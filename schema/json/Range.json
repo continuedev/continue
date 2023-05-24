@@ -1,0 +1,41 @@
+{
+  "title": "Range",
+  "$ref": "#/definitions/continuedev__src__continuedev__models__main__Range",
+  "definitions": {
+    "Position": {
+      "title": "Position",
+      "type": "object",
+      "properties": {
+        "line": {
+          "title": "Line",
+          "type": "integer"
+        },
+        "character": {
+          "title": "Character",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "line",
+        "character"
+      ]
+    },
+    "continuedev__src__continuedev__models__main__Range": {
+      "title": "Range",
+      "description": "A range in a file. 0-indexed.",
+      "type": "object",
+      "properties": {
+        "start": {
+          "$ref": "#/definitions/Position"
+        },
+        "end": {
+          "$ref": "#/definitions/Position"
+        }
+      },
+      "required": [
+        "start",
+        "end"
+      ]
+    }
+  }
+}

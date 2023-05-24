@@ -1,0 +1,202 @@
+{
+  "name": "continue",
+  "repository": {
+    "type": "git",
+    "url": ""
+  },
+  "displayName": "Continue",
+  "description": "Reduce debugging time by 10x",
+  "version": "0.0.1",
+  "publisher": "Continue",
+  "engines": {
+    "vscode": "^1.74.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "*"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "configuration": {
+      "title": "Continue",
+      "properties": {
+        "continue.automode": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically find relevant code and suggest a fix whenever a traceback is found."
+        },
+        "continue.serverUrl": {
+          "type": "string",
+          "default": "http://localhost:8000",
+          "description": "The URL of the Continue server to use."
+        }
+      }
+    },
+    "commands": [
+      {
+        "command": "continue.writeDocstring",
+        "category": "Continue",
+        "title": "Write a docstring for the current function"
+      },
+      {
+        "command": "continue.openDebugPanel",
+        "category": "Continue",
+        "title": "Open Debug Panel"
+      },
+      {
+        "command": "continue.askQuestionFromInput",
+        "Category": "Continue",
+        "title": "Ask a question from input box"
+      },
+      {
+        "command": "continue.openCapturedTerminal",
+        "Category": "Continue",
+        "title": "Open Captured Terminal"
+      },
+      {
+        "command": "continue.askQuestion",
+        "Category": "Continue",
+        "title": "Ask a question from webview"
+      },
+      {
+        "command": "continue.createTerminal",
+        "category": "Continue",
+        "title": "Create Terminal"
+      },
+      {
+        "command": "continue.debugTest",
+        "category": "Continue",
+        "title": "Debug Test"
+      },
+      {
+        "command": "continue.suggestionDown",
+        "category": "Continue",
+        "title": "Suggestion Down"
+      },
+      {
+        "command": "continue.suggestionUp",
+        "category": "Continue",
+        "title": "Suggestion Up"
+      },
+      {
+        "command": "continue.acceptSuggestion",
+        "category": "Continue",
+        "title": "Accept Suggestion"
+      },
+      {
+        "command": "continue.rejectSuggestion",
+        "category": "Continue",
+        "title": "Reject Suggestion"
+      },
+      {
+        "command": "continue.writeUnitTest",
+        "title": "Write Unit Test",
+        "category": "Continue"
+      },
+      {
+        "command": "continue.findSuspiciousCode",
+        "title": "Find Suspicious Code",
+        "category": "Continue"
+      },
+      {
+        "command": "continue.focusContinueInput",
+        "title": "Focus Continue Input",
+        "category": "Continue"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "continue.writeDocstring",
+        "key": "ctrl+alt+l",
+        "mac": "shift+cmd+l"
+      },
+      {
+        "command": "continue.writeUnitTest",
+        "key": "ctrl+alt+i",
+        "mac": "shift+cmd+i"
+      },
+      {
+        "command": "continue.askQuestionFromInput",
+        "key": "ctrl+alt+j",
+        "mac": "shift+cmd+j"
+      },
+      {
+        "command": "continue.suggestionDown",
+        "mac": "shift+ctrl+down",
+        "key": "shift+ctrl+down"
+      },
+      {
+        "command": "continue.suggestionUp",
+        "mac": "shift+ctrl+up",
+        "key": "shift+ctrl+up"
+      },
+      {
+        "command": "continue.acceptSuggestion",
+        "mac": "shift+ctrl+enter",
+        "key": "shift+ctrl+enter"
+      },
+      {
+        "command": "continue.focusContinueInput",
+        "mac": "cmd+k",
+        "key": "ctrl+k"
+      }
+    ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "continue.openDebugPanel",
+          "group": "navigation",
+          "when": "view == continue.debugView"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "clientgen": "rm -rf src/client/ && npx @openapitools/openapi-generator-cli generate -i ../schema/openapi.json -g typescript-fetch -o src/client/ --additional-properties=supportsES6=true,npmVersion=8.19.2,typescriptThreePlus=true",
+    "typegen": "node scripts/typegen.js",
+    "vscode:prepublish": "npm run compile",
+    "rebuild": "electron-rebuild -v 19.1.8 node-pty",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile && npm run lint",
+    "lint": "eslint src --ext ts",
+    "test": "node ./out/test/runTest.js",
+    "package": "cp ./config/prod_config.json ./config/config.json && npm run compile && mkdir -p ./build && vsce package --out ./build && chmod 777 ./build/continue-0.0.1.vsix && cp ./config/dev_config.json ./config/config.json",
+    "full-package": "cd ../continuedev && poetry build && cp ./dist/continuedev-0.1.0-py3-none-any.whl ../extension/scripts/continuedev-0.1.0-py3-none-any.whl && cd ../extension && npm run typegen && npm run clientgen && cd react-app && npm run build && cd .. && npm run package",
+    "install-extension": "code --install-extension ./build/continue-0.0.1.vsix",
+    "uninstall": "code --uninstall-extension Continue.continue",
+    "reinstall": "rm -rf ./build && npm run package && npm run uninstall && npm run install-extension"
+  },
+  "devDependencies": {
+    "@openapitools/openapi-generator-cli": "^2.5.2",
+    "@types/glob": "^8.0.0",
+    "@types/mocha": "^10.0.1",
+    "@types/node": "16.x",
+    "@types/node-fetch": "^2.6.2",
+    "@types/vscode": "^1.74.0",
+    "@typescript-eslint/eslint-plugin": "^5.45.0",
+    "@typescript-eslint/parser": "^5.45.0",
+    "@vscode/test-electron": "^2.2.0",
+    "eslint": "^8.28.0",
+    "glob": "^8.0.3",
+    "json-schema-to-typescript": "^12.0.0",
+    "mocha": "^10.1.0",
+    "typescript": "^4.9.3",
+    "vsce": "^2.15.0"
+  },
+  "dependencies": {
+    "@electron/rebuild": "^3.2.10",
+    "@reduxjs/toolkit": "^1.9.3",
+    "@segment/analytics-node": "^0.0.1-beta.16",
+    "@styled-icons/heroicons-outline": "^10.47.0",
+    "axios": "^1.2.5",
+    "highlight.js": "^11.7.0",
+    "octokit": "^2.0.11",
+    "react-redux": "^8.0.5",
+    "strip-ansi": "^7.0.1",
+    "vscode-languageclient": "^8.0.2",
+    "ws": "^8.13.0"
+  }
+}

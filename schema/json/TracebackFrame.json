@@ -1,0 +1,33 @@
+{
+  "title": "TracebackFrame",
+  "$ref": "#/definitions/continuedev__src__continuedev__models__main__TracebackFrame",
+  "definitions": {
+    "continuedev__src__continuedev__models__main__TracebackFrame": {
+      "title": "TracebackFrame",
+      "type": "object",
+      "properties": {
+        "filepath": {
+          "title": "Filepath",
+          "type": "string"
+        },
+        "lineno": {
+          "title": "Lineno",
+          "type": "integer"
+        },
+        "function": {
+          "title": "Function",
+          "type": "string"
+        },
+        "code": {
+          "title": "Code",
+          "type": "string"
+        }
+      },
+      "required": [
+        "filepath",
+        "lineno",
+        "function"
+      ]
+    }
+  }
+}
