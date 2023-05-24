@@ -1,0 +1,80 @@
+{
+  "title": "FileEditWithFullContents",
+  "$ref": "#/definitions/continuedev__src__continuedev__models__filesystem_edit__FileEditWithFullContents",
+  "definitions": {
+    "Position": {
+      "title": "Position",
+      "type": "object",
+      "properties": {
+        "line": {
+          "title": "Line",
+          "type": "integer"
+        },
+        "character": {
+          "title": "Character",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "line",
+        "character"
+      ]
+    },
+    "Range": {
+      "title": "Range",
+      "description": "A range in a file. 0-indexed.",
+      "type": "object",
+      "properties": {
+        "start": {
+          "$ref": "#/definitions/Position"
+        },
+        "end": {
+          "$ref": "#/definitions/Position"
+        }
+      },
+      "required": [
+        "start",
+        "end"
+      ]
+    },
+    "FileEdit": {
+      "title": "FileEdit",
+      "type": "object",
+      "properties": {
+        "filepath": {
+          "title": "Filepath",
+          "type": "string"
+        },
+        "range": {
+          "$ref": "#/definitions/Range"
+        },
+        "replacement": {
+          "title": "Replacement",
+          "type": "string"
+        }
+      },
+      "required": [
+        "filepath",
+        "range",
+        "replacement"
+      ]
+    },
+    "continuedev__src__continuedev__models__filesystem_edit__FileEditWithFullContents": {
+      "title": "FileEditWithFullContents",
+      "type": "object",
+      "properties": {
+        "fileEdit": {
+          "$ref": "#/definitions/FileEdit"
+        },
+        "fileContents": {
+          "title": "Filecontents",
+          "type": "string"
+        }
+      },
+      "required": [
+        "fileEdit",
+        "fileContents"
+      ]
+    }
+  }
+}

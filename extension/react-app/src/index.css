@@ -1,0 +1,34 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --secondary-dark: 37 37 38;
+  --vsc-background: 30 30 30;
+  --button-color: rgb(113, 28, 59);
+  --button-color-hover: rgba(113, 28, 59, 0.667);
+  --def-border-radius: 5px;
+}
+
+@font-face {
+  font-family: "Mona Sans";
+  src: url("assets/Mona-Sans.woff2") format("woff2 supports variations"),
+    url("assets/Mona-Sans.woff2") format("woff2-variations");
+  font-weight: 200 900;
+  font-stretch: 75% 85%;
+}
+
+html,
+body,
+#root {
+  height: calc(100% - 7px);
+}
+
+body {
+  background-color: var(--vsc-background);
+  padding: 0;
+  color: white;
+  font-family: "Mona Sans", "Arial", sans-serif;
+  padding: 0px;
+  margin: 0px;
+}

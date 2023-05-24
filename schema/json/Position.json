@@ -1,0 +1,24 @@
+{
+  "title": "Position",
+  "$ref": "#/definitions/continuedev__src__continuedev__models__main__Position",
+  "definitions": {
+    "continuedev__src__continuedev__models__main__Position": {
+      "title": "Position",
+      "type": "object",
+      "properties": {
+        "line": {
+          "title": "Line",
+          "type": "integer"
+        },
+        "character": {
+          "title": "Character",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "line",
+        "character"
+      ]
+    }
+  }
+}

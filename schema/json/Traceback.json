@@ -1,0 +1,63 @@
+{
+  "title": "Traceback",
+  "$ref": "#/definitions/continuedev__src__continuedev__models__main__Traceback",
+  "definitions": {
+    "TracebackFrame": {
+      "title": "TracebackFrame",
+      "type": "object",
+      "properties": {
+        "filepath": {
+          "title": "Filepath",
+          "type": "string"
+        },
+        "lineno": {
+          "title": "Lineno",
+          "type": "integer"
+        },
+        "function": {
+          "title": "Function",
+          "type": "string"
+        },
+        "code": {
+          "title": "Code",
+          "type": "string"
+        }
+      },
+      "required": [
+        "filepath",
+        "lineno",
+        "function"
+      ]
+    },
+    "continuedev__src__continuedev__models__main__Traceback": {
+      "title": "Traceback",
+      "type": "object",
+      "properties": {
+        "frames": {
+          "title": "Frames",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/TracebackFrame"
+          }
+        },
+        "message": {
+          "title": "Message",
+          "type": "string"
+        },
+        "error_type": {
+          "title": "Error Type",
+          "type": "string"
+        },
+        "full_traceback": {
+          "title": "Full Traceback",
+          "type": "string"
+        }
+      },
+      "required": [
+        "frames",
+        "message",
+        "error_type"
+      ]
+    }
+  }
+}
