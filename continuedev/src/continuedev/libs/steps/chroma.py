@@ -1,11 +1,10 @@
 from textwrap import dedent
 from typing import Coroutine, Union
-from ...models.filesystem_edit import AddDirectory, AddFile
-from ..observation import Observation, TextObservation
-from ..core import Step, ContinueSDK
-from .main import EditCodeStep, EditFileStep, RunCommandStep, WaitForUserConfirmationStep
+from ...core.observation import Observation, TextObservation
+from ...core.main import Step, ContinueSDK
+from .core.core import EditFileStep
 from ..chroma.query import query_codebase_index
-from .main import EditFileStep
+from .core.core import EditFileStep
 
 
 class AnswerQuestionChroma(Step):

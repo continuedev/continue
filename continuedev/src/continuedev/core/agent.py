@@ -2,13 +2,13 @@ import traceback
 import time
 from typing import Callable, Coroutine, List
 from ..models.filesystem_edit import FileEditWithFullContents
-from .llm import LLM
+from ..libs.llm import LLM
 from .observation import Observation
 from ..server.ide_protocol import AbstractIdeProtocolServer
-from .util.queue import AsyncSubscriptionQueue
+from ..libs.util.queue import AsyncSubscriptionQueue
 from ..models.main import ContinueBaseModel
-from .core import Policy, History, FullState, Step, HistoryNode
-from .steps.core.core import ReversibleStep, ManualEditStep, UserInputStep
+from .main import Policy, History, FullState, Step, HistoryNode
+from ..libs.steps.core.core import ReversibleStep, ManualEditStep, UserInputStep
 from .sdk import ContinueSDK
 
 

@@ -5,14 +5,14 @@ from pydantic import BaseModel
 from uvicorn.main import Server
 
 from ..models.filesystem_edit import FileEditWithFullContents
-from ..libs.policy import DemoPolicy
-from ..libs.core import FullState, History, Step
-from ..libs.agent import Agent
+from ..core.policy import DemoPolicy
+from ..core.main import FullState, History, Step
+from ..core.agent import Agent
 from ..libs.steps.nate import ImplementAbstractMethodStep
-from ..libs.observation import Observation
+from ..core.observation import Observation
 from ..libs.llm.openai import OpenAI
 from .ide_protocol import AbstractIdeProtocolServer
-from ..libs.env import openai_api_key
+from ..core.env import openai_api_key
 import asyncio
 import nest_asyncio
 nest_asyncio.apply()

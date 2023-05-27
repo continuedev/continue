@@ -1,7 +1,5 @@
 from plugins import policy
-from ....libs.observation import Observation
-from ....libs.steps import Step
-from ....libs.core import History
+from ....core.main import History, Step
 
 
 class AlternatingPolicy:
