@@ -51,6 +51,31 @@ class RunCommandStep(Step):
             return TextObservation(text=stdout)
 
 
+def ShellCommandsStep(Step):
+    cmds: List[str]
+    name: str = "Run Shell Commands"
+
+    async def describe(self, llm: LLM) -> Coroutine[str, None, None]:
+        return "\n".join(self.cmds)
+
+    async def run(self, sdk: ContinueSDK) -> Coroutine[Observation, None, None]:
+        cwd = await sdk.ide.getWorkspaceDirectory()
+
+        process = subprocess.Popen(
+            '/bin/bash', stdin=subprocess.PIPE, stdout=subprocess.PIPE, cwd=cwd)
+
+        stdin_input = "\n".join(self.cmds)
+        out, err = process.communicate(stdin_input.encode())
+
+        # TODO: How to await??
+
+        # If it fails, return the error
+        if err is not None and err != "":
+            return TextObservation(text=err)
+
+        return None
+
+
 class WaitForUserInputStep(Step):
     prompt: str
     name: str = "Waiting for user input"

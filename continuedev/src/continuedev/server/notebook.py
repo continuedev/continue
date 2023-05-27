@@ -6,19 +6,16 @@ from uvicorn.main import Server
 
 from ..models.filesystem_edit import FileEditWithFullContents
 from ..libs.policy import DemoPolicy
-from ..libs.core import Agent, FullState, History, Step
+from ..libs.core import FullState, History, Step
+from ..libs.agent import Agent
 from ..libs.steps.nate import ImplementAbstractMethodStep
 from ..libs.observation import Observation
-from dotenv import load_dotenv
 from ..libs.llm.openai import OpenAI
 from .ide_protocol import AbstractIdeProtocolServer
-import os
+from ..libs.env import openai_api_key
 import asyncio
 import nest_asyncio
 nest_asyncio.apply()
-
-load_dotenv()
-openai_api_key = os.getenv("OPENAI_API_KEY")
 
 router = APIRouter(prefix="/notebook", tags=["notebook"])
 
