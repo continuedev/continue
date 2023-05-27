@@ -1,4 +1,5 @@
-from ...core import ContinueSDK, Step
+from ....core.sdk import ContinueSDK
+from ....core.main import Step
 
 
 class ImplementAbstractMethodStep(Step):
