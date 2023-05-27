@@ -1,6 +1,8 @@
 from typing import Coroutine
 import pluggy
-from ...libs.core import ContinueSDK, Step, Observation
+from ...core.main import Step
+from ...core.observation import Observation
+from ...core.sdk import ContinueSDK
 
 hookspec = pluggy.HookspecMarker("continue.step")
 

@@ -2,7 +2,7 @@ from typing import Callable, Coroutine, Dict, Generator, List, Tuple, Union
 
 from ..models.main import ContinueBaseModel
 from pydantic import validator
-from .llm import LLM
+from ..libs.llm import LLM
 from .observation import Observation
 
 
@@ -68,20 +68,20 @@ class FullState(ContinueBaseModel):
     user_input_queue: List[str]
 
 
-class Policy(ContinueBaseModel):
-    """A rule that determines which step to take next"""
-
-    # Note that history is mutable, kinda sus
-    def next(self, history: History = History.from_empty()) -> "Step":
-        raise NotImplementedError
-
-
 class ContinueSDK:
     pass
 
 
 class SequentialStep:
     pass
+
+
+class Policy(ContinueBaseModel):
+    """A rule that determines which step to take next"""
+
+    # Note that history is mutable, kinda sus
+    def next(self, history: History = History.from_empty()) -> "Step":
+        raise NotImplementedError
 
 
 class Step(ContinueBaseModel):

@@ -2,9 +2,11 @@ import subprocess
 from ...models.main import Position, Range
 from ...models.filesystem import RangeInFile
 from ...models.filesystem_edit import AddDirectory, AddFile, FileEdit
-from ..observation import DictObservation
-from ..core import History, Step, ContinueSDK, Policy
-from .main import EditCodeStep, RunCommandStep, WaitForUserInputStep, WaitForUserConfirmationStep
+from ...core.observation import DictObservation
+from ...core.main import History, Step, Policy
+from ...core.sdk import ContinueSDK
+from .main import RunCommandStep
+from ..steps.core.core import EditCodeStep, WaitForUserConfirmationStep, WaitForUserInputStep
 
 source_name = "weather_api"
 
