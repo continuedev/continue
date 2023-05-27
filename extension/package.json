@@ -1,12 +1,20 @@
 {
   "name": "continue",
+  "icon": "media/continue-gradient.png",
   "repository": {
     "type": "git",
-    "url": ""
+    "url": "https://github.com/continuedev/continue"
   },
+  "bugs": {
+    "url": "https://github.com/continuedev/continue/issues",
+    "email": "nate@continue.dev"
+  },
+  "homepage": "https://continue.dev",
+  "license": "Apache-2.0",
   "displayName": "Continue",
-  "description": "Reduce debugging time by 10x",
-  "version": "0.0.1",
+  "pricing": "Free",
+  "description": "Refine code 10x faster",
+  "version": "0.0.2",
   "publisher": "Continue",
   "engines": {
     "vscode": "^1.74.0"
@@ -108,21 +116,6 @@
     ],
     "keybindings": [
       {
-        "command": "continue.writeDocstring",
-        "key": "ctrl+alt+l",
-        "mac": "shift+cmd+l"
-      },
-      {
-        "command": "continue.writeUnitTest",
-        "key": "ctrl+alt+i",
-        "mac": "shift+cmd+i"
-      },
-      {
-        "command": "continue.askQuestionFromInput",
-        "key": "ctrl+alt+j",
-        "mac": "shift+cmd+j"
-      },
-      {
         "command": "continue.suggestionDown",
         "mac": "shift+ctrl+down",
         "key": "shift+ctrl+down"
@@ -154,9 +147,13 @@
     }
   },
   "scripts": {
+    "vscode:prepublish": "npm run esbuild-base -- --minify",
+    "esbuild-base": "esbuild ./src/extension.ts --bundle --outfile=out/extension.js --external:vscode --format=cjs --platform=node",
+    "esbuild": "npm run esbuild-base -- --sourcemap",
+    "esbuild-watch": "npm run esbuild-base -- --sourcemap --watch",
+    "test-compile": "tsc -p ./",
     "clientgen": "rm -rf src/client/ && npx @openapitools/openapi-generator-cli generate -i ../schema/openapi.json -g typescript-fetch -o src/client/ --additional-properties=supportsES6=true,npmVersion=8.19.2,typescriptThreePlus=true",
     "typegen": "node scripts/typegen.js",
-    "vscode:prepublish": "npm run compile",
     "rebuild": "electron-rebuild -v 19.1.8 node-pty",
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
@@ -179,6 +176,7 @@
     "@typescript-eslint/eslint-plugin": "^5.45.0",
     "@typescript-eslint/parser": "^5.45.0",
     "@vscode/test-electron": "^2.2.0",
+    "esbuild": "^0.17.19",
     "eslint": "^8.28.0",
     "glob": "^8.0.3",
     "json-schema-to-typescript": "^12.0.0",
