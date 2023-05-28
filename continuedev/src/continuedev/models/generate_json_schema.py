@@ -19,7 +19,7 @@ RENAMES = {
     "ExampleClass": "RenamedName"
 }
 
-SCHEMA_DIR = "schema/json"
+SCHEMA_DIR = "../schema/json"
 
 
 def clear_schemas():
@@ -28,7 +28,7 @@ def clear_schemas():
             os.remove(os.path.join(SCHEMA_DIR, filename))
 
 
-if __name__ == "__main__":
+def main():
     clear_schemas()
     for model in MODELS_TO_GENERATE:
         title = RENAMES.get(model.__name__, model.__name__)
@@ -40,3 +40,7 @@ if __name__ == "__main__":
 
         with open(f"{SCHEMA_DIR}/{title}.json", "w") as f:
             f.write(json)
+
+
+if __name__ == "__main__":
+    main()

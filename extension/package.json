@@ -14,7 +14,7 @@
   "displayName": "Continue",
   "pricing": "Free",
   "description": "Refine code 10x faster",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "publisher": "Continue",
   "engines": {
     "vscode": "^1.74.0"
@@ -23,7 +23,7 @@
     "Other"
   ],
   "activationEvents": [
-    "*"
+    "onStartupFinished"
   ],
   "main": "./out/extension.js",
   "contributes": {
@@ -160,7 +160,7 @@
     "pretest": "npm run compile && npm run lint",
     "lint": "eslint src --ext ts",
     "test": "node ./out/test/runTest.js",
-    "package": "cp ./config/prod_config.json ./config/config.json && npm run compile && mkdir -p ./build && vsce package --out ./build && chmod 777 ./build/continue-0.0.1.vsix && cp ./config/dev_config.json ./config/config.json",
+    "package": "cp ./config/prod_config.json ./config/config.json && mkdir -p ./build && vsce package --out ./build && chmod 777 ./build/continue-0.0.2.vsix && cp ./config/dev_config.json ./config/config.json",
     "full-package": "cd ../continuedev && poetry build && cp ./dist/continuedev-0.1.0-py3-none-any.whl ../extension/scripts/continuedev-0.1.0-py3-none-any.whl && cd ../extension && npm run typegen && npm run clientgen && cd react-app && npm run build && cd .. && npm run package",
     "install-extension": "code --install-extension ./build/continue-0.0.1.vsix",
     "uninstall": "code --uninstall-extension .continue",

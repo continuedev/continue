@@ -20,6 +20,9 @@ urllib3 = "1.26.15"
 gpt-index = "^0.6.8"
 setuptools = "^67.7.2"
 
+[tool.poetry.scripts]
+typegen = "src.continuedev.models.generate_json_schema:main" 
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"

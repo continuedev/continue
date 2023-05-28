@@ -17,7 +17,6 @@ class Agent(ContinueBaseModel):
     policy: Policy
     ide: AbstractIdeProtocolServer
     history: History = History.from_empty()
-    continue_sdk: "ContinueSDK"
     _on_update_callbacks: List[Callable[[FullState], None]] = []
 
     _active: bool = False

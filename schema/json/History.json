@@ -1,6 +1,6 @@
 {
   "title": "History",
-  "$ref": "#/definitions/continuedev__src__continuedev__core__main__History",
+  "$ref": "#/definitions/src__continuedev__core__main__History",
   "definitions": {
     "Step": {
       "title": "Step",
@@ -47,7 +47,7 @@
         "depth"
       ]
     },
-    "continuedev__src__continuedev__core__main__History": {
+    "src__continuedev__core__main__History": {
       "title": "History",
       "description": "A history of steps taken and their results",
       "type": "object",

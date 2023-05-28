@@ -1,6 +1,6 @@
 {
   "title": "HistoryNode",
-  "$ref": "#/definitions/continuedev__src__continuedev__core__main__HistoryNode",
+  "$ref": "#/definitions/src__continuedev__core__main__HistoryNode",
   "definitions": {
     "Step": {
       "title": "Step",
@@ -26,7 +26,7 @@
       "type": "object",
       "properties": {}
     },
-    "continuedev__src__continuedev__core__main__HistoryNode": {
+    "src__continuedev__core__main__HistoryNode": {
       "title": "HistoryNode",
       "description": "A point in history, a list of which make up History",
       "type": "object",
