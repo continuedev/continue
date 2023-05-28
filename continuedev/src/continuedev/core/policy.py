@@ -1,5 +1,6 @@
 from typing import List, Tuple, Type
 
+
 from ..models.main import ContinueBaseModel
 
 from ..libs.steps.ty import CreatePipelineStep
@@ -8,6 +9,7 @@ from .observation import Observation, TracebackObservation, UserInputObservation
 from ..libs.steps.main import EditHighlightedCodeStep, SolveTracebackStep, RunCodeStep
 from ..libs.steps.nate import WritePytestsStep, CreateTableStep
 from ..libs.steps.chroma import AnswerQuestionChroma, EditFileChroma
+from ..libs.steps.continue_step import ContinueStepStep
 
 
 class DemoPolicy(Policy):
@@ -28,6 +30,8 @@ class DemoPolicy(Policy):
                 return AnswerQuestionChroma(question=" ".join(observation.user_input.split(" ")[1:]))
             elif "/edit" in observation.user_input:
                 return EditFileChroma(request=" ".join(observation.user_input.split(" ")[1:]))
+            elif "/step" in observation.user_input:
+                return ContinueStepStep(prompt=" ".join(observation.user_input.split(" ")[1:]))
             return EditHighlightedCodeStep(user_input=observation.user_input)
 
         state = history.get_current()
