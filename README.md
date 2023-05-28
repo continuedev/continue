@@ -1,11 +1,6 @@
 # Continue
 
-Try out latest version:
-
-- `cd extension`
-- `npm run package`
-- `cd build`
-- `code --install-extension continue-0.0.1.vsix`
+[Download for VS Code](https://marketplace.visualstudio.com/items?itemName=Continue.continue)
 
 Resources
 
