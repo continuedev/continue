@@ -5,20 +5,17 @@ from pydantic import BaseModel
 from uvicorn.main import Server
 
 from ..models.filesystem_edit import FileEditWithFullContents
-from ..libs.policy import DemoPolicy
-from ..libs.core import Agent, FullState, History, Step
+from ..core.policy import DemoPolicy
+from ..core.main import FullState, History, Step
+from ..core.agent import Agent
 from ..libs.steps.nate import ImplementAbstractMethodStep
-from ..libs.observation import Observation
-from dotenv import load_dotenv
+from ..core.observation import Observation
 from ..libs.llm.openai import OpenAI
 from .ide_protocol import AbstractIdeProtocolServer
-import os
+from ..core.env import openai_api_key
 import asyncio
 import nest_asyncio
 nest_asyncio.apply()
-
-load_dotenv()
-openai_api_key = os.getenv("OPENAI_API_KEY")
 
 router = APIRouter(prefix="/notebook", tags=["notebook"])
 

@@ -1,6 +1,6 @@
 from textwrap import dedent
 from ...models.filesystem_edit import AddDirectory, AddFile
-from ..core import Step, ContinueSDK
+from ...core.main import Step, ContinueSDK
 import os
 
 
