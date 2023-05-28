@@ -143,9 +143,7 @@ export async function startContinuePythonServer() {
       console.log("Continue python server already running");
       return;
     }
-  } catch (e) {
-    console.log("Error checking for existing server", e);
-  }
+  } catch (e) {}
 
   let activateCmd = ". env/bin/activate";
   let pythonCmd = "python3";
@@ -162,6 +160,7 @@ export async function startContinuePythonServer() {
     // exec(command);
     let child = spawn(command, {
       shell: true,
+      detached: true,
     });
     child.stdout.on("data", (data: any) => {
       console.log(`stdout: ${data}`);

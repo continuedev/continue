@@ -66,18 +66,22 @@ class IdeProtocolClient {
   }
 
   async isConnected() {
-    if (this._ws === null) {
-      this._ws = new WebSocket(this._serverUrl);
-    }
-    // On open, return a promise
-    if (this._ws!.readyState === WebSocket.OPEN) {
-      return;
-    }
-    return new Promise((resolve, reject) => {
-      this._ws!.onopen = () => {
-        resolve(null);
+    if (this._ws === null || this._ws.readyState !== WebSocket.OPEN) {
+      let ws = new WebSocket(this._serverUrl);
+      ws.onclose = () => {
+        this._ws = null;
       };
-    });
+      ws.on("message", (data: any) => {
+        this.handleMessage(JSON.parse(data));
+      });
+      this._ws = ws;
+
+      return new Promise((resolve, reject) => {
+        ws.addEventListener("open", () => {
+          resolve(null);
+        });
+      });
+    }
   }
 
   async startCore() {
