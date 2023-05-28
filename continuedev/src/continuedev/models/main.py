@@ -4,6 +4,11 @@ from pydantic import BaseModel, root_validator
 from functools import total_ordering
 
 
+class ContinueBaseModel(BaseModel):
+    class Config:
+        underscore_attrs_are_private = True
+
+
 @total_ordering
 class Position(BaseModel):
     line: int

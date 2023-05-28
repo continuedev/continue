@@ -3,7 +3,7 @@
 
 from ...models.filesystem import RangeInFile
 from .main import EditCodeStep, RunCommandStep
-from ..core import Step
+from ...core.main import Step
 
 
 class MigrationStep(Step):

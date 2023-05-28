@@ -1,11 +1,13 @@
 from typing import List, Tuple, Type
 
-from .steps.ty import CreatePipelineStep
-from .core import Step, Validator, Policy, History
+from ..models.main import ContinueBaseModel
+
+from ..libs.steps.ty import CreatePipelineStep
+from .main import Step, Validator, History, Policy
 from .observation import Observation, TracebackObservation, UserInputObservation
-from .steps.main import EditCodeStep, EditHighlightedCodeStep, SolveTracebackStep, RunCodeStep, FasterEditHighlightedCodeStep
-from .steps.nate import WritePytestsStep, CreateTableStep
-from .steps.chroma import AnswerQuestionChroma, EditFileChroma
+from ..libs.steps.main import EditHighlightedCodeStep, SolveTracebackStep, RunCodeStep
+from ..libs.steps.nate import WritePytestsStep, CreateTableStep
+from ..libs.steps.chroma import AnswerQuestionChroma, EditFileChroma
 
 
 class DemoPolicy(Policy):
