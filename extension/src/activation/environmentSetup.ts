@@ -59,7 +59,7 @@ async function setupPythonEnv() {
   }
   let pipCmd = pythonCmd.endsWith("3") ? "pip3" : "pip";
 
-  let activateCmd = "source env/bin/activate";
+  let activateCmd = ". env/bin/activate";
   let pipUpgradeCmd = `${pipCmd} install --upgrade pip`;
   if (process.platform == "win32") {
     activateCmd = ".\\env\\Scripts\\activate";
@@ -147,7 +147,7 @@ export async function startContinuePythonServer() {
     console.log("Error checking for existing server", e);
   }
 
-  let activateCmd = "source env/bin/activate";
+  let activateCmd = ". env/bin/activate";
   let pythonCmd = "python3";
   if (process.platform == "win32") {
     activateCmd = ".\\env\\Scripts\\activate";
