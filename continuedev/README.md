@@ -1,3 +1,7 @@
+# Continue
+
+Continue is a Python library for automating repetitive sequences of software development tasks using language models. Using our VS Code extension, you can build, run, and refine these recipes as they natively interact with your codebase. Download on [our GitHub](https://github.com/continuedev/continue).
+
 ## Steps to start
 
 - `cd continue/continue`
@@ -17,3 +21,7 @@ Same steps, then `uvicorn continue.src.server.main:app --reload`.
 ## To build
 
 Run `poetry build` and it will output wheel and tarball files in `./dist`.
+
+## Writing Steps
+
+See the `src/continuedev/libs/steps` folder for examples of writing a Continue step.
