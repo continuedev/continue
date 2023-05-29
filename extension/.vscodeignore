@@ -10,3 +10,5 @@ vsc-extension-quickstart.md
 **/*.map
 **/*.ts
 scripts/env/**
+scripts/.env
+**/.env
