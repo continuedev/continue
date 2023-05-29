@@ -191,7 +191,7 @@ class FasterEditHighlightedCodeStep(Step):
             replace_me = edit["replace_me"]
             replace_with = edit["replace_with"]
             file_edits.append(
-                FileEdit(filepath=filepath, range=Range.from_snippet_in_file(content=rif_dict[filepath], snippet=replace_me), replacement=replace_with))
+                FileEdit(filepath=filepath, range=Range.from_lines_snippet_in_file(content=rif_dict[filepath], snippet=replace_me), replacement=replace_with))
         # ------------------------------
 
         self._edit_diffs = []
