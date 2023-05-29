@@ -77,41 +77,45 @@ class FasterEditHighlightedCodeStep(Step):
     hide = True
     _completion: str = "Edit Code"
     _edit_diffs: Union[List[EditDiff], None] = None
-    _prompt: str = dedent("""Below is the code before changes:
+    _prompt: str = dedent("""\
+        You will be given code to edit in order to perfectly satisfy the user request. All the changes you make must be described as replacements, which you should format in the following way:
+        FILEPATH
+        <FILE_TO_EDIT>
+        REPLACE_ME
+        <CODE_TO_REPLACE>
+        REPLACE_WITH
+        <CODE_TO_REPLACE_WITH>
 
-{code}
+        where <CODE_TO_REPLACE> and <CODE_TO_REPLACE_WITH> can be multiple lines, but should be the mininum needed to make the edit. Be sure to maintain existing whitespace at the start of lines.
 
-This is the user request:
+        For example, if you want to replace the code `x = 1` with `x = 2` in main.py, you would write:
+        FILEPATH
+        main.py
+        REPLACE_ME
+        x = 1
+        REPLACE_WITH
+        x = 2
+        If you wanted to delete the code
+        ```
+        def sum(a, b):
+            return a + b
+        ```
+        in main.py, you would write:
+        FILEPATH
+        main.py
+        REPLACE_ME
+        def sum(a, b):
+            return a + b
+        REPLACE_WITH
 
-{user_input}
+        You may need to make multiple edits; respond with exactly as many as needed.
 
-Edit the code to perfectly satifsfy the user request. Format the changes you want to make as a comma-separated array of JSON objects of the form:
-{{
-    "edits": [{{
-        "filepath": <FILEPATH>,
-        "replace_me": <CODE_TO_REPLACE>,
-        "replace_with": <CODE_TO_REPLACE_WITH>
-    }}]
-}}
+        Below is the code before changes:
 
-For example, if you want to replace the code `x = 1` with `x = 2` in main.py, you would write:
-{{
-    "edits": [{{
-        "filepath": "main.py",
-        "replace_me": "x = 1",
-        "replace_with": "x = 2"
-    }}]
-}}
-If you wanted to delete the code `def sum(a, b):\\n    return a + b` in main.py, you would write:
-{{
-    "edits": [{{
-        "filepath": "main.py",
-        "replace_me": "def sum(a, b):\\n    return a + b",
-        "replace_with": ""
-    }}]
-}}
+        {code}
 
-Respond with only as many edits as needed, and output only the list of json objects, no other text.
+        This is the user request: "{user_input}"
+        Here is the description of changes to make:
 """)
 
     async def describe(self, llm: LLM) -> Coroutine[str, None, None]:
@@ -148,11 +152,41 @@ Respond with only as many edits as needed, and output only the list of json obje
         # Temporarily doing this to generate description.
         self._prompt = prompt
         self._completion = completion
+        print(completion)
 
         # ALTERNATIVE DECODING STEP HERE
+        raw_file_edits = []
+        lines = completion.split("\n")
+        current_edit = {}
+        status = "FILEPATH"
+        for i in range(0, len(lines)):
+            line = lines[i]
+            if line == "FILEPATH":
+                if "FILEPATH" in current_edit:
+                    raw_file_edits.append(current_edit)
+                current_edit = {}
+                status = "FILEPATH"
+            elif line == "REPLACE_ME":
+                status = "REPLACE_ME"
+            elif line == "REPLACE_WITH":
+                status = "REPLACE_WITH"
+            elif status == "FILEPATH":
+                current_edit["filepath"] = line
+            elif status == "REPLACE_ME":
+                if "replace_me" in current_edit:
+                    current_edit["replace_me"] += "\n" + line
+                else:
+                    current_edit["replace_me"] = line
+            elif status == "REPLACE_WITH":
+                if "replace_with" in current_edit:
+                    current_edit["replace_with"] += "\n" + line
+                else:
+                    current_edit["replace_with"] = line
+        if "filepath" in current_edit:
+            raw_file_edits.append(current_edit)
+
         file_edits = []
-        obj = json.loads(completion.strip())
-        for edit in obj["edits"]:
+        for edit in raw_file_edits:
             filepath = edit["filepath"]
             replace_me = edit["replace_me"]
             replace_with = edit["replace_with"]
