@@ -6,7 +6,8 @@ import { defaultBorderRadius, vscBackground } from ".";
 import { Clipboard } from "@styled-icons/heroicons-outline";
 
 const StyledPre = styled.pre`
-  overflow: scroll;
+  overflow-y: scroll;
+  word-wrap: normal;
   border: 1px solid gray;
   border-radius: ${defaultBorderRadius};
   background-color: ${vscBackground};
