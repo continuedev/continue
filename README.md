@@ -26,8 +26,16 @@ git clone https://github.com/continuedev/continue && cd continue/extension/scrip
 
 See our guides on writing recipes in the documentation.
 
-Resources
+# Resources
 
 - [Continue Github Project](https://github.com/orgs/continuedev/projects/1/views/1)
 - [Continue User Guide](https://www.notion.so/continue-dev/Continue-User-Guide-1c6ad99887d0474d9e42206f6c98efa4)
 - [Continue - Mission & Vision](https://continue-dev.notion.site/Continue-a8e41af9801641f79d2c8565907bbd22)
+
+# Contributing
+
+Please do
+
+# License
+
+[Apache-2.0]([https://github.com/sestinj/the-x/blob/main/LICENSE](https://opensource.org/licenses/Apache-2.0)) © 2023 Continue
