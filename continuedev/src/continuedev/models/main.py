@@ -32,7 +32,7 @@ class Position(BaseModel):
     def from_index(string: str, index: int) -> "Position":
         """Convert index in string to line and character"""
         line = string.count("\n", 0, index)
-        if line == 1:
+        if line == 0:
             character = index
         else:
             character = index - string.rindex("\n", 0, index) - 1
