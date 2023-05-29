@@ -4,11 +4,11 @@
 
 ### Automate more steps of your software development workflows using LLMs
 
-#### An open-source framework to accelerate your use of LLMs while coding
+#### An open-source framework to accelerate your use of models like GPT-4 while coding
 
 1. Leverage steps created by others in your workflows as you code.
 2. Customize steps and compose them together to fit your workflows.
-3. Review, reverse, and rerun steps to use LLMs with confidence.
+3. Review, reverse, and rerun steps to use models with confidence.
 
 ## How Continue works
 
