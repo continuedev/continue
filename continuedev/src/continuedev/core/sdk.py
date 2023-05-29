@@ -3,10 +3,12 @@ from typing import Coroutine, Union
 from ..models.filesystem_edit import FileSystemEdit, AddFile, DeleteFile, AddDirectory, DeleteDirectory
 from ..models.filesystem import RangeInFile
 from ..libs.llm import LLM
+from ..libs.llm.hf_inference_api import HuggingFaceInferenceAPI
 from .observation import Observation
 from ..server.ide_protocol import AbstractIdeProtocolServer
 from .main import History, Step
 from ..libs.steps.core.core import *
+from .env import get_env_var, save_env_var
 
 
 class Agent:
@@ -18,11 +20,22 @@ class ContinueSDKSteps:
         self.sdk = sdk
 
 
+class Models:
+    def __init__(self, sdk: "ContinueSDK"):
+        self.sdk = sdk
+
+    async def starcoder(self):
+        api_key = await self.sdk.get_user_secret(
+            'HUGGING_FACE_TOKEN', 'Please enter your Hugging Face token')
+        return HuggingFaceInferenceAPI(api_key=api_key)
+
+
 class ContinueSDK:
     """The SDK provided as parameters to a step"""
     llm: LLM
     ide: AbstractIdeProtocolServer
     steps: ContinueSDKSteps
+    models: Models
     __agent: Agent
 
     def __init__(self, agent: Agent, llm: Union[LLM, None] = None):
@@ -33,6 +46,7 @@ class ContinueSDK:
         self.ide = agent.ide
         self.__agent = agent
         self.steps = ContinueSDKSteps(self)
+        self.models = Models(self)
 
     @property
     def history(self) -> History:
@@ -80,3 +94,14 @@ class ContinueSDK:
 
     async def delete_directory(self, path: str):
         return await self.run_step(FileSystemEditStep(edit=DeleteDirectory(path=path)))
+
+    async def get_user_secret(self, env_var: str, prompt: str) -> str:
+        try:
+            val = get_env_var(env_var)
+            if val is not None:
+                return val
+        except:
+            pass
+        val = (await self.run_step(WaitForUserInputStep(prompt=prompt))).text
+        save_env_var(env_var, val)
+        return val

@@ -144,6 +144,9 @@ function StepContainer(props: StepContainerProps) {
               onSubmit={(ev) => {
                 props.onUserInput(ev.currentTarget.value);
               }}
+              onClick={(e) => {
+                e.stopPropagation();
+              }}
             />
           )}
           {props.historyNode.step.name === "Waiting for user confirmation" && (
@@ -163,24 +166,6 @@ function StepContainer(props: StepContainerProps) {
                 type="button"
                 value="Confirm"
               />
-            </>
-          )}
-
-          {open && (
-            <>
-              {/* {props.historyNode.observation && (
-                <SubContainer title="Error">
-                  <CodeBlock>Error Here</CodeBlock>
-                </SubContainer>
-              )} */}
-              {/* {props.iterationContext.suggestedChanges.map((sc) => {
-              return (
-                <SubContainer title="Suggested Change">
-                  {sc.filepath}
-                  <CodeBlock>{sc.replacement}</CodeBlock>
-                </SubContainer>
-              );
-            })} */}
             </>
           )}
         </StepContainerDiv>

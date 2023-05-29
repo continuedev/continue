@@ -49,9 +49,10 @@ class Agent(ContinueBaseModel):
     async def wait_for_user_input(self) -> str:
         self._active = False
         self.update_subscribers()
-        await self._user_input_queue.get(self.history.current_index)
+        user_input = await self._user_input_queue.get(self.history.current_index)
         self._active = True
         self.update_subscribers()
+        return user_input
 
     _manual_edits_buffer: List[FileEditWithFullContents] = []
 
