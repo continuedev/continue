@@ -1,3 +1,8 @@
+![GitHub issues](https://img.shields.io/github/issues-raw/continuedev/continue)
+[![License: MIT](https://img.shields.io/badge/License-Apache-2.0-yellow.svg)](https://opensource.org/licenses/Apache-2.0)
+![GitHub Repo stars](https://img.shields.io/github/stars/continuedev/continue?style=social)
+![Twitter URL](https://img.shields.io/twitter/url?style=social&url=https%3A%2F%2Fgithub.com%2Fcontinuedev%2Fcontinue)
+
 # Continue
 
 Continue is the open-source autopilot for software developers. Using our SDK you can write short scripts, called recipes, that automate sequences of tasks that are common within your codebase. This repository contains:
