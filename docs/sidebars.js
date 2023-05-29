@@ -16,7 +16,19 @@ const sidebars = {
 
   docsSidebar: [
     'intro',
-    'create-a-recipe',
+    'getting-started',
+    'install',
+    'how-continue-works',
+    {
+      type: 'category',
+      label: 'Walkthroughs',
+      items: [
+        'walkthroughs/use-the-gui',
+        'walkthroughs/use-a-recipe',
+        'walkthroughs/create-a-recipe',
+        'walkthroughs/share-a-recipe',
+      ],
+    },
     {
       type: 'category',
       label: 'Concepts',
@@ -28,11 +40,13 @@ const sidebars = {
         'concepts/ide',
         'concepts/llm',
         'concepts/policy',
-        'concepts/recipes',
+        'concepts/recipe',
         'concepts/sdk',
         'concepts/step',
       ],
     },
+    'sdk',
+    'telemetry',
   ],
 };
 
