@@ -12,7 +12,7 @@ from ..libs.steps.nate import ImplementAbstractMethodStep
 from ..core.observation import Observation
 from ..libs.llm.openai import OpenAI
 from .ide_protocol import AbstractIdeProtocolServer
-from ..core.env import openai_api_key
+from ..core.env import get_env_var
 import asyncio
 import nest_asyncio
 nest_asyncio.apply()
@@ -75,7 +75,7 @@ class SessionManager:
 
     def new_session(self, ide: AbstractIdeProtocolServer) -> str:
         cmd = "python3 /Users/natesesti/Desktop/continue/extension/examples/python/main.py"
-        agent = DemoAgent(llm=OpenAI(api_key=openai_api_key),
+        agent = DemoAgent(llm=OpenAI(api_key=get_env_var("OPENAI_API_KEY")),
                           policy=DemoPolicy(cmd=cmd), ide=ide)
         session_id = str(uuid4())
         session = Session(session_id=session_id, agent=agent)
