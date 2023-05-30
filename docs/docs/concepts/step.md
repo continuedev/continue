@@ -1,5 +1,7 @@
 # Step
 
+*TODO: Explain in detail what this is and what its purpose is*
+
 A step is
 
 ## Step methods

@@ -7,7 +7,7 @@ const darkCodeTheme = require('prism-react-renderer/themes/dracula');
 /** @type {import('@docusaurus/types').Config} */
 const config = {
   title: 'Continue',
-  tagline: 'an open-source library to accelerate your use of models like GPT-4 while coding',
+  tagline: 'the open-source library for accelerating your use of LLMs while coding',
   favicon: 'img/favicon.ico',
 
   // Set the production url of your site here
@@ -105,7 +105,7 @@ const config = {
             ],
           },
         ],
-        copyright: `Copyright © ${new Date().getFullYear()} Continue, Inc.`,
+        copyright: `Copyright © ${new Date().getFullYear()} Continue Dev, Inc.`,
       },
       prism: {
         theme: lightCodeTheme,

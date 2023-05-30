@@ -1,0 +1,11 @@
+# Autopilot
+
+*TODO: Explain in detail what this is and what its purpose is*
+
+`Autopilot` contains the
+- History
+- LLM
+- Policy
+- IDE
+
+**We should rename agent to autopilot in the code**

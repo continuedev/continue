@@ -1,4 +1,6 @@
-# Create a Recipe
+# Create a recipe
+
+*TODO: Describe step-by-step how to create a recipe*
 
 ## 1. Create a step
 
@@ -48,7 +50,9 @@ class SetUpVenvStep(Step):
             await sdk.run("python3 -m venv env && source env/bin/activate") # MacOS and Linux
 ```
 
-## 2. Compose steps together
+## 2. Compose steps together into a complete recipe
+
+R
 
 By convention, the name of every recipe ends with `Recipe`.
 
