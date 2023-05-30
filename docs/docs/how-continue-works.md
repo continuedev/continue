@@ -1,6 +1,10 @@
 # How `Continue` works
 
-*TODO: Describe in more detail how `Continue` works*
+_TODO: Describe in more detail how `Continue` works_
+
+> (Nate) Continue connects any code editor (primarily VS Code right now) to a server (the Continue server) that can take actions in the editor in accordance with defined recipes at the request of a user through the GUI. What this looks like (maybe I'll draw a diagram): The Continue VS Code extension runs the ContinueIdeProtocol, launches the Continue Python server in the background, and opens the Continue GUI in a side-panel. The Continue server is the brain, communication center, and source of truth, interacting with VS Code through the ContinueIdeProtocol and with the GUI through the NotebookProtocol. Communication between the extension and GUI happens through the Continue server. When you type a natural language command in the GUI, this is sent to the Continue server, where the `Autopilot` class takes action, potentially using the ContinueIdeProtocol to request actions be taken in the IDE, and then updates the GUI to display the new history.
+
+![Continue Architecture Diagram](/img/continue-architecture.png)
 
 ## Overview
 
@@ -15,9 +19,9 @@ The [Core](./concepts/core.md) connects the SDK and GUI with the IDE (i.e. in VS
 ## What to know about codebase
 
 - `core` directory contains major concepts
-    - This includes Autopilot, Policy, SDK (all in their own files  so far)
-    - It also includes  `main.py`, which contains History, HistoryNode, Step, and others
-    - You'll find `env.py` here too, which is a common place to load environment variables, which can then be imported from here
+  - This includes Autopilot, Policy, SDK (all in their own files so far)
+  - It also includes `main.py`, which contains History, HistoryNode, Step, and others
+  - You'll find `env.py` here too, which is a common place to load environment variables, which can then be imported from here
 - `libs` contains misc. stuff
 - `llm` for language model utilities
 - `steps` for builtin Continue steps
