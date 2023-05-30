@@ -7,7 +7,7 @@ const darkCodeTheme = require('prism-react-renderer/themes/dracula');
 /** @type {import('@docusaurus/types').Config} */
 const config = {
   title: 'Continue',
-  tagline: 'an open source autopilot for refining software',
+  tagline: 'an open-source library to accelerate your use of models like GPT-4 while coding',
   favicon: 'img/favicon.ico',
 
   // Set the production url of your site here
