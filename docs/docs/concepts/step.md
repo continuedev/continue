@@ -8,6 +8,8 @@ A `step` is
 
 ## What else to know
 
+A `Step` is a Pydantic class inheriting from `Step`. Steps implement the `run` method, which takes a ContinueSDK as its only parameter. The ContinueSDK gives all the utilities you need to easily write recipes (Steps). It also implements the `describe` method, which just computes a textual description of what happened when the `run` method was called. Can save attributes in `run` if you want, or just have a default `describe`, or not even implement it, in which case the name of the class is used. Any parameters to a Step are defined as attributes to the class without a double leading underscore (those with this are private).
+
 Steps can be composed together
 
 ### Step methods

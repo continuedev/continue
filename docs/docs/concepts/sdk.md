@@ -6,6 +6,8 @@ The `Continue SDK` gives you access to tools (e.g. open a directory, edit a file
 
 ## What else to know
 
+The ContinueSDK has a `run_step` method, which allows Steps to be composable. The reason you want to run it with `run_step` instead of creating a Step and calling `step.run(...)` is so Continue can automatically keep track of the order of all steps run, and allow for reversibility, etc... The ContinueSDK also contains functions for very common steps, like `edit_file`, `add_file`, `run` (to run shell commands), and a few others. `sdk.history` lets you access the history of past steps. `sdk.llm` lets you use the Autopilot's language model like `sdk.llm.complete`. `sdk.ide` lets you take any action within the connected IDE (this is where the IDE protocol is called).
+
 *TODO: Explain in detail what this is and what its purpose is*
 
 *TODO: Detail all the SDK methods and how to use them*
