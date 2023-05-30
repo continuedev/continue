@@ -1,5 +1,11 @@
 # IDE
 
+## One sentence definition
+
+The `IDE` is 
+
+## What else to know
+
 *TODO: Explain in detail what this is and what its purpose is*
 
 ## Supported IDEs

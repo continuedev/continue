@@ -30,8 +30,8 @@ export default function Home() {
   const {siteConfig} = useDocusaurusContext();
   return (
     <Layout
-      title={`${siteConfig.title} Docs`}
-      description="Description will go into a meta tag in <head />">
+      title={`Docs`}
+      description="Documentation for the `Continue` library">
       <HomepageHeader />
       <main>
         <HomepageFeatures />

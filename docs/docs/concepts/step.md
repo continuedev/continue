@@ -2,33 +2,41 @@
 
 *TODO: Explain in detail what this is and what its purpose is*
 
-A step is
+## One sentence definition
 
-## Step methods
+A `step` is 
 
-### `run` (required)
+## What else to know
+
+Steps can be composed together
+
+### Step methods
+
+#### `run` (required)
 
 the code that should run when executed by the policy
 
-### `description` (optional)
+#### `description` (optional)
 
 the definition of what the step does in natural language
 
-### `reverse` (optional)
+#### `reverse` (optional)
 
 the code that should run when the step is reversed
 
-### `modify` (optional)
+#### `modify` (optional)
 
 the code that should run when the step is rerun with feedback
 
-## Steps
+*TODO: Move list / description of all steps and recipes to the place where people will be able to use and update them*
 
-### Core
+### Steps & recipes
 
-#### RunCommandStep
+#### Core
 
-#### EditCodeStep
+##### RunCommandStep
+
+##### EditCodeStep
 
 #### ManualEditStep
 
