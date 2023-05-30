@@ -89,31 +89,31 @@ class ContinueSDK:
     """The SDK provided as parameters to a step"""
     llm: LLM
     ide: AbstractIdeProtocolServer
-    __agent: "Agent"
+    __autopilot: "Autopilot"
 
-    def __init__(self, agent: "Agent", llm: Union[LLM, None] = None):
+    def __init__(self, autopilot: "Autopilot", llm: Union[LLM, None] = None):
         if llm is None:
-            self.llm = agent.llm
+            self.llm = autopilot.llm
         else:
             self.llm = llm
-        self.ide = agent.ide
-        self.__agent = agent
+        self.ide = autopilot.ide
+        self.__autopilot = autopilot
 
     @property
     def history(self) -> History:
-        return self.__agent.history
+        return self.__autopilot.history
 
     async def run_step(self, step: "Step") -> Coroutine[Observation, None, None]:
-        return await self.__agent._run_singular_step(step)
+        return await self.__autopilot._run_singular_step(step)
 
     async def apply_filesystem_edit(self, edit: FileSystemEdit):
         await self.run_step(FileSystemEditStep(edit=edit))
 
     async def wait_for_user_input(self) -> str:
-        return await self.__agent.wait_for_user_input()
+        return await self.__autopilot.wait_for_user_input()
 
 
-class Agent(ContinueBaseModel):
+class Autopilot(ContinueBaseModel):
     llm: LLM
     policy: Policy
     ide: AbstractIdeProtocolServer
@@ -142,7 +142,7 @@ class Agent(ContinueBaseModel):
             callback(full_state)
 
     def __get_step_params(self, step: "Step"):
-        return ContinueSDK(agent=self, llm=self.llm.with_system_message(step.system_message))
+        return ContinueSDK(autopilot=self, llm=self.llm.with_system_message(step.system_message))
 
     def give_user_input(self, input: str, index: int):
         self._user_input_queue.post(index, input)
@@ -210,7 +210,7 @@ class Agent(ContinueBaseModel):
 
     async def run_from_step(self, step: "Step"):
         # if self._active:
-        #     raise RuntimeError("Agent is already running")
+        #     raise RuntimeError("Autopilot is already running")
         self._active = True
 
         next_step = step

@@ -9,10 +9,11 @@ The `Continue Core` connects the [SDK](./sdk.md) and [GUI](./gui.md) with the [I
 ## What else to know
 
 The `Core` includes
+
 - IDE protocol
 - GUI protocol
 - SDK
-- Agent
+- Autopilot
 
 There is a two-way sync between an IDE and the GUI that happens through Core.
 

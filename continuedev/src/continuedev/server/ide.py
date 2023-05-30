@@ -122,7 +122,7 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
         pass
 
     async def setFileOpen(self, filepath: str, open: bool = True):
-        # Agent needs access to this.
+        # Autopilot needs access to this.
         await self.websocket.send_json({
             "messageType": "setFileOpen",
             "filepath": filepath,
@@ -147,12 +147,12 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
         responses = await asyncio.gather(*[
             self._receive_json(ShowSuggestionResponse)
             for i in range(len(suggestions))
-        ])  # WORKING ON THIS FLOW HERE. Fine now to just await for response, instead of doing something fancy with a "waiting" state on the agent.
+        ])  # WORKING ON THIS FLOW HERE. Fine now to just await for response, instead of doing something fancy with a "waiting" state on the autopilot.
         # Just need connect the suggestionId to the IDE (and the notebook)
         return any([r.accepted for r in responses])
 
     # ------------------------------- #
-    # Here needs to pass message onto the Agent OR Agent just subscribes.
+    # Here needs to pass message onto the Autopilot OR Autopilot just subscribes.
     # This is where you might have triggers: plugins can subscribe to certian events
     # like file changes, tracebacks, etc...
 
@@ -160,12 +160,12 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
         pass
 
     def onTraceback(self, traceback: Traceback):
-        # Same as below, maybe not every agent?
+        # Same as below, maybe not every autopilot?
         for _, session in self.session_manager.sessions.items():
-            session.agent.handle_traceback(traceback)
+            session.autopilot.handle_traceback(traceback)
 
     def onFileSystemUpdate(self, update: FileSystemEdit):
-        # Access to Agent (so SessionManager)
+        # Access to Autopilot (so SessionManager)
         pass
 
     def onCloseNotebook(self, session_id: str):
@@ -176,10 +176,10 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
         pass
 
     def onFileEdits(self, edits: List[FileEditWithFullContents]):
-        # Send the file edits to ALL agents.
+        # Send the file edits to ALL autopilots.
         # Maybe not ideal behavior
         for _, session in self.session_manager.sessions.items():
-            session.agent.handle_manual_edits(edits)
+            session.autopilot.handle_manual_edits(edits)
 
     # Request information. Session doesn't matter.
     async def getOpenFiles(self) -> List[str]:
