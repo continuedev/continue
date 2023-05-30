@@ -33,7 +33,7 @@ const sidebars = {
       type: 'category',
       label: 'Concepts',
       items: [
-        'concepts/agent',
+        'concepts/autopilot',
         'concepts/core',
         'concepts/gui',
         'concepts/history',
@@ -45,7 +45,6 @@ const sidebars = {
         'concepts/step',
       ],
     },
-    'sdk',
     'telemetry',
   ],
 };

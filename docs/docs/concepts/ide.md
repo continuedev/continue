@@ -1,10 +1,14 @@
 # IDE
 
+*TODO: Explain in detail what this is and what its purpose is*
+
 ## Supported IDEs
 
 ### VS Code
 
 The VS Code extension implementation can be found at `/continue/extension/src`
+
+### GitHub Codespaces
 
 ## IDE Protocol methods
 

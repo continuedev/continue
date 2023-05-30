@@ -8,8 +8,8 @@ const FeatureList = [
     Svg: require('@site/static/img/undraw_docusaurus_mountain.svg').default,
     description: (
       <>
-        Enable LLMs to be an autopilot for parts of your software development tasks by 
-        leveraging steps and recipes created by others in your workflows as you code
+        Enable LLMs to be an autopilot for parts of your software development tasks 
+        by leveraging recipes created by others in the workflows you use when coding
       </>
     ),
   },
@@ -18,18 +18,18 @@ const FeatureList = [
     Svg: require('@site/static/img/undraw_docusaurus_tree.svg').default,
     description: (
       <>
-        Use the Continue SDK to create your own custom steps and compose them together
-        into personalized recipes, so that using LLMs actually fits into your workflows
+        Use the Continue SDK to create your own custom steps and compose them into 
+        personalized recipes, so that using LLMs seamlessly fits into your workflows
       </>
     ),
   },
   {
-    title: 'Guide the work done by LLMs to learn when to use and trust them',
+    title: 'Guide the steps taken by LLMs to learn when to use and trust them',
     Svg: require('@site/static/img/undraw_docusaurus_react.svg').default,
     description: (
       <>
-        Use the Continue GUI to review, reverse, and rerun some steps or even entire recipes,
-        incorporating LLMs with confidence into the workflows you use to create software
+        Use the Continue GUI to review, reverse, and rerun steps or even entire recipes,
+        incorporating LLMs with confidence into your software development workflows
       </>
     ),
   },

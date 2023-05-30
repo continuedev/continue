@@ -1,5 +1,9 @@
 # SDK
 
+*TODO: Explain in detail what this is and what its purpose is*
+
+*TODO: Detail all the SDK methods and how to use them*
+
 The `SDK` gives you access to tools (e.g. open a directory, edit a file, call an LLM, etc), which you can use when defining how a step should work and composing them with other steps.
 
 ## SDK methods

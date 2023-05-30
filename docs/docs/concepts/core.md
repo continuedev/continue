@@ -1,5 +1,7 @@
 # Core
 
+*TODO: Explain in detail what this is and what its purpose is*
+
 The `Core` connects the SDK and GUI with the IDE (i.e. in VS Code, a web browser, etc), enabling the steps to make changes to your code and accelerate your software development workflows.
 
 The `Core` includes
