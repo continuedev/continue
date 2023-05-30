@@ -4,4 +4,4 @@
 
 **Q: should we call this LLM? Perhaps just model?**
 
-**Q: should this abstraction be connected to agent?**
+**Q: should this abstraction be connected to autopilot?**
