@@ -4,32 +4,32 @@ import styles from './styles.module.css';
 
 const FeatureList = [
   {
-    title: 'Easy to Use',
+    title: 'Define the scenarios where LLMs should step into accelerate you',
     Svg: require('@site/static/img/undraw_docusaurus_mountain.svg').default,
     description: (
       <>
-        Docusaurus was designed from the ground up to be easily installed and
-        used to get your website up and running quickly.
+        Enable LLMs to be an autopilot for parts of your software development tasks 
+        by leveraging recipes created by others in the workflows you use when coding
       </>
     ),
   },
   {
-    title: 'Focus on What Matters',
+    title: 'Create your own workflows to show LLMs exactly what to do',
     Svg: require('@site/static/img/undraw_docusaurus_tree.svg').default,
     description: (
       <>
-        Docusaurus lets you focus on your docs, and we&apos;ll do the chores. Go
-        ahead and move your docs into the <code>docs</code> directory.
+        Use the Continue SDK to create your own custom steps and compose them into 
+        personalized recipes, so that using LLMs seamlessly fits into your workflows
       </>
     ),
   },
   {
-    title: 'Powered by React',
+    title: 'Guide the steps taken by LLMs to learn when to use and trust them',
     Svg: require('@site/static/img/undraw_docusaurus_react.svg').default,
     description: (
       <>
-        Extend or customize your website layout by reusing React. Docusaurus can
-        be extended while reusing the same header and footer.
+        Use the Continue GUI to review, reverse, and rerun steps or even entire recipes,
+        incorporating LLMs with confidence into your software development workflows
       </>
     ),
   },

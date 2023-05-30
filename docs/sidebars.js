@@ -44,7 +44,6 @@ const sidebars = {
         "concepts/step",
       ],
     },
-    "sdk",
     "telemetry",
   ],
 };
