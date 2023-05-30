@@ -1,6 +1,6 @@
 # Installation
 
-If you want to try out `Continue` without having to install it, check out the [GitHub Codespaces Demo](./getting-started.md)
+If you want to try `Continue` before installing, check out the [GitHub Codespaces Demo](./getting-started.md)
 
 ## Install `Continue` packaged as a VS Code extension
 

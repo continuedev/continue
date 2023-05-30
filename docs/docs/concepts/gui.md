@@ -1,6 +1,12 @@
 # GUI
 
-The `GUI` enables you to guide steps and makes everything transparent, so you can review all steps that were automated, giving you the opportunity to undo and rerun any that ran incorrectly.
+*TODO: Explain in detail what this is and what its purpose is*
+
+## One sentence definition
+
+The `Continue GUI` enables you to guide steps and makes everything transparent, so you can review all steps that were automated, giving you the opportunity to undo and rerun any that ran incorrectly.
+
+## What else to know
 
 **From GUI to Core**
 - Natural language instructions from the developer
