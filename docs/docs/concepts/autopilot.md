@@ -13,5 +13,3 @@ The `autopilot` is
 - LLM
 - Policy
 - IDE
-
-**We should rename agent to autopilot in the code**
