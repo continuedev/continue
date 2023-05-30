@@ -13,4 +13,4 @@ An `LLM` is short for Large Language Model, which includes models like GPT-4, St
 
 **Q: should we call this LLM? Perhaps just model?**
 
-**Q: should this abstraction be connected to agent?**
+**Q: should this abstraction be connected to autopilot?**

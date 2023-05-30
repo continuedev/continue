@@ -13,39 +13,38 @@
 
 /** @type {import('@docusaurus/plugin-content-docs').SidebarsConfig} */
 const sidebars = {
-
   docsSidebar: [
-    'intro',
-    'getting-started',
-    'install',
-    'how-continue-works',
+    "intro",
+    "getting-started",
+    "install",
+    "how-continue-works",
     {
-      type: 'category',
-      label: 'Walkthroughs',
+      type: "category",
+      label: "Walkthroughs",
       items: [
-        'walkthroughs/use-the-gui',
-        'walkthroughs/use-a-recipe',
-        'walkthroughs/create-a-recipe',
-        'walkthroughs/share-a-recipe',
+        "walkthroughs/use-the-gui",
+        "walkthroughs/use-a-recipe",
+        "walkthroughs/create-a-recipe",
+        "walkthroughs/share-a-recipe",
       ],
     },
     {
-      type: 'category',
-      label: 'Concepts',
+      type: "category",
+      label: "Concepts",
       items: [
-        'concepts/autopilot',
-        'concepts/core',
-        'concepts/gui',
-        'concepts/history',
-        'concepts/ide',
-        'concepts/llm',
-        'concepts/policy',
-        'concepts/recipe',
-        'concepts/sdk',
-        'concepts/step',
+        "concepts/autopilot",
+        "concepts/core",
+        "concepts/gui",
+        "concepts/history",
+        "concepts/ide",
+        "concepts/llm",
+        "concepts/policy",
+        "concepts/recipe",
+        "concepts/sdk",
+        "concepts/step",
       ],
     },
-    'telemetry',
+    "telemetry",
   ],
 };
 
