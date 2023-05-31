@@ -4,6 +4,7 @@ from ..models.filesystem_edit import FileSystemEdit, AddFile, DeleteFile, AddDir
 from ..models.filesystem import RangeInFile
 from ..libs.llm import LLM
 from ..libs.llm.hf_inference_api import HuggingFaceInferenceAPI
+from ..libs.llm.openai import OpenAI
 from .observation import Observation
 from ..server.ide_protocol import AbstractIdeProtocolServer
 from .main import History, Step
@@ -29,20 +30,20 @@ class Models:
             'HUGGING_FACE_TOKEN', 'Please enter your Hugging Face token')
         return HuggingFaceInferenceAPI(api_key=api_key)
 
+    async def gpt35(self):
+        api_key = await self.sdk.get_user_secret(
+            'OPENAI_API_KEY', 'Please enter your OpenAI API key')
+        return OpenAI(api_key=api_key, default_model="gpt-3.5-turbo")
+
 
 class ContinueSDK:
     """The SDK provided as parameters to a step"""
-    llm: LLM
     ide: AbstractIdeProtocolServer
     steps: ContinueSDKSteps
     models: Models
     __agent: Agent
 
-    def __init__(self, agent: Agent, llm: Union[LLM, None] = None):
-        if llm is None:
-            self.llm = agent.llm
-        else:
-            self.llm = llm
+    def __init__(self, agent: Agent):
         self.ide = agent.ide
         self.__agent = agent
         self.steps = ContinueSDKSteps(self)

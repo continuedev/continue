@@ -15,7 +15,7 @@ class MigrationStep(Step):
         recent_edits = await sdk.ide.get_recent_edits(self.edited_file)
         recent_edits_string = "\n\n".join(
             map(lambda x: x.to_string(), recent_edits))
-        description = await sdk.llm.complete(f"{recent_edits_string}\n\nGenerate a short description of the migration made in the above changes:\n")
+        description = await (await sdk.models.gpt35()).complete(f"{recent_edits_string}\n\nGenerate a short description of the migration made in the above changes:\n")
         await sdk.run_step(RunCommandStep(cmd=f"cd libs && poetry run alembic revision --autogenerate -m {description}"))
         migration_file = f"libs/alembic/versions/{?}.py"
         contents = await sdk.ide.readFile(migration_file)

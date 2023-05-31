@@ -62,11 +62,11 @@ const commandsMap: { [command: string]: (...args: any) => any } = {
   "continue.acceptSuggestion": acceptSuggestionCommand,
   "continue.rejectSuggestion": rejectSuggestionCommand,
   "continue.openDebugPanel": () => {
-    ideProtocolClient?.openNotebook();
+    ideProtocolClient.openNotebook();
   },
   "continue.focusContinueInput": async () => {
     if (!debugPanelWebview) {
-      await ideProtocolClient?.openNotebook();
+      await ideProtocolClient.openNotebook();
     }
     debugPanelWebview?.postMessage({
       type: "focusContinueInput",

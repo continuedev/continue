@@ -148,7 +148,7 @@
   },
   "scripts": {
     "vscode:prepublish": "npm run esbuild-base -- --minify",
-    "esbuild-base": "esbuild ./src/extension.ts --bundle --outfile=out/extension.js --external:vscode --format=cjs --platform=node",
+    "esbuild-base": "rm -rf ./out && esbuild ./src/extension.ts --bundle --outfile=out/extension.js --external:vscode --format=cjs --platform=node",
     "esbuild": "rm -rf ./out && npm run esbuild-base -- --sourcemap",
     "esbuild-watch": "npm run esbuild-base -- --sourcemap --watch",
     "test-compile": "tsc -p ./",
@@ -160,9 +160,9 @@
     "pretest": "npm run compile && npm run lint",
     "lint": "eslint src --ext ts",
     "test": "node ./out/test/runTest.js",
-    "package": "cp ./config/prod_config.json ./config/config.json && mkdir -p ./build && vsce package --out ./build && chmod 777 ./build/continue-0.0.2.vsix && cp ./config/dev_config.json ./config/config.json",
+    "package": "cp ./config/prod_config.json ./config/config.json && mkdir -p ./build && vsce package --out ./build && chmod 777 ./build/continue-0.0.5.vsix && cp ./config/dev_config.json ./config/config.json",
     "full-package": "cd ../continuedev && poetry build && cp ./dist/continuedev-0.1.0-py3-none-any.whl ../extension/scripts/continuedev-0.1.0-py3-none-any.whl && cd ../extension && npm run typegen && npm run clientgen && cd react-app && npm run build && cd .. && npm run package",
-    "install-extension": "code --install-extension ./build/continue-0.0.1.vsix",
+    "install-extension": "code --install-extension ./build/continue-0.0.5.vsix",
     "uninstall": "code --uninstall-extension .continue",
     "reinstall": "rm -rf ./build && npm run package && npm run uninstall && npm run install-extension"
   },
@@ -173,6 +173,7 @@
     "@types/node": "16.x",
     "@types/node-fetch": "^2.6.2",
     "@types/vscode": "^1.74.0",
+    "@types/ws": "^8.5.4",
     "@typescript-eslint/eslint-plugin": "^5.45.0",
     "@typescript-eslint/parser": "^5.45.0",
     "@vscode/test-electron": "^2.2.0",

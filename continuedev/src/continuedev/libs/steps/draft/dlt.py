@@ -10,7 +10,7 @@ class SetupPipelineStep(Step):
     api_description: str  # e.g. "I want to load data from the weatherapi.com API"
 
     async def run(self, sdk: ContinueSDK):
-        source_name = sdk.llm.complete(
+        source_name = (await sdk.models.gpt35()).complete(
             f"Write a snake_case name for the data source described by {self.api_description}: ").strip()
         filename = f'{source_name}.py'
 

@@ -14,6 +14,7 @@ import StepContainer from "../components/StepContainer";
 import { useSelector } from "react-redux";
 import { RootStore } from "../redux/store";
 import useContinueWebsocket from "../hooks/useWebsocket";
+import useContinueNotebookProtocol from "../hooks/useWebsocket";
 
 let TopNotebookDiv = styled.div`
   display: grid;
@@ -33,8 +34,6 @@ interface NotebookProps {
 }
 
 function Notebook(props: NotebookProps) {
-  const serverUrl = useSelector((state: RootStore) => state.config.apiUrl);
-
   const [waitingForSteps, setWaitingForSteps] = useState(false);
   const [userInputQueue, setUserInputQueue] = useState<string[]>([]);
   const [history, setHistory] = useState<History | undefined>();
@@ -157,30 +156,17 @@ function Notebook(props: NotebookProps) {
   // } as any
   // );
 
-  const { send: websocketSend } = useContinueWebsocket(serverUrl, (msg) => {
-    let data = JSON.parse(msg.data);
-    if (data.messageType === "state") {
-      setWaitingForSteps(data.state.active);
-      setHistory(data.state.history);
-      setUserInputQueue(data.state.user_input_queue);
-    }
-  });
+  const client = useContinueNotebookProtocol();
 
-  // useEffect(() => {
-  //   (async () => {
-  //     if (sessionId && props.firstObservation) {
-  //       let resp = await fetch(serverUrl + "/observation", {
-  //         method: "POST",
-  //         headers: new Headers({
-  //           "x-continue-session-id": sessionId,
-  //         }),
-  //         body: JSON.stringify({
-  //           observation: props.firstObservation,
-  //         }),
-  //       });
-  //     }
-  //   })();
-  // }, [props.firstObservation]);
+  useEffect(() => {
+    console.log("CLIENT ON STATE UPDATE: ", client, client?.onStateUpdate);
+    client?.onStateUpdate((state) => {
+      console.log("Received state update: ", state);
+      setWaitingForSteps(state.active);
+      setHistory(state.history);
+      setUserInputQueue(state.user_input_queue);
+    });
+  }, [client]);
 
   const mainTextInputRef = useRef<HTMLTextAreaElement>(null);
 
@@ -201,14 +187,12 @@ function Notebook(props: NotebookProps) {
 
   const onMainTextInput = () => {
     if (mainTextInputRef.current) {
-      let value = mainTextInputRef.current.value;
+      if (!client) return;
+      let input = mainTextInputRef.current.value;
       setWaitingForSteps(true);
-      websocketSend({
-        messageType: "main_input",
-        value: value,
-      });
+      client.sendMainInput(input);
       setUserInputQueue((queue) => {
-        return [...queue, value];
+        return [...queue, input];
       });
       mainTextInputRef.current.value = "";
       mainTextInputRef.current.style.height = "";
@@ -216,17 +200,20 @@ function Notebook(props: NotebookProps) {
   };
 
   const onStepUserInput = (input: string, index: number) => {
+    if (!client) return;
     console.log("Sending step user input", input, index);
-    websocketSend({
-      messageType: "step_user_input",
-      value: input,
-      index,
-    });
+    client.sendStepUserInput(input, index);
   };
 
   // const iterations = useSelector(selectIterations);
   return (
     <TopNotebookDiv>
+      {typeof client === "undefined" && (
+        <>
+          <Loader></Loader>
+          <p>Server disconnected</p>
+        </>
+      )}
       {history?.timeline.map((node: HistoryNode, index: number) => {
         return (
           <StepContainer
@@ -237,17 +224,10 @@ function Notebook(props: NotebookProps) {
             inFuture={index > history?.current_index}
             historyNode={node}
             onRefinement={(input: string) => {
-              websocketSend({
-                messageType: "refinement_input",
-                value: input,
-                index,
-              });
+              client?.sendRefinementInput(input, index);
             }}
             onReverse={() => {
-              websocketSend({
-                messageType: "reverse",
-                index,
-              });
+              client?.reverseToIndex(index);
             }}
           />
         );

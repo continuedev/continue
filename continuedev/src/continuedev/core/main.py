@@ -72,7 +72,7 @@ class ContinueSDK:
     pass
 
 
-class SequentialStep:
+class Models:
     pass
 
 
@@ -94,7 +94,7 @@ class Step(ContinueBaseModel):
     class Config:
         copy_on_model_validation = False
 
-    async def describe(self, llm: LLM) -> Coroutine[str, None, None]:
+    async def describe(self, models: Models) -> Coroutine[str, None, None]:
         if self._description is not None:
             return self._description
         return "Running step: " + self.name
@@ -133,6 +133,16 @@ class Step(ContinueBaseModel):
         else:
             steps.append(other)
         return SequentialStep(steps=steps)
+
+
+class SequentialStep(Step):
+    steps: list[Step]
+    hide: bool = True
+
+    async def run(self, sdk: ContinueSDK) -> Coroutine[Observation, None, None]:
+        for step in self.steps:
+            observation = await sdk.run_step(step)
+        return observation
 
 
 class ValidatorObservation(Observation):

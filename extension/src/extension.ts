@@ -4,7 +4,6 @@
 
 import * as vscode from "vscode";
 import {
-  setupExtensionEnvironment,
   isPythonEnvSetup,
   startContinuePythonServer,
 } from "./activation/environmentSetup";
@@ -26,11 +25,7 @@ export function activate(context: vscode.ExtensionContext) {
       cancellable: false,
     },
     async () => {
-      if (isPythonEnvSetup()) {
-        await startContinuePythonServer();
-      } else {
-        await setupExtensionEnvironment();
-      }
+      await startContinuePythonServer();
       dynamicImportAndActivate(context, true);
     }
   );
