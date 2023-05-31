@@ -13,7 +13,6 @@ from .sdk import ContinueSDK
 
 
 class Agent(ContinueBaseModel):
-    llm: LLM
     policy: Policy
     ide: AbstractIdeProtocolServer
     history: History = History.from_empty()
@@ -31,27 +30,24 @@ class Agent(ContinueBaseModel):
     def get_full_state(self) -> FullState:
         return FullState(history=self.history, active=self._active, user_input_queue=self._main_user_input_queue)
 
-    def on_update(self, callback: Callable[["FullState"], None]):
+    def on_update(self, callback: Coroutine["FullState", None, None]):
         """Subscribe to changes to state"""
         self._on_update_callbacks.append(callback)
 
-    def update_subscribers(self):
+    async def update_subscribers(self):
         full_state = self.get_full_state()
         for callback in self._on_update_callbacks:
-            callback(full_state)
-
-    def __get_step_params(self, step: "Step"):
-        return ContinueSDK(agent=self, llm=self.llm.with_system_message(step.system_message))
+            await callback(full_state)
 
     def give_user_input(self, input: str, index: int):
-        self._user_input_queue.post(index, input)
+        self._user_input_queue.post(str(index), input)
 
     async def wait_for_user_input(self) -> str:
         self._active = False
-        self.update_subscribers()
-        user_input = await self._user_input_queue.get(self.history.current_index)
+        await self.update_subscribers()
+        user_input = await self._user_input_queue.get(str(self.history.current_index))
         self._active = True
-        self.update_subscribers()
+        await self.update_subscribers()
         return user_input
 
     _manual_edits_buffer: List[FileEditWithFullContents] = []
@@ -62,9 +58,9 @@ class Agent(ContinueBaseModel):
                 current_step = self.history.get_current().step
                 self.history.step_back()
                 if issubclass(current_step.__class__, ReversibleStep):
-                    await current_step.reverse(self.__get_step_params(current_step))
+                    await current_step.reverse(ContinueSDK(self))
 
-                self.update_subscribers()
+                await self.update_subscribers()
         except Exception as e:
             print(e)
 
@@ -94,17 +90,17 @@ class Agent(ContinueBaseModel):
 
         # Run step
         self._step_depth += 1
-        observation = await step(self.__get_step_params(step))
+        observation = await step(ContinueSDK(self))
         self._step_depth -= 1
 
         # Add observation to history
         self.history.get_current().observation = observation
 
         # Update its description
-        step._set_description(await step.describe(self.llm))
+        step._set_description(await step.describe(ContinueSDK(self)))
 
         # Call all subscribed callbacks
-        self.update_subscribers()
+        await self.update_subscribers()
 
         return observation
 
@@ -138,7 +134,7 @@ class Agent(ContinueBaseModel):
 
         # Doing this so active can make it to the frontend after steps are done. But want better state syncing tools
         for callback in self._on_update_callbacks:
-            callback(None)
+            await callback(None)
 
     async def run_from_observation(self, observation: Observation):
         next_step = self.policy.next(self.history)
@@ -158,7 +154,7 @@ class Agent(ContinueBaseModel):
 
     async def accept_user_input(self, user_input: str):
         self._main_user_input_queue.append(user_input)
-        self.update_subscribers()
+        await self.update_subscribers()
 
         if len(self._main_user_input_queue) > 1:
             return
@@ -167,7 +163,7 @@ class Agent(ContinueBaseModel):
         # Just run the step that takes user input, and
         # then up to the policy to decide how to deal with it.
         self._main_user_input_queue.pop(0)
-        self.update_subscribers()
+        await self.update_subscribers()
         await self.run_from_step(UserInputStep(user_input=user_input))
 
         while len(self._main_user_input_queue) > 0:

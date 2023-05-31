@@ -11,7 +11,7 @@ from ...core.observation import Observation, TextObservation, TracebackObservati
 from ..llm.prompt_utils import MarkdownStyleEncoderDecoder
 from textwrap import dedent
 from ...core.main import Step
-from ...core.sdk import ContinueSDK
+from ...core.sdk import ContinueSDK, Models
 from ...core.observation import Observation
 import subprocess
 from .core.core import EditCodeStep
@@ -20,7 +20,7 @@ from .core.core import EditCodeStep
 class RunCodeStep(Step):
     cmd: str
 
-    async def describe(self, llm: LLM) -> Coroutine[str, None, None]:
+    async def describe(self, models: Models) -> Coroutine[str, None, None]:
         return f"Ran command: `{self.cmd}`"
 
     async def run(self, sdk: ContinueSDK) -> Coroutine[Observation, None, None]:
@@ -59,7 +59,7 @@ class RunCommandStep(Step):
     name: str = "Run command"
     _description: str = None
 
-    async def describe(self, llm: LLM) -> Coroutine[str, None, None]:
+    async def describe(self, models: Models) -> Coroutine[str, None, None]:
         if self._description is not None:
             return self._description
         return self.cmd
@@ -125,7 +125,7 @@ class FasterEditHighlightedCodeStep(Step):
         Here is the description of changes to make:
 """)
 
-    async def describe(self, llm: LLM) -> Coroutine[str, None, None]:
+    async def describe(self, models: Models) -> Coroutine[str, None, None]:
         return "Editing highlighted code"
 
     async def run(self, sdk: ContinueSDK) -> Coroutine[Observation, None, None]:
@@ -154,7 +154,7 @@ class FasterEditHighlightedCodeStep(Step):
         for rif in rif_with_contents:
             rif_dict[rif.filepath] = rif.contents
 
-        completion = sdk.llm.complete(prompt)
+        completion = (await sdk.models.gpt35()).complete(prompt)
 
         # Temporarily doing this to generate description.
         self._prompt = prompt
@@ -215,10 +215,10 @@ class FasterEditHighlightedCodeStep(Step):
 
 class StarCoderEditHighlightedCodeStep(Step):
     user_input: str
-    hide = True
+    hide = False
     _prompt: str = "<commit_before>{code}<commit_msg>{user_request}<commit_after>"
 
-    async def describe(self, llm: LLM) -> Coroutine[str, None, None]:
+    async def describe(self, models: Models) -> Coroutine[str, None, None]:
         return "Editing highlighted code"
 
     async def run(self, sdk: ContinueSDK) -> Coroutine[Observation, None, None]:
@@ -271,7 +271,7 @@ This is the user request:
 This is the code after being changed to perfectly satisfy the user request:
     """)
 
-    async def describe(self, llm: LLM) -> Coroutine[str, None, None]:
+    async def describe(self, models: Models) -> Coroutine[str, None, None]:
         return "Editing highlighted code"
 
     async def run(self, sdk: ContinueSDK) -> Coroutine[Observation, None, None]:
@@ -293,7 +293,7 @@ This is the code after being changed to perfectly satisfy the user request:
 class FindCodeStep(Step):
     prompt: str
 
-    async def describe(self, llm: LLM) -> Coroutine[str, None, None]:
+    async def describe(self, models: Models) -> Coroutine[str, None, None]:
         return "Finding code"
 
     async def run(self, sdk: ContinueSDK) -> Coroutine[Observation, None, None]:
@@ -307,7 +307,7 @@ class UserInputStep(Step):
 class SolveTracebackStep(Step):
     traceback: Traceback
 
-    async def describe(self, llm: LLM) -> Coroutine[str, None, None]:
+    async def describe(self, models: Models) -> Coroutine[str, None, None]:
         return f"```\n{self.traceback.full_traceback}\n```"
 
     async def run(self, sdk: ContinueSDK) -> Coroutine[Observation, None, None]:

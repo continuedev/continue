@@ -10,30 +10,28 @@ import {
 } from "./suggestions";
 import { debugPanelWebview, setupDebugPanel } from "./debugPanel";
 import { FileEditWithFullContents } from "../schema/FileEditWithFullContents";
-const util = require("util");
-const exec = util.promisify(require("child_process").exec);
-const WebSocket = require("ws");
 import fs = require("fs");
+import { WebsocketMessenger } from "./util/messenger";
 
 class IdeProtocolClient {
-  private _ws: WebSocket | null = null;
-  private _panels: Map<string, vscode.WebviewPanel> = new Map();
-  private readonly _serverUrl: string;
-  private readonly _context: vscode.ExtensionContext;
+  private messenger: WebsocketMessenger | null = null;
+  private panels: Map<string, vscode.WebviewPanel> = new Map();
+  private readonly context: vscode.ExtensionContext;
 
   private _makingEdit = 0;
 
   constructor(serverUrl: string, context: vscode.ExtensionContext) {
-    this._context = context;
-    this._serverUrl = serverUrl;
-    let ws = new WebSocket(serverUrl);
-    this._ws = ws;
-    ws.onclose = () => {
-      this._ws = null;
-    };
-    ws.on("message", (data: any) => {
-      this.handleMessage(JSON.parse(data));
+    this.context = context;
+
+    let messenger = new WebsocketMessenger(serverUrl);
+    this.messenger = messenger;
+    messenger.onClose(() => {
+      this.messenger = null;
     });
+    messenger.onMessage((messageType, data) => {
+      this.handleMessage(messageType, data);
+    });
+
     // Setup listeners for any file changes in open editors
     vscode.workspace.onDidChangeTextDocument((event) => {
       if (this._makingEdit === 0) {
@@ -58,125 +56,52 @@ class IdeProtocolClient {
             };
           }
         );
-        this.send("fileEdits", { fileEdits });
+        this.messenger?.send("fileEdits", { fileEdits });
       } else {
         this._makingEdit--;
       }
     });
   }
 
-  async isConnected() {
-    if (this._ws === null || this._ws.readyState !== WebSocket.OPEN) {
-      let ws = new WebSocket(this._serverUrl);
-      ws.onclose = () => {
-        this._ws = null;
-      };
-      ws.on("message", (data: any) => {
-        this.handleMessage(JSON.parse(data));
-      });
-      this._ws = ws;
-
-      return new Promise((resolve, reject) => {
-        ws.addEventListener("open", () => {
-          resolve(null);
-        });
-      });
-    }
-  }
-
-  async startCore() {
-    var { stdout, stderr } = await exec(
-      "cd /Users/natesesti/Desktop/continue/continue && poetry shell"
-    );
-    if (stderr) {
-      throw new Error(stderr);
-    }
-    var { stdout, stderr } = await exec(
-      "cd .. && uvicorn continue.src.server.main:app --reload --reload-dir continue"
-    );
-    if (stderr) {
-      throw new Error(stderr);
-    }
-    var { stdout, stderr } = await exec("python3 -m continue.src.libs.ide");
-    if (stderr) {
-      throw new Error(stderr);
-    }
-  }
-
-  async send(messageType: string, data: object) {
-    await this.isConnected();
-    let msg = JSON.stringify({ messageType, ...data });
-    this._ws!.send(msg);
-    console.log("Sent message", msg);
-  }
-
-  async receiveMessage(messageType: string): Promise<any> {
-    await this.isConnected();
-    console.log("Connected to websocket");
-    return await new Promise((resolve, reject) => {
-      if (!this._ws) {
-        reject("Not connected to websocket");
-      }
-      this._ws!.onmessage = (event: any) => {
-        let message = JSON.parse(event.data);
-        console.log("RECEIVED MESSAGE", message);
-        if (message.messageType === messageType) {
-          resolve(message);
-        }
-      };
-    });
-  }
-
-  async sendAndReceive(message: any, messageType: string): Promise<any> {
-    try {
-      await this.send(messageType, message);
-      let msg = await this.receiveMessage(messageType);
-      console.log("Received message", msg);
-      return msg;
-    } catch (e) {
-      console.log("Error sending message", e);
-    }
-  }
-
-  async handleMessage(message: any) {
-    switch (message.messageType) {
+  async handleMessage(messageType: string, data: any) {
+    switch (messageType) {
       case "highlightedCode":
-        this.send("highlightedCode", {
+        this.messenger?.send("highlightedCode", {
           highlightedCode: this.getHighlightedCode(),
         });
         break;
       case "workspaceDirectory":
-        this.send("workspaceDirectory", {
+        this.messenger?.send("workspaceDirectory", {
           workspaceDirectory: this.getWorkspaceDirectory(),
         });
       case "openFiles":
-        this.send("openFiles", {
+        this.messenger?.send("openFiles", {
           openFiles: this.getOpenFiles(),
         });
         break;
       case "readFile":
-        this.send("readFile", {
-          contents: this.readFile(message.filepath),
+        this.messenger?.send("readFile", {
+          contents: this.readFile(data.filepath),
         });
         break;
       case "editFile":
-        let fileEdit = await this.editFile(message.edit);
-        this.send("editFile", {
+        const fileEdit = await this.editFile(data.edit);
+        this.messenger?.send("editFile", {
           fileEdit,
         });
         break;
       case "saveFile":
-        this.saveFile(message.filepath);
+        this.saveFile(data.filepath);
         break;
       case "setFileOpen":
-        this.openFile(message.filepath);
+        this.openFile(data.filepath);
         // TODO: Close file
         break;
       case "openNotebook":
       case "connected":
         break;
       default:
-        throw Error("Unknown message type:" + message.messageType);
+        throw Error("Unknown message type:" + messageType);
     }
   }
   getWorkspaceDirectory() {
@@ -209,17 +134,20 @@ class IdeProtocolClient {
   // Initiate Request
 
   closeNotebook(sessionId: string) {
-    this._panels.get(sessionId)?.dispose();
-    this._panels.delete(sessionId);
+    this.panels.get(sessionId)?.dispose();
+    this.panels.delete(sessionId);
   }
 
   async openNotebook() {
     console.log("OPENING NOTEBOOK");
-    let resp = await this.sendAndReceive({}, "openNotebook");
-    let sessionId = resp.sessionId;
+    if (this.messenger === null) {
+      console.log("MESSENGER IS NULL");
+    }
+    const resp = await this.messenger?.sendAndReceive("openNotebook", {});
+    const sessionId = resp.sessionId;
     console.log("SESSION ID", sessionId);
 
-    let column = getRightViewColumn();
+    const column = getRightViewColumn();
     const panel = vscode.window.createWebviewPanel(
       "continue.debugPanelView",
       "Continue",
@@ -231,9 +159,9 @@ class IdeProtocolClient {
     );
 
     // And set its HTML content
-    panel.webview.html = setupDebugPanel(panel, this._context, sessionId);
+    panel.webview.html = setupDebugPanel(panel, this.context, sessionId);
 
-    this._panels.set(sessionId, panel);
+    this.panels.set(sessionId, panel);
   }
 
   acceptRejectSuggestion(accept: boolean, key: SuggestionRanges) {

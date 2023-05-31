@@ -40,7 +40,7 @@ class AnswerQuestionChroma(Step):
 
             Here is the answer:""")
 
-        answer = sdk.llm.complete(prompt)
+        answer = (await sdk.models.gpt35()).complete(prompt)
         print(answer)
         self._answer = answer
 

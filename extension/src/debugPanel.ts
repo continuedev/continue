@@ -16,7 +16,6 @@ import {
 import { sendTelemetryEvent, TelemetryEvent } from "./telemetry";
 import { RangeInFile, SerializedDebugContext } from "./client";
 import { addFileSystemToDebugContext } from "./util/util";
-const WebSocket = require("ws");
 
 class StreamManager {
   private _fullText: string = "";
@@ -108,15 +107,15 @@ class WebsocketConnection {
     this._onOpen = onOpen;
     this._onClose = onClose;
 
-    this._ws.onmessage = (event) => {
+    this._ws.addEventListener("message", (event) => {
       this._onMessage(event.data);
-    };
-    this._ws.onclose = () => {
+    });
+    this._ws.addEventListener("close", () => {
       this._onClose();
-    };
-    this._ws.onopen = () => {
+    });
+    this._ws.addEventListener("open", () => {
       this._onOpen();
-    };
+    });
   }
 
   public send(message: string) {
@@ -230,6 +229,19 @@ export function setupDebugPanel(
           apiUrl: getContinueServerUrl(),
           sessionId,
         });
+
+        // // Listen for changes to server URL in settings
+        // vscode.workspace.onDidChangeConfiguration((event) => {
+        //   if (event.affectsConfiguration("continue.serverUrl")) {
+        //     debugPanelWebview?.postMessage({
+        //       type: "onLoad",
+        //       vscMachineId: vscode.env.machineId,
+        //       apiUrl: getContinueServerUrl(),
+        //       sessionId,
+        //     });
+        //   }
+        // });
+
         break;
       }
 

@@ -4,27 +4,18 @@ from textwrap import dedent
 from typing import Coroutine, List, Union
 from ...llm.prompt_utils import MarkdownStyleEncoderDecoder
 
-from ...util.traceback_parsers import parse_python_traceback
-
 from ....models.filesystem_edit import EditDiff, FileEditWithFullContents, FileSystemEdit
 from ....models.filesystem import FileSystem, RangeInFile, RangeInFileWithContents
-from ...llm import LLM
 from ....core.observation import Observation, TextObservation, TracebackObservation, UserInputObservation
-from ....core.main import Step
+from ....core.main import Step, SequentialStep
 
 
 class ContinueSDK:
     pass
 
 
-class SequentialStep(Step):
-    steps: list[Step]
-    hide: bool = True
-
-    async def run(self, sdk: ContinueSDK) -> Coroutine[Observation, None, None]:
-        for step in self.steps:
-            observation = await sdk.run_step(step)
-        return observation
+class Models:
+    pass
 
 
 class ReversibleStep(Step):
@@ -52,7 +43,7 @@ def ShellCommandsStep(Step):
     cwd: str | None = None
     name: str = "Run Shell Commands"
 
-    async def describe(self, llm: LLM) -> Coroutine[str, None, None]:
+    async def describe(self, models: Models) -> Coroutine[str, None, None]:
         return "\n".join(self.cmds)
 
     async def run(self, sdk: ContinueSDK) -> Coroutine[Observation, None, None]:
@@ -81,13 +72,13 @@ class EditCodeStep(Step):
     _prompt: Union[str, None] = None
     _completion: Union[str, None] = None
 
-    async def describe(self, llm: LLM) -> Coroutine[str, None, None]:
+    async def describe(self, models: Models) -> Coroutine[str, None, None]:
         if self._edit_diffs is None:
             return "Editing files: " + ", ".join(map(lambda rif: rif.filepath, self.range_in_files))
         elif len(self._edit_diffs) == 0:
             return "No edits made"
         else:
-            return llm.complete(dedent(f"""{self._prompt}{self._completion}
+            return (await models.gpt35()).complete(dedent(f"""{self._prompt}{self._completion}
 
                 Maximally concise summary of changes in bullet points (can use markdown):
             """))
@@ -102,7 +93,7 @@ class EditCodeStep(Step):
         code_string = enc_dec.encode()
         prompt = self.prompt.format(code=code_string)
 
-        completion = sdk.llm.complete(prompt)
+        completion = (await sdk.models.gpt35()).complete(prompt)
 
         # Temporarily doing this to generate description.
         self._prompt = prompt
@@ -127,7 +118,7 @@ class EditFileStep(Step):
     prompt: str
     hide: bool = True
 
-    async def describe(self, llm: LLM) -> Coroutine[str, None, None]:
+    async def describe(self, models: Models) -> Coroutine[str, None, None]:
         return "Editing file: " + self.filepath
 
     async def run(self, sdk: ContinueSDK) -> Coroutine[Observation, None, None]:
@@ -145,7 +136,7 @@ class ManualEditStep(ReversibleStep):
 
     hide: bool = True
 
-    async def describe(self, llm: LLM) -> Coroutine[str, None, None]:
+    async def describe(self, models: Models) -> Coroutine[str, None, None]:
         return "Manual edit step"
         # TODO - only handling FileEdit here, but need all other types of FileSystemEdits
         # Also requires the merge_file_edit function
@@ -181,7 +172,7 @@ class UserInputStep(Step):
     name: str = "User Input"
     hide: bool = True
 
-    async def describe(self, llm: LLM) -> Coroutine[str, None, None]:
+    async def describe(self, models: Models) -> Coroutine[str, None, None]:
         return self.user_input
 
     async def run(self, sdk: ContinueSDK) -> Coroutine[UserInputObservation, None, None]:
@@ -194,7 +185,7 @@ class WaitForUserInputStep(Step):
 
     _description: Union[str, None] = None
 
-    async def describe(self, llm: LLM) -> Coroutine[str, None, None]:
+    async def describe(self, models: Models) -> Coroutine[str, None, None]:
         return self.prompt
 
     async def run(self, sdk: ContinueSDK) -> Coroutine[Observation, None, None]:
@@ -207,7 +198,7 @@ class WaitForUserConfirmationStep(Step):
     prompt: str
     name: str = "Waiting for user confirmation"
 
-    async def describe(self, llm: LLM) -> Coroutine[str, None, None]:
+    async def describe(self, models: Models) -> Coroutine[str, None, None]:
         return self.prompt
 
     async def run(self, sdk: ContinueSDK) -> Coroutine[Observation, None, None]:

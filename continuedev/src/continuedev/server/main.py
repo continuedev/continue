@@ -32,7 +32,7 @@ args = parser.parse_args()
 
 
 def run_server():
-    uvicorn.run(app, host="0.0.0.0", port=args.port, log_config="logging.ini")
+    uvicorn.run(app, host="0.0.0.0", port=args.port)
 
 
 if __name__ == "__main__":

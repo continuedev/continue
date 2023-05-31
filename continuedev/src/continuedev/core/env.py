@@ -8,6 +8,10 @@ def get_env_var(var_name: str):
 
 
 def save_env_var(var_name: str, var_value: str):
+    if not os.path.exists('.env'):
+        with open('.env', 'w') as f:
+            f.write(f'{var_name}="{var_value}"\n')
+        return
     with open('.env', 'r') as f:
         lines = f.readlines()
     with open('.env', 'w') as f:

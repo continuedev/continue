@@ -10,7 +10,7 @@ import { getContinueServerUrl } from "../bridge";
 
 export let extensionContext: vscode.ExtensionContext | undefined = undefined;
 
-export let ideProtocolClient: IdeProtocolClient | undefined = undefined;
+export let ideProtocolClient: IdeProtocolClient;
 
 export function activateExtension(
   context: vscode.ExtensionContext,
@@ -24,7 +24,7 @@ export function activateExtension(
   let serverUrl = getContinueServerUrl();
 
   ideProtocolClient = new IdeProtocolClient(
-    serverUrl.replace("http", "ws") + "/ide/ws",
+    `${serverUrl.replace("http", "ws")}/ide/ws`,
     context
   );
 

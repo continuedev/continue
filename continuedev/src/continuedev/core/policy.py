@@ -1,20 +1,16 @@
 from typing import List, Tuple, Type
 
-
-from ..models.main import ContinueBaseModel
-
 from ..libs.steps.ty import CreatePipelineStep
 from .main import Step, Validator, History, Policy
 from .observation import Observation, TracebackObservation, UserInputObservation
 from ..libs.steps.main import EditHighlightedCodeStep, SolveTracebackStep, RunCodeStep, FasterEditHighlightedCodeStep, StarCoderEditHighlightedCodeStep
 from ..libs.steps.nate import WritePytestsStep, CreateTableStep
-from ..libs.steps.chroma import AnswerQuestionChroma, EditFileChroma
+# from ..libs.steps.chroma import AnswerQuestionChroma, EditFileChroma
 from ..libs.steps.continue_step import ContinueStepStep
 
 
 class DemoPolicy(Policy):
     ran_code_last: bool = False
-    cmd: str
 
     def next(self, history: History) -> Step:
         observation = history.last_observation()
@@ -26,18 +22,15 @@ class DemoPolicy(Policy):
                 return CreatePipelineStep()
             elif "/table" in observation.user_input:
                 return CreateTableStep(sql_str=" ".join(observation.user_input.split(" ")[1:]))
-            elif "/ask" in observation.user_input:
-                return AnswerQuestionChroma(question=" ".join(observation.user_input.split(" ")[1:]))
-            elif "/edit" in observation.user_input:
-                return EditFileChroma(request=" ".join(observation.user_input.split(" ")[1:]))
+            # elif "/ask" in observation.user_input:
+            #     return AnswerQuestionChroma(question=" ".join(observation.user_input.split(" ")[1:]))
+            # elif "/edit" in observation.user_input:
+            #     return EditFileChroma(request=" ".join(observation.user_input.split(" ")[1:]))
             elif "/step" in observation.user_input:
                 return ContinueStepStep(prompt=" ".join(observation.user_input.split(" ")[1:]))
             return StarCoderEditHighlightedCodeStep(user_input=observation.user_input)
 
         state = history.get_current()
-        if state is None or not self.ran_code_last:
-            self.ran_code_last = True
-            return RunCodeStep(cmd=self.cmd)
 
         if observation is not None and isinstance(observation, TracebackObservation):
             self.ran_code_last = False
