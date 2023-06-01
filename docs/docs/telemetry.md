@@ -8,10 +8,10 @@
 
 We track the following...
 
-*TODO: Detail exactly what we track*
+**TODO: Detail exactly what we track after we add initial telemetry**
 
 ## How to opt out
 
 Here are the instructions for turning off telemetry...
 
-*TODO: Describe step-by-step how to opt out of telemetry*
+**TODO: Describe step-by-step how to opt out of telemetry**
