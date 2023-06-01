@@ -10,6 +10,7 @@ from ..models.main import ContinueBaseModel
 from .main import Policy, History, FullState, Step, HistoryNode
 from ..libs.steps.core.core import ReversibleStep, ManualEditStep, UserInputStep
 from .sdk import ContinueSDK
+import asyncio
 
 
 class Agent(ContinueBaseModel):
@@ -88,6 +89,9 @@ class Agent(ContinueBaseModel):
         self.history.add_node(HistoryNode(
             step=step, observation=None, depth=self._step_depth))
 
+        # Call all subscribed callbacks
+        await self.update_subscribers()
+
         # Run step
         self._step_depth += 1
         observation = await step(ContinueSDK(self))
@@ -98,10 +102,11 @@ class Agent(ContinueBaseModel):
             self._step_depth, include_current=True).observation = observation
 
         # Update its description
-        step._set_description(await step.describe(ContinueSDK(self).models))
-
-        # Call all subscribed callbacks
-        await self.update_subscribers()
+        async def update_description():
+            step._set_description(await step.describe(ContinueSDK(self).models))
+            # Update subscribers with new description
+            await self.update_subscribers()
+        asyncio.create_task(update_description())
 
         return observation
 
