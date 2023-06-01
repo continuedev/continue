@@ -4,7 +4,7 @@ import { useSelector } from "react-redux";
 import ContinueNotebookClientProtocol from "./useContinueNotebookProtocol";
 import { postVscMessage } from "../vscode";
 
-function useContinueNotebookProtocol(useVscodeMessagePassing: boolean = false) {
+function useContinueNotebookProtocol(useVscodeMessagePassing: boolean = true) {
   const sessionId = useSelector((state: RootStore) => state.config.sessionId);
   const serverHttpUrl = useSelector((state: RootStore) => state.config.apiUrl);
   const [client, setClient] = useState<

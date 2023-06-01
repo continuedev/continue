@@ -32,7 +32,8 @@ args = parser.parse_args()
 
 
 def run_server():
-    uvicorn.run(app, host="0.0.0.0", port=args.port)
+    uvicorn.run(app, host="0.0.0.0", port=args.port,
+                log_config="logging.yaml")
 
 
 if __name__ == "__main__":

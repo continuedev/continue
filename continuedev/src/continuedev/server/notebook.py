@@ -51,14 +51,17 @@ class NotebookProtocolServer(AbstractNotebookProtocolServer):
     def __init__(self, session: Session):
         self.session = session
 
-    async def _send_json(self, data: Any):
-        await self.websocket.send_json(data)
+    async def _send_json(self, message_type: str, data: Any):
+        await self.websocket.send_json({
+            "message_type": message_type,
+            "data": data
+        })
 
     async def _receive_json(self, message_type: str) -> Any:
         return await self.sub_queue.get(message_type)
 
     async def _send_and_receive_json(self, data: Any, resp_model: Type[T], message_type: str) -> T:
-        await self._send_json(data)
+        await self._send_json(message_type, data)
         resp = await self._receive_json(message_type)
         return resp_model.parse_obj(resp)
 
@@ -77,8 +80,7 @@ class NotebookProtocolServer(AbstractNotebookProtocolServer):
 
     async def send_state_update(self):
         state = self.session.agent.get_full_state().dict()
-        await self._send_json({
-            "messageType": "state_update",
+        await self._send_json("state_update", {
             "state": state
         })
 
@@ -112,7 +114,7 @@ async def websocket_endpoint(websocket: WebSocket, session: Session = Depends(we
     await protocol.send_state_update()
 
     while AppStatus.should_exit is False:
-        message = await websocket.receive_json()
+        message = await websocket.receive_text()
         print("Received message", message)
         if type(message) is str:
             message = json.loads(message)

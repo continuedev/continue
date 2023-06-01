@@ -77,25 +77,10 @@ class SessionManager:
             print(f"Session {session_id} has no websocket")
             return
 
-        async def a():
-            await self.sessions[session_id].ws.send_json({
-                "messageType": message_type,
-                "data": data
-            })
-
-        # Run coroutine in background
         await self.sessions[session_id].ws.send_json({
             "messageType": message_type,
             "data": data
         })
-        return
-        if self._event_loop is None or self._event_loop.is_closed():
-            self._event_loop = asyncio.new_event_loop()
-            self._event_loop.run_until_complete(a())
-            self._event_loop.close()
-        else:
-            self._event_loop.run_until_complete(a())
-            self._event_loop.close()
 
 
 session_manager = SessionManager()

@@ -10,6 +10,7 @@ import { getContinueServerUrl } from "../bridge";
 import fetch from "node-fetch";
 
 async function runCommand(cmd: string): Promise<[string, string | undefined]> {
+  console.log("Running command: ", cmd);
   var stdout: any = "";
   var stderr: any = "";
   try {
@@ -61,14 +62,16 @@ function getActivateUpgradeCommands(pythonCmd: string, pipCmd: string) {
 }
 
 function checkEnvExists() {
-  const envBinActivatePath = path.join(
+  const envBinPath = path.join(
     getExtensionUri().fsPath,
     "scripts",
     "env",
-    "bin",
-    "activate"
+    "bin"
   );
-  return fs.existsSync(envBinActivatePath);
+  return (
+    fs.existsSync(envBinPath + "/activate") &&
+    fs.existsSync(envBinPath + "/pip")
+  );
 }
 
 async function setupPythonEnv() {
@@ -180,34 +183,34 @@ export async function startContinuePythonServer() {
     pythonCmd = "python";
   }
 
-  // let command = `cd ${path.join(
-  //   getExtensionUri().fsPath,
-  //   "scripts"
-  // )} && ${activateCmd} && cd env/lib/python3.11/site-packages && ${pythonCmd} -m continuedev.server.main`;
   let command = `cd ${path.join(
     getExtensionUri().fsPath,
     "scripts"
   )} && ${activateCmd} && cd .. && ${pythonCmd} -m scripts.run_continue_server`;
-  try {
-    // exec(command);
-    const child = spawn(command, {
-      shell: true,
-    });
-    child.stdout.on("data", (data: any) => {
-      console.log(`stdout: ${data}`);
-    });
-    child.stderr.on("data", (data: any) => {
-      console.log(`stderr: ${data}`);
-    });
-    child.on("error", (error: any) => {
-      console.log(`error: ${error.message}`);
-    });
-  } catch (e) {
-    console.log("Failed to start Continue python server", e);
-  }
-  // Sleep for 3 seconds to give the server time to start
-  await new Promise((resolve) => setTimeout(resolve, 3000));
-  console.log("Successfully started Continue python server");
+
+  return new Promise((resolve, reject) => {
+    try {
+      const child = spawn(command, {
+        shell: true,
+      });
+      child.stdout.on("data", (data: any) => {
+        console.log(`stdout: ${data}`);
+      });
+      child.stderr.on("data", (data: any) => {
+        console.log(`stderr: ${data}`);
+        if (data.includes("Uvicorn running on")) {
+          console.log("Successfully started Continue python server");
+          resolve(null);
+        }
+      });
+      child.on("error", (error: any) => {
+        console.log(`error: ${error.message}`);
+      });
+    } catch (e) {
+      console.log("Failed to start Continue python server", e);
+      reject();
+    }
+  });
 }
 
 async function installNodeModules() {
