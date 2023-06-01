@@ -10,7 +10,7 @@ class ContinueNotebookClientProtocol extends AbstractContinueNotebookClientProto
 
   constructor(
     serverUrlWithSessionId: string,
-    useVscodeMessagePassing: boolean = false
+    useVscodeMessagePassing: boolean
   ) {
     super();
     this.serverUrlWithSessionId = serverUrlWithSessionId;

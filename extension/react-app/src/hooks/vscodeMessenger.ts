@@ -21,8 +21,10 @@ export class VscodeMessenger extends Messenger {
   onMessageType(messageType: string, callback: (data: object) => void): void {
     window.addEventListener("message", (event: any) => {
       if (event.data.type === "websocketForwardingMessage") {
-        if (event.data.message.messageType === messageType) {
-          callback(event.data.message.data);
+        console.log("VS CODE SENT DATA: ", event.data);
+        const data = JSON.parse(event.data.data);
+        if (data.messageType === messageType) {
+          callback(data.data);
         }
       }
     });
@@ -31,7 +33,8 @@ export class VscodeMessenger extends Messenger {
   onMessage(callback: (messageType: string, data: any) => void): void {
     window.addEventListener("message", (event: any) => {
       if (event.data.type === "websocketForwardingMessage") {
-        callback(event.data.message.messageType, event.data.message.data);
+        const data = JSON.parse(event.data.data);
+        callback(data.messageType, data.data);
       }
     });
   }
@@ -40,9 +43,10 @@ export class VscodeMessenger extends Messenger {
     return new Promise((resolve) => {
       const handler = (event: any) => {
         if (event.data.type === "websocketForwardingMessage") {
-          if (event.data.message.messageType === messageType) {
+          const data = JSON.parse(event.data.data);
+          if (data.messageType === messageType) {
             window.removeEventListener("message", handler);
-            resolve(event.data.message.data);
+            resolve(data.data);
           }
         }
       };

@@ -16,6 +16,7 @@ import {
 import { sendTelemetryEvent, TelemetryEvent } from "./telemetry";
 import { RangeInFile, SerializedDebugContext } from "./client";
 import { addFileSystemToDebugContext } from "./util/util";
+const WebSocket = require("ws");
 
 class StreamManager {
   private _fullText: string = "";
@@ -119,6 +120,9 @@ class WebsocketConnection {
   }
 
   public send(message: string) {
+    if (typeof message !== "string") {
+      message = JSON.stringify(message);
+    }
     this._ws.send(message);
   }
 
@@ -190,6 +194,7 @@ export function setupDebugPanel(
   async function connectWebsocket(url: string) {
     return new Promise((resolve, reject) => {
       const onMessage = (message: any) => {
+        console.log("websocket message", message);
         panel.webview.postMessage({
           type: "websocketForwardingMessage",
           url,
