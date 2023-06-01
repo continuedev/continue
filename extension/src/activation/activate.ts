@@ -62,9 +62,9 @@ export function activateExtension(
       ideProtocolClient?.openNotebook();
     });
   } else {
-    // ideProtocolClient?.openNotebook().then(() => {
-    //   // openCapturedTerminal();
-    // });
+    ideProtocolClient.openNotebook().then(() => {
+      // openCapturedTerminal();
+    });
   }
 
   extensionContext = context;

@@ -53,7 +53,7 @@ class NotebookProtocolServer(AbstractNotebookProtocolServer):
 
     async def _send_json(self, message_type: str, data: Any):
         await self.websocket.send_json({
-            "message_type": message_type,
+            "messageType": message_type,
             "data": data
         })
 

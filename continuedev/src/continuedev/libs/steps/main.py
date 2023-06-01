@@ -331,3 +331,23 @@ class SolveTracebackStep(Step):
         await sdk.run_step(EditCodeStep(
             range_in_files=range_in_files, prompt=prompt))
         return None
+
+
+class MessageStep(Step):
+    message: str
+
+    async def describe(self, models: Models) -> Coroutine[str, None, None]:
+        return self.message
+
+    async def run(self, sdk: ContinueSDK) -> Coroutine[Observation, None, None]:
+        pass
+
+
+class EmptyStep(Step):
+    hide: bool = True
+
+    async def describe(self, models: Models) -> Coroutine[str, None, None]:
+        return ""
+
+    async def run(self, sdk: ContinueSDK) -> Coroutine[Observation, None, None]:
+        pass

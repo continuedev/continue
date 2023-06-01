@@ -1,5 +1,7 @@
 import os
 from typing import Coroutine, Union
+
+from .config import ContinueConfig, load_config
 from ..models.filesystem_edit import FileSystemEdit, AddFile, DeleteFile, AddDirectory, DeleteDirectory
 from ..models.filesystem import RangeInFile
 from ..libs.llm import LLM
@@ -106,3 +108,18 @@ class ContinueSDK:
         val = (await self.run_step(WaitForUserInputStep(prompt=prompt))).text
         save_env_var(env_var, val)
         return val
+
+    async def get_config(self) -> ContinueConfig:
+        dir = await self.ide.getWorkspaceDirectory()
+        yaml_path = os.path.join(dir, 'continue.yaml')
+        json_path = os.path.join(dir, 'continue.json')
+        if os.path.exists(yaml_path):
+            return load_config(yaml_path)
+        elif os.path.exists(json_path):
+            return load_config(json_path)
+        else:
+            return ContinueConfig()
+
+    def set_loading_message(self, message: str):
+        # self.__agent.set_loading_message(message)
+        raise NotImplementedError()

@@ -77,6 +77,8 @@ function checkEnvExists() {
 async function setupPythonEnv() {
   console.log("Setting up python env for Continue extension...");
 
+  if (checkEnvExists()) return;
+
   // Assemble the command to create the env
   const [pythonCmd, pipCmd] = await getPythonPipCommands();
   const [activateCmd, pipUpgradeCmd] = getActivateUpgradeCommands(

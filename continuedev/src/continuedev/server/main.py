@@ -1,3 +1,4 @@
+import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from .ide import router as ide_router
@@ -32,8 +33,11 @@ args = parser.parse_args()
 
 
 def run_server():
-    uvicorn.run(app, host="0.0.0.0", port=args.port,
-                log_config="logging.yaml")
+    if os.path.exists("logging.yaml"):
+        uvicorn.run(app, host="0.0.0.0", port=args.port,
+                    log_config="logging.yaml")
+    else:
+        uvicorn.run(app, host="0.0.0.0", port=args.port)
 
 
 if __name__ == "__main__":
