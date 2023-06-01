@@ -1,10 +1,10 @@
 # Autopilot
 
-## Overview
-
 **TODO: Better explain in one sentence what this is and what its purpose is**
 
-The `autopilot` class is the main loop, completing steps and then deciding the next step and repeating
+:::info
+The **autopilot** is the main loop, completing steps and then deciding the next step and repeating
+:::
 
 ## Details
 
