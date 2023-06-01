@@ -74,7 +74,7 @@ class ContinueSDK:
 
     async def run(self, commands: List[str] | str, cwd: str = None):
         commands = commands if isinstance(commands, List) else [commands]
-        return await self.run_step(ShellCommandsStep(commands=commands, cwd=cwd))
+        return await self.run_step(ShellCommandsStep(cmds=commands, cwd=cwd))
 
     async def edit_file(self, filename: str, prompt: str):
         filepath = await self._ensure_absolute_path(filename)

@@ -194,7 +194,6 @@ export function setupDebugPanel(
   async function connectWebsocket(url: string) {
     return new Promise((resolve, reject) => {
       const onMessage = (message: any) => {
-        console.log("websocket message", message);
         panel.webview.postMessage({
           type: "websocketForwardingMessage",
           url,
