@@ -94,10 +94,11 @@ class Agent(ContinueBaseModel):
         self._step_depth -= 1
 
         # Add observation to history
-        self.history.get_current().observation = observation
+        self.history.get_last_at_depth(
+            self._step_depth, include_current=True).observation = observation
 
         # Update its description
-        step._set_description(await step.describe(ContinueSDK(self)))
+        step._set_description(await step.describe(ContinueSDK(self).models))
 
         # Call all subscribed callbacks
         await self.update_subscribers()

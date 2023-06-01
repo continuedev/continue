@@ -38,7 +38,7 @@ class FileSystemEditStep(ReversibleStep):
         # Where and when should file saves happen?
 
 
-def ShellCommandsStep(Step):
+class ShellCommandsStep(Step):
     cmds: List[str]
     cwd: str | None = None
     name: str = "Run Shell Commands"

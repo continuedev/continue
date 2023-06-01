@@ -340,7 +340,7 @@ class MessageStep(Step):
         return self.message
 
     async def run(self, sdk: ContinueSDK) -> Coroutine[Observation, None, None]:
-        pass
+        return TextObservation(text=self.message)
 
 
 class EmptyStep(Step):

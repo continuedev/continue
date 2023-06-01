@@ -27,6 +27,17 @@ class History(ContinueBaseModel):
             return None
         return self.timeline[self.current_index]
 
+    def get_last_at_depth(self, depth: int, include_current: bool = False) -> Union[HistoryNode, None]:
+        i = self.current_index if include_current else self.current_index - 1
+        while i >= 0:
+            if self.timeline[i].depth == depth and type(self.timeline[i].step).__name__ != "ManualEditStep":
+                return self.timeline[i]
+            i -= 1
+        return None
+
+    def get_last_at_same_depth(self) -> Union[HistoryNode, None]:
+        return self.get_last_at_depth(self.get_current().depth)
+
     def remove_current_and_substeps(self):
         self.timeline.pop(self.current_index)
         while self.get_current() is not None and self.get_current().depth > 0:
@@ -51,7 +62,7 @@ class History(ContinueBaseModel):
         self.current_index -= 1
 
     def last_observation(self) -> Union[Observation, None]:
-        state = self.get_current()
+        state = self.get_last_at_same_depth()
         if state is None:
             return None
         return state.observation
