@@ -21,7 +21,6 @@ export class VscodeMessenger extends Messenger {
   onMessageType(messageType: string, callback: (data: object) => void): void {
     window.addEventListener("message", (event: any) => {
       if (event.data.type === "websocketForwardingMessage") {
-        console.log("VS CODE SENT DATA: ", event.data);
         const data = JSON.parse(event.data.data);
         if (data.messageType === messageType) {
           callback(data.data);

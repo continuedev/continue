@@ -1,9 +1,10 @@
 from typing import List, Tuple, Type
 
-from ..libs.steps.ty import CreatePipelineStep
+from ..libs.steps.steps_on_startup import StepsOnStartupStep
+from ..libs.steps.draft.dlt import CreatePipelineStep
 from .main import Step, Validator, History, Policy
 from .observation import Observation, TracebackObservation, UserInputObservation
-from ..libs.steps.main import EditHighlightedCodeStep, SolveTracebackStep, RunCodeStep, FasterEditHighlightedCodeStep, StarCoderEditHighlightedCodeStep
+from ..libs.steps.main import EditHighlightedCodeStep, SolveTracebackStep, RunCodeStep, FasterEditHighlightedCodeStep, StarCoderEditHighlightedCodeStep, MessageStep, EmptyStep
 from ..libs.steps.nate import WritePytestsStep, CreateTableStep
 # from ..libs.steps.chroma import AnswerQuestionChroma, EditFileChroma
 from ..libs.steps.continue_step import ContinueStepStep
@@ -13,6 +14,10 @@ class DemoPolicy(Policy):
     ran_code_last: bool = False
 
     def next(self, history: History) -> Step:
+        # At the very start, run initial Steps spcecified in the config
+        if history.get_current() is None:
+            return MessageStep(message="Welcome to Continue!") >> StepsOnStartupStep()
+
         observation = history.last_observation()
         if observation is not None and isinstance(observation, UserInputObservation):
             # This could be defined with ObservationTypePolicy. Ergonomics not right though.

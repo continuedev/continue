@@ -2,7 +2,7 @@ from textwrap import dedent
 from ....models.filesystem_edit import AddFile
 from ....core.main import Step
 from ....core.sdk import ContinueSDK
-from ..main import WaitForUserInputStep
+from ..core.core import WaitForUserInputStep
 
 
 class SetupPipelineStep(Step):
@@ -77,6 +77,6 @@ class CreatePipelineStep(Step):
     async def run(self, sdk: ContinueSDK):
         await sdk.run_step(
             WaitForUserInputStep(prompt="What API do you want to load data from?") >>
-            SetupPipelineStep() >>
+            SetupPipelineStep(api_description="WeatherAPI.com API") >>
             ValidatePipelineStep()
         )
