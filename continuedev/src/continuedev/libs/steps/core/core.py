@@ -44,7 +44,8 @@ class ShellCommandsStep(Step):
     name: str = "Run Shell Commands"
 
     async def describe(self, models: Models) -> Coroutine[str, None, None]:
-        return "\n".join(self.cmds)
+        cmds_str = "\n".join(self.cmds)
+        return (await models.gpt35()).complete(f"{cmds_str}\n\nSummarize what was done in these shell commands, using markdown bullet points:")
 
     async def run(self, sdk: ContinueSDK) -> Coroutine[Observation, None, None]:
         cwd = await sdk.ide.getWorkspaceDirectory() if self.cwd is None else self.cwd

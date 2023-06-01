@@ -334,6 +334,7 @@ class SolveTracebackStep(Step):
 
 
 class MessageStep(Step):
+    name: str = "Message"
     message: str
 
     async def describe(self, models: Models) -> Coroutine[str, None, None]:

@@ -66,11 +66,11 @@ function checkEnvExists() {
     getExtensionUri().fsPath,
     "scripts",
     "env",
-    "bin"
+    process.platform == "win32" ? "Scripts" : "bin"
   );
   return (
-    fs.existsSync(envBinPath + "/activate") &&
-    fs.existsSync(envBinPath + "/pip")
+    fs.existsSync(path.join(envBinPath, "activate")) &&
+    fs.existsSync(path.join(envBinPath, "pip"))
   );
 }
 
