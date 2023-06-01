@@ -29,7 +29,7 @@ def main():
         print("Poetry is required for Continue but is not installed on your machine. See https://python-poetry.org/docs/#installation to download the latest version, then try again.")
         return
 
-    resp = run("cd ../../continuedev; poetry run typegen")
+    resp = run("cd ../../continuedev; poetry install; poetry run typegen")
 
     resp = run(
         "cd ..; npm i; cd react-app; npm i; cd ..; npm run full-package")
