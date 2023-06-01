@@ -1,19 +1,20 @@
 # GUI
 
-*TODO: Explain in detail what this is and what its purpose is*
+**TODO: Make sure codebase aligns with this terminology**
 
-## One sentence definition
+## Overview
+
+**TODO: Explain in one sentence what this is and what its purpose is**
 
 The `Continue GUI` enables you to guide steps and makes everything transparent, so you can review all steps that were automated, giving you the opportunity to undo and rerun any that ran incorrectly.
 
-## What else to know
+## Details
 
-**From GUI to Core**
-- Natural language instructions from the developer
-- Hover / clicked on a step
-- Other user input
+**TODO: Nate to brain dump anything important to know and Ty to shape into paragraphs**
 
-**From Core to GUI**
-- Updates to state (e.g. a new step)
-
-**Q: do we call this the Continue GUI or Notebook?**
+- **From GUI to Core**
+    - Natural language instructions from the developer
+    - Hover / clicked on a step
+    - Other user input
+- **From Core to GUI**
+    - Updates to state (e.g. a new step)

@@ -1,22 +1,52 @@
 # Create a recipe
 
-_TODO: Describe step-by-step how to create a recipe_
+**TODO: Describe step-by-step how to create a recipe**
 
-> Creating a recipe is the same as creating a step, except that you may choose to break it up into intermediate steps. Start by creating a subclass of Step. You should first consider what will be the parameters of your recipe. These are defined as attributes in the step, as with `input_file_path: str` below. Next, write the `run` method. This method takes the ContinueSDK as a parameter, giving you all the tools you need to write your recipe/steps (if it's missing something, let us know, we'll add it!). You can write any code inside the run method; this is what will happen when your recipe is run, line for line. As you're writing the run method, you want to consider how to break it up into sub-steps; each step will be displayed as a cell in the GUI, so this makes a difference to the end user. To break something off into a sub-step, simply make a new subclass of Step just like this one, with parameters and a run method, and call it inside of the parent step using `await sdk.run_step(MySubStep(<parameters>))`. To understand all of the other things you can do inside of a step with the `ContinueSDK`, see its documentation page.
-
-> Finally, every Step is displayed with a description of what it has done. If you'd like to override the default description of your steps, which is just the class name, then implement the `describe` method. You can:
-
-- Return a static string
-- Store state in a class attribute (prepend with a double underscore, which signifies (through Pydantic) that this is not a parameter for the Step, just internal state) during the run method, and then grab this in the describe method.
-- Use state in conjunction with the `models` parameter of the describe method to autogenerate a description with a language model. For example, if you'd used an attribute called `__code_written` to store a string representing some code that was written, you could implement describe as `return (await models.gpt35()).complete(f"{self.__code_written}\n\nSummarize the changes made in the above code.")`.
+Points to include
+- Where to create recipes
+- How to create a step
+- How to create recipe
+- Using models
 
 ## 1. Create a step
 
+### a. Start by creating a subclass of Step
+
+You should first consider what will be the parameters of your recipe. These are defined as attributes in the step, as with `input_file_path: str` below
+
+### b. Next, write the `run` method
+
+This method takes the ContinueSDK as a parameter, giving you all the tools you need to write your recipe/steps (if it's missing something, let us know, we'll add it!). You can write any code inside the run method; this is what will happen when your recipe is run, line for line. As you're writing the run method, you want to consider how to break it up into sub-steps; each step will be displayed as a cell in the GUI, so this makes a difference to the end user. To break something off into a sub-step, simply make a new subclass of Step just like this one, with parameters and a run method, and call it inside of the parent step using `await sdk.run_step(MySubStep(<parameters>))`. To understand all of the other things you can do inside of a step with the `ContinueSDK`, see its documentation page.
+
+### c. Finally, every Step is displayed with a description of what it has done
+
+If you'd like to override the default description of your steps, which is just the class name, then implement the `describe` method. You can:
+    - Return a static string
+    - Store state in a class attribute (prepend with a double underscore, which signifies (through Pydantic) that this is not a parameter for the Step, just internal state) during the run method, and then grab this in the describe method.
+    - Use state in conjunction with the `models` parameter of the describe method to autogenerate a description with a language model. For example, if you'd used an attribute called `__code_written` to store a string representing some code that was written, you could implement describe as `return (await models.gpt35()).complete(f"{self.__code_written}\n\nSummarize the changes made in the above code.")`.
+
+## 2. Compose steps together into a complete recipe
+
+Creating a recipe is the same as creating a step, except that you may choose to break it up into intermediate steps
+
+By convention, the name of every recipe ends with `Recipe`.
+
+```python
+class CreatePipelineRecipe(Step):
+
+    async def run(self, sdk: ContinueSDK):
+        await sdk.run_step(
+            WaitForUserInputStep(prompt="What API do you want to load data from?") >>
+            SetupPipelineStep() >>
+            ValidatePipelineStep()
+        )
+```
+
+## Additional considerations
+
 ### Using the SDK
 
-You will want to use the SDK when you are opening directories, editing files, using models, etc.
-
-This will ensure that these actions are recorded as steps, so they are reviewable, reversable, and rerunnable.
+You will want to use the SDK when you are opening directories, editing files, using models, etc. This will ensure that these actions are recorded as steps, so they are reviewable, reversable, and rerunnable.
 
 ### Allow for configurability
 
@@ -56,21 +86,4 @@ class SetUpVenvStep(Step):
             await sdk.run("python -m venv env; .\\env\\Scripts\\activate")
         else:
             await sdk.run("python3 -m venv env && source env/bin/activate") # MacOS and Linux
-```
-
-## 2. Compose steps together into a complete recipe
-
-R
-
-By convention, the name of every recipe ends with `Recipe`.
-
-```python
-class CreatePipelineRecipe(Step):
-
-    async def run(self, sdk: ContinueSDK):
-        await sdk.run_step(
-            WaitForUserInputStep(prompt="What API do you want to load data from?") >>
-            SetupPipelineStep() >>
-            ValidatePipelineStep()
-        )
 ```
