@@ -1,17 +1,14 @@
 # Policy
 
-## One sentence definition
+## Overview
+
+**TODO: Better explain in one sentence what this is and what its purpose is**
 
 A `policy` is decides what step to run next and is associated with a [autopilot](./autopilot.md).
 
-## What else to know
+## Details
 
-The Policy is where slash commands are defined. The Policy is a global thing, so probably something we'll want to make user-configurable if we don't significantly change it.
+**TODO: Nate to brain dump anything important to know and Ty to shape into paragraphs**
 
-*TODO: Explain in detail what this is and what its purpose is*
-
-The policy determines what step to run next
-
-**Q: what else do folks need to understand about policies?**
-
-**Q: what is the future plan for policies?**
+- The Policy is where slash commands are defined
+- The Policy is a global thing, so probably something we'll want to make user-configurable if we don't significantly change it

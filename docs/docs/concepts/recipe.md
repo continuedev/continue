@@ -1,19 +1,15 @@
 # Recipe
 
-## One sentence definition
+## Overview
 
-A `recipe` is a sequence of [steps](./step.md) composed into a workflow that developers use and share with others.
+**TODO: Better explain in one sentence what this is and what its purpose is**
 
-## What else to know
+A `recipe` is an ordered sequence of [steps](./step.md) that are intended to accomplish some complete task, comprising a workflow that developers use and share with others.
 
-Although technically just a step itself, since they also subclass the Step class, recipes differentiate themselves from normal steps by ending their name with `Recipe` by
+## Details
 
-Technically, everything is a step since everything subclasses the step class. Steps can be composed together. Once steps are composed into a workflow that developers use and share with others, that step is called a recipe and, by convention, it ends with Recipe to signal this
+**TODO: Nate to brain dump anything important to know and Ty to shape into paragraphs**
 
-*TODO: Explain in detail what this is and what its purpose is*
-
-An ordered sequence of steps that are intended to accomplish some complete task
-
-Actually just a step that is composed of only other steps / recipes.
-
-Altnerative names: workflow, plugin
+- Although technically just a step itself, since they also subclass the Step class, recipes differentiate themselves from normal steps by ending their name with `Recipe` by
+- Technically, everything is a step since everything subclasses the step class. Steps can be composed together. Once steps are composed into a workflow that developers use and share with others, that step is called a recipe and, by convention, it ends with Recipe to signal this
+- Actually just a step that is composed of only other steps / recipes.

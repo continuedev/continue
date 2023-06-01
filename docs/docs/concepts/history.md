@@ -1,11 +1,13 @@
 # History
 
-*TODO: Explain in detail what this is and what its purpose is*
+## Overview
 
-## One sentence definition
+**TODO: Better explain in one sentence what this is and what its purpose is**
 
 The `history` is the ordered record of all past steps.
 
-## What else to know
+## Details
 
-**Q: What step data and metadata is stored in the history?**
+**TODO: Nate to brain dump anything important to know and Ty to shape into paragraphs**
+
+- What step data and metadata is stored in the history?
