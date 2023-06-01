@@ -12,3 +12,14 @@ vsc-extension-quickstart.md
 scripts/env/**
 scripts/.env
 **/.env
+**/env
+**/node_modules
+
+react-app/node_modules
+react-app/public
+react-app/src
+
+**/.pytest_cache
+**/__pycache__
+
+scripts/data
