@@ -1,10 +1,10 @@
 # History
 
-## Overview
-
 **TODO: Better explain in one sentence what this is and what its purpose is**
 
-The `history` is the ordered record of all past steps.
+:::info
+The **history** is the ordered record of all past steps
+:::
 
 ## Details
 

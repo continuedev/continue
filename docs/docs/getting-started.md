@@ -6,7 +6,7 @@
 
 1. Click the `Open in GitHub Codespaces` badge above
 
-:::info
+:::tip
  We don't want to waste your time with install and env setup before you try Continue, so we set up a GitHub Codespaces dev container for you, which **won’t cost you anything**. If you are using GitHub Free for personal accounts, you can [use Codespaces for 120 hours per month for free](https://docs.github.com/en/billing/managing-billing-for-github-codespaces/about-billing-for-github-codespaces#monthly-included-storage-and-core-hours-for-personal-accounts)
 :::
 
@@ -27,7 +27,7 @@ c. In the third directory, try out Z recipe
 - something super simple (libaries)
 - unit testing
 
-**TODO: Design and these recipes in codespaces**
+**TODO: Design and add these recipes in codespaces**
 
 ## Next Steps
 

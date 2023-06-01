@@ -2,11 +2,12 @@
 
 **TODO: Make sure codebase aligns with this terminology**
 
-## Overview
-
 **TODO: Explain in one sentence what this is and what its purpose is**
 
-The `Continue GUI` enables you to guide steps and makes everything transparent, so you can review all steps that were automated, giving you the opportunity to undo and rerun any that ran incorrectly.
+:::info
+The **Continue GUI** enables you to guide steps and makes everything transparent, so you can review all steps that were automated, giving you the opportunity to undo and rerun any that ran incorrectly
+:::
+
 
 ## Details
 

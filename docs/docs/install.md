@@ -16,7 +16,7 @@ If you want to try `Continue` before installing, check out the [GitHub Codespace
 
 ## How to install from source
 
-Please follow the [README instructions in the repo](https://github.com/continuedev/continue) to install `Continue` from source.
+Please follow the [README instructions in the repo](https://github.com/continuedev/continue/blob/main/README.md) to install `Continue` from source.
 
 ## Next steps
 

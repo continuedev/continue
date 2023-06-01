@@ -1,10 +1,10 @@
 # Recipe
 
-## Overview
-
 **TODO: Better explain in one sentence what this is and what its purpose is**
 
-A `recipe` is an ordered sequence of [steps](./step.md) that are intended to accomplish some complete task, comprising a workflow that developers use and share with others.
+:::info
+A **recipe** is an ordered sequence of [steps](./step.md) that are intended to accomplish some complete task, comprising a workflow that developers use and share with others.
+:::
 
 ## Details
 

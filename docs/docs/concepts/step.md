@@ -1,10 +1,10 @@
 # Step
 
-## Overview
-
 **TODO: Better explain in one sentence what this is and what its purpose is**
 
-A `step` is a simple action that the LLM should take as part of a sequence that collectively completes some task
+:::info
+A **step** is a simple action that the LLM should take as part of a sequence that collectively completes some task
+:::
 
 ## Details
 
@@ -18,54 +18,54 @@ A `step` is a simple action that the LLM should take as part of a sequence that 
 - Any parameters to a Step are defined as attributes to the class without a double leading underscore (those with this are private).
 - Steps can be composed together
 
-### Step methods
+## Step methods
 
-#### `run` (required)
+### `run` (required)
 
 the code that should run when executed by the policy
 
-#### `description` (optional)
+### `description` (optional)
 
 the definition of what the step does in natural language
 
-#### `reverse` (optional)
+### `reverse` (optional)
 
 the code that should run when the step is reversed
 
-#### `modify` (optional)
+### `modify` (optional)
 
 the code that should run when the step is rerun with feedback
 
 **TODO: Move the below list / description of all steps and recipes to the place where people will be able to use, update, share them**
 
-### Steps & recipes
+## Steps & recipes
 
-#### Core
+### Core
 
-##### RunCommandStep
+#### RunCommandStep
 
-##### EditCodeStep
+#### EditCodeStep
 
-#### ManualEditStep
+### ManualEditStep
 
-### Community
+## Community
 
-#### CreateTableStep
+### CreateTableStep
 
 Create a table in TypeORM
 
-#### MigrationStep
+### MigrationStep
 
 Create and run an alembic migration
 
-##### Parameters
+#### Parameters
 
 - `edited_file`: 
 
-#### WritePytestsStep
+### WritePytestsStep
 
 Write unit tests for this file.
 
-##### Parameters
+#### Parameters
 
 - for_filepath (required): the path of the file that unit tests should be created for

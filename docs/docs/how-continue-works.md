@@ -14,7 +14,7 @@ The [GUI](./concepts/gui.md) enables you to guide steps and makes everything tra
 
 The [Core](./concepts/core.md) connects the SDK and GUI with the IDE (i.e. in VS Code, a web browser, etc), enabling the steps to make changes to your code and accelerate your software development workflows.
 
-## What to know about codebase
+## Details
 
 **TODO: Refactor all of this and make it fit with language above**
 

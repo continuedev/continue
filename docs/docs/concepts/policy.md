@@ -1,10 +1,10 @@
 # Policy
 
-## Overview
-
 **TODO: Better explain in one sentence what this is and what its purpose is**
 
-A `policy` is decides what step to run next and is associated with a [autopilot](./autopilot.md).
+:::info
+A **policy** is decides what step to run next and is associated with a [autopilot](./autopilot.md)
+:::
 
 ## Details
 
