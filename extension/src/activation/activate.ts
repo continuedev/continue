@@ -59,10 +59,10 @@ export function activateExtension(
             })
         ),
     ]).then(() => {
-      ideProtocolClient?.openNotebook();
+      ideProtocolClient?.openGUI();
     });
   } else {
-    ideProtocolClient.openNotebook().then(() => {
+    ideProtocolClient.openGUI().then(() => {
       // openCapturedTerminal();
     });
   }

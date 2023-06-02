@@ -14,9 +14,9 @@ import StepContainer from "../components/StepContainer";
 import { useSelector } from "react-redux";
 import { RootStore } from "../redux/store";
 import useContinueWebsocket from "../hooks/useWebsocket";
-import useContinueNotebookProtocol from "../hooks/useWebsocket";
+import useContinueGUIProtocol from "../hooks/useWebsocket";
 
-let TopNotebookDiv = styled.div`
+let TopGUIDiv = styled.div`
   display: grid;
   grid-template-columns: 1fr;
 `;
@@ -29,11 +29,11 @@ let UserInputQueueItem = styled.div`
   text-align: center;
 `;
 
-interface NotebookProps {
+interface GUIProps {
   firstObservation?: any;
 }
 
-function Notebook(props: NotebookProps) {
+function GUI(props: GUIProps) {
   const [waitingForSteps, setWaitingForSteps] = useState(false);
   const [userInputQueue, setUserInputQueue] = useState<string[]>([]);
   const [history, setHistory] = useState<History | undefined>();
@@ -156,7 +156,7 @@ function Notebook(props: NotebookProps) {
   // } as any
   // );
 
-  const client = useContinueNotebookProtocol();
+  const client = useContinueGUIProtocol();
 
   useEffect(() => {
     console.log("CLIENT ON STATE UPDATE: ", client, client?.onStateUpdate);
@@ -207,7 +207,7 @@ function Notebook(props: NotebookProps) {
 
   // const iterations = useSelector(selectIterations);
   return (
-    <TopNotebookDiv>
+    <TopGUIDiv>
       {typeof client === "undefined" && (
         <>
           <Loader></Loader>
@@ -258,8 +258,8 @@ function Notebook(props: NotebookProps) {
         }}
       ></MainTextInput>
       <ContinueButton onClick={onMainTextInput}></ContinueButton>
-    </TopNotebookDiv>
+    </TopGUIDiv>
   );
 }
 
-export default Notebook;
+export default GUI;

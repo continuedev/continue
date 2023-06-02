@@ -4,7 +4,7 @@ import { Provider } from "react-redux";
 import store from "./redux/store";
 import WelcomeTab from "./tabs/welcome";
 import ChatTab from "./tabs/chat";
-import Notebook from "./tabs/notebook";
+import GUI from "./tabs/gui";
 
 function App() {
   return (
@@ -13,8 +13,8 @@ function App() {
         <DebugPanel
           tabs={[
             {
-              element: <Notebook />,
-              title: "Notebook",
+              element: <GUI />,
+              title: "GUI",
             },
             // { element: <MainTab />, title: "Debug Panel" },
             // { element: <WelcomeTab />, title: "Welcome" },

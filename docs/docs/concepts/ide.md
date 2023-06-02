@@ -24,9 +24,9 @@ Get the workspace directory
 
 Set whether a file is open
 
-### openNotebook
+### openGUI
 
-Open a notebook
+Open a gui
 
 ### showSuggestionsAndWait
 
@@ -44,13 +44,13 @@ Called when a traceback is received
 
 Called when a file system update is received
 
-### onCloseNotebook
+### onCloseGUI
 
-Called when a notebook is closed
+Called when a gui is closed
 
-### onOpenNotebookRequest
+### onOpenGUIRequest
 
-Called when a notebook is requested to be opened
+Called when a gui is requested to be opened
 
 ### getOpenFiles
 
