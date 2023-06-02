@@ -128,28 +128,40 @@ export async function readFileAtRange(
   });
 }
 
+let showTextDocumentInProcess = false;
+
 export function openEditorAndRevealRange(
   editorFilename: string,
   range?: vscode.Range,
   viewColumn?: vscode.ViewColumn
 ): Promise<vscode.TextEditor> {
   return new Promise((resolve, _) => {
-    // Check if the editor is already open
-    if (editorFilename.startsWith("file://")) {
-      editorFilename = editorFilename.slice(7);
-    }
-    vscode.workspace.openTextDocument(editorFilename).then((doc) => {
-      vscode.window
-        .showTextDocument(
-          doc,
-          getViewColumnOfFile(editorFilename) || viewColumn
-        )
-        .then((editor) => {
-          if (range) {
-            editor.revealRange(range);
-          }
-          resolve(editor);
-        });
-    });
+    vscode.workspace.openTextDocument(editorFilename).then(async (doc) => {
+      try {
+        // An error is thrown mysteriously if you open two documents in parallel, hence this
+        while (showTextDocumentInProcess) {
+          await new Promise((resolve) => {
+            setInterval(() => {
+              resolve(null);
+            }, 200);
+          })
+        }
+        showTextDocumentInProcess = true;
+        vscode.window
+          .showTextDocument(
+            doc,
+            getViewColumnOfFile(editorFilename) || viewColumn
+          )
+          .then((editor) => {
+            if (range) {
+              editor.revealRange(range);
+            }
+            resolve(editor);
+            showTextDocumentInProcess = false;
+          })
+        } catch (err) {
+          console.log(err);
+        }
+      });
   });
 }
