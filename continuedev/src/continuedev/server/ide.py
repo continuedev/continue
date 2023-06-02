@@ -1,5 +1,6 @@
 # This is a separate server from server/main.py
 import asyncio
+import json
 import os
 from typing import Any, Dict, List, Type, TypeVar, Union
 import uuid
@@ -11,7 +12,7 @@ from ..models.filesystem import FileSystem, RangeInFile, EditDiff, RealFileSyste
 from ..models.main import Traceback
 from ..models.filesystem_edit import AddDirectory, AddFile, DeleteDirectory, DeleteFile, FileSystemEdit, FileEdit, FileEditWithFullContents, RenameDirectory, RenameFile, SequentialFileSystemEdit
 from pydantic import BaseModel
-from .notebook import SessionManager, session_manager
+from .gui import SessionManager, session_manager
 from .ide_protocol import AbstractIdeProtocolServer
 
 
@@ -90,31 +91,33 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
     def __init__(self, session_manager: SessionManager):
         self.session_manager = session_manager
 
-    async def _send_json(self, data: Any):
-        await self.websocket.send_json(data)
+    async def _send_json(self, message_type: str, data: Any):
+        await self.websocket.send_json({
+            "messageType": message_type,
+            "data": data
+        })
 
     async def _receive_json(self, message_type: str) -> Any:
         return await self.sub_queue.get(message_type)
 
     async def _send_and_receive_json(self, data: Any, resp_model: Type[T], message_type: str) -> T:
-        await self._send_json(data)
+        await self._send_json(message_type, data)
         resp = await self._receive_json(message_type)
         return resp_model.parse_obj(resp)
 
-    async def handle_json(self, data: Any):
-        t = data["messageType"]
-        if t == "openNotebook":
-            await self.openNotebook()
-        elif t == "setFileOpen":
+    async def handle_json(self, message_type: str, data: Any):
+        if message_type == "openGUI":
+            await self.openGUI()
+        elif message_type == "setFileOpen":
             await self.setFileOpen(data["filepath"], data["open"])
-        elif t == "fileEdits":
+        elif message_type == "fileEdits":
             fileEdits = list(
                 map(lambda d: FileEditWithFullContents.parse_obj(d), data["fileEdits"]))
             self.onFileEdits(fileEdits)
-        elif t in ["highlightedCode", "openFiles", "readFile", "editFile", "workspaceDirectory"]:
-            self.sub_queue.post(t, data)
+        elif message_type in ["highlightedCode", "openFiles", "readFile", "editFile", "workspaceDirectory"]:
+            self.sub_queue.post(message_type, data)
         else:
-            raise ValueError("Unknown message type", t)
+            raise ValueError("Unknown message type", message_type)
 
     # ------------------------------- #
     # Request actions in IDE, doesn't matter which Session
@@ -123,24 +126,21 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
 
     async def setFileOpen(self, filepath: str, open: bool = True):
         # Autopilot needs access to this.
-        await self.websocket.send_json({
-            "messageType": "setFileOpen",
+        await self._send_json("setFileOpen", {
             "filepath": filepath,
             "open": open
         })
 
-    async def openNotebook(self):
+    async def openGUI(self):
         session_id = self.session_manager.new_session(self)
-        await self._send_json({
-            "messageType": "openNotebook",
+        await self._send_json("openGUI", {
             "sessionId": session_id
         })
 
     async def showSuggestionsAndWait(self, suggestions: List[FileEdit]) -> bool:
         ids = [str(uuid.uuid4()) for _ in suggestions]
         for i in range(len(suggestions)):
-            self._send_json({
-                "messageType": "showSuggestion",
+            self._send_json("showSuggestion", {
                 "suggestion": suggestions[i],
                 "suggestionId": ids[i]
             })
@@ -148,7 +148,7 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
             self._receive_json(ShowSuggestionResponse)
             for i in range(len(suggestions))
         ])  # WORKING ON THIS FLOW HERE. Fine now to just await for response, instead of doing something fancy with a "waiting" state on the autopilot.
-        # Just need connect the suggestionId to the IDE (and the notebook)
+        # Just need connect the suggestionId to the IDE (and the gui)
         return any([r.accepted for r in responses])
 
     # ------------------------------- #
@@ -168,11 +168,11 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
         # Access to Autopilot (so SessionManager)
         pass
 
-    def onCloseNotebook(self, session_id: str):
+    def onCloseGUI(self, session_id: str):
         # Accesss to SessionManager
         pass
 
-    def onOpenNotebookRequest(self):
+    def onOpenGUIRequest(self):
         pass
 
     def onFileEdits(self, edits: List[FileEditWithFullContents]):
@@ -210,8 +210,7 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
 
     async def saveFile(self, filepath: str):
         """Save a file"""
-        await self._send_json({
-            "messageType": "saveFile",
+        await self._send_json("saveFile", {
             "filepath": filepath
         })
 
@@ -293,10 +292,17 @@ ideProtocolServer = IdeProtocolServer(session_manager)
 async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
     print("Accepted websocket connection from, ", websocket.client)
-    await websocket.send_json({"messageType": "connected"})
+    await websocket.send_json({"messageType": "connected", "data": {}})
     ideProtocolServer.websocket = websocket
     while True:
-        data = await websocket.receive_json()
-        await ideProtocolServer.handle_json(data)
+        message = await websocket.receive_text()
+        message = json.loads(message)
+
+        if "messageType" not in message or "data" not in message:
+            continue
+        message_type = message["messageType"]
+        data = message["data"]
+
+        await ideProtocolServer.handle_json(message_type, data)
 
     await websocket.close()

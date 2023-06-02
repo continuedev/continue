@@ -10,6 +10,7 @@ import { getContinueServerUrl } from "../bridge";
 import fetch from "node-fetch";
 
 async function runCommand(cmd: string): Promise<[string, string | undefined]> {
+  console.log("Running command: ", cmd);
   var stdout: any = "";
   var stderr: any = "";
   try {
@@ -28,18 +29,7 @@ async function runCommand(cmd: string): Promise<[string, string | undefined]> {
   return [stdout, stderr];
 }
 
-async function getPythonCmdAssumingInstalled() {
-  const [, stderr] = await runCommand("python3 --version");
-  if (stderr) {
-    return "python";
-  }
-  return "python3";
-}
-
-async function setupPythonEnv() {
-  console.log("Setting up python env for Continue extension...");
-  // First check that python3 is installed
-
+async function getPythonPipCommands() {
   var [stdout, stderr] = await runCommand("python3 --version");
   let pythonCmd = "python3";
   if (stderr) {
@@ -58,28 +48,81 @@ async function setupPythonEnv() {
     }
   }
   let pipCmd = pythonCmd.endsWith("3") ? "pip3" : "pip";
+  return [pythonCmd, pipCmd];
+}
 
-  let activateCmd = "source env/bin/activate";
+function getActivateUpgradeCommands(pythonCmd: string, pipCmd: string) {
+  let activateCmd = ". env/bin/activate";
   let pipUpgradeCmd = `${pipCmd} install --upgrade pip`;
   if (process.platform == "win32") {
     activateCmd = ".\\env\\Scripts\\activate";
     pipUpgradeCmd = `${pythonCmd} -m pip install --upgrade pip`;
   }
+  return [activateCmd, pipUpgradeCmd];
+}
 
-  let command = `cd ${path.join(
+function checkEnvExists() {
+  const envBinPath = path.join(
     getExtensionUri().fsPath,
-    "scripts"
-  )} && ${pythonCmd} -m venv env && ${activateCmd} && ${pipUpgradeCmd} && ${pipCmd} install -r requirements.txt`;
-  var [stdout, stderr] = await runCommand(command);
-  if (stderr) {
-    throw new Error(stderr);
+    "scripts",
+    "env",
+    process.platform == "win32" ? "Scripts" : "bin"
+  );
+  return (
+    fs.existsSync(path.join(envBinPath, "activate")) &&
+    fs.existsSync(path.join(envBinPath, "pip"))
+  );
+}
+
+async function setupPythonEnv() {
+  console.log("Setting up python env for Continue extension...");
+
+  if (checkEnvExists()) return;
+
+  // Assemble the command to create the env
+  const [pythonCmd, pipCmd] = await getPythonPipCommands();
+  const [activateCmd, pipUpgradeCmd] = getActivateUpgradeCommands(
+    pythonCmd,
+    pipCmd
+  );
+  const createEnvCommand = [
+    `cd ${path.join(getExtensionUri().fsPath, "scripts")}`,
+    `${pythonCmd} -m venv env`,
+  ].join(" && ");
+
+  // Repeat until it is successfully created (sometimes it fails to generate the bin, need to try again)
+  while (true) {
+    const [, stderr] = await runCommand(createEnvCommand);
+    if (stderr) {
+      throw new Error(stderr);
+    }
+    if (checkEnvExists()) {
+      break;
+    } else {
+      // Remove the env and try again
+      const removeCommand = `rm -rf ${path.join(
+        getExtensionUri().fsPath,
+        "scripts",
+        "env"
+      )}`;
+      await runCommand(removeCommand);
+    }
   }
   console.log(
     "Successfully set up python env at ",
     getExtensionUri().fsPath + "/scripts/env"
   );
 
-  await startContinuePythonServer();
+  const installRequirementsCommand = [
+    `cd ${path.join(getExtensionUri().fsPath, "scripts")}`,
+    activateCmd,
+    pipUpgradeCmd,
+    `${pipCmd} install -r requirements.txt`,
+  ].join(" && ");
+  const [, stderr] = await runCommand(installRequirementsCommand);
+  if (stderr) {
+    throw new Error(stderr);
+  }
 }
 
 function readEnvFile(path: string) {
@@ -116,38 +159,26 @@ function writeEnvFile(path: string, key: string, value: string) {
 }
 
 export async function startContinuePythonServer() {
+  await setupPythonEnv();
+
   // Check vscode settings
   let serverUrl = getContinueServerUrl();
   if (serverUrl !== "http://localhost:8000") {
     return;
   }
 
-  let envFile = path.join(getExtensionUri().fsPath, "scripts", ".env");
-  let openai_api_key: string | undefined =
-    readEnvFile(envFile)["OPENAI_API_KEY"];
-  while (typeof openai_api_key === "undefined" || openai_api_key === "") {
-    openai_api_key = await vscode.window.showInputBox({
-      prompt: "Enter your OpenAI API key",
-      placeHolder: "Enter your OpenAI API key",
-    });
-    // Write to .env file
-  }
-  writeEnvFile(envFile, "OPENAI_API_KEY", openai_api_key);
-
   console.log("Starting Continue python server...");
 
   // Check if already running by calling /health
   try {
-    let response = await fetch(serverUrl + "/health");
+    const response = await fetch(serverUrl + "/health");
     if (response.status === 200) {
       console.log("Continue python server already running");
       return;
     }
-  } catch (e) {
-    console.log("Error checking for existing server", e);
-  }
+  } catch (e) {}
 
-  let activateCmd = "source env/bin/activate";
+  let activateCmd = ". env/bin/activate";
   let pythonCmd = "python3";
   if (process.platform == "win32") {
     activateCmd = ".\\env\\Scripts\\activate";
@@ -158,26 +189,30 @@ export async function startContinuePythonServer() {
     getExtensionUri().fsPath,
     "scripts"
   )} && ${activateCmd} && cd .. && ${pythonCmd} -m scripts.run_continue_server`;
-  try {
-    // exec(command);
-    let child = spawn(command, {
-      shell: true,
-    });
-    child.stdout.on("data", (data: any) => {
-      console.log(`stdout: ${data}`);
-    });
-    child.stderr.on("data", (data: any) => {
-      console.log(`stderr: ${data}`);
-    });
-    child.on("error", (error: any) => {
-      console.log(`error: ${error.message}`);
-    });
-  } catch (e) {
-    console.log("Failed to start Continue python server", e);
-  }
-  // Sleep for 3 seconds to give the server time to start
-  await new Promise((resolve) => setTimeout(resolve, 3000));
-  console.log("Successfully started Continue python server");
+
+  return new Promise((resolve, reject) => {
+    try {
+      const child = spawn(command, {
+        shell: true,
+      });
+      child.stdout.on("data", (data: any) => {
+        console.log(`stdout: ${data}`);
+      });
+      child.stderr.on("data", (data: any) => {
+        console.log(`stderr: ${data}`);
+        if (data.includes("Uvicorn running on")) {
+          console.log("Successfully started Continue python server");
+          resolve(null);
+        }
+      });
+      child.on("error", (error: any) => {
+        console.log(`error: ${error.message}`);
+      });
+    } catch (e) {
+      console.log("Failed to start Continue python server", e);
+      reject();
+    }
+  });
 }
 
 async function installNodeModules() {
@@ -193,11 +228,6 @@ async function installNodeModules() {
 export function isPythonEnvSetup(): boolean {
   let pathToEnvCfg = getExtensionUri().fsPath + "/scripts/env/pyvenv.cfg";
   return fs.existsSync(path.join(pathToEnvCfg));
-}
-
-export async function setupExtensionEnvironment() {
-  console.log("Setting up environment for Continue extension...");
-  await Promise.all([setupPythonEnv()]);
 }
 
 export async function downloadPython3() {

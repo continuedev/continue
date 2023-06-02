@@ -1,14 +1,13 @@
-import asyncio
 from textwrap import dedent
 import time
 from typing import Coroutine, Union
 
-from ...models.main import Range
 from ...models.filesystem import RangeInFile
 from ...models.filesystem_edit import AddDirectory, AddFile
-from ..observation import Observation, TextObservation
-from ..core import Step, ContinueSDK
-from .main import EditCodeStep, EditFileStep, RunCommandStep, WaitForUserConfirmationStep
+from ...core.observation import Observation, TextObservation
+from ...core.main import Step, ContinueSDK
+from .main import RunCommandStep
+from .core.core import WaitForUserConfirmationStep, EditCodeStep, EditFileStep
 import os
 
 
@@ -46,7 +45,7 @@ Here are additional instructions:
 Here is a complete set of pytest unit tests:
 
         """)
-        # tests = sdk.llm.complete(prompt)
+        # tests = (await sdk.models.gpt35()).complete(prompt)
         tests = '''
 import pytest
 
@@ -170,9 +169,9 @@ export class Order {
   tracking_number: string;
 }'''
         time.sleep(2)
-        # orm_entity = sdk.llm.complete(
+        # orm_entity = (await sdk.models.gpt35()).complete(
         #     f"{self.sql_str}\n\nWrite a TypeORM entity called {entity_name} for this table, importing as necessary:")
-        # sdk.llm.complete("What is the name of the entity?")
+        # (await sdk.models.gpt35()).complete("What is the name of the entity?")
         await sdk.apply_filesystem_edit(AddFile(filepath=f"/Users/natesesti/Desktop/continue/extension/examples/python/MyProject/src/entity/{entity_name}.ts", content=orm_entity))
         await sdk.ide.setFileOpen(f"/Users/natesesti/Desktop/continue/extension/examples/python/MyProject/src/entity/{entity_name}.ts", True)
 

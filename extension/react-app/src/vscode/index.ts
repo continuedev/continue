@@ -5,6 +5,7 @@ declare const vscode: any;
 
 export function postVscMessage(type: string, data: any) {
   if (typeof vscode === "undefined") {
+    console.log("Unable to send message: vscode is undefined");
     return;
   }
   vscode.postMessage({

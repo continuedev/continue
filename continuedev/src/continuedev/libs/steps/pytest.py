@@ -1,6 +1,6 @@
 from textwrap import dedent
 from ...models.filesystem_edit import AddDirectory, AddFile
-from ..core import Step, ContinueSDK
+from ...core.main import Step, ContinueSDK
 import os
 
 
@@ -33,5 +33,5 @@ class WritePytestsStep(Step):
 
             Here is a complete set of pytest unit tests:
         """)
-        tests = sdk.llm.complete(prompt)
+        tests = (await sdk.models.gpt35()).complete(prompt)
         await sdk.apply_filesystem_edit(AddFile(filepath=path, content=tests))

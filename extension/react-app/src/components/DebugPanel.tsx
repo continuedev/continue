@@ -36,7 +36,8 @@ const GradientContainer = styled.div`
 const MainDiv = styled.div`
   height: 100%;
   border-radius: ${defaultBorderRadius};
-  overflow: scroll;
+  overflow-y: scroll;
+  scrollbar-gutter: stable both-edges;
   scrollbar-base-color: transparent;
   /* background: ${vscBackground}; */
   background-color: #1e1e1ede;
@@ -107,6 +108,7 @@ function DebugPanel(props: DebugPanelProps) {
                 className={
                   tab.title === "Chat" ? "overflow-hidden" : "overflow-scroll"
                 }
+                style={{ scrollbarGutter: "stable both-edges" }}
               >
                 {tab.element}
               </div>

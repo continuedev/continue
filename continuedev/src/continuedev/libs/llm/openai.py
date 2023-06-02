@@ -6,6 +6,8 @@ import aiohttp
 from ..llm import LLM
 from pydantic import BaseModel, validator
 
+DEFAULT_MAX_TOKENS = 2048
+
 
 class OpenAI(LLM):
     api_key: str
@@ -22,7 +24,7 @@ class OpenAI(LLM):
 
     def stream_chat(self, messages, **kwargs) -> Generator[Union[Any, List, Dict], None, None]:
         self.completion_count += 1
-        args = {"max_tokens": 512, "temperature": 0.5, "top_p": 1,
+        args = {"max_tokens": DEFAULT_MAX_TOKENS, "temperature": 0.5, "top_p": 1,
                 "frequency_penalty": 0, "presence_penalty": 0} | kwargs
         args["stream"] = True
         args["model"] = "gpt-3.5-turbo"
@@ -38,7 +40,7 @@ class OpenAI(LLM):
 
     def stream_complete(self, prompt: str, **kwargs) -> Generator[Union[Any, List, Dict], None, None]:
         self.completion_count += 1
-        args = {"model": self.default_model, "max_tokens": 512, "temperature": 0.5,
+        args = {"model": self.default_model, "max_tokens": DEFAULT_MAX_TOKENS, "temperature": 0.5,
                 "top_p": 1, "frequency_penalty": 0, "presence_penalty": 0, "suffix": None} | kwargs
         args["stream"] = True
 
@@ -64,7 +66,7 @@ class OpenAI(LLM):
         t1 = time.time()
 
         self.completion_count += 1
-        args = {"model": self.default_model, "max_tokens": 512, "temperature": 0.5, "top_p": 1,
+        args = {"model": self.default_model, "max_tokens": DEFAULT_MAX_TOKENS, "temperature": 0.5, "top_p": 1,
                 "frequency_penalty": 0, "presence_penalty": 0, "stream": False} | kwargs
 
         if args["model"] == "gpt-3.5-turbo":
@@ -132,7 +134,7 @@ class OpenAI(LLM):
 
     def parallel_complete(self, prompts: list[str], suffixes: Union[list[str], None] = None, **kwargs) -> list[str]:
         self.completion_count += len(prompts)
-        args = {"model": self.default_model, "max_tokens": 512, "temperature": 0.5,
+        args = {"model": self.default_model, "max_tokens": DEFAULT_MAX_TOKENS, "temperature": 0.5,
                 "top_p": 1, "frequency_penalty": 0, "presence_penalty": 0} | kwargs
 
         async def fn():

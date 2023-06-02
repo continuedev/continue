@@ -20,7 +20,8 @@ const Container = styled.div`
   margin: 3px;
   width: fit-content;
   max-width: 75%;
-  overflow: scroll;
+  overflow-y: scroll;
+  scrollbar-gutter: stable both-edges;
   word-wrap: break-word;
   -ms-word-wrap: break-word;
   height: fit-content;
