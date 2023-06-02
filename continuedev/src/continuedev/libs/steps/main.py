@@ -253,6 +253,8 @@ class StarCoderEditHighlightedCodeStep(Step):
             if completion.endswith(eot_token):
                 completion = completion[:completion.rindex(eot_token)]
 
+            self._prompt_and_completion += prompt + completion
+
             await sdk.ide.applyFileSystemEdit(
                 FileEdit(filepath=rif.filepath, range=rif.range, replacement=completion))
             await sdk.ide.saveFile(rif.filepath)

@@ -18,7 +18,7 @@ class DemoPolicy(Policy):
         if history.get_current() is None:
             return MessageStep(message="Welcome to Continue!") >> StepsOnStartupStep()
 
-        observation = history.last_observation()
+        observation = history.get_current().observation
         if observation is not None and isinstance(observation, UserInputObservation):
             # This could be defined with ObservationTypePolicy. Ergonomics not right though.
             if " test" in observation.user_input.lower():
