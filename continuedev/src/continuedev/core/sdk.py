@@ -2,7 +2,7 @@ import os
 from typing import Coroutine, Union
 
 from .config import ContinueConfig, load_config
-from ..models.filesystem_edit import FileSystemEdit, AddFile, DeleteFile, AddDirectory, DeleteDirectory
+from ..models.filesystem_edit import FileEdit, FileSystemEdit, AddFile, DeleteFile, AddDirectory, DeleteDirectory
 from ..models.filesystem import RangeInFile
 from ..libs.llm import LLM
 from ..libs.llm.hf_inference_api import HuggingFaceInferenceAPI
@@ -11,7 +11,7 @@ from .observation import Observation
 from ..server.ide_protocol import AbstractIdeProtocolServer
 from .main import History, Step
 from ..libs.steps.core.core import *
-from .env import get_env_var, save_env_var
+from .env import get_env_var, make_sure_env_exists
 
 
 class Agent:
@@ -29,12 +29,12 @@ class Models:
 
     async def starcoder(self):
         api_key = await self.sdk.get_user_secret(
-            'HUGGING_FACE_TOKEN', 'Please enter your Hugging Face token')
+            'HUGGING_FACE_TOKEN', 'Please add your Hugging Face token to the .env file')
         return HuggingFaceInferenceAPI(api_key=api_key)
 
     async def gpt35(self):
         api_key = await self.sdk.get_user_secret(
-            'OPENAI_API_KEY', 'Please enter your OpenAI API key')
+            'OPENAI_API_KEY', 'Please add your OpenAI API key to the .env file')
         return OpenAI(api_key=api_key, default_model="gpt-3.5-turbo")
 
 
@@ -86,6 +86,12 @@ class ContinueSDK:
             prompt=f'Here is the code before:\n\n{{code}}\n\nHere is the user request:\n\n{prompt}\n\nHere is the code edited to perfectly solve the user request:\n\n'
         ))
 
+    async def append_to_file(self, filename: str, content: str):
+        filepath = await self._ensure_absolute_path(filename)
+        previous_content = await self.ide.readFile(filepath)
+        file_edit = FileEdit.from_append(filepath, previous_content, content)
+        await self.ide.applyFileSystemEdit(file_edit)
+
     async def add_file(self, filename: str, content: str | None):
         return await self.run_step(FileSystemEditStep(edit=AddFile(filename=filename, content=content)))
 
@@ -99,14 +105,23 @@ class ContinueSDK:
         return await self.run_step(FileSystemEditStep(edit=DeleteDirectory(path=path)))
 
     async def get_user_secret(self, env_var: str, prompt: str) -> str:
-        try:
+        make_sure_env_exists()
+
+        val = None
+        while val is None:
+            try:
+                val = get_env_var(env_var)
+                if val is not None:
+                    return val
+            except:
+                pass
+            server_dir = os.getcwd()
+            env_path = os.path.join(server_dir, ".env")
+            await self.ide.setFileOpen(env_path)
+            await self.append_to_file(env_path, f'\n{env_var}="<ENTER SECRET HERE>"')
+            await self.run_step(WaitForUserConfirmationStep(prompt=prompt))
             val = get_env_var(env_var)
-            if val is not None:
-                return val
-        except:
-            pass
-        val = (await self.run_step(WaitForUserInputStep(prompt=prompt))).text
-        save_env_var(env_var, val)
+
         return val
 
     async def get_config(self) -> ContinueConfig:

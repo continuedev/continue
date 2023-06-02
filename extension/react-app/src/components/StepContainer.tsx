@@ -80,6 +80,13 @@ function StepContainer(props: StepContainerProps) {
   const [open, setOpen] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const naturalLanguageInputRef = useRef<HTMLTextAreaElement>(null);
+  const userInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (userInputRef?.current) {
+      userInputRef.current.focus();
+    }
+  }, [userInputRef]);
 
   useEffect(() => {
     if (isHovered) {
@@ -136,6 +143,7 @@ function StepContainer(props: StepContainerProps) {
 
           {props.historyNode.step.name === "Waiting for user input" && (
             <input
+              ref={userInputRef}
               className="m-auto p-2 rounded-md border-1 border-solid text-white w-3/4 border-gray-200 bg-vsc-background"
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
