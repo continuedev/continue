@@ -1,21 +1,20 @@
 # Introduction
 
-## Scripts reimagined in the age of LLMs
+![continue-cover-logo](/img/continue-cover-logo.png)
 
-### Automate more steps of your software development workflows using LLMs
+## Quickstart
 
-#### An open-source framework to accelerate your use of LLMs while coding
+1. Try out `Continue` in the [GitHub Codespaces Demo](./getting-started.md)
+2. Install `Continue` packaged as a [VS Code extension](./install.md)
 
-1. Leverage steps created by others in your workflows as you code.
-2. Customize steps and compose them together to fit your workflows.
-3. Review, reverse, and rerun steps to use LLMs with confidence.
+## What is `Continue`?
 
-## How Continue works
+**`Continue` is the open-source library for accelerating software development with language models**
 
-The Continue framework consists of a `SDK`, a `GUI`, and a `Core` that brings everything together.
+You define the scenarios where Large Language Models ([LLMs](./concepts/llm.md)) like GPT-4 and StarCoder should act as an autopilot, helping you complete software development tasks. You use [recipes](./concepts/recipe.md) created by others to automate more steps in your workflows. If a [recipe](./concepts/recipe.md) does not exist or work exactly like you want, you can use the [Continue SDK](./concepts/sdk.md) to create custom [steps](./concepts/step.md) and compose them into personalized [recipes](./concepts/recipe.md). Whether you are using a [recipe](./concepts/recipe.md) created by yourself or someone else, you can review, reverse, and rerun [steps](./concepts/step.md) with the [Continue GUI](./concepts/gui.md), which helps you guide the work done by LLMs and learn when to use and trust them.
 
-The `SDK` gives you access to tools (e.g. open a directory, edit a file, call an LLM, etc), which you can use when defining how a step should work and composing them with other steps.
+## Why do developers use `Continue`?
 
-The `GUI` enables you to guide steps and makes everything transparent, so you can review all steps that were automated, giving you the opportunity to undo and rerun any that ran incorrectly.
+Many developers have begun to use models like [GPT-4](https://openai.com/research/gpt-4) through [ChatGPT](https://openai.com/blog/chatgpt) while coding; however, the experience is painful because of how much manual copying, pasting, and editing is required to supply them with context and transfer the generated solutions to your codebase. `Continue` eliminates this pain by deeply integrating LLMs into your IDE amd workflows.
 
-The `Core` connects the SDK and GUI with the IDE (i.e. in VS Code, a web browser, etc), enabling the steps to make changes to your code and accelerate your software development workflows.
+`Continue` accelerates how developers build, ship, and maintain software, while giving them the control to define when LLMs should take actions and the confidence to trust LLMs. In short, it enables developers to do what they have always done: work together to create better and better abstractions that make it easier and easier to automate the repetitive work that people want computers to do.

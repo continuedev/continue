@@ -1,7 +1,7 @@
 import React from "react";
 import { postVscMessage } from "../vscode";
 
-function VSCodeFileLink(props: { path: string; text?: string }) {
+function VS CodeFileLink(props: { path: string; text?: string }) {
   return (
     <a
       href={`file://${props.path}`}
@@ -14,4 +14,4 @@ function VSCodeFileLink(props: { path: string; text?: string }) {
   );
 }
 
-export default VSCodeFileLink;
+export default VS CodeFileLink;

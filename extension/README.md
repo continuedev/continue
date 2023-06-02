@@ -14,4 +14,14 @@ Ask natural language questions of your codebase, like "Where is the entry point 
 
 Request an edit to the currently open file, for example: "Add CORS headers to this FastAPI server".
 
-### Generate Unit Tests
+### Generate a Fix
+
+Once Continue has code snippets to work with, it can generate a fix. Just click to accept or reject, or make the tweak you need.
+
+### Stacktrace Parsing
+
+Any stacktrace that appears in your VS Code terminal will be caught by us so we can immediately begin the debugging process. For small bugs that you might have quickly solved, we'll just speed up the process to be nearly instantaneous.
+
+### Generate Unit Tests and Docstrings
+
+Use `cmd+shift+i` to generate a unit test for the function surrounding your cursor position, and `cmd+shift+l` to generate a docstring.

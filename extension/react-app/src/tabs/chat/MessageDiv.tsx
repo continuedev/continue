@@ -6,7 +6,7 @@ import {
   defaultBorderRadius,
   secondaryDark,
 } from "../../components";
-import VSCodeFileLink from "../../components/VSCodeFileLink";
+import VS CodeFileLink from "../../components/VS CodeFileLink";
 import ReactMarkdown from "react-markdown";
 import "../../highlight/dark.min.css";
 import hljs from "highlight.js";

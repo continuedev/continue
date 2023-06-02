@@ -135,7 +135,7 @@ function formatFileRange(
   )} (lines ${rangeInFile.range.start.line + 1}-${
     rangeInFile.range.end.line + 1
   })`;
-  // +1 because VSCode Ranges are 0-indexed
+  // +1 because VS Code Ranges are 0-indexed
 }
 
 //#endregion
