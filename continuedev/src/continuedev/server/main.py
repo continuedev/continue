@@ -1,8 +1,10 @@
 import os
+import sys
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from .ide import router as ide_router
 from .gui import router as gui_router
+import logging
 import uvicorn
 import argparse
 
@@ -23,6 +25,7 @@ app.add_middleware(
 
 @app.get("/health")
 def health():
+    print("Testing")
     return {"status": "ok"}
 
 
@@ -32,12 +35,15 @@ parser.add_argument("-p", "--port", help="server port", type=int, default=8000)
 args = parser.parse_args()
 
 
+log_file = open('output.log', 'a')
+sys.stdout = log_file
+
+
 def run_server():
     if os.path.exists("logging.yaml"):
-        uvicorn.run(app, host="0.0.0.0", port=args.port,
-                    log_config="logging.yaml")
+        uvicorn.run(app, host="0.0.0.0", port=args.port, log_level="info")
     else:
-        uvicorn.run(app, host="0.0.0.0", port=args.port)
+        uvicorn.run(app, host="0.0.0.0", port=args.port, log_level="info")
 
 
 if __name__ == "__main__":
