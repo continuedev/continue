@@ -139,7 +139,7 @@ class IdeProtocolClient {
   }
 
   async openGUI() {
-    console.log("OPENING NOTEBOOK");
+    console.log("OPENING GUI");
     if (this.messenger === null) {
       console.log("MESSENGER IS NULL");
     }

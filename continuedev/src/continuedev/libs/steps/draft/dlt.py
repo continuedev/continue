@@ -50,6 +50,15 @@ class SetupPipelineStep(Step):
 
 
 class ValidatePipelineStep(Step):
+
+    async def describe(self, models: Models):
+        return dedent("""\
+        This step will validate that your dlt pipeline is working as expected:
+        - Test that the API call works
+        - Load the data into a local DuckDB instance
+        - Write a query to view the data
+        """)
+
     async def run(self, sdk: ContinueSDK):
         source_name = sdk.history.last_observation().values["source_name"]
         filename = f'{source_name}.py'
