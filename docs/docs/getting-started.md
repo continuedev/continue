@@ -14,18 +14,14 @@ We don't want to waste your time with install and env setup before you try Conti
 
 **TODO: Insert an image of Continue when it has opened**
 
-3. Try playing with Continue as you build a Python script to do Pandas stuff
+3. Try playing with Continue as you write some Python code to understand a dataset with Pandas
 
 **TODO: Design and set up Pandas stuff scenario in codespaces**
 
 4. There are a few recipes you should also try
-   a. In the first directory, try out X recipe
-   b. In the second directory, try out Y recipe
-   c. In the third directory, try out Z recipe
-
-- database migrations
-- something super simple (libaries)
-- unit testing
+   a. In the first directory, try out Pytest recipe
+   b. In the second directory, try out Write comments for the highlighted code recipe
+   c. In the third directory, try out dlt CreatePipeline recipe
 
 **TODO: Design and add these recipes in codespaces**
 
