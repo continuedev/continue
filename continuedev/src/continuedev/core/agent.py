@@ -14,7 +14,7 @@ from .sdk import ContinueSDK
 import asyncio
 
 
-class Agent(ContinueBaseModel):
+class Autopilot(ContinueBaseModel):
     policy: Policy
     ide: AbstractIdeProtocolServer
     history: History = History.from_empty()
@@ -116,7 +116,7 @@ class Agent(ContinueBaseModel):
 
     async def run_from_step(self, step: "Step"):
         # if self._active:
-        #     raise RuntimeError("Agent is already running")
+        #     raise RuntimeError("Autopilot is already running")
         self._active = True
 
         next_step = step

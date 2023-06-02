@@ -5,7 +5,7 @@ from uuid import uuid4
 from ..models.filesystem_edit import FileEditWithFullContents
 from ..core.policy import DemoPolicy
 from ..core.main import FullState
-from ..core.agent import Agent
+from ..core.autopilot import Autopilot
 from ..libs.steps.nate import ImplementAbstractMethodStep
 from .ide_protocol import AbstractIdeProtocolServer
 import asyncio
@@ -15,16 +15,16 @@ nest_asyncio.apply()
 
 class Session:
     session_id: str
-    agent: Agent
+    autopilot: Autopilot
     ws: Union[WebSocket, None]
 
-    def __init__(self, session_id: str, agent: Agent):
+    def __init__(self, session_id: str, autopilot: Autopilot):
         self.session_id = session_id
-        self.agent = agent
+        self.autopilot = autopilot
         self.ws = None
 
 
-class DemoAgent(Agent):
+class DemoAutopilot(Autopilot):
     first_seen: bool = False
     cumulative_edit_string = ""
 
@@ -51,18 +51,18 @@ class SessionManager:
         return self.sessions[session_id]
 
     def new_session(self, ide: AbstractIdeProtocolServer) -> str:
-        agent = DemoAgent(policy=DemoPolicy(), ide=ide)
+        autopilot = DemoAutopilot(policy=DemoPolicy(), ide=ide)
         session_id = str(uuid4())
-        session = Session(session_id=session_id, agent=agent)
+        session = Session(session_id=session_id, autopilot=autopilot)
         self.sessions[session_id] = session
 
         async def on_update(state: FullState):
             await session_manager.send_ws_data(session_id, "state_update", {
-                "state": agent.get_full_state().dict()
+                "state": autopilot.get_full_state().dict()
             })
 
-        agent.on_update(on_update)
-        asyncio.create_task(agent.run_policy())
+        autopilot.on_update(on_update)
+        asyncio.create_task(autopilot.run_policy())
         return session_id
 
     def remove_session(self, session_id: str):

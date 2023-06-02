@@ -13,24 +13,23 @@
 
 /** @type {import('@docusaurus/plugin-content-docs').SidebarsConfig} */
 const sidebars = {
-
   docsSidebar: [
-    'intro',
-    'create-a-recipe',
+    "intro",
+    "create-a-recipe",
     {
-      type: 'category',
-      label: 'Concepts',
+      type: "category",
+      label: "Concepts",
       items: [
-        'concepts/agent',
-        'concepts/core',
-        'concepts/gui',
-        'concepts/history',
-        'concepts/ide',
-        'concepts/llm',
-        'concepts/policy',
-        'concepts/recipes',
-        'concepts/sdk',
-        'concepts/step',
+        "concepts/autopilot",
+        "concepts/core",
+        "concepts/gui",
+        "concepts/history",
+        "concepts/ide",
+        "concepts/llm",
+        "concepts/policy",
+        "concepts/recipes",
+        "concepts/sdk",
+        "concepts/step",
       ],
     },
   ],
