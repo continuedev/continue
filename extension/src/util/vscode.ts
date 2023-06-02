@@ -135,6 +135,9 @@ export function openEditorAndRevealRange(
 ): Promise<vscode.TextEditor> {
   return new Promise((resolve, _) => {
     // Check if the editor is already open
+    if (editorFilename.startsWith("file://")) {
+      editorFilename = editorFilename.slice(7);
+    }
     vscode.workspace.openTextDocument(editorFilename).then((doc) => {
       vscode.window
         .showTextDocument(
