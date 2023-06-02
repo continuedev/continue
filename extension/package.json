@@ -14,7 +14,7 @@
   "displayName": "Continue",
   "pricing": "Free",
   "description": "Refine code 10x faster",
-  "version": "0.0.10",
+  "version": "0.0.11",
   "publisher": "Continue",
   "engines": {
     "vscode": "^1.74.0"
