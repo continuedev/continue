@@ -39,6 +39,10 @@ class Position(BaseModel):
 
         return Position(line=line, character=character)
 
+    @staticmethod
+    def from_end_of_file(contents: str) -> "Position":
+        return Position.from_index(contents, len(contents))
+
 
 class Range(BaseModel):
     """A range in a file. 0-indexed."""
@@ -116,6 +120,10 @@ class Range(BaseModel):
             raise ValueError("Snippet not found in content")
 
         return Range.from_shorthand(start_line, 0, end_line, len(content_lines[end_line]) - 1)
+
+    @staticmethod
+    def from_position(position: Position) -> "Range":
+        return Range(start=position, end=position)
 
 
 class AbstractModel(ABC, BaseModel):

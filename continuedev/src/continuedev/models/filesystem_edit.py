@@ -37,6 +37,10 @@ class FileEdit(AtomicFileSystemEdit):
     def from_insertion(filepath: str, position: Position, content: str) -> "FileEdit":
         return FileEdit(filepath=filepath, range=Range.from_shorthand(position.line, position.character, position.line, position.character), replacement=content)
 
+    @staticmethod
+    def from_append(filepath: str, previous_content: str, appended_content: str) -> "FileEdit":
+        return FileEdit(filepath=filepath, range=Range.from_position(Position.from_end_of_file(previous_content)), replacement=appended_content)
+
 
 class FileEditWithFullContents(BaseModel):
     fileEdit: FileEdit
