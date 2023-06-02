@@ -33,7 +33,7 @@ const sidebars = {
       label: "Concepts",
       items: [
         "concepts/autopilot",
-        "concepts/core",
+        "concepts/server",
         "concepts/gui",
         "concepts/history",
         "concepts/ide",

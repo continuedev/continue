@@ -4,13 +4,13 @@
 
 ## Overview
 
-The `Continue` library consists of an [SDK](./concepts/sdk.md), a [GUI](./concepts/gui.md), and a [Core](./concepts/core.md) that brings everything together.
+The `Continue` library consists of an [SDK](./concepts/sdk.md), a [GUI](./concepts/gui.md), and a [Server](./concepts/server.md) that brings everything together.
 
 The [SDK](./concepts/sdk.md) gives you access to the tools (e.g. open a directory, edit a file, call a model, etc.) needed to define steps that integrate LLMs into your IDE.
 
 The [GUI](./concepts/gui.md) lets you transparently review every automated step, providing the opportunity to undo and rerun any that ran incorrectly.
 
-The [Core](./concepts/core.md) holds the main event loop, responsible for connecting IDE, SDK, and GUI and deciding which steps to take next.
+The [Server](./concepts/server.md) holds the main event loop, responsible for connecting IDE, SDK, and GUI and deciding which steps to take next.
 
 ## Details
 
