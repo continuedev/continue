@@ -3,6 +3,7 @@
 **TODO: Describe step-by-step how to create a recipe**
 
 Points to include
+
 - Where to create recipes
 - How to create a step
 - How to create recipe
@@ -21,9 +22,10 @@ This method takes the ContinueSDK as a parameter, giving you all the tools you n
 ### c. Finally, every Step is displayed with a description of what it has done
 
 If you'd like to override the default description of your steps, which is just the class name, then implement the `describe` method. You can:
-    - Return a static string
-    - Store state in a class attribute (prepend with a double underscore, which signifies (through Pydantic) that this is not a parameter for the Step, just internal state) during the run method, and then grab this in the describe method.
-    - Use state in conjunction with the `models` parameter of the describe method to autogenerate a description with a language model. For example, if you'd used an attribute called `__code_written` to store a string representing some code that was written, you could implement describe as `return (await models.gpt35()).complete(f"{self.__code_written}\n\nSummarize the changes made in the above code.")`.
+
+- Return a static string
+- Store state in a class attribute (prepend with a double underscore, which signifies (through Pydantic) that this is not a parameter for the Step, just internal state) during the run method, and then grab this in the describe method.
+- Use state in conjunction with the `models` parameter of the describe method to autogenerate a description with a language model. For example, if you'd used an attribute called `__code_written` to store a string representing some code that was written, you could implement describe as `return (await models.gpt35()).complete(f"{self.\_\_code_written}\n\nSummarize the changes made in the above code.")`.
 
 ## 2. Compose steps together into a complete recipe
 
@@ -53,7 +55,7 @@ You will want to use the SDK when you are opening directories, editing files, us
 Steps can include optional parameters that allow users to configure them
 
 ```python
-from continueos import ContinueSDK
+from continuedev import ContinueSDK
 
 class CreatePytestsStep(Step):
 
@@ -73,7 +75,7 @@ class CreatePytestsStep(Step):
 You might want to implement your steps, so that they can run on Linux, MacOS, and Windows.
 
 ```python
-from continueos import ContinueSDK
+from continuedev import ContinueSDK
 import platform
 
 class SetUpVenvStep(Step):
