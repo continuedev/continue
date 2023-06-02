@@ -11,12 +11,16 @@ class ContinueConfig(BaseModel):
     """
     steps_on_startup: Optional[Dict[str, Dict]] = {}
     server_url: Optional[str] = None
+    allow_anonymous_telemetry: Optional[bool] = True
 
 
 def load_config(config_file: str) -> ContinueConfig:
     """
     Load the config file and return a ContinueConfig object.
     """
+    if not os.path.exists(config_file):
+        return ContinueConfig()
+
     _, ext = os.path.splitext(config_file)
     if ext == '.yaml':
         with open(config_file, 'r') as f:

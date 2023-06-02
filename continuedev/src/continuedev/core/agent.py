@@ -9,6 +9,7 @@ from ..libs.util.queue import AsyncSubscriptionQueue
 from ..models.main import ContinueBaseModel
 from .main import Policy, History, FullState, Step, HistoryNode
 from ..libs.steps.core.core import ReversibleStep, ManualEditStep, UserInputStep
+from ..libs.util.telemetry import capture_event
 from .sdk import ContinueSDK
 import asyncio
 
@@ -77,6 +78,9 @@ class Agent(ContinueBaseModel):
     _step_depth: int = 0
 
     async def _run_singular_step(self, step: "Step", is_future_step: bool = False) -> Coroutine[Observation, None, None]:
+        capture_event(
+            'step run', {'step_name': step.name, 'params': step.dict()})
+
         if not is_future_step:
             # Check manual edits buffer, clear out if needed by creating a ManualEditStep
             if len(self._manual_edits_buffer) > 0:
