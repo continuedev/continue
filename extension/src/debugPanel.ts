@@ -16,6 +16,7 @@ import {
 import { sendTelemetryEvent, TelemetryEvent } from "./telemetry";
 import { RangeInFile, SerializedDebugContext } from "./client";
 import { addFileSystemToDebugContext } from "./util/util";
+const WebSocket = require("ws");
 
 class StreamManager {
   private _fullText: string = "";
@@ -87,6 +88,49 @@ class StreamManager {
   }
 }
 
+let websocketConnections: { [url: string]: WebsocketConnection | undefined } =
+  {};
+
+class WebsocketConnection {
+  private _ws: WebSocket;
+  private _onMessage: (message: string) => void;
+  private _onOpen: () => void;
+  private _onClose: () => void;
+
+  constructor(
+    url: string,
+    onMessage: (message: string) => void,
+    onOpen: () => void,
+    onClose: () => void
+  ) {
+    this._ws = new WebSocket(url);
+    this._onMessage = onMessage;
+    this._onOpen = onOpen;
+    this._onClose = onClose;
+
+    this._ws.addEventListener("message", (event) => {
+      this._onMessage(event.data);
+    });
+    this._ws.addEventListener("close", () => {
+      this._onClose();
+    });
+    this._ws.addEventListener("open", () => {
+      this._onOpen();
+    });
+  }
+
+  public send(message: string) {
+    if (typeof message !== "string") {
+      message = JSON.stringify(message);
+    }
+    this._ws.send(message);
+  }
+
+  public close() {
+    this._ws.close();
+  }
+}
+
 let streamManager = new StreamManager();
 
 export let debugPanelWebview: vscode.Webview | undefined;
@@ -147,6 +191,39 @@ export function setupDebugPanel(
     });
   });
 
+  async function connectWebsocket(url: string) {
+    return new Promise((resolve, reject) => {
+      const onMessage = (message: any) => {
+        panel.webview.postMessage({
+          type: "websocketForwardingMessage",
+          url,
+          data: message,
+        });
+      };
+      const onOpen = () => {
+        panel.webview.postMessage({
+          type: "websocketForwardingOpen",
+          url,
+        });
+        resolve(null);
+      };
+      const onClose = () => {
+        websocketConnections[url] = undefined;
+        panel.webview.postMessage({
+          type: "websocketForwardingClose",
+          url,
+        });
+      };
+      const connection = new WebsocketConnection(
+        url,
+        onMessage,
+        onOpen,
+        onClose
+      );
+      websocketConnections[url] = connection;
+    });
+  }
+
   panel.webview.onDidReceiveMessage(async (data) => {
     switch (data.type) {
       case "onLoad": {
@@ -156,6 +233,40 @@ export function setupDebugPanel(
           apiUrl: getContinueServerUrl(),
           sessionId,
         });
+
+        // // Listen for changes to server URL in settings
+        // vscode.workspace.onDidChangeConfiguration((event) => {
+        //   if (event.affectsConfiguration("continue.serverUrl")) {
+        //     debugPanelWebview?.postMessage({
+        //       type: "onLoad",
+        //       vscMachineId: vscode.env.machineId,
+        //       apiUrl: getContinueServerUrl(),
+        //       sessionId,
+        //     });
+        //   }
+        // });
+
+        break;
+      }
+
+      case "websocketForwardingOpen": {
+        let url = data.url;
+        if (typeof websocketConnections[url] === "undefined") {
+          await connectWebsocket(url);
+        }
+        break;
+      }
+      case "websocketForwardingMessage": {
+        let url = data.url;
+        let connection = websocketConnections[url];
+        if (typeof connection === "undefined") {
+          await connectWebsocket(url);
+        }
+        connection = websocketConnections[url];
+        if (typeof connection === "undefined") {
+          throw new Error("Failed to connect websocket in VS Code Extension");
+        }
+        connection.send(data.message);
         break;
       }
       case "listTenThings": {

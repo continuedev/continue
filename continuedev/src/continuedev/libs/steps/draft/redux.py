@@ -1,7 +1,6 @@
-from textwrap import dedent
-from ....models.filesystem_edit import AddFile
-from ...core import Step, ContinueSDK
-from ..main import WaitForUserInputStep, EditFileStep
+from ....core.main import Step
+from ....core.sdk import ContinueSDK
+from ..core.core import EditFileStep
 
 
 class EditReduxStateStep(Step):

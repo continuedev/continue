@@ -1,0 +1,73 @@
+{
+  "title": "History",
+  "$ref": "#/definitions/src__continuedev__core__main__History",
+  "definitions": {
+    "Step": {
+      "title": "Step",
+      "type": "object",
+      "properties": {
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "hide": {
+          "title": "Hide",
+          "default": false,
+          "type": "boolean"
+        },
+        "system_message": {
+          "title": "System Message",
+          "type": "string"
+        }
+      }
+    },
+    "Observation": {
+      "title": "Observation",
+      "type": "object",
+      "properties": {}
+    },
+    "HistoryNode": {
+      "title": "HistoryNode",
+      "description": "A point in history, a list of which make up History",
+      "type": "object",
+      "properties": {
+        "step": {
+          "$ref": "#/definitions/Step"
+        },
+        "observation": {
+          "$ref": "#/definitions/Observation"
+        },
+        "depth": {
+          "title": "Depth",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "step",
+        "depth"
+      ]
+    },
+    "src__continuedev__core__main__History": {
+      "title": "History",
+      "description": "A history of steps taken and their results",
+      "type": "object",
+      "properties": {
+        "timeline": {
+          "title": "Timeline",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/HistoryNode"
+          }
+        },
+        "current_index": {
+          "title": "Current Index",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "timeline",
+        "current_index"
+      ]
+    }
+  }
+}

@@ -2,9 +2,11 @@ import subprocess
 from ...models.main import Position, Range
 from ...models.filesystem import RangeInFile
 from ...models.filesystem_edit import AddDirectory, AddFile, FileEdit
-from ..observation import DictObservation
-from ..core import History, Step, ContinueSDK, Policy
-from .main import EditCodeStep, RunCommandStep, WaitForUserInputStep, WaitForUserConfirmationStep
+from ...core.observation import DictObservation
+from ...core.main import History, Step, Policy
+from ...core.sdk import ContinueSDK
+from .main import RunCommandStep
+from ..steps.core.core import EditCodeStep, WaitForUserConfirmationStep, WaitForUserInputStep
 
 source_name = "weather_api"
 
@@ -16,7 +18,7 @@ class SetupPipelineStep(Step):
     api_description: str  # e.g. "I want to load data from the weatherapi.com API"
 
     async def run(self, sdk: ContinueSDK):
-        # source_name = sdk.llm.complete(
+        # source_name = (await sdk.models.gpt35()).complete(
         #     f"Write a snake_case name for the data source described by {self.api_description}: ").strip()
         filename = f'/Users/natesesti/Desktop/continue/extension/examples/python/{source_name}.py'
 

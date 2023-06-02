@@ -36,6 +36,8 @@ const MainDiv = styled.div<{ stepDepth: number; inFuture: boolean }>`
   animation: ${appear} 0.3s ease-in-out;
   /* padding-left: ${(props) => props.stepDepth * 20}px; */
   overflow: hidden;
+  margin-left: 0px;
+  margin-right: 0px;
 `;
 
 const StepContainerDiv = styled.div<{ open: boolean }>`
@@ -78,6 +80,13 @@ function StepContainer(props: StepContainerProps) {
   const [open, setOpen] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const naturalLanguageInputRef = useRef<HTMLTextAreaElement>(null);
+  const userInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (userInputRef?.current) {
+      userInputRef.current.focus();
+    }
+  }, [userInputRef]);
 
   useEffect(() => {
     if (isHovered) {
@@ -134,6 +143,7 @@ function StepContainer(props: StepContainerProps) {
 
           {props.historyNode.step.name === "Waiting for user input" && (
             <input
+              ref={userInputRef}
               className="m-auto p-2 rounded-md border-1 border-solid text-white w-3/4 border-gray-200 bg-vsc-background"
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
@@ -143,6 +153,9 @@ function StepContainer(props: StepContainerProps) {
               type="text"
               onSubmit={(ev) => {
                 props.onUserInput(ev.currentTarget.value);
+              }}
+              onClick={(e) => {
+                e.stopPropagation();
               }}
             />
           )}
@@ -163,24 +176,6 @@ function StepContainer(props: StepContainerProps) {
                 type="button"
                 value="Confirm"
               />
-            </>
-          )}
-
-          {open && (
-            <>
-              {/* {props.historyNode.observation && (
-                <SubContainer title="Error">
-                  <CodeBlock>Error Here</CodeBlock>
-                </SubContainer>
-              )} */}
-              {/* {props.iterationContext.suggestedChanges.map((sc) => {
-              return (
-                <SubContainer title="Suggested Change">
-                  {sc.filepath}
-                  <CodeBlock>{sc.replacement}</CodeBlock>
-                </SubContainer>
-              );
-            })} */}
             </>
           )}
         </StepContainerDiv>

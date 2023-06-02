@@ -4,6 +4,11 @@ from pydantic import BaseModel, root_validator
 from functools import total_ordering
 
 
+class ContinueBaseModel(BaseModel):
+    class Config:
+        underscore_attrs_are_private = True
+
+
 @total_ordering
 class Position(BaseModel):
     line: int
@@ -27,12 +32,16 @@ class Position(BaseModel):
     def from_index(string: str, index: int) -> "Position":
         """Convert index in string to line and character"""
         line = string.count("\n", 0, index)
-        if line == 1:
+        if line == 0:
             character = index
         else:
             character = index - string.rindex("\n", 0, index) - 1
 
         return Position(line=line, character=character)
+
+    @staticmethod
+    def from_end_of_file(contents: str) -> "Position":
+        return Position.from_index(contents, len(contents))
 
 
 class Range(BaseModel):
@@ -87,6 +96,34 @@ class Range(BaseModel):
         start_index = content.index(snippet)
         end_index = start_index + len(snippet)
         return Range.from_indices(content, start_index, end_index)
+
+    @staticmethod
+    def from_lines_snippet_in_file(content: str, snippet: str) -> "Range":
+        # lines is a substring of the content modulo whitespace on each line
+        content_lines = content.splitlines()
+        snippet_lines = snippet.splitlines()
+
+        start_line = -1
+        end_line = -1
+        looking_for_line = 0
+        for i in range(len(content_lines)):
+            if content_lines[i].strip() == snippet_lines[looking_for_line].strip():
+                if looking_for_line == len(snippet_lines) - 1:
+                    start_line = i - len(snippet_lines) + 1
+                    end_line = i
+                    break
+                looking_for_line += 1
+            else:
+                looking_for_line = 0
+
+        if start_line == -1 or end_line == -1:
+            raise ValueError("Snippet not found in content")
+
+        return Range.from_shorthand(start_line, 0, end_line, len(content_lines[end_line]) - 1)
+
+    @staticmethod
+    def from_position(position: Position) -> "Range":
+        return Range(start=position, end=position)
 
 
 class AbstractModel(ABC, BaseModel):

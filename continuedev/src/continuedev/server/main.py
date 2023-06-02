@@ -1,14 +1,15 @@
+import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from .ide import router as ide_router
-from .notebook import router as notebook_router
+from .gui import router as gui_router
 import uvicorn
 import argparse
 
 app = FastAPI()
 
 app.include_router(ide_router)
-app.include_router(notebook_router)
+app.include_router(gui_router)
 
 # Add CORS support
 app.add_middleware(
@@ -32,7 +33,11 @@ args = parser.parse_args()
 
 
 def run_server():
-    uvicorn.run(app, host="0.0.0.0", port=args.port, log_config="logging.ini")
+    if os.path.exists("logging.yaml"):
+        uvicorn.run(app, host="0.0.0.0", port=args.port,
+                    log_config="logging.yaml")
+    else:
+        uvicorn.run(app, host="0.0.0.0", port=args.port)
 
 
 if __name__ == "__main__":

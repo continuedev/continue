@@ -1,19 +1,24 @@
 from typing import List, Tuple, Type
 
-from .steps.ty import CreatePipelineStep
-from .core import Step, Validator, Policy, History
+from ..libs.steps.steps_on_startup import StepsOnStartupStep
+from ..libs.steps.draft.dlt import CreatePipelineStep
+from .main import Step, Validator, History, Policy
 from .observation import Observation, TracebackObservation, UserInputObservation
-from .steps.main import EditCodeStep, EditHighlightedCodeStep, SolveTracebackStep, RunCodeStep, FasterEditHighlightedCodeStep
-from .steps.nate import WritePytestsStep, CreateTableStep
-from .steps.chroma import AnswerQuestionChroma, EditFileChroma
+from ..libs.steps.main import EditHighlightedCodeStep, SolveTracebackStep, RunCodeStep, FasterEditHighlightedCodeStep, StarCoderEditHighlightedCodeStep, MessageStep, EmptyStep
+from ..libs.steps.nate import WritePytestsStep, CreateTableStep
+# from ..libs.steps.chroma import AnswerQuestionChroma, EditFileChroma
+from ..libs.steps.continue_step import ContinueStepStep
 
 
 class DemoPolicy(Policy):
     ran_code_last: bool = False
-    cmd: str
 
     def next(self, history: History) -> Step:
-        observation = history.last_observation()
+        # At the very start, run initial Steps spcecified in the config
+        if history.get_current() is None:
+            return MessageStep(message="Welcome to Continue!") >> StepsOnStartupStep()
+
+        observation = history.get_current().observation
         if observation is not None and isinstance(observation, UserInputObservation):
             # This could be defined with ObservationTypePolicy. Ergonomics not right though.
             if " test" in observation.user_input.lower():
@@ -22,16 +27,15 @@ class DemoPolicy(Policy):
                 return CreatePipelineStep()
             elif "/table" in observation.user_input:
                 return CreateTableStep(sql_str=" ".join(observation.user_input.split(" ")[1:]))
-            elif "/ask" in observation.user_input:
-                return AnswerQuestionChroma(question=" ".join(observation.user_input.split(" ")[1:]))
-            elif "/edit" in observation.user_input:
-                return EditFileChroma(request=" ".join(observation.user_input.split(" ")[1:]))
-            return EditHighlightedCodeStep(user_input=observation.user_input)
+            # elif "/ask" in observation.user_input:
+            #     return AnswerQuestionChroma(question=" ".join(observation.user_input.split(" ")[1:]))
+            # elif "/edit" in observation.user_input:
+            #     return EditFileChroma(request=" ".join(observation.user_input.split(" ")[1:]))
+            elif "/step" in observation.user_input:
+                return ContinueStepStep(prompt=" ".join(observation.user_input.split(" ")[1:]))
+            return StarCoderEditHighlightedCodeStep(user_input=observation.user_input)
 
         state = history.get_current()
-        if state is None or not self.ran_code_last:
-            self.ran_code_last = True
-            return RunCodeStep(cmd=self.cmd)
 
         if observation is not None and isinstance(observation, TracebackObservation):
             self.ran_code_last = False

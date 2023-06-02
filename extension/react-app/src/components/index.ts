@@ -45,7 +45,7 @@ export const Pre = styled.pre`
   border-radius: ${defaultBorderRadius};
   padding: 8px;
   max-height: 150px;
-  overflow: scroll;
+  overflow-y: scroll;
   margin: 0;
   background-color: ${secondaryDark};
   border: none;

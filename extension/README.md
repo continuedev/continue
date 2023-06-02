@@ -1,27 +1,18 @@
-# continue
+# Continue
 
-Bug report to fix in 1/10th the time.
+Automate software development at the level of tasks, instead of tab-autocompletions. With Continue, you can make large edits with natural language, ask questions of your codebase, and run custom recipes built with our open-source Python library.
 
-Our debugging assistant automatically handles tedious portions of the debugging process, such as:
-
-- Fault localization
-- Enumerating potential error sources
-- Generating fixes
-- Pulling in outside context
-- Following data flows
-- Parsing tracebacks
-- Generate unit tests
-- Generate docstrings
+Get started by opening the command pallet with `cmd+shift+p` and then selecting `Continue: Open Debug Panel`.
 
 # Features
 
 ### Ask a Question
 
-`cmd+shift+j` to open up a universal search bar, where you can ask questions of your codebase in natural language.
+Ask natural language questions of your codebase, like "Where is the entry point to the VS Code extension?"
 
-### Fault Localization
+### Edit with Natural Language
 
-Either manually highlight code snippets you think are suspicious, or let us find them for you.
+Request an edit to the currently open file, for example: "Add CORS headers to this FastAPI server".
 
 ### Generate a Fix
 

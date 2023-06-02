@@ -1,67 +1,39 @@
 import React, { useEffect, useState } from "react";
 import { RootStore } from "../redux/store";
 import { useSelector } from "react-redux";
+import ContinueGUIClientProtocol from "./useContinueGUIProtocol";
+import { postVscMessage } from "../vscode";
 
-function useContinueWebsocket(
-  serverUrl: string,
-  onMessage: (message: { data: any }) => void
-) {
+function useContinueGUIProtocol(useVscodeMessagePassing: boolean = true) {
   const sessionId = useSelector((state: RootStore) => state.config.sessionId);
-  const [websocket, setWebsocket] = useState<WebSocket | undefined>(undefined);
-
-  async function connect() {
-    while (!sessionId) {
-      await new Promise((resolve) => setTimeout(resolve, 300));
-    }
-
-    console.log("Creating websocket", sessionId);
-
-    const wsUrl =
-      serverUrl.replace("http", "ws") +
-      "/notebook/ws?session_id=" +
-      encodeURIComponent(sessionId);
-
-    const ws = new WebSocket(wsUrl);
-    setWebsocket(ws);
-
-    // Set up callbacks
-    ws.onopen = () => {
-      console.log("Websocket opened");
-      ws.send(JSON.stringify({ sessionId }));
-    };
-
-    ws.onmessage = (msg) => {
-      onMessage(msg);
-      console.log("Got message", msg);
-    };
-
-    ws.onclose = (msg) => {
-      console.log("Websocket closed");
-      setWebsocket(undefined);
-    };
-
-    return ws;
-  }
-
-  async function getConnection() {
-    if (!websocket) {
-      return await connect();
-    }
-    return websocket;
-  }
-
-  async function send(message: object) {
-    let ws = await getConnection();
-    ws.send(JSON.stringify(message));
-  }
+  const serverHttpUrl = useSelector((state: RootStore) => state.config.apiUrl);
+  const [client, setClient] = useState<ContinueGUIClientProtocol | undefined>(
+    undefined
+  );
 
   useEffect(() => {
-    if (!sessionId) {
+    if (!sessionId || !serverHttpUrl) {
+      if (useVscodeMessagePassing) {
+        postVscMessage("onLoad", {});
+      }
+      setClient(undefined);
       return;
     }
-    connect();
-  }, [sessionId]);
 
-  return { send };
+    const serverUrlWithSessionId =
+      serverHttpUrl.replace("http", "ws") +
+      "/gui/ws?session_id=" +
+      encodeURIComponent(sessionId);
+
+    console.log("Creating websocket", serverUrlWithSessionId);
+    console.log("Using vscode message passing", useVscodeMessagePassing);
+    const newClient = new ContinueGUIClientProtocol(
+      serverUrlWithSessionId,
+      useVscodeMessagePassing
+    );
+    setClient(newClient);
+  }, [sessionId, serverHttpUrl]);
+
+  return client;
 }
-export default useContinueWebsocket;
+export default useContinueGUIProtocol;
