@@ -22,23 +22,23 @@
 
 10. Then run `npm run compile`
 
-7. Open `src/activate.ts` file (or any TypeScript file)
+11. Open `src/activate.ts` file (or any TypeScript file)
 
-7. Press `F5` on your keyboard to start `Run and Debug` mode
+12. Press `F5` on your keyboard to start `Run and Debug` mode
 
-8. `cmd+shift+p` to look at developer console and select Continue commands
+13. `cmd+shift+p` to look at developer console and select Continue commands
 
-9. Every time you make changes to the code, you need to run `npm run compile`
+14. Every time you make changes to the code, you need to run `npm run compile`
 
-10. If you run into a "command not found" error, try running `npm run rebuild` and then `npm run compile`
+15. If you run into a "command not found" error, try running `npm run rebuild` and then `npm run compile`
 
 ## Alternative: Install a packaged version
 
-You should always have a packaged version installed in VSCode, because when Continue is broken you'll want a stable version to help you debug. There are four key commands in the `package.json`:
+You should always have a packaged version installed in VS Code, because when Continue is broken you'll want a stable version to help you debug. There are four key commands in the `package.json`:
 
 1. `npm run package` will create a .vsix file in the `build/` folder that can then be installed. It is this same file that you can share with others who want to try the extension.
 
-2. `npm run install-extension` will install the extension to VSCode. You should then see it in your installed extensions in the VSCode sidebar.
+2. `npm run install-extension` will install the extension to VS Code. You should then see it in your installed extensions in the VS Code sidebar.
 
 3. `npm run uninstall` will uninstall the extension. You don't always have to do this thanks to the reinstall command, but can be useful when you want to do so manually.
 
