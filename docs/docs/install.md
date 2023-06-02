@@ -20,8 +20,11 @@ Please follow the [README instructions in the repo](https://github.com/continued
 
 ## Next steps
 
-Now that you have installed the VS Code extension, you should go through the walkthroughs:
-- How to [use the GUI](./walkthroughs/use-the-gui.md)
-- How to [use a recipe](./walkthroughs/use-a-recipe.md)
-- How to [create a recipe](./walkthroughs/create-a-recipe.md)
-- How to [share a recipe](./walkthroughs/share-a-recipe.md)
+Now that you have installed the VS Code extension, you can learn more with our walkthroughs:
+
+How to...
+
+- [Use the GUI](./walkthroughs/use-the-gui.md)
+- [Invoke a recipe](./walkthroughs/use-a-recipe.md)
+- [Create a recipe](./walkthroughs/create-a-recipe.md)
+- [Share a recipe](./walkthroughs/share-a-recipe.md)

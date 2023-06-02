@@ -29,7 +29,7 @@ Once Continue has code snippets to work with, it can generate a fix. Just click 
 
 ### Stacktrace Parsing
 
-Any stacktrace that appears in your VSCode terminal will be caught by us so we can immediately begin the debugging process. For small bugs that you might have quickly solved, we'll just speed up the process to be nearly instantaneous.
+Any stacktrace that appears in your VS Code terminal will be caught by us so we can immediately begin the debugging process. For small bugs that you might have quickly solved, we'll just speed up the process to be nearly instantaneous.
 
 ### Generate Unit Tests and Docstrings
 

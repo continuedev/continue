@@ -2,17 +2,15 @@
 
 ![Continue Architecture Diagram](/img/continue-architecture.png)
 
-**TODO: Rename notebook protocol in this diagram**
-
 ## Overview
 
-The `Continue` library consists of a [SDK](./concepts/sdk.md), a [GUI](./concepts/gui.md), and a [Core](./concepts/core.md) that brings everything together.
+The `Continue` library consists of an [SDK](./concepts/sdk.md), a [GUI](./concepts/gui.md), and a [Core](./concepts/core.md) that brings everything together.
 
-The [SDK](./concepts/sdk.md) gives you access to tools (e.g. open a directory, edit a file, call a model, etc), which you can use when defining how a step should work and composing them with other steps.
+The [SDK](./concepts/sdk.md) gives you access to the tools (e.g. open a directory, edit a file, call a model, etc.) needed to define steps that integrate LLMs into your IDE.
 
-The [GUI](./concepts/gui.md) enables you to guide steps and makes everything transparent, so you can review all steps that were automated, giving you the opportunity to undo and rerun any that ran incorrectly.
+The [GUI](./concepts/gui.md) lets you transparently review every automated step, providing the opportunity to undo and rerun any that ran incorrectly.
 
-The [Core](./concepts/core.md) connects the SDK and GUI with the IDE (i.e. in VS Code, a web browser, etc), enabling the steps to make changes to your code and accelerate your software development workflows.
+The [Core](./concepts/core.md) holds the main event loop, responsible for connecting IDE, SDK, and GUI and deciding which steps to take next.
 
 ## Details
 
@@ -20,9 +18,9 @@ The [Core](./concepts/core.md) connects the SDK and GUI with the IDE (i.e. in VS
 
 - Continue connects any code editor (primarily VS Code right now) to a server (the Continue server) that can take actions in the editor in accordance with defined recipes at the request of a user through the GUI
 - What this looks like:
-  - The Continue VS Code extension runs the ContinueIdeProtocol, launches the Continue Python server in the background, and opens the Continue GUI in a side-panel. 
-  - The Continue server is the brain, communication center, and source of truth, interacting with VS Code through the ContinueIdeProtocol and with the GUI through the NotebookProtocol. 
-  - Communication between the extension and GUI happens through the Continue server. 
+  - The Continue VS Code extension runs the ContinueIdeProtocol, launches the Continue Python server in the background, and opens the Continue GUI in a side-panel.
+  - The Continue server is the brain, communication center, and source of truth, interacting with VS Code through the ContinueIdeProtocol and with the GUI through the NotebookProtocol.
+  - Communication between the extension and GUI happens through the Continue server.
   - When you type a natural language command in the GUI, this is sent to the Continue server, where the `Autopilot` class takes action, potentially using the ContinueIdeProtocol to request actions be taken in the IDE, and then updates the GUI to display the new history.
 - `core` directory contains major concepts
   - This includes Autopilot, Policy, SDK (all in their own files so far)

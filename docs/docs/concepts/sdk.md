@@ -8,8 +8,6 @@ The **Continue SDK** gives you all the tools you need to automate software devel
 
 ## Details
 
-**TODO: Nate to brain dump anything important to know and Ty to shape into paragraphs**
-
 - The ContinueSDK has a `run_step` method, which allows Steps to be composable
 - The reason you want to run it with `run_step` instead of creating a Step and calling `step.run(...)` is so Continue can automatically keep track of the order of all steps run, and allow for reversibility, etc...
 - The ContinueSDK also contains functions for very common steps, like `edit_file`, `add_file`, `run` (to run shell commands), and a few others
@@ -21,7 +19,7 @@ The **Continue SDK** gives you all the tools you need to automate software devel
 
 ### `sdk.ide`
 
-`sdk.ide` is an instance of the class `AbstractIdeProtocolServer`, which contains all the methods you might need to interact with the IDE. This includes things like reading, editing, saving, and opening files as well as getting the workspace directory, displaying suggestions, and more. The goal is to have an IDE agnostic way of interacting with IDEs, so that Steps are portable across VSCode, Sublime, Code, or any other editor you use.
+`sdk.ide` is an instance of the class `AbstractIdeProtocolServer`, which contains all the methods you might need to interact with the IDE. This includes things like reading, editing, saving, and opening files as well as getting the workspace directory, displaying suggestions, and more. The goal is to have an IDE agnostic way of interacting with IDEs, so that Steps are portable across VS Code, Sublime, Code, or any other editor you use.
 
 ### `sdk.models`
 
@@ -61,4 +59,4 @@ The below methods are all just shorthand for very common steps.
 
 ### `get_user_secret`
 
-`get_user_secret` will retrieve a secret from the local .env file or, if it doesn't exist, prompt the user to enter the secret, then store this in the .env file.
+`get_user_secret` will retrieve a secret from the local .env file or, if it doesn't exist, prompt the user to enter the secret before moving on.

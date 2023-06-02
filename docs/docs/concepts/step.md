@@ -8,8 +8,6 @@ A **step** is a simple action that the LLM should take as part of a sequence tha
 
 ## Details
 
-**TODO: Nate to brain dump anything important to know and Ty to shape into paragraphs**
-
 - A `Step` is a Pydantic class inheriting from `Step`
 - Steps implement the `run` method, which takes a ContinueSDK as its only parameter
 - The ContinueSDK gives all the utilities you need to easily write recipes (Steps)
@@ -60,7 +58,7 @@ Create and run an alembic migration
 
 #### Parameters
 
-- `edited_file`: 
+- `edited_file`:
 
 ### WritePytestsStep
 
