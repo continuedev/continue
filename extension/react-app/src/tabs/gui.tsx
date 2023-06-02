@@ -19,6 +19,7 @@ import useContinueGUIProtocol from "../hooks/useWebsocket";
 let TopGUIDiv = styled.div`
   display: grid;
   grid-template-columns: 1fr;
+  overflow: scroll;
 `;
 
 let UserInputQueueItem = styled.div`
@@ -37,7 +38,7 @@ function GUI(props: GUIProps) {
   const [waitingForSteps, setWaitingForSteps] = useState(false);
   const [userInputQueue, setUserInputQueue] = useState<string[]>([]);
   const [history, setHistory] = useState<History | undefined>();
-  //   {
+  // {
   //   timeline: [
   //     {
   //       step: {
@@ -153,8 +154,7 @@ function GUI(props: GUIProps) {
   //     },
   //   ],
   //   current_index: 0,
-  // } as any
-  // );
+  // } as any);
 
   const client = useContinueGUIProtocol();
 
@@ -211,7 +211,9 @@ function GUI(props: GUIProps) {
       {typeof client === "undefined" && (
         <>
           <Loader></Loader>
-          <p>Server disconnected</p>
+          <p style={{ textAlign: "center" }}>
+            Trying to reconnect with server...
+          </p>
         </>
       )}
       {history?.timeline.map((node: HistoryNode, index: number) => {
