@@ -8,10 +8,14 @@
 
 We track the following...
 
-**TODO: Detail exactly what we track after we add initial telemetry**
+- Steps that are run and their parameters
 
 ## How to opt out
 
-Here are the instructions for turning off telemetry...
+Create a `continue.json` file in the root of your workspace and add the following:
 
-**TODO: Describe step-by-step how to opt out of telemetry**
+```json
+{
+  "allow_anonymous_telemetry": false
+}
+```
