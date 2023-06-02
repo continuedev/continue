@@ -14,7 +14,7 @@ from ..libs.steps.core.core import *
 from .env import get_env_var, make_sure_env_exists
 
 
-class Agent:
+class Autopilot:
     pass
 
 
@@ -43,17 +43,17 @@ class ContinueSDK:
     ide: AbstractIdeProtocolServer
     steps: ContinueSDKSteps
     models: Models
-    __agent: Agent
+    __autopilot: Autopilot
 
-    def __init__(self, agent: Agent):
-        self.ide = agent.ide
-        self.__agent = agent
+    def __init__(self, autopilot: Autopilot):
+        self.ide = autopilot.ide
+        self.__autopilot = autopilot
         self.steps = ContinueSDKSteps(self)
         self.models = Models(self)
 
     @property
     def history(self) -> History:
-        return self.__agent.history
+        return self.__autopilot.history
 
     async def _ensure_absolute_path(self, path: str) -> str:
         if os.path.isabs(path):
@@ -61,13 +61,13 @@ class ContinueSDK:
         return os.path.join(await self.ide.getWorkspaceDirectory(), path)
 
     async def run_step(self, step: Step) -> Coroutine[Observation, None, None]:
-        return await self.__agent._run_singular_step(step)
+        return await self.__autopilot._run_singular_step(step)
 
     async def apply_filesystem_edit(self, edit: FileSystemEdit):
         return await self.run_step(FileSystemEditStep(edit=edit))
 
     async def wait_for_user_input(self) -> str:
-        return await self.__agent.wait_for_user_input()
+        return await self.__autopilot.wait_for_user_input()
 
     async def wait_for_user_confirmation(self, prompt: str):
         return await self.run_step(WaitForUserConfirmationStep(prompt=prompt))
@@ -136,5 +136,5 @@ class ContinueSDK:
             return ContinueConfig()
 
     def set_loading_message(self, message: str):
-        # self.__agent.set_loading_message(message)
+        # self.__autopilot.set_loading_message(message)
         raise NotImplementedError()

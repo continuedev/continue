@@ -79,26 +79,26 @@ class NotebookProtocolServer(AbstractNotebookProtocolServer):
             print(e)
 
     async def send_state_update(self):
-        state = self.session.agent.get_full_state().dict()
+        state = self.session.autopilot.get_full_state().dict()
         await self._send_json("state_update", {
             "state": state
         })
 
     def on_main_input(self, input: str):
         # Do something with user input
-        asyncio.create_task(self.session.agent.accept_user_input(input))
+        asyncio.create_task(self.session.autopilot.accept_user_input(input))
 
     def on_reverse_to_index(self, index: int):
         # Reverse the history to the given index
-        asyncio.create_task(self.session.agent.reverse_to_index(index))
+        asyncio.create_task(self.session.autopilot.reverse_to_index(index))
 
     def on_step_user_input(self, input: str, index: int):
         asyncio.create_task(
-            self.session.agent.give_user_input(input, index))
+            self.session.autopilot.give_user_input(input, index))
 
     def on_refinement_input(self, input: str, index: int):
         asyncio.create_task(
-            self.session.agent.accept_refinement_input(input, index))
+            self.session.autopilot.accept_refinement_input(input, index))
 
 
 @router.websocket("/ws")
