@@ -27,7 +27,7 @@ const sidebars = {
         "concepts/ide",
         "concepts/llm",
         "concepts/policy",
-        "concepts/recipes",
+        "concepts/recipe",
         "concepts/sdk",
         "concepts/step",
       ],
