@@ -24,8 +24,8 @@ class AbstractIdeProtocolServer(ABC):
         """Set whether a file is open"""
 
     @abstractmethod
-    async def openNotebook(self):
-        """Open a notebook"""
+    async def openGUI(self):
+        """Open a GUI"""
 
     @abstractmethod
     async def showSuggestionsAndWait(self, suggestions: List[FileEdit]) -> bool:
@@ -44,12 +44,12 @@ class AbstractIdeProtocolServer(ABC):
         """Called when a file system update is received"""
 
     @abstractmethod
-    def onCloseNotebook(self, session_id: str):
-        """Called when a notebook is closed"""
+    def onCloseGUI(self, session_id: str):
+        """Called when a GUI is closed"""
 
     @abstractmethod
-    def onOpenNotebookRequest(self):
-        """Called when a notebook is requested to be opened"""
+    def onOpenGUIRequest(self):
+        """Called when a GUI is requested to be opened"""
 
     @abstractmethod
     async def getOpenFiles(self) -> List[str]:

@@ -1,15 +1,15 @@
 import React, { useEffect, useState } from "react";
 import { RootStore } from "../redux/store";
 import { useSelector } from "react-redux";
-import ContinueNotebookClientProtocol from "./useContinueNotebookProtocol";
+import ContinueGUIClientProtocol from "./useContinueGUIProtocol";
 import { postVscMessage } from "../vscode";
 
-function useContinueNotebookProtocol(useVscodeMessagePassing: boolean = true) {
+function useContinueGUIProtocol(useVscodeMessagePassing: boolean = true) {
   const sessionId = useSelector((state: RootStore) => state.config.sessionId);
   const serverHttpUrl = useSelector((state: RootStore) => state.config.apiUrl);
-  const [client, setClient] = useState<
-    ContinueNotebookClientProtocol | undefined
-  >(undefined);
+  const [client, setClient] = useState<ContinueGUIClientProtocol | undefined>(
+    undefined
+  );
 
   useEffect(() => {
     if (!sessionId || !serverHttpUrl) {
@@ -22,12 +22,12 @@ function useContinueNotebookProtocol(useVscodeMessagePassing: boolean = true) {
 
     const serverUrlWithSessionId =
       serverHttpUrl.replace("http", "ws") +
-      "/notebook/ws?session_id=" +
+      "/gui/ws?session_id=" +
       encodeURIComponent(sessionId);
 
     console.log("Creating websocket", serverUrlWithSessionId);
     console.log("Using vscode message passing", useVscodeMessagePassing);
-    const newClient = new ContinueNotebookClientProtocol(
+    const newClient = new ContinueGUIClientProtocol(
       serverUrlWithSessionId,
       useVscodeMessagePassing
     );
@@ -36,4 +36,4 @@ function useContinueNotebookProtocol(useVscodeMessagePassing: boolean = true) {
 
   return client;
 }
-export default useContinueNotebookProtocol;
+export default useContinueGUIProtocol;

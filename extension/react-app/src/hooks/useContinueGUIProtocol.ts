@@ -1,9 +1,9 @@
-import AbstractContinueNotebookClientProtocol from "./ContinueNotebookClientProtocol";
+import AbstractContinueGUIClientProtocol from "./ContinueGUIClientProtocol";
 // import { Messenger, WebsocketMessenger } from "../../../src/util/messenger";
 import { Messenger, WebsocketMessenger } from "./messenger";
 import { VscodeMessenger } from "./vscodeMessenger";
 
-class ContinueNotebookClientProtocol extends AbstractContinueNotebookClientProtocol {
+class ContinueGUIClientProtocol extends AbstractContinueGUIClientProtocol {
   messenger: Messenger;
   // Server URL must contain the session ID param
   serverUrlWithSessionId: string;
@@ -46,4 +46,4 @@ class ContinueNotebookClientProtocol extends AbstractContinueNotebookClientProto
   }
 }
 
-export default ContinueNotebookClientProtocol;
+export default ContinueGUIClientProtocol;

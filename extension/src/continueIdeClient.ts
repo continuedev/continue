@@ -97,7 +97,7 @@ class IdeProtocolClient {
         this.openFile(data.filepath);
         // TODO: Close file
         break;
-      case "openNotebook":
+      case "openGUI":
       case "connected":
         break;
       default:
@@ -133,17 +133,17 @@ class IdeProtocolClient {
   // ------------------------------------ //
   // Initiate Request
 
-  closeNotebook(sessionId: string) {
+  closeGUI(sessionId: string) {
     this.panels.get(sessionId)?.dispose();
     this.panels.delete(sessionId);
   }
 
-  async openNotebook() {
+  async openGUI() {
     console.log("OPENING NOTEBOOK");
     if (this.messenger === null) {
       console.log("MESSENGER IS NULL");
     }
-    const resp = await this.messenger?.sendAndReceive("openNotebook", {});
+    const resp = await this.messenger?.sendAndReceive("openGUI", {});
     const sessionId = resp.sessionId;
     console.log("SESSION ID", sessionId);
 

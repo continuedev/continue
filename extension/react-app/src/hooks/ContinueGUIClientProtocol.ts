@@ -1,4 +1,4 @@
-abstract class AbstractContinueNotebookClientProtocol {
+abstract class AbstractContinueGUIClientProtocol {
   abstract sendMainInput(input: string): void;
 
   abstract reverseToIndex(index: number): void;
@@ -10,4 +10,4 @@ abstract class AbstractContinueNotebookClientProtocol {
   abstract onStateUpdate(state: any): void;
 }
 
-export default AbstractContinueNotebookClientProtocol;
+export default AbstractContinueGUIClientProtocol;

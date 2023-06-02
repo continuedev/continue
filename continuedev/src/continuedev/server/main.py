@@ -2,14 +2,14 @@ import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from .ide import router as ide_router
-from .notebook import router as notebook_router
+from .gui import router as gui_router
 import uvicorn
 import argparse
 
 app = FastAPI()
 
 app.include_router(ide_router)
-app.include_router(notebook_router)
+app.include_router(gui_router)
 
 # Add CORS support
 app.add_middleware(

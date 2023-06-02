@@ -5,13 +5,13 @@ from pydantic import BaseModel
 from uvicorn.main import Server
 
 from .session_manager import SessionManager, session_manager, Session
-from .notebook_protocol import AbstractNotebookProtocolServer
+from .gui_protocol import AbstractGUIProtocolServer
 from ..libs.util.queue import AsyncSubscriptionQueue
 import asyncio
 import nest_asyncio
 nest_asyncio.apply()
 
-router = APIRouter(prefix="/notebook", tags=["notebook"])
+router = APIRouter(prefix="/gui", tags=["gui"])
 
 # Graceful shutdown by closing websockets
 original_handler = Server.handle_exit
@@ -43,7 +43,7 @@ T = TypeVar("T", bound=BaseModel)
 # You should probably abstract away the websocket stuff into a separate class
 
 
-class NotebookProtocolServer(AbstractNotebookProtocolServer):
+class GUIProtocolServer(AbstractGUIProtocolServer):
     websocket: WebSocket
     session: Session
     sub_queue: AsyncSubscriptionQueue = AsyncSubscriptionQueue()
@@ -107,7 +107,7 @@ async def websocket_endpoint(websocket: WebSocket, session: Session = Depends(we
 
     print("Session started")
     session_manager.register_websocket(session.session_id, websocket)
-    protocol = NotebookProtocolServer(session)
+    protocol = GUIProtocolServer(session)
     protocol.websocket = websocket
 
     # Update any history that may have happened before connection

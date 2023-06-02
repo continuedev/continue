@@ -12,7 +12,7 @@ from ..models.filesystem import FileSystem, RangeInFile, EditDiff, RealFileSyste
 from ..models.main import Traceback
 from ..models.filesystem_edit import AddDirectory, AddFile, DeleteDirectory, DeleteFile, FileSystemEdit, FileEdit, FileEditWithFullContents, RenameDirectory, RenameFile, SequentialFileSystemEdit
 from pydantic import BaseModel
-from .notebook import SessionManager, session_manager
+from .gui import SessionManager, session_manager
 from .ide_protocol import AbstractIdeProtocolServer
 
 
@@ -106,8 +106,8 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
         return resp_model.parse_obj(resp)
 
     async def handle_json(self, message_type: str, data: Any):
-        if message_type == "openNotebook":
-            await self.openNotebook()
+        if message_type == "openGUI":
+            await self.openGUI()
         elif message_type == "setFileOpen":
             await self.setFileOpen(data["filepath"], data["open"])
         elif message_type == "fileEdits":
@@ -131,9 +131,9 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
             "open": open
         })
 
-    async def openNotebook(self):
+    async def openGUI(self):
         session_id = self.session_manager.new_session(self)
-        await self._send_json("openNotebook", {
+        await self._send_json("openGUI", {
             "sessionId": session_id
         })
 
@@ -148,7 +148,7 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
             self._receive_json(ShowSuggestionResponse)
             for i in range(len(suggestions))
         ])  # WORKING ON THIS FLOW HERE. Fine now to just await for response, instead of doing something fancy with a "waiting" state on the autopilot.
-        # Just need connect the suggestionId to the IDE (and the notebook)
+        # Just need connect the suggestionId to the IDE (and the gui)
         return any([r.accepted for r in responses])
 
     # ------------------------------- #
@@ -168,11 +168,11 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
         # Access to Autopilot (so SessionManager)
         pass
 
-    def onCloseNotebook(self, session_id: str):
+    def onCloseGUI(self, session_id: str):
         # Accesss to SessionManager
         pass
 
-    def onOpenNotebookRequest(self):
+    def onOpenGUIRequest(self):
         pass
 
     def onFileEdits(self, edits: List[FileEditWithFullContents]):

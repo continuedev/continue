@@ -2,7 +2,7 @@ from typing import Any
 from abc import ABC, abstractmethod
 
 
-class AbstractNotebookProtocolServer(ABC):
+class AbstractGUIProtocolServer(ABC):
     @abstractmethod
     async def handle_json(self, data: Any):
         """Handle a json message"""
