@@ -54,31 +54,6 @@ class RunPolicyUntilDoneStep(Step):
         return observation
 
 
-class RunCommandStep(Step):
-    cmd: str
-    name: str = "Run command"
-    _description: str = None
-
-    async def describe(self, models: Models) -> Coroutine[str, None, None]:
-        if self._description is not None:
-            return self._description
-        return self.cmd
-
-    async def run(self, sdk: ContinueSDK) -> Coroutine[Observation, None, None]:
-        cwd = await sdk.ide.getWorkspaceDirectory()
-        result = subprocess.run(
-            self.cmd.split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=cwd)
-        stdout = result.stdout.decode("utf-8")
-        stderr = result.stderr.decode("utf-8")
-        print(stdout, stderr)
-
-        # If it fails, return the error
-        if result.returncode != 0:
-            return TextObservation(text=stderr)
-        else:
-            return TextObservation(text=stdout)
-
-
 class FasterEditHighlightedCodeStep(Step):
     user_input: str
     hide = True
