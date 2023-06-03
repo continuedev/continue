@@ -22,6 +22,6 @@ If you would like to use Continue locally, you can follow [these steps](./instal
 
 If you'd like to continue exploring in GitHub Codespaces, you can learn more with our walkthroughs:
 - [Use the GUI](./walkthroughs/use-the-gui.md)
-- [Invoke a recipe](./walkthroughs/use-a-recipe.md)
+- [Use a recipe](./walkthroughs/use-a-recipe.md)
 - [Create a recipe](./walkthroughs/create-a-recipe.md)
 - [Share a recipe](./walkthroughs/share-a-recipe.md)
