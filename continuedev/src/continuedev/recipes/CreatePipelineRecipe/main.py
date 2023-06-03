@@ -23,11 +23,5 @@ class CreatePipelineRecipe(Step):
                 - Write a query to view the data""")) >>
             WaitForUserInputStep(prompt="What API do you want to load data from?") >>
             SetupPipelineStep(api_description="WeatherAPI.com API") >>
-            MessageStep(message=dedent("""\
-                This step will validate that your dlt pipeline is working as expected:
-                - Test that the API call works
-                - Load the data into a local DuckDB instance
-                - Write a query to view the data
-                """)) >>
             ValidatePipelineStep()
         )
