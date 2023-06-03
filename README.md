@@ -10,7 +10,7 @@ Continue is the open-source autopilot for software developers. Using our SDK you
 - The Continue Python package, which offers an SDK to write recipes and the Continue server, which runs all automations
 - The Continue VSCode extension, where you can natively run recipes and use natural language to refine code much faster
 
-## Getting Started
+# Getting Started
 
 The easiest way to start using Continue is to download our VS Code extension from the marketplace:
 
@@ -22,20 +22,26 @@ Alternatively, you can build from source. Just clone the repo and run a Python s
 git clone https://github.com/continuedev/continue && cd continue/extension/scripts && python3 install_from_source.py
 ```
 
-## Writing Recipes
+# Writing Recipes
 
-See our guides on writing recipes in the documentation.
-
-# Resources
-
-- [Continue Github Project](https://github.com/orgs/continuedev/projects/1/views/1)
-- [Continue User Guide](https://www.notion.so/continue-dev/Continue-User-Guide-1c6ad99887d0474d9e42206f6c98efa4)
-- [Continue - Mission & Vision](https://continue-dev.notion.site/Continue-a8e41af9801641f79d2c8565907bbd22)
+Check out our [recipes repo](https://github.com/continuedev/recipes) to learn how to write your own.
 
 # Contributing
 
-Please do
+Please do! The easiest way to start contributing is by writing recipes, but PRs/suggestions of all kinds are welcome : )
+
+# Subfolder READMEs
+
+[PyPI Package (Continue Server)](./continuedev) - See here to learn about the Continue Server, which can be downloaded as a [PyPI package](https://pypi.org/project/continuedev/).
+
+[Continue VS Code Extension](./extension) - See here to learn about the capabilities of our VS Code extension, which is the first implementation of Continue's IDE Protocol, built to be editor-agnostic. A README for developers is found in the [`src/` folder.](./extension/src).
+
+[Continue GUI](./extension/react-app/) - The Continue GUI is a React app that lets users interact with the server. It is made to be placed adjacent to the text editor in your IDE.
+
+[Docs](./docs) - The source for our documentation.
+
+[Schema](./schema) - JSON Schema types generated from Pydantic models, used across the `continuedev` and `extension/` directories.
 
 # License
 
-[Apache-2.0]([https://github.com/sestinj/the-x/blob/main/LICENSE](https://opensource.org/licenses/Apache-2.0)) © 2023 Continue
+[Apache-2.0](<[https://github.com/sestinj/the-x/blob/main/LICENSE](https://opensource.org/licenses/Apache-2.0)>) © 2023 Continue
