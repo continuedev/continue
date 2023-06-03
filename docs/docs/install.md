@@ -14,8 +14,6 @@ If you want to try Continue before installing locally, check out the [GitHub Cod
 
 **TODO: Add link to screenshot of what it looks like after install has completed**
 
-![vs-code-install]()
-
 :::note
 If you would like to install Continue from source, please [follow the instructions](https://github.com/continuedev/continue/blob/main/README.md) in the repo README.
 :::
