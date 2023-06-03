@@ -12,6 +12,8 @@ We track the following...
 
 ## How to opt out
 
+**TODO: Define where the root of your workspace**
+
 Create a `continue.json` file in the root of your workspace and add the following:
 
 ```json
