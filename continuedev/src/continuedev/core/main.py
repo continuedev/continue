@@ -67,6 +67,13 @@ class History(ContinueBaseModel):
             return None
         return state.observation
 
+    def pop_last_step(self) -> Union[HistoryNode, None]:
+        if self.current_index < 0:
+            return None
+        node = self.timeline.pop(self.current_index)
+        self.current_index -= 1
+        return node.step
+
     @classmethod
     def from_empty(cls):
         return cls(timeline=[], current_index=-1)
@@ -118,7 +125,7 @@ class Step(ContinueBaseModel):
         if self._description is not None:
             d["description"] = self._description
         else:
-            d["description"] = self.name
+            d["description"] = "`Description loading...`"
         return d
 
     @validator("name", pre=True, always=True)

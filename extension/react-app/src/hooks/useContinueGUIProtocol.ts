@@ -44,6 +44,10 @@ class ContinueGUIClientProtocol extends AbstractContinueGUIClientProtocol {
       }
     });
   }
+
+  retryAtIndex(index: number) {
+    this.messenger.send("retry_at_index", { index });
+  }
 }
 
 export default ContinueGUIClientProtocol;

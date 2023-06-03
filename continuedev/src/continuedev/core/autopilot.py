@@ -3,7 +3,7 @@ import time
 from typing import Callable, Coroutine, List
 from ..models.filesystem_edit import FileEditWithFullContents
 from ..libs.llm import LLM
-from .observation import Observation
+from .observation import Observation, InternalErrorObservation
 from ..server.ide_protocol import AbstractIdeProtocolServer
 from ..libs.util.queue import AsyncSubscriptionQueue
 from ..models.main import ContinueBaseModel
@@ -77,6 +77,11 @@ class Autopilot(ContinueBaseModel):
 
     _step_depth: int = 0
 
+    async def retry_at_index(self, index: int):
+        last_step = self.history.pop_last_step()
+        await self.update_subscribers()
+        await self._run_singular_step(last_step)
+
     async def _run_singular_step(self, step: "Step", is_future_step: bool = False) -> Coroutine[Observation, None, None]:
         capture_event(
             'step run', {'step_name': step.name, 'params': step.dict()})
@@ -96,14 +101,28 @@ class Autopilot(ContinueBaseModel):
         # Call all subscribed callbacks
         await self.update_subscribers()
 
-        # Run step
+        # Try to run step and handle errors
         self._step_depth += 1
-        observation = await step(ContinueSDK(self))
+
+        try:
+            observation = await step(ContinueSDK(self))
+        except Exception as e:
+            # Attach an InternalErrorObservation to the step and unhide it.
+            error_string = '\n\n'.join(
+                traceback.format_tb(e.__traceback__)) + f"\n\n{e.__repr__()}"
+            print(
+                f"Error while running step: \n{error_string}\n{e}")
+
+            observation = InternalErrorObservation(
+                error=error_string)
+            step.hide = False
+
         self._step_depth -= 1
 
         # Add observation to history
         self.history.get_last_at_depth(
             self._step_depth, include_current=True).observation = observation
+        await self.update_subscribers()
 
         # Update its description
         async def update_description():
@@ -122,22 +141,17 @@ class Autopilot(ContinueBaseModel):
         next_step = step
         is_future_step = False
         while not (next_step is None or self._should_halt):
-            try:
-                if is_future_step:
-                    # If future step, then we are replaying and need to delete the step from history so it can be replaced
-                    self.history.remove_current_and_substeps()
+            if is_future_step:
+                # If future step, then we are replaying and need to delete the step from history so it can be replaced
+                self.history.remove_current_and_substeps()
 
-                observation = await self._run_singular_step(next_step, is_future_step)
-                if next_step := self.policy.next(self.history):
-                    is_future_step = False
-                elif next_step := self.history.take_next_step():
-                    is_future_step = True
-                else:
-                    next_step = None
+            await self._run_singular_step(next_step, is_future_step)
 
-            except Exception as e:
-                print(
-                    f"Error while running step: \n{''.join(traceback.format_tb(e.__traceback__))}\n{e}")
+            if next_step := self.policy.next(self.history):
+                is_future_step = False
+            elif next_step := self.history.take_next_step():
+                is_future_step = True
+            else:
                 next_step = None
 
         self._active = False

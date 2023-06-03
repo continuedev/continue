@@ -26,3 +26,7 @@ class AbstractGUIProtocolServer(ABC):
     @abstractmethod
     async def send_state_update(self, state: dict):
         """Send a state update to the client"""
+
+    @abstractmethod
+    def on_retry_at_index(self, index: int):
+        """Called when the user requests a retry at a previous index"""

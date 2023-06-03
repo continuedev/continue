@@ -22,4 +22,11 @@ class HuggingFaceInferenceAPI(LLM):
                 "return_full_text": False,
             }
         })
-        return response.json()[0]["generated_text"]
+        data = response.json()
+
+        # Error if the response is not a list
+        if not isinstance(data, list):
+            raise Exception(
+                "Hugging Face returned an error response: \n\n", data)
+
+        return data[0]["generated_text"]
