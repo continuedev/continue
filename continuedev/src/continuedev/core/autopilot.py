@@ -8,7 +8,7 @@ from ..server.ide_protocol import AbstractIdeProtocolServer
 from ..libs.util.queue import AsyncSubscriptionQueue
 from ..models.main import ContinueBaseModel
 from .main import Policy, History, FullState, Step, HistoryNode
-from ..libs.steps.core.core import ReversibleStep, ManualEditStep, UserInputStep
+from ..steps.core.core import ReversibleStep, ManualEditStep, UserInputStep
 from ..libs.util.telemetry import capture_event
 from .sdk import ContinueSDK
 import asyncio

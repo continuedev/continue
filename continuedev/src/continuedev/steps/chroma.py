@@ -1,9 +1,9 @@
 from textwrap import dedent
 from typing import Coroutine, Union
-from ...core.observation import Observation, TextObservation
-from ...core.main import Step, ContinueSDK
+from ..core.observation import Observation, TextObservation
+from ..core.main import Step, ContinueSDK
 from .core.core import EditFileStep
-from ..chroma.query import query_codebase_index
+from ..libs.chroma.query import query_codebase_index
 from .core.core import EditFileStep
 
 

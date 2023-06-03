@@ -2,12 +2,12 @@
 import subprocess
 from textwrap import dedent
 from typing import Coroutine, List, Union
-from ...llm.prompt_utils import MarkdownStyleEncoderDecoder
+from ...libs.llm.prompt_utils import MarkdownStyleEncoderDecoder
 
-from ....models.filesystem_edit import EditDiff, FileEditWithFullContents, FileSystemEdit
-from ....models.filesystem import FileSystem, RangeInFile, RangeInFileWithContents
-from ....core.observation import Observation, TextObservation, TracebackObservation, UserInputObservation
-from ....core.main import Step, SequentialStep
+from ...models.filesystem_edit import EditDiff, FileEditWithFullContents, FileSystemEdit
+from ...models.filesystem import FileSystem, RangeInFile, RangeInFileWithContents
+from ...core.observation import Observation, TextObservation, TracebackObservation, UserInputObservation
+from ...core.main import Step, SequentialStep
 
 
 class ContinueSDK:

@@ -1,8 +1,7 @@
 # When an edit is made to an existing class or a new sqlalchemy class is created,
 # this should be kicked off.
 
-from ...models.filesystem import RangeInFile
-from .main import EditCodeStep, RunCommandStep
+from ..main import EditCodeStep, RunCommandStep
 from ...core.main import Step
 
 

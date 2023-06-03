@@ -6,7 +6,6 @@ from ..models.filesystem_edit import FileEditWithFullContents
 from ..core.policy import DemoPolicy
 from ..core.main import FullState
 from ..core.autopilot import Autopilot
-from ..libs.steps.nate import ImplementAbstractMethodStep
 from .ide_protocol import AbstractIdeProtocolServer
 import asyncio
 import nest_asyncio
@@ -34,11 +33,6 @@ class DemoAutopilot(Autopilot):
             self._manual_edits_buffer.append(edit)
             # Note that you're storing a lot of unecessary data here. Can compress into EditDiffs on the spot, and merge.
             # self._manual_edits_buffer = merge_file_edit(self._manual_edits_buffer, edit)
-            # FOR DEMO PURPOSES
-            if edit.fileEdit.filepath.endswith("filesystem.py") and "List" in self.cumulative_edit_string and ":" in edit.fileEdit.replacement:
-                self.cumulative_edit_string = ""
-                asyncio.create_task(self.run_from_step(
-                    ImplementAbstractMethodStep()))
 
 
 class SessionManager:

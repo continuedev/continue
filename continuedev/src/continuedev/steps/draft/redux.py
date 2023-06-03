@@ -1,5 +1,5 @@
-from ....core.main import Step
-from ....core.sdk import ContinueSDK
+from ...core.main import Step
+from ...core.sdk import ContinueSDK
 from ..core.core import EditFileStep
 
 
