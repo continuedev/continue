@@ -46,7 +46,7 @@ Let us know what you would like to contribute and we will help you make it happe
 
 #### 1. Clone this repo
 
-Reccommended: Run this command to use SSH
+Recommended: Run this command to use SSH
 ```bash
 git clone git@github.com:continuedev/continue.git
 ```
