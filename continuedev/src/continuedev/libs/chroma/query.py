@@ -1,78 +1,178 @@
+import json
 import subprocess
-import sys
-from llama_index import GPTVectorStoreIndex, StorageContext, load_index_from_storage
+from typing import List, Tuple
+from llama_index import GPTVectorStoreIndex, StorageContext, load_index_from_storage, Document
+from llama_index.langchain_helpers.text_splitter import TokenTextSplitter
 import os
-from typer import Typer
-from enum import Enum
-from .update import update_codebase_index, create_codebase_index, index_dir_for, get_current_branch
-from .replace import replace_additional_index
-
-app = Typer()
+from .update import filter_ignored_files, load_gpt_index_documents
+from functools import cached_property
 
 
-def query_codebase_index(query: str) -> str:
-    """Query the codebase index."""
-    branch = subprocess.check_output(
-        ["git", "rev-parse", "--abbrev-ref", "HEAD"]).decode("utf-8").strip()
-    path = index_dir_for(branch)
-    if not os.path.exists(path):
-        print("No index found for the codebase at ", path)
-        return ""
+class ChromaIndexManager:
+    workspace_dir: str
 
-    storage_context = StorageContext.from_defaults(
-        persist_dir=index_dir_for(branch))
-    index = load_index_from_storage(storage_context)
-    # index = GPTVectorStoreIndex.load_from_disk(path)
-    engine = index.as_query_engine()
-    return engine.query(query)
+    def __init__(self, workspace_dir: str):
+        self.workspace_dir = workspace_dir
 
+    @cached_property
+    def current_commit(self) -> str:
+        """Get the current commit."""
+        return subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=self.workspace_dir).decode("utf-8").strip()
 
-def query_additional_index(query: str) -> str:
-    """Query the additional index."""
-    index = GPTVectorStoreIndex.load_from_disk('data/additional_index.json')
-    return index.query(query)
+    @cached_property
+    def current_branch(self) -> str:
+        """Get the current branch."""
+        return subprocess.check_output(
+            ["git", "rev-parse", "--abbrev-ref", "HEAD"], cwd=self.workspace_dir).decode("utf-8").strip()
 
+    @cached_property
+    def index_dir(self) -> str:
+        return os.path.join(self.workspace_dir, ".continue", "chroma", self.current_branch)
 
-class IndexTypeOption(str, Enum):
-    codebase = "codebase"
-    additional = "additional"
+    @cached_property
+    def git_root_dir(self):
+        """Get the root directory of a Git repository."""
+        try:
+            return subprocess.check_output(['git', 'rev-parse', '--show-toplevel'], cwd=self.workspace_dir).strip().decode()
+        except subprocess.CalledProcessError:
+            return None
 
+    def check_index_exists(self):
+        return os.path.exists(self.index_dir)
 
-@app.command()
-def query(context: IndexTypeOption, query: str):
-    if context == IndexTypeOption.additional:
-        response = query_additional_index(query)
-    elif context == IndexTypeOption.codebase:
-        response = query_codebase_index(query)
-    else:
-        print("Error: unknown context")
-    print({"response": response})
+    def create_codebase_index(self):
+        """Create a new index for the current branch."""
+        if not self.check_index_exists():
+            os.makedirs(self.index_dir)
 
+        print("ROOT DIRECTORY: ", self.git_root_dir)
+        documents = load_gpt_index_documents(self.git_root_dir)
 
-@app.command()
-def check_index_exists(root_path: str):
-    branch = get_current_branch()
-    exists = os.path.exists(index_dir_for(branch))
-    print({"exists": exists})
+        chunks = {}
+        doc_chunks = []
+        for doc in documents:
+            text_splitter = TokenTextSplitter()
+            text_chunks = text_splitter.split_text(doc.text)
+            filename = doc.extra_info["filename"]
+            chunks[filename] = len(text_chunks)
+            for i, text in enumerate(text_chunks):
+                doc_chunks.append(Document(text, doc_id=f"{filename}::{i}"))
 
+        with open(f"{self.index_dir}/metadata.json", "w") as f:
+            json.dump({"commit": self.current_commit,
+                       "chunks": chunks}, f, indent=4)
 
-@app.command()
-def update():
-    update_codebase_index()
-    print("Updated codebase index")
+        index = GPTVectorStoreIndex([])
 
+        for chunk in doc_chunks:
+            index.insert(chunk)
 
-@app.command("create")
-def create_index():
-    create_codebase_index()
-    print("Created file index")
+        # d = 1536 # Dimension of text-ada-embedding-002
+        # faiss_index = faiss.IndexFlatL2(d)
+        # index = GPTFaissIndex(documents, faiss_index=faiss_index)
+        # index.save_to_disk(f"{index_dir_for(branch)}/index.json", faiss_index_save_path=f"{index_dir_for(branch)}/index_faiss_core.index")
 
+        index.storage_context.persist(persist_dir=self.index_dir)
 
-@app.command()
-def replace_additional_index(info: str):
-    replace_additional_index()
-    print("Replaced additional index")
+        print("Codebase index created")
 
+    def get_modified_deleted_files(self) -> Tuple[List[str], List[str]]:
+        """Get a list of all files that have been modified since the last commit."""
+        metadata = f"{self.index_dir}/metadata.json"
+        with open(metadata, "r") as f:
+            previous_commit = json.load(f)["commit"]
 
-if __name__ == '__main__':
-    app()
+        modified_deleted_files = subprocess.check_output(
+            ["git", "diff", "--name-only", previous_commit, self.current_commit]).decode("utf-8").strip()
+        modified_deleted_files = modified_deleted_files.split("\n")
+        modified_deleted_files = [f for f in modified_deleted_files if f]
+
+        deleted_files = [
+            f for f in modified_deleted_files if not os.path.exists(self.git_root_dir + "/" + f)]
+        modified_files = [
+            f for f in modified_deleted_files if os.path.exists(self.git_root_dir + "/" + f)]
+
+        return filter_ignored_files(modified_files, self.index_dir), filter_ignored_files(deleted_files, self.index_dir)
+
+    def update_codebase_index(self):
+        """Update the index with a list of files."""
+
+        if not self.check_index_exists():
+            self.create_codebase_index()
+        else:
+            # index = GPTFaissIndex.load_from_disk(f"{index_dir_for(branch)}/index.json", faiss_index_save_path=f"{index_dir_for(branch)}/index_faiss_core.index")
+            index = GPTVectorStoreIndex.load_from_disk(
+                f"{self.index_dir}/index.json")
+            modified_files, deleted_files = self.get_modified_deleted_files()
+
+            with open(f"{self.index_dir}/metadata.json", "r") as f:
+                metadata = json.load(f)
+
+            for file in deleted_files:
+
+                num_chunks = metadata["chunks"][file]
+                for i in range(num_chunks):
+                    index.delete(f"{file}::{i}")
+
+                del metadata["chunks"][file]
+
+                print(f"Deleted {file}")
+
+            for file in modified_files:
+
+                if file in metadata["chunks"]:
+
+                    num_chunks = metadata["chunks"][file]
+
+                    for i in range(num_chunks):
+                        index.delete(f"{file}::{i}")
+
+                    print(f"Deleted old version of {file}")
+
+                with open(file, "r") as f:
+                    text = f.read()
+
+                text_splitter = TokenTextSplitter()
+                text_chunks = text_splitter.split_text(text)
+
+                for i, text in enumerate(text_chunks):
+                    index.insert(Document(text, doc_id=f"{file}::{i}"))
+
+                metadata["chunks"][file] = len(text_chunks)
+
+                print(f"Inserted new version of {file}")
+
+            metadata["commit"] = self.current_commit
+
+            with open(f"{self.index_dir}/metadata.json", "w") as f:
+                json.dump(metadata, f, indent=4)
+
+            print("Codebase index updated")
+
+    def query_codebase_index(self, query: str) -> str:
+        """Query the codebase index."""
+        if not self.check_index_exists():
+            print("No index found for the codebase at ", self.index_dir)
+            return ""
+
+        storage_context = StorageContext.from_defaults(
+            persist_dir=self.index_dir)
+        index = load_index_from_storage(storage_context)
+        # index = GPTVectorStoreIndex.load_from_disk(path)
+        engine = index.as_query_engine()
+        return engine.query(query)
+
+    def query_additional_index(self, query: str) -> str:
+        """Query the additional index."""
+        index = GPTVectorStoreIndex.load_from_disk(
+            os.path.join(self.index_dir, 'additional_index.json'))
+        return index.query(query)
+
+    def replace_additional_index(self, info: str):
+        """Replace the additional index with the given info."""
+        with open(f'{self.index_dir}/additional_context.txt', 'w') as f:
+            f.write(info)
+        documents = [Document(info)]
+        index = GPTVectorStoreIndex(documents)
+        index.save_to_disk(f'{self.index_dir}/additional_index.json')
+        print("Additional index replaced")
