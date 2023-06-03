@@ -1,6 +1,8 @@
 # Continue PyPI Package
 
-Continue is a Python library for automating repetitive sequences of software development tasks using language models. Using our VS Code extension, you can build, run, and refine these recipes as they natively interact with your codebase. Download on [our GitHub](https://github.com/continuedev/continue).
+This package contains the [Continue](https://github.com/continuedev.com/continue) server and core classes needed to build your own recipes.
+
+Continue is a Python library for automating repetitive sequences of software development tasks using language models. Using our VS Code extension, you can build, run, and refine these recipes as they natively interact with your codebase. Read the docs [here](https://continuedev.netlify.app/) or download the VS Code extension [here](https://marketplace.visualstudio.com/items?itemName=Continue.continue).
 
 ## Continue Server
 
