@@ -1,5 +1,7 @@
 # Create a recipe
 
+Check out the [recipes folder](https://github.com/continuedev/continue/tree/main/continuedev/src/continuedev/recipes) to learn how to write your own.
+
 **TODO: Describe step-by-step how to create a recipe**
 
 Points to include
