@@ -1,49 +1,76 @@
-![GitHub issues](https://img.shields.io/github/issues-raw/continuedev/continue)
+<h1 align="center"> Continue </h1>
+
+<div align="center">
+
+**[Continue](https://continue.dev/docs) is the open-source library for accelerating software development with language models**
+
+</div>
+
+<div align="center">
+
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+![GitHub issues](https://img.shields.io/github/issues-raw/continuedev/continue)
 ![GitHub Repo stars](https://img.shields.io/github/stars/continuedev/continue?style=social)
 ![Twitter URL](https://img.shields.io/twitter/url?style=social&url=https%3A%2F%2Fgithub.com%2Fcontinuedev%2Fcontinue)
 
-# Continue
+</div>
 
-Continue is the open-source autopilot for software developers. Using our SDK you can write short scripts, called recipes, that automate sequences of tasks that are common within your codebase. This repository contains:
+## Getting Started
 
-- The Continue Python package, which offers an SDK to write recipes and the Continue server, which runs all automations
-- The Continue VSCode extension, where you can natively run recipes and use natural language to refine code much faster
+### GitHub Codespaces
 
-**[Read the docs](https://continuedev.netlify.app/)**
+Learn how to try the GitHub Codespaces Demo [here](https://continue.dev/docs/getting-started)
 
-# Getting Started
+### VS Code
 
-The easiest way to start using Continue is to download our VS Code extension from the marketplace:
+Learn how to install locally in VS Code [here](https://continue.dev/docs/install)
 
-[Download for VS Code](https://marketplace.visualstudio.com/items?itemName=Continue.continue)
+## Walkthroughs
 
-Alternatively, you can build from source. Just clone the repo and run a Python script:
+- [Use the GUI](https://continue.dev/walkthroughs/use-the-gui.md)
+- [Use a recipe](https://continue.dev/walkthroughs/use-a-recipe.md)
+- [Create a recipe](https://continue.dev/walkthroughs/create-a-recipe.md)
+- [Share a recipe](https://continue.dev/walkthroughs/share-a-recipe.md)
 
+## How to contribute
+
+### Option 1: Create a recipe and share it with the community
+
+Follow [these steps](https://continue.dev/walkthroughs/share-a-recipe.md) to share a recipe you have created :)
+
+### Option 2: Open a [new GitHub Issue](https://github.com/continuedev/continue/issues/new) or comment on [an existing one](https://github.com/continuedev/continue/issues)
+
+Let us know what you would like to contribute and we will help you make it happen!
+
+## Install from source
+
+#### 1. Clone this repo
+
+Reccommended: Run this command to use SSH
 ```bash
-git clone https://github.com/continuedev/continue && cd continue/extension/scripts && python3 install_from_source.py
+git clone git@github.com:continuedev/continue.git
 ```
 
-# Writing Recipes
+Alternative: Run this command to use HTTPS
+```bash
+git clone https://github.com/continuedev/continue
+```
 
-Check out the [recipes folder](https://github.com/continuedev/continue/tree/main/continuedev/src/continuedev/recipes) to learn how to write your own.
+#### 2. Install Continue
 
-# Contributing
+Run this command to use the install script
+```bash
+cd continue/extension/scripts && python3 install_from_source.py
+```
 
-Please do! The easiest way to start contributing is by writing recipes, but PRs/suggestions of all kinds are welcome : )
+# Understanding the codebase
 
-# Subfolder READMEs
-
-[PyPI Package (Continue Server)](./continuedev) - See here to learn about the Continue Server, which can be downloaded as a [PyPI package](https://pypi.org/project/continuedev/).
-
-[Continue VS Code Extension](./extension) - See here to learn about the capabilities of our VS Code extension, which is the first implementation of Continue's IDE Protocol, built to be editor-agnostic. A README for developers is found in the [`src/` folder.](./extension/src).
-
-[Continue GUI](./extension/react-app/) - The Continue GUI is a React app that lets users interact with the server. It is made to be placed adjacent to the text editor in your IDE.
-
-[Docs](./docs) - The source for our documentation.
-
-[Schema](./schema) - JSON Schema types generated from Pydantic models, used across the `continuedev` and `extension/` directories.
+- [Continue Server README](./continuedev): learn about the core of Continue, which can be downloaded as a [PyPI package](https://pypi.org/project/continuedev/)
+- [VS Code Extension README](./extension/src): learn about the capabilities of our extension—the first implementation of Continue's IDE Protocol—which makes it possible to use use Continue in VS Code and GitHub Codespaces
+- [Continue GUI README](./extension/react-app/): learn about the React app that lets users interact with the server and is placed adjacent to the text editor in any suppported IDE
+- [Schema README](./schema): learn about the JSON Schema types generated from Pydantic models, which we use across the `continuedev/` and `extension/` directories
+- [Continue Docs README](./docs): learn how our [docs](https://continue.dev/docs) are written and built
 
 # License
 
-[Apache-2.0](<[https://github.com/sestinj/the-x/blob/main/LICENSE](https://opensource.org/licenses/Apache-2.0)>) © 2023 Continue
+[Apache 2.0 © 2023 Continue Dev, Inc.](./LICENSE)
