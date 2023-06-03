@@ -12,6 +12,8 @@ If you want to try Continue before installing locally, check out the [GitHub Cod
 
 3. Once you do this, you will see a message in the bottom right hand corner of VS Code that says `Setting up Continue extension...`. After 30-90 seconds, the Continue extension will then open up. It should look like this when it is complete:
 
+**TODO: Add link to screenshot of what it looks like after install has completed**
+
 ![vs-code-install]()
 
 :::note
