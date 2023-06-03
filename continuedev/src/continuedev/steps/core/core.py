@@ -43,7 +43,12 @@ class ShellCommandsStep(Step):
     cwd: str | None = None
     name: str = "Run Shell Commands"
 
+    _err_text: str | None = None
+
     async def describe(self, models: Models) -> Coroutine[str, None, None]:
+        if self._err_text is not None:
+            return f"Error when running shell commands:\n```\n{self._err_text}\n```"
+
         cmds_str = "\n".join(self.cmds)
         return (await models.gpt35()).complete(f"{cmds_str}\n\nSummarize what was done in these shell commands, using markdown bullet points:")
 
@@ -58,6 +63,7 @@ class ShellCommandsStep(Step):
 
         # If it fails, return the error
         if err is not None and err != "":
+            self._err_text = err
             return TextObservation(text=err)
 
         return None
