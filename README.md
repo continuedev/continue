@@ -10,6 +10,8 @@ Continue is the open-source autopilot for software developers. Using our SDK you
 - The Continue Python package, which offers an SDK to write recipes and the Continue server, which runs all automations
 - The Continue VSCode extension, where you can natively run recipes and use natural language to refine code much faster
 
+**[Read the docs](https://continuedev.netlify.app/)**
+
 # Getting Started
 
 The easiest way to start using Continue is to download our VS Code extension from the marketplace:
