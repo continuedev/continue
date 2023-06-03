@@ -8,6 +8,7 @@ from ..steps.main import EditHighlightedCodeStep, SolveTracebackStep, RunCodeSte
 from ..recipes.WritePytestsRecipe.main import WritePytestsRecipe
 # from ..libs.steps.chroma import AnswerQuestionChroma, EditFileChroma
 from ..recipes.ContinueRecipeRecipe.main import ContinueStepStep
+from ..steps.comment_code import CommentCodeStep
 
 
 class DemoPolicy(Policy):
@@ -21,10 +22,12 @@ class DemoPolicy(Policy):
         observation = history.get_current().observation
         if observation is not None and isinstance(observation, UserInputObservation):
             # This could be defined with ObservationTypePolicy. Ergonomics not right though.
-            if " test" in observation.user_input.lower():
+            if "/pytest" in observation.user_input.lower():
                 return WritePytestsRecipe(instructions=observation.user_input)
             elif "/dlt" in observation.user_input.lower() or " dlt" in observation.user_input.lower():
                 return CreatePipelineRecipe()
+            elif "/comment" in observation.user_input.lower():
+                return CommentCodeStep()
             # elif "/ask" in observation.user_input:
             #     return AnswerQuestionChroma(question=" ".join(observation.user_input.split(" ")[1:]))
             # elif "/edit" in observation.user_input:

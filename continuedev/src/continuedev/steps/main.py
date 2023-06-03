@@ -215,6 +215,7 @@ class FasterEditHighlightedCodeStep(Step):
 
 class StarCoderEditHighlightedCodeStep(Step):
     user_input: str
+    name: str = "Editing code"
     hide = False
     _prompt: str = "<commit_before>{code}<commit_msg>{user_request}<commit_after>"
 
