@@ -24,7 +24,7 @@ git clone https://github.com/continuedev/continue && cd continue/extension/scrip
 
 # Writing Recipes
 
-Check out our [recipes repo](https://github.com/continuedev/recipes) to learn how to write your own.
+Check out the [recipes folder](https://github.com/continuedev/continue/tree/main/continuedev/src/continuedev/recipes) to learn how to write your own.
 
 # Contributing
 
