@@ -18,6 +18,7 @@ import {
   ChevronDown,
   ChevronRight,
   Backward,
+  ArrowPath,
 } from "@styled-icons/heroicons-outline";
 import { HistoryNode } from "../../../schema/HistoryNode";
 import ReactMarkdown from "react-markdown";
@@ -29,6 +30,7 @@ interface StepContainerProps {
   inFuture: boolean;
   onRefinement: (input: string) => void;
   onUserInput: (input: string) => void;
+  onRetry: () => void;
 }
 
 const MainDiv = styled.div<{ stepDepth: number; inFuture: boolean }>`
@@ -135,19 +137,44 @@ function StepContainer(props: StepContainerProps) {
             >
               <Backward size="1.6em" onClick={props.onReverse}></Backward>
             </HeaderButton> */}
+
+            {props.historyNode.observation?.error ? (
+              <HeaderButton
+                onClick={(e) => {
+                  e.stopPropagation();
+                  props.onRetry();
+                }}
+              >
+                <ArrowPath size="1.6em" onClick={props.onRetry}></ArrowPath>
+              </HeaderButton>
+            ) : (
+              <></>
+            )}
           </HeaderDiv>
 
           {open && (
-            <pre>
-              Step Details:
-              <br />
-              {JSON.stringify(props.historyNode.step, null, 2)}
-            </pre>
+            <>
+              <pre className="overflow-scroll">
+                Step Details:
+                <br />
+                {JSON.stringify(props.historyNode.step, null, 2)}
+              </pre>
+            </>
           )}
 
-          <ReactMarkdown key={1} className="overflow-scroll">
-            {props.historyNode.step.description as any}
-          </ReactMarkdown>
+          {props.historyNode.observation?.error ? (
+            <>
+              Error while running step:
+              <br />
+              <pre className="overflow-scroll">
+                {props.historyNode.observation.error as string}
+              </pre>
+            </>
+          ) : (
+            <ReactMarkdown key={1} className="overflow-scroll">
+              {props.historyNode.step.description as any}
+            </ReactMarkdown>
+          )}
 
           {props.historyNode.step.name === "Waiting for user input" && (
             <input

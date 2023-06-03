@@ -75,6 +75,8 @@ class GUIProtocolServer(AbstractGUIProtocolServer):
                 self.on_refinement_input(data["input"], data["index"])
             elif message_type == "reverse_to_index":
                 self.on_reverse_to_index(data["index"])
+            elif message_type == "retry_at_index":
+                self.on_retry_at_index(data["index"])
         except Exception as e:
             print(e)
 
@@ -99,6 +101,10 @@ class GUIProtocolServer(AbstractGUIProtocolServer):
     def on_refinement_input(self, input: str, index: int):
         asyncio.create_task(
             self.session.autopilot.accept_refinement_input(input, index))
+
+    def on_retry_at_index(self, index: int):
+        asyncio.create_task(
+            self.session.autopilot.retry_at_index(index))
 
 
 @router.websocket("/ws")

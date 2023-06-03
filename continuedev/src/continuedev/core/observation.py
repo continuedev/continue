@@ -33,3 +33,7 @@ class TextObservation(Observation):
         if v is None:
             return ""
         return v
+
+
+class InternalErrorObservation(Observation):
+    error: str

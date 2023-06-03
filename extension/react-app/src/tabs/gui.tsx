@@ -231,6 +231,10 @@ function GUI(props: GUIProps) {
             onReverse={() => {
               client?.reverseToIndex(index);
             }}
+            onRetry={() => {
+              client?.retryAtIndex(index);
+              setWaitingForSteps(true);
+            }}
           />
         );
       })}
