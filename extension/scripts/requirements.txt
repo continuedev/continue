@@ -3,4 +3,4 @@
 # typer==0.7.0
 # pydantic
 # pytest
-./continuedev-0.1.0-py3-none-any.whl
+./continuedev-0.1.1-py3-none-any.whl
