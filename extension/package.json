@@ -39,6 +39,16 @@
           "type": "string",
           "default": "http://localhost:8000",
           "description": "The URL of the Continue server to use."
+        },
+        "continue.OPENAI_API_KEY": {
+          "type": "string",
+          "default": "",
+          "description": "The OpenAI API key to use for code generation."
+        },
+        "continue.HUGGING_FACE_TOKEN": {
+          "type": "string",
+          "default": "",
+          "description": "The Hugging Face API token to use for code generation."
         }
       }
     },

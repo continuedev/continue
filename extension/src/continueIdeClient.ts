@@ -74,6 +74,12 @@ class IdeProtocolClient {
         this.messenger?.send("workspaceDirectory", {
           workspaceDirectory: this.getWorkspaceDirectory(),
         });
+        break;
+      case "getUserSecret":
+        this.messenger?.send("getUserSecret", {
+          value: await this.getUserSecret(data.key),
+        });
+        break;
       case "openFiles":
         this.messenger?.send("openFiles", {
           openFiles: this.getOpenFiles(),
@@ -128,6 +134,27 @@ class IdeProtocolClient {
   openFile(filepath: string) {
     // vscode has a builtin open/get open files
     openEditorAndRevealRange(filepath, undefined, vscode.ViewColumn.One);
+  }
+
+  async getUserSecret(key: string) {
+    // Check if secret already exists in VS Code settings (global)
+    let secret = vscode.workspace.getConfiguration("continue").get(key);
+    if (secret && secret !== "") return secret;
+
+    // If not, ask user for secret
+    while (typeof secret === "undefined" || secret === "") {
+      secret = await vscode.window.showInputBox({
+        prompt: `Enter secret for ${key}`,
+        password: true,
+      });
+    }
+
+    // Add secret to VS Code settings
+    vscode.workspace
+      .getConfiguration("continue")
+      .update(key, secret, vscode.ConfigurationTarget.Global);
+
+    return secret;
   }
 
   // ------------------------------------ //
