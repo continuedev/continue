@@ -60,7 +60,7 @@ Create and run an alembic migration
 
 - `edited_file`:
 
-### WritePytestsStep
+### WritePytestsRecipe
 
 Write unit tests for this file.
 

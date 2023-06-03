@@ -10,7 +10,7 @@ from ..libs.llm.openai import OpenAI
 from .observation import Observation
 from ..server.ide_protocol import AbstractIdeProtocolServer
 from .main import History, Step
-from ..libs.steps.core.core import *
+from ..steps.core.core import *
 from .env import get_env_var, make_sure_env_exists
 
 

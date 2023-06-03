@@ -1,6 +1,6 @@
 from textwrap import dedent
 from ...models.filesystem import RangeInFile
-from .main import EditHighlightedCodeStep
+from ...steps.main import EditHighlightedCodeStep
 from ...core.main import Step
 from ...core.sdk import ContinueSDK
 

@@ -2,17 +2,17 @@ from typing import Coroutine, List, Union
 
 from pydantic import BaseModel
 
-from ..util.traceback_parsers import parse_python_traceback
-from ..llm import LLM
-from ...models.main import Traceback, Range
-from ...models.filesystem_edit import EditDiff, FileEdit
-from ...models.filesystem import RangeInFile, RangeInFileWithContents
-from ...core.observation import Observation, TextObservation, TracebackObservation
-from ..llm.prompt_utils import MarkdownStyleEncoderDecoder
+from ..libs.util.traceback_parsers import parse_python_traceback
+from ..libs.llm import LLM
+from ..models.main import Traceback, Range
+from ..models.filesystem_edit import EditDiff, FileEdit
+from ..models.filesystem import RangeInFile, RangeInFileWithContents
+from ..core.observation import Observation, TextObservation, TracebackObservation
+from ..libs.llm.prompt_utils import MarkdownStyleEncoderDecoder
 from textwrap import dedent
-from ...core.main import Step
-from ...core.sdk import ContinueSDK, Models
-from ...core.observation import Observation
+from ..core.main import Step
+from ..core.sdk import ContinueSDK, Models
+from ..core.observation import Observation
 import subprocess
 from .core.core import EditCodeStep
 

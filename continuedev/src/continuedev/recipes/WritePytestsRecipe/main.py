@@ -4,7 +4,7 @@ from ...core.main import Step, ContinueSDK
 import os
 
 
-class WritePytestsStep(Step):
+class WritePytestsRecipe(Step):
     for_filepath: str
 
     async def run(self, sdk: ContinueSDK):

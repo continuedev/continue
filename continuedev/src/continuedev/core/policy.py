@@ -1,13 +1,13 @@
 from typing import List, Tuple, Type
 
-from ..libs.steps.steps_on_startup import StepsOnStartupStep
-from ..libs.steps.draft.dlt import CreatePipelineStep
+from ..steps.steps_on_startup import StepsOnStartupStep
+from ..recipes.CreatePipelineRecipe.main import CreatePipelineRecipe
 from .main import Step, Validator, History, Policy
 from .observation import Observation, TracebackObservation, UserInputObservation
-from ..libs.steps.main import EditHighlightedCodeStep, SolveTracebackStep, RunCodeStep, FasterEditHighlightedCodeStep, StarCoderEditHighlightedCodeStep, MessageStep, EmptyStep
-from ..libs.steps.nate import WritePytestsStep, CreateTableStep
+from ..steps.main import EditHighlightedCodeStep, SolveTracebackStep, RunCodeStep, FasterEditHighlightedCodeStep, StarCoderEditHighlightedCodeStep, MessageStep, EmptyStep
+from ..recipes.WritePytestsRecipe.main import WritePytestsRecipe
 # from ..libs.steps.chroma import AnswerQuestionChroma, EditFileChroma
-from ..libs.steps.continue_step import ContinueStepStep
+from ..recipes.ContinueRecipeRecipe.main import ContinueStepStep
 
 
 class DemoPolicy(Policy):
@@ -22,11 +22,9 @@ class DemoPolicy(Policy):
         if observation is not None and isinstance(observation, UserInputObservation):
             # This could be defined with ObservationTypePolicy. Ergonomics not right though.
             if " test" in observation.user_input.lower():
-                return WritePytestsStep(instructions=observation.user_input)
+                return WritePytestsRecipe(instructions=observation.user_input)
             elif "/dlt" in observation.user_input.lower() or " dlt" in observation.user_input.lower():
-                return CreatePipelineStep()
-            elif "/table" in observation.user_input:
-                return CreateTableStep(sql_str=" ".join(observation.user_input.split(" ")[1:]))
+                return CreatePipelineRecipe()
             # elif "/ask" in observation.user_input:
             #     return AnswerQuestionChroma(question=" ".join(observation.user_input.split(" ")[1:]))
             # elif "/edit" in observation.user_input:

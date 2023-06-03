@@ -1,13 +1,11 @@
-
-
-from ...core.main import ContinueSDK, Models, Step
+from ..core.main import ContinueSDK, Models, Step
 from .main import UserInputStep
-from .draft.dlt import CreatePipelineStep
+from ..recipes.CreatePipelineRecipe.main import CreatePipelineRecipe
 
 
 step_name_to_step_class = {
     "UserInputStep": UserInputStep,
-    "CreatePipelineStep": CreatePipelineStep
+    "CreatePipelineRecipe": CreatePipelineRecipe
 }
 
 

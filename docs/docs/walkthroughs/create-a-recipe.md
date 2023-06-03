@@ -67,7 +67,7 @@ class CreatePytestsStep(Step):
 
         code = await sdk.ide.readFile(self.input_file_path)
         sdk.run_step(CreateDirStep(output_dir_path))
-        sdk.run_step(WritePytestsStep(code, output_file_prefix, output_dir_path))
+        sdk.run_step(WritePytestsRecipe(code, output_file_prefix, output_dir_path))
 ```
 
 ### Adjust for different OS
