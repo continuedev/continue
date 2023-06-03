@@ -114,8 +114,8 @@ function StepContainer(props: StepContainerProps) {
       hidden={props.historyNode.step.hide as any}
     >
       <GradientBorder
-        className="m-2 overflow-hidden"
-        // onClick={() => setOpen((prev) => !prev)}
+        className="m-2 overflow-hidden cursor-pointer"
+        onClick={() => setOpen((prev) => !prev)}
       >
         <StepContainerDiv open={open}>
           <HeaderDiv>
@@ -136,6 +136,14 @@ function StepContainer(props: StepContainerProps) {
               <Backward size="1.6em" onClick={props.onReverse}></Backward>
             </HeaderButton> */}
           </HeaderDiv>
+
+          {open && (
+            <pre>
+              Step Details:
+              <br />
+              {JSON.stringify(props.historyNode.step, null, 2)}
+            </pre>
+          )}
 
           <ReactMarkdown key={1} className="overflow-scroll">
             {props.historyNode.step.description as any}
@@ -181,7 +189,7 @@ function StepContainer(props: StepContainerProps) {
         </StepContainerDiv>
       </GradientBorder>
 
-      <OnHoverDiv hidden={!open}>
+      {/* <OnHoverDiv hidden={!open}>
         <NaturalLanguageInput
           onKeyDown={(e) => {
             if (e.key === "Enter") {
@@ -195,7 +203,7 @@ function StepContainer(props: StepContainerProps) {
           }}
         ></NaturalLanguageInput>
         <ContinueButton onClick={onTextInput}></ContinueButton>
-      </OnHoverDiv>
+      </OnHoverDiv> */}
     </MainDiv>
   );
 }
