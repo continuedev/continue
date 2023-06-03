@@ -1,5 +1,6 @@
 from textwrap import dedent
 
+from ...steps.main import MessageStep
 from ...core.sdk import Models
 from ...core.observation import DictObservation
 from ...models.filesystem_edit import AddFile
@@ -52,6 +53,13 @@ class ValidatePipelineStep(Step):
     async def run(self, sdk: ContinueSDK):
         source_name = sdk.history.last_observation().values["source_name"]
         filename = f'{source_name}.py'
+
+        await sdk.run_step(MessageStep(message=dedent("""\
+                This step will validate that your dlt pipeline is working as expected:
+                - Test that the API call works
+                - Load the data into a local DuckDB instance
+                - Write a query to view the data
+                """)))
 
         # test that the API call works
         await sdk.run(f'python3 {filename}')
