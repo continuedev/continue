@@ -6,17 +6,16 @@
 
 The `Continue` library consists of an [SDK](./concepts/sdk.md), a [GUI](./concepts/gui.md), and a [Server](./concepts/server.md) that brings everything together.
 
-The [SDK](./concepts/sdk.md) gives you access to the tools (e.g. open a directory, edit a file, call a model, etc.) needed to define steps that integrate LLMs into your IDE.
+1. The [SDK](./concepts/sdk.md) gives you access to the tools (e.g. open a directory, edit a file, call a model, etc.) needed to define steps that integrate LLMs into your IDE.
 
-The [GUI](./concepts/gui.md) lets you transparently review every automated step, providing the opportunity to undo and rerun any that ran incorrectly.
+2. The [GUI](./concepts/gui.md) lets you transparently review every automated step, providing the opportunity to undo and rerun any that ran incorrectly.
 
-The [Server](./concepts/server.md) holds the main event loop, responsible for connecting IDE, SDK, and GUI and deciding which steps to take next.
+3. The [Server](./concepts/server.md) holds the main event loop, responsible for connecting IDE, SDK, and GUI and deciding which steps to take next.
 
 ## Details
 
-**TODO: Refactor all of this and make it fit with language above**
+Continue connects any code editor (e.g. VS Code, GitHub Codespaces, PyCharm, Replit, etc.) to the Continue Server, which take actions in the editor as instructed by recipes that a run by a user through the GUI.
 
-- Continue connects any code editor (primarily VS Code right now) to a server (the Continue server) that can take actions in the editor in accordance with defined recipes at the request of a user through the GUI
 - What this looks like:
   - The Continue VS Code extension runs the ContinueIdeProtocol, launches the Continue Python server in the background, and opens the Continue GUI in a side-panel.
   - The Continue server is the brain, communication center, and source of truth, interacting with VS Code through the ContinueIdeProtocol and with the GUI through the NotebookProtocol.
