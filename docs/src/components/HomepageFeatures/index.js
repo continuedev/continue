@@ -8,8 +8,8 @@ const FeatureList = [
     Svg: require("@site/static/img/undraw_docusaurus_mountain.svg").default,
     description: (
       <>
-        Seamlessly put your repetitive software development tasks on autopilot
-        by leveraging recipes created by others
+        Seamlessly put your repetitive software development tasks 
+        on autopilot by leveraging recipes created by others
       </>
     ),
   },
@@ -18,9 +18,8 @@ const FeatureList = [
     Svg: require("@site/static/img/undraw_docusaurus_tree.svg").default,
     description: (
       <>
-        Use the Continue SDK to create your own custom steps and compose them
-        into personalized recipes, guiding LLMs through common sequences of
-        tasks
+        Use the Continue SDK to create custom steps and compose 
+        them into recipes, guiding LLMs through common tasks
       </>
     ),
   },
@@ -29,8 +28,8 @@ const FeatureList = [
     Svg: require("@site/static/img/undraw_docusaurus_react.svg").default,
     description: (
       <>
-        Use the Continue GUI to review, reverse, and rerun steps or even entire
-        recipes, allowing you to build trust in LLMs
+        Use the Continue GUI to review, reverse, and rerun steps or even 
+        entire recipes, allowing you to build trust in language models
       </>
     ),
   },
