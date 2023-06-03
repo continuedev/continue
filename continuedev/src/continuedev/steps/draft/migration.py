@@ -1,7 +1,6 @@
 # When an edit is made to an existing class or a new sqlalchemy class is created,
 # this should be kicked off.
 
-from ..main import EditCodeStep, RunCommandStep
 from ...core.main import Step
 
 
@@ -15,11 +14,17 @@ class MigrationStep(Step):
         recent_edits_string = "\n\n".join(
             map(lambda x: x.to_string(), recent_edits))
         description = await (await sdk.models.gpt35()).complete(f"{recent_edits_string}\n\nGenerate a short description of the migration made in the above changes:\n")
-        await sdk.run_step(RunCommandStep(cmd=f"cd libs && poetry run alembic revision --autogenerate -m {description}"))
+        await sdk.run([
+            "cd libs",
+            "poetry run alembic revision --autogenerate -m " + description,
+        ])
         migration_file = f"libs/alembic/versions/{?}.py"
         contents = await sdk.ide.readFile(migration_file)
         await sdk.run_step(EditCodeStep(
             range_in_files=[RangeInFile.from_entire_file(migration_file, contents)],
             prompt=f"Here are the changes made to the sqlalchemy classes:\n\n{recent_edits_string}\n\nThis is the generated migration file:\n\n{{code}}\n\nReview the migration file to make sure it correctly reflects the changes made to the sqlalchemy classes.",
         ))
-        await sdk.run_step(RunCommandStep(cmd="cd libs && poetry run alembic upgrade head"))
+        await sdk.run([
+            "cd libs",
+            "poetry run alembic upgrade head",
+        ])

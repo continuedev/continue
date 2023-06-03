@@ -40,11 +40,13 @@ the code that should run when the step is rerun with feedback
 
 ### Core
 
-#### RunCommandStep
-
 #### EditCodeStep
 
+Provide a prompt and a list of file ranges to be edited by a language model.
+
 ### ManualEditStep
+
+A core step that tracks all user edits in the IDE so that they can be reversed along with other steps
 
 ## Community
 
@@ -67,3 +69,7 @@ Write unit tests for this file.
 #### Parameters
 
 - for_filepath (required): the path of the file that unit tests should be created for
+
+### AnswerQuestionChromaStep
+
+Type `/ask` and ask any question about your whole codebase. The Chroma embeddings store will help find important snippets and answer your question.
