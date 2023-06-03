@@ -1,10 +1,23 @@
 from textwrap import dedent
 from typing import Coroutine, Union
 from ..core.observation import Observation, TextObservation
-from ..core.main import Step, ContinueSDK
+from ..core.main import Step
+from ..core.sdk import ContinueSDK
 from .core.core import EditFileStep
-from ..libs.chroma.query import query_codebase_index
+from ..libs.chroma.query import ChromaIndexManager
 from .core.core import EditFileStep
+
+
+class CreateCodebaseIndexChroma(Step):
+    name: str = "Create Codebase Index"
+    hide: bool = True
+
+    async def describe(self, llm) -> Coroutine[str, None, None]:
+        return "Creating a codebase index for the current branch."
+
+    async def run(self, sdk: ContinueSDK) -> Coroutine[Observation, None, None]:
+        index = ChromaIndexManager(await sdk.ide.getWorkspaceDirectory())
+        index.create_codebase_index()
 
 
 class AnswerQuestionChroma(Step):
@@ -19,7 +32,8 @@ class AnswerQuestionChroma(Step):
             return self._answer
 
     async def run(self, sdk: ContinueSDK) -> Coroutine[Observation, None, None]:
-        results = query_codebase_index(self.question)
+        index = ChromaIndexManager(await sdk.ide.getWorkspaceDirectory())
+        results = index.query_codebase_index(self.question)
 
         code_snippets = ""
 
@@ -52,7 +66,8 @@ class EditFileChroma(Step):
     hide: bool = True
 
     async def run(self, sdk: ContinueSDK) -> Coroutine[Observation, None, None]:
-        results = query_codebase_index(self.request)
+        index = ChromaIndexManager(await sdk.ide.getWorkspaceDirectory())
+        results = index.query_codebase_index(self.question)
 
         resource_name = list(
             results.source_nodes[0].node.relationships.values())[0]
