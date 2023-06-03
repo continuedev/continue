@@ -40,44 +40,40 @@ Server.handle_exit = AppStatus.handle_exit
 
 
 class FileEditsUpdate(BaseModel):
-    messageType: str = "fileEdits"
     fileEdits: List[FileEditWithFullContents]
 
 
 class OpenFilesResponse(BaseModel):
-    messageType: str = "openFiles"
     openFiles: List[str]
 
 
 class HighlightedCodeResponse(BaseModel):
-    messageType: str = "highlightedCode"
     highlightedCode: List[RangeInFile]
 
 
 class ShowSuggestionRequest(BaseModel):
-    messageType: str = "showSuggestion"
     suggestion: FileEdit
 
 
 class ShowSuggestionResponse(BaseModel):
-    messageType: str = "showSuggestion"
     suggestion: FileEdit
     accepted: bool
 
 
 class ReadFileResponse(BaseModel):
-    messageType: str = "readFile"
     contents: str
 
 
 class EditFileResponse(BaseModel):
-    messageType: str = "editFile"
     fileEdit: FileEditWithFullContents
 
 
 class WorkspaceDirectoryResponse(BaseModel):
-    messageType: str = "workspaceDirectory"
     workspaceDirectory: str
+
+
+class GetUserSecretResponse(BaseModel):
+    value: str
 
 
 T = TypeVar("T", bound=BaseModel)
@@ -114,7 +110,7 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
             fileEdits = list(
                 map(lambda d: FileEditWithFullContents.parse_obj(d), data["fileEdits"]))
             self.onFileEdits(fileEdits)
-        elif message_type in ["highlightedCode", "openFiles", "readFile", "editFile", "workspaceDirectory"]:
+        elif message_type in ["highlightedCode", "openFiles", "readFile", "editFile", "workspaceDirectory", "getUserSecret"]:
             self.sub_queue.post(message_type, data)
         else:
             raise ValueError("Unknown message type", message_type)
@@ -183,30 +179,30 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
 
     # Request information. Session doesn't matter.
     async def getOpenFiles(self) -> List[str]:
-        resp = await self._send_and_receive_json({
-            "messageType": "openFiles"
-        }, OpenFilesResponse, "openFiles")
+        resp = await self._send_and_receive_json({}, OpenFilesResponse, "openFiles")
         return resp.openFiles
 
     async def getWorkspaceDirectory(self) -> str:
-        resp = await self._send_and_receive_json({
-            "messageType": "workspaceDirectory"
-        }, WorkspaceDirectoryResponse, "workspaceDirectory")
+        resp = await self._send_and_receive_json({}, WorkspaceDirectoryResponse, "workspaceDirectory")
         return resp.workspaceDirectory
 
     async def getHighlightedCode(self) -> List[RangeInFile]:
-        resp = await self._send_and_receive_json({
-            "messageType": "highlightedCode"
-        }, HighlightedCodeResponse, "highlightedCode")
+        resp = await self._send_and_receive_json({}, HighlightedCodeResponse, "highlightedCode")
         return resp.highlightedCode
 
     async def readFile(self, filepath: str) -> str:
         """Read a file"""
         resp = await self._send_and_receive_json({
-            "messageType": "readFile",
             "filepath": filepath
         }, ReadFileResponse, "readFile")
         return resp.contents
+
+    async def getUserSecret(self, key: str) -> str:
+        """Get a user secret"""
+        resp = await self._send_and_receive_json({
+            "key": key
+        }, GetUserSecretResponse, "getUserSecret")
+        return resp.value
 
     async def saveFile(self, filepath: str):
         """Save a file"""
@@ -222,7 +218,6 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
     async def editFile(self, edit: FileEdit) -> FileEditWithFullContents:
         """Edit a file"""
         resp = await self._send_and_receive_json({
-            "messageType": "editFile",
             "edit": edit.dict()
         }, EditFileResponse, "editFile")
         return resp.fileEdit

@@ -78,3 +78,7 @@ class AbstractIdeProtocolServer(ABC):
     @abstractmethod
     async def saveFile(self, filepath: str):
         """Save a file"""
+
+    @abstractmethod
+    async def getUserSecret(self, key: str):
+        """Get a user secret"""

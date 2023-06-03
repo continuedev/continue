@@ -114,12 +114,12 @@ function StepContainer(props: StepContainerProps) {
       hidden={props.historyNode.step.hide as any}
     >
       <GradientBorder
-        className="m-2 overflow-hidden cursor-pointer"
-        onClick={() => setOpen((prev) => !prev)}
+        className="m-2 overflow-hidden"
+        // onClick={() => setOpen((prev) => !prev)}
       >
         <StepContainerDiv open={open}>
           <HeaderDiv>
-            <h4 className="m-2 cursor-pointer">
+            <h4 className="m-2">
               {open ? (
                 <ChevronDown size="1.4em" />
               ) : (
@@ -127,14 +127,14 @@ function StepContainer(props: StepContainerProps) {
               )}
               {props.historyNode.step.name as any}:
             </h4>
-            <HeaderButton
+            {/* <HeaderButton
               onClick={(e) => {
                 e.stopPropagation();
                 props.onReverse();
               }}
             >
               <Backward size="1.6em" onClick={props.onReverse}></Backward>
-            </HeaderButton>
+            </HeaderButton> */}
           </HeaderDiv>
 
           <ReactMarkdown key={1} className="overflow-scroll">

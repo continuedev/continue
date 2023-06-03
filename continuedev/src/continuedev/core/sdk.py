@@ -11,7 +11,6 @@ from .observation import Observation
 from ..server.ide_protocol import AbstractIdeProtocolServer
 from .main import History, Step
 from ..steps.core.core import *
-from .env import get_env_var, make_sure_env_exists
 
 
 class Autopilot:
@@ -105,24 +104,7 @@ class ContinueSDK:
         return await self.run_step(FileSystemEditStep(edit=DeleteDirectory(path=path)))
 
     async def get_user_secret(self, env_var: str, prompt: str) -> str:
-        make_sure_env_exists()
-
-        val = None
-        while val is None:
-            try:
-                val = get_env_var(env_var)
-                if val is not None:
-                    return val
-            except:
-                pass
-            server_dir = os.getcwd()
-            env_path = os.path.join(server_dir, ".env")
-            await self.ide.setFileOpen(env_path)
-            await self.append_to_file(env_path, f'\n{env_var}="<ENTER SECRET HERE>"')
-            await self.run_step(WaitForUserConfirmationStep(prompt=prompt))
-            val = get_env_var(env_var)
-
-        return val
+        return await self.ide.getUserSecret(env_var)
 
     async def get_config(self) -> ContinueConfig:
         dir = await self.ide.getWorkspaceDirectory()

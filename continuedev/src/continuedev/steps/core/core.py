@@ -205,4 +205,5 @@ class WaitForUserConfirmationStep(Step):
     async def run(self, sdk: ContinueSDK) -> Coroutine[Observation, None, None]:
         self._description = self.prompt
         resp = await sdk.wait_for_user_input()
+        self.hide = True
         return TextObservation(text=resp)
