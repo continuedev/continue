@@ -13,10 +13,12 @@ class CreateCodebaseIndexChroma(Step):
     hide: bool = True
 
     async def describe(self, llm) -> Coroutine[str, None, None]:
-        return "Creating a codebase index for the current branch."
+        return "Indexing the codebase..."
 
     async def run(self, sdk: ContinueSDK) -> Coroutine[Observation, None, None]:
         index = ChromaIndexManager(await sdk.ide.getWorkspaceDirectory())
+        if not index.check_index_exists():
+            self.hide = False
         index.create_codebase_index()
 
 
@@ -55,7 +57,9 @@ class AnswerQuestionChroma(Step):
             Here is the answer:""")
 
         answer = (await sdk.models.gpt35()).complete(prompt)
-        print(answer)
+        # Make paths relative to the workspace directory
+        answer = answer.replace(await sdk.ide.getWorkspaceDirectory(), "")
+
         self._answer = answer
 
         await sdk.ide.setFileOpen(files[0])
@@ -67,7 +71,7 @@ class EditFileChroma(Step):
 
     async def run(self, sdk: ContinueSDK) -> Coroutine[Observation, None, None]:
         index = ChromaIndexManager(await sdk.ide.getWorkspaceDirectory())
-        results = index.query_codebase_index(self.question)
+        results = index.query_codebase_index(self.request)
 
         resource_name = list(
             results.source_nodes[0].node.relationships.values())[0]
