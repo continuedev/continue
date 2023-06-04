@@ -136,3 +136,5 @@ notes.txt
 cached_embeddings.pkl
 .ruff_cache
 codeql
+
+**/.continue

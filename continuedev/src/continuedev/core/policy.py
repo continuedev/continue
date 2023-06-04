@@ -4,7 +4,7 @@ from ..steps.steps_on_startup import StepsOnStartupStep
 from ..recipes.CreatePipelineRecipe.main import CreatePipelineRecipe
 from .main import Step, Validator, History, Policy
 from .observation import Observation, TracebackObservation, UserInputObservation
-from ..steps.main import EditHighlightedCodeStep, SolveTracebackStep, RunCodeStep, FasterEditHighlightedCodeStep, StarCoderEditHighlightedCodeStep, MessageStep, EmptyStep
+from ..steps.main import EditHighlightedCodeStep, SolveTracebackStep, RunCodeStep, FasterEditHighlightedCodeStep, StarCoderEditHighlightedCodeStep, MessageStep, EmptyStep, SetupContinueWorkspaceStep
 from ..recipes.WritePytestsRecipe.main import WritePytestsRecipe
 # from ..libs.steps.chroma import AnswerQuestionChroma, EditFileChroma
 from ..recipes.ContinueRecipeRecipe.main import ContinueStepStep
@@ -17,7 +17,7 @@ class DemoPolicy(Policy):
     def next(self, history: History) -> Step:
         # At the very start, run initial Steps spcecified in the config
         if history.get_current() is None:
-            return MessageStep(message="Welcome to Continue!") >> StepsOnStartupStep()
+            return MessageStep(message="Welcome to Continue!") >> SetupContinueWorkspaceStep() >> StepsOnStartupStep()
 
         observation = history.get_current().observation
         if observation is not None and isinstance(observation, UserInputObservation):
