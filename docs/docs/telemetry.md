@@ -2,13 +2,13 @@
 
 ## Overview
 
-`Continue` collects and reports **anonymous** usage information. This data is essential to understanding how we should improve the library. You can opt out of it at any time.
+Continue collects and reports **anonymous** usage information. This data is essential to understanding how we should improve the library. You can opt out of it at any time.
 
-We use [Posthog](https://posthog.com/), an open source platform for product analytics, to collect and store the data.
+We use [Posthog](https://posthog.com/), an open source platform for product analytics, to collect and store the data. You can review the code [here](https://github.com/continuedev/continue/tree/main/continuedev/src/continuedev/libs/util/telemetry.py).
 
 ## What we track
 
-We track the steps that are run and their parameters
+We track the steps that are run and their parameters.
 
 ## How to opt out
 

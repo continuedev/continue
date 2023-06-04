@@ -33,7 +33,7 @@ const sidebars = {
       label: "Concepts",
       items: [
         "concepts/autopilot",
-        "concepts/continue-json",
+        "concepts/credentials",
         "concepts/gui",
         "concepts/history",
         "concepts/ide",
@@ -45,6 +45,7 @@ const sidebars = {
         "concepts/step",
       ],
     },
+    "catalog",
     "telemetry",
   ],
 };

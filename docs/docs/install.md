@@ -14,6 +14,16 @@ If you want to try Continue before installing locally, check out the [GitHub Cod
 
 **TODO: Add link to screenshot of what it looks like after install has completed**
 
+You can also open the Continue GUI with `cmd+shift+p` on Mac / `ctrl+shift+p` on Windows and then selecting `Continue: Open Debug Panel`
+
+4. To test a few common recipes, open a blank python file and try the following:
+- Ask it to "write me a calculator class in python"
+- /comment to write comments for the class
+- /pytest to write Pytest unit tests in a separate file
+- Ask in natural language for a new method
+
+**TODO: Can we have one getting started workflow across VS Code and GitHub Codespaces?**
+
 :::note
 If you would like to install Continue from source, please [follow the instructions](https://github.com/continuedev/continue/blob/main/README.md) in the repo README.
 :::
