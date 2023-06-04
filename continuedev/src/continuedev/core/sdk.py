@@ -1,6 +1,8 @@
-import os
+from abc import ABC, abstractmethod
 from typing import Coroutine, Union
+import os
 
+from .abstract_sdk import AbstractContinueSDK
 from .config import ContinueConfig, load_config
 from ..models.filesystem_edit import FileEdit, FileSystemEdit, AddFile, DeleteFile, AddDirectory, DeleteDirectory
 from ..models.filesystem import RangeInFile
@@ -37,7 +39,7 @@ class Models:
         return OpenAI(api_key=api_key, default_model="gpt-3.5-turbo")
 
 
-class ContinueSDK:
+class ContinueSDK(AbstractContinueSDK):
     """The SDK provided as parameters to a step"""
     ide: AbstractIdeProtocolServer
     steps: ContinueSDKSteps
@@ -92,15 +94,19 @@ class ContinueSDK:
         await self.ide.applyFileSystemEdit(file_edit)
 
     async def add_file(self, filename: str, content: str | None):
+        filepath = await self._ensure_absolute_path(filename)
         return await self.run_step(FileSystemEditStep(edit=AddFile(filename=filename, content=content)))
 
     async def delete_file(self, filename: str):
+        filepath = await self._ensure_absolute_path(filename)
         return await self.run_step(FileSystemEditStep(edit=DeleteFile(filepath=filename)))
 
     async def add_directory(self, path: str):
+        filepath = await self._ensure_absolute_path(path)
         return await self.run_step(FileSystemEditStep(edit=AddDirectory(path=path)))
 
     async def delete_directory(self, path: str):
+        filepath = await self._ensure_absolute_path(path)
         return await self.run_step(FileSystemEditStep(edit=DeleteDirectory(path=path)))
 
     async def get_user_secret(self, env_var: str, prompt: str) -> str:
@@ -108,8 +114,8 @@ class ContinueSDK:
 
     async def get_config(self) -> ContinueConfig:
         dir = await self.ide.getWorkspaceDirectory()
-        yaml_path = os.path.join(dir, 'continue.yaml')
-        json_path = os.path.join(dir, 'continue.json')
+        yaml_path = os.path.join(dir, '.continue', 'config.yaml')
+        json_path = os.path.join(dir, '.continue', 'config.json')
         if os.path.exists(yaml_path):
             return load_config(yaml_path)
         elif os.path.exists(json_path):

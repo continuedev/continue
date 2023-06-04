@@ -14,7 +14,7 @@ We track the following...
 
 **TODO: Define where the root of your workspace**
 
-Create a `continue.json` file in the root of your workspace and add the following:
+Create a `.continue/config.json` file in the root of your workspace and add the following:
 
 ```json
 {

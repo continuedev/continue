@@ -1,3 +1,4 @@
+import os
 from typing import Coroutine, List, Union
 
 from pydantic import BaseModel
@@ -15,6 +16,20 @@ from ..core.sdk import ContinueSDK, Models
 from ..core.observation import Observation
 import subprocess
 from .core.core import EditCodeStep
+
+
+class SetupContinueWorkspaceStep(Step):
+    async def describe(self, models: Models) -> Coroutine[str, None, None]:
+        return "Set up Continue workspace by adding a .continue directory"
+
+    async def run(self, sdk: ContinueSDK) -> Coroutine[Observation, None, None]:
+        if not os.path.exists(os.path.join(await sdk.ide.getWorkspaceDirectory(), ".continue")):
+            await sdk.add_directory(".continue")
+            if not os.path.exists(os.path.join(await sdk.ide.getWorkspaceDirectory(), ".continue", "config.json")):
+                await sdk.add_file(".continue/config.json", dedent("""\
+                    {
+                        "allow_anonymous_telemetry": true
+                    }"""))
 
 
 class RunCodeStep(Step):
