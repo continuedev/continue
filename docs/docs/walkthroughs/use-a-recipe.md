@@ -28,7 +28,6 @@ Click this button
 add feedback to modify how it runs
 LLMs are non-determistic, so rerunning again might 
 
-
 ## Customizing the recipe
 
 If the recipe does not work exactly like you want, you can adjust it. Find the code for recipe here and then learn how to [create a recipe](./create-a-recipe.md) understand what you need to do to get it work like you want
