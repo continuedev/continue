@@ -38,21 +38,26 @@ class ChromaIndexManager:
             return None
 
     def check_index_exists(self):
-        return os.path.exists(self.index_dir)
+        return os.path.exists(os.path.join(self.index_dir, "metadata.json"))
 
     def create_codebase_index(self):
         """Create a new index for the current branch."""
         if not self.check_index_exists():
             os.makedirs(self.index_dir)
+        else:
+            return
 
-        print("ROOT DIRECTORY: ", self.git_root_dir)
-        documents = load_gpt_index_documents(self.git_root_dir)
+        documents = load_gpt_index_documents(self.workspace_dir)
 
         chunks = {}
         doc_chunks = []
         for doc in documents:
             text_splitter = TokenTextSplitter()
-            text_chunks = text_splitter.split_text(doc.text)
+            try:
+                text_chunks = text_splitter.split_text(doc.text)
+            except:
+                print("ERROR (probably found special token): ", doc.text)
+                continue
             filename = doc.extra_info["filename"]
             chunks[filename] = len(text_chunks)
             for i, text in enumerate(text_chunks):
@@ -88,9 +93,9 @@ class ChromaIndexManager:
         modified_deleted_files = [f for f in modified_deleted_files if f]
 
         deleted_files = [
-            f for f in modified_deleted_files if not os.path.exists(self.git_root_dir + "/" + f)]
+            f for f in modified_deleted_files if not os.path.exists(os.path.join(self.workspace_dir, f))]
         modified_files = [
-            f for f in modified_deleted_files if os.path.exists(self.git_root_dir + "/" + f)]
+            f for f in modified_deleted_files if os.path.exists(os.path.join(self.workspace_dir, f))]
 
         return filter_ignored_files(modified_files, self.index_dir), filter_ignored_files(deleted_files, self.index_dir)
 
