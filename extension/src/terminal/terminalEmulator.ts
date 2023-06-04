@@ -19,7 +19,7 @@
 //     });
 //   } else {
 //     vscode.commands
-//       .executeCommand("continue.openDebugPanel", extensionContext)
+//       .executeCommand("continue.openContinueGUI", extensionContext)
 //       .then(() => {
 //         // TODO: Waiting for the webview to load, but should add a hook to the onLoad message event. Same thing in autodebugTest command in commands.ts
 //         setTimeout(() => {
