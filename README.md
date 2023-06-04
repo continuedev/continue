@@ -2,7 +2,7 @@
 
 <div align="center">
 
-**[Continue](https://continuedev.netlify.app/docs) is the open-source library for accelerating software development with language models**
+**[Continue](https://continue.dev/docs) is the open-source library for accelerating software development with language models**
 
 </div>
 
@@ -19,11 +19,11 @@
 
 ### GitHub Codespaces
 
-Learn how to try the GitHub Codespaces Demo [here](https://continuedev.netlify.app/docs/getting-started)
+Learn how to try the GitHub Codespaces Demo [here](https://continue.dev/docs/docs/getting-started)
 
 ### VS Code
 
-Learn how to install locally in VS Code [here](https://continuedev.netlify.app/docs/install)
+Learn how to install locally in VS Code [here](https://continue.dev/docs/docs/install)
 
 ## Walkthroughs
 
@@ -72,7 +72,7 @@ cd continue/extension/scripts && python3 install_from_source.py
 - [VS Code Extension README](./extension/src): learn about the capabilities of our extension—the first implementation of Continue's IDE Protocol—which makes it possible to use use Continue in VS Code and GitHub Codespaces
 - [Continue GUI README](./extension/react-app/): learn about the React app that lets users interact with the server and is placed adjacent to the text editor in any suppported IDE
 - [Schema README](./schema): learn about the JSON Schema types generated from Pydantic models, which we use across the `continuedev/` and `extension/` directories
-- [Continue Docs README](./docs): learn how our [docs](https://continuedev.netlify.app/docs) are written and built
+- [Continue Docs README](./docs): learn how our [docs](https://continue.dev/docs) are written and built
 
 # License
 
