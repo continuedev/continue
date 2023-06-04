@@ -6,7 +6,7 @@ The Continue VS Code extension lets you make edits with natural langauge, ask qu
 
 ## Getting Started
 
-Get started by opening the command pallet with cmd+shift+p and then selecting Continue: Open Debug Panel.
+Get started by opening the command pallet with cmd+shift+p and then selecting Continue: Open Continue GUI.
 
 To test a few common recipes, open a blank python file and try the following:
 
