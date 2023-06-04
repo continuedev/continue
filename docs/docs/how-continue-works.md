@@ -1,8 +1,6 @@
-# How `Continue` works
+# How Continue works
 
 ![Continue Architecture Diagram](/img/continue-architecture.png)
-
-## Overview
 
 The `Continue` library consists of an [SDK](./concepts/sdk.md), a [GUI](./concepts/gui.md), and a [Server](./concepts/server.md) that brings everything together.
 
