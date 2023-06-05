@@ -1,12 +1,12 @@
 # Continue
 
-**[Continue](https://continue.dev/docs) is the open-source library for accelerating software development with language models**
+**[Continue](https://continue.dev/docs/) is the open-source library for accelerating software development with language models**
 
-The Continue VS Code extension lets you make edits with natural langauge, ask questions of your codebase, automatically generate unit tests, and more. Beyond the built-in functionality, you can easily write your own recipes to automate the most repetitive sequences of tasks in your workflow.
+You can use Continue to use and create recipes that automate the most repetitive sequences of tasks in your workflows.
 
 ## Getting Started
 
-Get started by opening the command pallet with cmd+shift+p and then selecting Continue: Open Continue GUI.
+After install is complete, the Continue extension should automatically open. You can also open it with `cmd+shift+p` on Mac / `ctrl+shift+p` on Windows and then selecting `Continue: Open Debug Panel`
 
 To test a few common recipes, open a blank python file and try the following:
 
@@ -15,9 +15,9 @@ To test a few common recipes, open a blank python file and try the following:
 - /pytest to write Pytest unit tests in a separate file
 - Ask in natural language for a new method
 
-See [here](https://continue.dev/docs/docs/concepts/recipe) for the full list of recipes currently available to use.
+Check out the [Catalog](https://continue.dev/docs/catalog) to see the full list of recipes
 
-You can find the Continue GitHub repo [here](https://github.com/continuedev/continue)
+Give Continue a start on GitHub [here](https://github.com/continuedev/continue)
 
 ## Feedback
 
