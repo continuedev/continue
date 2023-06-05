@@ -23,6 +23,7 @@ import {
 import { HistoryNode } from "../../../schema/HistoryNode";
 import ReactMarkdown from "react-markdown";
 import ContinueButton from "./ContinueButton";
+import InputAndButton from "./InputAndButton";
 
 interface StepContainerProps {
   historyNode: HistoryNode;
@@ -177,22 +178,11 @@ function StepContainer(props: StepContainerProps) {
           )}
 
           {props.historyNode.step.name === "Waiting for user input" && (
-            <input
-              ref={userInputRef}
-              className="m-auto p-2 rounded-md border-1 border-solid text-white w-3/4 border-gray-200 bg-vsc-background"
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  props.onUserInput(e.currentTarget.value);
-                }
+            <InputAndButton
+              onUserInput={(value) => {
+                props.onUserInput(value);
               }}
-              type="text"
-              onSubmit={(ev) => {
-                props.onUserInput(ev.currentTarget.value);
-              }}
-              onClick={(e) => {
-                e.stopPropagation();
-              }}
-            />
+            ></InputAndButton>
           )}
           {props.historyNode.step.name === "Waiting for user confirmation" && (
             <>
