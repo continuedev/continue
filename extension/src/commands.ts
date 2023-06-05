@@ -61,7 +61,7 @@ const commandsMap: { [command: string]: (...args: any) => any } = {
   "continue.suggestionUp": suggestionUpCommand,
   "continue.acceptSuggestion": acceptSuggestionCommand,
   "continue.rejectSuggestion": rejectSuggestionCommand,
-  "continue.openDebugPanel": () => {
+  "continue.openContinueGUI": () => {
     ideProtocolClient.openGUI();
   },
   "continue.focusContinueInput": async () => {
@@ -111,7 +111,7 @@ const commandsMap: { [command: string]: (...args: any) => any } = {
       vscode.window.showInformationMessage("The test passes!");
       return;
     }
-    vscode.commands.executeCommand("continue.openDebugPanel").then(() => {
+    vscode.commands.executeCommand("continue.openContinueGUI").then(() => {
       setTimeout(() => {
         debugPanelWebview?.postMessage({
           type: "traceback",
