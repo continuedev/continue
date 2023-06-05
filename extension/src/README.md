@@ -51,7 +51,7 @@ Update: directions to root README
 ## Commands
 
 - "Write a docstring for the current function" command (windows: `ctrl+alt+l`, mac: `shift+cmd+l`)
-- "Open Debug Panel" command
+- "Open Continue GUI" command
 - "Ask a question from input box" command (windows: `ctrl+alt+j`, mac: `shift+cmd+j`)
 - "Open Captured Terminal" command
 - "Ask a question from webview" command (what context is it given?)

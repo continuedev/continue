@@ -7,6 +7,7 @@ import * as path from "path";
 // import { openCapturedTerminal } from "../terminal/terminalEmulator";
 import IdeProtocolClient from "../continueIdeClient";
 import { getContinueServerUrl } from "../bridge";
+import { setupDebugPanel } from "../debugPanel";
 
 export let extensionContext: vscode.ExtensionContext | undefined = undefined;
 
@@ -20,6 +21,8 @@ export function activateExtension(
 
   registerAllCodeLensProviders(context);
   registerAllCommands(context);
+
+  // vscode.window.registerWebviewViewProvider("continue.continueGUIView", setupDebugPanel);
 
   let serverUrl = getContinueServerUrl();
 

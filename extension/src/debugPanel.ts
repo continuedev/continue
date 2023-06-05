@@ -135,7 +135,7 @@ let streamManager = new StreamManager();
 
 export let debugPanelWebview: vscode.Webview | undefined;
 export function setupDebugPanel(
-  panel: vscode.WebviewPanel,
+  panel: vscode.WebviewPanel | vscode.WebviewView,
   context: vscode.ExtensionContext | undefined,
   sessionId: string
 ): string {
@@ -487,3 +487,14 @@ export function setupDebugPanel(
       </body>
     </html>`;
 }
+
+// class ContinueGUIWebviewViewProvider implements vscode.WebviewViewProvider {
+//   public static readonly viewType = "continue.continueGUIView";
+//   resolveWebviewView(
+//     webviewView: vscode.WebviewView,
+//     context: vscode.WebviewViewResolveContext<unknown>,
+//     token: vscode.CancellationToken
+//   ): void | Thenable<void> {
+//     setupDebugPanel(webviewView, context, sessionId);
+//   }
+// }
