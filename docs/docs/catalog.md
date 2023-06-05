@@ -2,9 +2,7 @@
 
 ## Steps
 
-**TODO: better explain each step and link to them, find all in steps folder**
-
-#### EditCodeStep
+### EditCodeStep
 
 Provide a prompt and a list of file ranges to be edited by a language model
 
@@ -20,14 +18,12 @@ Create a table in TypeORM
 
 Create and run an alembic migration
 
-### WritePytestsRecipe
-
-Write unit tests for this file
-
 ### AnswerQuestionChromaStep
 
 Type `/ask` and ask any question about your whole codebase. The Chroma embeddings store will help find important snippets and answer your question
 
 ## Recipes
 
-**TODO: add each recipe, explain them, and link to them, find all in recipes folder**
+### WritePytestsRecipe
+
+Write unit tests for this file
