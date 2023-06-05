@@ -12,7 +12,9 @@ If you want to try Continue before installing locally, check out the [GitHub Cod
 
 3. Once you do this, you will see a message in the bottom right hand corner of VS Code that says `Setting up Continue extension...`. After 30-90 seconds, the Continue extension will then open up. It should look like this when it is complete:
 
-**TODO: Add link to screenshot of what it looks like after install has completed**
+**TODO: Nate to add a screenshot of what Codespaces + Continue looks like when it is ready**
+
+You can also open the Continue GUI with `cmd+shift+p` on Mac / `ctrl+shift+p` on Windows and then selecting `Continue: Open GUI`
 
 :::note
 If you would like to install Continue from source, please [follow the instructions](https://github.com/continuedev/continue/blob/main/README.md) in the repo README.
@@ -20,8 +22,7 @@ If you would like to install Continue from source, please [follow the instructio
 
 ## Next steps
 
-Now that you have installed locally in VS Code, you can learn more with our walkthroughs:
-- [Use the GUI](./walkthroughs/use-the-gui.md)
-- [Use a recipe](./walkthroughs/use-a-recipe.md)
-- [Create a recipe](./walkthroughs/create-a-recipe.md)
-- [Share a recipe](./walkthroughs/share-a-recipe.md)
+**TODO: Nate to update VS Code install to have the same getting started as Codespaces**
+
+Read the `Getting Started` section of the `README.md` file that has been opened in VS Code,
+which you can also find [here](https://github.com/continuedev/continue-codespaces-demo/blob/main/README.md)

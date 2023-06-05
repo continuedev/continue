@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Coroutine, List
+from typing import Coroutine, List, Union
 
 from .config import ContinueConfig
 from ..models.filesystem_edit import FileSystemEdit
@@ -45,7 +45,7 @@ class AbstractContinueSDK(ABC):
         pass
 
     @abstractmethod
-    async def run(self, commands: List[str] | str, cwd: str = None):
+    async def run(self, commands: Union[List[str], str], cwd: str = None):
         pass
 
     @abstractmethod
@@ -57,7 +57,7 @@ class AbstractContinueSDK(ABC):
         pass
 
     @abstractmethod
-    async def add_file(self, filename: str, content: str | None):
+    async def add_file(self, filename: str, content: Union[str, None]):
         pass
 
     @abstractmethod
