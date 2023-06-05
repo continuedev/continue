@@ -12,16 +12,8 @@ We don't want to waste your time with install and env setup before you try Conti
 
 2. Select the `Create new codespace` button and wait 30-90 seconds while it launches and installs the Continue extension. Once complete, it should look like this:
 
-**TODO: Adding image of Codespaces once its ready to be used**
-
-3. Read the `Getting Started` section of the `README.md` file that has been opened in your codespace, which you can also find [here](https://github.com/continuedev/continue-codespaces-demo/blob/main/README.md)
+**TODO: Nate to add a screenshot of what Codespaces + Continue looks like when it is ready**
 
 ## Next Steps
 
-If you would like to use Continue locally, you can follow [these steps](./install.md) to install it in VS Code.
-
-If you'd like to continue exploring in GitHub Codespaces, you can learn more with our walkthroughs:
-- [Use the GUI](./walkthroughs/use-the-gui.md)
-- [Use a recipe](./walkthroughs/use-a-recipe.md)
-- [Create a recipe](./walkthroughs/create-a-recipe.md)
-- [Share a recipe](./walkthroughs/share-a-recipe.md)
+ Read the `Getting Started` section of the `README.md` file that has been opened in your codespace, which you can also find [here](https://github.com/continuedev/continue-codespaces-demo/blob/main/README.md)
