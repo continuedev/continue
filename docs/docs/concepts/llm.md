@@ -18,6 +18,6 @@ Just a class with a "complete" method. Right now have HuggingFaceInferenceAPI an
 
 ### `gpt-4`
 
-### `gpt-turbo-3.5`
+### `gpt-3.5-turbo`
 
 ### `StarCoder`
