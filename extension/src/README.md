@@ -2,47 +2,31 @@
 
 ## How to get started with development
 
-1. Clone the `continue` repo
+1. Clone the Continue repo
 
-2. Open a VS Code window with the `continue` repo
+2. Open a VS Code window with the `continue` directory as your workspace
 
-3. Package and then start the FastAPI server by following instructions outlined in `package/server/README.md`
+3. Package and then start the FastAPI server by following instructions outlined in the `Continue Server` section of the `continuedev/README.md`
 
-4. Open the `extension` sub-directory of the repo in a second VS Code window
+4. Open a VS Code window with the `extension` directory as your workspace
 
-5. Run `npm install`
+5. From `continue/extension`, run `npm install`
 
-6. Run `npm run clientgen`
+6. Run `npm run full-package`
 
-7. Run `cd react-app`
+7. Open `src/activation/activate.ts` file (or any TypeScript file)
 
-8. Run `npm run build`
+8. Press `F5` on your keyboard to start `Run and Debug` mode
 
-9. Run `cd ..` to return to `extension` directory
+9. `cmd+shift+p` to look at developer console and select Continue commands
 
-10. Then run `npm run compile`
+10. Every time you make changes to the code, you need to run `npm run compile`
 
-11. Open `src/activate.ts` file (or any TypeScript file)
+11. If you run into a "command not found" error, try running `npm run rebuild` and then `npm run compile`
 
-12. Press `F5` on your keyboard to start `Run and Debug` mode
+## Alternative: Install from source
 
-13. `cmd+shift+p` to look at developer console and select Continue commands
-
-14. Every time you make changes to the code, you need to run `npm run compile`
-
-15. If you run into a "command not found" error, try running `npm run rebuild` and then `npm run compile`
-
-## Alternative: Install a packaged version
-
-You should always have a packaged version installed in VS Code, because when Continue is broken you'll want a stable version to help you debug. There are four key commands in the `package.json`:
-
-1. `npm run package` will create a .vsix file in the `build/` folder that can then be installed. It is this same file that you can share with others who want to try the extension.
-
-2. `npm run install-extension` will install the extension to VS Code. You should then see it in your installed extensions in the VS Code sidebar.
-
-3. `npm run uninstall` will uninstall the extension. You don't always have to do this thanks to the reinstall command, but can be useful when you want to do so manually.
-
-4. `npm run reinstall` will go through the entire process of uninstalling the existing installed extension, rebuilding, and then installing the new version. You shouldn't be doing this every time you make a change to the extension, but rather when there is some significant update that you would like to make available to yourself (or if you happen to be debugging something which is specific to the packaged extension).
+Update: directions to root README
 
 ## Background
 

@@ -88,7 +88,7 @@ async function setupPythonEnv() {
   const createEnvCommand = [
     `cd ${path.join(getExtensionUri().fsPath, "scripts")}`,
     `${pythonCmd} -m venv env`,
-  ].join(" && ");
+  ].join(" ; ");
 
   // Repeat until it is successfully created (sometimes it fails to generate the bin, need to try again)
   while (true) {

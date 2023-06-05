@@ -10,9 +10,15 @@ All of the recipes are located in this part of the codebase here
 
 At the moment, we only support editing the file open and focused in the code editor, so you need to make sure that is 
 
+user input step
+demopolicy decides what to do
+default step, starcoder to edit the current open file
+
 ## Use its slash command to start the recipe
 
-Every recipe can be triggered by the user using its slash command. For example, `/comment` will trigger
+Every recipe can be triggered by the user using its slash command. For example, `/comment` will trigger.
+
+add to the if / else with `/` commands
 
 ## Review the steps and take any required manual actions
 
