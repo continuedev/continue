@@ -1,6 +1,6 @@
 # Continue VS Code Extension README
 
-## How to get started with development
+## How to debug the VS Code Extension
 
 1. Clone the Continue repo
 

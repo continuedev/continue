@@ -25,22 +25,9 @@ Learn how to try the GitHub Codespaces Demo [here](https://continue.dev/docs/get
 
 Learn how to install locally in VS Code [here](https://continue.dev/docs/install)
 
-## Walkthroughs
-
-- [Use the GUI](https://continue.dev/docs/walkthroughs/use-the-gui.md)
-- [Use a recipe](https://continue.dev/docs/walkthroughs/use-a-recipe.md)
-- [Create a recipe](https://continue.dev/docs/walkthroughs/create-a-recipe.md)
-- [Share a recipe](https://continue.dev/docs/walkthroughs/share-a-recipe.md)
-
 ## How to contribute
 
-### Option 1: Create a recipe and share it with the community
-
-Follow [these steps](https://continue.dev/docs/walkthroughs/share-a-recipe.md) to share a recipe you have created :)
-
-### Option 2: Open a [new GitHub Issue](https://github.com/continuedev/continue/issues/new) or comment on [an existing one](https://github.com/continuedev/continue/issues)
-
-Let us know what you would like to contribute and we will help you make it happen!
+Open a [new GitHub Issue](https://github.com/continuedev/continue/issues/new) or comment on [an existing one](https://github.com/continuedev/continue/issues). Let us know what you would like to contribute there, and we will help you make it happen!
 
 ## Install from source
 
@@ -68,12 +55,12 @@ cd continue/extension/scripts && python3 install_from_source.py
 
 # Understanding the codebase
 
-- [Continue Server README](./continuedev): learn about the core of Continue, which can be downloaded as a [PyPI package](https://pypi.org/project/continuedev/)
-- [VS Code Extension README](./extension/src): learn about the capabilities of our extension—the first implementation of Continue's IDE Protocol—which makes it possible to use use Continue in VS Code and GitHub Codespaces
+- [Continue Server README](./continuedev/README.md): learn about the core of Continue, which can be downloaded as a [PyPI package](https://pypi.org/project/continuedev/)
+- [VS Code Extension README](./extension/README.md): learn about the capabilities of our extension—the first implementation of Continue's IDE Protocol—which makes it possible to use use Continue in VS Code and GitHub Codespaces
 - [Continue GUI README](./extension/react-app/): learn about the React app that lets users interact with the server and is placed adjacent to the text editor in any suppported IDE
 - [Schema README](./schema): learn about the JSON Schema types generated from Pydantic models, which we use across the `continuedev/` and `extension/` directories
 - [Continue Docs README](./docs): learn how our [docs](https://continue.dev/docs) are written and built
-- Add steps for development README mention here
+- [How to debug the VS Code Extension README](./extension/src/README.md): learn how to set up the VS Code extension, so you can debug it
 
 # License
 
