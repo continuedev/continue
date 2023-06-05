@@ -191,13 +191,18 @@ class WaitForUserInputStep(Step):
     name: str = "Waiting for user input"
 
     _description: Union[str, None] = None
+    _response: Union[str, None] = None
 
     async def describe(self, models: Models) -> Coroutine[str, None, None]:
-        return self.prompt
+        if self._response is None:
+            return self.prompt
+        else:
+            return self.prompt + "\n\n" + self._response
 
     async def run(self, sdk: ContinueSDK) -> Coroutine[Observation, None, None]:
         self._description = self.prompt
         resp = await sdk.wait_for_user_input()
+        self._response = resp
         return TextObservation(text=resp)
 
 

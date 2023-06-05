@@ -38,11 +38,11 @@ function GUI(props: GUIProps) {
   const [waitingForSteps, setWaitingForSteps] = useState(false);
   const [userInputQueue, setUserInputQueue] = useState<string[]>([]);
   const [history, setHistory] = useState<History | undefined>();
-  // {
+  //   {
   //   timeline: [
   //     {
   //       step: {
-  //         name: "RunCodeStep",
+  //         name: "Waiting for user input",
   //         cmd: "python3 /Users/natesesti/Desktop/continue/extension/examples/python/main.py",
   //         description:
   //           "Run `python3 /Users/natesesti/Desktop/continue/extension/examples/python/main.py`",
@@ -189,6 +189,8 @@ function GUI(props: GUIProps) {
     if (mainTextInputRef.current) {
       if (!client) return;
       let input = mainTextInputRef.current.value;
+      if (input.trim() === "") return;
+
       setWaitingForSteps(true);
       client.sendMainInput(input);
       setUserInputQueue((queue) => {
