@@ -6,13 +6,14 @@ Continue is a Python library for automating repetitive sequences of software dev
 
 ## Continue Server
 
-The Continue server acts as a bridge between the Continue React app and your IDE, running your recipes and acting on the codebase. Start it by running the following commands:
+The Continue server acts as a bridge between the Continue React app and your IDE, running your recipes and acting on the codebase. 
 
-- `cd continuedev`
-- Make sure packages are installed with `poetry install`
-- `poetry shell`
-- `cd ..`
-- `python3 -m continuedev.src.continuedev.server.main`
+Start it by running the following commands:
+1. `cd continuedev`
+2. Make sure packages are installed with `poetry install`
+3. `poetry shell`
+4. `cd ..`
+5. `python3 -m continuedev.src.continuedev.server.main`
 
 ## Scripts
 

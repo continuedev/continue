@@ -2,7 +2,7 @@
 
 ## Steps
 
-**TODO: better explain each step and link to them**
+**TODO: better explain each step and link to them, find all in steps folder**
 
 #### EditCodeStep
 
@@ -30,4 +30,4 @@ Type `/ask` and ask any question about your whole codebase. The Chroma embedding
 
 ## Recipes
 
-**TODO: add each recipe, explain them, and link to them**
+**TODO: add each recipe, explain them, and link to them, find all in recipes folder**

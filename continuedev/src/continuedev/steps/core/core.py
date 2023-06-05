@@ -40,10 +40,10 @@ class FileSystemEditStep(ReversibleStep):
 
 class ShellCommandsStep(Step):
     cmds: List[str]
-    cwd: str | None = None
+    cwd: Union[str, None] = None
     name: str = "Run Shell Commands"
 
-    _err_text: str | None = None
+    _err_text: Union[str, None] = None
 
     async def describe(self, models: Models) -> Coroutine[str, None, None]:
         if self._err_text is not None:

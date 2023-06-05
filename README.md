@@ -73,6 +73,7 @@ cd continue/extension/scripts && python3 install_from_source.py
 - [Continue GUI README](./extension/react-app/): learn about the React app that lets users interact with the server and is placed adjacent to the text editor in any suppported IDE
 - [Schema README](./schema): learn about the JSON Schema types generated from Pydantic models, which we use across the `continuedev/` and `extension/` directories
 - [Continue Docs README](./docs): learn how our [docs](https://continue.dev/docs) are written and built
+- Add steps for development README mention here
 
 # License
 

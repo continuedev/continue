@@ -73,7 +73,7 @@ class ContinueSDK(AbstractContinueSDK):
     async def wait_for_user_confirmation(self, prompt: str):
         return await self.run_step(WaitForUserConfirmationStep(prompt=prompt))
 
-    async def run(self, commands: List[str] | str, cwd: str = None):
+    async def run(self, commands: Union[List[str], str], cwd: str = None):
         commands = commands if isinstance(commands, List) else [commands]
         return await self.run_step(ShellCommandsStep(cmds=commands, cwd=cwd))
 
@@ -93,7 +93,7 @@ class ContinueSDK(AbstractContinueSDK):
         file_edit = FileEdit.from_append(filepath, previous_content, content)
         await self.ide.applyFileSystemEdit(file_edit)
 
-    async def add_file(self, filename: str, content: str | None):
+    async def add_file(self, filename: str, content: Union[str, None]):
         filepath = await self._ensure_absolute_path(filename)
         return await self.run_step(FileSystemEditStep(edit=AddFile(filename=filename, content=content)))
 
