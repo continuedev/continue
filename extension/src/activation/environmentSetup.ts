@@ -14,7 +14,7 @@ async function runCommand(cmd: string): Promise<[string, string | undefined]> {
   var stdout: any = "";
   var stderr: any = "";
   try {
-    var { stdout, stderr } = await exec(cmd);
+    var { stdout, stderr } = await exec(cmd, {'shell':'powershell.exe'});
   } catch (e: any) {
     stderr = e.stderr;
     stdout = e.stdout;
@@ -70,7 +70,7 @@ function checkEnvExists() {
   );
   return (
     fs.existsSync(path.join(envBinPath, "activate")) &&
-    fs.existsSync(path.join(envBinPath, "pip"))
+    fs.existsSync(path.join(envBinPath, process.platform == "win32" ? "pip.exe" : "pip"))
   );
 }
 
@@ -88,7 +88,11 @@ async function setupPythonEnv() {
   const createEnvCommand = [
     `cd ${path.join(getExtensionUri().fsPath, "scripts")}`,
     `${pythonCmd} -m venv env`,
-  ].join(" ; ");
+  ].join("; ");
+
+  const [here, something] = await runCommand(`cd ${path.join(getExtensionUri().fsPath, "scripts")}`);
+  const [here1, something1] = await runCommand('cd c:\\Users\\Ty\\Documents\\continuedev\\continue\\extension\\scripts; python -m venv env');
+  // console.log('cd c:\\Users\\Ty\\Documents\\continuedev\\continue\\extension\\scripts; c:\\Program` Files\\Python310\\python.exe -m venv env');
 
   // Repeat until it is successfully created (sometimes it fails to generate the bin, need to try again)
   while (true) {
