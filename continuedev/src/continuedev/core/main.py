@@ -181,10 +181,12 @@ class Context:
 
 
 class ContinueCustomException(Exception):
+    title: str
     message: str
 
-    def __init__(self, message: str):
+    def __init__(self, message: str, title: str = "Error while running step:"):
         self.message = message
+        self.title = title
 
 
 HistoryNode.update_forward_refs()

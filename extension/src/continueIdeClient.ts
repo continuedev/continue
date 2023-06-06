@@ -12,6 +12,7 @@ import { debugPanelWebview, setupDebugPanel } from "./debugPanel";
 import { FileEditWithFullContents } from "../schema/FileEditWithFullContents";
 import fs = require("fs");
 import { WebsocketMessenger } from "./util/messenger";
+import { CapturedTerminal } from "./terminal/terminalEmulator";
 
 class IdeProtocolClient {
   private messenger: WebsocketMessenger | null = null;
@@ -100,7 +101,9 @@ class IdeProtocolClient {
         this.highlightCode(data.rangeInFile, data.color);
         break;
       case "runCommand":
-        this.runCommand(data.command);
+        this.messenger?.send("runCommand", {
+          output: await this.runCommand(data.command),
+        });
         break;
       case "saveFile":
         this.saveFile(data.filepath);
@@ -316,18 +319,15 @@ class IdeProtocolClient {
     return rangeInFiles;
   }
 
-  runCommand(command: string) {
-    if (vscode.window.terminals.length === 0) {
-      const terminal = vscode.window.createTerminal();
-      terminal.show();
-      terminal.sendText("bash", true);
-      terminal.sendText(command, true);
-      return;
+  private continueTerminal: CapturedTerminal | undefined;
+
+  async runCommand(command: string) {
+    if (!this.continueTerminal) {
+      this.continueTerminal = new CapturedTerminal("Continue");
     }
-    const terminal = vscode.window.terminals[0];
-    terminal.show();
-    terminal.sendText(command, true);
-    // But need to know when it's done executing...
+
+    this.continueTerminal.show();
+    return await this.continueTerminal.runCommand(command);
   }
 }
 

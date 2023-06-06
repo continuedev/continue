@@ -43,6 +43,10 @@ function GUI(props: GUIProps) {
   //         description:
   //           "Run `python3 /Users/natesesti/Desktop/continue/extension/examples/python/main.py`",
   //       },
+  //       observation: {
+  //         error:
+  //           "Traceback (most recent call last):\n  File \"/Users/natesesti/Desktop/continue/extension/examples/python/main.py\", line 7, in <module>\n    print(sum(first, second))\n          ^^^^^^^^^^^^^^^^^^\n  File \"/Users/natesesti/Desktop/continue/extension/examples/python/sum.py\", line 2, in sum\n    return a + b\n           ~~^~~\nTypeError: unsupported operand type(s) for +: 'int' and 'str'",
+  //       },
   //       output: [
   //         {
   //           traceback: {

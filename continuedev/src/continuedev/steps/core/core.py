@@ -56,7 +56,9 @@ class ShellCommandsStep(Step):
         cwd = await sdk.ide.getWorkspaceDirectory() if self.cwd is None else self.cwd
 
         for cmd in self.cmds:
-            await sdk.ide.runCommand(cmd)
+            output = await sdk.ide.runCommand(cmd)
+
+        return TextObservation(text=output)
 
         # process = subprocess.Popen(
         #     '/bin/bash', stdin=subprocess.PIPE, stdout=subprocess.PIPE, cwd=cwd)
@@ -205,7 +207,7 @@ class WaitForUserInputStep(Step):
     async def run(self, sdk: ContinueSDK) -> Coroutine[Observation, None, None]:
         self.description = self.prompt
         resp = await sdk.wait_for_user_input()
-        self._response = resp
+        self.description = f"{self.prompt}\n\n`{resp}`"
         return TextObservation(text=resp)
 
 

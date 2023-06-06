@@ -22,7 +22,7 @@ class CreatePipelineRecipe(Step):
                 - Load the data into a local DuckDB instance
                 - Write a query to view the data""")) >>
             WaitForUserInputStep(
-                prompt="What API do you want to load data from?")
+                prompt="What API do you want to load data from? (e.g. weatherapi.com, chess.com)")
         )
         await sdk.run_step(
             SetupPipelineStep(api_description=text_observation.text) >>

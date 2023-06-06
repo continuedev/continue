@@ -75,9 +75,9 @@ class ContinueSDK(AbstractContinueSDK):
     async def wait_for_user_confirmation(self, prompt: str):
         return await self.run_step(WaitForUserConfirmationStep(prompt=prompt))
 
-    async def run(self, commands: Union[List[str], str], cwd: str = None, name: str = None, description: str = None):
+    async def run(self, commands: Union[List[str], str], cwd: str = None, name: str = None, description: str = None) -> Coroutine[str, None, None]:
         commands = commands if isinstance(commands, List) else [commands]
-        return await self.run_step(ShellCommandsStep(cmds=commands, cwd=cwd, description=description, **({'name': name} if name else {})))
+        return (await self.run_step(ShellCommandsStep(cmds=commands, cwd=cwd, description=description, **({'name': name} if name else {})))).text
 
     async def edit_file(self, filename: str, prompt: str, name: str = None, description: str = None):
         filepath = await self._ensure_absolute_path(filename)
@@ -131,5 +131,5 @@ class ContinueSDK(AbstractContinueSDK):
         # self.__autopilot.set_loading_message(message)
         raise NotImplementedError()
 
-    def raise_exception(self, message: str):
-        raise ContinueCustomException(message)
+    def raise_exception(self, message: str, title: str):
+        raise ContinueCustomException(message, title)
