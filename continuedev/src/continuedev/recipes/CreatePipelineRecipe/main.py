@@ -12,7 +12,7 @@ class CreatePipelineRecipe(Step):
 
     async def run(self, sdk: ContinueSDK):
         text_observation = await sdk.run_step(
-            MessageStep(message=dedent("""\
+            MessageStep(name="Building your first dlt pipeline", message=dedent("""\
                 This recipe will walk you through the process of creating a dlt pipeline for your chosen data source. With the help of Continue, you will:
                 - Create a Python virtual environment with dlt installed
                 - Run `dlt init` to generate a pipeline template

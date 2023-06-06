@@ -55,18 +55,21 @@ class ShellCommandsStep(Step):
     async def run(self, sdk: ContinueSDK) -> Coroutine[Observation, None, None]:
         cwd = await sdk.ide.getWorkspaceDirectory() if self.cwd is None else self.cwd
 
-        process = subprocess.Popen(
-            '/bin/bash', stdin=subprocess.PIPE, stdout=subprocess.PIPE, cwd=cwd)
+        for cmd in self.cmds:
+            await sdk.ide.runCommand(cmd)
 
-        stdin_input = "\n".join(self.cmds)
-        out, err = process.communicate(stdin_input.encode())
+        # process = subprocess.Popen(
+        #     '/bin/bash', stdin=subprocess.PIPE, stdout=subprocess.PIPE, cwd=cwd)
 
-        # If it fails, return the error
-        if err is not None and err != "":
-            self._err_text = err
-            return TextObservation(text=err)
+        # stdin_input = "\n".join(self.cmds)
+        # out, err = process.communicate(stdin_input.encode())
 
-        return None
+        # # If it fails, return the error
+        # if err is not None and err != "":
+        #     self._err_text = err
+        #     return TextObservation(text=err)
+
+        # return None
 
 
 class EditCodeStep(Step):
@@ -197,10 +200,10 @@ class WaitForUserInputStep(Step):
         if self._response is None:
             return self.prompt
         else:
-            return self.prompt + "\n\n" + self._response
+            return f"{self.prompt}\n\n`{self._response}`"
 
     async def run(self, sdk: ContinueSDK) -> Coroutine[Observation, None, None]:
-        self._description = self.prompt
+        self.description = self.prompt
         resp = await sdk.wait_for_user_input()
         self._response = resp
         return TextObservation(text=resp)
@@ -214,7 +217,7 @@ class WaitForUserConfirmationStep(Step):
         return self.prompt
 
     async def run(self, sdk: ContinueSDK) -> Coroutine[Observation, None, None]:
-        self._description = self.prompt
+        self.description = self.prompt
         resp = await sdk.wait_for_user_input()
         self.hide = True
         return TextObservation(text=resp)

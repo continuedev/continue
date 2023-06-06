@@ -1,25 +1,21 @@
 import styled from "styled-components";
 import {
-  Button,
   defaultBorderRadius,
   vscBackground,
-  MainTextInput,
   Loader,
+  MainTextInput,
 } from "../components";
 import ContinueButton from "../components/ContinueButton";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { History } from "../../../schema/History";
 import { HistoryNode } from "../../../schema/HistoryNode";
 import StepContainer from "../components/StepContainer";
-import { useSelector } from "react-redux";
-import { RootStore } from "../redux/store";
-import useContinueWebsocket from "../hooks/useWebsocket";
 import useContinueGUIProtocol from "../hooks/useWebsocket";
 
 let TopGUIDiv = styled.div`
   display: grid;
   grid-template-columns: 1fr;
-  overflow: scroll;
+  background-color: ${vscBackground};
 `;
 
 let UserInputQueueItem = styled.div`
@@ -156,7 +152,19 @@ function GUI(props: GUIProps) {
   //   current_index: 0,
   // } as any);
 
+  const topGuiDivRef = useRef<HTMLDivElement>(null);
   const client = useContinueGUIProtocol();
+
+  const scrollToBottom = useCallback(() => {
+    if (topGuiDivRef.current) {
+      setTimeout(() => {
+        window.scrollTo({
+          top: window.outerHeight,
+          behavior: "smooth",
+        });
+      }, 100);
+    }
+  }, [topGuiDivRef.current]);
 
   useEffect(() => {
     console.log("CLIENT ON STATE UPDATE: ", client, client?.onStateUpdate);
@@ -165,8 +173,14 @@ function GUI(props: GUIProps) {
       setWaitingForSteps(state.active);
       setHistory(state.history);
       setUserInputQueue(state.user_input_queue);
+
+      scrollToBottom();
     });
   }, [client]);
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [waitingForSteps]);
 
   const mainTextInputRef = useRef<HTMLTextAreaElement>(null);
 
@@ -189,16 +203,33 @@ function GUI(props: GUIProps) {
     if (mainTextInputRef.current) {
       if (!client) return;
       let input = mainTextInputRef.current.value;
-      if (input.trim() === "") return;
 
-      setWaitingForSteps(true);
-      client.sendMainInput(input);
-      setUserInputQueue((queue) => {
-        return [...queue, input];
-      });
-      mainTextInputRef.current.value = "";
-      mainTextInputRef.current.style.height = "";
+      if (
+        history &&
+        history.timeline[history.current_index].step.name ===
+          "Waiting for user input"
+      ) {
+        if (input.trim() === "") return;
+        onStepUserInput(input, history!.current_index);
+      } else if (
+        history &&
+        history.timeline[history.current_index].step.name ===
+          "Waiting for user confirmation"
+      ) {
+        onStepUserInput("ok", history!.current_index);
+      } else {
+        if (input.trim() === "") return;
+
+        client.sendMainInput(input);
+        setUserInputQueue((queue) => {
+          return [...queue, input];
+        });
+        mainTextInputRef.current.value = "";
+        mainTextInputRef.current.style.height = "";
+      }
     }
+
+    setWaitingForSteps(true);
   };
 
   const onStepUserInput = (input: string, index: number) => {
@@ -209,7 +240,14 @@ function GUI(props: GUIProps) {
 
   // const iterations = useSelector(selectIterations);
   return (
-    <TopGUIDiv>
+    <TopGUIDiv
+      ref={topGuiDivRef}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" && e.ctrlKey) {
+          onMainTextInput();
+        }
+      }}
+    >
       {typeof client === "undefined" && (
         <>
           <Loader></Loader>
@@ -249,6 +287,12 @@ function GUI(props: GUIProps) {
       </div>
 
       <MainTextInput
+        disabled={
+          history
+            ? history.timeline[history.current_index].step.name ===
+              "Waiting for user confirmation"
+            : false
+        }
         ref={mainTextInputRef}
         onKeyDown={(e) => {
           if (e.key === "Enter") {

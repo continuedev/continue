@@ -105,7 +105,7 @@ class Policy(ContinueBaseModel):
 class Step(ContinueBaseModel):
     name: str = None
     hide: bool = False
-    _description: Union[str, None] = None
+    description: Union[str, None] = None
 
     system_message: Union[str, None] = None
 
@@ -113,17 +113,14 @@ class Step(ContinueBaseModel):
         copy_on_model_validation = False
 
     async def describe(self, models: Models) -> Coroutine[str, None, None]:
-        if self._description is not None:
-            return self._description
+        if self.description is not None:
+            return self.description
         return "Running step: " + self.name
-
-    def _set_description(self, description: str):
-        self._description = description
 
     def dict(self, *args, **kwargs):
         d = super().dict(*args, **kwargs)
-        if self._description is not None:
-            d["description"] = self._description
+        if self.description is not None:
+            d["description"] = self.description
         else:
             d["description"] = "`Description loading...`"
         return d
@@ -171,6 +168,23 @@ class ValidatorObservation(Observation):
 class Validator(Step):
     def run(self, sdk: ContinueSDK) -> ValidatorObservation:
         raise NotImplementedError
+
+
+class Context:
+    key_value: Dict[str, str] = {}
+
+    def set(self, key: str, value: str):
+        self.key_value[key] = value
+
+    def get(self, key: str) -> str:
+        return self.key_value[key]
+
+
+class ContinueCustomException(Exception):
+    message: str
+
+    def __init__(self, message: str):
+        self.message = message
 
 
 HistoryNode.update_forward_refs()

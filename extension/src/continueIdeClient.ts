@@ -96,6 +96,12 @@ class IdeProtocolClient {
           fileEdit,
         });
         break;
+      case "highlightCode":
+        this.highlightCode(data.rangeInFile, data.color);
+        break;
+      case "runCommand":
+        this.runCommand(data.command);
+        break;
       case "saveFile":
         this.saveFile(data.filepath);
         break;
@@ -116,6 +122,28 @@ class IdeProtocolClient {
 
   // ------------------------------------ //
   // On message handlers
+
+  async highlightCode(rangeInFile: RangeInFile, color: string) {
+    const range = new vscode.Range(
+      rangeInFile.range.start.line,
+      rangeInFile.range.start.character,
+      rangeInFile.range.end.line,
+      rangeInFile.range.end.character
+    );
+    const editor = await openEditorAndRevealRange(
+      rangeInFile.filepath,
+      range,
+      vscode.ViewColumn.One
+    );
+    if (editor) {
+      editor.setDecorations(
+        vscode.window.createTextEditorDecorationType({
+          backgroundColor: color,
+        }),
+        [range]
+      );
+    }
+  }
 
   showSuggestion(edit: FileEdit) {
     // showSuggestion already exists
@@ -289,7 +317,16 @@ class IdeProtocolClient {
   }
 
   runCommand(command: string) {
-    vscode.window.terminals[0].sendText(command, true);
+    if (vscode.window.terminals.length === 0) {
+      const terminal = vscode.window.createTerminal();
+      terminal.show();
+      terminal.sendText("bash", true);
+      terminal.sendText(command, true);
+      return;
+    }
+    const terminal = vscode.window.terminals[0];
+    terminal.show();
+    terminal.sendText(command, true);
     // But need to know when it's done executing...
   }
 }

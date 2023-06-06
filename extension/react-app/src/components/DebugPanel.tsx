@@ -9,7 +9,7 @@ import {
 } from "../redux/slices/configSlice";
 import { setHighlightedCode } from "../redux/slices/miscSlice";
 import { updateFileSystem } from "../redux/slices/debugContexSlice";
-import { buttonColor, defaultBorderRadius, vscBackground } from ".";
+import { defaultBorderRadius, secondaryDark, vscBackground } from ".";
 interface DebugPanelProps {
   tabs: {
     element: React.ReactElement;
@@ -19,14 +19,15 @@ interface DebugPanelProps {
 
 const GradientContainer = styled.div`
   // Uncomment to get gradient border
-  background: linear-gradient(
+  /* background: linear-gradient(
     101.79deg,
     #12887a 0%,
     #87245c 37.64%,
     #e12637 65.98%,
     #ffb215 110.45%
-  );
+  ); */
   /* padding: 10px; */
+  background-color: ${secondaryDark};
   margin: 0;
   height: 100%;
   /* border: 1px solid white; */
@@ -36,11 +37,8 @@ const GradientContainer = styled.div`
 const MainDiv = styled.div`
   height: 100%;
   border-radius: ${defaultBorderRadius};
-  overflow-y: scroll;
-  scrollbar-gutter: stable both-edges;
   scrollbar-base-color: transparent;
-  /* background: ${vscBackground}; */
-  background-color: #1e1e1ede;
+  background-color: ${vscBackground};
 `;
 
 const TabBar = styled.div<{ numTabs: number }>`
@@ -105,9 +103,6 @@ function DebugPanel(props: DebugPanelProps) {
               <div
                 key={index}
                 hidden={index !== currentTab}
-                className={
-                  tab.title === "Chat" ? "overflow-hidden" : "overflow-scroll"
-                }
                 style={{ scrollbarGutter: "stable both-edges" }}
               >
                 {tab.element}
