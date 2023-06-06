@@ -3,6 +3,7 @@ import styled, { keyframes } from "styled-components";
 export const defaultBorderRadius = "5px";
 export const secondaryDark = "rgb(37 37 38)";
 export const vscBackground = "rgb(30 30 30)";
+export const vscBackgroundTransparent = "#1e1e1ede";
 export const buttonColor = "rgb(113 28 59)";
 export const buttonColorHover = "rgb(113 28 59 0.67)";
 
@@ -94,9 +95,13 @@ export const Loader = styled.div`
   margin: auto;
 `;
 
-export const GradientBorder = styled.div<{ borderWidth?: string }>`
-  border-radius: ${defaultBorderRadius};
-  padding: ${(props) => props.borderWidth || "1px"};
+export const GradientBorder = styled.div<{
+  borderWidth?: string;
+  borderRadius?: string;
+}>`
+  border-radius: ${(props) => props.borderRadius || "0"};
+  padding-top: ${(props) => props.borderWidth || "1px"};
+  padding-bottom: ${(props) => props.borderWidth || "1px"};
   background: linear-gradient(
     101.79deg,
     #12887a 0%,
