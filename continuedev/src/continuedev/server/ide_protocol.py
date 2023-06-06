@@ -88,5 +88,5 @@ class AbstractIdeProtocolServer(ABC):
         """Highlight code"""
 
     @abstractmethod
-    async def runCommand(self, command: str):
+    async def runCommand(self, command: str) -> str:
         """Run a command"""

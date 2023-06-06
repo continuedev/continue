@@ -36,4 +36,5 @@ class TextObservation(Observation):
 
 
 class InternalErrorObservation(Observation):
+    title: str
     error: str

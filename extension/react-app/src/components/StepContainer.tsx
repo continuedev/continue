@@ -22,6 +22,7 @@ import { HistoryNode } from "../../../schema/HistoryNode";
 import ReactMarkdown from "react-markdown";
 import ContinueButton from "./ContinueButton";
 import InputAndButton from "./InputAndButton";
+import ToggleErrorDiv from "./ToggleErrorDiv";
 
 interface StepContainerProps {
   historyNode: HistoryNode;
@@ -170,13 +171,10 @@ function StepContainer(props: StepContainerProps) {
           )}
 
           {props.historyNode.observation?.error ? (
-            <>
-              Error while running step:
-              <br />
-              <pre className="overflow-scroll">
-                {props.historyNode.observation.error as string}
-              </pre>
-            </>
+            <ToggleErrorDiv
+              title={"Error while running step:"}
+              error={props.historyNode.observation.error as string}
+            />
           ) : (
             <ReactMarkdown key={1} className="overflow-scroll">
               {props.historyNode.step.description as any}

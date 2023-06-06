@@ -34,8 +34,7 @@ class SetupPipelineStep(Step):
             'python3 -m venv env',
             'source env/bin/activate',
             'pip install dlt',
-            f'dlt init {source_name} duckdb',
-            'Y',
+            f'dlt init {source_name} duckdb\n\rY',
             'pip install -r requirements.txt'
         ], description=dedent(f"""\
             Running the following commands:
@@ -43,9 +42,8 @@ class SetupPipelineStep(Step):
             - `source env/bin/activate`: Activate the virtual environment
             - `pip install dlt`: Install dlt
             - `dlt init {source_name} duckdb`: Create a new dlt pipeline called {source_name} that loads data into a local DuckDB instance
-            - `pip install -r requirements.txt`: Install the Python dependencies for the pipeline"""))
+            - `pip install -r requirements.txt`: Install the Python dependencies for the pipeline"""), name="Setup Python environment")
 
-        await sdk.wait_for_user_confirmation("Wait for the commands to finish running, then press `Continue`")
         # editing the resource function to call the requested API
         await sdk.ide.highlightCode(RangeInFile(filepath=os.path.join(await sdk.ide.getWorkspaceDirectory(), filename), range=Range.from_shorthand(15, 0, 30, 0)), "#00ff0022")
 
@@ -78,17 +76,12 @@ class ValidatePipelineStep(Step):
         #         """)))
 
         # test that the API call works
-
-        p = subprocess.run(
-            ['python3', f'{filename}'], capture_output=True, text=True, cwd=workspace_dir)
-        err = p.stderr
+        output = await sdk.run(f'python3 {filename}', name="Test the pipeline", description=f"Running python3 {filename} to test loading data from the API")
 
         # If it fails, return the error
-        if err is not None and err != "":
+        if "Traceback" in output:
             sdk.raise_exception(
-                f"Error while running pipeline. Fix the resource function in {filename} and rerun this step: \n\n" + err)
-
-        await sdk.run(f'python3 {filename}', name="Test the pipeline", description=f"Running python3 {filename} to test loading data from the API")
+                title="Error while running pipeline.\nFix the resource function in {filename} and rerun this step", description=output)
 
         # remove exit() from the main main function
         await sdk.edit_file(

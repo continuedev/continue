@@ -118,7 +118,7 @@ class Autopilot(ContinueBaseModel):
                 f"\n{error_string}\n{e}")
 
             observation = InternalErrorObservation(
-                error=error_string)
+                error=error_string, title=e.title)
             step.hide = False
         except Exception as e:
             # Attach an InternalErrorObservation to the step and unhide it.
@@ -128,7 +128,7 @@ class Autopilot(ContinueBaseModel):
                 f"Error while running step: \n{error_string}\n{e}")
 
             observation = InternalErrorObservation(
-                error=error_string)
+                error=error_string, title=e.__repr__())
             step.hide = False
 
         self._step_depth -= 1
