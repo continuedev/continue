@@ -133,6 +133,17 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
             "sessionId": session_id
         })
 
+    async def highlightCode(self, range_in_file: RangeInFile, color: str):
+        await self._send_json("highlightCode", {
+            "rangeInFile": range_in_file.dict(),
+            "color": color
+        })
+
+    async def runCommand(self, command: str):
+        await self._send_json("runCommand", {
+            "command": command
+        })
+
     async def showSuggestionsAndWait(self, suggestions: List[FileEdit]) -> bool:
         ids = [str(uuid.uuid4()) for _ in suggestions]
         for i in range(len(suggestions)):

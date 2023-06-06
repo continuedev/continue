@@ -1,13 +1,13 @@
 import traceback
 import time
-from typing import Callable, Coroutine, List
+from typing import Any, Callable, Coroutine, Dict, List
 from ..models.filesystem_edit import FileEditWithFullContents
 from ..libs.llm import LLM
 from .observation import Observation, InternalErrorObservation
 from ..server.ide_protocol import AbstractIdeProtocolServer
 from ..libs.util.queue import AsyncSubscriptionQueue
 from ..models.main import ContinueBaseModel
-from .main import Policy, History, FullState, Step, HistoryNode
+from .main import Context, ContinueCustomException, Policy, History, FullState, Step, HistoryNode
 from ..steps.core.core import ReversibleStep, ManualEditStep, UserInputStep
 from ..libs.util.telemetry import capture_event
 from .sdk import ContinueSDK
@@ -18,6 +18,7 @@ class Autopilot(ContinueBaseModel):
     policy: Policy
     ide: AbstractIdeProtocolServer
     history: History = History.from_empty()
+    context: Context = Context()
     _on_update_callbacks: List[Callable[[FullState], None]] = []
 
     _active: bool = False
@@ -25,6 +26,10 @@ class Autopilot(ContinueBaseModel):
     _main_user_input_queue: List[str] = []
 
     _user_input_queue = AsyncSubscriptionQueue()
+
+    @property
+    def continue_sdk(self) -> ContinueSDK:
+        return ContinueSDK(self)
 
     class Config:
         arbitrary_types_allowed = True
@@ -60,7 +65,7 @@ class Autopilot(ContinueBaseModel):
                 current_step = self.history.get_current().step
                 self.history.step_back()
                 if issubclass(current_step.__class__, ReversibleStep):
-                    await current_step.reverse(ContinueSDK(self))
+                    await current_step.reverse(self.continue_sdk)
 
                 await self.update_subscribers()
         except Exception as e:
@@ -105,7 +110,16 @@ class Autopilot(ContinueBaseModel):
         self._step_depth += 1
 
         try:
-            observation = await step(ContinueSDK(self))
+            observation = await step(self.continue_sdk)
+        except ContinueCustomException as e:
+            # Attach an InternalErrorObservation to the step and unhide it.
+            error_string = e.message
+            print(
+                f"\n{error_string}\n{e}")
+
+            observation = InternalErrorObservation(
+                error=error_string)
+            step.hide = False
         except Exception as e:
             # Attach an InternalErrorObservation to the step and unhide it.
             error_string = '\n\n'.join(
@@ -125,11 +139,13 @@ class Autopilot(ContinueBaseModel):
         await self.update_subscribers()
 
         # Update its description
-        async def update_description():
-            step._set_description(await step.describe(ContinueSDK(self).models))
-            # Update subscribers with new description
-            await self.update_subscribers()
-        asyncio.create_task(update_description())
+        if step.description is None:
+            async def update_description():
+                step.description = await step.describe(self.continue_sdk.models)
+                # Update subscribers with new description
+                await self.update_subscribers()
+
+            asyncio.create_task(update_description())
 
         return observation
 
