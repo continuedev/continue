@@ -82,3 +82,11 @@ class AbstractIdeProtocolServer(ABC):
     @abstractmethod
     async def getUserSecret(self, key: str):
         """Get a user secret"""
+
+    @abstractmethod
+    async def highlightCode(self, range_in_file: RangeInFile, color: str):
+        """Highlight code"""
+
+    @abstractmethod
+    async def runCommand(self, command: str):
+        """Run a command"""

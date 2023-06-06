@@ -2,13 +2,11 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import styled, { keyframes } from "styled-components";
 import {
   appear,
-  buttonColor,
   defaultBorderRadius,
-  MainContainerWithBorder,
-  MainTextInput,
   secondaryDark,
   vscBackground,
   GradientBorder,
+  vscBackgroundTransparent,
 } from ".";
 import { RangeInFile, FileEdit } from "../../../src/client";
 import CodeBlock from "./CodeBlock";
@@ -32,6 +30,7 @@ interface StepContainerProps {
   onRefinement: (input: string) => void;
   onUserInput: (input: string) => void;
   onRetry: () => void;
+  open?: boolean;
 }
 
 const MainDiv = styled.div<{ stepDepth: number; inFuture: boolean }>`
@@ -44,15 +43,23 @@ const MainDiv = styled.div<{ stepDepth: number; inFuture: boolean }>`
 `;
 
 const StepContainerDiv = styled.div<{ open: boolean }>`
-  background-color: ${(props) => (props.open ? vscBackground : secondaryDark)};
-  border-radius: ${defaultBorderRadius};
-  padding: 8px;
+  /* background-color: ${(props) =>
+    props.open ? vscBackground : secondaryDark}; */
+  /* border-radius: ${defaultBorderRadius}; */
+  /* padding: 8px; */
 `;
 
 const HeaderDiv = styled.div`
+  background-color: ${vscBackgroundTransparent};
   display: grid;
   grid-template-columns: 1fr auto;
   align-items: center;
+`;
+
+const ContentDiv = styled.div`
+  padding: 8px;
+  padding-left: 16px;
+  background-color: ${vscBackground};
 `;
 
 const HeaderButton = styled.button`
@@ -75,12 +82,10 @@ const OnHoverDiv = styled.div`
   animation: ${appear} 0.3s ease-in-out;
 `;
 
-const NaturalLanguageInput = styled(MainTextInput)`
-  width: 80%;
-`;
-
 function StepContainer(props: StepContainerProps) {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(
+    typeof props.open === "undefined" ? true : props.open
+  );
   const [isHovered, setIsHovered] = useState(false);
   const naturalLanguageInputRef = useRef<HTMLTextAreaElement>(null);
   const userInputRef = useRef<HTMLInputElement>(null);
@@ -116,11 +121,11 @@ function StepContainer(props: StepContainerProps) {
       }}
       hidden={props.historyNode.step.hide as any}
     >
-      <GradientBorder
-        className="m-2 overflow-hidden cursor-pointer"
-        onClick={() => setOpen((prev) => !prev)}
-      >
-        <StepContainerDiv open={open}>
+      <StepContainerDiv open={open}>
+        <GradientBorder
+          className="overflow-hidden cursor-pointer"
+          onClick={() => setOpen((prev) => !prev)}
+        >
           <HeaderDiv>
             <h4 className="m-2">
               {open ? (
@@ -128,7 +133,7 @@ function StepContainer(props: StepContainerProps) {
               ) : (
                 <ChevronRight size="1.4em" />
               )}
-              {props.historyNode.step.name as any}:
+              {props.historyNode.step.name as any}
             </h4>
             {/* <HeaderButton
               onClick={(e) => {
@@ -152,8 +157,9 @@ function StepContainer(props: StepContainerProps) {
               <></>
             )}
           </HeaderDiv>
-
-          {open && (
+        </GradientBorder>
+        <ContentDiv hidden={!open}>
+          {open && false && (
             <>
               <pre className="overflow-scroll">
                 Step Details:
@@ -177,7 +183,7 @@ function StepContainer(props: StepContainerProps) {
             </ReactMarkdown>
           )}
 
-          {props.historyNode.step.name === "Waiting for user input" && (
+          {/* {props.historyNode.step.name === "Waiting for user input" && (
             <InputAndButton
               onUserInput={(value) => {
                 props.onUserInput(value);
@@ -202,9 +208,9 @@ function StepContainer(props: StepContainerProps) {
                 value="Confirm"
               />
             </>
-          )}
-        </StepContainerDiv>
-      </GradientBorder>
+          )} */}
+        </ContentDiv>
+      </StepContainerDiv>
 
       {/* <OnHoverDiv hidden={!open}>
         <NaturalLanguageInput

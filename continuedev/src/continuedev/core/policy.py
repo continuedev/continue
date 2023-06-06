@@ -17,9 +17,10 @@ class DemoPolicy(Policy):
     def next(self, history: History) -> Step:
         # At the very start, run initial Steps spcecified in the config
         if history.get_current() is None:
-            return (MessageStep(message="Welcome to Continue!") >>
-                    SetupContinueWorkspaceStep() >>
-                    CreateCodebaseIndexChroma() >>
+            return (
+                    MessageStep(name="Welcome to Continue!", message="") >>
+                    # SetupContinueWorkspaceStep() >>
+                    # CreateCodebaseIndexChroma() >>
                     StepsOnStartupStep())
 
         observation = history.get_current().observation
