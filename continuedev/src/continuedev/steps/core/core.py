@@ -4,7 +4,7 @@ from textwrap import dedent
 from typing import Coroutine, List, Union
 from ...libs.llm.prompt_utils import MarkdownStyleEncoderDecoder
 
-from ...models.filesystem_edit import EditDiff, FileEditWithFullContents, FileSystemEdit
+from ...models.filesystem_edit import EditDiff, FileEdit, FileEditWithFullContents, FileSystemEdit
 from ...models.filesystem import FileSystem, RangeInFile, RangeInFileWithContents
 from ...core.observation import Observation, TextObservation, TracebackObservation, UserInputObservation
 from ...core.main import Step, SequentialStep
@@ -74,26 +74,48 @@ class ShellCommandsStep(Step):
         # return None
 
 
-class EditCodeStep(Step):
-    # Might make an even more specific atomic step, which is "apply file edit"
+class Gpt35EditCodeStep(Step):
+    user_input: str
     range_in_files: List[RangeInFile]
-    prompt: str  # String with {code} somewhere
-    name: str = "Edit code"
+    name: str = "Editing Code"
+    hide = False
+    _prompt: str = dedent("""\
+        Take the file prefix and suffix into account, but only rewrite the commit before as specified in the commit message. Here's an example:
 
-    _edit_diffs: Union[List[EditDiff], None] = None
-    _prompt: Union[str, None] = None
-    _completion: Union[str, None] = None
+        <file_prefix>
+        a = 5
+        b = 4
+
+        <file_suffix>
+
+        def mul(a, b):
+            return a * b
+        <commit_before>
+        def sum():
+            return a + b
+        <commit_msg>
+        Make a and b parameters of sum
+        <commit_after>
+        def sum(a, b):
+            return a + b
+        <|endoftext|>
+
+        Now complete the real thing:
+
+        <file_prefix>
+        {file_prefix}
+        <file_suffix>
+        {file_suffix}
+        <commit_before>
+        {code}
+        <commit_msg>
+        {user_request}
+        <commit_after>""")
+
+    _prompt_and_completion: str = ""
 
     async def describe(self, models: Models) -> Coroutine[str, None, None]:
-        if self._edit_diffs is None:
-            return "Editing files: " + ", ".join(map(lambda rif: rif.filepath, self.range_in_files))
-        elif len(self._edit_diffs) == 0:
-            return "No edits made"
-        else:
-            return (await models.gpt35()).complete(dedent(f"""{self._prompt}{self._completion}
-
-                Maximally concise summary of changes in bullet points (can use markdown):
-            """))
+        return (await models.gpt35()).complete(f"{self._prompt_and_completion}\n\nPlease give brief a description of the changes made above using markdown bullet points:")
 
     async def run(self, sdk: ContinueSDK) -> Coroutine[Observation, None, None]:
         rif_with_contents = []
@@ -101,28 +123,27 @@ class EditCodeStep(Step):
             file_contents = await sdk.ide.readRangeInFile(range_in_file)
             rif_with_contents.append(
                 RangeInFileWithContents.from_range_in_file(range_in_file, file_contents))
-        enc_dec = MarkdownStyleEncoderDecoder(rif_with_contents)
-        code_string = enc_dec.encode()
-        prompt = self.prompt.format(code=code_string)
 
-        completion = (await sdk.models.gpt35()).complete(prompt)
+        rif_dict = {}
+        for rif in rif_with_contents:
+            rif_dict[rif.filepath] = rif.contents
 
-        # Temporarily doing this to generate description.
-        self._prompt = prompt
-        self._completion = completion
+        for rif in rif_with_contents:
+            full_file_contents = await sdk.ide.readFile(rif.filepath)
+            segs = full_file_contents.split(rif.contents)
+            prompt = self._prompt.format(
+                code=rif.contents, user_request=self.user_input, file_prefix=segs[0], file_suffix=segs[1])
 
-        file_edits = enc_dec.decode(completion)
+            completion = str((await sdk.models.gpt35()).complete(prompt))
+            eot_token = "<|endoftext|>"
+            completion = completion.removesuffix(eot_token)
 
-        self._edit_diffs = []
-        for file_edit in file_edits:
-            diff = await sdk.apply_filesystem_edit(file_edit)
-            self._edit_diffs.append(diff)
+            self._prompt_and_completion += prompt + completion
 
-        for filepath in set([file_edit.filepath for file_edit in file_edits]):
-            await sdk.ide.saveFile(filepath)
-            await sdk.ide.setFileOpen(filepath)
-
-        return None
+            await sdk.ide.applyFileSystemEdit(
+                FileEdit(filepath=rif.filepath, range=rif.range, replacement=completion))
+            await sdk.ide.saveFile(rif.filepath)
+            await sdk.ide.setFileOpen(rif.filepath)
 
 
 class EditFileStep(Step):
@@ -135,10 +156,10 @@ class EditFileStep(Step):
 
     async def run(self, sdk: ContinueSDK) -> Coroutine[Observation, None, None]:
         file_contents = await sdk.ide.readFile(self.filepath)
-        await sdk.run_step(EditCodeStep(
+        await sdk.run_step(Gpt35EditCodeStep(
             range_in_files=[RangeInFile.from_entire_file(
                 self.filepath, file_contents)],
-            prompt=self.prompt
+            user_input=self.prompt
         ))
 
 
