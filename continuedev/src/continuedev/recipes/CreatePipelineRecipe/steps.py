@@ -39,7 +39,7 @@ class SetupPipelineStep(Step):
             'python3 -m venv env',
             'source env/bin/activate',
             'pip install dlt',
-            f'dlt init {source_name} duckdb\n\rY',
+            f'dlt --non-interactive init {source_name} duckdb',
             'pip install -r requirements.txt'
         ], description=dedent(f"""\
             Running the following commands:
@@ -50,10 +50,12 @@ class SetupPipelineStep(Step):
             - `pip install -r requirements.txt`: Install the Python dependencies for the pipeline"""), name="Setup Python environment")
 
         # editing the resource function to call the requested API
-        await sdk.ide.highlightCode(RangeInFile(filepath=os.path.join(await sdk.ide.getWorkspaceDirectory(), filename), range=Range.from_shorthand(15, 0, 29, 0)), "#00ff0022")
+        resource_function_range = Range.from_shorthand(15, 0, 29, 0)
+        await sdk.ide.highlightCode(RangeInFile(filepath=os.path.join(await sdk.ide.getWorkspaceDirectory(), filename), range=resource_function_range), "#00ff0022")
 
         # sdk.set_loading_message("Writing code to call the API...")
         await sdk.edit_file(
+            range=resource_function_range,
             filename=filename,
             prompt=f'Edit the resource function to call the API described by this: {self.api_description}. Do not move or remove the exit() call in __main__.',
             name=f"Edit the resource function to call the API {AI_ASSISTED_STRING}"
@@ -144,8 +146,7 @@ class ValidatePipelineStep(Step):
 
             # print table names
             for row in rows:
-                print(row)
-        ''')
+                print(row)''')
 
         query_filename = os.path.join(workspace_dir, "query.py")
         await sdk.apply_filesystem_edit(AddFile(filepath=query_filename, content=tables_query_code), name="Add query.py file", description="Adding a file called `query.py` to the workspace that will run a test query on the DuckDB instance")
