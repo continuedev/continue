@@ -12,6 +12,7 @@ import { debugPanelWebview, setupDebugPanel } from "./debugPanel";
 import { FileEditWithFullContents } from "../schema/FileEditWithFullContents";
 import fs = require("fs");
 import { WebsocketMessenger } from "./util/messenger";
+import { CapturedTerminal } from "./terminal/terminalEmulator";
 
 class IdeProtocolClient {
   private messenger: WebsocketMessenger | null = null;
@@ -96,6 +97,14 @@ class IdeProtocolClient {
           fileEdit,
         });
         break;
+      case "highlightCode":
+        this.highlightCode(data.rangeInFile, data.color);
+        break;
+      case "runCommand":
+        this.messenger?.send("runCommand", {
+          output: await this.runCommand(data.command),
+        });
+        break;
       case "saveFile":
         this.saveFile(data.filepath);
         break;
@@ -116,6 +125,29 @@ class IdeProtocolClient {
 
   // ------------------------------------ //
   // On message handlers
+
+  async highlightCode(rangeInFile: RangeInFile, color: string) {
+    const range = new vscode.Range(
+      rangeInFile.range.start.line,
+      rangeInFile.range.start.character,
+      rangeInFile.range.end.line,
+      rangeInFile.range.end.character
+    );
+    const editor = await openEditorAndRevealRange(
+      rangeInFile.filepath,
+      range,
+      vscode.ViewColumn.One
+    );
+    if (editor) {
+      editor.setDecorations(
+        vscode.window.createTextEditorDecorationType({
+          backgroundColor: color,
+          isWholeLine: true,
+        }),
+        [range]
+      );
+    }
+  }
 
   showSuggestion(edit: FileEdit) {
     // showSuggestion already exists
@@ -288,9 +320,15 @@ class IdeProtocolClient {
     return rangeInFiles;
   }
 
-  runCommand(command: string) {
-    vscode.window.terminals[0].sendText(command, true);
-    // But need to know when it's done executing...
+  private continueTerminal: CapturedTerminal | undefined;
+
+  async runCommand(command: string) {
+    if (!this.continueTerminal) {
+      this.continueTerminal = new CapturedTerminal("Continue");
+    }
+
+    this.continueTerminal.show();
+    return await this.continueTerminal.runCommand(command);
   }
 }
 

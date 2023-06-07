@@ -1,11 +1,18 @@
+import os
+import subprocess
 from textwrap import dedent
+import time
 
+from ...models.main import Range
+from ...models.filesystem import RangeInFile
 from ...steps.main import MessageStep
 from ...core.sdk import Models
-from ...core.observation import DictObservation
-from ...models.filesystem_edit import AddFile
+from ...core.observation import DictObservation, InternalErrorObservation
+from ...models.filesystem_edit import AddFile, FileEdit
 from ...core.main import Step
 from ...core.sdk import ContinueSDK
+
+AI_ASSISTED_STRING = "(✨ AI-Assisted ✨)"
 
 
 class SetupPipelineStep(Step):
@@ -21,6 +28,8 @@ class SetupPipelineStep(Step):
         """)
 
     async def run(self, sdk: ContinueSDK):
+        sdk.context.set("api_description", self.api_description)
+
         source_name = (await sdk.models.gpt35()).complete(
             f"Write a snake_case name for the data source described by {self.api_description}: ").strip()
         filename = f'{source_name}.py'
@@ -30,48 +39,100 @@ class SetupPipelineStep(Step):
             'python3 -m venv env',
             'source env/bin/activate',
             'pip install dlt',
-            f'dlt init {source_name} duckdb',
-            'Y',
+            f'dlt --non-interactive init {source_name} duckdb',
             'pip install -r requirements.txt'
-        ])
+        ], description=dedent(f"""\
+            Running the following commands:
+            - `python3 -m venv env`: Create a Python virtual environment
+            - `source env/bin/activate`: Activate the virtual environment
+            - `pip install dlt`: Install dlt
+            - `dlt init {source_name} duckdb`: Create a new dlt pipeline called {source_name} that loads data into a local DuckDB instance
+            - `pip install -r requirements.txt`: Install the Python dependencies for the pipeline"""), name="Setup Python environment")
 
         # editing the resource function to call the requested API
+        resource_function_range = Range.from_shorthand(15, 0, 29, 0)
+        await sdk.ide.highlightCode(RangeInFile(filepath=os.path.join(await sdk.ide.getWorkspaceDirectory(), filename), range=resource_function_range), "#00ff0022")
+
+        # sdk.set_loading_message("Writing code to call the API...")
         await sdk.edit_file(
+            range=resource_function_range,
             filename=filename,
-            prompt=f'Edit the resource function to call the API described by this: {self.api_description}'
+            prompt=f'Edit the resource function to call the API described by this: {self.api_description}. Do not move or remove the exit() call in __main__.',
+            name=f"Edit the resource function to call the API {AI_ASSISTED_STRING}"
         )
+
+        time.sleep(1)
 
         # wait for user to put API key in secrets.toml
         await sdk.ide.setFileOpen(await sdk.ide.getWorkspaceDirectory() + "/.dlt/secrets.toml")
         await sdk.wait_for_user_confirmation("If this service requires an API key, please add it to the `secrets.toml` file and then press `Continue`")
-        return DictObservation(values={"source_name": source_name})
+
+        sdk.context.set("source_name", source_name)
 
 
 class ValidatePipelineStep(Step):
     hide: bool = True
 
     async def run(self, sdk: ContinueSDK):
-        source_name = sdk.history.last_observation().values["source_name"]
+        workspace_dir = await sdk.ide.getWorkspaceDirectory()
+        source_name = sdk.context.get("source_name")
         filename = f'{source_name}.py'
 
-        await sdk.run_step(MessageStep(message=dedent("""\
-                This step will validate that your dlt pipeline is working as expected:
-                - Test that the API call works
-                - Load the data into a local DuckDB instance
-                - Write a query to view the data
-                """)))
+        # await sdk.run_step(MessageStep(name="Validate the pipeline", message=dedent("""\
+        #         Next, we will validate that your dlt pipeline is working as expected:
+        #         - Test that the API call works
+        #         - Load the data into a local DuckDB instance
+        #         - Write a query to view the data
+        #         """)))
 
         # test that the API call works
-        await sdk.run(f'python3 {filename}')
+        output = await sdk.run(f'python3 {filename}', name="Test the pipeline", description=f"Running `python3 {filename}` to test loading data from the API")
+
+        # If it fails, return the error
+        if "Traceback" in output:
+            output = "Traceback" + output.split("Traceback")[-1]
+            file_content = await sdk.ide.readFile(os.path.join(workspace_dir, filename))
+            suggestion = (await sdk.models.gpt35()).complete(dedent(f"""\
+                ```python
+                {file_content}
+                ```
+                This above code is a dlt pipeline that loads data from an API. The function with the @resource decorator is responsible for calling the API and returning the data. While attempting to run the pipeline, the following error occurred:
+
+                ```ascii
+                {output}
+                ```
+
+                This is a brief summary of the error followed by a suggestion on how it can be fixed by editing the resource function:"""))
+
+            api_documentation_url = (await sdk.models.gpt35()).complete(dedent(f"""\
+                The API I am trying to call is the '{sdk.context.get('api_description')}'. I tried calling it in the @resource function like this:
+                ```python       
+                {file_content}
+                ```
+                What is the URL for the API documentation that will help me learn how to make this call? Please format in markdown so I can click the link."""))
+
+            sdk.raise_exception(
+                title=f"Error while running pipeline.\nFix the resource function in {filename} and rerun this step", message=output, with_step=MessageStep(name=f"Suggestion to solve error {AI_ASSISTED_STRING}", message=dedent(f"""\
+                {suggestion}
+                
+                {api_documentation_url}
+                
+                After you've fixed the code, click the retry button at the top of the Validate Pipeline step above.""")))
 
         # remove exit() from the main main function
-        await sdk.edit_file(
-            filename=filename,
-            prompt='Remove exit() from the main function'
-        )
+        await sdk.run_step(MessageStep(name="Remove early exit() from main function", message="Remove the early exit() from the main function now that we are done testing and want the pipeline to load the data into DuckDB."))
+
+        contents = await sdk.ide.readFile(os.path.join(workspace_dir, filename))
+        replacement = "\n".join(
+            list(filter(lambda line: line.strip() != "exit()", contents.split("\n"))))
+        await sdk.ide.applyFileSystemEdit(FileEdit(
+            filepath=os.path.join(workspace_dir, filename),
+            replacement=replacement,
+            range=Range.from_entire_file(contents)
+        ))
 
         # load the data into the DuckDB instance
-        await sdk.run(f'python3 {filename}')
+        await sdk.run(f'python3 {filename}', name="Load data into DuckDB", description=f"Running python3 {filename} to load data into DuckDB")
 
         table_name = f"{source_name}.{source_name}_resource"
         tables_query_code = dedent(f'''\
@@ -85,9 +146,8 @@ class ValidatePipelineStep(Step):
 
             # print table names
             for row in rows:
-                print(row)
-        ''')
+                print(row)''')
 
-        query_filename = (await sdk.ide.getWorkspaceDirectory()) + "/query.py"
-        await sdk.apply_filesystem_edit(AddFile(filepath=query_filename, content=tables_query_code))
-        await sdk.run('env/bin/python3 query.py')
+        query_filename = os.path.join(workspace_dir, "query.py")
+        await sdk.apply_filesystem_edit(AddFile(filepath=query_filename, content=tables_query_code), name="Add query.py file", description="Adding a file called `query.py` to the workspace that will run a test query on the DuckDB instance")
+        await sdk.run('env/bin/python3 query.py', name="Run test query", description="Running `env/bin/python3 query.py` to test that the data was loaded into DuckDB as expected")

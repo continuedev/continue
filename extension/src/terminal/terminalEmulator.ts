@@ -1,140 +1,162 @@
-// /* Terminal emulator - commented because node-pty is causing problems. */
+/* Terminal emulator - commented because node-pty is causing problems. */
 
-// import * as vscode from "vscode";
-// import pty = require("node-pty");
-// import os = require("os");
-// import { extensionContext } from "../activation/activate";
-// import { debugPanelWebview } from "../debugPanel"; // Need to consider having multiple panels, where to store this state.
-// import {
-//   CommandCaptureSnooper,
-//   PythonTracebackSnooper,
-//   TerminalSnooper,
-// } from "./snoopers";
+import * as vscode from "vscode";
+import os = require("os");
+import stripAnsi from "strip-ansi";
 
-// export function tracebackToWebviewAction(traceback: string) {
-//   if (debugPanelWebview) {
-//     debugPanelWebview.postMessage({
-//       type: "traceback",
-//       value: traceback,
-//     });
-//   } else {
-//     vscode.commands
-//       .executeCommand("continue.openContinueGUI", extensionContext)
-//       .then(() => {
-//         // TODO: Waiting for the webview to load, but should add a hook to the onLoad message event. Same thing in autodebugTest command in commands.ts
-//         setTimeout(() => {
-//           debugPanelWebview?.postMessage({
-//             type: "traceback",
-//             value: traceback,
-//           });
-//         }, 500);
-//       });
-//   }
-// }
+function loadNativeModule<T>(id: string): T | null {
+  try {
+    return require(`${vscode.env.appRoot}/node_modules.asar/${id}`);
+  } catch (err) {
+    // ignore
+  }
 
-// const DEFAULT_SNOOPERS = [
-//   new PythonTracebackSnooper(tracebackToWebviewAction),
-//   new CommandCaptureSnooper((data: string) => {
-//     if (data.trim().startsWith("pytest ")) {
-//       let fileAndFunctionSpecifier = data.split(" ")[1];
-//       vscode.commands.executeCommand(
-//         "continue.debugTest",
-//         fileAndFunctionSpecifier
-//       );
-//     }
-//   }),
-// ];
+  try {
+    return require(`${vscode.env.appRoot}/node_modules/${id}`);
+  } catch (err) {
+    // ignore
+  }
 
-// // Whenever a user opens a terminal, replace it with ours
-// vscode.window.onDidOpenTerminal((terminal) => {
-//   if (terminal.name != "Continue") {
-//     terminal.dispose();
-//     openCapturedTerminal();
-//   }
-// });
+  return null;
+}
 
-// function getDefaultShell(): string {
-//   if (process.platform !== "win32") {
-//     return os.userInfo().shell;
-//   }
-//   switch (process.platform) {
-//     case "win32":
-//       return process.env.COMSPEC || "cmd.exe";
-//     // case "darwin":
-//     //   return process.env.SHELL || "/bin/zsh";
-//     // default:
-//     //   return process.env.SHELL || "/bin/sh";
-//   }
-// }
+const pty = loadNativeModule<any>("node-pty");
 
-// function getRootDir(): string | undefined {
-//   var isWindows = os.platform() === "win32";
-//   let cwd = isWindows ? process.env.USERPROFILE : process.env.HOME;
-//   if (
-//     vscode.workspace.workspaceFolders &&
-//     vscode.workspace.workspaceFolders.length > 0
-//   ) {
-//     cwd = vscode.workspace.workspaceFolders[0].uri.fsPath;
-//   }
-//   return cwd;
-// }
+function getDefaultShell(): string {
+  if (process.platform !== "win32") {
+    return os.userInfo().shell;
+  }
+  switch (process.platform) {
+    case "win32":
+      return process.env.COMSPEC || "cmd.exe";
+    // case "darwin":
+    //   return process.env.SHELL || "/bin/zsh";
+    // default:
+    //   return process.env.SHELL || "/bin/sh";
+  }
+}
 
-// export function openCapturedTerminal(
-//   snoopers: TerminalSnooper<string>[] = DEFAULT_SNOOPERS
-// ) {
-//   // If there is another existing, non-Continue terminal, delete it
-//   let terminals = vscode.window.terminals;
-//   for (let i = 0; i < terminals.length; i++) {
-//     if (terminals[i].name != "Continue") {
-//       terminals[i].dispose();
-//     }
-//   }
+function getRootDir(): string | undefined {
+  const isWindows = os.platform() === "win32";
+  let cwd = isWindows ? process.env.USERPROFILE : process.env.HOME;
+  if (
+    vscode.workspace.workspaceFolders &&
+    vscode.workspace.workspaceFolders.length > 0
+  ) {
+    cwd = vscode.workspace.workspaceFolders[0].uri.fsPath;
+  }
+  return cwd;
+}
 
-//   let env = { ...(process.env as any) };
-//   if (os.platform() !== "win32") {
-//     env["PATH"] += ":" + ["/opt/homebrew/bin", "/opt/homebrew/sbin"].join(":");
-//   }
+export class CapturedTerminal {
+  private readonly terminal: vscode.Terminal;
+  private readonly shellCmd: string;
+  private readonly ptyProcess: any;
 
-//   var ptyProcess = pty.spawn(getDefaultShell(), [], {
-//     name: "xterm-256color",
-//     cols: 160, // TODO: Get size of vscode terminal, and change with resize
-//     rows: 26,
-//     cwd: getRootDir(),
-//     env,
-//     useConpty: true,
-//   });
+  private shellPrompt: string | undefined = undefined;
+  private dataBuffer: string = "";
 
-//   const writeEmitter = new vscode.EventEmitter<string>();
+  private onDataListeners: ((data: string) => void)[] = [];
 
-//   ptyProcess.onData((data: any) => {
-//     // Let each of the snoopers see the new data
-//     for (let snooper of snoopers) {
-//       snooper.onData(data);
-//     }
+  show() {
+    this.terminal.show();
+  }
 
-//     // Pass data through to terminal
-//     writeEmitter.fire(data);
-//   });
-//   process.on("exit", () => ptyProcess.kill());
+  private commandQueue: [string, (output: string) => void][] = [];
+  private hasRunCommand: boolean = false;
 
-//   const newPty: vscode.Pseudoterminal = {
-//     onDidWrite: writeEmitter.event,
-//     open: () => {},
-//     close: () => {},
-//     handleInput: (data) => {
-//       for (let snooper of snoopers) {
-//         snooper.onWrite(data);
-//       }
-//       ptyProcess.write(data);
-//     },
-//   };
-//   const terminal = vscode.window.createTerminal({
-//     name: "Continue",
-//     pty: newPty,
-//   });
-//   terminal.show();
+  private async waitForCommandToFinish() {
+    return new Promise<string>((resolve, reject) => {
+      this.onDataListeners.push((data: any) => {
+        const strippedData = stripAnsi(data);
+        this.dataBuffer += strippedData;
+        const lines = this.dataBuffer.split("\n");
+        if (
+          lines.length > 0 &&
+          (lines[lines.length - 1].includes("bash-") ||
+            lines[lines.length - 1].includes("(main)")) &&
+          lines[lines.length - 1].includes("$")
+        ) {
+          resolve(this.dataBuffer);
+          this.dataBuffer = "";
+          this.onDataListeners = [];
+        }
+      });
+    });
+  }
 
-//   setTimeout(() => {
-//     ptyProcess.write("clear\r");
-//   }, 500);
-// }
+  async runCommand(command: string): Promise<string> {
+    if (!this.hasRunCommand) {
+      this.hasRunCommand = true;
+      // Let the first bash- prompt appear and let python env be opened
+      await this.waitForCommandToFinish();
+    }
+
+    if (this.commandQueue.length === 0) {
+      return new Promise(async (resolve, reject) => {
+        this.commandQueue.push([command, resolve]);
+
+        while (this.commandQueue.length > 0) {
+          const [command, resolve] = this.commandQueue.shift()!;
+
+          this.terminal.sendText(command);
+          resolve(await this.waitForCommandToFinish());
+        }
+      });
+    } else {
+      return new Promise((resolve, reject) => {
+        this.commandQueue.push([command, resolve]);
+      });
+    }
+  }
+
+  private readonly writeEmitter: vscode.EventEmitter<string>;
+
+  constructor(terminalName: string) {
+    this.shellCmd = "bash"; // getDefaultShell();
+
+    const env = { ...(process.env as any) };
+    if (os.platform() !== "win32") {
+      env.PATH += `:${["/opt/homebrew/bin", "/opt/homebrew/sbin"].join(":")}`;
+    }
+
+    // Create the pseudo terminal
+    this.ptyProcess = pty.spawn(this.shellCmd, [], {
+      name: "xterm-256color",
+      cols: 160, // TODO: Get size of vscode terminal, and change with resize
+      rows: 26,
+      cwd: getRootDir(),
+      env,
+      useConpty: true,
+    });
+
+    this.writeEmitter = new vscode.EventEmitter<string>();
+
+    this.ptyProcess.onData((data: any) => {
+      // Pass data through to terminal
+      this.writeEmitter.fire(data);
+
+      for (let listener of this.onDataListeners) {
+        listener(data);
+      }
+    });
+
+    process.on("exit", () => this.ptyProcess.kill());
+
+    const newPty: vscode.Pseudoterminal = {
+      onDidWrite: this.writeEmitter.event,
+      open: () => {},
+      close: () => {},
+      handleInput: (data) => {
+        this.ptyProcess.write(data);
+      },
+    };
+
+    // Create and clear the terminal
+    this.terminal = vscode.window.createTerminal({
+      name: terminalName,
+      pty: newPty,
+    });
+    this.terminal.show();
+  }
+}

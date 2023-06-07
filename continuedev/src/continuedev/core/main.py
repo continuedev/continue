@@ -67,11 +67,16 @@ class History(ContinueBaseModel):
             return None
         return state.observation
 
-    def pop_last_step(self) -> Union[HistoryNode, None]:
-        if self.current_index < 0:
+    def pop_step(self, index: int = None) -> Union[HistoryNode, None]:
+        index = index if index is not None else self.current_index
+        if index < 0 or self.current_index < 0:
             return None
-        node = self.timeline.pop(self.current_index)
-        self.current_index -= 1
+
+        node = self.timeline.pop(index)
+
+        if index <= self.current_index:
+            self.current_index -= 1
+
         return node.step
 
     @classmethod
@@ -105,7 +110,7 @@ class Policy(ContinueBaseModel):
 class Step(ContinueBaseModel):
     name: str = None
     hide: bool = False
-    _description: Union[str, None] = None
+    description: Union[str, None] = None
 
     system_message: Union[str, None] = None
 
@@ -113,17 +118,14 @@ class Step(ContinueBaseModel):
         copy_on_model_validation = False
 
     async def describe(self, models: Models) -> Coroutine[str, None, None]:
-        if self._description is not None:
-            return self._description
+        if self.description is not None:
+            return self.description
         return "Running step: " + self.name
-
-    def _set_description(self, description: str):
-        self._description = description
 
     def dict(self, *args, **kwargs):
         d = super().dict(*args, **kwargs)
-        if self._description is not None:
-            d["description"] = self._description
+        if self.description is not None:
+            d["description"] = self.description
         else:
             d["description"] = "`Description loading...`"
         return d
@@ -171,6 +173,27 @@ class ValidatorObservation(Observation):
 class Validator(Step):
     def run(self, sdk: ContinueSDK) -> ValidatorObservation:
         raise NotImplementedError
+
+
+class Context:
+    key_value: Dict[str, str] = {}
+
+    def set(self, key: str, value: str):
+        self.key_value[key] = value
+
+    def get(self, key: str) -> str:
+        return self.key_value[key]
+
+
+class ContinueCustomException(Exception):
+    title: str
+    message: str
+    with_step: Union[Step, None]
+
+    def __init__(self, message: str, title: str = "Error while running step:", with_step: Union[Step, None] = None):
+        self.message = message
+        self.title = title
+        self.with_step = with_step
 
 
 HistoryNode.update_forward_refs()

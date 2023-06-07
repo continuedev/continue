@@ -17,7 +17,11 @@ class DemoPolicy(Policy):
     def next(self, history: History) -> Step:
         # At the very start, run initial Steps spcecified in the config
         if history.get_current() is None:
-            return MessageStep(message="Welcome to Continue!") >> SetupContinueWorkspaceStep() >> CreateCodebaseIndexChroma() >> StepsOnStartupStep()
+            return (
+                # MessageStep(name="Welcome to Continue!", message="") >>
+                # SetupContinueWorkspaceStep() >>
+                # CreateCodebaseIndexChroma() >>
+                StepsOnStartupStep())
 
         observation = history.get_current().observation
         if observation is not None and isinstance(observation, UserInputObservation):
@@ -34,7 +38,7 @@ class DemoPolicy(Policy):
                 return EditFileChroma(request=" ".join(observation.user_input.split(" ")[1:]))
             elif "/step" in observation.user_input:
                 return ContinueStepStep(prompt=" ".join(observation.user_input.split(" ")[1:]))
-            return StarCoderEditHighlightedCodeStep(user_input=observation.user_input)
+            return EditHighlightedCodeStep(user_input=observation.user_input)
 
         state = history.get_current()
 

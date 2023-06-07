@@ -2,16 +2,17 @@ from abc import ABC, abstractmethod
 from typing import Coroutine, Union
 import os
 
+from ..steps.core.core import Gpt35EditCodeStep
+from ..models.main import Range
 from .abstract_sdk import AbstractContinueSDK
 from .config import ContinueConfig, load_config
 from ..models.filesystem_edit import FileEdit, FileSystemEdit, AddFile, DeleteFile, AddDirectory, DeleteDirectory
 from ..models.filesystem import RangeInFile
-from ..libs.llm import LLM
 from ..libs.llm.hf_inference_api import HuggingFaceInferenceAPI
 from ..libs.llm.openai import OpenAI
 from .observation import Observation
 from ..server.ide_protocol import AbstractIdeProtocolServer
-from .main import History, Step
+from .main import Context, ContinueCustomException, History, Step
 from ..steps.core.core import *
 
 
@@ -44,6 +45,7 @@ class ContinueSDK(AbstractContinueSDK):
     ide: AbstractIdeProtocolServer
     steps: ContinueSDKSteps
     models: Models
+    context: Context
     __autopilot: Autopilot
 
     def __init__(self, autopilot: Autopilot):
@@ -51,6 +53,7 @@ class ContinueSDK(AbstractContinueSDK):
         self.__autopilot = autopilot
         self.steps = ContinueSDKSteps(self)
         self.models = Models(self)
+        self.context = autopilot.context
 
     @property
     def history(self) -> History:
@@ -64,8 +67,8 @@ class ContinueSDK(AbstractContinueSDK):
     async def run_step(self, step: Step) -> Coroutine[Observation, None, None]:
         return await self.__autopilot._run_singular_step(step)
 
-    async def apply_filesystem_edit(self, edit: FileSystemEdit):
-        return await self.run_step(FileSystemEditStep(edit=edit))
+    async def apply_filesystem_edit(self, edit: FileSystemEdit, name: str = None, description: str = None):
+        return await self.run_step(FileSystemEditStep(edit=edit, description=description, **({'name': name} if name else {})))
 
     async def wait_for_user_input(self) -> str:
         return await self.__autopilot.wait_for_user_input()
@@ -73,18 +76,21 @@ class ContinueSDK(AbstractContinueSDK):
     async def wait_for_user_confirmation(self, prompt: str):
         return await self.run_step(WaitForUserConfirmationStep(prompt=prompt))
 
-    async def run(self, commands: Union[List[str], str], cwd: str = None):
+    async def run(self, commands: Union[List[str], str], cwd: str = None, name: str = None, description: str = None) -> Coroutine[str, None, None]:
         commands = commands if isinstance(commands, List) else [commands]
-        return await self.run_step(ShellCommandsStep(cmds=commands, cwd=cwd))
+        return (await self.run_step(ShellCommandsStep(cmds=commands, cwd=cwd, description=description, **({'name': name} if name else {})))).text
 
-    async def edit_file(self, filename: str, prompt: str):
+    async def edit_file(self, filename: str, prompt: str, name: str = None, description: str = None, range: Range = None):
         filepath = await self._ensure_absolute_path(filename)
 
         await self.ide.setFileOpen(filepath)
         contents = await self.ide.readFile(filepath)
-        await self.run_step(EditCodeStep(
-            range_in_files=[RangeInFile.from_entire_file(filepath, contents)],
-            prompt=f'Here is the code before:\n\n{{code}}\n\nHere is the user request:\n\n{prompt}\n\nHere is the code edited to perfectly solve the user request:\n\n'
+        await self.run_step(Gpt35EditCodeStep(
+            range_in_files=[RangeInFile(filepath=filename, range=range) if range is not None else RangeInFile.from_entire_file(
+                filepath, contents)],
+            user_input=prompt,
+            description=description,
+            **({'name': name} if name else {})
         ))
 
     async def append_to_file(self, filename: str, content: str):
@@ -126,3 +132,6 @@ class ContinueSDK(AbstractContinueSDK):
     def set_loading_message(self, message: str):
         # self.__autopilot.set_loading_message(message)
         raise NotImplementedError()
+
+    def raise_exception(self, message: str, title: str, with_step: Union[Step, None] = None):
+        raise ContinueCustomException(message, title, with_step)

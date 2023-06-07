@@ -5,7 +5,6 @@ const { spawn } = require("child_process");
 import * as path from "path";
 import * as fs from "fs";
 import rebuild from "@electron/rebuild";
-import * as vscode from "vscode";
 import { getContinueServerUrl } from "../bridge";
 import fetch from "node-fetch";
 
@@ -14,7 +13,9 @@ async function runCommand(cmd: string): Promise<[string, string | undefined]> {
   var stdout: any = "";
   var stderr: any = "";
   try {
-    var { stdout, stderr } = await exec(cmd);
+    var { stdout, stderr } = await exec(cmd, {
+      shell: process.platform === "win32" ? "powershell.exe" : undefined,
+    });
   } catch (e: any) {
     stderr = e.stderr;
     stdout = e.stdout;
@@ -70,7 +71,9 @@ function checkEnvExists() {
   );
   return (
     fs.existsSync(path.join(envBinPath, "activate")) &&
-    fs.existsSync(path.join(envBinPath, "pip"))
+    fs.existsSync(
+      path.join(envBinPath, process.platform == "win32" ? "pip.exe" : "pip")
+    )
   );
 }
 
@@ -88,7 +91,7 @@ async function setupPythonEnv() {
   const createEnvCommand = [
     `cd ${path.join(getExtensionUri().fsPath, "scripts")}`,
     `${pythonCmd} -m venv env`,
-  ].join(" ; ");
+  ].join("; ");
 
   // Repeat until it is successfully created (sometimes it fails to generate the bin, need to try again)
   while (true) {

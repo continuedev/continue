@@ -1,25 +1,21 @@
 import styled from "styled-components";
 import {
-  Button,
   defaultBorderRadius,
   vscBackground,
-  MainTextInput,
   Loader,
+  MainTextInput,
 } from "../components";
 import ContinueButton from "../components/ContinueButton";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { History } from "../../../schema/History";
 import { HistoryNode } from "../../../schema/HistoryNode";
 import StepContainer from "../components/StepContainer";
-import { useSelector } from "react-redux";
-import { RootStore } from "../redux/store";
-import useContinueWebsocket from "../hooks/useWebsocket";
 import useContinueGUIProtocol from "../hooks/useWebsocket";
 
 let TopGUIDiv = styled.div`
   display: grid;
   grid-template-columns: 1fr;
-  overflow: scroll;
+  background-color: ${vscBackground};
 `;
 
 let UserInputQueueItem = styled.div`
@@ -38,14 +34,19 @@ function GUI(props: GUIProps) {
   const [waitingForSteps, setWaitingForSteps] = useState(false);
   const [userInputQueue, setUserInputQueue] = useState<string[]>([]);
   const [history, setHistory] = useState<History | undefined>();
-  // {
+  //   {
   //   timeline: [
   //     {
   //       step: {
-  //         name: "RunCodeStep",
+  //         name: "Waiting for user input",
   //         cmd: "python3 /Users/natesesti/Desktop/continue/extension/examples/python/main.py",
   //         description:
   //           "Run `python3 /Users/natesesti/Desktop/continue/extension/examples/python/main.py`",
+  //       },
+  //       observation: {
+  //         title: "ERROR FOUND",
+  //         error:
+  //           "Traceback (most recent call last):\n  File \"/Users/natesesti/Desktop/continue/extension/examples/python/main.py\", line 7, in <module>\n    print(sum(first, second))\n          ^^^^^^^^^^^^^^^^^^\n  File \"/Users/natesesti/Desktop/continue/extension/examples/python/sum.py\", line 2, in sum\n    return a + b\n           ~~^~~\nTypeError: unsupported operand type(s) for +: 'int' and 'str'",
   //       },
   //       output: [
   //         {
@@ -156,7 +157,19 @@ function GUI(props: GUIProps) {
   //   current_index: 0,
   // } as any);
 
+  const topGuiDivRef = useRef<HTMLDivElement>(null);
   const client = useContinueGUIProtocol();
+
+  const scrollToBottom = useCallback(() => {
+    if (topGuiDivRef.current) {
+      setTimeout(() => {
+        window.scrollTo({
+          top: window.outerHeight,
+          behavior: "smooth",
+        });
+      }, 100);
+    }
+  }, [topGuiDivRef.current]);
 
   useEffect(() => {
     console.log("CLIENT ON STATE UPDATE: ", client, client?.onStateUpdate);
@@ -165,8 +178,14 @@ function GUI(props: GUIProps) {
       setWaitingForSteps(state.active);
       setHistory(state.history);
       setUserInputQueue(state.user_input_queue);
+
+      scrollToBottom();
     });
   }, [client]);
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [waitingForSteps]);
 
   const mainTextInputRef = useRef<HTMLTextAreaElement>(null);
 
@@ -189,14 +208,33 @@ function GUI(props: GUIProps) {
     if (mainTextInputRef.current) {
       if (!client) return;
       let input = mainTextInputRef.current.value;
-      setWaitingForSteps(true);
-      client.sendMainInput(input);
-      setUserInputQueue((queue) => {
-        return [...queue, input];
-      });
+
+      if (
+        history &&
+        history.timeline[history.current_index].step.name ===
+          "Waiting for user input"
+      ) {
+        if (input.trim() === "") return;
+        onStepUserInput(input, history!.current_index);
+      } else if (
+        history &&
+        history.timeline[history.current_index].step.name ===
+          "Waiting for user confirmation"
+      ) {
+        onStepUserInput("ok", history!.current_index);
+      } else {
+        if (input.trim() === "") return;
+
+        client.sendMainInput(input);
+        setUserInputQueue((queue) => {
+          return [...queue, input];
+        });
+      }
       mainTextInputRef.current.value = "";
       mainTextInputRef.current.style.height = "";
     }
+
+    setWaitingForSteps(true);
   };
 
   const onStepUserInput = (input: string, index: number) => {
@@ -207,7 +245,14 @@ function GUI(props: GUIProps) {
 
   // const iterations = useSelector(selectIterations);
   return (
-    <TopGUIDiv>
+    <TopGUIDiv
+      ref={topGuiDivRef}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" && e.ctrlKey) {
+          onMainTextInput();
+        }
+      }}
+    >
       {typeof client === "undefined" && (
         <>
           <Loader></Loader>
@@ -247,6 +292,12 @@ function GUI(props: GUIProps) {
       </div>
 
       <MainTextInput
+        disabled={
+          history
+            ? history.timeline[history.current_index].step.name ===
+              "Waiting for user confirmation"
+            : false
+        }
         ref={mainTextInputRef}
         onKeyDown={(e) => {
           if (e.key === "Enter") {
@@ -257,13 +308,15 @@ function GUI(props: GUIProps) {
         }}
         rows={1}
         onChange={() => {
-          let textarea = mainTextInputRef.current!;
+          const textarea = mainTextInputRef.current!;
           textarea.style.height = ""; /* Reset the height*/
-          textarea.style.height =
-            Math.min(textarea.scrollHeight - 15, 500) + "px";
+          textarea.style.height = `${Math.min(
+            textarea.scrollHeight - 15,
+            500
+          )}px`;
         }}
-      ></MainTextInput>
-      <ContinueButton onClick={onMainTextInput}></ContinueButton>
+      />
+      <ContinueButton onClick={onMainTextInput} />
     </TopGUIDiv>
   );
 }

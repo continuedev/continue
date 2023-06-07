@@ -21,7 +21,6 @@ const Container = styled.div`
   width: fit-content;
   max-width: 75%;
   overflow-y: scroll;
-  scrollbar-gutter: stable both-edges;
   word-wrap: break-word;
   -ms-word-wrap: break-word;
   height: fit-content;
