@@ -18,10 +18,10 @@ class DemoPolicy(Policy):
         # At the very start, run initial Steps spcecified in the config
         if history.get_current() is None:
             return (
-                    MessageStep(name="Welcome to Continue!", message="") >>
-                    # SetupContinueWorkspaceStep() >>
-                    # CreateCodebaseIndexChroma() >>
-                    StepsOnStartupStep())
+                # MessageStep(name="Welcome to Continue!", message="") >>
+                # SetupContinueWorkspaceStep() >>
+                # CreateCodebaseIndexChroma() >>
+                StepsOnStartupStep())
 
         observation = history.get_current().observation
         if observation is not None and isinstance(observation, UserInputObservation):

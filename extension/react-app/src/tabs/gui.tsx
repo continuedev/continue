@@ -44,6 +44,7 @@ function GUI(props: GUIProps) {
   //           "Run `python3 /Users/natesesti/Desktop/continue/extension/examples/python/main.py`",
   //       },
   //       observation: {
+  //         title: "ERROR FOUND",
   //         error:
   //           "Traceback (most recent call last):\n  File \"/Users/natesesti/Desktop/continue/extension/examples/python/main.py\", line 7, in <module>\n    print(sum(first, second))\n          ^^^^^^^^^^^^^^^^^^\n  File \"/Users/natesesti/Desktop/continue/extension/examples/python/sum.py\", line 2, in sum\n    return a + b\n           ~~^~~\nTypeError: unsupported operand type(s) for +: 'int' and 'str'",
   //       },
@@ -228,9 +229,9 @@ function GUI(props: GUIProps) {
         setUserInputQueue((queue) => {
           return [...queue, input];
         });
-        mainTextInputRef.current.value = "";
-        mainTextInputRef.current.style.height = "";
       }
+      mainTextInputRef.current.value = "";
+      mainTextInputRef.current.style.height = "";
     }
 
     setWaitingForSteps(true);
@@ -307,13 +308,15 @@ function GUI(props: GUIProps) {
         }}
         rows={1}
         onChange={() => {
-          let textarea = mainTextInputRef.current!;
+          const textarea = mainTextInputRef.current!;
           textarea.style.height = ""; /* Reset the height*/
-          textarea.style.height =
-            Math.min(textarea.scrollHeight - 15, 500) + "px";
+          textarea.style.height = `${Math.min(
+            textarea.scrollHeight - 15,
+            500
+          )}px`;
         }}
-      ></MainTextInput>
-      <ContinueButton onClick={onMainTextInput}></ContinueButton>
+      />
+      <ContinueButton onClick={onMainTextInput} />
     </TopGUIDiv>
   );
 }
