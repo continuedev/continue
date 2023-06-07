@@ -15,7 +15,7 @@ from ..core.main import Step
 from ..core.sdk import ContinueSDK, Models
 from ..core.observation import Observation
 import subprocess
-from .core.core import EditCodeStep
+from .core.core import Gpt35EditCodeStep
 
 
 class SetupContinueWorkspaceStep(Step):
@@ -255,19 +255,9 @@ class StarCoderEditHighlightedCodeStep(Step):
 class EditHighlightedCodeStep(Step):
     user_input: str
     hide = True
-    _prompt: str = dedent("""Below is the code before changes:
-
-{code}
-
-This is the user request:
-
-{user_input}
-
-This is the code after being changed to perfectly satisfy the user request:
-    """)
 
     async def describe(self, models: Models) -> Coroutine[str, None, None]:
-        return "Editing highlighted code"
+        return "Editing code"
 
     async def run(self, sdk: ContinueSDK) -> Coroutine[Observation, None, None]:
         range_in_files = await sdk.ide.getHighlightedCode()
@@ -281,8 +271,7 @@ This is the code after being changed to perfectly satisfy the user request:
             range_in_files = [RangeInFile.from_entire_file(
                 filepath, content) for filepath, content in contents.items()]
 
-        await sdk.run_step(EditCodeStep(
-            range_in_files=range_in_files, prompt=self._prompt.format(code="{code}", user_input=self.user_input)))
+        await sdk.run_step(Gpt35EditCodeStep(user_input=self.user_input, range_in_files=range_in_files))
 
 
 class FindCodeStep(Step):
