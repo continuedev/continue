@@ -2,11 +2,12 @@ from abc import ABC, abstractmethod
 from typing import Coroutine, Union
 import os
 
+from ..steps.core.core import Gpt35EditCodeStep
+from ..models.main import Range
 from .abstract_sdk import AbstractContinueSDK
 from .config import ContinueConfig, load_config
 from ..models.filesystem_edit import FileEdit, FileSystemEdit, AddFile, DeleteFile, AddDirectory, DeleteDirectory
 from ..models.filesystem import RangeInFile
-from ..libs.llm import LLM
 from ..libs.llm.hf_inference_api import HuggingFaceInferenceAPI
 from ..libs.llm.openai import OpenAI
 from .observation import Observation
@@ -79,14 +80,15 @@ class ContinueSDK(AbstractContinueSDK):
         commands = commands if isinstance(commands, List) else [commands]
         return (await self.run_step(ShellCommandsStep(cmds=commands, cwd=cwd, description=description, **({'name': name} if name else {})))).text
 
-    async def edit_file(self, filename: str, prompt: str, name: str = None, description: str = None):
+    async def edit_file(self, filename: str, prompt: str, name: str = None, description: str = None, range: Range = None):
         filepath = await self._ensure_absolute_path(filename)
 
         await self.ide.setFileOpen(filepath)
         contents = await self.ide.readFile(filepath)
-        await self.run_step(EditCodeStep(
-            range_in_files=[RangeInFile.from_entire_file(filepath, contents)],
-            prompt=f'Here is the code before:\n\n{{code}}\n\nHere is the user request:\n\n{prompt}\n\nHere is the code edited to perfectly solve the user request:\n\n',
+        await self.run_step(Gpt35EditCodeStep(
+            range_in_files=[RangeInFile(filepath=filename, range=range) if range is not None else RangeInFile.from_entire_file(
+                filepath, contents)],
+            user_input=prompt,
             description=description,
             **({'name': name} if name else {})
         ))
