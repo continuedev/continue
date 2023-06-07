@@ -134,7 +134,7 @@ class ValidatePipelineStep(Step):
         # load the data into the DuckDB instance
         await sdk.run(f'python3 {filename}', name="Load data into DuckDB", description=f"Running python3 {filename} to load data into DuckDB")
 
-        table_name = f"{source_name}.{source_name}_resource"
+        table_name = f"{source_name}_data.{source_name}_resource"
         tables_query_code = dedent(f'''\
             import duckdb
 
