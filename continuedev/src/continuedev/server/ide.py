@@ -76,6 +76,10 @@ class GetUserSecretResponse(BaseModel):
     value: str
 
 
+class RunCommandResponse(BaseModel):
+    output: str
+
+
 T = TypeVar("T", bound=BaseModel)
 
 
@@ -110,7 +114,7 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
             fileEdits = list(
                 map(lambda d: FileEditWithFullContents.parse_obj(d), data["fileEdits"]))
             self.onFileEdits(fileEdits)
-        elif message_type in ["highlightedCode", "openFiles", "readFile", "editFile", "workspaceDirectory", "getUserSecret"]:
+        elif message_type in ["highlightedCode", "openFiles", "readFile", "editFile", "workspaceDirectory", "getUserSecret", "runCommand"]:
             self.sub_queue.post(message_type, data)
         else:
             raise ValueError("Unknown message type", message_type)
@@ -132,6 +136,15 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
         await self._send_json("openGUI", {
             "sessionId": session_id
         })
+
+    async def highlightCode(self, range_in_file: RangeInFile, color: str):
+        await self._send_json("highlightCode", {
+            "rangeInFile": range_in_file.dict(),
+            "color": color
+        })
+
+    async def runCommand(self, command: str) -> str:
+        return (await self._send_and_receive_json({"command": command}, RunCommandResponse, "runCommand")).output
 
     async def showSuggestionsAndWait(self, suggestions: List[FileEdit]) -> bool:
         ids = [str(uuid.uuid4()) for _ in suggestions]

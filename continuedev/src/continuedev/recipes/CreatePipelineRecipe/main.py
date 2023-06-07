@@ -11,8 +11,8 @@ class CreatePipelineRecipe(Step):
     hide: bool = True
 
     async def run(self, sdk: ContinueSDK):
-        await sdk.run_step(
-            MessageStep(message=dedent("""\
+        text_observation = await sdk.run_step(
+            MessageStep(name="Building your first dlt pipeline", message=dedent("""\
                 This recipe will walk you through the process of creating a dlt pipeline for your chosen data source. With the help of Continue, you will:
                 - Create a Python virtual environment with dlt installed
                 - Run `dlt init` to generate a pipeline template
@@ -21,7 +21,10 @@ class CreatePipelineRecipe(Step):
                 - Test that the API call works
                 - Load the data into a local DuckDB instance
                 - Write a query to view the data""")) >>
-            WaitForUserInputStep(prompt="What API do you want to load data from?") >>
-            SetupPipelineStep(api_description="WeatherAPI.com API") >>
+            WaitForUserInputStep(
+                prompt="What API do you want to load data from? (e.g. weatherapi.com, chess.com)")
+        )
+        await sdk.run_step(
+            SetupPipelineStep(api_description=text_observation.text) >>
             ValidatePipelineStep()
         )

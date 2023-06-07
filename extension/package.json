@@ -14,7 +14,7 @@
   "displayName": "Continue",
   "pricing": "Free",
   "description": "Refine code 10x faster",
-  "version": "0.0.20",
+  "version": "0.0.23",
   "publisher": "Continue",
   "engines": {
     "vscode": "^1.74.0"
@@ -42,12 +42,12 @@
           "description": "The URL of the Continue server to use."
         },
         "continue.OPENAI_API_KEY": {
-          "type": "string",
+          "type": "password",
           "default": "",
           "description": "The OpenAI API key to use for code generation."
         },
         "continue.HUGGING_FACE_TOKEN": {
-          "type": "string",
+          "type": "password",
           "default": "",
           "description": "The Hugging Face API token to use for code generation."
         }
@@ -169,7 +169,7 @@
   "scripts": {
     "vscode:prepublish": "npm run esbuild-base -- --minify",
     "esbuild-base": "rm -rf ./out && esbuild ./src/extension.ts --bundle --outfile=out/extension.js --external:vscode --format=cjs --platform=node",
-    "esbuild": "rm -rf ./out && npm run esbuild-base -- --sourcemap",
+    "esbuild": "rm -rf ./out && node esbuild.mjs",
     "esbuild-watch": "npm run esbuild-base -- --sourcemap --watch",
     "test-compile": "tsc -p ./",
     "clientgen": "rm -rf src/client/ && npx @openapitools/openapi-generator-cli generate -i ../schema/openapi.json -g typescript-fetch -o src/client/ --additional-properties=supportsES6=true,npmVersion=8.19.2,typescriptThreePlus=true",
@@ -215,11 +215,10 @@
     "@vitejs/plugin-react-swc": "^3.3.2",
     "axios": "^1.2.5",
     "highlight.js": "^11.7.0",
-    "octokit": "^2.0.11",
     "posthog-js": "^1.63.3",
     "react-markdown": "^8.0.7",
     "react-redux": "^8.0.5",
-    "strip-ansi": "^7.0.1",
+    "strip-ansi": "^7.1.0",
     "tailwindcss": "^3.3.2",
     "vite": "^4.3.9",
     "vscode-languageclient": "^8.0.2",

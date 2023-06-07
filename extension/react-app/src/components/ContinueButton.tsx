@@ -24,9 +24,13 @@ let StyledButton = styled(Button)`
   }
 `;
 
-function ContinueButton(props: { onClick?: () => void }) {
+function ContinueButton(props: { onClick?: () => void; hidden?: boolean }) {
   return (
-    <StyledButton className="m-auto" onClick={props.onClick}>
+    <StyledButton
+      hidden={props.hidden}
+      className="m-auto"
+      onClick={props.onClick}
+    >
       <Play />
       {/* <img src={"/continue_arrow.png"} width="16px"></img> */}
       Continue
