@@ -50,8 +50,9 @@ const StepContainerDiv = styled.div<{ open: boolean }>`
   /* padding: 8px; */
 `;
 
-const HeaderDiv = styled.div`
-  background-color: ${vscBackgroundTransparent};
+const HeaderDiv = styled.div<{ error: boolean }>`
+  background-color: ${(props) =>
+    props.error ? "#522" : vscBackgroundTransparent};
   display: grid;
   grid-template-columns: 1fr auto;
   align-items: center;
@@ -124,17 +125,23 @@ function StepContainer(props: StepContainerProps) {
     >
       <StepContainerDiv open={open}>
         <GradientBorder
+          borderColor={
+            props.historyNode.observation?.error ? "#f00" : undefined
+          }
           className="overflow-hidden cursor-pointer"
           onClick={() => setOpen((prev) => !prev)}
         >
-          <HeaderDiv>
+          <HeaderDiv
+            error={props.historyNode.observation?.error ? true : false}
+          >
             <h4 className="m-2">
               {open ? (
                 <ChevronDown size="1.4em" />
               ) : (
                 <ChevronRight size="1.4em" />
               )}
-              {props.historyNode.step.name as any}
+              {props.historyNode.observation?.title ||
+                (props.historyNode.step.name as any)}
             </h4>
             {/* <HeaderButton
               onClick={(e) => {
@@ -171,10 +178,9 @@ function StepContainer(props: StepContainerProps) {
           )}
 
           {props.historyNode.observation?.error ? (
-            <ToggleErrorDiv
-              title={"Error while running step:"}
-              error={props.historyNode.observation.error as string}
-            />
+            <pre className="overflow-x-scroll">
+              {props.historyNode.observation.error as string}
+            </pre>
           ) : (
             <ReactMarkdown key={1} className="overflow-scroll">
               {props.historyNode.step.description as any}

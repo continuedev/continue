@@ -131,5 +131,5 @@ class ContinueSDK(AbstractContinueSDK):
         # self.__autopilot.set_loading_message(message)
         raise NotImplementedError()
 
-    def raise_exception(self, message: str, title: str):
-        raise ContinueCustomException(message, title)
+    def raise_exception(self, message: str, title: str, with_step: Union[Step, None] = None):
+        raise ContinueCustomException(message, title, with_step)

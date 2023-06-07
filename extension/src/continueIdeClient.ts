@@ -142,6 +142,7 @@ class IdeProtocolClient {
       editor.setDecorations(
         vscode.window.createTextEditorDecorationType({
           backgroundColor: color,
+          isWholeLine: true,
         }),
         [range]
       );

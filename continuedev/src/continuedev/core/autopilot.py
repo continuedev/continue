@@ -83,9 +83,9 @@ class Autopilot(ContinueBaseModel):
     _step_depth: int = 0
 
     async def retry_at_index(self, index: int):
-        last_step = self.history.pop_last_step()
+        step = self.history.timeline[index].step.copy()
         await self.update_subscribers()
-        await self._run_singular_step(last_step)
+        await self._run_singular_step(step)
 
     async def _run_singular_step(self, step: "Step", is_future_step: bool = False) -> Coroutine[Observation, None, None]:
         capture_event(
@@ -119,7 +119,17 @@ class Autopilot(ContinueBaseModel):
 
             observation = InternalErrorObservation(
                 error=error_string, title=e.title)
+
+            # Reveal this step, but hide all of the following steps (its substeps)
             step.hide = False
+            i = self.history.get_current_index()
+            while self.history.timeline[i].step.name != step.name:
+                self.history.timeline[i].step.hide = True
+                i -= 1
+
+            if e.with_step is not None:
+                await self._run_singular_step(e.with_step)
+
         except Exception as e:
             # Attach an InternalErrorObservation to the step and unhide it.
             error_string = '\n\n'.join(
@@ -129,7 +139,13 @@ class Autopilot(ContinueBaseModel):
 
             observation = InternalErrorObservation(
                 error=error_string, title=e.__repr__())
+
+            # Reveal this step, but hide all of the following steps (its substeps)
             step.hide = False
+            i = self.history.get_current_index()
+            while self.history.timeline[i].step.name != step.name:
+                self.history.timeline[i].step.hide = True
+                i -= 1
 
         self._step_depth -= 1
 

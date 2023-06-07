@@ -67,11 +67,16 @@ class History(ContinueBaseModel):
             return None
         return state.observation
 
-    def pop_last_step(self) -> Union[HistoryNode, None]:
-        if self.current_index < 0:
+    def pop_step(self, index: int = None) -> Union[HistoryNode, None]:
+        index = index if index is not None else self.current_index
+        if index < 0 or self.current_index < 0:
             return None
-        node = self.timeline.pop(self.current_index)
-        self.current_index -= 1
+
+        node = self.timeline.pop(index)
+
+        if index <= self.current_index:
+            self.current_index -= 1
+
         return node.step
 
     @classmethod
@@ -183,10 +188,12 @@ class Context:
 class ContinueCustomException(Exception):
     title: str
     message: str
+    with_step: Union[Step, None]
 
-    def __init__(self, message: str, title: str = "Error while running step:"):
+    def __init__(self, message: str, title: str = "Error while running step:", with_step: Union[Step, None] = None):
         self.message = message
         self.title = title
+        self.with_step = with_step
 
 
 HistoryNode.update_forward_refs()

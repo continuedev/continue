@@ -73,8 +73,9 @@ export class CapturedTerminal {
         const lines = this.dataBuffer.split("\n");
         if (
           lines.length > 0 &&
-          lines[lines.length - 1].includes("bash-") &&
-          lines[lines.length - 1].trim().endsWith("$")
+          (lines[lines.length - 1].includes("bash-") ||
+            lines[lines.length - 1].includes("(main)")) &&
+          lines[lines.length - 1].includes("$")
         ) {
           resolve(this.dataBuffer);
           this.dataBuffer = "";
