@@ -135,7 +135,7 @@ class Gpt35EditCodeStep(Step):
             prompt = self._prompt.format(
                 code=rif.contents, user_request=self.user_input, file_prefix=segs[0], file_suffix=segs[1])
 
-            completion = str((await sdk.models.gpt35()).complete(prompt))
+            completion = str(sdk.models.gpt35.complete(prompt))
             eot_token = "<|endoftext|>"
             completion = completion.removesuffix(eot_token)
 
