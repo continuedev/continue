@@ -1,4 +1,6 @@
 from abc import ABC, abstractmethod
+import asyncio
+from functools import cached_property
 from typing import Coroutine, Union
 import os
 
@@ -29,15 +31,21 @@ class Models:
     def __init__(self, sdk: "ContinueSDK"):
         self.sdk = sdk
 
-    async def starcoder(self):
-        api_key = await self.sdk.get_user_secret(
-            'HUGGING_FACE_TOKEN', 'Please add your Hugging Face token to the .env file')
-        return HuggingFaceInferenceAPI(api_key=api_key)
+    @cached_property
+    def starcoder(self):
+        async def load_starcoder():
+            api_key = await self.sdk.get_user_secret(
+                'HUGGING_FACE_TOKEN', 'Please add your Hugging Face token to the .env file')
+            return HuggingFaceInferenceAPI(api_key=api_key)
+        return asyncio.get_event_loop().run_until_complete(load_starcoder())
 
-    async def gpt35(self):
-        api_key = await self.sdk.get_user_secret(
-            'OPENAI_API_KEY', 'Please add your OpenAI API key to the .env file')
-        return OpenAI(api_key=api_key, default_model="gpt-3.5-turbo")
+    @cached_property
+    def gpt35(self):
+        async def load_gpt35():
+            api_key = await self.sdk.get_user_secret(
+                'OPENAI_API_KEY', 'Please add your OpenAI API key to the .env file')
+            return OpenAI(api_key=api_key, default_model="gpt-3.5-turbo")
+        return asyncio.get_event_loop().run_until_complete(load_gpt35())
 
 
 class ContinueSDK(AbstractContinueSDK):
