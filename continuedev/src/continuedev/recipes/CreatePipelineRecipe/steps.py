@@ -89,7 +89,7 @@ class ValidatePipelineStep(Step):
         output = await sdk.run(f'python3 {filename}', name="Test the pipeline", description=f"Running `python3 {filename}` to test loading data from the API")
 
         # If it fails, return the error
-        if "Traceback" in output:
+        if "Traceback" in output or "SyntaxError" in output:
             output = "Traceback" + output.split("Traceback")[-1]
             file_content = await sdk.ide.readFile(os.path.join(workspace_dir, filename))
             suggestion = (await sdk.models.gpt35()).complete(dedent(f"""\

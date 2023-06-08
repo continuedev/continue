@@ -86,7 +86,7 @@ class ContinueSDK(AbstractContinueSDK):
         await self.ide.setFileOpen(filepath)
         contents = await self.ide.readFile(filepath)
         await self.run_step(Gpt35EditCodeStep(
-            range_in_files=[RangeInFile(filepath=filename, range=range) if range is not None else RangeInFile.from_entire_file(
+            range_in_files=[RangeInFile(filepath=filepath, range=range) if range is not None else RangeInFile.from_entire_file(
                 filepath, contents)],
             user_input=prompt,
             description=description,
