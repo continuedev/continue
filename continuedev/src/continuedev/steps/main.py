@@ -144,7 +144,7 @@ class FasterEditHighlightedCodeStep(Step):
         for rif in rif_with_contents:
             rif_dict[rif.filepath] = rif.contents
 
-        completion = (await sdk.models.gpt35()).complete(prompt)
+        completion = sdk.models.gpt35.complete(prompt)
 
         # Temporarily doing this to generate description.
         self._prompt = prompt
@@ -239,7 +239,7 @@ class StarCoderEditHighlightedCodeStep(Step):
         for rif in rif_with_contents:
             prompt = self._prompt.format(
                 code=rif.contents, user_request=self.user_input)
-            completion = str((await sdk.models.starcoder()).complete(prompt))
+            completion = str(sdk.models.starcoder.complete(prompt))
             eot_token = "<|endoftext|>"
             if completion.endswith(eot_token):
                 completion = completion[:completion.rindex(eot_token)]

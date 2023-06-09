@@ -100,7 +100,7 @@ class Gpt35EditCodeStep(Step):
             return a + b
         <|endoftext|>
 
-        Now complete the real thing:
+        Now complete the real thing. Do NOT rewrite the prefix or suffix.
 
         <file_prefix>
         {file_prefix}
@@ -110,7 +110,8 @@ class Gpt35EditCodeStep(Step):
         {code}
         <commit_msg>
         {user_request}
-        <commit_after>""")
+        <commit_after>
+        """)
 
     _prompt_and_completion: str = ""
 
@@ -134,7 +135,7 @@ class Gpt35EditCodeStep(Step):
             prompt = self._prompt.format(
                 code=rif.contents, user_request=self.user_input, file_prefix=segs[0], file_suffix=segs[1])
 
-            completion = str((await sdk.models.gpt35()).complete(prompt))
+            completion = str(sdk.models.gpt35.complete(prompt))
             eot_token = "<|endoftext|>"
             completion = completion.removesuffix(eot_token)
 
@@ -242,5 +243,4 @@ class WaitForUserConfirmationStep(Step):
     async def run(self, sdk: ContinueSDK) -> Coroutine[Observation, None, None]:
         self.description = self.prompt
         resp = await sdk.wait_for_user_input()
-        self.hide = True
         return TextObservation(text=resp)
