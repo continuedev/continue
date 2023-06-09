@@ -5,7 +5,7 @@ import time
 
 from ...models.main import Range
 from ...models.filesystem import RangeInFile
-from ...steps.main import MessageStep
+from ...steps.core.core import MessageStep
 from ...core.sdk import Models
 from ...core.observation import DictObservation, InternalErrorObservation
 from ...models.filesystem_edit import AddFile, FileEdit
@@ -51,7 +51,7 @@ class SetupPipelineStep(Step):
 
         # editing the resource function to call the requested API
         resource_function_range = Range.from_shorthand(15, 0, 29, 0)
-        await sdk.ide.highlightCode(RangeInFile(filepath=os.path.join(await sdk.ide.getWorkspaceDirectory(), filename), range=resource_function_range), "#00ff0022")
+        await sdk.ide.highlightCode(RangeInFile(filepath=os.path.join(await sdk.ide.getWorkspaceDirectory(), filename), range=resource_function_range))
 
         # sdk.set_loading_message("Writing code to call the API...")
         await sdk.edit_file(

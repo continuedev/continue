@@ -14,7 +14,7 @@ from ..libs.llm.hf_inference_api import HuggingFaceInferenceAPI
 from ..libs.llm.openai import OpenAI
 from .observation import Observation
 from ..server.ide_protocol import AbstractIdeProtocolServer
-from .main import Context, ContinueCustomException, History, Step
+from .main import Context, ContinueCustomException, History, Step, ChatMessage, ChatMessageRole
 from ..steps.core.core import *
 
 
@@ -136,3 +136,11 @@ class ContinueSDK(AbstractContinueSDK):
 
     def raise_exception(self, message: str, title: str, with_step: Union[Step, None] = None):
         raise ContinueCustomException(message, title, with_step)
+
+    def add_chat_context(self, content: str, role: ChatMessageRole = "assistent"):
+        self.history.timeline[self.history.current_index].step.chat_context.append(
+            ChatMessage(content=content, role=role))
+
+    @property
+    def chat_context(self) -> List[ChatMessage]:
+        return self.history.to_chat_history()
