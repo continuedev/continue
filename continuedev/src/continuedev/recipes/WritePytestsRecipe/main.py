@@ -38,7 +38,7 @@ class WritePytestsRecipe(Step):
             "{self.instructions}"
 
             Here is a complete set of pytest unit tests:""")
-        tests = (await sdk.models.gpt35()).complete(prompt)
+        tests = sdk.models.gpt35.complete(prompt)
 
         await sdk.apply_filesystem_edit(AddFile(filepath=path, content=tests))
 

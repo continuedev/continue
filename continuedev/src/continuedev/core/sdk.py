@@ -1,4 +1,6 @@
 from abc import ABC, abstractmethod
+import asyncio
+from functools import cached_property
 from typing import Coroutine, Union
 import os
 
@@ -20,30 +22,30 @@ class Autopilot:
     pass
 
 
-class ContinueSDKSteps:
-    def __init__(self, sdk: "ContinueSDK"):
-        self.sdk = sdk
-
-
 class Models:
     def __init__(self, sdk: "ContinueSDK"):
         self.sdk = sdk
 
-    async def starcoder(self):
-        api_key = await self.sdk.get_user_secret(
-            'HUGGING_FACE_TOKEN', 'Please add your Hugging Face token to the .env file')
-        return HuggingFaceInferenceAPI(api_key=api_key)
+    @cached_property
+    def starcoder(self):
+        async def load_starcoder():
+            api_key = await self.sdk.get_user_secret(
+                'HUGGING_FACE_TOKEN', 'Please add your Hugging Face token to the .env file')
+            return HuggingFaceInferenceAPI(api_key=api_key)
+        return asyncio.get_event_loop().run_until_complete(load_starcoder())
 
-    async def gpt35(self):
-        api_key = await self.sdk.get_user_secret(
-            'OPENAI_API_KEY', 'Please add your OpenAI API key to the .env file')
-        return OpenAI(api_key=api_key, default_model="gpt-3.5-turbo")
+    @cached_property
+    def gpt35(self):
+        async def load_gpt35():
+            api_key = await self.sdk.get_user_secret(
+                'OPENAI_API_KEY', 'Please add your OpenAI API key to the .env file')
+            return OpenAI(api_key=api_key, default_model="gpt-3.5-turbo")
+        return asyncio.get_event_loop().run_until_complete(load_gpt35())
 
 
 class ContinueSDK(AbstractContinueSDK):
     """The SDK provided as parameters to a step"""
     ide: AbstractIdeProtocolServer
-    steps: ContinueSDKSteps
     models: Models
     context: Context
     __autopilot: Autopilot
@@ -51,7 +53,6 @@ class ContinueSDK(AbstractContinueSDK):
     def __init__(self, autopilot: Autopilot):
         self.ide = autopilot.ide
         self.__autopilot = autopilot
-        self.steps = ContinueSDKSteps(self)
         self.models = Models(self)
         self.context = autopilot.context
 
@@ -86,7 +87,7 @@ class ContinueSDK(AbstractContinueSDK):
         await self.ide.setFileOpen(filepath)
         contents = await self.ide.readFile(filepath)
         await self.run_step(Gpt35EditCodeStep(
-            range_in_files=[RangeInFile(filepath=filename, range=range) if range is not None else RangeInFile.from_entire_file(
+            range_in_files=[RangeInFile(filepath=filepath, range=range) if range is not None else RangeInFile.from_entire_file(
                 filepath, contents)],
             user_input=prompt,
             description=description,
