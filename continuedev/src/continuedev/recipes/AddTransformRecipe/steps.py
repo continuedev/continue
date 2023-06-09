@@ -1,7 +1,9 @@
 import os
 from textwrap import dedent
 
-from ...steps.main import MessageStep
+from ...models.main import Range
+from ...models.filesystem import RangeInFile
+from ...steps.core.core import MessageStep
 from ...core.sdk import Models
 from ...core.observation import DictObservation
 from ...models.filesystem_edit import AddFile
@@ -26,7 +28,8 @@ class SetUpChessPipelineStep(Step):
             'source env/bin/activate',
             'pip install dlt',
             'dlt --non-interactive init chess duckdb',
-            'pip install -r requirements.txt'
+            'pip install -r requirements.txt',
+            'pip install pandas streamlit'  # Needed for the pipeline show step later
         ], name="Set up Python environment", description=dedent(f"""\
             Running the following commands:
             - `python3 -m venv env`: Create a Python virtual environment
@@ -44,13 +47,21 @@ class AddTransformStep(Step):
 
     async def run(self, sdk: ContinueSDK):
         source_name = 'chess'
-        filename = f'{source_name}.py'
+        filename = f'{source_name}_pipeline.py'
+        abs_filepath = os.path.join(sdk.ide.workspace_directory, filename)
 
         await sdk.run_step(MessageStep(message=dedent("""\
                 This step will customize your resource function with a transform of your choice:
                 - Add a filter or map transformation depending on your request
                 - Load the data into a local DuckDB instance
                 - Open up a Streamlit app for you to view the data"""), name="Write transformation function"))
+
+        # Open the file and highlight the function to be edited
+        await sdk.ide.setFileOpen(abs_filepath)
+        await sdk.ide.highlightCode(range_in_file=RangeInFile(
+            filepath=abs_filepath,
+            range=Range.from_shorthand(47, 0, 51, 0)
+        ))
 
         with open(os.path.join(os.path.dirname(__file__), 'dlt_transform_docs.md')) as f:
             dlt_transform_docs = f.read()
@@ -75,4 +86,4 @@ class AddTransformStep(Step):
         await sdk.run(f'python3 {filename}', name="Run the pipeline", description=f"Running `python3 {filename}` to load the data into a local DuckDB instance")
 
         # run a streamlit app to show the data
-        await sdk.run(f'dlt pipeline {source_name} show', name="Show data in a Streamlit app", description=f"Running `dlt pipeline {source_name} show` to show the data in a Streamlit app, where you can view and play with the data.")
+        await sdk.run(f'dlt pipeline {source_name}_pipeline show', name="Show data in a Streamlit app", description=f"Running `dlt pipeline {source_name} show` to show the data in a Streamlit app, where you can view and play with the data.")
