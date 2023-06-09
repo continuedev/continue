@@ -1,3 +1,4 @@
+from functools import cached_property
 import traceback
 import time
 from typing import Any, Callable, Coroutine, Dict, List
@@ -28,7 +29,7 @@ class Autopilot(ContinueBaseModel):
     _user_input_queue = AsyncSubscriptionQueue()
     _retry_queue = AsyncSubscriptionQueue()
 
-    @property
+    @cached_property
     def continue_sdk(self) -> ContinueSDK:
         return ContinueSDK(self)
 
@@ -200,8 +201,7 @@ class Autopilot(ContinueBaseModel):
         self._active = False
 
         # Doing this so active can make it to the frontend after steps are done. But want better state syncing tools
-        for callback in self._on_update_callbacks:
-            await callback(None)
+        await self.update_subscribers()
 
     async def run_from_observation(self, observation: Observation):
         next_step = self.policy.next(self.history)
