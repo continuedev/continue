@@ -22,11 +22,6 @@ class Autopilot:
     pass
 
 
-class ContinueSDKSteps:
-    def __init__(self, sdk: "ContinueSDK"):
-        self.sdk = sdk
-
-
 class Models:
     def __init__(self, sdk: "ContinueSDK"):
         self.sdk = sdk
@@ -51,7 +46,6 @@ class Models:
 class ContinueSDK(AbstractContinueSDK):
     """The SDK provided as parameters to a step"""
     ide: AbstractIdeProtocolServer
-    steps: ContinueSDKSteps
     models: Models
     context: Context
     __autopilot: Autopilot
@@ -59,7 +53,6 @@ class ContinueSDK(AbstractContinueSDK):
     def __init__(self, autopilot: Autopilot):
         self.ide = autopilot.ide
         self.__autopilot = autopilot
-        self.steps = ContinueSDKSteps(self)
         self.models = Models(self)
         self.context = autopilot.context
 

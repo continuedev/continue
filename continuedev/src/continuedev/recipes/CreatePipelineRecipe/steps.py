@@ -134,15 +134,16 @@ class ValidatePipelineStep(Step):
         # load the data into the DuckDB instance
         await sdk.run(f'python3 {filename}', name="Load data into DuckDB", description=f"Running python3 {filename} to load data into DuckDB")
 
-        table_name = f"{source_name}_data.{source_name}_resource"
         tables_query_code = dedent(f'''\
             import duckdb
 
             # connect to DuckDB instance
             conn = duckdb.connect(database="{source_name}.duckdb")
 
+            conn.execute("SET search_path = '{source_name}_data';")
+
             # get table names
-            rows = conn.execute("SELECT * FROM {table_name};").fetchall()
+            rows = conn.execute("SELECT * FROM _dlt_loads;").fetchall()
 
             # print table names
             for row in rows:
@@ -150,4 +151,27 @@ class ValidatePipelineStep(Step):
 
         query_filename = os.path.join(workspace_dir, "query.py")
         await sdk.apply_filesystem_edit(AddFile(filepath=query_filename, content=tables_query_code), name="Add query.py file", description="Adding a file called `query.py` to the workspace that will run a test query on the DuckDB instance")
-        await sdk.run('env/bin/python3 query.py', name="Run test query", description="Running `env/bin/python3 query.py` to test that the data was loaded into DuckDB as expected")
+
+
+class RunQueryStep(Step):
+    hide: bool = True
+
+    async def run(self, sdk: ContinueSDK):
+        output = await sdk.run('env/bin/python3 query.py', name="Run test query", description="Running `env/bin/python3 query.py` to test that the data was loaded into DuckDB as expected")
+
+        if "Traceback" in output or "SyntaxError" in output:
+            suggestion = sdk.models.gpt35.complete(dedent(f"""\
+                ```python
+                {await sdk.ide.readFile(os.path.join(sdk.ide.workspace_directory, "query.py"))}
+                ```
+                This above code is a query that runs on the DuckDB instance. While attempting to run the query, the following error occurred:
+
+                ```ascii
+                {output}
+                ```
+
+                This is a brief summary of the error followed by a suggestion on how it can be fixed:"""))
+
+            sdk.raise_exception(
+                title="Error while running query", message=output, with_step=MessageStep(name=f"Suggestion to solve error {AI_ASSISTED_STRING}", message=suggestion)
+            )
