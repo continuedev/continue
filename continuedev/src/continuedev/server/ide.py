@@ -1,5 +1,6 @@
 # This is a separate server from server/main.py
 import asyncio
+from functools import cached_property
 import json
 import os
 from typing import Any, Dict, List, Type, TypeVar, Union
@@ -198,6 +199,10 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
     async def getWorkspaceDirectory(self) -> str:
         resp = await self._send_and_receive_json({}, WorkspaceDirectoryResponse, "workspaceDirectory")
         return resp.workspaceDirectory
+
+    @cached_property
+    def workspace_directory(self) -> str:
+        return asyncio.run(self.getWorkspaceDirectory())
 
     async def getHighlightedCode(self) -> List[RangeInFile]:
         resp = await self._send_and_receive_json({}, HighlightedCodeResponse, "highlightedCode")
