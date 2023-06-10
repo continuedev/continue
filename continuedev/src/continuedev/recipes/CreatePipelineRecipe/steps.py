@@ -86,7 +86,7 @@ class ValidatePipelineStep(Step):
         #         """)))
 
         # test that the API call works
-        output = await sdk.run(f'python3 {filename}', name="Test the pipeline", description=f"Running `python3 {filename}` to test loading data from the API")
+        output = await sdk.run(f'python3 {filename}', name="Test the pipeline", description=f"Running `python3 {filename}` to test loading data from the API", handle_error=False)
 
         # If it fails, return the error
         if "Traceback" in output or "SyntaxError" in output:
@@ -157,7 +157,7 @@ class RunQueryStep(Step):
     hide: bool = True
 
     async def run(self, sdk: ContinueSDK):
-        output = await sdk.run('env/bin/python3 query.py', name="Run test query", description="Running `env/bin/python3 query.py` to test that the data was loaded into DuckDB as expected")
+        output = await sdk.run('env/bin/python3 query.py', name="Run test query", description="Running `env/bin/python3 query.py` to test that the data was loaded into DuckDB as expected", handle_error=False)
 
         if "Traceback" in output or "SyntaxError" in output:
             suggestion = sdk.models.gpt35.complete(dedent(f"""\

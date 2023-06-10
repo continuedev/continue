@@ -3,7 +3,6 @@ from typing import Callable, Coroutine, Dict, Generator, List, Literal, Tuple, U
 
 from ..models.main import ContinueBaseModel
 from pydantic import validator
-from ..libs.llm import LLM
 from .observation import Observation
 
 ChatMessageRole = Literal["assistant", "user", "system"]
@@ -21,6 +20,8 @@ class HistoryNode(ContinueBaseModel):
     depth: int
 
     def to_chat_messages(self) -> List[ChatMessage]:
+        if self.step.description is None:
+            return self.step.chat_context
         return self.step.chat_context + [ChatMessage(role="assistant", content=self.step.description)]
 
 
@@ -33,10 +34,7 @@ class History(ContinueBaseModel):
         msgs = []
         for node in self.timeline:
             if not node.step.hide:
-                msgs += [
-                    ChatMessage(role="assistant", content=msg)
-                    for msg in node.to_chat_messages()
-                ]
+                msgs += node.to_chat_messages()
         return msgs
 
     def add_node(self, node: HistoryNode):
