@@ -61,6 +61,7 @@ class ShellCommandsStep(Step):
     cmds: List[str]
     cwd: Union[str, None] = None
     name: str = "Run Shell Commands"
+    handle_error: bool = True
 
     _err_text: Union[str, None] = None
 
@@ -76,7 +77,7 @@ class ShellCommandsStep(Step):
 
         for cmd in self.cmds:
             output = await sdk.ide.runCommand(cmd)
-            if output is not None and output_contains_error(output):
+            if self.handle_error and output is not None and output_contains_error(output):
                 suggestion = sdk.models.gpt35.complete(dedent(f"""\
                     While running the command `{cmd}`, the following error occurred:
 
