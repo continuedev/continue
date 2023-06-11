@@ -9,6 +9,8 @@ from ..steps.main import EditHighlightedCodeStep, SolveTracebackStep, RunCodeSte
 from ..recipes.WritePytestsRecipe.main import WritePytestsRecipe
 from ..recipes.ContinueRecipeRecipe.main import ContinueStepStep
 from ..steps.comment_code import CommentCodeStep
+from ..steps.react import NLDecisionStep
+from ..steps.chat import SimpleChatStep
 
 
 class DemoPolicy(Policy):
@@ -26,19 +28,26 @@ class DemoPolicy(Policy):
         observation = history.get_current().observation
         if observation is not None and isinstance(observation, UserInputObservation):
             # This could be defined with ObservationTypePolicy. Ergonomics not right though.
-            if "/pytest" in observation.user_input.lower():
-                return WritePytestsRecipe(instructions=observation.user_input)
-            elif "/dlt" in observation.user_input.lower() or " dlt" in observation.user_input.lower():
+            user_input = observation.user_input
+            if "/pytest" in user_input.lower():
+                return WritePytestsRecipe(instructions=user_input)
+            elif "/dlt" in user_input.lower() or " dlt" in user_input.lower():
                 return CreatePipelineRecipe()
-            elif "/comment" in observation.user_input.lower():
+            elif "/comment" in user_input.lower():
                 return CommentCodeStep()
-            elif "/ask" in observation.user_input:
-                return AnswerQuestionChroma(question=" ".join(observation.user_input.split(" ")[1:]))
-            elif "/edit" in observation.user_input:
-                return EditFileChroma(request=" ".join(observation.user_input.split(" ")[1:]))
-            elif "/step" in observation.user_input:
-                return ContinueStepStep(prompt=" ".join(observation.user_input.split(" ")[1:]))
-            return EditHighlightedCodeStep(user_input=observation.user_input)
+            elif "/ask" in user_input:
+                return AnswerQuestionChroma(question=" ".join(user_input.split(" ")[1:]))
+            elif "/edit" in user_input:
+                return EditFileChroma(request=" ".join(user_input.split(" ")[1:]))
+            elif "/step" in user_input:
+                return ContinueStepStep(prompt=" ".join(user_input.split(" ")[1:]))
+            # return EditHighlightedCodeStep(user_input=user_input)
+            return NLDecisionStep(user_input=user_input, steps=[
+                EditHighlightedCodeStep(user_input=user_input),
+                AnswerQuestionChroma(question=user_input),
+                EditFileChroma(request=user_input),
+                SimpleChatStep(user_input=user_input)
+            ])
 
         state = history.get_current()
 
