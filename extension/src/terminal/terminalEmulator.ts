@@ -74,7 +74,7 @@ export class CapturedTerminal {
         if (
           lines.length > 0 &&
           (lines[lines.length - 1].includes("bash-") ||
-            lines[lines.length - 1].includes("(main)")) &&
+            lines[lines.length - 1].includes(") $ ")) &&
           lines[lines.length - 1].includes("$")
         ) {
           resolve(this.dataBuffer);

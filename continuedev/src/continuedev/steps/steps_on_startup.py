@@ -2,14 +2,15 @@ from ..core.main import ContinueSDK, Models, Step
 from .main import UserInputStep
 from ..recipes.CreatePipelineRecipe.main import CreatePipelineRecipe
 from ..recipes.DeployPipelineAirflowRecipe.main import DeployPipelineAirflowRecipe
-
+from ..recipes.DDtoBQRecipe.main import DDtoBQRecipe
 from ..recipes.AddTransformRecipe.main import AddTransformRecipe
 
 step_name_to_step_class = {
     "UserInputStep": UserInputStep,
     "CreatePipelineRecipe": CreatePipelineRecipe,
     "DeployPipelineAirflowRecipe": DeployPipelineAirflowRecipe,
-    "AddTransformRecipe": AddTransformRecipe
+    "AddTransformRecipe": AddTransformRecipe,
+    "DDtoBQRecipe": DDtoBQRecipe
 }
 
 
