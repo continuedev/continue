@@ -14,7 +14,7 @@ from ..libs.llm.hf_inference_api import HuggingFaceInferenceAPI
 from ..libs.llm.openai import OpenAI
 from .observation import Observation
 from ..server.ide_protocol import AbstractIdeProtocolServer
-from .main import Context, ContinueCustomException, History, Step
+from .main import Context, ContinueCustomException, History, Step, ChatMessage, ChatMessageRole
 from ..steps.core.core import *
 
 
@@ -77,9 +77,9 @@ class ContinueSDK(AbstractContinueSDK):
     async def wait_for_user_confirmation(self, prompt: str):
         return await self.run_step(WaitForUserConfirmationStep(prompt=prompt))
 
-    async def run(self, commands: Union[List[str], str], cwd: str = None, name: str = None, description: str = None) -> Coroutine[str, None, None]:
+    async def run(self, commands: Union[List[str], str], cwd: str = None, name: str = None, description: str = None, handle_error: bool = True) -> Coroutine[str, None, None]:
         commands = commands if isinstance(commands, List) else [commands]
-        return (await self.run_step(ShellCommandsStep(cmds=commands, cwd=cwd, description=description, **({'name': name} if name else {})))).text
+        return (await self.run_step(ShellCommandsStep(cmds=commands, cwd=cwd, description=description, handle_error=handle_error, **({'name': name} if name else {})))).text
 
     async def edit_file(self, filename: str, prompt: str, name: str = None, description: str = None, range: Range = None):
         filepath = await self._ensure_absolute_path(filename)
@@ -136,3 +136,11 @@ class ContinueSDK(AbstractContinueSDK):
 
     def raise_exception(self, message: str, title: str, with_step: Union[Step, None] = None):
         raise ContinueCustomException(message, title, with_step)
+
+    def add_chat_context(self, content: str, role: ChatMessageRole = "assistent"):
+        self.history.timeline[self.history.current_index].step.chat_context.append(
+            ChatMessage(content=content, role=role))
+
+    @property
+    def chat_context(self) -> List[ChatMessage]:
+        return self.history.to_chat_history()

@@ -4,13 +4,15 @@ from ..steps.chroma import AnswerQuestionChroma, EditFileChroma, CreateCodebaseI
 from ..steps.steps_on_startup import StepsOnStartupStep
 from ..recipes.CreatePipelineRecipe.main import CreatePipelineRecipe
 from ..recipes.DeployPipelineAirflowRecipe.main import DeployPipelineAirflowRecipe
+from ..recipes.AddTransformRecipe.main import AddTransformRecipe
 from .main import Step, Validator, History, Policy
 from .observation import Observation, TracebackObservation, UserInputObservation
-from ..steps.main import EditHighlightedCodeStep, SolveTracebackStep, RunCodeStep, FasterEditHighlightedCodeStep, StarCoderEditHighlightedCodeStep, MessageStep, EmptyStep, SetupContinueWorkspaceStep
+from ..steps.main import EditHighlightedCodeStep, SolveTracebackStep, RunCodeStep, FasterEditHighlightedCodeStep, StarCoderEditHighlightedCodeStep, EmptyStep, SetupContinueWorkspaceStep
 from ..recipes.WritePytestsRecipe.main import WritePytestsRecipe
 from ..recipes.ContinueRecipeRecipe.main import ContinueStepStep
 from ..steps.comment_code import CommentCodeStep
 from ..recipes.DDtoBQRecipe.main import DDtoBQRecipeRecipe
+from ..steps.core.core import MessageStep
 
 
 class DemoPolicy(Policy):
@@ -36,6 +38,8 @@ class DemoPolicy(Policy):
                 return DDtoBQRecipeRecipe()
             elif "/airflow" in observation.user_input.lower():
                 return DeployPipelineAirflowRecipe()
+            elif "/transform" in observation.user_input.lower():
+                return AddTransformRecipe()
             elif "/comment" in observation.user_input.lower():
                 return CommentCodeStep()
             elif "/ask" in observation.user_input:
