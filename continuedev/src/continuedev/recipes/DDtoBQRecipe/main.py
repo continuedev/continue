@@ -4,7 +4,7 @@ from ...core.main import Step
 from ...core.sdk import ContinueSDK
 from ...steps.core.core import WaitForUserInputStep
 from ...steps.main import MessageStep
-from .steps import SetupPipelineStep, ValidatePipelineStep, RunQueryStep
+from .steps import SetUpChessPipelineStep, SwitchDestinationStep
 
 # Based on the following guide:
 # https://github.com/dlt-hub/dlt/pull/392

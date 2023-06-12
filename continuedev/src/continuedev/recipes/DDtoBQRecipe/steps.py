@@ -45,15 +45,8 @@ class SwitchDestinationStep(Step):
     async def run(self, sdk: ContinueSDK):
 
         # Switch destination from DuckDB to Google BigQuery
-        filename = 'chess.py'
-        prompt = 'Replace the "destination" argument with "bigquery"'
-        
-        ## edit the pipeline to add a tranform function and attach it to a resource
-        await sdk.edit_file(
-            filename=filename,
-            prompt=prompt,
-            name=f'Replacing the "destination" argument with "bigquery"  {AI_ASSISTED_STRING}'
-        )
+        filepath = os.path.join(sdk.ide.workspace_directory, 'chess.py')
+        await sdk.run_step(FindAndReplaceStep(filepath=filepath, pattern="destination='duckdb'", replacement="destination='bigquery'"))
 
         # Add BigQuery credentials to your secrets.toml file
         template = dedent(f"""\
@@ -63,16 +56,28 @@ class SwitchDestinationStep(Step):
             private_key = "private_key" # please set me up!
             client_email = "client_email" # please set me up!""")
 
-        ## wait for user to put API key in secrets.toml
-        await sdk.ide.setFileOpen(await sdk.ide.getWorkspaceDirectory() + "/.dlt/secrets.toml")
-        ## append template to bottom of secrets.toml
+        # wait for user to put API key in secrets.toml
+        secrets_path = os.path.join(
+            sdk.ide.workspace_directory, "/.dlt/secrets.toml")
+        await sdk.ide.setFileOpen(secrets_path)
+        await sdk.append_to_file(secrets_path, template)
+
+        # append template to bottom of secrets.toml
         await sdk.wait_for_user_confirmation("Please add your GCP credentials to `secrets.toml` file and then press `Continue`")
 
+
+class LoadDataStep(Step):
+    name: str = "Load data to BigQuery"
+    hide: bool = True
+
+    async def run(self, sdk: ContinueSDK):
         # Run the pipeline again to load data to BigQuery
         output = await sdk.run('env/bin/python3 chess.py', name="Load data to BigQuery", description="Running `env/bin/python3 chess.py` to load data to Google BigQuery")
 
-        ## TODO: REPLACE WITH APPROACH TO HELPING WITH THINGS MENTIONED IN `## 5. Troubleshoot exceptions`
         if "Traceback" in output or "SyntaxError" in output:
+            with open(os.path.join(__file__, "dlt_duckdb_to_bigquery_docs.md"), "r") as f:
+                docs = f.read()
+
             suggestion = sdk.models.gpt35.complete(dedent(f"""\
                 ```python
                 {await sdk.ide.readFile(os.path.join(sdk.ide.workspace_directory, "query.py"))}
@@ -82,6 +87,10 @@ class SwitchDestinationStep(Step):
                 ```ascii
                 {output}
                 ```
+
+                Here is documentation describing common errors and their causes/solutions:
+
+                {docs}
 
                 This is a brief summary of the error followed by a suggestion on how it can be fixed:"""))
 
