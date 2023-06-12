@@ -3,6 +3,7 @@ import subprocess
 from textwrap import dedent
 import time
 
+from ...steps.find_and_replace import FindAndReplaceStep
 from ...models.main import Range
 from ...models.filesystem import RangeInFile
 from ...steps.main import MessageStep
@@ -13,6 +14,7 @@ from ...core.main import Step
 from ...core.sdk import ContinueSDK
 
 AI_ASSISTED_STRING = "(✨ AI-Assisted ✨)"
+
 
 class SetUpChessPipelineStep(Step):
     hide: bool = True
@@ -45,7 +47,8 @@ class SwitchDestinationStep(Step):
     async def run(self, sdk: ContinueSDK):
 
         # Switch destination from DuckDB to Google BigQuery
-        filepath = os.path.join(sdk.ide.workspace_directory, 'chess.py')
+        filepath = os.path.join(
+            sdk.ide.workspace_directory, 'chess_pipeline.py')
         await sdk.run_step(FindAndReplaceStep(filepath=filepath, pattern="destination='duckdb'", replacement="destination='bigquery'"))
 
         # Add BigQuery credentials to your secrets.toml file
@@ -58,7 +61,7 @@ class SwitchDestinationStep(Step):
 
         # wait for user to put API key in secrets.toml
         secrets_path = os.path.join(
-            sdk.ide.workspace_directory, "/.dlt/secrets.toml")
+            sdk.ide.workspace_directory, ".dlt/secrets.toml")
         await sdk.ide.setFileOpen(secrets_path)
         await sdk.append_to_file(secrets_path, template)
 
@@ -72,17 +75,15 @@ class LoadDataStep(Step):
 
     async def run(self, sdk: ContinueSDK):
         # Run the pipeline again to load data to BigQuery
-        output = await sdk.run('env/bin/python3 chess.py', name="Load data to BigQuery", description="Running `env/bin/python3 chess.py` to load data to Google BigQuery")
+        output = await sdk.run('env/bin/python3 chess_pipeline.py', name="Load data to BigQuery", description="Running `env/bin/python3 chess_pipeline.py` to load data to Google BigQuery")
 
         if "Traceback" in output or "SyntaxError" in output:
-            with open(os.path.join(__file__, "dlt_duckdb_to_bigquery_docs.md"), "r") as f:
+            with open(os.path.join(os.path.dirname(__file__), "dlt_duckdb_to_bigquery_docs.md"), "r") as f:
                 docs = f.read()
 
+            output = "Traceback" + output.split("Traceback")[-1]
             suggestion = sdk.models.gpt35.complete(dedent(f"""\
-                ```python
-                {await sdk.ide.readFile(os.path.join(sdk.ide.workspace_directory, "query.py"))}
-                ```
-                This above code is a query that runs on the DuckDB instance. While attempting to run the query, the following error occurred:
+                When trying to load data into BigQuery, the following error occurred:
 
                 ```ascii
                 {output}
