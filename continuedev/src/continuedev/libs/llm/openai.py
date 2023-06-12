@@ -1,6 +1,7 @@
 import asyncio
 import time
 from typing import Any, Dict, Generator, List, Union
+from ...core.main import ChatMessage
 import openai
 import aiohttp
 from ..llm import LLM
@@ -62,7 +63,7 @@ class OpenAI(LLM):
             for chunk in generator:
                 yield chunk.choices[0].text
 
-    def complete(self, prompt: str, **kwargs) -> str:
+    def complete(self, prompt: str, with_history: List[ChatMessage] = [], **kwargs) -> str:
         t1 = time.time()
 
         self.completion_count += 1
@@ -70,15 +71,17 @@ class OpenAI(LLM):
                 "frequency_penalty": 0, "presence_penalty": 0, "stream": False} | kwargs
 
         if args["model"] == "gpt-3.5-turbo":
-            messages = [{
-                "role": "user",
-                "content": prompt
-            }]
+            messages = []
             if self.system_message:
-                messages.insert(0, {
+                messages.append({
                     "role": "system",
                     "content": self.system_message
                 })
+            messages += [msg.dict() for msg in with_history]
+            messages.append({
+                "role": "user",
+                "content": prompt
+            })
             resp = openai.ChatCompletion.create(
                 messages=messages,
                 **args,

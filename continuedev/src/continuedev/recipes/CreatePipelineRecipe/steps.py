@@ -5,7 +5,7 @@ import time
 
 from ...models.main import Range
 from ...models.filesystem import RangeInFile
-from ...steps.main import MessageStep
+from ...steps.core.core import MessageStep
 from ...core.sdk import Models
 from ...core.observation import DictObservation, InternalErrorObservation
 from ...models.filesystem_edit import AddFile, FileEdit
@@ -51,7 +51,7 @@ class SetupPipelineStep(Step):
 
         # editing the resource function to call the requested API
         resource_function_range = Range.from_shorthand(15, 0, 29, 0)
-        await sdk.ide.highlightCode(RangeInFile(filepath=os.path.join(await sdk.ide.getWorkspaceDirectory(), filename), range=resource_function_range), "#00ff0022")
+        await sdk.ide.highlightCode(RangeInFile(filepath=os.path.join(await sdk.ide.getWorkspaceDirectory(), filename), range=resource_function_range))
 
         # sdk.set_loading_message("Writing code to call the API...")
         await sdk.edit_file(
@@ -86,7 +86,7 @@ class ValidatePipelineStep(Step):
         #         """)))
 
         # test that the API call works
-        output = await sdk.run(f'python3 {filename}', name="Test the pipeline", description=f"Running `python3 {filename}` to test loading data from the API")
+        output = await sdk.run(f'python3 {filename}', name="Test the pipeline", description=f"Running `python3 {filename}` to test loading data from the API", handle_error=False)
 
         # If it fails, return the error
         if "Traceback" in output or "SyntaxError" in output:
@@ -157,7 +157,7 @@ class RunQueryStep(Step):
     hide: bool = True
 
     async def run(self, sdk: ContinueSDK):
-        output = await sdk.run('env/bin/python3 query.py', name="Run test query", description="Running `env/bin/python3 query.py` to test that the data was loaded into DuckDB as expected")
+        output = await sdk.run('env/bin/python3 query.py', name="Run test query", description="Running `env/bin/python3 query.py` to test that the data was loaded into DuckDB as expected", handle_error=False)
 
         if "Traceback" in output or "SyntaxError" in output:
             suggestion = sdk.models.gpt35.complete(dedent(f"""\
