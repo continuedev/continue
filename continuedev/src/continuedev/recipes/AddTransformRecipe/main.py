@@ -19,7 +19,7 @@ class AddTransformRecipe(Step):
                 - Run the pipeline and view the transformed data in a Streamlit app"""), name="Add transformation to a dlt pipeline") >>
             SetUpChessPipelineStep() >>
             WaitForUserInputStep(
-                prompt="How do you want to transform the Chess.com API data before loading it? For example, you could use the `python-chess` library to decode the moves or filter out certain games")
+                prompt="How do you want to transform the Chess.com API data before loading it? For example, you could filter out games that ended in a draw.")
         )
         await sdk.run_step(
             AddTransformStep(

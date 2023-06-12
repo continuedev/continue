@@ -177,7 +177,7 @@ class IdeProtocolClient {
     // If not, ask user for secret
     while (typeof secret === "undefined" || secret === "") {
       secret = await vscode.window.showInputBox({
-        prompt: `Enter secret for ${key}`,
+        prompt: `Enter secret for ${key}. You can edit this later in the Continue VS Code settings.`,
         password: true,
       });
     }

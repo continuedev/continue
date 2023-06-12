@@ -31,12 +31,11 @@ class SetUpChessPipelineStep(Step):
             'pip install -r requirements.txt',
             'pip install pandas streamlit'  # Needed for the pipeline show step later
         ], name="Set up Python environment", description=dedent(f"""\
-            Running the following commands:
-            - `python3 -m venv env`: Create a Python virtual environment
-            - `source env/bin/activate`: Activate the virtual environment
-            - `pip install dlt`: Install dlt
-            - `dlt init chess duckdb`: Create a new dlt pipeline called "chess" that loads data into a local DuckDB instance
-            - `pip install -r requirements.txt`: Install the Python dependencies for the pipeline"""))
+            - Create a Python virtual environment: `python3 -m venv env`
+            - Activate the virtual environment: `source env/bin/activate`
+            - Install dlt: `pip install dlt`
+            - Create a new dlt pipeline called "chess" that loads data into a local DuckDB instance: `dlt init chess duckdb`
+            - Install the Python dependencies for the pipeline: `pip install -r requirements.txt`"""))
 
 
 class AddTransformStep(Step):
@@ -58,10 +57,6 @@ class AddTransformStep(Step):
 
         # Open the file and highlight the function to be edited
         await sdk.ide.setFileOpen(abs_filepath)
-        await sdk.ide.highlightCode(range_in_file=RangeInFile(
-            filepath=abs_filepath,
-            range=Range.from_shorthand(47, 0, 51, 0)
-        ))
 
         with open(os.path.join(os.path.dirname(__file__), 'dlt_transform_docs.md')) as f:
             dlt_transform_docs = f.read()
