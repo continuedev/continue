@@ -1,11 +1,13 @@
 from ..core.main import ContinueSDK, Models, Step
 from .main import UserInputStep
 from ..recipes.CreatePipelineRecipe.main import CreatePipelineRecipe
+from ..recipes.DDtoBQRecipe.main import DDtoBQRecipeRecipe
 
 
 step_name_to_step_class = {
     "UserInputStep": UserInputStep,
-    "CreatePipelineRecipe": CreatePipelineRecipe
+    "CreatePipelineRecipe": CreatePipelineRecipe,
+    "DDtoBQRecipeRecipe": DDtoBQRecipeRecipe
 }
 
 
