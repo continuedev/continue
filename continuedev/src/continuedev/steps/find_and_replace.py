@@ -25,3 +25,4 @@ class FindAndReplaceStep(Step):
             ))
             file_content = file_content[:start_index] + \
                 self.replacement + file_content[end_index:]
+            await sdk.ide.saveFile(self.filepath)
