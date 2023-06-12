@@ -35,6 +35,7 @@ class Autopilot(ContinueBaseModel):
 
     class Config:
         arbitrary_types_allowed = True
+        keep_untouched = (cached_property,)
 
     def get_full_state(self) -> FullState:
         return FullState(history=self.history, active=self._active, user_input_queue=self._main_user_input_queue)

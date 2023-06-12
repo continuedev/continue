@@ -1,10 +1,10 @@
-from abc import ABC, abstractmethod
+from abc import ABC, abstractmethod, abstractproperty
 from typing import Coroutine, List, Union
 
 from .config import ContinueConfig
 from ..models.filesystem_edit import FileSystemEdit
 from .observation import Observation
-from .main import History, Step
+from .main import ChatMessage, History, Step, ChatMessageRole
 
 
 """
@@ -82,4 +82,12 @@ class AbstractContinueSDK(ABC):
 
     @abstractmethod
     def set_loading_message(self, message: str):
+        pass
+
+    @abstractmethod
+    def add_chat_context(self, content: str, role: ChatMessageRole = "assistent"):
+        pass
+
+    @abstractproperty
+    def chat_context(self) -> List[ChatMessage]:
         pass

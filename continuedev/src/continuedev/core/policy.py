@@ -3,12 +3,14 @@ from typing import List, Tuple, Type
 from ..steps.chroma import AnswerQuestionChroma, EditFileChroma, CreateCodebaseIndexChroma
 from ..steps.steps_on_startup import StepsOnStartupStep
 from ..recipes.CreatePipelineRecipe.main import CreatePipelineRecipe
+from ..recipes.AddTransformRecipe.main import AddTransformRecipe
 from .main import Step, Validator, History, Policy
 from .observation import Observation, TracebackObservation, UserInputObservation
-from ..steps.main import EditHighlightedCodeStep, SolveTracebackStep, RunCodeStep, FasterEditHighlightedCodeStep, StarCoderEditHighlightedCodeStep, MessageStep, EmptyStep, SetupContinueWorkspaceStep
+from ..steps.main import EditHighlightedCodeStep, SolveTracebackStep, RunCodeStep, FasterEditHighlightedCodeStep, StarCoderEditHighlightedCodeStep, EmptyStep, SetupContinueWorkspaceStep
 from ..recipes.WritePytestsRecipe.main import WritePytestsRecipe
 from ..recipes.ContinueRecipeRecipe.main import ContinueStepStep
 from ..steps.comment_code import CommentCodeStep
+from ..steps.core.core import MessageStep
 
 
 class DemoPolicy(Policy):
@@ -28,8 +30,10 @@ class DemoPolicy(Policy):
             # This could be defined with ObservationTypePolicy. Ergonomics not right though.
             if "/pytest" in observation.user_input.lower():
                 return WritePytestsRecipe(instructions=observation.user_input)
-            elif "/dlt" in observation.user_input.lower() or " dlt" in observation.user_input.lower():
+            elif "/dlt" in observation.user_input.lower():
                 return CreatePipelineRecipe()
+            elif "/transform" in observation.user_input.lower():
+                return AddTransformRecipe()
             elif "/comment" in observation.user_input.lower():
                 return CommentCodeStep()
             elif "/ask" in observation.user_input:

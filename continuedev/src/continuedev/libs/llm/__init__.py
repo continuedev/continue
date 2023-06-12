@@ -1,4 +1,6 @@
-from typing import Union
+from typing import List, Union
+
+from ...core.main import ChatMessage
 from ...models.main import AbstractModel
 from pydantic import BaseModel
 
@@ -6,7 +8,7 @@ from pydantic import BaseModel
 class LLM(BaseModel):
     system_message: Union[str, None] = None
 
-    def complete(self, prompt: str, **kwargs):
+    def complete(self, prompt: str, with_history: List[ChatMessage] = [], **kwargs):
         """Return the completion of the text with the given temperature."""
         raise
 
