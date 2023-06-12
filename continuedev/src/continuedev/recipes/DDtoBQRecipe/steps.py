@@ -6,7 +6,7 @@ import time
 from ...steps.find_and_replace import FindAndReplaceStep
 from ...models.main import Range
 from ...models.filesystem import RangeInFile
-from ...steps.main import MessageStep
+from ...steps.core.core import MessageStep
 from ...core.sdk import Models
 from ...core.observation import DictObservation, InternalErrorObservation
 from ...models.filesystem_edit import AddFile, FileEdit
