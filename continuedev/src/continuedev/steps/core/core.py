@@ -88,7 +88,7 @@ class ShellCommandsStep(Step):
                     This is a brief summary of the error followed by a suggestion on how it can be fixed:"""), with_history=sdk.chat_context)
 
                 sdk.raise_exception(
-                    title="Error while running query", message=output, with_step=MessageStep(name=f"Suggestion to solve error {AI_ASSISTED_STRING}", message=suggestion)
+                    title="Error while running query", message=output, with_step=MessageStep(name=f"Suggestion to solve error {AI_ASSISTED_STRING}", message=f"{suggestion}\n\nYou can click the retry button on the failed step to try again.")
                 )
 
         return TextObservation(text=output)
