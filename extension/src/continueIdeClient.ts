@@ -278,40 +278,13 @@ class IdeProtocolClient {
         undefined,
         vscode.ViewColumn.One
       ).then((editor) => {
-        let range = new vscode.Range(
+        const range = new vscode.Range(
           edit.range.start.line,
           edit.range.start.character,
           edit.range.end.line,
           edit.range.end.character
         );
-        const decorationKey =
-          edit.replacement === ""
-            ? {
-                editorUri: editor.document.uri.fsPath,
-                options: {
-                  range: new vscode.Range(
-                    new vscode.Position(range.start.line, 0),
-                    new vscode.Position(range.end.line + 1, 0)
-                  ),
-                  // after: {
-                  //   contentText: "Removed",
-                  // },
-                },
-                decorationType: vscode.window.createTextEditorDecorationType({
-                  backgroundColor: "rgba(255, 0, 0, 0.2)",
-                }),
-              }
-            : {
-                editorUri: editor.document.uri.fsPath,
-                options: {
-                  range,
-                },
-                decorationType: vscode.window.createTextEditorDecorationType({
-                  backgroundColor: "rgba(66, 105, 55, 1.0)",
-                  isWholeLine: true,
-                }),
-              };
-        decorationManager.addDecoration(decorationKey);
+
         editor.edit((editBuilder) => {
           this._makingEdit += 2; // editBuilder.replace takes 2 edits: delete and insert
           editBuilder.replace(range, edit.replacement);
