@@ -11,7 +11,7 @@ from ..steps.main import EditHighlightedCodeStep, SolveTracebackStep, RunCodeSte
 from ..recipes.WritePytestsRecipe.main import WritePytestsRecipe
 from ..recipes.ContinueRecipeRecipe.main import ContinueStepStep
 from ..steps.comment_code import CommentCodeStep
-from ..recipes.DDtoBQRecipe.main import DDtoBQRecipeRecipe
+from ..recipes.DDtoBQRecipe.main import DDtoBQRecipe
 from ..steps.core.core import MessageStep
 
 
@@ -35,7 +35,7 @@ class DemoPolicy(Policy):
             elif "/dlt" in observation.user_input.lower():
                 return CreatePipelineRecipe()
             elif "/ddtobq" in observation.user_input.lower():
-                return DDtoBQRecipeRecipe()
+                return DDtoBQRecipe()
             elif "/airflow" in observation.user_input.lower():
                 return DeployPipelineAirflowRecipe()
             elif "/transform" in observation.user_input.lower():

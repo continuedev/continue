@@ -42,6 +42,22 @@ class SetupPipelineStep(Step):
             - `pip install -r requirements.txt`: Install the Python dependencies for the pipeline"""), name="Setup Python environment")
 
 
+class RunPipelineStep(Step):
+    hide: bool = True
+    name: str = "Run dlt Pipeline"
+
+    source_name: str
+
+    async def describe(self, models: Models):
+        pass
+
+    async def run(self, sdk: ContinueSDK):
+        await sdk.run([
+            f'python3 {self.source_name}_pipeline.py',
+        ], description=dedent(f"""\
+            Running the command `python3 {self.source_name}_pipeline.py to run the pipeline: """), name="Run dlt pipeline")
+
+
 class DeployAirflowStep(Step):
     hide: bool = True
     source_name: str
