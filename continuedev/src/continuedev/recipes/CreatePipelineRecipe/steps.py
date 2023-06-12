@@ -5,7 +5,7 @@ import time
 
 from ...models.main import Range
 from ...models.filesystem import RangeInFile
-from ...steps.main import MessageStep
+from ...steps.core.core import MessageStep
 from ...core.sdk import Models
 from ...core.observation import DictObservation, InternalErrorObservation
 from ...models.filesystem_edit import AddFile, FileEdit
@@ -30,7 +30,7 @@ class SetupPipelineStep(Step):
     async def run(self, sdk: ContinueSDK):
         sdk.context.set("api_description", self.api_description)
 
-        source_name = (await sdk.models.gpt35()).complete(
+        source_name = sdk.models.gpt35.complete(
             f"Write a snake_case name for the data source described by {self.api_description}: ").strip()
         filename = f'{source_name}.py'
 
@@ -51,7 +51,7 @@ class SetupPipelineStep(Step):
 
         # editing the resource function to call the requested API
         resource_function_range = Range.from_shorthand(15, 0, 29, 0)
-        await sdk.ide.highlightCode(RangeInFile(filepath=os.path.join(await sdk.ide.getWorkspaceDirectory(), filename), range=resource_function_range), "#00ff0022")
+        await sdk.ide.highlightCode(RangeInFile(filepath=os.path.join(await sdk.ide.getWorkspaceDirectory(), filename), range=resource_function_range))
 
         # sdk.set_loading_message("Writing code to call the API...")
         await sdk.edit_file(
@@ -86,13 +86,13 @@ class ValidatePipelineStep(Step):
         #         """)))
 
         # test that the API call works
-        output = await sdk.run(f'python3 {filename}', name="Test the pipeline", description=f"Running `python3 {filename}` to test loading data from the API")
+        output = await sdk.run(f'python3 {filename}', name="Test the pipeline", description=f"Running `python3 {filename}` to test loading data from the API", handle_error=False)
 
         # If it fails, return the error
-        if "Traceback" in output:
+        if "Traceback" in output or "SyntaxError" in output:
             output = "Traceback" + output.split("Traceback")[-1]
             file_content = await sdk.ide.readFile(os.path.join(workspace_dir, filename))
-            suggestion = (await sdk.models.gpt35()).complete(dedent(f"""\
+            suggestion = sdk.models.gpt35.complete(dedent(f"""\
                 ```python
                 {file_content}
                 ```
@@ -104,7 +104,7 @@ class ValidatePipelineStep(Step):
 
                 This is a brief summary of the error followed by a suggestion on how it can be fixed by editing the resource function:"""))
 
-            api_documentation_url = (await sdk.models.gpt35()).complete(dedent(f"""\
+            api_documentation_url = sdk.models.gpt35.complete(dedent(f"""\
                 The API I am trying to call is the '{sdk.context.get('api_description')}'. I tried calling it in the @resource function like this:
                 ```python       
                 {file_content}
@@ -134,15 +134,16 @@ class ValidatePipelineStep(Step):
         # load the data into the DuckDB instance
         await sdk.run(f'python3 {filename}', name="Load data into DuckDB", description=f"Running python3 {filename} to load data into DuckDB")
 
-        table_name = f"{source_name}.{source_name}_resource"
         tables_query_code = dedent(f'''\
             import duckdb
 
             # connect to DuckDB instance
             conn = duckdb.connect(database="{source_name}.duckdb")
 
+            conn.execute("SET search_path = '{source_name}_data';")
+
             # get table names
-            rows = conn.execute("SELECT * FROM {table_name};").fetchall()
+            rows = conn.execute("SELECT * FROM _dlt_loads;").fetchall()
 
             # print table names
             for row in rows:
@@ -150,4 +151,27 @@ class ValidatePipelineStep(Step):
 
         query_filename = os.path.join(workspace_dir, "query.py")
         await sdk.apply_filesystem_edit(AddFile(filepath=query_filename, content=tables_query_code), name="Add query.py file", description="Adding a file called `query.py` to the workspace that will run a test query on the DuckDB instance")
-        await sdk.run('env/bin/python3 query.py', name="Run test query", description="Running `env/bin/python3 query.py` to test that the data was loaded into DuckDB as expected")
+
+
+class RunQueryStep(Step):
+    hide: bool = True
+
+    async def run(self, sdk: ContinueSDK):
+        output = await sdk.run('env/bin/python3 query.py', name="Run test query", description="Running `env/bin/python3 query.py` to test that the data was loaded into DuckDB as expected", handle_error=False)
+
+        if "Traceback" in output or "SyntaxError" in output:
+            suggestion = sdk.models.gpt35.complete(dedent(f"""\
+                ```python
+                {await sdk.ide.readFile(os.path.join(sdk.ide.workspace_directory, "query.py"))}
+                ```
+                This above code is a query that runs on the DuckDB instance. While attempting to run the query, the following error occurred:
+
+                ```ascii
+                {output}
+                ```
+
+                This is a brief summary of the error followed by a suggestion on how it can be fixed:"""))
+
+            sdk.raise_exception(
+                title="Error while running query", message=output, with_step=MessageStep(name=f"Suggestion to solve error {AI_ASSISTED_STRING}", message=suggestion)
+            )

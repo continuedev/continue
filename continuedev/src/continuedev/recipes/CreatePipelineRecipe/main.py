@@ -3,8 +3,8 @@ from textwrap import dedent
 from ...core.main import Step
 from ...core.sdk import ContinueSDK
 from ...steps.core.core import WaitForUserInputStep
-from ...steps.main import MessageStep
-from .steps import SetupPipelineStep, ValidatePipelineStep
+from ...steps.core.core import MessageStep
+from .steps import SetupPipelineStep, ValidatePipelineStep, RunQueryStep
 
 
 class CreatePipelineRecipe(Step):
@@ -26,5 +26,6 @@ class CreatePipelineRecipe(Step):
         )
         await sdk.run_step(
             SetupPipelineStep(api_description=text_observation.text) >>
-            ValidatePipelineStep()
+            ValidatePipelineStep() >>
+            RunQueryStep()
         )

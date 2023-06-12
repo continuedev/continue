@@ -144,7 +144,7 @@ class FasterEditHighlightedCodeStep(Step):
         for rif in rif_with_contents:
             rif_dict[rif.filepath] = rif.contents
 
-        completion = (await sdk.models.gpt35()).complete(prompt)
+        completion = sdk.models.gpt35.complete(prompt)
 
         # Temporarily doing this to generate description.
         self._prompt = prompt
@@ -212,7 +212,7 @@ class StarCoderEditHighlightedCodeStep(Step):
     _prompt_and_completion: str = ""
 
     async def describe(self, models: Models) -> Coroutine[str, None, None]:
-        return (await models.gpt35()).complete(f"{self._prompt_and_completion}\n\nPlease give brief a description of the changes made above using markdown bullet points:")
+        return models.gpt35.complete(f"{self._prompt_and_completion}\n\nPlease give brief a description of the changes made above using markdown bullet points:")
 
     async def run(self, sdk: ContinueSDK) -> Coroutine[Observation, None, None]:
         range_in_files = await sdk.ide.getHighlightedCode()
@@ -239,7 +239,7 @@ class StarCoderEditHighlightedCodeStep(Step):
         for rif in rif_with_contents:
             prompt = self._prompt.format(
                 code=rif.contents, user_request=self.user_input)
-            completion = str((await sdk.models.starcoder()).complete(prompt))
+            completion = str(sdk.models.starcoder.complete(prompt))
             eot_token = "<|endoftext|>"
             if completion.endswith(eot_token):
                 completion = completion[:completion.rindex(eot_token)]
@@ -315,17 +315,6 @@ class SolveTracebackStep(Step):
         await sdk.run_step(EditCodeStep(
             range_in_files=range_in_files, prompt=prompt))
         return None
-
-
-class MessageStep(Step):
-    name: str = "Message"
-    message: str
-
-    async def describe(self, models: Models) -> Coroutine[str, None, None]:
-        return self.message
-
-    async def run(self, sdk: ContinueSDK) -> Coroutine[Observation, None, None]:
-        return TextObservation(text=self.message)
 
 
 class EmptyStep(Step):

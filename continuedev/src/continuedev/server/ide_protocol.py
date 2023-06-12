@@ -1,5 +1,5 @@
 from typing import Any, List
-from abc import ABC, abstractmethod
+from abc import ABC, abstractmethod, abstractproperty
 
 from ..models.main import Traceback
 from ..models.filesystem_edit import FileEdit, FileSystemEdit, EditDiff
@@ -90,3 +90,7 @@ class AbstractIdeProtocolServer(ABC):
     @abstractmethod
     async def runCommand(self, command: str) -> str:
         """Run a command"""
+
+    @abstractproperty
+    def workspace_directory(self) -> str:
+        """Get the workspace directory"""
