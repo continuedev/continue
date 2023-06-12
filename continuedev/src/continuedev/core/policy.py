@@ -37,7 +37,6 @@ class DemoPolicy(Policy):
                 return WritePytestsRecipe(instructions=user_input)
             elif "/dlt" in user_input.lower() or " dlt" in user_input.lower():
                 return CreatePipelineRecipe()
-            elif "/comment" in user_input.lower():
             if "/pytest" in observation.user_input.lower():
                 return WritePytestsRecipe(instructions=observation.user_input)
             elif "/dlt" in observation.user_input.lower():
@@ -59,10 +58,10 @@ class DemoPolicy(Policy):
             # return EditHighlightedCodeStep(user_input=user_input)
             return NLDecisionStep(user_input=user_input, steps=[
                 EditHighlightedCodeStep(user_input=user_input),
-                AnswerQuestionChroma(question=user_input),
-                EditFileChroma(request=user_input),
+                # AnswerQuestionChroma(question=user_input),
+                # EditFileChroma(request=user_input),
                 SimpleChatStep(user_input=user_input)
-            ])
+            ], default_step=EditHighlightedCodeStep(user_input=user_input))
 
         state = history.get_current()
 
