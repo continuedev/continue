@@ -3,7 +3,7 @@ from textwrap import dedent
 from ...core.main import Step
 from ...core.sdk import ContinueSDK
 from ...steps.core.core import WaitForUserInputStep
-from ...steps.main import MessageStep
+from ...steps.core.core import MessageStep
 from .steps import SetupPipelineStep, ValidatePipelineStep, RunQueryStep
 
 
