@@ -41,7 +41,7 @@ function GUI(props: GUIProps) {
   //         name: "Waiting for user input",
   //         cmd: "python3 /Users/natesesti/Desktop/continue/extension/examples/python/main.py",
   //         description:
-  //           "Run `python3 /Users/natesesti/Desktop/continue/extension/examples/python/main.py`",
+  //           "Run `python3 /Users/natesesti/Desktop/continue/extension/examples/python/main.py` and ```\nprint(sum(first, second))\n```\n- Testing\n- Testing 2\n- Testing 3",
   //       },
   //       observation: {
   //         title: "ERROR FOUND",
@@ -92,7 +92,7 @@ function GUI(props: GUIProps) {
   //         prompt:
   //           "I ran into this problem with my Python code:\n\n                Traceback (most recent call last):\n  File \"/Users/natesesti/Desktop/continue/extension/examples/python/main.py\", line 7, in <module>\n    print(sum(first, second))\n          ^^^^^^^^^^^^^^^^^^\n  File \"/Users/natesesti/Desktop/continue/extension/examples/python/sum.py\", line 2, in sum\n    return a + b\n           ~~^~~\nTypeError: unsupported operand type(s) for +: 'int' and 'str'\n\n                Below are the files that might need to be fixed:\n\n                {code}\n\n                This is what the code should be in order to avoid the problem:\n",
   //         description:
-  //           "Editing files: /Users/natesesti/Desktop/continue/extension/examples/python/main.py",
+  //           "Run `python3 /Users/natesesti/Desktop/continue/extension/examples/python/main.py` and\n```python\nprint(sum(first, second))\n```\n- Testing\n- Testing 2\n- Testing 3",
   //       },
   //       output: [
   //         null,
@@ -154,22 +154,30 @@ function GUI(props: GUIProps) {
   //       output: [null, null],
   //     },
   //   ],
-  //   current_index: 0,
+  //   current_index: 3,
   // } as any);
 
   const topGuiDivRef = useRef<HTMLDivElement>(null);
   const client = useContinueGUIProtocol();
 
+  const [scrollTimeout, setScrollTimeout] = useState<NodeJS.Timeout | null>(
+    null
+  );
   const scrollToBottom = useCallback(() => {
+    if (scrollTimeout) {
+      clearTimeout(scrollTimeout);
+    }
+    // Debounced smooth scroll to bottom of screen
     if (topGuiDivRef.current) {
-      setTimeout(() => {
+      const timeout = setTimeout(() => {
         window.scrollTo({
           top: window.outerHeight,
           behavior: "smooth",
         });
-      }, 100);
+      }, 200);
+      setScrollTimeout(timeout);
     }
-  }, [topGuiDivRef.current]);
+  }, [topGuiDivRef.current, scrollTimeout]);
 
   useEffect(() => {
     console.log("CLIENT ON STATE UPDATE: ", client, client?.onStateUpdate);

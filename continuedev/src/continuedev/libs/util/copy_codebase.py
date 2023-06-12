@@ -3,13 +3,12 @@ from pathlib import Path
 from typing import Iterable, List, Union
 from watchdog.observers import Observer
 from watchdog.events import PatternMatchingEventHandler
-from ..models.main import FileEdit, DeleteDirectory, DeleteFile, AddDirectory, AddFile, FileSystemEdit, Position, Range, RenameFile, RenameDirectory, SequentialFileSystemEdit
-from ..models.filesystem import FileSystem
-from ..libs.main import Autopilot
-from ..libs.map_path import map_path
-from ..libs.steps.main import ManualEditAction
+from ...models.main import FileEdit, DeleteDirectory, DeleteFile, AddDirectory, AddFile, FileSystemEdit, RenameFile, RenameDirectory, SequentialFileSystemEdit
+from ...models.filesystem import FileSystem
+from ...core.autopilot import Autopilot
+from .map_path import map_path
+from ...core.sdk import ManualEditStep
 import shutil
-import difflib
 
 
 def create_copy(orig_root: str, copy_root: str = None, ignore: Iterable[str] = []):
@@ -34,33 +33,6 @@ def create_copy(orig_root: str, copy_root: str = None, ignore: Iterable[str] = [
                 shutil.copyfile(child, map_path(child))
             else:
                 os.symlink(child, map_path(child))
-
-
-def calculate_diff(filepath: str, original: str, updated: str) -> List[FileEdit]:
-    s = difflib.SequenceMatcher(None, original, updated)
-    offset = 0  # The indices are offset by previous deletions/insertions
-    edits = []
-    for tag, i1, i2, j1, j2 in s.get_opcodes():
-        i1, i2, j1, j2 = i1 + offset, i2 + offset, j1 + offset, j2 + offset
-        replacement = updated[j1:j2]
-        if tag == "equal":
-            pass
-        elif tag == "delete":
-            edits.append(FileEdit.from_deletion(
-                filepath, Range.from_indices(original, i1, i2)))
-            offset -= i2 - i1
-        elif tag == "insert":
-            edits.append(FileEdit.from_insertion(
-                filepath, Position.from_index(original, i1), replacement))
-            offset += j2 - j1
-        elif tag == "replace":
-            edits.append(FileEdit(filepath, Range.from_indices(
-                original, i1, i2), replacement))
-            offset += (j2 - j1) - (i2 + i1)
-        else:
-            raise Exception("Unexpected difflib.SequenceMatcher tag: " + tag)
-
-    return edits
 
 
 # The whole usage of watchdog here should only be specific to RealFileSystem, you want to have a different "Observer" class for VirtualFileSystem, which would depend on being sent notifications

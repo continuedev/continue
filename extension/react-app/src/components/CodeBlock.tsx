@@ -11,6 +11,7 @@ const StyledPre = styled.pre`
   border: 1px solid gray;
   border-radius: ${defaultBorderRadius};
   background-color: ${vscBackground};
+  padding: 8px;
 `;
 
 const StyledCode = styled.code`
