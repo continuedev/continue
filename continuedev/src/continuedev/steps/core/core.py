@@ -193,7 +193,7 @@ class Gpt35EditCodeStep(Step):
                 edit.range.end.line += rif.range.start.line
                 edit.range.end.character += rif.range.start.character if edit.range.end.line == 0 else 0
 
-                for line in range(edit.range.start.line, edit.range.end.line + 1):
+                for line in range(edit.range.start.line, edit.range.end.line + 1 + len(edit.replacement.splitlines()) - (edit.range.end.line - edit.range.start.line + 1)):
                     lines_to_highlight.add(line)
 
                 await sdk.ide.applyFileSystemEdit(edit)

@@ -67,6 +67,20 @@ def calculate_diff(filepath: str, original: str, updated: str) -> List[FileEdit]
 
 
 def calculate_diff2(filepath: str, original: str, updated: str) -> List[FileEdit]:
+    # original_lines = original.splitlines()
+    # updated_lines = updated.splitlines()
+    # offset = 0
+    # while len(original_lines) and len(updated_lines) and original_lines[0] == updated_lines[0]:
+    #     original_lines = original_lines[1:]
+    #     updated_lines = updated_lines[1:]
+
+    # while len(original_lines) and len(updated_lines) and original_lines[-1] == updated_lines[-1]:
+    #     original_lines = original_lines[:-1]
+    #     updated_lines = updated_lines[:-1]
+
+    # original = "\n".join(original_lines)
+    # updated = "\n".join(updated_lines)
+
     edits = []
     max_iterations = 1000
     i = 0

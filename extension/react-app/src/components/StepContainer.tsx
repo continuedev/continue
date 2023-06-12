@@ -7,6 +7,7 @@ import {
   vscBackground,
   GradientBorder,
   vscBackgroundTransparent,
+  HeaderButton,
 } from ".";
 import { RangeInFile, FileEdit } from "../../../src/client";
 import CodeBlock from "./CodeBlock";
@@ -15,7 +16,7 @@ import SubContainer from "./SubContainer";
 import {
   ChevronDown,
   ChevronRight,
-  Backward,
+  XMark,
   ArrowPath,
 } from "@styled-icons/heroicons-outline";
 import { HistoryNode } from "../../../schema/HistoryNode";
@@ -31,6 +32,7 @@ interface StepContainerProps {
   onRefinement: (input: string) => void;
   onUserInput: (input: string) => void;
   onRetry: () => void;
+  onDelete: () => void;
   open?: boolean;
 }
 
@@ -54,28 +56,16 @@ const HeaderDiv = styled.div<{ error: boolean }>`
   background-color: ${(props) =>
     props.error ? "#522" : vscBackgroundTransparent};
   display: grid;
-  grid-template-columns: 1fr auto;
+  grid-template-columns: 1fr auto auto;
+  grid-gap: 8px;
   align-items: center;
+  padding-right: 8px;
 `;
 
 const ContentDiv = styled.div`
   padding: 8px;
   padding-left: 16px;
   background-color: ${vscBackground};
-`;
-
-const HeaderButton = styled.button`
-  background-color: transparent;
-  border: 1px solid white;
-  border-radius: ${defaultBorderRadius};
-  padding: 2px;
-  cursor: pointer;
-  color: white;
-
-  &:hover {
-    background-color: white;
-    color: black;
-  }
 `;
 
 const OnHoverDiv = styled.div`
@@ -161,18 +151,28 @@ function StepContainer(props: StepContainerProps) {
               <Backward size="1.6em" onClick={props.onReverse}></Backward>
             </HeaderButton> */}
 
-            {props.historyNode.observation?.error ? (
+            <>
               <HeaderButton
                 onClick={(e) => {
                   e.stopPropagation();
-                  props.onRetry();
+                  props.onDelete();
                 }}
               >
-                <ArrowPath size="1.6em" onClick={props.onRetry}></ArrowPath>
+                <XMark size="1.6em" onClick={props.onDelete} />
               </HeaderButton>
-            ) : (
-              <></>
-            )}
+              {props.historyNode.observation?.error ? (
+                <HeaderButton
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    props.onRetry();
+                  }}
+                >
+                  <ArrowPath size="1.6em" onClick={props.onRetry} />
+                </HeaderButton>
+              ) : (
+                <></>
+              )}
+            </>
           </HeaderDiv>
         </GradientBorder>
         <ContentDiv hidden={!open}>
