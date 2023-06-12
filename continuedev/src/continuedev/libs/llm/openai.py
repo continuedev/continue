@@ -23,7 +23,7 @@ class OpenAI(LLM):
     def with_system_message(self, system_message: Union[str, None]):
         return OpenAI(api_key=self.api_key, system_message=system_message)
 
-    def stream_chat(self, messages, **kwargs) -> Generator[Union[Any, List, Dict], None, None]:
+    def stream_chat(self, prompt, with_history: List[ChatMessage] = [], **kwargs) -> Generator[Union[Any, List, Dict], None, None]:
         self.completion_count += 1
         args = {"max_tokens": DEFAULT_MAX_TOKENS, "temperature": 0.5, "top_p": 1,
                 "frequency_penalty": 0, "presence_penalty": 0} | kwargs
@@ -31,7 +31,7 @@ class OpenAI(LLM):
         args["model"] = "gpt-3.5-turbo"
 
         for chunk in openai.ChatCompletion.create(
-            messages=messages,
+            messages=self.compile_chat_messages(with_history, prompt),
             **args,
         ):
             if "content" in chunk.choices[0].delta:
@@ -39,7 +39,21 @@ class OpenAI(LLM):
             else:
                 continue
 
-    def stream_complete(self, prompt: str, **kwargs) -> Generator[Union[Any, List, Dict], None, None]:
+    def compile_chat_messages(self, msgs: List[ChatMessage], prompt: str) -> List[Dict]:
+        history = []
+        if self.system_message:
+            history.append({
+                "role": "system",
+                "content": self.system_message
+            })
+        history += [msg.dict() for msg in msgs]
+        history.append({
+            "role": "user",
+            "content": prompt
+        })
+        return history
+
+    def stream_complete(self, prompt: str, with_history: List[ChatMessage] = [], **kwargs) -> Generator[Union[Any, List, Dict], None, None]:
         self.completion_count += 1
         args = {"model": self.default_model, "max_tokens": DEFAULT_MAX_TOKENS, "temperature": 0.5,
                 "top_p": 1, "frequency_penalty": 0, "presence_penalty": 0, "suffix": None} | kwargs
@@ -47,10 +61,7 @@ class OpenAI(LLM):
 
         if args["model"] == "gpt-3.5-turbo":
             generator = openai.ChatCompletion.create(
-                messages=[{
-                    "role": "user",
-                    "content": prompt
-                }],
+                messages=self.compile_chat_messages(with_history, prompt),
                 **args,
             )
             for chunk in generator:
@@ -71,19 +82,8 @@ class OpenAI(LLM):
                 "frequency_penalty": 0, "presence_penalty": 0, "stream": False} | kwargs
 
         if args["model"] == "gpt-3.5-turbo":
-            messages = []
-            if self.system_message:
-                messages.append({
-                    "role": "system",
-                    "content": self.system_message
-                })
-            messages += [msg.dict() for msg in with_history]
-            messages.append({
-                "role": "user",
-                "content": prompt
-            })
             resp = openai.ChatCompletion.create(
-                messages=messages,
+                messages=self.compile_chat_messages(with_history, prompt),
                 **args,
             ).choices[0].message.content
         else:
