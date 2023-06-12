@@ -19,7 +19,8 @@ class FindAndReplaceStep(Step):
             end_index = start_index + len(self.pattern)
             await sdk.ide.applyFileSystemEdit(FileEdit(
                 filepath=self.filepath,
-                range=Range.from_indices(file_content, start_index, end_index),
+                range=Range.from_indices(
+                    file_content, start_index, end_index - 1),
                 replacement=self.replacement
             ))
             file_content = file_content[:start_index] + \
