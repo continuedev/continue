@@ -23,7 +23,7 @@ The **Continue SDK** gives you all the tools you need to automate software devel
 
 ### `sdk.models`
 
-`sdk.models` is an instance of the `Models` class, containing many of the most commonly used LLMs or other foundation models. You can instantiate a model (starcoder for example) (this is too awkward rn, I know) by calling `starcoder = await sdk.models.starcoder()`. Right now, all of the models are `LLM`s, meaning that they offer the `complete` method, used like `bubble_sort_code = await starcoder.complete("# Write a bubble sort function below, in Python:\n")`.
+`sdk.models` is an instance of the `Models` class, containing many of the most commonly used LLMs or other foundation models. You can access a model (starcoder for example) like `starcoder = sdk.models.starcoder`. Right now, all of the models are `LLM`s, meaning that they offer the `complete` method, used like `bubble_sort_code = await starcoder.complete("# Write a bubble sort function below, in Python:\n")`.
 
 ### `sdk.history`
 
