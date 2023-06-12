@@ -12,6 +12,7 @@ from ...core.observation import DictObservation, InternalErrorObservation
 from ...models.filesystem_edit import AddFile, FileEdit
 from ...core.main import Step
 from ...core.sdk import ContinueSDK
+from ...steps.find_and_replace import FindAndReplaceStep
 
 AI_ASSISTED_STRING = "(✨ AI-Assisted ✨)"
 
@@ -57,17 +58,16 @@ class DeployAirflowStep(Step):
         filepath = os.path.join(
             directory, f"dags/dag_{self.source_name}_pipeline.py")
 
-        # TODO: Find and replace in file step.
-        old_file_contents = await sdk.ide.readFile(filepath)
-        file_contents = old_file_contents.replace("pipeline_name", f"{self.source_name}_pipeline").replace(
-            "dataset_name", f"{self.source_name}_dataset")
-        await sdk.apply_filesystem_edit(FileEdit(filepath=filepath, range=Range.from_entire_file(filepath, old_file_contents), replacement=file_contents))
+        # Replace the pipeline name and dataset name
+        await sdk.run_step(FindAndReplaceStep(filepath=filepath, pattern="'pipeline_name'", replacement=f"'{self.source_name}_pipeline'"))
+        await sdk.run_step(FindAndReplaceStep(filepath=filepath, pattern="'dataset_name'", replacement=f"'{self.source_name}_data'"))
+        await sdk.run_step(FindAndReplaceStep(filepath=filepath, pattern="pipeline_or_source_script", replacement=f"{self.source_name}_pipeline"))
 
         # Prompt the user for the DAG schedule
-        response = await sdk.run_step(WaitForUserInputStep(prompt="When would you like this Airflow DAG to run? (e.g. every day, every Monday, every 1st of the month, etc.)", name="Set DAG Schedule"))
         edit_dag_range = Range.from_shorthand(18, 0, 23, 0)
-        await sdk.ide.highlightCode(range_in_file=RangeInFile(filepath=filepath, range=edit_dag_range))
-        await sdk.edit_file(filepath, prompt=f"Edit the DAG so that it runs at the following schedule: '{response}'",
+        await sdk.ide.highlightCode(range_in_file=RangeInFile(filepath=filepath, range=edit_dag_range), color="#33993333")
+        response = await sdk.run_step(WaitForUserInputStep(prompt="When would you like this Airflow DAG to run? (e.g. every day, every Monday, every 1st of the month, etc.)"))
+        await sdk.edit_file(filepath, prompt=f"Edit the DAG so that it runs at the following schedule: '{response.text}'",
                             range=edit_dag_range)
 
         # Tell the user to check the schedule and fill in owner, email, other default_args
