@@ -1,9 +1,5 @@
 from textwrap import dedent
-<<<<<<< Updated upstream
-from typing import List, Union
-=======
-from typing import List, Tuple
->>>>>>> Stashed changes
+from typing import List, Union, Tuple
 from ..core.main import Step
 from ..core.sdk import ContinueSDK
 from .core.core import MessageStep
@@ -11,15 +7,10 @@ from .core.core import MessageStep
 
 class NLDecisionStep(Step):
     user_input: str
-<<<<<<< Updated upstream
-    steps: List[Step]
-    hide: bool = True
     default_step: Union[Step, None] = None
-=======
     steps: List[Tuple[Step, str]]
 
     hide: bool = True
->>>>>>> Stashed changes
 
     async def run(self, sdk: ContinueSDK):
         step_descriptions = "\n".join([
@@ -40,13 +31,8 @@ class NLDecisionStep(Step):
 
         step_to_run = None
         for step in self.steps:
-<<<<<<< Updated upstream
-            if step.name.lower() in resp:
-                step_to_run = step
-=======
             if step[0].name.lower() in resp:
                 step_to_run = step[0]
->>>>>>> Stashed changes
 
         step_to_run = step_to_run or self.default_step or self.steps[0]
 

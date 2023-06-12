@@ -57,10 +57,12 @@ class DemoPolicy(Policy):
                 return ContinueStepStep(prompt=" ".join(user_input.split(" ")[1:]))
             # return EditHighlightedCodeStep(user_input=user_input)
             return NLDecisionStep(user_input=user_input, steps=[
-                EditHighlightedCodeStep(user_input=user_input),
+                (EditHighlightedCodeStep(user_input=user_input),
+                 "Edit the highlighted code"),
                 # AnswerQuestionChroma(question=user_input),
                 # EditFileChroma(request=user_input),
-                SimpleChatStep(user_input=user_input)
+                (SimpleChatStep(user_input=user_input),
+                 "Respond to the user with a chat message"),
             ], default_step=EditHighlightedCodeStep(user_input=user_input))
 
         state = history.get_current()
