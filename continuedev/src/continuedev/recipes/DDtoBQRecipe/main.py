@@ -10,7 +10,7 @@ from .steps import SetUpChessPipelineStep, SwitchDestinationStep, LoadDataStep
 # https://github.com/dlt-hub/dlt/pull/392
 
 
-class DDtoBQRecipeRecipe(Step):
+class DDtoBQRecipe(Step):
     hide: bool = True
 
     async def run(self, sdk: ContinueSDK):
