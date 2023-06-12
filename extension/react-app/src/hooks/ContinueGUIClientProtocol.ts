@@ -8,6 +8,12 @@ abstract class AbstractContinueGUIClientProtocol {
   abstract sendStepUserInput(input: string, index: number): void;
 
   abstract onStateUpdate(state: any): void;
+
+  abstract sendClear(): void;
+
+  abstract retryAtIndex(index: number): void;
+
+  abstract deleteAtIndex(index: number): void;
 }
 
 export default AbstractContinueGUIClientProtocol;

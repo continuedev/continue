@@ -40,6 +40,12 @@ class Autopilot(ContinueBaseModel):
     def get_full_state(self) -> FullState:
         return FullState(history=self.history, active=self._active, user_input_queue=self._main_user_input_queue)
 
+    async def clear_history(self):
+        self.history = History.from_empty()
+        self._main_user_input_queue = []
+        self._active = False
+        await self.update_subscribers()
+
     def on_update(self, callback: Coroutine["FullState", None, None]):
         """Subscribe to changes to state"""
         self._on_update_callbacks.append(callback)
@@ -87,6 +93,10 @@ class Autopilot(ContinueBaseModel):
 
     async def retry_at_index(self, index: int):
         self._retry_queue.post(str(index), None)
+
+    async def delete_at_index(self, index: int):
+        self.history.timeline[index].step.hide = True
+        await self.update_subscribers()
 
     async def _run_singular_step(self, step: "Step", is_future_step: bool = False) -> Coroutine[Observation, None, None]:
         capture_event(
