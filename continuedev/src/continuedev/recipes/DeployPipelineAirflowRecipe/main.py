@@ -5,7 +5,7 @@ from ...core.main import Step
 from ...core.sdk import ContinueSDK
 from ...steps.core.core import WaitForUserInputStep
 from ...steps.main import MessageStep
-from .steps import SetupPipelineStep
+from .steps import SetupPipelineStep, DeployAirflowStep
 
 
 # https://github.com/dlt-hub/dlt-deploy-template/blob/master/airflow-composer/dag_template.py
@@ -19,7 +19,7 @@ class DeployPipelineAirflowRecipe(Step):
     hide: bool = True
 
     async def run(self, sdk: ContinueSDK):
-        text_observation = await sdk.run_step(
+        source_name = await sdk.run_step(
             MessageStep(name="Deploying a pipeline to Airflow", message=dedent("""\
                 This recipe will show you how to deploy a pipeline to Airflow. With the help of Continue, you will:
                 - Select a dlt-verified pipeline
@@ -45,5 +45,6 @@ class DeployPipelineAirflowRecipe(Step):
                 ])
         )
         await sdk.run_step(
-            SetupPipelineStep(source_name=text_observation.text) >>
+            SetupPipelineStep(source_name=source_name) >>
+            DeployAirflowStep(source_name=source_name)
         )
