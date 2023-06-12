@@ -84,6 +84,15 @@ const OnHoverDiv = styled.div`
   animation: ${appear} 0.3s ease-in-out;
 `;
 
+const MarkdownPre = styled.pre`
+  background-color: ${secondaryDark};
+  padding: 10px;
+  border-radius: ${defaultBorderRadius};
+  border: 0.5px solid white;
+`;
+
+const MarkdownCode = styled.code``;
+
 function StepContainer(props: StepContainerProps) {
   const [open, setOpen] = useState(
     typeof props.open === "undefined" ? true : props.open
@@ -182,7 +191,19 @@ function StepContainer(props: StepContainerProps) {
               {props.historyNode.observation.error as string}
             </pre>
           ) : (
-            <ReactMarkdown key={1} className="overflow-scroll">
+            <ReactMarkdown
+              key={1}
+              className="overflow-scroll"
+              components={{
+                pre: ({ node, ...props }) => {
+                  return (
+                    <CodeBlock
+                      children={props.children[0] as string}
+                    ></CodeBlock>
+                  );
+                },
+              }}
+            >
               {props.historyNode.step.description as any}
             </ReactMarkdown>
           )}

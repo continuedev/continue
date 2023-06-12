@@ -7,6 +7,7 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.9"
+diff-match-patch = "^20230430"
 fastapi = "^0.95.1"
 typer = "^0.7.0"
 openai = "^0.27.5"

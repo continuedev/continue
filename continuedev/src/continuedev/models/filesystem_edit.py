@@ -30,8 +30,8 @@ class FileEdit(AtomicFileSystemEdit):
         return FileEdit(map_path(self.filepath, orig_root, copy_root), self.range, self.replacement)
 
     @staticmethod
-    def from_deletion(filepath: str, start: Position, end: Position) -> "FileEdit":
-        return FileEdit(filepath, Range(start, end), "")
+    def from_deletion(filepath: str, range: Range) -> "FileEdit":
+        return FileEdit(filepath=filepath, range=range, replacement="")
 
     @staticmethod
     def from_insertion(filepath: str, position: Position, content: str) -> "FileEdit":

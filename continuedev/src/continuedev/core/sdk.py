@@ -149,3 +149,6 @@ class ContinueSDK(AbstractContinueSDK):
             history_context.append(ChatMessage(
                 content=f"The following code is highlighted:\n```\n{code}\n```", role="user"))
         return history_context
+
+    async def update_ui(self):
+        await self.__autopilot.update_subscribers()
