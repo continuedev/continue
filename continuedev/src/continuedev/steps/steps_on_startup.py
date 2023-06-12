@@ -3,11 +3,13 @@ from .main import UserInputStep
 from ..recipes.CreatePipelineRecipe.main import CreatePipelineRecipe
 from ..recipes.DeployPipelineAirflowRecipe.main import DeployPipelineAirflowRecipe
 
+from ..recipes.AddTransformRecipe.main import AddTransformRecipe
 
 step_name_to_step_class = {
     "UserInputStep": UserInputStep,
     "CreatePipelineRecipe": CreatePipelineRecipe,
-    "DeployPipelineAirflowRecipe": DeployPipelineAirflowRecipe
+    "DeployPipelineAirflowRecipe": DeployPipelineAirflowRecipe,
+    "AddTransformRecipe": AddTransformRecipe
 }
 
 

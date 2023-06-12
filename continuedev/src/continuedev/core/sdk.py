@@ -1,4 +1,6 @@
 from abc import ABC, abstractmethod
+import asyncio
+from functools import cached_property
 from typing import Coroutine, Union
 import os
 
@@ -12,7 +14,7 @@ from ..libs.llm.hf_inference_api import HuggingFaceInferenceAPI
 from ..libs.llm.openai import OpenAI
 from .observation import Observation
 from ..server.ide_protocol import AbstractIdeProtocolServer
-from .main import Context, ContinueCustomException, History, Step
+from .main import Context, ContinueCustomException, History, Step, ChatMessage, ChatMessageRole
 from ..steps.core.core import *
 
 
@@ -20,30 +22,30 @@ class Autopilot:
     pass
 
 
-class ContinueSDKSteps:
-    def __init__(self, sdk: "ContinueSDK"):
-        self.sdk = sdk
-
-
 class Models:
     def __init__(self, sdk: "ContinueSDK"):
         self.sdk = sdk
 
-    async def starcoder(self):
-        api_key = await self.sdk.get_user_secret(
-            'HUGGING_FACE_TOKEN', 'Please add your Hugging Face token to the .env file')
-        return HuggingFaceInferenceAPI(api_key=api_key)
+    @cached_property
+    def starcoder(self):
+        async def load_starcoder():
+            api_key = await self.sdk.get_user_secret(
+                'HUGGING_FACE_TOKEN', 'Please add your Hugging Face token to the .env file')
+            return HuggingFaceInferenceAPI(api_key=api_key)
+        return asyncio.get_event_loop().run_until_complete(load_starcoder())
 
-    async def gpt35(self):
-        api_key = await self.sdk.get_user_secret(
-            'OPENAI_API_KEY', 'Please add your OpenAI API key to the .env file')
-        return OpenAI(api_key=api_key, default_model="gpt-3.5-turbo")
+    @cached_property
+    def gpt35(self):
+        async def load_gpt35():
+            api_key = await self.sdk.get_user_secret(
+                'OPENAI_API_KEY', 'Please add your OpenAI API key to the .env file')
+            return OpenAI(api_key=api_key, default_model="gpt-3.5-turbo")
+        return asyncio.get_event_loop().run_until_complete(load_gpt35())
 
 
 class ContinueSDK(AbstractContinueSDK):
     """The SDK provided as parameters to a step"""
     ide: AbstractIdeProtocolServer
-    steps: ContinueSDKSteps
     models: Models
     context: Context
     __autopilot: Autopilot
@@ -51,7 +53,6 @@ class ContinueSDK(AbstractContinueSDK):
     def __init__(self, autopilot: Autopilot):
         self.ide = autopilot.ide
         self.__autopilot = autopilot
-        self.steps = ContinueSDKSteps(self)
         self.models = Models(self)
         self.context = autopilot.context
 
@@ -76,9 +77,9 @@ class ContinueSDK(AbstractContinueSDK):
     async def wait_for_user_confirmation(self, prompt: str):
         return await self.run_step(WaitForUserConfirmationStep(prompt=prompt))
 
-    async def run(self, commands: Union[List[str], str], cwd: str = None, name: str = None, description: str = None) -> Coroutine[str, None, None]:
+    async def run(self, commands: Union[List[str], str], cwd: str = None, name: str = None, description: str = None, handle_error: bool = True) -> Coroutine[str, None, None]:
         commands = commands if isinstance(commands, List) else [commands]
-        return (await self.run_step(ShellCommandsStep(cmds=commands, cwd=cwd, description=description, **({'name': name} if name else {})))).text
+        return (await self.run_step(ShellCommandsStep(cmds=commands, cwd=cwd, description=description, handle_error=handle_error, **({'name': name} if name else {})))).text
 
     async def edit_file(self, filename: str, prompt: str, name: str = None, description: str = None, range: Range = None):
         filepath = await self._ensure_absolute_path(filename)
@@ -86,7 +87,7 @@ class ContinueSDK(AbstractContinueSDK):
         await self.ide.setFileOpen(filepath)
         contents = await self.ide.readFile(filepath)
         await self.run_step(Gpt35EditCodeStep(
-            range_in_files=[RangeInFile(filepath=filename, range=range) if range is not None else RangeInFile.from_entire_file(
+            range_in_files=[RangeInFile(filepath=filepath, range=range) if range is not None else RangeInFile.from_entire_file(
                 filepath, contents)],
             user_input=prompt,
             description=description,
@@ -135,3 +136,11 @@ class ContinueSDK(AbstractContinueSDK):
 
     def raise_exception(self, message: str, title: str, with_step: Union[Step, None] = None):
         raise ContinueCustomException(message, title, with_step)
+
+    def add_chat_context(self, content: str, role: ChatMessageRole = "assistent"):
+        self.history.timeline[self.history.current_index].step.chat_context.append(
+            ChatMessage(content=content, role=role))
+
+    @property
+    def chat_context(self) -> List[ChatMessage]:
+        return self.history.to_chat_history()

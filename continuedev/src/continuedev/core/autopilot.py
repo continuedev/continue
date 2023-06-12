@@ -1,3 +1,4 @@
+from functools import cached_property
 import traceback
 import time
 from typing import Any, Callable, Coroutine, Dict, List
@@ -26,13 +27,15 @@ class Autopilot(ContinueBaseModel):
     _main_user_input_queue: List[str] = []
 
     _user_input_queue = AsyncSubscriptionQueue()
+    _retry_queue = AsyncSubscriptionQueue()
 
-    @property
+    @cached_property
     def continue_sdk(self) -> ContinueSDK:
         return ContinueSDK(self)
 
     class Config:
         arbitrary_types_allowed = True
+        keep_untouched = (cached_property,)
 
     def get_full_state(self) -> FullState:
         return FullState(history=self.history, active=self._active, user_input_queue=self._main_user_input_queue)
@@ -83,9 +86,7 @@ class Autopilot(ContinueBaseModel):
     _step_depth: int = 0
 
     async def retry_at_index(self, index: int):
-        step = self.history.timeline[index].step.copy()
-        await self.update_subscribers()
-        await self._run_singular_step(step)
+        self._retry_queue.post(str(index), None)
 
     async def _run_singular_step(self, step: "Step", is_future_step: bool = False) -> Coroutine[Observation, None, None]:
         capture_event(
@@ -109,50 +110,62 @@ class Autopilot(ContinueBaseModel):
         # Try to run step and handle errors
         self._step_depth += 1
 
+        caught_error = False
         try:
             observation = await step(self.continue_sdk)
-        except ContinueCustomException as e:
+        except Exception as e:
+            caught_error = True
+
+            is_continue_custom_exception = issubclass(
+                e.__class__, ContinueCustomException)
+
+            error_string = e.message if is_continue_custom_exception else '\n\n'.join(
+                traceback.format_tb(e.__traceback__)) + f"\n\n{e.__repr__()}"
+            error_title = e.title if is_continue_custom_exception else e.__repr__()
+
             # Attach an InternalErrorObservation to the step and unhide it.
-            error_string = e.message
-            print(
-                f"\n{error_string}\n{e}")
+            print(f"Error while running step: \n{error_string}\n{error_title}")
 
             observation = InternalErrorObservation(
-                error=error_string, title=e.title)
+                error=error_string, title=error_title)
 
             # Reveal this step, but hide all of the following steps (its substeps)
+            step_was_hidden = step.hide
+
             step.hide = False
             i = self.history.get_current_index()
             while self.history.timeline[i].step.name != step.name:
                 self.history.timeline[i].step.hide = True
                 i -= 1
 
-            if e.with_step is not None:
+            # i is now the index of the step that we want to show/rerun
+            self.history.timeline[i].observation = observation
+
+            await self.update_subscribers()
+
+            # ContinueCustomException can optionally specify a step to run on the error
+            if is_continue_custom_exception and e.with_step is not None:
                 await self._run_singular_step(e.with_step)
 
-        except Exception as e:
-            # Attach an InternalErrorObservation to the step and unhide it.
-            error_string = '\n\n'.join(
-                traceback.format_tb(e.__traceback__)) + f"\n\n{e.__repr__()}"
-            print(
-                f"Error while running step: \n{error_string}\n{e}")
-
-            observation = InternalErrorObservation(
-                error=error_string, title=e.__repr__())
-
-            # Reveal this step, but hide all of the following steps (its substeps)
-            step.hide = False
-            i = self.history.get_current_index()
-            while self.history.timeline[i].step.name != step.name:
-                self.history.timeline[i].step.hide = True
-                i -= 1
+            # Wait for a retry signal and then resume the step
+            self._active = False
+            await self._retry_queue.get(str(i))
+            self._active = True
+            # You might consider a "ignore and continue" button
+            # want it to have same step depth, so have to decrement
+            self._step_depth -= 1
+            copy_step = step.copy()
+            copy_step.hide = step_was_hidden
+            observation = await self._run_singular_step(copy_step)
+            self._step_depth += 1
 
         self._step_depth -= 1
 
-        # Add observation to history
-        self.history.get_last_at_depth(
-            self._step_depth, include_current=True).observation = observation
-        await self.update_subscribers()
+        # Add observation to history, unless already attached error observation
+        if not caught_error:
+            self.history.get_last_at_depth(
+                self._step_depth, include_current=True).observation = observation
+            await self.update_subscribers()
 
         # Update its description
         if step.description is None:
@@ -189,8 +202,7 @@ class Autopilot(ContinueBaseModel):
         self._active = False
 
         # Doing this so active can make it to the frontend after steps are done. But want better state syncing tools
-        for callback in self._on_update_callbacks:
-            await callback(None)
+        await self.update_subscribers()
 
     async def run_from_observation(self, observation: Observation):
         next_step = self.policy.next(self.history)

@@ -1,3 +1,5 @@
+from typing import List
+from ...core.main import ChatMessage
 from ..llm import LLM
 import requests
 
@@ -9,7 +11,7 @@ class HuggingFaceInferenceAPI(LLM):
     api_key: str
     model: str = "bigcode/starcoder"
 
-    def complete(self, prompt: str, **kwargs):
+    def complete(self, prompt: str, with_history: List[ChatMessage] = [], **kwargs):
         """Return the completion of the text with the given temperature."""
         API_URL = f"https://api-inference.huggingface.co/models/{self.model}"
         headers = {
