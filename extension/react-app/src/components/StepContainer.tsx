@@ -178,7 +178,7 @@ function StepContainer(props: StepContainerProps) {
         <ContentDiv hidden={!open}>
           {open && false && (
             <>
-              <pre className="overflow-scroll">
+              <pre className="overflow-x-scroll">
                 Step Details:
                 <br />
                 {JSON.stringify(props.historyNode.step, null, 2)}
