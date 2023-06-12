@@ -1,9 +1,16 @@
-from typing import Callable, Coroutine, Dict, Generator, List, Tuple, Union
+from textwrap import dedent
+from typing import Callable, Coroutine, Dict, Generator, List, Literal, Tuple, Union
 
 from ..models.main import ContinueBaseModel
 from pydantic import validator
-from ..libs.llm import LLM
 from .observation import Observation
+
+ChatMessageRole = Literal["assistant", "user", "system"]
+
+
+class ChatMessage(ContinueBaseModel):
+    role: ChatMessageRole
+    content: str
 
 
 class HistoryNode(ContinueBaseModel):
@@ -12,11 +19,23 @@ class HistoryNode(ContinueBaseModel):
     observation: Union[Observation, None]
     depth: int
 
+    def to_chat_messages(self) -> List[ChatMessage]:
+        if self.step.description is None:
+            return self.step.chat_context
+        return self.step.chat_context + [ChatMessage(role="assistant", content=self.step.description)]
+
 
 class History(ContinueBaseModel):
     """A history of steps taken and their results"""
     timeline: List[HistoryNode]
     current_index: int
+
+    def to_chat_history(self) -> List[ChatMessage]:
+        msgs = []
+        for node in self.timeline:
+            if not node.step.hide:
+                msgs += node.to_chat_messages()
+        return msgs
 
     def add_node(self, node: HistoryNode):
         self.timeline.insert(self.current_index + 1, node)
@@ -113,6 +132,7 @@ class Step(ContinueBaseModel):
     description: Union[str, None] = None
 
     system_message: Union[str, None] = None
+    chat_context: List[ChatMessage] = []
 
     class Config:
         copy_on_model_validation = False

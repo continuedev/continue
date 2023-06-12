@@ -138,7 +138,7 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
             "sessionId": session_id
         })
 
-    async def highlightCode(self, range_in_file: RangeInFile, color: str):
+    async def highlightCode(self, range_in_file: RangeInFile, color: str = "#00ff0022"):
         await self._send_json("highlightCode", {
             "rangeInFile": range_in_file.dict(),
             "color": color
