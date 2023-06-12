@@ -3,6 +3,7 @@ from typing import List, Tuple, Type
 from ..steps.chroma import AnswerQuestionChroma, EditFileChroma, CreateCodebaseIndexChroma
 from ..steps.steps_on_startup import StepsOnStartupStep
 from ..recipes.CreatePipelineRecipe.main import CreatePipelineRecipe
+from ..recipes.DeployPipelineAirflowRecipe.main import DeployPipelineAirflowRecipe
 from ..recipes.AddTransformRecipe.main import AddTransformRecipe
 from .main import Step, Validator, History, Policy
 from .observation import Observation, TracebackObservation, UserInputObservation
@@ -32,6 +33,8 @@ class DemoPolicy(Policy):
                 return WritePytestsRecipe(instructions=observation.user_input)
             elif "/dlt" in observation.user_input.lower():
                 return CreatePipelineRecipe()
+            elif "/airflow" in observation.user_input.lower():
+                return DeployPipelineAirflowRecipe()
             elif "/transform" in observation.user_input.lower():
                 return AddTransformRecipe()
             elif "/comment" in observation.user_input.lower():
