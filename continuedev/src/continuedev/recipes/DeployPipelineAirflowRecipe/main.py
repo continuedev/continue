@@ -5,7 +5,7 @@ from ...core.main import Step
 from ...core.sdk import ContinueSDK
 from ...steps.core.core import WaitForUserInputStep
 from ...steps.core.core import MessageStep
-from .steps import SetupPipelineStep, DeployAirflowStep
+from .steps import SetupPipelineStep, DeployAirflowStep, RunPipelineStep
 
 
 # https://github.com/dlt-hub/dlt-deploy-template/blob/master/airflow-composer/dag_template.py
@@ -46,5 +46,6 @@ class DeployPipelineAirflowRecipe(Step):
         )
         await sdk.run_step(
             SetupPipelineStep(source_name=source_name) >>
+            RunPipelineStep(source_name=source_name) >>
             DeployAirflowStep(source_name=source_name)
         )

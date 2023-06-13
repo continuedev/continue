@@ -26,7 +26,7 @@ class DemoPolicy(Policy):
         # At the very start, run initial Steps spcecified in the config
         if history.get_current() is None:
             return (
-                # MessageStep(name="Welcome to Continue!", message="") >>
+                MessageStep(name="Welcome to Continue!", message="You can type a question or instructions for a file edit in the text box. If you highlight code, edits will be localized to the highlighted range. Otherwise, the currently open file is taken as context. If you type '/', you can see the list of available slash commands.") >>
                 # SetupContinueWorkspaceStep() >>
                 # CreateCodebaseIndexChroma() >>
                 StepsOnStartupStep())

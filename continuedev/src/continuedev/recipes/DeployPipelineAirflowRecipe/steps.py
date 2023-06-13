@@ -69,12 +69,14 @@ class DeployAirflowStep(Step):
             f'dlt --non-interactive deploy {self.source_name}_pipeline.py airflow-composer',
         ], description="Running `dlt deploy airflow` to deploy the dlt pipeline to Airflow", name="Deploy dlt pipeline to Airflow")
 
-        # Modify the DAG file
+        # Get filepaths, open the DAG file
         directory = await sdk.ide.getWorkspaceDirectory()
         pipeline_filepath = os.path.join(
             directory, f"{self.source_name}_pipeline.py")
         dag_filepath = os.path.join(
             directory, f"dags/dag_{self.source_name}_pipeline.py")
+
+        await sdk.ide.setFileOpen(dag_filepath)
 
         # Replace the pipeline name and dataset name
         await sdk.run_step(FindAndReplaceStep(filepath=pipeline_filepath, pattern="'pipeline_name'", replacement=f"'{self.source_name}_pipeline'"))
@@ -82,11 +84,11 @@ class DeployAirflowStep(Step):
         await sdk.run_step(FindAndReplaceStep(filepath=pipeline_filepath, pattern="pipeline_or_source_script", replacement=f"{self.source_name}_pipeline"))
 
         # Prompt the user for the DAG schedule
-        edit_dag_range = Range.from_shorthand(18, 0, 23, 0)
-        await sdk.ide.highlightCode(range_in_file=RangeInFile(filepath=dag_filepath, range=edit_dag_range), color="#33993333")
-        response = await sdk.run_step(WaitForUserInputStep(prompt="When would you like this Airflow DAG to run? (e.g. every day, every Monday, every 1st of the month, etc.)"))
-        await sdk.edit_file(dag_filepath, prompt=f"Edit the DAG so that it runs at the following schedule: '{response.text}'",
-                            range=edit_dag_range)
+        # edit_dag_range = Range.from_shorthand(18, 0, 23, 0)
+        # await sdk.ide.highlightCode(range_in_file=RangeInFile(filepath=dag_filepath, range=edit_dag_range), color="#33993333")
+        # response = await sdk.run_step(WaitForUserInputStep(prompt="When would you like this Airflow DAG to run? (e.g. every day, every Monday, every 1st of the month, etc.)"))
+        # await sdk.edit_file(dag_filepath, prompt=f"Edit the DAG so that it runs at the following schedule: '{response.text}'",
+        #                     range=edit_dag_range)
 
         # Tell the user to check the schedule and fill in owner, email, other default_args
         await sdk.run_step(MessageStep(message="Fill in the owner, email, and other default_args in the DAG file with your own personal information. Then the DAG will be ready to run!", name="Fill in default_args"))
