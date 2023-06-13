@@ -1,5 +1,5 @@
 from ..core.main import ContinueSDK, Models, Step
-from .main import StarCoderEditHighlightedCodeStep
+from .main import EditHighlightedCodeStep
 
 
 class CommentCodeStep(Step):
@@ -9,4 +9,4 @@ class CommentCodeStep(Step):
         return "Writing comments"
 
     async def run(self, sdk: ContinueSDK):
-        await sdk.run_step(StarCoderEditHighlightedCodeStep(user_input="Wrote comprehensive comments in the canonical format for every class and function"))
+        await sdk.run_step(EditHighlightedCodeStep(user_input="Write comprehensive comments in the canonical format for every class and function"))

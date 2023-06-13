@@ -242,14 +242,14 @@ function GUI(props: GUIProps) {
       let input = mainTextInputRef.current.value;
 
       if (
-        history &&
+        history?.timeline.length &&
         history.timeline[history.current_index].step.name ===
           "Waiting for user input"
       ) {
         if (input.trim() === "") return;
         onStepUserInput(input, history!.current_index);
       } else if (
-        history &&
+        history?.timeline.length &&
         history.timeline[history.current_index].step.name ===
           "Waiting for user confirmation"
       ) {
@@ -344,7 +344,7 @@ function GUI(props: GUIProps) {
 
       <ComboBox
         disabled={
-          history
+          history?.timeline.length
             ? history.timeline[history.current_index].step.name ===
               "Waiting for user confirmation"
             : false

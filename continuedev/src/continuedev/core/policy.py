@@ -41,15 +41,11 @@ class DemoPolicy(Policy):
                 after_command = " ".join(user_input.split(" ")[1:])
                 for slash_command in config.slash_commands:
                     if slash_command.name == command_name[1:]:
-                        return get_step_from_name(slash_command.step_name, slash_command.params)
+                        params = slash_command.params
+                        params["user_input"] = after_command
+                        return get_step_from_name(slash_command.step_name, params)
 
-            if "/pytest" in user_input.lower():
-                return WritePytestsRecipe(instructions=user_input)
-            if "/pytest" in observation.user_input.lower():
-                return WritePytestsRecipe(instructions=observation.user_input)
-            elif "/comment" in observation.user_input.lower():
-                return CommentCodeStep()
-            elif "/ask" in user_input:
+            if "/ask" in user_input:
                 return AnswerQuestionChroma(question=" ".join(user_input.split(" ")[1:]))
             elif "/edit" in user_input:
                 return EditFileChroma(request=" ".join(user_input.split(" ")[1:]))
