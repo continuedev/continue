@@ -9,6 +9,10 @@ abstract class AbstractContinueGUIClientProtocol {
 
   abstract onStateUpdate(state: any): void;
 
+  abstract onAvailableSlashCommands(
+    callback: (commands: { name: string; description: string }[]) => void
+  ): void;
+
   abstract sendClear(): void;
 
   abstract retryAtIndex(index: number): void;

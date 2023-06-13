@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, Dict, List
 from abc import ABC, abstractmethod
 
 
@@ -26,6 +26,10 @@ class AbstractGUIProtocolServer(ABC):
     @abstractmethod
     async def send_state_update(self, state: dict):
         """Send a state update to the client"""
+
+    @abstractmethod
+    async def send_available_slash_commands(self, commands: List[Dict]):
+        """Send a list of available slash commands to the client"""
 
     @abstractmethod
     def on_retry_at_index(self, index: int):

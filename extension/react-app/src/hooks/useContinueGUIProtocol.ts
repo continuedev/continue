@@ -45,6 +45,16 @@ class ContinueGUIClientProtocol extends AbstractContinueGUIClientProtocol {
     });
   }
 
+  onAvailableSlashCommands(
+    callback: (commands: { name: string; description: string }[]) => void
+  ) {
+    this.messenger.onMessageType("available_slash_commands", (data: any) => {
+      if (data.commands) {
+        callback(data.commands);
+      }
+    });
+  }
+
   sendClear() {
     this.messenger.send("clear_history", {});
   }
