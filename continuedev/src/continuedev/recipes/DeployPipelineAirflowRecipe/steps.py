@@ -28,15 +28,15 @@ class SetupPipelineStep(Step):
 
     async def run(self, sdk: ContinueSDK):
         await sdk.run([
-            'python3 -m venv env',
-            'source env/bin/activate',
+            'python3 -m venv .env',
+            'source .env/bin/activate',
             'pip install dlt',
             f'dlt --non-interactive init {self.source_name} duckdb',
             'pip install -r requirements.txt'
         ], description=dedent(f"""\
             Running the following commands:
-            - `python3 -m venv env`: Create a Python virtual environment
-            - `source env/bin/activate`: Activate the virtual environment
+            - `python3 -m venv .env`: Create a Python virtual environment
+            - `source .env/bin/activate`: Activate the virtual environment
             - `pip install dlt`: Install dlt
             - `dlt init {self.source_name} duckdb`: Create a new dlt pipeline called {self.source_name} that loads data into a local DuckDB instance
             - `pip install -r requirements.txt`: Install the Python dependencies for the pipeline"""), name="Setup Python environment")

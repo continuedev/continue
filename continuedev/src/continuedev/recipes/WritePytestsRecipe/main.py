@@ -9,6 +9,9 @@ class WritePytestsRecipe(Step):
     for_filepath: Union[str, None] = None
     user_input: str = "Write unit tests for this file."
 
+    async def describe(self, models):
+        return f"Writing unit tests for {self.for_filepath}"
+
     async def run(self, sdk: ContinueSDK):
         if self.for_filepath is None:
             self.for_filepath = (await sdk.ide.getOpenFiles())[0]

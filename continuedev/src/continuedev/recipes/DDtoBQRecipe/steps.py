@@ -27,15 +27,15 @@ class SetUpChessPipelineStep(Step):
 
         # running commands to get started when creating a new dlt pipeline
         await sdk.run([
-            'python3 -m venv env',
-            'source env/bin/activate',
+            'python3 -m venv .env',
+            'source .env/bin/activate',
             'pip install dlt',
             'dlt --non-interactive init chess duckdb',
             'pip install -r requirements.txt',
         ], name="Set up Python environment", description=dedent(f"""\
             Running the following commands:
-            - `python3 -m venv env`: Create a Python virtual environment
-            - `source env/bin/activate`: Activate the virtual environment
+            - `python3 -m venv .env`: Create a Python virtual environment
+            - `source .env/bin/activate`: Activate the virtual environment
             - `pip install dlt`: Install dlt
             - `dlt init chess duckdb`: Create a new dlt pipeline called "chess" that loads data into a local DuckDB instance
             - `pip install -r requirements.txt`: Install the Python dependencies for the pipeline"""))
@@ -75,7 +75,7 @@ class LoadDataStep(Step):
 
     async def run(self, sdk: ContinueSDK):
         # Run the pipeline again to load data to BigQuery
-        output = await sdk.run('env/bin/python3 chess_pipeline.py', name="Load data to BigQuery", description="Running `env/bin/python3 chess_pipeline.py` to load data to Google BigQuery")
+        output = await sdk.run('.env/bin/python3 chess_pipeline.py', name="Load data to BigQuery", description="Running `.env/bin/python3 chess_pipeline.py` to load data to Google BigQuery")
 
         if "Traceback" in output or "SyntaxError" in output:
             with open(os.path.join(os.path.dirname(__file__), "dlt_duckdb_to_bigquery_docs.md"), "r") as f:
