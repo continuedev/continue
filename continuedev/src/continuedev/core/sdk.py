@@ -1,4 +1,3 @@
-from abc import ABC, abstractmethod
 import asyncio
 from functools import cached_property
 from typing import Coroutine, Union
@@ -119,8 +118,9 @@ class ContinueSDK(AbstractContinueSDK):
     async def get_user_secret(self, env_var: str, prompt: str) -> str:
         return await self.ide.getUserSecret(env_var)
 
-    async def get_config(self) -> ContinueConfig:
-        dir = await self.ide.getWorkspaceDirectory()
+    @property
+    def config(self) -> ContinueConfig:
+        dir = self.ide.workspace_directory
         yaml_path = os.path.join(dir, '.continue', 'config.yaml')
         json_path = os.path.join(dir, '.continue', 'config.json')
         if os.path.exists(yaml_path):
@@ -141,6 +141,14 @@ class ContinueSDK(AbstractContinueSDK):
         self.history.timeline[self.history.current_index].step.chat_context.append(
             ChatMessage(content=content, role=role))
 
-    @property
-    def chat_context(self) -> List[ChatMessage]:
-        return self.history.to_chat_history()
+    async def get_chat_context(self) -> List[ChatMessage]:
+        history_context = self.history.to_chat_history()
+        highlighted_code = await self.ide.getHighlightedCode()
+        for rif in highlighted_code:
+            code = await self.ide.readRangeInFile(rif)
+            history_context.append(ChatMessage(
+                content=f"The following code is highlighted:\n```\n{code}\n```", role="user"))
+        return history_context
+
+    async def update_ui(self):
+        await self.__autopilot.update_subscribers()

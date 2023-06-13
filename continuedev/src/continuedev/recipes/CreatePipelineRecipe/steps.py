@@ -6,11 +6,10 @@ import time
 from ...models.main import Range
 from ...models.filesystem import RangeInFile
 from ...steps.core.core import MessageStep
-from ...core.sdk import Models
 from ...core.observation import DictObservation, InternalErrorObservation
 from ...models.filesystem_edit import AddFile, FileEdit
 from ...core.main import Step
-from ...core.sdk import ContinueSDK
+from ...core.sdk import ContinueSDK, Models
 
 AI_ASSISTED_STRING = "(✨ AI-Assisted ✨)"
 

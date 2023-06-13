@@ -28,6 +28,7 @@ class DemoAutopilot(Autopilot):
     cumulative_edit_string = ""
 
     def handle_manual_edits(self, edits: List[FileEditWithFullContents]):
+        return
         for edit in edits:
             self.cumulative_edit_string += edit.fileEdit.replacement
             self._manual_edits_buffer.append(edit)

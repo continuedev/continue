@@ -143,3 +143,21 @@ export const appear = keyframes`
         transform: translateY(0px);
     }
 `;
+
+export const HeaderButton = styled.button`
+  background-color: transparent;
+  border: 1px solid white;
+  border-radius: ${defaultBorderRadius};
+  cursor: pointer;
+  color: white;
+
+  &:hover {
+    background-color: white;
+    color: black;
+  }
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 1px;
+`;

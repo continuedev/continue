@@ -4,6 +4,7 @@ import {
   vscBackground,
   Loader,
   MainTextInput,
+  HeaderButton,
 } from "../components";
 import ContinueButton from "../components/ContinueButton";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -11,7 +12,8 @@ import { History } from "../../../schema/History";
 import { HistoryNode } from "../../../schema/HistoryNode";
 import StepContainer from "../components/StepContainer";
 import useContinueGUIProtocol from "../hooks/useWebsocket";
-
+import { BookOpen, Trash } from "@styled-icons/heroicons-outline";
+import ComboBox from "../components/ComboBox";
 let TopGUIDiv = styled.div`
   display: grid;
   grid-template-columns: 1fr;
@@ -26,6 +28,14 @@ let UserInputQueueItem = styled.div`
   text-align: center;
 `;
 
+const TopBar = styled.div`
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  padding: 8px;
+  align-items: center;
+`;
+
 interface GUIProps {
   firstObservation?: any;
 }
@@ -33,15 +43,18 @@ interface GUIProps {
 function GUI(props: GUIProps) {
   const [waitingForSteps, setWaitingForSteps] = useState(false);
   const [userInputQueue, setUserInputQueue] = useState<string[]>([]);
+  const [availableSlashCommands, setAvailableSlashCommands] = useState<
+    { name: string; description: string }[]
+  >([]);
   const [history, setHistory] = useState<History | undefined>();
-  //   {
+  // {
   //   timeline: [
   //     {
   //       step: {
   //         name: "Waiting for user input",
   //         cmd: "python3 /Users/natesesti/Desktop/continue/extension/examples/python/main.py",
   //         description:
-  //           "Run `python3 /Users/natesesti/Desktop/continue/extension/examples/python/main.py`",
+  //           "Run `python3 /Users/natesesti/Desktop/continue/extension/examples/python/main.py` and ```\nprint(sum(first, second))\n```\n- Testing\n- Testing 2\n- Testing 3",
   //       },
   //       observation: {
   //         title: "ERROR FOUND",
@@ -92,7 +105,7 @@ function GUI(props: GUIProps) {
   //         prompt:
   //           "I ran into this problem with my Python code:\n\n                Traceback (most recent call last):\n  File \"/Users/natesesti/Desktop/continue/extension/examples/python/main.py\", line 7, in <module>\n    print(sum(first, second))\n          ^^^^^^^^^^^^^^^^^^\n  File \"/Users/natesesti/Desktop/continue/extension/examples/python/sum.py\", line 2, in sum\n    return a + b\n           ~~^~~\nTypeError: unsupported operand type(s) for +: 'int' and 'str'\n\n                Below are the files that might need to be fixed:\n\n                {code}\n\n                This is what the code should be in order to avoid the problem:\n",
   //         description:
-  //           "Editing files: /Users/natesesti/Desktop/continue/extension/examples/python/main.py",
+  //           "Run `python3 /Users/natesesti/Desktop/continue/extension/examples/python/main.py` and\n```python\nprint(sum(first, second))\n```\n- Testing\n- Testing 2\n- Testing 3",
   //       },
   //       output: [
   //         null,
@@ -154,22 +167,30 @@ function GUI(props: GUIProps) {
   //       output: [null, null],
   //     },
   //   ],
-  //   current_index: 0,
+  //   current_index: 3,
   // } as any);
 
   const topGuiDivRef = useRef<HTMLDivElement>(null);
   const client = useContinueGUIProtocol();
 
+  const [scrollTimeout, setScrollTimeout] = useState<NodeJS.Timeout | null>(
+    null
+  );
   const scrollToBottom = useCallback(() => {
+    if (scrollTimeout) {
+      clearTimeout(scrollTimeout);
+    }
+    // Debounced smooth scroll to bottom of screen
     if (topGuiDivRef.current) {
-      setTimeout(() => {
+      const timeout = setTimeout(() => {
         window.scrollTo({
           top: window.outerHeight,
           behavior: "smooth",
         });
-      }, 100);
+      }, 200);
+      setScrollTimeout(timeout);
     }
-  }, [topGuiDivRef.current]);
+  }, [topGuiDivRef.current, scrollTimeout]);
 
   useEffect(() => {
     console.log("CLIENT ON STATE UPDATE: ", client, client?.onStateUpdate);
@@ -181,13 +202,24 @@ function GUI(props: GUIProps) {
 
       scrollToBottom();
     });
+    client?.onAvailableSlashCommands((commands) => {
+      console.log("Received available slash commands: ", commands);
+      setAvailableSlashCommands(
+        commands.map((c) => {
+          return {
+            name: "/" + c.name,
+            description: c.description,
+          };
+        })
+      );
+    });
   }, [client]);
 
   useEffect(() => {
     scrollToBottom();
   }, [waitingForSteps]);
 
-  const mainTextInputRef = useRef<HTMLTextAreaElement>(null);
+  const mainTextInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (mainTextInputRef.current) {
@@ -230,8 +262,6 @@ function GUI(props: GUIProps) {
           return [...queue, input];
         });
       }
-      mainTextInputRef.current.value = "";
-      mainTextInputRef.current.style.height = "";
     }
 
     setWaitingForSteps(true);
@@ -253,6 +283,24 @@ function GUI(props: GUIProps) {
         }
       }}
     >
+      <TopBar>
+        <a href="https://continue.dev/docs" className="no-underline">
+          <HeaderButton style={{ padding: "3px" }}>
+            Continue Docs
+            <BookOpen size="1.6em" />
+          </HeaderButton>
+        </a>
+        <HeaderButton
+          onClick={() => {
+            client?.sendClear();
+          }}
+          style={{ padding: "3px" }}
+        >
+          Clear History
+          <Trash size="1.6em" />
+        </HeaderButton>
+      </TopBar>
+
       {typeof client === "undefined" && (
         <>
           <Loader></Loader>
@@ -280,6 +328,9 @@ function GUI(props: GUIProps) {
               client?.retryAtIndex(index);
               setWaitingForSteps(true);
             }}
+            onDelete={() => {
+              client?.deleteAtIndex(index);
+            }}
           />
         );
       })}
@@ -291,7 +342,7 @@ function GUI(props: GUIProps) {
         })}
       </div>
 
-      <MainTextInput
+      <ComboBox
         disabled={
           history
             ? history.timeline[history.current_index].step.name ===
@@ -299,22 +350,13 @@ function GUI(props: GUIProps) {
             : false
         }
         ref={mainTextInputRef}
-        onKeyDown={(e) => {
-          if (e.key === "Enter") {
-            onMainTextInput();
-            e.stopPropagation();
-            e.preventDefault();
-          }
+        onEnter={(e) => {
+          onMainTextInput();
+          e.stopPropagation();
+          e.preventDefault();
         }}
-        rows={1}
-        onChange={() => {
-          const textarea = mainTextInputRef.current!;
-          textarea.style.height = ""; /* Reset the height*/
-          textarea.style.height = `${Math.min(
-            textarea.scrollHeight - 15,
-            500
-          )}px`;
-        }}
+        onInputValueChange={() => {}}
+        items={availableSlashCommands}
       />
       <ContinueButton onClick={onMainTextInput} />
     </TopGUIDiv>

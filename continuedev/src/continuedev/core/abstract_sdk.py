@@ -76,8 +76,8 @@ class AbstractContinueSDK(ABC):
     async def get_user_secret(self, env_var: str, prompt: str) -> str:
         pass
 
-    @abstractmethod
-    async def get_config(self) -> ContinueConfig:
+    @abstractproperty
+    def config(self) -> ContinueConfig:
         pass
 
     @abstractmethod
@@ -88,6 +88,6 @@ class AbstractContinueSDK(ABC):
     def add_chat_context(self, content: str, role: ChatMessageRole = "assistent"):
         pass
 
-    @abstractproperty
-    def chat_context(self) -> List[ChatMessage]:
+    @abstractmethod
+    async def get_chat_context(self) -> List[ChatMessage]:
         pass

@@ -118,11 +118,15 @@ class Models:
     pass
 
 
+class ContinueConfig:
+    pass
+
+
 class Policy(ContinueBaseModel):
     """A rule that determines which step to take next"""
 
     # Note that history is mutable, kinda sus
-    def next(self, history: History = History.from_empty()) -> "Step":
+    def next(self, config: ContinueConfig, history: History = History.from_empty()) -> "Step":
         raise NotImplementedError
 
 

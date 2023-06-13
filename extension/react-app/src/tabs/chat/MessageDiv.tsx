@@ -58,7 +58,9 @@ function MessageDiv(props: ChatMessage) {
   }, [richContent, isStreaming]);
 
   useEffect(() => {
-    setRichContent([<ReactMarkdown key={1}>{props.content}</ReactMarkdown>]);
+    setRichContent([
+      <ReactMarkdown key={1} children={props.content}></ReactMarkdown>,
+    ]);
   }, [props.content]);
 
   return (

@@ -77,6 +77,10 @@ class GUIProtocolServer(AbstractGUIProtocolServer):
                 self.on_reverse_to_index(data["index"])
             elif message_type == "retry_at_index":
                 self.on_retry_at_index(data["index"])
+            elif message_type == "clear_history":
+                self.on_clear_history()
+            elif message_type == "delete_at_index":
+                self.on_delete_at_index(data["index"])
         except Exception as e:
             print(e)
 
@@ -84,6 +88,12 @@ class GUIProtocolServer(AbstractGUIProtocolServer):
         state = self.session.autopilot.get_full_state().dict()
         await self._send_json("state_update", {
             "state": state
+        })
+
+    async def send_available_slash_commands(self):
+        commands = await self.session.autopilot.get_available_slash_commands()
+        await self._send_json("available_slash_commands", {
+            "commands": commands
         })
 
     def on_main_input(self, input: str):
@@ -106,6 +116,12 @@ class GUIProtocolServer(AbstractGUIProtocolServer):
         asyncio.create_task(
             self.session.autopilot.retry_at_index(index))
 
+    def on_clear_history(self):
+        asyncio.create_task(self.session.autopilot.clear_history())
+
+    def on_delete_at_index(self, index: int):
+        asyncio.create_task(self.session.autopilot.delete_at_index(index))
+
 
 @router.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket, session: Session = Depends(websocket_session)):
@@ -117,6 +133,7 @@ async def websocket_endpoint(websocket: WebSocket, session: Session = Depends(we
     protocol.websocket = websocket
 
     # Update any history that may have happened before connection
+    await protocol.send_available_slash_commands()
     await protocol.send_state_update()
 
     while AppStatus.should_exit is False:

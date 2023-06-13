@@ -14,7 +14,7 @@
   "displayName": "Continue",
   "pricing": "Free",
   "description": "Refine code 10x faster",
-  "version": "0.0.34",
+  "version": "0.0.35",
   "publisher": "Continue",
   "engines": {
     "vscode": "^1.74.0"
@@ -55,92 +55,12 @@
     },
     "commands": [
       {
-        "command": "continue.writeDocstring",
-        "category": "Continue",
-        "title": "Write a docstring for the current function"
-      },
-      {
         "command": "continue.openContinueGUI",
         "category": "Continue",
         "title": "Open Continue GUI"
-      },
-      {
-        "command": "continue.askQuestionFromInput",
-        "Category": "Continue",
-        "title": "Ask a question from input box"
-      },
-      {
-        "command": "continue.openCapturedTerminal",
-        "Category": "Continue",
-        "title": "Open Captured Terminal"
-      },
-      {
-        "command": "continue.askQuestion",
-        "Category": "Continue",
-        "title": "Ask a question from webview"
-      },
-      {
-        "command": "continue.createTerminal",
-        "category": "Continue",
-        "title": "Create Terminal"
-      },
-      {
-        "command": "continue.debugTest",
-        "category": "Continue",
-        "title": "Debug Test"
-      },
-      {
-        "command": "continue.suggestionDown",
-        "category": "Continue",
-        "title": "Suggestion Down"
-      },
-      {
-        "command": "continue.suggestionUp",
-        "category": "Continue",
-        "title": "Suggestion Up"
-      },
-      {
-        "command": "continue.acceptSuggestion",
-        "category": "Continue",
-        "title": "Accept Suggestion"
-      },
-      {
-        "command": "continue.rejectSuggestion",
-        "category": "Continue",
-        "title": "Reject Suggestion"
-      },
-      {
-        "command": "continue.writeUnitTest",
-        "title": "Write Unit Test",
-        "category": "Continue"
-      },
-      {
-        "command": "continue.findSuspiciousCode",
-        "title": "Find Suspicious Code",
-        "category": "Continue"
-      },
-      {
-        "command": "continue.focusContinueInput",
-        "title": "Focus Continue Input",
-        "category": "Continue"
       }
     ],
     "keybindings": [
-      {
-        "command": "continue.suggestionDown",
-        "mac": "shift+ctrl+down",
-        "key": "shift+ctrl+down"
-      },
-      {
-        "command": "continue.suggestionUp",
-        "mac": "shift+ctrl+up",
-        "key": "shift+ctrl+up"
-      },
-      {
-        "command": "continue.acceptSuggestion",
-        "mac": "shift+ctrl+enter",
-        "key": "shift+ctrl+enter"
-      },
       {
         "command": "continue.focusContinueInput",
         "mac": "cmd+k",
@@ -214,6 +134,7 @@
     "@styled-icons/heroicons-outline": "^10.47.0",
     "@vitejs/plugin-react-swc": "^3.3.2",
     "axios": "^1.2.5",
+    "downshift": "^7.6.0",
     "highlight.js": "^11.7.0",
     "posthog-js": "^1.63.3",
     "react-markdown": "^8.0.7",
