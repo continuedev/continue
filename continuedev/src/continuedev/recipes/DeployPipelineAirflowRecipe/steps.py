@@ -65,9 +65,10 @@ class DeployAirflowStep(Step):
     async def run(self, sdk: ContinueSDK):
 
         # Run dlt command to deploy pipeline to Airflow
-        await sdk.run([
-            f'dlt --non-interactive deploy {self.source_name}_pipeline.py airflow-composer',
-        ], description="Running `dlt deploy airflow` to deploy the dlt pipeline to Airflow", name="Deploy dlt pipeline to Airflow")
+        await sdk.run(
+            ['git init',
+                f'dlt --non-interactive deploy {self.source_name}_pipeline.py airflow-composer'],
+            description="Running `dlt deploy airflow` to deploy the dlt pipeline to Airflow", name="Deploy dlt pipeline to Airflow")
 
         # Get filepaths, open the DAG file
         directory = await sdk.ide.getWorkspaceDirectory()
