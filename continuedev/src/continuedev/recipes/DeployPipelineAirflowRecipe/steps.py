@@ -74,7 +74,7 @@ class DeployAirflowStep(Step):
         pipeline_filepath = os.path.join(
             directory, f"{self.source_name}_pipeline.py")
         dag_filepath = os.path.join(
-            directory, f"dags/dag_{self.source_name}.py")
+            directory, f"dags/dag_{self.source_name}_pipeline.py")
 
         # Replace the pipeline name and dataset name
         await sdk.run_step(FindAndReplaceStep(filepath=pipeline_filepath, pattern="'pipeline_name'", replacement=f"'{self.source_name}_pipeline'"))
@@ -89,6 +89,6 @@ class DeployAirflowStep(Step):
                             range=edit_dag_range)
 
         # Tell the user to check the schedule and fill in owner, email, other default_args
-        await sdk.run_step(MessageStep(message="Fill in the owner, email, and other default_args in the DAG file with your own personal information.", name="Fill in default_args"))
+        await sdk.run_step(MessageStep(message="Fill in the owner, email, and other default_args in the DAG file with your own personal information. Then the DAG will be ready to run!", name="Fill in default_args"))
 
         # Run the DAG locally ??
