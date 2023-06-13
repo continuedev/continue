@@ -3,8 +3,10 @@ import os
 import subprocess
 from textwrap import dedent
 from typing import Coroutine, List, Union
-from ...libs.llm.prompt_utils import MarkdownStyleEncoderDecoder
 
+from ...models.main import Range
+from ...libs.util.calculate_diff import calculate_diff2, apply_edit_to_str
+from ...libs.llm.prompt_utils import MarkdownStyleEncoderDecoder
 from ...models.filesystem_edit import EditDiff, FileEdit, FileEditWithFullContents, FileSystemEdit
 from ...models.filesystem import FileSystem, RangeInFile, RangeInFileWithContents
 from ...core.observation import Observation, TextObservation, TracebackObservation, UserInputObservation
@@ -85,7 +87,7 @@ class ShellCommandsStep(Step):
                     {output}
                     ```
 
-                    This is a brief summary of the error followed by a suggestion on how it can be fixed:"""), with_history=sdk.chat_context)
+                    This is a brief summary of the error followed by a suggestion on how it can be fixed:"""), with_history=await sdk.get_chat_context())
 
                 sdk.raise_exception(
                     title="Error while running query", message=output, with_step=MessageStep(name=f"Suggestion to solve error {AI_ASSISTED_STRING}", message=f"{suggestion}\n\nYou can click the retry button on the failed step to try again.")
@@ -149,7 +151,11 @@ class Gpt35EditCodeStep(Step):
     _prompt_and_completion: str = ""
 
     async def describe(self, models: Models) -> Coroutine[str, None, None]:
-        return models.gpt35.complete(f"{self._prompt_and_completion}\n\nPlease give brief a description of the changes made above using markdown bullet points:")
+        description = models.gpt35.complete(
+            f"{self._prompt_and_completion}\n\nPlease give brief a description of the changes made above using markdown bullet points. Be concise and only mention changes made to the commit before, not prefix or suffix:")
+        self.name = models.gpt35.complete(
+            f"Write a short title for this description: {description}")
+        return description
 
     async def run(self, sdk: ContinueSDK) -> Coroutine[Observation, None, None]:
         rif_with_contents = []
@@ -174,10 +180,39 @@ class Gpt35EditCodeStep(Step):
 
             self._prompt_and_completion += prompt + completion
 
-            await sdk.ide.applyFileSystemEdit(
-                FileEdit(filepath=rif.filepath, range=rif.range, replacement=completion))
-            await sdk.ide.saveFile(rif.filepath)
+            # Calculate diff, open file, apply edits, and highlight changed lines
+            edits = calculate_diff2(
+                rif.filepath, rif.contents, completion.removesuffix("\n"))
+
             await sdk.ide.setFileOpen(rif.filepath)
+
+            lines_to_highlight = set()
+            for edit in edits:
+                edit.range.start.line += rif.range.start.line
+                edit.range.start.character += rif.range.start.character
+                edit.range.end.line += rif.range.start.line
+                edit.range.end.character += rif.range.start.character if edit.range.end.line == 0 else 0
+
+                for line in range(edit.range.start.line, edit.range.end.line + 1 + len(edit.replacement.splitlines()) - (edit.range.end.line - edit.range.start.line + 1)):
+                    lines_to_highlight.add(line)
+
+                await sdk.ide.applyFileSystemEdit(edit)
+
+            current_start = None
+            last_line = None
+            for line in sorted(list(lines_to_highlight)):
+                if current_start is None:
+                    current_start = line
+                elif line != last_line + 1:
+                    await sdk.ide.highlightCode(RangeInFile(filepath=edit.filepath, range=Range.from_shorthand(current_start, 0, last_line, 0)))
+                    current_start = line
+
+                last_line = line
+
+            if current_start is not None:
+                await sdk.ide.highlightCode(RangeInFile(filepath=edit.filepath, range=Range.from_shorthand(current_start, 0, last_line, 0)))
+
+            await sdk.ide.saveFile(rif.filepath)
 
 
 class EditFileStep(Step):

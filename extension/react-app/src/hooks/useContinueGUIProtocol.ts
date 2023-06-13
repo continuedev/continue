@@ -45,8 +45,26 @@ class ContinueGUIClientProtocol extends AbstractContinueGUIClientProtocol {
     });
   }
 
+  onAvailableSlashCommands(
+    callback: (commands: { name: string; description: string }[]) => void
+  ) {
+    this.messenger.onMessageType("available_slash_commands", (data: any) => {
+      if (data.commands) {
+        callback(data.commands);
+      }
+    });
+  }
+
+  sendClear() {
+    this.messenger.send("clear_history", {});
+  }
+
   retryAtIndex(index: number) {
     this.messenger.send("retry_at_index", { index });
+  }
+
+  deleteAtIndex(index: number) {
+    this.messenger.send("delete_at_index", { index });
   }
 }
 

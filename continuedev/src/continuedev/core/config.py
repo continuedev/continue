@@ -1,8 +1,17 @@
 import json
 import os
-from pydantic import BaseModel
+from pydantic import BaseModel, validator
 from typing import List, Optional, Dict
 import yaml
+
+from .main import Step
+
+
+class SlashCommand(BaseModel):
+    name: str
+    description: str
+    step_name: str
+    params: Optional[Dict] = {}
 
 
 class ContinueConfig(BaseModel):
@@ -12,6 +21,29 @@ class ContinueConfig(BaseModel):
     steps_on_startup: Optional[Dict[str, Dict]] = {}
     server_url: Optional[str] = None
     allow_anonymous_telemetry: Optional[bool] = True
+    slash_commands: Optional[List[SlashCommand]] = [
+        # SlashCommand(
+        #     name="pytest",
+        #     description="Write pytest unit tests for the current file",
+        #     step_name="WritePytestsRecipe",
+        #     params=??)
+
+        SlashCommand(
+            name="dlt",
+            description="Create a dlt pipeline",
+            step_name="CreatePipelineRecipe",
+        ),
+        SlashCommand(
+            name="ddtobq",
+            description="Create a dlt pipeline to load data from a data source into BigQuery",
+            step_name="DDtoBQRecipe",
+        ),
+        SlashCommand(
+            name="deployairflow",
+            description="Deploy a dlt pipeline to Airflow",
+            step_name="DeployPipelineAirflowRecipe",
+        ),
+    ]
 
 
 def load_config(config_file: str) -> ContinueConfig:

@@ -13,6 +13,7 @@ import { FileEditWithFullContents } from "../schema/FileEditWithFullContents";
 import fs = require("fs");
 import { WebsocketMessenger } from "./util/messenger";
 import { CapturedTerminal } from "./terminal/terminalEmulator";
+import { decorationManager } from "./decorations";
 
 class IdeProtocolClient {
   private messenger: WebsocketMessenger | null = null;
@@ -277,12 +278,13 @@ class IdeProtocolClient {
         undefined,
         vscode.ViewColumn.One
       ).then((editor) => {
-        let range = new vscode.Range(
+        const range = new vscode.Range(
           edit.range.start.line,
           edit.range.start.character,
           edit.range.end.line,
-          edit.range.end.character + 1
+          edit.range.end.character
         );
+
         editor.edit((editBuilder) => {
           this._makingEdit += 2; // editBuilder.replace takes 2 edits: delete and insert
           editBuilder.replace(range, edit.replacement);

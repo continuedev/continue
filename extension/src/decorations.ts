@@ -94,15 +94,22 @@ class DecorationManager {
       decorationTypes = new Map();
       decorationTypes.set(key.decorationType, [key.options]);
       this.editorToDecorations.set(key.editorUri, decorationTypes);
+    } else {
+      const decorations = decorationTypes.get(key.decorationType);
+      if (!decorations) {
+        decorationTypes.set(key.decorationType, [key.options]);
+      } else {
+        decorations.push(key.options);
+      }
     }
 
-    const decorations = decorationTypes.get(key.decorationType);
-    if (!decorations) {
-      decorationTypes.set(key.decorationType, [key.options]);
-    } else {
-      decorations.push(key.options);
-    }
     this.rerenderDecorations(key.editorUri, key.decorationType);
+
+    vscode.window.onDidChangeTextEditorSelection((event) => {
+      if (event.textEditor.document.fileName === key.editorUri) {
+        this.deleteAllDecorations(key.editorUri);
+      }
+    });
   }
 
   deleteDecoration(key: DecorationKey) {

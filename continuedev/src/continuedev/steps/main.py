@@ -16,6 +16,7 @@ from ..core.sdk import ContinueSDK, Models
 from ..core.observation import Observation
 import subprocess
 from .core.core import Gpt35EditCodeStep
+from ..libs.util.calculate_diff import calculate_diff2
 
 
 class SetupContinueWorkspaceStep(Step):
@@ -62,10 +63,10 @@ class RunPolicyUntilDoneStep(Step):
     policy: "Policy"
 
     async def run(self, sdk: ContinueSDK) -> Coroutine[Observation, None, None]:
-        next_step = self.policy.next(sdk.history)
+        next_step = self.policy.next(sdk.config, sdk.history)
         while next_step is not None:
             observation = await sdk.run_step(next_step)
-            next_step = self.policy.next(sdk.history)
+            next_step = self.policy.next(sdk.config, sdk.history)
         return observation
 
 
@@ -216,7 +217,8 @@ class StarCoderEditHighlightedCodeStep(Step):
 
     async def run(self, sdk: ContinueSDK) -> Coroutine[Observation, None, None]:
         range_in_files = await sdk.ide.getHighlightedCode()
-        if len(range_in_files) == 0:
+        found_highlighted_code = len(range_in_files) > 0
+        if not found_highlighted_code:
             # Get the full contents of all open files
             files = await sdk.ide.getOpenFiles()
             contents = {}
@@ -239,15 +241,29 @@ class StarCoderEditHighlightedCodeStep(Step):
         for rif in rif_with_contents:
             prompt = self._prompt.format(
                 code=rif.contents, user_request=self.user_input)
-            completion = str(sdk.models.starcoder.complete(prompt))
+
+            if found_highlighted_code:
+                full_file_contents = await sdk.ide.readFile(rif.filepath)
+                segs = full_file_contents.split(rif.contents)
+                prompt = f"<file_prefix>{segs[0]}<file_suffix>{segs[1]}" + prompt
+
+            completion = str((await sdk.models.starcoder()).complete(prompt))
             eot_token = "<|endoftext|>"
-            if completion.endswith(eot_token):
-                completion = completion[:completion.rindex(eot_token)]
+            completion = completion.removesuffix(eot_token)
+
+            if found_highlighted_code:
+                rif.contents = segs[0] + rif.contents + segs[1]
+                completion = segs[0] + completion + segs[1]
 
             self._prompt_and_completion += prompt + completion
 
-            await sdk.ide.applyFileSystemEdit(
-                FileEdit(filepath=rif.filepath, range=rif.range, replacement=completion))
+            edits = calculate_diff2(
+                rif.filepath, rif.contents, completion.removesuffix("\n"))
+            for edit in edits:
+                await sdk.ide.applyFileSystemEdit(edit)
+
+            # await sdk.ide.applyFileSystemEdit(
+            #     FileEdit(filepath=rif.filepath, range=rif.range, replacement=completion))
             await sdk.ide.saveFile(rif.filepath)
             await sdk.ide.setFileOpen(rif.filepath)
 

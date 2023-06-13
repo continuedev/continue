@@ -10,7 +10,7 @@ class FindAndReplaceStep(Step):
     replacement: str
 
     async def describe(self, models: Models):
-        return f"Replace all instances of `{self.pattern}` with `{self.replacement}` in `{self.filepath}`"
+        return f"Replaced all instances of `{self.pattern}` with `{self.replacement}` in `{self.filepath}`"
 
     async def run(self, sdk: ContinueSDK):
         file_content = await sdk.ide.readFile(self.filepath)
