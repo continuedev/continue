@@ -49,14 +49,14 @@ class AddTransformStep(Step):
         filename = f'{source_name}_pipeline.py'
         abs_filepath = os.path.join(sdk.ide.workspace_directory, filename)
 
+        # Open the file and highlight the function to be edited
+        await sdk.ide.setFileOpen(abs_filepath)
+
         await sdk.run_step(MessageStep(message=dedent("""\
                 This step will customize your resource function with a transform of your choice:
                 - Add a filter or map transformation depending on your request
                 - Load the data into a local DuckDB instance
                 - Open up a Streamlit app for you to view the data"""), name="Write transformation function"))
-
-        # Open the file and highlight the function to be edited
-        await sdk.ide.setFileOpen(abs_filepath)
 
         with open(os.path.join(os.path.dirname(__file__), 'dlt_transform_docs.md')) as f:
             dlt_transform_docs = f.read()
@@ -76,6 +76,8 @@ class AddTransformStep(Step):
             prompt=prompt,
             name=f"Writing transform function {AI_ASSISTED_STRING}"
         )
+
+        await sdk.wait_for_user_confirmation("Press Continue to confirm that the changes are okay before we run the pipeline.")
 
         # run the pipeline and load the data
         await sdk.run(f'python3 {filename}', name="Run the pipeline", description=f"Running `python3 {filename}` to load the data into a local DuckDB instance")

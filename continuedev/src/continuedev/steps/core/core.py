@@ -109,7 +109,7 @@ class ShellCommandsStep(Step):
         # return None
 
 
-class Gpt35EditCodeStep(Step):
+class DefaultModelEditCodeStep(Step):
     user_input: str
     range_in_files: List[RangeInFile]
     name: str = "Editing Code"
@@ -153,11 +153,13 @@ class Gpt35EditCodeStep(Step):
     async def describe(self, models: Models) -> Coroutine[str, None, None]:
         description = models.gpt35.complete(
             f"{self._prompt_and_completion}\n\nPlease give brief a description of the changes made above using markdown bullet points. Be concise and only mention changes made to the commit before, not prefix or suffix:")
-        self.name = models.gpt35.complete(
-            f"Write a short title for this description: {description}")
+        # self.name = models.gpt35.complete(
+        #     f"Write a short title for this description: {description}")
         return description
 
     async def run(self, sdk: ContinueSDK) -> Coroutine[Observation, None, None]:
+        self.name = self.user_input
+
         rif_with_contents = []
         for range_in_file in self.range_in_files:
             file_contents = await sdk.ide.readRangeInFile(range_in_file)
@@ -174,7 +176,7 @@ class Gpt35EditCodeStep(Step):
             prompt = self._prompt.format(
                 code=rif.contents, user_request=self.user_input, file_prefix=segs[0], file_suffix=segs[1])
 
-            completion = str(sdk.models.gpt35.complete(prompt))
+            completion = str(sdk.models.default.complete(prompt))
             eot_token = "<|endoftext|>"
             completion = completion.removesuffix(eot_token)
 
@@ -225,7 +227,7 @@ class EditFileStep(Step):
 
     async def run(self, sdk: ContinueSDK) -> Coroutine[Observation, None, None]:
         file_contents = await sdk.ide.readFile(self.filepath)
-        await sdk.run_step(Gpt35EditCodeStep(
+        await sdk.run_step(DefaultModelEditCodeStep(
             range_in_files=[RangeInFile.from_entire_file(
                 self.filepath, file_contents)],
             user_input=self.prompt

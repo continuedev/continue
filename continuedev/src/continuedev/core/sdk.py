@@ -3,7 +3,7 @@ from functools import cached_property
 from typing import Coroutine, Union
 import os
 
-from ..steps.core.core import Gpt35EditCodeStep
+from ..steps.core.core import DefaultModelEditCodeStep
 from ..models.main import Range
 from .abstract_sdk import AbstractContinueSDK
 from .config import ContinueConfig, load_config
@@ -40,6 +40,29 @@ class Models:
                 'OPENAI_API_KEY', 'Please add your OpenAI API key to the .env file')
             return OpenAI(api_key=api_key, default_model="gpt-3.5-turbo")
         return asyncio.get_event_loop().run_until_complete(load_gpt35())
+
+    @cached_property
+    def gpt4(self):
+        async def load_gpt4():
+            api_key = await self.sdk.get_user_secret(
+                'OPENAI_API_KEY', 'Please add your OpenAI API key to the .env file')
+            return OpenAI(api_key=api_key, default_model="gpt-4")
+        return asyncio.get_event_loop().run_until_complete(load_gpt4())
+
+    def __model_from_name(self, model_name: str):
+        if model_name == "starcoder":
+            return self.starcoder
+        elif model_name == "gpt35":
+            return self.gpt35
+        elif model_name == "gpt4":
+            return self.gpt4
+        else:
+            raise Exception(f"Unknown model {model_name}")
+
+    @cached_property
+    def default(self):
+        default_model = self.sdk.config.default_model
+        return self.__model_from_name(default_model) if default_model is not None else self.gpt35
 
 
 class ContinueSDK(AbstractContinueSDK):
@@ -85,7 +108,7 @@ class ContinueSDK(AbstractContinueSDK):
 
         await self.ide.setFileOpen(filepath)
         contents = await self.ide.readFile(filepath)
-        await self.run_step(Gpt35EditCodeStep(
+        await self.run_step(DefaultModelEditCodeStep(
             range_in_files=[RangeInFile(filepath=filepath, range=range) if range is not None else RangeInFile.from_entire_file(
                 filepath, contents)],
             user_input=prompt,

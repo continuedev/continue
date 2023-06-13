@@ -15,7 +15,7 @@ from ..core.main import Step
 from ..core.sdk import ContinueSDK, Models
 from ..core.observation import Observation
 import subprocess
-from .core.core import Gpt35EditCodeStep
+from .core.core import DefaultModelEditCodeStep
 from ..libs.util.calculate_diff import calculate_diff2
 
 
@@ -287,7 +287,7 @@ class EditHighlightedCodeStep(Step):
             range_in_files = [RangeInFile.from_entire_file(
                 filepath, content) for filepath, content in contents.items()]
 
-        await sdk.run_step(Gpt35EditCodeStep(user_input=self.user_input, range_in_files=range_in_files))
+        await sdk.run_step(DefaultModelEditCodeStep(user_input=self.user_input, range_in_files=range_in_files))
 
 
 class FindCodeStep(Step):
