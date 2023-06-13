@@ -17,3 +17,5 @@ We don't want to waste your time with install and env setup before you try Conti
 ## Next Steps
 
  Read the `Getting Started` section of the `README.md` file that has been opened in your codespace, which you can also find [here](https://github.com/continuedev/continue-codespaces-demo/blob/main/README.md)
+ 
+ If you're ready to download for VS Code, you can do so [here](https://marketplace.visualstudio.com/items?itemName=Continue.continue).
