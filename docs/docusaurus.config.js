@@ -39,6 +39,7 @@ const config = {
       /** @type {import('@docusaurus/preset-classic').Options} */
       ({
         docs: {
+          routeBasePath: '/',
           sidebarPath: require.resolve("./sidebars.js"),
           editUrl: "https://github.com/continuedev/continue/",
         },
@@ -82,7 +83,7 @@ const config = {
             items: [
               {
                 label: "Introduction",
-                to: "/docs/docs/intro",
+                to: "/intro",
               },
             ],
           },
