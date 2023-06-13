@@ -58,7 +58,7 @@ class DemoPolicy(Policy):
                 # AnswerQuestionChroma(question=user_input),
                 # EditFileChroma(request=user_input),
                 (SimpleChatStep(user_input=user_input),
-                 "Respond to the user with a chat message"),
+                 "Respond to the user with a chat message. Can answer questions about code or anything else."),
             ], default_step=EditHighlightedCodeStep(user_input=user_input))
 
         state = history.get_current()

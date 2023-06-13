@@ -24,15 +24,15 @@ class SetUpChessPipelineStep(Step):
 
         # running commands to get started when creating a new dlt pipeline
         await sdk.run([
-            'python3 -m venv env',
-            'source env/bin/activate',
+            'python3 -m venv .env',
+            'source .env/bin/activate',
             'pip install dlt',
             'dlt --non-interactive init chess duckdb',
             'pip install -r requirements.txt',
             'pip install pandas streamlit'  # Needed for the pipeline show step later
         ], name="Set up Python environment", description=dedent(f"""\
-            - Create a Python virtual environment: `python3 -m venv env`
-            - Activate the virtual environment: `source env/bin/activate`
+            - Create a Python virtual environment: `python3 -m venv .env`
+            - Activate the virtual environment: `source .env/bin/activate`
             - Install dlt: `pip install dlt`
             - Create a new dlt pipeline called "chess" that loads data into a local DuckDB instance: `dlt init chess duckdb`
             - Install the Python dependencies for the pipeline: `pip install -r requirements.txt`"""))

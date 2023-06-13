@@ -105,7 +105,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
     <div className="flex px-2" ref={divRef} hidden={!isOpen}>
       <MainTextInput
         disabled={props.disabled}
-        placeholder="Ask anything:"
+        placeholder="Type an instruction or question."
         {...getInputProps({
           onKeyDown: (event) => {
             if (event.key === "Enter" && (!isOpen || items.length === 0)) {

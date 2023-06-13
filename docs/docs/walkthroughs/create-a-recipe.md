@@ -93,5 +93,5 @@ class SetUpVenvStep(Step):
         if os == "Windows":
             await sdk.run("python -m venv env; .\\env\\Scripts\\activate")
         else:
-            await sdk.run("python3 -m venv env && source env/bin/activate") # MacOS and Linux
+            await sdk.run("python3 -m venv .env && source .env/bin/activate") # MacOS and Linux
 ```

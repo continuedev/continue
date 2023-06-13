@@ -194,15 +194,17 @@ function StepContainer(props: StepContainerProps) {
             <ReactMarkdown
               key={1}
               className="overflow-scroll"
-              components={{
-                pre: ({ node, ...props }) => {
-                  return (
-                    <CodeBlock
-                      children={props.children[0] as string}
-                    ></CodeBlock>
-                  );
-                },
-              }}
+              components={
+                {
+                  // pre: ({ node, ...props }) => {
+                  //   return (
+                  //     <CodeBlock
+                  //       children={props.children[0] as string}
+                  //     ></CodeBlock>
+                  //   );
+                  // },
+                }
+              }
             >
               {props.historyNode.step.description as any}
             </ReactMarkdown>
