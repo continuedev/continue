@@ -7,6 +7,8 @@ from ...recipes.DDtoBQRecipe.main import DDtoBQRecipe
 from ...recipes.DeployPipelineAirflowRecipe.main import DeployPipelineAirflowRecipe
 from ...recipes.DDtoBQRecipe.main import DDtoBQRecipe
 from ...recipes.AddTransformRecipe.main import AddTransformRecipe
+from ...recipes.WritePytestsRecipe.main import WritePytestsRecipe
+from ...steps.comment_code import CommentCodeStep
 
 step_name_to_step_class = {
     "UserInputStep": UserInputStep,
@@ -14,7 +16,9 @@ step_name_to_step_class = {
     "DDtoBQRecipe": DDtoBQRecipe,
     "DeployPipelineAirflowRecipe": DeployPipelineAirflowRecipe,
     "AddTransformRecipe": AddTransformRecipe,
-    "DDtoBQRecipe": DDtoBQRecipe
+    "DDtoBQRecipe": DDtoBQRecipe,
+    "WritePytestsRecipe": WritePytestsRecipe,
+    "CommentCodeStep": CommentCodeStep,
 }
 
 

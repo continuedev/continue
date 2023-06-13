@@ -7,7 +7,7 @@ import os
 
 class WritePytestsRecipe(Step):
     for_filepath: Union[str, None] = None
-    instructions: str = "Write unit tests for this file."
+    user_input: str = "Write unit tests for this file."
 
     async def run(self, sdk: ContinueSDK):
         if self.for_filepath is None:
@@ -35,7 +35,7 @@ class WritePytestsRecipe(Step):
 
             Here are additional instructions:
 
-            "{self.instructions}"
+            "{self.user_input}"
 
             Here is a complete set of pytest unit tests:""")
         tests = sdk.models.gpt35.complete(prompt)

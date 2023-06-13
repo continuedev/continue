@@ -43,6 +43,16 @@ class ContinueConfig(BaseModel):
             description="Deploy a dlt pipeline to Airflow",
             step_name="DeployPipelineAirflowRecipe",
         ),
+        SlashCommand(
+            name="comment",
+            description="Write comments for the current file or highlighted code",
+            step_name="CommentCodeStep",
+        ),
+        SlashCommand(
+            name="pytest",
+            description="Write pytest unit tests for the current file",
+            step_name="WritePytestsRecipe",
+        )
     ]
 
 
