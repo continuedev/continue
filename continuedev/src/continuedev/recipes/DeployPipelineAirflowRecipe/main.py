@@ -15,6 +15,7 @@ from .steps import SetupPipelineStep, DeployAirflowStep, RunPipelineStep
 # 3. Deploy selected verified pipeline with Airflow
 # 4. Set up Airflow locally?
 
+
 class DeployPipelineAirflowRecipe(Step):
     hide: bool = True
 
@@ -31,17 +32,27 @@ class DeployPipelineAirflowRecipe(Step):
                     Which verified pipeline do you want to deploy with Airflow? The options are:
                     - Asana
                     - Chess.com
+                    - Facebook Ads
                     - GitHub
                     - Google Analytics
                     - Google Sheets
                     - HubSpot
+                    - Jira
                     - Matomo
+                    - Mux
+                    - Notion
                     - Pipedrive
+                    - Pokemon
+                    - Salesforce
                     - Shopify
                     - Strapi
+                    - Stripe
+                    - SQL Database
+                    - Workable
                     - Zendesk"""),
                 options=[
-                    "asana_dlt", "chess", "github", "google_analytics", "google_sheets", "hubspot", "matomo", "pipedrive", "shopify_dlt", "strapi", "zendesk"
+                    "asana_dlt", "chess", "github", "google_analytics", "google_sheets", "hubspot", "matomo", "pipedrive", "shopify_dlt", "strapi", "zendesk",
+                    "facebook_ads", "jira", "mux", "notion", "pokemon", "salesforce", "stripe_analytics", "sql_database", "workable"
                 ])
         )
         await sdk.run_step(
