@@ -290,14 +290,14 @@ function GUI(props: GUIProps) {
             <BookOpen size="1.6em" />
           </HeaderButton>
         </a>
-        <HeaderButton style={{ padding: "3px" }}>
+        <HeaderButton
+          onClick={() => {
+            client?.sendClear();
+          }}
+          style={{ padding: "3px" }}
+        >
           Clear History
-          <Trash
-            size="1.6em"
-            onClick={() => {
-              client?.sendClear();
-            }}
-          />
+          <Trash size="1.6em" />
         </HeaderButton>
       </TopBar>
 
