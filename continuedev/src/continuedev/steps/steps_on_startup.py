@@ -1,19 +1,12 @@
-from ..core.main import ContinueSDK, Models, Step
+from ..core.main import Step
+from ..core.sdk import Models, ContinueSDK
 from .main import UserInputStep
 from ..recipes.CreatePipelineRecipe.main import CreatePipelineRecipe
 from ..recipes.DDtoBQRecipe.main import DDtoBQRecipe
 from ..recipes.DeployPipelineAirflowRecipe.main import DeployPipelineAirflowRecipe
 from ..recipes.DDtoBQRecipe.main import DDtoBQRecipe
 from ..recipes.AddTransformRecipe.main import AddTransformRecipe
-
-step_name_to_step_class = {
-    "UserInputStep": UserInputStep,
-    "CreatePipelineRecipe": CreatePipelineRecipe,
-    "DDtoBQRecipe": DDtoBQRecipe,
-    "DeployPipelineAirflowRecipe": DeployPipelineAirflowRecipe,
-    "AddTransformRecipe": AddTransformRecipe,
-    "DDtoBQRecipe": DDtoBQRecipe
-}
+from ..libs.util.step_name_to_steps import get_step_from_name
 
 
 class StepsOnStartupStep(Step):
@@ -23,13 +16,8 @@ class StepsOnStartupStep(Step):
         return "Running steps on startup"
 
     async def run(self, sdk: ContinueSDK):
-        steps_descriptions = (await sdk.get_config()).steps_on_startup
+        steps_on_startup = sdk.config.steps_on_startup
 
-        for step_name, step_params in steps_descriptions.items():
-            try:
-                step = step_name_to_step_class[step_name](**step_params)
-            except:
-                print(
-                    f"Incorrect parameters for step {step_name}. Parameters provided were: {step_params}")
-                continue
+        for step_name, step_params in steps_on_startup.items():
+            step = get_step_from_name(step_name, step_params)
             await sdk.run_step(step)

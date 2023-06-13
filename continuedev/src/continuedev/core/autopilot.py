@@ -40,6 +40,9 @@ class Autopilot(ContinueBaseModel):
     def get_full_state(self) -> FullState:
         return FullState(history=self.history, active=self._active, user_input_queue=self._main_user_input_queue)
 
+    async def get_available_slash_commands(self) -> List[Dict]:
+        return list(map(lambda x: {"name": x.name, "description": x.description}, self.continue_sdk.config.slash_commands)) or []
+
     async def clear_history(self):
         self.history = History.from_empty()
         self._main_user_input_queue = []
@@ -202,7 +205,7 @@ class Autopilot(ContinueBaseModel):
 
             await self._run_singular_step(next_step, is_future_step)
 
-            if next_step := self.policy.next(self.history):
+            if next_step := self.policy.next(self.continue_sdk.config, self.history):
                 is_future_step = False
             elif next_step := self.history.take_next_step():
                 is_future_step = True
@@ -215,11 +218,11 @@ class Autopilot(ContinueBaseModel):
         await self.update_subscribers()
 
     async def run_from_observation(self, observation: Observation):
-        next_step = self.policy.next(self.history)
+        next_step = self.policy.next(self.continue_sdk.config, self.history)
         await self.run_from_step(next_step)
 
     async def run_policy(self):
-        first_step = self.policy.next(self.history)
+        first_step = self.policy.next(self.continue_sdk.config, self.history)
         await self.run_from_step(first_step)
 
     async def _request_halt(self):

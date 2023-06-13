@@ -1,4 +1,3 @@
-from abc import ABC, abstractmethod
 import asyncio
 from functools import cached_property
 from typing import Coroutine, Union
@@ -119,8 +118,9 @@ class ContinueSDK(AbstractContinueSDK):
     async def get_user_secret(self, env_var: str, prompt: str) -> str:
         return await self.ide.getUserSecret(env_var)
 
-    async def get_config(self) -> ContinueConfig:
-        dir = await self.ide.getWorkspaceDirectory()
+    @property
+    def config(self) -> ContinueConfig:
+        dir = self.ide.workspace_directory
         yaml_path = os.path.join(dir, '.continue', 'config.yaml')
         json_path = os.path.join(dir, '.continue', 'config.json')
         if os.path.exists(yaml_path):

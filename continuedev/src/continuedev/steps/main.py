@@ -63,10 +63,10 @@ class RunPolicyUntilDoneStep(Step):
     policy: "Policy"
 
     async def run(self, sdk: ContinueSDK) -> Coroutine[Observation, None, None]:
-        next_step = self.policy.next(sdk.history)
+        next_step = self.policy.next(sdk.config, sdk.history)
         while next_step is not None:
             observation = await sdk.run_step(next_step)
-            next_step = self.policy.next(sdk.history)
+            next_step = self.policy.next(sdk.config, sdk.history)
         return observation
 
 

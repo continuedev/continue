@@ -14,7 +14,7 @@
   "displayName": "Continue",
   "pricing": "Free",
   "description": "Refine code 10x faster",
-  "version": "0.0.34",
+  "version": "0.0.35",
   "publisher": "Continue",
   "engines": {
     "vscode": "^1.74.0"
@@ -134,6 +134,7 @@
     "@styled-icons/heroicons-outline": "^10.47.0",
     "@vitejs/plugin-react-swc": "^3.3.2",
     "axios": "^1.2.5",
+    "downshift": "^7.6.0",
     "highlight.js": "^11.7.0",
     "posthog-js": "^1.63.3",
     "react-markdown": "^8.0.7",
