@@ -22,3 +22,7 @@ class LLM(BaseModel):
     def with_system_message(self, system_message: Union[str, None]):
         """Return a new model with the given system message."""
         raise NotImplementedError
+
+    def count_tokens(self, text: str):
+        """Return the number of tokens in the given text."""
+        raise NotImplementedError

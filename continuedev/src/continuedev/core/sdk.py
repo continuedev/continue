@@ -52,9 +52,9 @@ class Models:
     def __model_from_name(self, model_name: str):
         if model_name == "starcoder":
             return self.starcoder
-        elif model_name == "gpt35":
+        elif model_name == "gpt-3.5-turbo":
             return self.gpt35
-        elif model_name == "gpt4":
+        elif model_name == "gpt-4":
             return self.gpt4
         else:
             raise Exception(f"Unknown model {model_name}")
