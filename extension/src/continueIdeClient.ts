@@ -121,7 +121,11 @@ class IdeProtocolClient {
     }
   }
   getWorkspaceDirectory() {
-    return vscode.workspace.workspaceFolders![0].uri.fsPath;
+    if (!vscode.workspace.workspaceFolders) {
+      // Return the home directory
+      return process.env.HOME || process.env.USERPROFILE || "/";
+    }
+    return vscode.workspace.workspaceFolders[0].uri.fsPath;
   }
 
   // ------------------------------------ //
