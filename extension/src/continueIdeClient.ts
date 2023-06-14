@@ -77,6 +77,11 @@ class IdeProtocolClient {
           workspaceDirectory: this.getWorkspaceDirectory(),
         });
         break;
+      case "uniqueId":
+        this.messenger?.send("uniqueId", {
+          uniqueId: this.getUniqueId(),
+        });
+        break;
       case "getUserSecret":
         this.messenger?.send("getUserSecret", {
           value: await this.getUserSecret(data.key),
@@ -126,6 +131,10 @@ class IdeProtocolClient {
       return process.env.HOME || process.env.USERPROFILE || "/";
     }
     return vscode.workspace.workspaceFolders[0].uri.fsPath;
+  }
+
+  getUniqueId() {
+    return vscode.env.machineId;
   }
 
   // ------------------------------------ //

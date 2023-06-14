@@ -94,3 +94,7 @@ class AbstractIdeProtocolServer(ABC):
     @abstractproperty
     def workspace_directory(self) -> str:
         """Get the workspace directory"""
+
+    @abstractproperty
+    def unique_id(self) -> str:
+        """Get a unique ID for this IDE"""
