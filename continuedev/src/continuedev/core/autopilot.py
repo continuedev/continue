@@ -102,8 +102,8 @@ class Autopilot(ContinueBaseModel):
         await self.update_subscribers()
 
     async def _run_singular_step(self, step: "Step", is_future_step: bool = False) -> Coroutine[Observation, None, None]:
-        capture_event(
-            'step run', {'step_name': step.name, 'params': step.dict()})
+        capture_event(self.continue_sdk.ide.unique_id, 'step run', {
+                      'step_name': step.name, 'params': step.dict()})
 
         if not is_future_step:
             # Check manual edits buffer, clear out if needed by creating a ManualEditStep

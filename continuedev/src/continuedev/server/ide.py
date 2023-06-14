@@ -81,7 +81,27 @@ class RunCommandResponse(BaseModel):
     output: str
 
 
+class UniqueIdResponse(BaseModel):
+    uniqueId: str
+
+
 T = TypeVar("T", bound=BaseModel)
+
+
+class cached_property_no_none:
+    def __init__(self, func):
+        self.func = func
+
+    def __get__(self, instance, owner):
+        if instance is None:
+            return self
+        value = self.func(instance)
+        if value is not None:
+            setattr(instance, self.func.__name__, value)
+        return value
+
+    def __repr__(self):
+        return f"<cached_property_no_none '{self.func.__name__}'>"
 
 
 class IdeProtocolServer(AbstractIdeProtocolServer):
@@ -115,7 +135,7 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
             fileEdits = list(
                 map(lambda d: FileEditWithFullContents.parse_obj(d), data["fileEdits"]))
             self.onFileEdits(fileEdits)
-        elif message_type in ["highlightedCode", "openFiles", "readFile", "editFile", "workspaceDirectory", "getUserSecret", "runCommand"]:
+        elif message_type in ["highlightedCode", "openFiles", "readFile", "editFile", "workspaceDirectory", "getUserSecret", "runCommand", "uniqueId"]:
             self.sub_queue.post(message_type, data)
         else:
             raise ValueError("Unknown message type", message_type)
@@ -200,9 +220,17 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
         resp = await self._send_and_receive_json({}, WorkspaceDirectoryResponse, "workspaceDirectory")
         return resp.workspaceDirectory
 
+    async def get_unique_id(self) -> str:
+        resp = await self._send_and_receive_json({}, UniqueIdResponse, "uniqueId")
+        return resp.uniqueId
+
     @cached_property
     def workspace_directory(self) -> str:
         return asyncio.run(self.getWorkspaceDirectory())
+
+    @cached_property_no_none
+    def unique_id(self) -> str:
+        return asyncio.run(self.get_unique_id())
 
     async def getHighlightedCode(self) -> List[RangeInFile]:
         resp = await self._send_and_receive_json({}, HighlightedCodeResponse, "highlightedCode")

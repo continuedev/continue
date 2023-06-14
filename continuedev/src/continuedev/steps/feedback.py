@@ -10,7 +10,8 @@ class FeedbackStep(Step):
     name = "Thanks for your feedback!"
 
     async def describe(self, models: Models):
-        return f"`{self.user_input}`\n\nWe'll see your feedback and make improvements as soon as possible. If you'd like to directly email us, you can send an email to [nate@continue.dev](mailto:nate@continue.dev?subject=Feedback%20On%20Continue)."
+        return f"`{self.user_input}`\n\nWe'll see your feedback and make improvements as soon as possible. If you'd like to directly email us, you can contact [nate@continue.dev](mailto:nate@continue.dev?subject=Feedback%20On%20Continue)."
 
     async def run(self, sdk: ContinueSDK):
-        capture_event("feedback", {"feedback": self.user_input})
+        capture_event(sdk.ide.unique_id, "feedback",
+                      {"feedback": self.user_input})

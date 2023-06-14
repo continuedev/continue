@@ -6,7 +6,7 @@ posthog = Posthog('phc_JS6XFROuNbhJtVCEdTSYk6gl5ArRrTNMpCcguAXlSPs',
                   host='https://app.posthog.com')
 
 
-def capture_event(event_name, event_properties):
+def capture_event(unique_id: str, event_name, event_properties):
     config = load_config('.continue/config.json')
     if config.allow_anonymous_telemetry:
-        posthog.capture("not distinct :(", event_name, event_properties)
+        posthog.capture(unique_id, event_name, event_properties)
