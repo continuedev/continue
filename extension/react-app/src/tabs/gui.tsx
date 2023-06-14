@@ -12,8 +12,15 @@ import { History } from "../../../schema/History";
 import { HistoryNode } from "../../../schema/HistoryNode";
 import StepContainer from "../components/StepContainer";
 import useContinueGUIProtocol from "../hooks/useWebsocket";
-import { BookOpen, Trash } from "@styled-icons/heroicons-outline";
+import {
+  BookOpen,
+  ChatBubbleOvalLeft,
+  ChatBubbleOvalLeftEllipsis,
+  Trash,
+} from "@styled-icons/heroicons-outline";
 import ComboBox from "../components/ComboBox";
+import TextDialog from "../components/TextDialog";
+
 let TopGUIDiv = styled.div`
   display: grid;
   grid-template-columns: 1fr;
@@ -31,9 +38,11 @@ let UserInputQueueItem = styled.div`
 const TopBar = styled.div`
   display: flex;
   flex-direction: row;
-  justify-content: space-between;
+  gap: 8px;
+  justify-content: center;
   padding: 8px;
   align-items: center;
+  border-bottom: 0.1px solid gray;
 `;
 
 interface GUIProps {
@@ -170,6 +179,8 @@ function GUI(props: GUIProps) {
   //   current_index: 3,
   // } as any);
 
+  const [showFeedbackDialog, setShowFeedbackDialog] = useState(false);
+
   const topGuiDivRef = useRef<HTMLDivElement>(null);
   const client = useContinueGUIProtocol();
 
@@ -275,91 +286,110 @@ function GUI(props: GUIProps) {
 
   // const iterations = useSelector(selectIterations);
   return (
-    <TopGUIDiv
-      ref={topGuiDivRef}
-      onKeyDown={(e) => {
-        if (e.key === "Enter" && e.ctrlKey) {
-          onMainTextInput();
-        }
-      }}
-    >
-      <TopBar>
-        <a href="https://continue.dev/docs" className="no-underline">
-          <HeaderButton style={{ padding: "3px" }}>
-            Continue Docs
-            <BookOpen size="1.6em" />
-          </HeaderButton>
-        </a>
-        <HeaderButton
-          onClick={() => {
-            client?.sendClear();
-          }}
-          style={{ padding: "3px" }}
-        >
-          Clear History
-          <Trash size="1.6em" />
-        </HeaderButton>
-      </TopBar>
-
-      {typeof client === "undefined" && (
-        <>
-          <Loader></Loader>
-          <p style={{ textAlign: "center" }}>
-            Trying to reconnect with server...
-          </p>
-        </>
-      )}
-      {history?.timeline.map((node: HistoryNode, index: number) => {
-        return (
-          <StepContainer
-            key={index}
-            onUserInput={(input: string) => {
-              onStepUserInput(input, index);
-            }}
-            inFuture={index > history?.current_index}
-            historyNode={node}
-            onRefinement={(input: string) => {
-              client?.sendRefinementInput(input, index);
-            }}
-            onReverse={() => {
-              client?.reverseToIndex(index);
-            }}
-            onRetry={() => {
-              client?.retryAtIndex(index);
-              setWaitingForSteps(true);
-            }}
-            onDelete={() => {
-              client?.deleteAtIndex(index);
-            }}
-          />
-        );
-      })}
-      {waitingForSteps && <Loader></Loader>}
-
-      <div>
-        {userInputQueue.map((input) => {
-          return <UserInputQueueItem>{input}</UserInputQueueItem>;
-        })}
-      </div>
-
-      <ComboBox
-        disabled={
-          history?.timeline.length
-            ? history.timeline[history.current_index].step.name ===
-              "Waiting for user confirmation"
-            : false
-        }
-        ref={mainTextInputRef}
-        onEnter={(e) => {
-          onMainTextInput();
-          e.stopPropagation();
-          e.preventDefault();
+    <>
+      <TextDialog
+        showDialog={showFeedbackDialog}
+        onEnter={(text) => {
+          client?.sendMainInput(`/feedback ${text}`);
+          setShowFeedbackDialog(false);
         }}
-        onInputValueChange={() => {}}
-        items={availableSlashCommands}
-      />
-      <ContinueButton onClick={onMainTextInput} />
-    </TopGUIDiv>
+      ></TextDialog>
+      <TopGUIDiv
+        ref={topGuiDivRef}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" && e.ctrlKey) {
+            onMainTextInput();
+          }
+        }}
+      >
+        <TopBar>
+          <a href="https://continue.dev/docs" className="no-underline">
+            <HeaderButton style={{ padding: "3px" }}>
+              Continue Docs
+              <BookOpen size="1.6em" />
+            </HeaderButton>
+          </a>
+          <HeaderButton
+            style={{ padding: "3px" }}
+            onClick={() => {
+              // Set dialog open
+              setShowFeedbackDialog(true);
+            }}
+          >
+            Feedback
+            <ChatBubbleOvalLeftEllipsis size="1.6em" />
+          </HeaderButton>
+          <HeaderButton
+            onClick={() => {
+              client?.sendClear();
+            }}
+            style={{ padding: "3px" }}
+          >
+            Clear History
+            <Trash size="1.6em" />
+          </HeaderButton>
+        </TopBar>
+
+        {typeof client === "undefined" && (
+          <>
+            <Loader></Loader>
+            <p style={{ textAlign: "center" }}>
+              Trying to reconnect with server...
+            </p>
+          </>
+        )}
+        {history?.timeline.map((node: HistoryNode, index: number) => {
+          return (
+            <StepContainer
+              key={index}
+              onUserInput={(input: string) => {
+                onStepUserInput(input, index);
+              }}
+              inFuture={index > history?.current_index}
+              historyNode={node}
+              onRefinement={(input: string) => {
+                client?.sendRefinementInput(input, index);
+              }}
+              onReverse={() => {
+                client?.reverseToIndex(index);
+              }}
+              onRetry={() => {
+                client?.retryAtIndex(index);
+                setWaitingForSteps(true);
+              }}
+              onDelete={() => {
+                client?.deleteAtIndex(index);
+              }}
+            />
+          );
+        })}
+        {waitingForSteps && <Loader></Loader>}
+
+        <div>
+          {userInputQueue.map((input) => {
+            return <UserInputQueueItem>{input}</UserInputQueueItem>;
+          })}
+        </div>
+
+        <ComboBox
+          disabled={
+            history?.timeline.length
+              ? history.timeline[history.current_index].step.name ===
+                "Waiting for user confirmation"
+              : false
+          }
+          ref={mainTextInputRef}
+          onEnter={(e) => {
+            onMainTextInput();
+            e.stopPropagation();
+            e.preventDefault();
+          }}
+          onInputValueChange={() => {}}
+          items={availableSlashCommands}
+        />
+        <ContinueButton onClick={onMainTextInput} />
+      </TopGUIDiv>
+    </>
   );
 }
 
