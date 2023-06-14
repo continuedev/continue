@@ -35,8 +35,13 @@ class ContinueConfig(BaseModel):
         ),
         SlashCommand(
             name="ddtobq",
-            description="Create a dlt pipeline to load data from a data source into BigQuery",
+            description="Adjust a dlt pipeline to load data into BigQuery",
             step_name="DDtoBQRecipe",
+        ),
+        SlashCommand(
+            name="addtransform",
+            description="Add transforms to the chess.com API dlt pipeline.",
+            step_name="AddTransformRecipe",
         ),
         SlashCommand(
             name="deployairflow",
