@@ -5,7 +5,6 @@ from textwrap import dedent
 from typing import Coroutine, List, Union
 
 from ...models.main import Range
-from ...libs.util.calculate_diff import calculate_diff2, apply_edit_to_str, line_by_line_diff
 from ...libs.llm.prompt_utils import MarkdownStyleEncoderDecoder
 from ...models.filesystem_edit import EditDiff, FileEdit, FileEditWithFullContents, FileSystemEdit
 from ...models.filesystem import FileSystem, RangeInFile, RangeInFileWithContents
@@ -203,7 +202,6 @@ class DefaultModelEditCodeStep(Step):
                     index += 1
                 elif line.startswith(" "):
                     index += 1
-
 
             await sdk.ide.applyFileSystemEdit(FileEdit(
                 filepath=rif.filepath,

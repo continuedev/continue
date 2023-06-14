@@ -35,8 +35,8 @@ parser.add_argument("-p", "--port", help="server port", type=int, default=8000)
 args = parser.parse_args()
 
 
-log_file = open('output.log', 'a')
-sys.stdout = log_file
+# log_file = open('output.log', 'a')
+# sys.stdout = log_file
 
 
 def run_server():

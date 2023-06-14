@@ -9,6 +9,7 @@ from ...recipes.DDtoBQRecipe.main import DDtoBQRecipe
 from ...recipes.AddTransformRecipe.main import AddTransformRecipe
 from ...recipes.WritePytestsRecipe.main import WritePytestsRecipe
 from ...steps.comment_code import CommentCodeStep
+from ...steps.feedback import FeedbackStep
 
 step_name_to_step_class = {
     "UserInputStep": UserInputStep,
@@ -19,6 +20,7 @@ step_name_to_step_class = {
     "DDtoBQRecipe": DDtoBQRecipe,
     "WritePytestsRecipe": WritePytestsRecipe,
     "CommentCodeStep": CommentCodeStep,
+    "FeedbackStep": FeedbackStep,
 }
 
 

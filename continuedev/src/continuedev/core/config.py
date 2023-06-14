@@ -52,6 +52,11 @@ class ContinueConfig(BaseModel):
             name="pytest",
             description="Write pytest unit tests for the current file",
             step_name="WritePytestsRecipe",
+        ),
+        SlashCommand(
+            name="feedback",
+            description="Send feedback to improve Continue",
+            step_name="FeedbackStep",
         )
     ]
 
