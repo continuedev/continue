@@ -50,7 +50,7 @@ class SetupPipelineStep(Step):
 
         # editing the resource function to call the requested API
         resource_function_range = Range.from_shorthand(15, 0, 29, 0)
-        await sdk.ide.highlightCode(RangeInFile(filepath=os.path.join(await sdk.ide.getWorkspaceDirectory(), filename), range=resource_function_range))
+        await sdk.ide.highlightCode(RangeInFile(filepath=os.path.join(await sdk.ide.getWorkspaceDirectory(), filename), range=resource_function_range), "#ffa50033")
 
         # sdk.set_loading_message("Writing code to call the API...")
         await sdk.edit_file(

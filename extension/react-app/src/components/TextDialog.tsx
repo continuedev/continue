@@ -47,7 +47,15 @@ const TextDialog = (props: {
       <Dialog>
         <P>Thanks for your feedback. We'll get back to you soon!</P>
         <TextArea cols={50} rows={10} ref={textAreaRef}></TextArea>
-        <Button onClick={() => props.onEnter(text)}>Enter</Button>
+        <Button
+          onClick={() => {
+            if (textAreaRef.current) {
+              props.onEnter(textAreaRef.current.value);
+            }
+          }}
+        >
+          Enter
+        </Button>
       </Dialog>
     </DialogContainer>
   );
