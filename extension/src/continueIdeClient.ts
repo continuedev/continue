@@ -140,12 +140,20 @@ class IdeProtocolClient {
       vscode.ViewColumn.One
     );
     if (editor) {
-      editor.setDecorations(
-        vscode.window.createTextEditorDecorationType({
-          backgroundColor: color,
-          isWholeLine: true,
-        }),
-        [range]
+      const decorationType = vscode.window.createTextEditorDecorationType({
+        backgroundColor: color,
+        isWholeLine: true,
+      });
+      editor.setDecorations(decorationType, [range]);
+
+      // Listen for changes to cursor position
+      const cursorDisposable = vscode.window.onDidChangeTextEditorSelection(
+        (event) => {
+          if (event.textEditor.document.uri.fsPath === rangeInFile.filepath) {
+            cursorDisposable.dispose();
+            editor.setDecorations(decorationType, []);
+          }
+        }
       );
     }
   }
@@ -282,7 +290,7 @@ class IdeProtocolClient {
           edit.range.start.line,
           edit.range.start.character,
           edit.range.end.line,
-          edit.range.end.character
+          edit.range.end.character + 1
         );
 
         editor.edit((editBuilder) => {

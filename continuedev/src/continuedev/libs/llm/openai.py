@@ -34,7 +34,7 @@ class OpenAI(LLM):
         return tiktoken.encoding_for_model(self.default_model)
 
     def count_tokens(self, text: str):
-        return len(self.__encoding_for_model.encode(text))
+        return len(self.__encoding_for_model.encode(text, disallowed_special=()))
 
     def __prune_chat_history(self, chat_history: List[ChatMessage], max_tokens: int, tokens_for_completion: int):
         tokens = tokens_for_completion

@@ -1,5 +1,5 @@
 from abc import ABC
-from typing import List, Union
+from typing import List, Union, Tuple
 from pydantic import BaseModel, root_validator
 from functools import total_ordering
 
@@ -60,6 +60,18 @@ class Range(BaseModel):
 
     def is_empty(self) -> bool:
         return self.start == self.end
+
+    def indices_in_string(self, string: str) -> Tuple[int, int]:
+        """Get the start and end indicees of this range in the string"""
+        lines = string.splitlines()
+        if len(lines) == 0:
+            return (0, 0)
+
+        start_index = sum(
+            [len(line) + 1 for line in lines[:self.start.line]]) + self.start.character
+        end_index = sum(
+            [len(line) + 1 for line in lines[:self.end.line]]) + self.end.character
+        return (start_index, end_index)
 
     def overlaps_with(self, other: "Range") -> bool:
         return not (self.end < other.start or self.start > other.end)
