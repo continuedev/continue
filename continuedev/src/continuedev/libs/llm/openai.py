@@ -22,7 +22,12 @@ CHAT_MODELS = {
 class OpenAI(LLM):
     api_key: str
     completion_count: int = 0
-    default_model: str = "gpt-3.5-turbo"
+    default_model: str
+
+    def __init__(self, api_key: str, default_model: str = "gpt-3.5-turbo", system_message: str = None):
+        self.api_key = api_key
+        self.default_model = default_model
+        self.system_message = system_message
 
     @validator("api_key", pre=True, always=True)
     def validate_api_key(cls, v):
