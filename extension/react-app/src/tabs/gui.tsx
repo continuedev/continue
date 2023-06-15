@@ -212,12 +212,15 @@ function GUI(props: GUIProps) {
   useEffect(() => {
     console.log("CLIENT ON STATE UPDATE: ", client, client?.onStateUpdate);
     client?.onStateUpdate((state) => {
-      console.log("Received state update: ", state);
+      // Scroll only if user is at very bottom of the window.
+      const shouldScrollToBottom = window.outerHeight - window.scrollY < 200;
       setWaitingForSteps(state.active);
       setHistory(state.history);
       setUserInputQueue(state.user_input_queue);
 
-      scrollToBottom();
+      if (shouldScrollToBottom) {
+        scrollToBottom();
+      }
     });
     client?.onAvailableSlashCommands((commands) => {
       console.log("Received available slash commands: ", commands);
