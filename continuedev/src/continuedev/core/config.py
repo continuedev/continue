@@ -20,7 +20,7 @@ class ContinueConfig(BaseModel):
     server_url: Optional[str] = None
     allow_anonymous_telemetry: Optional[bool] = True
     default_model: Literal["gpt-3.5-turbo",
-                           "gpt-4", "starcoder"] = 'gpt-3.5-turbo'
+                           "gpt-4", "starcoder"] = 'gpt-4'
     slash_commands: Optional[List[SlashCommand]] = [
         # SlashCommand(
         #     name="pytest",
