@@ -26,7 +26,7 @@ class DemoPolicy(Policy):
         # At the very start, run initial Steps spcecified in the config
         if history.get_current() is None:
             return (
-                MessageStep(name="Welcome to Continue!", message="You can type a question or instructions for a file edit in the text box. If you highlight code, edits will be localized to the highlighted range. Otherwise, the currently open file is taken as context. If you type '/', you can see the list of available slash commands.") >>
+                MessageStep(name="Welcome to Continue!", message="Type '/' to see the list of available slash commands. If you highlight code, edits and explanations will be localized to the highlighted range. Otherwise, the currently open file is used. In both cases, the code is combined with the previous steps to construct the context.") >>
                 # SetupContinueWorkspaceStep() >>
                 # CreateCodebaseIndexChroma() >>
                 StepsOnStartupStep())
@@ -45,12 +45,6 @@ class DemoPolicy(Policy):
                         params["user_input"] = after_command
                         return get_step_from_name(slash_command.step_name, params)
 
-            if "/ask" in user_input:
-                return AnswerQuestionChroma(question=" ".join(user_input.split(" ")[1:]))
-            elif "/edit" in user_input:
-                return EditFileChroma(request=" ".join(user_input.split(" ")[1:]))
-            elif "/step" in user_input:
-                return ContinueStepStep(prompt=" ".join(user_input.split(" ")[1:]))
             # return EditHighlightedCodeStep(user_input=user_input)
             return NLDecisionStep(user_input=user_input, steps=[
                 (EditHighlightedCodeStep(user_input=user_input),
