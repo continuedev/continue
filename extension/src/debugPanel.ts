@@ -136,7 +136,6 @@ let streamManager = new StreamManager();
 export let debugPanelWebview: vscode.Webview | undefined;
 export function setupDebugPanel(
   panel: vscode.WebviewPanel | vscode.WebviewView,
-  context: vscode.ExtensionContext | undefined,
   sessionId: string
 ): string {
   debugPanelWebview = panel.webview;
@@ -164,6 +163,11 @@ export function setupDebugPanel(
       )
       .toString();
   }
+
+  panel.webview.options = {
+    enableScripts: true,
+    localResourceRoots: [vscode.Uri.joinPath(extensionUri, "react-app/dist")],
+  };
 
   const nonce = getNonce();
 
@@ -488,13 +492,21 @@ export function setupDebugPanel(
     </html>`;
 }
 
-// class ContinueGUIWebviewViewProvider implements vscode.WebviewViewProvider {
-//   public static readonly viewType = "continue.continueGUIView";
-//   resolveWebviewView(
-//     webviewView: vscode.WebviewView,
-//     context: vscode.WebviewViewResolveContext<unknown>,
-//     token: vscode.CancellationToken
-//   ): void | Thenable<void> {
-//     setupDebugPanel(webviewView, context, sessionId);
-//   }
-// }
+export class ContinueGUIWebviewViewProvider
+  implements vscode.WebviewViewProvider
+{
+  public static readonly viewType = "continue.continueGUIView";
+  private readonly sessionId: string;
+
+  constructor(sessionId: string) {
+    this.sessionId = sessionId;
+  }
+
+  resolveWebviewView(
+    webviewView: vscode.WebviewView,
+    _context: vscode.WebviewViewResolveContext,
+    _token: vscode.CancellationToken
+  ): void | Thenable<void> {
+    webviewView.webview.html = setupDebugPanel(webviewView, this.sessionId);
+  }
+}
