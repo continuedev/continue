@@ -2,23 +2,15 @@ from typing import Dict
 
 from ...core.main import Step
 from ...steps.core.core import UserInputStep
-from ...recipes.CreatePipelineRecipe.main import CreatePipelineRecipe
-from ...recipes.DDtoBQRecipe.main import DDtoBQRecipe
-from ...recipes.DeployPipelineAirflowRecipe.main import DeployPipelineAirflowRecipe
-from ...recipes.DDtoBQRecipe.main import DDtoBQRecipe
-from ...recipes.AddTransformRecipe.main import AddTransformRecipe
-from ...recipes.WritePytestsRecipe.main import WritePytestsRecipe
+from ...steps.main import EditHighlightedCodeStep
+from ...steps.chat import SimpleChatStep
 from ...steps.comment_code import CommentCodeStep
 from ...steps.feedback import FeedbackStep
 
 step_name_to_step_class = {
     "UserInputStep": UserInputStep,
-    "CreatePipelineRecipe": CreatePipelineRecipe,
-    "DDtoBQRecipe": DDtoBQRecipe,
-    "DeployPipelineAirflowRecipe": DeployPipelineAirflowRecipe,
-    "AddTransformRecipe": AddTransformRecipe,
-    "DDtoBQRecipe": DDtoBQRecipe,
-    "WritePytestsRecipe": WritePytestsRecipe,
+    "EditHighlightedCodeStep": EditHighlightedCodeStep,
+    "SimpleChatStep": SimpleChatStep,
     "CommentCodeStep": CommentCodeStep,
     "FeedbackStep": FeedbackStep,
 }

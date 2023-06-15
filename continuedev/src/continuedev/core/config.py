@@ -27,36 +27,20 @@ class ContinueConfig(BaseModel):
         #     description="Write pytest unit tests for the current file",
         #     step_name="WritePytestsRecipe",
         #     params=??)
-
         SlashCommand(
-            name="dlt",
-            description="Create a dlt pipeline",
-            step_name="CreatePipelineRecipe",
+            name="edit",
+            description="Edit code in the current file or the highlighted code",
+            step_name="EditHighlightedCodeStep",
         ),
         SlashCommand(
-            name="ddtobq",
-            description="Adjust a dlt pipeline to load data into BigQuery",
-            step_name="DDtoBQRecipe",
-        ),
-        SlashCommand(
-            name="addtransform",
-            description="Add transforms to the chess.com API dlt pipeline.",
-            step_name="AddTransformRecipe",
-        ),
-        SlashCommand(
-            name="deployairflow",
-            description="Deploy a dlt pipeline to Airflow",
-            step_name="DeployPipelineAirflowRecipe",
+            name="explain",
+            description="Reply to instructions or a question with previous steps as context",
+            step_name="SimpleChatStep",
         ),
         SlashCommand(
             name="comment",
             description="Write comments for the current file or highlighted code",
             step_name="CommentCodeStep",
-        ),
-        SlashCommand(
-            name="pytest",
-            description="Write pytest unit tests for the current file",
-            step_name="WritePytestsRecipe",
         ),
         SlashCommand(
             name="feedback",
