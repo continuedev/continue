@@ -105,7 +105,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
     <div className="flex px-2" ref={divRef} hidden={!isOpen}>
       <MainTextInput
         disabled={props.disabled}
-        placeholder="Type instructions or a question. Highlighted code / the open file are used as context."
+        placeholder="Type '/' to see the list of available slash commands..."
         {...getInputProps({
           onKeyDown: (event) => {
             if (event.key === "Enter" && (!isOpen || items.length === 0)) {
