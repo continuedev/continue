@@ -14,6 +14,9 @@ MAX_TOKENS_FOR_MODEL = {
     "gpt-4": 4097,
 }
 DEFAULT_MAX_TOKENS = 2048
+CHAT_MODELS = {
+    "gpt-3.5-turbo", "gpt-4"
+}
 
 
 class OpenAI(LLM):
@@ -87,7 +90,7 @@ class OpenAI(LLM):
                 "top_p": 1, "frequency_penalty": 0, "presence_penalty": 0, "suffix": None} | kwargs
         args["stream"] = True
 
-        if args["model"] == "gpt-3.5-turbo":
+        if args["model"] in CHAT_MODELS:
             generator = openai.ChatCompletion.create(
                 messages=self.compile_chat_messages(with_history, prompt),
                 **args,
@@ -109,7 +112,7 @@ class OpenAI(LLM):
         args = {"model": self.default_model, "max_tokens": DEFAULT_MAX_TOKENS, "temperature": 0.5, "top_p": 1,
                 "frequency_penalty": 0, "presence_penalty": 0, "stream": False} | kwargs
 
-        if args["model"] == "gpt-3.5-turbo":
+        if args["model"] in CHAT_MODELS:
             resp = openai.ChatCompletion.create(
                 messages=self.compile_chat_messages(with_history, prompt),
                 **args,
