@@ -29,10 +29,7 @@ class OpenAI(LLM):
         self.default_model = default_model
         self.system_message = system_message
 
-    @validator("api_key", pre=True, always=True)
-    def validate_api_key(cls, v):
-        openai.api_key = v
-        return v
+        openai.api_key = api_key
 
     @cached_property
     def __encoding_for_model(self):
