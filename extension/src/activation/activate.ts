@@ -7,7 +7,7 @@ import * as path from "path";
 // import { openCapturedTerminal } from "../terminal/terminalEmulator";
 import IdeProtocolClient from "../continueIdeClient";
 import { getContinueServerUrl } from "../bridge";
-import { setupDebugPanel } from "../debugPanel";
+import { setupDebugPanel, ContinueGUIWebviewViewProvider } from "../debugPanel";
 
 export let extensionContext: vscode.ExtensionContext | undefined = undefined;
 
@@ -31,44 +31,21 @@ export function activateExtension(
     context
   );
 
-  if (showTutorial && false) {
-    Promise.all([
-      vscode.workspace
-        .openTextDocument(
-          path.join(getExtensionUri().fsPath, "examples/python/sum.py")
-        )
-        .then((document) =>
-          vscode.window.showTextDocument(document, {
-            preview: false,
-            viewColumn: vscode.ViewColumn.One,
-          })
-        ),
+  // Setup the left panel
+  (async () => {
+    const sessionId = await ideProtocolClient.getSessionId();
+    const provider = new ContinueGUIWebviewViewProvider(sessionId);
 
-      vscode.workspace
-        .openTextDocument(
-          path.join(getExtensionUri().fsPath, "examples/python/main.py")
-        )
-        .then((document) =>
-          vscode.window
-            .showTextDocument(document, {
-              preview: false,
-              viewColumn: vscode.ViewColumn.One,
-            })
-            .then((editor) => {
-              editor.revealRange(
-                new vscode.Range(0, 0, 0, 0),
-                vscode.TextEditorRevealType.InCenter
-              );
-            })
-        ),
-    ]).then(() => {
-      ideProtocolClient?.openGUI();
-    });
-  } else {
-    ideProtocolClient.openGUI().then(() => {
-      // openCapturedTerminal();
-    });
-  }
+    context.subscriptions.push(
+      vscode.window.registerWebviewViewProvider(
+        "continue.continueGUIView",
+        provider,
+        {
+          webviewOptions: { retainContextWhenHidden: true },
+        }
+      )
+    );
+  })();
 
   extensionContext = context;
 }

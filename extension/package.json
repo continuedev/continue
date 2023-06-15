@@ -20,7 +20,19 @@
     "vscode": "^1.74.0"
   },
   "categories": [
-    "Other"
+    "Other",
+    "Education",
+    "Machine Learning"
+  ],
+  "keywords": [
+    "openai",
+    "chatbot",
+    "chatgpt",
+    "autocomplete",
+    "llm",
+    "ai",
+    "assistant",
+    "chat"
   ],
   "activationEvents": [
     "onStartupFinished",
@@ -68,20 +80,24 @@
       }
     ],
     "menus": {
-      "view/title": [
+      "view/title": []
+    },
+    "viewsContainers": {
+      "activitybar": [
         {
-          "command": "continue.openContinueGUI",
-          "group": "navigation",
-          "when": "view == continue.continueGUIView"
+          "id": "continue",
+          "title": "Continue",
+          "icon": "media/continue-gradient.png"
         }
       ]
     },
     "views": {
-      "explorer": [
+      "continue": [
         {
           "type": "webview",
           "id": "continue.continueGUIView",
-          "name": "Continue GUI"
+          "name": "Continue GUI",
+          "visibility": "visible"
         }
       ]
     }

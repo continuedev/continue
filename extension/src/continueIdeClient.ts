@@ -17,7 +17,6 @@ import { decorationManager } from "./decorations";
 
 class IdeProtocolClient {
   private messenger: WebsocketMessenger | null = null;
-  private panels: Map<string, vscode.WebviewPanel> = new Map();
   private readonly context: vscode.ExtensionContext;
 
   private _makingEdit = 0;
@@ -214,35 +213,18 @@ class IdeProtocolClient {
   // ------------------------------------ //
   // Initiate Request
 
-  closeGUI(sessionId: string) {
-    this.panels.get(sessionId)?.dispose();
-    this.panels.delete(sessionId);
+  async openGUI(asRightWebviewPanel: boolean = false) {
+    // Open the webview panel
   }
 
-  async openGUI() {
-    console.log("OPENING GUI");
+  async getSessionId(): Promise<string> {
     if (this.messenger === null) {
       console.log("MESSENGER IS NULL");
     }
     const resp = await this.messenger?.sendAndReceive("openGUI", {});
     const sessionId = resp.sessionId;
-    console.log("SESSION ID", sessionId);
-
-    const column = getRightViewColumn();
-    const panel = vscode.window.createWebviewPanel(
-      "continue.debugPanelView",
-      "Continue",
-      column,
-      {
-        enableScripts: true,
-        retainContextWhenHidden: true,
-      }
-    );
-
-    // And set its HTML content
-    panel.webview.html = setupDebugPanel(panel, this.context, sessionId);
-
-    this.panels.set(sessionId, panel);
+    console.log("New Continue session with ID: ", sessionId);
+    return sessionId;
   }
 
   acceptRejectSuggestion(accept: boolean, key: SuggestionRanges) {
