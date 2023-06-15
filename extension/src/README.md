@@ -20,9 +20,8 @@
 
 9. `cmd+shift+p` to look at developer console and select Continue commands
 
-10. Every time you make changes to the code, you need to run `npm run compile`
+10. Every time you make changes to the code, you need to run `npm run esbuild` unless you make changes inside of `react-app` and then you need to run `npm run build` from there
 
-11. If you run into a "command not found" error, try running `npm run rebuild` and then `npm run compile`
 
 ## Alternative: Install from source
 
