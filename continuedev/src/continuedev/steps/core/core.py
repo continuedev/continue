@@ -198,13 +198,13 @@ class DefaultModelEditCodeStep(Step):
             diff = list(difflib.ndiff(rif.contents.splitlines(
                 keepends=True), completion.splitlines(keepends=True)))
 
-            lines_to_highlight = []
+            lines_to_highlight = set()
             index = 0
             for line in diff:
                 if line.startswith("-"):
                     pass
                 elif line.startswith("+"):
-                    lines_to_highlight.append(index + rif.range.start.line)
+                    lines_to_highlight.add(index + rif.range.start.line)
                     index += 1
                 elif line.startswith(" "):
                     index += 1
@@ -215,8 +215,24 @@ class DefaultModelEditCodeStep(Step):
                 replacement=completion
             ))
 
-            for line in lines_to_highlight:
-                await sdk.ide.highlightCode(RangeInFile(filepath=rif.filepath, range=Range.from_shorthand(line, 0, line, 0)))
+            current_hl_start = None
+            last_hl = None
+            rifs_to_highlight = []
+            for line in sorted(list(lines_to_highlight)):
+                if current_hl_start is None:
+                    current_hl_start = line
+                elif line != last_hl + 1:
+                    rifs_to_highlight.append(RangeInFile(
+                        filepath=rif.filepath, range=Range.from_shorthand(current_hl_start, 0, last_hl, 0)))
+                    current_hl_start = line
+                last_hl = line
+
+            if current_hl_start is not None:
+                rifs_to_highlight.append(RangeInFile(
+                    filepath=rif.filepath, range=Range.from_shorthand(current_hl_start, 0, last_hl, 0)))
+
+            for rif_to_hl in rifs_to_highlight:
+                await sdk.ide.highlightCode(rif_to_hl)
 
             await sdk.ide.saveFile(rif.filepath)
 
