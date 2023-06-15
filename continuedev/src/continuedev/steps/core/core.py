@@ -187,6 +187,12 @@ class DefaultModelEditCodeStep(Step):
             eot_token = "<|endoftext|>"
             completion = completion.removesuffix(eot_token)
 
+            # Remove tags and If it accidentally includes prefix or suffix, remove it
+            completion = completion.replace("<file_prefix>", "").replace("<file_suffix>", "").replace(
+                "<commit_before>", "").replace("<commit_msg>", "").replace("<commit_after>", "")
+            completion = completion.removeprefix(segs[0])
+            completion = completion.removesuffix(segs[1])
+
             self._prompt_and_completion += prompt + completion
 
             diff = list(difflib.ndiff(rif.contents.splitlines(
