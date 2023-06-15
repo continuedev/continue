@@ -172,6 +172,15 @@ class ContinueSDK(AbstractContinueSDK):
     async def get_chat_context(self) -> List[ChatMessage]:
         history_context = self.history.to_chat_history()
         highlighted_code = await self.ide.getHighlightedCode()
+        if len(highlighted_code) == 0:
+            # Get the full contents of all open files
+            files = await self.ide.getOpenFiles()
+            contents = {}
+            for file in files:
+                contents[file] = await self.ide.readFile(file)
+
+            highlighted_code = [RangeInFile.from_entire_file(
+                filepath, content) for filepath, content in contents.items()]
         for rif in highlighted_code:
             code = await self.ide.readRangeInFile(rif)
             history_context.append(ChatMessage(
