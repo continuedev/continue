@@ -192,15 +192,13 @@ class IdeProtocolClient {
   async getUserSecret(key: string) {
     // Check if secret already exists in VS Code settings (global)
     let secret = vscode.workspace.getConfiguration("continue").get(key);
-    if (secret && secret !== "") return secret;
+    if (typeof secret !== "undefined") return secret;
 
     // If not, ask user for secret
-    while (typeof secret === "undefined" || secret === "") {
-      secret = await vscode.window.showInputBox({
-        prompt: `Enter secret for ${key}. You can edit this later in the Continue VS Code settings.`,
-        password: true,
-      });
-    }
+    secret = await vscode.window.showInputBox({
+      prompt: `Enter secret for ${key}, OR press enter to try for free. You can edit this later in the Continue VS Code settings.`,
+      password: true,
+    });
 
     // Add secret to VS Code settings
     vscode.workspace

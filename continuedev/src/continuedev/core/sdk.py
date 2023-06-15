@@ -15,6 +15,7 @@ from .observation import Observation
 from ..server.ide_protocol import AbstractIdeProtocolServer
 from .main import Context, ContinueCustomException, History, Step, ChatMessage, ChatMessageRole
 from ..steps.core.core import *
+from ..libs.llm.proxy_server import ProxyServer
 
 
 class Autopilot:
@@ -37,7 +38,9 @@ class Models:
     def gpt35(self):
         async def load_gpt35():
             api_key = await self.sdk.get_user_secret(
-                'OPENAI_API_KEY', 'Please add your OpenAI API key to the .env file')
+                'OPENAI_API_KEY', 'Enter your OpenAI API key, OR press enter to try for free')
+            if api_key == "":
+                return ProxyServer(self.sdk.ide.unique_id, "gpt-3.5-turbo")
             return OpenAI(api_key=api_key, default_model="gpt-3.5-turbo")
         return asyncio.get_event_loop().run_until_complete(load_gpt35())
 
@@ -45,7 +48,9 @@ class Models:
     def gpt4(self):
         async def load_gpt4():
             api_key = await self.sdk.get_user_secret(
-                'OPENAI_API_KEY', 'Please add your OpenAI API key to the .env file')
+                'OPENAI_API_KEY', 'Enter your OpenAI API key, OR press enter to try for free')
+            if api_key == "":
+                return ProxyServer(self.sdk.ide.unique_id, "gpt-4")
             return OpenAI(api_key=api_key, default_model="gpt-4")
         return asyncio.get_event_loop().run_until_complete(load_gpt4())
 
