@@ -193,7 +193,7 @@ function StepContainer(props: StepContainerProps) {
           ) : (
             <ReactMarkdown
               key={1}
-              className="overflow-scroll"
+              className="overflow-x-scroll"
               components={
                 {
                   // pre: ({ node, ...props }) => {
