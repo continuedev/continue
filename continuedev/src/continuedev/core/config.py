@@ -34,7 +34,7 @@ class ContinueConfig(BaseModel):
         ),
         SlashCommand(
             name="explain",
-            description="Reply to instructions or a question with previous steps as context",
+            description="Reply to instructions or a question with previous steps and the highlighted code or current file as context",
             step_name="SimpleChatStep",
         ),
         SlashCommand(
