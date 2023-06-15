@@ -334,3 +334,16 @@ class WaitForUserConfirmationStep(Step):
         self.description = self.prompt
         resp = await sdk.wait_for_user_input()
         return TextObservation(text=resp)
+
+
+def get_python_traceback(output: str) -> str:
+    if "Traceback" in output:
+        return output[output.index("Traceback"):]
+    else:
+        return None
+
+def get_javascript_traceback(output: str) -> str:
+    if "at " in output:
+        return output[output.index("at "):]
+    else:
+        return None
