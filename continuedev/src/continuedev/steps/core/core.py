@@ -338,12 +338,12 @@ class WaitForUserConfirmationStep(Step):
 
 def get_python_traceback(output: str) -> str:
     if "Traceback" in output:
-        return output[output.index("Traceback"):]
+        return output
     else:
         return None
 
 def get_javascript_traceback(output: str) -> str:
     if "at " in output:
-        return output[output.index("at "):]
+        return output
     else:
         return None
