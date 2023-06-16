@@ -230,7 +230,7 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
         resp = await self._send_and_receive_json({}, UniqueIdResponse, "uniqueId")
         return resp.uniqueId
 
-    @cached_property
+    @property
     def workspace_directory(self) -> str:
         return asyncio.run(self.getWorkspaceDirectory())
 
