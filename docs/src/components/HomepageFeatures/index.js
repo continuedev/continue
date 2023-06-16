@@ -22,7 +22,7 @@ const FeatureList = [
     ),
   },
   {
-    title: "Breakdown your work step-by-step",
+    title: "Break down your work step-by-step",
     Svg: require("@site/static/img/undraw_docusaurus_react.svg").default,
     description: (
       <>
