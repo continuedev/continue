@@ -21,7 +21,7 @@
 html,
 body,
 #root {
-  height: calc(100%);
+  height: 100%;
 }
 
 body {
@@ -31,4 +31,5 @@ body {
   font-family: "Mona Sans", "Arial", sans-serif;
   padding: 0px;
   margin: 0px;
+  height: 100%;
 }
