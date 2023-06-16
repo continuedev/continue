@@ -14,7 +14,11 @@ const HeaderButtonWithText = (props: HeaderButtonWithTextProps) => {
     <HeaderButton
       style={{ padding: "3px" }}
       onMouseEnter={() => setHover(true)}
-      onMouseLeave={() => setHover(false)}
+      onMouseLeave={() => {
+        setTimeout(() => {
+          setHover(false);
+        }, 100);
+      }}
       onClick={props.onClick}
     >
       <span hidden={!hover}>{props.text}</span>
