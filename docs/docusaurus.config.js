@@ -36,11 +36,6 @@ const config = {
   presets: [
     [
       "classic",
-      {
-        gtag: {
-          trackingID: 'G-M3JWW8N2XQ',
-        },
-      },
       /** @type {import('@docusaurus/preset-classic').Options} */
       ({
         docs: {
@@ -51,6 +46,9 @@ const config = {
         theme: {
           customCss: require.resolve("./src/css/custom.css"),
         },
+        gtag: {
+            trackingID: 'G-M3JWW8N2XQ',
+          },
       }),
     ],
   ],
