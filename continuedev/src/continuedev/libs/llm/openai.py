@@ -9,13 +9,14 @@ from ..llm import LLM
 from pydantic import BaseModel, validator
 import tiktoken
 
-MAX_TOKENS_FOR_MODEL = {
-    "gpt-3.5-turbo": 4097,
-    "gpt-4": 4097,
-}
 DEFAULT_MAX_TOKENS = 2048
+MAX_TOKENS_FOR_MODEL = {
+    "gpt-3.5-turbo": 4096 - DEFAULT_MAX_TOKENS,
+    "gpt-3.5-turbo-16k": 16384 - DEFAULT_MAX_TOKENS,
+    "gpt-4": 8192 - DEFAULT_MAX_TOKENS
+}
 CHAT_MODELS = {
-    "gpt-3.5-turbo", "gpt-4"
+    "gpt-3.5-turbo", "gpt-3.5-turbo-16k", "gpt-4"
 }
 
 
@@ -24,12 +25,16 @@ class OpenAI(LLM):
     completion_count: int = 0
     default_model: str
 
-    def __init__(self, api_key: str, default_model: str = "gpt-3.5-turbo", system_message: str = None):
+    def __init__(self, api_key: str, default_model: str, system_message: str = None):
         self.api_key = api_key
         self.default_model = default_model
         self.system_message = system_message
 
         openai.api_key = api_key
+
+    @cached_property
+    def name(self):
+        return self.default_model
 
     @cached_property
     def __encoding_for_model(self):
@@ -76,7 +81,7 @@ class OpenAI(LLM):
         return chat_history
 
     def with_system_message(self, system_message: Union[str, None]):
-        return OpenAI(api_key=self.api_key, system_message=system_message)
+        return OpenAI(api_key=self.api_key, default_model=self.default_model, system_message=system_message)
 
     def stream_chat(self, prompt, with_history: List[ChatMessage] = [], **kwargs) -> Generator[Union[Any, List, Dict], None, None]:
         self.completion_count += 1

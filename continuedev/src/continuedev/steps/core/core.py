@@ -10,6 +10,7 @@ from ...models.filesystem_edit import EditDiff, FileEdit, FileEditWithFullConten
 from ...models.filesystem import FileSystem, RangeInFile, RangeInFileWithContents
 from ...core.observation import Observation, TextObservation, TracebackObservation, UserInputObservation
 from ...core.main import Step, SequentialStep
+from ...libs.llm.openai import MAX_TOKENS_FOR_MODEL
 import difflib
 
 
@@ -172,16 +173,62 @@ class DefaultModelEditCodeStep(Step):
         for rif in rif_with_contents:
             await sdk.ide.setFileOpen(rif.filepath)
 
+            model_to_use = sdk.models.default
+            
             full_file_contents = await sdk.ide.readFile(rif.filepath)
-            start_index, end_index = rif.range.indices_in_string(
-                full_file_contents)
-            segs = [full_file_contents[:start_index],
-                    full_file_contents[end_index:]]
+
+            full_file_contents_lst = full_file_contents.split("\n")
+
+            max_start_line = rif.range.start.line
+            min_end_line = rif.range.end.line
+            cur_start_line = 0
+            cur_end_line = len(full_file_contents_lst) - 1
+
+            def cut_context(model_to_use, total_tokens, cur_start_line, cur_end_line):
+                        
+                if total_tokens > MAX_TOKENS_FOR_MODEL[model_to_use.name]:
+                    while cur_end_line > min_end_line:
+                        total_tokens -= model_to_use.count_tokens(full_file_contents_lst[cur_end_line])
+                        cur_end_line -= 1
+                        if total_tokens < MAX_TOKENS_FOR_MODEL[model_to_use.name]:
+                            return cur_start_line, cur_end_line
+                    
+                    if total_tokens > MAX_TOKENS_FOR_MODEL[model_to_use.name]:
+                        while cur_start_line < max_start_line:
+                            cur_start_line += 1
+                            total_tokens -= model_to_use.count_tokens(full_file_contents_lst[cur_end_line])
+                            if total_tokens < MAX_TOKENS_FOR_MODEL[model_to_use.name]:
+                                return cur_start_line, cur_end_line
+                            
+                return cur_start_line, cur_end_line
+
+            if model_to_use.name == "gpt-4":
+
+                total_tokens = model_to_use.count_tokens(full_file_contents)
+                cur_start_line, cur_end_line = cut_context(model_to_use, total_tokens, cur_start_line, cur_end_line)
+
+            elif model_to_use.name  == "gpt-3.5-turbo" or model_to_use.name == "gpt-3.5-turbo-16k":
+
+                if sdk.models.gpt35.count_tokens(full_file_contents) > MAX_TOKENS_FOR_MODEL["gpt-3.5-turbo"]:
+
+                    model_to_use = sdk.models.gpt3516k
+                    total_tokens = model_to_use.count_tokens(full_file_contents)
+                    cur_start_line, cur_end_line = cut_context(model_to_use, total_tokens, cur_start_line, cur_end_line)
+
+            else:
+
+                raise Exception("Unknown default model")
+                      
+            code_before = "".join(full_file_contents_lst[cur_start_line:max_start_line])
+            code_after = "".join(full_file_contents_lst[min_end_line:cur_end_line])
+
+            segs = [code_before, code_after]
 
             prompt = self._prompt.format(
                 code=rif.contents, user_request=self.user_input, file_prefix=segs[0], file_suffix=segs[1])
 
-            completion = str(await sdk.models.default.complete(prompt, with_history=await sdk.get_chat_context()))
+            completion = str(await model_to_use.complete(prompt, with_history=await sdk.get_chat_context()))
+
             eot_token = "<|endoftext|>"
             completion = completion.removesuffix(eot_token)
 
