@@ -12,6 +12,11 @@ class SlashCommand(BaseModel):
     params: Optional[Dict] = {}
 
 
+class OnTracebackSteps(BaseModel):
+    step_name: str
+    params: Optional[Dict] = {}
+
+
 class ContinueConfig(BaseModel):
     """
     A pydantic class for the continue config file.
@@ -48,6 +53,8 @@ class ContinueConfig(BaseModel):
             step_name="FeedbackStep",
         )
     ]
+    on_traceback: Optional[List[OnTracebackSteps]] = [
+        OnTracebackSteps(step_name="DefaultOnTracebackStep")]
 
 
 def load_config(config_file: str) -> ContinueConfig:
