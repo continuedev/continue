@@ -70,12 +70,13 @@ export class CapturedTerminal {
   private hasRunCommand: boolean = false;
 
   private dataEndsInPrompt(strippedData: string): boolean {
-    const lines = this.dataBuffer.split("\n");
+    const lines = strippedData.split("\n");
+    const last_line = lines[lines.length - 1];
     return (
-      lines.length > 0 &&
-      (lines[lines.length - 1].includes("bash-") ||
-        lines[lines.length - 1].includes(") $ ")) &&
-      lines[lines.length - 1].includes("$")
+      (lines.length > 0 &&
+        (last_line.includes("bash-") || last_line.includes(") $ ")) &&
+        last_line.includes("$")) ||
+      (last_line.includes("]> ") && last_line.includes(") ["))
     );
   }
 
@@ -127,12 +128,12 @@ export class CapturedTerminal {
     // Split the output by commands so it can be sent to Continue Server
 
     const strippedData = stripAnsi(data);
-    this.splitByCommandsBuffer += strippedData;
+    this.splitByCommandsBuffer += data;
     if (this.dataEndsInPrompt(strippedData)) {
       if (this.onCommandOutput) {
-        this.onCommandOutput(this.splitByCommandsBuffer);
+        this.onCommandOutput(stripAnsi(this.splitByCommandsBuffer));
       }
-      this.dataBuffer = "";
+      this.splitByCommandsBuffer = "";
     }
   }
 
@@ -166,6 +167,7 @@ export class CapturedTerminal {
       // Pass data through to terminal
       this.writeEmitter.fire(data);
 
+      this.splitByCommandsListener(data);
       for (let listener of this.onDataListeners) {
         listener(data);
       }

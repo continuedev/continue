@@ -14,6 +14,7 @@ from ..libs.util.telemetry import capture_event
 from .sdk import ContinueSDK
 import asyncio
 from ..libs.util.step_name_to_steps import get_step_from_name
+from ..libs.util.traceback_parsers import get_python_traceback, get_javascript_traceback
 
 
 class Autopilot(ContinueBaseModel):
@@ -92,12 +93,14 @@ class Autopilot(ContinueBaseModel):
             # Note that this is being overriden to do nothing in DemoAgent
 
     async def handle_command_output(self, output: str):
-        is_traceback = False
-        if is_traceback:
-            for tb_step in self.continue_sdk.config.on_traceback:
-                step = get_step_from_name(tb_step.step_name)(
-                    output=output, **tb_step.params)
-                await self._run_singular_step(step)
+        get_traceback_funcs = [get_python_traceback, get_javascript_traceback]
+        for get_tb_func in get_traceback_funcs:
+            traceback = get_tb_func(output)
+            if traceback is not None:
+                for tb_step in self.continue_sdk.config.on_traceback:
+                    step = get_step_from_name(
+                        tb_step.step_name, {"output": output, **tb_step.params})
+                    await self._run_singular_step(step)
 
     _step_depth: int = 0
 

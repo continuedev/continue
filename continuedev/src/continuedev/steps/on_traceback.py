@@ -9,6 +9,6 @@ class DefaultOnTracebackStep(Step):
     hide: bool = True
 
     async def run(self, sdk: ContinueSDK):
-        sdk.run_step(SimpleChatStep(
+        await sdk.run_step(SimpleChatStep(
             name="Help With Traceback",
             user_input=f"""I got the following error, can you please help explain how to fix it?\n\n{self.output}"""))

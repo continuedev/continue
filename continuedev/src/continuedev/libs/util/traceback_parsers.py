@@ -1,24 +1,15 @@
-from typing import Union
-from ...models.main import Traceback
-from boltons import tbutils
+def get_python_traceback(output: str) -> str:
+    if "Traceback (most recent call last):" in output or "SyntaxError" in output:
+        return output
+    else:
+        return None
 
 
-def sort_func(items):
-    """Sort a list of items."""
-    return sorted(items)
-
-
-def parse_python_traceback(stdout: str) -> Union[Traceback, None]:
-    """Parse a python traceback from stdout."""
-
-    # Sometimes paths are not quoted, but they need to be
-    if "File \"" not in stdout:
-        stdout = stdout.replace("File ", "File \"").replace(
-            ", line ", "\", line ")
-
-    try:
-        tbutil_parsed_exc = tbutils.ParsedException.from_string(stdout)
-        return Traceback.from_tbutil_parsed_exc(tbutil_parsed_exc)
-
-    except Exception:
+def get_javascript_traceback(output: str) -> str:
+    lines = output.splitlines()
+    if len(lines) > 0:
+        first_line = lines[0].split(": ")
+        if len(lines) > 1 and len(first_line) > 0 and len(first_line[0]) > 0 and "at" in lines[1].lstrip():
+            return output
+    else:
         return None
