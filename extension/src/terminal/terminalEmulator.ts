@@ -3,6 +3,7 @@
 import * as vscode from "vscode";
 import os = require("os");
 import stripAnsi from "strip-ansi";
+import { longestCommonSubsequence } from "../util/lcs";
 
 function loadNativeModule<T>(id: string): T | null {
   try {
@@ -71,13 +72,20 @@ export class CapturedTerminal {
 
   private dataEndsInPrompt(strippedData: string): boolean {
     const lines = strippedData.split("\n");
-    const last_line = lines[lines.length - 1];
+    const lastLine = lines[lines.length - 1];
+
     return (
-      (lines.length > 0 &&
-        (last_line.includes("bash-") || last_line.includes(") $ ")) &&
-        last_line.includes("$")) ||
-      (last_line.includes("]> ") && last_line.includes(") [")) ||
-      (last_line.includes(" (") && last_line.includes(")>"))
+      lines.length > 0 &&
+      (((lastLine.includes("bash-") || lastLine.includes(") $ ")) &&
+        lastLine.includes("$")) ||
+        (lastLine.includes("]> ") && lastLine.includes(") [")) ||
+        (lastLine.includes(" (") && lastLine.includes(")>")) ||
+        (typeof this.commandPromptString !== "undefined" &&
+          (lastLine.includes(this.commandPromptString) ||
+            this.commandPromptString.length -
+              longestCommonSubsequence(lastLine, this.commandPromptString)
+                .length <
+              3)))
     );
   }
 
@@ -96,12 +104,6 @@ export class CapturedTerminal {
   }
 
   async runCommand(command: string): Promise<string> {
-    if (!this.hasRunCommand) {
-      this.hasRunCommand = true;
-      // Let the first bash- prompt appear and let python env be opened
-      // await this.waitForCommandToFinish();
-    }
-
     if (this.commandQueue.length === 0) {
       return new Promise(async (resolve, reject) => {
         this.commandQueue.push([command, resolve]);
@@ -109,8 +111,12 @@ export class CapturedTerminal {
         while (this.commandQueue.length > 0) {
           const [command, resolve] = this.commandQueue.shift()!;
 
+          // Refresh the command prompt string every time in case it changes
+          await this.refreshCommandPromptString();
+
           this.terminal.sendText(command);
-          resolve(await this.waitForCommandToFinish());
+          const output = await this.waitForCommandToFinish();
+          resolve(output);
         }
       });
     } else {
@@ -136,6 +142,24 @@ export class CapturedTerminal {
       }
       this.splitByCommandsBuffer = "";
     }
+  }
+
+  private runningClearToGetPrompt: boolean = false;
+  private seenClear: boolean = false;
+  private commandPromptString: string | undefined = undefined;
+  private resolveMeWhenCommandPromptStringFound:
+    | ((_: unknown) => void)
+    | undefined = undefined;
+
+  private async refreshCommandPromptString(): Promise<string | undefined> {
+    // Sends a message that will be received by the terminal to get the command prompt string, see the onData method below in constructor.
+    this.runningClearToGetPrompt = true;
+    this.terminal.sendText("echo");
+    const promise = new Promise((resolve, reject) => {
+      this.resolveMeWhenCommandPromptStringFound = resolve;
+    });
+    await promise;
+    return this.commandPromptString;
   }
 
   constructor(
@@ -165,7 +189,54 @@ export class CapturedTerminal {
     this.writeEmitter = new vscode.EventEmitter<string>();
 
     this.ptyProcess.onData((data: any) => {
+      if (this.runningClearToGetPrompt) {
+        if (
+          stripAnsi(data)
+            .split("\n")
+            .flatMap((line) => line.split("\r"))
+            .find((line) => line.trim() === "echo") !== undefined
+        ) {
+          this.seenClear = true;
+          return;
+        } else if (this.seenClear) {
+          const strippedLines = stripAnsi(data)
+            .split("\r")
+            .filter(
+              (line) =>
+                line.trim().length > 0 &&
+                line.trim() !== "%" &&
+                line.trim() !== "⏎"
+            );
+          const lastLine = strippedLines[strippedLines.length - 1] || "";
+          const lines = lastLine
+            .split("\n")
+            .filter(
+              (line) =>
+                line.trim().length > 0 &&
+                line.trim() !== "%" &&
+                line.trim() !== "⏎"
+            );
+          const commandPromptString = (lines[lines.length - 1] || "").trim();
+          if (
+            commandPromptString.length > 0 &&
+            !commandPromptString.includes("echo")
+          ) {
+            this.runningClearToGetPrompt = false;
+            this.seenClear = false;
+            this.commandPromptString = commandPromptString;
+            console.log(
+              "Found command prompt string: " + this.commandPromptString
+            );
+            if (this.resolveMeWhenCommandPromptStringFound) {
+              this.resolveMeWhenCommandPromptStringFound(undefined);
+            }
+          }
+          return;
+        }
+      }
+
       // Pass data through to terminal
+      data = data.replace("⏎", "");
       this.writeEmitter.fire(data);
 
       this.splitByCommandsListener(data);
