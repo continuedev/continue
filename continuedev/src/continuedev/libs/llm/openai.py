@@ -103,7 +103,7 @@ class OpenAI(LLM):
                 "role": "system",
                 "content": self.system_message
             })
-        history += [msg.dict() for msg in msgs]
+        history += [{"role": msg.role, "content": msg.content} for msg in msgs]
         history.append({
             "role": "user",
             "content": prompt
