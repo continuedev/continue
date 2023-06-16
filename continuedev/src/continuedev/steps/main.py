@@ -145,7 +145,7 @@ class FasterEditHighlightedCodeStep(Step):
         for rif in rif_with_contents:
             rif_dict[rif.filepath] = rif.contents
 
-        completion = sdk.models.gpt35.complete(prompt)
+        completion = await sdk.models.gpt35.complete(prompt)
 
         # Temporarily doing this to generate description.
         self._prompt = prompt

@@ -11,9 +11,9 @@ class SimpleChatStep(Step):
 
     async def run(self, sdk: ContinueSDK):
         self.description = f"## {self.user_input}\n\n"
-        for chunk in sdk.models.default.stream_chat(self.user_input, with_history=await sdk.get_chat_context()):
+        async for chunk in sdk.models.default.stream_chat(self.user_input, with_history=await sdk.get_chat_context()):
             self.description += chunk
             await sdk.update_ui()
 
-        self.name = sdk.models.gpt35.complete(
-            f"Write a short title for the following chat message: {self.description}").strip()
+        self.name = (await sdk.models.gpt35.complete(
+            f"Write a short title for the following chat message: {self.description}")).strip()
