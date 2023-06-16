@@ -41,7 +41,7 @@ const config = {
         docs: {
           routeBasePath: '/',
           sidebarPath: require.resolve("./sidebars.js"),
-          editUrl: "https://github.com/continuedev/continue/",
+          editUrl: "https://github.com/continuedev/continue/tree/main/docs",
         },
         theme: {
           customCss: require.resolve("./src/css/custom.css"),
