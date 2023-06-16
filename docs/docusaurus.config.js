@@ -36,21 +36,19 @@ const config = {
   presets: [
     [
       "classic",
-      {
-        gtag: {
-          trackingID: 'G-M3JWW8N2XQ',
-        },
-      },
       /** @type {import('@docusaurus/preset-classic').Options} */
       ({
         docs: {
           routeBasePath: '/',
           sidebarPath: require.resolve("./sidebars.js"),
-          editUrl: "https://github.com/continuedev/continue/",
+          editUrl: "https://github.com/continuedev/continue/tree/main/docs",
         },
         theme: {
           customCss: require.resolve("./src/css/custom.css"),
         },
+        gtag: {
+            trackingID: 'G-M3JWW8N2XQ',
+          },
       }),
     ],
   ],
