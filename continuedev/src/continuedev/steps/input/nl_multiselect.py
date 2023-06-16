@@ -23,6 +23,6 @@ class NLMultiselectStep(Step):
         if first_try is not None:
             return first_try
 
-        gpt_parsed = sdk.models.gpt35.complete(
+        gpt_parsed = await sdk.models.gpt35.complete(
             f"These are the available options are: [{', '.join(self.options)}]. The user requested {user_response}. This is the exact string from the options array that they selected:")
         return extract_option(gpt_parsed) or self.options[0]

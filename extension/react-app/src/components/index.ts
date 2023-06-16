@@ -48,7 +48,7 @@ export const Pre = styled.pre`
   max-height: 150px;
   overflow-y: scroll;
   margin: 0;
-  background-color: ${secondaryDark};
+  background-color: ${vscBackground};
   border: none;
 
   /* text wrapping */

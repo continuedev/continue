@@ -17,39 +17,15 @@ interface DebugPanelProps {
   }[];
 }
 
-const GradientContainer = styled.div`
-  // Uncomment to get gradient border
-  /* background: linear-gradient(
-    101.79deg,
-    #12887a 0%,
-    #87245c 37.64%,
-    #e12637 65.98%,
-    #ffb215 110.45%
-  ); */
-  /* padding: 10px; */
-  background-color: ${secondaryDark};
-  margin: 0;
-  height: 100%;
-  /* border: 1px solid white; */
-  border-radius: ${defaultBorderRadius};
-`;
-
-const MainDiv = styled.div`
-  height: 100%;
-  border-radius: ${defaultBorderRadius};
-  scrollbar-base-color: transparent;
-  background-color: ${vscBackground};
-`;
-
 const TabBar = styled.div<{ numTabs: number }>`
   display: grid;
   grid-template-columns: repeat(${(props) => props.numTabs}, 1fr);
 `;
 
 const TabsAndBodyDiv = styled.div`
-  display: grid;
-  grid-template-rows: auto 1fr;
   height: 100%;
+  border-radius: ${defaultBorderRadius};
+  scrollbar-base-color: transparent;
 `;
 
 function DebugPanel(props: DebugPanelProps) {
@@ -76,42 +52,43 @@ function DebugPanel(props: DebugPanelProps) {
   const [currentTab, setCurrentTab] = useState(0);
 
   return (
-    <GradientContainer>
-      <MainDiv>
-        <TabsAndBodyDiv>
-          {props.tabs.length > 1 && (
-            <TabBar numTabs={props.tabs.length}>
-              {props.tabs.map((tab, index) => {
-                return (
-                  <div
-                    key={index}
-                    className={`p-2 cursor-pointer text-center ${
-                      index === currentTab
-                        ? "bg-secondary-dark"
-                        : "bg-vsc-background"
-                    }`}
-                    onClick={() => setCurrentTab(index)}
-                  >
-                    {tab.title}
-                  </div>
-                );
-              })}
-            </TabBar>
-          )}
+    <TabsAndBodyDiv>
+      {props.tabs.length > 1 && (
+        <TabBar numTabs={props.tabs.length}>
           {props.tabs.map((tab, index) => {
             return (
               <div
                 key={index}
-                hidden={index !== currentTab}
-                style={{ scrollbarGutter: "stable both-edges" }}
+                className={`p-2 cursor-pointer text-center ${
+                  index === currentTab
+                    ? "bg-secondary-dark"
+                    : "bg-vsc-background"
+                }`}
+                onClick={() => setCurrentTab(index)}
               >
-                {tab.element}
+                {tab.title}
               </div>
             );
           })}
-        </TabsAndBodyDiv>
-      </MainDiv>
-    </GradientContainer>
+        </TabBar>
+      )}
+      {props.tabs.map((tab, index) => {
+        return (
+          <div
+            key={index}
+            hidden={index !== currentTab}
+            style={{
+              scrollbarGutter: "stable both-edges",
+              minHeight: "100%",
+              display: "grid",
+              gridTemplateRows: "1fr auto",
+            }}
+          >
+            {tab.element}
+          </div>
+        );
+      })}
+    </TabsAndBodyDiv>
   );
 }
 

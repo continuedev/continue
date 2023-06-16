@@ -82,7 +82,7 @@ class LoadDataStep(Step):
                 docs = f.read()
 
             output = "Traceback" + output.split("Traceback")[-1]
-            suggestion = sdk.models.default.complete(dedent(f"""\
+            suggestion = await sdk.models.default.complete(dedent(f"""\
                 When trying to load data into BigQuery, the following error occurred:
 
                 ```ascii

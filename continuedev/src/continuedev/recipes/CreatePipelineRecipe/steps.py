@@ -29,8 +29,8 @@ class SetupPipelineStep(Step):
     async def run(self, sdk: ContinueSDK):
         sdk.context.set("api_description", self.api_description)
 
-        source_name = sdk.models.gpt35.complete(
-            f"Write a snake_case name for the data source described by {self.api_description}: ").strip()
+        source_name = (await sdk.models.gpt35.complete(
+            f"Write a snake_case name for the data source described by {self.api_description}: ")).strip()
         filename = f'{source_name}.py'
 
         # running commands to get started when creating a new dlt pipeline
@@ -49,7 +49,7 @@ class SetupPipelineStep(Step):
             - `pip install -r requirements.txt`: Install the Python dependencies for the pipeline"""), name="Setup Python environment")
 
         # editing the resource function to call the requested API
-        resource_function_range = Range.from_shorthand(15, 0, 29, 0)
+        resource_function_range = Range.from_shorthand(15, 0, 30, 0)
         await sdk.ide.highlightCode(RangeInFile(filepath=os.path.join(await sdk.ide.getWorkspaceDirectory(), filename), range=resource_function_range), "#ffa50033")
 
         # sdk.set_loading_message("Writing code to call the API...")
@@ -64,7 +64,7 @@ class SetupPipelineStep(Step):
 
         # wait for user to put API key in secrets.toml
         await sdk.ide.setFileOpen(await sdk.ide.getWorkspaceDirectory() + "/.dlt/secrets.toml")
-        await sdk.wait_for_user_confirmation("If this service requires an API key, please add it to the `secrets.toml` file and then press `Continue`")
+        await sdk.wait_for_user_confirmation("If this service requires an API key, please add it to the `secrets.toml` file and then press `Continue`.")
 
         sdk.context.set("source_name", source_name)
 
@@ -91,7 +91,7 @@ class ValidatePipelineStep(Step):
         if "Traceback" in output or "SyntaxError" in output:
             output = "Traceback" + output.split("Traceback")[-1]
             file_content = await sdk.ide.readFile(os.path.join(workspace_dir, filename))
-            suggestion = sdk.models.gpt35.complete(dedent(f"""\
+            suggestion = await sdk.models.gpt35.complete(dedent(f"""\
                 ```python
                 {file_content}
                 ```
@@ -103,7 +103,7 @@ class ValidatePipelineStep(Step):
 
                 This is a brief summary of the error followed by a suggestion on how it can be fixed by editing the resource function:"""))
 
-            api_documentation_url = sdk.models.gpt35.complete(dedent(f"""\
+            api_documentation_url = await sdk.models.gpt35.complete(dedent(f"""\
                 The API I am trying to call is the '{sdk.context.get('api_description')}'. I tried calling it in the @resource function like this:
                 ```python       
                 {file_content}
@@ -159,7 +159,7 @@ class RunQueryStep(Step):
         output = await sdk.run('.env/bin/python3 query.py', name="Run test query", description="Running `.env/bin/python3 query.py` to test that the data was loaded into DuckDB as expected", handle_error=False)
 
         if "Traceback" in output or "SyntaxError" in output:
-            suggestion = sdk.models.gpt35.complete(dedent(f"""\
+            suggestion = await sdk.models.gpt35.complete(dedent(f"""\
                 ```python
                 {await sdk.ide.readFile(os.path.join(sdk.ide.workspace_directory, "query.py"))}
                 ```
@@ -172,5 +172,5 @@ class RunQueryStep(Step):
                 This is a brief summary of the error followed by a suggestion on how it can be fixed:"""))
 
             sdk.raise_exception(
-                title="Error while running query", message=output, with_step=MessageStep(name=f"Suggestion to solve error {AI_ASSISTED_STRING}", message=suggestion)
+                title="Error while running query", message=output, with_step=MessageStep(name=f"Suggestion to solve error {AI_ASSISTED_STRING}", message=suggestion + "\n\nIt is also very likely that no duckdb table was created, which can happen if the resource function did not yield any data. Please make sure that it is yielding data and then rerun this step.")
             )

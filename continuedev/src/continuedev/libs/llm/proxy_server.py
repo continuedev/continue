@@ -1,8 +1,9 @@
 from functools import cached_property
 import json
-from typing import Any, Dict, Generator, List, Literal, Union
+from typing import Any, Coroutine, Dict, Generator, List, Literal, Union
 import requests
 import tiktoken
+import aiohttp
 
 from ...core.main import ChatMessage
 from ..llm import LLM
@@ -16,7 +17,7 @@ CHAT_MODELS = {
     "gpt-3.5-turbo", "gpt-4"
 }
 
-# SERVER_URL = "http://127.0.0.1:8002"
+# SERVER_URL = "http://127.0.0.1:8080"
 SERVER_URL = "https://proxy-server-l6vsfbzhba-uc.a.run.app"
 
 
@@ -39,16 +40,6 @@ class ProxyServer(LLM):
     def count_tokens(self, text: str):
         return len(self.__encoding_for_model.encode(text, disallowed_special=()))
 
-    def stream_chat(self, prompt, with_history: List[ChatMessage] = [], **kwargs) -> Generator[Union[Any, List, Dict], None, None]:
-        resp = requests.post(f"{SERVER_URL}/stream_complete", json={
-            "chat_history": self.compile_chat_messages(with_history, prompt),
-            "model": self.default_model,
-            "unique_id": self.unique_id,
-        }, stream=True)
-        for line in resp.iter_lines():
-            if line:
-                yield line.decode("utf-8")
-
     def __prune_chat_history(self, chat_history: List[ChatMessage], max_tokens: int, tokens_for_completion: int):
         tokens = tokens_for_completion
         for i in range(len(chat_history) - 1, -1, -1):
@@ -67,7 +58,7 @@ class ProxyServer(LLM):
                 "role": "system",
                 "content": self.system_message
             })
-        history += [msg.dict() for msg in msgs]
+        history += [{"role": msg.role, "content": msg.content} for msg in msgs]
         history.append({
             "role": "user",
             "content": prompt
@@ -75,11 +66,28 @@ class ProxyServer(LLM):
 
         return history
 
-    def complete(self, prompt: str, with_history: List[ChatMessage] = [], **kwargs) -> str:
+    async def complete(self, prompt: str, with_history: List[ChatMessage] = [], **kwargs) -> Coroutine[Any, Any, str]:
+        async with aiohttp.ClientSession() as session:
+            async with session.post(f"{SERVER_URL}/complete", json={
+                "chat_history": self.compile_chat_messages(with_history, prompt),
+                "model": self.default_model,
+                "unique_id": self.unique_id,
+            }) as resp:
+                try:
+                    return json.loads(await resp.text())
+                except json.JSONDecodeError:
+                    raise Exception(await resp.text())
 
-        resp = requests.post(f"{SERVER_URL}/complete", json={
-            "chat_history": self.compile_chat_messages(with_history, prompt),
-            "model": self.default_model,
-            "unique_id": self.unique_id,
-        })
-        return json.loads(resp.text)
+    async def stream_chat(self, prompt, with_history: List[ChatMessage] = [], **kwargs) -> Generator[Union[Any, List, Dict], None, None]:
+        async with aiohttp.ClientSession() as session:
+            async with session.post(f"{SERVER_URL}/stream_complete", json={
+                "chat_history": self.compile_chat_messages(with_history, prompt),
+                "model": self.default_model,
+                "unique_id": self.unique_id,
+            }) as resp:
+                async for line in resp.content:
+                    if line:
+                        try:
+                            yield line.decode("utf-8")
+                        except json.JSONDecodeError:
+                            raise Exception(str(line))

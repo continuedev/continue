@@ -27,5 +27,7 @@ class CreatePipelineRecipe(Step):
         await sdk.run_step(
             SetupPipelineStep(api_description=text_observation.text) >>
             ValidatePipelineStep() >>
-            RunQueryStep()
+            RunQueryStep() >>
+            MessageStep(
+                name="Congrats!", message="You've successfully created your first dlt pipeline! 🎉")
         )

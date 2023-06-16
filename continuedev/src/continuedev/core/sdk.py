@@ -177,26 +177,29 @@ class ContinueSDK(AbstractContinueSDK):
     def raise_exception(self, message: str, title: str, with_step: Union[Step, None] = None):
         raise ContinueCustomException(message, title, with_step)
 
-    def add_chat_context(self, content: str, role: ChatMessageRole = "assistent"):
+    def add_chat_context(self, content: str, summary: Union[str, None] = None, role: ChatMessageRole = "assistant"):
         self.history.timeline[self.history.current_index].step.chat_context.append(
-            ChatMessage(content=content, role=role))
+            ChatMessage(content=content, role=role, summary=summary))
 
     async def get_chat_context(self) -> List[ChatMessage]:
         history_context = self.history.to_chat_history()
         highlighted_code = await self.ide.getHighlightedCode()
+
+        preface = "The following code is highlighted"
+
         if len(highlighted_code) == 0:
+            preface = "The following file is open"
             # Get the full contents of all open files
             files = await self.ide.getOpenFiles()
-            contents = {}
-            for file in files:
-                contents[file] = await self.ide.readFile(file)
+            if len(files) > 0:
+                content = await self.ide.readFile(files[0])
+                highlighted_code = [
+                    RangeInFile.from_entire_file(files[0], content)]
 
-            highlighted_code = [RangeInFile.from_entire_file(
-                filepath, content) for filepath, content in contents.items()]
         for rif in highlighted_code:
             code = await self.ide.readRangeInFile(rif)
             history_context.append(ChatMessage(
-                content=f"The following code is highlighted:\n```\n{code}\n```", role="user"))
+                content=f"{preface} ({rif.filepath}):\n```\n{code}\n```", role="user", summary=f"{preface}: {rif.filepath}"))
         return history_context
 
     async def update_ui(self):

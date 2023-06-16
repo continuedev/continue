@@ -13,6 +13,8 @@ from ..steps.core.core import ReversibleStep, ManualEditStep, UserInputStep
 from ..libs.util.telemetry import capture_event
 from .sdk import ContinueSDK
 import asyncio
+from ..libs.util.step_name_to_steps import get_step_from_name
+from ..libs.util.traceback_parsers import get_python_traceback, get_javascript_traceback
 
 
 class Autopilot(ContinueBaseModel):
@@ -88,9 +90,17 @@ class Autopilot(ContinueBaseModel):
             self._manual_edits_buffer.append(edit)
             # TODO: You're storing a lot of unecessary data here. Can compress into EditDiffs on the spot, and merge.
             # self._manual_edits_buffer = merge_file_edit(self._manual_edits_buffer, edit)
+            # Note that this is being overriden to do nothing in DemoAgent
 
-    def handle_traceback(self, traceback: str):
-        raise NotImplementedError
+    async def handle_command_output(self, output: str):
+        get_traceback_funcs = [get_python_traceback, get_javascript_traceback]
+        for get_tb_func in get_traceback_funcs:
+            traceback = get_tb_func(output)
+            if traceback is not None:
+                for tb_step in self.continue_sdk.config.on_traceback:
+                    step = get_step_from_name(
+                        tb_step.step_name, {"output": output, **tb_step.params})
+                    await self._run_singular_step(step)
 
     _step_depth: int = 0
 
@@ -99,9 +109,23 @@ class Autopilot(ContinueBaseModel):
 
     async def delete_at_index(self, index: int):
         self.history.timeline[index].step.hide = True
+        self.history.timeline[index].deleted = True
         await self.update_subscribers()
 
     async def _run_singular_step(self, step: "Step", is_future_step: bool = False) -> Coroutine[Observation, None, None]:
+        # Allow config to set disallowed steps
+        if step.__class__.__name__ in self.continue_sdk.config.disallowed_steps:
+            return None
+
+        # If a parent step is deleted/cancelled, don't run this step
+        last_depth = self._step_depth
+        i = self.history.current_index
+        while i >= 0 and self.history.timeline[i].depth > last_depth:
+            if self.history.timeline[i].deleted:
+                return None
+            last_depth = self.history.timeline[i].depth
+            i -= 1
+
         capture_event(self.continue_sdk.ide.unique_id, 'step run', {
                       'step_name': step.name, 'params': step.dict()})
 
@@ -114,7 +138,7 @@ class Autopilot(ContinueBaseModel):
                 await self._run_singular_step(manualEditsStep)
 
         # Update history - do this first so we get top-first tree ordering
-        self.history.add_node(HistoryNode(
+        index_of_history_node = self.history.add_node(HistoryNode(
             step=step, observation=None, depth=self._step_depth))
 
         # Call all subscribed callbacks
@@ -127,6 +151,10 @@ class Autopilot(ContinueBaseModel):
         try:
             observation = await step(self.continue_sdk)
         except Exception as e:
+            if self.history.timeline[index_of_history_node].deleted:
+                # If step was deleted/cancelled, don't show error or allow retry
+                return None
+
             caught_error = True
 
             is_continue_custom_exception = issubclass(
@@ -176,8 +204,7 @@ class Autopilot(ContinueBaseModel):
 
         # Add observation to history, unless already attached error observation
         if not caught_error:
-            self.history.get_last_at_depth(
-                self._step_depth, include_current=True).observation = observation
+            self.history.timeline[index_of_history_node].observation = observation
             await self.update_subscribers()
 
         # Update its description

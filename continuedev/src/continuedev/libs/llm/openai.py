@@ -1,7 +1,7 @@
 import asyncio
 from functools import cached_property
 import time
-from typing import Any, Dict, Generator, List, Union
+from typing import Any, Coroutine, Dict, Generator, List, Union
 from ...core.main import ChatMessage
 import openai
 import aiohttp
@@ -47,12 +47,37 @@ class OpenAI(LLM):
         return len(self.__encoding_for_model.encode(text, disallowed_special=()))
 
     def __prune_chat_history(self, chat_history: List[ChatMessage], max_tokens: int, tokens_for_completion: int):
-        tokens = tokens_for_completion
-        for i in range(len(chat_history) - 1, -1, -1):
-            message = chat_history[i]
-            tokens += self.count_tokens(message.content)
-            if tokens > max_tokens:
-                return chat_history[i + 1:]
+        total_tokens = tokens_for_completion + \
+            sum(self.count_tokens(message.content) for message in chat_history)
+
+        # 1. Replace beyond last 5 messages with summary
+        i = 0
+        while total_tokens > max_tokens and i < len(chat_history) - 5:
+            message = chat_history[0]
+            total_tokens -= self.count_tokens(message.content)
+            total_tokens += self.count_tokens(message.summary)
+            message.content = message.summary
+            i += 1
+
+        # 2. Remove entire messages until the last 5
+        while len(chat_history) > 5 and total_tokens > max_tokens:
+            message = chat_history.pop(0)
+            total_tokens -= self.count_tokens(message.content)
+
+        # 3. Truncate message in the last 5
+        i = 0
+        while total_tokens > max_tokens:
+            message = chat_history[0]
+            total_tokens -= self.count_tokens(message.content)
+            total_tokens += self.count_tokens(message.summary)
+            message.content = message.summary
+            i += 1
+
+        # 4. Remove entire messages in the last 5
+        while total_tokens > max_tokens and len(chat_history) > 0:
+            message = chat_history.pop(0)
+            total_tokens -= self.count_tokens(message.content)
+
         return chat_history
 
     def with_system_message(self, system_message: Union[str, None]):
@@ -83,7 +108,7 @@ class OpenAI(LLM):
                 "role": "system",
                 "content": self.system_message
             })
-        history += [msg.dict() for msg in msgs]
+        history += [{"role": msg.role, "content": msg.content} for msg in msgs]
         history.append({
             "role": "user",
             "content": prompt
@@ -112,7 +137,7 @@ class OpenAI(LLM):
             for chunk in generator:
                 yield chunk.choices[0].text
 
-    def complete(self, prompt: str, with_history: List[ChatMessage] = [], **kwargs) -> str:
+    async def complete(self, prompt: str, with_history: List[ChatMessage] = [], **kwargs) -> Coroutine[Any, Any, str]:
         t1 = time.time()
 
         self.completion_count += 1
@@ -120,15 +145,15 @@ class OpenAI(LLM):
                 "frequency_penalty": 0, "presence_penalty": 0, "stream": False} | kwargs
 
         if args["model"] in CHAT_MODELS:
-            resp = openai.ChatCompletion.create(
+            resp = (await openai.ChatCompletion.acreate(
                 messages=self.compile_chat_messages(with_history, prompt),
                 **args,
-            ).choices[0].message.content
+            )).choices[0].message.content
         else:
-            resp = openai.Completion.create(
+            resp = (await openai.Completion.acreate(
                 prompt=prompt,
                 **args,
-            ).choices[0].text
+            )).choices[0].text
 
         t2 = time.time()
         print("Completion time:", t2 - t1)
