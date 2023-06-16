@@ -165,7 +165,7 @@ class ContinueSDK(AbstractContinueSDK):
     def raise_exception(self, message: str, title: str, with_step: Union[Step, None] = None):
         raise ContinueCustomException(message, title, with_step)
 
-    def add_chat_context(self, content: str, summary: Union[str, None] = None, role: ChatMessageRole = "assistent"):
+    def add_chat_context(self, content: str, summary: Union[str, None] = None, role: ChatMessageRole = "assistant"):
         self.history.timeline[self.history.current_index].step.chat_context.append(
             ChatMessage(content=content, role=role, summary=summary))
 
