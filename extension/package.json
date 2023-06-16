@@ -96,7 +96,7 @@
         {
           "type": "webview",
           "id": "continue.continueGUIView",
-          "name": ")",
+          "name": "GUI",
           "visibility": "visible"
         }
       ]
