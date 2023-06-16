@@ -4,32 +4,29 @@ import styles from "./styles.module.css";
 
 const FeatureList = [
   {
-    title: "Tell LLMs when to step in",
+    title: "Understand and edit code",
     Svg: require("@site/static/img/undraw_docusaurus_mountain.svg").default,
     description: (
       <>
-        Seamlessly put your repetitive software development tasks 
-        on autopilot by leveraging recipes created by others
+        Seamlessly ask language models to help you complete steps in your software development tasks
       </>
     ),
   },
   {
-    title: "Write your own recipes",
+    title: "Customizable for your team",
     Svg: require("@site/static/img/undraw_docusaurus_tree.svg").default,
     description: (
       <>
-        Use the Continue SDK to create custom steps and compose 
-        them into recipes, guiding LLMs through common tasks
+        Define when and how LLMs should act to accelerate steps in your team-specific workflows
       </>
     ),
   },
   {
-    title: "Wield LLMs with confidence",
+    title: "Break down your work step-by-step",
     Svg: require("@site/static/img/undraw_docusaurus_react.svg").default,
     description: (
       <>
-        Use the Continue GUI to review, reverse, and rerun steps or even 
-        entire recipes, allowing you to build trust in language models
+        Use the Continue GUI to review, reverse, and rerun steps that LLMs and you have taken together
       </>
     ),
   },

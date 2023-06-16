@@ -41,7 +41,7 @@ class WriteRegexPatternStep(Step):
 
     async def run(self, sdk: ContinueSDK):
         # Ask the user for a regex pattern
-        pattern = sdk.models.gpt35.complete(dedent(f"""\
+        pattern = await sdk.models.gpt35.complete(dedent(f"""\
             This is the user request:
 
             {self.user_request}

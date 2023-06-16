@@ -21,9 +21,7 @@ import {
 } from "@styled-icons/heroicons-outline";
 import { HistoryNode } from "../../../schema/HistoryNode";
 import ReactMarkdown from "react-markdown";
-import ContinueButton from "./ContinueButton";
-import InputAndButton from "./InputAndButton";
-import ToggleErrorDiv from "./ToggleErrorDiv";
+import HeaderButtonWithText from "./HeaderButtonWithText";
 
 interface StepContainerProps {
   historyNode: HistoryNode;
@@ -152,23 +150,25 @@ function StepContainer(props: StepContainerProps) {
             </HeaderButton> */}
 
             <>
-              <HeaderButton
+              <HeaderButtonWithText
                 onClick={(e) => {
                   e.stopPropagation();
                   props.onDelete();
                 }}
+                text="Delete"
               >
                 <XMark size="1.6em" onClick={props.onDelete} />
-              </HeaderButton>
+              </HeaderButtonWithText>
               {props.historyNode.observation?.error ? (
-                <HeaderButton
+                <HeaderButtonWithText
+                  text="Retry"
                   onClick={(e) => {
                     e.stopPropagation();
                     props.onRetry();
                   }}
                 >
                   <ArrowPath size="1.6em" onClick={props.onRetry} />
-                </HeaderButton>
+                </HeaderButtonWithText>
               ) : (
                 <></>
               )}
@@ -193,7 +193,7 @@ function StepContainer(props: StepContainerProps) {
           ) : (
             <ReactMarkdown
               key={1}
-              className="overflow-scroll"
+              className="overflow-x-scroll"
               components={
                 {
                   // pre: ({ node, ...props }) => {

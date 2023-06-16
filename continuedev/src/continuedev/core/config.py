@@ -12,11 +12,17 @@ class SlashCommand(BaseModel):
     params: Optional[Dict] = {}
 
 
+class OnTracebackSteps(BaseModel):
+    step_name: str
+    params: Optional[Dict] = {}
+
+
 class ContinueConfig(BaseModel):
     """
     A pydantic class for the continue config file.
     """
     steps_on_startup: Optional[Dict[str, Dict]] = {}
+    disallowed_steps: Optional[List[str]] = []
     server_url: Optional[str] = None
     allow_anonymous_telemetry: Optional[bool] = True
     default_model: Literal["gpt-3.5-turbo", "gpt-3.5-turbo-16k",
@@ -48,6 +54,8 @@ class ContinueConfig(BaseModel):
             step_name="FeedbackStep",
         )
     ]
+    on_traceback: Optional[List[OnTracebackSteps]] = [
+        OnTracebackSteps(step_name="DefaultOnTracebackStep")]
 
 
 def load_config(config_file: str) -> ContinueConfig:

@@ -14,25 +14,18 @@ import StepContainer from "../components/StepContainer";
 import useContinueGUIProtocol from "../hooks/useWebsocket";
 import {
   BookOpen,
-  ChatBubbleOvalLeft,
   ChatBubbleOvalLeftEllipsis,
   Trash,
 } from "@styled-icons/heroicons-outline";
 import ComboBox from "../components/ComboBox";
 import TextDialog from "../components/TextDialog";
+import HeaderButtonWithText from "../components/HeaderButtonWithText";
 
-const MainDiv = styled.div`
-  display: grid;
-  grid-template-rows: 1fr auto;
+const TopGUIDiv = styled.div`
+  overflow: hidden;
 `;
 
-let TopGUIDiv = styled.div`
-  display: grid;
-  grid-template-columns: 1fr;
-  background-color: ${vscBackground};
-`;
-
-let UserInputQueueItem = styled.div`
+const UserInputQueueItem = styled.div`
   border-radius: ${defaultBorderRadius};
   color: gray;
   padding: 8px;
@@ -40,7 +33,7 @@ let UserInputQueueItem = styled.div`
   text-align: center;
 `;
 
-const TopBar = styled.div`
+const Footer = styled.footer`
   display: flex;
   flex-direction: row;
   gap: 8px;
@@ -201,7 +194,7 @@ function GUI(props: GUIProps) {
     if (topGuiDivRef.current) {
       const timeout = setTimeout(() => {
         window.scrollTo({
-          top: window.outerHeight,
+          top: topGuiDivRef.current!.offsetHeight,
           behavior: "smooth",
         });
       }, 200);
@@ -213,7 +206,9 @@ function GUI(props: GUIProps) {
     console.log("CLIENT ON STATE UPDATE: ", client, client?.onStateUpdate);
     client?.onStateUpdate((state) => {
       // Scroll only if user is at very bottom of the window.
-      const shouldScrollToBottom = window.outerHeight - window.scrollY < 200;
+      const shouldScrollToBottom =
+        topGuiDivRef.current &&
+        topGuiDivRef.current?.offsetHeight - window.scrollY < 100;
       setWaitingForSteps(state.active);
       setHistory(state.history);
       setUserInputQueue(state.user_input_queue);
@@ -303,103 +298,98 @@ function GUI(props: GUIProps) {
           setShowFeedbackDialog(false);
         }}
       ></TextDialog>
-      <MainDiv>
-        <TopGUIDiv
-          ref={topGuiDivRef}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" && e.ctrlKey) {
-              onMainTextInput();
-            }
-          }}
-        >
-          {typeof client === "undefined" && (
-            <>
-              <Loader></Loader>
-              <p style={{ textAlign: "center" }}>
-                Trying to reconnect with server...
-              </p>
-            </>
-          )}
-          {history?.timeline.map((node: HistoryNode, index: number) => {
-            return (
-              <StepContainer
-                key={index}
-                onUserInput={(input: string) => {
-                  onStepUserInput(input, index);
-                }}
-                inFuture={index > history?.current_index}
-                historyNode={node}
-                onRefinement={(input: string) => {
-                  client?.sendRefinementInput(input, index);
-                }}
-                onReverse={() => {
-                  client?.reverseToIndex(index);
-                }}
-                onRetry={() => {
-                  client?.retryAtIndex(index);
-                  setWaitingForSteps(true);
-                }}
-                onDelete={() => {
-                  client?.deleteAtIndex(index);
-                }}
-              />
-            );
+
+      <TopGUIDiv
+        ref={topGuiDivRef}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" && e.ctrlKey) {
+            onMainTextInput();
+          }
+        }}
+      >
+        {typeof client === "undefined" && (
+          <>
+            <Loader></Loader>
+            <p style={{ textAlign: "center" }}>
+              Trying to reconnect with server...
+            </p>
+          </>
+        )}
+        {history?.timeline.map((node: HistoryNode, index: number) => {
+          return (
+            <StepContainer
+              key={index}
+              onUserInput={(input: string) => {
+                onStepUserInput(input, index);
+              }}
+              inFuture={index > history?.current_index}
+              historyNode={node}
+              onRefinement={(input: string) => {
+                client?.sendRefinementInput(input, index);
+              }}
+              onReverse={() => {
+                client?.reverseToIndex(index);
+              }}
+              onRetry={() => {
+                client?.retryAtIndex(index);
+                setWaitingForSteps(true);
+              }}
+              onDelete={() => {
+                client?.deleteAtIndex(index);
+              }}
+            />
+          );
+        })}
+        {waitingForSteps && <Loader></Loader>}
+
+        <div>
+          {userInputQueue.map((input) => {
+            return <UserInputQueueItem>{input}</UserInputQueueItem>;
           })}
-          {waitingForSteps && <Loader></Loader>}
+        </div>
 
-          <div>
-            {userInputQueue.map((input) => {
-              return <UserInputQueueItem>{input}</UserInputQueueItem>;
-            })}
-          </div>
-
-          <ComboBox
-            disabled={
-              history?.timeline.length
-                ? history.timeline[history.current_index].step.name ===
-                  "Waiting for user confirmation"
-                : false
-            }
-            ref={mainTextInputRef}
-            onEnter={(e) => {
-              onMainTextInput();
-              e.stopPropagation();
-              e.preventDefault();
-            }}
-            onInputValueChange={() => {}}
-            items={availableSlashCommands}
-          />
-          <ContinueButton onClick={onMainTextInput} />
-
-          <TopBar>
-            <a href="https://continue.dev/docs" className="no-underline">
-              <HeaderButton style={{ padding: "3px" }}>
-                Continue Docs
-                <BookOpen size="1.6em" />
-              </HeaderButton>
-            </a>
-            <HeaderButton
-              style={{ padding: "3px" }}
-              onClick={() => {
-                // Set dialog open
-                setShowFeedbackDialog(true);
-              }}
-            >
-              Feedback
-              <ChatBubbleOvalLeftEllipsis size="1.6em" />
-            </HeaderButton>
-            <HeaderButton
-              onClick={() => {
-                client?.sendClear();
-              }}
-              style={{ padding: "3px" }}
-            >
-              Clear History
-              <Trash size="1.6em" />
-            </HeaderButton>
-          </TopBar>
-        </TopGUIDiv>
-      </MainDiv>
+        <ComboBox
+          // disabled={
+          //   history?.timeline.length
+          //     ? history.timeline[history.current_index].step.name ===
+          //       "Waiting for user confirmation"
+          //     : false
+          // }
+          ref={mainTextInputRef}
+          onEnter={(e) => {
+            onMainTextInput();
+            e.stopPropagation();
+            e.preventDefault();
+          }}
+          onInputValueChange={() => {}}
+          items={availableSlashCommands}
+        />
+        <ContinueButton onClick={onMainTextInput} />
+      </TopGUIDiv>
+      <Footer>
+        <HeaderButtonWithText
+          onClick={() => {
+            client?.sendClear();
+          }}
+          text="Clear History"
+        >
+          <Trash size="1.6em" />
+        </HeaderButtonWithText>
+        <a href="https://continue.dev/docs" className="no-underline">
+          <HeaderButtonWithText text="Continue Docs">
+            <BookOpen size="1.6em" />
+          </HeaderButtonWithText>
+        </a>
+        <HeaderButtonWithText
+          onClick={() => {
+            // Set dialog open
+            setShowFeedbackDialog(true);
+          }}
+          text="Feedback"
+        >
+          <ChatBubbleOvalLeftEllipsis size="1.6em" />
+        </HeaderButtonWithText>
+      </Footer>
     </>
   );
 }

@@ -323,15 +323,21 @@ class IdeProtocolClient {
     return rangeInFiles;
   }
 
-  private continueTerminal: CapturedTerminal | undefined;
+  public continueTerminal: CapturedTerminal | undefined;
 
   async runCommand(command: string) {
-    if (!this.continueTerminal) {
-      this.continueTerminal = new CapturedTerminal("Continue");
+    if (!this.continueTerminal || this.continueTerminal.isClosed()) {
+      this.continueTerminal = new CapturedTerminal({
+        name: "Continue",
+      });
     }
 
     this.continueTerminal.show();
     return await this.continueTerminal.runCommand(command);
+  }
+
+  sendCommandOutput(output: string) {
+    this.messenger?.send("commandOutput", { output });
   }
 }
 
