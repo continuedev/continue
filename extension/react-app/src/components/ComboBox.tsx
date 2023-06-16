@@ -113,6 +113,9 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
               (event.nativeEvent as any).preventDownshiftDefault = true;
               if (props.onEnter) props.onEnter(event);
               setInputValue("");
+            } else if (event.key === "Tab" && items.length > 0) {
+              setInputValue(items[0].name);
+              event.preventDefault();
             }
           },
           ref: ref as any,
