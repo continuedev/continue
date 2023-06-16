@@ -1,6 +1,11 @@
+PYTHON_TRACEBACK_PREFIX = "Traceback (most recent call last):"
+
+
 def get_python_traceback(output: str) -> str:
-    if "Traceback (most recent call last):" in output or "SyntaxError" in output:
-        return output
+    if PYTHON_TRACEBACK_PREFIX in output:
+        return PYTHON_TRACEBACK_PREFIX + output.split(PYTHON_TRACEBACK_PREFIX)[-1]
+    elif "SyntaxError" in output:
+        return "SyntaxError" + output.split("SyntaxError")[-1]
     else:
         return None
 
