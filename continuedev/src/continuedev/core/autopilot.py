@@ -113,6 +113,10 @@ class Autopilot(ContinueBaseModel):
         await self.update_subscribers()
 
     async def _run_singular_step(self, step: "Step", is_future_step: bool = False) -> Coroutine[Observation, None, None]:
+        # Allow config to set disallowed steps
+        if step.__class__.__name__ in self.continue_sdk.config.disallowed_steps:
+            return None
+
         # If a parent step is deleted/cancelled, don't run this step
         last_depth = self._step_depth
         i = self.history.current_index

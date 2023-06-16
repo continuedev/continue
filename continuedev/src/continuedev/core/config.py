@@ -22,6 +22,7 @@ class ContinueConfig(BaseModel):
     A pydantic class for the continue config file.
     """
     steps_on_startup: Optional[Dict[str, Dict]] = {}
+    disallowed_steps: Optional[List[str]] = []
     server_url: Optional[str] = None
     allow_anonymous_telemetry: Optional[bool] = True
     default_model: Literal["gpt-3.5-turbo",

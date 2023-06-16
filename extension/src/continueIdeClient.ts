@@ -323,7 +323,7 @@ class IdeProtocolClient {
     return rangeInFiles;
   }
 
-  private continueTerminal: CapturedTerminal | undefined;
+  public continueTerminal: CapturedTerminal | undefined;
 
   async runCommand(command: string) {
     if (!this.continueTerminal || this.continueTerminal.isClosed()) {
