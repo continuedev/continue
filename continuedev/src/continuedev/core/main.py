@@ -11,6 +11,8 @@ ChatMessageRole = Literal["assistant", "user", "system"]
 class ChatMessage(ContinueBaseModel):
     role: ChatMessageRole
     content: str
+    # A summary for pruning chat context to fit context window. Often the Step name.
+    summary: str
 
 
 class HistoryNode(ContinueBaseModel):
@@ -23,7 +25,7 @@ class HistoryNode(ContinueBaseModel):
     def to_chat_messages(self) -> List[ChatMessage]:
         if self.step.description is None:
             return self.step.chat_context
-        return self.step.chat_context + [ChatMessage(role="assistant", content=self.step.description)]
+        return self.step.chat_context + [ChatMessage(role="assistant", content=self.step.description, summary=self.step.name)]
 
 
 class History(ContinueBaseModel):
