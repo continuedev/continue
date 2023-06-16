@@ -59,6 +59,9 @@ export function activateExtension(
       name: "Continue",
     });
     terminal.dispose();
+    if (!ideProtocolClient.continueTerminal) {
+      ideProtocolClient.continueTerminal = capturedTerminal;
+    }
   });
 
   // If any terminals are open to start, replace them
@@ -77,6 +80,9 @@ export function activateExtension(
       }
     );
     terminal.dispose();
+    if (!ideProtocolClient.continueTerminal) {
+      ideProtocolClient.continueTerminal = capturedTerminal;
+    }
   });
 
   extensionContext = context;

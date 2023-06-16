@@ -64,7 +64,7 @@ class SetupPipelineStep(Step):
 
         # wait for user to put API key in secrets.toml
         await sdk.ide.setFileOpen(await sdk.ide.getWorkspaceDirectory() + "/.dlt/secrets.toml")
-        await sdk.wait_for_user_confirmation("If this service requires an API key, please add it to the `secrets.toml` file and then press `Continue`. Otherwise, type '/edit this API does not require an API key'")
+        await sdk.wait_for_user_confirmation("If this service requires an API key, please add it to the `secrets.toml` file and then press `Continue`.")
 
         sdk.context.set("source_name", source_name)
 
@@ -172,5 +172,5 @@ class RunQueryStep(Step):
                 This is a brief summary of the error followed by a suggestion on how it can be fixed:"""))
 
             sdk.raise_exception(
-                title="Error while running query", message=output, with_step=MessageStep(name=f"Suggestion to solve error {AI_ASSISTED_STRING}", message=suggestion)
+                title="Error while running query", message=output, with_step=MessageStep(name=f"Suggestion to solve error {AI_ASSISTED_STRING}", message=suggestion + "\n\nIt is also very likely that no duckdb table was created, which can happen if the resource function did not yield any data. Please make sure that it is yielding data and then rerun this step.")
             )

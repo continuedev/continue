@@ -76,7 +76,8 @@ export class CapturedTerminal {
       (lines.length > 0 &&
         (last_line.includes("bash-") || last_line.includes(") $ ")) &&
         last_line.includes("$")) ||
-      (last_line.includes("]> ") && last_line.includes(") ["))
+      (last_line.includes("]> ") && last_line.includes(") [")) ||
+      (last_line.includes(" (") && last_line.includes(")>"))
     );
   }
 
@@ -98,7 +99,7 @@ export class CapturedTerminal {
     if (!this.hasRunCommand) {
       this.hasRunCommand = true;
       // Let the first bash- prompt appear and let python env be opened
-      await this.waitForCommandToFinish();
+      // await this.waitForCommandToFinish();
     }
 
     if (this.commandQueue.length === 0) {
@@ -154,7 +155,7 @@ export class CapturedTerminal {
     // Create the pseudo terminal
     this.ptyProcess = pty.spawn(this.shellCmd, [], {
       name: "xterm-256color",
-      cols: 160, // TODO: Get size of vscode terminal, and change with resize
+      cols: 250, // No way to get the size of VS Code terminal, or listen to resize, so make it just bigger than most conceivable VS Code widths
       rows: 26,
       cwd: getRootDir(),
       env,
