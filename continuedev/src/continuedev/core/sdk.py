@@ -186,10 +186,10 @@ class ContinueSDK(AbstractContinueSDK):
         highlighted_code = await self.ide.getHighlightedCode()
         if len(highlighted_code) == 0:
             # Get the full contents of all open files
-            files = await self.sdk.ide.getOpenFiles()
+            files = await self.ide.getOpenFiles()
             contents = {}
             for file in files:
-                contents[file] = await self.sdk.ide.readFile(file)
+                contents[file] = await self.ide.readFile(file)
 
             highlighted_code = [RangeInFile.from_entire_file(
                 filepath, content) for filepath, content in contents.items()]
