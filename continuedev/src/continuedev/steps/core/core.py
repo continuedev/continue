@@ -147,86 +147,37 @@ class DefaultModelEditCodeStep(Step):
 
         # Example #2
 
-        Now complete the task by outputting an edit. DO NOT rewrite the code that comes before or after the original code to edit. You are only to rewrite the original code as instructed:
-
         ## The code that comes before it
 
-        /* Terminal emulator - commented because node-pty is causing problems. */
-
-        import * as vscode from "vscode";
-        import os = require("os");
-        import stripAnsi from "strip-ansi";
-
-        function loadNativeModule<T>(id: string): T | null {
-        try {
-            return require(`${vscode.env.appRoot}/node_modules.asar/${id}`);
-        } catch (err) {
-            // ignore
-        }
-
-        try {
-            return require(`${vscode.env.appRoot}/node_modules/${id}`);
-        } catch (err) {
-            // ignore
-        }
-
-        return null;
-        }
-
-        const pty = loadNativeModule<any>("node-pty");
-
-        function getDefaultShell(): string {
-        if (process.platform !== "win32") {
-            return os.userInfo().shell;
-        }
-        switch (process.platform) {
-            case "win32":
-            return process.env.COMSPEC || "cmd.exe";
-            // case "darwin":
-            //   return process.env.SHELL || "/bin/zsh";
-            // default:
-            //   return process.env.SHELL || "/bin/sh";
-        }
-        }
-
-        function getRootDir(): string | undefined {
-        const isWindows = os.platform() === "win32";
-        let cwd = isWindows ? process.env.USERPROFILE : process.env.HOME;
-        if (
-            vscode.workspace.workspaceFolders &&
-            vscode.workspace.workspaceFolders.length > 0
-        ) {
-            cwd = vscode.workspace.workspaceFolders[0].uri.fsPath;
-        }
-        return cwd;
-        }
-
         export class CapturedTerminal {
-        private readonly terminal: vscode.Terminal;
-        private readonly shellCmd: string;
-        private readonly ptyProcess: any;
+            private readonly terminal: vscode.Terminal;
+            private readonly shellCmd: string;
+            private readonly ptyProcess: any;
 
-        private shellPrompt: string | undefined = undefined;
-        private dataBuffer: string = "";
+            private shellPrompt: string | undefined = undefined;
+            private dataBuffer: string = "";
 
-        private onDataListeners: ((data: string) => void)[] = [];
+            private onDataListeners: ((data: string) => void)[] = [];
 
-        show() {
-            this.terminal.show();
-        }
+            show() {
+                this.terminal.show();
+            }
 
-        private commandQueue: [string, (output: string) => void][] = [];
-        private hasRunCommand: boolean = false;
+            isClosed(): boolean {
+                return this.terminal.exitStatus !== undefined;
+            }
 
-        private async waitForCommandToFinish() {
+            private commandQueue: [string, (output: string) => void][] = [];
+            private hasRunCommand: boolean = false;
+
+        ## The code that comes after it
+
+          private async waitForCommandToFinish() {
             return new Promise<string>((resolve, reject) => {
             this.onDataListeners.push((data: any) => {
                 const strippedData = stripAnsi(data);
                 this.dataBuffer += strippedData;
-                const lines = this.dataBuffer.split("\n");
-
-        ## The code that comes after it
-
+                if (this.dataEndsInPrompt(strippedData)) {
                 resolve(this.dataBuffer);
                 this.dataBuffer = "";
                 this.onDataListeners = [];
@@ -235,98 +186,42 @@ class DefaultModelEditCodeStep(Step):
             });
         }
 
-        async runCommand(command: string): Promise<string> {
-            if (!this.hasRunCommand) {
-            this.hasRunCommand = true;
-            // Let the first bash- prompt appear and let python env be opened
-            await this.waitForCommandToFinish();
-            }
-
-            if (this.commandQueue.length === 0) {
-            return new Promise(async (resolve, reject) => {
-                this.commandQueue.push([command, resolve]);
-
-                while (this.commandQueue.length > 0) {
-                const [command, resolve] = this.commandQueue.shift()!;
-
-                this.terminal.sendText(command);
-                resolve(await this.waitForCommandToFinish());
-                }
-            });
-            } else {
-            return new Promise((resolve, reject) => {
-                this.commandQueue.push([command, resolve]);
-            });
-            }
-        }
-
-        private readonly writeEmitter: vscode.EventEmitter<string>;
-
-        constructor(terminalName: string) {
-            this.shellCmd = "bash"; // getDefaultShell();
-
-            const env = { ...(process.env as any) };
-            if (os.platform() !== "win32") {
-            env.PATH += `:${["/opt/homebrew/bin", "/opt/homebrew/sbin"].join(":")}`;
-            }
-
-            // Create the pseudo terminal
-            this.ptyProcess = pty.spawn(this.shellCmd, [], {
-            name: "xterm-256color",
-            cols: 160, // TODO: Get size of vscode terminal, and change with resize
-            rows: 26,
-            cwd: getRootDir(),
-            env,
-            useConpty: true,
-            });
-
-            this.writeEmitter = new vscode.EventEmitter<string>();
-
-            this.ptyProcess.onData((data: any) => {
-            // Pass data through to terminal
-            this.writeEmitter.fire(data);
-
-            for (let listener of this.onDataListeners) {
-                listener(data);
-            }
-            });
-
-            process.on("exit", () => this.ptyProcess.kill());
-
-            const newPty: vscode.Pseudoterminal = {
-            onDidWrite: this.writeEmitter.event,
-            open: () => {},
-            close: () => {},
-            handleInput: (data) => {
-                this.ptyProcess.write(data);
-            },
-            };
-
-            // Create and clear the terminal
-            this.terminal = vscode.window.createTerminal({
-            name: terminalName,
-            pty: newPty,
-            });
-            this.terminal.show();
-        }
-        }
-
         ## Code section to be edited
 
-        if (
-        lines.length > 0 &&
-        (lines[lines.length - 1].includes("bash-") ||
-            lines[lines.length - 1].includes(") $ ")) &&
-        lines[lines.length - 1].includes("$")
-        ) {
+        private dataEndsInPrompt(strippedData: string): boolean {
+            const lines = this.dataBuffer.split("\n");
+            return (
+            lines.length > 0 &&
+            (lines[lines.length - 1].includes("bash-") ||
+                lines[lines.length - 1].includes(") $ ")) &&
+            lines[lines.length - 1].includes("$")
+            );
+        }
 
         ## Edit instructions
 
-        more reliably parse the command line prompt
+        more reliably parse the command line prompt for different shells
 
         ## Edited code section
 
-        TODO: UPDATE THIS WITH WHAT WE ULTIMATELY DECIDE HERE
+        private dataEndsInPrompt(strippedData: string): boolean {
+            const lines = strippedData.split("\n");
+            const lastLine = lines[lines.length - 1];
+
+            return (
+            lines.length > 0 &&
+            (((lastLine.includes("bash-") || lastLine.includes(") $ ")) &&
+                lastLine.includes("$")) ||
+                (lastLine.includes("]> ") && lastLine.includes(") [")) ||
+                (lastLine.includes(" (") && lastLine.includes(")>")) ||
+                (typeof this.commandPromptString !== "undefined" &&
+                (lastLine.includes(this.commandPromptString) ||
+                    this.commandPromptString.length -
+                    longestCommonSubsequence(lastLine, this.commandPromptString)
+                        .length <
+                    3)))
+            );
+        }
 
         # Task
 
@@ -387,12 +282,10 @@ class DefaultModelEditCodeStep(Step):
                 code=rif.contents, user_request=self.user_input, file_prefix=segs[0], file_suffix=segs[1])
 
             completion = str(await sdk.models.default.complete(prompt, with_history=await sdk.get_chat_context()))
-            eot_token = "<|endoftext|>"
-            completion = completion.removesuffix(eot_token)
 
             # Remove tags and If it accidentally includes prefix or suffix, remove it
-            completion = completion.replace("<file_prefix>", "").replace("<file_suffix>", "").replace(
-                "<commit_before>", "").replace("<commit_msg>", "").replace("<commit_after>", "")
+            completion = completion.replace("## The code that comes before the section", "").replace("## The code that comes after the code section", "").replace(
+                "## Code section to be edited", "").replace("## Edit instructions", "").replace("## Edited code section", "")
             completion = completion.removeprefix(segs[0])
             completion = completion.removesuffix(segs[1])
 
