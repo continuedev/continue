@@ -343,7 +343,7 @@ def get_python_traceback(output: str) -> str:
         return None
 
 def get_javascript_traceback(output: str) -> str:
-    if "at " in output:
+    lines = output.splitlines("\n")
+    first_line = lines[0].split(": ")
+    if len(lines) > 0 and len(first_line[0]) > 0 and "at" in lines[1].lstrip():
         return output
-    else:
-        return None
