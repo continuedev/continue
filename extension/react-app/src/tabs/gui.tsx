@@ -194,7 +194,7 @@ function GUI(props: GUIProps) {
     if (topGuiDivRef.current) {
       const timeout = setTimeout(() => {
         window.scrollTo({
-          top: window.outerHeight,
+          top: topGuiDivRef.current!.offsetHeight,
           behavior: "smooth",
         });
       }, 200);
@@ -206,7 +206,9 @@ function GUI(props: GUIProps) {
     console.log("CLIENT ON STATE UPDATE: ", client, client?.onStateUpdate);
     client?.onStateUpdate((state) => {
       // Scroll only if user is at very bottom of the window.
-      const shouldScrollToBottom = window.outerHeight - window.scrollY < 200;
+      const shouldScrollToBottom =
+        topGuiDivRef.current &&
+        topGuiDivRef.current?.offsetHeight - window.scrollY < 100;
       setWaitingForSteps(state.active);
       setHistory(state.history);
       setUserInputQueue(state.user_input_queue);
@@ -347,12 +349,12 @@ function GUI(props: GUIProps) {
         </div>
 
         <ComboBox
-          disabled={
-            history?.timeline.length
-              ? history.timeline[history.current_index].step.name ===
-                "Waiting for user confirmation"
-              : false
-          }
+          // disabled={
+          //   history?.timeline.length
+          //     ? history.timeline[history.current_index].step.name ===
+          //       "Waiting for user confirmation"
+          //     : false
+          // }
           ref={mainTextInputRef}
           onEnter={(e) => {
             onMainTextInput();
@@ -365,6 +367,14 @@ function GUI(props: GUIProps) {
         <ContinueButton onClick={onMainTextInput} />
       </TopGUIDiv>
       <Footer>
+        <HeaderButtonWithText
+          onClick={() => {
+            client?.sendClear();
+          }}
+          text="Clear History"
+        >
+          <Trash size="1.6em" />
+        </HeaderButtonWithText>
         <a href="https://continue.dev/docs" className="no-underline">
           <HeaderButtonWithText text="Continue Docs">
             <BookOpen size="1.6em" />
@@ -378,14 +388,6 @@ function GUI(props: GUIProps) {
           text="Feedback"
         >
           <ChatBubbleOvalLeftEllipsis size="1.6em" />
-        </HeaderButtonWithText>
-        <HeaderButtonWithText
-          onClick={() => {
-            client?.sendClear();
-          }}
-          text="Clear History"
-        >
-          <Trash size="1.6em" />
         </HeaderButtonWithText>
       </Footer>
     </>

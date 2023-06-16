@@ -3,7 +3,6 @@ from typing import Coroutine, List, Union
 
 from pydantic import BaseModel
 
-from ..libs.util.traceback_parsers import parse_python_traceback
 from ..libs.llm import LLM
 from ..models.main import Traceback, Range
 from ..models.filesystem_edit import EditDiff, FileEdit
@@ -31,28 +30,6 @@ class SetupContinueWorkspaceStep(Step):
                     {
                         "allow_anonymous_telemetry": true
                     }"""))
-
-
-class RunCodeStep(Step):
-    cmd: str
-
-    async def describe(self, models: Models) -> Coroutine[str, None, None]:
-        return f"Ran command: `{self.cmd}`"
-
-    async def run(self, sdk: ContinueSDK) -> Coroutine[Observation, None, None]:
-        result = subprocess.run(
-            self.cmd.split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        stdout = result.stdout.decode("utf-8")
-        stderr = result.stderr.decode("utf-8")
-        print(stdout, stderr)
-
-        # If it fails, return the error
-        tb = parse_python_traceback(stdout) or parse_python_traceback(stderr)
-        if tb:
-            return TracebackObservation(traceback=tb)
-        else:
-            self.hide = True
-            return None
 
 
 class Policy(BaseModel):

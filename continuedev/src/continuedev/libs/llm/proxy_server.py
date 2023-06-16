@@ -17,7 +17,7 @@ CHAT_MODELS = {
     "gpt-3.5-turbo", "gpt-4"
 }
 
-# SERVER_URL = "http://127.0.0.1:8002"
+# SERVER_URL = "http://127.0.0.1:8080"
 SERVER_URL = "https://proxy-server-l6vsfbzhba-uc.a.run.app"
 
 
@@ -58,7 +58,7 @@ class ProxyServer(LLM):
                 "role": "system",
                 "content": self.system_message
             })
-        history += [msg.dict() for msg in msgs]
+        history += [{"role": msg.role, "content": msg.content} for msg in msgs]
         history.append({
             "role": "user",
             "content": prompt
@@ -87,4 +87,7 @@ class ProxyServer(LLM):
             }) as resp:
                 async for line in resp.content:
                     if line:
-                        yield line.decode("utf-8")
+                        try:
+                            yield line.decode("utf-8")
+                        except json.JSONDecodeError:
+                            raise Exception(str(line))
