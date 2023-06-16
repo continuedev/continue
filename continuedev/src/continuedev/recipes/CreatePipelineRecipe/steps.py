@@ -49,7 +49,7 @@ class SetupPipelineStep(Step):
             - `pip install -r requirements.txt`: Install the Python dependencies for the pipeline"""), name="Setup Python environment")
 
         # editing the resource function to call the requested API
-        resource_function_range = Range.from_shorthand(15, 0, 29, 0)
+        resource_function_range = Range.from_shorthand(15, 0, 30, 0)
         await sdk.ide.highlightCode(RangeInFile(filepath=os.path.join(await sdk.ide.getWorkspaceDirectory(), filename), range=resource_function_range), "#ffa50033")
 
         # sdk.set_loading_message("Writing code to call the API...")
@@ -64,7 +64,7 @@ class SetupPipelineStep(Step):
 
         # wait for user to put API key in secrets.toml
         await sdk.ide.setFileOpen(await sdk.ide.getWorkspaceDirectory() + "/.dlt/secrets.toml")
-        await sdk.wait_for_user_confirmation("If this service requires an API key, please add it to the `secrets.toml` file and then press `Continue`")
+        await sdk.wait_for_user_confirmation("If this service requires an API key, please add it to the `secrets.toml` file and then press `Continue`. Otherwise, type '/edit this API does not require an API key'")
 
         sdk.context.set("source_name", source_name)
 
