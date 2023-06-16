@@ -99,9 +99,19 @@ class Autopilot(ContinueBaseModel):
 
     async def delete_at_index(self, index: int):
         self.history.timeline[index].step.hide = True
+        self.history.timeline[index].deleted = True
         await self.update_subscribers()
 
     async def _run_singular_step(self, step: "Step", is_future_step: bool = False) -> Coroutine[Observation, None, None]:
+        # If a parent step is deleted/cancelled, don't run this step
+        last_depth = self._step_depth
+        i = self.history.current_index
+        while i >= 0 and self.history.timeline[i].depth > last_depth:
+            if self.history.timeline[i].deleted:
+                return None
+            last_depth = self.history.timeline[i].depth
+            i -= 1
+
         capture_event(self.continue_sdk.ide.unique_id, 'step run', {
                       'step_name': step.name, 'params': step.dict()})
 
@@ -114,7 +124,7 @@ class Autopilot(ContinueBaseModel):
                 await self._run_singular_step(manualEditsStep)
 
         # Update history - do this first so we get top-first tree ordering
-        self.history.add_node(HistoryNode(
+        index_of_history_node = self.history.add_node(HistoryNode(
             step=step, observation=None, depth=self._step_depth))
 
         # Call all subscribed callbacks
@@ -127,6 +137,10 @@ class Autopilot(ContinueBaseModel):
         try:
             observation = await step(self.continue_sdk)
         except Exception as e:
+            if self.history.timeline[index_of_history_node].deleted:
+                # If step was deleted/cancelled, don't show error or allow retry
+                return None
+
             caught_error = True
 
             is_continue_custom_exception = issubclass(
@@ -176,8 +190,7 @@ class Autopilot(ContinueBaseModel):
 
         # Add observation to history, unless already attached error observation
         if not caught_error:
-            self.history.get_last_at_depth(
-                self._step_depth, include_current=True).observation = observation
+            self.history.timeline[index_of_history_node].observation = observation
             await self.update_subscribers()
 
         # Update its description
