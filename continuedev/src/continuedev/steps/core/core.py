@@ -72,7 +72,7 @@ class ShellCommandsStep(Step):
             return f"Error when running shell commands:\n```\n{self._err_text}\n```"
 
         cmds_str = "\n".join(self.cmds)
-        return models.gpt35.complete(f"{cmds_str}\n\nSummarize what was done in these shell commands, using markdown bullet points:")
+        return await models.gpt35.complete(f"{cmds_str}\n\nSummarize what was done in these shell commands, using markdown bullet points:")
 
     async def run(self, sdk: ContinueSDK) -> Coroutine[Observation, None, None]:
         cwd = await sdk.ide.getWorkspaceDirectory() if self.cwd is None else self.cwd
@@ -151,10 +151,8 @@ class DefaultModelEditCodeStep(Step):
     _prompt_and_completion: str = ""
 
     async def describe(self, models: Models) -> Coroutine[str, None, None]:
-        description = models.gpt35.complete(
+        description = await models.gpt35.complete(
             f"{self._prompt_and_completion}\n\nPlease give brief a description of the changes made above using markdown bullet points. Be concise and only mention changes made to the commit before, not prefix or suffix:")
-        # self.name = models.gpt35.complete(
-        #     f"Write a short title for this description: {description}")
         return description
 
     async def run(self, sdk: ContinueSDK) -> Coroutine[Observation, None, None]:

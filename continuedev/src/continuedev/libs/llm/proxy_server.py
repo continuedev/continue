@@ -73,7 +73,10 @@ class ProxyServer(LLM):
                 "model": self.default_model,
                 "unique_id": self.unique_id,
             }) as resp:
-                return json.loads(await resp.text())
+                try:
+                    return json.loads(await resp.text())
+                except json.JSONDecodeError:
+                    raise Exception(await resp.text())
 
     async def stream_chat(self, prompt, with_history: List[ChatMessage] = [], **kwargs) -> Generator[Union[Any, List, Dict], None, None]:
         async with aiohttp.ClientSession() as session:
