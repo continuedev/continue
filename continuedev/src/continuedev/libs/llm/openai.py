@@ -140,15 +140,15 @@ class OpenAI(LLM):
                 "frequency_penalty": 0, "presence_penalty": 0, "stream": False} | kwargs
 
         if args["model"] in CHAT_MODELS:
-            resp = await openai.ChatCompletion.acreate(
+            resp = (await openai.ChatCompletion.acreate(
                 messages=self.compile_chat_messages(with_history, prompt),
                 **args,
-            ).choices[0].message.content
+            )).choices[0].message.content
         else:
-            resp = await openai.Completion.acreate(
+            resp = (await openai.Completion.acreate(
                 prompt=prompt,
                 **args,
-            ).choices[0].text
+            )).choices[0].text
 
         t2 = time.time()
         print("Completion time:", t2 - t1)
