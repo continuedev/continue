@@ -14,12 +14,12 @@ import StepContainer from "../components/StepContainer";
 import useContinueGUIProtocol from "../hooks/useWebsocket";
 import {
   BookOpen,
-  ChatBubbleOvalLeft,
   ChatBubbleOvalLeftEllipsis,
   Trash,
 } from "@styled-icons/heroicons-outline";
 import ComboBox from "../components/ComboBox";
 import TextDialog from "../components/TextDialog";
+import HeaderButtonWithText from "../components/HeaderButtonWithText";
 
 const TopGUIDiv = styled.div`
   overflow: hidden;
@@ -366,30 +366,27 @@ function GUI(props: GUIProps) {
       </TopGUIDiv>
       <Footer>
         <a href="https://continue.dev/docs" className="no-underline">
-          <HeaderButton style={{ padding: "3px" }}>
-            Continue Docs
+          <HeaderButtonWithText text="Continue Docs">
             <BookOpen size="1.6em" />
-          </HeaderButton>
+          </HeaderButtonWithText>
         </a>
-        <HeaderButton
-          style={{ padding: "3px" }}
+        <HeaderButtonWithText
           onClick={() => {
             // Set dialog open
             setShowFeedbackDialog(true);
           }}
+          text="Feedback"
         >
-          Feedback
           <ChatBubbleOvalLeftEllipsis size="1.6em" />
-        </HeaderButton>
-        <HeaderButton
+        </HeaderButtonWithText>
+        <HeaderButtonWithText
           onClick={() => {
             client?.sendClear();
           }}
-          style={{ padding: "3px" }}
+          text="Clear History"
         >
-          Clear History
           <Trash size="1.6em" />
-        </HeaderButton>
+        </HeaderButtonWithText>
       </Footer>
     </>
   );
