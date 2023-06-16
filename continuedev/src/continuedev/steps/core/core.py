@@ -224,12 +224,11 @@ class DefaultModelEditCodeStep(Step):
                                     break
             else:
                 raise Exception("Unknown default model")
+                      
+            code_before = "".join(full_file_contents_lst[min_end_line:])
+            code_after = "".join(full_file_contents_lst[:max_start_line])
 
-            start_index, end_index = rif.range.indices_in_string(
-                full_file_contents)
-            
-            segs = [full_file_contents[:start_index],
-                full_file_contents[end_index:]]
+            segs = [code_before, code_after]
 
             prompt = self._prompt.format(
                 code=rif.contents, user_request=self.user_input, file_prefix=segs[0], file_suffix=segs[1])
