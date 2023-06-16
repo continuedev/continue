@@ -9,12 +9,12 @@ from ..llm import LLM
 from pydantic import BaseModel, validator
 import tiktoken
 
-MAX_TOKENS_FOR_MODEL = {
-    "gpt-3.5-turbo": 4096,
-    "gpt-3.5-turbo-16k": 16384,
-    "gpt-4": 8192
-}
 DEFAULT_MAX_TOKENS = 2048
+MAX_TOKENS_FOR_MODEL = {
+    "gpt-3.5-turbo": 4096 - DEFAULT_MAX_TOKENS,
+    "gpt-3.5-turbo-16k": 16384 - DEFAULT_MAX_TOKENS,
+    "gpt-4": 8192 - DEFAULT_MAX_TOKENS
+}
 CHAT_MODELS = {
     "gpt-3.5-turbo", "gpt-3.5-turbo-16k", "gpt-4"
 }
@@ -31,6 +31,10 @@ class OpenAI(LLM):
         self.system_message = system_message
 
         openai.api_key = api_key
+
+    @cached_property
+    def name(self):
+        return self.default_model
 
     @cached_property
     def __encoding_for_model(self):
