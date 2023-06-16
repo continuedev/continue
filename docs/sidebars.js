@@ -17,7 +17,6 @@ const sidebars = {
     "intro",
     "getting-started",
     "install",
-    "catalog",
     "how-continue-works",
     "telemetry",
   ],
