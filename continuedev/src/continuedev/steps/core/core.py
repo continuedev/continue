@@ -80,7 +80,7 @@ class ShellCommandsStep(Step):
         for cmd in self.cmds:
             output = await sdk.ide.runCommand(cmd)
             if self.handle_error and output is not None and output_contains_error(output):
-                suggestion = sdk.models.gpt35.complete(dedent(f"""\
+                suggestion = await sdk.models.gpt35.complete(dedent(f"""\
                     While running the command `{cmd}`, the following error occurred:
 
                     ```ascii
@@ -183,7 +183,7 @@ class DefaultModelEditCodeStep(Step):
             prompt = self._prompt.format(
                 code=rif.contents, user_request=self.user_input, file_prefix=segs[0], file_suffix=segs[1])
 
-            completion = str(sdk.models.default.complete(prompt, with_history=await sdk.get_chat_context()))
+            completion = str(await sdk.models.default.complete(prompt, with_history=await sdk.get_chat_context()))
             eot_token = "<|endoftext|>"
             completion = completion.removesuffix(eot_token)
 

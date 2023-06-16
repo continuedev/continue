@@ -1,7 +1,7 @@
 import asyncio
 from functools import cached_property
 import time
-from typing import Any, Dict, Generator, List, Union
+from typing import Any, Coroutine, Dict, Generator, List, Union
 from ...core.main import ChatMessage
 import openai
 import aiohttp
@@ -107,7 +107,7 @@ class OpenAI(LLM):
             for chunk in generator:
                 yield chunk.choices[0].text
 
-    def complete(self, prompt: str, with_history: List[ChatMessage] = [], **kwargs) -> str:
+    async def complete(self, prompt: str, with_history: List[ChatMessage] = [], **kwargs) -> Coroutine[Any, Any, str]:
         t1 = time.time()
 
         self.completion_count += 1
@@ -115,12 +115,12 @@ class OpenAI(LLM):
                 "frequency_penalty": 0, "presence_penalty": 0, "stream": False} | kwargs
 
         if args["model"] in CHAT_MODELS:
-            resp = openai.ChatCompletion.create(
+            resp = await openai.ChatCompletion.acreate(
                 messages=self.compile_chat_messages(with_history, prompt),
                 **args,
             ).choices[0].message.content
         else:
-            resp = openai.Completion.create(
+            resp = await openai.Completion.acreate(
                 prompt=prompt,
                 **args,
             ).choices[0].text
