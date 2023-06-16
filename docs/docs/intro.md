@@ -11,7 +11,7 @@
 
 **Continue is the open-source library for accelerating software development with language models**
 
-You define the scenarios where Large Language Models LLMs like GPT-4 and StarCoder should act as an autopilot, helping you complete software development tasks. You use recipes created by others to automate more steps in your workflows. If a recipe does not exist or work exactly like you want, you can use the Continue SDK to create custom steps and compose them into personalized recipes. Whether you are using a recipe created by yourself or someone else, you can review, reverse, and rerun steps with the Continue GUI, which helps you guide the work done by LLMs and learn when to use and trust them.
+You determine when Large Language Models (LLMs) like GPT-4 should act as an autopilot, helping you complete software development tasks. You use recipes created by others to automate more steps in your workflows. If a recipe does not exist or work exactly like you want, you can use the Continue SDK to create custom steps and compose them into personalized recipes. Whether you are using a recipe created by yourself or someone else, you can review, reverse, and rerun steps with the Continue GUI, which helps you guide the work done by LLMs and learn when to use and trust them.
 
 ## Why do developers use Continue?
 
