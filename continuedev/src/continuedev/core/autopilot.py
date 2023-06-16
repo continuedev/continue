@@ -13,6 +13,7 @@ from ..steps.core.core import ReversibleStep, ManualEditStep, UserInputStep
 from ..libs.util.telemetry import capture_event
 from .sdk import ContinueSDK
 import asyncio
+from ..libs.util.step_name_to_steps import get_step_from_name
 
 
 class Autopilot(ContinueBaseModel):
@@ -88,9 +89,15 @@ class Autopilot(ContinueBaseModel):
             self._manual_edits_buffer.append(edit)
             # TODO: You're storing a lot of unecessary data here. Can compress into EditDiffs on the spot, and merge.
             # self._manual_edits_buffer = merge_file_edit(self._manual_edits_buffer, edit)
+            # Note that this is being overriden to do nothing in DemoAgent
 
-    def handle_traceback(self, traceback: str):
-        raise NotImplementedError
+    async def handle_command_output(self, output: str):
+        is_traceback = False
+        if is_traceback:
+            for tb_step in self.continue_sdk.config.on_traceback:
+                step = get_step_from_name(tb_step.step_name)(
+                    output=output, **tb_step.params)
+                await self._run_singular_step(step)
 
     _step_depth: int = 0
 

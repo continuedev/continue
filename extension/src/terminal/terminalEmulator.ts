@@ -62,21 +62,29 @@ export class CapturedTerminal {
     this.terminal.show();
   }
 
+  isClosed(): boolean {
+    return this.terminal.exitStatus !== undefined;
+  }
+
   private commandQueue: [string, (output: string) => void][] = [];
   private hasRunCommand: boolean = false;
+
+  private dataEndsInPrompt(strippedData: string): boolean {
+    const lines = this.dataBuffer.split("\n");
+    return (
+      lines.length > 0 &&
+      (lines[lines.length - 1].includes("bash-") ||
+        lines[lines.length - 1].includes(") $ ")) &&
+      lines[lines.length - 1].includes("$")
+    );
+  }
 
   private async waitForCommandToFinish() {
     return new Promise<string>((resolve, reject) => {
       this.onDataListeners.push((data: any) => {
         const strippedData = stripAnsi(data);
         this.dataBuffer += strippedData;
-        const lines = this.dataBuffer.split("\n");
-        if (
-          lines.length > 0 &&
-          (lines[lines.length - 1].includes("bash-") ||
-            lines[lines.length - 1].includes(") $ ")) &&
-          lines[lines.length - 1].includes("$")
-        ) {
+        if (this.dataEndsInPrompt(strippedData)) {
           resolve(this.dataBuffer);
           this.dataBuffer = "";
           this.onDataListeners = [];
@@ -112,8 +120,30 @@ export class CapturedTerminal {
 
   private readonly writeEmitter: vscode.EventEmitter<string>;
 
-  constructor(terminalName: string) {
-    this.shellCmd = "bash"; // getDefaultShell();
+  private splitByCommandsBuffer: string = "";
+  private readonly onCommandOutput: ((output: string) => void) | undefined;
+
+  splitByCommandsListener(data: string) {
+    // Split the output by commands so it can be sent to Continue Server
+
+    const strippedData = stripAnsi(data);
+    this.splitByCommandsBuffer += strippedData;
+    if (this.dataEndsInPrompt(strippedData)) {
+      if (this.onCommandOutput) {
+        this.onCommandOutput(this.splitByCommandsBuffer);
+      }
+      this.dataBuffer = "";
+    }
+  }
+
+  constructor(
+    options: { name: string } & Partial<vscode.ExtensionTerminalOptions>,
+    onCommandOutput?: (output: string) => void
+  ) {
+    this.onCommandOutput = onCommandOutput;
+
+    // this.shellCmd = "bash"; // getDefaultShell();
+    this.shellCmd = getDefaultShell();
 
     const env = { ...(process.env as any) };
     if (os.platform() !== "win32") {
@@ -154,7 +184,7 @@ export class CapturedTerminal {
 
     // Create and clear the terminal
     this.terminal = vscode.window.createTerminal({
-      name: terminalName,
+      ...options,
       pty: newPty,
     });
     this.terminal.show();

@@ -1,5 +1,4 @@
 # This is a separate server from server/main.py
-import asyncio
 from functools import cached_property
 import json
 import os
@@ -10,11 +9,13 @@ from uvicorn.main import Server
 
 from ..libs.util.queue import AsyncSubscriptionQueue
 from ..models.filesystem import FileSystem, RangeInFile, EditDiff, RealFileSystem
-from ..models.main import Traceback
 from ..models.filesystem_edit import AddDirectory, AddFile, DeleteDirectory, DeleteFile, FileSystemEdit, FileEdit, FileEditWithFullContents, RenameDirectory, RenameFile, SequentialFileSystemEdit
 from pydantic import BaseModel
 from .gui import SessionManager, session_manager
 from .ide_protocol import AbstractIdeProtocolServer
+import asyncio
+import nest_asyncio
+nest_asyncio.apply()
 
 
 router = APIRouter(prefix="/ide", tags=["ide"])
@@ -135,6 +136,9 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
             fileEdits = list(
                 map(lambda d: FileEditWithFullContents.parse_obj(d), data["fileEdits"]))
             self.onFileEdits(fileEdits)
+        elif message_type == "commandOutput":
+            output = data["output"]
+            self.onCommandOutput(output)
         elif message_type in ["highlightedCode", "openFiles", "readFile", "editFile", "workspaceDirectory", "getUserSecret", "runCommand", "uniqueId"]:
             self.sub_queue.post(message_type, data)
         else:
@@ -189,11 +193,6 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
     def onAcceptRejectSuggestion(self, suggestionId: str, accepted: bool):
         pass
 
-    def onTraceback(self, traceback: Traceback):
-        # Same as below, maybe not every autopilot?
-        for _, session in self.session_manager.sessions.items():
-            session.autopilot.handle_traceback(traceback)
-
     def onFileSystemUpdate(self, update: FileSystemEdit):
         # Access to Autopilot (so SessionManager)
         pass
@@ -210,6 +209,13 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
         # Maybe not ideal behavior
         for _, session in self.session_manager.sessions.items():
             session.autopilot.handle_manual_edits(edits)
+
+    def onCommandOutput(self, output: str):
+        # Send the output to ALL autopilots.
+        # Maybe not ideal behavior
+        for _, session in self.session_manager.sessions.items():
+            asyncio.create_task(
+                session.autopilot.handle_command_output(output))
 
     # Request information. Session doesn't matter.
     async def getOpenFiles(self) -> List[str]:
