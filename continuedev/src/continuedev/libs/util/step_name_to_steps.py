@@ -6,13 +6,23 @@ from ...steps.main import EditHighlightedCodeStep
 from ...steps.chat import SimpleChatStep
 from ...steps.comment_code import CommentCodeStep
 from ...steps.feedback import FeedbackStep
+from ...recipes.AddTransformRecipe.main import AddTransformRecipe
+from ...recipes.CreatePipelineRecipe.main import CreatePipelineRecipe
+from ...recipes.DDtoBQRecipe.main import DDtoBQRecipe
+from ...recipes.DeployPipelineAirflowRecipe.main import DeployPipelineAirflowRecipe
 
+# This mapping is used to convert from string in ContinueConfig json to corresponding Step class.
+# Used for example in slash_commands and steps_on_startup
 step_name_to_step_class = {
     "UserInputStep": UserInputStep,
     "EditHighlightedCodeStep": EditHighlightedCodeStep,
     "SimpleChatStep": SimpleChatStep,
     "CommentCodeStep": CommentCodeStep,
     "FeedbackStep": FeedbackStep,
+    "AddTransformRecipe": AddTransformRecipe,
+    "CreatePipelineRecipe": CreatePipelineRecipe,
+    "DDtoBQRecipe": DDtoBQRecipe,
+    "DeployPipelineAirflowRecipe": DeployPipelineAirflowRecipe,
 }
 
 
