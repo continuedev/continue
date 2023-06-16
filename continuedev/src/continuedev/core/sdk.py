@@ -45,6 +45,16 @@ class Models:
         return asyncio.get_event_loop().run_until_complete(load_gpt35())
 
     @cached_property
+    def gpt3516k(self):
+        async def load_gpt3516k():
+            api_key = await self.sdk.get_user_secret(
+                'OPENAI_API_KEY', 'Enter your OpenAI API key, OR press enter to try for free')
+            if api_key == "":
+                return ProxyServer(self.sdk.ide.unique_id, "gpt-3.5-turbo-16k")
+            return OpenAI(api_key=api_key, default_model="gpt-3.5-turbo-16k")
+        return asyncio.get_event_loop().run_until_complete(load_gpt3516k())
+
+    @cached_property
     def gpt4(self):
         async def load_gpt4():
             api_key = await self.sdk.get_user_secret(
@@ -59,6 +69,8 @@ class Models:
             return self.starcoder
         elif model_name == "gpt-3.5-turbo":
             return self.gpt35
+        elif model_name == "gpt-3.5-turbo-16k":
+            return self.gpt3516k
         elif model_name == "gpt-4":
             return self.gpt4
         else:
@@ -174,10 +186,10 @@ class ContinueSDK(AbstractContinueSDK):
         highlighted_code = await self.ide.getHighlightedCode()
         if len(highlighted_code) == 0:
             # Get the full contents of all open files
-            files = await self.ide.getOpenFiles()
+            files = await self.sdk.ide.getOpenFiles()
             contents = {}
             for file in files:
-                contents[file] = await self.ide.readFile(file)
+                contents[file] = await self.sdk.ide.readFile(file)
 
             highlighted_code = [RangeInFile.from_entire_file(
                 filepath, content) for filepath, content in contents.items()]

@@ -174,16 +174,67 @@ class DefaultModelEditCodeStep(Step):
         for rif in rif_with_contents:
             await sdk.ide.setFileOpen(rif.filepath)
 
+            model_to_use = sdk.config.default_model
+
             full_file_contents = await sdk.ide.readFile(rif.filepath)
+
+            full_file_contents_lst = full_file_contents.split("\n")
+
+            max_start_line = rif.range.start.line
+            min_end_line = rif.range.end.line
+            cur_start_line = 0
+            cur_end_line = len(full_file_contents_lst)
+
+            if sdk.config.default_model == "gpt-4":
+
+                total_tokens = sdk.models.gpt4.count_tokens(full_file_contents)
+                if total_tokens > sdk.models.gpt4.max_tokens:
+                    while cur_end_line > min_end_line:
+                        total_tokens -= len(full_file_contents_lst[cur_end_line])
+                        cur_end_line -= 1
+                        if total_tokens < sdk.models.gpt4.max_tokens:
+                            break
+                    
+                    if total_tokens > sdk.models.gpt4.max_tokens:
+                        while cur_start_line < max_start_line:
+                            cur_start_line += 1
+                            total_tokens -= len(full_file_contents_lst[cur_start_line])
+                            if total_tokens < sdk.models.gpt4.max_tokens:
+                                break
+
+            elif sdk.config.default_model == "gpt-3.5-turbo" or sdk.config.default_model == "gpt-3.5-turbo-16k":
+
+                if sdk.models.gpt35.count_tokens(full_file_contents) > sdk.models.gpt35.max_tokens:
+
+                    model_to_use = "gpt-3.5-turbo-16k"
+
+                    total_tokens = sdk.models.gpt3516k.count_tokens(full_file_contents)
+                    if total_tokens > sdk.models.gpt3516k.max_tokens:
+                        while cur_end_line > min_end_line:
+                            total_tokens -= len(full_file_contents_lst[cur_end_line])
+                            cur_end_line -= 1
+                            if total_tokens < sdk.models.gpt4.max_tokens:
+                                break
+                        
+                        if total_tokens > sdk.models.gpt3516k.max_tokens:
+                            while cur_start_line < max_start_line:
+                                total_tokens -= len(full_file_contents_lst[cur_start_line])
+                                cur_start_line += 1
+                                if total_tokens < sdk.models.gpt4.max_tokens:
+                                    break
+            else:
+                raise Exception("Unknown default model")
+
             start_index, end_index = rif.range.indices_in_string(
                 full_file_contents)
+            
             segs = [full_file_contents[:start_index],
-                    full_file_contents[end_index:]]
+                full_file_contents[end_index:]]
 
             prompt = self._prompt.format(
                 code=rif.contents, user_request=self.user_input, file_prefix=segs[0], file_suffix=segs[1])
 
-            completion = str(sdk.models.default.complete(prompt, with_history=await sdk.get_chat_context()))
+            completion = str(model_to_use.complete(prompt, with_history=await sdk.get_chat_context()))
             eot_token = "<|endoftext|>"
             completion = completion.removesuffix(eot_token)
 
