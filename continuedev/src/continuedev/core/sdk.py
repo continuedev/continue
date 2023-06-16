@@ -40,7 +40,7 @@ class Models:
             api_key = await self.sdk.get_user_secret(
                 'OPENAI_API_KEY', 'Enter your OpenAI API key, OR press enter to try for free')
             if api_key == "":
-                return ProxyServer(self.sdk.ide.unique_id, "gpt-3.5-turbo")
+                return ProxyServer(self.ide.unique_id, "gpt-3.5-turbo")
             return OpenAI(api_key=api_key, default_model="gpt-3.5-turbo")
         return asyncio.get_event_loop().run_until_complete(load_gpt35())
 
@@ -50,7 +50,7 @@ class Models:
             api_key = await self.sdk.get_user_secret(
                 'OPENAI_API_KEY', 'Enter your OpenAI API key, OR press enter to try for free')
             if api_key == "":
-                return ProxyServer(self.sdk.ide.unique_id, "gpt-3.5-turbo-16k")
+                return ProxyServer(self.ide.unique_id, "gpt-3.5-turbo-16k")
             return OpenAI(api_key=api_key, default_model="gpt-3.5-turbo-16k")
         return asyncio.get_event_loop().run_until_complete(load_gpt3516k())
 
@@ -60,7 +60,7 @@ class Models:
             api_key = await self.sdk.get_user_secret(
                 'OPENAI_API_KEY', 'Enter your OpenAI API key, OR press enter to try for free')
             if api_key == "":
-                return ProxyServer(self.sdk.ide.unique_id, "gpt-4")
+                return ProxyServer(self.ide.unique_id, "gpt-4")
             return OpenAI(api_key=api_key, default_model="gpt-4")
         return asyncio.get_event_loop().run_until_complete(load_gpt4())
 
