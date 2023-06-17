@@ -61,12 +61,9 @@ const commandsMap: { [command: string]: (...args: any) => any } = {
   "continue.suggestionUp": suggestionUpCommand,
   "continue.acceptSuggestion": acceptSuggestionCommand,
   "continue.rejectSuggestion": rejectSuggestionCommand,
-  "continue.openContinueGUI": () => {
-    ideProtocolClient.openGUI();
-  },
   "continue.focusContinueInput": async () => {
     if (!debugPanelWebview) {
-      await ideProtocolClient.openGUI();
+      vscode.commands.executeCommand("continue.continueGUIView.focus");
     }
     debugPanelWebview?.postMessage({
       type: "focusContinueInput",

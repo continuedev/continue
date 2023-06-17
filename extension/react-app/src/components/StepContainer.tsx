@@ -63,7 +63,6 @@ const HeaderDiv = styled.div<{ error: boolean }>`
 const ContentDiv = styled.div`
   padding: 8px;
   padding-left: 16px;
-  background-color: ${vscBackground};
 `;
 
 const OnHoverDiv = styled.div`

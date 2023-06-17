@@ -297,6 +297,9 @@ function GUI(props: GUIProps) {
           client?.sendMainInput(`/feedback ${text}`);
           setShowFeedbackDialog(false);
         }}
+        onClose={() => {
+          setShowFeedbackDialog(false);
+        }}
       ></TextDialog>
 
       <TopGUIDiv

@@ -68,6 +68,9 @@ interface ComboBoxProps {
 }
 
 const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
+  const [history, setHistory] = React.useState<string[]>([]);
+  // The position of the current command you are typing now, so the one that will be appended to history once you press enter
+  const [positionInHistory, setPositionInHistory] = React.useState<number>(0);
   const [items, setItems] = React.useState(props.items);
   const {
     isOpen,
@@ -113,9 +116,27 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
               (event.nativeEvent as any).preventDownshiftDefault = true;
               if (props.onEnter) props.onEnter(event);
               setInputValue("");
+              const value = event.currentTarget.value;
+              if (value !== "") {
+                setPositionInHistory(history.length + 1);
+                setHistory([...history, value]);
+              }
             } else if (event.key === "Tab" && items.length > 0) {
               setInputValue(items[0].name);
               event.preventDefault();
+            } else if (event.key === "ArrowUp" && !isOpen) {
+              if (positionInHistory == 0) return;
+              setInputValue(history[positionInHistory - 1]);
+              setPositionInHistory((prev) => prev - 1);
+            } else if (event.key === "ArrowDown" && !isOpen) {
+              if (positionInHistory >= history.length - 1) {
+                setInputValue("");
+              } else {
+                setInputValue(history[positionInHistory + 1]);
+              }
+              setPositionInHistory((prev) =>
+                Math.min(prev + 1, history.length)
+              );
             }
           },
           ref: ref as any,
