@@ -23,12 +23,14 @@ SERVER_URL = "https://proxy-server-l6vsfbzhba-uw.a.run.app"
 
 class ProxyServer(LLM):
     unique_id: str
+    name: str
     default_model: Literal["gpt-3.5-turbo", "gpt-4"]
 
     def __init__(self, unique_id: str, default_model: Literal["gpt-3.5-turbo", "gpt-4"], system_message: str = None):
         self.unique_id = unique_id
         self.default_model = default_model
         self.system_message = system_message
+        self.name = default_model
 
     @cached_property
     def __encoding_for_model(self):
