@@ -9,16 +9,22 @@ import {
 } from ".";
 
 const mainInputFontSize = 16;
-const MainTextInput = styled.input`
+const MainTextInput = styled.textarea`
+  resize: none;
+
   padding: 8px;
   font-size: ${mainInputFontSize}px;
   border-radius: ${defaultBorderRadius};
-  border: 1px solid #ccc;
+  border: 1px solid white;
   margin: 8px auto;
   width: 100%;
   background-color: ${vscBackground};
   color: white;
-  outline: 1px solid orange;
+
+  &:focus {
+    border: 1px solid transparent;
+    outline: 1px solid orange;
+  }
 `;
 
 const UlMaxHeight = 200;
@@ -108,10 +114,16 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
     <div className="flex px-2" ref={divRef} hidden={!isOpen}>
       <MainTextInput
         disabled={props.disabled}
-        placeholder="Type '/' to see the list of available slash commands..."
+        placeholder="Type '/' to see available slash commands."
         {...getInputProps({
           onKeyDown: (event) => {
-            if (event.key === "Enter" && (!isOpen || items.length === 0)) {
+            if (event.key === "Enter" && event.shiftKey) {
+              // Prevent Downshift's default 'Enter' behavior.
+              (event.nativeEvent as any).preventDownshiftDefault = true;
+            } else if (
+              event.key === "Enter" &&
+              (!isOpen || items.length === 0)
+            ) {
               // Prevent Downshift's default 'Enter' behavior.
               (event.nativeEvent as any).preventDownshiftDefault = true;
               if (props.onEnter) props.onEnter(event);
