@@ -95,26 +95,6 @@ export const Loader = styled.div`
   margin: auto;
 `;
 
-export const GradientBorder = styled.div<{
-  borderWidth?: string;
-  borderRadius?: string;
-  borderColor?: string;
-}>`
-  border-radius: ${(props) => props.borderRadius || "0"};
-  padding-top: ${(props) => props.borderWidth || "1px"};
-  padding-bottom: ${(props) => props.borderWidth || "1px"};
-  background: ${(props) =>
-    props.borderColor
-      ? props.borderColor
-      : `linear-gradient(
-    101.79deg,
-    #12887a 0%,
-    #87245c 37.64%,
-    #e12637 65.98%,
-    #ffb215 110.45%
-  )`};
-`;
-
 export const MainContainerWithBorder = styled.div<{ borderWidth?: string }>`
   border-radius: ${defaultBorderRadius};
   padding: ${(props) => props.borderWidth || "1px"};

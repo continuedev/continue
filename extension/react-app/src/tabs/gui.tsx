@@ -331,6 +331,8 @@ function GUI(props: GUIProps) {
         {history?.timeline.map((node: HistoryNode, index: number) => {
           return (
             <StepContainer
+              isLast={index === history.timeline.length - 1}
+              isFirst={index === 0}
               open={stepsOpen[index]}
               onToggle={() => {
                 const nextStepsOpen = [...stepsOpen];

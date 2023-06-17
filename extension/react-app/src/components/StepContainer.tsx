@@ -5,14 +5,8 @@ import {
   defaultBorderRadius,
   secondaryDark,
   vscBackground,
-  GradientBorder,
   vscBackgroundTransparent,
-  HeaderButton,
 } from ".";
-import { RangeInFile, FileEdit } from "../../../src/client";
-import CodeBlock from "./CodeBlock";
-import SubContainer from "./SubContainer";
-
 import {
   ChevronDown,
   ChevronRight,
@@ -22,6 +16,7 @@ import {
 import { HistoryNode } from "../../../schema/HistoryNode";
 import ReactMarkdown from "react-markdown";
 import HeaderButtonWithText from "./HeaderButtonWithText";
+import CodeBlock from "./CodeBlock";
 
 interface StepContainerProps {
   historyNode: HistoryNode;
@@ -34,6 +29,8 @@ interface StepContainerProps {
   open: boolean;
   onToggleAll: () => void;
   onToggle: () => void;
+  isFirst: boolean;
+  isLast: boolean;
 }
 
 const MainDiv = styled.div<{ stepDepth: number; inFuture: boolean }>`
@@ -67,12 +64,6 @@ const ContentDiv = styled.div`
   padding-left: 16px;
 `;
 
-const OnHoverDiv = styled.div`
-  text-align: center;
-  padding: 10px;
-  animation: ${appear} 0.3s ease-in-out;
-`;
-
 const MarkdownPre = styled.pre`
   background-color: ${secondaryDark};
   padding: 10px;
@@ -80,7 +71,34 @@ const MarkdownPre = styled.pre`
   border: 0.5px solid white;
 `;
 
-const MarkdownCode = styled.code``;
+const StyledCode = styled.code`
+  word-wrap: break-word;
+  color: lightgray;
+`;
+
+const GradientBorder = styled.div<{
+  borderWidth?: number;
+  borderRadius?: string;
+  borderColor?: string;
+  isFirst: boolean;
+  isLast: boolean;
+}>`
+  border-radius: ${(props) => props.borderRadius || "0"};
+  padding-top: ${(props) =>
+    `${(props.borderWidth || 1) / (props.isFirst ? 1 : 2)}px`};
+  padding-bottom: ${(props) =>
+    `${(props.borderWidth || 1) / (props.isLast ? 1 : 2)}px`};
+  background: ${(props) =>
+    props.borderColor
+      ? props.borderColor
+      : `linear-gradient(
+    101.79deg,
+    #12887a 0%,
+    #87245c 37.64%,
+    #e12637 65.98%,
+    #ffb215 110.45%
+  )`};
+`;
 
 function StepContainer(props: StepContainerProps) {
   const [isHovered, setIsHovered] = useState(false);
@@ -120,12 +138,14 @@ function StepContainer(props: StepContainerProps) {
     >
       <StepContainerDiv open={props.open}>
         <GradientBorder
+          isFirst={props.isFirst}
+          isLast={props.isLast}
           borderColor={
             props.historyNode.observation?.error ? "#f00" : undefined
           }
           className="overflow-hidden cursor-pointer"
           onClick={(e) => {
-            if (props.open && e.metaKey) {
+            if (e.metaKey) {
               props.onToggleAll();
             } else {
               props.onToggle();
@@ -198,66 +218,28 @@ function StepContainer(props: StepContainerProps) {
             <ReactMarkdown
               key={1}
               className="overflow-x-scroll"
-              components={
-                {
-                  // pre: ({ node, ...props }) => {
-                  //   return (
-                  //     <CodeBlock
-                  //       children={props.children[0] as string}
-                  //     ></CodeBlock>
-                  //   );
-                  // },
-                }
-              }
+              components={{
+                pre: ({ node, ...props }) => {
+                  return (
+                    <CodeBlock
+                      children={props.children[0] as string}
+                    ></CodeBlock>
+                  );
+                },
+                code: ({ node, ...props }) => {
+                  return (
+                    <StyledCode
+                      children={props.children[0] as string}
+                    ></StyledCode>
+                  );
+                },
+              }}
             >
               {props.historyNode.step.description as any}
             </ReactMarkdown>
           )}
-
-          {/* {props.historyNode.step.name === "Waiting for user input" && (
-            <InputAndButton
-              onUserInput={(value) => {
-                props.onUserInput(value);
-              }}
-            ></InputAndButton>
-          )}
-          {props.historyNode.step.name === "Waiting for user confirmation" && (
-            <>
-              <input
-                type="button"
-                value="Cancel"
-                className="m-4 p-2 rounded-md border border-solid text-white border-gray-200 bg-vsc-background cursor-pointer hover:bg-white hover:text-black"
-              ></input>
-              <input
-                className="m-4 p-2 rounded-md border border-solid text-white border-gray-200 bg-vsc-background cursor-pointer hover:bg-white hover:text-black"
-                onClick={(e) => {
-                  props.onUserInput("ok");
-                  e.preventDefault();
-                  e.stopPropagation();
-                }}
-                type="button"
-                value="Confirm"
-              />
-            </>
-          )} */}
         </ContentDiv>
       </StepContainerDiv>
-
-      {/* <OnHoverDiv hidden={!open}>
-        <NaturalLanguageInput
-          onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              onTextInput();
-            }
-          }}
-          ref={naturalLanguageInputRef}
-          onClick={(e) => {
-            e.stopPropagation();
-            e.preventDefault();
-          }}
-        ></NaturalLanguageInput>
-        <ContinueButton onClick={onTextInput}></ContinueButton>
-      </OnHoverDiv> */}
     </MainDiv>
   );
 }
