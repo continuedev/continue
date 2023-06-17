@@ -31,7 +31,9 @@ interface StepContainerProps {
   onUserInput: (input: string) => void;
   onRetry: () => void;
   onDelete: () => void;
-  open?: boolean;
+  open: boolean;
+  onToggleAll: () => void;
+  onToggle: () => void;
 }
 
 const MainDiv = styled.div<{ stepDepth: number; inFuture: boolean }>`
@@ -81,9 +83,6 @@ const MarkdownPre = styled.pre`
 const MarkdownCode = styled.code``;
 
 function StepContainer(props: StepContainerProps) {
-  const [open, setOpen] = useState(
-    typeof props.open === "undefined" ? true : props.open
-  );
   const [isHovered, setIsHovered] = useState(false);
   const naturalLanguageInputRef = useRef<HTMLTextAreaElement>(null);
   const userInputRef = useRef<HTMLInputElement>(null);
@@ -119,19 +118,25 @@ function StepContainer(props: StepContainerProps) {
       }}
       hidden={props.historyNode.step.hide as any}
     >
-      <StepContainerDiv open={open}>
+      <StepContainerDiv open={props.open}>
         <GradientBorder
           borderColor={
             props.historyNode.observation?.error ? "#f00" : undefined
           }
           className="overflow-hidden cursor-pointer"
-          onClick={() => setOpen((prev) => !prev)}
+          onClick={(e) => {
+            if (props.open && e.metaKey) {
+              props.onToggleAll();
+            } else {
+              props.onToggle();
+            }
+          }}
         >
           <HeaderDiv
             error={props.historyNode.observation?.error ? true : false}
           >
             <h4 className="m-2">
-              {open ? (
+              {props.open ? (
                 <ChevronDown size="1.4em" />
               ) : (
                 <ChevronRight size="1.4em" />
@@ -174,8 +179,8 @@ function StepContainer(props: StepContainerProps) {
             </>
           </HeaderDiv>
         </GradientBorder>
-        <ContentDiv hidden={!open}>
-          {open && false && (
+        <ContentDiv hidden={!props.open}>
+          {props.open && false && (
             <>
               <pre className="overflow-x-scroll">
                 Step Details:

@@ -124,11 +124,11 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
             } else if (event.key === "Tab" && items.length > 0) {
               setInputValue(items[0].name);
               event.preventDefault();
-            } else if (event.key === "ArrowUp" && !isOpen) {
+            } else if (event.key === "ArrowUp") {
               if (positionInHistory == 0) return;
               setInputValue(history[positionInHistory - 1]);
               setPositionInHistory((prev) => prev - 1);
-            } else if (event.key === "ArrowDown" && !isOpen) {
+            } else if (event.key === "ArrowDown") {
               if (positionInHistory >= history.length - 1) {
                 setInputValue("");
               } else {

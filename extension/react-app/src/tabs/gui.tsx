@@ -54,6 +54,7 @@ function GUI(props: GUIProps) {
   const [availableSlashCommands, setAvailableSlashCommands] = useState<
     { name: string; description: string }[]
   >([]);
+  const [stepsOpen, setStepsOpen] = useState<boolean[]>([]);
   const [history, setHistory] = useState<History | undefined>();
   // {
   //   timeline: [
@@ -212,6 +213,15 @@ function GUI(props: GUIProps) {
       setWaitingForSteps(state.active);
       setHistory(state.history);
       setUserInputQueue(state.user_input_queue);
+      const nextStepsOpen = [...stepsOpen];
+      for (
+        let i = nextStepsOpen.length;
+        i < state.history.timeline.length;
+        i++
+      ) {
+        nextStepsOpen.push(true);
+      }
+      setStepsOpen(nextStepsOpen);
 
       if (shouldScrollToBottom) {
         scrollToBottom();
@@ -321,6 +331,15 @@ function GUI(props: GUIProps) {
         {history?.timeline.map((node: HistoryNode, index: number) => {
           return (
             <StepContainer
+              open={stepsOpen[index]}
+              onToggle={() => {
+                const nextStepsOpen = [...stepsOpen];
+                nextStepsOpen[index] = !nextStepsOpen[index];
+                setStepsOpen(nextStepsOpen);
+              }}
+              onToggleAll={() => {
+                setStepsOpen((prev) => prev.map(() => !prev[index]));
+              }}
               key={index}
               onUserInput={(input: string) => {
                 onStepUserInput(input, index);
