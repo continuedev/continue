@@ -192,3 +192,6 @@ class ContinueSDK(AbstractContinueSDK):
 
     async def update_ui(self):
         await self.__autopilot.update_subscribers()
+
+    async def clear_history(self):
+        await self.__autopilot.clear_history()

@@ -15,9 +15,7 @@ const HeaderButtonWithText = (props: HeaderButtonWithTextProps) => {
       style={{ padding: "3px" }}
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => {
-        setTimeout(() => {
-          setHover(false);
-        }, 100);
+        setHover(false);
       }}
       onClick={props.onClick}
     >

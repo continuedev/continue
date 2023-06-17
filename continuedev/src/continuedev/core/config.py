@@ -52,6 +52,11 @@ class ContinueConfig(BaseModel):
             name="feedback",
             description="Send feedback to improve Continue",
             step_name="FeedbackStep",
+        ),
+        SlashCommand(
+            name="clear",
+            description="Clear step history",
+            step_name="ClearHistoryStep",
         )
     ]
     on_traceback: Optional[List[OnTracebackSteps]] = [
@@ -68,10 +73,16 @@ def load_config(config_file: str) -> ContinueConfig:
     _, ext = os.path.splitext(config_file)
     if ext == '.yaml':
         with open(config_file, 'r') as f:
-            config_dict = yaml.safe_load(f)
+            try:
+                config_dict = yaml.safe_load(f)
+            except:
+                return ContinueConfig()
     elif ext == '.json':
         with open(config_file, 'r') as f:
-            config_dict = json.load(f)
+            try:
+                config_dict = json.load(f)
+            except:
+                return ContinueConfig()
     else:
         raise ValueError(f'Unknown config file extension: {ext}')
     return ContinueConfig(**config_dict)

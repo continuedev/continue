@@ -18,7 +18,7 @@ CHAT_MODELS = {
 }
 
 # SERVER_URL = "http://127.0.0.1:8080"
-SERVER_URL = "https://proxy-server-l6vsfbzhba-uc.a.run.app"
+SERVER_URL = "https://proxy-server-l6vsfbzhba-uw.a.run.app"
 
 
 class ProxyServer(LLM):

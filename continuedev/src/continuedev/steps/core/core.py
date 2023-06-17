@@ -186,6 +186,8 @@ class DefaultModelEditCodeStep(Step):
             completion = completion.removesuffix(eot_token)
 
             # Remove tags and If it accidentally includes prefix or suffix, remove it
+            if completion.strip().startswith("```"):
+                completion = completion.strip().removeprefix("```").removesuffix("```")
             completion = completion.replace("<file_prefix>", "").replace("<file_suffix>", "").replace(
                 "<commit_before>", "").replace("<commit_msg>", "").replace("<commit_after>", "")
             completion = completion.removeprefix(segs[0])

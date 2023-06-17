@@ -14,7 +14,7 @@
   "displayName": "Continue",
   "pricing": "Free",
   "description": "Refine code 10x faster",
-  "version": "0.0.47",
+  "version": "0.0.50",
   "publisher": "Continue",
   "engines": {
     "vscode": "^1.74.0"
@@ -86,8 +86,8 @@
       "activitybar": [
         {
           "id": "continue",
-          "title": "Continue",
-          "icon": "media/continue-gradient.png"
+          "title": "Continue  ",
+          "icon": "react-app/dist/continue_arrow.png"
         }
       ]
     },
@@ -96,7 +96,7 @@
         {
           "type": "webview",
           "id": "continue.continueGUIView",
-          "name": ")",
+          "name": "  )",
           "visibility": "visible"
         }
       ]
