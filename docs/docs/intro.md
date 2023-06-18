@@ -4,8 +4,7 @@
 
 ## Quickstart
 
-1. Try out Continue in the [GitHub Codespaces Demo](./getting-started.md)
-2. Install Continue packaged as a [VS Code extension](./install.md)
+Install Continue packaged as a [VS Code extension](./install.md)
 
 ## What is Continue?
 
