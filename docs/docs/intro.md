@@ -4,7 +4,7 @@
 
 ## Quickstart
 
-Install Continue packaged as a [VS Code extension](./getting-started.md)
+**Install Continue packaged as a [VS Code extension](./getting-started.md)**
 
 ## What is Continue?
 
