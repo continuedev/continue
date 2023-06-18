@@ -2,12 +2,26 @@
 
 ## Download for VS Code
 
-1. Download on the VS Code Extension Marketplace [here](https://marketplace.visualstudio.com/items?itemName=Continue.continue).
+1. Click `Install` on the Continue extension in the Visual Studio Marketplace [here](https://marketplace.visualstudio.com/items?itemName=Continue.continue)
 
-2. Once downloaded, the extension will take about 30 seconds to load, and then you can open the left sidebar, as seen below.
+2. This will open the Continue extension page in VS Code, where you will need to click `Install` again
 
-3. If it's your first time using Continue, it will open a file called `calculator.py` where you can play around with Continue's functionality.
+3. Once you do this, you will see a message in the bottom right hand corner of VS Code that says `Setting up Continue extension...`. After 30-90 seconds, the Continue extension will then open up. It should look like this when it is complete:
 
-![codespaces-install](/img/continue-screenshot.png)
+![vscode-install](/img/continue-screenshot.png)
 
-[test file](file:///Desktop/minor_application.pdf)
+You can also open the Continue panel with `cmd+k` on Mac / `ctrl+k` on Windows.
+
+4. If it's your first time using Continue, it will open a file called `calculator.py` where you can play around with Continue's functionality.
+
+![codespaces-install](/img/continue-screenshot2.png)
+
+:::note
+If you would like to install Continue from source, please [follow the instructions](https://github.com/continuedev/continue/blob/main/README.md) in the repo README.
+:::
+
+:::note
+If you'd like to try without downloading for VS Code on your machine, you can open our GitHub Codespaces demo to try it in a browser-based editor.
+
+[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/continuedev/continue-codespaces-demo?quickstart=1)
+:::
