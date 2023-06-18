@@ -22,9 +22,9 @@ class WelcomeStep(Step):
 
         await sdk.ide.applyFileSystemEdit(AddFile(filepath=filepath, content=dedent("""\
             \"\"\"
-            Welcome to Continue! To get acquainted, delete this comment and try to use Continue for the following:
+            Welcome to Continue! To learn how to use it, delete this comment and try to use Continue for the following:
             - "Write me a calculator class"
-            - Ask for a new method, maybe "exp" or "mod" or sqrt"
+            - Ask for a new method (e.g. "exp", "mod", "sqrt")
             - Type /comment to write comments for the entire class
-            - Ask about how the class works, how to write it in another language, or anything else you can think of
+            - Ask about how the class works, how to write it in another language, etc.
             \"\"\"""")))
