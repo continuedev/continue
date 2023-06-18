@@ -28,3 +28,5 @@ class WelcomeStep(Step):
             - Type /comment to write comments for the entire class
             - Ask about how the class works, how to write it in another language, etc.
             \"\"\"""")))
+
+        await sdk.ide.setFileOpen(filepath=filepath)
