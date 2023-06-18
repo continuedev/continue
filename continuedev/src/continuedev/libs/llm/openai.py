@@ -83,14 +83,14 @@ class OpenAI(LLM):
     def with_system_message(self, system_message: Union[str, None]):
         return OpenAI(api_key=self.api_key, default_model=self.default_model, system_message=system_message)
 
-    def stream_chat(self, prompt, with_history: List[ChatMessage] = [], **kwargs) -> Generator[Union[Any, List, Dict], None, None]:
+    async def stream_chat(self, prompt, with_history: List[ChatMessage] = [], **kwargs) -> Generator[Union[Any, List, Dict], None, None]:
         self.completion_count += 1
         args = {"max_tokens": DEFAULT_MAX_TOKENS, "temperature": 0.5, "top_p": 1,
                 "frequency_penalty": 0, "presence_penalty": 0} | kwargs
         args["stream"] = True
         args["model"] = "gpt-3.5-turbo"
 
-        for chunk in openai.ChatCompletion.create(
+        async for chunk in await openai.ChatCompletion.acreate(
             messages=self.compile_chat_messages(with_history, prompt),
             **args,
         ):
