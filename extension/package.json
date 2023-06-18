@@ -14,7 +14,7 @@
   "displayName": "Continue",
   "pricing": "Free",
   "description": "Refine code 10x faster",
-  "version": "0.0.52",
+  "version": "0.0.54",
   "publisher": "Continue",
   "engines": {
     "vscode": "^1.74.0"
@@ -65,13 +65,7 @@
         }
       }
     },
-    "commands": [
-      {
-        "command": "continue.openContinueGUI",
-        "category": "Continue",
-        "title": "Open Continue GUI"
-      }
-    ],
+    "commands": [],
     "keybindings": [
       {
         "command": "continue.focusContinueInput",
