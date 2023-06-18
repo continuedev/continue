@@ -161,6 +161,21 @@ function writeEnvFile(path: string, key: string, value: string) {
   fs.writeFileSync(path, newEnvFile);
 }
 
+async function checkServerRunning(serverUrl: string): Promise<boolean> {
+  // Check if already running by calling /health
+  try {
+    const response = await fetch(serverUrl + "/health");
+    if (response.status === 200) {
+      console.log("Continue python server already running");
+      return true;
+    } else {
+      return false;
+    }
+  } catch (e) {
+    return false;
+  }
+}
+
 export async function startContinuePythonServer() {
   await setupPythonEnv();
 
@@ -172,14 +187,7 @@ export async function startContinuePythonServer() {
 
   console.log("Starting Continue python server...");
 
-  // Check if already running by calling /health
-  try {
-    const response = await fetch(serverUrl + "/health");
-    if (response.status === 200) {
-      console.log("Continue python server already running");
-      return;
-    }
-  } catch (e) {}
+  if (await checkServerRunning(serverUrl)) return;
 
   let activateCmd = ". env/bin/activate";
   let pythonCmd = "python3";
@@ -193,7 +201,7 @@ export async function startContinuePythonServer() {
     "scripts"
   )} && ${activateCmd} && cd .. && ${pythonCmd} -m scripts.run_continue_server`;
 
-  return new Promise((resolve, reject) => {
+  return new Promise(async (resolve, reject) => {
     try {
       const child = spawn(command, {
         shell: true,
@@ -213,7 +221,12 @@ export async function startContinuePythonServer() {
       });
     } catch (e) {
       console.log("Failed to start Continue python server", e);
-      reject();
+      // If failed, check if it's because the server is already running (might have happened just after we checked above)
+      if (await checkServerRunning(serverUrl)) {
+        resolve(null);
+      } else {
+        reject();
+      }
     }
   });
 }
