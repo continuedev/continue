@@ -1,5 +1,7 @@
+from textwrap import dedent
 from typing import List, Tuple, Type
 
+from ..steps.welcome import WelcomeStep
 from .config import ContinueConfig
 from ..steps.chroma import AnswerQuestionChroma, EditFileChroma, CreateCodebaseIndexChroma
 from ..steps.steps_on_startup import StepsOnStartupStep
@@ -26,7 +28,9 @@ class DemoPolicy(Policy):
         # At the very start, run initial Steps spcecified in the config
         if history.get_current() is None:
             return (
-                MessageStep(name="Welcome to Continue!", message="Type '/' to see the list of available slash commands. If you highlight code, edits and explanations will be localized to the highlighted range. Otherwise, the currently open file is used. In both cases, the code is combined with the previous steps to construct the context.") >>
+                MessageStep(name="Welcome to Continue!", message=dedent("""\
+                    Type '/' to see the list of available slash commands. If you highlight code, edits and explanations will be localized to the highlighted range. Otherwise, the currently open file is used. In both cases, the code is combined with the previous steps to construct the context.""")) >>
+                WelcomeStep() >>
                 # SetupContinueWorkspaceStep() >>
                 # CreateCodebaseIndexChroma() >>
                 StepsOnStartupStep())
