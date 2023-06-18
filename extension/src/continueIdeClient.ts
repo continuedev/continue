@@ -158,15 +158,17 @@ class IdeProtocolClient {
       });
       editor.setDecorations(decorationType, [range]);
 
-      // Listen for changes to cursor position
-      const cursorDisposable = vscode.window.onDidChangeTextEditorSelection(
-        (event) => {
-          if (event.textEditor.document.uri.fsPath === rangeInFile.filepath) {
-            cursorDisposable.dispose();
-            editor.setDecorations(decorationType, []);
+      // Listen for changes to cursor position and then remove the decoration (but keep for at least 2 seconds)
+      setTimeout(() => {
+        const cursorDisposable = vscode.window.onDidChangeTextEditorSelection(
+          (event) => {
+            if (event.textEditor.document.uri.fsPath === rangeInFile.filepath) {
+              cursorDisposable.dispose();
+              editor.setDecorations(decorationType, []);
+            }
           }
-        }
-      );
+        );
+      }, 2000);
     }
   }
 
