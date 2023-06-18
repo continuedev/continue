@@ -10,7 +10,8 @@ class NLDecisionStep(Step):
     default_step: Union[Step, None] = None
     steps: List[Tuple[Step, str]]
 
-    hide: bool = True
+    hide: bool = False
+    name: str = "Deciding what to do next"
 
     async def run(self, sdk: ContinueSDK):
         step_descriptions = "\n".join([
@@ -35,5 +36,8 @@ class NLDecisionStep(Step):
                 step_to_run = step[0]
 
         step_to_run = step_to_run or self.default_step or self.steps[0]
+
+        self.hide = True
+        await sdk.update_ui()
 
         await sdk.run_step(step_to_run)

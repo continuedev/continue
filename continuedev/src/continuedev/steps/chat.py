@@ -11,6 +11,8 @@ class SimpleChatStep(Step):
 
     async def run(self, sdk: ContinueSDK):
         self.description = f"```{self.user_input}```\n\n"
+        await sdk.update_ui()
+
         async for chunk in sdk.models.default.stream_chat(self.user_input, with_history=await sdk.get_chat_context()):
             self.description += chunk
             await sdk.update_ui()
