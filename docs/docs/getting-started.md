@@ -20,4 +20,4 @@ You can also open the Continue panel with `cmd+k` on Mac / `ctrl+k` on Windows
 
 ## Alternative: GitHub Codespaces
 
-If you would like to try without installing on your machine, you can [open our GitHub Codespace](https://github.com/codespaces/badge.svg)](https://codespaces.new/continuedev/continue-codespaces-demo?quickstart=1)) to play with Continue in a browser-based editor
+If you would like to try without installing on your machine, you can [open our GitHub Codespace](https://codespaces.new/continuedev/continue-codespaces-demo?quickstart=1) to play with Continue in a browser-based editor
