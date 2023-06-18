@@ -13,13 +13,7 @@
 
 /** @type {import('@docusaurus/plugin-content-docs').SidebarsConfig} */
 const sidebars = {
-  docsSidebar: [
-    "intro",
-    "getting-started",
-    "install",
-    "how-continue-works",
-    "telemetry",
-  ],
+  docsSidebar: ["intro", "getting-started", "how-continue-works", "telemetry"],
 };
 
 module.exports = sidebars;
