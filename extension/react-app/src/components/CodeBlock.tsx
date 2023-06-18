@@ -5,6 +5,8 @@ import { defaultBorderRadius, secondaryDark, vscBackground } from ".";
 
 import { Clipboard, CheckCircle } from "@styled-icons/heroicons-outline";
 
+import StyledCode from "./StyledCode";
+
 const StyledPre = styled.pre`
   overflow-y: scroll;
   word-wrap: normal;
@@ -15,8 +17,6 @@ const StyledPre = styled.pre`
   padding-top: 14px;
   padding-bottom: 16px;
 `;
-
-const StyledCode = styled.code``;
 
 const StyledCopyButton = styled.button<{ visible: boolean }>`
   /* position: relative; */
