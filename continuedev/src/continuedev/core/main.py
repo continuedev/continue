@@ -21,6 +21,7 @@ class HistoryNode(ContinueBaseModel):
     observation: Union[Observation, None]
     depth: int
     deleted: bool = False
+    active: bool = True
 
     def to_chat_messages(self) -> List[ChatMessage]:
         if self.step.description is None:
