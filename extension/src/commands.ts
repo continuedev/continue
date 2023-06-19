@@ -62,9 +62,7 @@ const commandsMap: { [command: string]: (...args: any) => any } = {
   "continue.acceptSuggestion": acceptSuggestionCommand,
   "continue.rejectSuggestion": rejectSuggestionCommand,
   "continue.focusContinueInput": async () => {
-    if (!debugPanelWebview) {
-      vscode.commands.executeCommand("continue.continueGUIView.focus");
-    }
+    vscode.commands.executeCommand("continue.continueGUIView.focus");
     debugPanelWebview?.postMessage({
       type: "focusContinueInput",
     });
