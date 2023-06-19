@@ -6,7 +6,7 @@ interface StyledCodeProps {
 }
 
 const StyledCode = (props: (StyledCodeProps)) => (
-  <SyntaxHighlighter language="auto" style={synthwave84}>
+  <SyntaxHighlighter style={synthwave84}>
     {props.children}
   </SyntaxHighlighter>
 );
