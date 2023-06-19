@@ -49,9 +49,13 @@ const StepContainerDiv = styled.div<{ open: boolean }>`
   /* padding: 8px; */
 `;
 
-const HeaderDiv = styled.div<{ error: boolean }>`
+const HeaderDiv = styled.div<{ error: boolean; loading: boolean }>`
   background-color: ${(props) =>
-    props.error ? "#522" : vscBackgroundTransparent};
+    props.error
+      ? "#522"
+      : props.loading
+      ? vscBackgroundTransparent
+      : vscBackground};
   display: grid;
   grid-template-columns: 1fr auto auto;
   grid-gap: 8px;
@@ -76,12 +80,22 @@ const StyledCode = styled.code`
   color: lightgray;
 `;
 
+const gradient = keyframes`
+  0% {
+    background-position: 0px 0;
+  }
+  100% {
+    background-position: 100em 0;
+  }
+`;
+
 const GradientBorder = styled.div<{
   borderWidth?: number;
   borderRadius?: string;
   borderColor?: string;
   isFirst: boolean;
   isLast: boolean;
+  loading: boolean;
 }>`
   border-radius: ${(props) => props.borderRadius || "0"};
   padding-top: ${(props) =>
@@ -91,13 +105,18 @@ const GradientBorder = styled.div<{
   background: ${(props) =>
     props.borderColor
       ? props.borderColor
-      : `linear-gradient(
+      : `repeating-linear-gradient(
     101.79deg,
     #12887a 0%,
-    #87245c 37.64%,
-    #e12637 65.98%,
-    #ffb215 110.45%
+    #87245c 16%,
+    #e12637 33%,
+    #ffb215 55%,
+    #e12637 67%,
+    #87245c 85%,
+    #12887a 99%
   )`};
+  animation: ${(props) => (props.loading ? gradient : "")} 6s linear infinite;
+  background-size: 200% 200%;
 `;
 
 function StepContainer(props: StepContainerProps) {
@@ -138,10 +157,15 @@ function StepContainer(props: StepContainerProps) {
     >
       <StepContainerDiv open={props.open}>
         <GradientBorder
+          loading={props.historyNode.active as boolean | false}
           isFirst={props.isFirst}
           isLast={props.isLast}
           borderColor={
-            props.historyNode.observation?.error ? "#f00" : undefined
+            props.historyNode.observation?.error
+              ? "#f00"
+              : props.historyNode.active
+              ? undefined
+              : "white"
           }
           className="overflow-hidden cursor-pointer"
           onClick={(e) => {
@@ -153,6 +177,7 @@ function StepContainer(props: StepContainerProps) {
           }}
         >
           <HeaderDiv
+            loading={props.historyNode.active as boolean | false}
             error={props.historyNode.observation?.error ? true : false}
           >
             <h4 className="m-2">
