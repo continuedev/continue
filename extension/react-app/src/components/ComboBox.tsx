@@ -116,6 +116,15 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
         disabled={props.disabled}
         placeholder="Type '/' to see available slash commands."
         {...getInputProps({
+          onChange: (e) => {
+            const target = e.target as HTMLTextAreaElement;
+            // Update the height of the textarea to match the content, up to a max of 200px.
+            target.style.height = "auto";
+            target.style.height = `${Math.min(
+              target.scrollHeight,
+              200
+            ).toString()}px`;
+          },
           onKeyDown: (event) => {
             if (event.key === "Enter" && event.shiftKey) {
               // Prevent Downshift's default 'Enter' behavior.
