@@ -54,6 +54,7 @@ function GUI(props: GUIProps) {
     (state: RootStore) => state.config.vscMachineId
   );
 
+  const [usingFastModel, setUsingFastModel] = useState(false);
   const [waitingForSteps, setWaitingForSteps] = useState(false);
   const [userInputQueue, setUserInputQueue] = useState<string[]>([]);
   const [availableSlashCommands, setAvailableSlashCommands] = useState<
@@ -62,129 +63,130 @@ function GUI(props: GUIProps) {
   const [dataSwitchChecked, setDataSwitchChecked] = useState(false);
   const [showDataSharingInfo, setShowDataSharingInfo] = useState(false);
   const [stepsOpen, setStepsOpen] = useState<boolean[]>([]);
-  const [history, setHistory] = useState<History | undefined>({
-    timeline: [
-      {
-        step: {
-          name: "Waiting for user input",
-          cmd: "python3 /Users/natesesti/Desktop/continue/extension/examples/python/main.py",
-          description:
-            "Run `python3 /Users/natesesti/Desktop/continue/extension/examples/python/main.py` and ```\nprint(sum(first, second))\n```\n- Testing\n- Testing 2\n- Testing 3",
-        },
-        observation: {
-          title: "ERROR FOUND",
-          error:
-            "Traceback (most recent call last):\n  File \"/Users/natesesti/Desktop/continue/extension/examples/python/main.py\", line 7, in <module>\n    print(sum(first, second))\n          ^^^^^^^^^^^^^^^^^^\n  File \"/Users/natesesti/Desktop/continue/extension/examples/python/sum.py\", line 2, in sum\n    return a + b\n           ~~^~~\nTypeError: unsupported operand type(s) for +: 'int' and 'str'",
-        },
-        output: [
-          {
-            traceback: {
-              frames: [
-                {
-                  filepath:
-                    "/Users/natesesti/Desktop/continue/extension/examples/python/main.py",
-                  lineno: 7,
-                  function: "<module>",
-                  code: "print(sum(first, second))",
-                },
-              ],
-              message: "unsupported operand type(s) for +: 'int' and 'str'",
-              error_type:
-                '          ^^^^^^^^^^^^^^^^^^\n  File "/Users/natesesti/Desktop/continue/extension/examples/python/sum.py", line 2, in sum\n    return a + b\n           ~~^~~\nTypeError',
-              full_traceback:
-                "Traceback (most recent call last):\n  File \"/Users/natesesti/Desktop/continue/extension/examples/python/main.py\", line 7, in <module>\n    print(sum(first, second))\n          ^^^^^^^^^^^^^^^^^^\n  File \"/Users/natesesti/Desktop/continue/extension/examples/python/sum.py\", line 2, in sum\n    return a + b\n           ~~^~~\nTypeError: unsupported operand type(s) for +: 'int' and 'str'",
-            },
-          },
-          null,
-        ],
-      },
-      {
-        step: {
-          name: "EditCodeStep",
-          range_in_files: [
-            {
-              filepath:
-                "/Users/natesesti/Desktop/continue/extension/examples/python/main.py",
-              range: {
-                start: {
-                  line: 0,
-                  character: 0,
-                },
-                end: {
-                  line: 6,
-                  character: 25,
-                },
-              },
-            },
-          ],
-          prompt:
-            "I ran into this problem with my Python code:\n\n                Traceback (most recent call last):\n  File \"/Users/natesesti/Desktop/continue/extension/examples/python/main.py\", line 7, in <module>\n    print(sum(first, second))\n          ^^^^^^^^^^^^^^^^^^\n  File \"/Users/natesesti/Desktop/continue/extension/examples/python/sum.py\", line 2, in sum\n    return a + b\n           ~~^~~\nTypeError: unsupported operand type(s) for +: 'int' and 'str'\n\n                Below are the files that might need to be fixed:\n\n                {code}\n\n                This is what the code should be in order to avoid the problem:\n",
-          description:
-            "Run `python3 /Users/natesesti/Desktop/continue/extension/examples/python/main.py` and\n```python\nprint(sum(first, second))\n```\n- Testing\n- Testing 2\n- Testing 3",
-        },
-        output: [
-          null,
-          {
-            reversible: true,
-            actions: [
-              {
-                reversible: true,
-                filesystem: {},
-                filepath:
-                  "/Users/natesesti/Desktop/continue/extension/examples/python/main.py",
-                range: {
-                  start: {
-                    line: 0,
-                    character: 0,
-                  },
-                  end: {
-                    line: 6,
-                    character: 25,
-                  },
-                },
-                replacement:
-                  "\nfrom sum import sum\n\nfirst = 1\nsecond = 2\n\nprint(sum(first, second))",
-              },
-            ],
-          },
-        ],
-      },
-      {
-        active: false,
-        step: {
-          name: "SolveTracebackStep",
-          traceback: {
-            frames: [
-              {
-                filepath:
-                  "/Users/natesesti/Desktop/continue/extension/examples/python/main.py",
-                lineno: 7,
-                function: "<module>",
-                code: "print(sum(first, second))",
-              },
-            ],
-            message: "unsupported operand type(s) for +: 'int' and 'str'",
-            error_type:
-              '          ^^^^^^^^^^^^^^^^^^\n  File "/Users/natesesti/Desktop/continue/extension/examples/python/sum.py", line 2, in sum\n    return a + b\n           ~~^~~\nTypeError',
-            full_traceback:
-              "Traceback (most recent call last):\n  File \"/Users/natesesti/Desktop/continue/extension/examples/python/main.py\", line 7, in <module>\n    print(sum(first, second))\n          ^^^^^^^^^^^^^^^^^^\n  File \"/Users/natesesti/Desktop/continue/extension/examples/python/sum.py\", line 2, in sum\n    return a + b\n           ~~^~~\nTypeError: unsupported operand type(s) for +: 'int' and 'str'",
-          },
-          description: "Running step: SolveTracebackStep",
-        },
-        output: [null, null],
-      },
-      {
-        step: {
-          name: "RunCodeStep",
-          cmd: "python3 /Users/natesesti/Desktop/continue/extension/examples/python/main.py",
-          description:
-            "Run `python3 /Users/natesesti/Desktop/continue/extension/examples/python/main.py`",
-        },
-        output: [null, null],
-      },
-    ],
-    current_index: 3,
-  } as any);
+  const [history, setHistory] = useState<History | undefined>();
+  //   {
+  //   timeline: [
+  //     {
+  //       step: {
+  //         name: "Waiting for user input",
+  //         cmd: "python3 /Users/natesesti/Desktop/continue/extension/examples/python/main.py",
+  //         description:
+  //           "Run `python3 /Users/natesesti/Desktop/continue/extension/examples/python/main.py` and ```\nprint(sum(first, second))\n```\n- Testing\n- Testing 2\n- Testing 3",
+  //       },
+  //       observation: {
+  //         title: "ERROR FOUND",
+  //         error:
+  //           "Traceback (most recent call last):\n  File \"/Users/natesesti/Desktop/continue/extension/examples/python/main.py\", line 7, in <module>\n    print(sum(first, second))\n          ^^^^^^^^^^^^^^^^^^\n  File \"/Users/natesesti/Desktop/continue/extension/examples/python/sum.py\", line 2, in sum\n    return a + b\n           ~~^~~\nTypeError: unsupported operand type(s) for +: 'int' and 'str'",
+  //       },
+  //       output: [
+  //         {
+  //           traceback: {
+  //             frames: [
+  //               {
+  //                 filepath:
+  //                   "/Users/natesesti/Desktop/continue/extension/examples/python/main.py",
+  //                 lineno: 7,
+  //                 function: "<module>",
+  //                 code: "print(sum(first, second))",
+  //               },
+  //             ],
+  //             message: "unsupported operand type(s) for +: 'int' and 'str'",
+  //             error_type:
+  //               '          ^^^^^^^^^^^^^^^^^^\n  File "/Users/natesesti/Desktop/continue/extension/examples/python/sum.py", line 2, in sum\n    return a + b\n           ~~^~~\nTypeError',
+  //             full_traceback:
+  //               "Traceback (most recent call last):\n  File \"/Users/natesesti/Desktop/continue/extension/examples/python/main.py\", line 7, in <module>\n    print(sum(first, second))\n          ^^^^^^^^^^^^^^^^^^\n  File \"/Users/natesesti/Desktop/continue/extension/examples/python/sum.py\", line 2, in sum\n    return a + b\n           ~~^~~\nTypeError: unsupported operand type(s) for +: 'int' and 'str'",
+  //           },
+  //         },
+  //         null,
+  //       ],
+  //     },
+  //     {
+  //       step: {
+  //         name: "EditCodeStep",
+  //         range_in_files: [
+  //           {
+  //             filepath:
+  //               "/Users/natesesti/Desktop/continue/extension/examples/python/main.py",
+  //             range: {
+  //               start: {
+  //                 line: 0,
+  //                 character: 0,
+  //               },
+  //               end: {
+  //                 line: 6,
+  //                 character: 25,
+  //               },
+  //             },
+  //           },
+  //         ],
+  //         prompt:
+  //           "I ran into this problem with my Python code:\n\n                Traceback (most recent call last):\n  File \"/Users/natesesti/Desktop/continue/extension/examples/python/main.py\", line 7, in <module>\n    print(sum(first, second))\n          ^^^^^^^^^^^^^^^^^^\n  File \"/Users/natesesti/Desktop/continue/extension/examples/python/sum.py\", line 2, in sum\n    return a + b\n           ~~^~~\nTypeError: unsupported operand type(s) for +: 'int' and 'str'\n\n                Below are the files that might need to be fixed:\n\n                {code}\n\n                This is what the code should be in order to avoid the problem:\n",
+  //         description:
+  //           "Run `python3 /Users/natesesti/Desktop/continue/extension/examples/python/main.py` and\n```python\nprint(sum(first, second))\n```\n- Testing\n- Testing 2\n- Testing 3",
+  //       },
+  //       output: [
+  //         null,
+  //         {
+  //           reversible: true,
+  //           actions: [
+  //             {
+  //               reversible: true,
+  //               filesystem: {},
+  //               filepath:
+  //                 "/Users/natesesti/Desktop/continue/extension/examples/python/main.py",
+  //               range: {
+  //                 start: {
+  //                   line: 0,
+  //                   character: 0,
+  //                 },
+  //                 end: {
+  //                   line: 6,
+  //                   character: 25,
+  //                 },
+  //               },
+  //               replacement:
+  //                 "\nfrom sum import sum\n\nfirst = 1\nsecond = 2\n\nprint(sum(first, second))",
+  //             },
+  //           ],
+  //         },
+  //       ],
+  //     },
+  //     {
+  //       active: false,
+  //       step: {
+  //         name: "SolveTracebackStep",
+  //         traceback: {
+  //           frames: [
+  //             {
+  //               filepath:
+  //                 "/Users/natesesti/Desktop/continue/extension/examples/python/main.py",
+  //               lineno: 7,
+  //               function: "<module>",
+  //               code: "print(sum(first, second))",
+  //             },
+  //           ],
+  //           message: "unsupported operand type(s) for +: 'int' and 'str'",
+  //           error_type:
+  //             '          ^^^^^^^^^^^^^^^^^^\n  File "/Users/natesesti/Desktop/continue/extension/examples/python/sum.py", line 2, in sum\n    return a + b\n           ~~^~~\nTypeError',
+  //           full_traceback:
+  //             "Traceback (most recent call last):\n  File \"/Users/natesesti/Desktop/continue/extension/examples/python/main.py\", line 7, in <module>\n    print(sum(first, second))\n          ^^^^^^^^^^^^^^^^^^\n  File \"/Users/natesesti/Desktop/continue/extension/examples/python/sum.py\", line 2, in sum\n    return a + b\n           ~~^~~\nTypeError: unsupported operand type(s) for +: 'int' and 'str'",
+  //         },
+  //         description: "Running step: SolveTracebackStep",
+  //       },
+  //       output: [null, null],
+  //     },
+  //     {
+  //       step: {
+  //         name: "RunCodeStep",
+  //         cmd: "python3 /Users/natesesti/Desktop/continue/extension/examples/python/main.py",
+  //         description:
+  //           "Run `python3 /Users/natesesti/Desktop/continue/extension/examples/python/main.py`",
+  //       },
+  //       output: [null, null],
+  //     },
+  //   ],
+  //   current_index: 3,
+  // } as any);
 
   const [showFeedbackDialog, setShowFeedbackDialog] = useState(false);
 
@@ -209,6 +211,20 @@ function GUI(props: GUIProps) {
       setScrollTimeout(timeout);
     }
   }, [topGuiDivRef.current, scrollTimeout]);
+
+  useEffect(() => {
+    const listener = (e: any) => {
+      // Cmd + J to toggle fast model
+      if (e.key === "j" && e.metaKey) {
+        setUsingFastModel((prev) => !prev);
+      }
+    };
+    window.addEventListener("keydown", listener);
+
+    return () => {
+      window.removeEventListener("keydown", listener);
+    };
+  }, []);
 
   useEffect(() => {
     console.log("CLIENT ON STATE UPDATE: ", client, client?.onStateUpdate);
@@ -454,6 +470,18 @@ function GUI(props: GUIProps) {
             Contribute Data
           </span>
         </div>
+        {/* <HeaderButtonWithText
+          onClick={() => {
+            setUsingFastModel((prev) => !prev);
+          }}
+          text={usingFastModel ? "gpt-3.5-turbo" : "gpt-4"}
+        >
+          <div
+            style={{ fontSize: "18px", marginLeft: "2px", marginRight: "2px" }}
+          >
+            {usingFastModel ? "⚡" : "🧠"}
+          </div>
+        </HeaderButtonWithText> */}
         <HeaderButtonWithText
           onClick={() => {
             client?.sendClear();
