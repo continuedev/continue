@@ -105,6 +105,7 @@ class Autopilot(ContinueBaseModel):
     _step_depth: int = 0
 
     async def retry_at_index(self, index: int):
+        self.history.timeline[index].step.hide = True
         self._retry_queue.post(str(index), None)
 
     async def delete_at_index(self, index: int):

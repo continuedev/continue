@@ -296,7 +296,7 @@ class DefaultModelEditCodeStep(Step):
                 for line in chunk_lines:
                     if "</modified_code_to_edit>" in line:
                         break
-                    elif "<modified_code_to_edit>" in line or "<file_prefix>" in line or "</file_prefix>" in line or "<file_suffix>" in line or "</file_suffix>" in line or "<user_request>" in line or "</user_request>" in line or "<code_to_edit>" in line or "</code_to_edit>" in line:
+                    elif "```" in line or "<modified_code_to_edit>" in line or "<file_prefix>" in line or "</file_prefix>" in line or "<file_suffix>" in line or "</file_suffix>" in line or "<user_request>" in line or "</user_request>" in line or "<code_to_edit>" in line or "</code_to_edit>" in line:
                         continue
                     elif i < len(original_lines) and line == original_lines[i]:
                         i += 1
@@ -308,7 +308,7 @@ class DefaultModelEditCodeStep(Step):
             # Add the unfinished line
             if unfinished_line != "":
                 unfinished_line = unfinished_line.removesuffix(
-                    "</modified_code_to_edit>").removesuffix("</code_to_edit>")
+                    "</modified_code_to_edit>").removesuffix("</code_to_edit>").removesuffix("```")
                 if not i < len(original_lines) or not unfinished_line == original_lines[i]:
                     await add_line(i, unfinished_line)
                 lines.append(unfinished_line)
