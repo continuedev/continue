@@ -235,45 +235,90 @@ class DefaultModelEditCodeStep(Step):
             prompt = self._prompt.format(
                 code=rif.contents, user_request=self.user_input, file_prefix=segs[0], file_suffix=segs[1])
 
-            completion = str(await model_to_use.complete(prompt, with_history=await sdk.get_chat_context()))
+            lines = []
+            unfinished_line = ""
+            i = 0
+            original_lines = rif.contents.split("\n")
+            lines_to_highlight = []
 
-            eot_token = "<|endoftext|>"
-            completion = completion.removesuffix(eot_token)
+            async def add_line(i: int, line: str):
+                range = Range.from_shorthand(
+                    rif.range.start.line + i, rif.range.start.character if i == 0 else 0, rif.range.start.line + i + 1, 0)
+                await sdk.ide.applyFileSystemEdit(FileEdit(
+                    filepath=rif.filepath,
+                    range=range,
+                    replacement=line + "\n"
+                ))
+                lines_to_highlight.append(rif.range.start.line + i)
+                # await sdk.ide.highlightCode(RangeInFile(
+                #     filepath=rif.filepath,
+                #     range=range
+                # ))
 
-            # Remove tags and If it accidentally includes prefix or suffix, remove it
-            if completion.strip().startswith("```"):
-                completion = completion.strip().removeprefix("```").removesuffix("```")
-            completion = completion.replace("<file_prefix>", "").replace("<file_suffix>", "").replace(
-                "<commit_before>", "").replace("<commit_msg>", "").replace("<commit_after>", "")
-            completion = completion.removeprefix(segs[0])
-            completion = completion.removesuffix(segs[1])
+            async for chunk in model_to_use.stream_chat(prompt, with_history=await sdk.get_chat_context()):
+                chunk_lines = chunk.split("\n")
+                chunk_lines[0] = unfinished_line + chunk_lines[0]
+                if chunk.endswith("\n"):
+                    unfinished_line = ""
+                    chunk_lines.pop()  # because this will be an empty string
+                else:
+                    unfinished_line = chunk_lines.pop()
+                lines.extend(chunk_lines)
+
+                for line in chunk_lines:
+                    if i < len(original_lines) and line == original_lines[i]:
+                        i += 1
+                        continue
+
+                    await add_line(i, line)
+                    i += 1
+
+            # Add the unfinished line
+            if unfinished_line != "":
+                if not i < len(original_lines) or not unfinished_line == original_lines[i]:
+                    await add_line(i, unfinished_line)
+                lines.append(unfinished_line)
+                i += 1
+
+            # Remove the leftover original lines
+            while i < len(original_lines):
+                range = Range.from_shorthand(
+                    rif.range.start.line + i, rif.range.start.character, rif.range.start.line + i, len(original_lines[i]))
+                await sdk.ide.applyFileSystemEdit(FileEdit(
+                    filepath=rif.filepath,
+                    range=range,
+                    replacement=""
+                ))
+                # await sdk.ide.highlightCode(RangeInFile(
+                #     filepath=rif.filepath,
+                #     range=range
+                # ))
+                i += 1
+
+            completion = "\n".join(lines)
+            # eot_token = "<|endoftext|>"
+            # completion = completion.removesuffix(eot_token)
+
+            # # Remove tags and If it accidentally includes prefix or suffix, remove it
+            # if completion.strip().startswith("```"):
+            #     completion = completion.strip().removeprefix("```").removesuffix("```")
+            # completion = completion.replace("<file_prefix>", "").replace("<file_suffix>", "").replace(
+            #     "<commit_before>", "").replace("<commit_msg>", "").replace("<commit_after>", "")
+            # completion = completion.removeprefix(segs[0])
+            # completion = completion.removesuffix(segs[1])
 
             self._prompt_and_completion += prompt + completion
 
-            diff = list(difflib.ndiff(rif.contents.splitlines(
-                keepends=True), completion.splitlines(keepends=True)))
-
-            lines_to_highlight = set()
-            index = 0
-            for line in diff:
-                if line.startswith("-"):
-                    pass
-                elif line.startswith("+"):
-                    lines_to_highlight.add(index + rif.range.start.line)
-                    index += 1
-                elif line.startswith(" "):
-                    index += 1
-
-            await sdk.ide.applyFileSystemEdit(FileEdit(
-                filepath=rif.filepath,
-                range=rif.range,
-                replacement=completion
-            ))
+            # await sdk.ide.applyFileSystemEdit(FileEdit(
+            #     filepath=rif.filepath,
+            #     range=rif.range,
+            #     replacement=completion
+            # ))
 
             current_hl_start = None
             last_hl = None
             rifs_to_highlight = []
-            for line in sorted(list(lines_to_highlight)):
+            for line in lines_to_highlight:
                 if current_hl_start is None:
                     current_hl_start = line
                 elif line != last_hl + 1:

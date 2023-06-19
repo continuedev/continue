@@ -159,7 +159,7 @@ class IdeProtocolClient {
       editor.setDecorations(decorationType, [range]);
 
       // Listen for changes to cursor position and then remove the decoration (but keep for at least 2 seconds)
-      setTimeout(() => {
+      const allowRemoveHighlight = () => {
         const cursorDisposable = vscode.window.onDidChangeTextEditorSelection(
           (event) => {
             if (event.textEditor.document.uri.fsPath === rangeInFile.filepath) {
@@ -168,7 +168,8 @@ class IdeProtocolClient {
             }
           }
         );
-      }, 2000);
+      };
+      setTimeout(allowRemoveHighlight, 2000);
     }
   }
 
@@ -285,7 +286,7 @@ class IdeProtocolClient {
           edit.range.start.line,
           edit.range.start.character,
           edit.range.end.line,
-          edit.range.end.character + 1
+          edit.range.end.character
         );
 
         editor.edit((editBuilder) => {
