@@ -122,7 +122,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
             target.style.height = "auto";
             target.style.height = `${Math.min(
               target.scrollHeight,
-              200
+              300
             ).toString()}px`;
           },
           onKeyDown: (event) => {

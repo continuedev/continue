@@ -21,6 +21,7 @@ urllib3 = "1.26.15"
 gpt-index = "^0.6.8"
 posthog = "^3.0.1"
 tiktoken = "^0.4.0"
+jsonref = "^1.1.0"
 
 [tool.poetry.scripts]
 typegen = "src.continuedev.models.generate_json_schema:main" 

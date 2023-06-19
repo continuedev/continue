@@ -364,7 +364,7 @@ function GUI(props: GUIProps) {
                 setStepsOpen(nextStepsOpen);
               }}
               onToggleAll={() => {
-                setStepsOpen((prev) => prev.map(() => !prev[index]));
+                setStepsOpen((prev) => prev.map((_, index) => !prev[index]));
               }}
               key={index}
               onUserInput={(input: string) => {
@@ -388,7 +388,7 @@ function GUI(props: GUIProps) {
             />
           );
         })}
-        {waitingForSteps && <Loader></Loader>}
+        {/* {waitingForSteps && <Loader></Loader>} */}
 
         <div>
           {userInputQueue.map((input) => {
