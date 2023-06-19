@@ -17,17 +17,17 @@
 
 ## Getting Started
 
-### GitHub Codespaces
-
-Learn how to try the GitHub Codespaces Demo [here](https://continue.dev/docs/getting-started)
-
-### VS Code
+### Install for VS Code
 
 Learn how to install locally in VS Code [here](https://continue.dev/docs/install)
 
+### GitHub Codespaces
+
+Explore Continue in GitHub Codespaces [here](https://continue.dev/docs/getting-started) if you'd like to try without downloading for VS Code.
+
 ## How to contribute
 
-Open a [new GitHub Issue](https://github.com/continuedev/continue/issues/new) or comment on [an existing one](https://github.com/continuedev/continue/issues). Let us know what you would like to contribute there, and we will help you make it happen!
+Open a [new GitHub Issue](https://github.com/continuedev/continue/issues/new) or comment on [an existing one](https://github.com/continuedev/continue/issues). Let us know what you would like to contribute, and we will help you make it happen!
 
 ## Install from source
 
