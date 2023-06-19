@@ -236,7 +236,7 @@ export class CapturedTerminal {
       }
 
       // Pass data through to terminal
-      data = data.replace("⏎", "");
+      data = data.replace(/⏎[\s\S]+⏎/g, "").replace(/⏎/g, "");
       this.writeEmitter.fire(data);
 
       this.splitByCommandsListener(data);

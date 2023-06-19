@@ -120,7 +120,7 @@ class Autopilot(ContinueBaseModel):
         # If a parent step is deleted/cancelled, don't run this step
         last_depth = self._step_depth
         i = self.history.current_index
-        while i >= 0 and self.history.timeline[i].depth > last_depth:
+        while i >= 0 and self.history.timeline[i].depth == last_depth + 1:
             if self.history.timeline[i].deleted:
                 return None
             last_depth = self.history.timeline[i].depth
@@ -181,6 +181,7 @@ class Autopilot(ContinueBaseModel):
 
             # i is now the index of the step that we want to show/rerun
             self.history.timeline[i].observation = observation
+            self.history.timeline[i].active = False
 
             await self.update_subscribers()
 
@@ -205,6 +206,7 @@ class Autopilot(ContinueBaseModel):
         # Add observation to history, unless already attached error observation
         if not caught_error:
             self.history.timeline[index_of_history_node].observation = observation
+            self.history.timeline[index_of_history_node].active = False
             await self.update_subscribers()
 
         # Update its description

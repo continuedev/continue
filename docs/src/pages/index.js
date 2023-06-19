@@ -19,7 +19,7 @@ function HomepageHeader() {
             className="button button--secondary button--lg"
             to="/docs/getting-started"
           >
-            GitHub Codespaces Demo
+            Download for VS Code
           </Link>
         </div>
       </div>

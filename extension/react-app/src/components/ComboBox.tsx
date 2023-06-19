@@ -9,16 +9,22 @@ import {
 } from ".";
 
 const mainInputFontSize = 16;
-const MainTextInput = styled.input`
+const MainTextInput = styled.textarea`
+  resize: none;
+
   padding: 8px;
   font-size: ${mainInputFontSize}px;
   border-radius: ${defaultBorderRadius};
-  border: 1px solid #ccc;
+  border: 1px solid white;
   margin: 8px auto;
   width: 100%;
   background-color: ${vscBackground};
   color: white;
-  outline: 1px solid orange;
+
+  &:focus {
+    border: 1px solid transparent;
+    outline: 1px solid orange;
+  }
 `;
 
 const UlMaxHeight = 200;
@@ -68,6 +74,9 @@ interface ComboBoxProps {
 }
 
 const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
+  const [history, setHistory] = React.useState<string[]>([]);
+  // The position of the current command you are typing now, so the one that will be appended to history once you press enter
+  const [positionInHistory, setPositionInHistory] = React.useState<number>(0);
   const [items, setItems] = React.useState(props.items);
   const {
     isOpen,
@@ -105,17 +114,50 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
     <div className="flex px-2" ref={divRef} hidden={!isOpen}>
       <MainTextInput
         disabled={props.disabled}
-        placeholder="Type '/' to see the list of available slash commands..."
+        placeholder="Type '/' to see available slash commands."
         {...getInputProps({
+          onChange: (e) => {
+            const target = e.target as HTMLTextAreaElement;
+            // Update the height of the textarea to match the content, up to a max of 200px.
+            target.style.height = "auto";
+            target.style.height = `${Math.min(
+              target.scrollHeight,
+              300
+            ).toString()}px`;
+          },
           onKeyDown: (event) => {
-            if (event.key === "Enter" && (!isOpen || items.length === 0)) {
+            if (event.key === "Enter" && event.shiftKey) {
+              // Prevent Downshift's default 'Enter' behavior.
+              (event.nativeEvent as any).preventDownshiftDefault = true;
+            } else if (
+              event.key === "Enter" &&
+              (!isOpen || items.length === 0)
+            ) {
               // Prevent Downshift's default 'Enter' behavior.
               (event.nativeEvent as any).preventDownshiftDefault = true;
               if (props.onEnter) props.onEnter(event);
               setInputValue("");
+              const value = event.currentTarget.value;
+              if (value !== "") {
+                setPositionInHistory(history.length + 1);
+                setHistory([...history, value]);
+              }
             } else if (event.key === "Tab" && items.length > 0) {
               setInputValue(items[0].name);
               event.preventDefault();
+            } else if (event.key === "ArrowUp") {
+              if (positionInHistory == 0) return;
+              setInputValue(history[positionInHistory - 1]);
+              setPositionInHistory((prev) => prev - 1);
+            } else if (event.key === "ArrowDown") {
+              if (positionInHistory >= history.length - 1) {
+                setInputValue("");
+              } else {
+                setInputValue(history[positionInHistory + 1]);
+              }
+              setPositionInHistory((prev) =>
+                Math.min(prev + 1, history.length)
+              );
             }
           },
           ref: ref as any,

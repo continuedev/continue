@@ -13,8 +13,8 @@
   "license": "Apache-2.0",
   "displayName": "Continue",
   "pricing": "Free",
-  "description": "Refine code 10x faster",
-  "version": "0.0.47",
+  "description": "Accelerating software development with language models",
+  "version": "0.0.55",
   "publisher": "Continue",
   "engines": {
     "vscode": "^1.74.0"
@@ -65,13 +65,7 @@
         }
       }
     },
-    "commands": [
-      {
-        "command": "continue.openContinueGUI",
-        "category": "Continue",
-        "title": "Open Continue GUI"
-      }
-    ],
+    "commands": [],
     "keybindings": [
       {
         "command": "continue.focusContinueInput",
@@ -86,8 +80,8 @@
       "activitybar": [
         {
           "id": "continue",
-          "title": "Continue",
-          "icon": "media/continue-gradient.png"
+          "title": "Continue  ",
+          "icon": "react-app/dist/play_button.png"
         }
       ]
     },
@@ -96,7 +90,7 @@
         {
           "type": "webview",
           "id": "continue.continueGUIView",
-          "name": "GUI",
+          "name": "  )",
           "visibility": "visible"
         }
       ]

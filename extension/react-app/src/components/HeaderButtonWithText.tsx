@@ -12,12 +12,10 @@ const HeaderButtonWithText = (props: HeaderButtonWithTextProps) => {
   const [hover, setHover] = useState(false);
   return (
     <HeaderButton
-      style={{ padding: "3px" }}
+      style={{ padding: "1px", paddingLeft: hover ? "4px" : "1px" }}
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => {
-        setTimeout(() => {
-          setHover(false);
-        }, 100);
+        setHover(false);
       }}
       onClick={props.onClick}
     >

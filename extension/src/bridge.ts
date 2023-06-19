@@ -10,6 +10,7 @@ import {
 } from "./client";
 import { convertSingleToDoubleQuoteJSON } from "./util/util";
 import { getExtensionUri } from "./util/vscode";
+import { extensionContext } from "./activation/activate";
 const axios = require("axios").default;
 const util = require("util");
 const exec = util.promisify(require("child_process").exec);
@@ -52,6 +53,13 @@ export function get_api_url() {
 const API_URL = get_api_url();
 
 export function getContinueServerUrl() {
+  // If in debug mode, always use 8001
+  if (
+    extensionContext &&
+    extensionContext.extensionMode === vscode.ExtensionMode.Development
+  ) {
+    return "http://localhost:8001";
+  }
   return (
     vscode.workspace.getConfiguration("continue").get<string>("serverUrl") ||
     "http://localhost:8000"

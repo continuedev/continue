@@ -1,20 +1,23 @@
 # Getting started
 
-## GitHub Codespaces Demo
+## Recommended: Install in VS Code
 
-[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/continuedev/continue-codespaces-demo?quickstart=1)
+1. Click `Install` on the Continue extension in the Visual Studio Marketplace [here](https://marketplace.visualstudio.com/items?itemName=Continue.continue)
 
-1. Click the `Open in GitHub Codespaces` badge above
+2. This will open the Continue extension page in VS Code, where you will need to click `Install` again
 
-:::tip
-We don't want to waste your time with install and env setup before you try Continue, so we set up a GitHub Codespace for you, which **won’t cost you anything**. If you are using GitHub Free for personal accounts, you can [use Codespaces for 120 hours per month for free](https://docs.github.com/en/billing/managing-billing-for-github-codespaces/about-billing-for-github-codespaces#monthly-included-storage-and-core-hours-for-personal-accounts)
-:::
+3. Once you do this, you will see a message in the bottom right hand corner of VS Code that says `Setting up Continue extension...`. After 30-90 seconds, the Continue extension will then open up. It should look like this when it is complete:
 
-2. Select the `Create new codespace` button and wait 30-90 seconds while it launches and installs the Continue extension. Once complete, it should look like this:
+![vscode-install](/img/continue-screenshot.png)
 
-![codespaces-install](/img/codespaces-install.png)
+You can also open the Continue panel with `cmd+k` on Mac / `ctrl+k` on Windows
 
-## Next Steps
+4. If it's your first time using Continue, it will open a file called `calculator.py` where you can play around with Continue's functionality.
 
- - Read the `Getting Started` section of the `README.md` file that has been opened in your codespace, which you can also find [here](https://github.com/continuedev/continue-codespaces-demo/blob/main/README.md)
- - If you're ready to download for VS Code, you can do so [here](https://marketplace.visualstudio.com/items?itemName=Continue.continue)
+![codespaces-install](/img/continue-screenshot2.png)
+
+5. Try using it with your own code!
+
+## Alternative: GitHub Codespaces
+
+If you would like to try without installing on your machine, you can [open our GitHub Codespace](https://codespaces.new/continuedev/continue-codespaces-demo?quickstart=1) to play with Continue in a browser-based editor

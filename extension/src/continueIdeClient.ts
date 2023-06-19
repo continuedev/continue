@@ -158,15 +158,18 @@ class IdeProtocolClient {
       });
       editor.setDecorations(decorationType, [range]);
 
-      // Listen for changes to cursor position
-      const cursorDisposable = vscode.window.onDidChangeTextEditorSelection(
-        (event) => {
-          if (event.textEditor.document.uri.fsPath === rangeInFile.filepath) {
-            cursorDisposable.dispose();
-            editor.setDecorations(decorationType, []);
+      // Listen for changes to cursor position and then remove the decoration (but keep for at least 2 seconds)
+      const allowRemoveHighlight = () => {
+        const cursorDisposable = vscode.window.onDidChangeTextEditorSelection(
+          (event) => {
+            if (event.textEditor.document.uri.fsPath === rangeInFile.filepath) {
+              cursorDisposable.dispose();
+              editor.setDecorations(decorationType, []);
+            }
           }
-        }
-      );
+        );
+      };
+      setTimeout(allowRemoveHighlight, 2000);
     }
   }
 
@@ -192,7 +195,7 @@ class IdeProtocolClient {
   async getUserSecret(key: string) {
     // Check if secret already exists in VS Code settings (global)
     let secret = vscode.workspace.getConfiguration("continue").get(key);
-    if (typeof secret !== "undefined") return secret;
+    if (typeof secret !== "undefined" && secret !== null) return secret;
 
     // If not, ask user for secret
     secret = await vscode.window.showInputBox({
@@ -283,7 +286,7 @@ class IdeProtocolClient {
           edit.range.start.line,
           edit.range.start.character,
           edit.range.end.line,
-          edit.range.end.character + 1
+          edit.range.end.character
         );
 
         editor.edit((editBuilder) => {

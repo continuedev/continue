@@ -40,10 +40,7 @@ args = parser.parse_args()
 
 
 def run_server():
-    if os.path.exists("logging.yaml"):
-        uvicorn.run(app, host="0.0.0.0", port=args.port, log_level="info")
-    else:
-        uvicorn.run(app, host="0.0.0.0", port=args.port, log_level="info")
+    uvicorn.run(app, host="0.0.0.0", port=args.port)
 
 
 if __name__ == "__main__":

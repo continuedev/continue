@@ -3,8 +3,8 @@
 @tailwind utilities;
 
 :root {
-  --secondary-dark: 37 37 38;
-  --vsc-background: 30 30 30;
+  --secondary-dark: rgb(37, 37, 38);
+  --vsc-background: rgb(30, 30, 30);
   --button-color: rgb(113, 28, 59);
   --button-color-hover: rgba(113, 28, 59, 0.667);
   --def-border-radius: 5px;
@@ -26,7 +26,6 @@ body,
 }
 
 body {
-  background-color: var(--vsc-background);
   padding: 0;
   color: white;
   font-family: "Mona Sans", "Arial", sans-serif;

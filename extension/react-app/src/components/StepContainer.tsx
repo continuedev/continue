@@ -5,14 +5,8 @@ import {
   defaultBorderRadius,
   secondaryDark,
   vscBackground,
-  GradientBorder,
   vscBackgroundTransparent,
-  HeaderButton,
 } from ".";
-import { RangeInFile, FileEdit } from "../../../src/client";
-import CodeBlock from "./CodeBlock";
-import SubContainer from "./SubContainer";
-
 import {
   ChevronDown,
   ChevronRight,
@@ -22,6 +16,7 @@ import {
 import { HistoryNode } from "../../../schema/HistoryNode";
 import ReactMarkdown from "react-markdown";
 import HeaderButtonWithText from "./HeaderButtonWithText";
+import CodeBlock from "./CodeBlock";
 
 interface StepContainerProps {
   historyNode: HistoryNode;
@@ -31,7 +26,11 @@ interface StepContainerProps {
   onUserInput: (input: string) => void;
   onRetry: () => void;
   onDelete: () => void;
-  open?: boolean;
+  open: boolean;
+  onToggleAll: () => void;
+  onToggle: () => void;
+  isFirst: boolean;
+  isLast: boolean;
 }
 
 const MainDiv = styled.div<{ stepDepth: number; inFuture: boolean }>`
@@ -50,9 +49,13 @@ const StepContainerDiv = styled.div<{ open: boolean }>`
   /* padding: 8px; */
 `;
 
-const HeaderDiv = styled.div<{ error: boolean }>`
+const HeaderDiv = styled.div<{ error: boolean; loading: boolean }>`
   background-color: ${(props) =>
-    props.error ? "#522" : vscBackgroundTransparent};
+    props.error
+      ? "#522"
+      : props.loading
+      ? vscBackgroundTransparent
+      : vscBackground};
   display: grid;
   grid-template-columns: 1fr auto auto;
   grid-gap: 8px;
@@ -63,13 +66,6 @@ const HeaderDiv = styled.div<{ error: boolean }>`
 const ContentDiv = styled.div`
   padding: 8px;
   padding-left: 16px;
-  background-color: ${vscBackground};
-`;
-
-const OnHoverDiv = styled.div`
-  text-align: center;
-  padding: 10px;
-  animation: ${appear} 0.3s ease-in-out;
 `;
 
 const MarkdownPre = styled.pre`
@@ -79,12 +75,51 @@ const MarkdownPre = styled.pre`
   border: 0.5px solid white;
 `;
 
-const MarkdownCode = styled.code``;
+const StyledCode = styled.code`
+  word-wrap: break-word;
+  color: lightgray;
+`;
+
+const gradient = keyframes`
+  0% {
+    background-position: 0px 0;
+  }
+  100% {
+    background-position: 100em 0;
+  }
+`;
+
+const GradientBorder = styled.div<{
+  borderWidth?: number;
+  borderRadius?: string;
+  borderColor?: string;
+  isFirst: boolean;
+  isLast: boolean;
+  loading: boolean;
+}>`
+  border-radius: ${(props) => props.borderRadius || "0"};
+  padding-top: ${(props) =>
+    `${(props.borderWidth || 1) / (props.isFirst ? 1 : 2)}px`};
+  padding-bottom: ${(props) =>
+    `${(props.borderWidth || 1) / (props.isLast ? 1 : 2)}px`};
+  background: ${(props) =>
+    props.borderColor
+      ? props.borderColor
+      : `repeating-linear-gradient(
+    101.79deg,
+    #12887a 0%,
+    #87245c 16%,
+    #e12637 33%,
+    #ffb215 55%,
+    #e12637 67%,
+    #87245c 85%,
+    #12887a 99%
+  )`};
+  animation: ${(props) => (props.loading ? gradient : "")} 6s linear infinite;
+  background-size: 200% 200%;
+`;
 
 function StepContainer(props: StepContainerProps) {
-  const [open, setOpen] = useState(
-    typeof props.open === "undefined" ? true : props.open
-  );
   const [isHovered, setIsHovered] = useState(false);
   const naturalLanguageInputRef = useRef<HTMLTextAreaElement>(null);
   const userInputRef = useRef<HTMLInputElement>(null);
@@ -120,19 +155,33 @@ function StepContainer(props: StepContainerProps) {
       }}
       hidden={props.historyNode.step.hide as any}
     >
-      <StepContainerDiv open={open}>
+      <StepContainerDiv open={props.open}>
         <GradientBorder
+          loading={props.historyNode.active as boolean | false}
+          isFirst={props.isFirst}
+          isLast={props.isLast}
           borderColor={
-            props.historyNode.observation?.error ? "#f00" : undefined
+            props.historyNode.observation?.error
+              ? "#f00"
+              : props.historyNode.active
+              ? undefined
+              : "white"
           }
           className="overflow-hidden cursor-pointer"
-          onClick={() => setOpen((prev) => !prev)}
+          onClick={(e) => {
+            if (e.metaKey) {
+              props.onToggleAll();
+            } else {
+              props.onToggle();
+            }
+          }}
         >
           <HeaderDiv
+            loading={props.historyNode.active as boolean | false}
             error={props.historyNode.observation?.error ? true : false}
           >
             <h4 className="m-2">
-              {open ? (
+              {props.open ? (
                 <ChevronDown size="1.4em" />
               ) : (
                 <ChevronRight size="1.4em" />
@@ -175,8 +224,8 @@ function StepContainer(props: StepContainerProps) {
             </>
           </HeaderDiv>
         </GradientBorder>
-        <ContentDiv hidden={!open}>
-          {open && false && (
+        <ContentDiv hidden={!props.open}>
+          {props.open && false && (
             <>
               <pre className="overflow-x-scroll">
                 Step Details:
@@ -194,66 +243,28 @@ function StepContainer(props: StepContainerProps) {
             <ReactMarkdown
               key={1}
               className="overflow-x-scroll"
-              components={
-                {
-                  // pre: ({ node, ...props }) => {
-                  //   return (
-                  //     <CodeBlock
-                  //       children={props.children[0] as string}
-                  //     ></CodeBlock>
-                  //   );
-                  // },
-                }
-              }
+              components={{
+                pre: ({ node, ...props }) => {
+                  return (
+                    <CodeBlock
+                      children={props.children[0] as string}
+                    ></CodeBlock>
+                  );
+                },
+                code: ({ node, ...props }) => {
+                  return (
+                    <StyledCode
+                      children={props.children[0] as string}
+                    ></StyledCode>
+                  );
+                },
+              }}
             >
               {props.historyNode.step.description as any}
             </ReactMarkdown>
           )}
-
-          {/* {props.historyNode.step.name === "Waiting for user input" && (
-            <InputAndButton
-              onUserInput={(value) => {
-                props.onUserInput(value);
-              }}
-            ></InputAndButton>
-          )}
-          {props.historyNode.step.name === "Waiting for user confirmation" && (
-            <>
-              <input
-                type="button"
-                value="Cancel"
-                className="m-4 p-2 rounded-md border border-solid text-white border-gray-200 bg-vsc-background cursor-pointer hover:bg-white hover:text-black"
-              ></input>
-              <input
-                className="m-4 p-2 rounded-md border border-solid text-white border-gray-200 bg-vsc-background cursor-pointer hover:bg-white hover:text-black"
-                onClick={(e) => {
-                  props.onUserInput("ok");
-                  e.preventDefault();
-                  e.stopPropagation();
-                }}
-                type="button"
-                value="Confirm"
-              />
-            </>
-          )} */}
         </ContentDiv>
       </StepContainerDiv>
-
-      {/* <OnHoverDiv hidden={!open}>
-        <NaturalLanguageInput
-          onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              onTextInput();
-            }
-          }}
-          ref={naturalLanguageInputRef}
-          onClick={(e) => {
-            e.stopPropagation();
-            e.preventDefault();
-          }}
-        ></NaturalLanguageInput>
-        <ContinueButton onClick={onTextInput}></ContinueButton>
-      </OnHoverDiv> */}
     </MainDiv>
   );
 }

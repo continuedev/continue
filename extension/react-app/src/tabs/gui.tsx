@@ -1,11 +1,5 @@
 import styled from "styled-components";
-import {
-  defaultBorderRadius,
-  vscBackground,
-  Loader,
-  MainTextInput,
-  HeaderButton,
-} from "../components";
+import { defaultBorderRadius, Loader } from "../components";
 import ContinueButton from "../components/ContinueButton";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { History } from "../../../schema/History";
@@ -20,6 +14,10 @@ import {
 import ComboBox from "../components/ComboBox";
 import TextDialog from "../components/TextDialog";
 import HeaderButtonWithText from "../components/HeaderButtonWithText";
+import ReactSwitch from "react-switch";
+import { usePostHog } from "posthog-js/react";
+import { useSelector } from "react-redux";
+import { RootStore } from "../redux/store";
 
 const TopGUIDiv = styled.div`
   overflow: hidden;
@@ -33,7 +31,7 @@ const UserInputQueueItem = styled.div`
   text-align: center;
 `;
 
-const Footer = styled.footer`
+const Footer = styled.footer<{ dataSwitchChecked: boolean }>`
   display: flex;
   flex-direction: row;
   gap: 8px;
@@ -42,6 +40,8 @@ const Footer = styled.footer`
   align-items: center;
   margin-top: 8px;
   border-top: 0.1px solid gray;
+  background-color: ${(props) =>
+    props.dataSwitchChecked ? "#12887a33" : "transparent"};
 `;
 
 interface GUIProps {
@@ -49,13 +49,22 @@ interface GUIProps {
 }
 
 function GUI(props: GUIProps) {
+  const posthog = usePostHog();
+  const vscMachineId = useSelector(
+    (state: RootStore) => state.config.vscMachineId
+  );
+
+  const [usingFastModel, setUsingFastModel] = useState(false);
   const [waitingForSteps, setWaitingForSteps] = useState(false);
   const [userInputQueue, setUserInputQueue] = useState<string[]>([]);
   const [availableSlashCommands, setAvailableSlashCommands] = useState<
     { name: string; description: string }[]
   >([]);
+  const [dataSwitchChecked, setDataSwitchChecked] = useState(false);
+  const [showDataSharingInfo, setShowDataSharingInfo] = useState(false);
+  const [stepsOpen, setStepsOpen] = useState<boolean[]>([]);
   const [history, setHistory] = useState<History | undefined>();
-  // {
+  //   {
   //   timeline: [
   //     {
   //       step: {
@@ -143,6 +152,7 @@ function GUI(props: GUIProps) {
   //       ],
   //     },
   //     {
+  //       active: false,
   //       step: {
   //         name: "SolveTracebackStep",
   //         traceback: {
@@ -203,6 +213,20 @@ function GUI(props: GUIProps) {
   }, [topGuiDivRef.current, scrollTimeout]);
 
   useEffect(() => {
+    const listener = (e: any) => {
+      // Cmd + J to toggle fast model
+      if (e.key === "j" && e.metaKey) {
+        setUsingFastModel((prev) => !prev);
+      }
+    };
+    window.addEventListener("keydown", listener);
+
+    return () => {
+      window.removeEventListener("keydown", listener);
+    };
+  }, []);
+
+  useEffect(() => {
     console.log("CLIENT ON STATE UPDATE: ", client, client?.onStateUpdate);
     client?.onStateUpdate((state) => {
       // Scroll only if user is at very bottom of the window.
@@ -212,6 +236,15 @@ function GUI(props: GUIProps) {
       setWaitingForSteps(state.active);
       setHistory(state.history);
       setUserInputQueue(state.user_input_queue);
+      const nextStepsOpen = [...stepsOpen];
+      for (
+        let i = nextStepsOpen.length;
+        i < state.history.timeline.length;
+        i++
+      ) {
+        nextStepsOpen.push(true);
+      }
+      setStepsOpen(nextStepsOpen);
 
       if (shouldScrollToBottom) {
         scrollToBottom();
@@ -253,8 +286,9 @@ function GUI(props: GUIProps) {
 
   const onMainTextInput = () => {
     if (mainTextInputRef.current) {
-      if (!client) return;
       let input = mainTextInputRef.current.value;
+      mainTextInputRef.current.value = "";
+      if (!client) return;
 
       if (
         history?.timeline.length &&
@@ -297,6 +331,9 @@ function GUI(props: GUIProps) {
           client?.sendMainInput(`/feedback ${text}`);
           setShowFeedbackDialog(false);
         }}
+        onClose={() => {
+          setShowFeedbackDialog(false);
+        }}
       ></TextDialog>
 
       <TopGUIDiv
@@ -318,6 +355,17 @@ function GUI(props: GUIProps) {
         {history?.timeline.map((node: HistoryNode, index: number) => {
           return (
             <StepContainer
+              isLast={index === history.timeline.length - 1}
+              isFirst={index === 0}
+              open={stepsOpen[index]}
+              onToggle={() => {
+                const nextStepsOpen = [...stepsOpen];
+                nextStepsOpen[index] = !nextStepsOpen[index];
+                setStepsOpen(nextStepsOpen);
+              }}
+              onToggleAll={() => {
+                setStepsOpen((prev) => prev.map((_, index) => !prev[index]));
+              }}
               key={index}
               onUserInput={(input: string) => {
                 onStepUserInput(input, index);
@@ -340,7 +388,7 @@ function GUI(props: GUIProps) {
             />
           );
         })}
-        {waitingForSteps && <Loader></Loader>}
+        {/* {waitingForSteps && <Loader></Loader>} */}
 
         <div>
           {userInputQueue.map((input) => {
@@ -366,17 +414,84 @@ function GUI(props: GUIProps) {
         />
         <ContinueButton onClick={onMainTextInput} />
       </TopGUIDiv>
-      <Footer>
+      <div
+        style={{
+          position: "fixed",
+          bottom: "50px",
+          backgroundColor: "white",
+          color: "black",
+          borderRadius: defaultBorderRadius,
+          padding: "16px",
+          margin: "16px",
+        }}
+        hidden={!showDataSharingInfo}
+      >
+        By turning on this switch, you signal that you would 
+        contribute this software development data to a publicly 
+        accessible, open-source dataset in the future.
+        <br />
+        <br />
+        <b>
+          {dataSwitchChecked
+            ? "No data is being collected. In the future, you would be contributing data"
+            : "No data is being collected. In the future, your data would not be shared"}
+        </b>
+      </div>
+      <Footer dataSwitchChecked={dataSwitchChecked}>
+        <div
+          style={{
+            display: "flex",
+            gap: "4px",
+            marginRight: "auto",
+            alignItems: "center",
+          }}
+          onMouseEnter={() => {
+            setShowDataSharingInfo(true);
+          }}
+          onMouseLeave={() => {
+            setShowDataSharingInfo(false);
+          }}
+        >
+          <ReactSwitch
+            height={20}
+            handleDiameter={20}
+            width={40}
+            onChange={() => {
+              posthog?.capture("data_switch_toggled", {
+                vscMachineId: vscMachineId,
+                dataSwitchChecked: !dataSwitchChecked,
+              });
+              setDataSwitchChecked((prev) => !prev);
+            }}
+            onColor="#12887a"
+            checked={dataSwitchChecked}
+          />
+          <span style={{ cursor: "help", fontSize: "14px" }}>
+            Contribute Data
+          </span>
+        </div>
+        {/* <HeaderButtonWithText
+          onClick={() => {
+            setUsingFastModel((prev) => !prev);
+          }}
+          text={usingFastModel ? "gpt-3.5-turbo" : "gpt-4"}
+        >
+          <div
+            style={{ fontSize: "18px", marginLeft: "2px", marginRight: "2px" }}
+          >
+            {usingFastModel ? "⚡" : "🧠"}
+          </div>
+        </HeaderButtonWithText> */}
         <HeaderButtonWithText
           onClick={() => {
             client?.sendClear();
           }}
-          text="Clear History"
+          text="Clear All"
         >
           <Trash size="1.6em" />
         </HeaderButtonWithText>
         <a href="https://continue.dev/docs" className="no-underline">
-          <HeaderButtonWithText text="Continue Docs">
+          <HeaderButtonWithText text="Docs">
             <BookOpen size="1.6em" />
           </HeaderButtonWithText>
         </a>

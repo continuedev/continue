@@ -17,7 +17,7 @@ SDK provides "IDEProtocol" class so that steps can interact with VS Code, etc...
 
 ### VS Code
 
-You can install the VS Code extension [here](../install.md)
+You can install the VS Code extension [here](../getting-started.md)
 
 ### GitHub Codespaces
 
