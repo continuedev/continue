@@ -426,15 +426,15 @@ function GUI(props: GUIProps) {
         }}
         hidden={!showDataSharingInfo}
       >
-        By turning on the switch, you will anonymously contribute your Continue
-        history to an open-source dataset used to train LLMs to use tools just
-        like a developer in their IDE.
+        By turning on this switch, you signal that you would 
+        contribute this software development data to a publicly 
+        accessible, open-source dataset in the future.
         <br />
         <br />
         <b>
           {dataSwitchChecked
-            ? "You are currently contributing data."
-            : "Your data is not being shared."}
+            ? "No data is being collected. In the future, you would be contributing data"
+            : "No data is being collected. In the future, your data would not be shared"}
         </b>
       </div>
       <Footer dataSwitchChecked={dataSwitchChecked}>
