@@ -15,6 +15,9 @@ import ComboBox from "../components/ComboBox";
 import TextDialog from "../components/TextDialog";
 import HeaderButtonWithText from "../components/HeaderButtonWithText";
 import ReactSwitch from "react-switch";
+import { usePostHog } from "posthog-js/react";
+import { useSelector } from "react-redux";
+import { RootStore } from "../redux/store";
 
 const TopGUIDiv = styled.div`
   overflow: hidden;
@@ -46,6 +49,11 @@ interface GUIProps {
 }
 
 function GUI(props: GUIProps) {
+  const posthog = usePostHog();
+  const vscMachineId = useSelector(
+    (state: RootStore) => state.config.vscMachineId
+  );
+
   const [waitingForSteps, setWaitingForSteps] = useState(false);
   const [userInputQueue, setUserInputQueue] = useState<string[]>([]);
   const [availableSlashCommands, setAvailableSlashCommands] = useState<
@@ -432,6 +440,10 @@ function GUI(props: GUIProps) {
             handleDiameter={20}
             width={40}
             onChange={() => {
+              posthog?.capture("data_switch_toggled", {
+                vscMachineId: vscMachineId,
+                dataSwitchChecked: !dataSwitchChecked,
+              });
               setDataSwitchChecked((prev) => !prev);
             }}
             onColor="#12887a"
