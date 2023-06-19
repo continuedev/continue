@@ -154,10 +154,11 @@ class DefaultModelEditCodeStep(Step):
     async def describe(self, models: Models) -> Coroutine[str, None, None]:
         description = await models.gpt35.complete(
             f"{self._prompt_and_completion}\n\nPlease give brief a description of the changes made above using markdown bullet points. Be concise and only mention changes made to the commit before, not prefix or suffix:")
-        return description
+        self.name = await models.gpt35.complete(f"Write a very short title to describe this requested change: '{self.user_input}'. This is the title:")
+        return f"`{self.user_input}`\n\n" + description
 
     async def run(self, sdk: ContinueSDK) -> Coroutine[Observation, None, None]:
-        self.name = self.user_input
+        self.description = f"`{self.user_input}`"
         await sdk.update_ui()
 
         rif_with_contents = []
@@ -174,7 +175,7 @@ class DefaultModelEditCodeStep(Step):
             await sdk.ide.setFileOpen(rif.filepath)
 
             model_to_use = sdk.models.default
-            
+
             full_file_contents = await sdk.ide.readFile(rif.filepath)
 
             full_file_contents_lst = full_file_contents.split("\n")
@@ -185,42 +186,49 @@ class DefaultModelEditCodeStep(Step):
             cur_end_line = len(full_file_contents_lst) - 1
 
             def cut_context(model_to_use, total_tokens, cur_start_line, cur_end_line):
-                        
+
                 if total_tokens > MAX_TOKENS_FOR_MODEL[model_to_use.name]:
                     while cur_end_line > min_end_line:
-                        total_tokens -= model_to_use.count_tokens(full_file_contents_lst[cur_end_line])
+                        total_tokens -= model_to_use.count_tokens(
+                            full_file_contents_lst[cur_end_line])
                         cur_end_line -= 1
                         if total_tokens < MAX_TOKENS_FOR_MODEL[model_to_use.name]:
                             return cur_start_line, cur_end_line
-                    
+
                     if total_tokens > MAX_TOKENS_FOR_MODEL[model_to_use.name]:
                         while cur_start_line < max_start_line:
                             cur_start_line += 1
-                            total_tokens -= model_to_use.count_tokens(full_file_contents_lst[cur_end_line])
+                            total_tokens -= model_to_use.count_tokens(
+                                full_file_contents_lst[cur_end_line])
                             if total_tokens < MAX_TOKENS_FOR_MODEL[model_to_use.name]:
                                 return cur_start_line, cur_end_line
-                            
+
                 return cur_start_line, cur_end_line
 
             if model_to_use.name == "gpt-4":
 
                 total_tokens = model_to_use.count_tokens(full_file_contents)
-                cur_start_line, cur_end_line = cut_context(model_to_use, total_tokens, cur_start_line, cur_end_line)
+                cur_start_line, cur_end_line = cut_context(
+                    model_to_use, total_tokens, cur_start_line, cur_end_line)
 
-            elif model_to_use.name  == "gpt-3.5-turbo" or model_to_use.name == "gpt-3.5-turbo-16k":
+            elif model_to_use.name == "gpt-3.5-turbo" or model_to_use.name == "gpt-3.5-turbo-16k":
 
                 if sdk.models.gpt35.count_tokens(full_file_contents) > MAX_TOKENS_FOR_MODEL["gpt-3.5-turbo"]:
 
                     model_to_use = sdk.models.gpt3516k
-                    total_tokens = model_to_use.count_tokens(full_file_contents)
-                    cur_start_line, cur_end_line = cut_context(model_to_use, total_tokens, cur_start_line, cur_end_line)
+                    total_tokens = model_to_use.count_tokens(
+                        full_file_contents)
+                    cur_start_line, cur_end_line = cut_context(
+                        model_to_use, total_tokens, cur_start_line, cur_end_line)
 
             else:
 
                 raise Exception("Unknown default model")
-                      
-            code_before = "".join(full_file_contents_lst[cur_start_line:max_start_line])
-            code_after = "".join(full_file_contents_lst[min_end_line:cur_end_line])
+
+            code_before = "".join(
+                full_file_contents_lst[cur_start_line:max_start_line])
+            code_after = "".join(
+                full_file_contents_lst[min_end_line:cur_end_line])
 
             segs = [code_before, code_after]
 

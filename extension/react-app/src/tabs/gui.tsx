@@ -1,11 +1,5 @@
 import styled from "styled-components";
-import {
-  defaultBorderRadius,
-  vscBackground,
-  Loader,
-  MainTextInput,
-  HeaderButton,
-} from "../components";
+import { defaultBorderRadius, Loader } from "../components";
 import ContinueButton from "../components/ContinueButton";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { History } from "../../../schema/History";
@@ -20,6 +14,7 @@ import {
 import ComboBox from "../components/ComboBox";
 import TextDialog from "../components/TextDialog";
 import HeaderButtonWithText from "../components/HeaderButtonWithText";
+import ReactSwitch from "react-switch";
 
 const TopGUIDiv = styled.div`
   overflow: hidden;
@@ -33,7 +28,7 @@ const UserInputQueueItem = styled.div`
   text-align: center;
 `;
 
-const Footer = styled.footer`
+const Footer = styled.footer<{ dataSwitchChecked: boolean }>`
   display: flex;
   flex-direction: row;
   gap: 8px;
@@ -42,6 +37,8 @@ const Footer = styled.footer`
   align-items: center;
   margin-top: 8px;
   border-top: 0.1px solid gray;
+  background-color: ${(props) =>
+    props.dataSwitchChecked ? "#12887a33" : "transparent"};
 `;
 
 interface GUIProps {
@@ -54,6 +51,8 @@ function GUI(props: GUIProps) {
   const [availableSlashCommands, setAvailableSlashCommands] = useState<
     { name: string; description: string }[]
   >([]);
+  const [dataSwitchChecked, setDataSwitchChecked] = useState(false);
+  const [showDataSharingInfo, setShowDataSharingInfo] = useState(false);
   const [stepsOpen, setStepsOpen] = useState<boolean[]>([]);
   const [history, setHistory] = useState<History | undefined>();
   // {
@@ -390,7 +389,58 @@ function GUI(props: GUIProps) {
         />
         <ContinueButton onClick={onMainTextInput} />
       </TopGUIDiv>
-      <Footer>
+      <div
+        style={{
+          position: "fixed",
+          bottom: "50px",
+          backgroundColor: "white",
+          color: "black",
+          borderRadius: defaultBorderRadius,
+          padding: "16px",
+          margin: "16px",
+        }}
+        hidden={!showDataSharingInfo}
+      >
+        By turning on the switch, you will anonymously contribute your Continue
+        history to an open-source dataset used to train LLMs to use tools just
+        like a developer in their IDE.
+        <br />
+        <br />
+        <b>
+          {dataSwitchChecked
+            ? "You are currently contributing data."
+            : "Your data is not being shared."}
+        </b>
+      </div>
+      <Footer dataSwitchChecked={dataSwitchChecked}>
+        <div
+          style={{
+            display: "flex",
+            gap: "4px",
+            marginRight: "auto",
+            alignItems: "center",
+          }}
+          onMouseEnter={() => {
+            setShowDataSharingInfo(true);
+          }}
+          onMouseLeave={() => {
+            setShowDataSharingInfo(false);
+          }}
+        >
+          <ReactSwitch
+            height={20}
+            handleDiameter={20}
+            width={40}
+            onChange={() => {
+              setDataSwitchChecked((prev) => !prev);
+            }}
+            onColor="#12887a"
+            checked={dataSwitchChecked}
+          />
+          <span style={{ cursor: "help", fontSize: "16px" }}>
+            Contribute Data
+          </span>
+        </div>
         <HeaderButtonWithText
           onClick={() => {
             client?.sendClear();
