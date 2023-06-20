@@ -23,19 +23,19 @@ class CreateCodebaseIndexChroma(Step):
 
 
 class AnswerQuestionChroma(Step):
-    question: str
+    user_input: str
     _answer: Union[str, None] = None
     name: str = "Answer Question"
 
     async def describe(self, llm) -> Coroutine[str, None, None]:
         if self._answer is None:
-            return f"Answering the question: {self.question}"
+            return f"Answering the question: {self.user_input}"
         else:
             return self._answer
 
     async def run(self, sdk: ContinueSDK) -> Coroutine[Observation, None, None]:
         index = ChromaIndexManager(await sdk.ide.getWorkspaceDirectory())
-        results = index.query_codebase_index(self.question)
+        results = index.query_codebase_index(self.user_input)
 
         code_snippets = ""
 
@@ -52,7 +52,7 @@ class AnswerQuestionChroma(Step):
 
             Here is the question to answer:
 
-            {self.question}
+            {self.user_input}
 
             Here is the answer:""")
 

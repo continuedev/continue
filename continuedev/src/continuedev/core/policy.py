@@ -32,7 +32,7 @@ class DemoPolicy(Policy):
                     Type '/' to see the list of available slash commands. If you highlight code, edits and explanations will be localized to the highlighted range. Otherwise, the currently open file is used. In both cases, the code is combined with the previous steps to construct the context.""")) >>
                 WelcomeStep() >>
                 # SetupContinueWorkspaceStep() >>
-                # CreateCodebaseIndexChroma() >>
+                CreateCodebaseIndexChroma() >>
                 StepsOnStartupStep())
 
         observation = history.get_current().observation

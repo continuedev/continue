@@ -11,6 +11,7 @@ from ...recipes.CreatePipelineRecipe.main import CreatePipelineRecipe
 from ...recipes.DDtoBQRecipe.main import DDtoBQRecipe
 from ...recipes.DeployPipelineAirflowRecipe.main import DeployPipelineAirflowRecipe
 from ...steps.on_traceback import DefaultOnTracebackStep
+from ...steps.chroma import AnswerQuestionChroma
 from ...steps.clear_history import ClearHistoryStep
 
 # This mapping is used to convert from string in ContinueConfig json to corresponding Step class.
@@ -26,6 +27,7 @@ step_name_to_step_class = {
     "DDtoBQRecipe": DDtoBQRecipe,
     "DeployPipelineAirflowRecipe": DeployPipelineAirflowRecipe,
     "DefaultOnTracebackStep": DefaultOnTracebackStep,
+    "AnswerQuestionChroma": AnswerQuestionChroma,
     "ClearHistoryStep": ClearHistoryStep,
 }
 
