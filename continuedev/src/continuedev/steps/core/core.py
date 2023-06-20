@@ -116,7 +116,7 @@ class DefaultModelEditCodeStep(Step):
     name: str = "Editing Code"
     hide = False
     _prompt: str = dedent("""\
-        Take the file prefix and suffix into account, but only rewrite the code_to_edit as specified in the user_request. The code you write in modified_code_to_edit will replace the code between the code_to_edit tags. Do NOT preface your answer or write anything other than code.
+        Take the file prefix and suffix into account, but only rewrite the code_to_edit as specified in the user_request. The code you write in modified_code_to_edit will replace the code between the code_to_edit tags. Do NOT preface your answer or write anything other than code. The </modified_code_to_edit> tag should be written to indicate the end of the modified code section.
 
         Example:
 
@@ -256,6 +256,27 @@ class DefaultModelEditCodeStep(Step):
             if segs[1].strip() == "":
                 segs[1] = segs[1].strip()
 
+            # Move any surrounding blank line in rif.contents to the prefix/suffix
+            first_line = rif.contents.splitlines(keepends=True)[0]
+            while first_line.strip() == "":
+                segs[0] += first_line
+                rif.contents = rif.contents[len(first_line):]
+                first_line = rif.contents.splitlines(keepends=True)[0]
+
+            last_line = rif.contents.splitlines(keepends=True)[-1]
+            while last_line.strip() == "":
+                segs[1] = last_line + segs[1]
+                rif.contents = rif.contents[:len(
+                    rif.contents) - len(last_line)]
+                last_line = rif.contents.splitlines(keepends=True)[-1]
+
+            while rif.contents.startswith("\n"):
+                segs[0] += "\n"
+                rif.contents = rif.contents[1:]
+            while rif.contents.endswith("\n"):
+                segs[1] = "\n" + segs[1]
+                rif.contents = rif.contents[:-1]
+
             prompt = self._prompt.format(
                 code=rif.contents, user_request=self.user_input, file_prefix=segs[0], file_suffix=segs[1])
 
@@ -275,15 +296,20 @@ class DefaultModelEditCodeStep(Step):
                     line = original_lines[0].replace(
                         original_lines[0].strip(), "") + line
 
-                range = Range.from_shorthand(
-                    rif.range.start.line + i, rif.range.start.character if i == 0 else 0, rif.range.start.line + i + 1, 0)
+                if i < len(original_lines):
+                    range = Range.from_shorthand(
+                        rif.range.start.line + i, rif.range.start.character if i == 0 else 0, rif.range.start.line + i + 1, 0)
+                else:
+                    range = Range.from_shorthand(
+                        rif.range.start.line + i, 0, rif.range.start.line + i, 0)
+
                 await sdk.ide.applyFileSystemEdit(FileEdit(
                     filepath=rif.filepath,
                     range=range,
                     replacement=line + "\n"
                 ))
 
-            async for chunk in model_to_use.stream_chat(prompt, with_history=await sdk.get_chat_context()):
+            async for chunk in model_to_use.stream_chat(prompt, with_history=await sdk.get_chat_context(), temperature=0):
                 chunk_lines = chunk.split("\n")
                 chunk_lines[0] = unfinished_line + chunk_lines[0]
                 if chunk.endswith("\n"):
@@ -308,7 +334,7 @@ class DefaultModelEditCodeStep(Step):
             # Add the unfinished line
             if unfinished_line != "":
                 unfinished_line = unfinished_line.removesuffix(
-                    "</modified_code_to_edit>").removesuffix("</code_to_edit>").removesuffix("```")
+                    "</modified_code_to_edit>").removesuffix("</code_to_edit>").removesuffix("```").removesuffix("</file_suffix>").removesuffix("</file_prefix")
                 if not i < len(original_lines) or not unfinished_line == original_lines[i]:
                     await add_line(i, unfinished_line)
                 lines.append(unfinished_line)
