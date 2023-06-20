@@ -149,20 +149,6 @@ class DefaultModelEditCodeStep(Step):
         </modified_code_to_edit>
 
         Main task:
-
-        <file_prefix>
-        {file_prefix}
-        </file_prefix>
-        <code_to_edit>
-        {code}
-        </code_to_edit>
-        <file_suffix>
-        {file_suffix}
-        </file_suffix>
-        <user_request>
-        {user_request}
-        </user_request>
-        <modified_code_to_edit>
         """)
 
     _prompt_and_completion: str = ""
@@ -257,33 +243,52 @@ class DefaultModelEditCodeStep(Step):
                 segs[1] = segs[1].strip()
 
             # Move any surrounding blank line in rif.contents to the prefix/suffix
-            first_line = rif.contents.splitlines(keepends=True)[0]
-            while first_line.strip() == "":
-                segs[0] += first_line
-                rif.contents = rif.contents[len(first_line):]
+            if len(rif.contents) > 0:
                 first_line = rif.contents.splitlines(keepends=True)[0]
+                while first_line.strip() == "":
+                    segs[0] += first_line
+                    rif.contents = rif.contents[len(first_line):]
+                    first_line = rif.contents.splitlines(keepends=True)[0]
 
-            last_line = rif.contents.splitlines(keepends=True)[-1]
-            while last_line.strip() == "":
-                segs[1] = last_line + segs[1]
-                rif.contents = rif.contents[:len(
-                    rif.contents) - len(last_line)]
                 last_line = rif.contents.splitlines(keepends=True)[-1]
+                while last_line.strip() == "":
+                    segs[1] = last_line + segs[1]
+                    rif.contents = rif.contents[:len(
+                        rif.contents) - len(last_line)]
+                    last_line = rif.contents.splitlines(keepends=True)[-1]
 
-            while rif.contents.startswith("\n"):
-                segs[0] += "\n"
-                rif.contents = rif.contents[1:]
-            while rif.contents.endswith("\n"):
-                segs[1] = "\n" + segs[1]
-                rif.contents = rif.contents[:-1]
+                while rif.contents.startswith("\n"):
+                    segs[0] += "\n"
+                    rif.contents = rif.contents[1:]
+                while rif.contents.endswith("\n"):
+                    segs[1] = "\n" + segs[1]
+                    rif.contents = rif.contents[:-1]
 
-            prompt = self._prompt.format(
-                code=rif.contents, user_request=self.user_input, file_prefix=segs[0], file_suffix=segs[1])
-
-            if segs[0].strip() == "":
-                prompt = prompt.replace("<file_prefix>\n", "")
-            if segs[1].strip() == "":
-                prompt = prompt.replace("\n<file_suffix>", "")
+            # .format(code=rif.contents, user_request=self.user_input, file_prefix=segs[0], file_suffix=segs[1])
+            prompt = self._prompt
+            if segs[0].strip() != "":
+                prompt += dedent(f"""\
+\n
+<file_prefix>
+{segs[0]}
+</file_prefix>""")
+            prompt += dedent(f"""\
+\n
+<code_to_edit>
+{rif.contents}
+</code_to_edit>""")
+            if segs[1].strip() != "":
+                prompt += dedent(f"""\
+\n
+<file_suffix>
+{segs[1]}
+</file_suffix>""")
+            prompt += dedent(f"""\
+\n
+<user_request>
+{self.user_input}
+</user_request>
+<modified_code_to_edit>""")
 
             lines = []
             unfinished_line = ""
@@ -297,9 +302,11 @@ class DefaultModelEditCodeStep(Step):
                         original_lines[0].strip(), "") + line
 
                 if i < len(original_lines):
+                    # Replace original line
                     range = Range.from_shorthand(
                         rif.range.start.line + i, rif.range.start.character if i == 0 else 0, rif.range.start.line + i + 1, 0)
                 else:
+                    # Insert a line
                     range = Range.from_shorthand(
                         rif.range.start.line + i, 0, rif.range.start.line + i, 0)
 
@@ -309,6 +316,7 @@ class DefaultModelEditCodeStep(Step):
                     replacement=line + "\n"
                 ))
 
+            lines_of_prefix_copied = 0
             async for chunk in model_to_use.stream_chat(prompt, with_history=await sdk.get_chat_context(), temperature=0):
                 chunk_lines = chunk.split("\n")
                 chunk_lines[0] = unfinished_line + chunk_lines[0]
@@ -324,6 +332,10 @@ class DefaultModelEditCodeStep(Step):
                         break
                     elif "```" in line or "<modified_code_to_edit>" in line or "<file_prefix>" in line or "</file_prefix>" in line or "<file_suffix>" in line or "</file_suffix>" in line or "<user_request>" in line or "</user_request>" in line or "<code_to_edit>" in line or "</code_to_edit>" in line:
                         continue
+                    elif (lines_of_prefix_copied > 0 or i == 0) and lines_of_prefix_copied < len(segs[0].splitlines()) and line == full_file_contents_lst[lines_of_prefix_copied]:
+                        # This is a sketchy way of stopping it from repeating the file_prefix. Is a bug if output happens to have a matching line
+                        lines_of_prefix_copied += 1
+                        continue
                     elif i < len(original_lines) and line == original_lines[i]:
                         i += 1
                         continue
@@ -333,8 +345,9 @@ class DefaultModelEditCodeStep(Step):
 
             # Add the unfinished line
             if unfinished_line != "":
-                unfinished_line = unfinished_line.removesuffix(
-                    "</modified_code_to_edit>").removesuffix("</code_to_edit>").removesuffix("```").removesuffix("</file_suffix>").removesuffix("</file_prefix")
+                unfinished_line = unfinished_line.replace(
+                    "</modified_code_to_edit>", "").replace("</code_to_edit>", "").replace("```", "").replace("</file_suffix>", "").replace("</file_prefix", "").replace(
+                    "<modified_code_to_edit>", "").replace("<code_to_edit>", "").replace("<file_suffix>", "").replace("<file_prefix", "")
                 if not i < len(original_lines) or not unfinished_line == original_lines[i]:
                     await add_line(i, unfinished_line)
                 lines.append(unfinished_line)
