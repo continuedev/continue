@@ -139,14 +139,8 @@ class ValidatePipelineStep(Step):
             # connect to DuckDB instance
             conn = duckdb.connect(database="{source_name}.duckdb")
 
-            conn.execute("SET search_path = '{source_name}_data';")
-
-            # get table names
-            rows = conn.execute("SELECT * FROM _dlt_loads;").fetchall()
-
-            # print table names
-            for row in rows:
-                print(row)''')
+            # list all tables
+            print(conn.sql("DESCRIBE"))''')
 
         query_filename = os.path.join(workspace_dir, "query.py")
         await sdk.apply_filesystem_edit(AddFile(filepath=query_filename, content=tables_query_code), name="Add query.py file", description="Adding a file called `query.py` to the workspace that will run a test query on the DuckDB instance")
