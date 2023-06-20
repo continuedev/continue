@@ -87,7 +87,7 @@ class ProxyServer(LLM):
                 "model": self.default_model,
                 "unique_id": self.unique_id,
             }) as resp:
-                async for line in resp.content:
+                async for line in resp.content.iter_any():
                     if line:
                         try:
                             yield line.decode("utf-8")
