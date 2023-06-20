@@ -267,28 +267,25 @@ class DefaultModelEditCodeStep(Step):
             # .format(code=rif.contents, user_request=self.user_input, file_prefix=segs[0], file_suffix=segs[1])
             prompt = self._prompt
             if segs[0].strip() != "":
-                prompt += dedent(f"""\
-\n
+                prompt += dedent(f"""
 <file_prefix>
 {segs[0]}
 </file_prefix>""")
-            prompt += dedent(f"""\
-\n
+            prompt += dedent(f"""
 <code_to_edit>
 {rif.contents}
 </code_to_edit>""")
             if segs[1].strip() != "":
-                prompt += dedent(f"""\
-\n
+                prompt += dedent(f"""
 <file_suffix>
 {segs[1]}
 </file_suffix>""")
-            prompt += dedent(f"""\
-\n
+            prompt += dedent(f"""
 <user_request>
 {self.user_input}
 </user_request>
-<modified_code_to_edit>""")
+<modified_code_to_edit>
+""")
 
             lines = []
             unfinished_line = ""
@@ -317,7 +314,11 @@ class DefaultModelEditCodeStep(Step):
                 ))
 
             lines_of_prefix_copied = 0
+            line_below_highlighted_range = segs[1].lstrip().split("\n")[0]
+            should_stop = False
             async for chunk in model_to_use.stream_chat(prompt, with_history=await sdk.get_chat_context(), temperature=0):
+                if should_stop:
+                    break
                 chunk_lines = chunk.split("\n")
                 chunk_lines[0] = unfinished_line + chunk_lines[0]
                 if chunk.endswith("\n"):
@@ -339,7 +340,10 @@ class DefaultModelEditCodeStep(Step):
                     elif i < len(original_lines) and line == original_lines[i]:
                         i += 1
                         continue
-
+                    # Because really short lines might be expected to be repeated !heuristic!
+                    elif line.strip() == line_below_highlighted_range.strip() and len(line.strip()) > 4:
+                        should_stop = True
+                        break
                     await add_line(i, line)
                     i += 1
 
