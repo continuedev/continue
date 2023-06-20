@@ -285,6 +285,7 @@ class DefaultModelEditCodeStep(Step):
 {self.user_input}
 </user_request>
 <modified_code_to_edit>
+
 """)
 
             lines = []
