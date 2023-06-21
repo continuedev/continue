@@ -116,9 +116,6 @@ class GUIProtocolServer(AbstractGUIProtocolServer):
         asyncio.create_task(
             self.session.autopilot.retry_at_index(index))
 
-    def on_change_default_model(self):
-        asyncio.create_task(self.session.autopilot.change_default_model())
-
     def on_clear_history(self):
         asyncio.create_task(self.session.autopilot.clear_history())
 
