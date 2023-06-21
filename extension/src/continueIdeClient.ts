@@ -12,7 +12,6 @@ import { debugPanelWebview, setupDebugPanel } from "./debugPanel";
 import { FileEditWithFullContents } from "../schema/FileEditWithFullContents";
 import fs = require("fs");
 import { WebsocketMessenger } from "./util/messenger";
-import { CapturedTerminal } from "./terminal/terminalEmulator";
 import { decorationManager } from "./decorations";
 
 class IdeProtocolClient {
@@ -326,17 +325,10 @@ class IdeProtocolClient {
     return rangeInFiles;
   }
 
-  public continueTerminal: CapturedTerminal | undefined;
-
   async runCommand(command: string) {
-    if (!this.continueTerminal || this.continueTerminal.isClosed()) {
-      this.continueTerminal = new CapturedTerminal({
-        name: "Continue",
-      });
-    }
-
-    this.continueTerminal.show();
-    return await this.continueTerminal.runCommand(command);
+    const terminal = vscode.window.createTerminal();
+    terminal.show();
+    terminal.sendText(command);
   }
 
   sendCommandOutput(output: string) {
