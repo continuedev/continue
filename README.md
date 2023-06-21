@@ -19,7 +19,7 @@
 
 ### Install for VS Code
 
-Learn how to install locally in VS Code [here](https://continue.dev/docs/install)
+Learn how to install locally in VS Code [here](https://continue.dev/docs/getting-started)
 
 ### GitHub Codespaces
 
