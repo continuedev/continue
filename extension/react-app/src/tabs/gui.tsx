@@ -470,7 +470,7 @@ function GUI(props: GUIProps) {
             Contribute Data
           </span>
         </div>
-        {/* <HeaderButtonWithText
+        { <HeaderButtonWithText
           onClick={() => {
             setUsingFastModel((prev) => !prev);
           }}
@@ -481,7 +481,7 @@ function GUI(props: GUIProps) {
           >
             {usingFastModel ? "⚡" : "🧠"}
           </div>
-        </HeaderButtonWithText> */}
+        </HeaderButtonWithText>}
         <HeaderButtonWithText
           onClick={() => {
             client?.sendClear();
