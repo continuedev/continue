@@ -13,8 +13,8 @@ class SuggestionsCodeLensProvider implements vscode.CodeLensProvider {
     }
 
     let codeLenses: vscode.CodeLens[] = [];
-    for (let suggestion of suggestions) {
-      let range = new vscode.Range(
+    for (const suggestion of suggestions) {
+      const range = new vscode.Range(
         suggestion.oldRange.start,
         suggestion.newRange.end
       );
@@ -57,16 +57,16 @@ class PytestCodeLensProvider implements vscode.CodeLensProvider {
     document: vscode.TextDocument,
     token: vscode.CancellationToken
   ): vscode.CodeLens[] | Thenable<vscode.CodeLens[]> {
-    let codeLenses: vscode.CodeLens[] = [];
+    const codeLenses: vscode.CodeLens[] = [];
     let lineno = 1;
-    let languageLibrary = getLanguageLibrary(document.fileName);
+    const languageLibrary = getLanguageLibrary(document.fileName);
     for (let line of document.getText().split("\n")) {
       if (
         languageLibrary.lineIsFunctionDef(line) &&
         languageLibrary.parseFunctionDefForName(line).startsWith("test_")
       ) {
-        let functionToTest = languageLibrary.parseFunctionDefForName(line);
-        let fileAndFunctionNameSpecifier =
+        const functionToTest = languageLibrary.parseFunctionDefForName(line);
+        const fileAndFunctionNameSpecifier =
           document.fileName + "::" + functionToTest;
         codeLenses.push(
           new vscode.CodeLens(new vscode.Range(lineno, 0, lineno, 1), {
@@ -85,12 +85,13 @@ class PytestCodeLensProvider implements vscode.CodeLensProvider {
 
 const allCodeLensProviders: { [langauge: string]: vscode.CodeLensProvider[] } =
   {
-    python: [new SuggestionsCodeLensProvider(), new PytestCodeLensProvider()],
+    // python: [new SuggestionsCodeLensProvider(), new PytestCodeLensProvider()],
+    "*": [new SuggestionsCodeLensProvider()],
   };
 
 export function registerAllCodeLensProviders(context: vscode.ExtensionContext) {
-  for (let language in allCodeLensProviders) {
-    for (let codeLensProvider of allCodeLensProviders[language]) {
+  for (const language in allCodeLensProviders) {
+    for (const codeLensProvider of allCodeLensProviders[language]) {
       context.subscriptions.push(
         vscode.languages.registerCodeLensProvider(language, codeLensProvider)
       );

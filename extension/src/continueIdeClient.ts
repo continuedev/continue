@@ -1,5 +1,8 @@
 // import { ShowSuggestionRequest } from "../schema/ShowSuggestionRequest";
-import { showSuggestion, SuggestionRanges } from "./suggestions";
+import {
+  showSuggestion as showSuggestionInEditor,
+  SuggestionRanges,
+} from "./suggestions";
 import { openEditorAndRevealRange, getRightViewColumn } from "./util/vscode";
 import { FileEdit } from "../schema/FileEdit";
 import { RangeInFile } from "../schema/RangeInFile";
@@ -115,7 +118,10 @@ class IdeProtocolClient {
         break;
       case "setFileOpen":
         this.openFile(data.filepath);
-        // TODO: Close file
+        // TODO: Close file if False
+        break;
+      case "showSuggestion":
+        this.showSuggestion(data.edit);
         break;
       case "openGUI":
       case "connected":
@@ -157,25 +163,12 @@ class IdeProtocolClient {
         isWholeLine: true,
       });
       editor.setDecorations(decorationType, [range]);
-
-      // Listen for changes to cursor position and then remove the decoration (but keep for at least 2 seconds)
-      const allowRemoveHighlight = () => {
-        const cursorDisposable = vscode.window.onDidChangeTextEditorSelection(
-          (event) => {
-            if (event.textEditor.document.uri.fsPath === rangeInFile.filepath) {
-              cursorDisposable.dispose();
-              editor.setDecorations(decorationType, []);
-            }
-          }
-        );
-      };
-      setTimeout(allowRemoveHighlight, 2000);
     }
   }
 
   showSuggestion(edit: FileEdit) {
     // showSuggestion already exists
-    showSuggestion(
+    showSuggestionInEditor(
       edit.filepath,
       new vscode.Range(
         edit.range.start.line,
