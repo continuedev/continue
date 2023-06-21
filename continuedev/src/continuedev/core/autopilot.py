@@ -45,10 +45,6 @@ class Autopilot(ContinueBaseModel):
     async def get_available_slash_commands(self) -> List[Dict]:
         return list(map(lambda x: {"name": x.name, "description": x.description}, self.continue_sdk.config.slash_commands)) or []
 
-    async def change_default_model(self):
-        # TODO: Implement this
-        temp = self.continue_sdk.config.slash_commands
-
     async def clear_history(self):
         self.history = History.from_empty()
         self._main_user_input_queue = []
