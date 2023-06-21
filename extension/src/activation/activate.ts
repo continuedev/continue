@@ -2,12 +2,10 @@ import * as vscode from "vscode";
 import { registerAllCommands } from "../commands";
 import { registerAllCodeLensProviders } from "../lang-server/codeLens";
 import { sendTelemetryEvent, TelemetryEvent } from "../telemetry";
-import { getExtensionUri } from "../util/vscode";
-import * as path from "path";
 // import { openCapturedTerminal } from "../terminal/terminalEmulator";
 import IdeProtocolClient from "../continueIdeClient";
 import { getContinueServerUrl } from "../bridge";
-import { setupDebugPanel, ContinueGUIWebviewViewProvider } from "../debugPanel";
+import { ContinueGUIWebviewViewProvider } from "../debugPanel";
 import { CapturedTerminal } from "../terminal/terminalEmulator";
 
 export let extensionContext: vscode.ExtensionContext | undefined = undefined;
