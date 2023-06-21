@@ -38,9 +38,7 @@ class OpenAI(LLM):
 
     @cached_property
     def __encoding_for_model(self):
-        aliases = {
-            "gpt-3.5-turbo": "gpt3"
-        }
+        aliases = {}
         return tiktoken.encoding_for_model(self.default_model)
 
     def count_tokens(self, text: str):
@@ -88,7 +86,7 @@ class OpenAI(LLM):
         args = {"max_tokens": DEFAULT_MAX_TOKENS, "temperature": 0.5, "top_p": 1,
                 "frequency_penalty": 0, "presence_penalty": 0} | kwargs
         args["stream"] = True
-        args["model"] = "gpt-3.5-turbo"
+        args["model"] = self.default_model
 
         async for chunk in await openai.ChatCompletion.acreate(
             messages=self.compile_chat_messages(with_history, prompt),
