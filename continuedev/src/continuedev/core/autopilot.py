@@ -211,13 +211,12 @@ class Autopilot(ContinueBaseModel):
             await self.update_subscribers()
 
         # Update its description
-        if step.description is None:
-            async def update_description():
-                step.description = await step.describe(self.continue_sdk.models)
-                # Update subscribers with new description
-                await self.update_subscribers()
+        async def update_description():
+            step.description = await step.describe(self.continue_sdk.models)
+            # Update subscribers with new description
+            await self.update_subscribers()
 
-            asyncio.create_task(update_description())
+        asyncio.create_task(update_description())
 
         return observation
 
