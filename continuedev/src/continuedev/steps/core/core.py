@@ -213,7 +213,7 @@ class DefaultModelEditCodeStep(Step):
 
             if model_to_use.name == "gpt-4":
 
-                total_tokens = model_to_use.count_tokens(full_file_contents)
+                total_tokens = model_to_use.count_tokens(full_file_contents + self._prompt)
                 cur_start_line, cur_end_line = cut_context(
                     model_to_use, total_tokens, cur_start_line, cur_end_line)
 
@@ -223,7 +223,7 @@ class DefaultModelEditCodeStep(Step):
 
                     model_to_use = sdk.models.gpt3516k
                     total_tokens = model_to_use.count_tokens(
-                        full_file_contents)
+                        full_file_contents + self._prompt)
                     cur_start_line, cur_end_line = cut_context(
                         model_to_use, total_tokens, cur_start_line, cur_end_line)
 
