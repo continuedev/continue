@@ -146,8 +146,10 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
 
     # ------------------------------- #
     # Request actions in IDE, doesn't matter which Session
-    def showSuggestion():
-        pass
+    async def showSuggestion(self, file_edit: FileEdit):
+        await self._send_json("showSuggestion", {
+            "edit": file_edit.dict()
+        })
 
     async def setFileOpen(self, filepath: str, open: bool = True):
         # Autopilot needs access to this.
