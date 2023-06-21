@@ -426,9 +426,9 @@ function GUI(props: GUIProps) {
         }}
         hidden={!showDataSharingInfo}
       >
-        By turning on this switch, you signal that you would 
-        contribute this software development data to a publicly 
-        accessible, open-source dataset in the future.
+        By turning on this switch, you signal that you would contribute this
+        software development data to a publicly accessible, open-source dataset
+        in the future.
         <br />
         <br />
         <b>
@@ -485,6 +485,8 @@ function GUI(props: GUIProps) {
         <HeaderButtonWithText
           onClick={() => {
             client?.sendClear();
+            // Reload the window to get completely fresh session
+            window.location.reload();
           }}
           text="Clear All"
         >

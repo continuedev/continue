@@ -248,6 +248,7 @@ class StarCoderEditHighlightedCodeStep(Step):
 class EditHighlightedCodeStep(Step):
     user_input: str
     hide = True
+    description: str = "Change the contents of the currently highlighted code or open file"
 
     async def describe(self, models: Models) -> Coroutine[str, None, None]:
         return "Editing code"

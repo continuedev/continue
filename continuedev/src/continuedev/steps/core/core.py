@@ -10,7 +10,7 @@ from ...models.filesystem_edit import EditDiff, FileEdit, FileEditWithFullConten
 from ...models.filesystem import FileSystem, RangeInFile, RangeInFileWithContents
 from ...core.observation import Observation, TextObservation, TracebackObservation, UserInputObservation
 from ...core.main import Step, SequentialStep
-from ...libs.llm.openai import MAX_TOKENS_FOR_MODEL
+from ...libs.util.count_tokens import MAX_TOKENS_FOR_MODEL
 import difflib
 
 
@@ -160,7 +160,7 @@ class DefaultModelEditCodeStep(Step):
         return f"`{self.user_input}`\n\n" + description
 
     async def run(self, sdk: ContinueSDK) -> Coroutine[Observation, None, None]:
-        self.description = f"`{self.user_input}`"
+        self.description = f"{self.user_input}"
         await sdk.update_ui()
 
         rif_with_contents = []
@@ -316,7 +316,7 @@ class DefaultModelEditCodeStep(Step):
             lines_of_prefix_copied = 0
             line_below_highlighted_range = segs[1].lstrip().split("\n")[0]
             should_stop = False
-            async for chunk in model_to_use.stream_chat(prompt, with_history=await sdk.get_chat_context(), temperature=0):
+            async for chunk in model_to_use.stream_complete(prompt, with_history=await sdk.get_chat_context(), temperature=0):
                 if should_stop:
                     break
                 chunk_lines = chunk.split("\n")
