@@ -230,6 +230,7 @@ function GUI(props: GUIProps) {
     console.log("CLIENT ON STATE UPDATE: ", client, client?.onStateUpdate);
     client?.onStateUpdate((state) => {
       // Scroll only if user is at very bottom of the window.
+      setUsingFastModel(state.default_model === "gpt-3.5-turbo");
       const shouldScrollToBottom =
         topGuiDivRef.current &&
         topGuiDivRef.current?.offsetHeight - window.scrollY < 100;
@@ -470,9 +471,10 @@ function GUI(props: GUIProps) {
             Contribute Data
           </span>
         </div>
-        {/* <HeaderButtonWithText
+        <HeaderButtonWithText
           onClick={() => {
             setUsingFastModel((prev) => !prev);
+            client?.changeDefaultModel();
           }}
           text={usingFastModel ? "gpt-3.5-turbo" : "gpt-4"}
         >
@@ -481,7 +483,7 @@ function GUI(props: GUIProps) {
           >
             {usingFastModel ? "⚡" : "🧠"}
           </div>
-        </HeaderButtonWithText> */}
+        </HeaderButtonWithText>
         <HeaderButtonWithText
           onClick={() => {
             client?.sendClear();
