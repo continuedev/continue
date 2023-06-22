@@ -78,7 +78,7 @@ class GUIProtocolServer(AbstractGUIProtocolServer):
             elif message_type == "retry_at_index":
                 self.on_retry_at_index(data["index"])
             elif message_type == "change_default_model":
-                self.on_change_default_model()
+                self.on_change_default_model(data["model"])
             elif message_type == "clear_history":
                 self.on_clear_history()
             elif message_type == "delete_at_index":
@@ -118,8 +118,8 @@ class GUIProtocolServer(AbstractGUIProtocolServer):
         asyncio.create_task(
             self.session.autopilot.retry_at_index(index))
 
-    def on_change_default_model(self):
-        asyncio.create_task(self.session.autopilot.change_default_model())
+    def on_change_default_model(self, model: str):
+        asyncio.create_task(self.session.autopilot.change_default_model(model))
 
     def on_clear_history(self):
         asyncio.create_task(self.session.autopilot.clear_history())

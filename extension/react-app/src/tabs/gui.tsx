@@ -427,9 +427,9 @@ function GUI(props: GUIProps) {
         }}
         hidden={!showDataSharingInfo}
       >
-        By turning on this switch, you signal that you would 
-        contribute this software development data to a publicly 
-        accessible, open-source dataset in the future.
+        By turning on this switch, you signal that you would contribute this
+        software development data to a publicly accessible, open-source dataset
+        in the future.
         <br />
         <br />
         <b>
@@ -473,8 +473,10 @@ function GUI(props: GUIProps) {
         </div>
         <HeaderButtonWithText
           onClick={() => {
+            client?.changeDefaultModel(
+              usingFastModel ? "gpt-4" : "gpt-3.5-turbo"
+            );
             setUsingFastModel((prev) => !prev);
-            client?.changeDefaultModel();
           }}
           text={usingFastModel ? "gpt-3.5-turbo" : "gpt-4"}
         >

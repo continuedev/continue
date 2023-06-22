@@ -87,37 +87,45 @@ def load_config(config_file: str) -> ContinueConfig:
         raise ValueError(f'Unknown config file extension: {ext}')
     return ContinueConfig(**config_dict)
 
-def update_config(config_file: str):
+
+def load_global_config() -> ContinueConfig:
     """
-    Update the config file with the current ContinueConfig object.
+    Load the global config file and return a ContinueConfig object.
     """
-    if not os.path.exists(config_file):
-        with open(config_file, 'w') as f:
-            config_dict = { "default_model": "gpt-3.5-turbo" }
-            json.dump(config_dict, f, indent=4)
+    global_dir = os.path.expanduser('~/.continue')
+    if not os.path.exists(global_dir):
+        os.mkdir(global_dir)
 
-    _, ext = os.path.splitext(config_file)
-    if ext == '.yaml':
+    yaml_path = os.path.join(global_dir, 'config.yaml')
+    if os.path.exists(yaml_path):
+        with open(config_path, 'r') as f:
+            try:
+                config_dict = yaml.safe_load(f)
+            except:
+                return ContinueConfig()
+    else:
+        config_path = os.path.join(global_dir, 'config.json')
+        with open(config_path, 'r') as f:
+            try:
+                config_dict = json.load(f)
+            except:
+                return ContinueConfig()
+    return ContinueConfig(**config_dict)
 
-        with open(config_file, 'w') as f:
-            config_dict = yaml.safe_load(f)
 
-            if config_dict["default_model"] == "gpt-4":
-                config_dict["default_model"] = "gpt-3.5-turbo"
-            else:
-                config_dict["default_model"] = "gpt-4"
-            
-            with open(config_file, 'w') as f:
-                json.dump(config_dict, f, indent=4)
+def update_global_config(config: ContinueConfig):
+    """
+    Update the config file with the given ContinueConfig object.
+    """
+    global_dir = os.path.expanduser('~/.continue')
+    if not os.path.exists(global_dir):
+        os.mkdir(global_dir)
 
-    elif ext == '.json':
-        with open(config_file, 'r') as f:
-            config_dict = json.load(f)
-
-        if config_dict["default_model"] == "gpt-4":
-            config_dict["default_model"] = "gpt-3.5-turbo"
-        else:
-            config_dict["default_model"] = "gpt-4"
-        
-        with open(config_file, 'w') as f:
-            json.dump(config_dict, f, indent=4)
+    yaml_path = os.path.join(global_dir, 'config.yaml')
+    if os.path.exists(yaml_path):
+        with open(config_path, 'w') as f:
+            yaml.dump(config.dict(), f)
+    else:
+        config_path = os.path.join(global_dir, 'config.json')
+        with open(config_path, 'w') as f:
+            json.dump(config.dict(), f)
