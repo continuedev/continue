@@ -13,6 +13,8 @@ abstract class AbstractContinueGUIClientProtocol {
     callback: (commands: { name: string; description: string }[]) => void
   ): void;
 
+  abstract changeDefaultModel(): void;
+
   abstract sendClear(): void;
 
   abstract retryAtIndex(index: number): void;

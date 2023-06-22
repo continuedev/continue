@@ -473,6 +473,7 @@ function GUI(props: GUIProps) {
         <HeaderButtonWithText
           onClick={() => {
             setUsingFastModel((prev) => !prev);
+            client?.changeDefaultModel();
           }}
           text={usingFastModel ? "gpt-3.5-turbo" : "gpt-4"}
         >

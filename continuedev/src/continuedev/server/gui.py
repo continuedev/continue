@@ -77,6 +77,8 @@ class GUIProtocolServer(AbstractGUIProtocolServer):
                 self.on_reverse_to_index(data["index"])
             elif message_type == "retry_at_index":
                 self.on_retry_at_index(data["index"])
+            elif message_type == "change_default_model":
+                self.on_change_default_model()
             elif message_type == "clear_history":
                 self.on_clear_history()
             elif message_type == "delete_at_index":
