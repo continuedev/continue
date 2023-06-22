@@ -163,6 +163,15 @@ class IdeProtocolClient {
         isWholeLine: true,
       });
       editor.setDecorations(decorationType, [range]);
+
+      const cursorDisposable = vscode.window.onDidChangeTextEditorSelection(
+        (event) => {
+          if (event.textEditor.document.uri.fsPath === rangeInFile.filepath) {
+            cursorDisposable.dispose();
+            editor.setDecorations(decorationType, []);
+          }
+        }
+      );
     }
   }
 
