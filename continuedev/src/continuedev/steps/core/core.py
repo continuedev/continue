@@ -265,7 +265,9 @@ class DefaultModelEditCodeStep(Step):
 
         full_file_contents_lines = full_file_contents.split("\n")
         original_lines = rif.contents.split("\n")
-        i = 0
+        completion_lines_covered = 0
+        # In the actual file, as it is with blocks and such
+        current_line_in_file = rif.range.start.line
         lines = []
         unfinished_line = ""
 
@@ -296,7 +298,7 @@ class DefaultModelEditCodeStep(Step):
             await sdk.ide.highlightCode(RangeInFile(filepath=rif.filepath, range=red_range), "#FF000022")
 
         async def show_block_as_suggestion():
-            nonlocal i, offset_from_blocks, current_block, current_block_start_of_insertion, matched_line, last_matched_line, lines_covered_in_this_block, liness_deleted_in_this_block
+            nonlocal completion_lines_covered, offset_from_blocks, current_block, current_block_start_of_insertion, matched_line, last_matched_line, lines_covered_in_this_block, liness_deleted_in_this_block, current_line_in_file
             end_line = offset_from_blocks + rif.range.start.line + matched_line
             # Delete the green inserted lines, because they will be shown as part of the suggestion
             await sdk.ide.applyFileSystemEdit(FileEdit(
@@ -310,9 +312,12 @@ class DefaultModelEditCodeStep(Step):
             await sdk.ide.showSuggestion(FileEdit(
                 filepath=rif.filepath,
                 range=Range.from_shorthand(
-                    end_line - lines_deleted_in_this_block, 0, end_line, 0),
+                    current_block_start_of_insertion, 0, end_line, 0),
                 replacement="\n".join(current_block) + "\n"
             ))
+
+            current_line_in_file = end_line + \
+                len(current_block) + 1  # CURRENTLY TODO HERE NOTE
             offset_from_blocks += len(current_block)
             current_block.clear()
 
@@ -320,46 +325,56 @@ class DefaultModelEditCodeStep(Step):
             # Keep track of where the first inserted line in this block came from
             nonlocal current_block_start_of_insertion
             if current_block_start_of_insertion < 0:
-                current_block_start_of_insertion = i + offset_from_blocks + rif.range.start.line
+                current_block_start_of_insertion = current_line_in_file
 
             # Insert the line, highlight green
-            await insert_line(line, i + offset_from_blocks + rif.range.start.line)
+            await insert_line(line, current_line_in_file)
             current_block.append(line)
 
-        def line_matches_something_in_original(line: str) -> int:
+        def line_matches_something_in_original(line: str) -> bool:
             nonlocal offset_from_blocks, last_matched_line, matched_line, lines_covered_in_this_block
-            # diff = list(difflib.ndiff(rif.contents.splitlines(
-            #     keepends=True), completion.splitlines(keepends=True)))
+            diff = list(difflib.ndiff(
+                original_lines[matched_line:], current_block + [line]))
+            i = current_line_in_file
+            if diff[i][0] == " ":
+                last_matched_line = matched_line
+                matched_line = i
+                lines_covered_in_this_block = matched_line - last_matched_line
+                return True
+            elif diff[i][0] == "-":
+                last_matched_line = matched_line
+                matched_line = i
+                lines_covered_in_this_block = matched_line - last_matched_line
+                return True
+            elif diff[i][0] == "+":
+                return False
+
             # TODO: and line.strip() != ""?
-            for j in range(last_matched_line, len(original_lines)):
+            for j in range(matched_line, len(original_lines)):
                 if line == original_lines[j]:
                     last_matched_line = matched_line
-                    lines_covered_in_this_block = j - matched_line
                     matched_line = j
-                    return j
-            return -1
+                    lines_covered_in_this_block = matched_line - last_matched_line
+                    return True
+            return False
 
         async def handle_generated_line(line: str):
-            nonlocal i, lines, current_block, offset_from_blocks, original_lines, current_block_start_of_insertion, matched_line, lines_covered_in_this_block, lines_same_in_this_block
+            nonlocal completion_lines_covered, lines, current_block, offset_from_blocks, original_lines, current_block_start_of_insertion, matched_line, lines_covered_in_this_block, lines_same_in_this_block, current_line_in_file, completion_lines_covered
 
             # Highlight the line to show progress
             await sdk.ide.highlightCode(RangeInFile(filepath=rif.filepath, range=Range.from_shorthand(
-                i + rif.range.start.line, 0, i + rif.range.start.line, 0)), "#FFFFFF22")
+                current_line_in_file, 0, current_line_in_file, 0)), "#FFFFFF22")
 
             # Check if this line appears to correspond to something in the original
-            if line_matches_something_in_original(line) >= 0:
+            if line_matches_something_in_original(line):
                 if len(current_block) > 0:
                     # Matches something, add all lines up to this as red in the old block, then show the block
                     await show_block_as_suggestion()
-                    i -= 1
-                    # i -= (len(current_block) -
-                    #       (matched_line - last_matched_line))
-                    lines_covered_in_this_block = 0
+                    # Begin next block!
                     lines_same_in_this_block = 0
-
+                    lines_covered_in_this_block = 0
                 current_block_start_of_insertion = -1
                 lines_same_in_this_block += 1
-
             else:
                 # No match, insert the line into the replacement but don't change the red highlighting
                 await add_green_to_block(line)
@@ -391,7 +406,7 @@ class DefaultModelEditCodeStep(Step):
                 elif self.line_to_be_ignored(line):
                     continue
                 # Check if we are currently just copying the prefix
-                elif (lines_of_prefix_copied > 0 or i == 0) and lines_of_prefix_copied < len(file_prefix.splitlines()) and line == full_file_contents_lines[lines_of_prefix_copied]:
+                elif (lines_of_prefix_copied > 0 or completion_lines_covered == 0) and lines_of_prefix_copied < len(file_prefix.splitlines()) and line == full_file_contents_lines[lines_of_prefix_copied]:
                     # This is a sketchy way of stopping it from repeating the file_prefix. Is a bug if output happens to have a matching line
                     lines_of_prefix_copied += 1
                     continue
@@ -403,16 +418,17 @@ class DefaultModelEditCodeStep(Step):
 
                 # If none of the above, insert the line!
                 await handle_generated_line(line)
-                i += 1
+                completion_lines_covered += 1
+                current_line_in_file += 1
 
         # Add the unfinished line
         if unfinished_line != "" and not self.line_to_be_ignored(unfinished_line) and not self.is_end_line(unfinished_line):
             lines.append(unfinished_line)
             await handle_generated_line(unfinished_line)
-            i += 1
+            completion_lines_covered += 1
 
         # Highlight the remainder of the range red
-        if i < len(original_lines):
+        if completion_lines_covered < len(original_lines):
             await handle_generated_line("")
             # range = Range.from_shorthand(
             #     i + 1 + offset_from_blocks + rif.range.start.line, 0, len(original_lines) + offset_from_blocks + rif.range.start.line, 0)
