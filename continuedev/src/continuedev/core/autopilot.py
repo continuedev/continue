@@ -46,8 +46,11 @@ class Autopilot(ContinueBaseModel):
         return list(map(lambda x: {"name": x.name, "description": x.description}, self.continue_sdk.config.slash_commands)) or []
 
     async def change_default_model(self):
-        # TODO: Implement this
-        temp = self.continue_sdk.config.slash_commands
+        print("Changing default model")
+        if self.continue_sdk.config.default_model == "gpt-4":
+            self.continue_sdk.config.default_model == "gpt-3.5-turbo" # not quite correct
+        else:
+            self.continue_sdk.config.default_model == "gpt-4" # not quite correct
 
     async def clear_history(self):
         self.history = History.from_empty()
