@@ -271,6 +271,7 @@ class DefaultModelEditCodeStep(Step):
         lines = []
         unfinished_line = ""
 
+        red_or_green_first = "green"
         current_block_added = []
         current_block_removed = []
         last_diff_char = " "
@@ -362,9 +363,15 @@ class DefaultModelEditCodeStep(Step):
                     return True
             return False
 
-        def block_not_empty() -> bool:
-            nonlocal current_block_added, current_block_removed
-            return len(current_block_added) or len(current_block_removed)
+        def should_end_current_block(next_diff_char: str) -> bool:
+            nonlocal current_block_added, current_block_removed, last_diff_char
+            if next_diff_char == " ":
+                return len(current_block_added) or len(current_block_removed)
+            elif next_diff_char == "-":
+                return last_diff_char == "+" and len(current_block_removed)
+            elif next_diff_char == "+":
+                return last_diff_char == "-" and len(current_block_added)
+            raise Exception("Invalid next_diff_char")
 
         async def handle_generated_line(line: str):
             nonlocal completion_lines_covered, lines, current_block_added, current_block_removed, offset_from_blocks, original_lines, current_block_start_of_insertion, matched_line, lines_covered_in_this_block, lines_same_in_this_block, current_line_in_file, completion_lines_covered, last_diff_char
@@ -379,37 +386,18 @@ class DefaultModelEditCodeStep(Step):
             next_diff_char = diff[current_line_in_file][0]
 
             # If we need to start a new block, end the old one
-            if next_diff_char != last_diff_char:
+            if should_end_current_block(next_diff_char):
                 await show_block_as_suggestion()
-
-            if next_diff_char == " ":
-                if block_not_empty():
-                    await show_block_as_suggestion()
-
                 current_block_start_of_insertion = -1
                 lines_same_in_this_block += 1
 
             elif next_diff_char == "-":
                 # Line was removed from the original, add it to the block
-                if block_not_empty():
-                    # Matches something, add all lines up to this as red in the old block, then show the block
-                    await show_block_as_suggestion()
-                    # Begin next block!
-                    lines_same_in_this_block = 0
-                    lines_covered_in_this_block = 0
-                current_block_start_of_insertion = -1
-                lines_same_in_this_block += 1
+                await add_red_to_block(line)
+
             elif next_diff_char == "+":
                 # Line was added to the original, add it to the block
-
-                if block_not_empty():
-                    # Matches something, add all lines up to this as red in the old block, then show the block
-                    await show_block_as_suggestion()
-                    # Begin next block!
-                    lines_same_in_this_block = 0
-                    lines_covered_in_this_block = 0
-                current_block_start_of_insertion = -1
-                lines_same_in_this_block += 1
+                await add_green_to_block(line)
 
             else:
                 raise Exception("Unexpected diff character: " +
