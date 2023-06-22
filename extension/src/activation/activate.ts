@@ -8,7 +8,7 @@ import * as path from "path";
 import IdeProtocolClient from "../continueIdeClient";
 import { getContinueServerUrl } from "../bridge";
 import { setupDebugPanel, ContinueGUIWebviewViewProvider } from "../debugPanel";
-import { CapturedTerminal } from "../terminal/terminalEmulator";
+// import { CapturedTerminal } from "../terminal/terminalEmulator";
 
 export let extensionContext: vscode.ExtensionContext | undefined = undefined;
 
@@ -49,41 +49,10 @@ export function activateExtension(
   })();
 
   // All opened terminals should be replaced by our own terminal
-  vscode.window.onDidOpenTerminal((terminal) => {
-    if (terminal.name === "Continue") {
-      return;
-    }
-    const options = terminal.creationOptions;
-    const capturedTerminal = new CapturedTerminal({
-      ...options,
-      name: "Continue",
-    });
-    terminal.dispose();
-    if (!ideProtocolClient.continueTerminal) {
-      ideProtocolClient.continueTerminal = capturedTerminal;
-    }
-  });
+  // vscode.window.onDidOpenTerminal((terminal) => {});
 
   // If any terminals are open to start, replace them
-  vscode.window.terminals.forEach((terminal) => {
-    if (terminal.name === "Continue") {
-      return;
-    }
-    const options = terminal.creationOptions;
-    const capturedTerminal = new CapturedTerminal(
-      {
-        ...options,
-        name: "Continue",
-      },
-      (commandOutput: string) => {
-        ideProtocolClient.sendCommandOutput(commandOutput);
-      }
-    );
-    terminal.dispose();
-    if (!ideProtocolClient.continueTerminal) {
-      ideProtocolClient.continueTerminal = capturedTerminal;
-    }
-  });
+  // vscode.window.terminals.forEach((terminal) => {}
 
   extensionContext = context;
 }
