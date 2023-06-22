@@ -230,7 +230,7 @@ function GUI(props: GUIProps) {
     console.log("CLIENT ON STATE UPDATE: ", client, client?.onStateUpdate);
     client?.onStateUpdate((state) => {
       // Scroll only if user is at very bottom of the window.
-      setUsingFastModel(state.using_fast_model);
+      setUsingFastModel(state.default_model === "gpt-3.5-turbo");
       const shouldScrollToBottom =
         topGuiDivRef.current &&
         topGuiDivRef.current?.offsetHeight - window.scrollY < 100;
