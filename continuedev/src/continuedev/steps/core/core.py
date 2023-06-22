@@ -271,14 +271,21 @@ class DefaultModelEditCodeStep(Step):
 
         current_block = []
         offset_from_blocks = 0
+        last_matched_line = 0
+        matched_line = 0
+        current_block_start_of_insertion = -1
+        lines_covered_in_this_block = 0
+        liness_deleted_in_this_block = 0
+        lines_same_in_this_block = 0
 
         async def insert_line(line: str, line_no: int):
             nonlocal current_block
             # Insert line, highlight green, highlight corresponding line red
+            red_line = line_no + len(current_block) + 1
             range = Range.from_shorthand(
                 line_no, 0, line_no, 0)
             red_range = Range.from_shorthand(
-                line_no + len(current_block), 0, line_no + len(current_block), 0)
+                red_line, 0, red_line, 0)
 
             await sdk.ide.applyFileSystemEdit(FileEdit(
                 filepath=rif.filepath,
@@ -289,32 +296,73 @@ class DefaultModelEditCodeStep(Step):
             await sdk.ide.highlightCode(RangeInFile(filepath=rif.filepath, range=red_range), "#FF000022")
 
         async def show_block_as_suggestion():
-            nonlocal i, offset_from_blocks, current_block
+            nonlocal i, offset_from_blocks, current_block, current_block_start_of_insertion, matched_line, last_matched_line, lines_covered_in_this_block, liness_deleted_in_this_block
+            end_line = offset_from_blocks + rif.range.start.line + matched_line
+            # Delete the green inserted lines, because they will be shown as part of the suggestion
+            await sdk.ide.applyFileSystemEdit(FileEdit(
+                filepath=rif.filepath,
+                range=Range.from_shorthand(
+                    current_block_start_of_insertion, 0, current_block_start_of_insertion + len(current_block), 0),
+                replacement=""
+            ))
+
+            lines_deleted_in_this_block = lines_covered_in_this_block - lines_same_in_this_block
             await sdk.ide.showSuggestion(FileEdit(
                 filepath=rif.filepath,
                 range=Range.from_shorthand(
-                    i + offset_from_blocks - len(current_block) + rif.range.start.line, 0, i + offset_from_blocks + rif.range.start.line, 0),
+                    end_line - lines_deleted_in_this_block, 0, end_line, 0),
                 replacement="\n".join(current_block) + "\n"
             ))
             offset_from_blocks += len(current_block)
             current_block.clear()
 
-        async def add_to_block(line: str):
-            current_block.append(line)
-            # TODO: This start line might have changed above
-            # await insert_line(line, i + offset_from_blocks +
-            #                   rif.range.start.line)
+        async def add_green_to_block(line: str):
+            # Keep track of where the first inserted line in this block came from
+            nonlocal current_block_start_of_insertion
+            if current_block_start_of_insertion < 0:
+                current_block_start_of_insertion = i + offset_from_blocks + rif.range.start.line
 
-        async def handle_generated_line(line: str):
-            nonlocal i, lines, current_block, offset_from_blocks, original_lines
+            # Insert the line, highlight green
+            await insert_line(line, i + offset_from_blocks + rif.range.start.line)
+            current_block.append(line)
+
+        def line_matches_something_in_original(line: str) -> int:
+            nonlocal offset_from_blocks, last_matched_line, matched_line, lines_covered_in_this_block
             # diff = list(difflib.ndiff(rif.contents.splitlines(
             #     keepends=True), completion.splitlines(keepends=True)))
-            if i < len(original_lines) and line == original_lines[i]:
-                # Line is the same as the original. Start a new block
-                await show_block_as_suggestion()
+            # TODO: and line.strip() != ""?
+            for j in range(last_matched_line, len(original_lines)):
+                if line == original_lines[j]:
+                    last_matched_line = matched_line
+                    lines_covered_in_this_block = j - matched_line
+                    matched_line = j
+                    return j
+            return -1
+
+        async def handle_generated_line(line: str):
+            nonlocal i, lines, current_block, offset_from_blocks, original_lines, current_block_start_of_insertion, matched_line, lines_covered_in_this_block, lines_same_in_this_block
+
+            # Highlight the line to show progress
+            await sdk.ide.highlightCode(RangeInFile(filepath=rif.filepath, range=Range.from_shorthand(
+                i + rif.range.start.line, 0, i + rif.range.start.line, 0)), "#FFFFFF22")
+
+            # Check if this line appears to correspond to something in the original
+            if line_matches_something_in_original(line) >= 0:
+                if len(current_block) > 0:
+                    # Matches something, add all lines up to this as red in the old block, then show the block
+                    await show_block_as_suggestion()
+                    i -= 1
+                    # i -= (len(current_block) -
+                    #       (matched_line - last_matched_line))
+                    lines_covered_in_this_block = 0
+                    lines_same_in_this_block = 0
+
+                current_block_start_of_insertion = -1
+                lines_same_in_this_block += 1
+
             else:
-                # Add to the current block
-                await add_to_block(line)
+                # No match, insert the line into the replacement but don't change the red highlighting
+                await add_green_to_block(line)
 
         lines_of_prefix_copied = 0
         repeating_file_suffix = False
@@ -372,6 +420,7 @@ class DefaultModelEditCodeStep(Step):
 
         # If the current block isn't empty, add that suggestion
         if len(current_block) > 0:
+            matched_line = rif.range.end.line - rif.range.start.line
             await show_block_as_suggestion()
 
         # Record the completion

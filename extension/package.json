@@ -65,12 +65,48 @@
         }
       }
     },
-    "commands": [],
+    "commands": [
+      {
+        "command": "continue.suggestionDown",
+        "category": "Continue",
+        "title": "Suggestion Down"
+      },
+      {
+        "command": "continue.suggestionUp",
+        "category": "Continue",
+        "title": "Suggestion Up"
+      },
+      {
+        "command": "continue.acceptSuggestion",
+        "category": "Continue",
+        "title": "Accept Suggestion"
+      },
+      {
+        "command": "continue.rejectSuggestion",
+        "category": "Continue",
+        "title": "Reject Suggestion"
+      }
+    ],
     "keybindings": [
       {
         "command": "continue.focusContinueInput",
         "mac": "cmd+k",
         "key": "ctrl+k"
+      },
+      {
+        "command": "continue.suggestionDown",
+        "mac": "shift+ctrl+down",
+        "key": "shift+ctrl+down"
+      },
+      {
+        "command": "continue.suggestionUp",
+        "mac": "shift+ctrl+up",
+        "key": "shift+ctrl+up"
+      },
+      {
+        "command": "continue.acceptSuggestion",
+        "mac": "shift+ctrl+enter",
+        "key": "shift+ctrl+enter"
       }
     ],
     "menus": {
