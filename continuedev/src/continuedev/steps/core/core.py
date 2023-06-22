@@ -271,7 +271,10 @@ class DefaultModelEditCodeStep(Step):
         lines = []
         unfinished_line = ""
 
-        current_block = []
+        current_block_added = []
+        current_block_removed = []
+        last_diff_char = " "
+
         offset_from_blocks = 0
         last_matched_line = 0
         matched_line = 0
@@ -281,9 +284,9 @@ class DefaultModelEditCodeStep(Step):
         lines_same_in_this_block = 0
 
         async def insert_line(line: str, line_no: int):
-            nonlocal current_block
+            nonlocal current_block_added
             # Insert line, highlight green, highlight corresponding line red
-            red_line = line_no + len(current_block) + 1
+            red_line = line_no + len(current_block_added) + 1
             range = Range.from_shorthand(
                 line_no, 0, line_no, 0)
             red_range = Range.from_shorthand(
@@ -298,7 +301,7 @@ class DefaultModelEditCodeStep(Step):
             await sdk.ide.highlightCode(RangeInFile(filepath=rif.filepath, range=red_range), "#FF000022")
 
         async def show_block_as_suggestion():
-            nonlocal completion_lines_covered, offset_from_blocks, current_block, current_block_start_of_insertion, matched_line, last_matched_line, lines_covered_in_this_block, liness_deleted_in_this_block, current_line_in_file
+            nonlocal completion_lines_covered, offset_from_blocks, current_block_added, current_block_removed, current_block_start_of_insertion, matched_line, last_matched_line, lines_covered_in_this_block, liness_deleted_in_this_block, current_line_in_file
             end_line = offset_from_blocks + rif.range.start.line + matched_line
             # Delete the green inserted lines, because they will be shown as part of the suggestion
             await sdk.ide.applyFileSystemEdit(FileEdit(
@@ -333,8 +336,9 @@ class DefaultModelEditCodeStep(Step):
 
         def line_matches_something_in_original(line: str) -> bool:
             nonlocal offset_from_blocks, last_matched_line, matched_line, lines_covered_in_this_block
-            diff = list(difflib.ndiff(
-                original_lines[matched_line:], current_block + [line]))
+            diff = list(filter(lambda x: not x.startswith("?"), difflib.ndiff(
+                original_lines[matched_line:], current_block + [line])))
+
             i = current_line_in_file
             if diff[i][0] == " ":
                 last_matched_line = matched_line
@@ -358,16 +362,36 @@ class DefaultModelEditCodeStep(Step):
                     return True
             return False
 
+        def block_not_empty() -> bool:
+            nonlocal current_block_added, current_block_removed
+            return len(current_block_added) or len(current_block_removed)
+
         async def handle_generated_line(line: str):
-            nonlocal completion_lines_covered, lines, current_block, offset_from_blocks, original_lines, current_block_start_of_insertion, matched_line, lines_covered_in_this_block, lines_same_in_this_block, current_line_in_file, completion_lines_covered
+            nonlocal completion_lines_covered, lines, current_block_added, current_block_removed, offset_from_blocks, original_lines, current_block_start_of_insertion, matched_line, lines_covered_in_this_block, lines_same_in_this_block, current_line_in_file, completion_lines_covered, last_diff_char
 
             # Highlight the line to show progress
             await sdk.ide.highlightCode(RangeInFile(filepath=rif.filepath, range=Range.from_shorthand(
                 current_line_in_file, 0, current_line_in_file, 0)), "#FFFFFF22")
 
-            # Check if this line appears to correspond to something in the original
-            if line_matches_something_in_original(line):
-                if len(current_block) > 0:
+            # Get the diff of current block and the original
+            diff = list(filter(lambda x: not x.startswith("?"), difflib.ndiff(
+                original_lines[matched_line:], current_block_added + [line])))
+            next_diff_char = diff[current_line_in_file][0]
+
+            # If we need to start a new block, end the old one
+            if next_diff_char != last_diff_char:
+                await show_block_as_suggestion()
+
+            if next_diff_char == " ":
+                if block_not_empty():
+                    await show_block_as_suggestion()
+
+                current_block_start_of_insertion = -1
+                lines_same_in_this_block += 1
+
+            elif next_diff_char == "-":
+                # Line was removed from the original, add it to the block
+                if block_not_empty():
                     # Matches something, add all lines up to this as red in the old block, then show the block
                     await show_block_as_suggestion()
                     # Begin next block!
@@ -375,9 +399,23 @@ class DefaultModelEditCodeStep(Step):
                     lines_covered_in_this_block = 0
                 current_block_start_of_insertion = -1
                 lines_same_in_this_block += 1
+            elif next_diff_char == "+":
+                # Line was added to the original, add it to the block
+
+                if block_not_empty():
+                    # Matches something, add all lines up to this as red in the old block, then show the block
+                    await show_block_as_suggestion()
+                    # Begin next block!
+                    lines_same_in_this_block = 0
+                    lines_covered_in_this_block = 0
+                current_block_start_of_insertion = -1
+                lines_same_in_this_block += 1
+
             else:
-                # No match, insert the line into the replacement but don't change the red highlighting
-                await add_green_to_block(line)
+                raise Exception("Unexpected diff character: " +
+                                diff[current_line_in_file][0])
+
+            last_diff_char = next_diff_char
 
         lines_of_prefix_copied = 0
         repeating_file_suffix = False
