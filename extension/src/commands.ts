@@ -12,7 +12,6 @@ import {
 } from "./suggestions";
 import * as bridge from "./bridge";
 import { debugPanelWebview } from "./debugPanel";
-import { writeUnitTestForFunction } from "./bridge";
 import { sendTelemetryEvent, TelemetryEvent } from "./telemetry";
 
 // Copy everything over from extension.ts
@@ -55,10 +54,6 @@ const commandsMap: { [command: string]: (...args: any) => any } = {
     debugPanelWebview?.postMessage({
       type: "focusContinueInput",
     });
-  },
-  "continue.openCapturedTerminal": () => {
-    // Happens in webview resolution function
-    // openCapturedTerminal();
   },
 };
 
