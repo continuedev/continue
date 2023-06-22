@@ -326,9 +326,13 @@ class IdeProtocolClient {
   }
 
   async runCommand(command: string) {
-    const terminal = vscode.window.createTerminal();
-    terminal.show();
-    terminal.sendText(command);
+    if (vscode.window.terminals.length) {
+      vscode.window.terminals[0].sendText(command);
+    } else {
+        const terminal = vscode.window.createTerminal();
+        terminal.show();
+        terminal.sendText(command);
+    }
   }
 
   sendCommandOutput(output: string) {
