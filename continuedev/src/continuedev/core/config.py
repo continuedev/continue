@@ -86,3 +86,38 @@ def load_config(config_file: str) -> ContinueConfig:
     else:
         raise ValueError(f'Unknown config file extension: {ext}')
     return ContinueConfig(**config_dict)
+
+def update_config(config_file: str):
+    """
+    Update the config file with the current ContinueConfig object.
+    """
+    if not os.path.exists(config_file):
+        with open(config_file, 'w') as f:
+            config_dict = { "default_model": "gpt-3.5-turbo" }
+            json.dump(config_dict, f, indent=4)
+
+    _, ext = os.path.splitext(config_file)
+    if ext == '.yaml':
+
+        with open(config_file, 'w') as f:
+            config_dict = yaml.safe_load(f)
+
+            if config_dict["default_model"] == "gpt-4":
+                config_dict["default_model"] = "gpt-3.5-turbo"
+            else:
+                config_dict["default_model"] = "gpt-4"
+            
+            with open(config_file, 'w') as f:
+                json.dump(config_dict, f, indent=4)
+
+    elif ext == '.json':
+        with open(config_file, 'r') as f:
+            config_dict = json.load(f)
+
+        if config_dict["default_model"] == "gpt-4":
+            config_dict["default_model"] = "gpt-3.5-turbo"
+        else:
+            config_dict["default_model"] = "gpt-4"
+        
+        with open(config_file, 'w') as f:
+            json.dump(config_dict, f, indent=4)
