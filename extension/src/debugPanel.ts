@@ -136,6 +136,9 @@ export function setupDebugPanel(
   let extensionUri = getExtensionUri();
   let scriptUri: string;
   let styleMainUri: string;
+  let vscMediaUrl: string = debugPanelWebview
+    .asWebviewUri(vscode.Uri.joinPath(extensionUri, "react-app/dist"))
+    .toString();
 
   const isProduction = true; // context?.extensionMode === vscode.ExtensionMode.Development;
   if (!isProduction) {
@@ -226,6 +229,7 @@ export function setupDebugPanel(
           vscMachineId: vscode.env.machineId,
           apiUrl: getContinueServerUrl(),
           sessionId,
+          vscMediaUrl,
         });
 
         // // Listen for changes to server URL in settings
