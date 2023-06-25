@@ -182,21 +182,24 @@ class ChatWithFunctions(Step):
             else:
                 if func_name == "python" and "python" not in step_name_step_class_map:
                     # GPT must be fine-tuned to believe this exists, but it doesn't always
-                    self.chat_context.append(ChatMessage(
-                        role="assistant",
-                        content=None,
-                        function_call=FunctionCall(
-                            name=func_name,
-                            arguments=func_args
-                        ),
-                        summary=f"Ran function {func_name}"
-                    ))
-                    self.chat_context.append(ChatMessage(
-                        role="user",
-                        content="The 'python' function does not exist. Don't call it.",
-                        summary="'python' function does not exist."
-                    ))
-                    continue
+                    func_name = "EditHighlightedCodeStep"
+                    func_args = json.dumps({"user_input": self.user_input})
+                    # self.chat_context.append(ChatMessage(
+                    #     role="assistant",
+                    #     content=None,
+                    #     function_call=FunctionCall(
+                    #         name=func_name,
+                    #         arguments=func_args
+                    #     ),
+                    #     summary=f"Ran function {func_name}"
+                    # ))
+                    # self.chat_context.append(ChatMessage(
+                    #     role="user",
+                    #     content="The 'python' function does not exist. Don't call it. Try again to call another function.",
+                    #     summary="'python' function does not exist."
+                    # ))
+                    # msg_step.hide = True
+                    # continue
                 # Call the function, then continue to chat
                 func_args = "{}" if func_args == "" else func_args
                 fn_call_params = json.loads(func_args)
