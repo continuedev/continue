@@ -25,6 +25,8 @@ def get_error_title(e: Exception) -> str:
         return "This OpenAI API key has been rate limited. Please try again."
     elif isinstance(e, openai_errors.Timeout):
         return "OpenAI timed out. Please try again."
+    elif isinstance(e, openai_errors.InvalidRequestError) and e.code == "context_length_exceeded":
+        return e._message
     return e.__repr__()
 
 
