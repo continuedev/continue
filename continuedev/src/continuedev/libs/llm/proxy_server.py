@@ -18,8 +18,7 @@ class ProxyServer(LLM):
     def __init__(self, unique_id: str, default_model: Literal["gpt-3.5-turbo", "gpt-4"], system_message: str = None):
         self.unique_id = unique_id
         self.default_model = default_model
-        self.system_message = (system_message or "") + \
-            "\nDo not ever call the 'python' function."
+        self.system_message = system_message
         self.name = default_model
 
     @property
