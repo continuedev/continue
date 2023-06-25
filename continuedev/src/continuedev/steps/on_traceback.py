@@ -1,5 +1,5 @@
 import os
-from ..core.main import Step
+from ..core.main import ChatMessage, Step
 from ..core.sdk import ContinueSDK
 from .chat import SimpleChatStep
 
@@ -16,7 +16,11 @@ class DefaultOnTracebackStep(Step):
             for seg in segs:
                 if seg.startswith(os.path.sep) and os.path.exists(seg) and os.path.commonprefix([seg, sdk.ide.workspace_directory]) == sdk.ide.workspace_directory:
                     file_contents = await sdk.ide.readFile(seg)
-                    await sdk.add_chat_context(f"The contents of {seg}:\n```\n{file_contents}\n```", "", "user")
+                    self.chat_context.append(ChatMessage(
+                        role="user",
+                        content=f"The contents of {seg}:\n```\n{file_contents}\n```",
+                        summary=""
+                    ))
 
         await sdk.run_step(SimpleChatStep(
             name="Help With Traceback",

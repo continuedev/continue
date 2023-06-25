@@ -13,12 +13,12 @@ class LLM(ABC):
         """Return the completion of the text with the given temperature."""
         raise NotImplementedError
 
-    def stream_chat(self, prompt, with_history: List[ChatMessage] = [], **kwargs) -> Generator[Union[Any, List, Dict], None, None]:
-        """Yield a stream of chat messages."""
+    def stream_complete(self, prompt, with_history: List[ChatMessage] = [], **kwargs) -> Generator[Union[Any, List, Dict], None, None]:
+        """Stream the completion through generator."""
         raise NotImplementedError
 
-    def with_system_message(self, system_message: Union[str, None]):
-        """Return a new model with the given system message."""
+    async def stream_chat(self, messages: List[ChatMessage] = [], **kwargs) -> Generator[Union[Any, List, Dict], None, None]:
+        """Stream the chat through generator."""
         raise NotImplementedError
 
     def count_tokens(self, text: str):

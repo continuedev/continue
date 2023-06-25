@@ -26,6 +26,15 @@ class Models:
     def __init__(self, sdk: "ContinueSDK"):
         self.sdk = sdk
 
+    def __load_openai_model(self, model: str) -> OpenAI:
+        async def load_openai_model():
+            api_key = await self.sdk.get_user_secret(
+                'OPENAI_API_KEY', 'Enter your OpenAI API key, OR press enter to try for free')
+            if api_key == "":
+                return ProxyServer(self.sdk.ide.unique_id, model)
+            return OpenAI(api_key=api_key, default_model=model)
+        return asyncio.get_event_loop().run_until_complete(load_openai_model())
+
     @cached_property
     def starcoder(self):
         async def load_starcoder():
@@ -36,33 +45,19 @@ class Models:
 
     @cached_property
     def gpt35(self):
-        async def load_gpt35():
-            api_key = await self.sdk.get_user_secret(
-                'OPENAI_API_KEY', 'Enter your OpenAI API key, OR press enter to try for free')
-            if api_key == "":
-                return ProxyServer(self.sdk.ide.unique_id, "gpt-3.5-turbo")
-            return OpenAI(api_key=api_key, default_model="gpt-3.5-turbo")
-        return asyncio.get_event_loop().run_until_complete(load_gpt35())
+        return self.__load_openai_model("gpt-3.5-turbo")
+
+    @cached_property
+    def gpt350613(self):
+        return self.__load_openai_model("gpt-3.5-turbo-0613")
 
     @cached_property
     def gpt3516k(self):
-        async def load_gpt3516k():
-            api_key = await self.sdk.get_user_secret(
-                'OPENAI_API_KEY', 'Enter your OpenAI API key, OR press enter to try for free')
-            if api_key == "":
-                return ProxyServer(self.sdk.ide.unique_id, "gpt-3.5-turbo-16k")
-            return OpenAI(api_key=api_key, default_model="gpt-3.5-turbo-16k")
-        return asyncio.get_event_loop().run_until_complete(load_gpt3516k())
+        return self.__load_openai_model("gpt-3.5-turbo-16k")
 
     @cached_property
     def gpt4(self):
-        async def load_gpt4():
-            api_key = await self.sdk.get_user_secret(
-                'OPENAI_API_KEY', 'Enter your OpenAI API key, OR press enter to try for free')
-            if api_key == "":
-                return ProxyServer(self.sdk.ide.unique_id, "gpt-4")
-            return OpenAI(api_key=api_key, default_model="gpt-4")
-        return asyncio.get_event_loop().run_until_complete(load_gpt4())
+        return self.__load_openai_model("gpt-4")
 
     def __model_from_name(self, model_name: str):
         if model_name == "starcoder":
@@ -102,7 +97,7 @@ class ContinueSDK(AbstractContinueSDK):
     async def _ensure_absolute_path(self, path: str) -> str:
         if os.path.isabs(path):
             return path
-        return os.path.join(await self.ide.getWorkspaceDirectory(), path)
+        return os.path.join(self.ide.workspace_directory, path)
 
     async def run_step(self, step: Step) -> Coroutine[Observation, None, None]:
         return await self.__autopilot._run_singular_step(step)
@@ -144,15 +139,15 @@ class ContinueSDK(AbstractContinueSDK):
         return await self.run_step(FileSystemEditStep(edit=AddFile(filepath=filepath, content=content)))
 
     async def delete_file(self, filename: str):
-        filepath = await self._ensure_absolute_path(filename)
+        filename = await self._ensure_absolute_path(filename)
         return await self.run_step(FileSystemEditStep(edit=DeleteFile(filepath=filename)))
 
     async def add_directory(self, path: str):
-        filepath = await self._ensure_absolute_path(path)
+        path = await self._ensure_absolute_path(path)
         return await self.run_step(FileSystemEditStep(edit=AddDirectory(path=path)))
 
     async def delete_directory(self, path: str):
-        filepath = await self._ensure_absolute_path(path)
+        path = await self._ensure_absolute_path(path)
         return await self.run_step(FileSystemEditStep(edit=DeleteDirectory(path=path)))
 
     async def get_user_secret(self, env_var: str, prompt: str) -> str:
@@ -182,10 +177,6 @@ class ContinueSDK(AbstractContinueSDK):
     def raise_exception(self, message: str, title: str, with_step: Union[Step, None] = None):
         raise ContinueCustomException(message, title, with_step)
 
-    def add_chat_context(self, content: str, summary: Union[str, None] = None, role: ChatMessageRole = "assistant"):
-        self.history.timeline[self.history.current_index].step.chat_context.append(
-            ChatMessage(content=content, role=role, summary=summary))
-
     async def get_chat_context(self) -> List[ChatMessage]:
         history_context = self.history.to_chat_history()
         highlighted_code = await self.ide.getHighlightedCode()
@@ -203,8 +194,15 @@ class ContinueSDK(AbstractContinueSDK):
 
         for rif in highlighted_code:
             code = await self.ide.readRangeInFile(rif)
-            history_context.append(ChatMessage(
-                content=f"{preface} ({rif.filepath}):\n```\n{code}\n```", role="user", summary=f"{preface}: {rif.filepath}"))
+            msg = ChatMessage(content=f"{preface} ({rif.filepath}):\n```\n{code}\n```",
+                              role="user", summary=f"{preface}: {rif.filepath}")
+
+            # Don't insert after latest user message or function call
+            i = -1
+            if history_context[i].role == "user" or history_context[i].role == "function":
+                i -= 1
+            history_context.insert(i, msg)
+
         return history_context
 
     async def update_ui(self):

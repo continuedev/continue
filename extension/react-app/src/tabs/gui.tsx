@@ -391,7 +391,7 @@ function GUI(props: GUIProps) {
             />
           );
         })}
-        {/* {waitingForSteps && <Loader></Loader>} */}
+        {waitingForSteps && <Loader></Loader>}
 
         <div>
           {userInputQueue.map((input) => {
@@ -491,6 +491,8 @@ function GUI(props: GUIProps) {
         <HeaderButtonWithText
           onClick={() => {
             client?.sendClear();
+            // Reload the window to get completely fresh session
+            window.location.reload();
           }}
           text="Clear All"
         >
