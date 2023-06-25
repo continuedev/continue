@@ -40,10 +40,13 @@ class Autopilot(ContinueBaseModel):
         keep_untouched = (cached_property,)
 
     def get_full_state(self) -> FullState:
-        return FullState(history=self.history, active=self._active, user_input_queue=self._main_user_input_queue)
+        return FullState(history=self.history, active=self._active, user_input_queue=self._main_user_input_queue, default_model=self.continue_sdk.config.default_model)
 
     async def get_available_slash_commands(self) -> List[Dict]:
         return list(map(lambda x: {"name": x.name, "description": x.description}, self.continue_sdk.config.slash_commands)) or []
+
+    async def change_default_model(self, model: str):
+        self.continue_sdk.update_default_model(model)
 
     async def clear_history(self):
         self.history = History.from_empty()

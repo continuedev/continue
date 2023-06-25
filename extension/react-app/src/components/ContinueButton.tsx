@@ -1,6 +1,8 @@
 import styled, { keyframes } from "styled-components";
 import { Button } from ".";
 import { Play } from "@styled-icons/heroicons-outline";
+import { useSelector } from "react-redux";
+import { RootStore } from "../redux/store";
 
 let StyledButton = styled(Button)`
   margin: auto;
@@ -25,14 +27,21 @@ let StyledButton = styled(Button)`
 `;
 
 function ContinueButton(props: { onClick?: () => void; hidden?: boolean }) {
+  const vscMediaUrl = useSelector(
+    (state: RootStore) => state.config.vscMediaUrl
+  );
+
   return (
     <StyledButton
       hidden={props.hidden}
       className="m-auto"
       onClick={props.onClick}
     >
-      <Play />
-      {/* <img src={"/continue_arrow.png"} width="16px"></img> */}
+      {vscMediaUrl ? (
+        <img src={`${vscMediaUrl}/play_button.png`} width="22px" />
+      ) : (
+        <Play />
+      )}
       Continue
     </StyledButton>
   );

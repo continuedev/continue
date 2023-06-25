@@ -86,3 +86,46 @@ def load_config(config_file: str) -> ContinueConfig:
     else:
         raise ValueError(f'Unknown config file extension: {ext}')
     return ContinueConfig(**config_dict)
+
+
+def load_global_config() -> ContinueConfig:
+    """
+    Load the global config file and return a ContinueConfig object.
+    """
+    global_dir = os.path.expanduser('~/.continue')
+    if not os.path.exists(global_dir):
+        os.mkdir(global_dir)
+
+    yaml_path = os.path.join(global_dir, 'config.yaml')
+    if os.path.exists(yaml_path):
+        with open(config_path, 'r') as f:
+            try:
+                config_dict = yaml.safe_load(f)
+            except:
+                return ContinueConfig()
+    else:
+        config_path = os.path.join(global_dir, 'config.json')
+        with open(config_path, 'r') as f:
+            try:
+                config_dict = json.load(f)
+            except:
+                return ContinueConfig()
+    return ContinueConfig(**config_dict)
+
+
+def update_global_config(config: ContinueConfig):
+    """
+    Update the config file with the given ContinueConfig object.
+    """
+    global_dir = os.path.expanduser('~/.continue')
+    if not os.path.exists(global_dir):
+        os.mkdir(global_dir)
+
+    yaml_path = os.path.join(global_dir, 'config.yaml')
+    if os.path.exists(yaml_path):
+        with open(config_path, 'w') as f:
+            yaml.dump(config.dict(), f)
+    else:
+        config_path = os.path.join(global_dir, 'config.json')
+        with open(config_path, 'w') as f:
+            json.dump(config.dict(), f)
