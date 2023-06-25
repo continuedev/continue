@@ -105,7 +105,7 @@ class ViewDirectoryTreeStep(Step):
 
 class EditFileStep(Step):
     name: str = "Edit File"
-    description: str = "Edit a file in the workspace."
+    description: str = "Edit a file in the workspace that is not currently open."
     filename: str
     instructions: str
     hide: bool = True
@@ -136,7 +136,7 @@ class ChatWithFunctions(Step):
 
         self.chat_context.append(ChatMessage(
             role="user",
-            content=self.user_input,
+            content=self.user_input + "\n**DO NOT EVER call the 'python' function.**",
             summary=self.user_input
         ))
 
@@ -182,6 +182,15 @@ class ChatWithFunctions(Step):
             else:
                 if func_name == "python" and "python" not in step_name_step_class_map:
                     # GPT must be fine-tuned to believe this exists, but it doesn't always
+                    self.chat_context.append(ChatMessage(
+                        role="assistant",
+                        content=None,
+                        function_call=FunctionCall(
+                            name=func_name,
+                            arguments=func_args
+                        ),
+                        summary=f"Ran function {func_name}"
+                    ))
                     self.chat_context.append(ChatMessage(
                         role="user",
                         content="The 'python' function does not exist. Don't call it.",

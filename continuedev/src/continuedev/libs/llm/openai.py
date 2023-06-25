@@ -70,7 +70,7 @@ class OpenAI(LLM):
                 messages=compile_chat_messages(
                     args["model"], with_history, prompt, with_functions=False),
                 **args,
-            )).choices[0].message
+            )).choices[0].message.content
         else:
             resp = (await openai.Completion.acreate(
                 prompt=prompt,
