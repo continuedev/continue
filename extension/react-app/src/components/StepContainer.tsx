@@ -200,6 +200,7 @@ function StepContainer(props: StepContainerProps) {
 
             <>
               <HeaderButtonWithText
+                disabled={props.historyNode.active as boolean}
                 onClick={(e) => {
                   e.stopPropagation();
                   props.onDelete();
