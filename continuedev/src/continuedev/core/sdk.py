@@ -6,7 +6,7 @@ import os
 from ..steps.core.core import DefaultModelEditCodeStep
 from ..models.main import Range
 from .abstract_sdk import AbstractContinueSDK
-from .config import ContinueConfig, load_config
+from .config import ContinueConfig, load_config, load_global_config, update_global_config
 from ..models.filesystem_edit import FileEdit, FileSystemEdit, AddFile, DeleteFile, AddDirectory, DeleteDirectory
 from ..models.filesystem import RangeInFile
 from ..libs.llm.hf_inference_api import HuggingFaceInferenceAPI
@@ -71,7 +71,7 @@ class Models:
         else:
             raise Exception(f"Unknown model {model_name}")
 
-    @cached_property
+    @property
     def default(self):
         default_model = self.sdk.config.default_model
         return self.__model_from_name(default_model) if default_model is not None else self.gpt35
@@ -163,7 +163,12 @@ class ContinueSDK(AbstractContinueSDK):
         elif os.path.exists(json_path):
             return load_config(json_path)
         else:
-            return ContinueConfig()
+            return load_global_config()
+
+    def update_default_model(self, model: str):
+        config = self.config
+        config.default_model = model
+        update_global_config(config)
 
     def set_loading_message(self, message: str):
         # self.__autopilot.set_loading_message(message)

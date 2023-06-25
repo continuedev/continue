@@ -1,5 +1,4 @@
 import * as vscode from "vscode";
-import { getLanguageLibrary } from "../languages";
 import { editorToSuggestions } from "../suggestions";
 
 class SuggestionsCodeLensProvider implements vscode.CodeLensProvider {
@@ -52,40 +51,9 @@ class SuggestionsCodeLensProvider implements vscode.CodeLensProvider {
   }
 }
 
-class PytestCodeLensProvider implements vscode.CodeLensProvider {
-  public provideCodeLenses(
-    document: vscode.TextDocument,
-    token: vscode.CancellationToken
-  ): vscode.CodeLens[] | Thenable<vscode.CodeLens[]> {
-    let codeLenses: vscode.CodeLens[] = [];
-    let lineno = 1;
-    let languageLibrary = getLanguageLibrary(document.fileName);
-    for (let line of document.getText().split("\n")) {
-      if (
-        languageLibrary.lineIsFunctionDef(line) &&
-        languageLibrary.parseFunctionDefForName(line).startsWith("test_")
-      ) {
-        let functionToTest = languageLibrary.parseFunctionDefForName(line);
-        let fileAndFunctionNameSpecifier =
-          document.fileName + "::" + functionToTest;
-        codeLenses.push(
-          new vscode.CodeLens(new vscode.Range(lineno, 0, lineno, 1), {
-            title: "Debug This Test",
-            command: "continue.debugTest",
-            arguments: [fileAndFunctionNameSpecifier],
-          })
-        );
-      }
-      lineno++;
-    }
-
-    return codeLenses;
-  }
-}
-
 const allCodeLensProviders: { [langauge: string]: vscode.CodeLensProvider[] } =
   {
-    python: [new SuggestionsCodeLensProvider(), new PytestCodeLensProvider()],
+    python: [new SuggestionsCodeLensProvider()],
   };
 
 export function registerAllCodeLensProviders(context: vscode.ExtensionContext) {

@@ -1,7 +1,5 @@
 import * as vscode from "vscode";
-import { getRightViewColumn, getTestFile } from "./util/vscode";
 import * as path from "path";
-import { getLanguageLibrary } from "./languages";
 
 export function showAnswerInTextEditor(
   filename: string,
@@ -222,99 +220,4 @@ export function highlightCode(
   }
 
   return key;
-}
-
-// Show unit test
-const pythonImportDistinguisher = (line: string): boolean => {
-  if (line.startsWith("from") || line.startsWith("import")) {
-    return true;
-  }
-  return false;
-};
-const javascriptImportDistinguisher = (line: string): boolean => {
-  if (line.startsWith("import")) {
-    return true;
-  }
-  return false;
-};
-const importDistinguishersMap: {
-  [fileExtension: string]: (line: string) => boolean;
-} = {
-  js: javascriptImportDistinguisher,
-  ts: javascriptImportDistinguisher,
-  py: pythonImportDistinguisher,
-};
-function getImportsFromFileString(
-  fileString: string,
-  importDistinguisher: (line: string) => boolean
-): Set<string> {
-  let importLines = new Set<string>();
-  for (let line of fileString.split("\n")) {
-    if (importDistinguisher(line)) {
-      importLines.add(line);
-    }
-  }
-  return importLines;
-}
-function removeRedundantLinesFrom(
-  fileContents: string,
-  linesToRemove: Set<string>
-): string {
-  let fileLines = fileContents.split("\n");
-  fileLines = fileLines.filter((line: string) => {
-    return !linesToRemove.has(line);
-  });
-  return fileLines.join("\n");
-}
-
-export async function writeAndShowUnitTest(
-  filename: string,
-  test: string
-): Promise<DecorationKey> {
-  return new Promise((resolve, reject) => {
-    let testFilename = getTestFile(filename, true);
-    vscode.workspace.openTextDocument(testFilename).then((doc) => {
-      let fileContent = doc.getText();
-      let fileEmpty = fileContent.trim() === "";
-      let existingImportLines = getImportsFromFileString(
-        fileContent,
-        importDistinguishersMap[doc.fileName.split(".").at(-1) || ".py"]
-      );
-
-      // Remove redundant imports, make sure pytest is there
-      test = removeRedundantLinesFrom(test, existingImportLines);
-      test =
-        (fileEmpty
-          ? `${getLanguageLibrary(".py").writeImport(
-              testFilename,
-              filename
-            )}\nimport pytest\n\n`
-          : "\n\n") +
-        test.trim() +
-        "\n";
-
-      vscode.window
-        .showTextDocument(doc, getRightViewColumn())
-        .then((editor) => {
-          let lastLine = editor.document.lineAt(editor.document.lineCount - 1);
-          let testRange = new vscode.Range(
-            lastLine.range.end,
-            new vscode.Position(
-              test.split("\n").length + lastLine.range.end.line,
-              0
-            )
-          );
-          editor
-            .edit((edit) => {
-              edit.insert(lastLine.range.end, test);
-              return true;
-            })
-            .then((success) => {
-              if (!success) reject("Failed to insert test");
-              let key = highlightCode(editor, testRange);
-              resolve(key);
-            });
-        });
-    });
-  });
 }

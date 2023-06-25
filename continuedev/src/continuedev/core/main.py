@@ -200,6 +200,7 @@ class FullState(ContinueBaseModel):
     history: History
     active: bool
     user_input_queue: List[str]
+    default_model: str
 
 
 class ContinueSDK:
