@@ -45,7 +45,7 @@ class Models:
 
     @cached_property
     def gpt35(self):
-        return self.__load_openai_model("gpt-3.5")
+        return self.__load_openai_model("gpt-3.5-turbo")
 
     @cached_property
     def gpt350613(self):

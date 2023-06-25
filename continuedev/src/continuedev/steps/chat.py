@@ -39,7 +39,7 @@ class AddFileStep(Step):
     file_contents: str
 
     async def describe(self, models: Models) -> Coroutine[Any, Any, Coroutine[str, None, None]]:
-        return f"Added a file named {self.filename} to the workspace."
+        return f"Added a file named `{self.filename}` to the workspace."
 
     async def run(self, sdk: ContinueSDK):
         try:
@@ -58,7 +58,7 @@ class DeleteFileStep(Step):
     filename: str
 
     async def describe(self, models: Models) -> Coroutine[Any, Any, Coroutine[str, None, None]]:
-        return f"Deleted a file named {self.filename} from the workspace."
+        return f"Deleted a file named `{self.filename}` from the workspace."
 
     async def run(self, sdk: ContinueSDK):
         await sdk.delete_file(self.filename)
@@ -70,7 +70,7 @@ class AddDirectoryStep(Step):
     directory_name: str
 
     async def describe(self, models: Models) -> Coroutine[Any, Any, Coroutine[str, None, None]]:
-        return f"Added a directory named {self.directory_name} to the workspace."
+        return f"Added a directory named `{self.directory_name}` to the workspace."
 
     async def run(self, sdk: ContinueSDK):
         try:
@@ -85,7 +85,7 @@ class RunTerminalCommandStep(Step):
     command: str
 
     async def describe(self, models: Models) -> Coroutine[Any, Any, Coroutine[str, None, None]]:
-        return f"Ran the terminal command {self.command}."
+        return f"Ran the terminal command `{self.command}`."
 
     async def run(self, sdk: ContinueSDK):
         await sdk.wait_for_user_confirmation(f"Run the following terminal command?\n\n```bash\n{self.command}\n```")
