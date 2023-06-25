@@ -88,7 +88,7 @@ class RunTerminalCommandStep(Step):
         return f"Ran the terminal command {self.command}."
 
     async def run(self, sdk: ContinueSDK):
-        await sdk.wait_for_user_confirmation(f"Run the terminal command {self.command}?")
+        await sdk.wait_for_user_confirmation(f"Run the following terminal command?\n\n```bash\n{self.command}\n```")
         await sdk.run(self.command)
 
 
@@ -201,7 +201,16 @@ class ChatWithFunctions(Step):
                     summary=f"Ran function {func_name}"
                 ))
                 last_function_called_index_in_history = sdk.history.current_index + 1
-                await sdk.run_step(step_name_step_class_map[func_name](
-                    **fn_call_params))
-                self.description += f"`Running function {func_name}`\n\n"
+                step_to_run = step_name_step_class_map[func_name](
+                    **fn_call_params)
+
+                if func_name == "AddFileStep":
+                    step_to_run.hide = True
+                    self.description += f"\nAdded file `{func_args['filename']}`"
+                elif func_name == "AddDirectoryStep":
+                    step_to_run.hide = True
+                    self.description += f"\nAdded directory `{func_args['directory_name']}`"
+                else:
+                    self.description += f"\n`Running function {func_name}`\n\n"
+                await sdk.run_step(step_to_run)
                 await sdk.update_ui()

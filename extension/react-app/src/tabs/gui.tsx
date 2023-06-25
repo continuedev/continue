@@ -388,7 +388,7 @@ function GUI(props: GUIProps) {
             />
           );
         })}
-        {/* {waitingForSteps && <Loader></Loader>} */}
+        {waitingForSteps && <Loader></Loader>}
 
         <div>
           {userInputQueue.map((input) => {
