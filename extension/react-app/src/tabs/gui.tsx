@@ -215,7 +215,7 @@ function GUI(props: GUIProps) {
   useEffect(() => {
     const listener = (e: any) => {
       // Cmd + J to toggle fast model
-      if (e.key === "j" && e.metaKey) {
+      if (e.key === "i" && e.metaKey && e.shiftKey) {
         setUsingFastModel((prev) => !prev);
       }
     };
@@ -237,15 +237,17 @@ function GUI(props: GUIProps) {
       setWaitingForSteps(state.active);
       setHistory(state.history);
       setUserInputQueue(state.user_input_queue);
-      const nextStepsOpen = [...stepsOpen];
-      for (
-        let i = nextStepsOpen.length;
-        i < state.history.timeline.length;
-        i++
-      ) {
-        nextStepsOpen.push(true);
-      }
-      setStepsOpen(nextStepsOpen);
+      setStepsOpen((prev) => {
+        const nextStepsOpen = [...prev];
+        for (
+          let i = nextStepsOpen.length;
+          i < state.history.timeline.length;
+          i++
+        ) {
+          nextStepsOpen.push(true);
+        }
+        return nextStepsOpen;
+      });
 
       if (shouldScrollToBottom) {
         scrollToBottom();
