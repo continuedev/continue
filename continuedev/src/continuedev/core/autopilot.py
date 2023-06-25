@@ -15,6 +15,17 @@ from .sdk import ContinueSDK
 import asyncio
 from ..libs.util.step_name_to_steps import get_step_from_name
 from ..libs.util.traceback_parsers import get_python_traceback, get_javascript_traceback
+from openai import error as openai_errors
+
+
+def get_error_title(e: Exception) -> str:
+    if isinstance(e, openai_errors.APIError):
+        return "OpenAI is overloaded with requests. Please try again."
+    elif isinstance(e, openai_errors.RateLimitError):
+        return "This OpenAI API key has been rate limited. Please try again."
+    elif isinstance(e, openai_errors.Timeout):
+        return "OpenAI timed out. Please try again."
+    return e.__repr__()
 
 
 class Autopilot(ContinueBaseModel):
@@ -166,7 +177,8 @@ class Autopilot(ContinueBaseModel):
 
             error_string = e.message if is_continue_custom_exception else '\n\n'.join(
                 traceback.format_tb(e.__traceback__)) + f"\n\n{e.__repr__()}"
-            error_title = e.title if is_continue_custom_exception else e.__repr__()
+            error_title = e.title if is_continue_custom_exception else get_error_title(
+                e)
 
             # Attach an InternalErrorObservation to the step and unhide it.
             print(f"Error while running step: \n{error_string}\n{error_title}")
