@@ -2,7 +2,7 @@
 import os
 import subprocess
 from textwrap import dedent
-from typing import Coroutine, List, Union
+from typing import Coroutine, List, Literal, Union
 
 from ...models.main import Range
 from ...libs.llm.prompt_utils import MarkdownStyleEncoderDecoder
@@ -271,7 +271,7 @@ class DefaultModelEditCodeStep(Step):
         lines = []
         unfinished_line = ""
 
-        red_or_green_first = "green"
+        red_or_green_first: Literal["green", "red"] = "green"
         current_block_added = []
         current_block_removed = []
         last_diff_char = " "
@@ -284,46 +284,50 @@ class DefaultModelEditCodeStep(Step):
         liness_deleted_in_this_block = 0
         lines_same_in_this_block = 0
 
-        async def insert_line(line: str, line_no: int):
-            nonlocal current_block_added
-            # Insert line, highlight green, highlight corresponding line red
-            red_line = line_no + len(current_block_added) + 1
-            range = Range.from_shorthand(
-                line_no, 0, line_no, 0)
-            red_range = Range.from_shorthand(
-                red_line, 0, red_line, 0)
+        async def insert_line(line: str, line_no: int, color: Literal{"red", "green"}):
+            if color == "green":
+                range = Range.from_shorthand(
+                    line_no, 0, line_no, 0)
 
-            await sdk.ide.applyFileSystemEdit(FileEdit(
-                filepath=rif.filepath,
-                range=range,
-                replacement=line + "\n"
-            ))
-            await sdk.ide.highlightCode(RangeInFile(filepath=rif.filepath, range=range), "#00FF0022")
-            await sdk.ide.highlightCode(RangeInFile(filepath=rif.filepath, range=red_range), "#FF000022")
+                await sdk.ide.applyFileSystemEdit(FileEdit(
+                    filepath=rif.filepath,
+                    range=range,
+                    replacement=line + "\n"
+                ))
+
+            color = '#00FF0022' if color == "green" else "#FF000022"
+            await sdk.ide.highlightCode(RangeInFile(filepath=rif.filepath, range=range), color)
 
         async def show_block_as_suggestion():
             nonlocal completion_lines_covered, offset_from_blocks, current_block_added, current_block_removed, current_block_start_of_insertion, matched_line, last_matched_line, lines_covered_in_this_block, liness_deleted_in_this_block, current_line_in_file
             end_line = offset_from_blocks + rif.range.start.line + matched_line
-            # Delete the green inserted lines, because they will be shown as part of the suggestion
-            await sdk.ide.applyFileSystemEdit(FileEdit(
-                filepath=rif.filepath,
-                range=Range.from_shorthand(
-                    current_block_start_of_insertion, 0, current_block_start_of_insertion + len(current_block), 0),
-                replacement=""
-            ))
 
-            lines_deleted_in_this_block = lines_covered_in_this_block - lines_same_in_this_block
-            await sdk.ide.showSuggestion(FileEdit(
-                filepath=rif.filepath,
-                range=Range.from_shorthand(
-                    current_block_start_of_insertion, 0, end_line, 0),
-                replacement="\n".join(current_block) + "\n"
-            ))
+            if red_or_green_first == "green":
+                # Delete the green inserted lines, because they will be shown as part of the suggestion
+                await sdk.ide.applyFileSystemEdit(FileEdit(
+                    filepath=rif.filepath,
+                    range=Range.from_shorthand(
+                        current_block_start_of_insertion, 0, current_block_start_of_insertion + len(current_block), 0),
+                    replacement=""
+                ))
 
-            current_line_in_file = end_line + \
-                len(current_block) + 1  # CURRENTLY TODO HERE NOTE
-            offset_from_blocks += len(current_block)
-            current_block.clear()
+                lines_deleted_in_this_block = lines_covered_in_this_block - lines_same_in_this_block
+                await sdk.ide.showSuggestion(FileEdit(
+                    filepath=rif.filepath,
+                    range=Range.from_shorthand(
+                        current_block_start_of_insertion, 0, end_line, 0),
+                    replacement="\n".join(current_block) + "\n"
+                ))
+                current_line_in_file = end_line + \
+                    len(current_block) + 1  # CURRENTLY TODO HERE NOTE
+                offset_from_blocks += len(current_block)
+                current_block.clear()
+            else:
+                # Ends in green, so if you want to delete the lines before the matched line, you need to start a new block.
+                current_block = [
+                    line for line in original_lines[]
+                ]
+
 
         async def add_green_to_block(line: str):
             # Keep track of where the first inserted line in this block came from
@@ -334,6 +338,9 @@ class DefaultModelEditCodeStep(Step):
             # Insert the line, highlight green
             await insert_line(line, current_line_in_file)
             current_block.append(line)
+
+        async def add_red_to_block(line: str):
+            await insert_line()
 
         def line_matches_something_in_original(line: str) -> bool:
             nonlocal offset_from_blocks, last_matched_line, matched_line, lines_covered_in_this_block
