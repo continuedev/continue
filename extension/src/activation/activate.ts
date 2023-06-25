@@ -7,24 +7,26 @@ import IdeProtocolClient from "../continueIdeClient";
 import { getContinueServerUrl } from "../bridge";
 import { CapturedTerminal } from "../terminal/terminalEmulator";
 import { setupDebugPanel, ContinueGUIWebviewViewProvider } from "../debugPanel";
+import { startContinuePythonServer } from "./environmentSetup";
 // import { CapturedTerminal } from "../terminal/terminalEmulator";
 
 export let extensionContext: vscode.ExtensionContext | undefined = undefined;
 
 export let ideProtocolClient: IdeProtocolClient;
 
-export function activateExtension(
+export async function activateExtension(
   context: vscode.ExtensionContext,
   showTutorial: boolean
 ) {
-  sendTelemetryEvent(TelemetryEvent.ExtensionActivated);
+  extensionContext = context;
 
+  sendTelemetryEvent(TelemetryEvent.ExtensionActivated);
   registerAllCodeLensProviders(context);
   registerAllCommands(context);
 
   // vscode.window.registerWebviewViewProvider("continue.continueGUIView", setupDebugPanel);
-
-  let serverUrl = getContinueServerUrl();
+  await startContinuePythonServer();
+  const serverUrl = getContinueServerUrl();
 
   ideProtocolClient = new IdeProtocolClient(
     `${serverUrl.replace("http", "ws")}/ide/ws`,
@@ -52,6 +54,4 @@ export function activateExtension(
 
   // If any terminals are open to start, replace them
   // vscode.window.terminals.forEach((terminal) => {}
-
-  extensionContext = context;
 }

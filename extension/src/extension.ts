@@ -13,7 +13,7 @@ async function dynamicImportAndActivate(
   showTutorial: boolean
 ) {
   const { activateExtension } = await import("./activation/activate");
-  activateExtension(context, showTutorial);
+  await activateExtension(context, showTutorial);
 }
 
 export function activate(context: vscode.ExtensionContext) {
@@ -25,7 +25,6 @@ export function activate(context: vscode.ExtensionContext) {
       cancellable: false,
     },
     async () => {
-      await startContinuePythonServer();
       dynamicImportAndActivate(context, true);
     }
   );

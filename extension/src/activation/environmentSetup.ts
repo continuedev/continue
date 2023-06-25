@@ -180,7 +180,7 @@ export async function startContinuePythonServer() {
   await setupPythonEnv();
 
   // Check vscode settings
-  let serverUrl = getContinueServerUrl();
+  const serverUrl = getContinueServerUrl();
   if (serverUrl !== "http://localhost:8000") {
     return;
   }
