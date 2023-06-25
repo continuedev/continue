@@ -14,8 +14,7 @@ class OpenAI(LLM):
     def __init__(self, api_key: str, default_model: str, system_message: str = None):
         self.api_key = api_key
         self.default_model = default_model
-        self.system_message = (system_message or "") + \
-            "\nDo not ever call the 'python' function."
+        self.system_message = system_message
 
         openai.api_key = api_key
 
