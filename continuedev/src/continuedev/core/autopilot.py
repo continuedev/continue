@@ -2,6 +2,8 @@ from functools import cached_property
 import traceback
 import time
 from typing import Any, Callable, Coroutine, Dict, List
+
+from aiohttp import ClientPayloadError
 from ..models.filesystem_edit import FileEditWithFullContents
 from ..libs.llm import LLM
 from .observation import Observation, InternalErrorObservation
@@ -27,6 +29,8 @@ def get_error_title(e: Exception) -> str:
         return "OpenAI timed out. Please try again."
     elif isinstance(e, openai_errors.InvalidRequestError) and e.code == "context_length_exceeded":
         return e._message
+    elif isinstance(e, ClientPayloadError):
+        return "The request to OpenAI failed. Please try again."
     return e.__repr__()
 
 
