@@ -42,7 +42,7 @@ class ProxyServer(LLM):
                 except:
                     raise Exception(await resp.text())
 
-    async def stream_chat(self, messages: List[ChatMessage] = [], **kwargs) -> Coroutine[Any, Any, Generator[Any | List | Dict, None, None]]:
+    async def stream_chat(self, messages: List[ChatMessage] = [], **kwargs) -> Coroutine[Any, Any, Generator[Union[Any, List, Dict], None, None]]:
         args = self.default_args | kwargs
         messages = compile_chat_messages(
             self.default_model, messages, None, with_functions=args["model"].endswith("0613"))

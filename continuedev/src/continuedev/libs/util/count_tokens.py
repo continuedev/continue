@@ -21,7 +21,7 @@ def encoding_for_model(model: str):
     return tiktoken.encoding_for_model(aliases.get(model, model))
 
 
-def count_tokens(model: str, text: str | None):
+def count_tokens(model: str, text: Union[str, None]):
     if text is None:
         return 0
     encoding = encoding_for_model(model)
@@ -74,7 +74,7 @@ def prune_chat_history(model: str, chat_history: List[ChatMessage], max_tokens: 
     return chat_history
 
 
-def compile_chat_messages(model: str, msgs: List[ChatMessage], prompt: str | None = None, with_functions: bool = False, system_message: Union[str, None] = None) -> List[Dict]:
+def compile_chat_messages(model: str, msgs: List[ChatMessage], prompt: Union[str, None] = None, with_functions: bool = False, system_message: Union[str, None] = None) -> List[Dict]:
     prompt_tokens = count_tokens(model, prompt)
     msgs = prune_chat_history(model,
                               msgs, MAX_TOKENS_FOR_MODEL[model], prompt_tokens + 1000 + count_tokens(model, system_message))
