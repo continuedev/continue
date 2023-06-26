@@ -105,6 +105,9 @@ def load_global_config() -> ContinueConfig:
                 return ContinueConfig()
     else:
         config_path = os.path.join(global_dir, 'config.json')
+        if not os.path.exists(config_path):
+            with open(config_path, 'w') as f:
+                json.dump(dict(ContinueConfig()), f)
         with open(config_path, 'r') as f:
             try:
                 config_dict = json.load(f)
