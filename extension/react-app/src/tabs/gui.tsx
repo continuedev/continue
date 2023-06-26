@@ -18,6 +18,7 @@ import ReactSwitch from "react-switch";
 import { usePostHog } from "posthog-js/react";
 import { useSelector } from "react-redux";
 import { RootStore } from "../redux/store";
+import LoadingCover from "../components/LoadingCover";
 
 const TopGUIDiv = styled.div`
   overflow: hidden;
@@ -328,6 +329,7 @@ function GUI(props: GUIProps) {
   // const iterations = useSelector(selectIterations);
   return (
     <>
+      <LoadingCover hidden={true} message="Downloading local model..." />
       <TextDialog
         showDialog={showFeedbackDialog}
         onEnter={(text) => {
