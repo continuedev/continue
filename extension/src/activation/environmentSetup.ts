@@ -7,6 +7,25 @@ import * as fs from "fs";
 import rebuild from "@electron/rebuild";
 import { getContinueServerUrl } from "../bridge";
 import fetch from "node-fetch";
+import * as vscode from "vscode";
+
+const MAX_RETRIES = 5;
+async function retryThenFail(
+  fn: () => Promise<any>,
+  retries: number = MAX_RETRIES
+): Promise<any> {
+  try {
+    return await fn();
+  } catch (e) {
+    if (retries > 0) {
+      return await retryThenFail(fn, retries - 1);
+    }
+    vscode.window.showErrorMessage(
+      "Failed to set up Continue extension. Please email nate@continue.dev and we'll get this fixed ASAP!"
+    );
+    throw e;
+  }
+}
 
 async function runCommand(cmd: string): Promise<[string, string | undefined]> {
   console.log("Running command: ", cmd);
@@ -91,6 +110,7 @@ async function setupPythonEnv() {
     pythonCmd,
     pipCmd
   );
+
   if (checkEnvExists()) {
     console.log("Python env already exists, skipping...");
   } else {
@@ -124,21 +144,23 @@ async function setupPythonEnv() {
     );
   }
 
-  if (checkRequirementsInstalled()) {
-    console.log("Python requirements already installed, skipping...");
-  } else {
-    const installRequirementsCommand = [
-      `cd ${path.join(getExtensionUri().fsPath, "scripts")}`,
-      activateCmd,
-      pipUpgradeCmd,
-      `${pipCmd} install -r requirements.txt`,
-      "touch .continue_env_installed",
-    ].join(" ; ");
-    const [, stderr] = await runCommand(installRequirementsCommand);
-    if (stderr) {
-      throw new Error(stderr);
+  await retryThenFail(async () => {
+    if (checkRequirementsInstalled()) {
+      console.log("Python requirements already installed, skipping...");
+    } else {
+      const installRequirementsCommand = [
+        `cd ${path.join(getExtensionUri().fsPath, "scripts")}`,
+        activateCmd,
+        pipUpgradeCmd,
+        `${pipCmd} install -r requirements.txt`,
+        "touch .continue_env_installed",
+      ].join(" ; ");
+      const [, stderr] = await runCommand(installRequirementsCommand);
+      if (stderr) {
+        throw new Error(stderr);
+      }
     }
-  }
+  });
 }
 
 function readEnvFile(path: string) {
@@ -198,10 +220,6 @@ export async function startContinuePythonServer() {
     return;
   }
 
-  console.log("Starting Continue python server...");
-
-  if (await checkServerRunning(serverUrl)) return;
-
   let activateCmd = ". env/bin/activate";
   let pythonCmd = "python3";
   if (process.platform == "win32") {
@@ -214,33 +232,39 @@ export async function startContinuePythonServer() {
     "scripts"
   )} ; ${activateCmd} ; cd .. ; ${pythonCmd} -m scripts.run_continue_server`;
 
-  return new Promise(async (resolve, reject) => {
-    try {
-      const child = spawn(command, {
-        shell: true,
-      });
-      child.stdout.on("data", (data: any) => {
-        console.log(`stdout: ${data}`);
-      });
-      child.stderr.on("data", (data: any) => {
-        console.log(`stderr: ${data}`);
-        if (data.includes("Uvicorn running on")) {
-          console.log("Successfully started Continue python server");
+  return await retryThenFail(async () => {
+    console.log("Starting Continue python server...");
+
+    if (await checkServerRunning(serverUrl)) return;
+
+    return new Promise(async (resolve, reject) => {
+      try {
+        const child = spawn(command, {
+          shell: true,
+        });
+        child.stdout.on("data", (data: any) => {
+          console.log(`stdout: ${data}`);
+        });
+        child.stderr.on("data", (data: any) => {
+          console.log(`stderr: ${data}`);
+          if (data.includes("Uvicorn running on")) {
+            console.log("Successfully started Continue python server");
+            resolve(null);
+          }
+        });
+        child.on("error", (error: any) => {
+          console.log(`error: ${error.message}`);
+        });
+      } catch (e) {
+        console.log("Failed to start Continue python server", e);
+        // If failed, check if it's because the server is already running (might have happened just after we checked above)
+        if (await checkServerRunning(serverUrl)) {
           resolve(null);
+        } else {
+          reject();
         }
-      });
-      child.on("error", (error: any) => {
-        console.log(`error: ${error.message}`);
-      });
-    } catch (e) {
-      console.log("Failed to start Continue python server", e);
-      // If failed, check if it's because the server is already running (might have happened just after we checked above)
-      if (await checkServerRunning(serverUrl)) {
-        resolve(null);
-      } else {
-        reject();
       }
-    }
+    });
   });
 }
 
