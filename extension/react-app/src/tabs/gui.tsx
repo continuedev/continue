@@ -352,9 +352,7 @@ function GUI(props: GUIProps) {
         {typeof client === "undefined" && (
           <>
             <Loader></Loader>
-            <p style={{ textAlign: "center" }}>
-              Trying to reconnect with server...
-            </p>
+            <p style={{ textAlign: "center" }}>Loading Continue server...</p>
           </>
         )}
         {history?.timeline.map((node: HistoryNode, index: number) => {
