@@ -4,7 +4,7 @@ from typing import Any, Coroutine, Dict, Generator, List, Union
 from ...core.main import ChatMessage
 import openai
 from ..llm import LLM
-from ..util.count_tokens import DEFAULT_MAX_TOKENS, compile_chat_messages, CHAT_MODELS, DEFAULT_ARGS, count_tokens
+from ..util.count_tokens import DEFAULT_MAX_TOKENS, compile_chat_messages, CHAT_MODELS, DEFAULT_ARGS, count_tokens, prune_raw_prompt_from_top
 
 
 class OpenAI(LLM):
@@ -72,7 +72,7 @@ class OpenAI(LLM):
             )).choices[0].message.content
         else:
             resp = (await openai.Completion.acreate(
-                prompt=prompt,
+                prompt=prune_raw_prompt_from_top(args["model"], prompt),
                 **args,
             )).choices[0].text
 
