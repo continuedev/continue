@@ -6,8 +6,8 @@ from ...core.main import ChatMessage
 from ..llm import LLM
 from ..util.count_tokens import DEFAULT_ARGS, DEFAULT_MAX_TOKENS, compile_chat_messages, CHAT_MODELS, count_tokens
 
-SERVER_URL = "http://127.0.0.1:8080"
-# SERVER_URL = "https://proxy-server-l6vsfbzhba-uw.a.run.app"
+# SERVER_URL = "http://127.0.0.1:8080"
+SERVER_URL = "https://proxy-server-l6vsfbzhba-uw.a.run.app"
 
 
 class ProxyServer(LLM):
