@@ -33,7 +33,7 @@ class ProxyServer(LLM):
 
         async with aiohttp.ClientSession() as session:
             async with session.post(f"{SERVER_URL}/complete", json={
-                "messages": compile_chat_messages(args["model"], with_history, prompt, with_functions=False),
+                "messages": compile_chat_messages(args["model"], with_history, prompt, functions=None),
                 "unique_id": self.unique_id,
                 **args
             }) as resp:
@@ -45,7 +45,7 @@ class ProxyServer(LLM):
     async def stream_chat(self, messages: List[ChatMessage] = [], **kwargs) -> Coroutine[Any, Any, Generator[Union[Any, List, Dict], None, None]]:
         args = self.default_args | kwargs
         messages = compile_chat_messages(
-            self.default_model, messages, None, with_functions=args["model"].endswith("0613"))
+            self.default_model, messages, None, functions=args.get("functions", None))
 
         async with aiohttp.ClientSession() as session:
             async with session.post(f"{SERVER_URL}/stream_chat", json={
@@ -59,14 +59,17 @@ class ProxyServer(LLM):
                         try:
                             json_chunk = line[0].decode("utf-8")
                             json_chunk = "{}" if json_chunk == "" else json_chunk
-                            yield json.loads(json_chunk)
+                            chunks = json_chunk.split("\n")
+                            for chunk in chunks:
+                                if chunk.strip() != "":
+                                    yield json.loads(chunk)
                         except:
                             raise Exception(str(line[0]))
 
     async def stream_complete(self, prompt, with_history: List[ChatMessage] = [], **kwargs) -> Generator[Union[Any, List, Dict], None, None]:
         args = self.default_args | kwargs
         messages = compile_chat_messages(
-            self.default_model, with_history, prompt, with_functions=args["model"].endswith("0613"))
+            self.default_model, with_history, prompt, functions=args.get("functions", None))
 
         async with aiohttp.ClientSession() as session:
             async with session.post(f"{SERVER_URL}/stream_complete", json={

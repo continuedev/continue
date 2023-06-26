@@ -10,7 +10,7 @@ from ...models.filesystem_edit import EditDiff, FileEdit, FileEditWithFullConten
 from ...models.filesystem import FileSystem, RangeInFile, RangeInFileWithContents
 from ...core.observation import Observation, TextObservation, TracebackObservation, UserInputObservation
 from ...core.main import Step, SequentialStep
-from ...libs.util.count_tokens import MAX_TOKENS_FOR_MODEL
+from ...libs.util.count_tokens import MAX_TOKENS_FOR_MODEL, DEFAULT_MAX_TOKENS
 import difflib
 
 
@@ -211,13 +211,17 @@ class DefaultModelEditCodeStep(Step):
 
                 return cur_start_line, cur_end_line
 
+            # We don't know here all of the functions being passed in.
+            # We care because if this prompt itself goes over the limit, then the entire message will have to be cut from the completion.
+            # Overflow won't happen, but prune_chat_messages in count_tokens.py will cut out this whole thing, instead of us cutting out only as many lines as we need.
+            BUFFER_FOR_FUNCTIONS = 200
+            total_tokens = model_to_use.count_tokens(
+                full_file_contents + self._prompt + self.user_input) + DEFAULT_MAX_TOKENS + BUFFER_FOR_FUNCTIONS
+
             model_to_use = sdk.models.default
             if model_to_use.name == "gpt-3.5-turbo":
-                if sdk.models.gpt35.count_tokens(full_file_contents) > MAX_TOKENS_FOR_MODEL["gpt-3.5-turbo"]:
+                if total_tokens > MAX_TOKENS_FOR_MODEL["gpt-3.5-turbo"]:
                     model_to_use = sdk.models.gpt3516k
-
-            total_tokens = model_to_use.count_tokens(
-                full_file_contents + self._prompt + self.user_input)
 
             cur_start_line, cur_end_line = cut_context(
                 model_to_use, total_tokens, cur_start_line, cur_end_line)
