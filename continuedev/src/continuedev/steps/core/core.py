@@ -284,7 +284,7 @@ class DefaultModelEditCodeStep(Step):
         liness_deleted_in_this_block = 0
         lines_same_in_this_block = 0
 
-        async def insert_line(line: str, line_no: int, color: Literal{"red", "green"}):
+        async def insert_line(line: str, line_no: int, color: Literal["red", "green"]):
             if color == "green":
                 range = Range.from_shorthand(
                     line_no, 0, line_no, 0)
@@ -307,7 +307,7 @@ class DefaultModelEditCodeStep(Step):
                 await sdk.ide.applyFileSystemEdit(FileEdit(
                     filepath=rif.filepath,
                     range=Range.from_shorthand(
-                        current_block_start_of_insertion, 0, current_block_start_of_insertion + len(current_block), 0),
+                        current_block_start_of_insertion, 0, current_block_start_of_insertion + len(current_block_added), 0),
                     replacement=""
                 ))
 
@@ -316,36 +316,45 @@ class DefaultModelEditCodeStep(Step):
                     filepath=rif.filepath,
                     range=Range.from_shorthand(
                         current_block_start_of_insertion, 0, end_line, 0),
-                    replacement="\n".join(current_block) + "\n"
+                    replacement="\n".join(current_block_added) + "\n"
                 ))
-                current_line_in_file = end_line + \
-                    len(current_block) + 1  # CURRENTLY TODO HERE NOTE
-                offset_from_blocks += len(current_block)
-                current_block.clear()
             else:
                 # Ends in green, so if you want to delete the lines before the matched line, you need to start a new block.
-                current_block = [
-                    line for line in original_lines[]
-                ]
+                pass
+                # current_block = [
+                #     line for line in original_lines[]
+                # ]
 
+            current_line_in_file = end_line + \
+                len(current_block_added) + 1  # CURRENTLY TODO HERE NOTE
+            offset_from_blocks += len(current_block_added)
+            current_block_added.clear()
+            current_block_removed.clear()
 
         async def add_green_to_block(line: str):
             # Keep track of where the first inserted line in this block came from
-            nonlocal current_block_start_of_insertion
+            nonlocal current_block_start_of_insertion, current_block_added
             if current_block_start_of_insertion < 0:
                 current_block_start_of_insertion = current_line_in_file
 
             # Insert the line, highlight green
-            await insert_line(line, current_line_in_file)
-            current_block.append(line)
+            await insert_line(line, current_line_in_file, "green")
+            current_block_added.append(line)
+            range = Range.from_shorthand(
+                current_line_in_file, 0, current_line_in_file, 0)
+            await sdk.ide.highlightCode(RangeInFile(filepath=rif.filepath, range=range), "#00FF0022")
 
         async def add_red_to_block(line: str):
-            await insert_line()
+            # Highlight the current line red and insert
+            current_block_removed.append(line)
+            range = Range.from_shorthand(
+                current_line_in_file, 0, current_line_in_file, 0)
+            await sdk.ide.highlightCode(RangeInFile(filepath=rif.filepath, range=range), "#FF000022")
 
         def line_matches_something_in_original(line: str) -> bool:
             nonlocal offset_from_blocks, last_matched_line, matched_line, lines_covered_in_this_block
             diff = list(filter(lambda x: not x.startswith("?"), difflib.ndiff(
-                original_lines[matched_line:], current_block + [line])))
+                original_lines[matched_line:], current_block_added + [line])))
 
             i = current_line_in_file
             if diff[i][0] == " ":
@@ -389,7 +398,7 @@ class DefaultModelEditCodeStep(Step):
 
             # Get the diff of current block and the original
             diff = list(filter(lambda x: not x.startswith("?"), difflib.ndiff(
-                original_lines[matched_line:], current_block_added + [line])))
+                original_lines, lines + [line])))
             next_diff_char = diff[current_line_in_file][0]
 
             # If we need to start a new block, end the old one
@@ -405,6 +414,10 @@ class DefaultModelEditCodeStep(Step):
             elif next_diff_char == "+":
                 # Line was added to the original, add it to the block
                 await add_green_to_block(line)
+
+            elif next_diff_char == " ":
+                # Line was unchanged, and didn't have to end a block
+                pass
 
             else:
                 raise Exception("Unexpected diff character: " +
@@ -468,7 +481,7 @@ class DefaultModelEditCodeStep(Step):
             # await sdk.ide.highlightCode(RangeInFile(filepath=rif.filepath, range=range), "#FF000022")
 
         # If the current block isn't empty, add that suggestion
-        if len(current_block) > 0:
+        if len(current_block_added) > 0 or len(current_block_removed) > 0:
             matched_line = rif.range.end.line - rif.range.start.line
             await show_block_as_suggestion()
 
