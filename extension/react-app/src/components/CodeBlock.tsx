@@ -22,7 +22,7 @@ const StyledCopyButton = styled.button<{ visible: boolean }>`
   /* position: relative; */
   float: right;
   border: none;
-  background-color: transparent;
+  background-color: ${secondaryDark};
   cursor: pointer;
   padding: 0;
   /* margin: 4px; */
@@ -77,7 +77,10 @@ function CodeBlock(props: { language?: string; children: string }) {
         setHovered(false);
       }}
     >
-      <CopyButton visible={hovered} textToCopy={props.children} />
+      <CopyButton
+        visible={hovered}
+        textToCopy={(props.children as any).props.children[0]}
+      />
       <StyledCode>{props.children}</StyledCode>
     </StyledPre>
   );

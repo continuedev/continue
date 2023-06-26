@@ -10,7 +10,7 @@ from ...models.filesystem_edit import EditDiff, FileEdit, FileEditWithFullConten
 from ...models.filesystem import FileSystem, RangeInFile, RangeInFileWithContents
 from ...core.observation import Observation, TextObservation, TracebackObservation, UserInputObservation
 from ...core.main import Step, SequentialStep
-from ...libs.llm.openai import MAX_TOKENS_FOR_MODEL
+from ...libs.util.count_tokens import MAX_TOKENS_FOR_MODEL, DEFAULT_MAX_TOKENS
 import difflib
 
 
@@ -116,37 +116,39 @@ class DefaultModelEditCodeStep(Step):
     name: str = "Editing Code"
     hide = False
     _prompt: str = dedent("""\
-        Take the file prefix and suffix into account, but only rewrite the commit before as specified in the commit message. Here's an example:
+        Take the file prefix and suffix into account, but only rewrite the code_to_edit as specified in the user_request. The code you write in modified_code_to_edit will replace the code between the code_to_edit tags. Do NOT preface your answer or write anything other than code. The </modified_code_to_edit> tag should be written to indicate the end of the modified code section. Do not ever use nested tags.
+
+        Example:
 
         <file_prefix>
-        a = 5
-        b = 4
+        class Database:
+            def __init__(self):
+                self._data = {{}}
+            
+            def get(self, key):
+                return self._data[key]
 
+        </file_prefix>
+        <code_to_edit>
+            def set(self, key, value):
+                self._data[key] = value
+        </code_to_edit>
         <file_suffix>
 
-        def mul(a, b):
-            return a * b
-        <commit_before>
-        def sum():
-            return a + b
-        <commit_msg>
-        Make a and b parameters of sum
-        <commit_after>
-        def sum(a, b):
-            return a + b
-        <|endoftext|>
+            def clear_all():
+                self._data = {{}}
+        </file_suffix>
+        <user_request>
+        Raise an error if the key already exists.
+        </user_request>
+        <modified_code_to_edit>
+            def set(self, key, value):
+                if key in self._data:
+                    raise KeyError(f"Key {{key}} already exists")
+                self._data[key] = value
+        </modified_code_to_edit>
 
-        Now complete the real thing. Do NOT rewrite the prefix or suffix. You are only to write the code that goes in "commit_after".
-
-        <file_prefix>
-        {file_prefix}
-        <file_suffix>
-        {file_suffix}
-        <commit_before>
-        {code}
-        <commit_msg>
-        {user_request}
-        <commit_after>
+        Main task:
         """)
 
     _prompt_and_completion: str = ""
@@ -154,14 +156,19 @@ class DefaultModelEditCodeStep(Step):
     async def describe(self, models: Models) -> Coroutine[str, None, None]:
         description = await models.gpt35.complete(
             f"{self._prompt_and_completion}\n\nPlease give brief a description of the changes made above using markdown bullet points. Be concise and only mention changes made to the commit before, not prefix or suffix:")
-        return description
+        self.name = await models.gpt35.complete(f"Write a very short title to describe this requested change: '{self.user_input}'. This is the title:")
+        return f"`{self.user_input}`\n\n" + description
 
     async def run(self, sdk: ContinueSDK) -> Coroutine[Observation, None, None]:
-        self.name = self.user_input
+        self.description = f"{self.user_input}"
         await sdk.update_ui()
 
         rif_with_contents = []
-        for range_in_file in self.range_in_files:
+        for range_in_file in map(lambda x: RangeInFile(
+            filepath=x.filepath,
+            # Only consider the range line-by-line. Maybe later don't if it's only a single line.
+            range=x.range.to_full_lines()
+        ), self.range_in_files):
             file_contents = await sdk.ide.readRangeInFile(range_in_file)
             rif_with_contents.append(
                 RangeInFileWithContents.from_range_in_file(range_in_file, file_contents))
@@ -174,7 +181,7 @@ class DefaultModelEditCodeStep(Step):
             await sdk.ide.setFileOpen(rif.filepath)
 
             model_to_use = sdk.models.default
-            
+
             full_file_contents = await sdk.ide.readFile(rif.filepath)
 
             full_file_contents_lst = full_file_contents.split("\n")
@@ -185,60 +192,178 @@ class DefaultModelEditCodeStep(Step):
             cur_end_line = len(full_file_contents_lst) - 1
 
             def cut_context(model_to_use, total_tokens, cur_start_line, cur_end_line):
-                        
+
                 if total_tokens > MAX_TOKENS_FOR_MODEL[model_to_use.name]:
                     while cur_end_line > min_end_line:
-                        total_tokens -= model_to_use.count_tokens(full_file_contents_lst[cur_end_line])
+                        total_tokens -= model_to_use.count_tokens(
+                            full_file_contents_lst[cur_end_line])
                         cur_end_line -= 1
                         if total_tokens < MAX_TOKENS_FOR_MODEL[model_to_use.name]:
                             return cur_start_line, cur_end_line
-                    
+
                     if total_tokens > MAX_TOKENS_FOR_MODEL[model_to_use.name]:
                         while cur_start_line < max_start_line:
                             cur_start_line += 1
-                            total_tokens -= model_to_use.count_tokens(full_file_contents_lst[cur_end_line])
+                            total_tokens -= model_to_use.count_tokens(
+                                full_file_contents_lst[cur_end_line])
                             if total_tokens < MAX_TOKENS_FOR_MODEL[model_to_use.name]:
                                 return cur_start_line, cur_end_line
-                            
+
                 return cur_start_line, cur_end_line
 
-            if model_to_use.name == "gpt-4":
+            # We don't know here all of the functions being passed in.
+            # We care because if this prompt itself goes over the limit, then the entire message will have to be cut from the completion.
+            # Overflow won't happen, but prune_chat_messages in count_tokens.py will cut out this whole thing, instead of us cutting out only as many lines as we need.
+            BUFFER_FOR_FUNCTIONS = 200
+            total_tokens = model_to_use.count_tokens(
+                full_file_contents + self._prompt + self.user_input) + DEFAULT_MAX_TOKENS + BUFFER_FOR_FUNCTIONS
 
-                total_tokens = model_to_use.count_tokens(full_file_contents)
-                cur_start_line, cur_end_line = cut_context(model_to_use, total_tokens, cur_start_line, cur_end_line)
-
-            elif model_to_use.name  == "gpt-3.5-turbo" or model_to_use.name == "gpt-3.5-turbo-16k":
-
-                if sdk.models.gpt35.count_tokens(full_file_contents) > MAX_TOKENS_FOR_MODEL["gpt-3.5-turbo"]:
-
+            model_to_use = sdk.models.default
+            if model_to_use.name == "gpt-3.5-turbo":
+                if total_tokens > MAX_TOKENS_FOR_MODEL["gpt-3.5-turbo"]:
                     model_to_use = sdk.models.gpt3516k
-                    total_tokens = model_to_use.count_tokens(full_file_contents)
-                    cur_start_line, cur_end_line = cut_context(model_to_use, total_tokens, cur_start_line, cur_end_line)
 
-            else:
+            cur_start_line, cur_end_line = cut_context(
+                model_to_use, total_tokens, cur_start_line, cur_end_line)
 
-                raise Exception("Unknown default model")
-                      
-            code_before = "".join(full_file_contents_lst[cur_start_line:max_start_line])
-            code_after = "".join(full_file_contents_lst[min_end_line:cur_end_line])
+            code_before = "\n".join(
+                full_file_contents_lst[cur_start_line:max_start_line])
+            code_after = "\n".join(
+                full_file_contents_lst[min_end_line:cur_end_line - 1])
 
             segs = [code_before, code_after]
+            if segs[0].strip() == "":
+                segs[0] = segs[0].strip()
+            if segs[1].strip() == "":
+                segs[1] = segs[1].strip()
 
-            prompt = self._prompt.format(
-                code=rif.contents, user_request=self.user_input, file_prefix=segs[0], file_suffix=segs[1])
+            # Move any surrounding blank line in rif.contents to the prefix/suffix
+            if len(rif.contents) > 0:
+                first_line = rif.contents.splitlines(keepends=True)[0]
+                while first_line.strip() == "":
+                    segs[0] += first_line
+                    rif.contents = rif.contents[len(first_line):]
+                    first_line = rif.contents.splitlines(keepends=True)[0]
 
-            completion = str(await model_to_use.complete(prompt, with_history=await sdk.get_chat_context()))
+                last_line = rif.contents.splitlines(keepends=True)[-1]
+                while last_line.strip() == "":
+                    segs[1] = last_line + segs[1]
+                    rif.contents = rif.contents[:len(
+                        rif.contents) - len(last_line)]
+                    last_line = rif.contents.splitlines(keepends=True)[-1]
 
-            eot_token = "<|endoftext|>"
-            completion = completion.removesuffix(eot_token)
+                while rif.contents.startswith("\n"):
+                    segs[0] += "\n"
+                    rif.contents = rif.contents[1:]
+                while rif.contents.endswith("\n"):
+                    segs[1] = "\n" + segs[1]
+                    rif.contents = rif.contents[:-1]
 
-            # Remove tags and If it accidentally includes prefix or suffix, remove it
-            if completion.strip().startswith("```"):
-                completion = completion.strip().removeprefix("```").removesuffix("```")
-            completion = completion.replace("<file_prefix>", "").replace("<file_suffix>", "").replace(
-                "<commit_before>", "").replace("<commit_msg>", "").replace("<commit_after>", "")
-            completion = completion.removeprefix(segs[0])
-            completion = completion.removesuffix(segs[1])
+            # .format(code=rif.contents, user_request=self.user_input, file_prefix=segs[0], file_suffix=segs[1])
+            prompt = self._prompt
+            if segs[0].strip() != "":
+                prompt += dedent(f"""
+<file_prefix>
+{segs[0]}
+</file_prefix>""")
+            prompt += dedent(f"""
+<code_to_edit>
+{rif.contents}
+</code_to_edit>""")
+            if segs[1].strip() != "":
+                prompt += dedent(f"""
+<file_suffix>
+{segs[1]}
+</file_suffix>""")
+            prompt += dedent(f"""
+<user_request>
+{self.user_input}
+</user_request>
+<modified_code_to_edit>
+""")
+
+            lines = []
+            unfinished_line = ""
+            i = 0
+            original_lines = rif.contents.split("\n")
+
+            async def add_line(i: int, line: str):
+                if i == 0:
+                    # First line indentation, because the model will assume that it is replacing in this way
+                    line = original_lines[0].replace(
+                        original_lines[0].strip(), "") + line
+
+                if i < len(original_lines):
+                    # Replace original line
+                    range = Range.from_shorthand(
+                        rif.range.start.line + i, rif.range.start.character if i == 0 else 0, rif.range.start.line + i + 1, 0)
+                else:
+                    # Insert a line
+                    range = Range.from_shorthand(
+                        rif.range.start.line + i, 0, rif.range.start.line + i, 0)
+
+                await sdk.ide.applyFileSystemEdit(FileEdit(
+                    filepath=rif.filepath,
+                    range=range,
+                    replacement=line + "\n"
+                ))
+
+            lines_of_prefix_copied = 0
+            line_below_highlighted_range = segs[1].lstrip().split("\n")[0]
+            should_stop = False
+            async for chunk in model_to_use.stream_complete(prompt, with_history=await sdk.get_chat_context(), temperature=0):
+                if should_stop:
+                    break
+                chunk_lines = chunk.split("\n")
+                chunk_lines[0] = unfinished_line + chunk_lines[0]
+                if chunk.endswith("\n"):
+                    unfinished_line = ""
+                    chunk_lines.pop()  # because this will be an empty string
+                else:
+                    unfinished_line = chunk_lines.pop()
+                lines.extend(chunk_lines)
+
+                for line in chunk_lines:
+                    if "</modified_code_to_edit>" in line:
+                        break
+                    elif "```" in line or "<modified_code_to_edit>" in line or "<file_prefix>" in line or "</file_prefix>" in line or "<file_suffix>" in line or "</file_suffix>" in line or "<user_request>" in line or "</user_request>" in line or "<code_to_edit>" in line or "</code_to_edit>" in line:
+                        continue
+                    elif (lines_of_prefix_copied > 0 or i == 0) and lines_of_prefix_copied < len(segs[0].splitlines()) and line == full_file_contents_lst[lines_of_prefix_copied]:
+                        # This is a sketchy way of stopping it from repeating the file_prefix. Is a bug if output happens to have a matching line
+                        lines_of_prefix_copied += 1
+                        continue
+                    elif i < len(original_lines) and line == original_lines[i]:
+                        i += 1
+                        continue
+                    # Because really short lines might be expected to be repeated !heuristic!
+                    elif line.strip() == line_below_highlighted_range.strip() and len(line.strip()) > 4:
+                        should_stop = True
+                        break
+                    await add_line(i, line)
+                    i += 1
+
+            # Add the unfinished line
+            if unfinished_line != "":
+                unfinished_line = unfinished_line.replace(
+                    "</modified_code_to_edit>", "").replace("</code_to_edit>", "").replace("```", "").replace("</file_suffix>", "").replace("</file_prefix", "").replace(
+                    "<modified_code_to_edit>", "").replace("<code_to_edit>", "").replace("<file_suffix>", "").replace("<file_prefix", "")
+                if not i < len(original_lines) or not unfinished_line == original_lines[i]:
+                    await add_line(i, unfinished_line)
+                lines.append(unfinished_line)
+                i += 1
+
+            # Remove the leftover original lines
+            while i < len(original_lines):
+                range = Range.from_shorthand(
+                    rif.range.start.line + i, rif.range.start.character, rif.range.start.line + i, len(original_lines[i]) + 1)
+                await sdk.ide.applyFileSystemEdit(FileEdit(
+                    filepath=rif.filepath,
+                    range=range,
+                    replacement=""
+                ))
+                i += 1
+
+            completion = "\n".join(lines)
 
             self._prompt_and_completion += prompt + completion
 
@@ -256,16 +381,10 @@ class DefaultModelEditCodeStep(Step):
                 elif line.startswith(" "):
                     index += 1
 
-            await sdk.ide.applyFileSystemEdit(FileEdit(
-                filepath=rif.filepath,
-                range=rif.range,
-                replacement=completion
-            ))
-
             current_hl_start = None
             last_hl = None
             rifs_to_highlight = []
-            for line in sorted(list(lines_to_highlight)):
+            for line in lines_to_highlight:
                 if current_hl_start is None:
                     current_hl_start = line
                 elif line != last_hl + 1:

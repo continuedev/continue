@@ -85,9 +85,5 @@ class AbstractContinueSDK(ABC):
         pass
 
     @abstractmethod
-    def add_chat_context(self, content: str, role: ChatMessageRole = "assistant"):
-        pass
-
-    @abstractmethod
     async def get_chat_context(self) -> List[ChatMessage]:
         pass

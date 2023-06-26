@@ -15,7 +15,7 @@ from ..recipes.WritePytestsRecipe.main import WritePytestsRecipe
 from ..recipes.ContinueRecipeRecipe.main import ContinueStepStep
 from ..steps.comment_code import CommentCodeStep
 from ..steps.react import NLDecisionStep
-from ..steps.chat import SimpleChatStep
+from ..steps.chat import SimpleChatStep, ChatWithFunctions, EditFileStep, AddFileStep
 from ..recipes.DDtoBQRecipe.main import DDtoBQRecipe
 from ..steps.core.core import MessageStep
 from ..libs.util.step_name_to_steps import get_step_from_name
@@ -28,7 +28,7 @@ class DemoPolicy(Policy):
         # At the very start, run initial Steps spcecified in the config
         if history.get_current() is None:
             return (
-                MessageStep(name="Welcome to Continue!", message=dedent("""\
+                MessageStep(name="Welcome to Continue", message=dedent("""\
                     Type '/' to see the list of available slash commands. If you highlight code, edits and explanations will be localized to the highlighted range. Otherwise, the currently open file is used. In both cases, the code is combined with the previous steps to construct the context.""")) >>
                 WelcomeStep() >>
                 # SetupContinueWorkspaceStep() >>
@@ -50,6 +50,7 @@ class DemoPolicy(Policy):
                         return get_step_from_name(slash_command.step_name, params)
 
             # return EditHighlightedCodeStep(user_input=user_input)
+            return ChatWithFunctions(user_input=user_input)
             return NLDecisionStep(user_input=user_input, steps=[
                 (EditHighlightedCodeStep(user_input=user_input),
                  "Edit the highlighted code"),

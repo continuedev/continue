@@ -8,7 +8,9 @@ We use [Posthog](https://posthog.com/), an open source platform for product anal
 
 ## What we track
 
-We track the steps that are run and their parameters.
+We track 
+- the steps that are run and their parameters
+- if the data contribution toggle is switched on / off
 
 ## How to opt out
 

@@ -1,7 +1,7 @@
 import os
 from typing import Coroutine, List, Union
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from ..libs.llm import LLM
 from ..models.main import Traceback, Range
@@ -246,8 +246,10 @@ class StarCoderEditHighlightedCodeStep(Step):
 
 
 class EditHighlightedCodeStep(Step):
-    user_input: str
+    user_input: str = Field(
+        ..., title="User Input", description="The natural language request describing how to edit the code")
     hide = True
+    description: str = "Change the contents of the currently highlighted code or open file"
 
     async def describe(self, models: Models) -> Coroutine[str, None, None]:
         return "Editing code"

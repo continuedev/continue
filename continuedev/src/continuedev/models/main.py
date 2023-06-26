@@ -76,6 +76,12 @@ class Range(BaseModel):
     def overlaps_with(self, other: "Range") -> bool:
         return not (self.end < other.start or self.start > other.end)
 
+    def to_full_lines(self) -> "Range":
+        return Range(
+            start=Position(line=self.start.line, character=0),
+            end=Position(line=self.end.line + 1, character=0)
+        )
+
     @staticmethod
     def from_indices(string: str, start_index: int, end_index: int) -> "Range":
         return Range(
