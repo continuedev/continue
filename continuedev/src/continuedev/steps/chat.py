@@ -136,7 +136,7 @@ class ChatWithFunctions(Step):
 
         self.chat_context.append(ChatMessage(
             role="user",
-            content=self.user_input + "\n**DO NOT EVER call the 'python' function.**",
+            content=self.user_input,
             summary=self.user_input
         ))
 
