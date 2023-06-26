@@ -77,54 +77,67 @@ function checkEnvExists() {
   );
 }
 
+function checkRequirementsInstalled() {
+  return fs.existsSync(
+    path.join(getExtensionUri().fsPath, "scripts", ".continue_env_installed")
+  );
+}
+
 async function setupPythonEnv() {
   console.log("Setting up python env for Continue extension...");
 
-  if (checkEnvExists()) return;
-
-  // Assemble the command to create the env
   const [pythonCmd, pipCmd] = await getPythonPipCommands();
   const [activateCmd, pipUpgradeCmd] = getActivateUpgradeCommands(
     pythonCmd,
     pipCmd
   );
-  const createEnvCommand = [
-    `cd ${path.join(getExtensionUri().fsPath, "scripts")}`,
-    `${pythonCmd} -m venv env`,
-  ].join("; ");
+  if (checkEnvExists()) {
+    console.log("Python env already exists, skipping...");
+  } else {
+    // Assemble the command to create the env
+    const createEnvCommand = [
+      `cd ${path.join(getExtensionUri().fsPath, "scripts")}`,
+      `${pythonCmd} -m venv env`,
+    ].join("; ");
 
-  // Repeat until it is successfully created (sometimes it fails to generate the bin, need to try again)
-  while (true) {
-    const [, stderr] = await runCommand(createEnvCommand);
+    // Repeat until it is successfully created (sometimes it fails to generate the bin, need to try again)
+    while (true) {
+      const [, stderr] = await runCommand(createEnvCommand);
+      if (stderr) {
+        throw new Error(stderr);
+      }
+      if (checkEnvExists()) {
+        break;
+      } else {
+        // Remove the env and try again
+        const removeCommand = `rm -rf ${path.join(
+          getExtensionUri().fsPath,
+          "scripts",
+          "env"
+        )}`;
+        await runCommand(removeCommand);
+      }
+    }
+    console.log(
+      "Successfully set up python env at ",
+      getExtensionUri().fsPath + "/scripts/env"
+    );
+  }
+
+  if (checkRequirementsInstalled()) {
+    console.log("Python requirements already installed, skipping...");
+  } else {
+    const installRequirementsCommand = [
+      `cd ${path.join(getExtensionUri().fsPath, "scripts")}`,
+      activateCmd,
+      pipUpgradeCmd,
+      `${pipCmd} install -r requirements.txt`,
+      "touch .continue_env_installed",
+    ].join(" ; ");
+    const [, stderr] = await runCommand(installRequirementsCommand);
     if (stderr) {
       throw new Error(stderr);
     }
-    if (checkEnvExists()) {
-      break;
-    } else {
-      // Remove the env and try again
-      const removeCommand = `rm -rf ${path.join(
-        getExtensionUri().fsPath,
-        "scripts",
-        "env"
-      )}`;
-      await runCommand(removeCommand);
-    }
-  }
-  console.log(
-    "Successfully set up python env at ",
-    getExtensionUri().fsPath + "/scripts/env"
-  );
-
-  const installRequirementsCommand = [
-    `cd ${path.join(getExtensionUri().fsPath, "scripts")}`,
-    activateCmd,
-    pipUpgradeCmd,
-    `${pipCmd} install -r requirements.txt`,
-  ].join(" ; ");
-  const [, stderr] = await runCommand(installRequirementsCommand);
-  if (stderr) {
-    throw new Error(stderr);
   }
 }
 
