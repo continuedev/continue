@@ -55,6 +55,10 @@ class ContinueGUIClientProtocol extends AbstractContinueGUIClientProtocol {
     });
   }
 
+  changeDefaultModel(model: string) {
+    this.messenger.send("change_default_model", { model });
+  }
+
   sendClear() {
     this.messenger.send("clear_history", {});
   }

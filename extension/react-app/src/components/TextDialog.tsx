@@ -15,6 +15,7 @@ const DialogContainer = styled.div`
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
+  width: 75%;
 `;
 
 const Dialog = styled.div`
@@ -76,7 +77,6 @@ const TextDialog = (props: {
         <Dialog>
           <P>Thanks for your feedback. We'll get back to you soon!</P>
           <TextArea
-            cols={50}
             rows={10}
             ref={textAreaRef}
             onKeyDown={(e) => {

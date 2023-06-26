@@ -100,7 +100,7 @@ class FileSystem(AbstractModel):
 
     @classmethod
     def read_range_in_str(self, s: str, r: Range) -> str:
-        lines = s.splitlines()[r.start.line:r.end.line + 1]
+        lines = s.split("\n")[r.start.line:r.end.line + 1]
         if len(lines) == 0:
             return ""
 

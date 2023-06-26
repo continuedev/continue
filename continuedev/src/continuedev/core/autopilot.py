@@ -2,6 +2,8 @@ from functools import cached_property
 import traceback
 import time
 from typing import Any, Callable, Coroutine, Dict, List
+
+from aiohttp import ClientPayloadError
 from ..models.filesystem_edit import FileEditWithFullContents
 from ..libs.llm import LLM
 from .observation import Observation, InternalErrorObservation
@@ -15,6 +17,21 @@ from .sdk import ContinueSDK
 import asyncio
 from ..libs.util.step_name_to_steps import get_step_from_name
 from ..libs.util.traceback_parsers import get_python_traceback, get_javascript_traceback
+from openai import error as openai_errors
+
+
+def get_error_title(e: Exception) -> str:
+    if isinstance(e, openai_errors.APIError):
+        return "OpenAI is overloaded with requests. Please try again."
+    elif isinstance(e, openai_errors.RateLimitError):
+        return "This OpenAI API key has been rate limited. Please try again."
+    elif isinstance(e, openai_errors.Timeout):
+        return "OpenAI timed out. Please try again."
+    elif isinstance(e, openai_errors.InvalidRequestError) and e.code == "context_length_exceeded":
+        return e._message
+    elif isinstance(e, ClientPayloadError):
+        return "The request to OpenAI failed. Please try again."
+    return e.__repr__()
 
 
 class Autopilot(ContinueBaseModel):
@@ -40,10 +57,13 @@ class Autopilot(ContinueBaseModel):
         keep_untouched = (cached_property,)
 
     def get_full_state(self) -> FullState:
-        return FullState(history=self.history, active=self._active, user_input_queue=self._main_user_input_queue)
+        return FullState(history=self.history, active=self._active, user_input_queue=self._main_user_input_queue, default_model=self.continue_sdk.config.default_model)
 
     async def get_available_slash_commands(self) -> List[Dict]:
         return list(map(lambda x: {"name": x.name, "description": x.description}, self.continue_sdk.config.slash_commands)) or []
+
+    async def change_default_model(self, model: str):
+        self.continue_sdk.update_default_model(model)
 
     async def clear_history(self):
         self.history = History.from_empty()
@@ -105,6 +125,7 @@ class Autopilot(ContinueBaseModel):
     _step_depth: int = 0
 
     async def retry_at_index(self, index: int):
+        self.history.timeline[index].step.hide = True
         self._retry_queue.post(str(index), None)
 
     async def delete_at_index(self, index: int):
@@ -162,7 +183,8 @@ class Autopilot(ContinueBaseModel):
 
             error_string = e.message if is_continue_custom_exception else '\n\n'.join(
                 traceback.format_tb(e.__traceback__)) + f"\n\n{e.__repr__()}"
-            error_title = e.title if is_continue_custom_exception else e.__repr__()
+            error_title = e.title if is_continue_custom_exception else get_error_title(
+                e)
 
             # Attach an InternalErrorObservation to the step and unhide it.
             print(f"Error while running step: \n{error_string}\n{error_title}")
@@ -181,6 +203,7 @@ class Autopilot(ContinueBaseModel):
 
             # i is now the index of the step that we want to show/rerun
             self.history.timeline[i].observation = observation
+            self.history.timeline[i].active = False
 
             await self.update_subscribers()
 
@@ -205,16 +228,16 @@ class Autopilot(ContinueBaseModel):
         # Add observation to history, unless already attached error observation
         if not caught_error:
             self.history.timeline[index_of_history_node].observation = observation
+            self.history.timeline[index_of_history_node].active = False
             await self.update_subscribers()
 
         # Update its description
-        if step.description is None:
-            async def update_description():
-                step.description = await step.describe(self.continue_sdk.models)
-                # Update subscribers with new description
-                await self.update_subscribers()
+        async def update_description():
+            step.description = await step.describe(self.continue_sdk.models)
+            # Update subscribers with new description
+            await self.update_subscribers()
 
-            asyncio.create_task(update_description())
+        asyncio.create_task(update_description())
 
         return observation
 

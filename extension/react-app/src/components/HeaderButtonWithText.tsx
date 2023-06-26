@@ -6,14 +6,20 @@ interface HeaderButtonWithTextProps {
   text: string;
   onClick?: (e: any) => void;
   children: React.ReactNode;
+  disabled?: boolean;
 }
 
 const HeaderButtonWithText = (props: HeaderButtonWithTextProps) => {
   const [hover, setHover] = useState(false);
   return (
     <HeaderButton
-      style={{ padding: "3px" }}
-      onMouseEnter={() => setHover(true)}
+      disabled={props.disabled}
+      style={{ padding: "1px", paddingLeft: hover ? "4px" : "1px" }}
+      onMouseEnter={() => {
+        if (!props.disabled) {
+          setHover(true);
+        }
+      }}
       onMouseLeave={() => {
         setHover(false);
       }}
