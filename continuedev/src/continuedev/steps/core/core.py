@@ -211,26 +211,16 @@ class DefaultModelEditCodeStep(Step):
 
                 return cur_start_line, cur_end_line
 
-            if model_to_use.name == "gpt-4":
-
-                total_tokens = model_to_use.count_tokens(
-                    full_file_contents + self._prompt)
-                cur_start_line, cur_end_line = cut_context(
-                    model_to_use, total_tokens, cur_start_line, cur_end_line)
-
-            elif model_to_use.name == "gpt-3.5-turbo" or model_to_use.name == "gpt-3.5-turbo-16k":
-
+            model_to_use = sdk.models.default
+            if model_to_use.name == "gpt-3.5-turbo":
                 if sdk.models.gpt35.count_tokens(full_file_contents) > MAX_TOKENS_FOR_MODEL["gpt-3.5-turbo"]:
-
                     model_to_use = sdk.models.gpt3516k
-                    total_tokens = model_to_use.count_tokens(
-                        full_file_contents + self._prompt)
-                    cur_start_line, cur_end_line = cut_context(
-                        model_to_use, total_tokens, cur_start_line, cur_end_line)
 
-            else:
+            total_tokens = model_to_use.count_tokens(
+                full_file_contents + self._prompt + self.user_input)
 
-                raise Exception("Unknown default model")
+            cur_start_line, cur_end_line = cut_context(
+                model_to_use, total_tokens, cur_start_line, cur_end_line)
 
             code_before = "\n".join(
                 full_file_contents_lst[cur_start_line:max_start_line])

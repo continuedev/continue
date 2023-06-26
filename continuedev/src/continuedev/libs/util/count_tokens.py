@@ -28,6 +28,16 @@ def count_tokens(model: str, text: str | None):
     return len(encoding.encode(text, disallowed_special=()))
 
 
+def prune_raw_prompt_from_top(model: str, prompt: str):
+    max_tokens = MAX_TOKENS_FOR_MODEL.get(model, DEFAULT_MAX_TOKENS)
+    encoding = encoding_for_model(model)
+    tokens = encoding.encode(prompt, disallowed_special=())
+    if len(tokens) <= max_tokens:
+        return prompt
+    else:
+        return encoding.decode(tokens[-max_tokens:])
+
+
 def prune_chat_history(model: str, chat_history: List[ChatMessage], max_tokens: int, tokens_for_completion: int):
     total_tokens = tokens_for_completion + \
         sum(count_tokens(model, message.content)
@@ -43,13 +53,13 @@ def prune_chat_history(model: str, chat_history: List[ChatMessage], max_tokens: 
         i += 1
 
     # 2. Remove entire messages until the last 5
-    while len(chat_history) > 5 and total_tokens > max_tokens:
+    while len(chat_history) > 5 and total_tokens > max_tokens and len(chat_history) > 0:
         message = chat_history.pop(0)
         total_tokens -= count_tokens(model, message.content)
 
     # 3. Truncate message in the last 5
     i = 0
-    while total_tokens > max_tokens:
+    while total_tokens > max_tokens and len(chat_history) > 0:
         message = chat_history[0]
         total_tokens -= count_tokens(model, message.content)
         total_tokens += count_tokens(model, message.summary)
