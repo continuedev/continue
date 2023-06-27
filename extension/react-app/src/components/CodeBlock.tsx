@@ -5,28 +5,27 @@ import { defaultBorderRadius, secondaryDark, vscBackground } from ".";
 
 import { Clipboard, CheckCircle } from "@styled-icons/heroicons-outline";
 
+import StyledCode from "./StyledCode";
+
 const StyledPre = styled.pre`
   overflow-y: scroll;
   word-wrap: normal;
   border: 0.5px solid gray;
   border-radius: ${defaultBorderRadius};
   background-color: ${secondaryDark};
-  padding: 8px;
-  padding-top: 14px;
-  padding-bottom: 16px;
+  position: relative;
 `;
 
-const StyledCode = styled.code``;
+const CopyButtonDiv = styled.div`
+  position: absolute;
+  top: 4px;
+  right: 4px;
+`;
 
 const StyledCopyButton = styled.button<{ visible: boolean }>`
-  /* position: relative; */
-  float: right;
   border: none;
-  background-color: ${secondaryDark};
+  background-color: transparent;
   cursor: pointer;
-  padding: 0;
-  /* margin: 4px; */
-  margin-top: -6px;
 
   visibility: ${(props) => (props.visible ? "visible" : "hidden")};
 `;
@@ -62,9 +61,55 @@ function CopyButton(props: { textToCopy: string; visible: boolean }) {
   );
 }
 
-function CodeBlock(props: { language?: string; children: string }) {
+function CodeBlock(props: { children: string }) {
+  const [result, setResult] = useState<AutoHighlightResult | undefined>(
+    undefined
+  );
   useEffect(() => {
-    hljs.highlightAll();
+    const result = hljs.highlightAuto(
+      (props.children as any).props.children[0],
+      [
+        "python",
+        "javascript",
+        "typescript",
+        "bash",
+        "html",
+        "css",
+        "json",
+        "yaml",
+        "markdown",
+        "sql",
+        "java",
+        "c",
+        "cpp",
+        "csharp",
+        "go",
+        "kotlin",
+        "php",
+        "ruby",
+        "rust",
+        "scala",
+        "swift",
+        "dart",
+        "haskell",
+        "perl",
+        "r",
+        "matlab",
+        "powershell",
+        "lua",
+        "elixir",
+        "clojure",
+        "groovy",
+        "julia",
+        "vbnet",
+        "objectivec",
+        "fsharp",
+        "erlang",
+        "ocaml",
+      ]
+    );
+    console.log(result);
+    setResult(result);
   }, [props.children]);
   const [hovered, setHovered] = useState<boolean>(false);
 
@@ -77,11 +122,15 @@ function CodeBlock(props: { language?: string; children: string }) {
         setHovered(false);
       }}
     >
-      <CopyButton
-        visible={hovered}
-        textToCopy={(props.children as any).props.children[0]}
-      />
-      <StyledCode>{props.children}</StyledCode>
+      <CopyButtonDiv>
+        <CopyButton
+          visible={hovered}
+          textToCopy={(props.children as any).props.children[0]}
+        />
+      </CopyButtonDiv>
+      <StyledCode language={result?.language}>
+        {(props.children as any).props.children[0]}
+      </StyledCode>
     </StyledPre>
   );
 }

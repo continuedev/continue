@@ -37,9 +37,21 @@ export const configSlice = createSlice({
       ...state,
       sessionId: action.payload,
     }),
+    setVscMediaUrl: (
+      state: RootStore["config"],
+      action: { type: string; payload: string }
+    ) => ({
+      ...state,
+      vscMediaUrl: action.payload,
+    }),
   },
 });
 
-export const { setVscMachineId, setApiUrl, setWorkspacePath, setSessionId } =
-  configSlice.actions;
+export const {
+  setVscMachineId,
+  setApiUrl,
+  setWorkspacePath,
+  setSessionId,
+  setVscMediaUrl,
+} = configSlice.actions;
 export default configSlice.reducer;

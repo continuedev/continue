@@ -36,6 +36,10 @@ class AbstractGUIProtocolServer(ABC):
         """Called when the user requests a retry at a previous index"""
 
     @abstractmethod
+    def on_change_default_model(self):
+        """Called when the user requests to change the default model"""
+
+    @abstractmethod
     def on_clear_history(self):
         """Called when the user requests to clear the history"""
 

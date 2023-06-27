@@ -10,7 +10,7 @@ from ...models.filesystem_edit import EditDiff, FileEdit, FileEditWithFullConten
 from ...models.filesystem import FileSystem, RangeInFile, RangeInFileWithContents
 from ...core.observation import Observation, TextObservation, TracebackObservation, UserInputObservation
 from ...core.main import Step, SequentialStep
-from ...libs.llm.openai import MAX_TOKENS_FOR_MODEL
+from ...libs.util.count_tokens import MAX_TOKENS_FOR_MODEL, DEFAULT_MAX_TOKENS
 import difflib
 
 
@@ -383,7 +383,7 @@ class DefaultModelEditCodeStep(Step):
         self._prompt_and_completion += prompt + completion
 
     async def run(self, sdk: ContinueSDK) -> Coroutine[Observation, None, None]:
-        self.description = f"`{self.user_input}`"
+        self.description = f"{self.user_input}"
         await sdk.update_ui()
 
         rif_with_contents = []
