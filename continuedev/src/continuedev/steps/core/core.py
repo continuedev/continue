@@ -251,10 +251,10 @@ class DefaultModelEditCodeStep(Step):
         return prompt
 
     def is_end_line(self, line: str) -> bool:
-        return "</modified_code_to_edit>" in line
+        return "</modified_code_to_edit>" in line or "</code_to_edit>" in line
 
     def line_to_be_ignored(self, line: str) -> bool:
-        return "```" in line or "<modified_code_to_edit>" in line or "<file_prefix>" in line or "</file_prefix>" in line or "<file_suffix>" in line or "</file_suffix>" in line or "<user_request>" in line or "</user_request>" in line or "<code_to_edit>" in line or "</code_to_edit>" in line
+        return "```" in line or "<modified_code_to_edit>" in line or "<file_prefix>" in line or "</file_prefix>" in line or "<file_suffix>" in line or "</file_suffix>" in line or "<user_request>" in line or "</user_request>" in line or "<code_to_edit>" in line
 
     async def stream_rif(self, rif: RangeInFileWithContents, sdk: ContinueSDK):
         full_file_contents = await sdk.ide.readFile(rif.filepath)
@@ -264,7 +264,7 @@ class DefaultModelEditCodeStep(Step):
         prompt = self.compile_prompt(file_prefix, contents, file_suffix, sdk)
 
         full_file_contents_lines = full_file_contents.split("\n")
-        original_lines = rif.contents.split("\n")
+        original_lines = [] if rif.contents == "" else rif.contents.split("\n")
         completion_lines_covered = 0
         # In the actual file, as it is with blocks and such
         current_line_in_file = rif.range.start.line
@@ -300,11 +300,7 @@ class DefaultModelEditCodeStep(Step):
             # We are in a block currently, and checking for whether it should be ended
             for i in range(len(original_lines_below_previous_blocks)):
                 og_line = original_lines_below_previous_blocks[i]
-                if og_line == line and len(og_line.strip()):
-                    # Gather the lines to insert/replace for the suggestion
-                    lines_to_replace = current_block_lines[:i]
-                    original_lines_below_previous_blocks = original_lines_below_previous_blocks[
-                        i + 1:]
+                if og_line == line:
 
                     # Insert the suggestion
                     await sdk.ide.showSuggestion(FileEdit(
@@ -314,7 +310,9 @@ class DefaultModelEditCodeStep(Step):
                         replacement="\n".join(current_block_lines)
                     ))
 
-                    # Reset current block
+                    # Reset current block / update variables
+                    original_lines_below_previous_blocks = original_lines_below_previous_blocks[
+                        i + 1:]
                     offset_from_blocks += len(current_block_lines)
                     current_block_lines = []
                     current_block_start = -1
@@ -380,6 +378,15 @@ class DefaultModelEditCodeStep(Step):
 
         # If the current block isn't empty, add that suggestion
         if len(current_block_lines) > 0:
+            # We have a chance to back-track here for blank lines that are repeats of the suffix
+            num_to_remove = 0
+            if repeating_file_suffix:
+                for i in range(-1, -len(current_block_lines) - 1, -1):
+                    if current_block_lines[i].strip() == "":
+                        num_to_remove += 1
+            current_block_lines = current_block_lines[:-
+                                                      num_to_remove] if num_to_remove > 0 else current_block_lines
+
             await sdk.ide.showSuggestion(FileEdit(
                 filepath=rif.filepath,
                 range=Range.from_shorthand(
