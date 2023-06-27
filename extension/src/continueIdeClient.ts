@@ -329,9 +329,9 @@ class IdeProtocolClient {
     if (vscode.window.terminals.length) {
       vscode.window.terminals[0].sendText(command);
     } else {
-        const terminal = vscode.window.createTerminal();
-        terminal.show();
-        terminal.sendText(command);
+      const terminal = vscode.window.createTerminal();
+      terminal.show();
+      terminal.sendText(command);
     }
   }
 
