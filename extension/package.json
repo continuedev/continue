@@ -85,6 +85,16 @@
         "command": "continue.rejectSuggestion",
         "category": "Continue",
         "title": "Reject Suggestion"
+      },
+      {
+        "command": "continue.acceptAllSuggestions",
+        "category": "Continue",
+        "title": "Accept All Suggestions"
+      },
+      {
+        "command": "continue.rejectAllSuggestions",
+        "category": "Continue",
+        "title": "Reject All Suggestions"
       }
     ],
     "keybindings": [
@@ -107,6 +117,16 @@
         "command": "continue.acceptSuggestion",
         "mac": "shift+ctrl+enter",
         "key": "shift+ctrl+enter"
+      },
+      {
+        "command": "continue.acceptAllSuggestions",
+        "mac": "shift+cmd+enter",
+        "key": "shift+ctrl+enter"
+      },
+      {
+        "command": "continue.rejectAllSuggestions",
+        "mac": "shift+cmd+backspace",
+        "key": "shift+ctrl+backspace"
       }
     ],
     "menus": {
