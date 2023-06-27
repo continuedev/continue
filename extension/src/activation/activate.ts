@@ -24,8 +24,19 @@ export async function activateExtension(
   registerAllCodeLensProviders(context);
   registerAllCommands(context);
 
-  // vscode.window.registerWebviewViewProvider("continue.continueGUIView", setupDebugPanel);
-  await startContinuePythonServer();
+  await new Promise((resolve, reject) => {
+    vscode.window.withProgress(
+      {
+        location: vscode.ProgressLocation.Notification,
+        title: "Starting Continue Server...",
+        cancellable: false,
+      },
+      async (progress, token) => {
+        await startContinuePythonServer();
+        resolve(null);
+      }
+    );
+  });
   const serverUrl = getContinueServerUrl();
 
   ideProtocolClient = new IdeProtocolClient(

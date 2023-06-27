@@ -2,14 +2,14 @@
 import os
 import subprocess
 from textwrap import dedent
-from typing import Coroutine, List, Union
+from typing import Coroutine, List, Literal, Union
 
 from ...models.main import Range
 from ...libs.llm.prompt_utils import MarkdownStyleEncoderDecoder
 from ...models.filesystem_edit import EditDiff, FileEdit, FileEditWithFullContents, FileSystemEdit
 from ...models.filesystem import FileSystem, RangeInFile, RangeInFileWithContents
 from ...core.observation import Observation, TextObservation, TracebackObservation, UserInputObservation
-from ...core.main import Step, SequentialStep
+from ...core.main import ChatMessage, Step, SequentialStep
 from ...libs.util.count_tokens import MAX_TOKENS_FOR_MODEL, DEFAULT_MAX_TOKENS
 import difflib
 
@@ -159,6 +159,238 @@ class DefaultModelEditCodeStep(Step):
         self.name = await models.gpt35.complete(f"Write a very short title to describe this requested change: '{self.user_input}'. This is the title:")
         return f"`{self.user_input}`\n\n" + description
 
+    async def get_prompt_parts(self, rif: RangeInFileWithContents, sdk: ContinueSDK, full_file_contents: str):
+        # If using 3.5 and overflows, upgrade to 3.5.16k
+        model_to_use = sdk.models.default
+        if model_to_use.name == "gpt-3.5-turbo":
+            if sdk.models.gpt35.count_tokens(full_file_contents) > MAX_TOKENS_FOR_MODEL["gpt-3.5-turbo"]:
+                model_to_use = sdk.models.gpt3516k
+
+        # Remove tokens from the end first, and then the start to clear space
+        # This part finds the start and end lines
+        full_file_contents_lst = full_file_contents.split("\n")
+        max_start_line = rif.range.start.line
+        min_end_line = rif.range.end.line
+        cur_start_line = 0
+        cur_end_line = len(full_file_contents_lst) - 1
+
+        total_tokens = model_to_use.count_tokens(
+            full_file_contents + self._prompt)
+
+        if total_tokens > MAX_TOKENS_FOR_MODEL[model_to_use.name]:
+            while cur_end_line > min_end_line:
+                total_tokens -= model_to_use.count_tokens(
+                    full_file_contents_lst[cur_end_line])
+                cur_end_line -= 1
+                if total_tokens < MAX_TOKENS_FOR_MODEL[model_to_use.name]:
+                    return cur_start_line, cur_end_line
+
+            if total_tokens > MAX_TOKENS_FOR_MODEL[model_to_use.name]:
+                while cur_start_line < max_start_line:
+                    cur_start_line += 1
+                    total_tokens -= model_to_use.count_tokens(
+                        full_file_contents_lst[cur_end_line])
+                    if total_tokens < MAX_TOKENS_FOR_MODEL[model_to_use.name]:
+                        return cur_start_line, cur_end_line
+
+        # Now use the found start/end lines to get the prefix and suffix strings
+        file_prefix = "\n".join(
+            full_file_contents_lst[cur_start_line:max_start_line])
+        file_suffix = "\n".join(
+            full_file_contents_lst[min_end_line:cur_end_line - 1])
+
+        # Move any surrounding blank line in rif.contents to the prefix/suffix
+        # TODO: Keep track of start line of the range, because it's needed below for offset stuff
+        rif_start_line = rif.range.start.line
+        if len(rif.contents) > 0:
+            first_line = rif.contents.splitlines(keepends=True)[0]
+            while first_line.strip() == "":
+                file_prefix += first_line
+                rif.contents = rif.contents[len(first_line):]
+                first_line = rif.contents.splitlines(keepends=True)[0]
+
+            last_line = rif.contents.splitlines(keepends=True)[-1]
+            while last_line.strip() == "":
+                file_suffix = last_line + file_suffix
+                rif.contents = rif.contents[:len(
+                    rif.contents) - len(last_line)]
+                last_line = rif.contents.splitlines(keepends=True)[-1]
+
+            while rif.contents.startswith("\n"):
+                file_prefix += "\n"
+                rif.contents = rif.contents[1:]
+            while rif.contents.endswith("\n"):
+                file_suffix = "\n" + file_suffix
+                rif.contents = rif.contents[:-1]
+
+        return file_prefix, rif.contents, file_suffix, model_to_use
+
+    def compile_prompt(self, file_prefix: str, contents: str, file_suffix: str, sdk: ContinueSDK) -> str:
+        prompt = self._prompt
+        if file_prefix.strip() != "":
+            prompt += dedent(f"""
+<file_prefix>
+{file_prefix}
+</file_prefix>""")
+        prompt += dedent(f"""
+<code_to_edit>
+{contents}
+</code_to_edit>""")
+        if file_suffix.strip() != "":
+            prompt += dedent(f"""
+<file_suffix>
+{file_suffix}
+</file_suffix>""")
+        prompt += dedent(f"""
+<user_request>
+{self.user_input}
+</user_request>
+<modified_code_to_edit>
+""")
+
+        return prompt
+
+    def is_end_line(self, line: str) -> bool:
+        return "</modified_code_to_edit>" in line
+
+    def line_to_be_ignored(self, line: str) -> bool:
+        return "```" in line or "<modified_code_to_edit>" in line or "<file_prefix>" in line or "</file_prefix>" in line or "<file_suffix>" in line or "</file_suffix>" in line or "<user_request>" in line or "</user_request>" in line or "<code_to_edit>" in line or "</code_to_edit>" in line
+
+    async def stream_rif(self, rif: RangeInFileWithContents, sdk: ContinueSDK):
+        full_file_contents = await sdk.ide.readFile(rif.filepath)
+
+        file_prefix, contents, file_suffix, model_to_use = await self.get_prompt_parts(
+            rif, sdk, full_file_contents)
+        prompt = self.compile_prompt(file_prefix, contents, file_suffix, sdk)
+
+        full_file_contents_lines = full_file_contents.split("\n")
+        original_lines = rif.contents.split("\n")
+        completion_lines_covered = 0
+        # In the actual file, as it is with blocks and such
+        current_line_in_file = rif.range.start.line
+
+        current_block_lines = []
+        original_lines_below_previous_blocks = original_lines
+        current_block_start = -1
+        offset_from_blocks = 0
+
+        lines_of_prefix_copied = 0
+        repeating_file_suffix = False
+        line_below_highlighted_range = file_suffix.lstrip().split("\n")[0]
+        lines = []
+        unfinished_line = ""
+
+        async def handle_generated_line(line: str):
+            nonlocal lines, current_block_start, current_line_in_file, original_lines, original_lines_below_previous_blocks, current_block_lines, offset_from_blocks
+
+            # Highlight the line to show progress
+            await sdk.ide.highlightCode(RangeInFile(filepath=rif.filepath, range=Range.from_shorthand(
+                current_line_in_file, 0, current_line_in_file, 0)), "#FFFFFF22" if len(current_block_lines) == 0 else "#FFFF0022")
+
+            if len(current_block_lines) == 0:
+                if len(original_lines_below_previous_blocks) == 0 or line != original_lines_below_previous_blocks[0]:
+                    current_block_lines.append(line)
+                    current_block_start = current_line_in_file
+
+                else:
+                    original_lines_below_previous_blocks = original_lines_below_previous_blocks[
+                        1:]
+                return
+
+            # We are in a block currently, and checking for whether it should be ended
+            for i in range(len(original_lines_below_previous_blocks)):
+                og_line = original_lines_below_previous_blocks[i]
+                if og_line == line and len(og_line.strip()):
+                    # Gather the lines to insert/replace for the suggestion
+                    lines_to_replace = current_block_lines[:i]
+                    original_lines_below_previous_blocks = original_lines_below_previous_blocks[
+                        i + 1:]
+
+                    # Insert the suggestion
+                    await sdk.ide.showSuggestion(FileEdit(
+                        filepath=rif.filepath,
+                        range=Range.from_shorthand(
+                            current_block_start, 0, current_block_start + i, 0),
+                        replacement="\n".join(current_block_lines)
+                    ))
+
+                    # Reset current block
+                    offset_from_blocks += len(current_block_lines)
+                    current_block_lines = []
+                    current_block_start = -1
+                    return
+
+            current_block_lines.append(line)
+
+        messages = await sdk.get_chat_context()
+        messages.append(ChatMessage(
+            role="user",
+            content=prompt,
+            summary=self.user_input
+        ))
+        async for chunk in model_to_use.stream_chat(messages, temperature=0):
+            # Stop early if it is repeating the file_suffix or the step was deleted
+            if repeating_file_suffix:
+                break
+            if sdk.current_step_was_deleted():
+                return
+
+            # Accumulate lines
+            if "content" not in chunk:
+                continue
+            chunk = chunk["content"]
+            chunk_lines = chunk.split("\n")
+            chunk_lines[0] = unfinished_line + chunk_lines[0]
+            if chunk.endswith("\n"):
+                unfinished_line = ""
+                chunk_lines.pop()  # because this will be an empty string
+            else:
+                unfinished_line = chunk_lines.pop()
+            lines.extend(chunk_lines)
+
+            # Deal with newly accumulated lines
+            for line in chunk_lines:
+                # Lines that should signify the end of generation
+                if self.is_end_line(line):
+                    break
+                # Lines that should be ignored, like the <> tags
+                elif self.line_to_be_ignored(line):
+                    continue
+                # Check if we are currently just copying the prefix
+                elif (lines_of_prefix_copied > 0 or completion_lines_covered == 0) and lines_of_prefix_copied < len(file_prefix.splitlines()) and line == full_file_contents_lines[lines_of_prefix_copied]:
+                    # This is a sketchy way of stopping it from repeating the file_prefix. Is a bug if output happens to have a matching line
+                    lines_of_prefix_copied += 1
+                    continue
+                # Because really short lines might be expected to be repeated, this is only a !heuristic!
+                # Stop when it starts copying the file_suffix
+                elif line.strip() == line_below_highlighted_range.strip() and len(line.strip()) > 4:
+                    repeating_file_suffix = True
+                    break
+
+                # If none of the above, insert the line!
+                await handle_generated_line(line)
+                completion_lines_covered += 1
+                current_line_in_file += 1
+
+        # Add the unfinished line
+        if unfinished_line != "" and not self.line_to_be_ignored(unfinished_line) and not self.is_end_line(unfinished_line):
+            lines.append(unfinished_line)
+            await handle_generated_line(unfinished_line)
+            completion_lines_covered += 1
+
+        # If the current block isn't empty, add that suggestion
+        if len(current_block_lines) > 0:
+            await sdk.ide.showSuggestion(FileEdit(
+                filepath=rif.filepath,
+                range=Range.from_shorthand(
+                    current_block_start, 0, current_block_start + len(original_lines_below_previous_blocks), 0),
+                replacement="\n".join(current_block_lines)
+            ))
+
+        # Record the completion
+        completion = "\n".join(lines)
+        self._prompt_and_completion += prompt + completion
+
     async def run(self, sdk: ContinueSDK) -> Coroutine[Observation, None, None]:
         self.description = f"{self.user_input}"
         await sdk.update_ui()
@@ -179,228 +411,8 @@ class DefaultModelEditCodeStep(Step):
 
         for rif in rif_with_contents:
             await sdk.ide.setFileOpen(rif.filepath)
-
-            model_to_use = sdk.models.default
-
-            full_file_contents = await sdk.ide.readFile(rif.filepath)
-
-            full_file_contents_lst = full_file_contents.split("\n")
-
-            max_start_line = rif.range.start.line
-            min_end_line = rif.range.end.line
-            cur_start_line = 0
-            cur_end_line = len(full_file_contents_lst) - 1
-
-            def cut_context(model_to_use, total_tokens, cur_start_line, cur_end_line):
-
-                if total_tokens > MAX_TOKENS_FOR_MODEL[model_to_use.name]:
-                    while cur_end_line > min_end_line:
-                        total_tokens -= model_to_use.count_tokens(
-                            full_file_contents_lst[cur_end_line])
-                        cur_end_line -= 1
-                        if total_tokens < MAX_TOKENS_FOR_MODEL[model_to_use.name]:
-                            return cur_start_line, cur_end_line
-
-                    if total_tokens > MAX_TOKENS_FOR_MODEL[model_to_use.name]:
-                        while cur_start_line < max_start_line:
-                            cur_start_line += 1
-                            total_tokens -= model_to_use.count_tokens(
-                                full_file_contents_lst[cur_end_line])
-                            if total_tokens < MAX_TOKENS_FOR_MODEL[model_to_use.name]:
-                                return cur_start_line, cur_end_line
-
-                return cur_start_line, cur_end_line
-
-            # We don't know here all of the functions being passed in.
-            # We care because if this prompt itself goes over the limit, then the entire message will have to be cut from the completion.
-            # Overflow won't happen, but prune_chat_messages in count_tokens.py will cut out this whole thing, instead of us cutting out only as many lines as we need.
-            BUFFER_FOR_FUNCTIONS = 200
-            total_tokens = model_to_use.count_tokens(
-                full_file_contents + self._prompt + self.user_input) + DEFAULT_MAX_TOKENS + BUFFER_FOR_FUNCTIONS
-
-            model_to_use = sdk.models.default
-            if model_to_use.name == "gpt-3.5-turbo":
-                if total_tokens > MAX_TOKENS_FOR_MODEL["gpt-3.5-turbo"]:
-                    model_to_use = sdk.models.gpt3516k
-
-            cur_start_line, cur_end_line = cut_context(
-                model_to_use, total_tokens, cur_start_line, cur_end_line)
-
-            code_before = "\n".join(
-                full_file_contents_lst[cur_start_line:max_start_line])
-            code_after = "\n".join(
-                full_file_contents_lst[min_end_line:cur_end_line - 1])
-
-            segs = [code_before, code_after]
-            if segs[0].strip() == "":
-                segs[0] = segs[0].strip()
-            if segs[1].strip() == "":
-                segs[1] = segs[1].strip()
-
-            # Move any surrounding blank line in rif.contents to the prefix/suffix
-            if len(rif.contents) > 0:
-                first_line = rif.contents.splitlines(keepends=True)[0]
-                while first_line.strip() == "":
-                    segs[0] += first_line
-                    rif.contents = rif.contents[len(first_line):]
-                    first_line = rif.contents.splitlines(keepends=True)[0]
-
-                last_line = rif.contents.splitlines(keepends=True)[-1]
-                while last_line.strip() == "":
-                    segs[1] = last_line + segs[1]
-                    rif.contents = rif.contents[:len(
-                        rif.contents) - len(last_line)]
-                    last_line = rif.contents.splitlines(keepends=True)[-1]
-
-                while rif.contents.startswith("\n"):
-                    segs[0] += "\n"
-                    rif.contents = rif.contents[1:]
-                while rif.contents.endswith("\n"):
-                    segs[1] = "\n" + segs[1]
-                    rif.contents = rif.contents[:-1]
-
-            # .format(code=rif.contents, user_request=self.user_input, file_prefix=segs[0], file_suffix=segs[1])
-            prompt = self._prompt
-            if segs[0].strip() != "":
-                prompt += dedent(f"""
-<file_prefix>
-{segs[0]}
-</file_prefix>""")
-            prompt += dedent(f"""
-<code_to_edit>
-{rif.contents}
-</code_to_edit>""")
-            if segs[1].strip() != "":
-                prompt += dedent(f"""
-<file_suffix>
-{segs[1]}
-</file_suffix>""")
-            prompt += dedent(f"""
-<user_request>
-{self.user_input}
-</user_request>
-<modified_code_to_edit>
-""")
-
-            lines = []
-            unfinished_line = ""
-            i = 0
-            original_lines = rif.contents.split("\n")
-
-            async def add_line(i: int, line: str):
-                if i == 0:
-                    # First line indentation, because the model will assume that it is replacing in this way
-                    line = original_lines[0].replace(
-                        original_lines[0].strip(), "") + line
-
-                if i < len(original_lines):
-                    # Replace original line
-                    range = Range.from_shorthand(
-                        rif.range.start.line + i, rif.range.start.character if i == 0 else 0, rif.range.start.line + i + 1, 0)
-                else:
-                    # Insert a line
-                    range = Range.from_shorthand(
-                        rif.range.start.line + i, 0, rif.range.start.line + i, 0)
-
-                await sdk.ide.applyFileSystemEdit(FileEdit(
-                    filepath=rif.filepath,
-                    range=range,
-                    replacement=line + "\n"
-                ))
-
-            lines_of_prefix_copied = 0
-            line_below_highlighted_range = segs[1].lstrip().split("\n")[0]
-            should_stop = False
-            async for chunk in model_to_use.stream_complete(prompt, with_history=await sdk.get_chat_context(), temperature=0):
-                if should_stop:
-                    break
-                chunk_lines = chunk.split("\n")
-                chunk_lines[0] = unfinished_line + chunk_lines[0]
-                if chunk.endswith("\n"):
-                    unfinished_line = ""
-                    chunk_lines.pop()  # because this will be an empty string
-                else:
-                    unfinished_line = chunk_lines.pop()
-                lines.extend(chunk_lines)
-
-                for line in chunk_lines:
-                    if "</modified_code_to_edit>" in line:
-                        break
-                    elif "```" in line or "<modified_code_to_edit>" in line or "<file_prefix>" in line or "</file_prefix>" in line or "<file_suffix>" in line or "</file_suffix>" in line or "<user_request>" in line or "</user_request>" in line or "<code_to_edit>" in line or "</code_to_edit>" in line:
-                        continue
-                    elif (lines_of_prefix_copied > 0 or i == 0) and lines_of_prefix_copied < len(segs[0].splitlines()) and line == full_file_contents_lst[lines_of_prefix_copied]:
-                        # This is a sketchy way of stopping it from repeating the file_prefix. Is a bug if output happens to have a matching line
-                        lines_of_prefix_copied += 1
-                        continue
-                    elif i < len(original_lines) and line == original_lines[i]:
-                        i += 1
-                        continue
-                    # Because really short lines might be expected to be repeated !heuristic!
-                    elif line.strip() == line_below_highlighted_range.strip() and len(line.strip()) > 4:
-                        should_stop = True
-                        break
-                    await add_line(i, line)
-                    i += 1
-
-            # Add the unfinished line
-            if unfinished_line != "":
-                unfinished_line = unfinished_line.replace(
-                    "</modified_code_to_edit>", "").replace("</code_to_edit>", "").replace("```", "").replace("</file_suffix>", "").replace("</file_prefix", "").replace(
-                    "<modified_code_to_edit>", "").replace("<code_to_edit>", "").replace("<file_suffix>", "").replace("<file_prefix", "")
-                if not i < len(original_lines) or not unfinished_line == original_lines[i]:
-                    await add_line(i, unfinished_line)
-                lines.append(unfinished_line)
-                i += 1
-
-            # Remove the leftover original lines
-            while i < len(original_lines):
-                range = Range.from_shorthand(
-                    rif.range.start.line + i, rif.range.start.character, rif.range.start.line + i, len(original_lines[i]) + 1)
-                await sdk.ide.applyFileSystemEdit(FileEdit(
-                    filepath=rif.filepath,
-                    range=range,
-                    replacement=""
-                ))
-                i += 1
-
-            completion = "\n".join(lines)
-
-            self._prompt_and_completion += prompt + completion
-
-            diff = list(difflib.ndiff(rif.contents.splitlines(
-                keepends=True), completion.splitlines(keepends=True)))
-
-            lines_to_highlight = set()
-            index = 0
-            for line in diff:
-                if line.startswith("-"):
-                    pass
-                elif line.startswith("+"):
-                    lines_to_highlight.add(index + rif.range.start.line)
-                    index += 1
-                elif line.startswith(" "):
-                    index += 1
-
-            current_hl_start = None
-            last_hl = None
-            rifs_to_highlight = []
-            for line in lines_to_highlight:
-                if current_hl_start is None:
-                    current_hl_start = line
-                elif line != last_hl + 1:
-                    rifs_to_highlight.append(RangeInFile(
-                        filepath=rif.filepath, range=Range.from_shorthand(current_hl_start, 0, last_hl, 0)))
-                    current_hl_start = line
-                last_hl = line
-
-            if current_hl_start is not None:
-                rifs_to_highlight.append(RangeInFile(
-                    filepath=rif.filepath, range=Range.from_shorthand(current_hl_start, 0, last_hl, 0)))
-
-            for rif_to_hl in rifs_to_highlight:
-                await sdk.ide.highlightCode(rif_to_hl)
-
-            await sdk.ide.saveFile(rif.filepath)
+            await self.stream_rif(rif, sdk)
+            # await sdk.ide.saveFile(rif.filepath)
 
 
 class EditFileStep(Step):

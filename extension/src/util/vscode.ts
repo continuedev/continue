@@ -118,9 +118,11 @@ export async function readFileAtRange(
             )
           );
         } else {
-          let firstLine = lines[range.start.line].slice(range.start.character);
-          let lastLine = lines[range.end.line].slice(0, range.end.character);
-          let middleLines = lines.slice(range.start.line + 1, range.end.line);
+          const firstLine = lines[range.start.line].slice(
+            range.start.character
+          );
+          const lastLine = lines[range.end.line].slice(0, range.end.character);
+          const middleLines = lines.slice(range.start.line + 1, range.end.line);
           resolve([firstLine, ...middleLines, lastLine].join("\n"));
         }
       }
@@ -144,7 +146,7 @@ export function openEditorAndRevealRange(
             setInterval(() => {
               resolve(null);
             }, 200);
-          })
+          });
         }
         showTextDocumentInProcess = true;
         vscode.window
@@ -158,10 +160,10 @@ export function openEditorAndRevealRange(
             }
             resolve(editor);
             showTextDocumentInProcess = false;
-          })
-        } catch (err) {
-          console.log(err);
-        }
-      });
+          });
+      } catch (err) {
+        console.log(err);
+      }
+    });
   });
 }

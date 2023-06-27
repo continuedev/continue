@@ -47,9 +47,13 @@ class AddFileStep(Step):
         except FileNotFoundError:
             self.description = f"File {self.filename} does not exist."
             return
-        currently_open_file = (await sdk.ide.getOpenFiles())[0]
+
         await sdk.ide.setFileOpen(os.path.join(sdk.ide.workspace_directory, self.filename))
-        await sdk.ide.setFileOpen(currently_open_file)
+
+        open_files = await sdk.ide.getOpenFiles()
+        if len(open_files) > 0:
+            currently_open_file = (await sdk.ide.getOpenFiles())[0]
+            await sdk.ide.setFileOpen(currently_open_file)
 
 
 class DeleteFileStep(Step):
