@@ -63,8 +63,10 @@ async function getPythonPipCommands() {
       pythonCmd = "python";
     } else {
       // Python doesn't exist at all
-      console.log("Python3 not found, downloading...");
-      await downloadPython3();
+      vscode.window.showErrorMessage(
+        "Continue requires Python3. Please install from https://www.python.org/downloads, reload VS Code, and try again."
+      );
+      throw new Error("Python3 is not installed.");
     }
   }
   let pipCmd = pythonCmd.endsWith("3") ? "pip3" : "pip";
