@@ -61,9 +61,55 @@ function CopyButton(props: { textToCopy: string; visible: boolean }) {
   );
 }
 
-function CodeBlock(props: { language?: string; children: string }) {
+function CodeBlock(props: { children: string }) {
+  const [result, setResult] = useState<AutoHighlightResult | undefined>(
+    undefined
+  );
   useEffect(() => {
-    hljs.highlightAll();
+    const result = hljs.highlightAuto(
+      (props.children as any).props.children[0],
+      [
+        "python",
+        "javascript",
+        "typescript",
+        "bash",
+        "html",
+        "css",
+        "json",
+        "yaml",
+        "markdown",
+        "sql",
+        "java",
+        "c",
+        "cpp",
+        "csharp",
+        "go",
+        "kotlin",
+        "php",
+        "ruby",
+        "rust",
+        "scala",
+        "swift",
+        "dart",
+        "haskell",
+        "perl",
+        "r",
+        "matlab",
+        "powershell",
+        "lua",
+        "elixir",
+        "clojure",
+        "groovy",
+        "julia",
+        "vbnet",
+        "objectivec",
+        "fsharp",
+        "erlang",
+        "ocaml",
+      ]
+    );
+    console.log(result);
+    setResult(result);
   }, [props.children]);
   const [hovered, setHovered] = useState<boolean>(false);
 
@@ -82,7 +128,9 @@ function CodeBlock(props: { language?: string; children: string }) {
           textToCopy={(props.children as any).props.children[0]}
         />
       </CopyButtonDiv>
-      <StyledCode language={props.language}>{props.children}</StyledCode>
+      <StyledCode language={result?.language}>
+        {(props.children as any).props.children[0]}
+      </StyledCode>
     </StyledPre>
   );
 }
