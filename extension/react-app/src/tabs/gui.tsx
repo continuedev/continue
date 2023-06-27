@@ -18,6 +18,7 @@ import ReactSwitch from "react-switch";
 import { usePostHog } from "posthog-js/react";
 import { useSelector } from "react-redux";
 import { RootStore } from "../redux/store";
+import LoadingCover from "../components/LoadingCover";
 
 const TopGUIDiv = styled.div`
   overflow: hidden;
@@ -215,7 +216,7 @@ function GUI(props: GUIProps) {
   useEffect(() => {
     const listener = (e: any) => {
       // Cmd + J to toggle fast model
-      if (e.key === "j" && e.metaKey) {
+      if (e.key === "i" && e.metaKey && e.shiftKey) {
         setUsingFastModel((prev) => !prev);
       }
     };
@@ -230,21 +231,24 @@ function GUI(props: GUIProps) {
     console.log("CLIENT ON STATE UPDATE: ", client, client?.onStateUpdate);
     client?.onStateUpdate((state) => {
       // Scroll only if user is at very bottom of the window.
+      setUsingFastModel(state.default_model === "gpt-3.5-turbo");
       const shouldScrollToBottom =
         topGuiDivRef.current &&
         topGuiDivRef.current?.offsetHeight - window.scrollY < 100;
       setWaitingForSteps(state.active);
       setHistory(state.history);
       setUserInputQueue(state.user_input_queue);
-      const nextStepsOpen = [...stepsOpen];
-      for (
-        let i = nextStepsOpen.length;
-        i < state.history.timeline.length;
-        i++
-      ) {
-        nextStepsOpen.push(true);
-      }
-      setStepsOpen(nextStepsOpen);
+      setStepsOpen((prev) => {
+        const nextStepsOpen = [...prev];
+        for (
+          let i = nextStepsOpen.length;
+          i < state.history.timeline.length;
+          i++
+        ) {
+          nextStepsOpen.push(true);
+        }
+        return nextStepsOpen;
+      });
 
       if (shouldScrollToBottom) {
         scrollToBottom();
@@ -325,6 +329,7 @@ function GUI(props: GUIProps) {
   // const iterations = useSelector(selectIterations);
   return (
     <>
+      <LoadingCover hidden={true} message="Downloading local model..." />
       <TextDialog
         showDialog={showFeedbackDialog}
         onEnter={(text) => {
@@ -347,9 +352,7 @@ function GUI(props: GUIProps) {
         {typeof client === "undefined" && (
           <>
             <Loader></Loader>
-            <p style={{ textAlign: "center" }}>
-              Trying to reconnect with server...
-            </p>
+            <p style={{ textAlign: "center" }}>Loading Continue server...</p>
           </>
         )}
         {history?.timeline.map((node: HistoryNode, index: number) => {
@@ -388,7 +391,7 @@ function GUI(props: GUIProps) {
             />
           );
         })}
-        {/* {waitingForSteps && <Loader></Loader>} */}
+        {waitingForSteps && <Loader></Loader>}
 
         <div>
           {userInputQueue.map((input) => {
@@ -426,9 +429,9 @@ function GUI(props: GUIProps) {
         }}
         hidden={!showDataSharingInfo}
       >
-        By turning on this switch, you signal that you would 
-        contribute this software development data to a publicly 
-        accessible, open-source dataset in the future.
+        By turning on this switch, you signal that you would contribute this
+        software development data to a publicly accessible, open-source dataset
+        in the future.
         <br />
         <br />
         <b>
@@ -470,8 +473,11 @@ function GUI(props: GUIProps) {
             Contribute Data
           </span>
         </div>
-        {/* <HeaderButtonWithText
+        <HeaderButtonWithText
           onClick={() => {
+            client?.changeDefaultModel(
+              usingFastModel ? "gpt-4" : "gpt-3.5-turbo"
+            );
             setUsingFastModel((prev) => !prev);
           }}
           text={usingFastModel ? "gpt-3.5-turbo" : "gpt-4"}
@@ -481,7 +487,7 @@ function GUI(props: GUIProps) {
           >
             {usingFastModel ? "⚡" : "🧠"}
           </div>
-        </HeaderButtonWithText> */}
+        </HeaderButtonWithText>
         <HeaderButtonWithText
           onClick={() => {
             client?.sendClear();
