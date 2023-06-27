@@ -238,6 +238,26 @@ export function acceptSuggestionCommand(key: SuggestionRanges | null = null) {
   selectSuggestion("selected", key);
 }
 
+function handleAllSuggestions(accept: boolean) {
+  const editor = vscode.window.activeTextEditor;
+  if (!editor) return;
+  const editorUri = editor.document.uri.toString();
+  const suggestions = editorToSuggestions.get(editorUri);
+  if (!suggestions) return;
+
+  while (suggestions.length > 0) {
+    selectSuggestion(accept ? "new" : "old");
+  }
+}
+
+export function acceptAllSuggestionsCommand() {
+  handleAllSuggestions(true);
+}
+
+export function rejectAllSuggestionsCommand() {
+  handleAllSuggestions(false);
+}
+
 export async function rejectSuggestionCommand(
   key: SuggestionRanges | null = null
 ) {
@@ -292,9 +312,15 @@ export async function showSuggestion(
 
   return new Promise((resolve, reject) => {
     editor!
-      .edit((edit) => {
-        edit.insert(new vscode.Position(range.end.line, 0), suggestion + "\n");
-      })
+      .edit(
+        (edit) => {
+          edit.insert(
+            new vscode.Position(range.end.line, 0),
+            suggestion + "\n"
+          );
+        },
+        { undoStopBefore: false, undoStopAfter: false }
+      )
       .then(
         (success) => {
           if (success) {
