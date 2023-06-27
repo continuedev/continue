@@ -121,7 +121,7 @@ async function setupPythonEnv() {
     activateCmd,
     pipUpgradeCmd,
     `${pipCmd} install -r requirements.txt`,
-  ].join(" && ");
+  ].join(" ; ");
   const [, stderr] = await runCommand(installRequirementsCommand);
   if (stderr) {
     throw new Error(stderr);
@@ -255,10 +255,10 @@ export async function downloadPython3() {
     throw new Error("python3 not found");
   } else if (os === "linux") {
     command =
-      "sudo apt update && upgrade && sudo apt install python3 python3-pip";
+      "sudo apt update ; upgrade ; sudo apt install python3 python3-pip";
   } else if (os === "win32") {
     command =
-      "wget -O python_installer.exe https://www.python.org/ftp/python/3.11.3/python-3.11.3-amd64.exe && python_installer.exe /quiet InstallAllUsers=1 PrependPath=1 Include_test=0";
+      "wget -O python_installer.exe https://www.python.org/ftp/python/3.11.3/python-3.11.3-amd64.exe ; python_installer.exe /quiet InstallAllUsers=1 PrependPath=1 Include_test=0";
     pythonCmd = "python";
   }
 

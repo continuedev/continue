@@ -71,7 +71,7 @@ class ProxyServer(LLM):
     async def complete(self, prompt: str, with_history: List[ChatMessage] = [], **kwargs) -> Coroutine[Any, Any, str]:
         async with aiohttp.ClientSession() as session:
             async with session.post(f"{SERVER_URL}/complete", json={
-                "chat_history": self.compile_chat_messages(with_history, prompt),
+                "messages": self.compile_chat_messages(with_history, prompt),
                 "model": self.default_model,
                 "unique_id": self.unique_id,
             }) as resp:
@@ -83,7 +83,7 @@ class ProxyServer(LLM):
     async def stream_chat(self, prompt, with_history: List[ChatMessage] = [], **kwargs) -> Generator[Union[Any, List, Dict], None, None]:
         async with aiohttp.ClientSession() as session:
             async with session.post(f"{SERVER_URL}/stream_complete", json={
-                "chat_history": self.compile_chat_messages(with_history, prompt),
+                "messages": self.compile_chat_messages(with_history, prompt),
                 "model": self.default_model,
                 "unique_id": self.unique_id,
             }) as resp:

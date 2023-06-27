@@ -59,10 +59,35 @@ export function rerenderDecorations(editorUri: string) {
   );
   if (!suggestions || !editor) return;
 
-  const olds: vscode.Range[] = [];
-  const news: vscode.Range[] = [];
-  const oldSels: vscode.Range[] = [];
-  const newSels: vscode.Range[] = [];
+  const rangesWithoutEmptyLastLine = (ranges: vscode.Range[]) => {
+    const newRanges: vscode.Range[] = [];
+    for (let i = 0; i < ranges.length; i++) {
+      const range = ranges[i];
+      if (
+        range.start.line === range.end.line &&
+        range.start.character === 0 &&
+        range.end.character === 0
+      ) {
+        // Empty range, don't show it
+        continue;
+      }
+      newRanges.push(
+        new vscode.Range(
+          range.start.line,
+          range.start.character,
+          // Don't include the last line if it is empty
+          range.end.line - (range.end.character === 0 ? 1 : 0),
+          range.end.character
+        )
+      );
+    }
+    return newRanges;
+  };
+
+  let olds: vscode.Range[] = [];
+  let news: vscode.Range[] = [];
+  let oldSels: vscode.Range[] = [];
+  let newSels: vscode.Range[] = [];
   for (let i = 0; i < suggestions.length; i++) {
     const suggestion = suggestions[i];
     if (typeof idx != "undefined" && idx === i) {
@@ -78,6 +103,13 @@ export function rerenderDecorations(editorUri: string) {
       news.push(suggestion.newRange);
     }
   }
+
+  // Don't highlight the last line if it is empty
+  olds = rangesWithoutEmptyLastLine(olds);
+  news = rangesWithoutEmptyLastLine(news);
+  oldSels = rangesWithoutEmptyLastLine(oldSels);
+  newSels = rangesWithoutEmptyLastLine(newSels);
+
   editor.setDecorations(oldDecorationType, olds);
   editor.setDecorations(newDecorationType, news);
   editor.setDecorations(oldSelDecorationType, oldSels);
@@ -174,7 +206,7 @@ function selectSuggestion(
 
   rangeToDelete = new vscode.Range(
     rangeToDelete.start,
-    new vscode.Position(rangeToDelete.end.line + 1, 0)
+    new vscode.Position(rangeToDelete.end.line, 0)
   );
   editor.edit((edit) => {
     edit.delete(rangeToDelete);
@@ -261,19 +293,13 @@ export async function showSuggestion(
   return new Promise((resolve, reject) => {
     editor!
       .edit((edit) => {
-        if (range.end.line + 1 >= editor.document.lineCount) {
-          suggestion = "\n" + suggestion;
-        }
-        edit.insert(
-          new vscode.Position(range.end.line + 1, 0),
-          suggestion + "\n"
-        );
+        edit.insert(new vscode.Position(range.end.line, 0), suggestion + "\n");
       })
       .then(
         (success) => {
           if (success) {
             let suggestionRange = new vscode.Range(
-              new vscode.Position(range.end.line + 1, 0),
+              new vscode.Position(range.end.line, 0),
               new vscode.Position(
                 range.end.line + suggestion.split("\n").length,
                 0
