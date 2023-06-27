@@ -28,6 +28,10 @@ class SuggestionsCodeLensProvider implements vscode.CodeLensProvider {
           title: "Reject ❌",
           command: "continue.rejectSuggestion",
           arguments: [suggestion],
+        }),
+        new vscode.CodeLens(range, {
+          title: "(⌘⇧↩/⌘⇧⌫ to accept/reject all)",
+          command: "",
         })
       );
     }

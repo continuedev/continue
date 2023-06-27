@@ -246,7 +246,7 @@ function handleAllSuggestions(accept: boolean) {
   if (!suggestions) return;
 
   while (suggestions.length > 0) {
-    selectSuggestion(accept ? "new" : "old");
+    selectSuggestion(accept ? "new" : "old", suggestions[0]);
   }
 }
 

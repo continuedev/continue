@@ -323,9 +323,11 @@ class DefaultModelEditCodeStep(Step):
             current_block_lines.append(line)
 
         async for chunk in model_to_use.stream_chat(prompt, with_history=await sdk.get_chat_context(), temperature=0):
-            # Stop early if it is repeating the file_suffix
+            # Stop early if it is repeating the file_suffix or the step was deleted
             if repeating_file_suffix:
                 break
+            if sdk.current_step_was_deleted():
+                return
 
             # Accumulate lines
             chunk_lines = chunk.split("\n")

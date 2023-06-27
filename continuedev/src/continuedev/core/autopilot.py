@@ -121,7 +121,7 @@ class Autopilot(ContinueBaseModel):
         # If a parent step is deleted/cancelled, don't run this step
         last_depth = self._step_depth
         i = self.history.current_index
-        while i >= 0 and self.history.timeline[i].depth == last_depth + 1:
+        while i >= 0 and self.history.timeline[i].depth == last_depth - 1:
             if self.history.timeline[i].deleted:
                 return None
             last_depth = self.history.timeline[i].depth
