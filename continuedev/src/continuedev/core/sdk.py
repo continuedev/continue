@@ -207,3 +207,6 @@ class ContinueSDK(AbstractContinueSDK):
 
     async def clear_history(self):
         await self.__autopilot.clear_history()
+
+    def current_step_was_deleted(self):
+        return self.history.timeline[self.history.current_index].deleted
