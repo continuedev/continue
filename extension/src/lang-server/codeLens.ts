@@ -6,12 +6,12 @@ class SuggestionsCodeLensProvider implements vscode.CodeLensProvider {
     document: vscode.TextDocument,
     token: vscode.CancellationToken
   ): vscode.CodeLens[] | Thenable<vscode.CodeLens[]> {
-    let suggestions = editorToSuggestions.get(document.uri.toString());
+    const suggestions = editorToSuggestions.get(document.uri.toString());
     if (!suggestions) {
       return [];
     }
 
-    let codeLenses: vscode.CodeLens[] = [];
+    const codeLenses: vscode.CodeLens[] = [];
     for (const suggestion of suggestions) {
       const range = new vscode.Range(
         suggestion.oldRange.start,
@@ -27,12 +27,16 @@ class SuggestionsCodeLensProvider implements vscode.CodeLensProvider {
           title: "Reject ❌",
           command: "continue.rejectSuggestion",
           arguments: [suggestion],
-        }),
-        new vscode.CodeLens(range, {
-          title: "(⌘⇧↩/⌘⇧⌫ to accept/reject all)",
-          command: "",
         })
       );
+      if (codeLenses.length === 2) {
+        codeLenses.push(
+          new vscode.CodeLens(range, {
+            title: "(⌘⇧↩/⌘⇧⌫ to accept/reject all)",
+            command: "",
+          })
+        );
+      }
     }
 
     return codeLenses;

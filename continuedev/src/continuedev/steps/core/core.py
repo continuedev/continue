@@ -288,14 +288,11 @@ class DefaultModelEditCodeStep(Step):
                 current_line_in_file, 0, current_line_in_file, 0)), "#FFFFFF22" if len(current_block_lines) == 0 else "#FFFF0022")
 
             if len(current_block_lines) == 0:
-                if len(original_lines_below_previous_blocks) == 0 or line != original_lines_below_previous_blocks[0]:
-                    current_block_lines.append(line)
-                    current_block_start = current_line_in_file
-
-                else:
+                current_block_start = current_line_in_file
+                if len(original_lines_below_previous_blocks) > 0 and line == original_lines_below_previous_blocks[0]:
                     original_lines_below_previous_blocks = original_lines_below_previous_blocks[
                         1:]
-                return
+                    return
 
             # We are in a block currently, and checking for whether it should be ended
             for i in range(len(original_lines_below_previous_blocks)):
@@ -303,12 +300,15 @@ class DefaultModelEditCodeStep(Step):
                 if og_line == line:
 
                     # Insert the suggestion
+                    replacement = "\n".join(current_block_lines)
                     await sdk.ide.showSuggestion(FileEdit(
                         filepath=rif.filepath,
                         range=Range.from_shorthand(
                             current_block_start, 0, current_block_start + i, 0),
-                        replacement="\n".join(current_block_lines)
+                        replacement=replacement
                     ))
+                    if replacement == "":
+                        current_line_in_file += 1
 
                     # Reset current block / update variables
                     original_lines_below_previous_blocks = original_lines_below_previous_blocks[
@@ -348,6 +348,9 @@ class DefaultModelEditCodeStep(Step):
 
             # Deal with newly accumulated lines
             for line in chunk_lines:
+                # Trailing whitespace doesn't matter
+                line = line.rstrip()
+
                 # Lines that should signify the end of generation
                 if self.is_end_line(line):
                     break
