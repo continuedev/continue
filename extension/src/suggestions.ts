@@ -316,7 +316,7 @@ export async function showSuggestion(
         (edit) => {
           edit.insert(
             new vscode.Position(range.end.line, 0),
-            suggestion + "\n"
+            suggestion + (suggestion === "" ? "" : "\n")
           );
         },
         { undoStopBefore: false, undoStopAfter: false }
@@ -324,12 +324,11 @@ export async function showSuggestion(
       .then(
         (success) => {
           if (success) {
+            const suggestionLinesLength =
+              suggestion === "" ? 0 : suggestion.split("\n").length;
             let suggestionRange = new vscode.Range(
               new vscode.Position(range.end.line, 0),
-              new vscode.Position(
-                range.end.line + suggestion.split("\n").length,
-                0
-              )
+              new vscode.Position(range.end.line + suggestionLinesLength, 0)
             );
 
             const filename = editor!.document.uri.toString();
