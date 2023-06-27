@@ -280,8 +280,14 @@ class DefaultModelEditCodeStep(Step):
         lines = []
         unfinished_line = ""
 
+        # Don't end the block until you've matched N simultaneous lines
+        # This helps avoid many tiny blocks
+        LINES_TO_MATCH_BEFORE_ENDING_BLOCK = 2
+        matched_lines_at_end_of_block = 0
+        index_of_last_matched_line = -1
+
         async def handle_generated_line(line: str):
-            nonlocal lines, current_block_start, current_line_in_file, original_lines, original_lines_below_previous_blocks, current_block_lines, offset_from_blocks
+            nonlocal lines, current_block_start, current_line_in_file, original_lines, original_lines_below_previous_blocks, current_block_lines, offset_from_blocks, matched_lines_at_end_of_block, index_of_last_matched_line, LINES_TO_MATCH_BEFORE_ENDING_BLOCK
 
             # Highlight the line to show progress
             await sdk.ide.highlightCode(RangeInFile(filepath=rif.filepath, range=Range.from_shorthand(
@@ -295,28 +301,52 @@ class DefaultModelEditCodeStep(Step):
                     return
 
             # We are in a block currently, and checking for whether it should be ended
-            for i in range(len(original_lines_below_previous_blocks)):
-                og_line = original_lines_below_previous_blocks[i]
-                if og_line == line:
+            if matched_lines_at_end_of_block == 0:
+                # Find the first matching line
+                for i in range(len(original_lines_below_previous_blocks)):
+                    og_line = original_lines_below_previous_blocks[i]
+                    # TODO: It's a bit sus to be disqualifying empty lines.
+                    # What you ideally do is find ALL matches, and then throw them out as you check the following lines
+                    if og_line == line and og_line.strip() != "":
+                        matched_lines_at_end_of_block = 1
+                        index_of_last_matched_line = i
+                        break
+            else:
+                # Check if the next line matches
+                index_of_line_to_match = index_of_last_matched_line + matched_lines_at_end_of_block
+                if len(original_lines_below_previous_blocks) > index_of_line_to_match and original_lines_below_previous_blocks[index_of_line_to_match] == line:
+                    if matched_lines_at_end_of_block >= LINES_TO_MATCH_BEFORE_ENDING_BLOCK:
+                        # We've matched the required number of lines, insert suggestion!
 
-                    # Insert the suggestion
-                    replacement = "\n".join(current_block_lines)
-                    await sdk.ide.showSuggestion(FileEdit(
-                        filepath=rif.filepath,
-                        range=Range.from_shorthand(
-                            current_block_start, 0, current_block_start + i, 0),
-                        replacement=replacement
-                    ))
-                    if replacement == "":
-                        current_line_in_file += 1
+                        # But first, remove the lines that were matched, because they shouldn't be a part of the block
+                        # Remove matched_lines_at_end_of_block lines from current_block_lines
+                        current_block_lines = current_block_lines[:-
+                                                                  matched_lines_at_end_of_block]
 
-                    # Reset current block / update variables
-                    original_lines_below_previous_blocks = original_lines_below_previous_blocks[
-                        i + 1:]
-                    offset_from_blocks += len(current_block_lines)
-                    current_block_lines = []
-                    current_block_start = -1
-                    return
+                        # Insert the suggestion
+                        replacement = "\n".join(current_block_lines)
+                        await sdk.ide.showSuggestion(FileEdit(
+                            filepath=rif.filepath,
+                            range=Range.from_shorthand(
+                                current_block_start, 0, current_block_start + index_of_last_matched_line, 0),
+                            replacement=replacement
+                        ))
+                        if replacement == "":
+                            current_line_in_file += 1
+
+                        # Reset current block / update variables
+                        original_lines_below_previous_blocks = original_lines_below_previous_blocks[
+                            index_of_line_to_match + 1:]
+                        offset_from_blocks += len(current_block_lines)
+                        current_block_lines = []
+                        current_block_start = -1
+                        return
+                    else:
+                        matched_lines_at_end_of_block += 1
+                else:
+                    # We matched some lines, but didn't make it to N
+                    # So this block should continue on with the matched lines as a part of it
+                    matched_lines_at_end_of_block = 0
 
             current_block_lines.append(line)
 
