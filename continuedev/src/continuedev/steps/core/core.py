@@ -253,8 +253,8 @@ class DefaultModelEditCodeStep(Step):
     def is_end_line(self, line: str) -> bool:
         return "</modified_code_to_edit>" in line or "</code_to_edit>" in line
 
-    def line_to_be_ignored(self, line: str) -> bool:
-        return "```" in line or "<modified_code_to_edit>" in line or "<file_prefix>" in line or "</file_prefix>" in line or "<file_suffix>" in line or "</file_suffix>" in line or "<user_request>" in line or "</user_request>" in line or "<code_to_edit>" in line
+    def line_to_be_ignored(self, line: str, is_first_line: bool = False) -> bool:
+        return ("```" in line and is_first_line) or "<modified_code_to_edit>" in line or "<file_prefix>" in line or "</file_prefix>" in line or "<file_suffix>" in line or "</file_suffix>" in line or "<user_request>" in line or "</user_request>" in line or "<code_to_edit>" in line
 
     async def stream_rif(self, rif: RangeInFileWithContents, sdk: ContinueSDK):
         full_file_contents = await sdk.ide.readFile(rif.filepath)
@@ -355,7 +355,7 @@ class DefaultModelEditCodeStep(Step):
                 if self.is_end_line(line):
                     break
                 # Lines that should be ignored, like the <> tags
-                elif self.line_to_be_ignored(line):
+                elif self.line_to_be_ignored(line, completion_lines_covered == 0):
                     continue
                 # Check if we are currently just copying the prefix
                 elif (lines_of_prefix_copied > 0 or completion_lines_covered == 0) and lines_of_prefix_copied < len(file_prefix.splitlines()) and line == full_file_contents_lines[lines_of_prefix_copied]:
@@ -374,7 +374,7 @@ class DefaultModelEditCodeStep(Step):
                 current_line_in_file += 1
 
         # Add the unfinished line
-        if unfinished_line != "" and not self.line_to_be_ignored(unfinished_line) and not self.is_end_line(unfinished_line):
+        if unfinished_line != "" and not self.line_to_be_ignored(unfinished_line, completion_lines_covered == 0) and not self.is_end_line(unfinished_line):
             lines.append(unfinished_line)
             await handle_generated_line(unfinished_line)
             completion_lines_covered += 1
