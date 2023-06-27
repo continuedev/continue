@@ -18,8 +18,8 @@
     "react-dom": "^18.2.0",
     "react-markdown": "^8.0.5",
     "react-redux": "^8.0.5",
-    "react-syntax-highlighter": "^15.5.0",
     "react-switch": "^7.0.0",
+    "react-syntax-highlighter": "^15.5.0",
     "styled-components": "^5.3.6",
     "vscode-webview": "^1.0.1-beta.1"
   },

@@ -1,12 +1,17 @@
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
-import { synthwave84 } from "react-syntax-highlighter/dist/esm/styles/prism";
+import { vscDarkPlus as highlightStyle } from "react-syntax-highlighter/dist/esm/styles/prism";
 
 interface StyledCodeProps {
   children: string;
+  language?: string;
 }
 
 const StyledCode = (props: StyledCodeProps) => (
-  <SyntaxHighlighter style={synthwave84}>
+  <SyntaxHighlighter
+    customStyle={{ margin: "0" }}
+    style={highlightStyle}
+    language={props.language || "python"}
+  >
     {(props.children as any).props.children}
   </SyntaxHighlighter>
 );
