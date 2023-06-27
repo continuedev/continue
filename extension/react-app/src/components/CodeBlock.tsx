@@ -13,20 +13,19 @@ const StyledPre = styled.pre`
   border: 0.5px solid gray;
   border-radius: ${defaultBorderRadius};
   background-color: ${secondaryDark};
-  padding: 8px;
-  padding-top: 14px;
-  padding-bottom: 16px;
+  position: relative;
+`;
+
+const CopyButtonDiv = styled.div`
+  position: absolute;
+  top: 4px;
+  right: 4px;
 `;
 
 const StyledCopyButton = styled.button<{ visible: boolean }>`
-  /* position: relative; */
-  float: right;
   border: none;
-  background-color: ${secondaryDark};
+  background-color: transparent;
   cursor: pointer;
-  padding: 0;
-  /* margin: 4px; */
-  margin-top: -6px;
 
   visibility: ${(props) => (props.visible ? "visible" : "hidden")};
 `;
@@ -77,11 +76,13 @@ function CodeBlock(props: { language?: string; children: string }) {
         setHovered(false);
       }}
     >
-      <CopyButton
-        visible={hovered}
-        textToCopy={(props.children as any).props.children[0]}
-      />
-      <StyledCode>{props.children}</StyledCode>
+      <CopyButtonDiv>
+        <CopyButton
+          visible={hovered}
+          textToCopy={(props.children as any).props.children[0]}
+        />
+      </CopyButtonDiv>
+      <StyledCode language={props.language}>{props.children}</StyledCode>
     </StyledPre>
   );
 }
