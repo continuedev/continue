@@ -12,7 +12,7 @@ const StyledCode = (props: StyledCodeProps) => (
     style={highlightStyle}
     language={props.language || "python"}
   >
-    {(props.children as any).props.children}
+    {props.children}
   </SyntaxHighlighter>
 );
 
