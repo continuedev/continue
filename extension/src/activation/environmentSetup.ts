@@ -108,17 +108,15 @@ async function setupPythonEnv() {
   console.log("Setting up python env for Continue extension...");
 
   const [pythonCmd, pipCmd] = await getPythonPipCommands();
-  const [activateCmd, pipUpgradeCmd, touchCmd] = getActivateUpgradeTouchCommands(
-    pythonCmd,
-    pipCmd
-  );
+  const [activateCmd, pipUpgradeCmd, touchCmd] =
+    getActivateUpgradeTouchCommands(pythonCmd, pipCmd);
 
   if (checkEnvExists()) {
     console.log("Python env already exists, skipping...");
   } else {
     // Assemble the command to create the env
     const createEnvCommand = [
-      `cd ${path.join(getExtensionUri().fsPath, "scripts")}`,
+      `cd "${path.join(getExtensionUri().fsPath, "scripts")}"`,
       `${pythonCmd} -m venv env`,
     ].join("; ");
 
@@ -132,11 +130,11 @@ async function setupPythonEnv() {
         break;
       } else {
         // Remove the env and try again
-        const removeCommand = `rm -rf ${path.join(
+        const removeCommand = `rm -rf "${path.join(
           getExtensionUri().fsPath,
           "scripts",
           "env"
-        )}`;
+        )}"`;
         await runCommand(removeCommand);
       }
     }
@@ -151,7 +149,7 @@ async function setupPythonEnv() {
       console.log("Python requirements already installed, skipping...");
     } else {
       const installRequirementsCommand = [
-        `cd ${path.join(getExtensionUri().fsPath, "scripts")}`,
+        `cd "${path.join(getExtensionUri().fsPath, "scripts")}"`,
         activateCmd,
         pipUpgradeCmd,
         `${pipCmd} install -r requirements.txt`,
@@ -229,10 +227,10 @@ export async function startContinuePythonServer() {
     pythonCmd = "python";
   }
 
-  let command = `cd ${path.join(
+  let command = `cd "${path.join(
     getExtensionUri().fsPath,
     "scripts"
-  )} && ${activateCmd} && cd .. && ${pythonCmd} -m scripts.run_continue_server`;
+  )}" && ${activateCmd} && cd .. && ${pythonCmd} -m scripts.run_continue_server`;
 
   return await retryThenFail(async () => {
     console.log("Starting Continue python server...");
