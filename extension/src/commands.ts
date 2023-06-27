@@ -9,6 +9,8 @@ import {
   rejectSuggestionCommand,
   suggestionDownCommand,
   suggestionUpCommand,
+  acceptAllSuggestionsCommand,
+  rejectAllSuggestionsCommand,
 } from "./suggestions";
 import * as bridge from "./bridge";
 import { debugPanelWebview } from "./debugPanel";
@@ -49,6 +51,8 @@ const commandsMap: { [command: string]: (...args: any) => any } = {
   "continue.suggestionUp": suggestionUpCommand,
   "continue.acceptSuggestion": acceptSuggestionCommand,
   "continue.rejectSuggestion": rejectSuggestionCommand,
+  "continue.acceptAllSuggestions": acceptAllSuggestionsCommand,
+  "continue.rejectAllSuggestions": rejectAllSuggestionsCommand,
   "continue.focusContinueInput": async () => {
     vscode.commands.executeCommand("continue.continueGUIView.focus");
     debugPanelWebview?.postMessage({

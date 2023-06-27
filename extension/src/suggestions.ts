@@ -14,7 +14,7 @@ export const editorToSuggestions: Map<
   string, // URI of file
   SuggestionRanges[]
 > = new Map();
-export let currentSuggestion: Map<string, number> = new Map(); // Map from editor URI to index of current SuggestionRanges in editorToSuggestions
+export const currentSuggestion: Map<string, number> = new Map(); // Map from editor URI to index of current SuggestionRanges in editorToSuggestions
 
 // When tab is reopened, rerender the decorations:
 vscode.window.onDidChangeActiveTextEditor((editor) => {
@@ -25,16 +25,16 @@ vscode.workspace.onDidOpenTextDocument((doc) => {
   rerenderDecorations(doc.uri.toString());
 });
 
-let newDecorationType = vscode.window.createTextEditorDecorationType({
+const newDecorationType = vscode.window.createTextEditorDecorationType({
   backgroundColor: "rgb(0, 255, 0, 0.1)",
   isWholeLine: true,
 });
-let oldDecorationType = vscode.window.createTextEditorDecorationType({
+const oldDecorationType = vscode.window.createTextEditorDecorationType({
   backgroundColor: "rgb(255, 0, 0, 0.1)",
   isWholeLine: true,
   cursor: "pointer",
 });
-let newSelDecorationType = vscode.window.createTextEditorDecorationType({
+const newSelDecorationType = vscode.window.createTextEditorDecorationType({
   backgroundColor: "rgb(0, 255, 0, 0.25)",
   isWholeLine: true,
   after: {
@@ -42,7 +42,7 @@ let newSelDecorationType = vscode.window.createTextEditorDecorationType({
     margin: "0 0 0 1em",
   },
 });
-let oldSelDecorationType = vscode.window.createTextEditorDecorationType({
+const oldSelDecorationType = vscode.window.createTextEditorDecorationType({
   backgroundColor: "rgb(255, 0, 0, 0.25)",
   isWholeLine: true,
   after: {
@@ -52,19 +52,44 @@ let oldSelDecorationType = vscode.window.createTextEditorDecorationType({
 });
 
 export function rerenderDecorations(editorUri: string) {
-  let suggestions = editorToSuggestions.get(editorUri);
-  let idx = currentSuggestion.get(editorUri);
-  let editor = vscode.window.visibleTextEditors.find(
+  const suggestions = editorToSuggestions.get(editorUri);
+  const idx = currentSuggestion.get(editorUri);
+  const editor = vscode.window.visibleTextEditors.find(
     (editor) => editor.document.uri.toString() === editorUri
   );
   if (!suggestions || !editor) return;
 
-  let olds: vscode.Range[] = [],
-    news: vscode.Range[] = [],
-    oldSels: vscode.Range[] = [],
-    newSels: vscode.Range[] = [];
+  const rangesWithoutEmptyLastLine = (ranges: vscode.Range[]) => {
+    const newRanges: vscode.Range[] = [];
+    for (let i = 0; i < ranges.length; i++) {
+      const range = ranges[i];
+      if (
+        range.start.line === range.end.line &&
+        range.start.character === 0 &&
+        range.end.character === 0
+      ) {
+        // Empty range, don't show it
+        continue;
+      }
+      newRanges.push(
+        new vscode.Range(
+          range.start.line,
+          range.start.character,
+          // Don't include the last line if it is empty
+          range.end.line - (range.end.character === 0 ? 1 : 0),
+          range.end.character
+        )
+      );
+    }
+    return newRanges;
+  };
+
+  let olds: vscode.Range[] = [];
+  let news: vscode.Range[] = [];
+  let oldSels: vscode.Range[] = [];
+  let newSels: vscode.Range[] = [];
   for (let i = 0; i < suggestions.length; i++) {
-    let suggestion = suggestions[i];
+    const suggestion = suggestions[i];
     if (typeof idx != "undefined" && idx === i) {
       if (suggestion.newSelected) {
         olds.push(suggestion.oldRange);
@@ -78,6 +103,13 @@ export function rerenderDecorations(editorUri: string) {
       news.push(suggestion.newRange);
     }
   }
+
+  // Don't highlight the last line if it is empty
+  olds = rangesWithoutEmptyLastLine(olds);
+  news = rangesWithoutEmptyLastLine(news);
+  oldSels = rangesWithoutEmptyLastLine(oldSels);
+  newSels = rangesWithoutEmptyLastLine(newSels);
+
   editor.setDecorations(oldDecorationType, olds);
   editor.setDecorations(newDecorationType, news);
   editor.setDecorations(oldSelDecorationType, oldSels);
@@ -92,14 +124,14 @@ export function rerenderDecorations(editorUri: string) {
 }
 
 export function suggestionDownCommand() {
-  let editor = vscode.window.activeTextEditor;
+  const editor = vscode.window.activeTextEditor;
   if (!editor) return;
-  let editorUri = editor.document.uri.toString();
-  let suggestions = editorToSuggestions.get(editorUri);
-  let idx = currentSuggestion.get(editorUri);
+  const editorUri = editor.document.uri.toString();
+  const suggestions = editorToSuggestions.get(editorUri);
+  const idx = currentSuggestion.get(editorUri);
   if (!suggestions || idx === undefined) return;
 
-  let suggestion = suggestions[idx];
+  const suggestion = suggestions[idx];
   if (!suggestion.newSelected) {
     suggestion.newSelected = true;
   } else if (idx + 1 < suggestions.length) {
@@ -109,14 +141,14 @@ export function suggestionDownCommand() {
 }
 
 export function suggestionUpCommand() {
-  let editor = vscode.window.activeTextEditor;
+  const editor = vscode.window.activeTextEditor;
   if (!editor) return;
-  let editorUri = editor.document.uri.toString();
-  let suggestions = editorToSuggestions.get(editorUri);
-  let idx = currentSuggestion.get(editorUri);
+  const editorUri = editor.document.uri.toString();
+  const suggestions = editorToSuggestions.get(editorUri);
+  const idx = currentSuggestion.get(editorUri);
   if (!suggestions || idx === undefined) return;
 
-  let suggestion = suggestions[idx];
+  const suggestion = suggestions[idx];
   if (suggestion.newSelected) {
     suggestion.newSelected = false;
   } else if (idx > 0) {
@@ -130,10 +162,10 @@ function selectSuggestion(
   accept: SuggestionSelectionOption,
   key: SuggestionRanges | null = null
 ) {
-  let editor = vscode.window.activeTextEditor;
+  const editor = vscode.window.activeTextEditor;
   if (!editor) return;
-  let editorUri = editor.document.uri.toString();
-  let suggestions = editorToSuggestions.get(editorUri);
+  const editorUri = editor.document.uri.toString();
+  const suggestions = editorToSuggestions.get(editorUri);
 
   if (!suggestions) return;
 
@@ -174,7 +206,7 @@ function selectSuggestion(
 
   rangeToDelete = new vscode.Range(
     rangeToDelete.start,
-    new vscode.Position(rangeToDelete.end.line + 1, 0)
+    new vscode.Position(rangeToDelete.end.line, 0)
   );
   editor.edit((edit) => {
     edit.delete(rangeToDelete);
@@ -206,6 +238,26 @@ export function acceptSuggestionCommand(key: SuggestionRanges | null = null) {
   selectSuggestion("selected", key);
 }
 
+function handleAllSuggestions(accept: boolean) {
+  const editor = vscode.window.activeTextEditor;
+  if (!editor) return;
+  const editorUri = editor.document.uri.toString();
+  const suggestions = editorToSuggestions.get(editorUri);
+  if (!suggestions) return;
+
+  while (suggestions.length > 0) {
+    selectSuggestion(accept ? "new" : "old", suggestions[0]);
+  }
+}
+
+export function acceptAllSuggestionsCommand() {
+  handleAllSuggestions(true);
+}
+
+export function rejectAllSuggestionsCommand() {
+  handleAllSuggestions(false);
+}
+
 export async function rejectSuggestionCommand(
   key: SuggestionRanges | null = null
 ) {
@@ -218,62 +270,62 @@ export async function showSuggestion(
   range: vscode.Range,
   suggestion: string
 ): Promise<boolean> {
-  let existingCode = await readFileAtRange(
-    new vscode.Range(range.start, range.end),
-    editorFilename
-  );
+  // const existingCode = await readFileAtRange(
+  //   new vscode.Range(range.start, range.end),
+  //   editorFilename
+  // );
 
   // If any of the outside lines are the same, don't repeat them in the suggestion
-  let slines = suggestion.split("\n");
-  let elines = existingCode.split("\n");
-  let linesRemovedBefore = 0;
-  let linesRemovedAfter = 0;
-  while (slines.length > 0 && elines.length > 0 && slines[0] === elines[0]) {
-    slines.shift();
-    elines.shift();
-    linesRemovedBefore++;
-  }
+  // const slines = suggestion.split("\n");
+  // const elines = existingCode.split("\n");
+  // let linesRemovedBefore = 0;
+  // let linesRemovedAfter = 0;
+  // while (slines.length > 0 && elines.length > 0 && slines[0] === elines[0]) {
+  //   slines.shift();
+  //   elines.shift();
+  //   linesRemovedBefore++;
+  // }
 
-  while (
-    slines.length > 0 &&
-    elines.length > 0 &&
-    slines[slines.length - 1] === elines[elines.length - 1]
-  ) {
-    slines.pop();
-    elines.pop();
-    linesRemovedAfter++;
-  }
+  // while (
+  //   slines.length > 0 &&
+  //   elines.length > 0 &&
+  //   slines[slines.length - 1] === elines[elines.length - 1]
+  // ) {
+  //   slines.pop();
+  //   elines.pop();
+  //   linesRemovedAfter++;
+  // }
 
-  suggestion = slines.join("\n");
-  if (suggestion === "") return Promise.resolve(false); // Don't even make a suggestion if they are exactly the same
+  // suggestion = slines.join("\n");
+  // if (suggestion === "") return Promise.resolve(false); // Don't even make a suggestion if they are exactly the same
 
-  range = new vscode.Range(
-    new vscode.Position(range.start.line + linesRemovedBefore, 0),
-    new vscode.Position(
-      range.end.line - linesRemovedAfter,
-      elines.at(-1)?.length || 0
-    )
-  );
+  // range = new vscode.Range(
+  //   new vscode.Position(range.start.line + linesRemovedBefore, 0),
+  //   new vscode.Position(
+  //     range.end.line - linesRemovedAfter,
+  //     elines.at(-1)?.length || 0
+  //   )
+  // );
 
-  let editor = await openEditorAndRevealRange(editorFilename, range);
+  const editor = await openEditorAndRevealRange(editorFilename, range);
   if (!editor) return Promise.resolve(false);
 
   return new Promise((resolve, reject) => {
     editor!
-      .edit((edit) => {
-        if (range.end.line + 1 >= editor.document.lineCount) {
-          suggestion = "\n" + suggestion;
-        }
-        edit.insert(
-          new vscode.Position(range.end.line + 1, 0),
-          suggestion + "\n"
-        );
-      })
+      .edit(
+        (edit) => {
+          edit.insert(
+            new vscode.Position(range.end.line, 0),
+            suggestion + "\n"
+          );
+        },
+        { undoStopBefore: false, undoStopAfter: false }
+      )
       .then(
         (success) => {
           if (success) {
             let suggestionRange = new vscode.Range(
-              new vscode.Position(range.end.line + 1, 0),
+              new vscode.Position(range.end.line, 0),
               new vscode.Position(
                 range.end.line + suggestion.split("\n").length,
                 0

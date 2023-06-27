@@ -12,21 +12,25 @@ class SuggestionsCodeLensProvider implements vscode.CodeLensProvider {
     }
 
     let codeLenses: vscode.CodeLens[] = [];
-    for (let suggestion of suggestions) {
-      let range = new vscode.Range(
+    for (const suggestion of suggestions) {
+      const range = new vscode.Range(
         suggestion.oldRange.start,
         suggestion.newRange.end
       );
       codeLenses.push(
         new vscode.CodeLens(range, {
-          title: "Accept",
+          title: "Accept ✅",
           command: "continue.acceptSuggestion",
           arguments: [suggestion],
         }),
         new vscode.CodeLens(range, {
-          title: "Reject",
+          title: "Reject ❌",
           command: "continue.rejectSuggestion",
           arguments: [suggestion],
+        }),
+        new vscode.CodeLens(range, {
+          title: "(⌘⇧↩/⌘⇧⌫ to accept/reject all)",
+          command: "",
         })
       );
     }
@@ -53,12 +57,13 @@ class SuggestionsCodeLensProvider implements vscode.CodeLensProvider {
 
 const allCodeLensProviders: { [langauge: string]: vscode.CodeLensProvider[] } =
   {
-    python: [new SuggestionsCodeLensProvider()],
+    // python: [new SuggestionsCodeLensProvider(), new PytestCodeLensProvider()],
+    "*": [new SuggestionsCodeLensProvider()],
   };
 
 export function registerAllCodeLensProviders(context: vscode.ExtensionContext) {
-  for (let language in allCodeLensProviders) {
-    for (let codeLensProvider of allCodeLensProviders[language]) {
+  for (const language in allCodeLensProviders) {
+    for (const codeLensProvider of allCodeLensProviders[language]) {
       context.subscriptions.push(
         vscode.languages.registerCodeLensProvider(language, codeLensProvider)
       );

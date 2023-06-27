@@ -12,7 +12,7 @@ class AbstractIdeProtocolServer(ABC):
         """Handle a json message"""
 
     @abstractmethod
-    def showSuggestion():
+    def showSuggestion(self, file_edit: FileEdit):
         """Show a suggestion to the user"""
 
     @abstractmethod
