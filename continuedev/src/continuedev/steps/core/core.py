@@ -316,7 +316,6 @@ class DefaultModelEditCodeStep(Step):
 
                     # Reset current block
                     offset_from_blocks += len(current_block_lines)
-                    current_line_in_file += len(current_block_lines)
                     current_block_lines = []
                     current_block_start = -1
                     return
