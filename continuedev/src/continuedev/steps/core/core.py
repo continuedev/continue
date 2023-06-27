@@ -268,166 +268,61 @@ class DefaultModelEditCodeStep(Step):
         completion_lines_covered = 0
         # In the actual file, as it is with blocks and such
         current_line_in_file = rif.range.start.line
-        lines = []
-        unfinished_line = ""
 
-        red_or_green_first: Literal["green", "red"] = "green"
-        current_block_added = []
-        current_block_removed = []
-        last_diff_char = " "
-
+        current_block_lines = []
+        original_lines_below_previous_blocks = original_lines
+        current_block_start = -1
         offset_from_blocks = 0
-        last_matched_line = 0
-        matched_line = 0
-        current_block_start_of_insertion = -1
-        lines_covered_in_this_block = 0
-        liness_deleted_in_this_block = 0
-        lines_same_in_this_block = 0
-
-        async def insert_line(line: str, line_no: int, color: Literal["red", "green"]):
-            if color == "green":
-                range = Range.from_shorthand(
-                    line_no, 0, line_no, 0)
-
-                await sdk.ide.applyFileSystemEdit(FileEdit(
-                    filepath=rif.filepath,
-                    range=range,
-                    replacement=line + "\n"
-                ))
-
-            color = '#00FF0022' if color == "green" else "#FF000022"
-            await sdk.ide.highlightCode(RangeInFile(filepath=rif.filepath, range=range), color)
-
-        async def show_block_as_suggestion():
-            nonlocal completion_lines_covered, offset_from_blocks, current_block_added, current_block_removed, current_block_start_of_insertion, matched_line, last_matched_line, lines_covered_in_this_block, liness_deleted_in_this_block, current_line_in_file
-            end_line = offset_from_blocks + rif.range.start.line + matched_line
-
-            if red_or_green_first == "green":
-                # Delete the green inserted lines, because they will be shown as part of the suggestion
-                await sdk.ide.applyFileSystemEdit(FileEdit(
-                    filepath=rif.filepath,
-                    range=Range.from_shorthand(
-                        current_block_start_of_insertion, 0, current_block_start_of_insertion + len(current_block_added), 0),
-                    replacement=""
-                ))
-
-                lines_deleted_in_this_block = lines_covered_in_this_block - lines_same_in_this_block
-                await sdk.ide.showSuggestion(FileEdit(
-                    filepath=rif.filepath,
-                    range=Range.from_shorthand(
-                        current_block_start_of_insertion, 0, end_line, 0),
-                    replacement="\n".join(current_block_added) + "\n"
-                ))
-            else:
-                # Ends in green, so if you want to delete the lines before the matched line, you need to start a new block.
-                pass
-                # current_block = [
-                #     line for line in original_lines[]
-                # ]
-
-            current_line_in_file = end_line + \
-                len(current_block_added) + 1  # CURRENTLY TODO HERE NOTE
-            offset_from_blocks += len(current_block_added)
-            current_block_added.clear()
-            current_block_removed.clear()
-
-        async def add_green_to_block(line: str):
-            # Keep track of where the first inserted line in this block came from
-            nonlocal current_block_start_of_insertion, current_block_added
-            if current_block_start_of_insertion < 0:
-                current_block_start_of_insertion = current_line_in_file
-
-            # Insert the line, highlight green
-            await insert_line(line, current_line_in_file, "green")
-            current_block_added.append(line)
-            range = Range.from_shorthand(
-                current_line_in_file, 0, current_line_in_file, 0)
-            await sdk.ide.highlightCode(RangeInFile(filepath=rif.filepath, range=range), "#00FF0022")
-
-        async def add_red_to_block(line: str):
-            # Highlight the current line red and insert
-            current_block_removed.append(line)
-            range = Range.from_shorthand(
-                current_line_in_file, 0, current_line_in_file, 0)
-            await sdk.ide.highlightCode(RangeInFile(filepath=rif.filepath, range=range), "#FF000022")
-
-        def line_matches_something_in_original(line: str) -> bool:
-            nonlocal offset_from_blocks, last_matched_line, matched_line, lines_covered_in_this_block
-            diff = list(filter(lambda x: not x.startswith("?"), difflib.ndiff(
-                original_lines[matched_line:], current_block_added + [line])))
-
-            i = current_line_in_file
-            if diff[i][0] == " ":
-                last_matched_line = matched_line
-                matched_line = i
-                lines_covered_in_this_block = matched_line - last_matched_line
-                return True
-            elif diff[i][0] == "-":
-                last_matched_line = matched_line
-                matched_line = i
-                lines_covered_in_this_block = matched_line - last_matched_line
-                return True
-            elif diff[i][0] == "+":
-                return False
-
-            # TODO: and line.strip() != ""?
-            for j in range(matched_line, len(original_lines)):
-                if line == original_lines[j]:
-                    last_matched_line = matched_line
-                    matched_line = j
-                    lines_covered_in_this_block = matched_line - last_matched_line
-                    return True
-            return False
-
-        def should_end_current_block(next_diff_char: str) -> bool:
-            nonlocal current_block_added, current_block_removed, last_diff_char
-            if next_diff_char == " ":
-                return len(current_block_added) or len(current_block_removed)
-            elif next_diff_char == "-":
-                return last_diff_char == "+" and len(current_block_removed)
-            elif next_diff_char == "+":
-                return last_diff_char == "-" and len(current_block_added)
-            raise Exception("Invalid next_diff_char")
-
-        async def handle_generated_line(line: str):
-            nonlocal completion_lines_covered, lines, current_block_added, current_block_removed, offset_from_blocks, original_lines, current_block_start_of_insertion, matched_line, lines_covered_in_this_block, lines_same_in_this_block, current_line_in_file, completion_lines_covered, last_diff_char
-
-            # Highlight the line to show progress
-            await sdk.ide.highlightCode(RangeInFile(filepath=rif.filepath, range=Range.from_shorthand(
-                current_line_in_file, 0, current_line_in_file, 0)), "#FFFFFF22")
-
-            # Get the diff of current block and the original
-            diff = list(filter(lambda x: not x.startswith("?"), difflib.ndiff(
-                original_lines, lines + [line])))
-            next_diff_char = diff[current_line_in_file][0]
-
-            # If we need to start a new block, end the old one
-            if should_end_current_block(next_diff_char):
-                await show_block_as_suggestion()
-                current_block_start_of_insertion = -1
-                lines_same_in_this_block += 1
-
-            elif next_diff_char == "-":
-                # Line was removed from the original, add it to the block
-                await add_red_to_block(line)
-
-            elif next_diff_char == "+":
-                # Line was added to the original, add it to the block
-                await add_green_to_block(line)
-
-            elif next_diff_char == " ":
-                # Line was unchanged, and didn't have to end a block
-                pass
-
-            else:
-                raise Exception("Unexpected diff character: " +
-                                diff[current_line_in_file][0])
-
-            last_diff_char = next_diff_char
 
         lines_of_prefix_copied = 0
         repeating_file_suffix = False
         line_below_highlighted_range = file_suffix.lstrip().split("\n")[0]
+        lines = []
+        unfinished_line = ""
+
+        async def handle_generated_line(line: str):
+            nonlocal lines, current_block_start, current_line_in_file, original_lines, original_lines_below_previous_blocks, current_block_lines, offset_from_blocks
+
+            # Highlight the line to show progress
+            await sdk.ide.highlightCode(RangeInFile(filepath=rif.filepath, range=Range.from_shorthand(
+                current_line_in_file, 0, current_line_in_file, 0)), "#FFFFFF22" if len(current_block_lines) == 0 else "#FFFF0022")
+
+            if len(current_block_lines) == 0:
+                if len(original_lines_below_previous_blocks) == 0 or line != original_lines_below_previous_blocks[0]:
+                    current_block_lines.append(line)
+                    current_block_start = current_line_in_file
+
+                else:
+                    original_lines_below_previous_blocks = original_lines_below_previous_blocks[
+                        1:]
+                return
+
+            # We are in a block currently, and checking for whether it should be ended
+            for i in range(len(original_lines_below_previous_blocks)):
+                og_line = original_lines_below_previous_blocks[i]
+                if og_line == line and len(og_line.strip()):
+                    # Gather the lines to insert/replace for the suggestion
+                    lines_to_replace = current_block_lines[:i]
+                    original_lines_below_previous_blocks = original_lines_below_previous_blocks[
+                        i + 1:]
+
+                    # Insert the suggestion
+                    await sdk.ide.showSuggestion(FileEdit(
+                        filepath=rif.filepath,
+                        range=Range.from_shorthand(
+                            current_block_start, 0, current_block_start + i, 0),
+                        replacement="\n".join(current_block_lines)
+                    ))
+
+                    # Reset current block
+                    offset_from_blocks += len(current_block_lines)
+                    current_line_in_file += len(current_block_lines)
+                    current_block_lines = []
+                    current_block_start = -1
+                    return
+
+            current_block_lines.append(line)
+
         async for chunk in model_to_use.stream_chat(prompt, with_history=await sdk.get_chat_context(), temperature=0):
             # Stop early if it is repeating the file_suffix
             if repeating_file_suffix:
@@ -473,17 +368,14 @@ class DefaultModelEditCodeStep(Step):
             await handle_generated_line(unfinished_line)
             completion_lines_covered += 1
 
-        # Highlight the remainder of the range red
-        if completion_lines_covered < len(original_lines):
-            await handle_generated_line("")
-            # range = Range.from_shorthand(
-            #     i + 1 + offset_from_blocks + rif.range.start.line, 0, len(original_lines) + offset_from_blocks + rif.range.start.line, 0)
-            # await sdk.ide.highlightCode(RangeInFile(filepath=rif.filepath, range=range), "#FF000022")
-
         # If the current block isn't empty, add that suggestion
-        if len(current_block_added) > 0 or len(current_block_removed) > 0:
-            matched_line = rif.range.end.line - rif.range.start.line
-            await show_block_as_suggestion()
+        if len(current_block_lines) > 0:
+            await sdk.ide.showSuggestion(FileEdit(
+                filepath=rif.filepath,
+                range=Range.from_shorthand(
+                    current_block_start, 0, current_block_start + len(original_lines_below_previous_blocks), 0),
+                replacement="\n".join(current_block_lines)
+            ))
 
         # Record the completion
         completion = "\n".join(lines)

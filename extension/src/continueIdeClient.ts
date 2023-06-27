@@ -145,6 +145,7 @@ class IdeProtocolClient {
   // ------------------------------------ //
   // On message handlers
 
+  private _lastDecorationType: vscode.TextEditorDecorationType | null = null;
   async highlightCode(rangeInFile: RangeInFile, color: string) {
     const range = new vscode.Range(
       rangeInFile.range.start.line,
@@ -172,6 +173,11 @@ class IdeProtocolClient {
           }
         }
       );
+
+      if (this._lastDecorationType) {
+        editor.setDecorations(this._lastDecorationType, []);
+      }
+      this._lastDecorationType = decorationType;
     }
   }
 
