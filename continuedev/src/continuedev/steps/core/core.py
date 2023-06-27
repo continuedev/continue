@@ -9,7 +9,7 @@ from ...libs.llm.prompt_utils import MarkdownStyleEncoderDecoder
 from ...models.filesystem_edit import EditDiff, FileEdit, FileEditWithFullContents, FileSystemEdit
 from ...models.filesystem import FileSystem, RangeInFile, RangeInFileWithContents
 from ...core.observation import Observation, TextObservation, TracebackObservation, UserInputObservation
-from ...core.main import Step, SequentialStep
+from ...core.main import ChatMessage, Step, SequentialStep
 from ...libs.util.count_tokens import MAX_TOKENS_FOR_MODEL, DEFAULT_MAX_TOKENS
 import difflib
 
@@ -322,7 +322,13 @@ class DefaultModelEditCodeStep(Step):
 
             current_block_lines.append(line)
 
-        async for chunk in model_to_use.stream_chat(prompt, with_history=await sdk.get_chat_context(), temperature=0):
+        messages = await sdk.get_chat_context()
+        messages.append(ChatMessage(
+            role="user",
+            content=prompt,
+            summary=self.user_input
+        ))
+        async for chunk in model_to_use.stream_chat(messages, temperature=0):
             # Stop early if it is repeating the file_suffix or the step was deleted
             if repeating_file_suffix:
                 break
@@ -330,6 +336,9 @@ class DefaultModelEditCodeStep(Step):
                 return
 
             # Accumulate lines
+            if "content" not in chunk:
+                continue
+            chunk = chunk["content"]
             chunk_lines = chunk.split("\n")
             chunk_lines[0] = unfinished_line + chunk_lines[0]
             if chunk.endswith("\n"):
