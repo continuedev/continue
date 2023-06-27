@@ -71,14 +71,16 @@ async function getPythonPipCommands() {
   return [pythonCmd, pipCmd];
 }
 
-function getActivateUpgradeCommands(pythonCmd: string, pipCmd: string) {
+function getActivateUpgradeTouchCommands(pythonCmd: string, pipCmd: string) {
   let activateCmd = ". env/bin/activate";
   let pipUpgradeCmd = `${pipCmd} install --upgrade pip`;
+  let touchCmd = "touch .continue_env_installed";
   if (process.platform == "win32") {
     activateCmd = ".\\env\\Scripts\\activate";
     pipUpgradeCmd = `${pythonCmd} -m pip install --upgrade pip`;
+    touchCmd = "ni .continue_env_installed -type file";
   }
-  return [activateCmd, pipUpgradeCmd];
+  return [activateCmd, pipUpgradeCmd, touchCmd];
 }
 
 function checkEnvExists() {
@@ -106,7 +108,7 @@ async function setupPythonEnv() {
   console.log("Setting up python env for Continue extension...");
 
   const [pythonCmd, pipCmd] = await getPythonPipCommands();
-  const [activateCmd, pipUpgradeCmd] = getActivateUpgradeCommands(
+  const [activateCmd, pipUpgradeCmd, touchCmd] = getActivateUpgradeTouchCommands(
     pythonCmd,
     pipCmd
   );
@@ -153,7 +155,7 @@ async function setupPythonEnv() {
         activateCmd,
         pipUpgradeCmd,
         `${pipCmd} install -r requirements.txt`,
-        "touch .continue_env_installed",
+        touchCmd,
       ].join(" ; ");
       const [, stderr] = await runCommand(installRequirementsCommand);
       if (stderr) {
@@ -230,7 +232,7 @@ export async function startContinuePythonServer() {
   let command = `cd ${path.join(
     getExtensionUri().fsPath,
     "scripts"
-  )} ; ${activateCmd} ; cd .. ; ${pythonCmd} -m scripts.run_continue_server`;
+  )} && ${activateCmd} && cd .. && ${pythonCmd} -m scripts.run_continue_server`;
 
   return await retryThenFail(async () => {
     console.log("Starting Continue python server...");
