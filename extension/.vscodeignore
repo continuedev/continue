@@ -23,3 +23,4 @@ react-app/src
 **/__pycache__
 
 scripts/data
+scripts/env
