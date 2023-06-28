@@ -183,7 +183,7 @@ class DefaultModelEditCodeStep(Step):
                     full_file_contents_lst[cur_end_line])
                 cur_end_line -= 1
                 if total_tokens < MAX_TOKENS_FOR_MODEL[model_to_use.name]:
-                    return cur_start_line, cur_end_line
+                    break
 
             if total_tokens > MAX_TOKENS_FOR_MODEL[model_to_use.name]:
                 while cur_start_line < max_start_line:
@@ -191,7 +191,7 @@ class DefaultModelEditCodeStep(Step):
                     total_tokens -= model_to_use.count_tokens(
                         full_file_contents_lst[cur_end_line])
                     if total_tokens < MAX_TOKENS_FOR_MODEL[model_to_use.name]:
-                        return cur_start_line, cur_end_line
+                        break
 
         # Now use the found start/end lines to get the prefix and suffix strings
         file_prefix = "\n".join(

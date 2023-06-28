@@ -25,6 +25,9 @@ class SimpleChatStep(Step):
         await sdk.update_ui()
 
         async for chunk in sdk.models.default.stream_complete(self.user_input, with_history=await sdk.get_chat_context()):
+            if sdk.current_step_was_deleted():
+                return
+
             self.description += chunk
             await sdk.update_ui()
 
@@ -125,11 +128,11 @@ class ChatWithFunctions(Step):
                              EditHighlightedCodeStep(user_input=""),
                              ViewDirectoryTreeStep(), AddDirectoryStep(directory_name=""),
                              DeleteFileStep(filename=""), RunTerminalCommandStep(command="")]
-    name: str = "Chat"
+    name: str = "Input"
     manage_own_chat_context: bool = True
 
     async def run(self, sdk: ContinueSDK):
-        self.description = f"```{self.user_input}```\n\nDeciding next steps...\n\n"
+        self.description = f"```{self.user_input}```"
         await sdk.update_ui()
 
         step_name_step_class_map = {
@@ -153,6 +156,9 @@ class ChatWithFunctions(Step):
             msg_step = None
 
             async for msg_chunk in sdk.models.gpt350613.stream_chat(await sdk.get_chat_context(), functions=functions):
+                if sdk.current_step_was_deleted():
+                    return
+
                 if "content" in msg_chunk and msg_chunk["content"] is not None:
                     msg_content += msg_chunk["content"]
                     # if last_function_called_index_in_history is not None:
@@ -220,13 +226,13 @@ class ChatWithFunctions(Step):
                 step_to_run = step_name_step_class_map[func_name](
                     **fn_call_params)
 
-                if func_name == "AddFileStep":
-                    step_to_run.hide = True
-                    self.description += f"\nAdded file `{func_args['filename']}`"
-                elif func_name == "AddDirectoryStep":
-                    step_to_run.hide = True
-                    self.description += f"\nAdded directory `{func_args['directory_name']}`"
-                else:
-                    self.description += f"\n`Running function {func_name}`\n\n"
+                # if func_name == "AddFileStep":
+                #     step_to_run.hide = True
+                #     self.description += f"\nAdded file `{func_args['filename']}`"
+                # elif func_name == "AddDirectoryStep":
+                #     step_to_run.hide = True
+                #     self.description += f"\nAdded directory `{func_args['directory_name']}`"
+                # else:
+                #     self.description += f"\n`Running function {func_name}`\n\n"
                 await sdk.run_step(step_to_run)
                 await sdk.update_ui()
