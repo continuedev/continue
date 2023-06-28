@@ -154,21 +154,22 @@ class DefaultModelEditCodeStep(Step):
     _prompt_and_completion: str = ""
 
     async def describe(self, models: Models) -> Coroutine[str, None, None]:
-        description = await models.gpt35.complete(
+        description = await models.gpt3516k.complete(
             f"{self._prompt_and_completion}\n\nPlease give brief a description of the changes made above using markdown bullet points. Be concise and only mention changes made to the commit before, not prefix or suffix:")
-        self.name = await models.gpt35.complete(f"Write a very short title to describe this requested change: '{self.user_input}'. This is the title:")
+        self.name = await models.gpt3516k.complete(f"Write a very short title to describe this requested change: '{self.user_input}'. This is the title:")
         return f"`{self.user_input}`\n\n" + description
 
     async def get_prompt_parts(self, rif: RangeInFileWithContents, sdk: ContinueSDK, full_file_contents: str):
         # We don't know here all of the functions being passed in.
         # We care because if this prompt itself goes over the limit, then the entire message will have to be cut from the completion.
         # Overflow won't happen, but prune_chat_messages in count_tokens.py will cut out this whole thing, instead of us cutting out only as many lines as we need.
+        model_to_use = sdk.models.default
+
         BUFFER_FOR_FUNCTIONS = 200
         total_tokens = model_to_use.count_tokens(
             full_file_contents + self._prompt + self.user_input) + BUFFER_FOR_FUNCTIONS + DEFAULT_MAX_TOKENS
 
         # If using 3.5 and overflows, upgrade to 3.5.16k
-        model_to_use = sdk.models.default
         if model_to_use.name == "gpt-3.5-turbo":
             if total_tokens > MAX_TOKENS_FOR_MODEL["gpt-3.5-turbo"]:
                 model_to_use = sdk.models.gpt3516k
@@ -405,7 +406,7 @@ class DefaultModelEditCodeStep(Step):
                     continue
                 # Because really short lines might be expected to be repeated, this is only a !heuristic!
                 # Stop when it starts copying the file_suffix
-                elif line.strip() == line_below_highlighted_range.strip() and len(line.strip()) > 4:
+                elif line.strip() == line_below_highlighted_range.strip() and len(line.strip()) > 4 and not line.strip() == original_lines_below_previous_blocks[0].strip():
                     repeating_file_suffix = True
                     break
 
