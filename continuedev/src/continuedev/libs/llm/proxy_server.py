@@ -38,7 +38,7 @@ class ProxyServer(LLM):
                 **args
             }) as resp:
                 try:
-                    return json.loads(await resp.text())
+                    return await resp.text()
                 except:
                     raise Exception(await resp.text())
 
