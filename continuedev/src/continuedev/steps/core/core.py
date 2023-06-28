@@ -318,17 +318,20 @@ class DefaultModelEditCodeStep(Step):
                     if matched_lines_at_end_of_block >= LINES_TO_MATCH_BEFORE_ENDING_BLOCK:
                         # We've matched the required number of lines, insert suggestion!
 
-                        # But first, remove the lines that were matched, because they shouldn't be a part of the block
-                        # Remove matched_lines_at_end_of_block lines from current_block_lines
-                        current_block_lines = current_block_lines[:-
-                                                                  matched_lines_at_end_of_block]
+                        # We added some lines to the block that were matched (including maybe some blank lines)
+                        # So here we will strip all matching lines from the end of current_block_lines
+                        lines_stripped = []
+                        index_of_end_of_block = index_of_line_to_match
+                        while len(current_block_lines) > 0 and current_block_lines[-1] == original_lines_below_previous_blocks[index_of_end_of_block - 1]:
+                            lines_stripped.append(current_block_lines.pop())
+                            index_of_end_of_block -= 1
 
                         # Insert the suggestion
                         replacement = "\n".join(current_block_lines)
                         await sdk.ide.showSuggestion(FileEdit(
                             filepath=rif.filepath,
                             range=Range.from_shorthand(
-                                current_block_start, 0, current_block_start + index_of_last_matched_line, 0),
+                                current_block_start, 0, current_block_start + index_of_end_of_block, 0),
                             replacement=replacement
                         ))
                         if replacement == "":
@@ -340,6 +343,9 @@ class DefaultModelEditCodeStep(Step):
                         offset_from_blocks += len(current_block_lines)
                         current_block_lines = []
                         current_block_start = -1
+                        matched_lines_at_end_of_block = 0
+                        index_of_last_matched_line = -1
+
                         return
                     else:
                         matched_lines_at_end_of_block += 1

@@ -37,18 +37,18 @@ const oldDecorationType = vscode.window.createTextEditorDecorationType({
 const newSelDecorationType = vscode.window.createTextEditorDecorationType({
   backgroundColor: "rgb(0, 255, 0, 0.25)",
   isWholeLine: true,
-  after: {
-    contentText: "Press ctrl+shift+enter to accept",
-    margin: "0 0 0 1em",
-  },
+  // after: {
+  //   contentText: "Press ctrl+shift+enter to accept",
+  //   margin: "0 0 0 1em",
+  // },
 });
 const oldSelDecorationType = vscode.window.createTextEditorDecorationType({
   backgroundColor: "rgb(255, 0, 0, 0.25)",
   isWholeLine: true,
-  after: {
-    contentText: "Press ctrl+shift+enter to reject",
-    margin: "0 0 0 1em",
-  },
+  // after: {
+  //   contentText: "Press ctrl+shift+enter to reject",
+  //   margin: "0 0 0 1em",
+  // },
 });
 
 export function rerenderDecorations(editorUri: string) {
