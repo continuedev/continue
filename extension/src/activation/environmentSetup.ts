@@ -101,9 +101,32 @@ function checkEnvExists() {
 }
 
 function checkRequirementsInstalled() {
-  return fs.existsSync(
-    path.join(getExtensionUri().fsPath, "scripts", ".continue_env_installed")
+  const envLibsPath = path.join(
+    getExtensionUri().fsPath,
+    "scripts",
+    "env",
+    process.platform == "win32" ? "Lib" : "lib"
   );
+  // Get the python version folder name
+  const pythonVersions = fs.readdirSync(envLibsPath).filter((f: string) => {
+    return f.startsWith("python");
+  });
+  if (pythonVersions.length == 0) {
+    return false;
+  }
+
+  const continuePath = path.join(
+    envLibsPath,
+    pythonVersions[0],
+    "site-packages",
+    "continuedev"
+  );
+
+  return fs.existsSync(continuePath);
+
+  // return fs.existsSync(
+  //   path.join(getExtensionUri().fsPath, "scripts", ".continue_env_installed")
+  // );
 }
 
 async function setupPythonEnv() {
