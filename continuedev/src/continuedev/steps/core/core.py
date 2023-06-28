@@ -160,10 +160,17 @@ class DefaultModelEditCodeStep(Step):
         return f"`{self.user_input}`\n\n" + description
 
     async def get_prompt_parts(self, rif: RangeInFileWithContents, sdk: ContinueSDK, full_file_contents: str):
+        # We don't know here all of the functions being passed in.
+        # We care because if this prompt itself goes over the limit, then the entire message will have to be cut from the completion.
+        # Overflow won't happen, but prune_chat_messages in count_tokens.py will cut out this whole thing, instead of us cutting out only as many lines as we need.
+        BUFFER_FOR_FUNCTIONS = 200
+        total_tokens = model_to_use.count_tokens(
+            full_file_contents + self._prompt + self.user_input) + BUFFER_FOR_FUNCTIONS + DEFAULT_MAX_TOKENS
+
         # If using 3.5 and overflows, upgrade to 3.5.16k
         model_to_use = sdk.models.default
         if model_to_use.name == "gpt-3.5-turbo":
-            if sdk.models.gpt35.count_tokens(full_file_contents) > MAX_TOKENS_FOR_MODEL["gpt-3.5-turbo"]:
+            if total_tokens > MAX_TOKENS_FOR_MODEL["gpt-3.5-turbo"]:
                 model_to_use = sdk.models.gpt3516k
 
         # Remove tokens from the end first, and then the start to clear space
@@ -173,9 +180,6 @@ class DefaultModelEditCodeStep(Step):
         min_end_line = rif.range.end.line
         cur_start_line = 0
         cur_end_line = len(full_file_contents_lst) - 1
-
-        total_tokens = model_to_use.count_tokens(
-            full_file_contents + self._prompt)
 
         if total_tokens > MAX_TOKENS_FOR_MODEL[model_to_use.name]:
             while cur_end_line > min_end_line:
