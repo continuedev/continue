@@ -290,8 +290,9 @@ class DefaultModelEditCodeStep(Step):
             nonlocal lines, current_block_start, current_line_in_file, original_lines, original_lines_below_previous_blocks, current_block_lines, offset_from_blocks, matched_lines_at_end_of_block, index_of_last_matched_line, LINES_TO_MATCH_BEFORE_ENDING_BLOCK
 
             # Highlight the line to show progress
+            line_to_highlight = current_line_in_file - len(current_block_lines)
             await sdk.ide.highlightCode(RangeInFile(filepath=rif.filepath, range=Range.from_shorthand(
-                current_line_in_file, 0, current_line_in_file, 0)), "#FFFFFF22" if len(current_block_lines) == 0 else "#FFFF0022")
+                line_to_highlight, 0, line_to_highlight, 0)), "#FFFFFF22" if len(current_block_lines) == 0 else "#00FF0022")
 
             if len(current_block_lines) == 0:
                 current_block_start = current_line_in_file
@@ -331,7 +332,7 @@ class DefaultModelEditCodeStep(Step):
                         await sdk.ide.showSuggestion(FileEdit(
                             filepath=rif.filepath,
                             range=Range.from_shorthand(
-                                current_block_start, 0, current_block_start + index_of_end_of_block, 0),
+                                current_block_start + offset_from_blocks, 0, current_block_start + offset_from_blocks + index_of_end_of_block, 0),
                             replacement=replacement
                         ))
                         if replacement == "":
@@ -419,17 +420,19 @@ class DefaultModelEditCodeStep(Step):
         if len(current_block_lines) > 0:
             # We have a chance to back-track here for blank lines that are repeats of the suffix
             num_to_remove = 0
-            if repeating_file_suffix:
-                for i in range(-1, -len(current_block_lines) - 1, -1):
-                    if current_block_lines[i].strip() == "":
-                        num_to_remove += 1
+            for i in range(-1, -len(current_block_lines) - 1, -1):
+                if len(original_lines_below_previous_blocks) == 0:
+                    break
+                if current_block_lines[i] == original_lines_below_previous_blocks[-1]:
+                    num_to_remove += 1
+                    original_lines_below_previous_blocks.pop()
             current_block_lines = current_block_lines[:-
                                                       num_to_remove] if num_to_remove > 0 else current_block_lines
 
             await sdk.ide.showSuggestion(FileEdit(
                 filepath=rif.filepath,
                 range=Range.from_shorthand(
-                    current_block_start, 0, current_block_start + len(original_lines_below_previous_blocks), 0),
+                    current_block_start + offset_from_blocks, 0, current_block_start + offset_from_blocks + len(original_lines_below_previous_blocks), 0),
                 replacement="\n".join(current_block_lines)
             ))
 
