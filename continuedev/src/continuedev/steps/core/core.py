@@ -254,7 +254,7 @@ class DefaultModelEditCodeStep(Step):
         return "</modified_code_to_edit>" in line or "</code_to_edit>" in line
 
     def line_to_be_ignored(self, line: str, is_first_line: bool = False) -> bool:
-        return ("```" in line and is_first_line) or "<modified_code_to_edit>" in line or "<file_prefix>" in line or "</file_prefix>" in line or "<file_suffix>" in line or "</file_suffix>" in line or "<user_request>" in line or "</user_request>" in line or "<code_to_edit>" in line
+        return "```" in line or "<modified_code_to_edit>" in line or "<file_prefix>" in line or "</file_prefix>" in line or "<file_suffix>" in line or "</file_suffix>" in line or "<user_request>" in line or "</user_request>" in line or "<code_to_edit>" in line
 
     async def stream_rif(self, rif: RangeInFileWithContents, sdk: ContinueSDK):
         full_file_contents = await sdk.ide.readFile(rif.filepath)

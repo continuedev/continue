@@ -61,7 +61,7 @@ function CopyButton(props: { textToCopy: string; visible: boolean }) {
   );
 }
 
-function CodeBlock(props: { children: string }) {
+function CodeBlock(props: { children: React.ReactNode }) {
   const [result, setResult] = useState<AutoHighlightResult | undefined>(
     undefined
   );
