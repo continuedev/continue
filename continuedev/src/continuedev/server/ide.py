@@ -334,15 +334,15 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
         )
 
 
-ideProtocolServer = IdeProtocolServer(session_manager)
-
-
 @router.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
     print("Accepted websocket connection from, ", websocket.client)
     await websocket.send_json({"messageType": "connected", "data": {}})
+
+    ideProtocolServer = IdeProtocolServer(session_manager)
     ideProtocolServer.websocket = websocket
+
     while True:
         message = await websocket.receive_text()
         message = json.loads(message)
