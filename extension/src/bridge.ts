@@ -48,7 +48,7 @@ export function get_api_url() {
   if (config.API_URL) {
     return config.API_URL;
   }
-  return "http://localhost:8000";
+  return "http://localhost:65432";
 }
 const API_URL = get_api_url();
 
@@ -62,7 +62,7 @@ export function getContinueServerUrl() {
   }
   return (
     vscode.workspace.getConfiguration("continue").get<string>("serverUrl") ||
-    "http://localhost:8000"
+    "http://localhost:65432"
   );
 }
 

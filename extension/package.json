@@ -50,7 +50,7 @@
         },
         "continue.serverUrl": {
           "type": "string",
-          "default": "http://localhost:8000",
+          "default": "http://localhost:65432",
           "description": "The URL of the Continue server to use."
         },
         "continue.OPENAI_API_KEY": {

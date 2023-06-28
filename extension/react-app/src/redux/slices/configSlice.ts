@@ -4,7 +4,7 @@ import { RootStore } from "../store";
 export const configSlice = createSlice({
   name: "config",
   initialState: {
-    apiUrl: "http://localhost:8000",
+    apiUrl: "http://localhost:65432",
   } as RootStore["config"],
   reducers: {
     setWorkspacePath: (

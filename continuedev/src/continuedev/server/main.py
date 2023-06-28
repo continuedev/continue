@@ -31,7 +31,8 @@ def health():
 
 # add cli arg for server port
 parser = argparse.ArgumentParser()
-parser.add_argument("-p", "--port", help="server port", type=int, default=8000)
+parser.add_argument("-p", "--port", help="server port",
+                    type=int, default=65432)
 args = parser.parse_args()
 
 

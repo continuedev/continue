@@ -218,7 +218,7 @@ export async function startContinuePythonServer() {
 
   // Check vscode settings
   const serverUrl = getContinueServerUrl();
-  if (serverUrl !== "http://localhost:8000") {
+  if (serverUrl !== "http://localhost:65432") {
     return;
   }
 
