@@ -1,19 +1,30 @@
 # Continue
 
-**[Continue](https://continue.dev/docs/) is the open-source library for accelerating software development with language models**
+**[Continue](https://continue.dev/docs) is the open-source autopilot for software development—a [VS Code extension](https://marketplace.visualstudio.com/items?itemName=Continue.continue) that brings the power of ChatGPT to your IDE**
 
-## Getting Started
+## Task, not tab, auto-complete
 
-After install is complete, the Continue extension will automatically open. You can also open it by pressing `cmd+k` on Mac / `ctrl+k` on Windows and then selecting `Continue: Open Continue GUI`.
+### Edit in natural language
 
-To learn how to use it, try to use Continue for the following after `calculator.py` opens:
-- "Write me a calculator class"
-- Ask for a new method (e.g. "exp", "mod", "sqrt")
-- Type /comment to write comments for the entire class
-- Ask about how the class works, how to write it in another language, etc.
+Highlight a section of code and instruct Continue to refactor it
+- `/edit Make this use more descriptive variable names`
+- `/edit Rewrite this API call to grab all pages`
+- `/edit Use 'Union' instead of a vertical bar here`
 
-Give Continue a star on GitHub [here](https://github.com/continuedev/continue)
+### Get possible explainations
 
-## Feedback
+Ask Continue about a part of your code to get another perspective
+- `/explain what might cause this error?`
+- `/explain what is the load_dotenv library name?`
+- `/explain how do I find running process on port 8000?`
 
-Have thoughts about Continue? Please [leave an issue](https://github.com/continuedev/continue/issues/new) or email us at hi@continue.dev :)
+### Generate files from scratch
+
+Let Continue build the scaffolding of Python scripts, React components, and more
+- `Create a shell script to back up my home dir to /tmp/`
+- `Write Python in a new file to get Posthog events`
+- `Add a React component for syntax highlighted code`
+
+## License
+
+[Apache 2.0 © 2023 Continue Dev, Inc.](./LICENSE)
