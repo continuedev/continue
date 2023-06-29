@@ -165,7 +165,7 @@ class DefaultModelEditCodeStep(Step):
         # Overflow won't happen, but prune_chat_messages in count_tokens.py will cut out this whole thing, instead of us cutting out only as many lines as we need.
         model_to_use = sdk.models.default
 
-        BUFFER_FOR_FUNCTIONS = 200
+        BUFFER_FOR_FUNCTIONS = 400
         total_tokens = model_to_use.count_tokens(
             full_file_contents + self._prompt + self.user_input) + BUFFER_FOR_FUNCTIONS + DEFAULT_MAX_TOKENS
 
