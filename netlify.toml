@@ -1,4 +1,12 @@
 [[redirects]]
-  from = "/docs/*"
-  to = "/:splat"
-  status = 200
+from = "/docs/*"
+to = "/:splat"
+status = 200
+
+[[redirects]]
+from = "/"
+to = "/docs/intro"
+
+[[redirects]]
+from = "/docs"
+to = "/docs/intro"
