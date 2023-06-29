@@ -1,6 +1,10 @@
 <h1 align="center">Continue</h1>
 
-<h2 align="center">[Continue](https://continue.dev/docs) is the open-source autopilot for software development—a [VS Code extension](https://marketplace.visualstudio.com/items?itemName=Continue.continue) that brings the power of ChatGPT to your IDE</h2>
+<div align="center">
+
+**[Continue](https://continue.dev/docs) is the open-source autopilot for software development—a [VS Code extension](https://marketplace.visualstudio.com/items?itemName=Continue.continue) that brings the power of ChatGPT to your IDE**
+
+</div>
 
 <div align="center">
 
