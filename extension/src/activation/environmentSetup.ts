@@ -274,7 +274,10 @@ export async function startContinuePythonServer() {
         });
         child.stderr.on("data", (data: any) => {
           console.log(`stderr: ${data}`);
-          if (data.includes("Uvicorn running on")) {
+          if (
+            data.includes("Uvicorn running on") || // Successfully started the server
+            data.includes("address already in use") // The server is already running (probably a simultaneously opened VS Code window)
+          ) {
             console.log("Successfully started Continue python server");
             resolve(null);
           }
