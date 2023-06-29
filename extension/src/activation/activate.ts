@@ -28,7 +28,8 @@ export async function activateExtension(
     vscode.window.withProgress(
       {
         location: vscode.ProgressLocation.Notification,
-        title: "Starting Continue Server...",
+        title:
+          "Starting Continue Server... (it may take a minute to download Python packages)",
         cancellable: false,
       },
       async (progress, token) => {

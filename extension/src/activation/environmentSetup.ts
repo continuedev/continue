@@ -101,26 +101,28 @@ function checkEnvExists() {
 }
 
 function checkRequirementsInstalled() {
-  const envLibsPath = path.join(
+  let envLibsPath = path.join(
     getExtensionUri().fsPath,
     "scripts",
     "env",
     process.platform == "win32" ? "Lib" : "lib"
   );
-  // Get the python version folder name
-  const pythonVersions = fs.readdirSync(envLibsPath).filter((f: string) => {
-    return f.startsWith("python");
-  });
-  if (pythonVersions.length == 0) {
-    return false;
+  // If site-packages is directly under env, use that
+  if (fs.existsSync(path.join(envLibsPath, "site-packages"))) {
+    envLibsPath = path.join(envLibsPath, "site-packages");
+  } else {
+    // Get the python version folder name
+    const pythonVersions = fs.readdirSync(envLibsPath).filter((f: string) => {
+      return f.startsWith("python");
+    });
+    if (pythonVersions.length == 0) {
+      return false;
+    }
+    const pythonVersion = pythonVersions[0];
+    envLibsPath = path.join(envLibsPath, pythonVersion, "site-packages");
   }
 
-  const continuePath = path.join(
-    envLibsPath,
-    pythonVersions[0],
-    "site-packages",
-    "continuedev"
-  );
+  const continuePath = path.join(envLibsPath, "continuedev");
 
   return fs.existsSync(continuePath);
 
