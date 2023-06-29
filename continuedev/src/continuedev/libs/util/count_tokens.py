@@ -83,7 +83,7 @@ def compile_chat_messages(model: str, msgs: List[ChatMessage], prompt: Union[str
             prompt_tokens += count_tokens(model, json.dumps(function))
 
     msgs = prune_chat_history(model,
-                              msgs, MAX_TOKENS_FOR_MODEL[model], prompt_tokens + 1000 + count_tokens(model, system_message))
+                              msgs, MAX_TOKENS_FOR_MODEL[model], prompt_tokens + DEFAULT_MAX_TOKENS + count_tokens(model, system_message))
     history = []
     if system_message:
         history.append({
