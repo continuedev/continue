@@ -139,13 +139,14 @@ class Autopilot(ContinueBaseModel):
             return None
 
         # If a parent step is deleted/cancelled, don't run this step
-        last_depth = self._step_depth
-        i = self.history.current_index
-        while i >= 0 and self.history.timeline[i].depth == last_depth - 1:
-            if self.history.timeline[i].deleted:
-                return None
-            last_depth = self.history.timeline[i].depth
-            i -= 1
+        # TODO: This was problematic because when running a step after deleting one, it seemed to think that was the parent
+        # last_depth = self._step_depth
+        # i = self.history.current_index
+        # while i >= 0 and self.history.timeline[i].depth == last_depth - 1:
+        #     if self.history.timeline[i].deleted:
+        #         return None
+        #     last_depth = self.history.timeline[i].depth
+        #     i -= 1
 
         capture_event(self.continue_sdk.ide.unique_id, 'step run', {
                       'step_name': step.name, 'params': step.dict()})
