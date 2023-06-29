@@ -22,6 +22,7 @@ export interface RootStore {
     sessionId: string | undefined;
     sessionStarted: number | undefined;
     vscMediaUrl: string | undefined;
+    dataSwitchOn: boolean | undefined;
   };
   chat: {
     messages: ChatMessage[];

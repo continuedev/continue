@@ -19,6 +19,7 @@ import { usePostHog } from "posthog-js/react";
 import { useSelector } from "react-redux";
 import { RootStore } from "../redux/store";
 import LoadingCover from "../components/LoadingCover";
+import { postVscMessage } from "../vscode";
 
 const TopGUIDiv = styled.div`
   overflow: hidden;
@@ -54,6 +55,16 @@ function GUI(props: GUIProps) {
   const vscMachineId = useSelector(
     (state: RootStore) => state.config.vscMachineId
   );
+  const [dataSwitchChecked, setDataSwitchChecked] = useState(false);
+  const dataSwitchOn = useSelector(
+    (state: RootStore) => state.config.dataSwitchOn
+  )
+
+  useEffect(() => {
+    if (typeof dataSwitchOn !== "undefined") {
+      setDataSwitchChecked(dataSwitchOn)
+    }
+  }, [dataSwitchOn])
 
   const [usingFastModel, setUsingFastModel] = useState(false);
   const [waitingForSteps, setWaitingForSteps] = useState(false);
@@ -61,7 +72,6 @@ function GUI(props: GUIProps) {
   const [availableSlashCommands, setAvailableSlashCommands] = useState<
     { name: string; description: string }[]
   >([]);
-  const [dataSwitchChecked, setDataSwitchChecked] = useState(false);
   const [showDataSharingInfo, setShowDataSharingInfo] = useState(false);
   const [stepsOpen, setStepsOpen] = useState<boolean[]>([
     true,
@@ -538,15 +548,15 @@ function GUI(props: GUIProps) {
         }}
         hidden={!showDataSharingInfo}
       >
-        By turning on this switch, you signal that you would contribute this
-        software development data to a publicly accessible, open-source dataset
-        in the future.
+        By turning on this switch, you will begin collecting accepted and 
+        rejected suggestions in .continue/suggestions.json. This data is 
+        stored locally on your machine and not sent anywhere.
         <br />
         <br />
         <b>
           {dataSwitchChecked
-            ? "No data is being collected. In the future, you would be contributing data"
-            : "No data is being collected. In the future, your data would not be shared"}
+            ? "👍 Data is being collected"
+            : "👎 No data is being collected"}
         </b>
       </div>
       <Footer dataSwitchChecked={dataSwitchChecked}>
@@ -573,13 +583,14 @@ function GUI(props: GUIProps) {
                 vscMachineId: vscMachineId,
                 dataSwitchChecked: !dataSwitchChecked,
               });
+              postVscMessage("toggleDataSwitch", {on: !dataSwitchChecked})
               setDataSwitchChecked((prev) => !prev);
             }}
             onColor="#12887a"
             checked={dataSwitchChecked}
           />
           <span style={{ cursor: "help", fontSize: "14px" }}>
-            Contribute Data
+            Collect Data
           </span>
         </div>
         <HeaderButtonWithText
