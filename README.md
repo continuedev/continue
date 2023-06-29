@@ -1,8 +1,8 @@
-<h1 align="center"> Continue </h1>
+<h1 align="center">Continue</h1>
 
 <div align="center">
 
-**[Continue](https://continue.dev/docs) is the open-source library for accelerating software development with language models**
+**[Continue](https://continue.dev/docs) is the open-source autopilot for software development—a [VS Code extension](https://marketplace.visualstudio.com/items?itemName=Continue.continue) that brings the power of ChatGPT to your IDE**
 
 </div>
 
@@ -15,53 +15,33 @@
 
 </div>
 
+## Task, not tab, auto-complete
+
+### Edit in natural language
+
+Highlight a section of code and instruct Continue to refactor it
+- `/edit Make this use more descriptive variable names`
+- `/edit Rewrite this API call to grab all pages`
+- `/edit Use 'Union' instead of a vertical bar here`
+
+### Get possible explainations
+
+Ask Continue about a part of your code to get another perspective
+- `/explain what might cause this error?`
+- `/explain what is the load_dotenv library name?`
+- `/explain how do I find running process on port 8000?`
+
+### Generate files from scratch
+
+Let Continue build the scaffolding of Python scripts, React components, and more
+- `Create a shell script to back up my home dir to /tmp/`
+- `Write Python in a new file to get Posthog events`
+- `Add a React component for syntax highlighted code`
+
 ## Getting Started
 
-### Install for VS Code
+### [Download for VS Code](https://marketplace.visualstudio.com/items?itemName=Continue.continue)
 
-Learn how to install locally in VS Code [here](https://continue.dev/docs/getting-started)
-
-### GitHub Codespaces
-
-Explore Continue in GitHub Codespaces [here](https://continue.dev/docs/getting-started) if you'd like to try without downloading for VS Code.
-
-## How to contribute
-
-Open a [new GitHub Issue](https://github.com/continuedev/continue/issues/new) or comment on [an existing one](https://github.com/continuedev/continue/issues). Let us know what you would like to contribute, and we will help you make it happen!
-
-## Install from source
-
-#### 1. Clone this repo
-
-Recommended: Run this command to use SSH
-
-```bash
-git clone git@github.com:continuedev/continue.git
-```
-
-Alternative: Run this command to use HTTPS
-
-```bash
-git clone https://github.com/continuedev/continue
-```
-
-#### 2. Install Continue
-
-Run this command to use the install script
-
-```bash
-cd continue/extension/scripts && python3 install_from_source.py
-```
-
-# Understanding the codebase
-
-- [Continue Server README](./continuedev/README.md): learn about the core of Continue, which can be downloaded as a [PyPI package](https://pypi.org/project/continuedev/)
-- [VS Code Extension README](./extension/README.md): learn about the capabilities of our extension—the first implementation of Continue's IDE Protocol—which makes it possible to use use Continue in VS Code and GitHub Codespaces
-- [Continue GUI README](./extension/react-app/): learn about the React app that lets users interact with the server and is placed adjacent to the text editor in any suppported IDE
-- [Schema README](./schema): learn about the JSON Schema types generated from Pydantic models, which we use across the `continuedev/` and `extension/` directories
-- [Continue Docs README](./docs): learn how our [docs](https://continue.dev/docs) are written and built
-- [How to debug the VS Code Extension README](./extension/src/README.md): learn how to set up the VS Code extension, so you can debug it
-
-# License
+## License
 
 [Apache 2.0 © 2023 Continue Dev, Inc.](./LICENSE)
