@@ -150,11 +150,10 @@ async function setupPythonEnv() {
     // Repeat until it is successfully created (sometimes it fails to generate the bin, need to try again)
     while (true) {
       const [, stderr] = await runCommand(createEnvCommand);
-      if (stderr) {
-        throw new Error(stderr);
-      }
       if (checkEnvExists()) {
         break;
+      } else if (stderr) {
+        throw new Error(stderr);
       } else {
         // Remove the env and try again
         const removeCommand = `rm -rf "${path.join(
@@ -180,7 +179,6 @@ async function setupPythonEnv() {
         activateCmd,
         pipUpgradeCmd,
         `${pipCmd} install -r requirements.txt`,
-        touchCmd,
       ].join(" ; ");
       const [, stderr] = await runCommand(installRequirementsCommand);
       if (stderr) {
@@ -273,13 +271,14 @@ export async function startContinuePythonServer() {
           console.log(`stdout: ${data}`);
         });
         child.stderr.on("data", (data: any) => {
-          console.log(`stderr: ${data}`);
           if (
             data.includes("Uvicorn running on") || // Successfully started the server
             data.includes("address already in use") // The server is already running (probably a simultaneously opened VS Code window)
           ) {
             console.log("Successfully started Continue python server");
             resolve(null);
+          } else {
+            console.log(`stderr: ${data}`);
           }
         });
         child.on("error", (error: any) => {

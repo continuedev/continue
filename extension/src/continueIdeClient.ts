@@ -226,9 +226,18 @@ class IdeProtocolClient {
   }
 
   async getSessionId(): Promise<string> {
-    if (this.messenger === null) {
-      console.log("MESSENGER IS NULL");
-    }
+    await new Promise((resolve, reject) => {
+      // Repeatedly try to connect to the server
+      const interval = setInterval(() => {
+        if (
+          this.messenger &&
+          this.messenger.websocket.readyState === 1 // 1 => OPEN
+        ) {
+          clearInterval(interval);
+          resolve(null);
+        }
+      }, 1000);
+    });
     const resp = await this.messenger?.sendAndReceive("openGUI", {});
     const sessionId = resp.sessionId;
     console.log("New Continue session with ID: ", sessionId);
