@@ -6,7 +6,11 @@ Continue collects and reports **anonymous** usage information. This data is esse
 
 ## What we track
 
-We track the steps that are run and their parameters and if the data collection toggle is switched on / off.
+We track
+
+- the steps that are run and their parameters
+- toggling of the data collection switch
+- whether you accept or reject suggestions (not the code itself)
 
 ## How to opt out
 
