@@ -61,7 +61,7 @@ const config = {
       navbar: {
         title: "Continue",
         logo: {
-          alt: "My Site Logo",
+          alt: "Continue Logo",
           src: "img/logo.svg",
         },
         items: [
@@ -88,11 +88,19 @@ const config = {
                 label: "Introduction",
                 to: "/intro",
               },
+              {
+                label: "VS Code",
+                to: "https://marketplace.visualstudio.com/items?itemName=Continue.continue",
+              },
             ],
           },
           {
             title: "Community",
             items: [
+              {
+                label: "Discord",
+                href: "https://discord.gg/DvACJvjx",
+              },
               {
                 label: "Twitter",
                 href: "https://twitter.com/continuedev",
@@ -105,6 +113,10 @@ const config = {
               {
                 label: "GitHub",
                 href: "https://github.com/continuedev/continue",
+              },
+              {
+                label: "Website",
+                href: "https://continue.dev",
               },
             ],
           },
