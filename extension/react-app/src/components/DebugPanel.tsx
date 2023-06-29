@@ -7,6 +7,7 @@ import {
   setVscMachineId,
   setSessionId,
   setVscMediaUrl,
+  setDataSwitchOn,
 } from "../redux/slices/configSlice";
 import { setHighlightedCode } from "../redux/slices/miscSlice";
 import { updateFileSystem } from "../redux/slices/debugContexSlice";
@@ -39,6 +40,7 @@ function DebugPanel(props: DebugPanelProps) {
           dispatch(setVscMachineId(event.data.vscMachineId));
           dispatch(setSessionId(event.data.sessionId));
           dispatch(setVscMediaUrl(event.data.vscMediaUrl));
+          dispatch(setDataSwitchOn(event.data.dataSwitchOn));
           break;
         case "highlightedCode":
           dispatch(setHighlightedCode(event.data.rangeInFile));
