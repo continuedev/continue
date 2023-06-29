@@ -13,8 +13,8 @@
   "license": "Apache-2.0",
   "displayName": "Continue",
   "pricing": "Free",
-  "description": "Open-source autopilot for software development",
-  "version": "0.0.86",
+  "description": "Accelerating software development with language models",
+  "version": "0.0.88",
   "publisher": "Continue",
   "engines": {
     "vscode": "^1.74.0"
