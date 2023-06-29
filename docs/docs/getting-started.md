@@ -2,17 +2,15 @@
 
 ## Recommended: Install in VS Code
 
-1. Click `Install` on the Continue extension in the Visual Studio Marketplace [here](https://marketplace.visualstudio.com/items?itemName=Continue.continue)
+1. Click `Install` on the **[Continue extension in the Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=Continue.continue)**
 
 2. This will open the Continue extension page in VS Code, where you will need to click `Install` again
 
-3. Once you do this, you will see a message in the bottom right hand corner of VS Code that says `Setting up Continue extension...`. After 30-90 seconds, the Continue extension will then open up. It should look like this when it is complete:
+3. Once you do this, you will see a message in the bottom right hand corner of VS Code that says `Setting up Continue extension...`. After 30-90 seconds, the Continue extension will then open up:
 
 ![vscode-install](/img/continue-screenshot.png)
 
-You can also open the Continue panel with `cmd+k` on Mac / `ctrl+k` on Windows
-
-4. If it's your first time using Continue, it will open a file called `calculator.py` where you can play around with Continue's functionality.
+4. If it's your first time using Continue, it will open a file called `calculator.py` with instructions:
 
 ![codespaces-install](/img/continue-screenshot2.png)
 
