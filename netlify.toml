@@ -1,9 +1,4 @@
 [[redirects]]
-from = "/docs/*"
-to = "/:splat"
-status = 200
-
-[[redirects]]
 from = "/"
 to = "/docs/intro"
 
