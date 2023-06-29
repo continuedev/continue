@@ -39,7 +39,7 @@ const config = {
       /** @type {import('@docusaurus/preset-classic').Options} */
       ({
         docs: {
-          routeBasePath: '/',
+          routeBasePath: "/",
           sidebarPath: require.resolve("./sidebars.js"),
           editUrl: "https://github.com/continuedev/continue/tree/main/docs",
         },
@@ -47,8 +47,8 @@ const config = {
           customCss: require.resolve("./src/css/custom.css"),
         },
         gtag: {
-            trackingID: 'G-M3JWW8N2XQ',
-          },
+          trackingID: "G-M3JWW8N2XQ",
+        },
       }),
     ],
   ],
@@ -129,12 +129,12 @@ const config = {
       },
       algolia: {
         // The application ID provided by Algolia
-        appId: '0OMUMCQZVV',
+        appId: "0OMUMCQZVV",
 
         // Public API key: it is safe to commit it
-        apiKey: '6795de0f612eebe17018f8061a9ef18e',
+        apiKey: "6795de0f612eebe17018f8061a9ef18e",
 
-        indexName: 'continue',
+        indexName: "continue",
 
         // Optional: see doc section below
         contextualSearch: true,
