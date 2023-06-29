@@ -64,7 +64,101 @@ function GUI(props: GUIProps) {
   const [dataSwitchChecked, setDataSwitchChecked] = useState(false);
   const [showDataSharingInfo, setShowDataSharingInfo] = useState(false);
   const [stepsOpen, setStepsOpen] = useState<boolean[]>([]);
-  const [history, setHistory] = useState<History | undefined>();
+  const [history, setHistory] = useState<History | undefined>({
+    timeline: [
+      {
+        step: {
+          name: "SequentialStep",
+          hide: true,
+          description: "Running step: SequentialStep",
+          system_message: null,
+          chat_context: [],
+          manage_own_chat_context: false,
+          steps: [
+            {
+              name: "Welcome to Continue",
+              hide: false,
+              description:
+                "Type '/' to see the list of available slash commands. If you highlight code, edits and explanations will be localized to the highlighted range. Otherwise, the currently open file is used. In both cases, the code is combined with the previous steps to construct the context.",
+              system_message: null,
+              chat_context: [],
+              manage_own_chat_context: false,
+              message:
+                "Type '/' to see the list of available slash commands. If you highlight code, edits and explanations will be localized to the highlighted range. Otherwise, the currently open file is used. In both cases, the code is combined with the previous steps to construct the context.",
+            },
+            {
+              name: "Welcome to Continue!",
+              hide: true,
+              description: "Welcome to Continue!",
+              system_message: null,
+              chat_context: [],
+              manage_own_chat_context: false,
+            },
+            {
+              name: "StepsOnStartupStep",
+              hide: true,
+              description: "Running steps on startup",
+              system_message: null,
+              chat_context: [],
+              manage_own_chat_context: false,
+            },
+          ],
+        },
+        observation: null,
+        depth: 0,
+        deleted: false,
+        active: false,
+      },
+      {
+        step: {
+          name: "Welcome to Continue",
+          hide: false,
+          description:
+            "Type '/' to see the list of available slash commands. If you highlight code, edits and explanations will be localized to the highlighted range. Otherwise, the currently open file is used. In both cases, the code is combined with the previous steps to construct the context.",
+          system_message: null,
+          chat_context: [],
+          manage_own_chat_context: false,
+          message:
+            "Type '/' to see the list of available slash commands. If you highlight code, edits and explanations will be localized to the highlighted range. Otherwise, the currently open file is used. In both cases, the code is combined with the previous steps to construct the context.",
+        },
+        observation: {
+          text: "Type '/' to see the list of available slash commands. If you highlight code, edits and explanations will be localized to the highlighted range. Otherwise, the currently open file is used. In both cases, the code is combined with the previous steps to construct the context.",
+        },
+        depth: 1,
+        deleted: false,
+        active: false,
+      },
+      {
+        step: {
+          name: "Welcome to Continue!",
+          hide: true,
+          description: "Welcome to Continue!",
+          system_message: null,
+          chat_context: [],
+          manage_own_chat_context: false,
+        },
+        observation: null,
+        depth: 1,
+        deleted: false,
+        active: false,
+      },
+      {
+        step: {
+          name: "StepsOnStartupStep",
+          hide: true,
+          description: "Running steps on startup",
+          system_message: null,
+          chat_context: [],
+          manage_own_chat_context: false,
+        },
+        observation: null,
+        depth: 1,
+        deleted: false,
+        active: false,
+      },
+    ],
+    current_index: 3,
+  } as any);
   //   {
   //   timeline: [
   //     {
@@ -228,7 +322,6 @@ function GUI(props: GUIProps) {
   }, []);
 
   useEffect(() => {
-    console.log("CLIENT ON STATE UPDATE: ", client, client?.onStateUpdate);
     client?.onStateUpdate((state) => {
       // Scroll only if user is at very bottom of the window.
       setUsingFastModel(state.default_model === "gpt-3.5-turbo");
