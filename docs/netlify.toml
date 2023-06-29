@@ -1,7 +1,0 @@
-[[redirects]]
-from = "/"
-to = "/docs/intro"
-
-[[redirects]]
-from = "/docs"
-to = "/docs/intro"

@@ -142,18 +142,4 @@ const config = {
     }),
 };
 
-module.exports = {
-  ...config,
-  plugins: [
-    [
-      "@docusaurus/plugin-client-redirects",
-      {
-        createRedirects: (path) => {
-          if (path.startsWith("/docs")) {
-            return [path.replace("/docs", "/docs/intro")];
-          }
-        },
-      },
-    ],
-  ],
-};
+module.exports = config;
