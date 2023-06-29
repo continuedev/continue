@@ -126,7 +126,7 @@ let streamManager = new StreamManager();
 export let debugPanelWebview: vscode.Webview | undefined;
 export function setupDebugPanel(
   panel: vscode.WebviewPanel | vscode.WebviewView,
-  sessionId: string
+  sessionIdPromise: Promise<string>
 ): string {
   debugPanelWebview = panel.webview;
   panel.onDidDispose(() => {
@@ -224,6 +224,7 @@ export function setupDebugPanel(
   panel.webview.onDidReceiveMessage(async (data) => {
     switch (data.type) {
       case "onLoad": {
+        const sessionId = await sessionIdPromise;
         panel.webview.postMessage({
           type: "onLoad",
           vscMachineId: vscode.env.machineId,
@@ -334,10 +335,10 @@ export class ContinueGUIWebviewViewProvider
   implements vscode.WebviewViewProvider
 {
   public static readonly viewType = "continue.continueGUIView";
-  private readonly sessionId: string;
+  private readonly sessionIdPromise: Promise<string>;
 
-  constructor(sessionId: string) {
-    this.sessionId = sessionId;
+  constructor(sessionIdPromise: Promise<string>) {
+    this.sessionIdPromise = sessionIdPromise;
   }
 
   resolveWebviewView(
@@ -345,6 +346,9 @@ export class ContinueGUIWebviewViewProvider
     _context: vscode.WebviewViewResolveContext,
     _token: vscode.CancellationToken
   ): void | Thenable<void> {
-    webviewView.webview.html = setupDebugPanel(webviewView, this.sessionId);
+    webviewView.webview.html = setupDebugPanel(
+      webviewView,
+      this.sessionIdPromise
+    );
   }
 }

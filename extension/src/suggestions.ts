@@ -231,6 +231,8 @@ function selectSuggestion(
     currentSuggestion.set(editorUri, Math.min(idx, suggestions.length - 1));
   }
   rerenderDecorations(editorUri);
+
+  editorToSuggestions.set(editorUri, suggestions);
 }
 
 export function acceptSuggestionCommand(key: SuggestionRanges | null = null) {

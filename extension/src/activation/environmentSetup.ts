@@ -101,9 +101,34 @@ function checkEnvExists() {
 }
 
 function checkRequirementsInstalled() {
-  return fs.existsSync(
-    path.join(getExtensionUri().fsPath, "scripts", ".continue_env_installed")
+  let envLibsPath = path.join(
+    getExtensionUri().fsPath,
+    "scripts",
+    "env",
+    process.platform == "win32" ? "Lib" : "lib"
   );
+  // If site-packages is directly under env, use that
+  if (fs.existsSync(path.join(envLibsPath, "site-packages"))) {
+    envLibsPath = path.join(envLibsPath, "site-packages");
+  } else {
+    // Get the python version folder name
+    const pythonVersions = fs.readdirSync(envLibsPath).filter((f: string) => {
+      return f.startsWith("python");
+    });
+    if (pythonVersions.length == 0) {
+      return false;
+    }
+    const pythonVersion = pythonVersions[0];
+    envLibsPath = path.join(envLibsPath, pythonVersion, "site-packages");
+  }
+
+  const continuePath = path.join(envLibsPath, "continuedev");
+
+  return fs.existsSync(continuePath);
+
+  // return fs.existsSync(
+  //   path.join(getExtensionUri().fsPath, "scripts", ".continue_env_installed")
+  // );
 }
 
 async function setupPythonEnv() {
@@ -249,7 +274,10 @@ export async function startContinuePythonServer() {
         });
         child.stderr.on("data", (data: any) => {
           console.log(`stderr: ${data}`);
-          if (data.includes("Uvicorn running on")) {
+          if (
+            data.includes("Uvicorn running on") || // Successfully started the server
+            data.includes("address already in use") // The server is already running (probably a simultaneously opened VS Code window)
+          ) {
             console.log("Successfully started Continue python server");
             resolve(null);
           }
