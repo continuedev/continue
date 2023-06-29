@@ -54,6 +54,14 @@ export class WebsocketMessenger extends Messenger {
     super();
     this.serverUrl = serverUrl;
     this.websocket = this._newWebsocket();
+
+    const interval = setInterval(() => {
+      if (this.websocket.readyState === this.websocket.OPEN) {
+        clearInterval(interval);
+      } else if (this.websocket.readyState !== this.websocket.CONNECTING) {
+        this.websocket = this._newWebsocket();
+      }
+    }, 1000);
   }
 
   send(messageType: string, data: object) {

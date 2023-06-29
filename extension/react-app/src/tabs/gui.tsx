@@ -63,7 +63,12 @@ function GUI(props: GUIProps) {
   >([]);
   const [dataSwitchChecked, setDataSwitchChecked] = useState(false);
   const [showDataSharingInfo, setShowDataSharingInfo] = useState(false);
-  const [stepsOpen, setStepsOpen] = useState<boolean[]>([]);
+  const [stepsOpen, setStepsOpen] = useState<boolean[]>([
+    true,
+    true,
+    true,
+    true,
+  ]);
   const [history, setHistory] = useState<History | undefined>({
     timeline: [
       {
@@ -78,13 +83,24 @@ function GUI(props: GUIProps) {
             {
               name: "Welcome to Continue",
               hide: false,
-              description:
-                "Type '/' to see the list of available slash commands. If you highlight code, edits and explanations will be localized to the highlighted range. Otherwise, the currently open file is used. In both cases, the code is combined with the previous steps to construct the context.",
+              description: `Welcome to Continue`,
               system_message: null,
               chat_context: [],
               manage_own_chat_context: false,
-              message:
-                "Type '/' to see the list of available slash commands. If you highlight code, edits and explanations will be localized to the highlighted range. Otherwise, the currently open file is used. In both cases, the code is combined with the previous steps to construct the context.",
+              message: `# Welcome to Continue
+
+              _If it's your first time using Continue, it can take up to a minute for the server to install._
+              
+              Continue is not perfect, but a great tool to add to your toolbox. These are the tasks that Continue is currently best at:
+              
+              - Highlight a section of code and instruct Continue to refactor it, e.g. \`"/edit make this use more descriptive variable names"\`
+              - Ask questions of the open file, e.g. \`"/explain what is the purpose of each of these if statements?"\`
+              - Ask Continue to build the scaffolding of a new file from scratch, e.g. \`"add a React component for syntax highlighted code"\`
+              
+              You can use "slash commands" to directly instruct Continue what to do, or just enter a request and it will automatically decide next steps. To see the list of available slash commands, type '/'.
+              
+              If you highlight code, edits and explanations will be localized to the highlighted range. Otherwise, the currently open file is used. In both cases, the code is combined with the previous steps to construct the context.
+              `,
             },
             {
               name: "Welcome to Continue!",
@@ -585,7 +601,7 @@ function GUI(props: GUIProps) {
           onClick={() => {
             client?.sendClear();
           }}
-          text="Clear All"
+          text="Clear"
         >
           <Trash size="1.6em" />
         </HeaderButtonWithText>
