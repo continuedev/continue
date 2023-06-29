@@ -406,7 +406,7 @@ class DefaultModelEditCodeStep(Step):
                     continue
                 # Because really short lines might be expected to be repeated, this is only a !heuristic!
                 # Stop when it starts copying the file_suffix
-                elif line.strip() == line_below_highlighted_range.strip() and len(line.strip()) > 4 and not line.strip() == original_lines_below_previous_blocks[0].strip():
+                elif line.strip() == line_below_highlighted_range.strip() and len(line.strip()) > 4 and not (len(original_lines_below_previous_blocks) > 0 and line.strip() == original_lines_below_previous_blocks[0].strip()):
                     repeating_file_suffix = True
                     break
 

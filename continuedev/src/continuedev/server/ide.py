@@ -253,10 +253,14 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
 
     async def getUserSecret(self, key: str) -> str:
         """Get a user secret"""
-        resp = await self._send_and_receive_json({
-            "key": key
-        }, GetUserSecretResponse, "getUserSecret")
-        return resp.value
+        try:
+            resp = await self._send_and_receive_json({
+                "key": key
+            }, GetUserSecretResponse, "getUserSecret")
+            return resp.value
+        except Exception as e:
+            print("Error getting user secret", e)
+            return ""
 
     async def saveFile(self, filepath: str):
         """Save a file"""
