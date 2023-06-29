@@ -11,6 +11,7 @@ from ...models.filesystem import FileSystem, RangeInFile, RangeInFileWithContent
 from ...core.observation import Observation, TextObservation, TracebackObservation, UserInputObservation
 from ...core.main import ChatMessage, Step, SequentialStep
 from ...libs.util.count_tokens import MAX_TOKENS_FOR_MODEL, DEFAULT_MAX_TOKENS
+from ...libs.util.dedent import dedent_and_get_common_whitespace
 import difflib
 
 
@@ -266,6 +267,8 @@ class DefaultModelEditCodeStep(Step):
 
         file_prefix, contents, file_suffix, model_to_use = await self.get_prompt_parts(
             rif, sdk, full_file_contents)
+        contents, common_whitespace = dedent_and_get_common_whitespace(
+            contents)
         prompt = self.compile_prompt(file_prefix, contents, file_suffix, sdk)
 
         full_file_contents_lines = full_file_contents.split("\n")
@@ -292,10 +295,11 @@ class DefaultModelEditCodeStep(Step):
         index_of_last_matched_line = -1
 
         async def handle_generated_line(line: str):
-            nonlocal lines, current_block_start, current_line_in_file, original_lines, original_lines_below_previous_blocks, current_block_lines, offset_from_blocks, matched_lines_at_end_of_block, index_of_last_matched_line, LINES_TO_MATCH_BEFORE_ENDING_BLOCK
+            nonlocal lines, current_block_start, current_line_in_file, original_lines, original_lines_below_previous_blocks, current_block_lines, offset_from_blocks, matched_lines_at_end_of_block, index_of_last_matched_line, LINES_TO_MATCH_BEFORE_ENDING_BLOCK, common_whitespace
 
             # Highlight the line to show progress
-            line_to_highlight = current_line_in_file - len(current_block_lines)
+            # - len(current_block_lines)
+            line_to_highlight = current_line_in_file
             await sdk.ide.highlightCode(RangeInFile(filepath=rif.filepath, range=Range.from_shorthand(
                 line_to_highlight, 0, line_to_highlight, 0)), "#FFFFFF22" if len(current_block_lines) == 0 else "#00FF0022")
 
@@ -393,6 +397,9 @@ class DefaultModelEditCodeStep(Step):
                 # Trailing whitespace doesn't matter
                 line = line.rstrip()
 
+                # Add the common whitespace that was removed before prompting
+                line = common_whitespace + line
+
                 # Lines that should signify the end of generation
                 if self.is_end_line(line):
                     break
@@ -417,6 +424,7 @@ class DefaultModelEditCodeStep(Step):
 
         # Add the unfinished line
         if unfinished_line != "" and not self.line_to_be_ignored(unfinished_line, completion_lines_covered == 0) and not self.is_end_line(unfinished_line):
+            unfinished_line = common_whitespace + unfinished_line
             lines.append(unfinished_line)
             await handle_generated_line(unfinished_line)
             completion_lines_covered += 1
