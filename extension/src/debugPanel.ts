@@ -113,7 +113,13 @@ class WebsocketConnection {
     if (typeof message !== "string") {
       message = JSON.stringify(message);
     }
-    this._ws.send(message);
+    if (this._ws.readyState === WebSocket.OPEN) {
+      this._ws.send(message);
+    } else {
+      this._ws.addEventListener("open", () => {
+        this._ws.send(message);
+      });
+    }
   }
 
   public close() {
@@ -231,7 +237,9 @@ export function setupDebugPanel(
           apiUrl: getContinueServerUrl(),
           sessionId,
           vscMediaUrl,
-          dataSwitchOn: vscode.workspace.getConfiguration("continue").get<boolean>("dataSwitch")
+          dataSwitchOn: vscode.workspace
+            .getConfiguration("continue")
+            .get<boolean>("dataSwitch"),
         });
 
         // // Listen for changes to server URL in settings
@@ -249,10 +257,10 @@ export function setupDebugPanel(
         break;
       }
       case "toggleDataSwitch": {
-        // Set the setting in vscode 
+        // Set the setting in vscode
         await vscode.workspace
-        .getConfiguration("continue")
-        .update("dataSwitch", data.on, vscode.ConfigurationTarget.Global);
+          .getConfiguration("continue")
+          .update("dataSwitch", data.on, vscode.ConfigurationTarget.Global);
         break;
       }
       case "websocketForwardingOpen": {

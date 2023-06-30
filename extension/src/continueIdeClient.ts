@@ -1,5 +1,6 @@
 // import { ShowSuggestionRequest } from "../schema/ShowSuggestionRequest";
 import {
+  editorSuggestionsLocked,
   showSuggestion as showSuggestionInEditor,
   SuggestionRanges,
 } from "./suggestions";
@@ -119,6 +120,9 @@ class IdeProtocolClient {
         this.openFile(data.filepath);
         // TODO: Close file if False
         break;
+      case "setSuggestionsLocked":
+        this.setSuggestionsLocked(data.filepath, data.locked);
+        break;
       case "showSuggestion":
         this.showSuggestion(data.edit);
         break;
@@ -202,6 +206,11 @@ class IdeProtocolClient {
   openFile(filepath: string) {
     // vscode has a builtin open/get open files
     openEditorAndRevealRange(filepath, undefined, vscode.ViewColumn.One);
+  }
+
+  setSuggestionsLocked(filepath: string, locked: boolean) {
+    editorSuggestionsLocked.set(filepath, locked);
+    // TODO: Rerender?
   }
 
   async getUserSecret(key: string) {
