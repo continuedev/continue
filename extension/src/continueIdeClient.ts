@@ -173,6 +173,11 @@ class IdeProtocolClient {
         }
       );
 
+      setTimeout(() => {
+        cursorDisposable.dispose();
+        editor.setDecorations(decorationType, []);
+      }, 2500);
+
       if (this._lastDecorationType) {
         editor.setDecorations(this._lastDecorationType, []);
       }

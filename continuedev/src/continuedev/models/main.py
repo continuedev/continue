@@ -107,7 +107,7 @@ class Range(BaseModel):
         lines = content.splitlines()
         if len(lines) == 0:
             return Range.from_shorthand(0, 0, 0, 0)
-        return Range.from_shorthand(0, 0, len(lines) - 1, len(lines[-1]) - 1)
+        return Range.from_shorthand(0, 0, len(lines), 0)
 
     @staticmethod
     def from_snippet_in_file(content: str, snippet: str) -> "Range":
