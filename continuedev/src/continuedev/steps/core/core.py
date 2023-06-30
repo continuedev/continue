@@ -286,14 +286,14 @@ class DefaultModelEditCodeStep(Step):
         # Don't end the block until you've matched N simultaneous lines
         # This helps avoid many tiny blocks
         LINES_TO_MATCH_BEFORE_ENDING_BLOCK = 2
-        matched_lines_at_end_of_block = 0
         # If a line has been matched at the end of the block, this is its index within original_lines_below_previous_blocks
         # Except we are keeping track of multiple potentialities, so it's a list
         # We always check the lines following each of these leads, but if multiple make it out at the end, we use the first one
+        # This is a tuple of (index_of_last_matched_line, number_of_lines_matched)
         indices_of_last_matched_lines = []
 
         async def handle_generated_line(line: str):
-            nonlocal current_block_start, current_line_in_file, original_lines, original_lines_below_previous_blocks, current_block_lines, matched_lines_at_end_of_block, indices_of_last_matched_lines, LINES_TO_MATCH_BEFORE_ENDING_BLOCK, offset_from_blocks
+            nonlocal current_block_start, current_line_in_file, original_lines, original_lines_below_previous_blocks, current_block_lines, indices_of_last_matched_lines, LINES_TO_MATCH_BEFORE_ENDING_BLOCK, offset_from_blocks
 
             # Highlight the line to show progress
             # - len(current_block_lines)
@@ -311,66 +311,64 @@ class DefaultModelEditCodeStep(Step):
                         1:]
                     return
 
-            # Just started a block, or a previous line failed to match. Looking for a match
-            if matched_lines_at_end_of_block == 0:
-                # Find the first matching line
-                for i in range(len(original_lines_below_previous_blocks)):
-                    og_line = original_lines_below_previous_blocks[i]
-                    # TODO: It's a bit sus to be disqualifying empty lines.
-                    # What you ideally do is find ALL matches, and then throw them out as you check the following lines
-                    if og_line == line:  # and og_line.strip() != "":
-                        matched_lines_at_end_of_block = 1
-                        indices_of_last_matched_lines.append(i)
-            else:
-                # In a block, and have already matched at least one line
-                # Check if the next line matches, for each of the candidates
-                matches_found = []
-                for index_of_last_matched_line in range(len(indices_of_last_matched_lines)):
-                    if index_of_last_matched_line + 1 < len(original_lines_below_previous_blocks) and line == original_lines_below_previous_blocks[index_of_last_matched_line + 1]:
-                        matches_found.append(index_of_last_matched_line + 1)
-                indices_of_last_matched_lines = matches_found
+            # In a block, and have already matched at least one line
+            # Check if the next line matches, for each of the candidates
+            matches_found = []
+            first_valid_match = None
+            for index_of_last_matched_line, num_lines_matched in indices_of_last_matched_lines:
+                if index_of_last_matched_line + 1 < len(original_lines_below_previous_blocks) and line == original_lines_below_previous_blocks[index_of_last_matched_line + 1]:
+                    matches_found.append(
+                        (index_of_last_matched_line + 1, num_lines_matched + 1))
+                    if first_valid_match is None and num_lines_matched + 1 >= LINES_TO_MATCH_BEFORE_ENDING_BLOCK:
+                        first_valid_match = (
+                            index_of_last_matched_line + 1, num_lines_matched + 1)
+            indices_of_last_matched_lines = matches_found
 
-                if len(matches_found) > 0:
-                    matched_lines_at_end_of_block += 1
-                    if matched_lines_at_end_of_block >= LINES_TO_MATCH_BEFORE_ENDING_BLOCK:
-                        # We've matched the required number of lines, insert suggestion!
+            if first_valid_match is not None:
+                # We've matched the required number of lines, insert suggestion!
 
-                        # We added some lines to the block that were matched (including maybe some blank lines)
-                        # So here we will strip all matching lines from the end of current_block_lines
-                        lines_stripped = []
-                        index_of_last_line_in_block = indices_of_last_matched_lines[0]
-                        while len(current_block_lines) > 0 and current_block_lines[-1] == original_lines_below_previous_blocks[index_of_last_line_in_block]:
-                            lines_stripped.append(current_block_lines.pop())
-                            index_of_last_line_in_block -= 1
+                # We added some lines to the block that were matched (including maybe some blank lines)
+                # So here we will strip all matching lines from the end of current_block_lines
+                lines_stripped = []
+                index_of_last_line_in_block = first_valid_match[0]
+                while len(current_block_lines) > 0 and current_block_lines[-1] == original_lines_below_previous_blocks[index_of_last_line_in_block]:
+                    lines_stripped.append(current_block_lines.pop())
+                    index_of_last_line_in_block -= 1
 
-                        # Insert the suggestion
-                        replacement = "\n".join(current_block_lines)
-                        await sdk.ide.showSuggestion(FileEdit(
-                            filepath=rif.filepath,
-                            range=Range.from_shorthand(
-                                current_block_start, 0, current_block_start + index_of_last_line_in_block, 0),
-                            replacement=replacement
-                        ))
-                        if replacement == "":
-                            current_line_in_file += 1
+                # Insert the suggestion
+                replacement = "\n".join(current_block_lines)
+                await sdk.ide.showSuggestion(FileEdit(
+                    filepath=rif.filepath,
+                    range=Range.from_shorthand(
+                        current_block_start, 0, current_block_start + index_of_last_line_in_block, 0),
+                    replacement=replacement
+                ))
+                if replacement == "":
+                    current_line_in_file += 1
 
-                        # Reset current block / update variables
-                        offset_from_blocks += len(current_block_lines)
-                        original_lines_below_previous_blocks = original_lines_below_previous_blocks[
-                            index_of_last_line_in_block + 1:]
-                        current_block_lines = []
-                        current_block_start = -1
-                        matched_lines_at_end_of_block = 0
-                        indices_of_last_matched_lines = []
+                # Reset current block / update variables
+                offset_from_blocks += len(current_block_lines)
+                original_lines_below_previous_blocks = original_lines_below_previous_blocks[
+                    index_of_last_line_in_block + 1:]
+                current_block_lines = []
+                current_block_start = -1
+                indices_of_last_matched_lines = []
 
-                        return
-                    else:
-                        pass
-                else:
-                    # We matched some lines, but didn't make it to N
-                    # So this block should continue on with the matched lines as a part of it
-                    matched_lines_at_end_of_block = 0
-                    indices_of_last_matched_lines = []
+                return
+
+            # Always look for new matching candidates
+            new_matches = []
+            for i in range(len(original_lines_below_previous_blocks)):
+                og_line = original_lines_below_previous_blocks[i]
+                # TODO: It's a bit sus to be disqualifying empty lines.
+                # What you ideally do is find ALL matches, and then throw them out as you check the following lines
+                if og_line == line:  # and og_line.strip() != "":
+                    new_matches.append((i, 1))
+            indices_of_last_matched_lines += new_matches
+
+            # Make sure they are sorted by index
+            indices_of_last_matched_lines = sorted(
+                indices_of_last_matched_lines, key=lambda x: x[0])
 
             current_block_lines.append(line)
 
