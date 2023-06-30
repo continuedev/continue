@@ -267,35 +267,31 @@ class DefaultModelEditCodeStep(Step):
 
         file_prefix, contents, file_suffix, model_to_use = await self.get_prompt_parts(
             rif, sdk, full_file_contents)
-        contents, common_whitespace = dedent_and_get_common_whitespace(
-            contents)
+        # contents, common_whitespace = dedent_and_get_common_whitespace(
+        #     contents)
         prompt = self.compile_prompt(file_prefix, contents, file_suffix, sdk)
-
         full_file_contents_lines = full_file_contents.split("\n")
-        original_lines = [] if rif.contents == "" else rif.contents.split("\n")
-        completion_lines_covered = 0
-        # In the actual file, as it is with blocks and such
-        current_line_in_file = rif.range.start.line
 
+        # Important state variables
+        # -------------------------
+        original_lines = [] if rif.contents == "" else rif.contents.split("\n")
+        # In the actual file, taking into account block offset
+        current_line_in_file = rif.range.start.line
         current_block_lines = []
         original_lines_below_previous_blocks = original_lines
+        # The start of the current block in file, taking into account block offset
         current_block_start = -1
         offset_from_blocks = 0
-
-        lines_of_prefix_copied = 0
-        repeating_file_suffix = False
-        line_below_highlighted_range = file_suffix.lstrip().split("\n")[0]
-        lines = []
-        unfinished_line = ""
 
         # Don't end the block until you've matched N simultaneous lines
         # This helps avoid many tiny blocks
         LINES_TO_MATCH_BEFORE_ENDING_BLOCK = 2
         matched_lines_at_end_of_block = 0
+        # If a line has been matched at the end of the block, this is its index within original_lines_below_previous_blocks
         index_of_last_matched_line = -1
 
         async def handle_generated_line(line: str):
-            nonlocal lines, current_block_start, current_line_in_file, original_lines, original_lines_below_previous_blocks, current_block_lines, offset_from_blocks, matched_lines_at_end_of_block, index_of_last_matched_line, LINES_TO_MATCH_BEFORE_ENDING_BLOCK, common_whitespace
+            nonlocal current_block_start, current_line_in_file, original_lines, original_lines_below_previous_blocks, current_block_lines, matched_lines_at_end_of_block, index_of_last_matched_line, LINES_TO_MATCH_BEFORE_ENDING_BLOCK, offset_from_blocks
 
             # Highlight the line to show progress
             # - len(current_block_lines)
@@ -304,53 +300,57 @@ class DefaultModelEditCodeStep(Step):
                 line_to_highlight, 0, line_to_highlight, 0)), "#FFFFFF22" if len(current_block_lines) == 0 else "#00FF0022")
 
             if len(current_block_lines) == 0:
-                current_block_start = current_line_in_file
+                # Set this as the start of the next block
+                current_block_start = rif.range.start.line + len(original_lines) - len(
+                    original_lines_below_previous_blocks) + offset_from_blocks  # current_line_in_file
                 if len(original_lines_below_previous_blocks) > 0 and line == original_lines_below_previous_blocks[0]:
+                    # Line is equal to the next line in file, move past this line
                     original_lines_below_previous_blocks = original_lines_below_previous_blocks[
                         1:]
                     return
 
-            # We are in a block currently, and checking for whether it should be ended
+            # Just started a block, or a previous line failed to match. Looking for a match
             if matched_lines_at_end_of_block == 0:
                 # Find the first matching line
                 for i in range(len(original_lines_below_previous_blocks)):
                     og_line = original_lines_below_previous_blocks[i]
                     # TODO: It's a bit sus to be disqualifying empty lines.
                     # What you ideally do is find ALL matches, and then throw them out as you check the following lines
-                    if og_line == line and og_line.strip() != "":
+                    if og_line == line:  # and og_line.strip() != "":
                         matched_lines_at_end_of_block = 1
                         index_of_last_matched_line = i
                         break
             else:
+                # In a block, and have already matched at least one line
                 # Check if the next line matches
-                index_of_line_to_match = index_of_last_matched_line + matched_lines_at_end_of_block
-                if len(original_lines_below_previous_blocks) > index_of_line_to_match and original_lines_below_previous_blocks[index_of_line_to_match] == line:
+                if index_of_last_matched_line + 1 < len(original_lines_below_previous_blocks) and line == original_lines_below_previous_blocks[index_of_last_matched_line + 1]:
+                    matched_lines_at_end_of_block += 1
                     if matched_lines_at_end_of_block >= LINES_TO_MATCH_BEFORE_ENDING_BLOCK:
                         # We've matched the required number of lines, insert suggestion!
 
                         # We added some lines to the block that were matched (including maybe some blank lines)
                         # So here we will strip all matching lines from the end of current_block_lines
                         lines_stripped = []
-                        index_of_end_of_block = index_of_line_to_match
-                        while len(current_block_lines) > 0 and current_block_lines[-1] == original_lines_below_previous_blocks[index_of_end_of_block - 1]:
+                        index_of_last_line_in_block = index_of_last_matched_line + 1
+                        while len(current_block_lines) > 0 and current_block_lines[-1] == original_lines_below_previous_blocks[index_of_last_line_in_block]:
                             lines_stripped.append(current_block_lines.pop())
-                            index_of_end_of_block -= 1
+                            index_of_last_line_in_block -= 1
 
                         # Insert the suggestion
                         replacement = "\n".join(current_block_lines)
                         await sdk.ide.showSuggestion(FileEdit(
                             filepath=rif.filepath,
                             range=Range.from_shorthand(
-                                current_block_start + offset_from_blocks, 0, current_block_start + offset_from_blocks + index_of_end_of_block, 0),
+                                current_block_start, 0, current_block_start + index_of_last_line_in_block, 0),
                             replacement=replacement
                         ))
                         if replacement == "":
                             current_line_in_file += 1
 
                         # Reset current block / update variables
-                        original_lines_below_previous_blocks = original_lines_below_previous_blocks[
-                            index_of_line_to_match + 1:]
                         offset_from_blocks += len(current_block_lines)
+                        original_lines_below_previous_blocks = original_lines_below_previous_blocks[
+                            index_of_last_line_in_block + 1:]
                         current_block_lines = []
                         current_block_start = -1
                         matched_lines_at_end_of_block = 0
@@ -358,11 +358,12 @@ class DefaultModelEditCodeStep(Step):
 
                         return
                     else:
-                        matched_lines_at_end_of_block += 1
+                        index_of_last_matched_line += 1
                 else:
                     # We matched some lines, but didn't make it to N
                     # So this block should continue on with the matched lines as a part of it
                     matched_lines_at_end_of_block = 0
+                    index_of_last_matched_line = -1
 
             current_block_lines.append(line)
 
@@ -372,6 +373,13 @@ class DefaultModelEditCodeStep(Step):
             content=prompt,
             summary=self.user_input
         ))
+
+        lines_of_prefix_copied = 0
+        lines = []
+        unfinished_line = ""
+        completion_lines_covered = 0
+        repeating_file_suffix = False
+        line_below_highlighted_range = file_suffix.lstrip().split("\n")[0]
         async for chunk in model_to_use.stream_chat(messages, temperature=0):
             # Stop early if it is repeating the file_suffix or the step was deleted
             if repeating_file_suffix:
@@ -398,7 +406,7 @@ class DefaultModelEditCodeStep(Step):
                 line = line.rstrip()
 
                 # Add the common whitespace that was removed before prompting
-                line = common_whitespace + line
+                # line = common_whitespace + line
 
                 # Lines that should signify the end of generation
                 if self.is_end_line(line):
@@ -424,14 +432,16 @@ class DefaultModelEditCodeStep(Step):
 
         # Add the unfinished line
         if unfinished_line != "" and not self.line_to_be_ignored(unfinished_line, completion_lines_covered == 0) and not self.is_end_line(unfinished_line):
-            unfinished_line = common_whitespace + unfinished_line
+            # unfinished_line = common_whitespace + unfinished_line
             lines.append(unfinished_line)
             await handle_generated_line(unfinished_line)
             completion_lines_covered += 1
+            current_line_in_file += 1
 
         # If the current block isn't empty, add that suggestion
         if len(current_block_lines) > 0:
-            # We have a chance to back-track here for blank lines that are repeats of the suffix
+            # We have a chance to back-track here for blank lines that are repeats of the end of the original
+            # Don't want to have the same ending in both the original and the generated, can just leave it there
             num_to_remove = 0
             for i in range(-1, -len(current_block_lines) - 1, -1):
                 if len(original_lines_below_previous_blocks) == 0:
@@ -445,7 +455,7 @@ class DefaultModelEditCodeStep(Step):
             await sdk.ide.showSuggestion(FileEdit(
                 filepath=rif.filepath,
                 range=Range.from_shorthand(
-                    current_block_start + offset_from_blocks, 0, current_block_start + offset_from_blocks + len(original_lines_below_previous_blocks), 0),
+                    current_block_start, 0, current_block_start + len(original_lines_below_previous_blocks), 0),
                 replacement="\n".join(current_block_lines)
             ))
 
