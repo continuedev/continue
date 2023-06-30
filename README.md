@@ -9,9 +9,10 @@
 <div align="center">
 
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-![GitHub issues](https://img.shields.io/github/issues-raw/continuedev/continue)
-![GitHub Repo stars](https://img.shields.io/github/stars/continuedev/continue?style=social)
 ![Twitter URL](https://img.shields.io/twitter/url?style=social&url=https%3A%2F%2Fgithub.com%2Fcontinuedev%2Fcontinue)
+  <a target="_blank" href="https://discord.gg/DvACJvjx" style="background:none">
+    <img src="https://img.shields.io/badge/discord-join-continue.svg?labelColor=191937&color=6F6FF7&logo=discord" />
+  </a>
 
 </div>
 
