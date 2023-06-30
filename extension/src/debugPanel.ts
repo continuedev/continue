@@ -231,6 +231,7 @@ export function setupDebugPanel(
           apiUrl: getContinueServerUrl(),
           sessionId,
           vscMediaUrl,
+          dataSwitchOn: vscode.workspace.getConfiguration("continue").get<boolean>("dataSwitch")
         });
 
         // // Listen for changes to server URL in settings
@@ -247,7 +248,13 @@ export function setupDebugPanel(
 
         break;
       }
-
+      case "toggleDataSwitch": {
+        // Set the setting in vscode 
+        await vscode.workspace
+        .getConfiguration("continue")
+        .update("dataSwitch", data.on, vscode.ConfigurationTarget.Global);
+        break;
+      }
       case "websocketForwardingOpen": {
         let url = data.url;
         if (typeof websocketConnections[url] === "undefined") {
