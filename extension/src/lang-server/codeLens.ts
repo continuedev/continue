@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import { editorToSuggestions } from "../suggestions";
+import { editorToSuggestions, editorSuggestionsLocked } from "../suggestions";
 
 class SuggestionsCodeLensProvider implements vscode.CodeLensProvider {
   public provideCodeLenses(
@@ -10,6 +10,7 @@ class SuggestionsCodeLensProvider implements vscode.CodeLensProvider {
     if (!suggestions) {
       return [];
     }
+    const locked = editorSuggestionsLocked.get(document.uri.fsPath.toString());
 
     const codeLenses: vscode.CodeLens[] = [];
     for (const suggestion of suggestions) {
@@ -20,12 +21,12 @@ class SuggestionsCodeLensProvider implements vscode.CodeLensProvider {
       codeLenses.push(
         new vscode.CodeLens(range, {
           title: "Accept ✅",
-          command: "continue.acceptSuggestion",
+          command: locked ? "" : "continue.acceptSuggestion",
           arguments: [suggestion],
         }),
         new vscode.CodeLens(range, {
           title: "Reject ❌",
-          command: "continue.rejectSuggestion",
+          command: locked ? "" : "continue.rejectSuggestion",
           arguments: [suggestion],
         })
       );

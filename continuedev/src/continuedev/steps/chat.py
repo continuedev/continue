@@ -152,8 +152,8 @@ class ChatWithFunctions(Step):
         ))
 
         last_function_called_index_in_history = None
-        # GPT keeps wanting to call the non-existent 'python' function repeatedly, so limiting to once
-        already_called_python = False
+        last_function_called_name = None
+        last_function_called_params = None
         while True:
             was_function_called = False
             func_args = ""
@@ -196,10 +196,8 @@ class ChatWithFunctions(Step):
                 ))
                 break
             else:
+                last_function_called = func_name
                 if func_name == "python" and "python" not in step_name_step_class_map:
-                    if already_called_python:
-                        return
-                    already_called_python = True
                     # GPT must be fine-tuned to believe this exists, but it doesn't always
                     func_name = "EditHighlightedCodeStep"
                     func_args = json.dumps({"user_input": self.user_input})
@@ -239,8 +237,6 @@ class ChatWithFunctions(Step):
                 if func_name not in step_name_step_class_map:
                     raise Exception(
                         f"The model tried to call a function ({func_name}) that does not exist. Please try again.")
-                step_to_run = step_name_step_class_map[func_name](
-                    **fn_call_params)
 
                 # if func_name == "AddFileStep":
                 #     step_to_run.hide = True
@@ -251,9 +247,17 @@ class ChatWithFunctions(Step):
                 # else:
                 #     self.description += f"\n`Running function {func_name}`\n\n"
                 if func_name == "EditHighlightedCodeStep":
-                    step_to_run.user_input = self.user_input
+                    fn_call_params["user_input"] = self.user_input
                 elif func_name == "EditFile":
-                    step_to_run.instructions = self.user_input
+                    fn_call_params["instructions"] = self.user_input
+
+                step_to_run = step_name_step_class_map[func_name](
+                    **fn_call_params)
+                if last_function_called_name is not None and last_function_called_name == func_name and last_function_called_params is not None and last_function_called_params == fn_call_params:
+                    # If it's calling the same function more than once in a row, it's probably looping and confused
+                    return
+                last_function_called_name = func_name
+                last_function_called_params = fn_call_params
 
                 await sdk.run_step(step_to_run)
                 await sdk.update_ui()
