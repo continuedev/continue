@@ -79,7 +79,7 @@ class GetUserSecretResponse(BaseModel):
 
 
 class RunCommandResponse(BaseModel):
-    output: str
+    output: str = ""
 
 
 class UniqueIdResponse(BaseModel):

@@ -195,7 +195,7 @@ class ContinueSDK(AbstractContinueSDK):
         for rif in highlighted_code:
             code = await self.ide.readRangeInFile(rif)
             msg = ChatMessage(content=f"{preface} ({rif.filepath}):\n```\n{code}\n```",
-                              role="user", summary=f"{preface}: {rif.filepath}")
+                              role="system", summary=f"{preface}: {rif.filepath}")
 
             # Don't insert after latest user message or function call
             i = -1

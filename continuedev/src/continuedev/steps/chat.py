@@ -152,6 +152,8 @@ class ChatWithFunctions(Step):
         ))
 
         last_function_called_index_in_history = None
+        # GPT keeps wanting to call the non-existent 'python' function repeatedly, so limiting to once
+        already_called_python = False
         while True:
             was_function_called = False
             func_args = ""
@@ -195,6 +197,9 @@ class ChatWithFunctions(Step):
                 break
             else:
                 if func_name == "python" and "python" not in step_name_step_class_map:
+                    if already_called_python:
+                        return
+                    already_called_python = True
                     # GPT must be fine-tuned to believe this exists, but it doesn't always
                     func_name = "EditHighlightedCodeStep"
                     func_args = json.dumps({"user_input": self.user_input})
@@ -231,6 +236,9 @@ class ChatWithFunctions(Step):
                     summary=f"Called function {func_name}"
                 ))
                 last_function_called_index_in_history = sdk.history.current_index + 1
+                if func_name not in step_name_step_class_map:
+                    raise Exception(
+                        f"The model tried to call a function ({func_name}) that does not exist. Please try again.")
                 step_to_run = step_name_step_class_map[func_name](
                     **fn_call_params)
 

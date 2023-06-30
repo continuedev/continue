@@ -33,7 +33,7 @@ def get_error_title(e: Exception) -> str:
         return "The request to OpenAI failed. Please try again."
     elif isinstance(e, openai_errors.APIConnectionError):
         return "The request failed. Please check your internet connection and try again."
-    return e.__repr__()
+    return e.__str__() or e.__repr__()
 
 
 class Autopilot(ContinueBaseModel):
