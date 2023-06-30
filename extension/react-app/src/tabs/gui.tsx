@@ -616,7 +616,7 @@ function GUI(props: GUIProps) {
         >
           <Trash size="1.6em" />
         </HeaderButtonWithText>
-        <a href="https://continue.dev/docs" className="no-underline">
+        <a href="https://continue.dev/docs/how-to-use-continue" className="no-underline">
           <HeaderButtonWithText text="Docs">
             <BookOpen size="1.6em" />
           </HeaderButtonWithText>
