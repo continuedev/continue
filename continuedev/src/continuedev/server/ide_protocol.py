@@ -24,6 +24,10 @@ class AbstractIdeProtocolServer(ABC):
         """Set whether a file is open"""
 
     @abstractmethod
+    async def setSuggestionsLocked(self, filepath: str, locked: bool = True):
+        """Set whether suggestions are locked"""
+
+    @abstractmethod
     async def openGUI(self):
         """Open a GUI"""
 
