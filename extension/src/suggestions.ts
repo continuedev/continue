@@ -2,11 +2,15 @@ import * as vscode from "vscode";
 import { sendTelemetryEvent, TelemetryEvent } from "./telemetry";
 import { openEditorAndRevealRange } from "./util/vscode";
 import { translate, readFileAtRange } from "./util/vscode";
+import * as fs from 'fs';
+import * as path from 'path';
+
 
 export interface SuggestionRanges {
   oldRange: vscode.Range;
   newRange: vscode.Range;
   newSelected: boolean;
+  newContent: string;
 }
 
 /* Keyed by editor.document.uri.toString() */
@@ -204,6 +208,41 @@ function selectSuggestion(
         : suggestion.newRange;
   }
 
+  let workspaceDir = vscode.workspace.workspaceFolders ? vscode.workspace.workspaceFolders[0]?.uri.fsPath : undefined;
+
+  let collectOn = vscode.workspace.getConfiguration("continue").get<boolean>("dataSwitch")
+
+  if (workspaceDir && collectOn) {
+
+    let continueDir = path.join(workspaceDir, ".continue");
+  
+    // Check if .continue directory doesn't exists
+    if(!fs.existsSync(continueDir)) {
+      fs.mkdirSync(continueDir);
+    }
+  
+    let suggestionsPath = path.join(continueDir, "suggestions.json");
+    
+    // Initialize suggestions list
+    let suggestions = [];
+  
+    // Check if suggestions.json exists
+    if(fs.existsSync(suggestionsPath)) {
+      let rawData = fs.readFileSync(suggestionsPath, 'utf-8');
+      suggestions = JSON.parse(rawData);
+    }
+
+    if (accept === "new" || (accept === "selected" && suggestion.newSelected)) {
+      suggestions.push({ accepted: true, timestamp: Date.now(), suggestion: suggestion.newContent });
+    } else {
+      suggestions.push({ accepted: false, timestamp: Date.now(), suggestion: suggestion.newContent });
+    }
+  
+    // Write the updated suggestions back to the file
+    fs.writeFileSync(suggestionsPath, JSON.stringify(suggestions, null, 4), 'utf-8');
+
+  }
+
   rangeToDelete = new vscode.Range(
     rangeToDelete.start,
     new vscode.Position(rangeToDelete.end.line, 0)
@@ -332,6 +371,7 @@ export async function showSuggestion(
               new vscode.Position(range.end.line, 0),
               new vscode.Position(range.end.line + suggestionLinesLength, 0)
             );
+            let content = editor!.document.getText(suggestionRange);
 
             const filename = editor!.document.uri.toString();
             if (editorToSuggestions.has(filename)) {
@@ -340,6 +380,7 @@ export async function showSuggestion(
                 oldRange: range,
                 newRange: suggestionRange,
                 newSelected: true,
+                newContent: content
               });
               editorToSuggestions.set(filename, suggestions);
               currentSuggestion.set(filename, suggestions.length - 1);
@@ -349,6 +390,7 @@ export async function showSuggestion(
                   oldRange: range,
                   newRange: suggestionRange,
                   newSelected: true,
+                  newContent: content
                 },
               ]);
               currentSuggestion.set(filename, 0);
