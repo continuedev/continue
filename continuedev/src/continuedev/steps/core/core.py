@@ -288,10 +288,12 @@ class DefaultModelEditCodeStep(Step):
         LINES_TO_MATCH_BEFORE_ENDING_BLOCK = 2
         matched_lines_at_end_of_block = 0
         # If a line has been matched at the end of the block, this is its index within original_lines_below_previous_blocks
-        index_of_last_matched_line = -1
+        # Except we are keeping track of multiple potentialities, so it's a list
+        # We always check the lines following each of these leads, but if multiple make it out at the end, we use the first one
+        indices_of_last_matched_lines = []
 
         async def handle_generated_line(line: str):
-            nonlocal current_block_start, current_line_in_file, original_lines, original_lines_below_previous_blocks, current_block_lines, matched_lines_at_end_of_block, index_of_last_matched_line, LINES_TO_MATCH_BEFORE_ENDING_BLOCK, offset_from_blocks
+            nonlocal current_block_start, current_line_in_file, original_lines, original_lines_below_previous_blocks, current_block_lines, matched_lines_at_end_of_block, indices_of_last_matched_lines, LINES_TO_MATCH_BEFORE_ENDING_BLOCK, offset_from_blocks
 
             # Highlight the line to show progress
             # - len(current_block_lines)
@@ -318,12 +320,17 @@ class DefaultModelEditCodeStep(Step):
                     # What you ideally do is find ALL matches, and then throw them out as you check the following lines
                     if og_line == line:  # and og_line.strip() != "":
                         matched_lines_at_end_of_block = 1
-                        index_of_last_matched_line = i
-                        break
+                        indices_of_last_matched_lines.append(i)
             else:
                 # In a block, and have already matched at least one line
-                # Check if the next line matches
-                if index_of_last_matched_line + 1 < len(original_lines_below_previous_blocks) and line == original_lines_below_previous_blocks[index_of_last_matched_line + 1]:
+                # Check if the next line matches, for each of the candidates
+                matches_found = []
+                for index_of_last_matched_line in range(len(indices_of_last_matched_lines)):
+                    if index_of_last_matched_line + 1 < len(original_lines_below_previous_blocks) and line == original_lines_below_previous_blocks[index_of_last_matched_line + 1]:
+                        matches_found.append(index_of_last_matched_line + 1)
+                indices_of_last_matched_lines = matches_found
+
+                if len(matches_found) > 0:
                     matched_lines_at_end_of_block += 1
                     if matched_lines_at_end_of_block >= LINES_TO_MATCH_BEFORE_ENDING_BLOCK:
                         # We've matched the required number of lines, insert suggestion!
@@ -331,7 +338,7 @@ class DefaultModelEditCodeStep(Step):
                         # We added some lines to the block that were matched (including maybe some blank lines)
                         # So here we will strip all matching lines from the end of current_block_lines
                         lines_stripped = []
-                        index_of_last_line_in_block = index_of_last_matched_line + 1
+                        index_of_last_line_in_block = indices_of_last_matched_lines[0]
                         while len(current_block_lines) > 0 and current_block_lines[-1] == original_lines_below_previous_blocks[index_of_last_line_in_block]:
                             lines_stripped.append(current_block_lines.pop())
                             index_of_last_line_in_block -= 1
@@ -354,16 +361,16 @@ class DefaultModelEditCodeStep(Step):
                         current_block_lines = []
                         current_block_start = -1
                         matched_lines_at_end_of_block = 0
-                        index_of_last_matched_line = -1
+                        indices_of_last_matched_lines = []
 
                         return
                     else:
-                        index_of_last_matched_line += 1
+                        pass
                 else:
                     # We matched some lines, but didn't make it to N
                     # So this block should continue on with the matched lines as a part of it
                     matched_lines_at_end_of_block = 0
-                    index_of_last_matched_line = -1
+                    indices_of_last_matched_lines = []
 
             current_block_lines.append(line)
 
@@ -449,6 +456,8 @@ class DefaultModelEditCodeStep(Step):
                 if current_block_lines[i] == original_lines_below_previous_blocks[-1]:
                     num_to_remove += 1
                     original_lines_below_previous_blocks.pop()
+                else:
+                    break
             current_block_lines = current_block_lines[:-
                                                       num_to_remove] if num_to_remove > 0 else current_block_lines
 
