@@ -490,8 +490,9 @@ class DefaultModelEditCodeStep(Step):
 
         for rif in rif_with_contents:
             await sdk.ide.setFileOpen(rif.filepath)
+            await sdk.ide.setSuggestionsLocked(rif.filepath, True)
             await self.stream_rif(rif, sdk)
-            # await sdk.ide.saveFile(rif.filepath)
+            await sdk.ide.setSuggestionsLocked(rif.filepath, False)
 
 
 class EditFileStep(Step):

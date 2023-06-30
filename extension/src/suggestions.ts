@@ -17,6 +17,7 @@ export const editorToSuggestions: Map<
   string, // URI of file
   SuggestionRanges[]
 > = new Map();
+export const editorSuggestionsLocked: Map<string, boolean> = new Map(); // Map from editor URI to whether the suggestions are locked
 export const currentSuggestion: Map<string, number> = new Map(); // Map from editor URI to index of current SuggestionRanges in editorToSuggestions
 
 // When tab is reopened, rerender the decorations:

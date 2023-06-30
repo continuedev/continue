@@ -155,7 +155,55 @@
           "visibility": "visible"
         }
       ]
-    }
+    },
+    "walkthroughs": [
+      {
+        "id": "continue",
+        "title": "Getting Started with Continue",
+        "description": "Learn how to effectively use Continue",
+        "steps": [
+          {
+            "id": "edit",
+            "title": "Highlight and Edit",
+            "description": "This step will run a command and check off once it has been run.\n[Run Command](command:getting-started-sample.runCommand)",
+            "media": {
+              "image": "media/image.png",
+              "altText": "Empty image"
+            },
+            "completionEvents": [
+              "onCommand:continue.acceptSuggestion"
+            ]
+          },
+          {
+            "id": "explain",
+            "title": "Ask Questions",
+            "description": "This step will change a setting and check off when the setting has changed\n[Change Setting](command:getting-started-sample.changeSetting)",
+            "media": {
+              "markdown": "media/walkthrough.md"
+            },
+            "completionEvents": []
+          },
+          {
+            "id": "generate",
+            "title": "Generate Files from Scratch",
+            "description": "Ask Continue to create a file from scratch.",
+            "media": {
+              "markdown": "media/walkthrough.md"
+            },
+            "completionEvents": []
+          },
+          {
+            "id": "commands",
+            "title": "Use a Slash Command",
+            "description": "Highlight some code then type '/explain' followed by a question. Slash commands let you select exactly the function you'd like Continue to perform. Others include '/edit' (to edit code), '/comment' (to comment code), and '/feedback' (to share with us what you think of Continue).",
+            "media": {
+              "markdown": "media/walkthrough.md"
+            },
+            "completionEvents": []
+          }
+        ]
+      }
+    ]
   },
   "scripts": {
     "vscode:prepublish": "npm run esbuild-base -- --minify",

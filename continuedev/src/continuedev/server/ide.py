@@ -132,6 +132,8 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
             await self.openGUI()
         elif message_type == "setFileOpen":
             await self.setFileOpen(data["filepath"], data["open"])
+        elif message_type == "setSuggestionsLocked":
+            await self.setSuggestionsLocked(data["filepath"], data["locked"])
         elif message_type == "fileEdits":
             fileEdits = list(
                 map(lambda d: FileEditWithFullContents.parse_obj(d), data["fileEdits"]))
@@ -156,6 +158,13 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
         await self._send_json("setFileOpen", {
             "filepath": filepath,
             "open": open
+        })
+
+    async def setSuggestionsLocked(self, filepath: str, locked: bool = True):
+        # Lock suggestions in the file so they don't ruin the offset before others are inserted
+        await self._send_json("setSuggestionsLocked", {
+            "filepath": filepath,
+            "locked": locked
         })
 
     async def openGUI(self):
