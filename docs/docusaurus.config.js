@@ -63,6 +63,7 @@ const config = {
         logo: {
           alt: "Continue Logo",
           src: "img/logo.png",
+          href: 'https://continue.dev'
         },
         items: [
           {
