@@ -2,9 +2,8 @@ import * as vscode from "vscode";
 import { sendTelemetryEvent, TelemetryEvent } from "./telemetry";
 import { openEditorAndRevealRange } from "./util/vscode";
 import { translate, readFileAtRange } from "./util/vscode";
-import * as fs from 'fs';
-import * as path from 'path';
-
+import * as fs from "fs";
+import * as path from "path";
 
 export interface SuggestionRanges {
   oldRange: vscode.Range;
@@ -208,39 +207,65 @@ function selectSuggestion(
         : suggestion.newRange;
   }
 
-  let workspaceDir = vscode.workspace.workspaceFolders ? vscode.workspace.workspaceFolders[0]?.uri.fsPath : undefined;
+  let workspaceDir = vscode.workspace.workspaceFolders
+    ? vscode.workspace.workspaceFolders[0]?.uri.fsPath
+    : undefined;
 
-  let collectOn = vscode.workspace.getConfiguration("continue").get<boolean>("dataSwitch")
+  let collectOn = vscode.workspace
+    .getConfiguration("continue")
+    .get<boolean>("dataSwitch");
 
   if (workspaceDir && collectOn) {
-
     let continueDir = path.join(workspaceDir, ".continue");
-  
+
     // Check if .continue directory doesn't exists
-    if(!fs.existsSync(continueDir)) {
+    if (!fs.existsSync(continueDir)) {
       fs.mkdirSync(continueDir);
     }
-  
+
     let suggestionsPath = path.join(continueDir, "suggestions.json");
-    
+
     // Initialize suggestions list
     let suggestions = [];
-  
+
     // Check if suggestions.json exists
-    if(fs.existsSync(suggestionsPath)) {
-      let rawData = fs.readFileSync(suggestionsPath, 'utf-8');
+    if (fs.existsSync(suggestionsPath)) {
+      let rawData = fs.readFileSync(suggestionsPath, "utf-8");
       suggestions = JSON.parse(rawData);
     }
 
     if (accept === "new" || (accept === "selected" && suggestion.newSelected)) {
-      suggestions.push({ accepted: true, timestamp: Date.now(), suggestion: suggestion.newContent });
+      suggestions.push({
+        accepted: true,
+        timestamp: Date.now(),
+        suggestion: suggestion.newContent,
+      });
     } else {
-      suggestions.push({ accepted: false, timestamp: Date.now(), suggestion: suggestion.newContent });
+      suggestions.push({
+        accepted: false,
+        timestamp: Date.now(),
+        suggestion: suggestion.newContent,
+      });
     }
-  
-    // Write the updated suggestions back to the file
-    fs.writeFileSync(suggestionsPath, JSON.stringify(suggestions, null, 4), 'utf-8');
 
+    // Write the updated suggestions back to the file
+    fs.writeFileSync(
+      suggestionsPath,
+      JSON.stringify(suggestions, null, 4),
+      "utf-8"
+    );
+
+    // If it's not already there, add .continue to .gitignore
+    const gitignorePath = path.join(workspaceDir, ".gitignore");
+    if (fs.existsSync(gitignorePath)) {
+      const gitignoreData = fs.readFileSync(gitignorePath, "utf-8");
+      const gitIgnoreLines = gitignoreData.split("\n");
+      if (!gitIgnoreLines.includes(".continue")) {
+        fs.appendFileSync(gitignorePath, "\n.continue\n");
+      }
+    } else {
+      fs.writeFileSync(gitignorePath, ".continue\n");
+    }
   }
 
   rangeToDelete = new vscode.Range(
@@ -380,7 +405,7 @@ export async function showSuggestion(
                 oldRange: range,
                 newRange: suggestionRange,
                 newSelected: true,
-                newContent: content
+                newContent: content,
               });
               editorToSuggestions.set(filename, suggestions);
               currentSuggestion.set(filename, suggestions.length - 1);
@@ -390,7 +415,7 @@ export async function showSuggestion(
                   oldRange: range,
                   newRange: suggestionRange,
                   newSelected: true,
-                  newContent: content
+                  newContent: content,
                 },
               ]);
               currentSuggestion.set(filename, 0);

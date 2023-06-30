@@ -62,7 +62,7 @@ const config = {
         title: "Continue",
         logo: {
           alt: "Continue Logo",
-          src: "img/logo.svg",
+          src: "img/logo.png",
         },
         items: [
           {
