@@ -454,7 +454,7 @@ class DefaultModelEditCodeStep(Step):
         self._prompt_and_completion += prompt + completion
 
     async def run(self, sdk: ContinueSDK) -> Coroutine[Observation, None, None]:
-        self.description = f"{self.user_input}"
+        self.description = f"`{self.user_input}`"
         await sdk.update_ui()
 
         rif_with_contents = []

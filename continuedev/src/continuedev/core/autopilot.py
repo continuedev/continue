@@ -31,6 +31,8 @@ def get_error_title(e: Exception) -> str:
         return e._message
     elif isinstance(e, ClientPayloadError):
         return "The request to OpenAI failed. Please try again."
+    elif isinstance(e, openai_errors.APIConnectionError):
+        return "The request failed. Please check your internet connection and try again."
     return e.__repr__()
 
 

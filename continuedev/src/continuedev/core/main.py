@@ -111,7 +111,7 @@ class HistoryNode(ContinueBaseModel):
                 content=json.dumps({
                     "description": self.step.description or "Function complete",
                 }),
-                summary=f"Ran function {self.step.name}"
+                summary=f"Called function {self.step.name}"
             )]
 
 
