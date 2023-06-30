@@ -21,12 +21,12 @@ class SuggestionsCodeLensProvider implements vscode.CodeLensProvider {
       codeLenses.push(
         new vscode.CodeLens(range, {
           title: "Accept ✅",
-          command: locked ? "" : "continue.acceptSuggestion",
+          command: "continue.acceptSuggestion",
           arguments: [suggestion],
         }),
         new vscode.CodeLens(range, {
           title: "Reject ❌",
-          command: locked ? "" : "continue.rejectSuggestion",
+          command: "continue.rejectSuggestion",
           arguments: [suggestion],
         })
       );
