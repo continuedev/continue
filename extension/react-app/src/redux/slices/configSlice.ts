@@ -44,6 +44,13 @@ export const configSlice = createSlice({
       ...state,
       vscMediaUrl: action.payload,
     }),
+    setDataSwitchOn: (
+      state: RootStore["config"],
+      action: { type: string; payload: boolean }
+    ) => ({
+      ...state,
+      dataSwitchOn: action.payload,
+    })
   },
 });
 
@@ -53,5 +60,6 @@ export const {
   setWorkspacePath,
   setSessionId,
   setVscMediaUrl,
+  setDataSwitchOn
 } = configSlice.actions;
 export default configSlice.reducer;
