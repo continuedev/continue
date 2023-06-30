@@ -130,29 +130,36 @@ class GUIProtocolServer(AbstractGUIProtocolServer):
 
 @router.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket, session: Session = Depends(websocket_session)):
-    await websocket.accept()
+    try:
+        print("Received websocket connection at url: ", websocket.url)
+        await websocket.accept()
 
-    print("Session started")
-    session_manager.register_websocket(session.session_id, websocket)
-    protocol = GUIProtocolServer(session)
-    protocol.websocket = websocket
+        print("Session started")
+        session_manager.register_websocket(session.session_id, websocket)
+        protocol = GUIProtocolServer(session)
+        protocol.websocket = websocket
 
-    # Update any history that may have happened before connection
-    await protocol.send_available_slash_commands()
-    await protocol.send_state_update()
+        # Update any history that may have happened before connection
+        await protocol.send_available_slash_commands()
+        # await protocol.send_state_update() THIS WAS CAUSING A LOT OF ISSUES. Don't uncomment.
 
-    while AppStatus.should_exit is False:
-        message = await websocket.receive_text()
-        print("Received message", message)
-        if type(message) is str:
-            message = json.loads(message)
+        while AppStatus.should_exit is False:
+            message = await websocket.receive_text()
+            print("Received message", message)
+            if type(message) is str:
+                message = json.loads(message)
 
-        if "messageType" not in message or "data" not in message:
-            continue
-        message_type = message["messageType"]
-        data = message["data"]
+            if "messageType" not in message or "data" not in message:
+                continue
+            message_type = message["messageType"]
+            data = message["data"]
 
-        protocol.handle_json(message_type, data)
+            protocol.handle_json(message_type, data)
 
-    print("Closing websocket")
-    await websocket.close()
+    except Exception as e:
+        print("ERROR in gui websocket: ", e)
+        raise e
+    finally:
+        print("Closing gui websocket")
+        await websocket.close()
+        session_manager.remove_session(session.session_id)

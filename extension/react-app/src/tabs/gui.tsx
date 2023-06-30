@@ -58,13 +58,13 @@ function GUI(props: GUIProps) {
   const [dataSwitchChecked, setDataSwitchChecked] = useState(false);
   const dataSwitchOn = useSelector(
     (state: RootStore) => state.config.dataSwitchOn
-  )
+  );
 
   useEffect(() => {
     if (typeof dataSwitchOn !== "undefined") {
-      setDataSwitchChecked(dataSwitchOn)
+      setDataSwitchChecked(dataSwitchOn);
     }
-  }, [dataSwitchOn])
+  }, [dataSwitchOn]);
 
   const [usingFastModel, setUsingFastModel] = useState(false);
   const [waitingForSteps, setWaitingForSteps] = useState(false);
@@ -548,9 +548,9 @@ function GUI(props: GUIProps) {
         }}
         hidden={!showDataSharingInfo}
       >
-        By turning on this switch, you will begin collecting accepted and 
-        rejected suggestions in .continue/suggestions.json. This data is 
-        stored locally on your machine and not sent anywhere.
+        By turning on this switch, you will begin collecting accepted and
+        rejected suggestions in .continue/suggestions.json. This data is stored
+        locally on your machine and not sent anywhere.
         <br />
         <br />
         <b>
@@ -583,15 +583,13 @@ function GUI(props: GUIProps) {
                 vscMachineId: vscMachineId,
                 dataSwitchChecked: !dataSwitchChecked,
               });
-              postVscMessage("toggleDataSwitch", {on: !dataSwitchChecked})
+              postVscMessage("toggleDataSwitch", { on: !dataSwitchChecked });
               setDataSwitchChecked((prev) => !prev);
             }}
             onColor="#12887a"
             checked={dataSwitchChecked}
           />
-          <span style={{ cursor: "help", fontSize: "14px" }}>
-            Collect Data
-          </span>
+          <span style={{ cursor: "help", fontSize: "14px" }}>Collect Data</span>
         </div>
         <HeaderButtonWithText
           onClick={() => {
@@ -616,7 +614,10 @@ function GUI(props: GUIProps) {
         >
           <Trash size="1.6em" />
         </HeaderButtonWithText>
-        <a href="https://continue.dev/docs/how-to-use-continue" className="no-underline">
+        <a
+          href="https://continue.dev/docs/how-to-use-continue"
+          className="no-underline"
+        >
           <HeaderButtonWithText text="Docs">
             <BookOpen size="1.6em" />
           </HeaderButtonWithText>

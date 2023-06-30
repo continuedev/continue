@@ -42,7 +42,7 @@ class SessionManager:
 
     def get_session(self, session_id: str) -> Session:
         if session_id not in self.sessions:
-            raise KeyError("Session ID not recognized")
+            raise KeyError("Session ID not recognized", session_id)
         return self.sessions[session_id]
 
     def new_session(self, ide: AbstractIdeProtocolServer) -> str:

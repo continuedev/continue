@@ -37,34 +37,34 @@ class IdeProtocolClient {
     });
 
     // Setup listeners for any file changes in open editors
-    vscode.workspace.onDidChangeTextDocument((event) => {
-      if (this._makingEdit === 0) {
-        let fileEdits: FileEditWithFullContents[] = event.contentChanges.map(
-          (change) => {
-            return {
-              fileEdit: {
-                filepath: event.document.uri.fsPath,
-                range: {
-                  start: {
-                    line: change.range.start.line,
-                    character: change.range.start.character,
-                  },
-                  end: {
-                    line: change.range.end.line,
-                    character: change.range.end.character,
-                  },
-                },
-                replacement: change.text,
-              },
-              fileContents: event.document.getText(),
-            };
-          }
-        );
-        this.messenger?.send("fileEdits", { fileEdits });
-      } else {
-        this._makingEdit--;
-      }
-    });
+    // vscode.workspace.onDidChangeTextDocument((event) => {
+    //   if (this._makingEdit === 0) {
+    //     let fileEdits: FileEditWithFullContents[] = event.contentChanges.map(
+    //       (change) => {
+    //         return {
+    //           fileEdit: {
+    //             filepath: event.document.uri.fsPath,
+    //             range: {
+    //               start: {
+    //                 line: change.range.start.line,
+    //                 character: change.range.start.character,
+    //               },
+    //               end: {
+    //                 line: change.range.end.line,
+    //                 character: change.range.end.character,
+    //               },
+    //             },
+    //             replacement: change.text,
+    //           },
+    //           fileContents: event.document.getText(),
+    //         };
+    //       }
+    //     );
+    //     this.messenger?.send("fileEdits", { fileEdits });
+    //   } else {
+    //     this._makingEdit--;
+    //   }
+    // });
   }
 
   async handleMessage(messageType: string, data: any) {

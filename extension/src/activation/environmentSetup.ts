@@ -71,7 +71,8 @@ async function getPythonPipCommands() {
   }
 
   const version = stdout.split(" ")[1];
-  if (version < "3.7") {
+  const [major, minor] = version.split(".");
+  if (parseInt(major) !== 3 || parseInt(minor) < 7) {
     vscode.window.showErrorMessage(
       "Continue requires Python3 version 3.7 or greater. Please update your Python3 installation, reload VS Code, and try again."
     );
