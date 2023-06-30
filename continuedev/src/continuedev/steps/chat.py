@@ -1,6 +1,8 @@
 import json
 from typing import Any, Coroutine, List
 
+from pydantic import Field
+
 from .main import EditHighlightedCodeStep
 from .core.core import MessageStep
 from ..core.main import FunctionCall, Models
@@ -113,8 +115,10 @@ class ViewDirectoryTreeStep(Step):
 class EditFileStep(Step):
     name: str = "Edit File"
     description: str = "Edit a file in the workspace that is not currently open."
-    filename: str
-    instructions: str
+    filename: str = Field(
+        ..., description="The name of the file to edit.")
+    instructions: str = Field(
+        ..., description="The instructions to edit the file.")
     hide: bool = True
 
     async def run(self, sdk: ContinueSDK):
@@ -201,7 +205,7 @@ class ChatWithFunctions(Step):
                     #         name=func_name,
                     #         arguments=func_args
                     #     ),
-                    #     summary=f"Ran function {func_name}"
+                    #     summary=f"Called function {func_name}"
                     # ))
                     # self.chat_context.append(ChatMessage(
                     #     role="user",
@@ -212,7 +216,11 @@ class ChatWithFunctions(Step):
                     # continue
                 # Call the function, then continue to chat
                 func_args = "{}" if func_args == "" else func_args
-                fn_call_params = json.loads(func_args)
+                try:
+                    fn_call_params = json.loads(func_args)
+                except json.JSONDecodeError:
+                    raise Exception(
+                        "The model returned invalid JSON. Please try again")
                 self.chat_context.append(ChatMessage(
                     role="assistant",
                     content=None,
@@ -220,7 +228,7 @@ class ChatWithFunctions(Step):
                         name=func_name,
                         arguments=func_args
                     ),
-                    summary=f"Ran function {func_name}"
+                    summary=f"Called function {func_name}"
                 ))
                 last_function_called_index_in_history = sdk.history.current_index + 1
                 step_to_run = step_name_step_class_map[func_name](
@@ -234,5 +242,10 @@ class ChatWithFunctions(Step):
                 #     self.description += f"\nAdded directory `{func_args['directory_name']}`"
                 # else:
                 #     self.description += f"\n`Running function {func_name}`\n\n"
+                if func_name == "EditHighlightedCodeStep":
+                    step_to_run.user_input = self.user_input
+                elif func_name == "EditFile":
+                    step_to_run.instructions = self.user_input
+
                 await sdk.run_step(step_to_run)
                 await sdk.update_ui()

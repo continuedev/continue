@@ -65,51 +65,56 @@ function CodeBlock(props: { children: React.ReactNode }) {
   const [result, setResult] = useState<AutoHighlightResult | undefined>(
     undefined
   );
+
+  const [highlightTimeout, setHighlightTimeout] = useState<
+    NodeJS.Timeout | undefined
+  >(undefined);
+
   useEffect(() => {
-    const result = hljs.highlightAuto(
-      (props.children as any).props.children[0],
-      [
-        "python",
-        "javascript",
-        "typescript",
-        "bash",
-        "html",
-        "css",
-        "json",
-        "yaml",
-        "markdown",
-        "sql",
-        "java",
-        "c",
-        "cpp",
-        "csharp",
-        "go",
-        "kotlin",
-        "php",
-        "ruby",
-        "rust",
-        "scala",
-        "swift",
-        "dart",
-        "haskell",
-        "perl",
-        "r",
-        "matlab",
-        "powershell",
-        "lua",
-        "elixir",
-        "clojure",
-        "groovy",
-        "julia",
-        "vbnet",
-        "objectivec",
-        "fsharp",
-        "erlang",
-        "ocaml",
-      ]
+    // Don't highlight more than once every 100ms
+    if (highlightTimeout) {
+      return;
+    }
+
+    setHighlightTimeout(
+      setTimeout(() => {
+        const result = hljs.highlightAuto(
+          (props.children as any).props.children[0],
+          [
+            "python",
+            "javascript",
+            "typescript",
+            "bash",
+            "html",
+            "css",
+            "json",
+            "yaml",
+            "markdown",
+            "sql",
+            "java",
+            "c",
+            "cpp",
+            "csharp",
+            "go",
+            "kotlin",
+            "php",
+            "ruby",
+            "rust",
+            "scala",
+            "swift",
+            "dart",
+            "haskell",
+            "perl",
+            "r",
+            "julia",
+            "objectivec",
+            "ocaml",
+          ]
+        );
+        setResult(result);
+        setHighlightTimeout(undefined);
+      }, 100)
     );
-    console.log(result);
-    setResult(result);
   }, [props.children]);
   const [hovered, setHovered] = useState<boolean>(false);
 
