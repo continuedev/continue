@@ -331,7 +331,7 @@ class DefaultModelEditCodeStep(Step):
                 # So here we will strip all matching lines from the end of current_block_lines
                 lines_stripped = []
                 index_of_last_line_in_block = first_valid_match[0]
-                while len(current_block_lines) > 0 and current_block_lines[-1] == original_lines_below_previous_blocks[index_of_last_line_in_block]:
+                while len(current_block_lines) > 0 and current_block_lines[-1] == original_lines_below_previous_blocks[index_of_last_line_in_block - 1]:
                     lines_stripped.append(current_block_lines.pop())
                     index_of_last_line_in_block -= 1
 
@@ -340,7 +340,7 @@ class DefaultModelEditCodeStep(Step):
                 await sdk.ide.showSuggestion(FileEdit(
                     filepath=rif.filepath,
                     range=Range.from_shorthand(
-                        current_block_start, 0, current_block_start + index_of_last_line_in_block, 0),
+                        current_block_start + 1, 0, current_block_start + index_of_last_line_in_block, 0),
                     replacement=replacement
                 ))
                 if replacement == "":
@@ -462,7 +462,7 @@ class DefaultModelEditCodeStep(Step):
             await sdk.ide.showSuggestion(FileEdit(
                 filepath=rif.filepath,
                 range=Range.from_shorthand(
-                    current_block_start, 0, current_block_start + len(original_lines_below_previous_blocks), 0),
+                    current_block_start + 1, 0, current_block_start + len(original_lines_below_previous_blocks), 0),
                 replacement="\n".join(current_block_lines)
             ))
 
