@@ -1,0 +1,4 @@
+[[redirects]]
+  from = "/docs"
+  to = "/docs/intro"
+  force = true
