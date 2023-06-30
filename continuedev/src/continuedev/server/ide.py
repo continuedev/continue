@@ -349,22 +349,28 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
 
 @router.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
-    await websocket.accept()
-    print("Accepted websocket connection from, ", websocket.client)
-    await websocket.send_json({"messageType": "connected", "data": {}})
+    try:
+        await websocket.accept()
+        print("Accepted websocket connection from, ", websocket.client)
+        await websocket.send_json({"messageType": "connected", "data": {}})
 
-    ideProtocolServer = IdeProtocolServer(session_manager)
-    ideProtocolServer.websocket = websocket
+        ideProtocolServer = IdeProtocolServer(session_manager)
+        ideProtocolServer.websocket = websocket
 
-    while True:
-        message = await websocket.receive_text()
-        message = json.loads(message)
+        while AppStatus.should_exit is False:
+            message = await websocket.receive_text()
+            message = json.loads(message)
 
-        if "messageType" not in message or "data" not in message:
-            continue
-        message_type = message["messageType"]
-        data = message["data"]
+            if "messageType" not in message or "data" not in message:
+                continue
+            message_type = message["messageType"]
+            data = message["data"]
 
-        await ideProtocolServer.handle_json(message_type, data)
+            await ideProtocolServer.handle_json(message_type, data)
 
-    await websocket.close()
+        print("Closing ide websocket")
+        await websocket.close()
+    except Exception as e:
+        print("Error in ide websocket: ", e)
+        await websocket.close()
+        raise e
