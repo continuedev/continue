@@ -1,4 +1,4 @@
 [[redirects]]
-  from = "/docs"
+  from = "/"
   to = "/docs/intro"
   force = true
