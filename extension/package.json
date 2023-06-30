@@ -159,45 +159,36 @@
     "walkthroughs": [
       {
         "id": "continue",
-        "title": "Getting Started with Continue",
-        "description": "Learn how to effectively use Continue",
+        "title": "Getting Started",
+        "description": "Learn how to use Continue",
         "steps": [
           {
             "id": "edit",
-            "title": "Highlight and Edit",
-            "description": "This step will run a command and check off once it has been run.\n[Run Command](command:getting-started-sample.runCommand)",
+            "title": "Edit in natural language",
+            "description": "Highlight a section of code and instruct Continue to refactor it (e.g. `/edit Make this use more descriptive variable names`)",
             "media": {
-              "image": "media/image.png",
+              "image": "media/edit.png",
               "altText": "Empty image"
             },
-            "completionEvents": [
-              "onCommand:continue.acceptSuggestion"
-            ]
+            "completionEvents": []
           },
           {
             "id": "explain",
-            "title": "Ask Questions",
-            "description": "This step will change a setting and check off when the setting has changed\n[Change Setting](command:getting-started-sample.changeSetting)",
+            "title": "Get possible explanations",
+            "description": "Ask Continue about a part of your code to get another perspective (e.g. `/explain how do I find running process on port 8000?`)",
             "media": {
-              "markdown": "media/walkthrough.md"
+              "image": "media/explain.png",
+              "altText": "Empty image"
             },
             "completionEvents": []
           },
           {
             "id": "generate",
-            "title": "Generate Files from Scratch",
-            "description": "Ask Continue to create a file from scratch.",
+            "title": "Generate files from scratch",
+            "description": "Let Continue build the scaffolding of Python scripts, React components, and more (e.g. `Create a shell script to back up my home dir to /tmp/`)",
             "media": {
-              "markdown": "media/walkthrough.md"
-            },
-            "completionEvents": []
-          },
-          {
-            "id": "commands",
-            "title": "Use a Slash Command",
-            "description": "Highlight some code then type '/explain' followed by a question. Slash commands let you select exactly the function you'd like Continue to perform. Others include '/edit' (to edit code), '/comment' (to comment code), and '/feedback' (to share with us what you think of Continue).",
-            "media": {
-              "markdown": "media/walkthrough.md"
+              "image": "media/generate.png",
+              "altText": "Empty image"
             },
             "completionEvents": []
           }
