@@ -49,6 +49,12 @@ class Range(BaseModel):
     start: Position
     end: Position
 
+    def __lt__(self, other: "Range") -> bool:
+        return self.start < other.start or (self.start == other.start and self.end < other.end)
+
+    def __eq__(self, other: "Range") -> bool:
+        return self.start == other.start and self.end == other.end
+
     def __hash__(self):
         return hash((self.start, self.end))
 

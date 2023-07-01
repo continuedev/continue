@@ -1,4 +1,4 @@
-import React, { useCallback } from "react";
+import React, { useCallback, useEffect } from "react";
 import { useCombobox } from "downshift";
 import styled from "styled-components";
 import {
@@ -7,8 +7,44 @@ import {
   secondaryDark,
   vscBackground,
 } from ".";
+import CodeBlock from "./CodeBlock";
+import { RangeInFile } from "../../../src/client";
 
 const mainInputFontSize = 16;
+
+const ContextDropdown = styled.div`
+  position: absolute;
+  padding: 4px;
+  width: calc(100% - 16px - 8px);
+  background-color: ${secondaryDark};
+  color: white;
+  border-bottom-right-radius: ${defaultBorderRadius};
+  border-bottom-left-radius: ${defaultBorderRadius};
+  /* border: 1px solid white; */
+  border-top: none;
+  margin-left: 8px;
+  margin-right: 8px;
+  margin-top: -12px;
+  outline: 1px solid orange;
+`;
+
+const PillButton = styled.button`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border: none;
+  color: white;
+  background-color: gray;
+  border-radius: 50px;
+  padding: 5px 10px;
+  margin: 5px 0;
+  cursor: pointer;
+
+  &:hover {
+    background-color: ${buttonColor};
+  }
+`;
+
 const MainTextInput = styled.textarea`
   resize: none;
 
@@ -20,6 +56,7 @@ const MainTextInput = styled.textarea`
   width: 100%;
   background-color: ${vscBackground};
   color: white;
+  z-index: 1;
 
   &:focus {
     border: 1px solid transparent;
@@ -49,6 +86,7 @@ const Ul = styled.ul<{
   border-radius: ${defaultBorderRadius};
   overflow: hidden;
   border: 0.5px solid gray;
+  z-index: 2;
 `;
 
 const Li = styled.li<{
@@ -71,6 +109,8 @@ interface ComboBoxProps {
   onInputValueChange: (inputValue: string) => void;
   disabled?: boolean;
   onEnter?: (e: React.KeyboardEvent<HTMLInputElement>) => void;
+  highlightedCodeSections?: (RangeInFile & { contents: string })[];
+  deleteContextItem?: (idx: number) => void;
 }
 
 const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
@@ -78,6 +118,24 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
   // The position of the current command you are typing now, so the one that will be appended to history once you press enter
   const [positionInHistory, setPositionInHistory] = React.useState<number>(0);
   const [items, setItems] = React.useState(props.items);
+  const [showContextDropdown, setShowContextDropdown] = React.useState(false);
+  const [highlightedCodeSections, setHighlightedCodeSections] = React.useState(
+    props.highlightedCodeSections || [
+      {
+        filepath: "test.ts",
+        range: {
+          start: { line: 0, character: 0 },
+          end: { line: 0, character: 0 },
+        },
+        contents: "import * as a from 'a';",
+      },
+    ]
+  );
+
+  useEffect(() => {
+    setHighlightedCodeSections(props.highlightedCodeSections || []);
+  }, [props.highlightedCodeSections]);
+
   const {
     isOpen,
     getToggleButtonProps,
@@ -111,90 +169,124 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
   };
 
   return (
-    <div className="flex px-2" ref={divRef} hidden={!isOpen}>
-      <MainTextInput
-        disabled={props.disabled}
-        placeholder="Type '/' to see available slash commands."
-        {...getInputProps({
-          onChange: (e) => {
-            const target = e.target as HTMLTextAreaElement;
-            // Update the height of the textarea to match the content, up to a max of 200px.
-            target.style.height = "auto";
-            target.style.height = `${Math.min(
-              target.scrollHeight,
-              300
-            ).toString()}px`;
-          },
-          onKeyDown: (event) => {
-            if (event.key === "Enter" && event.shiftKey) {
-              // Prevent Downshift's default 'Enter' behavior.
-              (event.nativeEvent as any).preventDownshiftDefault = true;
-            } else if (
-              event.key === "Enter" &&
-              (!isOpen || items.length === 0)
-            ) {
-              // Prevent Downshift's default 'Enter' behavior.
-              (event.nativeEvent as any).preventDownshiftDefault = true;
-              if (props.onEnter) props.onEnter(event);
-              setInputValue("");
-              const value = event.currentTarget.value;
-              if (value !== "") {
-                setPositionInHistory(history.length + 1);
-                setHistory([...history, value]);
+    <>
+      <div className="flex px-2" ref={divRef} hidden={!isOpen}>
+        <MainTextInput
+          disabled={props.disabled}
+          placeholder="Type '/' to see available slash commands."
+          {...getInputProps({
+            onChange: (e) => {
+              const target = e.target as HTMLTextAreaElement;
+              // Update the height of the textarea to match the content, up to a max of 200px.
+              target.style.height = "auto";
+              target.style.height = `${Math.min(
+                target.scrollHeight,
+                300
+              ).toString()}px`;
+
+              setShowContextDropdown(target.value.endsWith("@"));
+            },
+            onKeyDown: (event) => {
+              if (event.key === "Enter" && event.shiftKey) {
+                // Prevent Downshift's default 'Enter' behavior.
+                (event.nativeEvent as any).preventDownshiftDefault = true;
+              } else if (
+                event.key === "Enter" &&
+                (!isOpen || items.length === 0)
+              ) {
+                // Prevent Downshift's default 'Enter' behavior.
+                (event.nativeEvent as any).preventDownshiftDefault = true;
+                if (props.onEnter) props.onEnter(event);
+                setInputValue("");
+                const value = event.currentTarget.value;
+                if (value !== "") {
+                  setPositionInHistory(history.length + 1);
+                  setHistory([...history, value]);
+                }
+              } else if (event.key === "Tab" && items.length > 0) {
+                setInputValue(items[0].name);
+                event.preventDefault();
+              } else if (
+                event.key === "ArrowUp" ||
+                (event.key === "ArrowDown" &&
+                  event.currentTarget.value.split("\n").length > 1)
+              ) {
+                (event.nativeEvent as any).preventDownshiftDefault = true;
+              } else if (
+                event.key === "ArrowUp" &&
+                event.currentTarget.value.split("\n").length > 1
+              ) {
+                if (positionInHistory == 0) return;
+                setInputValue(history[positionInHistory - 1]);
+                setPositionInHistory((prev) => prev - 1);
+              } else if (
+                event.key === "ArrowDown" &&
+                event.currentTarget.value.split("\n").length > 1
+              ) {
+                if (positionInHistory < history.length - 1) {
+                  setInputValue(history[positionInHistory + 1]);
+                }
+                setPositionInHistory((prev) =>
+                  Math.min(prev + 1, history.length)
+                );
               }
-            } else if (event.key === "Tab" && items.length > 0) {
-              setInputValue(items[0].name);
-              event.preventDefault();
-            } else if (
-              event.key === "ArrowUp" ||
-              (event.key === "ArrowDown" &&
-                event.currentTarget.value.split("\n").length > 1)
-            ) {
-              (event.nativeEvent as any).preventDownshiftDefault = true;
-            } else if (
-              event.key === "ArrowUp" &&
-              event.currentTarget.value.split("\n").length > 1
-            ) {
-              if (positionInHistory == 0) return;
-              setInputValue(history[positionInHistory - 1]);
-              setPositionInHistory((prev) => prev - 1);
-            } else if (
-              event.key === "ArrowDown" &&
-              event.currentTarget.value.split("\n").length > 1
-            ) {
-              if (positionInHistory < history.length - 1) {
-                setInputValue(history[positionInHistory + 1]);
+            },
+            ref: ref as any,
+          })}
+        />
+        <Ul
+          {...getMenuProps({
+            ref: ulRef,
+          })}
+          showAbove={showAbove()}
+          ulHeightPixels={ulRef.current?.getBoundingClientRect().height || 0}
+        >
+          {isOpen &&
+            items.map((item, index) => (
+              <Li
+                key={`${item.name}${index}`}
+                {...getItemProps({ item, index })}
+                highlighted={highlightedIndex === index}
+                selected={selectedItem === item}
+              >
+                <span>
+                  {item.name}: {item.description}
+                </span>
+              </Li>
+            ))}
+        </Ul>
+      </div>
+      <ContextDropdown hidden={!showContextDropdown}>
+        <p>Highlight code to include as context:</p>
+        {highlightedCodeSections.map((section, idx) => (
+          <>
+            <p>{section.filepath}</p>
+            <CodeBlock showCopy={false} key={idx}>
+              {section.contents}
+            </CodeBlock>
+          </>
+        ))}
+      </ContextDropdown>
+      <div className="px-2">
+        {highlightedCodeSections.map((section, idx) => (
+          <PillButton
+            onClick={() => {
+              console.log("delete context item", idx);
+              if (props.deleteContextItem) {
+                props.deleteContextItem(idx);
               }
-              setPositionInHistory((prev) =>
-                Math.min(prev + 1, history.length)
-              );
-            }
-          },
-          ref: ref as any,
-        })}
-      />
-      <Ul
-        {...getMenuProps({
-          ref: ulRef,
-        })}
-        showAbove={showAbove()}
-        ulHeightPixels={ulRef.current?.getBoundingClientRect().height || 0}
-      >
-        {isOpen &&
-          items.map((item, index) => (
-            <Li
-              key={`${item.name}${index}`}
-              {...getItemProps({ item, index })}
-              highlighted={highlightedIndex === index}
-              selected={selectedItem === item}
-            >
-              <span>
-                {item.name}: {item.description}
-              </span>
-            </Li>
-          ))}
-      </Ul>
-    </div>
+              setHighlightedCodeSections((prev) => {
+                const newSections = [...prev];
+                newSections.splice(idx, 1);
+                return newSections;
+              });
+            }}
+          >
+            {section.filepath}
+          </PillButton>
+        ))}
+      </div>
+    </>
   );
 });
 

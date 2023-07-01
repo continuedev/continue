@@ -23,10 +23,39 @@ class RangeInFile(BaseModel):
 
 
 class RangeInFileWithContents(RangeInFile):
+    """A range in a file with the contents of the range."""
     contents: str
 
     def __hash__(self):
         return hash((self.filepath, self.range, self.contents))
+
+    def union(self, other: "RangeInFileWithContents") -> "RangeInFileWithContents":
+        assert self.filepath == other.filepath
+        # Use a placeholder variable for self and swap it with other if other comes before self
+        first = self
+        second = other
+        if other.range.start < self.range.start:
+            first = other
+            second = self
+
+        assert first.filepath == second.filepath
+
+        # Calculate the start and end positions of the overlap
+        overlap_start = max(first.range.start,
+                            second.range.start) - first.range.start
+        overlap_end = min(first.range.end, second.range.end) - \
+            first.range.start
+
+        # Calculate the new contents by removing the overlap
+        union_contents = first.contents[:overlap_start] + \
+            second.contents[overlap_start:overlap_end] + \
+            first.contents[overlap_end:]
+
+        return RangeInFileWithContents(
+            filepath=first.filepath,
+            range=first.range.union(second.range),
+            contents=union_contents
+        )
 
     @staticmethod
     def from_entire_file(filepath: str, content: str) -> "RangeInFileWithContents":

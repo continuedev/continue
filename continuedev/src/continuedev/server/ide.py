@@ -8,7 +8,7 @@ from fastapi import WebSocket, Body, APIRouter
 from uvicorn.main import Server
 
 from ..libs.util.queue import AsyncSubscriptionQueue
-from ..models.filesystem import FileSystem, RangeInFile, EditDiff, RealFileSystem
+from ..models.filesystem import FileSystem, RangeInFile, EditDiff, RangeInFileWithContents, RealFileSystem
 from ..models.filesystem_edit import AddDirectory, AddFile, DeleteDirectory, DeleteFile, FileSystemEdit, FileEdit, FileEditWithFullContents, RenameDirectory, RenameFile, SequentialFileSystemEdit
 from pydantic import BaseModel
 from .gui import SessionManager, session_manager
@@ -139,6 +139,9 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
             fileEdits = list(
                 map(lambda d: FileEditWithFullContents.parse_obj(d), data["fileEdits"]))
             self.onFileEdits(fileEdits)
+        elif message_type == "highlightedCodePush":
+            self.onHighlightedCodeUpdate(
+                [RangeInFileWithContents(**rif) for rif in data["highlightedCode"]])
         elif message_type == "commandOutput":
             output = data["output"]
             self.onCommandOutput(output)
@@ -228,6 +231,11 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
         for _, session in self.session_manager.sessions.items():
             asyncio.create_task(
                 session.autopilot.handle_command_output(output))
+
+    def onHighlightedCodeUpdate(self, range_in_files: List[RangeInFileWithContents]):
+        for _, session in self.session_manager.sessions.items():
+            asyncio.create_task(
+                session.autopilot.handle_highlighted_code(range_in_files))
 
     # Request information. Session doesn't matter.
     async def getOpenFiles(self) -> List[str]:

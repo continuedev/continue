@@ -246,10 +246,14 @@ function StepContainer(props: StepContainerProps) {
               className="overflow-x-scroll"
               components={{
                 pre: ({ node, ...props }) => {
-                  return <CodeBlock children={props.children[0]} />;
+                  return (
+                    <CodeBlock
+                      children={(props.children[0] as any).props.children[0]}
+                    />
+                  );
                 },
                 code: ({ node, ...props }) => {
-                  return <StyledCode children={props.children[0]} />;
+                  return <StyledCode children={props.children[0] as any} />;
                 },
               }}
             >
