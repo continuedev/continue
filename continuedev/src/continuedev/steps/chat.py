@@ -29,12 +29,20 @@ class SimpleChatStep(Step):
             self.description = ""
         await sdk.update_ui()
 
-        async for chunk in sdk.models.default.stream_complete(self.user_input, with_history=await sdk.get_chat_context()):
+        messages = await sdk.get_chat_context()
+        messages.append(ChatMessage(
+            role="user",
+            content=self.user_input,
+            summary=self.user_input
+        ))
+
+        async for chunk in sdk.models.default.stream_chat(messages):
             if sdk.current_step_was_deleted():
                 return
 
-            self.description += chunk
-            await sdk.update_ui()
+            if "content" in chunk:
+                self.description += chunk["content"]
+                await sdk.update_ui()
 
         self.name = (await sdk.models.gpt35.complete(
             f"Write a short title for the following chat message: {self.description}")).strip()

@@ -223,7 +223,7 @@
     "@types/node-fetch": "^2.6.2",
     "@types/react-dom": "^18.2.4",
     "@types/styled-components": "^5.1.26",
-    "@types/vscode": "^1.74.0",
+    "@types/vscode": "1.60",
     "@types/ws": "^8.5.4",
     "@typescript-eslint/eslint-plugin": "^5.45.0",
     "@typescript-eslint/parser": "^5.45.0",
