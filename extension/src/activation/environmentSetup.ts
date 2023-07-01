@@ -67,17 +67,37 @@ async function getPythonPipCommands() {
       vscode.window.showErrorMessage(
         "Continue requires Python3. Please install from https://www.python.org/downloads, reload VS Code, and try again."
       );
-      throw new Error("Python 3.7 or greater is not installed.");
+      throw new Error("Python 3 is not installed.");
     }
   }
 
   const version = stdout.split(" ")[1];
   const [major, minor] = version.split(".");
   if (parseInt(major) !== 3 || parseInt(minor) < 7) {
-    vscode.window.showErrorMessage(
-      "Continue requires Python3 version 3.7 or greater. Please update your Python3 installation, reload VS Code, and try again."
-    );
-    throw new Error("Python3 is not installed.");
+    // Need to check specific versions
+    const checkPython3VersionExists = async (minorVersion: number) => {
+      const [stdout, stderr] = await runCommand(
+        `python3.${minorVersion} --version`
+      );
+      return typeof stderr === "undefined" || stderr === "";
+    };
+
+    const validVersions = [7, 8, 9, 10, 11, 12];
+    let versionExists = false;
+
+    for (const minorVersion of validVersions) {
+      if (await checkPython3VersionExists(minorVersion)) {
+        versionExists = true;
+        break;
+      }
+    }
+
+    if (!versionExists) {
+      vscode.window.showErrorMessage(
+        "Continue requires Python3 version 3.7 or greater. Please update your Python3 installation, reload VS Code, and try again."
+      );
+      throw new Error("Python3 is not installed.");
+    }
   }
   const pipCmd = pythonCmd.endsWith("3") ? "pip3" : "pip";
   return [pythonCmd, pipCmd];

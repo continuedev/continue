@@ -157,7 +157,7 @@ class DefaultModelEditCodeStep(Step):
     async def describe(self, models: Models) -> Coroutine[str, None, None]:
         description = await models.gpt3516k.complete(
             f"{self._prompt_and_completion}\n\nPlease give brief a description of the changes made above using markdown bullet points. Be concise and only mention changes made to the commit before, not prefix or suffix:")
-        self.name = await models.gpt3516k.complete(f"Write a very short title to describe this requested change: '{self.user_input}'. This is the title:")
+        self.name = await models.gpt3516k.complete(f"Write a very short title to describe this requested change (no quotes): '{self.user_input}'. This is the title:")
 
         # Remove quotes from title and description if they are wrapped
         if description.startswith('"') and description.endswith('"'):
@@ -244,7 +244,7 @@ class DefaultModelEditCodeStep(Step):
                 file_suffix = "\n" + file_suffix
                 rif.contents = rif.contents[:-1]
 
-                return file_prefix, rif.contents, file_suffix, model_to_use
+        return file_prefix, rif.contents, file_suffix, model_to_use
 
     def compile_prompt(self, file_prefix: str, contents: str, file_suffix: str, sdk: ContinueSDK) -> str:
         prompt = self._prompt
