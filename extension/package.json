@@ -17,7 +17,7 @@
   "version": "0.0.99",
   "publisher": "Continue",
   "engines": {
-    "vscode": "^1.74.0"
+    "vscode": "^1.60.0"
   },
   "categories": [
     "Other",
