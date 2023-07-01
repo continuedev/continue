@@ -4,3 +4,4 @@ out/
 .vscode-test/
 data/
 src/client
+.continue

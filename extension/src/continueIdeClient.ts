@@ -32,8 +32,8 @@ class IdeProtocolClient {
     messenger.onClose(() => {
       this.messenger = null;
     });
-    messenger.onMessage((messageType, data) => {
-      this.handleMessage(messageType, data);
+    messenger.onMessage((messageType, data, messenger) => {
+      this.handleMessage(messageType, data, messenger);
     });
 
     // Setup listeners for any file changes in open editors
@@ -67,41 +67,45 @@ class IdeProtocolClient {
     // });
   }
 
-  async handleMessage(messageType: string, data: any) {
+  async handleMessage(
+    messageType: string,
+    data: any,
+    messenger: WebsocketMessenger
+  ) {
     switch (messageType) {
       case "highlightedCode":
-        this.messenger?.send("highlightedCode", {
+        messenger.send("highlightedCode", {
           highlightedCode: this.getHighlightedCode(),
         });
         break;
       case "workspaceDirectory":
-        this.messenger?.send("workspaceDirectory", {
+        messenger.send("workspaceDirectory", {
           workspaceDirectory: this.getWorkspaceDirectory(),
         });
         break;
       case "uniqueId":
-        this.messenger?.send("uniqueId", {
+        messenger.send("uniqueId", {
           uniqueId: this.getUniqueId(),
         });
         break;
       case "getUserSecret":
-        this.messenger?.send("getUserSecret", {
+        messenger.send("getUserSecret", {
           value: await this.getUserSecret(data.key),
         });
         break;
       case "openFiles":
-        this.messenger?.send("openFiles", {
+        messenger.send("openFiles", {
           openFiles: this.getOpenFiles(),
         });
         break;
       case "readFile":
-        this.messenger?.send("readFile", {
+        messenger.send("readFile", {
           contents: this.readFile(data.filepath),
         });
         break;
       case "editFile":
         const fileEdit = await this.editFile(data.edit);
-        this.messenger?.send("editFile", {
+        messenger.send("editFile", {
           fileEdit,
         });
         break;
@@ -109,7 +113,7 @@ class IdeProtocolClient {
         this.highlightCode(data.rangeInFile, data.color);
         break;
       case "runCommand":
-        this.messenger?.send("runCommand", {
+        messenger.send("runCommand", {
           output: await this.runCommand(data.command),
         });
         break;
@@ -249,6 +253,8 @@ class IdeProtocolClient {
         ) {
           clearInterval(interval);
           resolve(null);
+        } else {
+          console.log("Websocket not yet open, trying again...");
         }
       }, 1000);
     });

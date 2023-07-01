@@ -110,7 +110,8 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
     session_manager: SessionManager
     sub_queue: AsyncSubscriptionQueue = AsyncSubscriptionQueue()
 
-    def __init__(self, session_manager: SessionManager):
+    def __init__(self, session_manager: SessionManager, websocket: WebSocket):
+        self.websocket = websocket
         self.session_manager = session_manager
 
     async def _send_json(self, message_type: str, data: Any):
@@ -354,8 +355,7 @@ async def websocket_endpoint(websocket: WebSocket):
         print("Accepted websocket connection from, ", websocket.client)
         await websocket.send_json({"messageType": "connected", "data": {}})
 
-        ideProtocolServer = IdeProtocolServer(session_manager)
-        ideProtocolServer.websocket = websocket
+        ideProtocolServer = IdeProtocolServer(session_manager, websocket)
 
         while AppStatus.should_exit is False:
             message = await websocket.receive_text()

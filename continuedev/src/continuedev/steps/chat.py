@@ -23,7 +23,10 @@ class SimpleChatStep(Step):
     name: str = "Chat"
 
     async def run(self, sdk: ContinueSDK):
-        self.description = f"```{self.user_input}```\n\n"
+        self.description = f"`{self.user_input}`\n\n"
+        if self.user_input.strip() == "":
+            self.user_input = "Explain this code's function is a concise list of markdown bullets."
+            self.description = ""
         await sdk.update_ui()
 
         async for chunk in sdk.models.default.stream_complete(self.user_input, with_history=await sdk.get_chat_context()):
