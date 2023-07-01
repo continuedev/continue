@@ -1,5 +1,6 @@
 console.log("Websocket import");
 const WebSocket = require("ws");
+import fetch from "node-fetch";
 
 export abstract class Messenger {
   abstract send(messageType: string, data: object): void;
@@ -50,18 +51,49 @@ export class WebsocketMessenger extends Messenger {
     return newWebsocket;
   }
 
+  async checkServerRunning(serverUrl: string): Promise<boolean> {
+    // Check if already running by calling /health
+    try {
+      const response = await fetch(serverUrl + "/health");
+      if (response.status === 200) {
+        console.log("Continue python server already running");
+        return true;
+      } else {
+        return false;
+      }
+    } catch (e) {
+      return false;
+    }
+  }
+
   constructor(serverUrl: string) {
     super();
     this.serverUrl = serverUrl;
     this.websocket = this._newWebsocket();
 
-    const interval = setInterval(() => {
-      if (this.websocket.readyState === this.websocket.OPEN) {
-        clearInterval(interval);
-      } else if (this.websocket.readyState !== this.websocket.CONNECTING) {
-        this.websocket = this._newWebsocket();
-      }
-    }, 1000);
+    // Wait until the server is running
+    // const interval = setInterval(async () => {
+    //   if (
+    //     await this.checkServerRunning(
+    //       serverUrl.replace("/ide/ws", "").replace("ws://", "http://")
+    //     )
+    //   ) {
+    //     this.websocket = this._newWebsocket();
+    //     clearInterval(interval);
+    //   } else {
+    //     console.log(
+    //       "Waiting for python server to start-----------------------"
+    //     );
+    //   }
+    // }, 1000);
+
+    // const interval = setInterval(() => {
+    //   if (this.websocket.readyState === this.websocket.OPEN) {
+    //     clearInterval(interval);
+    //   } else if (this.websocket.readyState !== this.websocket.CONNECTING) {
+    //     this.websocket = this._newWebsocket();
+    //   }
+    // }, 1000);
   }
 
   send(messageType: string, data: object) {
@@ -99,10 +131,16 @@ export class WebsocketMessenger extends Messenger {
     });
   }
 
-  onMessage(callback: (messageType: string, data: any) => void): void {
+  onMessage(
+    callback: (
+      messageType: string,
+      data: any,
+      messenger: WebsocketMessenger
+    ) => void
+  ): void {
     this.websocket.addEventListener("message", (event) => {
       const msg = JSON.parse(event.data);
-      callback(msg.messageType, msg.data);
+      callback(msg.messageType, msg.data, this);
     });
   }
 

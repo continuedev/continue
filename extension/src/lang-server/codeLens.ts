@@ -60,18 +60,15 @@ class SuggestionsCodeLensProvider implements vscode.CodeLensProvider {
   }
 }
 
-const allCodeLensProviders: { [langauge: string]: vscode.CodeLensProvider[] } =
-  {
-    // python: [new SuggestionsCodeLensProvider(), new PytestCodeLensProvider()],
-    "*": [new SuggestionsCodeLensProvider()],
-  };
+let suggestionsCodeLensDisposable: vscode.Disposable | undefined = undefined;
 
 export function registerAllCodeLensProviders(context: vscode.ExtensionContext) {
-  for (const language in allCodeLensProviders) {
-    for (const codeLensProvider of allCodeLensProviders[language]) {
-      context.subscriptions.push(
-        vscode.languages.registerCodeLensProvider(language, codeLensProvider)
-      );
-    }
+  if (suggestionsCodeLensDisposable) {
+    suggestionsCodeLensDisposable.dispose();
   }
+  suggestionsCodeLensDisposable = vscode.languages.registerCodeLensProvider(
+    "*",
+    new SuggestionsCodeLensProvider()
+  );
+  context.subscriptions.push(suggestionsCodeLensDisposable);
 }

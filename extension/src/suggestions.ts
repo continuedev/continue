@@ -4,6 +4,8 @@ import { openEditorAndRevealRange } from "./util/vscode";
 import { translate, readFileAtRange } from "./util/vscode";
 import * as fs from "fs";
 import * as path from "path";
+import { registerAllCodeLensProviders } from "./lang-server/codeLens";
+import { extensionContext } from "./activation/activate";
 
 export interface SuggestionRanges {
   oldRange: vscode.Range;
@@ -125,6 +127,10 @@ export function rerenderDecorations(editorUri: string) {
     suggestions[idx].newRange,
     vscode.TextEditorRevealType.Default
   );
+
+  if (extensionContext) {
+    registerAllCodeLensProviders(extensionContext);
+  }
 }
 
 export function suggestionDownCommand() {
@@ -337,42 +343,14 @@ export async function showSuggestion(
   range: vscode.Range,
   suggestion: string
 ): Promise<boolean> {
-  // const existingCode = await readFileAtRange(
-  //   new vscode.Range(range.start, range.end),
-  //   editorFilename
-  // );
-
-  // If any of the outside lines are the same, don't repeat them in the suggestion
-  // const slines = suggestion.split("\n");
-  // const elines = existingCode.split("\n");
-  // let linesRemovedBefore = 0;
-  // let linesRemovedAfter = 0;
-  // while (slines.length > 0 && elines.length > 0 && slines[0] === elines[0]) {
-  //   slines.shift();
-  //   elines.shift();
-  //   linesRemovedBefore++;
-  // }
-
-  // while (
-  //   slines.length > 0 &&
-  //   elines.length > 0 &&
-  //   slines[slines.length - 1] === elines[elines.length - 1]
-  // ) {
-  //   slines.pop();
-  //   elines.pop();
-  //   linesRemovedAfter++;
-  // }
-
-  // suggestion = slines.join("\n");
-  // if (suggestion === "") return Promise.resolve(false); // Don't even make a suggestion if they are exactly the same
-
-  // range = new vscode.Range(
-  //   new vscode.Position(range.start.line + linesRemovedBefore, 0),
-  //   new vscode.Position(
-  //     range.end.line - linesRemovedAfter,
-  //     elines.at(-1)?.length || 0
-  //   )
-  // );
+  // Check for empty suggestions:
+  if (
+    suggestion === "" &&
+    range.start.line === range.end.line &&
+    range.start.character === range.end.character
+  ) {
+    return Promise.resolve(false);
+  }
 
   const editor = await openEditorAndRevealRange(editorFilename, range);
   if (!editor) return Promise.resolve(false);

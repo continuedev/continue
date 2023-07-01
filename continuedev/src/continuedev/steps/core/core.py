@@ -158,6 +158,14 @@ class DefaultModelEditCodeStep(Step):
         description = await models.gpt3516k.complete(
             f"{self._prompt_and_completion}\n\nPlease give brief a description of the changes made above using markdown bullet points. Be concise and only mention changes made to the commit before, not prefix or suffix:")
         self.name = await models.gpt3516k.complete(f"Write a very short title to describe this requested change: '{self.user_input}'. This is the title:")
+
+        # Remove quotes from title and description if they are wrapped
+        if description.startswith('"') and description.endswith('"'):
+            description = description[1:-1]
+
+        if self.name.startswith('"') and self.name.endswith('"'):
+            self.name = self.name[1:-1]
+
         return f"`{self.user_input}`\n\n" + description
 
     async def get_prompt_parts(self, rif: RangeInFileWithContents, sdk: ContinueSDK, full_file_contents: str):
@@ -169,6 +177,10 @@ class DefaultModelEditCodeStep(Step):
         BUFFER_FOR_FUNCTIONS = 400
         total_tokens = model_to_use.count_tokens(
             full_file_contents + self._prompt + self.user_input) + BUFFER_FOR_FUNCTIONS + DEFAULT_MAX_TOKENS
+
+        TOKENS_TO_BE_CONSIDERED_LARGE_RANGE = 1000
+        if model_to_use.count_tokens(rif.contents) > TOKENS_TO_BE_CONSIDERED_LARGE_RANGE:
+            self.description += "\n\n**It looks like you've selected a large range to edit, which may take a while to complete. If you'd like to cancel, click the 'X' button above. If you highlight a more specific range, Continue will only edit within it.**"
 
         # If using 3.5 and overflows, upgrade to 3.5.16k
         if model_to_use.name == "gpt-3.5-turbo":
@@ -267,8 +279,8 @@ class DefaultModelEditCodeStep(Step):
 
         file_prefix, contents, file_suffix, model_to_use = await self.get_prompt_parts(
             rif, sdk, full_file_contents)
-        # contents, common_whitespace = dedent_and_get_common_whitespace(
-        #     contents)
+        contents, common_whitespace = dedent_and_get_common_whitespace(
+            contents)
         prompt = self.compile_prompt(file_prefix, contents, file_suffix, sdk)
         full_file_contents_lines = full_file_contents.split("\n")
 
@@ -304,7 +316,7 @@ class DefaultModelEditCodeStep(Step):
             if len(current_block_lines) == 0:
                 # Set this as the start of the next block
                 current_block_start = rif.range.start.line + len(original_lines) - len(
-                    original_lines_below_previous_blocks) + offset_from_blocks  # current_line_in_file
+                    original_lines_below_previous_blocks) + offset_from_blocks
                 if len(original_lines_below_previous_blocks) > 0 and line == original_lines_below_previous_blocks[0]:
                     # Line is equal to the next line in file, move past this line
                     original_lines_below_previous_blocks = original_lines_below_previous_blocks[
@@ -335,12 +347,23 @@ class DefaultModelEditCodeStep(Step):
                     lines_stripped.append(current_block_lines.pop())
                     index_of_last_line_in_block -= 1
 
+                # It's also possible that some lines match at the beginning of the block
+                # lines_stripped_at_beginning = []
+                # j = 0
+                # while len(current_block_lines) > 0 and current_block_lines[0] == original_lines_below_previous_blocks[first_valid_match[0] - first_valid_match[1] + j]:
+                #     lines_stripped_at_beginning.append(
+                #         current_block_lines.pop(0))
+                #     j += 1
+                #     # current_block_start += 1
+
                 # Insert the suggestion
                 replacement = "\n".join(current_block_lines)
+                start_line = current_block_start + 1
+                end_line = current_block_start + index_of_last_line_in_block
                 await sdk.ide.showSuggestion(FileEdit(
                     filepath=rif.filepath,
                     range=Range.from_shorthand(
-                        current_block_start + 1, 0, current_block_start + index_of_last_line_in_block, 0),
+                        start_line, 0, end_line, 0),
                     replacement=replacement
                 ))
                 if replacement == "":
@@ -411,7 +434,7 @@ class DefaultModelEditCodeStep(Step):
                 line = line.rstrip()
 
                 # Add the common whitespace that was removed before prompting
-                # line = common_whitespace + line
+                line = common_whitespace + line
 
                 # Lines that should signify the end of generation
                 if self.is_end_line(line):
@@ -437,7 +460,7 @@ class DefaultModelEditCodeStep(Step):
 
         # Add the unfinished line
         if unfinished_line != "" and not self.line_to_be_ignored(unfinished_line, completion_lines_covered == 0) and not self.is_end_line(unfinished_line):
-            # unfinished_line = common_whitespace + unfinished_line
+            unfinished_line = common_whitespace + unfinished_line
             lines.append(unfinished_line)
             await handle_generated_line(unfinished_line)
             completion_lines_covered += 1
@@ -458,6 +481,12 @@ class DefaultModelEditCodeStep(Step):
                     break
             current_block_lines = current_block_lines[:-
                                                       num_to_remove] if num_to_remove > 0 else current_block_lines
+
+            # It's also possible that some lines match at the beginning of the block
+            # while len(current_block_lines) > 0 and len(original_lines_below_previous_blocks) > 0 and current_block_lines[0] == original_lines_below_previous_blocks[0]:
+            #     current_block_lines.pop(0)
+            #     original_lines_below_previous_blocks.pop(0)
+            #     current_block_start += 1
 
             await sdk.ide.showSuggestion(FileEdit(
                 filepath=rif.filepath,
