@@ -61,7 +61,7 @@ function CopyButton(props: { textToCopy: string; visible: boolean }) {
   );
 }
 
-function CodeBlock(props: { children: React.ReactNode }) {
+function CodeBlock(props: { children: string; showCopy?: boolean }) {
   const [result, setResult] = useState<AutoHighlightResult | undefined>(
     undefined
   );
@@ -78,39 +78,36 @@ function CodeBlock(props: { children: React.ReactNode }) {
 
     setHighlightTimeout(
       setTimeout(() => {
-        const result = hljs.highlightAuto(
-          (props.children as any).props.children[0],
-          [
-            "python",
-            "javascript",
-            "typescript",
-            "bash",
-            "html",
-            "css",
-            "json",
-            "yaml",
-            "markdown",
-            "sql",
-            "java",
-            "c",
-            "cpp",
-            "csharp",
-            "go",
-            "kotlin",
-            "php",
-            "ruby",
-            "rust",
-            "scala",
-            "swift",
-            "dart",
-            "haskell",
-            "perl",
-            "r",
-            "julia",
-            "objectivec",
-            "ocaml",
-          ]
-        );
+        const result = hljs.highlightAuto(props.children, [
+          "python",
+          "javascript",
+          "typescript",
+          "bash",
+          "html",
+          "css",
+          "json",
+          "yaml",
+          "markdown",
+          "sql",
+          "java",
+          "c",
+          "cpp",
+          "csharp",
+          "go",
+          "kotlin",
+          "php",
+          "ruby",
+          "rust",
+          "scala",
+          "swift",
+          "dart",
+          "haskell",
+          "perl",
+          "r",
+          "julia",
+          "objectivec",
+          "ocaml",
+        ]);
         setResult(result);
         setHighlightTimeout(undefined);
       }, 100)
@@ -129,13 +126,11 @@ function CodeBlock(props: { children: React.ReactNode }) {
     >
       <CopyButtonDiv>
         <CopyButton
-          visible={hovered}
-          textToCopy={(props.children as any).props.children[0]}
+          visible={hovered && (props.showCopy || true)}
+          textToCopy={props.children}
         />
       </CopyButtonDiv>
-      <StyledCode language={result?.language}>
-        {(props.children as any).props.children[0]}
-      </StyledCode>
+      <StyledCode language={result?.language}>{props.children}</StyledCode>
     </StyledPre>
   );
 }
