@@ -249,7 +249,7 @@ class EditHighlightedCodeStep(Step):
     user_input: str = Field(
         ..., title="User Input", description="The natural language request describing how to edit the code")
     hide = True
-    description: str = "Change the contents of the currently highlighted code or open file"
+    description: str = "Change the contents of the currently highlighted code or open file. You should call this function if the user asks seems to be asking for a code change."
 
     async def describe(self, models: Models) -> Coroutine[str, None, None]:
         return "Editing code"

@@ -8,6 +8,7 @@ import rebuild from "@electron/rebuild";
 import { getContinueServerUrl } from "../bridge";
 import fetch from "node-fetch";
 import * as vscode from "vscode";
+import fkill from "fkill";
 
 const MAX_RETRIES = 5;
 async function retryThenFail(
@@ -82,16 +83,14 @@ async function getPythonPipCommands() {
   return [pythonCmd, pipCmd];
 }
 
-function getActivateUpgradeTouchCommands(pythonCmd: string, pipCmd: string) {
+function getActivateUpgradeCommands(pythonCmd: string, pipCmd: string) {
   let activateCmd = ". env/bin/activate";
   let pipUpgradeCmd = `${pipCmd} install --upgrade pip`;
-  let touchCmd = "touch .continue_env_installed";
   if (process.platform == "win32") {
     activateCmd = ".\\env\\Scripts\\activate";
     pipUpgradeCmd = `${pythonCmd} -m pip install --upgrade pip`;
-    touchCmd = "ni .continue_env_installed -type file";
   }
-  return [activateCmd, pipUpgradeCmd, touchCmd];
+  return [activateCmd, pipUpgradeCmd];
 }
 
 function checkEnvExists() {
@@ -144,8 +143,10 @@ async function setupPythonEnv() {
   console.log("Setting up python env for Continue extension...");
 
   const [pythonCmd, pipCmd] = await getPythonPipCommands();
-  const [activateCmd, pipUpgradeCmd, touchCmd] =
-    getActivateUpgradeTouchCommands(pythonCmd, pipCmd);
+  const [activateCmd, pipUpgradeCmd] = getActivateUpgradeCommands(
+    pythonCmd,
+    pipCmd
+  );
 
   if (checkEnvExists()) {
     console.log("Python env already exists, skipping...");
@@ -245,14 +246,37 @@ async function checkServerRunning(serverUrl: string): Promise<boolean> {
   }
 }
 
-export async function startContinuePythonServer() {
-  await setupPythonEnv();
+function serverVersionPath(): string {
+  const extensionPath = getExtensionUri().fsPath;
+  return path.join(extensionPath, "server_version.txt");
+}
 
+function getExtensionVersion() {
+  const extension = vscode.extensions.getExtension("continue.continue");
+  return extension?.packageJSON.version || "";
+}
+
+export async function startContinuePythonServer() {
   // Check vscode settings
   const serverUrl = getContinueServerUrl();
   if (serverUrl !== "http://localhost:65432") {
     return;
   }
+
+  if (await checkServerRunning(serverUrl)) {
+    // Kill the server if it is running an old version
+    if (fs.existsSync(serverVersionPath())) {
+      const serverVersion = fs.readFileSync(serverVersionPath(), "utf8");
+      if (serverVersion === getExtensionVersion()) {
+        return;
+      }
+    }
+    console.log("Killing old server...");
+    await fkill(":65432");
+  }
+
+  // Do this after above check so we don't have to waste time setting up the env
+  await setupPythonEnv();
 
   let activateCmd = ". env/bin/activate";
   let pythonCmd = "python3";
@@ -268,8 +292,6 @@ export async function startContinuePythonServer() {
 
   return await retryThenFail(async () => {
     console.log("Starting Continue python server...");
-
-    if (await checkServerRunning(serverUrl)) return;
 
     return new Promise(async (resolve, reject) => {
       try {
@@ -293,6 +315,9 @@ export async function startContinuePythonServer() {
         child.on("error", (error: any) => {
           console.log(`error: ${error.message}`);
         });
+
+        // Write the current version of vscode to a file called server_version.txt
+        fs.writeFileSync(serverVersionPath(), getExtensionVersion());
       } catch (e) {
         console.log("Failed to start Continue python server", e);
         // If failed, check if it's because the server is already running (might have happened just after we checked above)

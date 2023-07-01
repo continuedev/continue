@@ -221,18 +221,21 @@ class DefaultModelEditCodeStep(Step):
         # TODO: Keep track of start line of the range, because it's needed below for offset stuff
         rif_start_line = rif.range.start.line
         if len(rif.contents) > 0:
-            first_line = rif.contents.splitlines(keepends=True)[0]
-            while first_line.strip() == "":
+            lines = rif.contents.splitlines(keepends=True)
+            first_line = lines[0] if lines else None
+            while first_line and first_line.strip() == "":
                 file_prefix += first_line
                 rif.contents = rif.contents[len(first_line):]
-                first_line = rif.contents.splitlines(keepends=True)[0]
+                lines = rif.contents.splitlines(keepends=True)
+                first_line = lines[0] if lines else None
 
-            last_line = rif.contents.splitlines(keepends=True)[-1]
-            while last_line.strip() == "":
+            last_line = lines[-1] if lines else None
+            while last_line and last_line.strip() == "":
                 file_suffix = last_line + file_suffix
                 rif.contents = rif.contents[:len(
                     rif.contents) - len(last_line)]
-                last_line = rif.contents.splitlines(keepends=True)[-1]
+                lines = rif.contents.splitlines(keepends=True)
+                last_line = lines[-1] if lines else None
 
             while rif.contents.startswith("\n"):
                 file_prefix += "\n"
@@ -241,7 +244,7 @@ class DefaultModelEditCodeStep(Step):
                 file_suffix = "\n" + file_suffix
                 rif.contents = rif.contents[:-1]
 
-        return file_prefix, rif.contents, file_suffix, model_to_use
+                return file_prefix, rif.contents, file_suffix, model_to_use
 
     def compile_prompt(self, file_prefix: str, contents: str, file_suffix: str, sdk: ContinueSDK) -> str:
         prompt = self._prompt

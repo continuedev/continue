@@ -14,7 +14,7 @@
   "displayName": "Continue",
   "pricing": "Free",
   "description": "The open-source coding autopilot",
-  "version": "0.0.97",
+  "version": "0.0.99",
   "publisher": "Continue",
   "engines": {
     "vscode": "^1.74.0"
@@ -244,6 +244,7 @@
     "@vitejs/plugin-react-swc": "^3.3.2",
     "axios": "^1.2.5",
     "downshift": "^7.6.0",
+    "fkill": "^8.1.0",
     "highlight.js": "^11.7.0",
     "posthog-js": "^1.63.3",
     "react-markdown": "^8.0.7",
