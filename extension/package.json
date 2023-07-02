@@ -14,7 +14,7 @@
   "displayName": "Continue",
   "pricing": "Free",
   "description": "The open-source coding autopilot",
-  "version": "0.0.102",
+  "version": "0.0.103",
   "publisher": "Continue",
   "engines": {
     "vscode": "^1.60.0"
@@ -240,6 +240,7 @@
     "@electron/rebuild": "^3.2.10",
     "@reduxjs/toolkit": "^1.9.3",
     "@segment/analytics-node": "^0.0.1-beta.16",
+    "@sentry/node": "^7.57.0",
     "@styled-icons/heroicons-outline": "^10.47.0",
     "@vitejs/plugin-react-swc": "^3.3.2",
     "axios": "^1.2.5",
