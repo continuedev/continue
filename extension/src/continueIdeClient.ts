@@ -375,6 +375,10 @@ class IdeProtocolClient {
   sendCommandOutput(output: string) {
     this.messenger?.send("commandOutput", { output });
   }
+
+  sendAcceptRejectSuggestion(accepted: boolean) {
+    this.messenger?.send("acceptRejectSuggestion", { accepted });
+  }
 }
 
 export default IdeProtocolClient;
