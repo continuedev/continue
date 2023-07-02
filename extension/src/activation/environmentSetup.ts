@@ -9,6 +9,7 @@ import { getContinueServerUrl } from "../bridge";
 import fetch from "node-fetch";
 import * as vscode from "vscode";
 import fkill from "fkill";
+import { sendTelemetryEvent, TelemetryEvent } from "../telemetry";
 
 const MAX_RETRIES = 5;
 async function retryThenFail(
@@ -17,13 +18,16 @@ async function retryThenFail(
 ): Promise<any> {
   try {
     return await fn();
-  } catch (e) {
+  } catch (e: any) {
     if (retries > 0) {
       return await retryThenFail(fn, retries - 1);
     }
     vscode.window.showErrorMessage(
       "Failed to set up Continue extension. Please email nate@continue.dev and we'll get this fixed ASAP!"
     );
+    sendTelemetryEvent(TelemetryEvent.ExtensionSetupError, {
+      error: e.message,
+    });
     throw e;
   }
 }
@@ -45,6 +49,12 @@ async function runCommand(cmd: string): Promise<[string, string | undefined]> {
   }
   if (typeof stdout === "undefined") {
     stdout = "";
+  }
+
+  if (stderr) {
+    sendTelemetryEvent(TelemetryEvent.ExtensionSetupError, {
+      error: stderr,
+    });
   }
 
   return [stdout, stderr];
@@ -288,33 +298,33 @@ export async function startContinuePythonServer() {
     return;
   }
 
-  if (await checkServerRunning(serverUrl)) {
-    // Kill the server if it is running an old version
-    if (fs.existsSync(serverVersionPath())) {
-      const serverVersion = fs.readFileSync(serverVersionPath(), "utf8");
-      if (serverVersion === getExtensionVersion()) {
-        return;
-      }
-    }
-    console.log("Killing old server...");
-    await fkill(":65432");
-  }
-
-  // Do this after above check so we don't have to waste time setting up the env
-  await setupPythonEnv();
-
-  const [pythonCmd] = await getPythonPipCommands();
-  const activateCmd =
-    process.platform == "win32"
-      ? ".\\env\\Scripts\\activate"
-      : ". env/bin/activate";
-
-  const command = `cd "${path.join(
-    getExtensionUri().fsPath,
-    "scripts"
-  )}" && ${activateCmd} && cd .. && ${pythonCmd} -m scripts.run_continue_server`;
-
   return await retryThenFail(async () => {
+    if (await checkServerRunning(serverUrl)) {
+      // Kill the server if it is running an old version
+      if (fs.existsSync(serverVersionPath())) {
+        const serverVersion = fs.readFileSync(serverVersionPath(), "utf8");
+        if (serverVersion === getExtensionVersion()) {
+          return;
+        }
+      }
+      console.log("Killing old server...");
+      await fkill(":65432");
+    }
+
+    // Do this after above check so we don't have to waste time setting up the env
+    await setupPythonEnv();
+
+    const [pythonCmd] = await getPythonPipCommands();
+    const activateCmd =
+      process.platform == "win32"
+        ? ".\\env\\Scripts\\activate"
+        : ". env/bin/activate";
+
+    const command = `cd "${path.join(
+      getExtensionUri().fsPath,
+      "scripts"
+    )}" && ${activateCmd} && cd .. && ${pythonCmd} -m scripts.run_continue_server`;
+
     console.log("Starting Continue python server...");
 
     return new Promise(async (resolve, reject) => {
@@ -322,22 +332,25 @@ export async function startContinuePythonServer() {
         const child = spawn(command, {
           shell: true,
         });
-        child.stdout.on("data", (data: any) => {
-          console.log(`stdout: ${data}`);
-        });
         child.stderr.on("data", (data: any) => {
+          console.log(`stdout: ${data}`);
           if (
             data.includes("Uvicorn running on") || // Successfully started the server
             data.includes("address already in use") // The server is already running (probably a simultaneously opened VS Code window)
           ) {
             console.log("Successfully started Continue python server");
             resolve(null);
-          } else {
-            console.log(`stderr: ${data}`);
+          } else if (data.includes("ERROR") || data.includes("Traceback")) {
+            sendTelemetryEvent(TelemetryEvent.ExtensionSetupError, {
+              error: data,
+            });
           }
         });
         child.on("error", (error: any) => {
           console.log(`error: ${error.message}`);
+          sendTelemetryEvent(TelemetryEvent.ExtensionSetupError, {
+            error: error.message,
+          });
         });
 
         // Write the current version of vscode to a file called server_version.txt
