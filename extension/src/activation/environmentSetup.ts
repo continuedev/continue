@@ -71,9 +71,11 @@ async function getPythonPipCommands() {
     }
   }
 
+  let pipCmd = pythonCmd.endsWith("3") ? "pip3" : "pip";
+
   const version = stdout.split(" ")[1];
   const [major, minor] = version.split(".");
-  if (parseInt(major) !== 3 || parseInt(minor) < 7) {
+  if (parseInt(major) !== 3 || parseInt(minor) < 8) {
     // Need to check specific versions
     const checkPython3VersionExists = async (minorVersion: number) => {
       const [stdout, stderr] = await runCommand(
@@ -82,24 +84,27 @@ async function getPythonPipCommands() {
       return typeof stderr === "undefined" || stderr === "";
     };
 
-    const validVersions = [7, 8, 9, 10, 11, 12];
+    const VALID_VERSIONS = [8, 9, 10, 11, 12];
     let versionExists = false;
 
-    for (const minorVersion of validVersions) {
+    for (const minorVersion of VALID_VERSIONS) {
       if (await checkPython3VersionExists(minorVersion)) {
         versionExists = true;
-        break;
+        pythonCmd = `python3.${minorVersion}`;
+        pipCmd = `pip3.${minorVersion}`;
       }
     }
 
     if (!versionExists) {
       vscode.window.showErrorMessage(
-        "Continue requires Python3 version 3.7 or greater. Please update your Python3 installation, reload VS Code, and try again."
+        "Continue requires Python3 version 3.8 or greater. Please update your Python3 installation, reload VS Code, and try again."
       );
-      throw new Error("Python3 is not installed.");
+      throw new Error("Python3.8 or greater is not installed.");
     }
+  } else {
+    pythonCmd = `python${major}.${minor}`;
+    pipCmd = `pip${major}.${minor}`;
   }
-  const pipCmd = pythonCmd.endsWith("3") ? "pip3" : "pip";
   return [pythonCmd, pipCmd];
 }
 
@@ -298,14 +303,13 @@ export async function startContinuePythonServer() {
   // Do this after above check so we don't have to waste time setting up the env
   await setupPythonEnv();
 
-  let activateCmd = ". env/bin/activate";
-  let pythonCmd = "python3";
-  if (process.platform == "win32") {
-    activateCmd = ".\\env\\Scripts\\activate";
-    pythonCmd = "python";
-  }
+  const [pythonCmd] = await getPythonPipCommands();
+  const activateCmd =
+    process.platform == "win32"
+      ? ".\\env\\Scripts\\activate"
+      : ". env/bin/activate";
 
-  let command = `cd "${path.join(
+  const command = `cd "${path.join(
     getExtensionUri().fsPath,
     "scripts"
   )}" && ${activateCmd} && cd .. && ${pythonCmd} -m scripts.run_continue_server`;
