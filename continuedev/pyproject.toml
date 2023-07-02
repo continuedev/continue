@@ -6,7 +6,7 @@ authors = ["Nate Sesti <sestinj@gmail.com>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.9"
+python = "^3.8"
 diff-match-patch = "^20230430"
 fastapi = "^0.95.1"
 typer = "^0.7.0"

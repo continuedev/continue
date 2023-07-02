@@ -5,6 +5,11 @@ import aiohttp
 from ...core.main import ChatMessage
 from ..llm import LLM
 from ..util.count_tokens import DEFAULT_ARGS, DEFAULT_MAX_TOKENS, compile_chat_messages, CHAT_MODELS, count_tokens
+import certifi
+import ssl
+
+ca_bundle_path = certifi.where()
+ssl_context = ssl.create_default_context(cafile=ca_bundle_path)
 
 # SERVER_URL = "http://127.0.0.1:8080"
 SERVER_URL = "https://proxy-server-l6vsfbzhba-uw.a.run.app"
@@ -31,7 +36,7 @@ class ProxyServer(LLM):
     async def complete(self, prompt: str, with_history: List[ChatMessage] = [], **kwargs) -> Coroutine[Any, Any, str]:
         args = self.default_args | kwargs
 
-        async with aiohttp.ClientSession() as session:
+        async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(ssl_context=ssl_context)) as session:
             async with session.post(f"{SERVER_URL}/complete", json={
                 "messages": compile_chat_messages(args["model"], with_history, prompt, functions=None),
                 "unique_id": self.unique_id,
@@ -47,7 +52,7 @@ class ProxyServer(LLM):
         messages = compile_chat_messages(
             self.default_model, messages, None, functions=args.get("functions", None))
 
-        async with aiohttp.ClientSession() as session:
+        async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(ssl_context=ssl_context)) as session:
             async with session.post(f"{SERVER_URL}/stream_chat", json={
                 "messages": messages,
                 "unique_id": self.unique_id,
@@ -71,7 +76,7 @@ class ProxyServer(LLM):
         messages = compile_chat_messages(
             self.default_model, with_history, prompt, functions=args.get("functions", None))
 
-        async with aiohttp.ClientSession() as session:
+        async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(ssl_context=ssl_context)) as session:
             async with session.post(f"{SERVER_URL}/stream_complete", json={
                 "messages": messages,
                 "unique_id": self.unique_id,
