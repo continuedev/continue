@@ -52,6 +52,7 @@ const TextDialog = (props: {
   showDialog: boolean;
   onEnter: (text: string) => void;
   onClose: () => void;
+  message?: string;
 }) => {
   const [text, setText] = useState("");
   const textAreaRef = React.createRef<HTMLTextAreaElement>();
@@ -75,7 +76,7 @@ const TextDialog = (props: {
         }}
       >
         <Dialog>
-          <P>Thanks for your feedback. We'll get back to you soon!</P>
+          <P>{props.message || ""}</P>
           <TextArea
             rows={10}
             ref={textAreaRef}

@@ -36,7 +36,7 @@ class SimpleChatStep(Step):
             summary=self.user_input
         ))
 
-        async for chunk in sdk.models.default.stream_chat(messages):
+        async for chunk in sdk.models.gpt4.stream_chat(messages):
             if sdk.current_step_was_deleted():
                 return
 
