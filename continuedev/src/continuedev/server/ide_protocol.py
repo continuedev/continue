@@ -36,7 +36,7 @@ class AbstractIdeProtocolServer(ABC):
         """Show suggestions to the user and wait for a response"""
 
     @abstractmethod
-    def onAcceptRejectSuggestion(self, suggestionId: str, accepted: bool):
+    def onAcceptRejectSuggestion(self, accepted: bool):
         """Called when the user accepts or rejects a suggestion"""
 
     @abstractmethod
