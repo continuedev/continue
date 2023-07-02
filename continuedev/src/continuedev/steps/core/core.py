@@ -172,7 +172,7 @@ class DefaultModelEditCodeStep(Step):
         # We don't know here all of the functions being passed in.
         # We care because if this prompt itself goes over the limit, then the entire message will have to be cut from the completion.
         # Overflow won't happen, but prune_chat_messages in count_tokens.py will cut out this whole thing, instead of us cutting out only as many lines as we need.
-        model_to_use = sdk.models.default
+        model_to_use = sdk.models.gpt4
 
         BUFFER_FOR_FUNCTIONS = 400
         total_tokens = model_to_use.count_tokens(
