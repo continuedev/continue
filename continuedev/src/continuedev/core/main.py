@@ -2,6 +2,7 @@ import json
 from textwrap import dedent
 from typing import Callable, Coroutine, Dict, Generator, List, Literal, Tuple, Union
 
+from ..models.filesystem import RangeInFileWithContents
 from ..models.main import ContinueBaseModel
 from pydantic import validator
 from .observation import Observation
@@ -201,6 +202,7 @@ class FullState(ContinueBaseModel):
     active: bool
     user_input_queue: List[str]
     default_model: str
+    highlighted_ranges: List[RangeInFileWithContents]
 
 
 class ContinueSDK:

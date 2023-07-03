@@ -179,7 +179,7 @@ class ContinueSDK(AbstractContinueSDK):
 
     async def get_chat_context(self) -> List[ChatMessage]:
         history_context = self.history.to_chat_history()
-        highlighted_code = await self.ide.getHighlightedCode()
+        highlighted_code = self.__autopilot._highlighted_ranges
 
         preface = "The following code is highlighted"
 
@@ -190,11 +190,10 @@ class ContinueSDK(AbstractContinueSDK):
             if len(files) > 0:
                 content = await self.ide.readFile(files[0])
                 highlighted_code = [
-                    RangeInFile.from_entire_file(files[0], content)]
+                    RangeInFileWithContents.from_entire_file(files[0], content)]
 
         for rif in highlighted_code:
-            code = await self.ide.readRangeInFile(rif)
-            msg = ChatMessage(content=f"{preface} ({rif.filepath}):\n```\n{code}\n```",
+            msg = ChatMessage(content=f"{preface} ({rif.filepath}):\n```\n{rif.contents}\n```",
                               role="system", summary=f"{preface}: {rif.filepath}")
 
             # Don't insert after latest user message or function call

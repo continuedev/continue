@@ -83,6 +83,8 @@ class GUIProtocolServer(AbstractGUIProtocolServer):
                 self.on_clear_history()
             elif message_type == "delete_at_index":
                 self.on_delete_at_index(data["index"])
+            elif message_type == "delete_context_item_at_index":
+                self.on_delete_context_item_at_index(data["index"])
         except Exception as e:
             print(e)
 
@@ -126,6 +128,11 @@ class GUIProtocolServer(AbstractGUIProtocolServer):
 
     def on_delete_at_index(self, index: int):
         asyncio.create_task(self.session.autopilot.delete_at_index(index))
+
+    def on_delete_context_item_at_index(self, index: int):
+        asyncio.create_task(
+            self.session.autopilot.delete_context_item_at_index(index)
+        )
 
 
 @router.websocket("/ws")

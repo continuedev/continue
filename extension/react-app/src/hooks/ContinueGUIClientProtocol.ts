@@ -20,6 +20,8 @@ abstract class AbstractContinueGUIClientProtocol {
   abstract retryAtIndex(index: number): void;
 
   abstract deleteAtIndex(index: number): void;
+
+  abstract deleteContextItemAtIndex(index: number): void;
 }
 
 export default AbstractContinueGUIClientProtocol;
