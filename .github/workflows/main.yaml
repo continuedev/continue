@@ -13,13 +13,21 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
+      - name: Cache node_modules
+        uses: actions/cache@v2
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+
       - name: Set up Node.js
         uses: actions/setup-node@v2
         with:
           node-version: "14"
 
       - name: Install Dependencies
-        run: npm install
+        run: |
+          cd extension
+          npm install
 
       - name: Build and Publish
         run: |
