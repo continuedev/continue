@@ -49,7 +49,7 @@ jobs:
           cd extension
           npm ci
 
-      -name: Install react-app Dependencies
+      - name: Install react-app Dependencies
         run: |
           cd extension/react-app
           npm ci
