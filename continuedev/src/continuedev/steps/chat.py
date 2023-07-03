@@ -106,7 +106,7 @@ class RunTerminalCommandStep(Step):
 
 class ViewDirectoryTreeStep(Step):
     name: str = "View Directory Tree"
-    description: str = "View the directory tree to learn which folder and files exist."
+    description: str = "View the directory tree to learn which folder and files exist. You should always do this before adding new files."
 
     async def describe(self, models: Models) -> Coroutine[Any, Any, Coroutine[str, None, None]]:
         return f"Viewed the directory tree."

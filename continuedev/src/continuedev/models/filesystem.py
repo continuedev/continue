@@ -40,21 +40,15 @@ class RangeInFileWithContents(RangeInFile):
 
         assert first.filepath == second.filepath
 
-        # Calculate the start and end positions of the overlap
-        overlap_start = max(first.range.start,
-                            second.range.start) - first.range.start
-        overlap_end = min(first.range.end, second.range.end) - \
-            first.range.start
-
-        # Calculate the new contents by removing the overlap
-        union_contents = first.contents[:overlap_start] + \
-            second.contents[overlap_start:overlap_end] + \
-            first.contents[overlap_end:]
+        # Calculate union of contents
+        num_overlapping_lines = first.range.end.line - second.range.start.line + 1
+        union_lines = first.contents.splitlines()[:-num_overlapping_lines] + \
+            second.contents.splitlines()
 
         return RangeInFileWithContents(
             filepath=first.filepath,
             range=first.range.union(second.range),
-            contents=union_contents
+            contents="\n".join(union_lines)
         )
 
     @staticmethod
