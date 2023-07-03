@@ -154,25 +154,32 @@ class DefaultModelEditCodeStep(Step):
 
     _prompt_and_completion: str = ""
 
+    def _cleanup_output(self, output: str) -> str:
+        output = output.replace('\\"', '"')
+        output = output.replace("\\'", "'")
+        output = output.replace("\\n", "\n")
+        output = output.replace("\\t", "\t")
+        output = output.replace("\\\\", "\\")
+        if output.startswith('"') and output.endswith('"'):
+            output = output[1:-1]
+
+        return output
+
     async def describe(self, models: Models) -> Coroutine[str, None, None]:
-        description = await models.gpt3516k.complete(
-            f"{self._prompt_and_completion}\n\nPlease give brief a description of the changes made above using markdown bullet points. Be concise and only mention changes made to the commit before, not prefix or suffix:")
-        self.name = await models.gpt3516k.complete(f"Write a very short title to describe this requested change (no quotes): '{self.user_input}'. This is the title:")
+        description = await models.gpt3516k.complete(dedent(f"""\
+            {self._prompt_and_completion}
+            
+            Please give brief a description of the changes made above using markdown bullet points. Be concise and only mention changes made to the commit before, not prefix or suffix:"""))
+        name = await models.gpt3516k.complete(f"Write a very short title to describe this requested change (no quotes): '{self.user_input}'. This is the title:")
+        self.name = self._cleanup_output(name)
 
-        # Remove quotes from title and description if they are wrapped
-        if description.startswith('"') and description.endswith('"'):
-            description = description[1:-1]
-
-        if self.name.startswith('"') and self.name.endswith('"'):
-            self.name = self.name[1:-1]
-
-        return f"`{self.user_input}`\n\n" + description
+        return f"`{self.user_input}`\n\n{self._cleanup_output(description)}"
 
     async def get_prompt_parts(self, rif: RangeInFileWithContents, sdk: ContinueSDK, full_file_contents: str):
         # We don't know here all of the functions being passed in.
         # We care because if this prompt itself goes over the limit, then the entire message will have to be cut from the completion.
         # Overflow won't happen, but prune_chat_messages in count_tokens.py will cut out this whole thing, instead of us cutting out only as many lines as we need.
-        model_to_use = sdk.models.default
+        model_to_use = sdk.models.gpt4
 
         BUFFER_FOR_FUNCTIONS = 400
         total_tokens = model_to_use.count_tokens(
@@ -360,7 +367,7 @@ class DefaultModelEditCodeStep(Step):
 
                 # Insert the suggestion
                 replacement = "\n".join(current_block_lines)
-                start_line = current_block_start + 1
+                start_line = current_block_start
                 end_line = current_block_start + index_of_last_line_in_block
                 await sdk.ide.showSuggestion(FileEdit(
                     filepath=rif.filepath,
@@ -368,10 +375,9 @@ class DefaultModelEditCodeStep(Step):
                         start_line, 0, end_line, 0),
                     replacement=replacement
                 ))
-                if replacement == "":
-                    current_line_in_file += 1
 
                 # Reset current block / update variables
+                current_line_in_file += 1
                 offset_from_blocks += len(current_block_lines)
                 original_lines_below_previous_blocks = original_lines_below_previous_blocks[
                     index_of_last_line_in_block + 1:]
@@ -493,7 +499,7 @@ class DefaultModelEditCodeStep(Step):
             await sdk.ide.showSuggestion(FileEdit(
                 filepath=rif.filepath,
                 range=Range.from_shorthand(
-                    current_block_start + 1, 0, current_block_start + len(original_lines_below_previous_blocks), 0),
+                    current_block_start, 0, current_block_start + len(original_lines_below_previous_blocks), 0),
                 replacement="\n".join(current_block_lines)
             ))
 
@@ -585,10 +591,17 @@ class UserInputStep(Step):
     name: str = "User Input"
     hide: bool = True
 
+    manage_own_chat_context: bool = True
+
     async def describe(self, models: Models) -> Coroutine[str, None, None]:
         return self.user_input
 
     async def run(self, sdk: ContinueSDK) -> Coroutine[UserInputObservation, None, None]:
+        self.chat_context.append(ChatMessage(
+            role="user",
+            content=self.user_input,
+            summary=self.user_input
+        ))
         return UserInputObservation(user_input=self.user_input)
 
 

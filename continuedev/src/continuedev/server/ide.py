@@ -7,6 +7,7 @@ import uuid
 from fastapi import WebSocket, Body, APIRouter
 from uvicorn.main import Server
 
+from ..libs.util.telemetry import capture_event
 from ..libs.util.queue import AsyncSubscriptionQueue
 from ..models.filesystem import FileSystem, RangeInFile, EditDiff, RangeInFileWithContents, RealFileSystem
 from ..models.filesystem_edit import AddDirectory, AddFile, DeleteDirectory, DeleteFile, FileSystemEdit, FileEdit, FileEditWithFullContents, RenameDirectory, RenameFile, SequentialFileSystemEdit
@@ -145,6 +146,8 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
         elif message_type == "commandOutput":
             output = data["output"]
             self.onCommandOutput(output)
+        elif message_type == "acceptRejectSuggestion":
+            self.onAcceptRejectSuggestion(data["accepted"])
         elif message_type in ["highlightedCode", "openFiles", "readFile", "editFile", "workspaceDirectory", "getUserSecret", "runCommand", "uniqueId"]:
             self.sub_queue.post(message_type, data)
         else:
@@ -205,8 +208,10 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
     # This is where you might have triggers: plugins can subscribe to certian events
     # like file changes, tracebacks, etc...
 
-    def onAcceptRejectSuggestion(self, suggestionId: str, accepted: bool):
-        pass
+    def onAcceptRejectSuggestion(self, accepted: bool):
+        capture_event(self.unique_id, "accept_reject_suggestion", {
+            "accepted": accepted
+        })
 
     def onFileSystemUpdate(self, update: FileSystemEdit):
         # Access to Autopilot (so SessionManager)

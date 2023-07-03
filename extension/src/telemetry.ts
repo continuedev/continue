@@ -35,6 +35,8 @@ export enum TelemetryEvent {
   AutoDebugThisTest = "AutoDebugThisTest",
   // Command run to generate docstring
   GenerateDocstring = "GenerateDocstring",
+  // Error setting up the extension
+  ExtensionSetupError = "ExtensionSetupError",
 }
 
 export function sendTelemetryEvent(

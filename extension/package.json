@@ -14,10 +14,10 @@
   "displayName": "Continue",
   "pricing": "Free",
   "description": "The open-source coding autopilot",
-  "version": "0.0.99",
+  "version": "0.0.104",
   "publisher": "Continue",
   "engines": {
-    "vscode": "^1.74.0"
+    "vscode": "^1.60.0"
   },
   "categories": [
     "Other",
@@ -223,7 +223,7 @@
     "@types/node-fetch": "^2.6.2",
     "@types/react-dom": "^18.2.4",
     "@types/styled-components": "^5.1.26",
-    "@types/vscode": "^1.74.0",
+    "@types/vscode": "1.60",
     "@types/ws": "^8.5.4",
     "@typescript-eslint/eslint-plugin": "^5.45.0",
     "@typescript-eslint/parser": "^5.45.0",
@@ -240,6 +240,7 @@
     "@electron/rebuild": "^3.2.10",
     "@reduxjs/toolkit": "^1.9.3",
     "@segment/analytics-node": "^0.0.1-beta.16",
+    "@sentry/node": "^7.57.0",
     "@styled-icons/heroicons-outline": "^10.47.0",
     "@vitejs/plugin-react-swc": "^3.3.2",
     "axios": "^1.2.5",
