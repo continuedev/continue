@@ -27,21 +27,32 @@ jobs:
           cd continuedev
           poetry install
 
-      - name: Cache node_modules
+      - name: Cache extension node_modules
         uses: actions/cache@v2
         with:
-          path: node_modules
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          path: extension/node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('extension/package-lock.json') }}
+
+      - name: Cache react-app node_modules
+        uses: actions/cache@v2
+        with:
+          path: extension/react-app/node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('extension/react-app/package-lock.json') }}
 
       - name: Set up Node.js
         uses: actions/setup-node@v2
         with:
           node-version: "14"
 
-      - name: Install Dependencies
+      - name: Install extension Dependencies
         run: |
           cd extension
-          npm install
+          npm ci
+
+      -name: Install react-app Dependencies
+        run: |
+          cd extension/react-app
+          npm ci
 
       - name: Build and Publish
         run: |
