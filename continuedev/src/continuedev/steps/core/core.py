@@ -154,19 +154,26 @@ class DefaultModelEditCodeStep(Step):
 
     _prompt_and_completion: str = ""
 
+    def _cleanup_output(self, output: str) -> str:
+        output = output.replace('\\"', '"')
+        output = output.replace("\\'", "'")
+        output = output.replace("\\n", "\n")
+        output = output.replace("\\t", "\t")
+        output = output.replace("\\\\", "\\")
+        if output.startswith('"') and output.endswith('"'):
+            output = output[1:-1]
+
+        return output
+
     async def describe(self, models: Models) -> Coroutine[str, None, None]:
-        description = await models.gpt3516k.complete(
-            f"{self._prompt_and_completion}\n\nPlease give brief a description of the changes made above using markdown bullet points. Be concise and only mention changes made to the commit before, not prefix or suffix:")
-        self.name = await models.gpt3516k.complete(f"Write a very short title to describe this requested change (no quotes): '{self.user_input}'. This is the title:")
+        description = await models.gpt3516k.complete(dedent(f"""\
+            {self._prompt_and_completion}
+            
+            Please give brief a description of the changes made above using markdown bullet points. Be concise and only mention changes made to the commit before, not prefix or suffix:"""))
+        name = await models.gpt3516k.complete(f"Write a very short title to describe this requested change (no quotes): '{self.user_input}'. This is the title:")
+        self.name = self._cleanup_output(name)
 
-        # Remove quotes from title and description if they are wrapped
-        if description.startswith('"') and description.endswith('"'):
-            description = description[1:-1]
-
-        if self.name.startswith('"') and self.name.endswith('"'):
-            self.name = self.name[1:-1]
-
-        return f"`{self.user_input}`\n\n" + description
+        return f"`{self.user_input}`\n\n{self._cleanup_output(description)}"
 
     async def get_prompt_parts(self, rif: RangeInFileWithContents, sdk: ContinueSDK, full_file_contents: str):
         # We don't know here all of the functions being passed in.
@@ -586,10 +593,17 @@ class UserInputStep(Step):
     name: str = "User Input"
     hide: bool = True
 
+    manage_own_chat_context: bool = True
+
     async def describe(self, models: Models) -> Coroutine[str, None, None]:
         return self.user_input
 
     async def run(self, sdk: ContinueSDK) -> Coroutine[UserInputObservation, None, None]:
+        self.chat_context.append(ChatMessage(
+            role="user",
+            content=self.user_input,
+            summary=self.user_input
+        ))
         return UserInputObservation(user_input=self.user_input)
 
 
