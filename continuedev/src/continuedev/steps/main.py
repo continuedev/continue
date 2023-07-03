@@ -266,6 +266,13 @@ class EditHighlightedCodeStep(Step):
             range_in_files = [RangeInFile.from_entire_file(
                 filepath, content) for filepath, content in contents.items()]
 
+        # If still no highlighted code, create a new file and edit there
+        if len(range_in_files) == 0:
+            # Create a new file
+            new_file_path = "new_file.txt"
+            await sdk.add_file(new_file_path)
+            range_in_files = [RangeInFile.from_entire_file(new_file_path, "")]
+
         await sdk.run_step(DefaultModelEditCodeStep(user_input=self.user_input, range_in_files=range_in_files))
 
 
