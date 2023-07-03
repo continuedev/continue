@@ -276,7 +276,7 @@ class Step(ContinueBaseModel):
 
 
 class SequentialStep(Step):
-    steps: list[Step]
+    steps: List[Step]
     hide: bool = True
 
     async def run(self, sdk: ContinueSDK) -> Coroutine[Observation, None, None]:
