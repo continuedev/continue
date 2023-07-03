@@ -47,12 +47,12 @@ jobs:
       - name: Install extension Dependencies
         run: |
           cd extension
-          npm ci
+          npm ci --legacy-peer-deps
 
       - name: Install react-app Dependencies
         run: |
           cd extension/react-app
-          npm ci
+          npm ci --legacy-peer-deps
 
       - name: Build and Publish
         run: |
