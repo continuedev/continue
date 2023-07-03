@@ -12,17 +12,16 @@ import {
   acceptSuggestionCommand,
   rejectSuggestionCommand,
 } from "./suggestions";
-import { debugPanelWebview, setupDebugPanel } from "./debugPanel";
 import { FileEditWithFullContents } from "../schema/FileEditWithFullContents";
 import fs = require("fs");
 import { WebsocketMessenger } from "./util/messenger";
-import { decorationManager } from "./decorations";
-
 class IdeProtocolClient {
   private messenger: WebsocketMessenger | null = null;
   private readonly context: vscode.ExtensionContext;
 
   private _makingEdit = 0;
+
+  private _highlightDebounce: NodeJS.Timeout | null = null;
 
   constructor(serverUrl: string, context: vscode.ExtensionContext) {
     this.context = context;
@@ -65,6 +64,36 @@ class IdeProtocolClient {
     //     this._makingEdit--;
     //   }
     // });
+
+    // Setup listeners for any file changes in open editors
+    vscode.window.onDidChangeTextEditorSelection((event) => {
+      if (this._highlightDebounce) {
+        clearTimeout(this._highlightDebounce);
+      }
+      this._highlightDebounce = setTimeout(() => {
+        const highlightedCode = event.textEditor.selections
+          .filter((s) => !s.isEmpty)
+          .map((selection) => {
+            const range = new vscode.Range(selection.start, selection.end);
+            const contents = event.textEditor.document.getText(range);
+            return {
+              filepath: event.textEditor.document.uri.fsPath,
+              contents,
+              range: {
+                start: {
+                  line: selection.start.line,
+                  character: selection.start.character,
+                },
+                end: {
+                  line: selection.end.line,
+                  character: selection.end.character,
+                },
+              },
+            };
+          });
+        this.sendHighlightedCode(highlightedCode);
+      }, 100);
+    });
   }
 
   async handleMessage(
@@ -374,6 +403,10 @@ class IdeProtocolClient {
 
   sendCommandOutput(output: string) {
     this.messenger?.send("commandOutput", { output });
+  }
+
+  sendHighlightedCode(highlightedCode: (RangeInFile & { contents: string })[]) {
+    this.messenger?.send("highlightedCodePush", { highlightedCode });
   }
 
   sendAcceptRejectSuggestion(accepted: boolean) {

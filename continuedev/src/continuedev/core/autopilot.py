@@ -2,8 +2,10 @@ from functools import cached_property
 import traceback
 import time
 from typing import Any, Callable, Coroutine, Dict, List
-
+import os
 from aiohttp import ClientPayloadError
+
+from ..models.filesystem import RangeInFileWithContents
 from ..models.filesystem_edit import FileEditWithFullContents
 from ..libs.llm import LLM
 from .observation import Observation, InternalErrorObservation
@@ -59,7 +61,13 @@ class Autopilot(ContinueBaseModel):
         keep_untouched = (cached_property,)
 
     def get_full_state(self) -> FullState:
-        return FullState(history=self.history, active=self._active, user_input_queue=self._main_user_input_queue, default_model=self.continue_sdk.config.default_model)
+        return FullState(
+            history=self.history,
+            active=self._active,
+            user_input_queue=self._main_user_input_queue,
+            default_model=self.continue_sdk.config.default_model,
+            highlighted_ranges=self._highlighted_ranges
+        )
 
     async def get_available_slash_commands(self) -> List[Dict]:
         return list(map(lambda x: {"name": x.name, "description": x.description}, self.continue_sdk.config.slash_commands)) or []
@@ -124,6 +132,31 @@ class Autopilot(ContinueBaseModel):
                         tb_step.step_name, {"output": output, **tb_step.params})
                     await self._run_singular_step(step)
 
+    _highlighted_ranges: List[RangeInFileWithContents] = []
+
+    async def handle_highlighted_code(self, range_in_files: List[RangeInFileWithContents]):
+        workspace_path = self.continue_sdk.ide.workspace_directory
+        for rif in range_in_files:
+            rif.filepath = os.path.relpath(rif.filepath, workspace_path)
+
+        old_ranges = self._highlighted_ranges + range_in_files
+        new_ranges = []
+
+        while len(old_ranges) > 0:
+            old_range = old_ranges.pop(0)
+            found_overlap = False
+            for i in range(len(new_ranges)):
+                if old_range.filepath == new_ranges[i].filepath and old_range.range.overlaps_with(new_ranges[i].range):
+                    new_ranges[i] = old_range.union(new_ranges[i])
+                    found_overlap = True
+                    break
+
+            if not found_overlap:
+                new_ranges.append(old_range)
+
+        self._highlighted_ranges = new_ranges
+        await self.update_subscribers()
+
     _step_depth: int = 0
 
     async def retry_at_index(self, index: int):
@@ -133,6 +166,10 @@ class Autopilot(ContinueBaseModel):
     async def delete_at_index(self, index: int):
         self.history.timeline[index].step.hide = True
         self.history.timeline[index].deleted = True
+        await self.update_subscribers()
+
+    async def delete_context_item_at_index(self, index: int):
+        self._highlighted_ranges.pop(index)
         await self.update_subscribers()
 
     async def _run_singular_step(self, step: "Step", is_future_step: bool = False) -> Coroutine[Observation, None, None]:
