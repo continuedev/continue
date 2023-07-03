@@ -408,6 +408,10 @@ class IdeProtocolClient {
   sendHighlightedCode(highlightedCode: (RangeInFile & { contents: string })[]) {
     this.messenger?.send("highlightedCodePush", { highlightedCode });
   }
+
+  sendAcceptRejectSuggestion(accepted: boolean) {
+    this.messenger?.send("acceptRejectSuggestion", { accepted });
+  }
 }
 
 export default IdeProtocolClient;

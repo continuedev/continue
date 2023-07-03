@@ -103,6 +103,7 @@ function GUI(props: GUIProps) {
   } as any);
 
   const [showFeedbackDialog, setShowFeedbackDialog] = useState(false);
+  const [feedbackDialogMessage, setFeedbackDialogMessage] = useState("");
 
   const topGuiDivRef = useRef<HTMLDivElement>(null);
   const client = useContinueGUIProtocol();
@@ -259,6 +260,7 @@ function GUI(props: GUIProps) {
         onClose={() => {
           setShowFeedbackDialog(false);
         }}
+        message={feedbackDialogMessage}
       ></TextDialog>
 
       <TopGUIDiv
@@ -396,17 +398,24 @@ function GUI(props: GUIProps) {
         </div>
         <HeaderButtonWithText
           onClick={() => {
-            client?.changeDefaultModel(
-              usingFastModel ? "gpt-4" : "gpt-3.5-turbo"
-            );
+            // client?.changeDefaultModel(
+            //   usingFastModel ? "gpt-4" : "gpt-3.5-turbo"
+            // );
+            if (!usingFastModel) {
+              // Show the dialog
+              setFeedbackDialogMessage(
+                "We don't yet support local models, but we're working on it! If privacy is a concern of yours, please use the feedback button in the bottom right to let us know."
+              );
+              setShowFeedbackDialog(true);
+            }
             setUsingFastModel((prev) => !prev);
           }}
-          text={usingFastModel ? "gpt-3.5-turbo" : "gpt-4"}
+          text={usingFastModel ? "local" : "gpt-4"}
         >
           <div
             style={{ fontSize: "18px", marginLeft: "2px", marginRight: "2px" }}
           >
-            {usingFastModel ? "⚡" : "🧠"}
+            {usingFastModel ? "🔒" : "🧠"}
           </div>
         </HeaderButtonWithText>
         <HeaderButtonWithText
@@ -428,6 +437,9 @@ function GUI(props: GUIProps) {
         <HeaderButtonWithText
           onClick={() => {
             // Set dialog open
+            setFeedbackDialogMessage(
+              "Having trouble using Continue? Want a new feature? Let us know! This box is anonymous, but we will promptly address your feedback."
+            );
             setShowFeedbackDialog(true);
           }}
           text="Feedback"

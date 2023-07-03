@@ -5,7 +5,7 @@ import { translate, readFileAtRange } from "./util/vscode";
 import * as fs from "fs";
 import * as path from "path";
 import { registerAllCodeLensProviders } from "./lang-server/codeLens";
-import { extensionContext } from "./activation/activate";
+import { extensionContext, ideProtocolClient } from "./activation/activate";
 
 export interface SuggestionRanges {
   oldRange: vscode.Range;
@@ -241,19 +241,14 @@ function selectSuggestion(
       suggestions = JSON.parse(rawData);
     }
 
-    if (accept === "new" || (accept === "selected" && suggestion.newSelected)) {
-      suggestions.push({
-        accepted: true,
-        timestamp: Date.now(),
-        suggestion: suggestion.newContent,
-      });
-    } else {
-      suggestions.push({
-        accepted: false,
-        timestamp: Date.now(),
-        suggestion: suggestion.newContent,
-      });
-    }
+    const accepted =
+      accept === "new" || (accept === "selected" && suggestion.newSelected);
+    suggestions.push({
+      accepted,
+      timestamp: Date.now(),
+      suggestion: suggestion.newContent,
+    });
+    ideProtocolClient.sendAcceptRejectSuggestion(accepted);
 
     // Write the updated suggestions back to the file
     fs.writeFileSync(

@@ -198,7 +198,7 @@ class ContinueSDK(AbstractContinueSDK):
 
             # Don't insert after latest user message or function call
             i = -1
-            if history_context[i].role == "user" or history_context[i].role == "function":
+            if len(history_context) > 0 and (history_context[i].role == "user" or history_context[i].role == "function"):
                 i -= 1
             history_context.insert(i, msg)
 
