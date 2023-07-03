@@ -62,7 +62,7 @@ class SimpleChatStep(Step):
 
 class AddFileStep(Step):
     name: str = "Add File"
-    description = "Add a file to the workspace."
+    description = "Add a file to the workspace. Should always view the directory tree before this."
     filename: str
     file_contents: str
 
@@ -70,11 +70,7 @@ class AddFileStep(Step):
         return f"Added a file named `{self.filename}` to the workspace."
 
     async def run(self, sdk: ContinueSDK):
-        try:
-            await sdk.add_file(self.filename, self.file_contents)
-        except FileNotFoundError:
-            self.description = f"File {self.filename} does not exist."
-            return
+        await sdk.add_file(self.filename, self.file_contents)
 
         await sdk.ide.setFileOpen(os.path.join(sdk.ide.workspace_directory, self.filename))
 
@@ -132,7 +128,7 @@ class ViewDirectoryTreeStep(Step):
         return f"Viewed the directory tree."
 
     async def run(self, sdk: ContinueSDK):
-        self.description = f"```\n{display_tree(sdk.ide.workspace_directory, True)}\n```"
+        self.description = f"```\n{display_tree(sdk.ide.workspace_directory, True, max_depth=2)}\n```"
 
 
 class EditFileStep(Step):
