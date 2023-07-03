@@ -136,6 +136,8 @@ class ContinueSDK(AbstractContinueSDK):
 
     async def add_file(self, filename: str, content: Union[str, None]):
         filepath = await self._ensure_absolute_path(filename)
+        dir_name = os.path.dirname(filepath)
+        os.makedirs(dir_name, exist_ok=True)
         return await self.run_step(FileSystemEditStep(edit=AddFile(filepath=filepath, content=content)))
 
     async def delete_file(self, filename: str):
