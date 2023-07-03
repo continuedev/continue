@@ -69,6 +69,7 @@ function GUI(props: GUIProps) {
   const [usingFastModel, setUsingFastModel] = useState(false);
   const [waitingForSteps, setWaitingForSteps] = useState(false);
   const [userInputQueue, setUserInputQueue] = useState<string[]>([]);
+  const [highlightedRanges, setHighlightedRanges] = useState([]);
   const [availableSlashCommands, setAvailableSlashCommands] = useState<
     { name: string; description: string }[]
   >([]);
@@ -83,60 +84,6 @@ function GUI(props: GUIProps) {
     timeline: [
       {
         step: {
-          name: "SequentialStep",
-          hide: true,
-          description: "Running step: SequentialStep",
-          system_message: null,
-          chat_context: [],
-          manage_own_chat_context: false,
-          steps: [
-            {
-              name: "Welcome to Continue",
-              hide: false,
-              description: `Welcome to Continue`,
-              system_message: null,
-              chat_context: [],
-              manage_own_chat_context: false,
-              message: `# Welcome to Continue
-
-              _If it's your first time using Continue, it can take up to a minute for the server to install._
-              
-              Continue is not perfect, but a great tool to add to your toolbox. These are the tasks that Continue is currently best at:
-              
-              - Highlight a section of code and instruct Continue to refactor it, e.g. \`"/edit make this use more descriptive variable names"\`
-              - Ask questions of the open file, e.g. \`"/explain what is the purpose of each of these if statements?"\`
-              - Ask Continue to build the scaffolding of a new file from scratch, e.g. \`"add a React component for syntax highlighted code"\`
-              
-              You can use "slash commands" to directly instruct Continue what to do, or just enter a request and it will automatically decide next steps. To see the list of available slash commands, type '/'.
-              
-              If you highlight code, edits and explanations will be localized to the highlighted range. Otherwise, the currently open file is used. In both cases, the code is combined with the previous steps to construct the context.
-              `,
-            },
-            {
-              name: "Welcome to Continue!",
-              hide: true,
-              description: "Welcome to Continue!",
-              system_message: null,
-              chat_context: [],
-              manage_own_chat_context: false,
-            },
-            {
-              name: "StepsOnStartupStep",
-              hide: true,
-              description: "Running steps on startup",
-              system_message: null,
-              chat_context: [],
-              manage_own_chat_context: false,
-            },
-          ],
-        },
-        observation: null,
-        depth: 0,
-        deleted: false,
-        active: false,
-      },
-      {
-        step: {
           name: "Welcome to Continue",
           hide: false,
           description:
@@ -147,167 +94,13 @@ function GUI(props: GUIProps) {
           message:
             "Type '/' to see the list of available slash commands. If you highlight code, edits and explanations will be localized to the highlighted range. Otherwise, the currently open file is used. In both cases, the code is combined with the previous steps to construct the context.",
         },
-        observation: {
-          text: "Type '/' to see the list of available slash commands. If you highlight code, edits and explanations will be localized to the highlighted range. Otherwise, the currently open file is used. In both cases, the code is combined with the previous steps to construct the context.",
-        },
-        depth: 1,
-        deleted: false,
-        active: false,
-      },
-      {
-        step: {
-          name: "Welcome to Continue!",
-          hide: true,
-          description: "Welcome to Continue!",
-          system_message: null,
-          chat_context: [],
-          manage_own_chat_context: false,
-        },
-        observation: null,
-        depth: 1,
-        deleted: false,
-        active: false,
-      },
-      {
-        step: {
-          name: "StepsOnStartupStep",
-          hide: true,
-          description: "Running steps on startup",
-          system_message: null,
-          chat_context: [],
-          manage_own_chat_context: false,
-        },
-        observation: null,
-        depth: 1,
+        depth: 0,
         deleted: false,
         active: false,
       },
     ],
     current_index: 3,
   } as any);
-  //   {
-  //   timeline: [
-  //     {
-  //       step: {
-  //         name: "Waiting for user input",
-  //         cmd: "python3 /Users/natesesti/Desktop/continue/extension/examples/python/main.py",
-  //         description:
-  //           "Run `python3 /Users/natesesti/Desktop/continue/extension/examples/python/main.py` and ```\nprint(sum(first, second))\n```\n- Testing\n- Testing 2\n- Testing 3",
-  //       },
-  //       observation: {
-  //         title: "ERROR FOUND",
-  //         error:
-  //           "Traceback (most recent call last):\n  File \"/Users/natesesti/Desktop/continue/extension/examples/python/main.py\", line 7, in <module>\n    print(sum(first, second))\n          ^^^^^^^^^^^^^^^^^^\n  File \"/Users/natesesti/Desktop/continue/extension/examples/python/sum.py\", line 2, in sum\n    return a + b\n           ~~^~~\nTypeError: unsupported operand type(s) for +: 'int' and 'str'",
-  //       },
-  //       output: [
-  //         {
-  //           traceback: {
-  //             frames: [
-  //               {
-  //                 filepath:
-  //                   "/Users/natesesti/Desktop/continue/extension/examples/python/main.py",
-  //                 lineno: 7,
-  //                 function: "<module>",
-  //                 code: "print(sum(first, second))",
-  //               },
-  //             ],
-  //             message: "unsupported operand type(s) for +: 'int' and 'str'",
-  //             error_type:
-  //               '          ^^^^^^^^^^^^^^^^^^\n  File "/Users/natesesti/Desktop/continue/extension/examples/python/sum.py", line 2, in sum\n    return a + b\n           ~~^~~\nTypeError',
-  //             full_traceback:
-  //               "Traceback (most recent call last):\n  File \"/Users/natesesti/Desktop/continue/extension/examples/python/main.py\", line 7, in <module>\n    print(sum(first, second))\n          ^^^^^^^^^^^^^^^^^^\n  File \"/Users/natesesti/Desktop/continue/extension/examples/python/sum.py\", line 2, in sum\n    return a + b\n           ~~^~~\nTypeError: unsupported operand type(s) for +: 'int' and 'str'",
-  //           },
-  //         },
-  //         null,
-  //       ],
-  //     },
-  //     {
-  //       step: {
-  //         name: "EditCodeStep",
-  //         range_in_files: [
-  //           {
-  //             filepath:
-  //               "/Users/natesesti/Desktop/continue/extension/examples/python/main.py",
-  //             range: {
-  //               start: {
-  //                 line: 0,
-  //                 character: 0,
-  //               },
-  //               end: {
-  //                 line: 6,
-  //                 character: 25,
-  //               },
-  //             },
-  //           },
-  //         ],
-  //         prompt:
-  //           "I ran into this problem with my Python code:\n\n                Traceback (most recent call last):\n  File \"/Users/natesesti/Desktop/continue/extension/examples/python/main.py\", line 7, in <module>\n    print(sum(first, second))\n          ^^^^^^^^^^^^^^^^^^\n  File \"/Users/natesesti/Desktop/continue/extension/examples/python/sum.py\", line 2, in sum\n    return a + b\n           ~~^~~\nTypeError: unsupported operand type(s) for +: 'int' and 'str'\n\n                Below are the files that might need to be fixed:\n\n                {code}\n\n                This is what the code should be in order to avoid the problem:\n",
-  //         description:
-  //           "Run `python3 /Users/natesesti/Desktop/continue/extension/examples/python/main.py` and\n```python\nprint(sum(first, second))\n```\n- Testing\n- Testing 2\n- Testing 3",
-  //       },
-  //       output: [
-  //         null,
-  //         {
-  //           reversible: true,
-  //           actions: [
-  //             {
-  //               reversible: true,
-  //               filesystem: {},
-  //               filepath:
-  //                 "/Users/natesesti/Desktop/continue/extension/examples/python/main.py",
-  //               range: {
-  //                 start: {
-  //                   line: 0,
-  //                   character: 0,
-  //                 },
-  //                 end: {
-  //                   line: 6,
-  //                   character: 25,
-  //                 },
-  //               },
-  //               replacement:
-  //                 "\nfrom sum import sum\n\nfirst = 1\nsecond = 2\n\nprint(sum(first, second))",
-  //             },
-  //           ],
-  //         },
-  //       ],
-  //     },
-  //     {
-  //       active: false,
-  //       step: {
-  //         name: "SolveTracebackStep",
-  //         traceback: {
-  //           frames: [
-  //             {
-  //               filepath:
-  //                 "/Users/natesesti/Desktop/continue/extension/examples/python/main.py",
-  //               lineno: 7,
-  //               function: "<module>",
-  //               code: "print(sum(first, second))",
-  //             },
-  //           ],
-  //           message: "unsupported operand type(s) for +: 'int' and 'str'",
-  //           error_type:
-  //             '          ^^^^^^^^^^^^^^^^^^\n  File "/Users/natesesti/Desktop/continue/extension/examples/python/sum.py", line 2, in sum\n    return a + b\n           ~~^~~\nTypeError',
-  //           full_traceback:
-  //             "Traceback (most recent call last):\n  File \"/Users/natesesti/Desktop/continue/extension/examples/python/main.py\", line 7, in <module>\n    print(sum(first, second))\n          ^^^^^^^^^^^^^^^^^^\n  File \"/Users/natesesti/Desktop/continue/extension/examples/python/sum.py\", line 2, in sum\n    return a + b\n           ~~^~~\nTypeError: unsupported operand type(s) for +: 'int' and 'str'",
-  //         },
-  //         description: "Running step: SolveTracebackStep",
-  //       },
-  //       output: [null, null],
-  //     },
-  //     {
-  //       step: {
-  //         name: "RunCodeStep",
-  //         cmd: "python3 /Users/natesesti/Desktop/continue/extension/examples/python/main.py",
-  //         description:
-  //           "Run `python3 /Users/natesesti/Desktop/continue/extension/examples/python/main.py`",
-  //       },
-  //       output: [null, null],
-  //     },
-  //   ],
-  //   current_index: 3,
-  // } as any);
 
   const [showFeedbackDialog, setShowFeedbackDialog] = useState(false);
   const [feedbackDialogMessage, setFeedbackDialogMessage] = useState("");
@@ -357,6 +150,7 @@ function GUI(props: GUIProps) {
         topGuiDivRef.current?.offsetHeight - window.scrollY < 100;
       setWaitingForSteps(state.active);
       setHistory(state.history);
+      setHighlightedRanges(state.highlighted_ranges);
       setUserInputQueue(state.user_input_queue);
       setStepsOpen((prev) => {
         const nextStepsOpen = [...prev];
@@ -392,6 +186,13 @@ function GUI(props: GUIProps) {
   }, [waitingForSteps]);
 
   const mainTextInputRef = useRef<HTMLInputElement>(null);
+
+  const deleteContextItem = useCallback(
+    (idx: number) => {
+      client?.deleteContextItemAtIndex(idx);
+    },
+    [client]
+  );
 
   useEffect(() => {
     if (mainTextInputRef.current) {
@@ -535,6 +336,8 @@ function GUI(props: GUIProps) {
           }}
           onInputValueChange={() => {}}
           items={availableSlashCommands}
+          highlightedCodeSections={highlightedRanges}
+          deleteContextItem={deleteContextItem}
         />
         <ContinueButton onClick={onMainTextInput} />
       </TopGUIDiv>

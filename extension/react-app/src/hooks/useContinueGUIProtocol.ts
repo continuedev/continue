@@ -70,6 +70,10 @@ class ContinueGUIClientProtocol extends AbstractContinueGUIClientProtocol {
   deleteAtIndex(index: number) {
     this.messenger.send("delete_at_index", { index });
   }
+
+  deleteContextItemAtIndex(index: number) {
+    this.messenger.send("delete_context_item_at_index", { index });
+  }
 }
 
 export default ContinueGUIClientProtocol;
