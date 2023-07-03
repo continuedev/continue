@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod, abstractproperty
 
 from ..models.main import Traceback
 from ..models.filesystem_edit import FileEdit, FileSystemEdit, EditDiff
-from ..models.filesystem import RangeInFile
+from ..models.filesystem import RangeInFile, RangeInFileWithContents
 
 
 class AbstractIdeProtocolServer(ABC):
@@ -90,6 +90,10 @@ class AbstractIdeProtocolServer(ABC):
     @abstractmethod
     async def runCommand(self, command: str) -> str:
         """Run a command"""
+
+    @abstractmethod
+    def onHighlightedCodeUpdate(self, range_in_files: List[RangeInFileWithContents]):
+        """Called when highlighted code is updated"""
 
     @abstractproperty
     def workspace_directory(self) -> str:

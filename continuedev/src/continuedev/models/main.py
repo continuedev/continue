@@ -43,11 +43,22 @@ class Position(BaseModel):
     def from_end_of_file(contents: str) -> "Position":
         return Position.from_index(contents, len(contents))
 
+    def to_index(self, string: str) -> int:
+        """Convert line and character to index in string"""
+        lines = string.splitlines()
+        return sum(map(len, lines[:self.line])) + self.character
+
 
 class Range(BaseModel):
     """A range in a file. 0-indexed."""
     start: Position
     end: Position
+
+    def __lt__(self, other: "Range") -> bool:
+        return self.start < other.start or (self.start == other.start and self.end < other.end)
+
+    def __eq__(self, other: "Range") -> bool:
+        return self.start == other.start and self.end == other.end
 
     def __hash__(self):
         return hash((self.start, self.end))

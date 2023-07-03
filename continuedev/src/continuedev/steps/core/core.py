@@ -318,8 +318,7 @@ class DefaultModelEditCodeStep(Step):
             nonlocal current_block_start, current_line_in_file, original_lines, original_lines_below_previous_blocks, current_block_lines, indices_of_last_matched_lines, LINES_TO_MATCH_BEFORE_ENDING_BLOCK, offset_from_blocks
 
             # Highlight the line to show progress
-            # - len(current_block_lines)
-            line_to_highlight = current_line_in_file
+            line_to_highlight = current_line_in_file - len(current_block_lines)
             await sdk.ide.highlightCode(RangeInFile(filepath=rif.filepath, range=Range.from_shorthand(
                 line_to_highlight, 0, line_to_highlight, 0)), "#FFFFFF22" if len(current_block_lines) == 0 else "#00FF0022")
 
