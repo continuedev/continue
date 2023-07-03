@@ -21,6 +21,7 @@ openai.api_key = OPENAI_API_KEY
 class SimpleChatStep(Step):
     user_input: str
     name: str = "Chat"
+    manage_own_chat_context: bool = True
 
     async def run(self, sdk: ContinueSDK):
         self.description = f"`{self.user_input}`\n\n"
@@ -36,16 +37,27 @@ class SimpleChatStep(Step):
             summary=self.user_input
         ))
 
+        completion = ""
         async for chunk in sdk.models.gpt4.stream_chat(messages):
             if sdk.current_step_was_deleted():
                 return
 
             if "content" in chunk:
                 self.description += chunk["content"]
+                completion += chunk["content"]
                 await sdk.update_ui()
 
         self.name = (await sdk.models.gpt35.complete(
             f"Write a short title for the following chat message: {self.description}")).strip()
+
+        if self.name.startswith('"') and self.name.endswith('"'):
+            self.name = self.name[1:-1]
+
+        self.chat_context.append(ChatMessage(
+            role="assistant",
+            content=completion,
+            summary=self.name
+        ))
 
 
 class AddFileStep(Step):
