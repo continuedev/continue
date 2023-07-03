@@ -139,21 +139,22 @@ class Autopilot(ContinueBaseModel):
         for rif in range_in_files:
             rif.filepath = os.path.relpath(rif.filepath, workspace_path)
 
+        old_ranges = self._highlighted_ranges + range_in_files
         new_ranges = []
-        for rif in range_in_files:
+
+        while len(old_ranges) > 0:
+            old_range = old_ranges.pop(0)
             found_overlap = False
-            for i in range(len(self._highlighted_ranges)):
-                hr = self._highlighted_ranges[i]
-                if hr.filepath == rif.filepath and hr.range.overlaps_with(rif.range):
-                    new_ranges.append(rif.union(hr))
+            for i in range(len(new_ranges)):
+                if old_range.filepath == new_ranges[i].filepath and old_range.range.overlaps_with(new_ranges[i].range):
+                    new_ranges[i] = old_range.union(new_ranges[i])
                     found_overlap = True
-                    self._highlighted_ranges.pop(i)
                     break
 
             if not found_overlap:
-                new_ranges.append(rif)
+                new_ranges.append(old_range)
 
-        self._highlighted_ranges += new_ranges
+        self._highlighted_ranges = new_ranges
         await self.update_subscribers()
 
     _step_depth: int = 0

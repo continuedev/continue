@@ -6,6 +6,7 @@ import { RootStore } from "../redux/store";
 
 let StyledButton = styled(Button)`
   margin: auto;
+  margin-top: 8px;
   display: grid;
   grid-template-columns: 30px 1fr;
   align-items: center;

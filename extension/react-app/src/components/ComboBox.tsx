@@ -9,6 +9,7 @@ import {
 } from ".";
 import CodeBlock from "./CodeBlock";
 import { RangeInFile } from "../../../src/client";
+import PillButton from "./PillButton";
 
 const mainInputFontSize = 16;
 
@@ -22,27 +23,9 @@ const ContextDropdown = styled.div`
   border-bottom-left-radius: ${defaultBorderRadius};
   /* border: 1px solid white; */
   border-top: none;
-  margin-left: 8px;
-  margin-right: 8px;
-  margin-top: -12px;
+  margin: 8px;
   outline: 1px solid orange;
-`;
-
-const PillButton = styled.button`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  border: none;
-  color: white;
-  background-color: gray;
-  border-radius: 50px;
-  padding: 5px 10px;
-  margin: 5px 0;
-  cursor: pointer;
-
-  &:hover {
-    background-color: ${buttonColor};
-  }
+  z-index: 5;
 `;
 
 const MainTextInput = styled.textarea`
@@ -118,7 +101,9 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
   // The position of the current command you are typing now, so the one that will be appended to history once you press enter
   const [positionInHistory, setPositionInHistory] = React.useState<number>(0);
   const [items, setItems] = React.useState(props.items);
-  const [showContextDropdown, setShowContextDropdown] = React.useState(false);
+  const [hoveringButton, setHoveringButton] = React.useState(false);
+  const [hoveringContextDropdown, setHoveringContextDropdown] =
+    React.useState(false);
   const [highlightedCodeSections, setHighlightedCodeSections] = React.useState(
     props.highlightedCodeSections || [
       {
@@ -184,7 +169,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
                 300
               ).toString()}px`;
 
-              setShowContextDropdown(target.value.endsWith("@"));
+              // setShowContextDropdown(target.value.endsWith("@"));
             },
             onKeyDown: (event) => {
               if (event.key === "Enter" && event.shiftKey) {
@@ -256,22 +241,11 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
             ))}
         </Ul>
       </div>
-      <ContextDropdown hidden={!showContextDropdown}>
-        <p>Highlight code to include as context:</p>
-        {highlightedCodeSections.map((section, idx) => (
-          <>
-            <p>{section.filepath}</p>
-            <CodeBlock showCopy={false} key={idx}>
-              {section.contents}
-            </CodeBlock>
-          </>
-        ))}
-      </ContextDropdown>
-      <div className="px-2">
+      <div className="px-2 flex gap-2 items-center flex-wrap">
         {highlightedCodeSections.map((section, idx) => (
           <PillButton
-            onClick={() => {
-              console.log("delete context item", idx);
+            title={section.filepath}
+            onDelete={() => {
               if (props.deleteContextItem) {
                 props.deleteContextItem(idx);
               }
@@ -281,11 +255,42 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
                 return newSections;
               });
             }}
-          >
-            {section.filepath}
-          </PillButton>
+            onHover={(val: boolean) => {
+              if (val) {
+                setHoveringButton(val);
+              } else {
+                setTimeout(() => {
+                  setHoveringButton(val);
+                }, 100);
+              }
+            }}
+          />
         ))}
+
+        <span className="text-trueGray-400 ml-auto mr-4 text-xs">
+          Highlight code to include as context.{" "}
+          {highlightedCodeSections.length > 0 &&
+            "Otherwise using entire currently open file."}
+        </span>
       </div>
+      <ContextDropdown
+        onMouseEnter={() => {
+          setHoveringContextDropdown(true);
+        }}
+        onMouseLeave={() => {
+          setHoveringContextDropdown(false);
+        }}
+        hidden={!hoveringContextDropdown && !hoveringButton}
+      >
+        {highlightedCodeSections.map((section, idx) => (
+          <>
+            <p>{section.filepath}</p>
+            <CodeBlock showCopy={false} key={idx}>
+              {section.contents}
+            </CodeBlock>
+          </>
+        ))}
+      </ContextDropdown>
     </>
   );
 });
