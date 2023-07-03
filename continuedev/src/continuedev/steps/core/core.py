@@ -368,7 +368,7 @@ class DefaultModelEditCodeStep(Step):
 
                 # Insert the suggestion
                 replacement = "\n".join(current_block_lines)
-                start_line = current_block_start + 1
+                start_line = current_block_start
                 end_line = current_block_start + index_of_last_line_in_block
                 await sdk.ide.showSuggestion(FileEdit(
                     filepath=rif.filepath,
@@ -376,10 +376,9 @@ class DefaultModelEditCodeStep(Step):
                         start_line, 0, end_line, 0),
                     replacement=replacement
                 ))
-                if replacement == "":
-                    current_line_in_file += 1
 
                 # Reset current block / update variables
+                current_line_in_file += 1
                 offset_from_blocks += len(current_block_lines)
                 original_lines_below_previous_blocks = original_lines_below_previous_blocks[
                     index_of_last_line_in_block + 1:]
@@ -501,7 +500,7 @@ class DefaultModelEditCodeStep(Step):
             await sdk.ide.showSuggestion(FileEdit(
                 filepath=rif.filepath,
                 range=Range.from_shorthand(
-                    current_block_start + 1, 0, current_block_start + len(original_lines_below_previous_blocks), 0),
+                    current_block_start, 0, current_block_start + len(original_lines_below_previous_blocks), 0),
                 replacement="\n".join(current_block_lines)
             ))
 
