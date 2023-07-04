@@ -4,7 +4,6 @@ const exec = util.promisify(require("child_process").exec);
 const { spawn } = require("child_process");
 import * as path from "path";
 import * as fs from "fs";
-import rebuild from "@electron/rebuild";
 import { getContinueServerUrl } from "../bridge";
 import fetch from "node-fetch";
 import * as vscode from "vscode";
@@ -60,7 +59,7 @@ async function runCommand(cmd: string): Promise<[string, string | undefined]> {
   return [stdout, stderr];
 }
 
-async function getPythonPipCommands() {
+export async function getPythonPipCommands() {
   var [stdout, stderr] = await runCommand("python3 --version");
   let pythonCmd = "python3";
   if (stderr) {
@@ -111,10 +110,8 @@ async function getPythonPipCommands() {
       );
       throw new Error("Python3.8 or greater is not installed.");
     }
-  } else {
-    pythonCmd = `python${major}.${minor}`;
-    pipCmd = `pip${major}.${minor}`;
   }
+
   return [pythonCmd, pipCmd];
 }
 
@@ -366,16 +363,6 @@ export async function startContinuePythonServer() {
       }
     });
   });
-}
-
-async function installNodeModules() {
-  console.log("Rebuilding node-pty for Continue extension...");
-  await rebuild({
-    buildPath: getExtensionUri().fsPath, // Folder containing node_modules
-    electronVersion: "19.1.8",
-    onlyModules: ["node-pty"],
-  });
-  console.log("Successfully rebuilt node-pty");
 }
 
 export function isPythonEnvSetup(): boolean {

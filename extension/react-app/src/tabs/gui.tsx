@@ -215,30 +215,35 @@ function GUI(props: GUIProps) {
       mainTextInputRef.current.value = "";
       if (!client) return;
 
+      setWaitingForSteps(true);
+
       if (
-        history?.timeline.length &&
-        history.timeline[history.current_index].step.name ===
+        history &&
+        history.current_index >= 0 &&
+        history.current_index < history.timeline.length
+      ) {
+        if (
+          history.timeline[history.current_index].step.name ===
           "Waiting for user input"
-      ) {
-        if (input.trim() === "") return;
-        onStepUserInput(input, history!.current_index);
-      } else if (
-        history?.timeline.length &&
-        history.timeline[history.current_index].step.name ===
+        ) {
+          if (input.trim() === "") return;
+          onStepUserInput(input, history!.current_index);
+          return;
+        } else if (
+          history.timeline[history.current_index].step.name ===
           "Waiting for user confirmation"
-      ) {
-        onStepUserInput("ok", history!.current_index);
-      } else {
-        if (input.trim() === "") return;
-
-        client.sendMainInput(input);
-        setUserInputQueue((queue) => {
-          return [...queue, input];
-        });
+        ) {
+          onStepUserInput("ok", history!.current_index);
+          return;
+        }
       }
-    }
+      if (input.trim() === "") return;
 
-    setWaitingForSteps(true);
+      client.sendMainInput(input);
+      setUserInputQueue((queue) => {
+        return [...queue, input];
+      });
+    }
   };
 
   const onStepUserInput = (input: string, index: number) => {
