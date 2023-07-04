@@ -44,6 +44,11 @@ class ContinueConfig(BaseModel):
             step_name="SimpleChatStep",
         ),
         SlashCommand(
+            name="config",
+            description="Open the config file to create new and edit existing slash commands",
+            step_name="OpenConfigStep",
+        ),
+        SlashCommand(
             name="comment",
             description="Write comments for the current file or highlighted code",
             step_name="CommentCodeStep",
