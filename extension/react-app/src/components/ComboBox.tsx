@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { useCombobox } from "downshift";
 import styled from "styled-components";
 import {
@@ -10,7 +10,10 @@ import {
 import CodeBlock from "./CodeBlock";
 import { RangeInFile } from "../../../src/client";
 import PillButton from "./PillButton";
+import HeaderButtonWithText from "./HeaderButtonWithText";
+import { Trash, LockClosed, LockOpen } from "@styled-icons/heroicons-outline";
 
+// #region styled components
 const mainInputFontSize = 16;
 
 const ContextDropdown = styled.div`
@@ -87,13 +90,16 @@ const Li = styled.li<{
   cursor: pointer;
 `;
 
+// #endregion
+
 interface ComboBoxProps {
   items: { name: string; description: string }[];
   onInputValueChange: (inputValue: string) => void;
   disabled?: boolean;
-  onEnter?: (e: React.KeyboardEvent<HTMLInputElement>) => void;
-  highlightedCodeSections?: (RangeInFile & { contents: string })[];
-  deleteContextItem?: (idx: number) => void;
+  onEnter: (e: React.KeyboardEvent<HTMLInputElement>) => void;
+  highlightedCodeSections: (RangeInFile & { contents: string })[];
+  deleteContextItems: (indices: number[]) => void;
+  onTogglePin: () => void;
 }
 
 const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
@@ -104,6 +110,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
   const [hoveringButton, setHoveringButton] = React.useState(false);
   const [hoveringContextDropdown, setHoveringContextDropdown] =
     React.useState(false);
+  const [pinned, setPinned] = useState(false);
   const [highlightedCodeSections, setHighlightedCodeSections] = React.useState(
     props.highlightedCodeSections || [
       {
@@ -242,12 +249,46 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
         </Ul>
       </div>
       <div className="px-2 flex gap-2 items-center flex-wrap">
+        {highlightedCodeSections.length > 0 && (
+          <>
+            <HeaderButtonWithText
+              text="Clear Context"
+              onClick={() => {
+                props.deleteContextItems(
+                  highlightedCodeSections.map((_, idx) => idx)
+                );
+              }}
+            >
+              <Trash size="1.6em" />
+            </HeaderButtonWithText>
+            <HeaderButtonWithText
+              text={pinned ? "Unpin Context" : "Pin Context"}
+              inverted={pinned}
+              onClick={() => {
+                setPinned((prev) => !prev);
+                props.onTogglePin();
+              }}
+            >
+              {pinned ? (
+                <LockClosed size="1.6em"></LockClosed>
+              ) : (
+                <LockOpen size="1.6em"></LockOpen>
+              )}
+            </HeaderButtonWithText>
+          </>
+        )}
         {highlightedCodeSections.map((section, idx) => (
           <PillButton
-            title={section.filepath}
+            title={
+              hoveringButton
+                ? `${section.filepath} (${section.range.start.line + 1}-${
+                    section.range.end.line + 1
+                  })`
+                : section.filepath
+            }
             onDelete={() => {
-              if (props.deleteContextItem) {
-                props.deleteContextItem(idx);
+              if (props.deleteContextItems) {
+                props.deleteContextItems([idx]);
               }
               setHighlightedCodeSections((prev) => {
                 const newSections = [...prev];
@@ -280,7 +321,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
         onMouseLeave={() => {
           setHoveringContextDropdown(false);
         }}
-        hidden={!hoveringContextDropdown && !hoveringButton}
+        hidden={true || (!hoveringContextDropdown && !hoveringButton)}
       >
         {highlightedCodeSections.map((section, idx) => (
           <>
