@@ -12,6 +12,7 @@ from ...recipes.DDtoBQRecipe.main import DDtoBQRecipe
 from ...recipes.DeployPipelineAirflowRecipe.main import DeployPipelineAirflowRecipe
 from ...steps.on_traceback import DefaultOnTracebackStep
 from ...steps.clear_history import ClearHistoryStep
+from ...steps.open_config import OpenConfigStep
 
 # This mapping is used to convert from string in ContinueConfig json to corresponding Step class.
 # Used for example in slash_commands and steps_on_startup
@@ -27,6 +28,7 @@ step_name_to_step_class = {
     "DeployPipelineAirflowRecipe": DeployPipelineAirflowRecipe,
     "DefaultOnTracebackStep": DefaultOnTracebackStep,
     "ClearHistoryStep": ClearHistoryStep,
+    "OpenConfigStep": OpenConfigStep
 }
 
 

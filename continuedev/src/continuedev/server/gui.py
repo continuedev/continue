@@ -148,7 +148,7 @@ async def websocket_endpoint(websocket: WebSocket, session: Session = Depends(we
 
         # Update any history that may have happened before connection
         await protocol.send_available_slash_commands()
-        # await protocol.send_state_update() THIS WAS CAUSING A LOT OF ISSUES. Don't uncomment.
+        await protocol.send_state_update()
 
         while AppStatus.should_exit is False:
             message = await websocket.receive_text()
