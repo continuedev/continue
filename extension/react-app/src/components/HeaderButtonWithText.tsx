@@ -7,12 +7,14 @@ interface HeaderButtonWithTextProps {
   onClick?: (e: any) => void;
   children: React.ReactNode;
   disabled?: boolean;
+  inverted?: boolean;
 }
 
 const HeaderButtonWithText = (props: HeaderButtonWithTextProps) => {
   const [hover, setHover] = useState(false);
   return (
     <HeaderButton
+      inverted={props.inverted}
       disabled={props.disabled}
       style={{ padding: "1px", paddingLeft: hover ? "4px" : "1px" }}
       onMouseEnter={() => {

@@ -70,10 +70,13 @@ function GUI(props: GUIProps) {
   const [usingFastModel, setUsingFastModel] = useState(false);
   const [waitingForSteps, setWaitingForSteps] = useState(false);
   const [userInputQueue, setUserInputQueue] = useState<string[]>([]);
-  const [highlightedRanges, setHighlightedRanges] = useState([]);
+  const [highlightedRanges, setHighlightedRanges] = useState([
+    { filepath: "abc.txt", range: { start: { line: 2 }, end: { line: 4 } } },
+  ]);
   const [availableSlashCommands, setAvailableSlashCommands] = useState<
     { name: string; description: string }[]
   >([]);
+  const [pinned, setPinned] = useState(false);
   const [showDataSharingInfo, setShowDataSharingInfo] = useState(false);
   const [stepsOpen, setStepsOpen] = useState<boolean[]>([
     true,
@@ -185,9 +188,9 @@ function GUI(props: GUIProps) {
 
   const mainTextInputRef = useRef<HTMLInputElement>(null);
 
-  const deleteContextItem = useCallback(
-    (idx: number) => {
-      client?.deleteContextAtIndices([idx]);
+  const deleteContextItems = useCallback(
+    (indices: number[]) => {
+      client?.deleteContextAtIndices(indices);
     },
     [client]
   );
@@ -241,6 +244,13 @@ function GUI(props: GUIProps) {
       setUserInputQueue((queue) => {
         return [...queue, input];
       });
+
+      // Delete all context items unless locked
+      if (!pinned) {
+        client?.deleteContextAtIndices(
+          highlightedRanges.map((_, index) => index)
+        );
+      }
     }
   };
 
@@ -345,7 +355,10 @@ function GUI(props: GUIProps) {
           onInputValueChange={() => {}}
           items={availableSlashCommands}
           highlightedCodeSections={highlightedRanges}
-          deleteContextItem={deleteContextItem}
+          deleteContextItems={deleteContextItems}
+          onTogglePin={() => {
+            setPinned((prev: boolean) => !prev);
+          }}
         />
         <ContinueButton onClick={onMainTextInput} />
       </TopGUIDiv>
