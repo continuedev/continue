@@ -88,13 +88,16 @@ function GUI(props: GUIProps) {
         step: {
           name: "Welcome to Continue",
           hide: false,
-          description:
-            "Highlight code and ask a question or give instructions. Past steps are used as additional context by default. Use slash commands when you want fine-grained control.",
+          description: `- Highlight code and ask a question or give instructions
+- Use \`cmd+k\` (Mac) / \`ctrl+k\` (Windows) to open Continue
+- Use \`cmd+shift+e\` / \`ctrl+shift+e\` to open file Explorer
+- Add your own OpenAI API key to VS Code Settings with \`cmd+,\`
+- Use slash commands when you want fine-grained control
+- Past steps are included as part of the context by default`,
           system_message: null,
           chat_context: [],
           manage_own_chat_context: false,
-          message:
-            "Highlight code and ask a question or give instructions. Past steps are used as additional context by default. Use slash commands when you want fine-grained control.",
+          message: "",
         },
         depth: 0,
         deleted: false,
