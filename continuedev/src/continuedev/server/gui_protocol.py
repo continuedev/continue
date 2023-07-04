@@ -28,10 +28,6 @@ class AbstractGUIProtocolServer(ABC):
         """Send a state update to the client"""
 
     @abstractmethod
-    async def send_available_slash_commands(self, commands: List[Dict]):
-        """Send a list of available slash commands to the client"""
-
-    @abstractmethod
     def on_retry_at_index(self, index: int):
         """Called when the user requests a retry at a previous index"""
 

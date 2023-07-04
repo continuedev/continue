@@ -31,7 +31,8 @@ class DemoPolicy(Policy):
                 MessageStep(name="Welcome to Continue", message=dedent("""\
                     - Highlight code and ask a question or give instructions
                     - Past steps are used as additional context by default
-                    - Use slash commands when you want fine-grained control""")) >>
+                    - Use slash commands when you want fine-grained control
+                    - Use cmd+k (MacOS) or ctrl+k (Windows) to toggle Continue""")) >>
                 WelcomeStep() >>
                 # SetupContinueWorkspaceStep() >>
                 # CreateCodebaseIndexChroma() >>
