@@ -174,7 +174,7 @@ class DefaultModelEditCodeStep(Step):
         name = await models.gpt3516k.complete(f"Write a very short title to describe this requested change (no quotes): '{self.user_input}'. This is the title:")
         self.name = self._cleanup_output(name)
 
-        return f"`{self.user_input}`\n\n{self._cleanup_output(description)}"
+        return f"{self._cleanup_output(description)}"
 
     async def get_prompt_parts(self, rif: RangeInFileWithContents, sdk: ContinueSDK, full_file_contents: str):
         # We don't know here all of the functions being passed in.

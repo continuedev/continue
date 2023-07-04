@@ -410,21 +410,21 @@ class IdeProtocolClient {
     let rangeInFiles: RangeInFile[] = [];
     vscode.window.visibleTextEditors.forEach((editor) => {
       editor.selections.forEach((selection) => {
-        if (!selection.isEmpty) {
-          rangeInFiles.push({
-            filepath: editor.document.uri.fsPath,
-            range: {
-              start: {
-                line: selection.start.line,
-                character: selection.start.character,
-              },
-              end: {
-                line: selection.end.line,
-                character: selection.end.character,
-              },
+        // if (!selection.isEmpty) {
+        rangeInFiles.push({
+          filepath: editor.document.uri.fsPath,
+          range: {
+            start: {
+              line: selection.start.line,
+              character: selection.start.character,
             },
-          });
-        }
+            end: {
+              line: selection.end.line,
+              character: selection.end.character,
+            },
+          },
+        });
+        // }
       });
     });
     return rangeInFiles;
