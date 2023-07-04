@@ -54,6 +54,12 @@ class RangeInFileWithContents(RangeInFile):
     @staticmethod
     def from_entire_file(filepath: str, content: str) -> "RangeInFileWithContents":
         lines = content.splitlines()
+        if not lines:
+            return RangeInFileWithContents(
+                filepath=filepath,
+                range=Range.from_shorthand(0, 0, 0, 0),
+                contents=""
+            )
         return RangeInFileWithContents(
             filepath=filepath,
             range=Range.from_shorthand(
