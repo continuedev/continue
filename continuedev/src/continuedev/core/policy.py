@@ -19,6 +19,7 @@ from ..steps.chat import SimpleChatStep, ChatWithFunctions, EditFileStep, AddFil
 from ..recipes.DDtoBQRecipe.main import DDtoBQRecipe
 from ..steps.core.core import MessageStep
 from ..libs.util.step_name_to_steps import get_step_from_name
+from ..steps.custom_command import CustomCommandStep
 
 
 class DemoPolicy(Policy):
@@ -51,6 +52,10 @@ class DemoPolicy(Policy):
                         params = slash_command.params
                         params["user_input"] = after_command
                         return get_step_from_name(slash_command.step_name, params)
+
+                for custom_cmd in config.custom_commands:
+                    if custom_cmd.name == command_name[1:]:
+                        return CustomCommandStep(name=custom_cmd.name, prompt=custom_cmd.prompt, user_input=after_command)
 
             # return EditHighlightedCodeStep(user_input=user_input)
             return ChatWithFunctions(user_input=user_input)
