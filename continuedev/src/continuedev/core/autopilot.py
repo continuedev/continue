@@ -173,8 +173,12 @@ class Autopilot(ContinueBaseModel):
         self.history.timeline[index].deleted = True
         await self.update_subscribers()
 
-    async def delete_context_item_at_index(self, index: int):
-        self._highlighted_ranges.pop(index)
+    async def delete_context_at_indices(self, indices: List[int]):
+        kept_ranges = []
+        for i, rif in enumerate(self._highlighted_ranges):
+            if i not in indices:
+                kept_ranges.append(rif)
+        self._highlighted_ranges = kept_ranges
         await self.update_subscribers()
 
     async def _run_singular_step(self, step: "Step", is_future_step: bool = False) -> Coroutine[Observation, None, None]:

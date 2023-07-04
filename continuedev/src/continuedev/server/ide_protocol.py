@@ -95,6 +95,10 @@ class AbstractIdeProtocolServer(ABC):
     def onHighlightedCodeUpdate(self, range_in_files: List[RangeInFileWithContents]):
         """Called when highlighted code is updated"""
 
+    @abstractmethod
+    async def showDiff(self, filepath: str, replacement: str):
+        """Show a diff"""
+
     @abstractproperty
     def workspace_directory(self) -> str:
         """Get the workspace directory"""

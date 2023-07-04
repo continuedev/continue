@@ -1,6 +1,6 @@
 import asyncio
 from textwrap import dedent
-from typing import List
+from typing import List, Union
 
 from ..models.filesystem import RangeInFile
 from ..models.main import Range
@@ -54,7 +54,7 @@ class WriteRegexPatternStep(Step):
 class EditAllMatchesStep(Step):
     pattern: str
     user_request: str
-    directory: str | None = None
+    directory: Union[str, None] = None
 
     async def run(self, sdk: ContinueSDK):
         # Search all files for a given string

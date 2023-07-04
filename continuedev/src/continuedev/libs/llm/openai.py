@@ -24,13 +24,14 @@ class OpenAI(LLM):
 
     @property
     def default_args(self):
-        return DEFAULT_ARGS | {"model": self.default_model}
+        return {**DEFAULT_ARGS, "model": self.default_model}
 
     def count_tokens(self, text: str):
         return count_tokens(self.default_model, text)
 
     async def stream_complete(self, prompt, with_history: List[ChatMessage] = [], **kwargs) -> Generator[Union[Any, List, Dict], None, None]:
-        args = self.default_args | kwargs
+        args = self.default_args.copy()
+        args.update(kwargs)
         args["stream"] = True
 
         if args["model"] in CHAT_MODELS:
@@ -48,7 +49,8 @@ class OpenAI(LLM):
                 yield chunk.choices[0].text
 
     async def stream_chat(self, messages: List[ChatMessage] = [], **kwargs) -> Generator[Union[Any, List, Dict], None, None]:
-        args = self.default_args | kwargs
+        args = self.default_args.copy()
+        args.update(kwargs)
         args["stream"] = True
         args["model"] = self.default_model if self.default_model in CHAT_MODELS else "gpt-3.5-turbo-0613"
         if not args["model"].endswith("0613") and "functions" in args:
@@ -62,7 +64,7 @@ class OpenAI(LLM):
             yield chunk.choices[0].delta
 
     async def complete(self, prompt: str, with_history: List[ChatMessage] = [], **kwargs) -> Coroutine[Any, Any, str]:
-        args = self.default_args | kwargs
+        args = {**self.default_args, **kwargs}
 
         if args["model"] in CHAT_MODELS:
             resp = (await openai.ChatCompletion.acreate(
