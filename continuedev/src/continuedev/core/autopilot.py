@@ -35,6 +35,8 @@ def get_error_title(e: Exception) -> str:
         return "The request to OpenAI failed. Please try again."
     elif isinstance(e, openai_errors.APIConnectionError):
         return "The request failed. Please check your internet connection and try again."
+    elif isinstance(e, openai_errors.InvalidRequestError):
+        return 'Your API key does not have access to GPT-4. You can use ours for free by going to VS Code settings and changing the value of continue.OPENAI_API_KEY to ""'
     return e.__str__() or e.__repr__()
 
 
