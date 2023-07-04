@@ -54,6 +54,11 @@ class ContinueConfig(BaseModel):
             step_name="FeedbackStep",
         ),
         SlashCommand(
+            name="answer",
+            description="Get your questions about the codebase answered",
+            step_name="AnswerQuestionChroma",
+        ),
+        SlashCommand(
             name="clear",
             description="Clear step history",
             step_name="ClearHistoryStep",

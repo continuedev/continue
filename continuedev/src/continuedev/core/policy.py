@@ -34,7 +34,7 @@ class DemoPolicy(Policy):
                     - Use slash commands when you want fine-grained control""")) >>
                 WelcomeStep() >>
                 # SetupContinueWorkspaceStep() >>
-                # CreateCodebaseIndexChroma() >>
+                CreateCodebaseIndexChroma() >>
                 StepsOnStartupStep())
 
         observation = history.get_current().observation
