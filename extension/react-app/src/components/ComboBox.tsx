@@ -279,13 +279,9 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
         )}
         {highlightedCodeSections.map((section, idx) => (
           <PillButton
-            title={
-              hoveringButton
-                ? `${section.filepath} (${section.range.start.line + 1}-${
-                    section.range.end.line + 1
-                  })`
-                : section.filepath
-            }
+            title={`${section.filepath} (${section.range.start.line + 1}-${
+              section.range.end.line + 1
+            })`}
             onDelete={() => {
               if (props.deleteContextItems) {
                 props.deleteContextItems([idx]);

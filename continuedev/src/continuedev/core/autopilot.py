@@ -144,9 +144,7 @@ class Autopilot(ContinueBaseModel):
     async def handle_highlighted_code(self, range_in_files: List[RangeInFileWithContents]):
         workspace_path = self.continue_sdk.ide.workspace_directory
         for rif in range_in_files:
-            rif.filepath = os.path.relpath(rif.filepath, workspace_path)
-            if rif.filepath.startswith(".."):
-                rif.filepath = os.path.basename(rif.filepath)
+            rif.filepath = os.path.basename(rif.filepath)
 
         # If current range overlaps with any others, delete them and only keep the new range
         new_ranges = []
@@ -156,6 +154,13 @@ class Autopilot(ContinueBaseModel):
                 if rif.filepath == new_rif.filepath and rif.range.overlaps_with(new_rif.range):
                     found_overlap = True
                     break
+
+                # Also don't allow multiple ranges in same file with same content. This is useless to the model, and avoids
+                # the bug where cmd+f causes repeated highlights
+                if rif.filepath == new_rif.filepath and rif.contents == new_rif.contents:
+                    found_overlap = True
+                    break
+
             if not found_overlap:
                 new_ranges.append(rif)
 

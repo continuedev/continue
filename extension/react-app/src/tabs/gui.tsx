@@ -70,9 +70,7 @@ function GUI(props: GUIProps) {
   const [usingFastModel, setUsingFastModel] = useState(false);
   const [waitingForSteps, setWaitingForSteps] = useState(false);
   const [userInputQueue, setUserInputQueue] = useState<string[]>([]);
-  const [highlightedRanges, setHighlightedRanges] = useState([
-    { filepath: "abc.txt", range: { start: { line: 2 }, end: { line: 4 } } },
-  ]);
+  const [highlightedRanges, setHighlightedRanges] = useState([]);
   const [availableSlashCommands, setAvailableSlashCommands] = useState<
     { name: string; description: string }[]
   >([]);
@@ -296,6 +294,7 @@ function GUI(props: GUIProps) {
               onDelete={() => {
                 client?.deleteAtIndex(index);
               }}
+              historyNode={node}
             >
               {node.step.description as string}
             </UserInputContainer>
