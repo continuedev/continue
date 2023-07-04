@@ -28,13 +28,13 @@ class ProxyServer(LLM):
 
     @property
     def default_args(self):
-        return DEFAULT_ARGS | {"model": self.default_model}
+        return {**DEFAULT_ARGS, "model": self.default_model}
 
     def count_tokens(self, text: str):
         return count_tokens(self.default_model, text)
 
     async def complete(self, prompt: str, with_history: List[ChatMessage] = [], **kwargs) -> Coroutine[Any, Any, str]:
-        args = self.default_args | kwargs
+        args = {**self.default_args, **kwargs}
 
         async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(ssl_context=ssl_context)) as session:
             async with session.post(f"{SERVER_URL}/complete", json={
@@ -48,7 +48,7 @@ class ProxyServer(LLM):
                     raise Exception(await resp.text())
 
     async def stream_chat(self, messages: List[ChatMessage] = [], **kwargs) -> Coroutine[Any, Any, Generator[Union[Any, List, Dict], None, None]]:
-        args = self.default_args | kwargs
+        args = {**self.default_args, **kwargs}
         messages = compile_chat_messages(
             self.default_model, messages, None, functions=args.get("functions", None))
 
@@ -72,7 +72,7 @@ class ProxyServer(LLM):
                             raise Exception(str(line[0]))
 
     async def stream_complete(self, prompt, with_history: List[ChatMessage] = [], **kwargs) -> Generator[Union[Any, List, Dict], None, None]:
-        args = self.default_args | kwargs
+        args = {**self.default_args, **kwargs}
         messages = compile_chat_messages(
             self.default_model, with_history, prompt, functions=args.get("functions", None))
 

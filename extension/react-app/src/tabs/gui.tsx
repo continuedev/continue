@@ -187,7 +187,7 @@ function GUI(props: GUIProps) {
 
   const deleteContextItem = useCallback(
     (idx: number) => {
-      client?.deleteContextItemAtIndex(idx);
+      client?.deleteContextAtIndices([idx]);
     },
     [client]
   );

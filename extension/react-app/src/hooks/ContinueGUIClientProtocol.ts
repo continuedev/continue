@@ -21,7 +21,7 @@ abstract class AbstractContinueGUIClientProtocol {
 
   abstract deleteAtIndex(index: number): void;
 
-  abstract deleteContextItemAtIndex(index: number): void;
+  abstract deleteContextAtIndices(indices: number[]): void;
 }
 
 export default AbstractContinueGUIClientProtocol;
