@@ -29,7 +29,9 @@ class DemoPolicy(Policy):
         if history.get_current() is None:
             return (
                 MessageStep(name="Welcome to Continue", message=dedent("""\
-                    Type '/' to see the list of available slash commands. If you highlight code, edits and explanations will be localized to the highlighted range. Otherwise, the currently open file is used. In both cases, the code is combined with the previous steps to construct the context.""")) >>
+                    - Highlight code and ask a question or give instructions
+                    - Past steps are used as additional context by default
+                    - Use slash commands when you want fine-grained control""")) >>
                 WelcomeStep() >>
                 # SetupContinueWorkspaceStep() >>
                 # CreateCodebaseIndexChroma() >>
