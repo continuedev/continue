@@ -14,7 +14,7 @@
   "displayName": "Continue",
   "pricing": "Free",
   "description": "The open-source coding autopilot",
-  "version": "0.0.106",
+  "version": "0.0.107",
   "publisher": "Continue",
   "engines": {
     "vscode": "^1.67.0"
@@ -55,7 +55,7 @@
         },
         "continue.OPENAI_API_KEY": {
           "type": "password",
-          "default": "",
+          "default": null,
           "description": "The OpenAI API key to use for code generation."
         },
         "continue.dataSwitch": {

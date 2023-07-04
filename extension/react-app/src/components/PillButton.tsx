@@ -50,7 +50,6 @@ const PillButton = (props: PillButtonProps) => {
             borderRight: "1px solid black",
             paddingRight: "4px",
           }}
-          hidden={!isHovered}
           onClick={() => {
             props.onDelete?.();
             props.onHover?.(false);
