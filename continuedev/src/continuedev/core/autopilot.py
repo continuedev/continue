@@ -145,23 +145,21 @@ class Autopilot(ContinueBaseModel):
         workspace_path = self.continue_sdk.ide.workspace_directory
         for rif in range_in_files:
             rif.filepath = os.path.relpath(rif.filepath, workspace_path)
+            if rif.filepath.startswith(".."):
+                rif.filepath = os.path.basename(rif.filepath)
 
-        old_ranges = self._highlighted_ranges + range_in_files
+        # If current range overlaps with any others, delete them and only keep the new range
         new_ranges = []
-
-        while len(old_ranges) > 0:
-            old_range = old_ranges.pop(0)
+        for i, rif in enumerate(self._highlighted_ranges):
             found_overlap = False
-            for i in range(len(new_ranges)):
-                if old_range.filepath == new_ranges[i].filepath and old_range.range.overlaps_with(new_ranges[i].range):
-                    new_ranges[i] = old_range.union(new_ranges[i])
+            for new_rif in range_in_files:
+                if rif.filepath == new_rif.filepath and rif.range.overlaps_with(new_rif.range):
                     found_overlap = True
                     break
-
             if not found_overlap:
-                new_ranges.append(old_range)
+                new_ranges.append(rif)
 
-        self._highlighted_ranges = new_ranges
+        self._highlighted_ranges = new_ranges + range_in_files
         await self.update_subscribers()
 
     _step_depth: int = 0
@@ -235,6 +233,8 @@ class Autopilot(ContinueBaseModel):
 
             # Attach an InternalErrorObservation to the step and unhide it.
             print(f"Error while running step: \n{error_string}\n{error_title}")
+            capture_event(self.continue_sdk.ide.unique_id, 'step error', {
+                'error_message': error_string, 'error_title': error_title, 'step_name': step.name, 'params': step.dict()})
 
             observation = InternalErrorObservation(
                 error=error_string, title=error_title)
