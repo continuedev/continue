@@ -21,4 +21,5 @@ def dedent_and_get_common_whitespace(s: str) -> Tuple[str, str]:
                 if lcp == "":
                     return s, ""
                 break
-    return "\n".join(map(lambda x: x.removeprefix(lcp), lines)), lcp
+
+    return "\n".join(map(lambda x: x.lstrip(lcp), lines)), lcp
