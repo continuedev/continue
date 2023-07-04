@@ -12,6 +12,11 @@ class SlashCommand(BaseModel):
     params: Optional[Dict] = {}
 
 
+class CustomCommand(BaseModel):
+    name: str
+    prompt: str
+
+
 class OnTracebackSteps(BaseModel):
     step_name: str
     params: Optional[Dict] = {}
@@ -27,6 +32,7 @@ class ContinueConfig(BaseModel):
     allow_anonymous_telemetry: Optional[bool] = True
     default_model: Literal["gpt-3.5-turbo", "gpt-3.5-turbo-16k",
                            "gpt-4"] = 'gpt-4'
+    custom_commands: Optional[List[CustomCommand]] = []
     slash_commands: Optional[List[SlashCommand]] = [
         # SlashCommand(
         #     name="pytest",

@@ -66,11 +66,16 @@ class Autopilot(ContinueBaseModel):
             active=self._active,
             user_input_queue=self._main_user_input_queue,
             default_model=self.continue_sdk.config.default_model,
-            highlighted_ranges=self._highlighted_ranges
+            highlighted_ranges=self._highlighted_ranges,
+            slash_commands=self.get_available_slash_commands()
         )
 
-    async def get_available_slash_commands(self) -> List[Dict]:
-        return list(map(lambda x: {"name": x.name, "description": x.description}, self.continue_sdk.config.slash_commands)) or []
+    def get_available_slash_commands(self) -> List[Dict]:
+        custom_commands = list(map(lambda x: {
+                               "name": x.name, "description": x.prompt}, self.continue_sdk.config.custom_commands)) or []
+        slash_commands = list(map(lambda x: {
+                              "name": x.name, "description": x.description}, self.continue_sdk.config.slash_commands)) or []
+        return custom_commands + slash_commands
 
     async def change_default_model(self, model: str):
         self.continue_sdk.update_default_model(model)

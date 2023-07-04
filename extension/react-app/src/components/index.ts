@@ -1,7 +1,7 @@
 import styled, { keyframes } from "styled-components";
 
 export const defaultBorderRadius = "5px";
-export const secondaryDark = "rgb(37 37 38)";
+export const secondaryDark = "rgb(42 42 42)";
 export const vscBackground = "rgb(30 30 30)";
 export const vscBackgroundTransparent = "#1e1e1ede";
 export const buttonColor = "rgb(113 28 59)";

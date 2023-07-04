@@ -20,6 +20,7 @@ import { useSelector } from "react-redux";
 import { RootStore } from "../redux/store";
 import LoadingCover from "../components/LoadingCover";
 import { postVscMessage } from "../vscode";
+import UserInputContainer from "../components/UserInputContainer";
 
 const TopGUIDiv = styled.div`
   overflow: hidden;
@@ -152,6 +153,14 @@ function GUI(props: GUIProps) {
       setHistory(state.history);
       setHighlightedRanges(state.highlighted_ranges);
       setUserInputQueue(state.user_input_queue);
+      setAvailableSlashCommands(
+        state.slash_commands.map((c: any) => {
+          return {
+            name: `/${c.name}`,
+            description: c.description,
+          };
+        })
+      );
       setStepsOpen((prev) => {
         const nextStepsOpen = [...prev];
         for (
@@ -167,17 +176,6 @@ function GUI(props: GUIProps) {
       if (shouldScrollToBottom) {
         scrollToBottom();
       }
-    });
-    client?.onAvailableSlashCommands((commands) => {
-      console.log("Received available slash commands: ", commands);
-      setAvailableSlashCommands(
-        commands.map((c) => {
-          return {
-            name: "/" + c.name,
-            description: c.description,
-          };
-        })
-      );
     });
   }, [client]);
 
@@ -283,7 +281,15 @@ function GUI(props: GUIProps) {
           </>
         )}
         {history?.timeline.map((node: HistoryNode, index: number) => {
-          return (
+          return node.step.name === "User Input" ? (
+            <UserInputContainer
+              onDelete={() => {
+                client?.deleteAtIndex(index);
+              }}
+            >
+              {node.step.description as string}
+            </UserInputContainer>
+          ) : (
             <StepContainer
               isLast={index === history.timeline.length - 1}
               isFirst={index === 0}
@@ -302,9 +308,6 @@ function GUI(props: GUIProps) {
               }}
               inFuture={index > history?.current_index}
               historyNode={node}
-              onRefinement={(input: string) => {
-                client?.sendRefinementInput(input, index);
-              }}
               onReverse={() => {
                 client?.reverseToIndex(index);
               }}
