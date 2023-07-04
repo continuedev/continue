@@ -16,40 +16,29 @@ const StyledDiv = styled.div`
   background-color: rgb(50 50 50);
   padding: 8px;
   padding-left: 16px;
+  padding-right: 16px;
   border-bottom: 1px solid white;
   border-top: 1px solid white;
   font-size: 13px;
   display: flex;
   align-items: center;
-  gap: 2px;
 `;
 
-const DeleteButton = styled.button`
-  position: absolute;
-  top: 0;
-  right: 0;
-  background: none;
-  border: none;
-  cursor: pointer;
-  margin-left: auto;
-`;
-
-const UserInputContainer: React.FC<UserInputContainerProps> = ({
-  children,
-  onDelete,
-}) => {
+const UserInputContainer = (props: UserInputContainerProps) => {
   return (
     <StyledDiv>
-      {children}
-      <HeaderButtonWithText
-        onClick={(e) => {
-          e.stopPropagation();
-          onDelete();
-        }}
-        text="Delete"
-      >
-        <XMark size="1.6em" onClick={onDelete} />
-      </HeaderButtonWithText>
+      {props.children}
+      <div style={{ marginLeft: "auto" }}>
+        <HeaderButtonWithText
+          onClick={(e) => {
+            props.onDelete();
+            e.stopPropagation();
+          }}
+          text="Delete"
+        >
+          <XMark size="1.6em" onClick={props.onDelete} />
+        </HeaderButtonWithText>
+      </div>
     </StyledDiv>
   );
 };
