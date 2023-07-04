@@ -158,7 +158,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
       <div className="flex px-2" ref={divRef} hidden={!isOpen}>
         <MainTextInput
           disabled={props.disabled}
-          placeholder="Type '/' to see available slash commands."
+          placeholder="Ask a question, give instructions, or type '/' to see slash commands"
           {...getInputProps({
             onChange: (e) => {
               const target = e.target as HTMLTextAreaElement;
