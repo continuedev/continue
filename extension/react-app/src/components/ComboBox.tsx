@@ -269,7 +269,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
 
         <span className="text-trueGray-400 ml-auto mr-4 text-xs">
           Highlight code to include as context.{" "}
-          {highlightedCodeSections.length > 0 &&
+          {highlightedCodeSections.length === 0 &&
             "Otherwise using entire currently open file."}
         </span>
       </div>
