@@ -196,6 +196,10 @@ class History(ContinueBaseModel):
         return cls(timeline=[], current_index=-1)
 
 
+class SlashCommandDescription(ContinueBaseModel):
+    name: str
+    description: str
+
 class FullState(ContinueBaseModel):
     """A full state of the program, including the history"""
     history: History
@@ -203,6 +207,7 @@ class FullState(ContinueBaseModel):
     user_input_queue: List[str]
     default_model: str
     highlighted_ranges: List[RangeInFileWithContents]
+    slash_commands: List[SlashCommandDescription]
 
 
 class ContinueSDK:

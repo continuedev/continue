@@ -94,12 +94,6 @@ class GUIProtocolServer(AbstractGUIProtocolServer):
             "state": state
         })
 
-    async def send_available_slash_commands(self):
-        commands = await self.session.autopilot.get_available_slash_commands()
-        await self._send_json("available_slash_commands", {
-            "commands": commands
-        })
-
     def on_main_input(self, input: str):
         # Do something with user input
         asyncio.create_task(self.session.autopilot.accept_user_input(input))
@@ -147,8 +141,7 @@ async def websocket_endpoint(websocket: WebSocket, session: Session = Depends(we
         protocol.websocket = websocket
 
         # Update any history that may have happened before connection
-        await protocol.send_available_slash_commands()
-        # await protocol.send_state_update() THIS WAS CAUSING A LOT OF ISSUES. Don't uncomment.
+        await protocol.send_state_update()
 
         while AppStatus.should_exit is False:
             message = await websocket.receive_text()

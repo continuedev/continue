@@ -22,7 +22,6 @@ interface StepContainerProps {
   historyNode: HistoryNode;
   onReverse: () => void;
   inFuture: boolean;
-  onRefinement: (input: string) => void;
   onUserInput: (input: string) => void;
   onRetry: () => void;
   onDelete: () => void;
@@ -32,6 +31,8 @@ interface StepContainerProps {
   isFirst: boolean;
   isLast: boolean;
 }
+
+// #region styled components
 
 const MainDiv = styled.div<{ stepDepth: number; inFuture: boolean }>`
   opacity: ${(props) => (props.inFuture ? 0.3 : 1)};
@@ -63,9 +64,12 @@ const HeaderDiv = styled.div<{ error: boolean; loading: boolean }>`
   padding-right: 8px;
 `;
 
-const ContentDiv = styled.div`
+const ContentDiv = styled.div<{ isUserInput: boolean }>`
   padding: 8px;
   padding-left: 16px;
+  background-color: ${(props) =>
+    props.isUserInput ? secondaryDark : vscBackground};
+  font-size: 13px;
 `;
 
 const MarkdownPre = styled.pre`
@@ -119,10 +123,13 @@ const GradientBorder = styled.div<{
   background-size: 200% 200%;
 `;
 
+// #endregion
+
 function StepContainer(props: StepContainerProps) {
   const [isHovered, setIsHovered] = useState(false);
   const naturalLanguageInputRef = useRef<HTMLTextAreaElement>(null);
   const userInputRef = useRef<HTMLInputElement>(null);
+  const isUserInput = props.historyNode.step.name === "UserInputStep";
 
   useEffect(() => {
     if (userInputRef?.current) {
@@ -135,13 +142,6 @@ function StepContainer(props: StepContainerProps) {
       naturalLanguageInputRef.current?.focus();
     }
   }, [isHovered]);
-
-  const onTextInput = useCallback(() => {
-    if (naturalLanguageInputRef.current) {
-      props.onRefinement(naturalLanguageInputRef.current.value);
-      naturalLanguageInputRef.current.value = "";
-    }
-  }, [naturalLanguageInputRef]);
 
   return (
     <MainDiv
@@ -181,11 +181,12 @@ function StepContainer(props: StepContainerProps) {
             error={props.historyNode.observation?.error ? true : false}
           >
             <h4 className="m-2">
-              {props.open ? (
-                <ChevronDown size="1.4em" />
-              ) : (
-                <ChevronRight size="1.4em" />
-              )}
+              {!isUserInput &&
+                (props.open ? (
+                  <ChevronDown size="1.4em" />
+                ) : (
+                  <ChevronRight size="1.4em" />
+                ))}
               {props.historyNode.observation?.title ||
                 (props.historyNode.step.name as any)}
             </h4>
@@ -225,7 +226,7 @@ function StepContainer(props: StepContainerProps) {
             </>
           </HeaderDiv>
         </GradientBorder>
-        <ContentDiv hidden={!props.open}>
+        <ContentDiv hidden={!props.open} isUserInput={isUserInput}>
           {props.open && false && (
             <>
               <pre className="overflow-x-scroll">

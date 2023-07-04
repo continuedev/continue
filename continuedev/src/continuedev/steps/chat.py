@@ -22,9 +22,9 @@ class SimpleChatStep(Step):
     user_input: str
     name: str = "Chat"
     manage_own_chat_context: bool = True
+    description: str = ""
 
     async def run(self, sdk: ContinueSDK):
-        self.description = f"`{self.user_input}`\n\n"
         if self.user_input.strip() == "":
             self.user_input = "Explain this code's function is a concise list of markdown bullets."
             self.description = ""
@@ -148,9 +148,9 @@ class ChatWithFunctions(Step):
                              DeleteFileStep(filename=""), RunTerminalCommandStep(command="")]
     name: str = "Input"
     manage_own_chat_context: bool = True
+    description: str = ""
 
     async def run(self, sdk: ContinueSDK):
-        self.description = f"```{self.user_input}```"
         await sdk.update_ui()
 
         step_name_step_class_map = {

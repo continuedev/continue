@@ -116,6 +116,7 @@ class DefaultModelEditCodeStep(Step):
     range_in_files: List[RangeInFile]
     name: str = "Editing Code"
     hide = False
+    description: str = ""
     _prompt: str = dedent("""\
         Take the file prefix and suffix into account, but only rewrite the code_to_edit as specified in the user_request. The code you write in modified_code_to_edit will replace the code between the code_to_edit tags. Do NOT preface your answer or write anything other than code. The </modified_code_to_edit> tag should be written to indicate the end of the modified code section. Do not ever use nested tags.
 
@@ -508,7 +509,6 @@ class DefaultModelEditCodeStep(Step):
         self._prompt_and_completion += prompt + completion
 
     async def run(self, sdk: ContinueSDK) -> Coroutine[Observation, None, None]:
-        self.description = f"`{self.user_input}`"
         await sdk.update_ui()
 
         rif_with_contents = []
@@ -589,7 +589,7 @@ class ManualEditStep(ReversibleStep):
 class UserInputStep(Step):
     user_input: str
     name: str = "User Input"
-    hide: bool = True
+    hide: bool = False
 
     manage_own_chat_context: bool = True
 
