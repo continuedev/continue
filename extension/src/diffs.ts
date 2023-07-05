@@ -55,7 +55,7 @@ class DiffManager {
     fs.writeFileSync(newFilepath, newContent);
 
     // Open the diff editor if this is a new diff
-    if (!this.diffs.has(originalFilepath)) {
+    if (!this.diffs.has(newFilepath)) {
       const diffInfo: DiffInfo = {
         originalFilepath,
         newFilepath,
@@ -65,7 +65,7 @@ class DiffManager {
         newFilepath,
         newContent
       );
-      this.diffs.set(originalFilepath, diffInfo);
+      this.diffs.set(newFilepath, diffInfo);
     }
     return newFilepath;
   }
@@ -76,13 +76,13 @@ class DiffManager {
       vscode.window.showTextDocument(diffInfo.editor.document);
       vscode.commands.executeCommand("workbench.action.closeActiveEditor");
     }
-    this.diffs.delete(diffInfo.originalFilepath);
+    this.diffs.delete(diffInfo.newFilepath);
     fs.unlinkSync(diffInfo.newFilepath);
   }
 
-  acceptDiff(originalFilepath: string) {
+  acceptDiff(newFilepath: string) {
     // Get the diff info, copy new file to original, then delete from record and close the corresponding editor
-    const diffInfo = this.diffs.get(originalFilepath);
+    const diffInfo = this.diffs.get(newFilepath);
     if (!diffInfo) {
       return;
     }
@@ -93,8 +93,8 @@ class DiffManager {
     this.cleanUpDiff(diffInfo);
   }
 
-  rejectDiff(originalFilepath: string) {
-    const diffInfo = this.diffs.get(originalFilepath);
+  rejectDiff(newFilepath: string) {
+    const diffInfo = this.diffs.get(newFilepath);
     if (!diffInfo) {
       return;
     }
@@ -105,10 +105,10 @@ class DiffManager {
 
 export const diffManager = new DiffManager();
 
-export async function acceptDiffCommand(originalFilepath: string) {
-  diffManager.acceptDiff(originalFilepath);
+export async function acceptDiffCommand(newFilepath: string) {
+  diffManager.acceptDiff(newFilepath);
 }
 
-export async function rejectDiffCommand(originalFilepath: string) {
-  diffManager.rejectDiff(originalFilepath);
+export async function rejectDiffCommand(newFilepath: string) {
+  diffManager.rejectDiff(newFilepath);
 }
