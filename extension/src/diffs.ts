@@ -47,6 +47,12 @@ class DiffManager {
     if (!editor) {
       throw new Error("No active text editor found for Continue Diff");
     }
+
+    // Change the vscode setting to allow codeLens in diff editor
+    vscode.workspace
+      .getConfiguration("diffEditor", editor.document.uri)
+      .update("codeLens", true, vscode.ConfigurationTarget.Global);
+
     return editor;
   }
 
