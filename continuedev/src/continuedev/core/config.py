@@ -33,11 +33,11 @@ DEFAULT_SLASH_COMMANDS = [
         description="Edit code in the current file or the highlighted code",
         step_name="EditHighlightedCodeStep",
     ),
-    SlashCommand(
-        name="explain",
-        description="Reply to instructions or a question with previous steps and the highlighted code or current file as context",
-        step_name="SimpleChatStep",
-    ),
+    # SlashCommand(
+    #     name="explain",
+    #     description="Reply to instructions or a question with previous steps and the highlighted code or current file as context",
+    #     step_name="SimpleChatStep",
+    # ),
     SlashCommand(
         name="config",
         description="Open the config file to create new and edit existing slash commands",
@@ -129,7 +129,7 @@ def load_global_config() -> ContinueConfig:
         config_path = os.path.join(global_dir, 'config.json')
         if not os.path.exists(config_path):
             with open(config_path, 'w') as f:
-                json.dump(dict(ContinueConfig()), f)
+                json.dump(ContinueConfig().dict(), f)
         with open(config_path, 'r') as f:
             try:
                 config_dict = json.load(f)

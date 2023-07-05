@@ -195,6 +195,11 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
               ) {
                 // Prevent Downshift's default 'Enter' behavior.
                 (event.nativeEvent as any).preventDownshiftDefault = true;
+
+                // cmd+enter to /edit
+                if (event.metaKey) {
+                  event.currentTarget.value = `/edit ${event.currentTarget}`;
+                }
                 if (props.onEnter) props.onEnter(event);
                 setInputValue("");
                 const value = event.currentTarget.value;

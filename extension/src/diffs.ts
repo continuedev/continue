@@ -16,13 +16,17 @@ class DiffManager {
   // Doing this because virtual files are read-only
   private diffs: Map<string, DiffInfo> = new Map();
 
-  constructor() {
+  private setupDirectory() {
     // Make sure the diff directory exists
     if (!fs.existsSync(DIFF_DIRECTORY)) {
       fs.mkdirSync(DIFF_DIRECTORY, {
         recursive: true,
       });
     }
+  }
+
+  constructor() {
+    this.setupDirectory();
   }
 
   private escapeFilepath(filepath: string): string {
@@ -47,6 +51,8 @@ class DiffManager {
   }
 
   writeDiff(originalFilepath: string, newContent: string): string {
+    this.setupDirectory();
+
     // Create or update existing diff
     const newFilepath = path.join(
       DIFF_DIRECTORY,
