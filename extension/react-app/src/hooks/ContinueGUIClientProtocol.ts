@@ -22,6 +22,8 @@ abstract class AbstractContinueGUIClientProtocol {
   abstract deleteAtIndex(index: number): void;
 
   abstract deleteContextAtIndices(indices: number[]): void;
+
+  abstract toggleAddingHighlightedCode(): void;
 }
 
 export default AbstractContinueGUIClientProtocol;

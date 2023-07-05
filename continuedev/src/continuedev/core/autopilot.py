@@ -69,7 +69,8 @@ class Autopilot(ContinueBaseModel):
             user_input_queue=self._main_user_input_queue,
             default_model=self.continue_sdk.config.default_model,
             highlighted_ranges=self._highlighted_ranges,
-            slash_commands=self.get_available_slash_commands()
+            slash_commands=self.get_available_slash_commands(),
+            adding_highlighted_code=self._adding_highlighted_code,
         )
 
     def get_available_slash_commands(self) -> List[Dict]:
@@ -140,8 +141,12 @@ class Autopilot(ContinueBaseModel):
                     await self._run_singular_step(step)
 
     _highlighted_ranges: List[RangeInFileWithContents] = []
+    _adding_highlighted_code: bool = False
 
     async def handle_highlighted_code(self, range_in_files: List[RangeInFileWithContents]):
+        if not self._adding_highlighted_code:
+            return
+
         workspace_path = self.continue_sdk.ide.workspace_directory
         for rif in range_in_files:
             rif.filepath = os.path.basename(rif.filepath)
@@ -184,6 +189,10 @@ class Autopilot(ContinueBaseModel):
             if i not in indices:
                 kept_ranges.append(rif)
         self._highlighted_ranges = kept_ranges
+        await self.update_subscribers()
+
+    async def toggle_adding_highlighted_code(self):
+        self._adding_highlighted_code = not self._adding_highlighted_code
         await self.update_subscribers()
 
     async def _run_singular_step(self, step: "Step", is_future_step: bool = False) -> Coroutine[Observation, None, None]:

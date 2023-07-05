@@ -71,6 +71,7 @@ function GUI(props: GUIProps) {
   const [waitingForSteps, setWaitingForSteps] = useState(false);
   const [userInputQueue, setUserInputQueue] = useState<string[]>([]);
   const [highlightedRanges, setHighlightedRanges] = useState([]);
+  const [addingHighlightedCode, setAddingHighlightedCode] = useState(false);
   const [availableSlashCommands, setAvailableSlashCommands] = useState<
     { name: string; description: string }[]
   >([]);
@@ -157,6 +158,7 @@ function GUI(props: GUIProps) {
       setHistory(state.history);
       setHighlightedRanges(state.highlighted_ranges);
       setUserInputQueue(state.user_input_queue);
+      setAddingHighlightedCode(state.adding_highlighted_code);
       setAvailableSlashCommands(
         state.slash_commands.map((c: any) => {
           return {
@@ -361,6 +363,10 @@ function GUI(props: GUIProps) {
           onTogglePin={() => {
             setPinned((prev: boolean) => !prev);
           }}
+          onToggleAddContext={() => {
+            client?.toggleAddingHighlightedCode();
+          }}
+          addingHighlightedCode={addingHighlightedCode}
         />
         <ContinueButton onClick={onMainTextInput} />
       </TopGUIDiv>

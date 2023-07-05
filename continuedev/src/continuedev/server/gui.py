@@ -85,6 +85,8 @@ class GUIProtocolServer(AbstractGUIProtocolServer):
                 self.on_delete_at_index(data["index"])
             elif message_type == "delete_context_at_indices":
                 self.on_delete_context_at_indices(data["indices"])
+            elif message_type == "toggle_adding_highlighted_code":
+                self.on_toggle_adding_highlighted_code()
         except Exception as e:
             print(e)
 
@@ -126,6 +128,11 @@ class GUIProtocolServer(AbstractGUIProtocolServer):
     def on_delete_context_at_indices(self, indices: List[int]):
         asyncio.create_task(
             self.session.autopilot.delete_context_at_indices(indices)
+        )
+
+    def on_toggle_adding_highlighted_code(self):
+        asyncio.create_task(
+            self.session.autopilot.toggle_adding_highlighted_code()
         )
 
 
