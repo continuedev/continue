@@ -8,15 +8,17 @@ interface HeaderButtonWithTextProps {
   children: React.ReactNode;
   disabled?: boolean;
   inverted?: boolean;
+  active?: boolean;
 }
 
 const HeaderButtonWithText = (props: HeaderButtonWithTextProps) => {
   const [hover, setHover] = useState(false);
+  const paddingLeft = (props.disabled ? (props.active ?  "3px" : "1px"): (hover ? "4px" : "1px"));
   return (
     <HeaderButton
       inverted={props.inverted}
       disabled={props.disabled}
-      style={{ padding: "1px", paddingLeft: hover ? "4px" : "1px" }}
+      style={{ padding: (props.active ?  "3px" : "1px"), paddingLeft, borderRadius: (props.active ?  "50%" : undefined) }}
       onMouseEnter={() => {
         if (!props.disabled) {
           setHover(true);
