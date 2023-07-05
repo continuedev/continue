@@ -14,8 +14,8 @@ interface UserInputContainerProps {
   historyNode: HistoryNode;
 }
 
-const StyledDiv = styled.div<{ hidden: boolean }>`
-  background-color: rgb(50 50 50);
+const StyledDiv = styled.div`
+  background-color: rgb(45 45 45);
   padding: 8px;
   padding-left: 16px;
   padding-right: 16px;
@@ -24,14 +24,12 @@ const StyledDiv = styled.div<{ hidden: boolean }>`
   font-size: 13px;
   display: flex;
   align-items: center;
-  visibility: ${(props) => (props.hidden ? "hidden" : "visible")};
-  height: ${(props) => (props.hidden ? "0px" : "auto")};
 `;
 
 const UserInputContainer = (props: UserInputContainerProps) => {
   return (
-    <StyledDiv hidden={props.historyNode.step.hide as any}>
-      {props.children}
+    <StyledDiv>
+      <b>{props.children}</b>
       <div style={{ marginLeft: "auto" }}>
         <HeaderButtonWithText
           onClick={(e) => {

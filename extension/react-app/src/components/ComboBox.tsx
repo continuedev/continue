@@ -324,7 +324,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
           />
         ))}
 
-        <span className="text-trueGray-400 ml-auto mr-4 text-xs">
+        <span className="text-trueGray-400 ml-auto mr-4 text-xs text-right">
           Highlight code to include as context. Currently open file included by
           default. {highlightedCodeSections.length === 0 && ""}
         </span>
