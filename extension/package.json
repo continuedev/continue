@@ -14,7 +14,7 @@
   "displayName": "Continue",
   "pricing": "Free",
   "description": "The open-source coding autopilot",
-  "version": "0.0.111",
+  "version": "0.0.112",
   "publisher": "Continue",
   "engines": {
     "vscode": "^1.67.0"
@@ -39,6 +39,7 @@
     "onView:continueGUIView"
   ],
   "main": "./out/extension.js",
+  "browser": "./out/extension.js",
   "contributes": {
     "configuration": {
       "title": "Continue",

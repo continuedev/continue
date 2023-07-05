@@ -67,11 +67,9 @@ class DiffViewerCodeLensProvider implements vscode.CodeLensProvider {
     document: vscode.TextDocument,
     token: vscode.CancellationToken
   ): vscode.CodeLens[] | Thenable<vscode.CodeLens[]> {
-    if (path.dirname(document.uri.fsPath) !== DIFF_DIRECTORY) {
-      return [];
-    } else {
+    if (path.dirname(document.uri.fsPath) === DIFF_DIRECTORY) {
       const codeLenses: vscode.CodeLens[] = [];
-      const range = new vscode.Range(0, 0, 0, 0);
+      const range = new vscode.Range(0, 0, 1, 0);
       codeLenses.push(
         new vscode.CodeLens(range, {
           title: "Accept ✅",
@@ -85,6 +83,24 @@ class DiffViewerCodeLensProvider implements vscode.CodeLensProvider {
         })
       );
       return codeLenses;
+    } else {
+      return [];
+    }
+  }
+
+  onDidChangeCodeLenses?: vscode.Event<void> | undefined;
+
+  constructor(emitter?: vscode.EventEmitter<void>) {
+    if (emitter) {
+      this.onDidChangeCodeLenses = emitter.event;
+      this.onDidChangeCodeLenses(() => {
+        if (vscode.window.activeTextEditor) {
+          this.provideCodeLenses(
+            vscode.window.activeTextEditor.document,
+            new vscode.CancellationTokenSource().token
+          );
+        }
+      });
     }
   }
 }

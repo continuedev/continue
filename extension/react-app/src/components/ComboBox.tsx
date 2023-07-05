@@ -198,7 +198,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
 
                 // cmd+enter to /edit
                 if (event.metaKey) {
-                  event.currentTarget.value = `/edit ${event.currentTarget}`;
+                  event.currentTarget.value = `/edit ${event.currentTarget.value}`;
                 }
                 if (props.onEnter) props.onEnter(event);
                 setInputValue("");
