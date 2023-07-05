@@ -14,7 +14,7 @@ interface UserInputContainerProps {
   historyNode: HistoryNode;
 }
 
-const StyledDiv = styled.div`
+const StyledDiv = styled.div<{ hidden: boolean }>`
   background-color: rgb(50 50 50);
   padding: 8px;
   padding-left: 16px;
@@ -24,6 +24,8 @@ const StyledDiv = styled.div`
   font-size: 13px;
   display: flex;
   align-items: center;
+  visibility: ${(props) => (props.hidden ? "hidden" : "visible")};
+  height: ${(props) => (props.hidden ? "0px" : "auto")};
 `;
 
 const UserInputContainer = (props: UserInputContainerProps) => {

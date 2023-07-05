@@ -286,6 +286,7 @@ class DefaultModelEditCodeStep(Step):
         return "```" in line or "<modified_code_to_edit>" in line or "<file_prefix>" in line or "</file_prefix>" in line or "<file_suffix>" in line or "</file_suffix>" in line or "<user_request>" in line or "</user_request>" in line or "<code_to_edit>" in line
 
     async def stream_rif(self, rif: RangeInFileWithContents, sdk: ContinueSDK):
+        await sdk.ide.saveFile(rif.filepath)
         full_file_contents = await sdk.ide.readFile(rif.filepath)
 
         file_prefix, contents, file_suffix, model_to_use = await self.get_prompt_parts(

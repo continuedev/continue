@@ -74,6 +74,10 @@ class ContinueGUIClientProtocol extends AbstractContinueGUIClientProtocol {
   deleteContextAtIndices(indices: number[]) {
     this.messenger.send("delete_context_at_indices", { indices });
   }
+
+  toggleAddingHighlightedCode(): void {
+    this.messenger.send("toggle_adding_highlighted_code", {});
+  }
 }
 
 export default ContinueGUIClientProtocol;
