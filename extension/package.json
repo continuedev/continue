@@ -87,6 +87,16 @@
         "title": "Reject Suggestion"
       },
       {
+        "command": "continue.acceptDiff",
+        "category": "Continue",
+        "title": "Accept Diff"
+      },
+      {
+        "command": "continue.rejectDiff",
+        "category": "Continue",
+        "title": "Reject Diff"
+      },
+      {
         "command": "continue.acceptAllSuggestions",
         "category": "Continue",
         "title": "Accept All Suggestions"
