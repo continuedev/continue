@@ -12,6 +12,8 @@ import {
   acceptAllSuggestionsCommand,
   rejectAllSuggestionsCommand,
 } from "./suggestions";
+
+import { acceptDiffCommand, rejectDiffCommand } from "./diffs";
 import * as bridge from "./bridge";
 import { debugPanelWebview } from "./debugPanel";
 import { sendTelemetryEvent, TelemetryEvent } from "./telemetry";
@@ -51,6 +53,8 @@ const commandsMap: { [command: string]: (...args: any) => any } = {
   "continue.suggestionUp": suggestionUpCommand,
   "continue.acceptSuggestion": acceptSuggestionCommand,
   "continue.rejectSuggestion": rejectSuggestionCommand,
+  "continue.acceptDiff": acceptDiffCommand,
+  "continue.rejectDiff": rejectDiffCommand,
   "continue.acceptAllSuggestions": acceptAllSuggestionsCommand,
   "continue.rejectAllSuggestions": rejectAllSuggestionsCommand,
   "continue.focusContinueInput": async () => {
