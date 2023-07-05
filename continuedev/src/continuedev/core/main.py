@@ -107,11 +107,9 @@ class HistoryNode(ContinueBaseModel):
             return self.step.chat_context
         return self.step.chat_context + [
             ChatMessage(
-                role="function",
+                role="assistant",
                 name=self.step.__class__.__name__,
-                content=json.dumps({
-                    "description": self.step.description or "Function complete",
-                }),
+                content=self.step.description or f"Ran function {self.step.name}",
                 summary=f"Called function {self.step.name}"
             )]
 
@@ -199,6 +197,7 @@ class History(ContinueBaseModel):
 class SlashCommandDescription(ContinueBaseModel):
     name: str
     description: str
+
 
 class FullState(ContinueBaseModel):
     """A full state of the program, including the history"""

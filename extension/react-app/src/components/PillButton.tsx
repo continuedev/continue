@@ -1,6 +1,7 @@
 import { useState } from "react";
 import styled from "styled-components";
 import { defaultBorderRadius } from ".";
+import { XMark } from "@styled-icons/heroicons-outline";
 
 const Button = styled.button`
   border: none;
@@ -42,22 +43,21 @@ const PillButton = (props: PillButtonProps) => {
       <div
         style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: "4px" }}
       >
-        <span>{props.title}</span>
         <span
           style={{
             cursor: "pointer",
             color: "red",
-            borderLeft: "1px solid black",
-            paddingLeft: "4px",
+            borderRight: "1px solid black",
+            paddingRight: "4px",
           }}
-          hidden={!isHovered}
           onClick={() => {
             props.onDelete?.();
             props.onHover?.(false);
           }}
         >
-          X
+          <XMark style={{ padding: "0px" }} size="1.2em" strokeWidth="2px" />
         </span>
+        <span>{props.title}</span>
       </div>
     </Button>
   );

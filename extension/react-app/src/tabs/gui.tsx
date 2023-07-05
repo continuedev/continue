@@ -74,6 +74,7 @@ function GUI(props: GUIProps) {
   const [availableSlashCommands, setAvailableSlashCommands] = useState<
     { name: string; description: string }[]
   >([]);
+  const [pinned, setPinned] = useState(false);
   const [showDataSharingInfo, setShowDataSharingInfo] = useState(false);
   const [stepsOpen, setStepsOpen] = useState<boolean[]>([
     true,
@@ -87,13 +88,16 @@ function GUI(props: GUIProps) {
         step: {
           name: "Welcome to Continue",
           hide: false,
-          description:
-            "Highlight code and ask a question or give instructions. Past steps are used as additional context by default. Use slash commands when you want fine-grained control.",
+          description: `- Highlight code and ask a question or give instructions
+- Use \`cmd+k\` (Mac) / \`ctrl+k\` (Windows) to open Continue
+- Use \`cmd+shift+e\` / \`ctrl+shift+e\` to open file Explorer
+- Add your own OpenAI API key to VS Code Settings with \`cmd+,\`
+- Use slash commands when you want fine-grained control
+- Past steps are included as part of the context by default`,
           system_message: null,
           chat_context: [],
           manage_own_chat_context: false,
-          message:
-            "Highlight code and ask a question or give instructions. Past steps are used as additional context by default. Use slash commands when you want fine-grained control.",
+          message: "",
         },
         depth: 0,
         deleted: false,
@@ -185,9 +189,9 @@ function GUI(props: GUIProps) {
 
   const mainTextInputRef = useRef<HTMLInputElement>(null);
 
-  const deleteContextItem = useCallback(
-    (idx: number) => {
-      client?.deleteContextItemAtIndex(idx);
+  const deleteContextItems = useCallback(
+    (indices: number[]) => {
+      client?.deleteContextAtIndices(indices);
     },
     [client]
   );
@@ -241,6 +245,13 @@ function GUI(props: GUIProps) {
       setUserInputQueue((queue) => {
         return [...queue, input];
       });
+
+      // Delete all context items unless locked
+      if (!pinned) {
+        client?.deleteContextAtIndices(
+          highlightedRanges.map((_, index) => index)
+        );
+      }
     }
   };
 
@@ -286,6 +297,7 @@ function GUI(props: GUIProps) {
               onDelete={() => {
                 client?.deleteAtIndex(index);
               }}
+              historyNode={node}
             >
               {node.step.description as string}
             </UserInputContainer>
@@ -345,7 +357,10 @@ function GUI(props: GUIProps) {
           onInputValueChange={() => {}}
           items={availableSlashCommands}
           highlightedCodeSections={highlightedRanges}
-          deleteContextItem={deleteContextItem}
+          deleteContextItems={deleteContextItems}
+          onTogglePin={() => {
+            setPinned((prev: boolean) => !prev);
+          }}
         />
         <ContinueButton onClick={onMainTextInput} />
       </TopGUIDiv>

@@ -149,6 +149,7 @@ class ChatWithFunctions(Step):
     name: str = "Input"
     manage_own_chat_context: bool = True
     description: str = ""
+    hide: bool = True
 
     async def run(self, sdk: ContinueSDK):
         await sdk.update_ui()

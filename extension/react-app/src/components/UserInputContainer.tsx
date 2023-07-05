@@ -6,10 +6,12 @@ import HeaderButtonWithText from "./HeaderButtonWithText";
 import { Play, XMark } from "@styled-icons/heroicons-outline";
 import { RootStore } from "../redux/store";
 import { useSelector } from "react-redux";
+import { HistoryNode } from "../../../schema/HistoryNode";
 
 interface UserInputContainerProps {
   onDelete: () => void;
   children: string;
+  historyNode: HistoryNode;
 }
 
 const StyledDiv = styled.div`
@@ -26,7 +28,7 @@ const StyledDiv = styled.div`
 
 const UserInputContainer = (props: UserInputContainerProps) => {
   return (
-    <StyledDiv>
+    <StyledDiv hidden={props.historyNode.step.hide as any}>
       {props.children}
       <div style={{ marginLeft: "auto" }}>
         <HeaderButtonWithText
@@ -36,7 +38,7 @@ const UserInputContainer = (props: UserInputContainerProps) => {
           }}
           text="Delete"
         >
-          <XMark size="1.6em" onClick={props.onDelete} />
+          <XMark size="1.6em" />
         </HeaderButtonWithText>
       </div>
     </StyledDiv>

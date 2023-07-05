@@ -159,6 +159,9 @@ class IdeProtocolClient {
       case "showSuggestion":
         this.showSuggestion(data.edit);
         break;
+      case "showDiff":
+        this.showDiff(data.filepath, data.replacement);
+        break;
       case "openGUI":
       case "connected":
         break;
@@ -234,6 +237,42 @@ class IdeProtocolClient {
       ),
       edit.replacement
     );
+  }
+
+  contentProvider: vscode.Disposable | null = null;
+
+  showDiff(filepath: string, replacement: string) {
+    const myProvider = new (class
+      implements vscode.TextDocumentContentProvider
+    {
+      onDidChangeEmitter = new vscode.EventEmitter<vscode.Uri>();
+      onDidChange = this.onDidChangeEmitter.event;
+      provideTextDocumentContent = (uri: vscode.Uri) => {
+        return replacement;
+      };
+    })();
+    this.contentProvider = vscode.workspace.registerTextDocumentContentProvider(
+      "continueDiff",
+      myProvider
+    );
+
+    // Call the event fire
+    const diffFilename = `continueDiff://${filepath}`;
+    myProvider.onDidChangeEmitter.fire(vscode.Uri.parse(diffFilename));
+
+    const leftUri = vscode.Uri.file(filepath);
+    const rightUri = vscode.Uri.parse(diffFilename);
+    const title = "Continue Diff";
+    vscode.commands
+      .executeCommand("vscode.diff", leftUri, rightUri, title)
+      .then(
+        () => {
+          console.log("Diff view opened successfully");
+        },
+        (error) => {
+          console.error("Error opening diff view:", error);
+        }
+      );
   }
 
   openFile(filepath: string) {
@@ -371,21 +410,21 @@ class IdeProtocolClient {
     let rangeInFiles: RangeInFile[] = [];
     vscode.window.visibleTextEditors.forEach((editor) => {
       editor.selections.forEach((selection) => {
-        if (!selection.isEmpty) {
-          rangeInFiles.push({
-            filepath: editor.document.uri.fsPath,
-            range: {
-              start: {
-                line: selection.start.line,
-                character: selection.start.character,
-              },
-              end: {
-                line: selection.end.line,
-                character: selection.end.character,
-              },
+        // if (!selection.isEmpty) {
+        rangeInFiles.push({
+          filepath: editor.document.uri.fsPath,
+          range: {
+            start: {
+              line: selection.start.line,
+              character: selection.start.character,
             },
-          });
-        }
+            end: {
+              line: selection.end.line,
+              character: selection.end.character,
+            },
+          },
+        });
+        // }
       });
     });
     return rangeInFiles;

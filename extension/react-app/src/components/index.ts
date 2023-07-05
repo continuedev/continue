@@ -124,16 +124,19 @@ export const appear = keyframes`
     }
 `;
 
-export const HeaderButton = styled.button`
-  background-color: transparent;
+export const HeaderButton = styled.button<{ inverted: boolean | undefined }>`
+  background-color: ${({ inverted }) => (inverted ? "white" : "transparent")};
+  color: ${({ inverted }) => (inverted ? "black" : "white")};
+
   border: 1px solid white;
   border-radius: ${defaultBorderRadius};
   cursor: pointer;
-  color: white;
 
   &:hover {
-    background-color: white;
-    color: black;
+    background-color: ${({ inverted }) =>
+      typeof inverted === "undefined" || inverted ? "white" : "transparent"};
+    color: ${({ inverted }) =>
+      typeof inverted === "undefined" || inverted ? "black" : "white"};
   }
   display: flex;
   align-items: center;

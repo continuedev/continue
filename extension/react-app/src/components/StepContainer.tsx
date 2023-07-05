@@ -84,7 +84,8 @@ const MarkdownPre = styled.pre`
 
 const StyledCode = styled.code`
   word-wrap: break-word;
-  color: lightgray;
+  color: #f69292;
+  background: transparent;
 `;
 
 const gradient = keyframes`
