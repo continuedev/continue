@@ -252,6 +252,7 @@
     "@segment/analytics-node": "^0.0.1-beta.16",
     "@sentry/node": "^7.57.0",
     "@styled-icons/heroicons-outline": "^10.47.0",
+    "@styled-icons/heroicons-solid": "^10.47.0",
     "@vitejs/plugin-react-swc": "^3.3.2",
     "axios": "^1.2.5",
     "downshift": "^7.6.0",
