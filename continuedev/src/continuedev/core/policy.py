@@ -74,14 +74,14 @@ class DemoPolicy(Policy):
             # This could be defined with ObservationTypePolicy. Ergonomics not right though.
             user_input = observation.user_input
 
-            slash_command = parse_slash_command(user_input)
+            slash_command = parse_slash_command(user_input, config)
             if slash_command is not None:
                 return slash_command
 
-            custom_command = parse_custom_command(user_input)
+            custom_command = parse_custom_command(user_input, config)
             if custom_command is not None:
                 return custom_command
 
-            return ChatWithFunctions(user_input=user_input)
+            return SimpleChatStep(user_input=user_input)
 
         return None
