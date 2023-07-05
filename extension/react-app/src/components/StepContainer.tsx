@@ -11,11 +11,9 @@ import {
   ChevronDown,
   ChevronRight,
   ArrowPath,
-  XMark
+  XMark,
 } from "@styled-icons/heroicons-outline";
-import {
-  Stop,
-} from "@styled-icons/heroicons-solid";
+import { Stop } from "@styled-icons/heroicons-solid";
 import { HistoryNode } from "../../../schema/HistoryNode";
 import ReactMarkdown from "react-markdown";
 import HeaderButtonWithText from "./HeaderButtonWithText";
@@ -213,7 +211,11 @@ function StepContainer(props: StepContainerProps) {
                 text={props.historyNode.active ? "Stop" : "Delete"}
                 active={props.historyNode.active}
               >
-                {props.historyNode.active ? <Stop size="1.6em" onClick={props.onDelete} /> :<XMark size="1.6em" onClick={props.onDelete} />}
+                {props.historyNode.active ? (
+                  <Stop size="1.2em" onClick={props.onDelete} />
+                ) : (
+                  <XMark size="1.6em" onClick={props.onDelete} />
+                )}
               </HeaderButtonWithText>
               {props.historyNode.observation?.error ? (
                 <HeaderButtonWithText

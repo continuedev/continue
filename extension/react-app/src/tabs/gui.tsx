@@ -295,14 +295,16 @@ function GUI(props: GUIProps) {
         )}
         {history?.timeline.map((node: HistoryNode, index: number) => {
           return node.step.name === "User Input" ? (
-            <UserInputContainer
-              onDelete={() => {
-                client?.deleteAtIndex(index);
-              }}
-              historyNode={node}
-            >
-              {node.step.description as string}
-            </UserInputContainer>
+            node.step.hide || (
+              <UserInputContainer
+                onDelete={() => {
+                  client?.deleteAtIndex(index);
+                }}
+                historyNode={node}
+              >
+                {node.step.description as string}
+              </UserInputContainer>
+            )
           ) : (
             <StepContainer
               isLast={index === history.timeline.length - 1}
