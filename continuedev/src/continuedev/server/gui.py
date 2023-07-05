@@ -1,6 +1,6 @@
 import json
 from fastapi import Depends, Header, WebSocket, APIRouter
-from typing import Any, Type, TypeVar, Union
+from typing import Any, List, Type, TypeVar, Union
 from pydantic import BaseModel
 from uvicorn.main import Server
 
@@ -83,8 +83,8 @@ class GUIProtocolServer(AbstractGUIProtocolServer):
                 self.on_clear_history()
             elif message_type == "delete_at_index":
                 self.on_delete_at_index(data["index"])
-            elif message_type == "delete_context_item_at_index":
-                self.on_delete_context_item_at_index(data["index"])
+            elif message_type == "delete_context_at_indices":
+                self.on_delete_context_at_indices(data["indices"])
         except Exception as e:
             print(e)
 
@@ -123,9 +123,9 @@ class GUIProtocolServer(AbstractGUIProtocolServer):
     def on_delete_at_index(self, index: int):
         asyncio.create_task(self.session.autopilot.delete_at_index(index))
 
-    def on_delete_context_item_at_index(self, index: int):
+    def on_delete_context_at_indices(self, indices: List[int]):
         asyncio.create_task(
-            self.session.autopilot.delete_context_item_at_index(index)
+            self.session.autopilot.delete_context_at_indices(indices)
         )
 
 

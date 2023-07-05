@@ -160,6 +160,12 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
             "edit": file_edit.dict()
         })
 
+    async def showDiff(self, filepath: str, replacement: str):
+        await self._send_json("showDiff", {
+            "filepath": filepath,
+            "replacement": replacement
+        })
+
     async def setFileOpen(self, filepath: str, open: bool = True):
         # Autopilot needs access to this.
         await self._send_json("setFileOpen", {
