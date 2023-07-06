@@ -206,7 +206,7 @@ function StepContainer(props: StepContainerProps) {
                   e.stopPropagation();
                   props.onDelete();
                 }}
-                text={props.historyNode.active ? "Stop" : "Delete"}
+                text={props.historyNode.active ? "Stop (⌘⌫)" : "Delete"}
               >
                 {props.historyNode.active ? (
                   <StopCircle size="1.6em" onClick={props.onDelete} />

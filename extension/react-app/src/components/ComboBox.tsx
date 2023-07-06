@@ -79,7 +79,7 @@ const MainTextInput = styled.textarea`
   }
 `;
 
-const UlMaxHeight = 400;
+const UlMaxHeight = 300;
 const Ul = styled.ul<{
   hidden: boolean;
   showAbove: boolean;
@@ -94,13 +94,20 @@ const Ul = styled.ul<{
   background-color: ${secondaryDark};
   color: white;
   max-height: ${UlMaxHeight}px;
-  overflow: scroll;
+  overflow-y: scroll;
+  overflow-x: hidden;
   padding: 0;
   ${({ hidden }) => hidden && "display: none;"}
   border-radius: ${defaultBorderRadius};
-  overflow: hidden;
   border: 0.5px solid gray;
   z-index: 2;
+  // Get rid of scrollbar and its padding
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  &::-webkit-scrollbar {
+    width: 0px;
+    background: transparent; /* make scrollbar transparent */
+  }
 `;
 
 const Li = styled.li<{
@@ -108,7 +115,7 @@ const Li = styled.li<{
   selected: boolean;
   isLastItem: boolean;
 }>`
-  ${({ highlighted }) => highlighted && "background: #aa0000;"}
+  ${({ highlighted }) => highlighted && "background: #ff000066;"}
   ${({ selected }) => selected && "font-weight: bold;"}
     padding: 0.5rem 0.75rem;
   display: flex;
@@ -272,6 +279,12 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
                 event.key === "Enter" &&
                 (!isOpen || items.length === 0)
               ) {
+                setInputValue("");
+                const value = event.currentTarget.value;
+                if (value !== "") {
+                  setPositionInHistory(history.length + 1);
+                  setHistory([...history, value]);
+                }
                 // Prevent Downshift's default 'Enter' behavior.
                 (event.nativeEvent as any).preventDownshiftDefault = true;
 
@@ -280,33 +293,28 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
                   event.currentTarget.value = `/edit ${event.currentTarget.value}`;
                 }
                 if (props.onEnter) props.onEnter(event);
-                setInputValue("");
-                const value = event.currentTarget.value;
-                if (value !== "") {
-                  setPositionInHistory(history.length + 1);
-                  setHistory([...history, value]);
-                }
               } else if (event.key === "Tab" && items.length > 0) {
                 setInputValue(items[0].name);
                 event.preventDefault();
               } else if (
-                event.key === "ArrowUp" ||
-                (event.key === "ArrowDown" &&
-                  event.currentTarget.value.split("\n").length > 1)
+                (event.key === "ArrowUp" || event.key === "ArrowDown") &&
+                event.currentTarget.value.split("\n").length > 1
               ) {
                 (event.nativeEvent as any).preventDownshiftDefault = true;
-              } else if (
-                event.key === "ArrowUp" &&
-                event.currentTarget.value.split("\n").length > 1
-              ) {
+              } else if (event.key === "ArrowUp") {
+                console.log("OWJFOIJO");
                 if (positionInHistory == 0) return;
+                else if (
+                  positionInHistory == history.length &&
+                  (history.length === 0 ||
+                    history[history.length - 1] !== event.currentTarget.value)
+                ) {
+                  setHistory([...history, event.currentTarget.value]);
+                }
                 setInputValue(history[positionInHistory - 1]);
                 setPositionInHistory((prev) => prev - 1);
-              } else if (
-                event.key === "ArrowDown" &&
-                event.currentTarget.value.split("\n").length > 1
-              ) {
-                if (positionInHistory < history.length - 1) {
+              } else if (event.key === "ArrowDown") {
+                if (positionInHistory < history.length) {
                   setInputValue(history[positionInHistory + 1]);
                 }
                 setPositionInHistory((prev) =>
@@ -327,6 +335,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
           {isOpen &&
             items.map((item, index) => (
               <Li
+                style={{ borderTop: index === 0 ? "none" : undefined }}
                 key={`${item.name}${index}`}
                 {...getItemProps({ item, index })}
                 highlighted={highlightedIndex === index}

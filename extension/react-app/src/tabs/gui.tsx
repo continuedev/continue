@@ -139,9 +139,16 @@ function GUI(props: GUIProps) {
 
   useEffect(() => {
     const listener = (e: any) => {
-      // Cmd + J to toggle fast model
+      // Cmd + i to toggle fast model
       if (e.key === "i" && e.metaKey && e.shiftKey) {
         setUsingFastModel((prev) => !prev);
+        // Cmd + backspace to stop currently running step
+      } else if (
+        e.key === "Backspace" &&
+        e.metaKey &&
+        typeof history?.current_index !== "undefined"
+      ) {
+        client?.deleteAtIndex(history.current_index);
       }
     };
     window.addEventListener("keydown", listener);
@@ -149,7 +156,7 @@ function GUI(props: GUIProps) {
     return () => {
       window.removeEventListener("keydown", listener);
     };
-  }, []);
+  }, [client, history]);
 
   useEffect(() => {
     client?.onStateUpdate((state: FullState) => {
