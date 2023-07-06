@@ -29,7 +29,7 @@ class Models:
     def __load_openai_model(self, model: str) -> OpenAI:
         async def load_openai_model():
             api_key = await self.sdk.get_user_secret(
-                'OPENAI_API_KEY', 'Enter your OpenAI API key, OR press enter to try for free')
+                'OPENAI_API_KEY', 'Enter your OpenAI API key or press enter to try for free')
             if api_key == "":
                 return ProxyServer(self.sdk.ide.unique_id, model)
             return OpenAI(api_key=api_key, default_model=model)
