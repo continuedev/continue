@@ -147,6 +147,10 @@ class Autopilot(ContinueBaseModel):
         if not self._adding_highlighted_code:
             return
 
+        # Filter out rifs from ~/.continue/diffs folder
+        range_in_files = [
+            rif for rif in range_in_files if not os.path.dirname(rif.filepath) == os.path.expanduser("~/.continue/diffs")]
+
         workspace_path = self.continue_sdk.ide.workspace_directory
         for rif in range_in_files:
             rif.filepath = os.path.basename(rif.filepath)

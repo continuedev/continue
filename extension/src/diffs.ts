@@ -92,7 +92,14 @@ class DiffManager {
     fs.unlinkSync(diffInfo.newFilepath);
   }
 
-  acceptDiff(newFilepath: string) {
+  acceptDiff(newFilepath?: string) {
+    // If no newFilepath is provided and there is only one in the dictionary, use that
+    if (!newFilepath && this.diffs.size === 1) {
+      newFilepath = Array.from(this.diffs.keys())[0];
+    }
+    if (!newFilepath) {
+      return;
+    }
     // Get the diff info, copy new file to original, then delete from record and close the corresponding editor
     const diffInfo = this.diffs.get(newFilepath);
     if (!diffInfo) {
@@ -105,7 +112,14 @@ class DiffManager {
     this.cleanUpDiff(diffInfo);
   }
 
-  rejectDiff(newFilepath: string) {
+  rejectDiff(newFilepath?: string) {
+    // If no newFilepath is provided and there is only one in the dictionary, use that
+    if (!newFilepath && this.diffs.size === 1) {
+      newFilepath = Array.from(this.diffs.keys())[0];
+    }
+    if (!newFilepath) {
+      return;
+    }
     const diffInfo = this.diffs.get(newFilepath);
     if (!diffInfo) {
       return;
@@ -117,10 +131,10 @@ class DiffManager {
 
 export const diffManager = new DiffManager();
 
-export async function acceptDiffCommand(newFilepath: string) {
+export async function acceptDiffCommand(newFilepath?: string) {
   diffManager.acceptDiff(newFilepath);
 }
 
-export async function rejectDiffCommand(newFilepath: string) {
+export async function rejectDiffCommand(newFilepath?: string) {
   diffManager.rejectDiff(newFilepath);
 }
