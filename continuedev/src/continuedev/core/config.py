@@ -15,6 +15,7 @@ class SlashCommand(BaseModel):
 class CustomCommand(BaseModel):
     name: str
     prompt: str
+    description: str
 
 
 class OnTracebackSteps(BaseModel):
@@ -73,6 +74,7 @@ class ContinueConfig(BaseModel):
                            "gpt-4"] = 'gpt-4'
     custom_commands: Optional[List[CustomCommand]] = [CustomCommand(
         name="test",
+        description="This is an example custom command. Use /config to edit it and create more",
         prompt="Write a comprehensive set of unit tests for the selected code. It should setup, run tests that check for correctness including important edge cases, and teardown. Ensure that the tests are complete and sophisticated. Give the tests just as chat output, don't edit any file.",
     )]
     slash_commands: Optional[List[SlashCommand]] = DEFAULT_SLASH_COMMANDS
