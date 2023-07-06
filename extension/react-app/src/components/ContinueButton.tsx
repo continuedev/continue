@@ -10,20 +10,12 @@ let StyledButton = styled(Button)`
   display: grid;
   grid-template-columns: 30px 1fr;
   align-items: center;
-  background: linear-gradient(
-    95.23deg,
-    #be1a55 14.44%,
-    rgba(203, 27, 90, 0.4) 82.21%
-  );
+  background: #be1b55;
 
   &:hover {
     transition-delay: 0.5s;
     transition-property: "background";
-    background: linear-gradient(
-      45deg,
-      #be1a55 14.44%,
-      rgba(203, 27, 90, 0.4) 82.21%
-    );
+    opacity: 0.8;
   }
 `;
 

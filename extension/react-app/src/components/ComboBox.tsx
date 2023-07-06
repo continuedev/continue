@@ -22,7 +22,7 @@ import {
 import { HighlightedRangeContext } from "../../../schema/FullState";
 
 // #region styled components
-const mainInputFontSize = 16;
+const mainInputFontSize = 13;
 
 const EmptyPillDiv = styled.div`
   padding: 8px;
@@ -64,7 +64,6 @@ const MainTextInput = styled.textarea`
   padding: 8px;
   font-size: ${mainInputFontSize}px;
   font-family: inherit;
-  border: 1px solid transparent;
   border-radius: ${defaultBorderRadius};
   margin: 8px auto;
   height: auto;
@@ -74,8 +73,7 @@ const MainTextInput = styled.textarea`
   z-index: 1;
 
   &:focus {
-    outline: 1px solid #ff000066;
-    border: 1px solid transparent;
+    outline: 1px solid ${lightGray};
   }
 `;
 
@@ -191,7 +189,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
   return (
     <>
       <div className="px-2 flex gap-2 items-center flex-wrap mt-2">
-        {highlightedCodeSections.length > 1 && (
+        {/* {highlightedCodeSections.length > 1 && (
           <>
             <HeaderButtonWithText
               text="Clear Context"
@@ -204,7 +202,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
               <Trash size="1.6em" />
             </HeaderButtonWithText>
           </>
-        )}
+        )} */}
         {highlightedCodeSections.map((section, idx) => (
           <PillButton
             editing={section.editing}

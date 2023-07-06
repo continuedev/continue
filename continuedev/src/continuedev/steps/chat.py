@@ -20,7 +20,7 @@ openai.api_key = OPENAI_API_KEY
 
 class SimpleChatStep(Step):
     user_input: str
-    name: str = "Chat"
+    name: str = "Generating Response..."
     manage_own_chat_context: bool = True
     description: str = ""
 

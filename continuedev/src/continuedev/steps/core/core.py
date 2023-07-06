@@ -302,7 +302,7 @@ class DefaultModelEditCodeStep(Step):
             completion = "\n".join(lines)
 
             full_prefix_lines = full_file_contents_lines[:rif.range.start.line]
-            full_suffix_lines = full_file_contents_lines[rif.range.end.line + 1:]
+            full_suffix_lines = full_file_contents_lines[rif.range.end.line:]
             new_file_contents = "\n".join(
                 full_prefix_lines) + "\n" + completion + "\n" + "\n".join(full_suffix_lines)
             await sdk.ide.showDiff(rif.filepath, new_file_contents)

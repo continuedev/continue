@@ -1,7 +1,7 @@
 import React from "react";
 import ReactMarkdown from "react-markdown";
 import styled from "styled-components";
-import { buttonColor, secondaryDark } from ".";
+import { buttonColor, secondaryDark, vscBackground } from ".";
 import HeaderButtonWithText from "./HeaderButtonWithText";
 import { Play, XMark } from "@styled-icons/heroicons-outline";
 import { RootStore } from "../redux/store";
@@ -22,6 +22,7 @@ const StyledDiv = styled.div`
   font-size: 13px;
   display: flex;
   align-items: center;
+  border-bottom: 1px solid ${vscBackground};
 `;
 
 const UserInputContainer = (props: UserInputContainerProps) => {

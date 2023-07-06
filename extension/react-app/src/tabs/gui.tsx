@@ -165,7 +165,15 @@ function GUI(props: GUIProps) {
       const shouldScrollToBottom =
         topGuiDivRef.current &&
         topGuiDivRef.current?.offsetHeight - window.scrollY < 100;
-      setWaitingForSteps(state.active);
+
+      const waitingForSteps =
+        state.active &&
+        state.history.current_index < state.history.timeline.length &&
+        state.history.timeline[
+          state.history.current_index
+        ].step.description?.trim() === "";
+
+      setWaitingForSteps(waitingForSteps);
       setHistory(state.history);
       setHighlightedRanges(state.highlighted_ranges);
       setUserInputQueue(state.user_input_queue);

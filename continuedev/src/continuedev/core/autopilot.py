@@ -151,14 +151,22 @@ class Autopilot(ContinueBaseModel):
             self._highlighted_ranges[0].editing = True
 
     async def handle_highlighted_code(self, range_in_files: List[RangeInFileWithContents]):
-        if not self._adding_highlighted_code and len(self._highlighted_ranges) > 0:
-            return
 
         # If un-highlighting, then remove the range
-        if len(self._highlighted_ranges) == 1 and len(range_in_files) == 1 and range_in_files[0].range.start == range_in_files[0].range.end:
+        if len(self._highlighted_ranges) == 1 and len(range_in_files) <= 1 and (len(range_in_files) == 0 or range_in_files[0].range.start == range_in_files[0].range.end):
             self._highlighted_ranges = []
             await self.update_subscribers()
             return
+
+        # If not toggled to be adding context, only edit or add the first range
+        if not self._adding_highlighted_code and len(self._highlighted_ranges) > 0:
+            if len(range_in_files) == 0:
+                return
+            if range_in_files[0].range.overlaps_with(self._highlighted_ranges[0].range) and range_in_files[0].filepath == self._highlighted_ranges[0].range.filepath:
+                self._highlighted_ranges = [HighlightedRangeContext(
+                    range=range_in_files[0].range, editing=True, pinned=False)]
+                await self.update_subscribers()
+                return
 
         # Filter out rifs from ~/.continue/diffs folder
         range_in_files = [
@@ -391,8 +399,8 @@ class Autopilot(ContinueBaseModel):
             return
 
         # Remove context unless pinned
-        self._highlighted_ranges = [
-            hr for hr in self._highlighted_ranges if hr.pinned]
+        # self._highlighted_ranges = [
+        #     hr for hr in self._highlighted_ranges if hr.pinned]
 
         # await self._request_halt()
         # Just run the step that takes user input, and

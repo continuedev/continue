@@ -259,7 +259,7 @@ class Step(ContinueBaseModel):
         if self.description is not None:
             d["description"] = self.description
         else:
-            d["description"] = "`Step in progress...`"
+            d["description"] = "Step in progress..."
         return d
 
     @validator("name", pre=True, always=True)
