@@ -453,7 +453,7 @@ class DefaultModelEditCodeStep(Step):
             lines.extend(map(lambda l: common_whitespace + l, chunk_lines))
 
             if True:
-                await sendDiffUpdate(lines, sdk)
+                await sendDiffUpdate(lines + [common_whitespace + unfinished_line], sdk)
 
             # Deal with newly accumulated lines
             for line in chunk_lines:
