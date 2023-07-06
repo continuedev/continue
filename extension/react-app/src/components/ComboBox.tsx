@@ -4,6 +4,7 @@ import styled from "styled-components";
 import {
   buttonColor,
   defaultBorderRadius,
+  lightGray,
   secondaryDark,
   vscBackground,
 } from ".";
@@ -16,10 +17,31 @@ import {
   LockClosed,
   LockOpen,
   Plus,
+  DocumentPlus,
 } from "@styled-icons/heroicons-outline";
+import { HighlightedRangeContext } from "../../../schema/FullState";
 
 // #region styled components
 const mainInputFontSize = 16;
+
+const EmptyPillDiv = styled.div`
+  padding: 8px;
+  border-radius: ${defaultBorderRadius};
+  border: 1px dashed ${lightGray};
+  color: ${lightGray};
+  background-color: ${vscBackground};
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  text-align: center;
+  cursor: pointer;
+  font-size: 13px;
+
+  &:hover {
+    background-color: ${lightGray};
+    color: ${vscBackground};
+  }
+`;
 
 const ContextDropdown = styled.div`
   position: absolute;
@@ -41,21 +63,23 @@ const MainTextInput = styled.textarea`
 
   padding: 8px;
   font-size: ${mainInputFontSize}px;
+  font-family: inherit;
+  border: 1px solid transparent;
   border-radius: ${defaultBorderRadius};
-  border: 1px solid white;
   margin: 8px auto;
+  height: auto;
   width: 100%;
-  background-color: ${vscBackground};
+  background-color: ${secondaryDark};
   color: white;
   z-index: 1;
 
   &:focus {
+    outline: 1px solid #ff000066;
     border: 1px solid transparent;
-    outline: 1px solid orange;
   }
 `;
 
-const UlMaxHeight = 400;
+const UlMaxHeight = 300;
 const Ul = styled.ul<{
   hidden: boolean;
   showAbove: boolean;
@@ -69,15 +93,21 @@ const Ul = styled.ul<{
   background: ${vscBackground};
   background-color: ${secondaryDark};
   color: white;
-  font-family: "Fira Code", monospace;
   max-height: ${UlMaxHeight}px;
-  overflow: scroll;
+  overflow-y: scroll;
+  overflow-x: hidden;
   padding: 0;
   ${({ hidden }) => hidden && "display: none;"}
   border-radius: ${defaultBorderRadius};
-  overflow: hidden;
   border: 0.5px solid gray;
   z-index: 2;
+  // Get rid of scrollbar and its padding
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  &::-webkit-scrollbar {
+    width: 0px;
+    background: transparent; /* make scrollbar transparent */
+  }
 `;
 
 const Li = styled.li<{
@@ -85,7 +115,7 @@ const Li = styled.li<{
   selected: boolean;
   isLastItem: boolean;
 }>`
-  ${({ highlighted }) => highlighted && "background: #aa0000;"}
+  ${({ highlighted }) => highlighted && "background: #ff000066;"}
   ${({ selected }) => selected && "font-weight: bold;"}
     padding: 0.5rem 0.75rem;
   display: flex;
@@ -102,7 +132,7 @@ interface ComboBoxProps {
   onInputValueChange: (inputValue: string) => void;
   disabled?: boolean;
   onEnter: (e: React.KeyboardEvent<HTMLInputElement>) => void;
-  highlightedCodeSections: (RangeInFile & { contents: string })[];
+  highlightedCodeSections: HighlightedRangeContext[];
   deleteContextItems: (indices: number[]) => void;
   onTogglePin: () => void;
   onToggleAddContext: () => void;
@@ -119,16 +149,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
     React.useState(false);
   const [pinned, setPinned] = useState(false);
   const [highlightedCodeSections, setHighlightedCodeSections] = React.useState(
-    props.highlightedCodeSections || [
-      {
-        filepath: "test.ts",
-        range: {
-          start: { line: 0, character: 0 },
-          end: { line: 0, character: 0 },
-        },
-        contents: "import * as a from 'a';",
-      },
-    ]
+    props.highlightedCodeSections || []
   );
 
   useEffect(() => {
@@ -169,6 +190,71 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
 
   return (
     <>
+      <div className="px-2 flex gap-2 items-center flex-wrap mt-2">
+        {highlightedCodeSections.length > 1 && (
+          <>
+            <HeaderButtonWithText
+              text="Clear Context"
+              onClick={() => {
+                props.deleteContextItems(
+                  highlightedCodeSections.map((_, idx) => idx)
+                );
+              }}
+            >
+              <Trash size="1.6em" />
+            </HeaderButtonWithText>
+          </>
+        )}
+        {highlightedCodeSections.map((section, idx) => (
+          <PillButton
+            editing={section.editing}
+            pinned={section.pinned}
+            index={idx}
+            key={`${section.filepath}${idx}`}
+            title={`${section.range.filepath} (${
+              section.range.range.start.line + 1
+            }-${section.range.range.end.line + 1})`}
+            onDelete={() => {
+              if (props.deleteContextItems) {
+                props.deleteContextItems([idx]);
+              }
+              setHighlightedCodeSections((prev) => {
+                const newSections = [...prev];
+                newSections.splice(idx, 1);
+                return newSections;
+              });
+            }}
+            onHover={(val: boolean) => {
+              if (val) {
+                setHoveringButton(val);
+              } else {
+                setTimeout(() => {
+                  setHoveringButton(val);
+                }, 100);
+              }
+            }}
+          />
+        ))}
+        {props.highlightedCodeSections.length > 0 &&
+          (props.addingHighlightedCode ? (
+            <EmptyPillDiv
+              onClick={() => {
+                props.onToggleAddContext();
+              }}
+            >
+              Highlight to Add Context
+            </EmptyPillDiv>
+          ) : (
+            <HeaderButtonWithText
+              text="Add to Context"
+              onClick={() => {
+                props.onToggleAddContext();
+              }}
+            >
+              <DocumentPlus width="1.6em"></DocumentPlus>
+            </HeaderButtonWithText>
+          ))}
+      </div>
       <div className="flex px-2" ref={divRef} hidden={!isOpen}>
         <MainTextInput
           disabled={props.disabled}
@@ -193,6 +279,12 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
                 event.key === "Enter" &&
                 (!isOpen || items.length === 0)
               ) {
+                setInputValue("");
+                const value = event.currentTarget.value;
+                if (value !== "") {
+                  setPositionInHistory(history.length + 1);
+                  setHistory([...history, value]);
+                }
                 // Prevent Downshift's default 'Enter' behavior.
                 (event.nativeEvent as any).preventDownshiftDefault = true;
 
@@ -201,33 +293,28 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
                   event.currentTarget.value = `/edit ${event.currentTarget.value}`;
                 }
                 if (props.onEnter) props.onEnter(event);
-                setInputValue("");
-                const value = event.currentTarget.value;
-                if (value !== "") {
-                  setPositionInHistory(history.length + 1);
-                  setHistory([...history, value]);
-                }
               } else if (event.key === "Tab" && items.length > 0) {
                 setInputValue(items[0].name);
                 event.preventDefault();
               } else if (
-                event.key === "ArrowUp" ||
-                (event.key === "ArrowDown" &&
-                  event.currentTarget.value.split("\n").length > 1)
+                (event.key === "ArrowUp" || event.key === "ArrowDown") &&
+                event.currentTarget.value.split("\n").length > 1
               ) {
                 (event.nativeEvent as any).preventDownshiftDefault = true;
-              } else if (
-                event.key === "ArrowUp" &&
-                event.currentTarget.value.split("\n").length > 1
-              ) {
+              } else if (event.key === "ArrowUp") {
+                console.log("OWJFOIJO");
                 if (positionInHistory == 0) return;
+                else if (
+                  positionInHistory == history.length &&
+                  (history.length === 0 ||
+                    history[history.length - 1] !== event.currentTarget.value)
+                ) {
+                  setHistory([...history, event.currentTarget.value]);
+                }
                 setInputValue(history[positionInHistory - 1]);
                 setPositionInHistory((prev) => prev - 1);
-              } else if (
-                event.key === "ArrowDown" &&
-                event.currentTarget.value.split("\n").length > 1
-              ) {
-                if (positionInHistory < history.length - 1) {
+              } else if (event.key === "ArrowDown") {
+                if (positionInHistory < history.length) {
                   setInputValue(history[positionInHistory + 1]);
                 }
                 setPositionInHistory((prev) =>
@@ -248,6 +335,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
           {isOpen &&
             items.map((item, index) => (
               <Li
+                style={{ borderTop: index === 0 ? "none" : undefined }}
                 key={`${item.name}${index}`}
                 {...getItemProps({ item, index })}
                 highlighted={highlightedIndex === index}
@@ -260,80 +348,10 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
             ))}
         </Ul>
       </div>
-      <div className="px-2 flex gap-2 items-center flex-wrap">
-        {highlightedCodeSections.length === 0 && (
-          <HeaderButtonWithText
-            text={
-              props.addingHighlightedCode ? "Adding Context" : "Add Context"
-            }
-            onClick={() => {
-              props.onToggleAddContext();
-            }}
-            inverted={props.addingHighlightedCode}
-          >
-            <Plus size="1.6em" />
-          </HeaderButtonWithText>
-        )}
-        {highlightedCodeSections.length > 0 && (
-          <>
-            <HeaderButtonWithText
-              text="Clear Context"
-              onClick={() => {
-                props.deleteContextItems(
-                  highlightedCodeSections.map((_, idx) => idx)
-                );
-              }}
-            >
-              <Trash size="1.6em" />
-            </HeaderButtonWithText>
-            <HeaderButtonWithText
-              text={pinned ? "Unpin Context" : "Pin Context"}
-              inverted={pinned}
-              onClick={() => {
-                setPinned((prev) => !prev);
-                props.onTogglePin();
-              }}
-            >
-              {pinned ? (
-                <LockClosed size="1.6em"></LockClosed>
-              ) : (
-                <LockOpen size="1.6em"></LockOpen>
-              )}
-            </HeaderButtonWithText>
-          </>
-        )}
-        {highlightedCodeSections.map((section, idx) => (
-          <PillButton
-            title={`${section.filepath} (${section.range.start.line + 1}-${
-              section.range.end.line + 1
-            })`}
-            onDelete={() => {
-              if (props.deleteContextItems) {
-                props.deleteContextItems([idx]);
-              }
-              setHighlightedCodeSections((prev) => {
-                const newSections = [...prev];
-                newSections.splice(idx, 1);
-                return newSections;
-              });
-            }}
-            onHover={(val: boolean) => {
-              if (val) {
-                setHoveringButton(val);
-              } else {
-                setTimeout(() => {
-                  setHoveringButton(val);
-                }, 100);
-              }
-            }}
-          />
-        ))}
-
-        <span className="text-trueGray-400 ml-auto mr-4 text-xs text-right">
-          Highlight code to include as context. Currently open file included by
-          default. {highlightedCodeSections.length === 0 && ""}
-        </span>
-      </div>
+      {/* <span className="text-trueGray-400 ml-auto m-auto text-xs text-right">
+        Highlight code to include as context. Currently open file included by
+        default. {highlightedCodeSections.length === 0 && ""}
+      </span> */}
       <ContextDropdown
         onMouseEnter={() => {
           setHoveringContextDropdown(true);
@@ -345,9 +363,9 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
       >
         {highlightedCodeSections.map((section, idx) => (
           <>
-            <p>{section.filepath}</p>
+            <p>{section.range.filepath}</p>
             <CodeBlock showCopy={false} key={idx}>
-              {section.contents}
+              {section.range.contents}
             </CodeBlock>
           </>
         ))}

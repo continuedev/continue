@@ -12,7 +12,7 @@ from .observation import Observation, InternalErrorObservation
 from ..server.ide_protocol import AbstractIdeProtocolServer
 from ..libs.util.queue import AsyncSubscriptionQueue
 from ..models.main import ContinueBaseModel
-from .main import Context, ContinueCustomException, Policy, History, FullState, Step, HistoryNode
+from .main import Context, ContinueCustomException, HighlightedRangeContext, Policy, History, FullState, Step, HistoryNode
 from ..steps.core.core import ReversibleStep, ManualEditStep, UserInputStep
 from ..libs.util.telemetry import capture_event
 from .sdk import ContinueSDK
@@ -140,11 +140,24 @@ class Autopilot(ContinueBaseModel):
                         tb_step.step_name, {"output": output, **tb_step.params})
                     await self._run_singular_step(step)
 
-    _highlighted_ranges: List[RangeInFileWithContents] = []
+    _highlighted_ranges: List[HighlightedRangeContext] = []
     _adding_highlighted_code: bool = False
 
+    def _make_sure_is_editing_range(self):
+        """If none of the highlighted ranges are currently being edited, the first should be selected"""
+        if len(self._highlighted_ranges) == 0:
+            return
+        if not any(map(lambda x: x.editing, self._highlighted_ranges)):
+            self._highlighted_ranges[0].editing = True
+
     async def handle_highlighted_code(self, range_in_files: List[RangeInFileWithContents]):
-        if not self._adding_highlighted_code:
+        if not self._adding_highlighted_code and len(self._highlighted_ranges) > 0:
+            return
+
+        # If un-highlighting, then remove the range
+        if len(self._highlighted_ranges) == 1 and len(range_in_files) == 1 and range_in_files[0].range.start == range_in_files[0].range.end:
+            self._highlighted_ranges = []
+            await self.update_subscribers()
             return
 
         # Filter out rifs from ~/.continue/diffs folder
@@ -160,20 +173,25 @@ class Autopilot(ContinueBaseModel):
         for i, rif in enumerate(self._highlighted_ranges):
             found_overlap = False
             for new_rif in range_in_files:
-                if rif.filepath == new_rif.filepath and rif.range.overlaps_with(new_rif.range):
+                if rif.range.filepath == new_rif.filepath and rif.range.range.overlaps_with(new_rif.range):
                     found_overlap = True
                     break
 
                 # Also don't allow multiple ranges in same file with same content. This is useless to the model, and avoids
                 # the bug where cmd+f causes repeated highlights
-                if rif.filepath == new_rif.filepath and rif.contents == new_rif.contents:
+                if rif.range.filepath == new_rif.filepath and rif.range.contents == new_rif.contents:
                     found_overlap = True
                     break
 
             if not found_overlap:
                 new_ranges.append(rif)
 
-        self._highlighted_ranges = new_ranges + range_in_files
+        self._highlighted_ranges = new_ranges + [HighlightedRangeContext(
+            range=rif, editing=False, pinned=False
+        ) for rif in range_in_files]
+
+        self._make_sure_is_editing_range()
+
         await self.update_subscribers()
 
     _step_depth: int = 0
@@ -193,10 +211,23 @@ class Autopilot(ContinueBaseModel):
             if i not in indices:
                 kept_ranges.append(rif)
         self._highlighted_ranges = kept_ranges
+
+        self._make_sure_is_editing_range()
+
         await self.update_subscribers()
 
     async def toggle_adding_highlighted_code(self):
         self._adding_highlighted_code = not self._adding_highlighted_code
+        await self.update_subscribers()
+
+    async def set_editing_at_indices(self, indices: List[int]):
+        for i in range(len(self._highlighted_ranges)):
+            self._highlighted_ranges[i].editing = i in indices
+        await self.update_subscribers()
+
+    async def set_pinned_at_indices(self, indices: List[int]):
+        for i in range(len(self._highlighted_ranges)):
+            self._highlighted_ranges[i].pinned = i in indices
         await self.update_subscribers()
 
     async def _run_singular_step(self, step: "Step", is_future_step: bool = False) -> Coroutine[Observation, None, None]:
@@ -358,6 +389,10 @@ class Autopilot(ContinueBaseModel):
 
         if len(self._main_user_input_queue) > 1:
             return
+
+        # Remove context unless pinned
+        self._highlighted_ranges = [
+            hr for hr in self._highlighted_ranges if hr.pinned]
 
         # await self._request_halt()
         # Just run the step that takes user input, and

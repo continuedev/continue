@@ -15,12 +15,10 @@ interface UserInputContainerProps {
 }
 
 const StyledDiv = styled.div`
-  background-color: rgb(45 45 45);
+  background-color: ${secondaryDark};
   padding: 8px;
   padding-left: 16px;
   padding-right: 16px;
-  border-bottom: 1px solid white;
-  border-top: 1px solid white;
   font-size: 13px;
   display: flex;
   align-items: center;
@@ -29,7 +27,7 @@ const StyledDiv = styled.div`
 const UserInputContainer = (props: UserInputContainerProps) => {
   return (
     <StyledDiv>
-      <b>{props.children}</b>
+      {props.children}
       <div style={{ marginLeft: "auto" }}>
         <HeaderButtonWithText
           onClick={(e) => {

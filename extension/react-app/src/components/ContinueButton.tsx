@@ -18,7 +18,7 @@ let StyledButton = styled(Button)`
 
   &:hover {
     transition-delay: 0.5s;
-    transition-property: background;
+    transition-property: "background";
     background: linear-gradient(
       45deg,
       #be1a55 14.44%,

@@ -1,0 +1,304 @@
+{
+  "title": "FullState",
+  "$ref": "#/definitions/src__continuedev__core__main__FullState",
+  "definitions": {
+    "FunctionCall": {
+      "title": "FunctionCall",
+      "type": "object",
+      "properties": {
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "arguments": {
+          "title": "Arguments",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "arguments"
+      ]
+    },
+    "ChatMessage": {
+      "title": "ChatMessage",
+      "type": "object",
+      "properties": {
+        "role": {
+          "title": "Role",
+          "enum": [
+            "assistant",
+            "user",
+            "system",
+            "function"
+          ],
+          "type": "string"
+        },
+        "content": {
+          "title": "Content",
+          "type": "string"
+        },
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "summary": {
+          "title": "Summary",
+          "type": "string"
+        },
+        "function_call": {
+          "$ref": "#/definitions/FunctionCall"
+        }
+      },
+      "required": [
+        "role",
+        "summary"
+      ]
+    },
+    "Step": {
+      "title": "Step",
+      "type": "object",
+      "properties": {
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "hide": {
+          "title": "Hide",
+          "default": false,
+          "type": "boolean"
+        },
+        "description": {
+          "title": "Description",
+          "type": "string"
+        },
+        "system_message": {
+          "title": "System Message",
+          "type": "string"
+        },
+        "chat_context": {
+          "title": "Chat Context",
+          "default": [],
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ChatMessage"
+          }
+        },
+        "manage_own_chat_context": {
+          "title": "Manage Own Chat Context",
+          "default": false,
+          "type": "boolean"
+        }
+      }
+    },
+    "Observation": {
+      "title": "Observation",
+      "type": "object",
+      "properties": {}
+    },
+    "HistoryNode": {
+      "title": "HistoryNode",
+      "description": "A point in history, a list of which make up History",
+      "type": "object",
+      "properties": {
+        "step": {
+          "$ref": "#/definitions/Step"
+        },
+        "observation": {
+          "$ref": "#/definitions/Observation"
+        },
+        "depth": {
+          "title": "Depth",
+          "type": "integer"
+        },
+        "deleted": {
+          "title": "Deleted",
+          "default": false,
+          "type": "boolean"
+        },
+        "active": {
+          "title": "Active",
+          "default": true,
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "step",
+        "depth"
+      ]
+    },
+    "History": {
+      "title": "History",
+      "description": "A history of steps taken and their results",
+      "type": "object",
+      "properties": {
+        "timeline": {
+          "title": "Timeline",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/HistoryNode"
+          }
+        },
+        "current_index": {
+          "title": "Current Index",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "timeline",
+        "current_index"
+      ]
+    },
+    "Position": {
+      "title": "Position",
+      "type": "object",
+      "properties": {
+        "line": {
+          "title": "Line",
+          "type": "integer"
+        },
+        "character": {
+          "title": "Character",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "line",
+        "character"
+      ]
+    },
+    "Range": {
+      "title": "Range",
+      "description": "A range in a file. 0-indexed.",
+      "type": "object",
+      "properties": {
+        "start": {
+          "$ref": "#/definitions/Position"
+        },
+        "end": {
+          "$ref": "#/definitions/Position"
+        }
+      },
+      "required": [
+        "start",
+        "end"
+      ]
+    },
+    "RangeInFileWithContents": {
+      "title": "RangeInFileWithContents",
+      "description": "A range in a file with the contents of the range.",
+      "type": "object",
+      "properties": {
+        "filepath": {
+          "title": "Filepath",
+          "type": "string"
+        },
+        "range": {
+          "$ref": "#/definitions/Range"
+        },
+        "contents": {
+          "title": "Contents",
+          "type": "string"
+        }
+      },
+      "required": [
+        "filepath",
+        "range",
+        "contents"
+      ]
+    },
+    "HighlightedRangeContext": {
+      "title": "HighlightedRangeContext",
+      "description": "Context for a highlighted range",
+      "type": "object",
+      "properties": {
+        "range": {
+          "$ref": "#/definitions/RangeInFileWithContents"
+        },
+        "editing": {
+          "title": "Editing",
+          "type": "boolean"
+        },
+        "pinned": {
+          "title": "Pinned",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "range",
+        "editing",
+        "pinned"
+      ]
+    },
+    "SlashCommandDescription": {
+      "title": "SlashCommandDescription",
+      "type": "object",
+      "properties": {
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "description": {
+          "title": "Description",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "description"
+      ]
+    },
+    "src__continuedev__core__main__FullState": {
+      "title": "FullState",
+      "description": "A full state of the program, including the history",
+      "type": "object",
+      "properties": {
+        "history": {
+          "$ref": "#/definitions/History"
+        },
+        "active": {
+          "title": "Active",
+          "type": "boolean"
+        },
+        "user_input_queue": {
+          "title": "User Input Queue",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "default_model": {
+          "title": "Default Model",
+          "type": "string"
+        },
+        "highlighted_ranges": {
+          "title": "Highlighted Ranges",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/HighlightedRangeContext"
+          }
+        },
+        "slash_commands": {
+          "title": "Slash Commands",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/SlashCommandDescription"
+          }
+        },
+        "adding_highlighted_code": {
+          "title": "Adding Highlighted Code",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "history",
+        "active",
+        "user_input_queue",
+        "default_model",
+        "highlighted_ranges",
+        "slash_commands",
+        "adding_highlighted_code"
+      ]
+    }
+  }
+}

@@ -199,13 +199,20 @@ class SlashCommandDescription(ContinueBaseModel):
     description: str
 
 
+class HighlightedRangeContext(ContinueBaseModel):
+    """Context for a highlighted range"""
+    range: RangeInFileWithContents
+    editing: bool
+    pinned: bool
+
+
 class FullState(ContinueBaseModel):
     """A full state of the program, including the history"""
     history: History
     active: bool
     user_input_queue: List[str]
     default_model: str
-    highlighted_ranges: List[RangeInFileWithContents]
+    highlighted_ranges: List[HighlightedRangeContext]
     slash_commands: List[SlashCommandDescription]
     adding_highlighted_code: bool
 
