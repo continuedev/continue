@@ -87,6 +87,10 @@ class GUIProtocolServer(AbstractGUIProtocolServer):
                 self.on_delete_context_at_indices(data["indices"])
             elif message_type == "toggle_adding_highlighted_code":
                 self.on_toggle_adding_highlighted_code()
+            elif message_type == "set_editing_at_indices":
+                self.on_set_editing_at_indices(data["indices"])
+            elif message_type == "set_pinned_at_indices":
+                self.on_set_pinned_at_indices(data["indices"])
         except Exception as e:
             print(e)
 
@@ -133,6 +137,16 @@ class GUIProtocolServer(AbstractGUIProtocolServer):
     def on_toggle_adding_highlighted_code(self):
         asyncio.create_task(
             self.session.autopilot.toggle_adding_highlighted_code()
+        )
+
+    def on_set_editing_at_indices(self, indices: List[int]):
+        asyncio.create_task(
+            self.session.autopilot.set_editing_at_indices(indices)
+        )
+
+    def on_set_pinned_at_indices(self, indices: List[int]):
+        asyncio.create_task(
+            self.session.autopilot.set_pinned_at_indices(indices)
         )
 
 

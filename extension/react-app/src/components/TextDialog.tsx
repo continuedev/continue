@@ -8,6 +8,7 @@ const ScreenCover = styled.div`
   width: 100%;
   height: 100%;
   background-color: rgba(168, 168, 168, 0.5);
+  z-index: 100;
 `;
 
 const DialogContainer = styled.div`
@@ -35,7 +36,6 @@ const TextArea = styled.textarea`
   border-radius: 8px;
   padding: 8px;
   outline: 1px solid black;
-  font-family: Arial, Helvetica, sans-serif;
   resize: none;
 
   &:focus {

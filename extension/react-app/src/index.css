@@ -10,19 +10,12 @@
   --def-border-radius: 5px;
 }
 
-@font-face {
-  font-family: "Mona Sans";
-  src: url("assets/Mona-Sans.woff2") format("woff2 supports variations"),
-    url("assets/Mona-Sans.woff2") format("woff2-variations");
-  font-weight: 200 900;
-  font-stretch: 75% 85%;
-}
-
 html,
 body,
 #root {
   height: 100%;
   background-color: var(--vsc-background);
+  font-family: "Lexend", sans-serif;
 }
 
 body {
