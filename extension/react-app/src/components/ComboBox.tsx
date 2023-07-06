@@ -55,7 +55,7 @@ const MainTextInput = styled.textarea`
   }
 `;
 
-const UlMaxHeight = 200;
+const UlMaxHeight = 400;
 const Ul = styled.ul<{
   hidden: boolean;
   showAbove: boolean;

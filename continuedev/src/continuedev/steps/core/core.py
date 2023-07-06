@@ -332,8 +332,9 @@ class DefaultModelEditCodeStep(Step):
 
             # Highlight the line to show progress
             line_to_highlight = current_line_in_file - len(current_block_lines)
-            await sdk.ide.highlightCode(RangeInFile(filepath=rif.filepath, range=Range.from_shorthand(
-                line_to_highlight, 0, line_to_highlight, 0)), "#FFFFFF22" if len(current_block_lines) == 0 else "#00FF0022")
+            if False:
+                await sdk.ide.highlightCode(RangeInFile(filepath=rif.filepath, range=Range.from_shorthand(
+                    line_to_highlight, 0, line_to_highlight, 0)), "#FFFFFF22" if len(current_block_lines) == 0 else "#00FF0022")
 
             if len(current_block_lines) == 0:
                 # Set this as the start of the next block
@@ -382,12 +383,14 @@ class DefaultModelEditCodeStep(Step):
                 replacement = "\n".join(current_block_lines)
                 start_line = current_block_start
                 end_line = current_block_start + index_of_last_line_in_block
-                await sdk.ide.showSuggestion(FileEdit(
-                    filepath=rif.filepath,
-                    range=Range.from_shorthand(
-                        start_line, 0, end_line, 0),
-                    replacement=replacement
-                ))
+
+                if False:
+                    await sdk.ide.showSuggestion(FileEdit(
+                        filepath=rif.filepath,
+                        range=Range.from_shorthand(
+                            start_line, 0, end_line, 0),
+                        replacement=replacement
+                    ))
 
                 # Reset current block / update variables
                 current_line_in_file += 1
