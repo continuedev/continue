@@ -13,7 +13,7 @@ import {
   ArrowPath,
   XMark,
 } from "@styled-icons/heroicons-outline";
-import { Stop } from "@styled-icons/heroicons-solid";
+import { StopCircle } from "@styled-icons/heroicons-solid";
 import { HistoryNode } from "../../../schema/HistoryNode";
 import ReactMarkdown from "react-markdown";
 import HeaderButtonWithText from "./HeaderButtonWithText";
@@ -67,7 +67,6 @@ const HeaderDiv = styled.div<{ error: boolean; loading: boolean }>`
 
 const ContentDiv = styled.div<{ isUserInput: boolean }>`
   padding: 8px;
-  padding-left: 16px;
   background-color: ${(props) =>
     props.isUserInput ? secondaryDark : vscBackground};
   font-size: 13px;
@@ -167,7 +166,7 @@ function StepContainer(props: StepContainerProps) {
               ? "#f00"
               : props.historyNode.active
               ? undefined
-              : "white"
+              : "transparent"
           }
           className="overflow-hidden cursor-pointer"
           onClick={(e) => {
@@ -182,7 +181,7 @@ function StepContainer(props: StepContainerProps) {
             loading={props.historyNode.active as boolean | false}
             error={props.historyNode.observation?.error ? true : false}
           >
-            <h4 className="m-2">
+            <div className="m-2">
               {!isUserInput &&
                 (props.open ? (
                   <ChevronDown size="1.4em" />
@@ -191,7 +190,7 @@ function StepContainer(props: StepContainerProps) {
                 ))}
               {props.historyNode.observation?.title ||
                 (props.historyNode.step.name as any)}
-            </h4>
+            </div>
             {/* <HeaderButton
               onClick={(e) => {
                 e.stopPropagation();
@@ -203,16 +202,14 @@ function StepContainer(props: StepContainerProps) {
 
             <>
               <HeaderButtonWithText
-                disabled={props.historyNode.active as boolean}
                 onClick={(e) => {
                   e.stopPropagation();
                   props.onDelete();
                 }}
-                text={props.historyNode.active ? "Stop" : "Delete"}
-                active={props.historyNode.active}
+                text={props.historyNode.active ? "Stop (⌘⌫)" : "Delete"}
               >
                 {props.historyNode.active ? (
-                  <Stop size="1.2em" onClick={props.onDelete} />
+                  <StopCircle size="1.6em" onClick={props.onDelete} />
                 ) : (
                   <XMark size="1.6em" onClick={props.onDelete} />
                 )}

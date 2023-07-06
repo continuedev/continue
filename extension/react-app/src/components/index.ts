@@ -1,7 +1,9 @@
+import { Tooltip } from "react-tooltip";
 import styled, { keyframes } from "styled-components";
 
 export const defaultBorderRadius = "5px";
-export const secondaryDark = "rgb(42 42 42)";
+export const lightGray = "rgb(100 100 100)";
+export const secondaryDark = "rgb(45 45 45)";
 export const vscBackground = "rgb(30 30 30)";
 export const vscBackgroundTransparent = "#1e1e1ede";
 export const buttonColor = "rgb(113 28 59)";
@@ -24,6 +26,16 @@ export const Button = styled.button`
   &:hover:enabled {
     background-color: ${buttonColorHover};
   }
+`;
+
+export const StyledTooltip = styled(Tooltip)`
+  font-size: 12px;
+  background-color: rgb(60 60 60);
+  border-radius: ${defaultBorderRadius};
+  padding: 6px;
+  padding-left: 12px;
+  padding-right: 12px;
+  z-index: 100;
 `;
 
 export const TextArea = styled.textarea`
@@ -128,19 +140,17 @@ export const HeaderButton = styled.button<{ inverted: boolean | undefined }>`
   background-color: ${({ inverted }) => (inverted ? "white" : "transparent")};
   color: ${({ inverted }) => (inverted ? "black" : "white")};
 
-  border: 1px solid white;
+  border: none;
   border-radius: ${defaultBorderRadius};
   cursor: pointer;
 
   &:hover {
     background-color: ${({ inverted }) =>
-      typeof inverted === "undefined" || inverted ? "white" : "transparent"};
-    color: ${({ inverted }) =>
-      typeof inverted === "undefined" || inverted ? "black" : "white"};
+      typeof inverted === "undefined" || inverted ? lightGray : "transparent"};
   }
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 4px;
-  padding: 1px;
+  padding: 2px;
 `;
