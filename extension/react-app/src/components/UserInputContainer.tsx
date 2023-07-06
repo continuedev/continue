@@ -15,7 +15,7 @@ interface UserInputContainerProps {
 }
 
 const StyledDiv = styled.div`
-  background-color: rgb(50 50 50);
+  background-color: rgb(45 45 45);
   padding: 8px;
   padding-left: 16px;
   padding-right: 16px;
@@ -28,8 +28,8 @@ const StyledDiv = styled.div`
 
 const UserInputContainer = (props: UserInputContainerProps) => {
   return (
-    <StyledDiv hidden={props.historyNode.step.hide as any}>
-      {props.children}
+    <StyledDiv>
+      <b>{props.children}</b>
       <div style={{ marginLeft: "auto" }}>
         <HeaderButtonWithText
           onClick={(e) => {

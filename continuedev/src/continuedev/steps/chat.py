@@ -107,12 +107,8 @@ class RunTerminalCommandStep(Step):
     description: str = "Run a terminal command."
     command: str
 
-    async def describe(self, models: Models) -> Coroutine[Any, Any, Coroutine[str, None, None]]:
-        return f"Ran the terminal command `{self.command}`."
-
     async def run(self, sdk: ContinueSDK):
-        await sdk.wait_for_user_confirmation(f"Run the following terminal command?\n\n```bash\n{self.command}\n```")
-        await sdk.run(self.command)
+        self.description = f"Copy this command and run in your terminal:\n\n```bash\n{self.command}\n```"
 
 
 class ViewDirectoryTreeStep(Step):

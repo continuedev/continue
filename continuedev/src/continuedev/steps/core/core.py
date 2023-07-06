@@ -286,6 +286,7 @@ class DefaultModelEditCodeStep(Step):
         return "```" in line or "<modified_code_to_edit>" in line or "<file_prefix>" in line or "</file_prefix>" in line or "<file_suffix>" in line or "</file_suffix>" in line or "<user_request>" in line or "</user_request>" in line or "<code_to_edit>" in line
 
     async def stream_rif(self, rif: RangeInFileWithContents, sdk: ContinueSDK):
+        await sdk.ide.saveFile(rif.filepath)
         full_file_contents = await sdk.ide.readFile(rif.filepath)
 
         file_prefix, contents, file_suffix, model_to_use = await self.get_prompt_parts(
@@ -294,6 +295,17 @@ class DefaultModelEditCodeStep(Step):
             contents)
         prompt = self.compile_prompt(file_prefix, contents, file_suffix, sdk)
         full_file_contents_lines = full_file_contents.split("\n")
+
+        async def sendDiffUpdate(lines: List[str], sdk: ContinueSDK):
+            nonlocal full_file_contents_lines, rif
+
+            completion = "\n".join(lines)
+
+            full_prefix_lines = full_file_contents_lines[:rif.range.start.line]
+            full_suffix_lines = full_file_contents_lines[rif.range.end.line + 1:]
+            new_file_contents = "\n".join(
+                full_prefix_lines) + "\n" + completion + "\n" + "\n".join(full_suffix_lines)
+            await sdk.ide.showDiff(rif.filepath, new_file_contents)
 
         # Important state variables
         # -------------------------
@@ -320,8 +332,9 @@ class DefaultModelEditCodeStep(Step):
 
             # Highlight the line to show progress
             line_to_highlight = current_line_in_file - len(current_block_lines)
-            await sdk.ide.highlightCode(RangeInFile(filepath=rif.filepath, range=Range.from_shorthand(
-                line_to_highlight, 0, line_to_highlight, 0)), "#FFFFFF22" if len(current_block_lines) == 0 else "#00FF0022")
+            if False:
+                await sdk.ide.highlightCode(RangeInFile(filepath=rif.filepath, range=Range.from_shorthand(
+                    line_to_highlight, 0, line_to_highlight, 0)), "#FFFFFF22" if len(current_block_lines) == 0 else "#00FF0022")
 
             if len(current_block_lines) == 0:
                 # Set this as the start of the next block
@@ -370,12 +383,14 @@ class DefaultModelEditCodeStep(Step):
                 replacement = "\n".join(current_block_lines)
                 start_line = current_block_start
                 end_line = current_block_start + index_of_last_line_in_block
-                await sdk.ide.showSuggestion(FileEdit(
-                    filepath=rif.filepath,
-                    range=Range.from_shorthand(
-                        start_line, 0, end_line, 0),
-                    replacement=replacement
-                ))
+
+                if False:
+                    await sdk.ide.showSuggestion(FileEdit(
+                        filepath=rif.filepath,
+                        range=Range.from_shorthand(
+                            start_line, 0, end_line, 0),
+                        replacement=replacement
+                    ))
 
                 # Reset current block / update variables
                 current_line_in_file += 1
@@ -435,15 +450,15 @@ class DefaultModelEditCodeStep(Step):
                 chunk_lines.pop()  # because this will be an empty string
             else:
                 unfinished_line = chunk_lines.pop()
-            lines.extend(chunk_lines)
+            lines.extend(map(lambda l: common_whitespace + l, chunk_lines))
+
+            if True:
+                await sendDiffUpdate(lines, sdk)
 
             # Deal with newly accumulated lines
             for line in chunk_lines:
                 # Trailing whitespace doesn't matter
                 line = line.rstrip()
-
-                # Add the common whitespace that was removed before prompting
-                line = common_whitespace + line
 
                 # Lines that should signify the end of generation
                 if self.is_end_line(line):
@@ -463,7 +478,9 @@ class DefaultModelEditCodeStep(Step):
                     break
 
                 # If none of the above, insert the line!
-                await handle_generated_line(line)
+                if False:
+                    await handle_generated_line(line)
+
                 completion_lines_covered += 1
                 current_line_in_file += 1
 
@@ -475,34 +492,37 @@ class DefaultModelEditCodeStep(Step):
             completion_lines_covered += 1
             current_line_in_file += 1
 
-        # If the current block isn't empty, add that suggestion
-        if len(current_block_lines) > 0:
-            # We have a chance to back-track here for blank lines that are repeats of the end of the original
-            # Don't want to have the same ending in both the original and the generated, can just leave it there
-            num_to_remove = 0
-            for i in range(-1, -len(current_block_lines) - 1, -1):
-                if len(original_lines_below_previous_blocks) == 0:
-                    break
-                if current_block_lines[i] == original_lines_below_previous_blocks[-1]:
-                    num_to_remove += 1
-                    original_lines_below_previous_blocks.pop()
-                else:
-                    break
-            current_block_lines = current_block_lines[:-
-                                                      num_to_remove] if num_to_remove > 0 else current_block_lines
+        await sendDiffUpdate(lines, sdk)
 
-            # It's also possible that some lines match at the beginning of the block
-            # while len(current_block_lines) > 0 and len(original_lines_below_previous_blocks) > 0 and current_block_lines[0] == original_lines_below_previous_blocks[0]:
-            #     current_block_lines.pop(0)
-            #     original_lines_below_previous_blocks.pop(0)
-            #     current_block_start += 1
+        if False:
+            # If the current block isn't empty, add that suggestion
+            if len(current_block_lines) > 0:
+                # We have a chance to back-track here for blank lines that are repeats of the end of the original
+                # Don't want to have the same ending in both the original and the generated, can just leave it there
+                num_to_remove = 0
+                for i in range(-1, -len(current_block_lines) - 1, -1):
+                    if len(original_lines_below_previous_blocks) == 0:
+                        break
+                    if current_block_lines[i] == original_lines_below_previous_blocks[-1]:
+                        num_to_remove += 1
+                        original_lines_below_previous_blocks.pop()
+                    else:
+                        break
+                current_block_lines = current_block_lines[:-
+                                                          num_to_remove] if num_to_remove > 0 else current_block_lines
 
-            await sdk.ide.showSuggestion(FileEdit(
-                filepath=rif.filepath,
-                range=Range.from_shorthand(
-                    current_block_start, 0, current_block_start + len(original_lines_below_previous_blocks), 0),
-                replacement="\n".join(current_block_lines)
-            ))
+                # It's also possible that some lines match at the beginning of the block
+                # while len(current_block_lines) > 0 and len(original_lines_below_previous_blocks) > 0 and current_block_lines[0] == original_lines_below_previous_blocks[0]:
+                #     current_block_lines.pop(0)
+                #     original_lines_below_previous_blocks.pop(0)
+                #     current_block_start += 1
+
+                await sdk.ide.showSuggestion(FileEdit(
+                    filepath=rif.filepath,
+                    range=Range.from_shorthand(
+                        current_block_start, 0, current_block_start + len(original_lines_below_previous_blocks), 0),
+                    replacement="\n".join(current_block_lines)
+                ))
 
         # Record the completion
         completion = "\n".join(lines)

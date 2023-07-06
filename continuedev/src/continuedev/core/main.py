@@ -207,6 +207,7 @@ class FullState(ContinueBaseModel):
     default_model: str
     highlighted_ranges: List[RangeInFileWithContents]
     slash_commands: List[SlashCommandDescription]
+    adding_highlighted_code: bool
 
 
 class ContinueSDK:

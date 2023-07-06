@@ -11,7 +11,12 @@ import CodeBlock from "./CodeBlock";
 import { RangeInFile } from "../../../src/client";
 import PillButton from "./PillButton";
 import HeaderButtonWithText from "./HeaderButtonWithText";
-import { Trash, LockClosed, LockOpen } from "@styled-icons/heroicons-outline";
+import {
+  Trash,
+  LockClosed,
+  LockOpen,
+  Plus,
+} from "@styled-icons/heroicons-outline";
 
 // #region styled components
 const mainInputFontSize = 16;
@@ -50,7 +55,7 @@ const MainTextInput = styled.textarea`
   }
 `;
 
-const UlMaxHeight = 200;
+const UlMaxHeight = 400;
 const Ul = styled.ul<{
   hidden: boolean;
   showAbove: boolean;
@@ -100,6 +105,8 @@ interface ComboBoxProps {
   highlightedCodeSections: (RangeInFile & { contents: string })[];
   deleteContextItems: (indices: number[]) => void;
   onTogglePin: () => void;
+  onToggleAddContext: () => void;
+  addingHighlightedCode: boolean;
 }
 
 const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
@@ -188,6 +195,11 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
               ) {
                 // Prevent Downshift's default 'Enter' behavior.
                 (event.nativeEvent as any).preventDownshiftDefault = true;
+
+                // cmd+enter to /edit
+                if (event.metaKey) {
+                  event.currentTarget.value = `/edit ${event.currentTarget.value}`;
+                }
                 if (props.onEnter) props.onEnter(event);
                 setInputValue("");
                 const value = event.currentTarget.value;
@@ -249,6 +261,19 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
         </Ul>
       </div>
       <div className="px-2 flex gap-2 items-center flex-wrap">
+        {highlightedCodeSections.length === 0 && (
+          <HeaderButtonWithText
+            text={
+              props.addingHighlightedCode ? "Adding Context" : "Add Context"
+            }
+            onClick={() => {
+              props.onToggleAddContext();
+            }}
+            inverted={props.addingHighlightedCode}
+          >
+            <Plus size="1.6em" />
+          </HeaderButtonWithText>
+        )}
         {highlightedCodeSections.length > 0 && (
           <>
             <HeaderButtonWithText
@@ -304,10 +329,9 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
           />
         ))}
 
-        <span className="text-trueGray-400 ml-auto mr-4 text-xs">
-          Highlight code to include as context.{" "}
-          {highlightedCodeSections.length === 0 &&
-            "Otherwise using entire currently open file."}
+        <span className="text-trueGray-400 ml-auto mr-4 text-xs text-right">
+          Highlight code to include as context. Currently open file included by
+          default. {highlightedCodeSections.length === 0 && ""}
         </span>
       </div>
       <ContextDropdown
