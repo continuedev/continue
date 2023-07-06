@@ -1,11 +1,13 @@
 import styled from "styled-components";
-import { defaultBorderRadius, Loader } from "../components";
+import { defaultBorderRadius } from "../components";
+import Loader from "../components/Loader";
 import ContinueButton from "../components/ContinueButton";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { FullState, HighlightedRangeContext } from "../../../schema/FullState";
+import { useCallback, useEffect, useRef, useState, useContext } from "react";
 import { History } from "../../../schema/History";
 import { HistoryNode } from "../../../schema/HistoryNode";
 import StepContainer from "../components/StepContainer";
-import useContinueGUIProtocol from "../hooks/useWebsocket";
+import { GUIClientContext } from "../App";
 import {
   BookOpen,
   ChatBubbleOvalLeftEllipsis,
@@ -52,6 +54,7 @@ interface GUIProps {
 }
 
 function GUI(props: GUIProps) {
+  const client = useContext(GUIClientContext);
   const posthog = usePostHog();
   const vscMachineId = useSelector(
     (state: RootStore) => state.config.vscMachineId
@@ -70,7 +73,9 @@ function GUI(props: GUIProps) {
   const [usingFastModel, setUsingFastModel] = useState(false);
   const [waitingForSteps, setWaitingForSteps] = useState(false);
   const [userInputQueue, setUserInputQueue] = useState<string[]>([]);
-  const [highlightedRanges, setHighlightedRanges] = useState([]);
+  const [highlightedRanges, setHighlightedRanges] = useState<
+    HighlightedRangeContext[]
+  >([]);
   const [addingHighlightedCode, setAddingHighlightedCode] = useState(false);
   const [availableSlashCommands, setAvailableSlashCommands] = useState<
     { name: string; description: string }[]
@@ -112,7 +117,6 @@ function GUI(props: GUIProps) {
   const [feedbackDialogMessage, setFeedbackDialogMessage] = useState("");
 
   const topGuiDivRef = useRef<HTMLDivElement>(null);
-  const client = useContinueGUIProtocol();
 
   const [scrollTimeout, setScrollTimeout] = useState<NodeJS.Timeout | null>(
     null
@@ -148,7 +152,7 @@ function GUI(props: GUIProps) {
   }, []);
 
   useEffect(() => {
-    client?.onStateUpdate((state) => {
+    client?.onStateUpdate((state: FullState) => {
       // Scroll only if user is at very bottom of the window.
       setUsingFastModel(state.default_model === "gpt-3.5-turbo");
       const shouldScrollToBottom =
@@ -289,7 +293,7 @@ function GUI(props: GUIProps) {
       >
         {typeof client === "undefined" && (
           <>
-            <Loader></Loader>
+            <Loader />
             <p style={{ textAlign: "center" }}>Loading Continue server...</p>
           </>
         )}
@@ -316,7 +320,8 @@ function GUI(props: GUIProps) {
                 setStepsOpen(nextStepsOpen);
               }}
               onToggleAll={() => {
-                setStepsOpen((prev) => prev.map((_, index) => !prev[index]));
+                const shouldOpen = !stepsOpen[index];
+                setStepsOpen((prev) => prev.map(() => shouldOpen));
               }}
               key={index}
               onUserInput={(input: string) => {
@@ -381,6 +386,7 @@ function GUI(props: GUIProps) {
           borderRadius: defaultBorderRadius,
           padding: "16px",
           margin: "16px",
+          zIndex: 100,
         }}
         hidden={!showDataSharingInfo}
       >

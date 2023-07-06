@@ -23,6 +23,10 @@ abstract class AbstractContinueGUIClientProtocol {
 
   abstract deleteContextAtIndices(indices: number[]): void;
 
+  abstract setEditingAtIndices(indices: number[]): void;
+
+  abstract setPinnedAtIndices(indices: number[]): void;
+
   abstract toggleAddingHighlightedCode(): void;
 }
 

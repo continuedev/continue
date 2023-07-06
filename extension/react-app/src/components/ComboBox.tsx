@@ -4,6 +4,7 @@ import styled from "styled-components";
 import {
   buttonColor,
   defaultBorderRadius,
+  lightGray,
   secondaryDark,
   vscBackground,
 } from ".";
@@ -16,10 +17,31 @@ import {
   LockClosed,
   LockOpen,
   Plus,
+  DocumentPlus,
 } from "@styled-icons/heroicons-outline";
+import { HighlightedRangeContext } from "../../../schema/FullState";
 
 // #region styled components
 const mainInputFontSize = 16;
+
+const EmptyPillDiv = styled.div`
+  padding: 8px;
+  border-radius: ${defaultBorderRadius};
+  border: 1px dashed ${lightGray};
+  color: ${lightGray};
+  background-color: ${vscBackground};
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  text-align: center;
+  cursor: pointer;
+  font-size: 13px;
+
+  &:hover {
+    background-color: ${lightGray};
+    color: ${vscBackground};
+  }
+`;
 
 const ContextDropdown = styled.div`
   position: absolute;
@@ -41,17 +63,19 @@ const MainTextInput = styled.textarea`
 
   padding: 8px;
   font-size: ${mainInputFontSize}px;
+  font-family: inherit;
+  border: 1px solid transparent;
   border-radius: ${defaultBorderRadius};
-  border: 1px solid white;
   margin: 8px auto;
+  height: auto;
   width: 100%;
-  background-color: ${vscBackground};
+  background-color: ${secondaryDark};
   color: white;
   z-index: 1;
 
   &:focus {
+    outline: 1px solid #ff000066;
     border: 1px solid transparent;
-    outline: 1px solid orange;
   }
 `;
 
@@ -69,7 +93,6 @@ const Ul = styled.ul<{
   background: ${vscBackground};
   background-color: ${secondaryDark};
   color: white;
-  font-family: "Fira Code", monospace;
   max-height: ${UlMaxHeight}px;
   overflow: scroll;
   padding: 0;
@@ -102,7 +125,7 @@ interface ComboBoxProps {
   onInputValueChange: (inputValue: string) => void;
   disabled?: boolean;
   onEnter: (e: React.KeyboardEvent<HTMLInputElement>) => void;
-  highlightedCodeSections: (RangeInFile & { contents: string })[];
+  highlightedCodeSections: HighlightedRangeContext[];
   deleteContextItems: (indices: number[]) => void;
   onTogglePin: () => void;
   onToggleAddContext: () => void;
@@ -119,16 +142,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
     React.useState(false);
   const [pinned, setPinned] = useState(false);
   const [highlightedCodeSections, setHighlightedCodeSections] = React.useState(
-    props.highlightedCodeSections || [
-      {
-        filepath: "test.ts",
-        range: {
-          start: { line: 0, character: 0 },
-          end: { line: 0, character: 0 },
-        },
-        contents: "import * as a from 'a';",
-      },
-    ]
+    props.highlightedCodeSections || []
   );
 
   useEffect(() => {
@@ -169,6 +183,71 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
 
   return (
     <>
+      <div className="px-2 flex gap-2 items-center flex-wrap mt-2">
+        {highlightedCodeSections.length > 1 && (
+          <>
+            <HeaderButtonWithText
+              text="Clear Context"
+              onClick={() => {
+                props.deleteContextItems(
+                  highlightedCodeSections.map((_, idx) => idx)
+                );
+              }}
+            >
+              <Trash size="1.6em" />
+            </HeaderButtonWithText>
+          </>
+        )}
+        {highlightedCodeSections.map((section, idx) => (
+          <PillButton
+            editing={section.editing}
+            pinned={section.pinned}
+            index={idx}
+            key={`${section.filepath}${idx}`}
+            title={`${section.range.filepath} (${
+              section.range.range.start.line + 1
+            }-${section.range.range.end.line + 1})`}
+            onDelete={() => {
+              if (props.deleteContextItems) {
+                props.deleteContextItems([idx]);
+              }
+              setHighlightedCodeSections((prev) => {
+                const newSections = [...prev];
+                newSections.splice(idx, 1);
+                return newSections;
+              });
+            }}
+            onHover={(val: boolean) => {
+              if (val) {
+                setHoveringButton(val);
+              } else {
+                setTimeout(() => {
+                  setHoveringButton(val);
+                }, 100);
+              }
+            }}
+          />
+        ))}
+        {props.highlightedCodeSections.length > 0 &&
+          (props.addingHighlightedCode ? (
+            <EmptyPillDiv
+              onClick={() => {
+                props.onToggleAddContext();
+              }}
+            >
+              Highlight to Add Context
+            </EmptyPillDiv>
+          ) : (
+            <HeaderButtonWithText
+              text="Add to Context"
+              onClick={() => {
+                props.onToggleAddContext();
+              }}
+            >
+              <DocumentPlus width="1.6em"></DocumentPlus>
+            </HeaderButtonWithText>
+          ))}
+      </div>
       <div className="flex px-2" ref={divRef} hidden={!isOpen}>
         <MainTextInput
           disabled={props.disabled}
@@ -260,80 +339,10 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
             ))}
         </Ul>
       </div>
-      <div className="px-2 flex gap-2 items-center flex-wrap">
-        {highlightedCodeSections.length === 0 && (
-          <HeaderButtonWithText
-            text={
-              props.addingHighlightedCode ? "Adding Context" : "Add Context"
-            }
-            onClick={() => {
-              props.onToggleAddContext();
-            }}
-            inverted={props.addingHighlightedCode}
-          >
-            <Plus size="1.6em" />
-          </HeaderButtonWithText>
-        )}
-        {highlightedCodeSections.length > 0 && (
-          <>
-            <HeaderButtonWithText
-              text="Clear Context"
-              onClick={() => {
-                props.deleteContextItems(
-                  highlightedCodeSections.map((_, idx) => idx)
-                );
-              }}
-            >
-              <Trash size="1.6em" />
-            </HeaderButtonWithText>
-            <HeaderButtonWithText
-              text={pinned ? "Unpin Context" : "Pin Context"}
-              inverted={pinned}
-              onClick={() => {
-                setPinned((prev) => !prev);
-                props.onTogglePin();
-              }}
-            >
-              {pinned ? (
-                <LockClosed size="1.6em"></LockClosed>
-              ) : (
-                <LockOpen size="1.6em"></LockOpen>
-              )}
-            </HeaderButtonWithText>
-          </>
-        )}
-        {highlightedCodeSections.map((section, idx) => (
-          <PillButton
-            title={`${section.filepath} (${section.range.start.line + 1}-${
-              section.range.end.line + 1
-            })`}
-            onDelete={() => {
-              if (props.deleteContextItems) {
-                props.deleteContextItems([idx]);
-              }
-              setHighlightedCodeSections((prev) => {
-                const newSections = [...prev];
-                newSections.splice(idx, 1);
-                return newSections;
-              });
-            }}
-            onHover={(val: boolean) => {
-              if (val) {
-                setHoveringButton(val);
-              } else {
-                setTimeout(() => {
-                  setHoveringButton(val);
-                }, 100);
-              }
-            }}
-          />
-        ))}
-
-        <span className="text-trueGray-400 ml-auto mr-4 text-xs text-right">
-          Highlight code to include as context. Currently open file included by
-          default. {highlightedCodeSections.length === 0 && ""}
-        </span>
-      </div>
+      {/* <span className="text-trueGray-400 ml-auto m-auto text-xs text-right">
+        Highlight code to include as context. Currently open file included by
+        default. {highlightedCodeSections.length === 0 && ""}
+      </span> */}
       <ContextDropdown
         onMouseEnter={() => {
           setHoveringContextDropdown(true);
@@ -345,9 +354,9 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
       >
         {highlightedCodeSections.map((section, idx) => (
           <>
-            <p>{section.filepath}</p>
+            <p>{section.range.filepath}</p>
             <CodeBlock showCopy={false} key={idx}>
-              {section.contents}
+              {section.range.contents}
             </CodeBlock>
           </>
         ))}
