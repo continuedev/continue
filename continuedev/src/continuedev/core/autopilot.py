@@ -75,7 +75,7 @@ class Autopilot(ContinueBaseModel):
 
     def get_available_slash_commands(self) -> List[Dict]:
         custom_commands = list(map(lambda x: {
-                               "name": x.name, "description": x.prompt}, self.continue_sdk.config.custom_commands)) or []
+                               "name": x.name, "description": x.description}, self.continue_sdk.config.custom_commands)) or []
         slash_commands = list(map(lambda x: {
                               "name": x.name, "description": x.description}, self.continue_sdk.config.slash_commands)) or []
         return custom_commands + slash_commands

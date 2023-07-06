@@ -46,7 +46,7 @@ def parse_custom_command(inp: str, config: ContinueConfig) -> Union[None, Step]:
             slash_command = parse_slash_command(custom_cmd.prompt, config)
             if slash_command is not None:
                 return slash_command
-            return CustomCommandStep(name=custom_cmd.name, prompt=custom_cmd.prompt, user_input=after_command)
+            return CustomCommandStep(name=custom_cmd.name, description=custom_cmd.description, prompt=custom_cmd.prompt, user_input=after_command)
     return None
 
 
