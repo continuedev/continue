@@ -264,7 +264,7 @@ class IdeProtocolClient {
 
     // If not, ask user for secret
     secret = await vscode.window.showInputBox({
-      prompt: `Enter secret for ${key}, OR press enter to try for free. You can edit this later in the Continue VS Code settings.`,
+      prompt: `Either enter secret for ${key} or press enter to try Continue for free.`,
       password: true,
     });
 
