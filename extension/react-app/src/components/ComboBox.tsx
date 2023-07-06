@@ -71,9 +71,11 @@ const MainTextInput = styled.textarea`
   background-color: ${secondaryDark};
   color: white;
   z-index: 1;
+  border: 1px solid transparent;
 
   &:focus {
     outline: 1px solid ${lightGray};
+    border: 1px solid transparent;
   }
 `;
 
