@@ -9,12 +9,13 @@ class OpenConfigStep(Step):
 
     async def describe(self, models):
         return dedent("""\
-            Config.json is now open. You can add a custom slash command in the `\"custom_commands\"` section, like in this example:
+            `\"config.json\"` is now open. You can add a custom slash command in the `\"custom_commands\"` section, like in this example:
             ```json
             "custom_commands": [
                 {
                     "name": "test",
-                    "prompt": "write me a comprehensive unit test for this function, that covers all edge cases. Use pytest."
+                    "description": "Write unit tests like I do for the highlighted code"
+                    "prompt": "Write a comprehensive set of unit tests for the selected code. It should setup, run tests that check for correctness including important edge cases, and teardown. Ensure that the tests are complete and sophisticated."
                 }
             ],
             ```""")
