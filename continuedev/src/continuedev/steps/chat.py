@@ -30,15 +30,8 @@ class SimpleChatStep(Step):
             self.description = ""
         await sdk.update_ui()
 
-        messages = await sdk.get_chat_context()
-        messages.append(ChatMessage(
-            role="user",
-            content=self.user_input,
-            summary=self.user_input
-        ))
-
         completion = ""
-        async for chunk in sdk.models.gpt4.stream_chat(messages):
+        async for chunk in sdk.models.gpt4.stream_chat(await sdk.get_chat_context()):
             if sdk.current_step_was_deleted():
                 return
 
