@@ -14,7 +14,7 @@
   "displayName": "Continue",
   "pricing": "Free",
   "description": "The open-source coding autopilot",
-  "version": "0.0.108",
+  "version": "0.0.113",
   "publisher": "Continue",
   "engines": {
     "vscode": "^1.67.0"
@@ -39,6 +39,7 @@
     "onView:continueGUIView"
   ],
   "main": "./out/extension.js",
+  "browser": "./out/extension.js",
   "contributes": {
     "configuration": {
       "title": "Continue",
@@ -87,6 +88,16 @@
         "title": "Reject Suggestion"
       },
       {
+        "command": "continue.acceptDiff",
+        "category": "Continue",
+        "title": "Accept Diff"
+      },
+      {
+        "command": "continue.rejectDiff",
+        "category": "Continue",
+        "title": "Reject Diff"
+      },
+      {
         "command": "continue.acceptAllSuggestions",
         "category": "Continue",
         "title": "Accept All Suggestions"
@@ -119,12 +130,12 @@
         "key": "shift+ctrl+enter"
       },
       {
-        "command": "continue.acceptAllSuggestions",
+        "command": "continue.acceptDiff",
         "mac": "shift+cmd+enter",
         "key": "shift+ctrl+enter"
       },
       {
-        "command": "continue.rejectAllSuggestions",
+        "command": "continue.rejectDiff",
         "mac": "shift+cmd+backspace",
         "key": "shift+ctrl+backspace"
       }
@@ -242,6 +253,7 @@
     "@segment/analytics-node": "^0.0.1-beta.16",
     "@sentry/node": "^7.57.0",
     "@styled-icons/heroicons-outline": "^10.47.0",
+    "@styled-icons/heroicons-solid": "^10.47.0",
     "@vitejs/plugin-react-swc": "^3.3.2",
     "axios": "^1.2.5",
     "downshift": "^7.6.0",

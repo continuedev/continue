@@ -1,5 +1,5 @@
 from textwrap import dedent
-from typing import List, Tuple, Type
+from typing import List, Tuple, Type, Union
 
 from ..steps.welcome import WelcomeStep
 from .config import ContinueConfig
@@ -20,6 +20,34 @@ from ..recipes.DDtoBQRecipe.main import DDtoBQRecipe
 from ..steps.core.core import MessageStep
 from ..libs.util.step_name_to_steps import get_step_from_name
 from ..steps.custom_command import CustomCommandStep
+
+
+def parse_slash_command(inp: str, config: ContinueConfig) -> Union[None, Step]:
+    """
+    Parses a slash command, returning the command name and the rest of the input.
+    """
+    if inp.startswith("/"):
+        command_name = inp.split(" ")[0]
+        after_command = " ".join(inp.split(" ")[1:])
+
+        for slash_command in config.slash_commands:
+            if slash_command.name == command_name[1:]:
+                params = slash_command.params
+                params["user_input"] = after_command
+                return get_step_from_name(slash_command.step_name, params)
+    return None
+
+
+def parse_custom_command(inp: str, config: ContinueConfig) -> Union[None, Step]:
+    command_name = inp.split(" ")[0]
+    after_command = " ".join(inp.split(" ")[1:])
+    for custom_cmd in config.custom_commands:
+        if custom_cmd.name == command_name[1:]:
+            slash_command = parse_slash_command(custom_cmd.prompt, config)
+            if slash_command is not None:
+                return slash_command
+            return CustomCommandStep(name=custom_cmd.name, prompt=custom_cmd.prompt, user_input=after_command)
+    return None
 
 
 class DemoPolicy(Policy):
@@ -46,34 +74,14 @@ class DemoPolicy(Policy):
             # This could be defined with ObservationTypePolicy. Ergonomics not right though.
             user_input = observation.user_input
 
-            if user_input.startswith("/"):
-                command_name = user_input.split(" ")[0]
-                after_command = " ".join(user_input.split(" ")[1:])
-                for slash_command in config.slash_commands:
-                    if slash_command.name == command_name[1:]:
-                        params = slash_command.params
-                        params["user_input"] = after_command
-                        return get_step_from_name(slash_command.step_name, params)
+            slash_command = parse_slash_command(user_input, config)
+            if slash_command is not None:
+                return slash_command
 
-                for custom_cmd in config.custom_commands:
-                    if custom_cmd.name == command_name[1:]:
-                        return CustomCommandStep(name=custom_cmd.name, prompt=custom_cmd.prompt, user_input=after_command)
+            custom_command = parse_custom_command(user_input, config)
+            if custom_command is not None:
+                return custom_command
 
-            # return EditHighlightedCodeStep(user_input=user_input)
-            return ChatWithFunctions(user_input=user_input)
-            return NLDecisionStep(user_input=user_input, steps=[
-                (EditHighlightedCodeStep(user_input=user_input),
-                 "Edit the highlighted code"),
-                # AnswerQuestionChroma(question=user_input),
-                # EditFileChroma(request=user_input),
-                (SimpleChatStep(user_input=user_input),
-                 "Respond to the user with a chat message. Can answer questions about code or anything else."),
-            ], default_step=EditHighlightedCodeStep(user_input=user_input))
+            return SimpleChatStep(user_input=user_input)
 
-        state = history.get_current()
-
-        if observation is not None and isinstance(observation, TracebackObservation):
-            self.ran_code_last = False
-            return SolveTracebackStep(traceback=observation.traceback)
-        else:
-            return None
+        return None

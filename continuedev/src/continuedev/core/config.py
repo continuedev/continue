@@ -33,11 +33,11 @@ DEFAULT_SLASH_COMMANDS = [
         description="Edit code in the current file or the highlighted code",
         step_name="EditHighlightedCodeStep",
     ),
-    SlashCommand(
-        name="explain",
-        description="Reply to instructions or a question with previous steps and the highlighted code or current file as context",
-        step_name="SimpleChatStep",
-    ),
+    # SlashCommand(
+    #     name="explain",
+    #     description="Reply to instructions or a question with previous steps and the highlighted code or current file as context",
+    #     step_name="SimpleChatStep",
+    # ),
     SlashCommand(
         name="config",
         description="Open the config file to create new and edit existing slash commands",
@@ -71,7 +71,10 @@ class ContinueConfig(BaseModel):
     allow_anonymous_telemetry: Optional[bool] = True
     default_model: Literal["gpt-3.5-turbo", "gpt-3.5-turbo-16k",
                            "gpt-4"] = 'gpt-4'
-    custom_commands: Optional[List[CustomCommand]] = []
+    custom_commands: Optional[List[CustomCommand]] = [CustomCommand(
+        name="test",
+        prompt="Write a comprehensive set of unit tests for the selected code. It should setup, run tests that check for correctness including important edge cases, and teardown. Ensure that the tests are complete and sophisticated. Give the tests just as chat output, don't edit any file.",
+    )]
     slash_commands: Optional[List[SlashCommand]] = DEFAULT_SLASH_COMMANDS
     on_traceback: Optional[List[OnTracebackSteps]] = [
         OnTracebackSteps(step_name="DefaultOnTracebackStep")]
@@ -126,7 +129,7 @@ def load_global_config() -> ContinueConfig:
         config_path = os.path.join(global_dir, 'config.json')
         if not os.path.exists(config_path):
             with open(config_path, 'w') as f:
-                json.dump(dict(ContinueConfig()), f)
+                json.dump(ContinueConfig().dict(), f)
         with open(config_path, 'r') as f:
             try:
                 config_dict = json.load(f)

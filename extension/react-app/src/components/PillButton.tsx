@@ -15,6 +15,8 @@ const Button = styled.button`
     background-color: white;
     color: black;
   }
+
+  cursor: pointer;
 `;
 
 interface PillButtonProps {
@@ -39,26 +41,13 @@ const PillButton = (props: PillButtonProps) => {
           props.onHover(false);
         }
       }}
+      onClick={() => {
+        if (props.onDelete) {
+          props.onDelete();
+        }
+      }}
     >
-      <div
-        style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: "4px" }}
-      >
-        <span
-          style={{
-            cursor: "pointer",
-            color: "red",
-            borderRight: "1px solid black",
-            paddingRight: "4px",
-          }}
-          onClick={() => {
-            props.onDelete?.();
-            props.onHover?.(false);
-          }}
-        >
-          <XMark style={{ padding: "0px" }} size="1.2em" strokeWidth="2px" />
-        </span>
-        <span>{props.title}</span>
-      </div>
+      {props.title}
     </Button>
   );
 };

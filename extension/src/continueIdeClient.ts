@@ -15,6 +15,10 @@ import {
 import { FileEditWithFullContents } from "../schema/FileEditWithFullContents";
 import fs = require("fs");
 import { WebsocketMessenger } from "./util/messenger";
+import * as path from "path";
+import * as os from "os";
+import { diffManager } from "./diffs";
+
 class IdeProtocolClient {
   private messenger: WebsocketMessenger | null = null;
   private readonly context: vscode.ExtensionContext;
@@ -239,40 +243,8 @@ class IdeProtocolClient {
     );
   }
 
-  contentProvider: vscode.Disposable | null = null;
-
   showDiff(filepath: string, replacement: string) {
-    const myProvider = new (class
-      implements vscode.TextDocumentContentProvider
-    {
-      onDidChangeEmitter = new vscode.EventEmitter<vscode.Uri>();
-      onDidChange = this.onDidChangeEmitter.event;
-      provideTextDocumentContent = (uri: vscode.Uri) => {
-        return replacement;
-      };
-    })();
-    this.contentProvider = vscode.workspace.registerTextDocumentContentProvider(
-      "continueDiff",
-      myProvider
-    );
-
-    // Call the event fire
-    const diffFilename = `continueDiff://${filepath}`;
-    myProvider.onDidChangeEmitter.fire(vscode.Uri.parse(diffFilename));
-
-    const leftUri = vscode.Uri.file(filepath);
-    const rightUri = vscode.Uri.parse(diffFilename);
-    const title = "Continue Diff";
-    vscode.commands
-      .executeCommand("vscode.diff", leftUri, rightUri, title)
-      .then(
-        () => {
-          console.log("Diff view opened successfully");
-        },
-        (error) => {
-          console.error("Error opening diff view:", error);
-        }
-      );
+    diffManager.writeDiff(filepath, replacement);
   }
 
   openFile(filepath: string) {
