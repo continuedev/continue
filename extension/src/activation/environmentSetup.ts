@@ -195,6 +195,11 @@ async function setupPythonEnv() {
       if (checkEnvExists()) {
         break;
       } else if (stderr) {
+        if (stderr.includes("Running Scripts is Disabled on this System")) {
+          vscode.window.showErrorMessage(
+             "A Python virtual enviroment cannot be activated because running scripts is disabled for this user. Please enable signed scripts to run with this command in PowerShell: `Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser`, reload VS Code, and then try again."
+          );
+        }
         throw new Error(stderr);
       } else {
         // Remove the env and try again
