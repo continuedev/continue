@@ -150,6 +150,8 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
             self.onAcceptRejectSuggestion(data["accepted"])
         elif message_type == "acceptRejectDiff":
             self.onAcceptRejectDiff(data["accepted"])
+        elif message_type == "mainUserInput":
+            self.onMainUserInput(data["input"])
         elif message_type in ["highlightedCode", "openFiles", "readFile", "editFile", "workspaceDirectory", "getUserSecret", "runCommand", "uniqueId"]:
             self.sub_queue.post(message_type, data)
         else:
@@ -254,6 +256,11 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
         for _, session in self.session_manager.sessions.items():
             asyncio.create_task(
                 session.autopilot.handle_highlighted_code(range_in_files))
+
+    def onMainUserInput(self, input: str):
+        for _, session in self.session_manager.sessions.items():
+            asyncio.create_task(
+                session.autopilot.accept_user_input(input))
 
     # Request information. Session doesn't matter.
     async def getOpenFiles(self) -> List[str]:
