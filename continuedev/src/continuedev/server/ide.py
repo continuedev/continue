@@ -148,6 +148,8 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
             self.onCommandOutput(output)
         elif message_type == "acceptRejectSuggestion":
             self.onAcceptRejectSuggestion(data["accepted"])
+        elif message_type == "acceptRejectDiff":
+            self.onAcceptRejectDiff(data["accepted"])
         elif message_type in ["highlightedCode", "openFiles", "readFile", "editFile", "workspaceDirectory", "getUserSecret", "runCommand", "uniqueId"]:
             self.sub_queue.post(message_type, data)
         else:
@@ -216,6 +218,11 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
 
     def onAcceptRejectSuggestion(self, accepted: bool):
         capture_event(self.unique_id, "accept_reject_suggestion", {
+            "accepted": accepted
+        })
+
+    def onAcceptRejectDiff(self, accepted: bool):
+        capture_event(self.unique_id, "accept_reject_diff", {
             "accepted": accepted
         })
 

@@ -217,25 +217,10 @@ function GUI(props: GUIProps) {
     [client]
   );
 
-  useEffect(() => {
-    if (mainTextInputRef.current) {
-      mainTextInputRef.current.focus();
-      let handler = (event: any) => {
-        if (event.data.type === "focusContinueInput") {
-          mainTextInputRef.current?.focus();
-        }
-      };
-      window.addEventListener("message", handler);
-      return () => {
-        window.removeEventListener("message", handler);
-      };
-    }
-  }, [mainTextInputRef]);
-
   const onMainTextInput = () => {
     if (mainTextInputRef.current) {
-      let input = mainTextInputRef.current.value;
-      mainTextInputRef.current.value = "";
+      const input = (mainTextInputRef.current as any).inputValue;
+      (mainTextInputRef.current as any).setInputValue("");
       if (!client) return;
 
       setWaitingForSteps(true);
@@ -266,13 +251,6 @@ function GUI(props: GUIProps) {
       setUserInputQueue((queue) => {
         return [...queue, input];
       });
-
-      // Delete all context items unless locked
-      if (!pinned) {
-        client?.deleteContextAtIndices(
-          highlightedRanges.map((_, index) => index)
-        );
-      }
     }
   };
 

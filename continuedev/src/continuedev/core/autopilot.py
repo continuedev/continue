@@ -153,7 +153,7 @@ class Autopilot(ContinueBaseModel):
     async def handle_highlighted_code(self, range_in_files: List[RangeInFileWithContents]):
 
         # If un-highlighting, then remove the range
-        if len(self._highlighted_ranges) == 1 and len(range_in_files) <= 1 and (len(range_in_files) == 0 or range_in_files[0].range.start == range_in_files[0].range.end):
+        if len(self._highlighted_ranges) == 1 and len(range_in_files) <= 1 and (len(range_in_files) == 0 or range_in_files[0].range.start == range_in_files[0].range.end) and not self._adding_highlighted_code:
             self._highlighted_ranges = []
             await self.update_subscribers()
             return
