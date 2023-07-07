@@ -38,7 +38,12 @@ class DiffManager {
     originalFilepath: string,
     newFilepath: string,
     newContent: string
-  ): vscode.TextEditor {
+  ): vscode.TextEditor | undefined {
+    // If the file doesn't yet exist, don't open the diff editor
+    if (!fs.existsSync(newFilepath)) {
+      return undefined;
+    }
+
     const rightUri = vscode.Uri.parse(newFilepath);
     const leftUri = vscode.Uri.file(originalFilepath);
     const title = "Continue Diff";
@@ -73,6 +78,12 @@ class DiffManager {
         originalFilepath,
         newFilepath,
       };
+      this.diffs.set(newFilepath, diffInfo);
+    }
+
+    // Open the editor if it hasn't been opened yet
+    const diffInfo = this.diffs.get(newFilepath);
+    if (diffInfo && !diffInfo?.editor) {
       diffInfo.editor = this.openDiffEditor(
         originalFilepath,
         newFilepath,
@@ -80,6 +91,7 @@ class DiffManager {
       );
       this.diffs.set(newFilepath, diffInfo);
     }
+
     return newFilepath;
   }
 
@@ -89,7 +101,7 @@ class DiffManager {
       vscode.window.showTextDocument(diffInfo.editor.document);
       vscode.commands.executeCommand("workbench.action.closeActiveEditor");
     }
-    this.diffs.delete(diffInfo.newFilepath);
+    // this.diffs.delete(diffInfo.newFilepath);
     fs.unlinkSync(diffInfo.newFilepath);
   }
 
