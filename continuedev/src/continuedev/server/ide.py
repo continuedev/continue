@@ -250,7 +250,7 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
 
     def onDeleteAtIndex(self, index: int):
         for _, session in self.session_manager.sessions.items():
-            session.autopilot.delete_at_index(index)
+            asyncio.create_task(session.autopilot.delete_at_index(index))
 
     def onCommandOutput(self, output: str):
         # Send the output to ALL autopilots.

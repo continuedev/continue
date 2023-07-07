@@ -217,9 +217,13 @@ function GUI(props: GUIProps) {
     [client]
   );
 
-  const onMainTextInput = () => {
+  const onMainTextInput = (event?: any) => {
     if (mainTextInputRef.current) {
-      const input = (mainTextInputRef.current as any).inputValue;
+      let input = (mainTextInputRef.current as any).inputValue;
+      // cmd+enter to /edit
+      if (event?.metaKey) {
+        input = `/edit ${input}`;
+      }
       (mainTextInputRef.current as any).setInputValue("");
       if (!client) return;
 
@@ -352,7 +356,7 @@ function GUI(props: GUIProps) {
           // }
           ref={mainTextInputRef}
           onEnter={(e) => {
-            onMainTextInput();
+            onMainTextInput(e);
             e.stopPropagation();
             e.preventDefault();
           }}
