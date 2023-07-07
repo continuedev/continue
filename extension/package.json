@@ -14,7 +14,7 @@
   "displayName": "Continue",
   "pricing": "Free",
   "description": "The open-source coding autopilot",
-  "version": "0.0.124",
+  "version": "0.0.125",
   "publisher": "Continue",
   "engines": {
     "vscode": "^1.67.0"
@@ -146,8 +146,8 @@
       },
       {
         "command": "continue.quickTextEntry",
-        "mac": "cmd+h",
-        "key": "ctrl+h"
+        "mac": "cmd+shift+l",
+        "key": "ctrl+shift+l"
       }
     ],
     "menus": {
