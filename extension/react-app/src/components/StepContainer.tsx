@@ -260,6 +260,9 @@ function StepContainer(props: StepContainerProps) {
                 code: ({ node, ...props }) => {
                   return <StyledCode children={props.children[0] as any} />;
                 },
+                ul: ({ node, ...props }) => {
+                  return <ul className="ml-0" {...props} />;
+                },
               }}
             >
               {props.historyNode.step.description as any}

@@ -1,4 +1,9 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useState,
+} from "react";
 import { useCombobox } from "downshift";
 import styled from "styled-components";
 import {
@@ -151,22 +156,13 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
   const [highlightedCodeSections, setHighlightedCodeSections] = React.useState(
     props.highlightedCodeSections || []
   );
+  const inputRef = React.useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     setHighlightedCodeSections(props.highlightedCodeSections || []);
   }, [props.highlightedCodeSections]);
 
-  const {
-    isOpen,
-    getToggleButtonProps,
-    getLabelProps,
-    getMenuProps,
-    getInputProps,
-    highlightedIndex,
-    getItemProps,
-    selectedItem,
-    setInputValue,
-  } = useCombobox({
+  const { getInputProps, ...downshiftProps } = useCombobox({
     onInputValueChange({ inputValue }) {
       if (!inputValue) return;
       props.onInputValueChange(inputValue);
@@ -181,6 +177,24 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
       return item ? item.name : "";
     },
   });
+
+  useImperativeHandle(ref, () => downshiftProps, [downshiftProps]);
+
+  useEffect(() => {
+    if (!inputRef.current) {
+      return;
+    }
+    inputRef.current.focus();
+    const handler = (event: any) => {
+      if (event.data.type === "focusContinueInput") {
+        inputRef.current!.focus();
+      }
+    };
+    window.addEventListener("message", handler);
+    return () => {
+      window.removeEventListener("message", handler);
+    };
+  }, [inputRef.current]);
 
   const divRef = React.useRef<HTMLDivElement>(null);
   const ulRef = React.useRef<HTMLUListElement>(null);
@@ -255,7 +269,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
             </HeaderButtonWithText>
           ))}
       </div>
-      <div className="flex px-2" ref={divRef} hidden={!isOpen}>
+      <div className="flex px-2" ref={divRef} hidden={!downshiftProps.isOpen}>
         <MainTextInput
           disabled={props.disabled}
           placeholder="Ask a question, give instructions, or type '/' to see slash commands"
@@ -277,9 +291,9 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
                 (event.nativeEvent as any).preventDownshiftDefault = true;
               } else if (
                 event.key === "Enter" &&
-                (!isOpen || items.length === 0)
+                (!downshiftProps.isOpen || items.length === 0)
               ) {
-                setInputValue("");
+                downshiftProps.setInputValue("");
                 const value = event.currentTarget.value;
                 if (value !== "") {
                   setPositionInHistory(history.length + 1);
@@ -294,7 +308,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
                 }
                 if (props.onEnter) props.onEnter(event);
               } else if (event.key === "Tab" && items.length > 0) {
-                setInputValue(items[0].name);
+                downshiftProps.setInputValue(items[0].name);
                 event.preventDefault();
               } else if (
                 (event.key === "ArrowUp" || event.key === "ArrowDown") &&
@@ -311,35 +325,35 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
                 ) {
                   setHistory([...history, event.currentTarget.value]);
                 }
-                setInputValue(history[positionInHistory - 1]);
+                downshiftProps.setInputValue(history[positionInHistory - 1]);
                 setPositionInHistory((prev) => prev - 1);
               } else if (event.key === "ArrowDown") {
                 if (positionInHistory < history.length) {
-                  setInputValue(history[positionInHistory + 1]);
+                  downshiftProps.setInputValue(history[positionInHistory + 1]);
                 }
                 setPositionInHistory((prev) =>
                   Math.min(prev + 1, history.length)
                 );
               }
             },
-            ref: ref as any,
+            ref: inputRef,
           })}
         />
         <Ul
-          {...getMenuProps({
+          {...downshiftProps.getMenuProps({
             ref: ulRef,
           })}
           showAbove={showAbove()}
           ulHeightPixels={ulRef.current?.getBoundingClientRect().height || 0}
         >
-          {isOpen &&
+          {downshiftProps.isOpen &&
             items.map((item, index) => (
               <Li
                 style={{ borderTop: index === 0 ? "none" : undefined }}
                 key={`${item.name}${index}`}
-                {...getItemProps({ item, index })}
-                highlighted={highlightedIndex === index}
-                selected={selectedItem === item}
+                {...downshiftProps.getItemProps({ item, index })}
+                highlighted={downshiftProps.highlightedIndex === index}
+                selected={downshiftProps.selectedItem === item}
               >
                 <span>
                   {item.name}: {item.description}

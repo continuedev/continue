@@ -2,6 +2,7 @@ import * as os from "os";
 import * as path from "path";
 import * as fs from "fs";
 import * as vscode from "vscode";
+import { ideProtocolClient } from "./activation/activate";
 
 interface DiffInfo {
   originalFilepath: string;
@@ -133,8 +134,10 @@ export const diffManager = new DiffManager();
 
 export async function acceptDiffCommand(newFilepath?: string) {
   diffManager.acceptDiff(newFilepath);
+  ideProtocolClient.sendAcceptRejectDiff(true);
 }
 
 export async function rejectDiffCommand(newFilepath?: string) {
   diffManager.rejectDiff(newFilepath);
+  ideProtocolClient.sendAcceptRejectDiff(false);
 }

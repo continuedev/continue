@@ -450,39 +450,39 @@ class DefaultModelEditCodeStep(Step):
                 chunk_lines.pop()  # because this will be an empty string
             else:
                 unfinished_line = chunk_lines.pop()
-            lines.extend(map(lambda l: common_whitespace + l, chunk_lines))
-
-            if True:
-                await sendDiffUpdate(lines + [common_whitespace + unfinished_line], sdk)
 
             # Deal with newly accumulated lines
-            for line in chunk_lines:
+            for i in range(len(chunk_lines)):
                 # Trailing whitespace doesn't matter
-                line = line.rstrip()
+                chunk_lines[i] = chunk_lines[i].rstrip()
+                chunk_lines[i] = common_whitespace + chunk_lines[i]
 
                 # Lines that should signify the end of generation
-                if self.is_end_line(line):
+                if self.is_end_line(chunk_lines[i]):
                     break
                 # Lines that should be ignored, like the <> tags
-                elif self.line_to_be_ignored(line, completion_lines_covered == 0):
+                elif self.line_to_be_ignored(chunk_lines[i], completion_lines_covered == 0):
                     continue
                 # Check if we are currently just copying the prefix
-                elif (lines_of_prefix_copied > 0 or completion_lines_covered == 0) and lines_of_prefix_copied < len(file_prefix.splitlines()) and line == full_file_contents_lines[lines_of_prefix_copied]:
+                elif (lines_of_prefix_copied > 0 or completion_lines_covered == 0) and lines_of_prefix_copied < len(file_prefix.splitlines()) and chunk_lines[i] == full_file_contents_lines[lines_of_prefix_copied]:
                     # This is a sketchy way of stopping it from repeating the file_prefix. Is a bug if output happens to have a matching line
                     lines_of_prefix_copied += 1
                     continue
                 # Because really short lines might be expected to be repeated, this is only a !heuristic!
                 # Stop when it starts copying the file_suffix
-                elif line.strip() == line_below_highlighted_range.strip() and len(line.strip()) > 4 and not (len(original_lines_below_previous_blocks) > 0 and line.strip() == original_lines_below_previous_blocks[0].strip()):
+                elif chunk_lines[i].strip() == line_below_highlighted_range.strip() and len(chunk_lines[i].strip()) > 4 and not (len(original_lines_below_previous_blocks) > 0 and chunk_lines[i].strip() == original_lines_below_previous_blocks[0].strip()):
                     repeating_file_suffix = True
                     break
 
                 # If none of the above, insert the line!
                 if False:
-                    await handle_generated_line(line)
+                    await handle_generated_line(chunk_lines[i])
 
+                lines.append(chunk_lines[i])
                 completion_lines_covered += 1
                 current_line_in_file += 1
+
+            await sendDiffUpdate(lines + [common_whitespace + unfinished_line], sdk)
 
         # Add the unfinished line
         if unfinished_line != "" and not self.line_to_be_ignored(unfinished_line, completion_lines_covered == 0) and not self.is_end_line(unfinished_line):

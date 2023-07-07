@@ -13,9 +13,8 @@ let StyledButton = styled(Button)`
   background: #be1b55;
 
   &:hover {
-    transition-delay: 0.5s;
     transition-property: "background";
-    opacity: 0.8;
+    opacity: 0.7;
   }
 `;
 
