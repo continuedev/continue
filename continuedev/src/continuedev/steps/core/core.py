@@ -305,7 +305,10 @@ class DefaultModelEditCodeStep(Step):
             full_suffix_lines = full_file_contents_lines[rif.range.end.line:]
             new_file_contents = "\n".join(
                 full_prefix_lines) + "\n" + completion + "\n" + "\n".join(full_suffix_lines)
-            await sdk.ide.showDiff(rif.filepath, new_file_contents)
+
+            step_index = sdk.history.current_index
+
+            await sdk.ide.showDiff(rif.filepath, new_file_contents, step_index)
 
         # Important state variables
         # -------------------------

@@ -164,7 +164,7 @@ class IdeProtocolClient {
         this.showSuggestion(data.edit);
         break;
       case "showDiff":
-        this.showDiff(data.filepath, data.replacement);
+        this.showDiff(data.filepath, data.replacement, data.step_index);
         break;
       case "openGUI":
       case "connected":
@@ -243,8 +243,8 @@ class IdeProtocolClient {
     );
   }
 
-  showDiff(filepath: string, replacement: string) {
-    diffManager.writeDiff(filepath, replacement);
+  showDiff(filepath: string, replacement: string, step_index: number) {
+    diffManager.writeDiff(filepath, replacement, step_index);
   }
 
   openFile(filepath: string) {
@@ -430,6 +430,10 @@ class IdeProtocolClient {
 
   sendMainUserInput(input: string) {
     this.messenger?.send("mainUserInput", { input });
+  }
+
+  deleteAtIndex(index: number) {
+    this.messenger?.send("deleteAtIndex", { index });
   }
 }
 
