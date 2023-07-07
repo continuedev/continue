@@ -82,6 +82,6 @@ class DemoPolicy(Policy):
             if custom_command is not None:
                 return custom_command
 
-            return SimpleChatStep(user_input=user_input)
+            return SimpleChatStep()
 
         return None
