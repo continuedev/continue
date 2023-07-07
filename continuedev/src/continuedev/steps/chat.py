@@ -27,7 +27,7 @@ class SimpleChatStep(Step):
     async def run(self, sdk: ContinueSDK):
         completion = ""
         messages = self.messages or await sdk.get_chat_context()
-        async for chunk in sdk.models.gpt4.stream_chat(messages):
+        async for chunk in sdk.models.gpt4.stream_chat(messages, temperature=0.5):
             if sdk.current_step_was_deleted():
                 return
 

@@ -38,7 +38,8 @@ class ChatMessage(ContinueBaseModel):
                 del d[key]
 
         if not with_functions:
-            d["role"] = "assistant"
+            if d["role"] == "function":
+                d["role"] = "assistant"
             if "name" in d:
                 del d["name"]
             if "function_call" in d:
