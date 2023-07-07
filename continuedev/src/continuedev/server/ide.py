@@ -152,6 +152,8 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
             self.onAcceptRejectDiff(data["accepted"])
         elif message_type == "mainUserInput":
             self.onMainUserInput(data["input"])
+        elif message_type == "deleteAtIndex":
+            self.onDeleteAtIndex(data["index"])
         elif message_type in ["highlightedCode", "openFiles", "readFile", "editFile", "workspaceDirectory", "getUserSecret", "runCommand", "uniqueId"]:
             self.sub_queue.post(message_type, data)
         else:
@@ -164,10 +166,11 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
             "edit": file_edit.dict()
         })
 
-    async def showDiff(self, filepath: str, replacement: str):
+    async def showDiff(self, filepath: str, replacement: str, step_index: int):
         await self._send_json("showDiff", {
             "filepath": filepath,
-            "replacement": replacement
+            "replacement": replacement,
+            "step_index": step_index
         })
 
     async def setFileOpen(self, filepath: str, open: bool = True):
@@ -244,6 +247,10 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
         # Maybe not ideal behavior
         for _, session in self.session_manager.sessions.items():
             session.autopilot.handle_manual_edits(edits)
+
+    def onDeleteAtIndex(self, index: int):
+        for _, session in self.session_manager.sessions.items():
+            session.autopilot.delete_at_index(index)
 
     def onCommandOutput(self, output: str):
         # Send the output to ALL autopilots.
