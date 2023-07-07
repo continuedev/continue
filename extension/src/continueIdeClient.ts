@@ -427,6 +427,10 @@ class IdeProtocolClient {
   sendAcceptRejectDiff(accepted: boolean) {
     this.messenger?.send("acceptRejectDiff", { accepted });
   }
+
+  sendMainUserInput(input: string) {
+    this.messenger?.send("mainUserInput", { input });
+  }
 }
 
 export default IdeProtocolClient;

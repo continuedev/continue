@@ -17,6 +17,7 @@ import { acceptDiffCommand, rejectDiffCommand } from "./diffs";
 import * as bridge from "./bridge";
 import { debugPanelWebview } from "./debugPanel";
 import { sendTelemetryEvent, TelemetryEvent } from "./telemetry";
+import { ideProtocolClient } from "./activation/activate";
 
 // Copy everything over from extension.ts
 const commandsMap: { [command: string]: (...args: any) => any } = {
@@ -62,6 +63,17 @@ const commandsMap: { [command: string]: (...args: any) => any } = {
     debugPanelWebview?.postMessage({
       type: "focusContinueInput",
     });
+  },
+  "continue.quickTextEntry": async () => {
+    const text = await vscode.window.showInputBox({
+      placeHolder:
+        "Ask a question, give instructions, or enter a slash command",
+      title: "Continue Quick Input",
+    });
+    if (text) {
+      ideProtocolClient.sendMainUserInput(text);
+    }
+    vscode.commands.executeCommand("continue.continueGUIView.focus");
   },
 };
 
