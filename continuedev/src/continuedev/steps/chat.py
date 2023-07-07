@@ -22,10 +22,12 @@ class SimpleChatStep(Step):
     name: str = "Generating Response..."
     manage_own_chat_context: bool = True
     description: str = ""
+    messages: List[ChatMessage] = None
 
     async def run(self, sdk: ContinueSDK):
         completion = ""
-        async for chunk in sdk.models.gpt4.stream_chat(await sdk.get_chat_context()):
+        messages = self.messages or await sdk.get_chat_context()
+        async for chunk in sdk.models.gpt4.stream_chat(messages):
             if sdk.current_step_was_deleted():
                 return
 
