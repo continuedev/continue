@@ -10,7 +10,7 @@
 
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 ![Twitter URL](https://img.shields.io/twitter/url?style=social&url=https%3A%2F%2Fgithub.com%2Fcontinuedev%2Fcontinue)
-  <a target="_blank" href="https://discord.gg/DvACJvjx" style="background:none">
+  <a target="_blank" href="https://discord.gg/vapESyrFmJ" style="background:none">
     <img src="https://img.shields.io/badge/discord-join-continue.svg?labelColor=191937&color=6F6FF7&logo=discord" />
   </a>
 
@@ -21,23 +21,23 @@
 
 ### Edit in natural language
 
+### Get possible explainations
+
+Ask Continue about a part of your code to get another perspective
+- `what might cause this error?`
+- `what is the load_dotenv library name?`
+- `how do I find running process on port 8000?`
+
 Highlight a section of code and instruct Continue to refactor it
 - `/edit Make this use more descriptive variable names`
 - `/edit Rewrite this API call to grab all pages`
 - `/edit Use 'Union' instead of a vertical bar here`
 
-### Get possible explainations
-
-Ask Continue about a part of your code to get another perspective
-- `/explain what might cause this error?`
-- `/explain what is the load_dotenv library name?`
-- `/explain how do I find running process on port 8000?`
-
 ### Generate files from scratch
 
 Let Continue build the scaffolding of Python scripts, React components, and more
 - `Create a shell script to back up my home dir to /tmp/`
-- `Write Python in a new file to get Posthog events`
+- `Write a Python script to get Posthog events`
 - `Add a React component for syntax highlighted code`
 
 ## Getting Started
