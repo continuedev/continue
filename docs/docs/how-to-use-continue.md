@@ -12,8 +12,8 @@ As you use Continue more, you will learn when to trust it. A great way to get st
 
 If you are trying to use it for a new task and don’t have a sense of how much Continue can help you complete it, it can often be helpful to start like this:
 
-1. Highlight any code that you don’t understand and type `/explain tell me how this code works`
-2. If the explanation seems reasonable, then, while still highlighting the code, type `/explain how would you change this code to [INSERT TASK]?`
+1. Highlight any code that you don’t understand and type `tell me how this code works`
+2. If the explanation seems reasonable, then, while still highlighting the code, type `how would you change this code to [INSERT TASK]?`
 3. If this explanation is also pretty good, then, while still highlighting the code, type `/edit [INSERT TASK]`
 4. If it does not work on first attempt, click `reject` on its suggestions and try again—often it will make a different suggestion each time
 5. If it not giving you what you want, click `reject` and try again with more specific / clear instructions, articulating exactly what you want it to do and not to do
@@ -43,7 +43,7 @@ After selecting a code section, try to refactor it with Continue (e.g “/edit c
 
 ### Ask about highlighted code or an entire file
 
-If you don't understand how some code works, highlight it and ask "/explain how does this code work?"
+If you don't understand how some code works, highlight it and ask "how does this code work?"
 
 ### Ask about errors
 
@@ -51,7 +51,7 @@ Continue can also help explain errors and offer possible solutions. You will nee
 
 ### Figure out what shell command to run
 
-Instead of switching windows and getting distracted, you can ask things like "/explain How to I find running process on port 8000?"
+Instead of switching windows and getting distracted, you can ask things like "How do I find running process on port 8000?"
 
 ### Ask single-turn open-ended questions
 
@@ -91,7 +91,7 @@ If you highlight very long lines (e.g. a complex SVG), you might also run into i
 
 ### Using context from many other files
 
-Similar to how you would make changes manually, focus on one file at a time. If there is key information in another file, try copy and pasting that section into the text input along with your `/edit` or `/explain` instructions.
+Similar to how you would make changes manually, focus on one file at a time. If there is key information in another file, try copy and pasting that section into the text input along with your instructions.
 
 ### Tasks with many steps
 

@@ -191,7 +191,7 @@
           {
             "id": "explain",
             "title": "Get possible explanations",
-            "description": "Ask Continue about a part of your code to get another perspective (e.g. `/explain how do I find running process on port 8000?`)",
+            "description": "Ask Continue about a part of your code to get another perspective (e.g. `how do I find running process on port 8000?`)",
             "media": {
               "image": "media/explain.png",
               "altText": "Empty image"
