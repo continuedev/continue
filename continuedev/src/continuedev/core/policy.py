@@ -18,7 +18,6 @@ from ..steps.react import NLDecisionStep
 from ..steps.chat import SimpleChatStep, ChatWithFunctions, EditFileStep, AddFileStep
 from ..recipes.DDtoBQRecipe.main import DDtoBQRecipe
 from ..steps.core.core import MessageStep
-from ..libs.util.step_name_to_steps import get_step_from_name
 from ..steps.custom_command import CustomCommandStep
 
 
@@ -34,7 +33,11 @@ def parse_slash_command(inp: str, config: ContinueConfig) -> Union[None, Step]:
             if slash_command.name == command_name[1:]:
                 params = slash_command.params
                 params["user_input"] = after_command
-                return get_step_from_name(slash_command.step_name, params)
+                try:
+                    return slash_command.step(**params)
+                except TypeError as e:
+                    raise Exception(
+                        f"Incorrect params used for slash command '{command_name}': {e}")
     return None
 
 

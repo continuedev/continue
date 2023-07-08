@@ -17,7 +17,6 @@ from ..steps.core.core import ReversibleStep, ManualEditStep, UserInputStep
 from ..libs.util.telemetry import capture_event
 from .sdk import ContinueSDK
 import asyncio
-from ..libs.util.step_name_to_steps import get_step_from_name
 from ..libs.util.traceback_parsers import get_python_traceback, get_javascript_traceback
 from openai import error as openai_errors
 
@@ -136,8 +135,7 @@ class Autopilot(ContinueBaseModel):
             traceback = get_tb_func(output)
             if traceback is not None:
                 for tb_step in self.continue_sdk.config.on_traceback:
-                    step = get_step_from_name(
-                        tb_step.step_name, {"output": output, **tb_step.params})
+                    step = tb_step.step({"output": output, **tb_step.params})
                     await self._run_singular_step(step)
 
     _highlighted_ranges: List[HighlightedRangeContext] = []

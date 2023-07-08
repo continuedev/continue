@@ -1,14 +1,15 @@
 import json
 import os
+from .main import Step
 from pydantic import BaseModel, validator
-from typing import List, Literal, Optional, Dict
+from typing import List, Literal, Optional, Dict, Type, Union
 import yaml
 
 
 class SlashCommand(BaseModel):
     name: str
     description: str
-    step_name: str
+    step: Type[Step]
     params: Optional[Dict] = {}
 
 
@@ -19,54 +20,15 @@ class CustomCommand(BaseModel):
 
 
 class OnTracebackSteps(BaseModel):
-    step_name: str
+    step: Type[Step]
     params: Optional[Dict] = {}
-
-
-DEFAULT_SLASH_COMMANDS = [
-    # SlashCommand(
-    #     name="pytest",
-    #     description="Write pytest unit tests for the current file",
-    #     step_name="WritePytestsRecipe",
-    #     params=??)
-    SlashCommand(
-        name="edit",
-        description="Edit code in the current file or the highlighted code",
-        step_name="EditHighlightedCodeStep",
-    ),
-    # SlashCommand(
-    #     name="explain",
-    #     description="Reply to instructions or a question with previous steps and the highlighted code or current file as context",
-    #     step_name="SimpleChatStep",
-    # ),
-    SlashCommand(
-        name="config",
-        description="Open the config file to create new and edit existing slash commands",
-        step_name="OpenConfigStep",
-    ),
-    SlashCommand(
-        name="comment",
-        description="Write comments for the current file or highlighted code",
-        step_name="CommentCodeStep",
-    ),
-    SlashCommand(
-        name="feedback",
-        description="Send feedback to improve Continue",
-        step_name="FeedbackStep",
-    ),
-    SlashCommand(
-        name="clear",
-        description="Clear step history",
-        step_name="ClearHistoryStep",
-    )
-]
 
 
 class ContinueConfig(BaseModel):
     """
     A pydantic class for the continue config file.
     """
-    steps_on_startup: Optional[Dict[str, Dict]] = {}
+    steps_on_startup: List[Step] = []
     disallowed_steps: Optional[List[str]] = []
     server_url: Optional[str] = None
     allow_anonymous_telemetry: Optional[bool] = True
@@ -77,14 +39,54 @@ class ContinueConfig(BaseModel):
         description="This is an example custom command. Use /config to edit it and create more",
         prompt="Write a comprehensive set of unit tests for the selected code. It should setup, run tests that check for correctness including important edge cases, and teardown. Ensure that the tests are complete and sophisticated. Give the tests just as chat output, don't edit any file.",
     )]
-    slash_commands: Optional[List[SlashCommand]] = DEFAULT_SLASH_COMMANDS
-    on_traceback: Optional[List[OnTracebackSteps]] = [
-        OnTracebackSteps(step_name="DefaultOnTracebackStep")]
+    slash_commands: Optional[List[SlashCommand]] = []
+    on_traceback: Optional[List[OnTracebackSteps]] = []
 
     # Want to force these to be the slash commands for now
     @validator('slash_commands', pre=True)
     def default_slash_commands_validator(cls, v):
-        return DEFAULT_SLASH_COMMANDS
+        from ..steps.core.core import UserInputStep
+        from ..steps.open_config import OpenConfigStep
+        from ..steps.clear_history import ClearHistoryStep
+        from ..steps.on_traceback import DefaultOnTracebackStep
+        from ..recipes.DeployPipelineAirflowRecipe.main import DeployPipelineAirflowRecipe
+        from ..recipes.DDtoBQRecipe.main import DDtoBQRecipe
+        from ..recipes.CreatePipelineRecipe.main import CreatePipelineRecipe
+        from ..recipes.AddTransformRecipe.main import AddTransformRecipe
+        from ..steps.feedback import FeedbackStep
+        from ..steps.comment_code import CommentCodeStep
+        from ..steps.chat import SimpleChatStep
+        from ..steps.main import EditHighlightedCodeStep
+
+        DEFAULT_SLASH_COMMANDS = [
+            SlashCommand(
+                name="edit",
+                description="Edit code in the current file or the highlighted code",
+                step=EditHighlightedCodeStep,
+            ),
+            SlashCommand(
+                name="config",
+                description="Open the config file to create new and edit existing slash commands",
+                step=OpenConfigStep,
+            ),
+            SlashCommand(
+                name="comment",
+                description="Write comments for the current file or highlighted code",
+                step=CommentCodeStep,
+            ),
+            SlashCommand(
+                name="feedback",
+                description="Send feedback to improve Continue",
+                step=FeedbackStep,
+            ),
+            SlashCommand(
+                name="clear",
+                description="Clear step history",
+                step=ClearHistoryStep,
+            )
+        ]
+
+        return DEFAULT_SLASH_COMMANDS + v
 
 
 def load_config(config_file: str) -> ContinueConfig:

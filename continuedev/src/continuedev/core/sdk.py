@@ -166,17 +166,31 @@ class ContinueSDK(AbstractContinueSDK):
     async def get_user_secret(self, env_var: str, prompt: str) -> str:
         return await self.ide.getUserSecret(env_var)
 
+    @staticmethod
+    def load_config_dot_py(path: str) -> ContinueConfig:
+        # Use importlib to load the config file config.py at the given path
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("config", path)
+        config = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(config)
+        return config.config
+
     @property
     def config(self) -> ContinueConfig:
+        # TODO: Workspace config files should override global
         dir = self.ide.workspace_directory
-        yaml_path = os.path.join(dir, '.continue', 'config.yaml')
-        json_path = os.path.join(dir, '.continue', 'config.json')
-        if os.path.exists(yaml_path):
-            return load_config(yaml_path)
-        elif os.path.exists(json_path):
-            return load_config(json_path)
-        else:
-            return load_global_config()
+        path = os.path.join(dir, '.continue', 'config.py')
+        if not os.path.exists(path):
+            global_dir = os.path.expanduser('~/.continue')
+            if not os.path.exists(global_dir):
+                os.mkdir(global_dir)
+            path = os.path.join(global_dir, 'config.py')
+            if not os.path.exists(path):
+                # Need to copy over the default config
+                return ContinueConfig()
+
+        config = ContinueSDK.load_config_dot_py(path)
+        return config
 
     def update_default_model(self, model: str):
         config = self.config
