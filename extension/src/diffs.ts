@@ -39,14 +39,25 @@ class DiffManager {
     originalFilepath: string,
     newFilepath: string
   ): vscode.TextEditor | undefined {
-    // If the file doesn't yet exist, don't open the diff editor
-    if (!fs.existsSync(newFilepath)) {
+    // If the file doesn't yet exist or the basename is a single digit number (git hash object or something), don't open the diff editor
+    if (
+      !fs.existsSync(newFilepath) ||
+      path.basename(originalFilepath).match(/^\d$/)
+    ) {
       return undefined;
     }
 
     const rightUri = vscode.Uri.parse(newFilepath);
     const leftUri = vscode.Uri.file(originalFilepath);
     const title = "Continue Diff";
+    console.log(
+      "Opening diff window with ",
+      leftUri,
+      rightUri,
+      title,
+      newFilepath,
+      originalFilepath
+    );
     vscode.commands.executeCommand("vscode.diff", leftUri, rightUri, title);
 
     const editor = vscode.window.activeTextEditor;
@@ -112,11 +123,13 @@ class DiffManager {
       newFilepath = Array.from(this.diffs.keys())[0];
     }
     if (!newFilepath) {
+      console.log("No newFilepath provided to accept the diff");
       return;
     }
     // Get the diff info, copy new file to original, then delete from record and close the corresponding editor
     const diffInfo = this.diffs.get(newFilepath);
     if (!diffInfo) {
+      console.log("No corresponding diffInfo found for newFilepath");
       return;
     }
     fs.writeFileSync(
@@ -132,10 +145,12 @@ class DiffManager {
       newFilepath = Array.from(this.diffs.keys())[0];
     }
     if (!newFilepath) {
+      console.log("No newFilepath provided to reject the diff");
       return;
     }
     const diffInfo = this.diffs.get(newFilepath);
     if (!diffInfo) {
+      console.log("No corresponding diffInfo found for newFilepath");
       return;
     }
 
