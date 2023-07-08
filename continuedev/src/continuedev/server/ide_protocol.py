@@ -96,7 +96,11 @@ class AbstractIdeProtocolServer(ABC):
         """Called when highlighted code is updated"""
 
     @abstractmethod
-    async def showDiff(self, filepath: str, replacement: str):
+    def onDeleteAtIndex(self, index: int):
+        """Called when a step is deleted at a given index"""
+
+    @abstractmethod
+    async def showDiff(self, filepath: str, replacement: str, step_index: int):
         """Show a diff"""
 
     @abstractproperty

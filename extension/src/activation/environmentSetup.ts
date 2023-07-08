@@ -10,7 +10,7 @@ import * as vscode from "vscode";
 import fkill from "fkill";
 import { sendTelemetryEvent, TelemetryEvent } from "../telemetry";
 
-const MAX_RETRIES = 0;
+const MAX_RETRIES = 3;
 async function retryThenFail(
   fn: () => Promise<any>,
   retries: number = MAX_RETRIES
@@ -197,7 +197,7 @@ async function setupPythonEnv() {
       } else if (stderr) {
         if (stderr.includes("running scripts is disabled on this system")) {
           vscode.window.showErrorMessage(
-             "A Python virtual enviroment cannot be activated because running scripts is disabled for this user. Please enable signed scripts to run with this command in PowerShell: `Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser`, reload VS Code, and then try again."
+            "A Python virtual enviroment cannot be activated because running scripts is disabled for this user. Please enable signed scripts to run with this command in PowerShell: `Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser`, reload VS Code, and then try again."
           );
         }
         throw new Error(stderr);

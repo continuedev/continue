@@ -1,4 +1,6 @@
 import os
+
+from .core.core import UserInputStep
 from ..core.main import ChatMessage, Step
 from ..core.sdk import ContinueSDK
 from .chat import SimpleChatStep
@@ -21,7 +23,5 @@ class DefaultOnTracebackStep(Step):
                         content=f"The contents of {seg}:\n```\n{file_contents}\n```",
                         summary=""
                     ))
-
-        await sdk.run_step(SimpleChatStep(
-            name="Help With Traceback",
-            user_input=f"""I got the following error, can you please help explain how to fix it?\n\n{self.output}"""))
+        await sdk.run_step(UserInputStep(user_input=f"""I got the following error, can you please help explain how to fix it?\n\n{self.output}"""))
+        await sdk.run_step(SimpleChatStep(name="Help With Traceback"))

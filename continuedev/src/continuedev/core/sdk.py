@@ -192,7 +192,8 @@ class ContinueSDK(AbstractContinueSDK):
 
     async def get_chat_context(self) -> List[ChatMessage]:
         history_context = self.history.to_chat_history()
-        highlighted_code = self.__autopilot._highlighted_ranges
+        highlighted_code = [
+            hr.range for hr in self.__autopilot._highlighted_ranges]
 
         preface = "The following code is highlighted"
 

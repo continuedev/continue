@@ -8,6 +8,7 @@ interface DiffInfo {
   originalFilepath: string;
   newFilepath: string;
   editor?: vscode.TextEditor;
+  step_index: number;
 }
 
 export const DIFF_DIRECTORY = path.join(os.homedir(), ".continue", "diffs");
@@ -36,8 +37,7 @@ class DiffManager {
 
   private openDiffEditor(
     originalFilepath: string,
-    newFilepath: string,
-    newContent: string
+    newFilepath: string
   ): vscode.TextEditor | undefined {
     // If the file doesn't yet exist, don't open the diff editor
     if (!fs.existsSync(newFilepath)) {
@@ -62,7 +62,11 @@ class DiffManager {
     return editor;
   }
 
-  writeDiff(originalFilepath: string, newContent: string): string {
+  writeDiff(
+    originalFilepath: string,
+    newContent: string,
+    step_index: number
+  ): string {
     this.setupDirectory();
 
     // Create or update existing diff
@@ -77,6 +81,7 @@ class DiffManager {
       const diffInfo: DiffInfo = {
         originalFilepath,
         newFilepath,
+        step_index,
       };
       this.diffs.set(newFilepath, diffInfo);
     }
@@ -84,11 +89,7 @@ class DiffManager {
     // Open the editor if it hasn't been opened yet
     const diffInfo = this.diffs.get(newFilepath);
     if (diffInfo && !diffInfo?.editor) {
-      diffInfo.editor = this.openDiffEditor(
-        originalFilepath,
-        newFilepath,
-        newContent
-      );
+      diffInfo.editor = this.openDiffEditor(originalFilepath, newFilepath);
       this.diffs.set(newFilepath, diffInfo);
     }
 
@@ -101,7 +102,7 @@ class DiffManager {
       vscode.window.showTextDocument(diffInfo.editor.document);
       vscode.commands.executeCommand("workbench.action.closeActiveEditor");
     }
-    // this.diffs.delete(diffInfo.newFilepath);
+    this.diffs.delete(diffInfo.newFilepath);
     fs.unlinkSync(diffInfo.newFilepath);
   }
 
@@ -137,6 +138,9 @@ class DiffManager {
     if (!diffInfo) {
       return;
     }
+
+    // Stop the step at step_index in case it is still streaming
+    ideProtocolClient.deleteAtIndex(diffInfo.step_index);
 
     this.cleanUpDiff(diffInfo);
   }
