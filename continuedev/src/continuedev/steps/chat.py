@@ -19,19 +19,15 @@ openai.api_key = OPENAI_API_KEY
 
 
 class SimpleChatStep(Step):
-    user_input: str
     name: str = "Generating Response..."
     manage_own_chat_context: bool = True
     description: str = ""
+    messages: List[ChatMessage] = None
 
     async def run(self, sdk: ContinueSDK):
-        if self.user_input.strip() == "":
-            self.user_input = "Explain this code's function is a concise list of markdown bullets."
-            self.description = ""
-        await sdk.update_ui()
-
         completion = ""
-        async for chunk in sdk.models.gpt4.stream_chat(await sdk.get_chat_context()):
+        messages = self.messages or await sdk.get_chat_context()
+        async for chunk in sdk.models.gpt4.stream_chat(messages, temperature=0.5):
             if sdk.current_step_was_deleted():
                 return
 
