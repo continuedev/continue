@@ -162,7 +162,7 @@ class Autopilot(ContinueBaseModel):
         if not self._adding_highlighted_code and len(self._highlighted_ranges) > 0:
             if len(range_in_files) == 0:
                 return
-            if range_in_files[0].range.overlaps_with(self._highlighted_ranges[0].range) and range_in_files[0].filepath == self._highlighted_ranges[0].range.filepath:
+            if range_in_files[0].range.overlaps_with(self._highlighted_ranges[0].range.range) and range_in_files[0].filepath == self._highlighted_ranges[0].range.filepath:
                 self._highlighted_ranges = [HighlightedRangeContext(
                     range=range_in_files[0].range, editing=True, pinned=False)]
                 await self.update_subscribers()
