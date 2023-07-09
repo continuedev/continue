@@ -205,6 +205,7 @@ class HighlightedRangeContext(ContinueBaseModel):
     range: RangeInFileWithContents
     editing: bool
     pinned: bool
+    display_name: str
 
 
 class FullState(ContinueBaseModel):
