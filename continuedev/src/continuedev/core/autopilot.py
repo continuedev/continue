@@ -151,30 +151,28 @@ class Autopilot(ContinueBaseModel):
             self._highlighted_ranges[0].editing = True
 
     async def handle_highlighted_code(self, range_in_files: List[RangeInFileWithContents]):
-
-        # If un-highlighting, then remove the range
-        if len(self._highlighted_ranges) == 1 and len(range_in_files) <= 1 and (len(range_in_files) == 0 or range_in_files[0].range.start == range_in_files[0].range.end) and not self._adding_highlighted_code:
-            self._highlighted_ranges = []
-            await self.update_subscribers()
-            return
-
-        # If not toggled to be adding context, only edit or add the first range
-        if not self._adding_highlighted_code and len(self._highlighted_ranges) > 0:
-            if len(range_in_files) == 0:
-                return
-            if range_in_files[0].range.overlaps_with(self._highlighted_ranges[0].range.range) and range_in_files[0].filepath == self._highlighted_ranges[0].range.filepath:
-                self._highlighted_ranges = [HighlightedRangeContext(
-                    range=range_in_files[0].range, editing=True, pinned=False)]
-                await self.update_subscribers()
-                return
-
         # Filter out rifs from ~/.continue/diffs folder
         range_in_files = [
             rif for rif in range_in_files if not os.path.dirname(rif.filepath) == os.path.expanduser("~/.continue/diffs")]
 
+        # Make sure all filepaths are relative to workspace
         workspace_path = self.continue_sdk.ide.workspace_directory
         for rif in range_in_files:
             rif.filepath = os.path.basename(rif.filepath)
+
+        # If not adding highlighted code
+        if not self._adding_highlighted_code:
+            if len(self._highlighted_ranges) == 1 and len(range_in_files) <= 1 and (len(range_in_files) == 0 or range_in_files[0].range.start == range_in_files[0].range.end):
+                # If un-highlighting the range to edit, then remove the range
+                self._highlighted_ranges = []
+                await self.update_subscribers()
+            elif len(range_in_files) > 0:
+                # Otherwise, replace the current range with the new one
+                # This is the first range to be highlighted
+                self._highlighted_ranges = [HighlightedRangeContext(
+                    range=range_in_files[0], editing=True, pinned=False)]
+                await self.update_subscribers()
+            return
 
         # If current range overlaps with any others, delete them and only keep the new range
         new_ranges = []
