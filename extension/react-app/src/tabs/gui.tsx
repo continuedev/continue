@@ -438,7 +438,7 @@ function GUI(props: GUIProps) {
             if (!usingFastModel) {
               // Show the dialog
               setFeedbackDialogMessage(
-                "We don't yet support local models, but we're working on it! If privacy is a concern of yours, please use the feedback button in the bottom right to let us know."
+                "We don't yet support local models, but we're working on it! If privacy is a concern of yours, please write a short note to let us know."
               );
               setShowFeedbackDialog(true);
             }
