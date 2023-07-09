@@ -324,7 +324,14 @@ export async function startContinuePythonServer() {
         }
       }
       console.log("Killing old server...");
-      await fkill(":65432");
+      try {
+        await fkill(":65432");
+      } catch (e) {
+        console.log(
+          "Failed to kill old server, likely because it didn't exist:",
+          e
+        );
+      }
     }
 
     // Do this after above check so we don't have to waste time setting up the env
