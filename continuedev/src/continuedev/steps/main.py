@@ -245,6 +245,17 @@ class EditHighlightedCodeStep(Step):
 
     async def run(self, sdk: ContinueSDK) -> Coroutine[Observation, None, None]:
         range_in_files = sdk.get_code_context(only_editing=True)
+
+        # If nothing highlighted, insert at the cursor if possible
+        if len(range_in_files) == 0:
+            highlighted_code = await sdk.ide.getHighlightedCode()
+            if highlighted_code is not None:
+                for rif in highlighted_code:
+                    if rif.range.start == rif.range.end:
+                        range_in_files.append(
+                            RangeInFileWithContents.from_range_in_file(rif, ""))
+
+        # If nothing highlighted, edit the first open file
         if len(range_in_files) == 0:
             # Get the full contents of all open files
             files = await sdk.ide.getOpenFiles()
