@@ -157,8 +157,6 @@ class Autopilot(ContinueBaseModel):
 
         # Make sure all filepaths are relative to workspace
         workspace_path = self.continue_sdk.ide.workspace_directory
-        for rif in range_in_files:
-            rif.filepath = os.path.basename(rif.filepath)
 
         # If not adding highlighted code
         if not self._adding_highlighted_code:
@@ -170,7 +168,7 @@ class Autopilot(ContinueBaseModel):
                 # Otherwise, replace the current range with the new one
                 # This is the first range to be highlighted
                 self._highlighted_ranges = [HighlightedRangeContext(
-                    range=range_in_files[0], editing=True, pinned=False)]
+                    range=range_in_files[0], editing=True, pinned=False, display_name=os.path.basename(range_in_files[0].filepath))]
                 await self.update_subscribers()
             return
 
@@ -193,7 +191,7 @@ class Autopilot(ContinueBaseModel):
                 new_ranges.append(rif)
 
         self._highlighted_ranges = new_ranges + [HighlightedRangeContext(
-            range=rif, editing=False, pinned=False
+            range=rif, editing=False, pinned=False, display_name=os.path.basename(rif.filepath)
         ) for rif in range_in_files]
 
         self._make_sure_is_editing_range()

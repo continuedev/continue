@@ -32,6 +32,7 @@ export type Character = number;
 export type Contents = string;
 export type Editing = boolean;
 export type Pinned = boolean;
+export type DisplayName = string;
 export type HighlightedRanges = HighlightedRangeContext[];
 export type Name3 = string;
 export type Description1 = string;
@@ -102,6 +103,7 @@ export interface HighlightedRangeContext {
   range: RangeInFileWithContents;
   editing: Editing;
   pinned: Pinned;
+  display_name: DisplayName;
   [k: string]: unknown;
 }
 /**
