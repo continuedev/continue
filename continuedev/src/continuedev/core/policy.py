@@ -85,6 +85,9 @@ class DemoPolicy(Policy):
             if custom_command is not None:
                 return custom_command
 
+            if user_input.startswith("/edit"):
+                return EditHighlightedCodeStep(user_input=user_input[5:])
+
             return SimpleChatStep()
 
         return None
