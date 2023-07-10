@@ -13,7 +13,7 @@ from ..libs.llm.hf_inference_api import HuggingFaceInferenceAPI
 from ..libs.llm.openai import OpenAI
 from .observation import Observation
 from ..server.ide_protocol import AbstractIdeProtocolServer
-from .main import Context, ContinueCustomException, History, Step, ChatMessage, ChatMessageRole
+from .main import Context, ContinueCustomException, HighlightedRangeContext, History, Step, ChatMessage, ChatMessageRole
 from ..steps.core.core import *
 from ..libs.llm.proxy_server import ProxyServer
 
@@ -177,6 +177,11 @@ class ContinueSDK(AbstractContinueSDK):
             return load_config(json_path)
         else:
             return load_global_config()
+
+    def get_code_context(self, only_editing: bool = False) -> List[RangeInFileWithContents]:
+        context = list(filter(lambda x: x.editing, self.__autopilot._highlighted_ranges)
+                       ) if only_editing else self.__autopilot._highlighted_ranges
+        return [c.range for c in context]
 
     def update_default_model(self, model: str):
         config = self.config

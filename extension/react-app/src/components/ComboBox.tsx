@@ -224,8 +224,8 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
             editing={section.editing}
             pinned={section.pinned}
             index={idx}
-            key={`${section.filepath}${idx}`}
-            title={`${section.range.filepath} (${
+            key={`${section.display_name}${idx}`}
+            title={`${section.display_name} (${
               section.range.range.start.line + 1
             }-${section.range.range.end.line + 1})`}
             onDelete={() => {
@@ -372,7 +372,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
       >
         {highlightedCodeSections.map((section, idx) => (
           <>
-            <p>{section.range.filepath}</p>
+            <p>{section.display_name}</p>
             <CodeBlock showCopy={false} key={idx}>
               {section.range.contents}
             </CodeBlock>

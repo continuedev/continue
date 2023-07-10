@@ -222,12 +222,17 @@
         "pinned": {
           "title": "Pinned",
           "type": "boolean"
+        },
+        "display_name": {
+          "title": "Display Name",
+          "type": "string"
         }
       },
       "required": [
         "range",
         "editing",
-        "pinned"
+        "pinned",
+        "display_name"
       ]
     },
     "SlashCommandDescription": {
