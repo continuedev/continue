@@ -167,10 +167,13 @@ class DefaultModelEditCodeStep(Step):
         return output
 
     async def describe(self, models: Models) -> Coroutine[str, None, None]:
-        description = await models.gpt3516k.complete(dedent(f"""\
-            {self._prompt_and_completion}
-            
-            Please give brief a description of the changes made above using markdown bullet points. Be concise and only mention changes made to the commit before, not prefix or suffix:"""))
+        if self._prompt_and_completion == "":
+            description = "No edits were made"
+        else:
+            description = await models.gpt3516k.complete(dedent(f"""\
+                {self._prompt_and_completion}
+                
+                Please give brief a description of the changes made above using markdown bullet points. Be concise and only mention changes made to the commit before, not prefix or suffix:"""))
         name = await models.gpt3516k.complete(f"Write a very short title to describe this requested change (no quotes): '{self.user_input}'. This is the title:")
         self.name = self._cleanup_output(name)
 
