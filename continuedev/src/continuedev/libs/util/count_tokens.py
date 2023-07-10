@@ -76,14 +76,14 @@ def prune_chat_history(model: str, chat_history: List[ChatMessage], max_tokens: 
     return chat_history
 
 
-def compile_chat_messages(model: str, msgs: List[ChatMessage], prompt: Union[str, None] = None, functions: Union[List, None] = None, system_message: Union[str, None] = None) -> List[Dict]:
+def compile_chat_messages(model: str, msgs: List[ChatMessage], max_tokens: int, prompt: Union[str, None] = None, functions: Union[List, None] = None, system_message: Union[str, None] = None) -> List[Dict]:
     prompt_tokens = count_tokens(model, prompt)
     if functions is not None:
         for function in functions:
             prompt_tokens += count_tokens(model, json.dumps(function))
 
     msgs = prune_chat_history(model,
-                              msgs, MAX_TOKENS_FOR_MODEL[model], prompt_tokens + DEFAULT_MAX_TOKENS + count_tokens(model, system_message))
+                              msgs, MAX_TOKENS_FOR_MODEL[model], prompt_tokens + max_tokens + count_tokens(model, system_message))
     history = []
     if system_message:
         history.append({

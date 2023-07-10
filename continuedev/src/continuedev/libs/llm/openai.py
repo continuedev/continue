@@ -37,7 +37,7 @@ class OpenAI(LLM):
         if args["model"] in CHAT_MODELS:
             async for chunk in await openai.ChatCompletion.acreate(
                 messages=compile_chat_messages(
-                    args["model"], with_history, prompt, functions=None),
+                    args["model"], with_history, args["max_tokens"], prompt, functions=None),
                 **args,
             ):
                 if "content" in chunk.choices[0].delta:
@@ -58,7 +58,7 @@ class OpenAI(LLM):
 
         async for chunk in await openai.ChatCompletion.acreate(
             messages=compile_chat_messages(
-                args["model"], messages, functions=args.get("functions", None)),
+                args["model"], messages, args["max_tokens"], functions=args.get("functions", None)),
             **args,
         ):
             yield chunk.choices[0].delta
@@ -69,7 +69,7 @@ class OpenAI(LLM):
         if args["model"] in CHAT_MODELS:
             resp = (await openai.ChatCompletion.acreate(
                 messages=compile_chat_messages(
-                    args["model"], with_history, prompt, functions=None),
+                    args["model"], with_history, args["max_tokens"], prompt, functions=None),
                 **args,
             )).choices[0].message.content
         else:

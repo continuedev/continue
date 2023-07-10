@@ -181,14 +181,21 @@ class DefaultModelEditCodeStep(Step):
         # We care because if this prompt itself goes over the limit, then the entire message will have to be cut from the completion.
         # Overflow won't happen, but prune_chat_messages in count_tokens.py will cut out this whole thing, instead of us cutting out only as many lines as we need.
         model_to_use = sdk.models.gpt4
+        max_tokens = DEFAULT_MAX_TOKENS
+
+        TOKENS_TO_BE_CONSIDERED_LARGE_RANGE = 1200
+        if model_to_use.count_tokens(rif.contents) > TOKENS_TO_BE_CONSIDERED_LARGE_RANGE:
+            self.description += "\n\n**It looks like you've selected a large range to edit, which may take a while to complete. If you'd like to cancel, click the 'X' button above. If you highlight a more specific range, Continue will only edit within it.**"
+
+            # At this point, we also increase the max_tokens parameter so it doesn't stop in the middle of generation
+            # Increase max_tokens to be double the size of the range
+            # But don't exceed twice default max tokens
+            max_tokens = int(min(model_to_use.count_tokens(
+                rif.contents), DEFAULT_MAX_TOKENS) * 2.5)
 
         BUFFER_FOR_FUNCTIONS = 400
         total_tokens = model_to_use.count_tokens(
-            full_file_contents + self._prompt + self.user_input) + BUFFER_FOR_FUNCTIONS + DEFAULT_MAX_TOKENS
-
-        TOKENS_TO_BE_CONSIDERED_LARGE_RANGE = 1000
-        if model_to_use.count_tokens(rif.contents) > TOKENS_TO_BE_CONSIDERED_LARGE_RANGE:
-            self.description += "\n\n**It looks like you've selected a large range to edit, which may take a while to complete. If you'd like to cancel, click the 'X' button above. If you highlight a more specific range, Continue will only edit within it.**"
+            full_file_contents + self._prompt + self.user_input) + BUFFER_FOR_FUNCTIONS + max_tokens
 
         # If using 3.5 and overflows, upgrade to 3.5.16k
         if model_to_use.name == "gpt-3.5-turbo":
@@ -252,7 +259,7 @@ class DefaultModelEditCodeStep(Step):
                 file_suffix = "\n" + file_suffix
                 rif.contents = rif.contents[:-1]
 
-        return file_prefix, rif.contents, file_suffix, model_to_use
+        return file_prefix, rif.contents, file_suffix, model_to_use, max_tokens
 
     def compile_prompt(self, file_prefix: str, contents: str, file_suffix: str, sdk: ContinueSDK) -> str:
         prompt = self._prompt
@@ -289,7 +296,7 @@ class DefaultModelEditCodeStep(Step):
         await sdk.ide.saveFile(rif.filepath)
         full_file_contents = await sdk.ide.readFile(rif.filepath)
 
-        file_prefix, contents, file_suffix, model_to_use = await self.get_prompt_parts(
+        file_prefix, contents, file_suffix, model_to_use, max_tokens = await self.get_prompt_parts(
             rif, sdk, full_file_contents)
         contents, common_whitespace = dedent_and_get_common_whitespace(
             contents)
@@ -435,7 +442,7 @@ class DefaultModelEditCodeStep(Step):
         completion_lines_covered = 0
         repeating_file_suffix = False
         line_below_highlighted_range = file_suffix.lstrip().split("\n")[0]
-        async for chunk in model_to_use.stream_chat(messages, temperature=0):
+        async for chunk in model_to_use.stream_chat(messages, temperature=0, max_tokens=max_tokens):
             # Stop early if it is repeating the file_suffix or the step was deleted
             if repeating_file_suffix:
                 break
