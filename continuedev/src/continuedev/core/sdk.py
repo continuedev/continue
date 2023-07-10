@@ -166,14 +166,20 @@ class ContinueSDK(AbstractContinueSDK):
     async def get_user_secret(self, env_var: str, prompt: str) -> str:
         return await self.ide.getUserSecret(env_var)
 
-    @staticmethod
-    def load_config_dot_py(path: str) -> ContinueConfig:
+    _last_valid_config: ContinueConfig = None
+
+    def load_config_dot_py(self, path: str) -> ContinueConfig:
         # Use importlib to load the config file config.py at the given path
-        import importlib.util
-        spec = importlib.util.spec_from_file_location("config", path)
-        config = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(config)
-        return config.config
+        try:
+            import importlib.util
+            spec = importlib.util.spec_from_file_location("config", path)
+            config = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(config)
+            self._last_valid_config = config.config
+            return config.config
+        except Exception as e:
+            print("Error loading config.py: ", e)
+            return ContinueConfig() if self._last_valid_config is None else self._last_valid_config
 
     @property
     def config(self) -> ContinueConfig:
@@ -189,7 +195,7 @@ class ContinueSDK(AbstractContinueSDK):
                 # Need to copy over the default config
                 return ContinueConfig()
 
-        config = ContinueSDK.load_config_dot_py(path)
+        config = self.load_config_dot_py(path)
         return config
 
     def update_default_model(self, model: str):
