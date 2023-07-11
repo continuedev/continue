@@ -164,7 +164,12 @@ class DiffManager {
     // Stop the step at step_index in case it is still streaming
     ideProtocolClient.deleteAtIndex(diffInfo.step_index);
 
-    this.cleanUpDiff(diffInfo);
+    vscode.workspace.textDocuments
+      .find((doc) => doc.uri.fsPath === newFilepath)
+      ?.save()
+      .then(() => {
+        this.cleanUpDiff(diffInfo);
+      });
   }
 }
 
