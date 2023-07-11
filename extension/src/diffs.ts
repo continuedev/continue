@@ -132,11 +132,18 @@ class DiffManager {
       console.log("No corresponding diffInfo found for newFilepath");
       return;
     }
-    fs.writeFileSync(
-      diffInfo.originalFilepath,
-      fs.readFileSync(diffInfo.newFilepath)
-    );
-    this.cleanUpDiff(diffInfo);
+
+    // Save the right-side file, then copy over to original
+    vscode.workspace.textDocuments
+      .find((doc) => doc.uri.fsPath === newFilepath)
+      ?.save()
+      .then(() => {
+        fs.writeFileSync(
+          diffInfo.originalFilepath,
+          fs.readFileSync(diffInfo.newFilepath)
+        );
+        this.cleanUpDiff(diffInfo);
+      });
   }
 
   rejectDiff(newFilepath?: string) {
@@ -157,7 +164,12 @@ class DiffManager {
     // Stop the step at step_index in case it is still streaming
     ideProtocolClient.deleteAtIndex(diffInfo.step_index);
 
-    this.cleanUpDiff(diffInfo);
+    vscode.workspace.textDocuments
+      .find((doc) => doc.uri.fsPath === newFilepath)
+      ?.save()
+      .then(() => {
+        this.cleanUpDiff(diffInfo);
+      });
   }
 }
 
