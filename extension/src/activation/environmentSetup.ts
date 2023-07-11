@@ -366,23 +366,25 @@ export async function startContinuePythonServer() {
   setupServerPath();
 
   return await retryThenFail(async () => {
-    if (await checkServerRunning(serverUrl)) {
-      // Kill the server if it is running an old version
-      if (fs.existsSync(serverVersionPath())) {
-        const serverVersion = fs.readFileSync(serverVersionPath(), "utf8");
-        if (serverVersion === getExtensionVersion()) {
-          return;
-        }
+    // Kill the server if it is running an old version
+    if (fs.existsSync(serverVersionPath())) {
+      const serverVersion = fs.readFileSync(serverVersionPath(), "utf8");
+      if (
+        serverVersion === getExtensionVersion() &&
+        (await checkServerRunning(serverUrl))
+      ) {
+        // The current version is already up and running, no need to continue
+        return;
       }
-      console.log("Killing old server...");
-      try {
-        await fkill(":65432");
-      } catch (e) {
-        console.log(
-          "Failed to kill old server, likely because it didn't exist:",
-          e
-        );
-      }
+    }
+    console.log("Killing old server...");
+    try {
+      await fkill(":65432");
+    } catch (e) {
+      console.log(
+        "Failed to kill old server, likely because it didn't exist:",
+        e
+      );
     }
 
     // Do this after above check so we don't have to waste time setting up the env
