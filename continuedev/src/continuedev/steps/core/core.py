@@ -265,6 +265,23 @@ class DefaultModelEditCodeStep(Step):
         return file_prefix, rif.contents, file_suffix, model_to_use, max_tokens
 
     def compile_prompt(self, file_prefix: str, contents: str, file_suffix: str, sdk: ContinueSDK) -> str:
+        if contents.strip() == "":
+            # Seperate prompt for insertion at the cursor, the other tends to cause it to repeat whole file
+            prompt = dedent(f"""\
+<file_prefix>
+{file_prefix}
+</file_prefix>
+<insertion_code_here>
+<file_suffix>
+{file_suffix}
+</file_suffix>
+<user_request>
+{self.user_input}
+</user_request>
+
+Please output the code to be inserted at the cursor in order to fulfill the user_request. Do NOT preface your answer or write anything other than code. You should not write any tags, just the code. Make sure to correctly indent the code:""")
+            return prompt
+
         prompt = self._prompt
         if file_prefix.strip() != "":
             prompt += dedent(f"""
@@ -306,15 +323,32 @@ class DefaultModelEditCodeStep(Step):
         prompt = self.compile_prompt(file_prefix, contents, file_suffix, sdk)
         full_file_contents_lines = full_file_contents.split("\n")
 
-        async def sendDiffUpdate(lines: List[str], sdk: ContinueSDK):
-            nonlocal full_file_contents_lines, rif
+        lines_to_display = []
+
+        async def sendDiffUpdate(lines: List[str], sdk: ContinueSDK, final: bool = False):
+            nonlocal full_file_contents_lines, rif, lines_to_display
 
             completion = "\n".join(lines)
 
             full_prefix_lines = full_file_contents_lines[:rif.range.start.line]
             full_suffix_lines = full_file_contents_lines[rif.range.end.line:]
+
+            # Don't do this at the very end, just show the inserted code
+            if final:
+                lines_to_display = []
+            # Only recalculate at every new-line, because this is sort of expensive
+            elif completion.endswith("\n"):
+                contents_lines = rif.contents.split("\n")
+                rewritten_lines = 0
+                for line in lines:
+                    for i in range(rewritten_lines, len(contents_lines)):
+                        if difflib.SequenceMatcher(None, line, contents_lines[i]).ratio() > 0.7 and contents_lines[i].strip() != "":
+                            rewritten_lines = i + 1
+                            break
+                lines_to_display = contents_lines[rewritten_lines:]
+
             new_file_contents = "\n".join(
-                full_prefix_lines) + "\n" + completion + "\n" + "\n".join(full_suffix_lines)
+                full_prefix_lines) + "\n" + completion + "\n" + "\n".join(lines_to_display) + "\n" + "\n".join(full_suffix_lines)
 
             step_index = sdk.history.current_index
 
@@ -495,7 +529,7 @@ class DefaultModelEditCodeStep(Step):
                 completion_lines_covered += 1
                 current_line_in_file += 1
 
-            await sendDiffUpdate(lines + [common_whitespace + unfinished_line], sdk)
+            await sendDiffUpdate(lines + [common_whitespace if unfinished_line.startswith("<") else (common_whitespace + unfinished_line)], sdk)
 
         # Add the unfinished line
         if unfinished_line != "" and not self.line_to_be_ignored(unfinished_line, completion_lines_covered == 0) and not self.is_end_line(unfinished_line):
@@ -505,7 +539,7 @@ class DefaultModelEditCodeStep(Step):
             completion_lines_covered += 1
             current_line_in_file += 1
 
-        await sendDiffUpdate(lines, sdk)
+        await sendDiffUpdate(lines, sdk, final=True)
 
         if False:
             # If the current block isn't empty, add that suggestion
