@@ -131,7 +131,7 @@ def load_global_config() -> ContinueConfig:
         config_path = os.path.join(global_dir, 'config.json')
         if not os.path.exists(config_path):
             with open(config_path, 'w') as f:
-                json.dump(ContinueConfig().dict(), f)
+                json.dump(ContinueConfig().dict(), f, indent=4)
         with open(config_path, 'r') as f:
             try:
                 config_dict = json.load(f)
@@ -151,7 +151,7 @@ def update_global_config(config: ContinueConfig):
     yaml_path = os.path.join(global_dir, 'config.yaml')
     if os.path.exists(yaml_path):
         with open(config_path, 'w') as f:
-            yaml.dump(config.dict(), f)
+            yaml.dump(config.dict(), f, indent=4)
     else:
         config_path = os.path.join(global_dir, 'config.json')
         with open(config_path, 'w') as f:

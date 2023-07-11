@@ -29,6 +29,8 @@ class SimpleChatStep(Step):
         messages = self.messages or await sdk.get_chat_context()
         async for chunk in sdk.models.gpt4.stream_chat(messages, temperature=0.5):
             if sdk.current_step_was_deleted():
+                # So that the message doesn't disappear
+                self.hide = False
                 return
 
             if "content" in chunk:

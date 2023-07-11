@@ -22,7 +22,7 @@ async function retryThenFail(
     if (retries > 0) {
       return await retryThenFail(fn, retries - 1);
     }
-    vscode.window.showErrorMessage(
+    vscode.window.showInformationMessage(
       "Failed to set up Continue extension. Please email nate@continue.dev and we'll get this fixed ASAP!"
     );
     sendTelemetryEvent(TelemetryEvent.ExtensionSetupError, {
@@ -156,10 +156,7 @@ async function checkRequirementsInstalled() {
         activateCmd,
         `${pipCmd} uninstall -y continuedev`,
       ].join(" ; ");
-      const [, stderr] = await runCommand(removeOldVersionCommand);
-      if (stderr) {
-        throw new Error(stderr);
-      }
+      await runCommand(removeOldVersionCommand);
       return false;
     }
   }
@@ -224,6 +221,9 @@ async function setupPythonEnv() {
       // First, try to run the command to install python3-venv
       let [stdout, stderr] = await runCommand(`${pythonCmd} --version`);
       if (stderr) {
+        await vscode.window.showErrorMessage(
+          "Python3 is not installed. Please install from https://www.python.org/downloads, reload VS Code, and try again."
+        );
         throw new Error(stderr);
       }
       const version = stdout.split(" ")[1].split(".")[1];
@@ -351,7 +351,7 @@ function requirementsVersionPath(): string {
   return path.join(serverPath(), "requirements_version.txt");
 }
 
-function getExtensionVersion() {
+export function getExtensionVersion() {
   const extension = vscode.extensions.getExtension("continue.continue");
   return extension?.packageJSON.version || "";
 }
@@ -366,23 +366,25 @@ export async function startContinuePythonServer() {
   setupServerPath();
 
   return await retryThenFail(async () => {
-    if (await checkServerRunning(serverUrl)) {
-      // Kill the server if it is running an old version
-      if (fs.existsSync(serverVersionPath())) {
-        const serverVersion = fs.readFileSync(serverVersionPath(), "utf8");
-        if (serverVersion === getExtensionVersion()) {
-          return;
-        }
+    // Kill the server if it is running an old version
+    if (fs.existsSync(serverVersionPath())) {
+      const serverVersion = fs.readFileSync(serverVersionPath(), "utf8");
+      if (
+        serverVersion === getExtensionVersion() &&
+        (await checkServerRunning(serverUrl))
+      ) {
+        // The current version is already up and running, no need to continue
+        return;
       }
-      console.log("Killing old server...");
-      try {
-        await fkill(":65432");
-      } catch (e) {
-        console.log(
-          "Failed to kill old server, likely because it didn't exist:",
-          e
-        );
-      }
+    }
+    console.log("Killing old server...");
+    try {
+      await fkill(":65432");
+    } catch (e) {
+      console.log(
+        "Failed to kill old server, likely because it didn't exist:",
+        e
+      );
     }
 
     // Do this after above check so we don't have to waste time setting up the env

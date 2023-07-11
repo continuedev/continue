@@ -7,8 +7,15 @@ import IdeProtocolClient from "../continueIdeClient";
 import { getContinueServerUrl } from "../bridge";
 import { CapturedTerminal } from "../terminal/terminalEmulator";
 import { setupDebugPanel, ContinueGUIWebviewViewProvider } from "../debugPanel";
-import { startContinuePythonServer } from "./environmentSetup";
+import {
+  getExtensionVersion,
+  startContinuePythonServer,
+} from "./environmentSetup";
+import fetch from "node-fetch";
 // import { CapturedTerminal } from "../terminal/terminalEmulator";
+
+const PACKAGE_JSON_RAW_GITHUB_URL =
+  "https://raw.githubusercontent.com/continuedev/continue/main/extension/package.json";
 
 export let extensionContext: vscode.ExtensionContext | undefined = undefined;
 
@@ -19,6 +26,19 @@ export async function activateExtension(
   showTutorial: boolean
 ) {
   extensionContext = context;
+
+  // Before anything else, check whether this is an out-of-date version of the extension
+  // Do so by grabbing the package.json off of the GitHub respository for now.
+  fetch(PACKAGE_JSON_RAW_GITHUB_URL)
+    .then(async (res) => res.json())
+    .then((packageJson) => {
+      if (packageJson.version !== getExtensionVersion()) {
+        vscode.window.showInformationMessage(
+          `You are using an out-of-date version of the Continue extension. Please update to the latest version.`
+        );
+      }
+    })
+    .catch((e) => console.log("Error checking for extension updates: ", e));
 
   await new Promise((resolve, reject) => {
     vscode.window.withProgress(

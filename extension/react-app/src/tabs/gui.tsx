@@ -170,6 +170,7 @@ function GUI(props: GUIProps) {
       const waitingForSteps =
         state.active &&
         state.history.current_index < state.history.timeline.length &&
+        state.history.timeline[state.history.current_index] &&
         state.history.timeline[
           state.history.current_index
         ].step.description?.trim() === "";
@@ -236,14 +237,14 @@ function GUI(props: GUIProps) {
         history.current_index < history.timeline.length
       ) {
         if (
-          history.timeline[history.current_index].step.name ===
+          history.timeline[history.current_index]?.step.name ===
           "Waiting for user input"
         ) {
           if (input.trim() === "") return;
           onStepUserInput(input, history!.current_index);
           return;
         } else if (
-          history.timeline[history.current_index].step.name ===
+          history.timeline[history.current_index]?.step.name ===
           "Waiting for user confirmation"
         ) {
           onStepUserInput("ok", history!.current_index);
@@ -350,12 +351,6 @@ function GUI(props: GUIProps) {
         </div>
 
         <ComboBox
-          // disabled={
-          //   history?.timeline.length
-          //     ? history.timeline[history.current_index].step.name ===
-          //       "Waiting for user confirmation"
-          //     : false
-          // }
           ref={mainTextInputRef}
           onEnter={(e) => {
             onMainTextInput(e);

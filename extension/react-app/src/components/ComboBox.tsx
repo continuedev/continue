@@ -180,6 +180,26 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
 
   useImperativeHandle(ref, () => downshiftProps, [downshiftProps]);
 
+  const [metaKeyPressed, setMetaKeyPressed] = useState(false);
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Meta") {
+        setMetaKeyPressed(true);
+      }
+    };
+    const handleKeyUp = (e: KeyboardEvent) => {
+      if (e.key === "Meta") {
+        setMetaKeyPressed(false);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("keyup", handleKeyUp);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("keyup", handleKeyUp);
+    };
+  });
+
   useEffect(() => {
     if (!inputRef.current) {
       return;
@@ -272,7 +292,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
       <div className="flex px-2" ref={divRef} hidden={!downshiftProps.isOpen}>
         <MainTextInput
           disabled={props.disabled}
-          placeholder="Ask a question, give instructions, or type '/' to see slash commands"
+          placeholder="Ask a question, give instructions, or type '/' to see slash commands. ⌘⏎ to edit."
           {...getInputProps({
             onChange: (e) => {
               const target = e.target as HTMLTextAreaElement;
@@ -357,10 +377,13 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
             ))}
         </Ul>
       </div>
-      {/* <span className="text-trueGray-400 ml-auto m-auto text-xs text-right">
-        Highlight code to include as context. Currently open file included by
-        default. {highlightedCodeSections.length === 0 && ""}
-      </span> */}
+      {highlightedCodeSections.length === 0 &&
+        (downshiftProps.inputValue?.startsWith("/edit") ||
+          (metaKeyPressed && downshiftProps.inputValue?.length > 0)) && (
+          <div className="text-trueGray-400 pr-4 text-xs text-right">
+            Inserting at cursor
+          </div>
+        )}
       <ContextDropdown
         onMouseEnter={() => {
           setHoveringContextDropdown(true);
