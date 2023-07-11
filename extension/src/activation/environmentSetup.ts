@@ -22,7 +22,7 @@ async function retryThenFail(
     if (retries > 0) {
       return await retryThenFail(fn, retries - 1);
     }
-    vscode.window.showErrorMessage(
+    vscode.window.showInformationMessage(
       "Failed to set up Continue extension. Please email nate@continue.dev and we'll get this fixed ASAP!"
     );
     sendTelemetryEvent(TelemetryEvent.ExtensionSetupError, {
