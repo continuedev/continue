@@ -2,6 +2,7 @@ import json
 from fastapi import Depends, Header, WebSocket, APIRouter
 from typing import Any, List, Type, TypeVar, Union
 from pydantic import BaseModel
+import traceback
 from uvicorn.main import Server
 
 from .session_manager import SessionManager, session_manager, Session
@@ -188,7 +189,7 @@ async def websocket_endpoint(websocket: WebSocket, session: Session = Depends(we
     except Exception as e:
         print("ERROR in gui websocket: ", e)
         capture_event(session.autopilot.continue_sdk.ide.unique_id, "gui_error", {
-                      "error_title": e.__str__() or e.__repr__(), "error_message": e.__traceback__})
+                      "error_title": e.__str__() or e.__repr__(), "error_message": traceback.format_tb(e.__traceback__)})
         raise e
     finally:
         print("Closing gui websocket")
