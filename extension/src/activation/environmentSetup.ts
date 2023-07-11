@@ -351,7 +351,7 @@ function requirementsVersionPath(): string {
   return path.join(serverPath(), "requirements_version.txt");
 }
 
-function getExtensionVersion() {
+export function getExtensionVersion() {
   const extension = vscode.extensions.getExtension("continue.continue");
   return extension?.packageJSON.version || "";
 }
