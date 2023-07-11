@@ -224,6 +224,9 @@ async function setupPythonEnv() {
       // First, try to run the command to install python3-venv
       let [stdout, stderr] = await runCommand(`${pythonCmd} --version`);
       if (stderr) {
+        await vscode.window.showErrorMessage(
+          "Python3 is not installed. Please install from https://www.python.org/downloads, reload VS Code, and try again."
+        );
         throw new Error(stderr);
       }
       const version = stdout.split(" ")[1].split(".")[1];
