@@ -414,6 +414,6 @@ async def websocket_endpoint(websocket: WebSocket):
     except Exception as e:
         print("Error in ide websocket: ", e)
         capture_event(ideProtocolServer.unique_id, "gui_error", {
-                      "error_title": e.__str__() or e.__repr__(), "error_message": traceback.format_tb(e.__traceback__)})
+                      "error_title": e.__str__() or e.__repr__(), "error_message": traceback.format_exception(e)})
         await websocket.close()
         raise e

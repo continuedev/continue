@@ -285,7 +285,7 @@ class Autopilot(ContinueBaseModel):
                 e.__class__, ContinueCustomException)
 
             error_string = e.message if is_continue_custom_exception else '\n'.join(
-                traceback.format_tb(e.__traceback__)) + f"\n\n{e.__repr__()}"
+                traceback.format_exception(e))
             error_title = e.title if is_continue_custom_exception else get_error_title(
                 e)
 
