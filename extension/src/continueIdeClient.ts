@@ -300,7 +300,7 @@ class IdeProtocolClient {
     });
     const resp = await this.messenger?.sendAndReceive("openGUI", {});
     const sessionId = resp.sessionId;
-    console.log("New Continue session with ID: ", sessionId);
+    // console.log("New Continue session with ID: ", sessionId);
     return sessionId;
   }
 

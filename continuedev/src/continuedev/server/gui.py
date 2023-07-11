@@ -2,14 +2,14 @@ import json
 from fastapi import Depends, Header, WebSocket, APIRouter
 from typing import Any, List, Type, TypeVar, Union
 from pydantic import BaseModel
+import traceback
 from uvicorn.main import Server
 
 from .session_manager import SessionManager, session_manager, Session
 from .gui_protocol import AbstractGUIProtocolServer
 from ..libs.util.queue import AsyncSubscriptionQueue
-import asyncio
-import nest_asyncio
-nest_asyncio.apply()
+from ..libs.util.telemetry import capture_event
+from ..libs.util.create_async_task import create_async_task
 
 router = APIRouter(prefix="/gui", tags=["gui"])
 
@@ -102,51 +102,60 @@ class GUIProtocolServer(AbstractGUIProtocolServer):
 
     def on_main_input(self, input: str):
         # Do something with user input
-        asyncio.create_task(self.session.autopilot.accept_user_input(input))
+        create_async_task(self.session.autopilot.accept_user_input(
+            input), self.session.autopilot.continue_sdk.ide.unique_id)
 
     def on_reverse_to_index(self, index: int):
         # Reverse the history to the given index
-        asyncio.create_task(self.session.autopilot.reverse_to_index(index))
+        create_async_task(self.session.autopilot.reverse_to_index(
+            index), self.session.autopilot.continue_sdk.ide.unique_id)
 
     def on_step_user_input(self, input: str, index: int):
-        asyncio.create_task(
-            self.session.autopilot.give_user_input(input, index))
+        create_async_task(
+            self.session.autopilot.give_user_input(input, index), self.session.autopilot.continue_sdk.ide.unique_id)
 
     def on_refinement_input(self, input: str, index: int):
-        asyncio.create_task(
-            self.session.autopilot.accept_refinement_input(input, index))
+        create_async_task(
+            self.session.autopilot.accept_refinement_input(input, index), self.session.autopilot.continue_sdk.ide.unique_id)
 
     def on_retry_at_index(self, index: int):
-        asyncio.create_task(
-            self.session.autopilot.retry_at_index(index))
+        create_async_task(
+            self.session.autopilot.retry_at_index(index), self.session.autopilot.continue_sdk.ide.unique_id)
 
     def on_change_default_model(self, model: str):
-        asyncio.create_task(self.session.autopilot.change_default_model(model))
+        create_async_task(self.session.autopilot.change_default_model(
+            model), self.session.autopilot.continue_sdk.ide.unique_id)
 
     def on_clear_history(self):
-        asyncio.create_task(self.session.autopilot.clear_history())
+        create_async_task(self.session.autopilot.clear_history(
+        ), self.session.autopilot.continue_sdk.ide.unique_id)
 
     def on_delete_at_index(self, index: int):
-        asyncio.create_task(self.session.autopilot.delete_at_index(index))
+        create_async_task(self.session.autopilot.delete_at_index(
+            index), self.session.autopilot.continue_sdk.ide.unique_id)
 
     def on_delete_context_at_indices(self, indices: List[int]):
-        asyncio.create_task(
-            self.session.autopilot.delete_context_at_indices(indices)
+        create_async_task(
+            self.session.autopilot.delete_context_at_indices(
+                indices), self.session.autopilot.continue_sdk.ide.unique_id
         )
 
     def on_toggle_adding_highlighted_code(self):
-        asyncio.create_task(
-            self.session.autopilot.toggle_adding_highlighted_code()
+        create_async_task(
+            self.session.autopilot.toggle_adding_highlighted_code(
+            ), self.session.autopilot.continue_sdk.ide.unique_id
         )
 
     def on_set_editing_at_indices(self, indices: List[int]):
-        asyncio.create_task(
-            self.session.autopilot.set_editing_at_indices(indices)
+        create_async_task(
+            self.session.autopilot.set_editing_at_indices(
+                indices), self.session.autopilot.continue_sdk.ide.unique_id
         )
 
     def on_set_pinned_at_indices(self, indices: List[int]):
-        asyncio.create_task(
-            self.session.autopilot.set_pinned_at_indices(indices)
+        create_async_task(
+            self.session.autopilot.set_pinned_at_indices(
+                indices), self.session.autopilot.continue_sdk.ide.unique_id
         )
 
 
@@ -179,6 +188,8 @@ async def websocket_endpoint(websocket: WebSocket, session: Session = Depends(we
 
     except Exception as e:
         print("ERROR in gui websocket: ", e)
+        capture_event(session.autopilot.continue_sdk.ide.unique_id, "gui_error", {
+                      "error_title": e.__str__() or e.__repr__(), "error_message": traceback.format_tb(e.__traceback__)})
         raise e
     finally:
         print("Closing gui websocket")
