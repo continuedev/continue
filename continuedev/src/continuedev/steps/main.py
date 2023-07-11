@@ -10,7 +10,7 @@ from ..models.filesystem import RangeInFile, RangeInFileWithContents
 from ..core.observation import Observation, TextObservation, TracebackObservation
 from ..libs.llm.prompt_utils import MarkdownStyleEncoderDecoder
 from textwrap import dedent
-from ..core.main import Step
+from ..core.main import ContinueCustomException, Step
 from ..core.sdk import ContinueSDK, Models
 from ..core.observation import Observation
 import subprocess
@@ -251,6 +251,9 @@ class EditHighlightedCodeStep(Step):
             highlighted_code = await sdk.ide.getHighlightedCode()
             if highlighted_code is not None:
                 for rif in highlighted_code:
+                    if os.path.dirname(rif.filepath) == os.path.expanduser(os.path.join("~", ".continue", "diffs")):
+                        raise ContinueCustomException(
+                            message="Please accept or reject the change before making another edit in this file.", title="Accept/Reject First")
                     if rif.range.start == rif.range.end:
                         range_in_files.append(
                             RangeInFileWithContents.from_range_in_file(rif, ""))
@@ -277,6 +280,11 @@ class EditHighlightedCodeStep(Step):
         range_in_files = list(map(lambda x: RangeInFile(
             filepath=x.filepath, range=x.range
         ), range_in_files))
+
+        for range_in_file in range_in_files:
+            if os.path.dirname(range_in_file.filepath) == os.path.expanduser(os.path.join("~", ".continue", "diffs")):
+                self.description = "Please accept or reject the change before making another edit in this file."
+                return
 
         await sdk.run_step(DefaultModelEditCodeStep(user_input=self.user_input, range_in_files=range_in_files))
 

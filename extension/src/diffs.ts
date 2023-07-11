@@ -132,11 +132,18 @@ class DiffManager {
       console.log("No corresponding diffInfo found for newFilepath");
       return;
     }
-    fs.writeFileSync(
-      diffInfo.originalFilepath,
-      fs.readFileSync(diffInfo.newFilepath)
-    );
-    this.cleanUpDiff(diffInfo);
+
+    // Save the right-side file, then copy over to original
+    vscode.workspace.textDocuments
+      .find((doc) => doc.uri.fsPath === newFilepath)
+      ?.save()
+      .then(() => {
+        fs.writeFileSync(
+          diffInfo.originalFilepath,
+          fs.readFileSync(diffInfo.newFilepath)
+        );
+        this.cleanUpDiff(diffInfo);
+      });
   }
 
   rejectDiff(newFilepath?: string) {
