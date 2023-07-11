@@ -15,8 +15,7 @@ from pydantic import BaseModel
 from .gui import SessionManager, session_manager
 from .ide_protocol import AbstractIdeProtocolServer
 import asyncio
-import nest_asyncio
-nest_asyncio.apply()
+from ..libs.util.create_async_task import create_async_task
 
 
 router = APIRouter(prefix="/ide", tags=["ide"])
@@ -250,24 +249,25 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
 
     def onDeleteAtIndex(self, index: int):
         for _, session in self.session_manager.sessions.items():
-            asyncio.create_task(session.autopilot.delete_at_index(index))
+            create_async_task(
+                session.autopilot.delete_at_index(index), self.unique_id)
 
     def onCommandOutput(self, output: str):
         # Send the output to ALL autopilots.
         # Maybe not ideal behavior
         for _, session in self.session_manager.sessions.items():
-            asyncio.create_task(
-                session.autopilot.handle_command_output(output))
+            create_async_task(
+                session.autopilot.handle_command_output(output), self.unique_id)
 
     def onHighlightedCodeUpdate(self, range_in_files: List[RangeInFileWithContents]):
         for _, session in self.session_manager.sessions.items():
-            asyncio.create_task(
-                session.autopilot.handle_highlighted_code(range_in_files))
+            create_async_task(
+                session.autopilot.handle_highlighted_code(range_in_files), self.unique_id)
 
     def onMainUserInput(self, input: str):
         for _, session in self.session_manager.sessions.items():
-            asyncio.create_task(
-                session.autopilot.accept_user_input(input))
+            create_async_task(
+                session.autopilot.accept_user_input(input), self.unique_id)
 
     # Request information. Session doesn't matter.
     async def getOpenFiles(self) -> List[str]:
@@ -412,5 +412,7 @@ async def websocket_endpoint(websocket: WebSocket):
         await websocket.close()
     except Exception as e:
         print("Error in ide websocket: ", e)
+        capture_event(ideProtocolServer.unique_id, "gui_error", {
+                      "error_title": e.__str__() or e.__repr__(), "error_message": e.__traceback__})
         await websocket.close()
         raise e
