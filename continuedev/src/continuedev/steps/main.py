@@ -258,24 +258,10 @@ class EditHighlightedCodeStep(Step):
                         range_in_files.append(
                             RangeInFileWithContents.from_range_in_file(rif, ""))
 
-        # If nothing highlighted, edit the first open file
+        # If still no highlighted code, raise error
         if len(range_in_files) == 0:
-            # Get the full contents of all open files
-            files = await sdk.ide.getOpenFiles()
-            contents = {}
-            for file in files:
-                contents[file] = await sdk.ide.readFile(file)
-
-            range_in_files = [RangeInFileWithContents.from_entire_file(
-                filepath, content) for filepath, content in contents.items()]
-
-        # If still no highlighted code, create a new file and edit there
-        if len(range_in_files) == 0:
-            # Create a new file
-            new_file_path = "new_file.txt"
-            await sdk.add_file(new_file_path, "")
-            range_in_files = [
-                RangeInFileWithContents.from_entire_file(new_file_path, "")]
+            raise ContinueCustomException(
+                message="Please highlight some code and try again.", title="No Code Selected")
 
         range_in_files = list(map(lambda x: RangeInFile(
             filepath=x.filepath, range=x.range
