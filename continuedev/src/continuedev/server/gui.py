@@ -189,7 +189,7 @@ async def websocket_endpoint(websocket: WebSocket, session: Session = Depends(we
     except Exception as e:
         print("ERROR in gui websocket: ", e)
         capture_event(session.autopilot.continue_sdk.ide.unique_id, "gui_error", {
-                      "error_title": e.__str__() or e.__repr__(), "error_message": traceback.format_exception(e)})
+                      "error_title": e.__str__() or e.__repr__(), "error_message": '\n'.join(traceback.format_exception(e))})
         raise e
     finally:
         print("Closing gui websocket")
