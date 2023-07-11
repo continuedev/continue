@@ -152,7 +152,8 @@ class DefaultModelEditCodeStep(Step):
 
         Main task:
         """)
-
+    _previous_contents: str = ""
+    _new_contents: str = ""
     _prompt_and_completion: str = ""
 
     def _cleanup_output(self, output: str) -> str:
@@ -167,13 +168,19 @@ class DefaultModelEditCodeStep(Step):
         return output
 
     async def describe(self, models: Models) -> Coroutine[str, None, None]:
-        if self._prompt_and_completion == "":
+        if self._previous_contents.strip() == self._new_contents.strip():
             description = "No edits were made"
         else:
             description = await models.gpt3516k.complete(dedent(f"""\
-                {self._prompt_and_completion}
-                
-                Please give brief a description of the changes made above using markdown bullet points. Be concise and only mention changes made to the commit before, not prefix or suffix:"""))
+                ```original
+                {self._previous_contents}
+                ```
+
+                ```new
+                {self._new_contents}
+                ```
+
+                Please give brief a description of the changes made above using markdown bullet points. Be concise:"""))
         name = await models.gpt3516k.complete(f"Write a very short title to describe this requested change (no quotes): '{self.user_input}'. This is the title:")
         self.name = self._cleanup_output(name)
 
@@ -573,6 +580,8 @@ Please output the code to be inserted at the cursor in order to fulfill the user
 
         # Record the completion
         completion = "\n".join(lines)
+        self._previous_contents = "\n".join(original_lines)
+        self._new_contents = completion
         self._prompt_and_completion += prompt + completion
 
     async def run(self, sdk: ContinueSDK) -> Coroutine[Observation, None, None]:

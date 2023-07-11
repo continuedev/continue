@@ -2,7 +2,7 @@ import * as os from "os";
 import * as path from "path";
 import * as fs from "fs";
 import * as vscode from "vscode";
-import { ideProtocolClient } from "./activation/activate";
+import { extensionContext, ideProtocolClient } from "./activation/activate";
 
 interface DiffInfo {
   originalFilepath: string;
@@ -69,6 +69,28 @@ class DiffManager {
     vscode.workspace
       .getConfiguration("diffEditor", editor.document.uri)
       .update("codeLens", true, vscode.ConfigurationTarget.Global);
+
+    if (
+      extensionContext?.globalState.get<boolean>(
+        "continue.showDiffInfoMessage"
+      ) !== false
+    ) {
+      vscode.window
+        .showInformationMessage(
+          "Accept (⌘⇧↩) or reject (⌘⇧⌫) at the top of the file.",
+          "Got it",
+          "Don't show again"
+        )
+        .then((selection) => {
+          if (selection === "Don't show again") {
+            // Get the global state
+            extensionContext?.globalState.update(
+              "continue.showDiffInfoMessage",
+              false
+            );
+          }
+        });
+    }
 
     return editor;
   }
@@ -152,7 +174,10 @@ class DiffManager {
       newFilepath = Array.from(this.diffs.keys())[0];
     }
     if (!newFilepath) {
-      console.log("No newFilepath provided to reject the diff");
+      console.log(
+        "No newFilepath provided to reject the diff, diffs.size was",
+        this.diffs.size
+      );
       return;
     }
     const diffInfo = this.diffs.get(newFilepath);
