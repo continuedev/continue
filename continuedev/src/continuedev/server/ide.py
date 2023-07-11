@@ -6,6 +6,7 @@ from typing import Any, Dict, List, Type, TypeVar, Union
 import uuid
 from fastapi import WebSocket, Body, APIRouter
 from uvicorn.main import Server
+import traceback
 
 from ..libs.util.telemetry import capture_event
 from ..libs.util.queue import AsyncSubscriptionQueue
@@ -413,6 +414,6 @@ async def websocket_endpoint(websocket: WebSocket):
     except Exception as e:
         print("Error in ide websocket: ", e)
         capture_event(ideProtocolServer.unique_id, "gui_error", {
-                      "error_title": e.__str__() or e.__repr__(), "error_message": e.__traceback__})
+                      "error_title": e.__str__() or e.__repr__(), "error_message": traceback.format_tb(e.__traceback__)})
         await websocket.close()
         raise e
