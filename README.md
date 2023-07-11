@@ -19,26 +19,26 @@
 
 ## Task, not tab, auto-complete
 
-### Edit in natural language
-
 ### Get possible explainations
 
 Ask Continue about a part of your code to get another perspective
-- `what might cause this error?`
-- `what is the load_dotenv library name?`
-- `how do I find running process on port 8000?`
+- “how can I set up a Prisma schema that cascades deletes?”
+- “where in the page should I be making this request to the backend?”
+- “how can I communicate between these iframes?”
+
+### Edit in natural language
 
 Highlight a section of code and instruct Continue to refactor it
-- `/edit Make this use more descriptive variable names`
-- `/edit Rewrite this API call to grab all pages`
-- `/edit Use 'Union' instead of a vertical bar here`
+- “/edit migrate this digital ocean terraform file into one that works for GCP”
+- “/edit change this plot into a bar chart in this dashboard component”
+- “/edit rewrite this function to be async”
 
 ### Generate files from scratch
 
 Let Continue build the scaffolding of Python scripts, React components, and more
-- `Create a shell script to back up my home dir to /tmp/`
-- `Write a Python script to get Posthog events`
-- `Add a React component for syntax highlighted code`
+- “/edit here is a connector for postgres, now write one for kafka”
+- “/edit make an IAM policy that creates a user with read-only access to S3”
+- “/edit use this schema to write me a SQL query that gets recently churned users”
 
 ## Getting Started
 

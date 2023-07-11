@@ -1,3 +1,4 @@
+from asyncio import BaseEventLoop
 from fastapi import WebSocket
 from typing import Any, Dict, List, Union
 from uuid import uuid4
@@ -7,9 +8,7 @@ from ..core.policy import DemoPolicy
 from ..core.main import FullState
 from ..core.autopilot import Autopilot
 from .ide_protocol import AbstractIdeProtocolServer
-import asyncio
-import nest_asyncio
-nest_asyncio.apply()
+from ..libs.util.create_async_task import create_async_task
 
 
 class Session:
@@ -38,7 +37,7 @@ class DemoAutopilot(Autopilot):
 
 class SessionManager:
     sessions: Dict[str, Session] = {}
-    _event_loop: Union[asyncio.BaseEventLoop, None] = None
+    _event_loop: Union[BaseEventLoop, None] = None
 
     def get_session(self, session_id: str) -> Session:
         if session_id not in self.sessions:
@@ -57,7 +56,7 @@ class SessionManager:
             })
 
         autopilot.on_update(on_update)
-        asyncio.create_task(autopilot.run_policy())
+        create_async_task(autopilot.run_policy())
         return session_id
 
     def remove_session(self, session_id: str):
