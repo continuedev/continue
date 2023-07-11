@@ -76,7 +76,7 @@ const Onboarding = () => {
         <h1>{topMessages[counter]}</h1>
         <div style={{ display: "flex", justifyContent: "center" }}>
           <img
-            src={`https://github.com/continuedev/continue/blob/main/${gifs[counter]}.gif?raw=true`}
+            src={`https://github.com/continuedev/continue/blob/main/media/${gifs[counter]}.gif?raw=true`}
             alt={topMessages[counter]}
           />
         </div>
