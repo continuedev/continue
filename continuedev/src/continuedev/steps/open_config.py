@@ -18,7 +18,10 @@ class OpenConfigStep(Step):
                     "prompt": "Write a comprehensive set of unit tests for the selected code. It should setup, run tests that check for correctness including important edge cases, and teardown. Ensure that the tests are complete and sophisticated."
                 }
             ],
-            ```""")
+            ```
+            `"name"` is the command you will type.
+            `"description"` is the description displayed in the slash command menu.
+            `"prompt"` is the instruction given to the model. The overall prompt becomes "Task: {prompt}, Additional info: {user_input}". For example, if you entered "/test exactly 5 assertions", the overall prompt would become "Task: Write a comprehensive...and sophisticated, Additional info: exactly 5 assertions".""")
 
     async def run(self, sdk: ContinueSDK):
         global_dir = os.path.expanduser('~/.continue')
