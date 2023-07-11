@@ -378,7 +378,8 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
         </Ul>
       </div>
       {highlightedCodeSections.length === 0 &&
-        (downshiftProps.inputValue?.startsWith("/edit") || metaKeyPressed) && (
+        (downshiftProps.inputValue?.startsWith("/edit") ||
+          (metaKeyPressed && downshiftProps.inputValue?.length > 0)) && (
           <div className="text-trueGray-400 pr-4 text-xs text-right">
             Inserting at cursor
           </div>
