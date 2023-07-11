@@ -156,10 +156,7 @@ async function checkRequirementsInstalled() {
         activateCmd,
         `${pipCmd} uninstall -y continuedev`,
       ].join(" ; ");
-      const [, stderr] = await runCommand(removeOldVersionCommand);
-      if (stderr) {
-        throw new Error(stderr);
-      }
+      await runCommand(removeOldVersionCommand);
       return false;
     }
   }
