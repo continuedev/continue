@@ -20,6 +20,7 @@ import asyncio
 from ..libs.util.step_name_to_steps import get_step_from_name
 from ..libs.util.traceback_parsers import get_python_traceback, get_javascript_traceback
 from openai import error as openai_errors
+from ..libs.util.create_async_task import create_async_task
 
 
 def get_error_title(e: Exception) -> str:
@@ -341,7 +342,8 @@ class Autopilot(ContinueBaseModel):
             # Update subscribers with new description
             await self.update_subscribers()
 
-        asyncio.create_task(update_description())
+        create_async_task(update_description(),
+                          self.continue_sdk.ide.unique_id)
 
         return observation
 

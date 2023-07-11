@@ -6,6 +6,7 @@ from ..models.filesystem import RangeInFile
 from ..models.main import Range
 from ..core.main import Step
 from ..core.sdk import ContinueSDK
+from ..libs.util.create_async_task import create_async_task
 import os
 import re
 
@@ -60,9 +61,9 @@ class EditAllMatchesStep(Step):
         # Search all files for a given string
         range_in_files = find_all_matches_in_dir(self.pattern, self.directory or await sdk.ide.getWorkspaceDirectory())
 
-        tasks = [asyncio.create_task(sdk.edit_file(
+        tasks = [create_async_task(sdk.edit_file(
             range=range_in_file.range,
             filename=range_in_file.filepath,
             prompt=self.user_request
-        )) for range_in_file in range_in_files]
+        ), sdk.ide.unique_id) for range_in_file in range_in_files]
         await asyncio.gather(*tasks)
