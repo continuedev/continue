@@ -7,6 +7,7 @@ import * as fs from "fs";
 import { getContinueServerUrl } from "../bridge";
 import fetch from "node-fetch";
 import * as vscode from "vscode";
+import * as os from "os";
 import fkill from "fkill";
 import { sendTelemetryEvent, TelemetryEvent } from "../telemetry";
 
@@ -127,8 +128,7 @@ function getActivateUpgradeCommands(pythonCmd: string, pipCmd: string) {
 
 function checkEnvExists() {
   const envBinPath = path.join(
-    getExtensionUri().fsPath,
-    "scripts",
+    serverPath(),
     "env",
     process.platform == "win32" ? "Scripts" : "bin"
   );
@@ -140,10 +140,32 @@ function checkEnvExists() {
   );
 }
 
-function checkRequirementsInstalled() {
+async function checkRequirementsInstalled() {
+  // First, check if the requirements have been installed most recently for a later version of the extension
+  if (fs.existsSync(requirementsVersionPath())) {
+    const requirementsVersion = fs.readFileSync(
+      requirementsVersionPath(),
+      "utf8"
+    );
+    if (requirementsVersion !== getExtensionVersion()) {
+      // Remove the old version of continuedev from site-packages
+      const [pythonCmd, pipCmd] = await getPythonPipCommands();
+      const [activateCmd] = getActivateUpgradeCommands(pythonCmd, pipCmd);
+      const removeOldVersionCommand = [
+        `cd "${serverPath()}"`,
+        activateCmd,
+        `${pipCmd} uninstall -y continuedev`,
+      ].join(" ; ");
+      const [, stderr] = await runCommand(removeOldVersionCommand);
+      if (stderr) {
+        throw new Error(stderr);
+      }
+      return false;
+    }
+  }
+
   let envLibsPath = path.join(
-    getExtensionUri().fsPath,
-    "scripts",
+    serverPath(),
     "env",
     process.platform == "win32" ? "Lib" : "lib"
   );
@@ -165,10 +187,6 @@ function checkRequirementsInstalled() {
   const continuePath = path.join(envLibsPath, "continuedev");
 
   return fs.existsSync(continuePath);
-
-  // return fs.existsSync(
-  //   path.join(getExtensionUri().fsPath, "scripts", ".continue_env_installed")
-  // );
 }
 
 async function setupPythonEnv() {
@@ -180,12 +198,13 @@ async function setupPythonEnv() {
     pipCmd
   );
 
+  // First, create the virtual environment
   if (checkEnvExists()) {
     console.log("Python env already exists, skipping...");
   } else {
     // Assemble the command to create the env
     const createEnvCommand = [
-      `cd "${path.join(getExtensionUri().fsPath, "scripts")}"`,
+      `cd "${serverPath()}"`,
       `${pythonCmd} -m venv env`,
     ].join(" ; ");
 
@@ -216,10 +235,7 @@ async function setupPythonEnv() {
       console.log(msg);
       await vscode.window.showErrorMessage(msg);
     } else if (checkEnvExists()) {
-      console.log(
-        "Successfully set up python env at ",
-        getExtensionUri().fsPath + "/scripts/env"
-      );
+      console.log("Successfully set up python env at ", `${serverPath()}/env`);
     } else {
       const msg = [
         "Python environment not successfully created. Trying again. Here was the stdout + stderr: ",
@@ -231,12 +247,13 @@ async function setupPythonEnv() {
     }
   }
 
+  // Install the requirements
   await retryThenFail(async () => {
-    if (checkRequirementsInstalled()) {
+    if (await checkRequirementsInstalled()) {
       console.log("Python requirements already installed, skipping...");
     } else {
       const installRequirementsCommand = [
-        `cd "${path.join(getExtensionUri().fsPath, "scripts")}"`,
+        `cd "${serverPath()}"`,
         activateCmd,
         pipUpgradeCmd,
         `${pipCmd} install -r requirements.txt`,
@@ -245,6 +262,8 @@ async function setupPythonEnv() {
       if (stderr) {
         throw new Error(stderr);
       }
+      // Write the version number for which requirements were installed
+      fs.writeFileSync(requirementsVersionPath(), getExtensionVersion());
     }
   });
 }
@@ -297,9 +316,39 @@ async function checkServerRunning(serverUrl: string): Promise<boolean> {
   }
 }
 
+export function getContinueGlobalPath(): string {
+  // This is ~/.continue on mac/linux
+  const continuePath = path.join(os.homedir(), ".continue");
+  if (!fs.existsSync(continuePath)) {
+    fs.mkdirSync(continuePath);
+  }
+  return continuePath;
+}
+
+function setupServerPath() {
+  const sPath = serverPath();
+  const extensionServerPath = path.join(getExtensionUri().fsPath, "server");
+  const files = fs.readdirSync(extensionServerPath);
+  files.forEach((file) => {
+    const filePath = path.join(extensionServerPath, file);
+    fs.copyFileSync(filePath, path.join(sPath, file));
+  });
+}
+
+function serverPath(): string {
+  const sPath = path.join(getContinueGlobalPath(), "server");
+  if (!fs.existsSync(sPath)) {
+    fs.mkdirSync(sPath);
+  }
+  return sPath;
+}
+
 function serverVersionPath(): string {
-  const extensionPath = getExtensionUri().fsPath;
-  return path.join(extensionPath, "server_version.txt");
+  return path.join(serverPath(), "server_version.txt");
+}
+
+function requirementsVersionPath(): string {
+  return path.join(serverPath(), "requirements_version.txt");
 }
 
 function getExtensionVersion() {
@@ -313,6 +362,8 @@ export async function startContinuePythonServer() {
   if (serverUrl !== "http://localhost:65432") {
     return;
   }
+
+  setupServerPath();
 
   return await retryThenFail(async () => {
     if (await checkServerRunning(serverUrl)) {
@@ -337,16 +388,14 @@ export async function startContinuePythonServer() {
     // Do this after above check so we don't have to waste time setting up the env
     await setupPythonEnv();
 
+    // Spawn the server process on port 65432
     const [pythonCmd] = await getPythonPipCommands();
     const activateCmd =
       process.platform == "win32"
         ? ".\\env\\Scripts\\activate"
         : ". env/bin/activate";
 
-    const command = `cd "${path.join(
-      getExtensionUri().fsPath,
-      "scripts"
-    )}" && ${activateCmd} && cd .. && ${pythonCmd} -m scripts.run_continue_server`;
+    const command = `cd "${serverPath()}" && ${activateCmd} && cd .. && ${pythonCmd} -m server.run_continue_server`;
 
     console.log("Starting Continue python server...");
 
@@ -392,8 +441,8 @@ export async function startContinuePythonServer() {
 }
 
 export function isPythonEnvSetup(): boolean {
-  let pathToEnvCfg = getExtensionUri().fsPath + "/scripts/env/pyvenv.cfg";
-  return fs.existsSync(path.join(pathToEnvCfg));
+  const pathToEnvCfg = path.join(serverPath(), "env", "pyvenv.cfg");
+  return fs.existsSync(pathToEnvCfg);
 }
 
 export async function downloadPython3() {
