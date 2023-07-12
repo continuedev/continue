@@ -147,7 +147,8 @@ function GUI(props: GUIProps) {
       } else if (
         e.key === "Backspace" &&
         e.metaKey &&
-        typeof history?.current_index !== "undefined"
+        typeof history?.current_index !== "undefined" &&
+        history.timeline[history.current_index]?.active
       ) {
         client?.deleteAtIndex(history.current_index);
       }
