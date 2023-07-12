@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import styled from "styled-components";
 import { ArrowLeft, ArrowRight } from "@styled-icons/heroicons-outline";
 import { defaultBorderRadius } from ".";
+import Loader from "./Loader";
 
 const StyledDiv = styled.div`
   position: absolute;
@@ -39,19 +40,21 @@ const Onboarding = () => {
     "Let Continue build the scaffolding of Python scripts, React components, and more",
   ];
 
-  const vscMediaUrl = useSelector(
-    (state: RootStore) => state.config.vscMediaUrl
-  );
-
   useEffect(() => {
     const hasVisited = localStorage.getItem("hasVisited");
-    if (hasVisited) {
+    if (hasVisited && false) {
       setCounter(4);
     } else {
       setCounter(0);
       localStorage.setItem("hasVisited", "true");
     }
   }, []);
+
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    setLoading(true);
+  }, [counter]);
 
   return (
     <StyledDiv hidden={counter >= 4}>
@@ -75,10 +78,34 @@ const Onboarding = () => {
       >
         <h1>{topMessages[counter]}</h1>
         <div style={{ display: "flex", justifyContent: "center" }}>
-          <img
-            src={`https://github.com/continuedev/continue/blob/main/media/${gifs[counter]}.gif?raw=true`}
-            alt={topMessages[counter]}
-          />
+          {loading && (
+            <div style={{ margin: "auto", position: "absolute", zIndex: 0 }}>
+              <Loader />
+            </div>
+          )}
+          {counter % 2 === 0 ? (
+            <img
+              src={`https://github.com/continuedev/continue/blob/main/media/${gifs[counter]}.gif?raw=true`}
+              width="100%"
+              key={"even-gif"}
+              alt={topMessages[counter]}
+              onLoad={() => {
+                setLoading(false);
+              }}
+              style={{ zIndex: 1 }}
+            />
+          ) : (
+            <img
+              src={`https://github.com/continuedev/continue/blob/main/media/${gifs[counter]}.gif?raw=true`}
+              width="100%"
+              key={"odd-gif"}
+              alt={topMessages[counter]}
+              onLoad={() => {
+                setLoading(false);
+              }}
+              style={{ zIndex: 1 }}
+            />
+          )}
         </div>
         <p>{bottomMessages[counter]}</p>
         <p
@@ -98,7 +125,11 @@ const Onboarding = () => {
           </StyledSpan>
           <span hidden={counter === 0}>{" | "}</span>
           <StyledSpan onClick={() => setCounter((prev) => prev + 1)}>
-            Click to {counter === 3 || "learn how to"} use Continue{" "}
+            {counter === 0
+              ? "Click to learn how to use Continue"
+              : counter === 3
+              ? "Get Started"
+              : "Next"}{" "}
             <ArrowRight width="18px" strokeWidth="2px" />
           </StyledSpan>
         </p>
