@@ -15,7 +15,7 @@ import fetch from "node-fetch";
 // import { CapturedTerminal } from "../terminal/terminalEmulator";
 
 const PACKAGE_JSON_RAW_GITHUB_URL =
-  "https://raw.githubusercontent.com/continuedev/continue/main/extension/package.json";
+  "https://raw.githubusercontent.com/continuedev/continue/HEAD/extension/package.json";
 
 export let extensionContext: vscode.ExtensionContext | undefined = undefined;
 
