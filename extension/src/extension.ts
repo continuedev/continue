@@ -8,12 +8,9 @@ import {
   startContinuePythonServer,
 } from "./activation/environmentSetup";
 
-async function dynamicImportAndActivate(
-  context: vscode.ExtensionContext,
-  showTutorial: boolean
-) {
+async function dynamicImportAndActivate(context: vscode.ExtensionContext) {
   const { activateExtension } = await import("./activation/activate");
-  await activateExtension(context, showTutorial);
+  await activateExtension(context);
 }
 
 export function activate(context: vscode.ExtensionContext) {
@@ -25,7 +22,7 @@ export function activate(context: vscode.ExtensionContext) {
       cancellable: false,
     },
     async () => {
-      dynamicImportAndActivate(context, true);
+      dynamicImportAndActivate(context);
     }
   );
 }

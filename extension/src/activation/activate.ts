@@ -21,10 +21,7 @@ export let extensionContext: vscode.ExtensionContext | undefined = undefined;
 
 export let ideProtocolClient: IdeProtocolClient;
 
-export async function activateExtension(
-  context: vscode.ExtensionContext,
-  showTutorial: boolean
-) {
+export async function activateExtension(context: vscode.ExtensionContext) {
   extensionContext = context;
 
   // Before anything else, check whether this is an out-of-date version of the extension
