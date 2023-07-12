@@ -6,7 +6,7 @@ import { DIFF_DIRECTORY } from "../diffs";
 class SuggestionsCodeLensProvider implements vscode.CodeLensProvider {
   public provideCodeLenses(
     document: vscode.TextDocument,
-    token: vscode.CancellationToken
+    _: vscode.CancellationToken
   ): vscode.CodeLens[] | Thenable<vscode.CodeLens[]> {
     const suggestions = editorToSuggestions.get(document.uri.toString());
     if (!suggestions) {
@@ -44,28 +44,12 @@ class SuggestionsCodeLensProvider implements vscode.CodeLensProvider {
 
     return codeLenses;
   }
-
-  onDidChangeCodeLenses?: vscode.Event<void> | undefined;
-
-  constructor(emitter?: vscode.EventEmitter<void>) {
-    if (emitter) {
-      this.onDidChangeCodeLenses = emitter.event;
-      this.onDidChangeCodeLenses(() => {
-        if (vscode.window.activeTextEditor) {
-          this.provideCodeLenses(
-            vscode.window.activeTextEditor.document,
-            new vscode.CancellationTokenSource().token
-          );
-        }
-      });
-    }
-  }
 }
 
 class DiffViewerCodeLensProvider implements vscode.CodeLensProvider {
   public provideCodeLenses(
     document: vscode.TextDocument,
-    token: vscode.CancellationToken
+    _: vscode.CancellationToken
   ): vscode.CodeLens[] | Thenable<vscode.CodeLens[]> {
     if (path.dirname(document.uri.fsPath) === DIFF_DIRECTORY) {
       const codeLenses: vscode.CodeLens[] = [];
@@ -85,22 +69,6 @@ class DiffViewerCodeLensProvider implements vscode.CodeLensProvider {
       return codeLenses;
     } else {
       return [];
-    }
-  }
-
-  onDidChangeCodeLenses?: vscode.Event<void> | undefined;
-
-  constructor(emitter?: vscode.EventEmitter<void>) {
-    if (emitter) {
-      this.onDidChangeCodeLenses = emitter.event;
-      this.onDidChangeCodeLenses(() => {
-        if (vscode.window.activeTextEditor) {
-          this.provideCodeLenses(
-            vscode.window.activeTextEditor.document,
-            new vscode.CancellationTokenSource().token
-          );
-        }
-      });
     }
   }
 }
