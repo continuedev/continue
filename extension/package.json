@@ -44,18 +44,13 @@
     "configuration": {
       "title": "Continue",
       "properties": {
-        "continue.automode": {
-          "type": "boolean",
-          "default": true,
-          "description": "Automatically find relevant code and suggest a fix whenever a traceback is found."
-        },
         "continue.serverUrl": {
           "type": "string",
           "default": "http://localhost:65432",
           "description": "The URL of the Continue server to use."
         },
         "continue.OPENAI_API_KEY": {
-          "type": "password",
+          "type": "string",
           "default": null,
           "description": "The OpenAI API key to use for code generation."
         },

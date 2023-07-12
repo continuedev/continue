@@ -355,7 +355,7 @@ Please output the code to be inserted at the cursor in order to fulfill the user
                 lines_to_display = contents_lines[rewritten_lines:]
 
             new_file_contents = "\n".join(
-                full_prefix_lines) + "\n" + completion + "\n" + "\n".join(lines_to_display) + "\n" + "\n".join(full_suffix_lines)
+                full_prefix_lines) + "\n" + completion + "\n" + ("\n".join(lines_to_display) + "\n" if len(lines_to_display) > 0 else "") + "\n".join(full_suffix_lines)
 
             step_index = sdk.history.current_index
 

@@ -26,7 +26,7 @@ const StyledSpan = styled.span`
 
 const Onboarding = () => {
   const [counter, setCounter] = useState(4);
-  const gifs = ["intro", "explain", "edit", "generate"];
+  const gifs = ["intro", "explain", "edit", "generate", "intro"];
   const topMessages = [
     "Welcome to Continue!",
     "Answer coding questions",
@@ -42,7 +42,7 @@ const Onboarding = () => {
 
   useEffect(() => {
     const hasVisited = localStorage.getItem("hasVisited");
-    if (hasVisited && false) {
+    if (hasVisited) {
       setCounter(4);
     } else {
       setCounter(0);
