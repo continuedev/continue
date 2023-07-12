@@ -16,10 +16,6 @@ class AbstractIdeProtocolServer(ABC):
         """Show a suggestion to the user"""
 
     @abstractmethod
-    async def getWorkspaceDirectory(self):
-        """Get the workspace directory"""
-
-    @abstractmethod
     async def setFileOpen(self, filepath: str, open: bool = True):
         """Set whether a file is open"""
 
@@ -103,9 +99,7 @@ class AbstractIdeProtocolServer(ABC):
     async def showDiff(self, filepath: str, replacement: str, step_index: int):
         """Show a diff"""
 
-    @abstractproperty
-    def workspace_directory(self) -> str:
-        """Get the workspace directory"""
+    workspace_directory: str
 
     @abstractproperty
     def unique_id(self) -> str:

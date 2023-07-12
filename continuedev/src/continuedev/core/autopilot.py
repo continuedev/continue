@@ -251,7 +251,7 @@ class Autopilot(ContinueBaseModel):
         #     i -= 1
 
         capture_event(self.continue_sdk.ide.unique_id, 'step run', {
-                      'step_name': step.name, 'params': step.dict()})
+            'step_name': step.name, 'params': step.dict()})
 
         if not is_future_step:
             # Check manual edits buffer, clear out if needed by creating a ManualEditStep
@@ -290,7 +290,8 @@ class Autopilot(ContinueBaseModel):
                 e)
 
             # Attach an InternalErrorObservation to the step and unhide it.
-            print(f"Error while running step: \n{error_string}\n{error_title}")
+            print(
+                f"Error while running step: \n{error_string}\n{error_title}")
             capture_event(self.continue_sdk.ide.unique_id, 'step error', {
                 'error_message': error_string, 'error_title': error_title, 'step_name': step.name, 'params': step.dict()})
 

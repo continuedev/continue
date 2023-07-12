@@ -27,16 +27,21 @@ class SimpleChatStep(Step):
     async def run(self, sdk: ContinueSDK):
         completion = ""
         messages = self.messages or await sdk.get_chat_context()
-        async for chunk in sdk.models.gpt4.stream_chat(messages, temperature=0.5):
-            if sdk.current_step_was_deleted():
-                # So that the message doesn't disappear
-                self.hide = False
-                return
 
-            if "content" in chunk:
-                self.description += chunk["content"]
-                completion += chunk["content"]
-                await sdk.update_ui()
+        generator = sdk.models.gpt4.stream_chat(messages, temperature=0.5)
+        try:
+            async for chunk in generator:
+                if sdk.current_step_was_deleted():
+                    # So that the message doesn't disappear
+                    self.hide = False
+                    return
+
+                if "content" in chunk:
+                    self.description += chunk["content"]
+                    completion += chunk["content"]
+                    await sdk.update_ui()
+        finally:
+            await generator.aclose()
 
         self.name = (await sdk.models.gpt35.complete(
             f"Write a short title for the following chat message: {self.description}")).strip()

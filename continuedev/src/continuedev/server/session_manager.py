@@ -9,11 +9,13 @@ from ..core.main import FullState
 from ..core.autopilot import Autopilot
 from .ide_protocol import AbstractIdeProtocolServer
 from ..libs.util.create_async_task import create_async_task
+from ..libs.util.errors import SessionNotFound
 
 
 class Session:
     session_id: str
     autopilot: Autopilot
+    # The GUI websocket for the session
     ws: Union[WebSocket, None]
 
     def __init__(self, session_id: str, autopilot: Autopilot):
@@ -37,7 +39,6 @@ class DemoAutopilot(Autopilot):
 
 class SessionManager:
     sessions: Dict[str, Session] = {}
-    _event_loop: Union[BaseEventLoop, None] = None
 
     def get_session(self, session_id: str) -> Session:
         if session_id not in self.sessions:
@@ -67,6 +68,8 @@ class SessionManager:
         print("Registered websocket for session", session_id)
 
     async def send_ws_data(self, session_id: str, message_type: str, data: Any):
+        if session_id not in self.sessions:
+            raise SessionNotFound(f"Session {session_id} not found")
         if self.sessions[session_id].ws is None:
             print(f"Session {session_id} has no websocket")
             return
