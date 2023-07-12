@@ -14,7 +14,8 @@ def create_async_task(coro: Coroutine, unique_id: Union[str, None] = None):
         try:
             future.result()
         except Exception as e:
-            print("Exception caught from async task: ", e)
+            print("Exception caught from async task: ",
+                  '\n'.join(traceback.format_exception(e)))
             capture_event(unique_id or "None", "async_task_error", {
                 "error_title": e.__str__() or e.__repr__(), "error_message": '\n'.join(traceback.format_exception(e))
             })

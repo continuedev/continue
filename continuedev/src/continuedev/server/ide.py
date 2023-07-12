@@ -5,6 +5,7 @@ import os
 from typing import Any, Dict, List, Type, TypeVar, Union
 import uuid
 from fastapi import WebSocket, Body, APIRouter
+from starlette.websockets import WebSocketState, WebSocketDisconnect
 from uvicorn.main import Server
 import traceback
 
@@ -17,6 +18,8 @@ from .gui import SessionManager, session_manager
 from .ide_protocol import AbstractIdeProtocolServer
 import asyncio
 from ..libs.util.create_async_task import create_async_task
+import nest_asyncio
+nest_asyncio.apply()
 
 
 router = APIRouter(prefix="/ide", tags=["ide"])
@@ -115,7 +118,30 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
         self.websocket = websocket
         self.session_manager = session_manager
 
+    workspace_directory: str
+
+    async def initialize(self) -> List[str]:
+        await self._send_json("workspaceDirectory", {})
+        other_msgs = []
+        while True:
+            msg_string = await self.websocket.receive_text()
+            message = json.loads(msg_string)
+            if "messageType" not in message or "data" not in message:
+                continue
+            message_type = message["messageType"]
+            data = message["data"]
+            # if message_type == "openGUI":
+            #     await self.openGUI()
+            if message_type == "workspaceDirectory":
+                self.workspace_directory = data["workspaceDirectory"]
+                break
+            else:
+                other_msgs.append(msg_string)
+        return other_msgs
+
     async def _send_json(self, message_type: str, data: Any):
+        if self.websocket.client_state == WebSocketState.DISCONNECTED:
+            return
         await self.websocket.send_json({
             "messageType": message_type,
             "data": data
@@ -154,8 +180,10 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
             self.onMainUserInput(data["input"])
         elif message_type == "deleteAtIndex":
             self.onDeleteAtIndex(data["index"])
-        elif message_type in ["highlightedCode", "openFiles", "readFile", "editFile", "workspaceDirectory", "getUserSecret", "runCommand", "uniqueId"]:
+        elif message_type in ["highlightedCode", "openFiles", "readFile", "editFile", "getUserSecret", "runCommand", "uniqueId"]:
             self.sub_queue.post(message_type, data)
+        elif message_type == "workspaceDirectory":
+            self.workspace_directory = data["workspaceDirectory"]
         else:
             raise ValueError("Unknown message type", message_type)
 
@@ -275,17 +303,9 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
         resp = await self._send_and_receive_json({}, OpenFilesResponse, "openFiles")
         return resp.openFiles
 
-    async def getWorkspaceDirectory(self) -> str:
-        resp = await self._send_and_receive_json({}, WorkspaceDirectoryResponse, "workspaceDirectory")
-        return resp.workspaceDirectory
-
     async def get_unique_id(self) -> str:
         resp = await self._send_and_receive_json({}, UniqueIdResponse, "uniqueId")
         return resp.uniqueId
-
-    @property
-    def workspace_directory(self) -> str:
-        return asyncio.run(self.getWorkspaceDirectory())
 
     @cached_property_no_none
     def unique_id(self) -> str:
@@ -396,24 +416,35 @@ async def websocket_endpoint(websocket: WebSocket):
         print("Accepted websocket connection from, ", websocket.client)
         await websocket.send_json({"messageType": "connected", "data": {}})
 
-        ideProtocolServer = IdeProtocolServer(session_manager, websocket)
-
-        while AppStatus.should_exit is False:
-            message = await websocket.receive_text()
-            message = json.loads(message)
+        def handle_msg(msg):
+            message = json.loads(msg)
 
             if "messageType" not in message or "data" not in message:
-                continue
+                return
             message_type = message["messageType"]
             data = message["data"]
 
-            await ideProtocolServer.handle_json(message_type, data)
+            create_async_task(
+                ideProtocolServer.handle_json(message_type, data))
+
+        ideProtocolServer = IdeProtocolServer(session_manager, websocket)
+        other_msgs = await ideProtocolServer.initialize()
+
+        for other_msg in other_msgs:
+            handle_msg(other_msg)
+
+        while AppStatus.should_exit is False:
+            message = await websocket.receive_text()
+            handle_msg(message)
 
         print("Closing ide websocket")
-        await websocket.close()
+    except WebSocketDisconnect as e:
+        print("IDE wbsocket disconnected")
     except Exception as e:
         print("Error in ide websocket: ", e)
         capture_event(ideProtocolServer.unique_id, "gui_error", {
                       "error_title": e.__str__() or e.__repr__(), "error_message": '\n'.join(traceback.format_exception(e))})
-        await websocket.close()
         raise e
+    finally:
+        if websocket.client_state != WebSocketState.DISCONNECTED:
+            await websocket.close()

@@ -89,6 +89,20 @@ class ContinueSDK(AbstractContinueSDK):
         self.__autopilot = autopilot
         self.models = Models(self)
         self.context = autopilot.context
+        self.config = self._load_config()
+
+    config: ContinueConfig
+
+    def _load_config(self) -> ContinueConfig:
+        dir = self.ide.workspace_directory
+        yaml_path = os.path.join(dir, '.continue', 'config.yaml')
+        json_path = os.path.join(dir, '.continue', 'config.json')
+        if os.path.exists(yaml_path):
+            return load_config(yaml_path)
+        elif os.path.exists(json_path):
+            return load_config(json_path)
+        else:
+            return load_global_config()
 
     @property
     def history(self) -> History:
@@ -165,18 +179,6 @@ class ContinueSDK(AbstractContinueSDK):
 
     async def get_user_secret(self, env_var: str, prompt: str) -> str:
         return await self.ide.getUserSecret(env_var)
-
-    @property
-    def config(self) -> ContinueConfig:
-        dir = self.ide.workspace_directory
-        yaml_path = os.path.join(dir, '.continue', 'config.yaml')
-        json_path = os.path.join(dir, '.continue', 'config.json')
-        if os.path.exists(yaml_path):
-            return load_config(yaml_path)
-        elif os.path.exists(json_path):
-            return load_config(json_path)
-        else:
-            return load_global_config()
 
     def get_code_context(self, only_editing: bool = False) -> List[RangeInFileWithContents]:
         context = list(filter(lambda x: x.editing, self.__autopilot._highlighted_ranges)

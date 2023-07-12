@@ -1,5 +1,6 @@
 import json
 from fastapi import Depends, Header, WebSocket, APIRouter
+from starlette.websockets import WebSocketState, WebSocketDisconnect
 from typing import Any, List, Type, TypeVar, Union
 from pydantic import BaseModel
 import traceback
@@ -52,6 +53,8 @@ class GUIProtocolServer(AbstractGUIProtocolServer):
         self.session = session
 
     async def _send_json(self, message_type: str, data: Any):
+        if self.websocket.client_state == WebSocketState.DISCONNECTED:
+            return
         await self.websocket.send_json({
             "messageType": message_type,
             "data": data
@@ -171,7 +174,7 @@ async def websocket_endpoint(websocket: WebSocket, session: Session = Depends(we
         protocol.websocket = websocket
 
         # Update any history that may have happened before connection
-        await protocol.send_state_update()
+        # await protocol.send_state_update()
 
         while AppStatus.should_exit is False:
             message = await websocket.receive_text()
@@ -185,7 +188,8 @@ async def websocket_endpoint(websocket: WebSocket, session: Session = Depends(we
             data = message["data"]
 
             protocol.handle_json(message_type, data)
-
+    except WebSocketDisconnect as e:
+        print("GUI websocket disconnected")
     except Exception as e:
         print("ERROR in gui websocket: ", e)
         capture_event(session.autopilot.continue_sdk.ide.unique_id, "gui_error", {
@@ -193,5 +197,6 @@ async def websocket_endpoint(websocket: WebSocket, session: Session = Depends(we
         raise e
     finally:
         print("Closing gui websocket")
-        await websocket.close()
+        if websocket.client_state != WebSocketState.DISCONNECTED:
+            await websocket.close()
         session_manager.remove_session(session.session_id)
