@@ -29,4 +29,4 @@ class WelcomeStep(Step):
             - Ask about how the class works, how to write it in another language, etc.
             \"\"\"""")))
 
-        await sdk.ide.setFileOpen(filepath=filepath)
+        # await sdk.ide.setFileOpen(filepath=filepath)

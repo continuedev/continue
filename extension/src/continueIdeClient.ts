@@ -131,6 +131,11 @@ class IdeProtocolClient {
           openFiles: this.getOpenFiles(),
         });
         break;
+      case "visibleFiles":
+        messenger.send("visibleFiles", {
+          visibleFiles: this.getVisibleFiles(),
+        });
+        break;
       case "readFile":
         messenger.send("readFile", {
           contents: this.readFile(data.filepath),
@@ -328,6 +333,12 @@ class IdeProtocolClient {
       .map((editor) => {
         return editor.document.uri.fsPath;
       });
+  }
+
+  getVisibleFiles(): string[] {
+    return vscode.window.visibleTextEditors.map((editor) => {
+      return editor.document.uri.fsPath;
+    });
   }
 
   saveFile(filepath: string) {

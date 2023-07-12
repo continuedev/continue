@@ -158,7 +158,7 @@ function StepContainer(props: StepContainerProps) {
     >
       <StepContainerDiv open={props.open}>
         <GradientBorder
-          loading={props.historyNode.active as boolean | false}
+          loading={props.historyNode.active as boolean || false}
           isFirst={props.isFirst}
           isLast={props.isLast}
           borderColor={
@@ -178,7 +178,7 @@ function StepContainer(props: StepContainerProps) {
           }}
         >
           <HeaderDiv
-            loading={props.historyNode.active as boolean | false}
+            loading={props.historyNode.active as boolean || false}
             error={props.historyNode.observation?.error ? true : false}
           >
             <div className="m-2">

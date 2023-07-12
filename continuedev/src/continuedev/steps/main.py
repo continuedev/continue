@@ -99,8 +99,8 @@ class FasterEditHighlightedCodeStep(Step):
     async def run(self, sdk: ContinueSDK) -> Coroutine[Observation, None, None]:
         range_in_files = await sdk.get_code_context(only_editing=True)
         if len(range_in_files) == 0:
-            # Get the full contents of all open files
-            files = await sdk.ide.getOpenFiles()
+            # Get the full contents of all visible files
+            files = await sdk.ide.getVisibleFiles()
             contents = {}
             for file in files:
                 contents[file] = await sdk.ide.readFile(file)
@@ -191,8 +191,8 @@ class StarCoderEditHighlightedCodeStep(Step):
         range_in_files = await sdk.get_code_context(only_editing=True)
         found_highlighted_code = len(range_in_files) > 0
         if not found_highlighted_code:
-            # Get the full contents of all open files
-            files = await sdk.ide.getOpenFiles()
+            # Get the full contents of all visible files
+            files = await sdk.ide.getVisibleFiles()
             contents = {}
             for file in files:
                 contents[file] = await sdk.ide.readFile(file)
@@ -273,16 +273,6 @@ class EditHighlightedCodeStep(Step):
                 return
 
         await sdk.run_step(DefaultModelEditCodeStep(user_input=self.user_input, range_in_files=range_in_files))
-
-
-class FindCodeStep(Step):
-    prompt: str
-
-    async def describe(self, models: Models) -> Coroutine[str, None, None]:
-        return "Finding code"
-
-    async def run(self, sdk: ContinueSDK) -> Coroutine[Observation, None, None]:
-        return await sdk.ide.getOpenFiles()
 
 
 class UserInputStep(Step):

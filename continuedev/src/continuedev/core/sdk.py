@@ -204,14 +204,14 @@ class ContinueSDK(AbstractContinueSDK):
 
         preface = "The following code is highlighted"
 
+        # If no higlighted ranges, use first file as context
         if len(highlighted_code) == 0:
             preface = "The following file is open"
-            # Get the full contents of all open files
-            files = await self.ide.getOpenFiles()
-            if len(files) > 0:
-                content = await self.ide.readFile(files[0])
+            visible_files = await self.ide.getVisibleFiles()
+            if len(visible_files) > 0:
+                content = await self.ide.readFile(visible_files[0])
                 highlighted_code = [
-                    RangeInFileWithContents.from_entire_file(files[0], content)]
+                    RangeInFileWithContents.from_entire_file(visible_files[0], content)]
 
         for rif in highlighted_code:
             msg = ChatMessage(content=f"{preface} ({rif.filepath}):\n```\n{rif.contents}\n```",
