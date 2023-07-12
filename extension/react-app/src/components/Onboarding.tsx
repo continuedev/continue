@@ -87,25 +87,20 @@ const Onboarding = () => {
             paddingRight: "50px",
             paddingBottom: "50px",
             textAlign: "center",
+            cursor: "pointer",
           }}
         >
-          <div
-            style={{
-              cursor: "pointer",
-            }}
+          <StyledSpan
+            hidden={counter === 0}
+            onClick={() => setCounter((prev) => Math.max(prev - 1, 0))}
           >
-            <StyledSpan
-              hidden={counter === 0}
-              onClick={() => setCounter((prev) => Math.max(prev - 1, 0))}
-            >
-              <ArrowLeft width="18px" strokeWidth="2px" /> Previous
-            </StyledSpan>
-            <span hidden={counter === 0}>{" | "}</span>
-            <StyledSpan onClick={() => setCounter((prev) => prev + 1)}>
-              Click to {counter === 3 || "learn how to"} use Continue{" "}
-              <ArrowRight width="18px" strokeWidth="2px" />
-            </StyledSpan>
-          </div>
+            <ArrowLeft width="18px" strokeWidth="2px" /> Previous
+          </StyledSpan>
+          <span hidden={counter === 0}>{" | "}</span>
+          <StyledSpan onClick={() => setCounter((prev) => prev + 1)}>
+            Click to {counter === 3 || "learn how to"} use Continue{" "}
+            <ArrowRight width="18px" strokeWidth="2px" />
+          </StyledSpan>
         </p>
       </div>
     </StyledDiv>
