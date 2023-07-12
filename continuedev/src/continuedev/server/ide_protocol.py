@@ -52,6 +52,10 @@ class AbstractIdeProtocolServer(ABC):
         """Get a list of open files"""
 
     @abstractmethod
+    async def getVisibleFiles(self) -> List[str]:
+        """Get a list of visible files"""
+
+    @abstractmethod
     async def getHighlightedCode(self) -> List[RangeInFile]:
         """Get a list of highlighted code"""
 

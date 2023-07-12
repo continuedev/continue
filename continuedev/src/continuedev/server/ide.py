@@ -52,6 +52,8 @@ class FileEditsUpdate(BaseModel):
 class OpenFilesResponse(BaseModel):
     openFiles: List[str]
 
+class VisibleFilesResponse(BaseModel):
+    visibleFiles: List[str]
 
 class HighlightedCodeResponse(BaseModel):
     highlightedCode: List[RangeInFile]
@@ -180,7 +182,7 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
             self.onMainUserInput(data["input"])
         elif message_type == "deleteAtIndex":
             self.onDeleteAtIndex(data["index"])
-        elif message_type in ["highlightedCode", "openFiles", "readFile", "editFile", "getUserSecret", "runCommand", "uniqueId"]:
+        elif message_type in ["highlightedCode", "openFiles", "visibleFiles", "readFile", "editFile", "getUserSecret", "runCommand", "uniqueId"]:
             self.sub_queue.post(message_type, data)
         elif message_type == "workspaceDirectory":
             self.workspace_directory = data["workspaceDirectory"]
@@ -302,6 +304,10 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
     async def getOpenFiles(self) -> List[str]:
         resp = await self._send_and_receive_json({}, OpenFilesResponse, "openFiles")
         return resp.openFiles
+    
+    async def getVisibleFiles(self) -> List[str]:
+        resp = await self._send_and_receive_json({}, VisibleFilesResponse, "visibleFiles")
+        return resp.visibleFiles
 
     async def get_unique_id(self) -> str:
         resp = await self._send_and_receive_json({}, UniqueIdResponse, "uniqueId")

@@ -208,6 +208,8 @@ class Autopilot(ContinueBaseModel):
     async def delete_at_index(self, index: int):
         self.history.timeline[index].step.hide = True
         self.history.timeline[index].deleted = True
+        self.history.timeline[index].active = False
+
         await self.update_subscribers()
 
     async def delete_context_at_indices(self, indices: List[int]):

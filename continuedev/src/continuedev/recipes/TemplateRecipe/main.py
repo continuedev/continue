@@ -20,8 +20,8 @@ class TemplateRecipe(Step):
 
     # The code executed when the recipe is run
     async def run(self, sdk: ContinueSDK) -> Coroutine[Observation, None, None]:
-        open_files = await sdk.ide.getOpenFiles()
+        visible_files = await sdk.ide.getVisibleFiles()
         await sdk.edit_file(
-            filename=open_files[0],
+            filename=visible_files[0],
             prompt=f"Append a statement to print `Hello, {self.name}!` at the end of the file."
         )
