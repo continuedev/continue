@@ -2,11 +2,9 @@ import * as vscode from "vscode";
 import { registerAllCommands } from "../commands";
 import { registerAllCodeLensProviders } from "../lang-server/codeLens";
 import { sendTelemetryEvent, TelemetryEvent } from "../telemetry";
-// import { openCapturedTerminal } from "../terminal/terminalEmulator";
 import IdeProtocolClient from "../continueIdeClient";
 import { getContinueServerUrl } from "../bridge";
-import { CapturedTerminal } from "../terminal/terminalEmulator";
-import { setupDebugPanel, ContinueGUIWebviewViewProvider } from "../debugPanel";
+import { ContinueGUIWebviewViewProvider } from "../debugPanel";
 import {
   getExtensionVersion,
   startContinuePythonServer,
@@ -37,6 +35,7 @@ export async function activateExtension(context: vscode.ExtensionContext) {
     })
     .catch((e) => console.log("Error checking for extension updates: ", e));
 
+  // Start the Python server
   await new Promise((resolve, reject) => {
     vscode.window.withProgress(
       {
@@ -52,19 +51,19 @@ export async function activateExtension(context: vscode.ExtensionContext) {
     );
   });
 
+  // Register commands and providers
   sendTelemetryEvent(TelemetryEvent.ExtensionActivated);
   registerAllCodeLensProviders(context);
   registerAllCommands(context);
 
+  // Initialize IDE Protocol Client, then call "openGUI"
   const serverUrl = getContinueServerUrl();
-
   ideProtocolClient = new IdeProtocolClient(
     `${serverUrl.replace("http", "ws")}/ide/ws`,
     context
   );
 
-  // Setup the left panel
-  (async () => {
+  {
     const sessionIdPromise = await ideProtocolClient.getSessionId();
     const provider = new ContinueGUIWebviewViewProvider(sessionIdPromise);
 
@@ -77,10 +76,5 @@ export async function activateExtension(context: vscode.ExtensionContext) {
         }
       )
     );
-  })();
-  // All opened terminals should be replaced by our own terminal
-  // vscode.window.onDidOpenTerminal((terminal) => {});
-
-  // If any terminals are open to start, replace them
-  // vscode.window.terminals.forEach((terminal) => {}
+  }
 }
