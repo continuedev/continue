@@ -20,7 +20,6 @@ import ReactSwitch from "react-switch";
 import { usePostHog } from "posthog-js/react";
 import { useSelector } from "react-redux";
 import { RootStore } from "../redux/store";
-import LoadingCover from "../components/LoadingCover";
 import { postVscMessage } from "../vscode";
 import UserInputContainer from "../components/UserInputContainer";
 import Onboarding from "../components/Onboarding";
@@ -270,19 +269,16 @@ function GUI(props: GUIProps) {
   // const iterations = useSelector(selectIterations);
   return (
     <>
-      <Onboarding></Onboarding>
-      <LoadingCover hidden={true} message="Downloading local model..." />
-      <TextDialog
-        showDialog={showFeedbackDialog}
-        onEnter={(text) => {
-          client?.sendMainInput(`/feedback ${text}`);
-          setShowFeedbackDialog(false);
-        }}
-        onClose={() => {
-          setShowFeedbackDialog(false);
-        }}
-        message={feedbackDialogMessage}
-      ></TextDialog>
+      <Onboarding />
+      <TextDialog showDialog={showFeedbackDialog}
+      onEnter={(text) => {
+        client?.sendMainInput(`/feedback ${text}`);
+        setShowFeedbackDialog(false);
+      }}
+      onClose={() => {
+        setShowFeedbackDialog(false);
+      }}
+      message={feedbackDialogMessage} />
 
       <TopGUIDiv
         ref={topGuiDivRef}
