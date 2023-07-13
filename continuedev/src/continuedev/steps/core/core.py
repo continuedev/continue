@@ -486,58 +486,64 @@ Please output the code to be inserted at the cursor in order to fulfill the user
         completion_lines_covered = 0
         repeating_file_suffix = False
         line_below_highlighted_range = file_suffix.lstrip().split("\n")[0]
-        async for chunk in model_to_use.stream_chat(messages, temperature=0, max_tokens=max_tokens):
-            # Stop early if it is repeating the file_suffix or the step was deleted
-            if repeating_file_suffix:
-                break
-            if sdk.current_step_was_deleted():
-                return
 
-            # Accumulate lines
-            if "content" not in chunk:
-                continue
-            chunk = chunk["content"]
-            chunk_lines = chunk.split("\n")
-            chunk_lines[0] = unfinished_line + chunk_lines[0]
-            if chunk.endswith("\n"):
-                unfinished_line = ""
-                chunk_lines.pop()  # because this will be an empty string
-            else:
-                unfinished_line = chunk_lines.pop()
+        generator = model_to_use.stream_chat(
+            messages, temperature=0, max_tokens=max_tokens)
 
-            # Deal with newly accumulated lines
-            for i in range(len(chunk_lines)):
-                # Trailing whitespace doesn't matter
-                chunk_lines[i] = chunk_lines[i].rstrip()
-                chunk_lines[i] = common_whitespace + chunk_lines[i]
-
-                # Lines that should signify the end of generation
-                if self.is_end_line(chunk_lines[i]):
+        try:
+            async for chunk in generator:
+                # Stop early if it is repeating the file_suffix or the step was deleted
+                if repeating_file_suffix:
                     break
-                # Lines that should be ignored, like the <> tags
-                elif self.line_to_be_ignored(chunk_lines[i], completion_lines_covered == 0):
+                if sdk.current_step_was_deleted():
+                    return
+
+                # Accumulate lines
+                if "content" not in chunk:
                     continue
-                # Check if we are currently just copying the prefix
-                elif (lines_of_prefix_copied > 0 or completion_lines_covered == 0) and lines_of_prefix_copied < len(file_prefix.splitlines()) and chunk_lines[i] == full_file_contents_lines[lines_of_prefix_copied]:
-                    # This is a sketchy way of stopping it from repeating the file_prefix. Is a bug if output happens to have a matching line
-                    lines_of_prefix_copied += 1
-                    continue
-                # Because really short lines might be expected to be repeated, this is only a !heuristic!
-                # Stop when it starts copying the file_suffix
-                elif chunk_lines[i].strip() == line_below_highlighted_range.strip() and len(chunk_lines[i].strip()) > 4 and not (len(original_lines_below_previous_blocks) > 0 and chunk_lines[i].strip() == original_lines_below_previous_blocks[0].strip()):
-                    repeating_file_suffix = True
-                    break
+                chunk = chunk["content"]
+                chunk_lines = chunk.split("\n")
+                chunk_lines[0] = unfinished_line + chunk_lines[0]
+                if chunk.endswith("\n"):
+                    unfinished_line = ""
+                    chunk_lines.pop()  # because this will be an empty string
+                else:
+                    unfinished_line = chunk_lines.pop()
 
-                # If none of the above, insert the line!
-                if False:
-                    await handle_generated_line(chunk_lines[i])
+                # Deal with newly accumulated lines
+                for i in range(len(chunk_lines)):
+                    # Trailing whitespace doesn't matter
+                    chunk_lines[i] = chunk_lines[i].rstrip()
+                    chunk_lines[i] = common_whitespace + chunk_lines[i]
 
-                lines.append(chunk_lines[i])
-                completion_lines_covered += 1
-                current_line_in_file += 1
+                    # Lines that should signify the end of generation
+                    if self.is_end_line(chunk_lines[i]):
+                        break
+                    # Lines that should be ignored, like the <> tags
+                    elif self.line_to_be_ignored(chunk_lines[i], completion_lines_covered == 0):
+                        continue
+                    # Check if we are currently just copying the prefix
+                    elif (lines_of_prefix_copied > 0 or completion_lines_covered == 0) and lines_of_prefix_copied < len(file_prefix.splitlines()) and chunk_lines[i] == full_file_contents_lines[lines_of_prefix_copied]:
+                        # This is a sketchy way of stopping it from repeating the file_prefix. Is a bug if output happens to have a matching line
+                        lines_of_prefix_copied += 1
+                        continue
+                    # Because really short lines might be expected to be repeated, this is only a !heuristic!
+                    # Stop when it starts copying the file_suffix
+                    elif chunk_lines[i].strip() == line_below_highlighted_range.strip() and len(chunk_lines[i].strip()) > 4 and not (len(original_lines_below_previous_blocks) > 0 and chunk_lines[i].strip() == original_lines_below_previous_blocks[0].strip()):
+                        repeating_file_suffix = True
+                        break
 
-            await sendDiffUpdate(lines + [common_whitespace if unfinished_line.startswith("<") else (common_whitespace + unfinished_line)], sdk)
+                    # If none of the above, insert the line!
+                    if False:
+                        await handle_generated_line(chunk_lines[i])
 
+                    lines.append(chunk_lines[i])
+                    completion_lines_covered += 1
+                    current_line_in_file += 1
+
+                await sendDiffUpdate(lines + [common_whitespace if unfinished_line.startswith("<") else (common_whitespace + unfinished_line)], sdk)
+        finally:
+            await generator.aclose()
         # Add the unfinished line
         if unfinished_line != "" and not self.line_to_be_ignored(unfinished_line, completion_lines_covered == 0) and not self.is_end_line(unfinished_line):
             unfinished_line = common_whitespace + unfinished_line
