@@ -45,6 +45,11 @@ DEFAULT_SLASH_COMMANDS = [
         step_name="OpenConfigStep",
     ),
     SlashCommand(
+        name="help",
+        description="Ask a question like '/help what is given to the llm as context?'",
+        step_name="HelpStep",
+    ),
+    SlashCommand(
         name="comment",
         description="Write comments for the current file or highlighted code",
         step_name="CommentCodeStep",
