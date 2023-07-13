@@ -9,6 +9,7 @@ interface DiffInfo {
   newFilepath: string;
   editor?: vscode.TextEditor;
   step_index: number;
+  range: vscode.Range;
 }
 
 export const DIFF_DIRECTORY = path.join(os.homedir(), ".continue", "diffs");
@@ -17,6 +18,10 @@ class DiffManager {
   // Create a temporary file in the global .continue directory which displays the updated version
   // Doing this because virtual files are read-only
   private diffs: Map<string, DiffInfo> = new Map();
+
+  diffAtNewFilepath(newFilepath: string): DiffInfo | undefined {
+    return this.diffs.get(newFilepath);
+  }
 
   private setupDirectory() {
     // Make sure the diff directory exists
@@ -33,6 +38,10 @@ class DiffManager {
 
   private escapeFilepath(filepath: string): string {
     return filepath.replace(/\\/g, "_").replace(/\//g, "_");
+  }
+
+  private getNewFilepath(originalFilepath: string): string {
+    return path.join(DIFF_DIRECTORY, this.escapeFilepath(originalFilepath));
   }
 
   private openDiffEditor(
@@ -103,18 +112,28 @@ class DiffManager {
     this.setupDirectory();
 
     // Create or update existing diff
-    const newFilepath = path.join(
-      DIFF_DIRECTORY,
-      this.escapeFilepath(originalFilepath)
-    );
+    const newFilepath = this.getNewFilepath(originalFilepath);
     fs.writeFileSync(newFilepath, newContent);
 
     // Open the diff editor if this is a new diff
     if (!this.diffs.has(newFilepath)) {
+      // Figure out the first line that is different
+      const oldContent = fs.readFileSync(originalFilepath).toString("utf-8");
+      let line = 0;
+      const newLines = newContent.split("\n");
+      const oldLines = oldContent.split("\n");
+      for (let i = 0; i < newLines.length && i < oldLines.length; i++) {
+        if (newLines[i] !== oldLines[i]) {
+          line = i;
+          break;
+        }
+      }
+
       const diffInfo: DiffInfo = {
         originalFilepath,
         newFilepath,
         step_index,
+        range: new vscode.Range(line, 0, line + 1, 0),
       };
       this.diffs.set(newFilepath, diffInfo);
     }
@@ -139,10 +158,38 @@ class DiffManager {
     fs.unlinkSync(diffInfo.newFilepath);
   }
 
+  private inferNewFilepath() {
+    const activeEditorPath =
+      vscode.window.activeTextEditor?.document.uri.fsPath;
+    if (activeEditorPath && path.dirname(activeEditorPath) === DIFF_DIRECTORY) {
+      return activeEditorPath;
+    }
+    const visibleEditors = vscode.window.visibleTextEditors.map(
+      (editor) => editor.document.uri.fsPath
+    );
+    for (const editorPath of visibleEditors) {
+      if (path.dirname(editorPath) === DIFF_DIRECTORY) {
+        for (const otherEditorPath of visibleEditors) {
+          if (
+            path.dirname(otherEditorPath) !== DIFF_DIRECTORY &&
+            this.getNewFilepath(otherEditorPath) === editorPath
+          ) {
+            return editorPath;
+          }
+        }
+      }
+    }
+
+    if (this.diffs.size === 1) {
+      return Array.from(this.diffs.keys())[0];
+    }
+    return undefined;
+  }
+
   acceptDiff(newFilepath?: string) {
-    // If no newFilepath is provided and there is only one in the dictionary, use that
-    if (!newFilepath && this.diffs.size === 1) {
-      newFilepath = Array.from(this.diffs.keys())[0];
+    // When coming from a keyboard shortcut, we have to infer the newFilepath from visible text editors
+    if (!newFilepath) {
+      newFilepath = this.inferNewFilepath();
     }
     if (!newFilepath) {
       console.log("No newFilepath provided to accept the diff");
@@ -170,8 +217,8 @@ class DiffManager {
 
   rejectDiff(newFilepath?: string) {
     // If no newFilepath is provided and there is only one in the dictionary, use that
-    if (!newFilepath && this.diffs.size === 1) {
-      newFilepath = Array.from(this.diffs.keys())[0];
+    if (!newFilepath) {
+      newFilepath = this.inferNewFilepath();
     }
     if (!newFilepath) {
       console.log(

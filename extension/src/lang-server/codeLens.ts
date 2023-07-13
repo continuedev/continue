@@ -2,7 +2,7 @@ import * as vscode from "vscode";
 import { editorToSuggestions, editorSuggestionsLocked } from "../suggestions";
 import * as path from "path";
 import * as os from "os";
-import { DIFF_DIRECTORY } from "../diffs";
+import { DIFF_DIRECTORY, diffManager } from "../diffs";
 class SuggestionsCodeLensProvider implements vscode.CodeLensProvider {
   public provideCodeLenses(
     document: vscode.TextDocument,
@@ -53,7 +53,11 @@ class DiffViewerCodeLensProvider implements vscode.CodeLensProvider {
   ): vscode.CodeLens[] | Thenable<vscode.CodeLens[]> {
     if (path.dirname(document.uri.fsPath) === DIFF_DIRECTORY) {
       const codeLenses: vscode.CodeLens[] = [];
-      const range = new vscode.Range(0, 0, 1, 0);
+      let range = new vscode.Range(0, 0, 1, 0);
+      const diffInfo = diffManager.diffAtNewFilepath(document.uri.fsPath);
+      if (diffInfo) {
+        range = diffInfo.range;
+      }
       codeLenses.push(
         new vscode.CodeLens(range, {
           title: "Accept ✅ (⌘⇧↩)",
