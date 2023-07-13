@@ -1,13 +1,13 @@
 from functools import cached_property
 import traceback
 import time
-from typing import Any, Callable, Coroutine, Dict, List
+from typing import Any, Callable, Coroutine, Dict, List, Union
 import os
 from aiohttp import ClientPayloadError
+from pydantic import root_validator
 
 from ..models.filesystem import RangeInFileWithContents
 from ..models.filesystem_edit import FileEditWithFullContents
-from ..libs.llm import LLM
 from .observation import Observation, InternalErrorObservation
 from ..server.ide_protocol import AbstractIdeProtocolServer
 from ..libs.util.queue import AsyncSubscriptionQueue
@@ -16,7 +16,6 @@ from .main import Context, ContinueCustomException, HighlightedRangeContext, Pol
 from ..steps.core.core import ReversibleStep, ManualEditStep, UserInputStep
 from ..libs.util.telemetry import capture_event
 from .sdk import ContinueSDK
-import asyncio
 from ..libs.util.step_name_to_steps import get_step_from_name
 from ..libs.util.traceback_parsers import get_python_traceback, get_javascript_traceback
 from openai import error as openai_errors
@@ -46,6 +45,7 @@ class Autopilot(ContinueBaseModel):
     ide: AbstractIdeProtocolServer
     history: History = History.from_empty()
     context: Context = Context()
+    full_state: Union[FullState, None] = None
     _on_update_callbacks: List[Callable[[FullState], None]] = []
 
     _active: bool = False
@@ -63,8 +63,15 @@ class Autopilot(ContinueBaseModel):
         arbitrary_types_allowed = True
         keep_untouched = (cached_property,)
 
+    @root_validator(pre=True)
+    def fill_in_values(cls, values):
+        full_state: FullState = values.get('full_state')
+        if full_state is not None:
+            values['history'] = full_state.history
+        return values
+
     def get_full_state(self) -> FullState:
-        return FullState(
+        full_state = FullState(
             history=self.history,
             active=self._active,
             user_input_queue=self._main_user_input_queue,
@@ -73,6 +80,8 @@ class Autopilot(ContinueBaseModel):
             slash_commands=self.get_available_slash_commands(),
             adding_highlighted_code=self._adding_highlighted_code,
         )
+        self.full_state = full_state
+        return full_state
 
     def get_available_slash_commands(self) -> List[Dict]:
         custom_commands = list(map(lambda x: {

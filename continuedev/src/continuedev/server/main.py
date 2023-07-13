@@ -4,7 +4,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from .ide import router as ide_router
 from .gui import router as gui_router
-import logging
+from .session_manager import session_manager
+import atexit
 import uvicorn
 import argparse
 
@@ -44,5 +45,16 @@ def run_server():
     uvicorn.run(app, host="0.0.0.0", port=args.port)
 
 
+def cleanup():
+    print("Cleaning up sessions")
+    for session_id in session_manager.sessions:
+        session_manager.persist_session(session_id)
+
+
+atexit.register(cleanup)
 if __name__ == "__main__":
-    run_server()
+    try:
+        run_server()
+    except Exception as e:
+        cleanup()
+        raise e

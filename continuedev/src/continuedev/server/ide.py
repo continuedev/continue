@@ -52,8 +52,10 @@ class FileEditsUpdate(BaseModel):
 class OpenFilesResponse(BaseModel):
     openFiles: List[str]
 
+
 class VisibleFilesResponse(BaseModel):
     visibleFiles: List[str]
+
 
 class HighlightedCodeResponse(BaseModel):
     highlightedCode: List[RangeInFile]
@@ -115,6 +117,7 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
     websocket: WebSocket
     session_manager: SessionManager
     sub_queue: AsyncSubscriptionQueue = AsyncSubscriptionQueue()
+    session_id: Union[str, None] = None
 
     def __init__(self, session_manager: SessionManager, websocket: WebSocket):
         self.websocket = websocket
@@ -132,8 +135,6 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
                 continue
             message_type = message["messageType"]
             data = message["data"]
-            # if message_type == "openGUI":
-            #     await self.openGUI()
             if message_type == "workspaceDirectory":
                 self.workspace_directory = data["workspaceDirectory"]
                 break
@@ -158,8 +159,8 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
         return resp_model.parse_obj(resp)
 
     async def handle_json(self, message_type: str, data: Any):
-        if message_type == "openGUI":
-            await self.openGUI()
+        if message_type == "getSessionId":
+            await self.getSessionId()
         elif message_type == "setFileOpen":
             await self.setFileOpen(data["filepath"], data["open"])
         elif message_type == "setSuggestionsLocked":
@@ -217,9 +218,10 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
             "locked": locked
         })
 
-    async def openGUI(self):
-        session_id = self.session_manager.new_session(self)
-        await self._send_json("openGUI", {
+    async def getSessionId(self):
+        session_id = self.session_manager.new_session(
+            self, self.session_id).session_id
+        await self._send_json("getSessionId", {
             "sessionId": session_id
         })
 
@@ -304,7 +306,7 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
     async def getOpenFiles(self) -> List[str]:
         resp = await self._send_and_receive_json({}, OpenFilesResponse, "openFiles")
         return resp.openFiles
-    
+
     async def getVisibleFiles(self) -> List[str]:
         resp = await self._send_and_receive_json({}, VisibleFilesResponse, "visibleFiles")
         return resp.visibleFiles
@@ -416,7 +418,7 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
 
 
 @router.websocket("/ws")
-async def websocket_endpoint(websocket: WebSocket):
+async def websocket_endpoint(websocket: WebSocket, session_id: str = None):
     try:
         await websocket.accept()
         print("Accepted websocket connection from, ", websocket.client)
@@ -434,6 +436,9 @@ async def websocket_endpoint(websocket: WebSocket):
                 ideProtocolServer.handle_json(message_type, data))
 
         ideProtocolServer = IdeProtocolServer(session_manager, websocket)
+        ideProtocolServer.session_id = session_id
+        if session_id is not None:
+            session_manager.registered_ides[session_id] = ideProtocolServer
         other_msgs = await ideProtocolServer.initialize()
 
         for other_msg in other_msgs:
@@ -454,3 +459,5 @@ async def websocket_endpoint(websocket: WebSocket):
     finally:
         if websocket.client_state != WebSocketState.DISCONNECTED:
             await websocket.close()
+
+        session_manager.registered_ides.pop(ideProtocolServer.session_id)

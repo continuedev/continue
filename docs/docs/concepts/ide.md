@@ -41,9 +41,9 @@ Get the workspace directory
 
 Set whether a file is open
 
-### openGUI
+### getSessionId
 
-Open a gui
+Get a new session ID
 
 ### showSuggestionsAndWait
 
