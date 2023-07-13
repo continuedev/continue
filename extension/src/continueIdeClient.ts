@@ -1,10 +1,9 @@
-// import { ShowSuggestionRequest } from "../schema/ShowSuggestionRequest";
 import {
   editorSuggestionsLocked,
   showSuggestion as showSuggestionInEditor,
   SuggestionRanges,
 } from "./suggestions";
-import { openEditorAndRevealRange, getRightViewColumn } from "./util/vscode";
+import { openEditorAndRevealRange } from "./util/vscode";
 import { FileEdit } from "../schema/FileEdit";
 import { RangeInFile } from "../schema/RangeInFile";
 import * as vscode from "vscode";
@@ -15,8 +14,6 @@ import {
 import { FileEditWithFullContents } from "../schema/FileEditWithFullContents";
 import fs = require("fs");
 import { WebsocketMessenger } from "./util/messenger";
-import * as path from "path";
-import * as os from "os";
 import { diffManager } from "./diffs";
 
 class IdeProtocolClient {
@@ -27,17 +24,54 @@ class IdeProtocolClient {
 
   private _highlightDebounce: NodeJS.Timeout | null = null;
 
-  constructor(serverUrl: string, context: vscode.ExtensionContext) {
-    this.context = context;
+  private _lastReloadTime: number = 16;
+  private _reconnectionTimeouts: NodeJS.Timeout[] = [];
 
-    let messenger = new WebsocketMessenger(serverUrl);
+  private _sessionId: string | null = null;
+  private _serverUrl: string;
+
+  private _newWebsocketMessenger() {
+    const requestUrl =
+      this._serverUrl +
+      (this._sessionId ? `?session_id=${this._sessionId}` : "");
+    const messenger = new WebsocketMessenger(requestUrl);
     this.messenger = messenger;
-    messenger.onClose(() => {
+
+    const reconnect = () => {
+      console.log("Trying to reconnect IDE protocol websocket...");
       this.messenger = null;
+
+      // Exponential backoff to reconnect
+      this._reconnectionTimeouts.forEach((to) => clearTimeout(to));
+
+      const timeout = setTimeout(() => {
+        if (this.messenger?.websocket?.readyState === 1) {
+          return;
+        }
+        this._newWebsocketMessenger();
+      }, this._lastReloadTime);
+
+      this._reconnectionTimeouts.push(timeout);
+      this._lastReloadTime = Math.min(2 * this._lastReloadTime, 5000);
+    };
+    messenger.onOpen(() => {
+      this._reconnectionTimeouts.forEach((to) => clearTimeout(to));
+    });
+    messenger.onClose(() => {
+      reconnect();
+    });
+    messenger.onError(() => {
+      reconnect();
     });
     messenger.onMessage((messageType, data, messenger) => {
       this.handleMessage(messageType, data, messenger);
     });
+  }
+
+  constructor(serverUrl: string, context: vscode.ExtensionContext) {
+    this.context = context;
+    this._serverUrl = serverUrl;
+    this._newWebsocketMessenger();
 
     // Setup listeners for any file changes in open editors
     // vscode.workspace.onDidChangeTextDocument((event) => {
@@ -171,7 +205,7 @@ class IdeProtocolClient {
       case "showDiff":
         this.showDiff(data.filepath, data.replacement, data.step_index);
         break;
-      case "openGUI":
+      case "getSessionId":
       case "connected":
         break;
       default:
@@ -284,10 +318,6 @@ class IdeProtocolClient {
   // ------------------------------------ //
   // Initiate Request
 
-  async openGUI(asRightWebviewPanel: boolean = false) {
-    // Open the webview panel
-  }
-
   async getSessionId(): Promise<string> {
     await new Promise((resolve, reject) => {
       // Repeatedly try to connect to the server
@@ -303,10 +333,10 @@ class IdeProtocolClient {
         }
       }, 1000);
     });
-    const resp = await this.messenger?.sendAndReceive("openGUI", {});
-    const sessionId = resp.sessionId;
+    const resp = await this.messenger?.sendAndReceive("getSessionId", {});
     // console.log("New Continue session with ID: ", sessionId);
-    return sessionId;
+    this._sessionId = resp.sessionId;
+    return resp.sessionId;
   }
 
   acceptRejectSuggestion(accept: boolean, key: SuggestionRanges) {
