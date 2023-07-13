@@ -1,5 +1,6 @@
-from typing import Any, List
+from typing import Any, List, Union
 from abc import ABC, abstractmethod, abstractproperty
+from fastapi import WebSocket
 
 from ..models.main import Traceback
 from ..models.filesystem_edit import FileEdit, FileSystemEdit, EditDiff
@@ -7,6 +8,9 @@ from ..models.filesystem import RangeInFile, RangeInFileWithContents
 
 
 class AbstractIdeProtocolServer(ABC):
+    websocket: WebSocket
+    session_id: Union[str, None]
+
     @abstractmethod
     async def handle_json(self, data: Any):
         """Handle a json message"""
@@ -24,8 +28,8 @@ class AbstractIdeProtocolServer(ABC):
         """Set whether suggestions are locked"""
 
     @abstractmethod
-    async def openGUI(self):
-        """Open a GUI"""
+    async def getSessionId(self):
+        """Get a new session ID"""
 
     @abstractmethod
     async def showSuggestionsAndWait(self, suggestions: List[FileEdit]) -> bool:

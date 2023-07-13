@@ -31,12 +31,12 @@ class AppStatus:
 Server.handle_exit = AppStatus.handle_exit
 
 
-def session(x_continue_session_id: str = Header("anonymous")) -> Session:
-    return session_manager.get_session(x_continue_session_id)
+async def session(x_continue_session_id: str = Header("anonymous")) -> Session:
+    return await session_manager.get_session(x_continue_session_id)
 
 
-def websocket_session(session_id: str) -> Session:
-    return session_manager.get_session(session_id)
+async def websocket_session(session_id: str) -> Session:
+    return await session_manager.get_session(session_id)
 
 
 T = TypeVar("T", bound=BaseModel)
@@ -199,4 +199,6 @@ async def websocket_endpoint(websocket: WebSocket, session: Session = Depends(we
         print("Closing gui websocket")
         if websocket.client_state != WebSocketState.DISCONNECTED:
             await websocket.close()
+
+        session_manager.persist_session(session.session_id)
         session_manager.remove_session(session.session_id)

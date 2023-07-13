@@ -8,76 +8,6 @@ import {
 import { RangeInFile } from "./client";
 const WebSocket = require("ws");
 
-class StreamManager {
-  private _fullText: string = "";
-  private _insertionPoint: vscode.Position | undefined;
-
-  private _addToEditor(update: string) {
-    let editor =
-      vscode.window.activeTextEditor || vscode.window.visibleTextEditors[0];
-
-    if (typeof this._insertionPoint === "undefined") {
-      if (editor?.selection.isEmpty) {
-        this._insertionPoint = editor?.selection.active;
-      } else {
-        this._insertionPoint = editor?.selection.end;
-      }
-    }
-    editor?.edit((editBuilder) => {
-      if (this._insertionPoint) {
-        editBuilder.insert(this._insertionPoint, update);
-        this._insertionPoint = this._insertionPoint.translate(
-          Array.from(update.matchAll(/\n/g)).length,
-          update.length
-        );
-      }
-    });
-  }
-
-  public closeStream() {
-    this._fullText = "";
-    this._insertionPoint = undefined;
-    this._codeBlockStatus = "closed";
-    this._pendingBackticks = 0;
-  }
-
-  private _codeBlockStatus: "open" | "closed" | "language-descriptor" =
-    "closed";
-  private _pendingBackticks: number = 0;
-  public onStreamUpdate(update: string) {
-    let textToInsert = "";
-    for (let i = 0; i < update.length; i++) {
-      switch (this._codeBlockStatus) {
-        case "closed":
-          if (update[i] === "`" && this._fullText.endsWith("``")) {
-            this._codeBlockStatus = "language-descriptor";
-          }
-          break;
-        case "language-descriptor":
-          if (update[i] === " " || update[i] === "\n") {
-            this._codeBlockStatus = "open";
-          }
-          break;
-        case "open":
-          if (update[i] === "`") {
-            if (this._fullText.endsWith("``")) {
-              this._codeBlockStatus = "closed";
-              this._pendingBackticks = 0;
-            } else {
-              this._pendingBackticks += 1;
-            }
-          } else {
-            textToInsert += "`".repeat(this._pendingBackticks) + update[i];
-            this._pendingBackticks = 0;
-          }
-          break;
-      }
-      this._fullText += update[i];
-    }
-    this._addToEditor(textToInsert);
-  }
-}
-
 let websocketConnections: { [url: string]: WebsocketConnection | undefined } =
   {};
 
@@ -127,8 +57,6 @@ class WebsocketConnection {
   }
 }
 
-let streamManager = new StreamManager();
-
 export let debugPanelWebview: vscode.Webview | undefined;
 export function setupDebugPanel(
   panel: vscode.WebviewPanel | vscode.WebviewView,
@@ -147,10 +75,7 @@ export function setupDebugPanel(
     .toString();
 
   const isProduction = true; // context?.extensionMode === vscode.ExtensionMode.Development;
-  if (!isProduction) {
-    scriptUri = "http://localhost:5173/src/main.tsx";
-    styleMainUri = "http://localhost:5173/src/main.css";
-  } else {
+  if (isProduction) {
     scriptUri = debugPanelWebview
       .asWebviewUri(
         vscode.Uri.joinPath(extensionUri, "react-app/dist/assets/index.js")
@@ -161,6 +86,9 @@ export function setupDebugPanel(
         vscode.Uri.joinPath(extensionUri, "react-app/dist/assets/index.css")
       )
       .toString();
+  } else {
+    scriptUri = "http://localhost:5173/src/main.tsx";
+    styleMainUri = "http://localhost:5173/src/main.css";
   }
 
   panel.webview.options = {
@@ -175,11 +103,11 @@ export function setupDebugPanel(
       return;
     }
 
-    let rangeInFile: RangeInFile = {
+    const rangeInFile: RangeInFile = {
       range: e.selections[0],
       filepath: e.textEditor.document.fileName,
     };
-    let filesystem = {
+    const filesystem = {
       [rangeInFile.filepath]: e.textEditor.document.getText(),
     };
     panel.webview.postMessage({
@@ -217,13 +145,19 @@ export function setupDebugPanel(
           url,
         });
       };
-      const connection = new WebsocketConnection(
-        url,
-        onMessage,
-        onOpen,
-        onClose
-      );
-      websocketConnections[url] = connection;
+      try {
+        const connection = new WebsocketConnection(
+          url,
+          onMessage,
+          onOpen,
+          onClose
+        );
+        websocketConnections[url] = connection;
+        resolve(null);
+      } catch (e) {
+        console.log("Caught it!: ", e);
+        reject(e);
+      }
     });
   }
 
@@ -290,15 +224,6 @@ export function setupDebugPanel(
       }
       case "openFile": {
         openEditorAndRevealRange(data.path, undefined, vscode.ViewColumn.One);
-        break;
-      }
-      case "streamUpdate": {
-        // Write code at the position of the cursor
-        streamManager.onStreamUpdate(data.update);
-        break;
-      }
-      case "closeStream": {
-        streamManager.closeStream();
         break;
       }
       case "withProgress": {
