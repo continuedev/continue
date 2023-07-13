@@ -174,7 +174,7 @@ async def websocket_endpoint(websocket: WebSocket, session: Session = Depends(we
         protocol.websocket = websocket
 
         # Update any history that may have happened before connection
-        # await protocol.send_state_update()
+        await protocol.send_state_update()
 
         while AppStatus.should_exit is False:
             message = await websocket.receive_text()
