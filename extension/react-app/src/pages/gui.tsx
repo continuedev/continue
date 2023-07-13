@@ -262,7 +262,6 @@ function GUI(props: GUIProps) {
 
   const onStepUserInput = (input: string, index: number) => {
     if (!client) return;
-    console.log("Sending step user input", input, index);
     client.sendStepUserInput(input, index);
   };
 

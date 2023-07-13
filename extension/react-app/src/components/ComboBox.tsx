@@ -331,7 +331,6 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
               ) {
                 (event.nativeEvent as any).preventDownshiftDefault = true;
               } else if (event.key === "ArrowUp") {
-                console.log("OWJFOIJO");
                 if (positionInHistory == 0) return;
                 else if (
                   positionInHistory == history.length &&

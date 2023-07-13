@@ -1,6 +1,3 @@
-// console.log("Websocket import");
-// const WebSocket = require("ws");
-
 export abstract class Messenger {
   abstract send(messageType: string, data: object): void;
 
@@ -28,13 +25,6 @@ export class WebsocketMessenger extends Messenger {
   private serverUrl: string;
 
   _newWebsocket(): WebSocket {
-    // // Dynamic import, because WebSocket is builtin with browser, but not with node. And can't use require in browser.
-    // if (typeof process === "object") {
-    //   console.log("Using node");
-    //   // process is only available in Node
-    //   var WebSocket = require("ws");
-    // }
-
     const newWebsocket = new WebSocket(this.serverUrl);
     for (const listener of this.onOpenListeners) {
       this.onOpen(listener);

@@ -56,7 +56,7 @@ export async function activateExtension(context: vscode.ExtensionContext) {
   registerAllCodeLensProviders(context);
   registerAllCommands(context);
 
-  // Initialize IDE Protocol Client, then call "openGUI"
+  // Initialize IDE Protocol Client
   const serverUrl = getContinueServerUrl();
   ideProtocolClient = new IdeProtocolClient(
     `${serverUrl.replace("http", "ws")}/ide/ws`,
