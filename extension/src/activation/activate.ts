@@ -35,46 +35,48 @@ export async function activateExtension(context: vscode.ExtensionContext) {
     })
     .catch((e) => console.log("Error checking for extension updates: ", e));
 
-  // Start the Python server
-  await new Promise((resolve, reject) => {
-    vscode.window.withProgress(
-      {
-        location: vscode.ProgressLocation.Notification,
-        title:
-          "Starting Continue Server... (it may take a minute to download Python packages)",
-        cancellable: false,
-      },
-      async (progress, token) => {
-        await startContinuePythonServer();
-        resolve(null);
-      }
+  const sessionIdPromise = (async () => {
+    // Start the Python server
+    await new Promise((resolve, reject) => {
+      vscode.window.withProgress(
+        {
+          location: vscode.ProgressLocation.Notification,
+          title:
+            "Starting Continue Server... (it may take a minute to download Python packages)",
+          cancellable: false,
+        },
+        async (progress, token) => {
+          await startContinuePythonServer();
+          resolve(null);
+        }
+      );
+    });
+
+    // Initialize IDE Protocol Client
+    const serverUrl = getContinueServerUrl();
+    ideProtocolClient = new IdeProtocolClient(
+      `${serverUrl.replace("http", "ws")}/ide/ws`,
+      context
     );
-  });
+
+    return ideProtocolClient.getSessionId();
+  })();
+
+  // Register the webview
+  const provider = new ContinueGUIWebviewViewProvider(sessionIdPromise);
+
+  context.subscriptions.push(
+    vscode.window.registerWebviewViewProvider(
+      "continue.continueGUIView",
+      provider,
+      {
+        webviewOptions: { retainContextWhenHidden: true },
+      }
+    )
+  );
 
   // Register commands and providers
   sendTelemetryEvent(TelemetryEvent.ExtensionActivated);
   registerAllCodeLensProviders(context);
   registerAllCommands(context);
-
-  // Initialize IDE Protocol Client
-  const serverUrl = getContinueServerUrl();
-  ideProtocolClient = new IdeProtocolClient(
-    `${serverUrl.replace("http", "ws")}/ide/ws`,
-    context
-  );
-
-  {
-    const sessionIdPromise = await ideProtocolClient.getSessionId();
-    const provider = new ContinueGUIWebviewViewProvider(sessionIdPromise);
-
-    context.subscriptions.push(
-      vscode.window.registerWebviewViewProvider(
-        "continue.continueGUIView",
-        provider,
-        {
-          webviewOptions: { retainContextWhenHidden: true },
-        }
-      )
-    );
-  }
 }
