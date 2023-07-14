@@ -253,9 +253,12 @@ function StepContainer(props: StepContainerProps) {
           )}
 
           {props.historyNode.observation?.error ? (
-            <pre className="overflow-x-scroll">
-              {props.historyNode.observation.error as string}
-            </pre>
+            <details>
+              <summary>View Traceback</summary>
+              <pre className="overflow-x-scroll">
+                {props.historyNode.observation.error as string}
+              </pre>
+            </details>
           ) : (
             <StyledMarkdownPreview
               source={props.historyNode.step.description || ""}

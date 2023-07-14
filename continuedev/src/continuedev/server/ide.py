@@ -149,7 +149,7 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
         return other_msgs
 
     async def _send_json(self, message_type: str, data: Any):
-        if self.websocket.client_state == WebSocketState.DISCONNECTED:
+        if self.websocket.application_state == WebSocketState.DISCONNECTED:
             return
         await self.websocket.send_json({
             "messageType": message_type,

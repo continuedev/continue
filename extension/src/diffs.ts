@@ -129,7 +129,7 @@ class DiffManager {
     // Open the diff editor if this is a new diff
     if (!this.diffs.has(newFilepath)) {
       // Figure out the first line that is different
-      const oldContent = fs.readFileSync(originalFilepath).toString("utf-8");
+      const oldContent = ideProtocolClient.readFile(originalFilepath);
       const line = this._findFirstDifferentLine(oldContent, newContent);
 
       const diffInfo: DiffInfo = {

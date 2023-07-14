@@ -169,6 +169,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
   useImperativeHandle(ref, () => downshiftProps, [downshiftProps]);
 
   const [metaKeyPressed, setMetaKeyPressed] = useState(false);
+  const [focused, setFocused] = useState(false);
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Meta") {
@@ -298,7 +299,11 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
 
               // setShowContextDropdown(target.value.endsWith("@"));
             },
+            onFocus: (e) => {
+              setFocused(true);
+            },
             onBlur: (e) => {
+              setFocused(false);
               postVscMessage("blurContinueInput", {});
             },
             onKeyDown: (event) => {
@@ -374,7 +379,9 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
       </div>
       {highlightedCodeSections.length === 0 &&
         (downshiftProps.inputValue?.startsWith("/edit") ||
-          (metaKeyPressed && downshiftProps.inputValue?.length > 0)) && (
+          (focused &&
+            metaKeyPressed &&
+            downshiftProps.inputValue?.length > 0)) && (
           <div className="text-trueGray-400 pr-4 text-xs text-right">
             Inserting at cursor
           </div>

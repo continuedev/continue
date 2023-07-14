@@ -9,7 +9,7 @@ from ...libs.llm.prompt_utils import MarkdownStyleEncoderDecoder
 from ...models.filesystem_edit import EditDiff, FileEdit, FileEditWithFullContents, FileSystemEdit
 from ...models.filesystem import FileSystem, RangeInFile, RangeInFileWithContents
 from ...core.observation import Observation, TextObservation, TracebackObservation, UserInputObservation
-from ...core.main import ChatMessage, Step, SequentialStep
+from ...core.main import ChatMessage, ContinueCustomException, Step, SequentialStep
 from ...libs.util.count_tokens import MAX_TOKENS_FOR_MODEL, DEFAULT_MAX_TOKENS
 from ...libs.util.dedent import dedent_and_get_common_whitespace
 import difflib
@@ -608,6 +608,13 @@ Please output the code to be inserted at the cursor in order to fulfill the user
             rif_dict[rif.filepath] = rif.contents
 
         for rif in rif_with_contents:
+            # If the file doesn't exist, ask them to save it first
+            if not os.path.exists(rif.filepath):
+                message = f"The file {rif.filepath} does not exist. Please save it first."
+                raise ContinueCustomException(
+                    title=message, message=message
+                )
+
             await sdk.ide.setFileOpen(rif.filepath)
             await sdk.ide.setSuggestionsLocked(rif.filepath, True)
             await self.stream_rif(rif, sdk)
