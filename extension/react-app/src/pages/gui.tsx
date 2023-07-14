@@ -95,11 +95,8 @@ function GUI(props: GUIProps) {
           name: "Welcome to Continue",
           hide: false,
           description: `- Highlight code and ask a question or give instructions
-- Use \`cmd+k\` (Mac) / \`ctrl+k\` (Windows) to open Continue
-- Use \`cmd+shift+e\` / \`ctrl+shift+e\` to open file Explorer
-- Add your own OpenAI API key to VS Code Settings with \`cmd+,\`
-- Use slash commands when you want fine-grained control
-- Past steps are included as part of the context by default`,
+          - Use \`cmd+m\` (Mac) / \`ctrl+m\` (Windows) to open Continue
+          - Use \`/help\` to ask questions about how to use Continue`,
           system_message: null,
           chat_context: [],
           manage_own_chat_context: false,
@@ -269,15 +266,17 @@ function GUI(props: GUIProps) {
   return (
     <>
       <Onboarding />
-      <TextDialog showDialog={showFeedbackDialog}
-      onEnter={(text) => {
-        client?.sendMainInput(`/feedback ${text}`);
-        setShowFeedbackDialog(false);
-      }}
-      onClose={() => {
-        setShowFeedbackDialog(false);
-      }}
-      message={feedbackDialogMessage} />
+      <TextDialog
+        showDialog={showFeedbackDialog}
+        onEnter={(text) => {
+          client?.sendMainInput(`/feedback ${text}`);
+          setShowFeedbackDialog(false);
+        }}
+        onClose={() => {
+          setShowFeedbackDialog(false);
+        }}
+        message={feedbackDialogMessage}
+      />
 
       <TopGUIDiv
         ref={topGuiDivRef}

@@ -228,6 +228,11 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
         )} */}
         {highlightedCodeSections.map((section, idx) => (
           <PillButton
+            warning={
+              section.range.contents.length > 4000 && section.editing
+                ? "Editing such a large range may be slow"
+                : undefined
+            }
             editing={section.editing}
             pinned={section.pinned}
             index={idx}
