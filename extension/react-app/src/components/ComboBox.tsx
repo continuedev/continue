@@ -1,29 +1,16 @@
-import React, {
-  useCallback,
-  useEffect,
-  useImperativeHandle,
-  useState,
-} from "react";
+import React, { useEffect, useImperativeHandle, useState } from "react";
 import { useCombobox } from "downshift";
 import styled from "styled-components";
 import {
-  buttonColor,
   defaultBorderRadius,
   lightGray,
   secondaryDark,
   vscBackground,
 } from ".";
 import CodeBlock from "./CodeBlock";
-import { RangeInFile } from "../../../src/client";
 import PillButton from "./PillButton";
 import HeaderButtonWithText from "./HeaderButtonWithText";
-import {
-  Trash,
-  LockClosed,
-  LockOpen,
-  Plus,
-  DocumentPlus,
-} from "@styled-icons/heroicons-outline";
+import { DocumentPlus } from "@styled-icons/heroicons-outline";
 import { HighlightedRangeContext } from "../../../schema/FullState";
 
 // #region styled components

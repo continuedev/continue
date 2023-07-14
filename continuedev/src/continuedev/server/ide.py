@@ -123,10 +123,12 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
         self.websocket = websocket
         self.session_manager = session_manager
 
-    workspace_directory: str
+    workspace_directory: str = None
+    unique_id: str = None
 
     async def initialize(self) -> List[str]:
         await self._send_json("workspaceDirectory", {})
+        await self._send_json("uniqueId", {})
         other_msgs = []
         while True:
             msg_string = await self.websocket.receive_text()
@@ -137,9 +139,13 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
             data = message["data"]
             if message_type == "workspaceDirectory":
                 self.workspace_directory = data["workspaceDirectory"]
-                break
+            elif message_type == "uniqueId":
+                self.unique_id = data["uniqueId"]
             else:
                 other_msgs.append(msg_string)
+
+            if self.workspace_directory is not None and self.unique_id is not None:
+                break
         return other_msgs
 
     async def _send_json(self, message_type: str, data: Any):
@@ -183,10 +189,12 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
             self.onMainUserInput(data["input"])
         elif message_type == "deleteAtIndex":
             self.onDeleteAtIndex(data["index"])
-        elif message_type in ["highlightedCode", "openFiles", "visibleFiles", "readFile", "editFile", "getUserSecret", "runCommand", "uniqueId"]:
+        elif message_type in ["highlightedCode", "openFiles", "visibleFiles", "readFile", "editFile", "getUserSecret", "runCommand"]:
             self.sub_queue.post(message_type, data)
         elif message_type == "workspaceDirectory":
             self.workspace_directory = data["workspaceDirectory"]
+        elif message_type == "uniqueId":
+            self.unique_id = data["uniqueId"]
         else:
             raise ValueError("Unknown message type", message_type)
 
@@ -310,14 +318,6 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
     async def getVisibleFiles(self) -> List[str]:
         resp = await self._send_and_receive_json({}, VisibleFilesResponse, "visibleFiles")
         return resp.visibleFiles
-
-    async def get_unique_id(self) -> str:
-        resp = await self._send_and_receive_json({}, UniqueIdResponse, "uniqueId")
-        return resp.uniqueId
-
-    @cached_property_no_none
-    def unique_id(self) -> str:
-        return asyncio.run(self.get_unique_id())
 
     async def getHighlightedCode(self) -> List[RangeInFile]:
         resp = await self._send_and_receive_json({}, HighlightedCodeResponse, "highlightedCode")

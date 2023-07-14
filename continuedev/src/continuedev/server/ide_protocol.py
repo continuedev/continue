@@ -108,7 +108,4 @@ class AbstractIdeProtocolServer(ABC):
         """Show a diff"""
 
     workspace_directory: str
-
-    @abstractproperty
-    def unique_id(self) -> str:
-        """Get a unique ID for this IDE"""
+    unique_id: str

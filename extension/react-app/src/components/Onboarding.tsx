@@ -22,6 +22,7 @@ const StyledSpan = styled.span`
   &:hover {
     background-color: #ffffff33;
   }
+  white-space: nowrap;
 `;
 
 const Onboarding = () => {
