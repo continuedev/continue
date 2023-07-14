@@ -16,10 +16,13 @@ import {
 import { acceptDiffCommand, rejectDiffCommand } from "./diffs";
 import * as bridge from "./bridge";
 import { debugPanelWebview } from "./debugPanel";
-import { sendTelemetryEvent, TelemetryEvent } from "./telemetry";
 import { ideProtocolClient } from "./activation/activate";
 
 let focusedOnContinueInput = false;
+
+export const setFocusedOnContinueInput = (value: boolean) => {
+  focusedOnContinueInput = value;
+};
 
 // Copy everything over from extension.ts
 const commandsMap: { [command: string]: (...args: any) => any } = {

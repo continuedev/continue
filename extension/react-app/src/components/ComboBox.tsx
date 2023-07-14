@@ -12,6 +12,7 @@ import PillButton from "./PillButton";
 import HeaderButtonWithText from "./HeaderButtonWithText";
 import { DocumentPlus } from "@styled-icons/heroicons-outline";
 import { HighlightedRangeContext } from "../../../schema/FullState";
+import { postVscMessage } from "../vscode";
 
 // #region styled components
 const mainInputFontSize = 13;
@@ -296,6 +297,9 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
               ).toString()}px`;
 
               // setShowContextDropdown(target.value.endsWith("@"));
+            },
+            onBlur: (e) => {
+              postVscMessage("blurContinueInput", {});
             },
             onKeyDown: (event) => {
               if (event.key === "Enter" && event.shiftKey) {
