@@ -104,6 +104,17 @@ class DiffManager {
     return editor;
   }
 
+  private _findFirstDifferentLine(contentA: string, contentB: string): number {
+    const linesA = contentA.split("\n");
+    const linesB = contentB.split("\n");
+    for (let i = 0; i < linesA.length && i < linesB.length; i++) {
+      if (linesA[i] !== linesB[i]) {
+        return i;
+      }
+    }
+    return 0;
+  }
+
   writeDiff(
     originalFilepath: string,
     newContent: string,
@@ -119,15 +130,7 @@ class DiffManager {
     if (!this.diffs.has(newFilepath)) {
       // Figure out the first line that is different
       const oldContent = fs.readFileSync(originalFilepath).toString("utf-8");
-      let line = 0;
-      const newLines = newContent.split("\n");
-      const oldLines = oldContent.split("\n");
-      for (let i = 0; i < newLines.length && i < oldLines.length; i++) {
-        if (newLines[i] !== oldLines[i]) {
-          line = i;
-          break;
-        }
-      }
+      const line = this._findFirstDifferentLine(oldContent, newContent);
 
       const diffInfo: DiffInfo = {
         originalFilepath,
