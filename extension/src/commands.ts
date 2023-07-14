@@ -19,6 +19,8 @@ import { debugPanelWebview } from "./debugPanel";
 import { sendTelemetryEvent, TelemetryEvent } from "./telemetry";
 import { ideProtocolClient } from "./activation/activate";
 
+let focusedOnContinueInput = false;
+
 // Copy everything over from extension.ts
 const commandsMap: { [command: string]: (...args: any) => any } = {
   "continue.suggestionDown": suggestionDownCommand,
@@ -30,10 +32,15 @@ const commandsMap: { [command: string]: (...args: any) => any } = {
   "continue.acceptAllSuggestions": acceptAllSuggestionsCommand,
   "continue.rejectAllSuggestions": rejectAllSuggestionsCommand,
   "continue.focusContinueInput": async () => {
-    vscode.commands.executeCommand("continue.continueGUIView.focus");
-    debugPanelWebview?.postMessage({
-      type: "focusContinueInput",
-    });
+    if (focusedOnContinueInput) {
+      vscode.commands.executeCommand("workbench.action.focusActiveEditorGroup");
+    } else {
+      vscode.commands.executeCommand("continue.continueGUIView.focus");
+      debugPanelWebview?.postMessage({
+        type: "focusContinueInput",
+      });
+    }
+    focusedOnContinueInput = !focusedOnContinueInput;
   },
   "continue.quickTextEntry": async () => {
     const text = await vscode.window.showInputBox({

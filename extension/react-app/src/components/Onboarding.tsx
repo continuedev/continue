@@ -109,6 +109,7 @@ const Onboarding = () => {
             paddingBottom: "50px",
             textAlign: "center",
             cursor: "pointer",
+            whiteSpace: "nowrap",
           }}
         >
           <StyledSpan

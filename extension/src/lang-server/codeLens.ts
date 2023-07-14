@@ -60,12 +60,12 @@ class DiffViewerCodeLensProvider implements vscode.CodeLensProvider {
       }
       codeLenses.push(
         new vscode.CodeLens(range, {
-          title: "Accept ✅ (⌘⇧↩)",
+          title: "Accept All ✅ (⌘⇧↩)",
           command: "continue.acceptDiff",
           arguments: [document.uri.fsPath],
         }),
         new vscode.CodeLens(range, {
-          title: "Reject ❌ (⌘⇧⌫)",
+          title: "Reject All ❌ (⌘⇧⌫)",
           command: "continue.rejectDiff",
           arguments: [document.uri.fsPath],
         })
