@@ -37,6 +37,8 @@ def get_error_title(e: Exception) -> str:
         return "The request failed. Please check your internet connection and try again. If this issue persists, you can use our API key for free by going to VS Code settings and changing the value of continue.OPENAI_API_KEY to \"\""
     elif isinstance(e, openai_errors.InvalidRequestError):
         return 'Your API key does not have access to GPT-4. You can use ours for free by going to VS Code settings and changing the value of continue.OPENAI_API_KEY to ""'
+    elif e.__str__().startswith("Cannot connect to host"):
+        return "The request failed. Please check your internet connection and try again."
     return e.__str__() or e.__repr__()
 
 

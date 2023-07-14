@@ -386,8 +386,12 @@ class IdeProtocolClient {
         contents = editor.document.getText();
       }
     });
-    if (!contents) {
-      contents = fs.readFileSync(filepath, "utf-8");
+    if (typeof contents === "undefined") {
+      if (fs.existsSync(filepath)) {
+        contents = fs.readFileSync(filepath, "utf-8");
+      } else {
+        contents = "";
+      }
     }
     return contents;
   }

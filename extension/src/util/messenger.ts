@@ -15,7 +15,7 @@ export abstract class Messenger {
   abstract onOpen(callback: () => void): void;
 
   abstract onClose(callback: () => void): void;
-  
+
   abstract onError(callback: () => void): void;
 
   abstract sendAndReceive(messageType: string, data: any): Promise<any>;
