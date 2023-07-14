@@ -6,7 +6,7 @@ from ..libs.util.telemetry import capture_event
 help = dedent("""\
         Continue is an open-source coding autopilot. It is a VS Code extension that brings the power of ChatGPT to your IDE.
               
-        It gathers context for you and stores your interactions automatically, so that you can avoid copy/paste now and benefit from a customized LLM later.
+        It gathers context for you and stores your interactions automatically, so that you can avoid copy/paste now and benefit from a customized Large Language Model (LLM) later.
 
         Continue can be used to...
         1. Edit chunks of code with specific instructions (e.g. "/edit migrate this digital ocean terraform file into one that works for GCP")
@@ -25,6 +25,7 @@ help = dedent("""\
 
         If you have feedback, please use /feedback to let us know how you would like to use Continue. We are excited to hear from you!""")
 
+
 class HelpStep(Step):
 
     name: str = "Help"
@@ -41,7 +42,7 @@ class HelpStep(Step):
                     Information:
 
                     {help}""")
-        
+
         self.chat_context.append(ChatMessage(
             role="user",
             content=prompt,
@@ -54,4 +55,5 @@ class HelpStep(Step):
                 self.description += chunk["content"]
                 await sdk.update_ui()
 
-        capture_event(sdk.ide.unique_id, "help", {"question": question, "answer": self.description})
+        capture_event(sdk.ide.unique_id, "help", {
+                      "question": question, "answer": self.description})
