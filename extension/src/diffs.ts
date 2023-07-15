@@ -3,6 +3,7 @@ import * as path from "path";
 import * as fs from "fs";
 import * as vscode from "vscode";
 import { extensionContext, ideProtocolClient } from "./activation/activate";
+import { getMetaKeyLabel } from "./util/util";
 
 interface DiffInfo {
   originalFilepath: string;
@@ -86,7 +87,7 @@ class DiffManager {
     ) {
       vscode.window
         .showInformationMessage(
-          "Accept (⌘⇧↩) or reject (⌘⇧⌫) at the top of the file.",
+          `Accept (${getMetaKeyLabel()}⇧↩) or reject (${getMetaKeyLabel()}⇧⌫) at the top of the file.`,
           "Got it",
           "Don't show again"
         )
