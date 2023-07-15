@@ -17,6 +17,7 @@ import { StopCircle } from "@styled-icons/heroicons-solid";
 import { HistoryNode } from "../../../schema/HistoryNode";
 import HeaderButtonWithText from "./HeaderButtonWithText";
 import MarkdownPreview from "@uiw/react-markdown-preview";
+import { getMetaKeyLabel, isMetaEquivalentKeyPressed } from "../util";
 
 interface StepContainerProps {
   historyNode: HistoryNode;
@@ -217,7 +218,11 @@ function StepContainer(props: StepContainerProps) {
                   e.stopPropagation();
                   props.onDelete();
                 }}
-                text={props.historyNode.active ? "Stop (⌘⌫)" : "Delete"}
+                text={
+                  props.historyNode.active
+                    ? `Stop (${getMetaKeyLabel()}⌫)`
+                    : "Delete"
+                }
               >
                 {props.historyNode.active ? (
                   <StopCircle size="1.6em" onClick={props.onDelete} />
