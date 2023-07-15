@@ -81,7 +81,11 @@ const TextDialog = (props: {
             rows={10}
             ref={textAreaRef}
             onKeyDown={(e) => {
-              if (e.key === "Enter" && e.metaKey && textAreaRef.current) {
+              if (
+                e.key === "Enter" &&
+                isMetaEquivalentKeyPressed(e) &&
+                textAreaRef.current
+              ) {
                 props.onEnter(textAreaRef.current.value);
                 setText("");
               } else if (e.key === "Escape") {

@@ -137,12 +137,12 @@ function GUI(props: GUIProps) {
   useEffect(() => {
     const listener = (e: any) => {
       // Cmd + i to toggle fast model
-      if (e.key === "i" && e.metaKey && e.shiftKey) {
+      if (e.key === "i" && isMetaEquivalentKeyPressed(e) && e.shiftKey) {
         setUsingFastModel((prev) => !prev);
         // Cmd + backspace to stop currently running step
       } else if (
         e.key === "Backspace" &&
-        e.metaKey &&
+        isMetaEquivalentKeyPressed(e) &&
         typeof history?.current_index !== "undefined" &&
         history.timeline[history.current_index]?.active
       ) {
@@ -220,7 +220,7 @@ function GUI(props: GUIProps) {
     if (mainTextInputRef.current) {
       let input = (mainTextInputRef.current as any).inputValue;
       // cmd+enter to /edit
-      if (event?.metaKey) {
+      if (isMetaEquivalentKeyPressed(event)) {
         input = `/edit ${input}`;
       }
       (mainTextInputRef.current as any).setInputValue("");

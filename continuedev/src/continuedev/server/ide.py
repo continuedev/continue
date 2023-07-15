@@ -227,8 +227,8 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
         })
 
     async def getSessionId(self):
-        session_id = self.session_manager.new_session(
-            self, self.session_id).session_id
+        session_id = (await self.session_manager.new_session(
+            self, self.session_id)).session_id
         await self._send_json("getSessionId", {
             "sessionId": session_id
         })
