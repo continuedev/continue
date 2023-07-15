@@ -56,7 +56,7 @@ class DiffManager {
       return undefined;
     }
 
-    const rightUri = vscode.Uri.parse(newFilepath);
+    const rightUri = vscode.Uri.file(newFilepath);
     const leftUri = vscode.Uri.file(originalFilepath);
     const title = "Continue Diff";
     console.log(
