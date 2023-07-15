@@ -1,6 +1,6 @@
 type Platform = "mac" | "linux" | "windows" | "unknown";
 
-function getPlatform(): Platform {
+export function getPlatform(): Platform {
   const platform = window.navigator.platform.toUpperCase();
   if (platform.indexOf("MAC") >= 0) {
     return "mac";
@@ -13,7 +13,7 @@ function getPlatform(): Platform {
   }
 }
 
-function isMetaEquivalentKeyPressed(event: {
+export function isMetaEquivalentKeyPressed(event: {
   metaKey: boolean;
   ctrlKey: boolean;
 }): boolean {
@@ -26,5 +26,18 @@ function isMetaEquivalentKeyPressed(event: {
       return event.ctrlKey;
     default:
       return event.metaKey;
+  }
+}
+
+export function getMetaKeyLabel(): string {
+  const platform = getPlatform();
+  switch (platform) {
+    case "mac":
+      return "⌘";
+    case "linux":
+    case "windows":
+      return "^";
+    default:
+      return "⌘";
   }
 }
