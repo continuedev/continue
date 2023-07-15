@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from "react";
 import styled from "styled-components";
 import { Button, buttonColor, secondaryDark, vscBackground } from ".";
+import { isMetaEquivalentKeyPressed } from "../util";
 
 const ScreenCover = styled.div`
   position: absolute;

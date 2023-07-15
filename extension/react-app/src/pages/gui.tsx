@@ -23,6 +23,7 @@ import { RootStore } from "../redux/store";
 import { postVscMessage } from "../vscode";
 import UserInputContainer from "../components/UserInputContainer";
 import Onboarding from "../components/Onboarding";
+import { isMetaEquivalentKeyPressed } from "../util";
 
 const TopGUIDiv = styled.div`
   overflow: hidden;
