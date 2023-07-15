@@ -181,7 +181,7 @@ function StepContainer(props: StepContainerProps) {
           }
           className="overflow-hidden cursor-pointer"
           onClick={(e) => {
-            if (e.metaKey) {
+            if (isMetaEquivalentKeyPressed(e)) {
               props.onToggleAll();
             } else {
               props.onToggle();

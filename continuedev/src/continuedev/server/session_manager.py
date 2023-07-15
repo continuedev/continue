@@ -53,18 +53,18 @@ class SessionManager:
             session_files = os.listdir(sessions_folder)
             if f"{session_id}.json" in session_files and session_id in self.registered_ides:
                 if self.registered_ides[session_id].session_id is not None:
-                    return self.new_session(self.registered_ides[session_id], session_id=session_id)
+                    return await self.new_session(self.registered_ides[session_id], session_id=session_id)
 
             raise KeyError("Session ID not recognized", session_id)
         return self.sessions[session_id]
 
-    def new_session(self, ide: AbstractIdeProtocolServer, session_id: Union[str, None] = None) -> Session:
+    async def new_session(self, ide: AbstractIdeProtocolServer, session_id: Union[str, None] = None) -> Session:
         full_state = None
         if session_id is not None and os.path.exists(getSessionFilePath(session_id)):
             with open(getSessionFilePath(session_id), "r") as f:
                 full_state = FullState(**json.load(f))
 
-        autopilot = DemoAutopilot(
+        autopilot = await DemoAutopilot.create(
             policy=DemoPolicy(), ide=ide, full_state=full_state)
         session_id = session_id or str(uuid4())
         ide.session_id = session_id

@@ -1,6 +1,6 @@
 import asyncio
 from functools import cached_property
-from typing import Coroutine, Union
+from typing import Coroutine, Dict, Union
 import os
 
 from ..steps.core.core import DefaultModelEditCodeStep
@@ -13,7 +13,7 @@ from ..libs.llm.hf_inference_api import HuggingFaceInferenceAPI
 from ..libs.llm.openai import OpenAI
 from .observation import Observation
 from ..server.ide_protocol import AbstractIdeProtocolServer
-from .main import Context, ContinueCustomException, HighlightedRangeContext, History, Step, ChatMessage, ChatMessageRole
+from .main import Context, ContinueCustomException, History, Step, ChatMessage
 from ..steps.core.core import *
 from ..libs.llm.proxy_server import ProxyServer
 
@@ -22,26 +22,46 @@ class Autopilot:
     pass
 
 
+ModelProvider = Literal["openai", "hf_inference_api", "ggml", "anthropic"]
+MODEL_PROVIDER_TO_ENV_VAR = {
+    "openai": "OPENAI_API_KEY",
+    "hf_inference_api": "HUGGING_FACE_TOKEN",
+    "anthropic": "ANTHROPIC_API_KEY"
+}
+
+
 class Models:
-    def __init__(self, sdk: "ContinueSDK"):
+    provider_keys: Dict[ModelProvider, str] = {}
+    model_providers: List[ModelProvider]
+
+    def __init__(self, sdk: "ContinueSDK", model_providers: List[ModelProvider]):
         self.sdk = sdk
+        self.model_providers = model_providers
+
+    @classmethod
+    async def create(cls, sdk: "ContinueSDK", with_providers: List[ModelProvider] = ["openai"]) -> "Models":
+        models = Models(sdk, with_providers)
+        for provider in with_providers:
+            if provider in MODEL_PROVIDER_TO_ENV_VAR:
+                env_var = MODEL_PROVIDER_TO_ENV_VAR[provider]
+                models.provider_keys[provider] = await sdk.get_user_secret(
+                    env_var, f'Please add your {env_var} to the .env file')
+
+        return models
 
     def __load_openai_model(self, model: str) -> OpenAI:
-        async def load_openai_model():
-            api_key = await self.sdk.get_user_secret(
-                'OPENAI_API_KEY', 'Enter your OpenAI API key or press enter to try for free')
-            if api_key == "":
-                return ProxyServer(self.sdk.ide.unique_id, model)
-            return OpenAI(api_key=api_key, default_model=model)
-        return asyncio.get_event_loop().run_until_complete(load_openai_model())
+        api_key = self.provider_keys["openai"]
+        if api_key == "":
+            return ProxyServer(self.sdk.ide.unique_id, model)
+        return OpenAI(api_key=api_key, default_model=model)
+
+    def __load_hf_inference_api_model(self, model: str) -> HuggingFaceInferenceAPI:
+        api_key = self.provider_keys["hf_inference_api"]
+        return HuggingFaceInferenceAPI(api_key=api_key, model=model)
 
     @cached_property
     def starcoder(self):
-        async def load_starcoder():
-            api_key = await self.sdk.get_user_secret(
-                'HUGGING_FACE_TOKEN', 'Please add your Hugging Face token to the .env file')
-            return HuggingFaceInferenceAPI(api_key=api_key)
-        return asyncio.get_event_loop().run_until_complete(load_starcoder())
+        return self.__load_hf_inference_api_model("bigcode/starcoder")
 
     @cached_property
     def gpt35(self):
@@ -74,7 +94,7 @@ class Models:
     @property
     def default(self):
         default_model = self.sdk.config.default_model
-        return self.__model_from_name(default_model) if default_model is not None else self.gpt35
+        return self.__model_from_name(default_model) if default_model is not None else self.gpt4
 
 
 class ContinueSDK(AbstractContinueSDK):
@@ -87,9 +107,14 @@ class ContinueSDK(AbstractContinueSDK):
     def __init__(self, autopilot: Autopilot):
         self.ide = autopilot.ide
         self.__autopilot = autopilot
-        self.models = Models(self)
         self.context = autopilot.context
         self.config = self._load_config()
+
+    @classmethod
+    async def create(cls, autopilot: Autopilot) -> "ContinueSDK":
+        sdk = ContinueSDK(autopilot)
+        sdk.models = await Models.create(sdk)
+        return sdk
 
     config: ContinueConfig
 
