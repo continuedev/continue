@@ -15,6 +15,7 @@ import { FileEditWithFullContents } from "../schema/FileEditWithFullContents";
 import fs = require("fs");
 import { WebsocketMessenger } from "./util/messenger";
 import { diffManager } from "./diffs";
+import path = require("path");
 
 class IdeProtocolClient {
   private messenger: WebsocketMessenger | null = null;
@@ -350,25 +351,28 @@ class IdeProtocolClient {
   // ------------------------------------ //
   // Respond to request
 
+  private editorIsTerminal(editor: vscode.TextEditor) {
+    return (
+      !!path.basename(editor.document.uri.fsPath).match(/\d/) ||
+      (editor.document.languageId === "plaintext" &&
+        editor.document.getText() === "accessible-buffer-accessible-buffer-")
+    );
+  }
+
   getOpenFiles(): string[] {
     return vscode.window.visibleTextEditors
-      .filter((editor) => {
-        return !(
-          editor.document.uri.fsPath.endsWith("/1") ||
-          (editor.document.languageId === "plaintext" &&
-            editor.document.getText() ===
-              "accessible-buffer-accessible-buffer-")
-        );
-      })
+      .filter((editor) => !this.editorIsTerminal(editor))
       .map((editor) => {
         return editor.document.uri.fsPath;
       });
   }
 
   getVisibleFiles(): string[] {
-    return vscode.window.visibleTextEditors.map((editor) => {
-      return editor.document.uri.fsPath;
-    });
+    return vscode.window.visibleTextEditors
+      .filter((editor) => !this.editorIsTerminal(editor))
+      .map((editor) => {
+        return editor.document.uri.fsPath;
+      });
   }
 
   saveFile(filepath: string) {
