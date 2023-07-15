@@ -12,7 +12,7 @@ interface DiffInfo {
   range: vscode.Range;
 }
 
-export const DIFF_DIRECTORY = path.join(os.homedir(), ".continue", "diffs");
+export const DIFF_DIRECTORY = path.join(os.homedir(), ".continue", "diffs").replace(/^C:/, "c:");
 
 class DiffManager {
   // Create a temporary file in the global .continue directory which displays the updated version
