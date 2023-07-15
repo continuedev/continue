@@ -149,6 +149,11 @@ class DiffManager {
       this.diffs.set(newFilepath, diffInfo);
     }
 
+    vscode.commands.executeCommand(
+      "workbench.action.files.revert",
+      vscode.Uri.file(newFilepath)
+    );
+
     return newFilepath;
   }
 
