@@ -11,7 +11,8 @@ import * as os from "os";
 import fkill from "fkill";
 import { sendTelemetryEvent, TelemetryEvent } from "../telemetry";
 
-const WINDOWS_REMOTE_SIGNED_SCRIPTS_ERROR = "A Python virtual enviroment cannot be activated because running scripts is disabled for this user. Please enable signed scripts to run with this command in PowerShell: `Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser`, reload VS Code, and then try again.";
+const WINDOWS_REMOTE_SIGNED_SCRIPTS_ERROR =
+  "A Python virtual enviroment cannot be activated because running scripts is disabled for this user. In order to use Continue, please enable signed scripts to run with this command in PowerShell: `Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser`, reload VS Code, and then try again.";
 
 const MAX_RETRIES = 3;
 async function retryThenFail(
@@ -26,7 +27,8 @@ async function retryThenFail(
     }
 
     // Show corresponding error message depending on the platform
-    let msg = "Failed to set up Continue extension. Please email nate@continue.dev and we'll get this fixed ASAP!";
+    let msg =
+      "Failed to set up Continue extension. Please email nate@continue.dev and we'll get this fixed ASAP!";
     try {
       switch (process.platform) {
         case "win32":
@@ -35,14 +37,14 @@ async function retryThenFail(
         case "darwin":
           break;
         case "linux":
-          const [pythonCmd,] = await getPythonPipCommands();
+          const [pythonCmd] = await getPythonPipCommands();
           msg = await getLinuxAptInstallError(pythonCmd);
           break;
       }
     } finally {
       vscode.window.showErrorMessage(msg);
     }
-    
+
     sendTelemetryEvent(TelemetryEvent.ExtensionSetupError, {
       error: e.message,
     });
@@ -216,10 +218,7 @@ async function getLinuxAptInstallError(pythonCmd: string) {
   const version = stdout.split(" ")[1].split(".")[1];
   const installVenvCommand = `apt-get install python3.${version}-venv`;
   await runCommand("apt-get update");
-  // Ask the user to run the command to install python3-venv (requires sudo, so we can't)
-  // First, get the python version
-  const msg = `[Important] Continue needs to create a Python virtual environment, but python3.${version}-venv is not installed. Please run this command in your terminal: \`${installVenvCommand}\`, reload VS Code, and then try again.`;
-  return msg;
+  return `[Important] Continue needs to create a Python virtual environment, but python3.${version}-venv is not installed. Please run this command in your terminal: \`${installVenvCommand}\`, reload VS Code, and then try again.`;
 }
 
 async function setupPythonEnv() {
@@ -246,9 +245,7 @@ async function setupPythonEnv() {
       stderr &&
       stderr.includes("running scripts is disabled on this system")
     ) {
-      await vscode.window.showErrorMessage(
-        WINDOWS_REMOTE_SIGNED_SCRIPTS_ERROR
-      );
+      await vscode.window.showErrorMessage(WINDOWS_REMOTE_SIGNED_SCRIPTS_ERROR);
       throw new Error(stderr);
     } else if (
       stderr?.includes("On Debian/Ubuntu systems") ||
