@@ -20,6 +20,10 @@ async function retryThenFail(
   retries: number = MAX_RETRIES
 ): Promise<any> {
   try {
+    if (retries < MAX_RETRIES && process.platform === "win32") {
+      const [stdout, stderr] = await runCommand("Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser");
+    }
+
     return await fn();
   } catch (e: any) {
     if (retries > 0) {
