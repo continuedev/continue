@@ -50,6 +50,8 @@ class Autopilot(ContinueBaseModel):
     full_state: Union[FullState, None] = None
     _on_update_callbacks: List[Callable[[FullState], None]] = []
 
+    continue_sdk: ContinueSDK = None
+
     _active: bool = False
     _should_halt: bool = False
     _main_user_input_queue: List[str] = []
@@ -57,9 +59,11 @@ class Autopilot(ContinueBaseModel):
     _user_input_queue = AsyncSubscriptionQueue()
     _retry_queue = AsyncSubscriptionQueue()
 
-    @cached_property
-    def continue_sdk(self) -> ContinueSDK:
-        return ContinueSDK(self)
+    @classmethod
+    async def create(cls, policy: Policy, ide: AbstractIdeProtocolServer, full_state: FullState) -> "Autopilot":
+        autopilot = cls(ide=ide, policy=policy)
+        autopilot.continue_sdk = await ContinueSDK.create(autopilot)
+        return autopilot
 
     class Config:
         arbitrary_types_allowed = True

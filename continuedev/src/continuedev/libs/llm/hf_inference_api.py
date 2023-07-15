@@ -9,7 +9,11 @@ DEFAULT_MAX_TIME = 120.
 
 class HuggingFaceInferenceAPI(LLM):
     api_key: str
-    model: str = "bigcode/starcoder"
+    model: str
+
+    def __init__(self, api_key: str, model: str):
+        self.api_key = api_key
+        self.model = model
 
     def complete(self, prompt: str, with_history: List[ChatMessage] = [], **kwargs):
         """Return the completion of the text with the given temperature."""
