@@ -3,6 +3,7 @@ import { editorToSuggestions, editorSuggestionsLocked } from "../suggestions";
 import * as path from "path";
 import * as os from "os";
 import { DIFF_DIRECTORY, diffManager } from "../diffs";
+import { getMetaKeyLabel } from "../util/util";
 class SuggestionsCodeLensProvider implements vscode.CodeLensProvider {
   public provideCodeLenses(
     document: vscode.TextDocument,
@@ -35,7 +36,7 @@ class SuggestionsCodeLensProvider implements vscode.CodeLensProvider {
       if (codeLenses.length === 2) {
         codeLenses.push(
           new vscode.CodeLens(range, {
-            title: "(⌘⇧↩/⌘⇧⌫ to accept/reject all)",
+            title: `(${getMetaKeyLabel()}⇧↩/${getMetaKeyLabel()}⇧⌫ to accept/reject all)`,
             command: "",
           })
         );
@@ -60,12 +61,12 @@ class DiffViewerCodeLensProvider implements vscode.CodeLensProvider {
       }
       codeLenses.push(
         new vscode.CodeLens(range, {
-          title: "Accept All ✅ (⌘⇧↩)",
+          title: `Accept All ✅ (${getMetaKeyLabel()}⇧↩)`,
           command: "continue.acceptDiff",
           arguments: [document.uri.fsPath],
         }),
         new vscode.CodeLens(range, {
-          title: "Reject All ❌ (⌘⇧⌫)",
+          title: `Reject All ❌ (${getMetaKeyLabel()}⇧⌫)`,
           command: "continue.rejectDiff",
           arguments: [document.uri.fsPath],
         })

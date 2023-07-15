@@ -13,6 +13,7 @@ import HeaderButtonWithText from "./HeaderButtonWithText";
 import { DocumentPlus } from "@styled-icons/heroicons-outline";
 import { HighlightedRangeContext } from "../../../schema/FullState";
 import { postVscMessage } from "../vscode";
+import { getMetaKeyLabel } from "../util";
 
 // #region styled components
 const mainInputFontSize = 13;
@@ -286,7 +287,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
       <div className="flex px-2" ref={divRef} hidden={!downshiftProps.isOpen}>
         <MainTextInput
           disabled={props.disabled}
-          placeholder="Ask a question, give instructions, or type '/' to see slash commands. ⌘⏎ to edit."
+          placeholder={`Ask a question, give instructions, or type '/' to see slash commands. ${getMetaKeyLabel()}⏎ to edit.`}
           {...getInputProps({
             onChange: (e) => {
               const target = e.target as HTMLTextAreaElement;
