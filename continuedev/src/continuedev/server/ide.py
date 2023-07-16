@@ -287,25 +287,31 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
     def onOpenGUIRequest(self):
         pass
 
+    def __get_autopilot(self):
+        return self.session_manager.sessions[self.session_id].autopilot
+
     def onFileEdits(self, edits: List[FileEditWithFullContents]):
-        session_manager.sessions[self.session_id].autopilot.handle_manual_edits(
-            edits)
+        if autopilot := self.__get_autopilot():
+            autopilot.handle_manual_edits(edits)
 
     def onDeleteAtIndex(self, index: int):
-        create_async_task(
-            session_manager.sessions[self.session_id].autopilot.delete_at_index(index), self.unique_id)
+        if autopilot := self.__get_autopilot():
+            create_async_task(autopilot.delete_at_index(index), self.unique_id)
 
     def onCommandOutput(self, output: str):
-        create_async_task(
-            self.session_manager.sessions[self.session_id].autopilot.handle_command_output(output), self.unique_id)
+        if autopilot := self.__get_autopilot():
+            create_async_task(
+                autopilot.handle_command_output(output), self.unique_id)
 
     def onHighlightedCodeUpdate(self, range_in_files: List[RangeInFileWithContents]):
-        create_async_task(
-            self.session_manager.sessions[self.session_id].autopilot.handle_highlighted_code(range_in_files), self.unique_id)
+        if autopilot := self.__get_autopilot():
+            create_async_task(autopilot.handle_highlighted_code(
+                range_in_files), self.unique_id)
 
     def onMainUserInput(self, input: str):
-        create_async_task(
-            self.session_manager.sessions[self.session_id].autopilot.accept_user_input(input), self.unique_id)
+        if autopilot := self.__get_autopilot():
+            create_async_task(
+                autopilot.accept_user_input(input), self.unique_id)
 
     # Request information. Session doesn't matter.
     async def getOpenFiles(self) -> List[str]:
