@@ -14,7 +14,7 @@ class WritePytestsRecipe(Step):
 
     async def run(self, sdk: ContinueSDK):
         if self.for_filepath is None:
-            self.for_filepath = (await sdk.ide.getOpenFiles())[0]
+            self.for_filepath = (await sdk.ide.getVisibleFiles())[0]
 
         filename = os.path.basename(self.for_filepath)
         dirname = os.path.dirname(self.for_filepath)

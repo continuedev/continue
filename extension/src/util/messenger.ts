@@ -16,6 +16,8 @@ export abstract class Messenger {
 
   abstract onClose(callback: () => void): void;
 
+  abstract onError(callback: () => void): void;
+
   abstract sendAndReceive(messageType: string, data: any): Promise<any>;
 }
 
@@ -26,6 +28,7 @@ export class WebsocketMessenger extends Messenger {
   } = {};
   private onOpenListeners: (() => void)[] = [];
   private onCloseListeners: (() => void)[] = [];
+  private onErrorListeners: (() => void)[] = [];
   private serverUrl: string;
 
   _newWebsocket(): WebSocket {
@@ -42,6 +45,9 @@ export class WebsocketMessenger extends Messenger {
     }
     for (const listener of this.onCloseListeners) {
       this.onClose(listener);
+    }
+    for (const listener of this.onErrorListeners) {
+      this.onError(listener);
     }
     for (const messageType in this.onMessageListeners) {
       for (const listener of this.onMessageListeners[messageType]) {
@@ -150,5 +156,9 @@ export class WebsocketMessenger extends Messenger {
 
   onClose(callback: () => void): void {
     this.websocket.addEventListener("close", callback);
+  }
+
+  onError(callback: () => void): void {
+    this.websocket.addEventListener("error", callback);
   }
 }

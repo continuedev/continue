@@ -13,6 +13,7 @@ from ...recipes.DeployPipelineAirflowRecipe.main import DeployPipelineAirflowRec
 from ...steps.on_traceback import DefaultOnTracebackStep
 from ...steps.clear_history import ClearHistoryStep
 from ...steps.open_config import OpenConfigStep
+from ...steps.help import HelpStep
 
 # This mapping is used to convert from string in ContinueConfig json to corresponding Step class.
 # Used for example in slash_commands and steps_on_startup
@@ -28,7 +29,8 @@ step_name_to_step_class = {
     "DeployPipelineAirflowRecipe": DeployPipelineAirflowRecipe,
     "DefaultOnTracebackStep": DefaultOnTracebackStep,
     "ClearHistoryStep": ClearHistoryStep,
-    "OpenConfigStep": OpenConfigStep
+    "OpenConfigStep": OpenConfigStep,
+    "HelpStep": HelpStep,
 }
 
 

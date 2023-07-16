@@ -1,13 +1,13 @@
 from functools import cached_property
 import traceback
 import time
-from typing import Any, Callable, Coroutine, Dict, List
+from typing import Any, Callable, Coroutine, Dict, List, Union
 import os
 from aiohttp import ClientPayloadError
+from pydantic import root_validator
 
 from ..models.filesystem import RangeInFileWithContents
 from ..models.filesystem_edit import FileEditWithFullContents
-from ..libs.llm import LLM
 from .observation import Observation, InternalErrorObservation
 from ..server.ide_protocol import AbstractIdeProtocolServer
 from ..libs.util.queue import AsyncSubscriptionQueue
@@ -16,10 +16,10 @@ from .main import Context, ContinueCustomException, HighlightedRangeContext, Pol
 from ..steps.core.core import ReversibleStep, ManualEditStep, UserInputStep
 from ..libs.util.telemetry import capture_event
 from .sdk import ContinueSDK
-import asyncio
 from ..libs.util.step_name_to_steps import get_step_from_name
 from ..libs.util.traceback_parsers import get_python_traceback, get_javascript_traceback
 from openai import error as openai_errors
+from ..libs.util.create_async_task import create_async_task
 
 
 def get_error_title(e: Exception) -> str:
@@ -34,9 +34,11 @@ def get_error_title(e: Exception) -> str:
     elif isinstance(e, ClientPayloadError):
         return "The request to OpenAI failed. Please try again."
     elif isinstance(e, openai_errors.APIConnectionError):
-        return "The request failed. Please check your internet connection and try again."
+        return "The request failed. Please check your internet connection and try again. If this issue persists, you can use our API key for free by going to VS Code settings and changing the value of continue.OPENAI_API_KEY to \"\""
     elif isinstance(e, openai_errors.InvalidRequestError):
         return 'Your API key does not have access to GPT-4. You can use ours for free by going to VS Code settings and changing the value of continue.OPENAI_API_KEY to ""'
+    elif e.__str__().startswith("Cannot connect to host"):
+        return "The request failed. Please check your internet connection and try again."
     return e.__str__() or e.__repr__()
 
 
@@ -45,7 +47,10 @@ class Autopilot(ContinueBaseModel):
     ide: AbstractIdeProtocolServer
     history: History = History.from_empty()
     context: Context = Context()
+    full_state: Union[FullState, None] = None
     _on_update_callbacks: List[Callable[[FullState], None]] = []
+
+    continue_sdk: ContinueSDK = None
 
     _active: bool = False
     _should_halt: bool = False
@@ -54,16 +59,25 @@ class Autopilot(ContinueBaseModel):
     _user_input_queue = AsyncSubscriptionQueue()
     _retry_queue = AsyncSubscriptionQueue()
 
-    @cached_property
-    def continue_sdk(self) -> ContinueSDK:
-        return ContinueSDK(self)
+    @classmethod
+    async def create(cls, policy: Policy, ide: AbstractIdeProtocolServer, full_state: FullState) -> "Autopilot":
+        autopilot = cls(ide=ide, policy=policy)
+        autopilot.continue_sdk = await ContinueSDK.create(autopilot)
+        return autopilot
 
     class Config:
         arbitrary_types_allowed = True
         keep_untouched = (cached_property,)
 
+    @root_validator(pre=True)
+    def fill_in_values(cls, values):
+        full_state: FullState = values.get('full_state')
+        if full_state is not None:
+            values['history'] = full_state.history
+        return values
+
     def get_full_state(self) -> FullState:
-        return FullState(
+        full_state = FullState(
             history=self.history,
             active=self._active,
             user_input_queue=self._main_user_input_queue,
@@ -72,6 +86,8 @@ class Autopilot(ContinueBaseModel):
             slash_commands=self.get_available_slash_commands(),
             adding_highlighted_code=self._adding_highlighted_code,
         )
+        self.full_state = full_state
+        return full_state
 
     def get_available_slash_commands(self) -> List[Dict]:
         custom_commands = list(map(lambda x: {
@@ -207,6 +223,8 @@ class Autopilot(ContinueBaseModel):
     async def delete_at_index(self, index: int):
         self.history.timeline[index].step.hide = True
         self.history.timeline[index].deleted = True
+        self.history.timeline[index].active = False
+
         await self.update_subscribers()
 
     async def delete_context_at_indices(self, indices: List[int]):
@@ -250,7 +268,7 @@ class Autopilot(ContinueBaseModel):
         #     i -= 1
 
         capture_event(self.continue_sdk.ide.unique_id, 'step run', {
-                      'step_name': step.name, 'params': step.dict()})
+            'step_name': step.name, 'params': step.dict()})
 
         if not is_future_step:
             # Check manual edits buffer, clear out if needed by creating a ManualEditStep
@@ -284,12 +302,13 @@ class Autopilot(ContinueBaseModel):
                 e.__class__, ContinueCustomException)
 
             error_string = e.message if is_continue_custom_exception else '\n'.join(
-                traceback.format_tb(e.__traceback__)) + f"\n\n{e.__repr__()}"
+                traceback.format_exception(e))
             error_title = e.title if is_continue_custom_exception else get_error_title(
                 e)
 
             # Attach an InternalErrorObservation to the step and unhide it.
-            print(f"Error while running step: \n{error_string}\n{error_title}")
+            print(
+                f"Error while running step: \n{error_string}\n{error_title}")
             capture_event(self.continue_sdk.ide.unique_id, 'step error', {
                 'error_message': error_string, 'error_title': error_title, 'step_name': step.name, 'params': step.dict()})
 
@@ -341,7 +360,8 @@ class Autopilot(ContinueBaseModel):
             # Update subscribers with new description
             await self.update_subscribers()
 
-        asyncio.create_task(update_description())
+        create_async_task(update_description(),
+                          self.continue_sdk.ide.unique_id)
 
         return observation
 

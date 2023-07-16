@@ -2,21 +2,30 @@ import * as os from "os";
 import * as path from "path";
 import * as fs from "fs";
 import * as vscode from "vscode";
-import { ideProtocolClient } from "./activation/activate";
+import { extensionContext, ideProtocolClient } from "./activation/activate";
+import { getMetaKeyLabel } from "./util/util";
+import { devDataPath } from "./activation/environmentSetup";
 
 interface DiffInfo {
   originalFilepath: string;
   newFilepath: string;
   editor?: vscode.TextEditor;
   step_index: number;
+  range: vscode.Range;
 }
 
-export const DIFF_DIRECTORY = path.join(os.homedir(), ".continue", "diffs");
+export const DIFF_DIRECTORY = path
+  .join(os.homedir(), ".continue", "diffs")
+  .replace(/^C:/, "c:");
 
 class DiffManager {
   // Create a temporary file in the global .continue directory which displays the updated version
   // Doing this because virtual files are read-only
   private diffs: Map<string, DiffInfo> = new Map();
+
+  diffAtNewFilepath(newFilepath: string): DiffInfo | undefined {
+    return this.diffs.get(newFilepath);
+  }
 
   private setupDirectory() {
     // Make sure the diff directory exists
@@ -35,6 +44,10 @@ class DiffManager {
     return filepath.replace(/\\/g, "_").replace(/\//g, "_");
   }
 
+  private getNewFilepath(originalFilepath: string): string {
+    return path.join(DIFF_DIRECTORY, this.escapeFilepath(originalFilepath));
+  }
+
   private openDiffEditor(
     originalFilepath: string,
     newFilepath: string
@@ -47,7 +60,7 @@ class DiffManager {
       return undefined;
     }
 
-    const rightUri = vscode.Uri.parse(newFilepath);
+    const rightUri = vscode.Uri.file(newFilepath);
     const leftUri = vscode.Uri.file(originalFilepath);
     const title = "Continue Diff";
     console.log(
@@ -70,7 +83,40 @@ class DiffManager {
       .getConfiguration("diffEditor", editor.document.uri)
       .update("codeLens", true, vscode.ConfigurationTarget.Global);
 
+    if (
+      extensionContext?.globalState.get<boolean>(
+        "continue.showDiffInfoMessage"
+      ) !== false
+    ) {
+      vscode.window
+        .showInformationMessage(
+          `Accept (${getMetaKeyLabel()}⇧↩) or reject (${getMetaKeyLabel()}⇧⌫) at the top of the file.`,
+          "Got it",
+          "Don't show again"
+        )
+        .then((selection) => {
+          if (selection === "Don't show again") {
+            // Get the global state
+            extensionContext?.globalState.update(
+              "continue.showDiffInfoMessage",
+              false
+            );
+          }
+        });
+    }
+
     return editor;
+  }
+
+  private _findFirstDifferentLine(contentA: string, contentB: string): number {
+    const linesA = contentA.split("\n");
+    const linesB = contentB.split("\n");
+    for (let i = 0; i < linesA.length && i < linesB.length; i++) {
+      if (linesA[i] !== linesB[i]) {
+        return i;
+      }
+    }
+    return 0;
   }
 
   writeDiff(
@@ -81,18 +127,20 @@ class DiffManager {
     this.setupDirectory();
 
     // Create or update existing diff
-    const newFilepath = path.join(
-      DIFF_DIRECTORY,
-      this.escapeFilepath(originalFilepath)
-    );
+    const newFilepath = this.getNewFilepath(originalFilepath);
     fs.writeFileSync(newFilepath, newContent);
 
     // Open the diff editor if this is a new diff
     if (!this.diffs.has(newFilepath)) {
+      // Figure out the first line that is different
+      const oldContent = ideProtocolClient.readFile(originalFilepath);
+      const line = this._findFirstDifferentLine(oldContent, newContent);
+
       const diffInfo: DiffInfo = {
         originalFilepath,
         newFilepath,
         step_index,
+        range: new vscode.Range(line, 0, line + 1, 0),
       };
       this.diffs.set(newFilepath, diffInfo);
     }
@@ -103,6 +151,11 @@ class DiffManager {
       diffInfo.editor = this.openDiffEditor(originalFilepath, newFilepath);
       this.diffs.set(newFilepath, diffInfo);
     }
+
+    vscode.commands.executeCommand(
+      "workbench.action.files.revert",
+      vscode.Uri.file(newFilepath)
+    );
 
     return newFilepath;
   }
@@ -117,10 +170,38 @@ class DiffManager {
     fs.unlinkSync(diffInfo.newFilepath);
   }
 
+  private inferNewFilepath() {
+    const activeEditorPath =
+      vscode.window.activeTextEditor?.document.uri.fsPath;
+    if (activeEditorPath && path.dirname(activeEditorPath) === DIFF_DIRECTORY) {
+      return activeEditorPath;
+    }
+    const visibleEditors = vscode.window.visibleTextEditors.map(
+      (editor) => editor.document.uri.fsPath
+    );
+    for (const editorPath of visibleEditors) {
+      if (path.dirname(editorPath) === DIFF_DIRECTORY) {
+        for (const otherEditorPath of visibleEditors) {
+          if (
+            path.dirname(otherEditorPath) !== DIFF_DIRECTORY &&
+            this.getNewFilepath(otherEditorPath) === editorPath
+          ) {
+            return editorPath;
+          }
+        }
+      }
+    }
+
+    if (this.diffs.size === 1) {
+      return Array.from(this.diffs.keys())[0];
+    }
+    return undefined;
+  }
+
   acceptDiff(newFilepath?: string) {
-    // If no newFilepath is provided and there is only one in the dictionary, use that
-    if (!newFilepath && this.diffs.size === 1) {
-      newFilepath = Array.from(this.diffs.keys())[0];
+    // When coming from a keyboard shortcut, we have to infer the newFilepath from visible text editors
+    if (!newFilepath) {
+      newFilepath = this.inferNewFilepath();
     }
     if (!newFilepath) {
       console.log("No newFilepath provided to accept the diff");
@@ -132,20 +213,32 @@ class DiffManager {
       console.log("No corresponding diffInfo found for newFilepath");
       return;
     }
-    fs.writeFileSync(
-      diffInfo.originalFilepath,
-      fs.readFileSync(diffInfo.newFilepath)
-    );
-    this.cleanUpDiff(diffInfo);
+
+    // Save the right-side file, then copy over to original
+    vscode.workspace.textDocuments
+      .find((doc) => doc.uri.fsPath === newFilepath)
+      ?.save()
+      .then(() => {
+        fs.writeFileSync(
+          diffInfo.originalFilepath,
+          fs.readFileSync(diffInfo.newFilepath)
+        );
+        this.cleanUpDiff(diffInfo);
+      });
+
+    recordAcceptReject(true, diffInfo);
   }
 
   rejectDiff(newFilepath?: string) {
     // If no newFilepath is provided and there is only one in the dictionary, use that
-    if (!newFilepath && this.diffs.size === 1) {
-      newFilepath = Array.from(this.diffs.keys())[0];
+    if (!newFilepath) {
+      newFilepath = this.inferNewFilepath();
     }
     if (!newFilepath) {
-      console.log("No newFilepath provided to reject the diff");
+      console.log(
+        "No newFilepath provided to reject the diff, diffs.size was",
+        this.diffs.size
+      );
       return;
     }
     const diffInfo = this.diffs.get(newFilepath);
@@ -157,11 +250,55 @@ class DiffManager {
     // Stop the step at step_index in case it is still streaming
     ideProtocolClient.deleteAtIndex(diffInfo.step_index);
 
-    this.cleanUpDiff(diffInfo);
+    vscode.workspace.textDocuments
+      .find((doc) => doc.uri.fsPath === newFilepath)
+      ?.save()
+      .then(() => {
+        this.cleanUpDiff(diffInfo);
+      });
+
+    recordAcceptReject(false, diffInfo);
   }
 }
 
 export const diffManager = new DiffManager();
+
+function recordAcceptReject(accepted: boolean, diffInfo: DiffInfo) {
+  const collectOn = vscode.workspace
+    .getConfiguration("continue")
+    .get<boolean>("dataSwitch");
+
+  if (collectOn) {
+    const devDataDir = devDataPath();
+    const suggestionsPath = path.join(devDataDir, "suggestions.json");
+
+    // Initialize suggestions list
+    let suggestions = [];
+
+    // Check if suggestions.json exists
+    if (fs.existsSync(suggestionsPath)) {
+      const rawData = fs.readFileSync(suggestionsPath, "utf-8");
+      suggestions = JSON.parse(rawData);
+    }
+
+    // Add the new suggestion to the list
+    suggestions.push({
+      accepted,
+      timestamp: Date.now(),
+      suggestion: diffInfo.originalFilepath,
+    });
+
+    // Send the suggestion to the server
+    ideProtocolClient.sendAcceptRejectSuggestion(accepted);
+
+    // Write the updated suggestions back to the file
+    fs.writeFileSync(
+      suggestionsPath,
+      JSON.stringify(suggestions, null, 4),
+      "utf-8"
+    );
+  }
+}
 
 export async function acceptDiffCommand(newFilepath?: string) {
   diffManager.acceptDiff(newFilepath);

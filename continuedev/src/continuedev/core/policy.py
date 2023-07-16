@@ -59,11 +59,8 @@ class DemoPolicy(Policy):
             return (
                 MessageStep(name="Welcome to Continue", message=dedent("""\
                     - Highlight code and ask a question or give instructions
-                    - Use `cmd+k` (Mac) / `ctrl+k` (Windows) to open Continue
-                    - Use `cmd+shift+e` / `ctrl+shift+e` to open file Explorer
-                    - Add your own OpenAI API key to VS Code Settings with `cmd+,`
-                    - Use slash commands when you want fine-grained control
-                    - Past steps are included as part of the context by default""")) >>
+                    - Use `cmd+m` (Mac) / `ctrl+m` (Windows) to open Continue
+                    - Use `/help` to ask questions about how to use Continue""")) >>
                 WelcomeStep() >>
                 # SetupContinueWorkspaceStep() >>
                 # CreateCodebaseIndexChroma() >>
