@@ -156,8 +156,12 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
             "data": data
         })
 
-    async def _receive_json(self, message_type: str) -> Any:
-        return await self.sub_queue.get(message_type)
+    async def _receive_json(self, message_type: str, timeout: int = 5) -> Any:
+        try:
+            return await asyncio.wait_for(self.sub_queue.get(message_type), timeout=timeout)
+        except asyncio.TimeoutError:
+            raise Exception(
+                "IDE Protocol _receive_json timed out after 5 seconds")
 
     async def _send_and_receive_json(self, data: Any, resp_model: Type[T], message_type: str) -> T:
         await self._send_json(message_type, data)

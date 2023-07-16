@@ -28,8 +28,6 @@ async function retryThenFail(
         );
         console.log("Execution policy stdout: ", stdout);
         console.log("Execution policy stderr: ", stderr);
-        // Then reload the window for this to take effect
-        await vscode.commands.executeCommand("workbench.action.reloadWindow");
       }
     }
 
@@ -447,7 +445,8 @@ export async function startContinuePythonServer() {
           console.log(`stdout: ${data}`);
           if (
             data.includes("Uvicorn running on") || // Successfully started the server
-            data.includes("address already in use") // The server is already running (probably a simultaneously opened VS Code window)
+            data.includes("only one usage of each socket address") || // [windows] The server is already running (probably a simultaneously opened VS Code window)
+            data.includes("address already in use") // [mac/linux] The server is already running (probably a simultaneously opened VS Code window)
           ) {
             console.log("Successfully started Continue python server");
             resolve(null);
