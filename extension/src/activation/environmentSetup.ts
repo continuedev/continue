@@ -21,11 +21,16 @@ async function retryThenFail(
 ): Promise<any> {
   try {
     if (retries < MAX_RETRIES && process.platform === "win32") {
-      const [stdout, stderr] = await runCommand(
-        "Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser"
-      );
-      console.log("Execution policy stdout: ", stdout);
-      console.log("Execution policy stderr: ", stderr);
+      let [stdout, stderr] = await runCommand("Get-ExecutionPolicy");
+      if (!stdout.includes("RemoteSigned")) {
+        [stdout, stderr] = await runCommand(
+          "Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser"
+        );
+        console.log("Execution policy stdout: ", stdout);
+        console.log("Execution policy stderr: ", stderr);
+        // Then reload the window for this to take effect
+        await vscode.commands.executeCommand("workbench.action.reloadWindow");
+      }
     }
 
     return await fn();
@@ -238,45 +243,50 @@ async function setupPythonEnv() {
     pipCmd
   );
 
-  // First, create the virtual environment
-  if (checkEnvExists()) {
-    console.log("Python env already exists, skipping...");
-  } else {
-    // Assemble the command to create the env
-    const createEnvCommand = [
-      `cd "${serverPath()}"`,
-      `${pythonCmd} -m venv env`,
-    ].join(" ; ");
-
-    const [stdout, stderr] = await runCommand(createEnvCommand);
-    if (
-      stderr &&
-      stderr.includes("running scripts is disabled on this system")
-    ) {
-      await vscode.window.showErrorMessage(WINDOWS_REMOTE_SIGNED_SCRIPTS_ERROR);
-      throw new Error(stderr);
-    } else if (
-      stderr?.includes("On Debian/Ubuntu systems") ||
-      stdout?.includes("On Debian/Ubuntu systems")
-    ) {
-      const msg = await getLinuxAptInstallError(pythonCmd);
-      console.log(msg);
-      await vscode.window.showErrorMessage(msg);
-    } else if (checkEnvExists()) {
-      console.log("Successfully set up python env at ", `${serverPath()}/env`);
-    } else {
-      const msg = [
-        "Python environment not successfully created. Trying again. Here was the stdout + stderr: ",
-        `stdout: ${stdout}`,
-        `stderr: ${stderr}`,
-      ].join("\n\n");
-      console.log(msg);
-      throw new Error(msg);
-    }
-  }
-
-  // Install the requirements
   await retryThenFail(async () => {
+    // First, create the virtual environment
+    if (checkEnvExists()) {
+      console.log("Python env already exists, skipping...");
+    } else {
+      // Assemble the command to create the env
+      const createEnvCommand = [
+        `cd "${serverPath()}"`,
+        `${pythonCmd} -m venv env`,
+      ].join(" ; ");
+
+      const [stdout, stderr] = await runCommand(createEnvCommand);
+      if (
+        stderr &&
+        stderr.includes("running scripts is disabled on this system")
+      ) {
+        await vscode.window.showErrorMessage(
+          WINDOWS_REMOTE_SIGNED_SCRIPTS_ERROR
+        );
+        throw new Error(stderr);
+      } else if (
+        stderr?.includes("On Debian/Ubuntu systems") ||
+        stdout?.includes("On Debian/Ubuntu systems")
+      ) {
+        const msg = await getLinuxAptInstallError(pythonCmd);
+        console.log(msg);
+        await vscode.window.showErrorMessage(msg);
+      } else if (checkEnvExists()) {
+        console.log(
+          "Successfully set up python env at ",
+          `${serverPath()}/env`
+        );
+      } else {
+        const msg = [
+          "Python environment not successfully created. Trying again. Here was the stdout + stderr: ",
+          `stdout: ${stdout}`,
+          `stderr: ${stderr}`,
+        ].join("\n\n");
+        console.log(msg);
+        throw new Error(msg);
+      }
+    }
+
+    // Install the requirements
     if (await checkRequirementsInstalled()) {
       console.log("Python requirements already installed, skipping...");
     } else {
