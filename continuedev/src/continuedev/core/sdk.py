@@ -82,7 +82,7 @@ class Models:
 
     @cached_property
     def ggml(self):
-        return GGML("", "ggml")
+        return GGML()
 
     def __model_from_name(self, model_name: str):
         if model_name == "starcoder":
@@ -93,12 +93,13 @@ class Models:
             return self.gpt3516k
         elif model_name == "gpt-4":
             return self.gpt4
+        elif model_name == "ggml":
+            return self.ggml
         else:
             raise Exception(f"Unknown model {model_name}")
 
     @property
     def default(self):
-        return self.ggml
         default_model = self.sdk.config.default_model
         return self.__model_from_name(default_model) if default_model is not None else self.gpt4
 

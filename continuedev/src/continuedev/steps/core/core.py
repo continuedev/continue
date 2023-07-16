@@ -192,7 +192,8 @@ class DefaultModelEditCodeStep(Step):
         # We care because if this prompt itself goes over the limit, then the entire message will have to be cut from the completion.
         # Overflow won't happen, but prune_chat_messages in count_tokens.py will cut out this whole thing, instead of us cutting out only as many lines as we need.
         model_to_use = sdk.models.default
-        max_tokens = DEFAULT_MAX_TOKENS
+        max_tokens = MAX_TOKENS_FOR_MODEL.get(
+            model_to_use.name, DEFAULT_MAX_TOKENS) / 2
 
         TOKENS_TO_BE_CONSIDERED_LARGE_RANGE = 1200
         if model_to_use.count_tokens(rif.contents) > TOKENS_TO_BE_CONSIDERED_LARGE_RANGE:
@@ -498,7 +499,7 @@ Please output the code to be inserted at the cursor in order to fulfill the user
 
         if isinstance(model_to_use, GGML):
             messages = [ChatMessage(
-                role="user", content=f"```\n{rif.contents}\n```\n{self.user_input}\n```\n", summary=self.user_input)]
+                role="user", content=f"```\n{rif.contents}\n```\n\nUser request: \"{self.user_input}\"\n\nThis is the code after changing to perfectly comply with the user request. It does not include any placeholder code, only real implementations:\n\n```\n", summary=self.user_input)]
 
         generator = model_to_use.stream_chat(
             messages, temperature=0, max_tokens=max_tokens)
