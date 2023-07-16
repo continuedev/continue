@@ -260,34 +260,34 @@ async function createPythonVenv(pythonCmd: string) {
       await vscode.window.showErrorMessage(msg);
     } else if (checkEnvExists()) {
       console.log("Successfully set up python env at ", `${serverPath()}/env`);
+    } else if (
+      stderr?.includes("Permission denied") &&
+      stderr?.includes("python.exe")
+    ) {
+      // This might mean that another window is currently using the python.exe file to install requirements
+      // So we want to wait and try again
+      let i = 0;
+      await new Promise((resolve, reject) =>
+        setInterval(() => {
+          if (i > 5) {
+            reject("Timed out waiting for other window to create env...");
+          }
+          if (checkEnvExists()) {
+            resolve(null);
+          } else {
+            console.log("Waiting for other window to create env...");
+          }
+          i++;
+        }, 5000)
+      );
     } else {
-      try {
-        // This might mean that another window is currently using the python.exe file to install requirements
-        // So we want to wait and try again
-        let i = 0;
-        await new Promise((resolve, reject) =>
-          setInterval(() => {
-            if (i > 5) {
-              reject();
-            }
-            if (checkEnvExists()) {
-              resolve(null);
-            } else {
-              console.log("Waiting for other window to create env...");
-            }
-            i++;
-          }, 5000)
-        );
-      } catch (e) {
-        const msg = [
-          "Python environment not successfully created. Trying again. Here was the stdout + stderr: ",
-          `stdout: ${stdout}`,
-          `stderr: ${stderr}`,
-          `e: ${e}`,
-        ].join("\n\n");
-        console.log(msg);
-        throw new Error(msg);
-      }
+      const msg = [
+        "Python environment not successfully created. Trying again. Here was the stdout + stderr: ",
+        `stdout: ${stdout}`,
+        `stderr: ${stderr}`,
+      ].join("\n\n");
+      console.log(msg);
+      throw new Error(msg);
     }
   }
 }
