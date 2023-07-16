@@ -34,6 +34,13 @@ const commandsMap: { [command: string]: (...args: any) => any } = {
   "continue.rejectDiff": rejectDiffCommand,
   "continue.acceptAllSuggestions": acceptAllSuggestionsCommand,
   "continue.rejectAllSuggestions": rejectAllSuggestionsCommand,
+  "continue.quickFix": async (message: string, code: string, edit: boolean) => {
+    ideProtocolClient.sendMainUserInput(
+      `${
+        edit ? "/edit " : ""
+      }${code}\n\nHow do I fix this problem in the above code?: ${message}`
+    );
+  },
   "continue.focusContinueInput": async () => {
     if (focusedOnContinueInput) {
       vscode.commands.executeCommand("workbench.action.focusActiveEditorGroup");
