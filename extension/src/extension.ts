@@ -3,17 +3,17 @@
  */
 
 import * as vscode from "vscode";
-import {
-  isPythonEnvSetup,
-  startContinuePythonServer,
-} from "./activation/environmentSetup";
 
-async function dynamicImportAndActivate(
-  context: vscode.ExtensionContext,
-  showTutorial: boolean
-) {
+async function dynamicImportAndActivate(context: vscode.ExtensionContext) {
   const { activateExtension } = await import("./activation/activate");
-  await activateExtension(context, showTutorial);
+  try {
+    await activateExtension(context);
+  } catch (e) {
+    console.log("Error activating extension: ", e);
+    vscode.window.showInformationMessage(
+      "Error activating the Continue extension."
+    );
+  }
 }
 
 export function activate(context: vscode.ExtensionContext) {
@@ -25,7 +25,7 @@ export function activate(context: vscode.ExtensionContext) {
       cancellable: false,
     },
     async () => {
-      dynamicImportAndActivate(context, true);
+      dynamicImportAndActivate(context);
     }
   );
 }

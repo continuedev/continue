@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import styled, { keyframes } from "styled-components";
 import {
   appear,
@@ -15,9 +15,9 @@ import {
 } from "@styled-icons/heroicons-outline";
 import { StopCircle } from "@styled-icons/heroicons-solid";
 import { HistoryNode } from "../../../schema/HistoryNode";
-import ReactMarkdown from "react-markdown";
 import HeaderButtonWithText from "./HeaderButtonWithText";
-import CodeBlock from "./CodeBlock";
+import MarkdownPreview from "@uiw/react-markdown-preview";
+import { getMetaKeyLabel, isMetaEquivalentKeyPressed } from "../util";
 
 interface StepContainerProps {
   historyNode: HistoryNode;
@@ -72,19 +72,6 @@ const ContentDiv = styled.div<{ isUserInput: boolean }>`
   font-size: 13px;
 `;
 
-const MarkdownPre = styled.pre`
-  background-color: ${secondaryDark};
-  padding: 10px;
-  border-radius: ${defaultBorderRadius};
-  border: 0.5px solid white;
-`;
-
-const StyledCode = styled.code`
-  word-wrap: break-word;
-  color: #f69292;
-  background: transparent;
-`;
-
 const gradient = keyframes`
   0% {
     background-position: 0px 0;
@@ -124,6 +111,31 @@ const GradientBorder = styled.div<{
   background-size: 200% 200%;
 `;
 
+const StyledMarkdownPreview = styled(MarkdownPreview)`
+  pre {
+    background-color: ${secondaryDark};
+    padding: 1px;
+    border-radius: ${defaultBorderRadius};
+    border: 0.5px solid white;
+  }
+
+  code {
+    color: #f69292;
+    word-wrap: break-word;
+  }
+
+  pre > code {
+    background-color: ${secondaryDark};
+    color: white;
+  }
+
+  background-color: ${vscBackground};
+  font-family: "Lexend", sans-serif;
+  font-size: 13px;
+  padding: 8px;
+  color: white;
+`;
+
 // #endregion
 
 function StepContainer(props: StepContainerProps) {
@@ -158,7 +170,7 @@ function StepContainer(props: StepContainerProps) {
     >
       <StepContainerDiv open={props.open}>
         <GradientBorder
-          loading={props.historyNode.active as boolean | false}
+          loading={(props.historyNode.active as boolean) || false}
           isFirst={props.isFirst}
           isLast={props.isLast}
           borderColor={
@@ -170,7 +182,7 @@ function StepContainer(props: StepContainerProps) {
           }
           className="overflow-hidden cursor-pointer"
           onClick={(e) => {
-            if (e.metaKey) {
+            if (isMetaEquivalentKeyPressed(e)) {
               props.onToggleAll();
             } else {
               props.onToggle();
@@ -178,7 +190,7 @@ function StepContainer(props: StepContainerProps) {
           }}
         >
           <HeaderDiv
-            loading={props.historyNode.active as boolean | false}
+            loading={(props.historyNode.active as boolean) || false}
             error={props.historyNode.observation?.error ? true : false}
           >
             <div className="m-2">
@@ -206,7 +218,11 @@ function StepContainer(props: StepContainerProps) {
                   e.stopPropagation();
                   props.onDelete();
                 }}
-                text={props.historyNode.active ? "Stop (⌘⌫)" : "Delete"}
+                text={
+                  props.historyNode.active
+                    ? `Stop (${getMetaKeyLabel()}⌫)`
+                    : "Delete"
+                }
               >
                 {props.historyNode.active ? (
                   <StopCircle size="1.6em" onClick={props.onDelete} />
@@ -242,31 +258,16 @@ function StepContainer(props: StepContainerProps) {
           )}
 
           {props.historyNode.observation?.error ? (
-            <pre className="overflow-x-scroll">
-              {props.historyNode.observation.error as string}
-            </pre>
+            <details>
+              <summary>View Traceback</summary>
+              <pre className="overflow-x-scroll">
+                {props.historyNode.observation.error as string}
+              </pre>
+            </details>
           ) : (
-            <ReactMarkdown
-              key={1}
-              className="overflow-x-scroll"
-              components={{
-                pre: ({ node, ...props }) => {
-                  return (
-                    <CodeBlock
-                      children={(props.children[0] as any).props.children[0]}
-                    />
-                  );
-                },
-                code: ({ node, ...props }) => {
-                  return <StyledCode children={props.children[0] as any} />;
-                },
-                ul: ({ node, ...props }) => {
-                  return <ul className="ml-0" {...props} />;
-                },
-              }}
-            >
-              {props.historyNode.step.description as any}
-            </ReactMarkdown>
+            <StyledMarkdownPreview
+              source={props.historyNode.step.description || ""}
+            />
           )}
         </ContentDiv>
       </StepContainerDiv>

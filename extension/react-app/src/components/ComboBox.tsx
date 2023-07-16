@@ -1,30 +1,19 @@
-import React, {
-  useCallback,
-  useEffect,
-  useImperativeHandle,
-  useState,
-} from "react";
+import React, { useEffect, useImperativeHandle, useState } from "react";
 import { useCombobox } from "downshift";
 import styled from "styled-components";
 import {
-  buttonColor,
   defaultBorderRadius,
   lightGray,
   secondaryDark,
   vscBackground,
 } from ".";
 import CodeBlock from "./CodeBlock";
-import { RangeInFile } from "../../../src/client";
 import PillButton from "./PillButton";
 import HeaderButtonWithText from "./HeaderButtonWithText";
-import {
-  Trash,
-  LockClosed,
-  LockOpen,
-  Plus,
-  DocumentPlus,
-} from "@styled-icons/heroicons-outline";
+import { DocumentPlus } from "@styled-icons/heroicons-outline";
 import { HighlightedRangeContext } from "../../../schema/FullState";
+import { postVscMessage } from "../vscode";
+import { getMetaKeyLabel } from "../util";
 
 // #region styled components
 const mainInputFontSize = 13;
@@ -180,6 +169,27 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
 
   useImperativeHandle(ref, () => downshiftProps, [downshiftProps]);
 
+  const [metaKeyPressed, setMetaKeyPressed] = useState(false);
+  const [focused, setFocused] = useState(false);
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Meta") {
+        setMetaKeyPressed(true);
+      }
+    };
+    const handleKeyUp = (e: KeyboardEvent) => {
+      if (e.key === "Meta") {
+        setMetaKeyPressed(false);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("keyup", handleKeyUp);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("keyup", handleKeyUp);
+    };
+  });
+
   useEffect(() => {
     if (!inputRef.current) {
       return;
@@ -221,6 +231,11 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
         )} */}
         {highlightedCodeSections.map((section, idx) => (
           <PillButton
+            warning={
+              section.range.contents.length > 4000 && section.editing
+                ? "Editing such a large range may be slow"
+                : undefined
+            }
             editing={section.editing}
             pinned={section.pinned}
             index={idx}
@@ -272,7 +287,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
       <div className="flex px-2" ref={divRef} hidden={!downshiftProps.isOpen}>
         <MainTextInput
           disabled={props.disabled}
-          placeholder="Ask a question, give instructions, or type '/' to see slash commands"
+          placeholder={`Ask a question, give instructions, or type '/' to see slash commands. ${getMetaKeyLabel()}⏎ to edit.`}
           {...getInputProps({
             onChange: (e) => {
               const target = e.target as HTMLTextAreaElement;
@@ -284,6 +299,13 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
               ).toString()}px`;
 
               // setShowContextDropdown(target.value.endsWith("@"));
+            },
+            onFocus: (e) => {
+              setFocused(true);
+            },
+            onBlur: (e) => {
+              setFocused(false);
+              postVscMessage("blurContinueInput", {});
             },
             onKeyDown: (event) => {
               if (event.key === "Enter" && event.shiftKey) {
@@ -311,7 +333,6 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
               ) {
                 (event.nativeEvent as any).preventDownshiftDefault = true;
               } else if (event.key === "ArrowUp") {
-                console.log("OWJFOIJO");
                 if (positionInHistory == 0) return;
                 else if (
                   positionInHistory == history.length &&
@@ -357,10 +378,15 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
             ))}
         </Ul>
       </div>
-      {/* <span className="text-trueGray-400 ml-auto m-auto text-xs text-right">
-        Highlight code to include as context. Currently open file included by
-        default. {highlightedCodeSections.length === 0 && ""}
-      </span> */}
+      {highlightedCodeSections.length === 0 &&
+        (downshiftProps.inputValue?.startsWith("/edit") ||
+          (focused &&
+            metaKeyPressed &&
+            downshiftProps.inputValue?.length > 0)) && (
+          <div className="text-trueGray-400 pr-4 text-xs text-right">
+            Inserting at cursor
+          </div>
+        )}
       <ContextDropdown
         onMouseEnter={() => {
           setHoveringContextDropdown(true);

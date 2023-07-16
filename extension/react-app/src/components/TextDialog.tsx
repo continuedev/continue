@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from "react";
 import styled from "styled-components";
 import { Button, buttonColor, secondaryDark, vscBackground } from ".";
+import { isMetaEquivalentKeyPressed } from "../util";
 
 const ScreenCover = styled.div`
   position: absolute;
@@ -81,7 +82,11 @@ const TextDialog = (props: {
             rows={10}
             ref={textAreaRef}
             onKeyDown={(e) => {
-              if (e.key === "Enter" && e.metaKey && textAreaRef.current) {
+              if (
+                e.key === "Enter" &&
+                isMetaEquivalentKeyPressed(e) &&
+                textAreaRef.current
+              ) {
                 props.onEnter(textAreaRef.current.value);
                 setText("");
               } else if (e.key === "Escape") {

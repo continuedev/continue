@@ -1,27 +1,43 @@
-import { RangeInFile } from "../../../src/client";
+type Platform = "mac" | "linux" | "windows" | "unknown";
 
-export function readRangeInVirtualFileSystem(
-  rangeInFile: RangeInFile,
-  filesystem: { [filepath: string]: string }
-): string | undefined {
-  const range = rangeInFile.range;
-
-  let data = filesystem[rangeInFile.filepath];
-  if (data === undefined) {
-    console.log("File not found");
-    return undefined;
+export function getPlatform(): Platform {
+  const platform = window.navigator.platform.toUpperCase();
+  if (platform.indexOf("MAC") >= 0) {
+    return "mac";
+  } else if (platform.indexOf("LINUX") >= 0) {
+    return "linux";
+  } else if (platform.indexOf("WIN") >= 0) {
+    return "windows";
   } else {
-    let lines = data.toString().split("\n");
-    if (range.start.line === range.end.line) {
-      return lines[rangeInFile.range.start.line].slice(
-        rangeInFile.range.start.character,
-        rangeInFile.range.end.character
-      );
-    } else {
-      let firstLine = lines[range.start.line].slice(range.start.character);
-      let lastLine = lines[range.end.line].slice(0, range.end.character);
-      let middleLines = lines.slice(range.start.line + 1, range.end.line);
-      return [firstLine, ...middleLines, lastLine].join("\n");
-    }
+    return "unknown";
+  }
+}
+
+export function isMetaEquivalentKeyPressed(event: {
+  metaKey: boolean;
+  ctrlKey: boolean;
+}): boolean {
+  const platform = getPlatform();
+  switch (platform) {
+    case "mac":
+      return event.metaKey;
+    case "linux":
+    case "windows":
+      return event.ctrlKey;
+    default:
+      return event.metaKey;
+  }
+}
+
+export function getMetaKeyLabel(): string {
+  const platform = getPlatform();
+  switch (platform) {
+    case "mac":
+      return "⌘";
+    case "linux":
+    case "windows":
+      return "^";
+    default:
+      return "⌘";
   }
 }

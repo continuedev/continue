@@ -14,7 +14,7 @@
   "displayName": "Continue",
   "pricing": "Free",
   "description": "The open-source coding autopilot",
-  "version": "0.0.143",
+  "version": "0.0.175",
   "publisher": "Continue",
   "engines": {
     "vscode": "^1.67.0"
@@ -44,18 +44,13 @@
     "configuration": {
       "title": "Continue",
       "properties": {
-        "continue.automode": {
-          "type": "boolean",
-          "default": true,
-          "description": "Automatically find relevant code and suggest a fix whenever a traceback is found."
-        },
         "continue.serverUrl": {
           "type": "string",
           "default": "http://localhost:65432",
           "description": "The URL of the Continue server to use."
         },
         "continue.OPENAI_API_KEY": {
-          "type": "password",
+          "type": "string",
           "default": null,
           "description": "The OpenAI API key to use for code generation."
         },
@@ -111,13 +106,18 @@
         "command": "continue.quickTextEntry",
         "category": "Continue",
         "title": "Quick Text Entry"
+      },
+      {
+        "command": "continue.quickFix",
+        "category": "Continue",
+        "title": "Quick Fix"
       }
     ],
     "keybindings": [
       {
         "command": "continue.focusContinueInput",
-        "mac": "cmd+k",
-        "key": "ctrl+k"
+        "mac": "cmd+m",
+        "key": "ctrl+m"
       },
       {
         "command": "continue.suggestionDown",
@@ -181,7 +181,7 @@
           {
             "id": "edit",
             "title": "Edit in natural language",
-            "description": "Highlight a section of code and instruct Continue to refactor it (e.g. `/edit Make this use more descriptive variable names`)",
+            "description": "Highlight a section of code and instruct Continue to refactor it (e.g. `/edit rewrite this function to be async`)",
             "media": {
               "image": "media/edit.png",
               "altText": "Empty image"
@@ -191,7 +191,7 @@
           {
             "id": "explain",
             "title": "Get possible explanations",
-            "description": "Ask Continue about a part of your code to get another perspective (e.g. `how do I find running process on port 8000?`)",
+            "description": "Ask Continue about a part of your code to get another perspective (e.g. `where in the page should I be making this request to the backend?`)",
             "media": {
               "image": "media/explain.png",
               "altText": "Empty image"
@@ -201,7 +201,7 @@
           {
             "id": "generate",
             "title": "Generate files from scratch",
-            "description": "Let Continue build the scaffolding of Python scripts, React components, and more (e.g. `Create a shell script to back up my home dir to /tmp/`)",
+            "description": "Let Continue build the scaffolding of Python scripts, React components, and more (e.g. `/edit here is a connector for postgres, now write one for kafka`)",
             "media": {
               "image": "media/generate.png",
               "altText": "Empty image"
@@ -227,7 +227,7 @@
     "test": "node ./out/test/runTest.js",
     "jest": "jest --config ./jest.config.js",
     "package": "cp ./config/prod_config.json ./config/config.json && mkdir -p ./build && vsce package --out ./build && cp ./config/dev_config.json ./config/config.json",
-    "full-package": "cd ../continuedev && poetry build && cp ./dist/continuedev-0.1.2-py3-none-any.whl ../extension/scripts/continuedev-0.1.2-py3-none-any.whl && cd ../extension && npm install && npm run typegen && npm run clientgen && cd react-app && npm install && npm run build && cd .. && npm run package",
+    "full-package": "cd ../continuedev && poetry build && cp ./dist/continuedev-0.1.2-py3-none-any.whl ../extension/server/continuedev-0.1.2-py3-none-any.whl && cd ../extension && npm install && npm run typegen && npm run clientgen && cd react-app && npm install && npm run build && cd .. && npm run package",
     "install-extension": "code --install-extension ./build/continue-0.0.8.vsix",
     "uninstall": "code --uninstall-extension .continue",
     "reinstall": "rm -rf ./build && npm run package && npm run uninstall && npm run install-extension"

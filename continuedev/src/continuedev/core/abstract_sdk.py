@@ -76,9 +76,7 @@ class AbstractContinueSDK(ABC):
     async def get_user_secret(self, env_var: str, prompt: str) -> str:
         pass
 
-    @abstractproperty
-    def config(self) -> ContinueConfig:
-        pass
+    config: ContinueConfig
 
     @abstractmethod
     def set_loading_message(self, message: str):

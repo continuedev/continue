@@ -10,7 +10,7 @@ from ..models.filesystem import RangeInFile, RangeInFileWithContents
 from ..core.observation import Observation, TextObservation, TracebackObservation
 from ..libs.llm.prompt_utils import MarkdownStyleEncoderDecoder
 from textwrap import dedent
-from ..core.main import Step
+from ..core.main import ContinueCustomException, Step
 from ..core.sdk import ContinueSDK, Models
 from ..core.observation import Observation
 import subprocess
@@ -99,8 +99,8 @@ class FasterEditHighlightedCodeStep(Step):
     async def run(self, sdk: ContinueSDK) -> Coroutine[Observation, None, None]:
         range_in_files = await sdk.get_code_context(only_editing=True)
         if len(range_in_files) == 0:
-            # Get the full contents of all open files
-            files = await sdk.ide.getOpenFiles()
+            # Get the full contents of all visible files
+            files = await sdk.ide.getVisibleFiles()
             contents = {}
             for file in files:
                 contents[file] = await sdk.ide.readFile(file)
@@ -191,8 +191,8 @@ class StarCoderEditHighlightedCodeStep(Step):
         range_in_files = await sdk.get_code_context(only_editing=True)
         found_highlighted_code = len(range_in_files) > 0
         if not found_highlighted_code:
-            # Get the full contents of all open files
-            files = await sdk.ide.getOpenFiles()
+            # Get the full contents of all visible files
+            files = await sdk.ide.getVisibleFiles()
             contents = {}
             for file in files:
                 contents[file] = await sdk.ide.readFile(file)
@@ -251,44 +251,28 @@ class EditHighlightedCodeStep(Step):
             highlighted_code = await sdk.ide.getHighlightedCode()
             if highlighted_code is not None:
                 for rif in highlighted_code:
+                    if os.path.dirname(rif.filepath) == os.path.expanduser(os.path.join("~", ".continue", "diffs")):
+                        raise ContinueCustomException(
+                            message="Please accept or reject the change before making another edit in this file.", title="Accept/Reject First")
                     if rif.range.start == rif.range.end:
                         range_in_files.append(
                             RangeInFileWithContents.from_range_in_file(rif, ""))
 
-        # If nothing highlighted, edit the first open file
+        # If still no highlighted code, raise error
         if len(range_in_files) == 0:
-            # Get the full contents of all open files
-            files = await sdk.ide.getOpenFiles()
-            contents = {}
-            for file in files:
-                contents[file] = await sdk.ide.readFile(file)
-
-            range_in_files = [RangeInFileWithContents.from_entire_file(
-                filepath, content) for filepath, content in contents.items()]
-
-        # If still no highlighted code, create a new file and edit there
-        if len(range_in_files) == 0:
-            # Create a new file
-            new_file_path = "new_file.txt"
-            await sdk.add_file(new_file_path, "")
-            range_in_files = [
-                RangeInFileWithContents.from_entire_file(new_file_path, "")]
+            raise ContinueCustomException(
+                message="Please highlight some code and try again.", title="No Code Selected")
 
         range_in_files = list(map(lambda x: RangeInFile(
             filepath=x.filepath, range=x.range
         ), range_in_files))
 
+        for range_in_file in range_in_files:
+            if os.path.dirname(range_in_file.filepath) == os.path.expanduser(os.path.join("~", ".continue", "diffs")):
+                self.description = "Please accept or reject the change before making another edit in this file."
+                return
+
         await sdk.run_step(DefaultModelEditCodeStep(user_input=self.user_input, range_in_files=range_in_files))
-
-
-class FindCodeStep(Step):
-    prompt: str
-
-    async def describe(self, models: Models) -> Coroutine[str, None, None]:
-        return "Finding code"
-
-    async def run(self, sdk: ContinueSDK) -> Coroutine[Observation, None, None]:
-        return await sdk.ide.getOpenFiles()
 
 
 class UserInputStep(Step):
