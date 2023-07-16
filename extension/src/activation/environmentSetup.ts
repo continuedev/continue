@@ -21,7 +21,11 @@ async function retryThenFail(
 ): Promise<any> {
   try {
     if (retries < MAX_RETRIES && process.platform === "win32") {
-      const [stdout, stderr] = await runCommand("Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser");
+      const [stdout, stderr] = await runCommand(
+        "Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser"
+      );
+      console.log("Execution policy stdout: ", stdout);
+      console.log("Execution policy stderr: ", stderr);
     }
 
     return await fn();
