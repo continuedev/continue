@@ -474,6 +474,14 @@ Please output the code to be inserted at the cursor in order to fulfill the user
             current_block_lines.append(line)
 
         messages = await sdk.get_chat_context()
+        # Delete the last user and assistant messages
+        i = len(messages) - 1
+        deleted = 0
+        while i >= 0 and deleted < 2:
+            if messages[i].role == "user" or messages[i].role == "assistant":
+                messages.pop(i)
+                deleted += 1
+            i -= 1
         messages.append(ChatMessage(
             role="user",
             content=prompt,
