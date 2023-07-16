@@ -104,8 +104,11 @@ class IdeProtocolClient {
     //   }
     // });
 
-    // Setup listeners for any file changes in open editors
+    // Setup listeners for any selection changes in open editors
     vscode.window.onDidChangeTextEditorSelection((event) => {
+      if (this.editorIsTerminal(event.textEditor)) {
+        return;
+      }
       if (this._highlightDebounce) {
         clearTimeout(this._highlightDebounce);
       }
@@ -376,20 +379,24 @@ class IdeProtocolClient {
   }
 
   saveFile(filepath: string) {
-    vscode.window.visibleTextEditors.forEach((editor) => {
-      if (editor.document.uri.fsPath === filepath) {
-        editor.document.save();
-      }
-    });
+    vscode.window.visibleTextEditors
+      .filter((editor) => !this.editorIsTerminal(editor))
+      .forEach((editor) => {
+        if (editor.document.uri.fsPath === filepath) {
+          editor.document.save();
+        }
+      });
   }
 
   readFile(filepath: string): string {
     let contents: string | undefined;
-    vscode.window.visibleTextEditors.forEach((editor) => {
-      if (editor.document.uri.fsPath === filepath) {
-        contents = editor.document.getText();
-      }
-    });
+    vscode.window.visibleTextEditors
+      .filter((editor) => !this.editorIsTerminal(editor))
+      .forEach((editor) => {
+        if (editor.document.uri.fsPath === filepath) {
+          contents = editor.document.getText();
+        }
+      });
     if (typeof contents === "undefined") {
       if (fs.existsSync(filepath)) {
         contents = fs.readFileSync(filepath, "utf-8");
@@ -429,25 +436,27 @@ class IdeProtocolClient {
   getHighlightedCode(): RangeInFile[] {
     // TODO
     let rangeInFiles: RangeInFile[] = [];
-    vscode.window.visibleTextEditors.forEach((editor) => {
-      editor.selections.forEach((selection) => {
-        // if (!selection.isEmpty) {
-        rangeInFiles.push({
-          filepath: editor.document.uri.fsPath,
-          range: {
-            start: {
-              line: selection.start.line,
-              character: selection.start.character,
+    vscode.window.visibleTextEditors
+      .filter((editor) => !this.editorIsTerminal(editor))
+      .forEach((editor) => {
+        editor.selections.forEach((selection) => {
+          // if (!selection.isEmpty) {
+          rangeInFiles.push({
+            filepath: editor.document.uri.fsPath,
+            range: {
+              start: {
+                line: selection.start.line,
+                character: selection.start.character,
+              },
+              end: {
+                line: selection.end.line,
+                character: selection.end.character,
+              },
             },
-            end: {
-              line: selection.end.line,
-              character: selection.end.character,
-            },
-          },
+          });
+          // }
         });
-        // }
       });
-    });
     return rangeInFiles;
   }
 

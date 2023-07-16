@@ -126,7 +126,8 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
     workspace_directory: str = None
     unique_id: str = None
 
-    async def initialize(self) -> List[str]:
+    async def initialize(self, session_id: str) -> List[str]:
+        self.session_id = session_id
         await self._send_json("workspaceDirectory", {})
         await self._send_json("uniqueId", {})
         other_msgs = []
@@ -287,32 +288,24 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
         pass
 
     def onFileEdits(self, edits: List[FileEditWithFullContents]):
-        # Send the file edits to ALL autopilots.
-        # Maybe not ideal behavior
-        for _, session in self.session_manager.sessions.items():
-            session.autopilot.handle_manual_edits(edits)
+        session_manager.sessions[self.session_id].autopilot.handle_manual_edits(
+            edits)
 
     def onDeleteAtIndex(self, index: int):
-        for _, session in self.session_manager.sessions.items():
-            create_async_task(
-                session.autopilot.delete_at_index(index), self.unique_id)
+        create_async_task(
+            session_manager.sessions[self.session_id].autopilot.delete_at_index(index), self.unique_id)
 
     def onCommandOutput(self, output: str):
-        # Send the output to ALL autopilots.
-        # Maybe not ideal behavior
-        for _, session in self.session_manager.sessions.items():
-            create_async_task(
-                session.autopilot.handle_command_output(output), self.unique_id)
+        create_async_task(
+            self.session_manager.sessions[self.session_id].autopilot.handle_command_output(output), self.unique_id)
 
     def onHighlightedCodeUpdate(self, range_in_files: List[RangeInFileWithContents]):
-        for _, session in self.session_manager.sessions.items():
-            create_async_task(
-                session.autopilot.handle_highlighted_code(range_in_files), self.unique_id)
+        create_async_task(
+            self.session_manager.sessions[self.session_id].autopilot.handle_highlighted_code(range_in_files), self.unique_id)
 
     def onMainUserInput(self, input: str):
-        for _, session in self.session_manager.sessions.items():
-            create_async_task(
-                session.autopilot.accept_user_input(input), self.unique_id)
+        create_async_task(
+            self.session_manager.sessions[self.session_id].autopilot.accept_user_input(input), self.unique_id)
 
     # Request information. Session doesn't matter.
     async def getOpenFiles(self) -> List[str]:
@@ -440,10 +433,9 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str = None):
                 ideProtocolServer.handle_json(message_type, data))
 
         ideProtocolServer = IdeProtocolServer(session_manager, websocket)
-        ideProtocolServer.session_id = session_id
         if session_id is not None:
             session_manager.registered_ides[session_id] = ideProtocolServer
-        other_msgs = await ideProtocolServer.initialize()
+        other_msgs = await ideProtocolServer.initialize(session_id)
 
         for other_msg in other_msgs:
             handle_msg(other_msg)
