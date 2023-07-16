@@ -4,6 +4,7 @@ import * as fs from "fs";
 import * as vscode from "vscode";
 import { extensionContext, ideProtocolClient } from "./activation/activate";
 import { getMetaKeyLabel } from "./util/util";
+import { devDataPath } from "./activation/environmentSetup";
 
 interface DiffInfo {
   originalFilepath: string;
@@ -13,7 +14,9 @@ interface DiffInfo {
   range: vscode.Range;
 }
 
-export const DIFF_DIRECTORY = path.join(os.homedir(), ".continue", "diffs").replace(/^C:/, "c:");
+export const DIFF_DIRECTORY = path
+  .join(os.homedir(), ".continue", "diffs")
+  .replace(/^C:/, "c:");
 
 class DiffManager {
   // Create a temporary file in the global .continue directory which displays the updated version
@@ -222,6 +225,8 @@ class DiffManager {
         );
         this.cleanUpDiff(diffInfo);
       });
+
+    recordAcceptReject(true, diffInfo);
   }
 
   rejectDiff(newFilepath?: string) {
@@ -251,10 +256,49 @@ class DiffManager {
       .then(() => {
         this.cleanUpDiff(diffInfo);
       });
+
+    recordAcceptReject(false, diffInfo);
   }
 }
 
 export const diffManager = new DiffManager();
+
+function recordAcceptReject(accepted: boolean, diffInfo: DiffInfo) {
+  const collectOn = vscode.workspace
+    .getConfiguration("continue")
+    .get<boolean>("dataSwitch");
+
+  if (collectOn) {
+    const devDataDir = devDataPath();
+    const suggestionsPath = path.join(devDataDir, "suggestions.json");
+
+    // Initialize suggestions list
+    let suggestions = [];
+
+    // Check if suggestions.json exists
+    if (fs.existsSync(suggestionsPath)) {
+      const rawData = fs.readFileSync(suggestionsPath, "utf-8");
+      suggestions = JSON.parse(rawData);
+    }
+
+    // Add the new suggestion to the list
+    suggestions.push({
+      accepted,
+      timestamp: Date.now(),
+      suggestion: diffInfo.originalFilepath,
+    });
+
+    // Send the suggestion to the server
+    ideProtocolClient.sendAcceptRejectSuggestion(accepted);
+
+    // Write the updated suggestions back to the file
+    fs.writeFileSync(
+      suggestionsPath,
+      JSON.stringify(suggestions, null, 4),
+      "utf-8"
+    );
+  }
+}
 
 export async function acceptDiffCommand(newFilepath?: string) {
   diffManager.acceptDiff(newFilepath);
