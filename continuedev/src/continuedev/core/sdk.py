@@ -11,6 +11,7 @@ from ..models.filesystem_edit import FileEdit, FileSystemEdit, AddFile, DeleteFi
 from ..models.filesystem import RangeInFile
 from ..libs.llm.hf_inference_api import HuggingFaceInferenceAPI
 from ..libs.llm.openai import OpenAI
+from ..libs.llm.ggml import GGML
 from .observation import Observation
 from ..server.ide_protocol import AbstractIdeProtocolServer
 from .main import Context, ContinueCustomException, HighlightedRangeContext, History, Step, ChatMessage, ChatMessageRole
@@ -59,6 +60,10 @@ class Models:
     def gpt4(self):
         return self.__load_openai_model("gpt-4")
 
+    @cached_property
+    def ggml(self):
+        return GGML("", "ggml")
+
     def __model_from_name(self, model_name: str):
         if model_name == "starcoder":
             return self.starcoder
@@ -73,6 +78,7 @@ class Models:
 
     @property
     def default(self):
+        return self.ggml
         default_model = self.sdk.config.default_model
         return self.__model_from_name(default_model) if default_model is not None else self.gpt35
 
