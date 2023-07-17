@@ -11,7 +11,7 @@ from ..models.filesystem_edit import FileEdit, FileSystemEdit, AddFile, DeleteFi
 from ..models.filesystem import RangeInFile
 from ..libs.llm.hf_inference_api import HuggingFaceInferenceAPI
 from ..libs.llm.openai import OpenAI
-from ..libs.llm.anthropic import Anthropic
+from ..libs.llm.anthropic import AnthropicLLM
 from ..libs.llm.ggml import GGML
 from .observation import Observation
 from ..server.ide_protocol import AbstractIdeProtocolServer
@@ -66,9 +66,9 @@ class Models:
         api_key = self.provider_keys["hf_inference_api"]
         return HuggingFaceInferenceAPI(api_key=api_key, model=model, system_message=self.system_message)
 
-    def __load_anthropic_model(self, model: str) -> Anthropic:
+    def __load_anthropic_model(self, model: str) -> AnthropicLLM:
         api_key = self.provider_keys["anthropic"]
-        return Anthropic(api_key=api_key, model=model)
+        return AnthropicLLM(api_key, model, self.system_message)
 
     @cached_property
     def claude2(self):
