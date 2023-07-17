@@ -11,6 +11,7 @@ from ..models.filesystem_edit import FileEdit, FileSystemEdit, AddFile, DeleteFi
 from ..models.filesystem import RangeInFile
 from ..libs.llm.hf_inference_api import HuggingFaceInferenceAPI
 from ..libs.llm.openai import OpenAI
+from ..libs.llm.ggml import GGML
 from .observation import Observation
 from ..server.ide_protocol import AbstractIdeProtocolServer
 from .main import Context, ContinueCustomException, History, Step, ChatMessage
@@ -79,6 +80,10 @@ class Models:
     def gpt4(self):
         return self.__load_openai_model("gpt-4")
 
+    @cached_property
+    def ggml(self):
+        return GGML()
+
     def __model_from_name(self, model_name: str):
         if model_name == "starcoder":
             return self.starcoder
@@ -88,6 +93,8 @@ class Models:
             return self.gpt3516k
         elif model_name == "gpt-4":
             return self.gpt4
+        elif model_name == "ggml":
+            return self.ggml
         else:
             raise Exception(f"Unknown model {model_name}")
 

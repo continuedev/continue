@@ -28,7 +28,7 @@ class SimpleChatStep(Step):
         completion = ""
         messages = self.messages or await sdk.get_chat_context()
 
-        generator = sdk.models.gpt4.stream_chat(messages, temperature=0.5)
+        generator = sdk.models.default.stream_chat(messages, temperature=0.5)
         try:
             async for chunk in generator:
                 if sdk.current_step_was_deleted():
