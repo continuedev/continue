@@ -27,7 +27,6 @@ const GridDiv = styled.div`
   height: 100%;
   display: grid;
   grid-gap: 0;
-  grid-template-columns: 1fr 1fr;
   align-items: center;
   border-radius: ${defaultBorderRadius};
 
@@ -69,6 +68,7 @@ interface PillButtonProps {
   editing: boolean;
   pinned: boolean;
   warning?: string;
+  onlyShowDelete?: boolean;
 }
 
 const PillButton = (props: PillButtonProps) => {
@@ -105,19 +105,25 @@ const PillButton = (props: PillButtonProps) => {
           }}
         >
           {isHovered && (
-            <GridDiv>
-              <ButtonDiv
-                data-tooltip-id={`edit-${props.index}`}
-                backgroundColor={"#8800aa55"}
-                onClick={() => {
-                  client?.setEditingAtIndices([props.index]);
-                }}
-              >
-                <PaintBrush
-                  style={{ margin: "auto" }}
-                  width="1.6em"
-                ></PaintBrush>
-              </ButtonDiv>
+            <GridDiv
+              style={{
+                gridTemplateColumns: props.onlyShowDelete ? "1fr" : "1fr 1fr",
+              }}
+            >
+              {props.onlyShowDelete || (
+                <ButtonDiv
+                  data-tooltip-id={`edit-${props.index}`}
+                  backgroundColor={"#8800aa55"}
+                  onClick={() => {
+                    client?.setEditingAtIndices([props.index]);
+                  }}
+                >
+                  <PaintBrush
+                    style={{ margin: "auto" }}
+                    width="1.6em"
+                  ></PaintBrush>
+                </ButtonDiv>
+              )}
 
               {/* <ButtonDiv
             data-tooltip-id={`pin-${props.index}`}
