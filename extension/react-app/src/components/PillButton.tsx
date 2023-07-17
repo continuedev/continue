@@ -159,8 +159,8 @@ const PillButton = (props: PillButtonProps) => {
         </Button>
         <StyledTooltip id={`edit-${props.index}`}>
           {props.editing
-            ? "Editing this range (with rest of file as context)"
-            : "Edit this range"}
+            ? "Editing this section (with entire file as context)"
+            : "Edit this section"}
         </StyledTooltip>
         <StyledTooltip id={`delete-${props.index}`}>Delete</StyledTooltip>
         {props.warning && (

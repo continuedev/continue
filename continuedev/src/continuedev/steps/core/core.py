@@ -1,6 +1,7 @@
 # These steps are depended upon by ContinueSDK
 import os
 import subprocess
+import difflib
 from textwrap import dedent
 from typing import Coroutine, List, Literal, Union
 
@@ -161,13 +162,12 @@ class DefaultModelEditCodeStep(Step):
         if self._previous_contents.strip() == self._new_contents.strip():
             description = "No edits were made"
         else:
+            changes = '\n'.join(difflib.ndiff(self._previous_contents.splitlines(), self._new_contents.splitlines()))
             description = await models.gpt3516k.complete(dedent(f"""\
-                ```original
-                {self._previous_contents}
-                ```
+                Diff summary: "{self.user_input}"
 
-                ```new
-                {self._new_contents}
+                ```diff
+                {changes}
                 ```
 
                 Please give brief a description of the changes made above using markdown bullet points. Be concise:"""))
