@@ -162,7 +162,8 @@ class DefaultModelEditCodeStep(Step):
         if self._previous_contents.strip() == self._new_contents.strip():
             description = "No edits were made"
         else:
-            changes = '\n'.join(difflib.ndiff(self._previous_contents.splitlines(), self._new_contents.splitlines()))
+            changes = '\n'.join(difflib.ndiff(
+                self._previous_contents.splitlines(), self._new_contents.splitlines()))
             description = await models.gpt3516k.complete(dedent(f"""\
                 Diff summary: "{self.user_input}"
 
@@ -181,8 +182,8 @@ class DefaultModelEditCodeStep(Step):
         # We care because if this prompt itself goes over the limit, then the entire message will have to be cut from the completion.
         # Overflow won't happen, but prune_chat_messages in count_tokens.py will cut out this whole thing, instead of us cutting out only as many lines as we need.
         model_to_use = sdk.models.default
-        max_tokens = MAX_TOKENS_FOR_MODEL.get(
-            model_to_use.name, DEFAULT_MAX_TOKENS) / 2
+        max_tokens = int(MAX_TOKENS_FOR_MODEL.get(
+            model_to_use.name, DEFAULT_MAX_TOKENS) / 2)
 
         TOKENS_TO_BE_CONSIDERED_LARGE_RANGE = 1200
         if model_to_use.count_tokens(rif.contents) > TOKENS_TO_BE_CONSIDERED_LARGE_RANGE:
