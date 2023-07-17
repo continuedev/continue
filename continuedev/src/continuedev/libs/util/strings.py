@@ -23,3 +23,27 @@ def dedent_and_get_common_whitespace(s: str) -> Tuple[str, str]:
                 break
 
     return "\n".join(map(lambda x: x.lstrip(lcp), lines)), lcp
+
+
+def remove_quotes_and_escapes(output: str) -> str:
+    """
+    Clean up the output of the completion API, removing unnecessary escapes and quotes
+    """
+    output = output.strip()
+
+    # Replace smart quotes
+    output = output.replace("“", '"')
+    output = output.replace("”", '"')
+    output = output.replace("‘", "'")
+    output = output.replace("’", "'")
+
+    # Remove escapes
+    output = output.replace('\\"', '"')
+    output = output.replace("\\'", "'")
+    output = output.replace("\\n", "\n")
+    output = output.replace("\\t", "\t")
+    output = output.replace("\\\\", "\\")
+    if (output.startswith('"') and output.endswith('"')) or (output.startswith("'") and output.endswith("'")):
+        output = output[1:-1]
+
+    return output

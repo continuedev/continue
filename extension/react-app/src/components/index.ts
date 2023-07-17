@@ -3,11 +3,15 @@ import styled, { keyframes } from "styled-components";
 
 export const defaultBorderRadius = "5px";
 export const lightGray = "rgb(100 100 100)";
-export const secondaryDark = "rgb(45 45 45)";
-export const vscBackground = "rgb(30 30 30)";
+// export const secondaryDark = "rgb(45 45 45)";
+// export const vscBackground = "rgb(30 30 30)";
 export const vscBackgroundTransparent = "#1e1e1ede";
 export const buttonColor = "rgb(113 28 59)";
 export const buttonColorHover = "rgb(113 28 59 0.67)";
+
+export const secondaryDark = "var(--vscode-textBlockQuote-background)";
+export const vscBackground = "var(--vscode-editor-background)";
+export const vscForeground = "var(--vscode-editor-foreground)";
 
 export const Button = styled.button`
   padding: 10px 12px;
@@ -46,8 +50,8 @@ export const TextArea = styled.textarea`
   resize: vertical;
 
   padding: 4px;
-  caret-color: white;
-  color: white;
+  caret-color: ${vscForeground};
+  color: #{vscForeground};
 
   &:focus {
     outline: 1px solid ${buttonColor};
@@ -120,7 +124,7 @@ export const MainTextInput = styled.textarea`
   border: 1px solid #ccc;
   margin: 8px 8px;
   background-color: ${vscBackground};
-  color: white;
+  color: ${vscForeground};
   outline: 1px solid orange;
   resize: none;
 `;
@@ -137,8 +141,9 @@ export const appear = keyframes`
 `;
 
 export const HeaderButton = styled.button<{ inverted: boolean | undefined }>`
-  background-color: ${({ inverted }) => (inverted ? "white" : "transparent")};
-  color: ${({ inverted }) => (inverted ? "black" : "white")};
+  background-color: ${({ inverted }) =>
+    inverted ? vscForeground : "transparent"};
+  color: ${({ inverted }) => (inverted ? vscBackground : vscForeground)};
 
   border: none;
   border-radius: ${defaultBorderRadius};
@@ -146,7 +151,9 @@ export const HeaderButton = styled.button<{ inverted: boolean | undefined }>`
 
   &:hover {
     background-color: ${({ inverted }) =>
-      typeof inverted === "undefined" || inverted ? lightGray : "transparent"};
+      typeof inverted === "undefined" || inverted
+        ? secondaryDark
+        : "transparent"};
   }
   display: flex;
   align-items: center;

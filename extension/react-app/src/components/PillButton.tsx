@@ -1,6 +1,11 @@
 import { useContext, useState } from "react";
 import styled from "styled-components";
-import { StyledTooltip, defaultBorderRadius, secondaryDark } from ".";
+import {
+  StyledTooltip,
+  defaultBorderRadius,
+  secondaryDark,
+  vscForeground,
+} from ".";
 import {
   Trash,
   PaintBrush,
@@ -10,7 +15,7 @@ import { GUIClientContext } from "../App";
 
 const Button = styled.button`
   border: none;
-  color: white;
+  color: ${vscForeground};
   background-color: ${secondaryDark};
   border-radius: ${defaultBorderRadius};
   padding: 8px;
