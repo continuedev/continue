@@ -37,21 +37,6 @@ const EmptyPillDiv = styled.div`
   }
 `;
 
-const ContextDropdown = styled.div`
-  position: absolute;
-  padding: 4px;
-  width: calc(100% - 16px - 8px);
-  background-color: ${secondaryDark};
-  color: white;
-  border-bottom-right-radius: ${defaultBorderRadius};
-  border-bottom-left-radius: ${defaultBorderRadius};
-  /* border: 1px solid white; */
-  border-top: none;
-  margin: 8px;
-  outline: 1px solid orange;
-  z-index: 5;
-`;
-
 const MainTextInput = styled.textarea`
   resize: none;
 
@@ -88,12 +73,13 @@ const Ul = styled.ul<{
   background-color: ${secondaryDark};
   color: white;
   max-height: ${UlMaxHeight}px;
+  width: calc(100% - 16px);
   overflow-y: scroll;
   overflow-x: hidden;
   padding: 0;
   ${({ hidden }) => hidden && "display: none;"}
   border-radius: ${defaultBorderRadius};
-  border: 0.5px solid gray;
+  outline: 0.5px solid gray;
   z-index: 2;
   // Get rid of scrollbar and its padding
   scrollbar-width: none;
@@ -138,10 +124,6 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
   // The position of the current command you are typing now, so the one that will be appended to history once you press enter
   const [positionInHistory, setPositionInHistory] = React.useState<number>(0);
   const [items, setItems] = React.useState(props.items);
-  const [hoveringButton, setHoveringButton] = React.useState(false);
-  const [hoveringContextDropdown, setHoveringContextDropdown] =
-    React.useState(false);
-  const [pinned, setPinned] = useState(false);
   const [highlightedCodeSections, setHighlightedCodeSections] = React.useState(
     props.highlightedCodeSections || []
   );
@@ -252,15 +234,6 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
                 newSections.splice(idx, 1);
                 return newSections;
               });
-            }}
-            onHover={(val: boolean) => {
-              if (val) {
-                setHoveringButton(val);
-              } else {
-                setTimeout(() => {
-                  setHoveringButton(val);
-                }, 100);
-              }
             }}
           />
         ))}
@@ -387,24 +360,6 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
             Inserting at cursor
           </div>
         )}
-      <ContextDropdown
-        onMouseEnter={() => {
-          setHoveringContextDropdown(true);
-        }}
-        onMouseLeave={() => {
-          setHoveringContextDropdown(false);
-        }}
-        hidden={true || (!hoveringContextDropdown && !hoveringButton)}
-      >
-        {highlightedCodeSections.map((section, idx) => (
-          <>
-            <p>{section.display_name}</p>
-            <CodeBlock showCopy={false} key={idx}>
-              {section.range.contents}
-            </CodeBlock>
-          </>
-        ))}
-      </ContextDropdown>
     </>
   );
 });
