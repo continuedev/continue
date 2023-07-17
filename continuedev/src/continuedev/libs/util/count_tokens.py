@@ -6,6 +6,7 @@ import tiktoken
 
 aliases = {
     "ggml": "gpt-3.5-turbo",
+    "claude-2": "gpt-3.5-turbo",
 }
 DEFAULT_MAX_TOKENS = 2048
 MAX_TOKENS_FOR_MODEL = {
@@ -13,7 +14,8 @@ MAX_TOKENS_FOR_MODEL = {
     "gpt-3.5-turbo-0613": 4096,
     "gpt-3.5-turbo-16k": 16384,
     "gpt-4": 8192,
-    "ggml": 2048
+    "ggml": 2048,
+    "claude-2": 100000
 }
 CHAT_MODELS = {
     "gpt-3.5-turbo", "gpt-3.5-turbo-16k", "gpt-4", "gpt-3.5-turbo-0613"

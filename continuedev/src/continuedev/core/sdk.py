@@ -11,6 +11,7 @@ from ..models.filesystem_edit import FileEdit, FileSystemEdit, AddFile, DeleteFi
 from ..models.filesystem import RangeInFile
 from ..libs.llm.hf_inference_api import HuggingFaceInferenceAPI
 from ..libs.llm.openai import OpenAI
+from ..libs.llm.anthropic import AnthropicLLM
 from ..libs.llm.ggml import GGML
 from .observation import Observation
 from ..server.ide_protocol import AbstractIdeProtocolServer
@@ -27,7 +28,7 @@ ModelProvider = Literal["openai", "hf_inference_api", "ggml", "anthropic"]
 MODEL_PROVIDER_TO_ENV_VAR = {
     "openai": "OPENAI_API_KEY",
     "hf_inference_api": "HUGGING_FACE_TOKEN",
-    "anthropic": "ANTHROPIC_API_KEY"
+    "anthropic": "ANTHROPIC_API_KEY",
 }
 
 
@@ -43,6 +44,9 @@ class Models:
 
     @classmethod
     async def create(cls, sdk: "ContinueSDK", with_providers: List[ModelProvider] = ["openai"]) -> "Models":
+        if sdk.config.default_model == "claude-2":
+            with_providers.append("anthropic")
+
         models = Models(sdk, with_providers)
         for provider in with_providers:
             if provider in MODEL_PROVIDER_TO_ENV_VAR:
@@ -61,6 +65,14 @@ class Models:
     def __load_hf_inference_api_model(self, model: str) -> HuggingFaceInferenceAPI:
         api_key = self.provider_keys["hf_inference_api"]
         return HuggingFaceInferenceAPI(api_key=api_key, model=model, system_message=self.system_message)
+
+    def __load_anthropic_model(self, model: str) -> AnthropicLLM:
+        api_key = self.provider_keys["anthropic"]
+        return AnthropicLLM(api_key, model, self.system_message)
+
+    @cached_property
+    def claude2(self):
+        return self.__load_anthropic_model("claude-2")
 
     @cached_property
     def starcoder(self):
@@ -95,6 +107,8 @@ class Models:
             return self.gpt3516k
         elif model_name == "gpt-4":
             return self.gpt4
+        elif model_name == "claude-2":
+            return self.claude2
         elif model_name == "ggml":
             return self.ggml
         else:
