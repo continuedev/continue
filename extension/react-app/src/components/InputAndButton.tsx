@@ -1,6 +1,6 @@
 import React, { useRef } from "react";
 import styled from "styled-components";
-import { vscBackground } from ".";
+import { vscBackground, vscForeground } from ".";
 
 interface InputAndButtonProps {
   onUserInput: (input: string) => void;
@@ -16,7 +16,7 @@ const Input = styled.input`
   padding: 0.5rem;
   border: 1px solid white;
   background-color: ${vscBackground};
-  color: white;
+  color: ${vscForeground};
   border-radius: 4px;
   border-top-right-radius: 0;
   border-bottom-right-radius: 0;
@@ -27,7 +27,7 @@ const Button = styled.button`
   padding: 0.5rem;
   border: 1px solid white;
   background-color: ${vscBackground};
-  color: white;
+  color: ${vscForeground};
   border-radius: 4px;
   border-top-left-radius: 0;
   border-bottom-left-radius: 0;
@@ -35,8 +35,8 @@ const Button = styled.button`
   cursor: pointer;
 
   &:hover {
-    background-color: white;
-    color: black;
+    background-color: ${vscForeground};
+    color: ${vscBackground};
   }
 `;
 

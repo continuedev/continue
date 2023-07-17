@@ -12,7 +12,7 @@ from ...models.filesystem import FileSystem, RangeInFile, RangeInFileWithContent
 from ...core.observation import Observation, TextObservation, TracebackObservation, UserInputObservation
 from ...core.main import ChatMessage, ContinueCustomException, Step, SequentialStep
 from ...libs.util.count_tokens import MAX_TOKENS_FOR_MODEL, DEFAULT_MAX_TOKENS
-from ...libs.util.dedent import dedent_and_get_common_whitespace
+from ...libs.util.strings import dedent_and_get_common_whitespace, remove_quotes_and_escapes
 import difflib
 
 
@@ -157,17 +157,6 @@ class DefaultModelEditCodeStep(Step):
     _new_contents: str = ""
     _prompt_and_completion: str = ""
 
-    def _cleanup_output(self, output: str) -> str:
-        output = output.replace('\\"', '"')
-        output = output.replace("\\'", "'")
-        output = output.replace("\\n", "\n")
-        output = output.replace("\\t", "\t")
-        output = output.replace("\\\\", "\\")
-        if output.startswith('"') and output.endswith('"'):
-            output = output[1:-1]
-
-        return output
-
     async def describe(self, models: Models) -> Coroutine[str, None, None]:
         if self._previous_contents.strip() == self._new_contents.strip():
             description = "No edits were made"
@@ -183,9 +172,9 @@ class DefaultModelEditCodeStep(Step):
 
                 Please give brief a description of the changes made above using markdown bullet points. Be concise:"""))
         name = await models.gpt3516k.complete(f"Write a very short title to describe this requested change (no quotes): '{self.user_input}'. This is the title:")
-        self.name = self._cleanup_output(name)
+        self.name = remove_quotes_and_escapes(name)
 
-        return f"{self._cleanup_output(description)}"
+        return f"{remove_quotes_and_escapes(description)}"
 
     async def get_prompt_parts(self, rif: RangeInFileWithContents, sdk: ContinueSDK, full_file_contents: str):
         # We don't know here all of the functions being passed in.
