@@ -23,8 +23,10 @@ class ContinueQuickFixProvider implements vscode.CodeActionProvider {
       );
       quickFix.isPreferred = false;
       const surroundingRange = new vscode.Range(
-        range.start.translate(-3, 0),
-        range.end.translate(3, 0)
+        Math.max(0, range.start.line - 3),
+        0,
+        Math.min(document.lineCount, range.end.line + 3),
+        0
       );
       quickFix.command = {
         command: "continue.quickFix",
