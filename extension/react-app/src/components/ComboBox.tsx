@@ -218,6 +218,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
                 ? "Editing such a large range may be slow"
                 : undefined
             }
+            onlyShowDelete={highlightedCodeSections.length <= 1}
             editing={section.editing}
             pinned={section.pinned}
             index={idx}
@@ -334,6 +335,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
           })}
           showAbove={showAbove()}
           ulHeightPixels={ulRef.current?.getBoundingClientRect().height || 0}
+          hidden={!downshiftProps.isOpen || items.length === 0}
         >
           {downshiftProps.isOpen &&
             items.map((item, index) => (
