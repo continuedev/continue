@@ -6,6 +6,7 @@ import {
   secondaryDark,
   vscBackground,
   vscBackgroundTransparent,
+  vscForeground,
 } from ".";
 import {
   ChevronDown,
@@ -120,20 +121,22 @@ const StyledMarkdownPreview = styled(MarkdownPreview)`
   }
 
   code {
-    color: #f69292;
+    color: #f78383;
     word-wrap: break-word;
+    border-radius: ${defaultBorderRadius};
+    background-color: ${secondaryDark};
   }
 
   pre > code {
     background-color: ${secondaryDark};
-    color: white;
+    color: ${vscForeground};
   }
 
   background-color: ${vscBackground};
   font-family: "Lexend", sans-serif;
   font-size: 13px;
   padding: 8px;
-  color: white;
+  color: ${vscForeground};
 `;
 
 // #endregion
@@ -267,6 +270,9 @@ function StepContainer(props: StepContainerProps) {
           ) : (
             <StyledMarkdownPreview
               source={props.historyNode.step.description || ""}
+              wrapperElement={{
+                "data-color-mode": "dark",
+              }}
             />
           )}
         </ContentDiv>
