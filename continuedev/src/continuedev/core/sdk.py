@@ -34,10 +34,12 @@ MODEL_PROVIDER_TO_ENV_VAR = {
 class Models:
     provider_keys: Dict[ModelProvider, str] = {}
     model_providers: List[ModelProvider]
+    system_message: str
 
     def __init__(self, sdk: "ContinueSDK", model_providers: List[ModelProvider]):
         self.sdk = sdk
         self.model_providers = model_providers
+        self.system_message = sdk.config.system_message
 
     @classmethod
     async def create(cls, sdk: "ContinueSDK", with_providers: List[ModelProvider] = ["openai"]) -> "Models":
@@ -53,12 +55,12 @@ class Models:
     def __load_openai_model(self, model: str) -> OpenAI:
         api_key = self.provider_keys["openai"]
         if api_key == "":
-            return ProxyServer(self.sdk.ide.unique_id, model)
-        return OpenAI(api_key=api_key, default_model=model)
+            return ProxyServer(self.sdk.ide.unique_id, model, system_message=self.system_message)
+        return OpenAI(api_key=api_key, default_model=model, system_message=self.system_message)
 
     def __load_hf_inference_api_model(self, model: str) -> HuggingFaceInferenceAPI:
         api_key = self.provider_keys["hf_inference_api"]
-        return HuggingFaceInferenceAPI(api_key=api_key, model=model)
+        return HuggingFaceInferenceAPI(api_key=api_key, model=model, system_message=self.system_message)
 
     @cached_property
     def starcoder(self):
@@ -82,7 +84,7 @@ class Models:
 
     @cached_property
     def ggml(self):
-        return GGML()
+        return GGML(system_message=self.system_message)
 
     def __model_from_name(self, model_name: str):
         if model_name == "starcoder":

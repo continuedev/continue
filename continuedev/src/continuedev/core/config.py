@@ -85,6 +85,7 @@ class ContinueConfig(BaseModel):
     slash_commands: Optional[List[SlashCommand]] = DEFAULT_SLASH_COMMANDS
     on_traceback: Optional[List[OnTracebackSteps]] = [
         OnTracebackSteps(step_name="DefaultOnTracebackStep")]
+    system_message: Optional[str] = None
 
     # Want to force these to be the slash commands for now
     @validator('slash_commands', pre=True)
