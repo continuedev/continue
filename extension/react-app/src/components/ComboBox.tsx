@@ -6,6 +6,7 @@ import {
   lightGray,
   secondaryDark,
   vscBackground,
+  vscForeground,
 } from ".";
 import CodeBlock from "./CodeBlock";
 import PillButton from "./PillButton";
@@ -48,7 +49,7 @@ const MainTextInput = styled.textarea`
   height: auto;
   width: 100%;
   background-color: ${secondaryDark};
-  color: white;
+  color: ${vscForeground};
   z-index: 1;
   border: 1px solid transparent;
 
@@ -71,7 +72,7 @@ const Ul = styled.ul<{
   position: absolute;
   background: ${vscBackground};
   background-color: ${secondaryDark};
-  color: white;
+  color: ${vscForeground};
   max-height: ${UlMaxHeight}px;
   width: calc(100% - 16px);
   overflow-y: scroll;
@@ -95,6 +96,7 @@ const Li = styled.li<{
   selected: boolean;
   isLastItem: boolean;
 }>`
+  background-color: ${secondaryDark};
   ${({ highlighted }) => highlighted && "background: #ff000066;"}
   ${({ selected }) => selected && "font-weight: bold;"}
     padding: 0.5rem 0.75rem;
@@ -218,7 +220,9 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
                 ? "Editing such a large range may be slow"
                 : undefined
             }
-            onlyShowDelete={highlightedCodeSections.length <= 1}
+            onlyShowDelete={
+              highlightedCodeSections.length <= 1 || section.editing
+            }
             editing={section.editing}
             pinned={section.pinned}
             index={idx}
