@@ -249,11 +249,11 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
                 props.onToggleAddContext();
               }}
             >
-              Highlight to Add Context
+              Highlight code section
             </EmptyPillDiv>
           ) : (
             <HeaderButtonWithText
-              text="Add to Context"
+              text="Add more code to context"
               onClick={() => {
                 props.onToggleAddContext();
               }}
@@ -265,7 +265,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
       <div className="flex px-2" ref={divRef} hidden={!downshiftProps.isOpen}>
         <MainTextInput
           disabled={props.disabled}
-          placeholder={`Ask a question, give instructions, or type '/' to see slash commands. ${getMetaKeyLabel()}⏎ to edit.`}
+          placeholder={`Ask a question, give instructions, or type '/' to see slash commands`}
           {...getInputProps({
             onChange: (e) => {
               const target = e.target as HTMLTextAreaElement;
