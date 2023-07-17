@@ -1,22 +1,30 @@
 from functools import cached_property
-import time
 from typing import Any, Coroutine, Dict, Generator, List, Union
+
 from ...core.main import ChatMessage
 import openai
 from ..llm import LLM
-from ..util.count_tokens import DEFAULT_MAX_TOKENS, compile_chat_messages, CHAT_MODELS, DEFAULT_ARGS, count_tokens, prune_raw_prompt_from_top
+from ..util.count_tokens import compile_chat_messages, CHAT_MODELS, DEFAULT_ARGS, count_tokens, prune_raw_prompt_from_top
+from ...core.config import AzureInfo
 
 
 class OpenAI(LLM):
     api_key: str
     default_model: str
 
-    def __init__(self, api_key: str, default_model: str, system_message: str = None):
+    def __init__(self, api_key: str, default_model: str, system_message: str = None, azure_info: AzureInfo = None):
         self.api_key = api_key
         self.default_model = default_model
         self.system_message = system_message
+        self.azure_info = azure_info
 
         openai.api_key = api_key
+
+        # Using an Azure OpenAI deployment
+        if azure_info is not None:
+            openai.api_type = "azure"
+            openai.api_base = azure_info.endpoint
+            openai.api_version = azure_info.api_version
 
     @cached_property
     def name(self):
@@ -24,7 +32,10 @@ class OpenAI(LLM):
 
     @property
     def default_args(self):
-        return {**DEFAULT_ARGS, "model": self.default_model}
+        args = {**DEFAULT_ARGS, "model": self.default_model}
+        if self.azure_info is not None:
+            args["engine"] = self.azure_info.engine
+        return args
 
     def count_tokens(self, text: str):
         return count_tokens(self.default_model, text)
