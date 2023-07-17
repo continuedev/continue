@@ -56,7 +56,7 @@ class Models:
         api_key = self.provider_keys["openai"]
         if api_key == "":
             return ProxyServer(self.sdk.ide.unique_id, model, system_message=self.system_message)
-        return OpenAI(api_key=api_key, default_model=model, system_message=self.system_message)
+        return OpenAI(api_key=api_key, default_model=model, system_message=self.system_message, azure_info=self.sdk.config.azure_openai_info)
 
     def __load_hf_inference_api_model(self, model: str) -> HuggingFaceInferenceAPI:
         api_key = self.provider_keys["hf_inference_api"]
