@@ -166,6 +166,22 @@ class Autopilot(ContinueBaseModel):
         if not any(map(lambda x: x.editing, self._highlighted_ranges)):
             self._highlighted_ranges[0].editing = True
 
+    def _disambiguate_highlighted_ranges(self):
+        """If any files have the same name, also display their folder name"""
+        name_counts = {}
+        for rif in self._highlighted_ranges:
+            if rif.display_name in name_counts:
+                name_counts[rif.display_name] += 1
+            else:
+                name_counts[rif.display_name] = 1
+
+        for rif in self._highlighted_ranges:
+            if name_counts[rif.display_name] > 1:
+                rif.display_name = os.path.join(
+                    os.path.basename(os.path.dirname(rif.range.filepath)), rif.display_name)
+            else:
+                rif.display_name = os.path.basename(rif.range.filepath)
+
     async def handle_highlighted_code(self, range_in_files: List[RangeInFileWithContents]):
         # Filter out rifs from ~/.continue/diffs folder
         range_in_files = [
@@ -211,6 +227,7 @@ class Autopilot(ContinueBaseModel):
         ) for rif in range_in_files]
 
         self._make_sure_is_editing_range()
+        self._disambiguate_highlighted_ranges()
 
         await self.update_subscribers()
 

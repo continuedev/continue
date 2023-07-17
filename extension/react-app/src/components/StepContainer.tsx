@@ -53,12 +53,7 @@ const StepContainerDiv = styled.div<{ open: boolean }>`
 `;
 
 const HeaderDiv = styled.div<{ error: boolean; loading: boolean }>`
-  background-color: ${(props) =>
-    props.error
-      ? "#522"
-      : props.loading
-      ? vscBackgroundTransparent
-      : vscBackground};
+  background-color: ${(props) => (props.error ? "#522" : vscBackground)};
   display: grid;
   grid-template-columns: 1fr auto auto;
   grid-gap: 8px;
