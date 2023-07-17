@@ -33,7 +33,7 @@ class GGML(LLM):
 
         args = {**self.default_args, **kwargs}
         messages = compile_chat_messages(
-            self.name, with_history, args["max_tokens"], prompt, functions=args.get("functions", None))
+            self.name, with_history, args["max_tokens"], prompt, functions=args.get("functions", None), system_message=self.system_message)
 
         async with aiohttp.ClientSession() as session:
             async with session.post(f"{SERVER_URL}/v1/completions", json={
@@ -50,7 +50,7 @@ class GGML(LLM):
     async def stream_chat(self, messages: List[ChatMessage] = [], **kwargs) -> Generator[Union[Any, List, Dict], None, None]:
         args = {**self.default_args, **kwargs}
         messages = compile_chat_messages(
-            self.name, messages, args["max_tokens"], None, functions=args.get("functions", None))
+            self.name, messages, args["max_tokens"], None, functions=args.get("functions", None), system_message=self.system_message)
         args["stream"] = True
 
         async with aiohttp.ClientSession() as session:
@@ -77,7 +77,7 @@ class GGML(LLM):
 
         async with aiohttp.ClientSession() as session:
             async with session.post(f"{SERVER_URL}/v1/completions", json={
-                "messages": compile_chat_messages(args["model"], with_history, args["max_tokens"], prompt, functions=None),
+                "messages": compile_chat_messages(args["model"], with_history, args["max_tokens"], prompt, functions=None, system_message=self.system_message),
                 **args
             }) as resp:
                 try:

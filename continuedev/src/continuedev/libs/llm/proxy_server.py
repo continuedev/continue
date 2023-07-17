@@ -38,7 +38,7 @@ class ProxyServer(LLM):
 
         async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(ssl_context=ssl_context)) as session:
             async with session.post(f"{SERVER_URL}/complete", json={
-                "messages": compile_chat_messages(args["model"], with_history, args["max_tokens"], prompt, functions=None),
+                "messages": compile_chat_messages(args["model"], with_history, args["max_tokens"], prompt, functions=None, system_message=self.system_message),
                 "unique_id": self.unique_id,
                 **args
             }) as resp:
@@ -50,7 +50,7 @@ class ProxyServer(LLM):
     async def stream_chat(self, messages: List[ChatMessage] = [], **kwargs) -> Coroutine[Any, Any, Generator[Union[Any, List, Dict], None, None]]:
         args = {**self.default_args, **kwargs}
         messages = compile_chat_messages(
-            self.default_model, messages, args["max_tokens"], None, functions=args.get("functions", None))
+            self.default_model, messages, args["max_tokens"], None, functions=args.get("functions", None), system_message=self.system_message)
 
         async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(ssl_context=ssl_context)) as session:
             async with session.post(f"{SERVER_URL}/stream_chat", json={
@@ -74,7 +74,7 @@ class ProxyServer(LLM):
     async def stream_complete(self, prompt, with_history: List[ChatMessage] = [], **kwargs) -> Generator[Union[Any, List, Dict], None, None]:
         args = {**self.default_args, **kwargs}
         messages = compile_chat_messages(
-            self.default_model, with_history, args["max_tokens"], prompt, functions=args.get("functions", None))
+            self.default_model, with_history, args["max_tokens"], prompt, functions=args.get("functions", None), system_message=self.system_message)
 
         async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(ssl_context=ssl_context)) as session:
             async with session.post(f"{SERVER_URL}/stream_complete", json={

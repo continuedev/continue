@@ -1,6 +1,7 @@
 import json
 from typing import Dict, List, Union
 from ...core.main import ChatMessage
+from .templating import render_system_message
 import tiktoken
 
 aliases = {
@@ -85,13 +86,15 @@ def compile_chat_messages(model: str, msgs: List[ChatMessage], max_tokens: int, 
         for function in functions:
             prompt_tokens += count_tokens(model, json.dumps(function))
 
+    rendered_system_message = render_system_message(system_message)
+
     msgs = prune_chat_history(model,
-                              msgs, MAX_TOKENS_FOR_MODEL[model], prompt_tokens + max_tokens + count_tokens(model, system_message))
+                              msgs, MAX_TOKENS_FOR_MODEL[model], prompt_tokens + max_tokens + count_tokens(model, rendered_system_message))
     history = []
     if system_message:
         history.append({
             "role": "system",
-            "content": system_message
+            "content": rendered_system_message
         })
     history += [msg.to_dict(with_functions=functions is not None)
                 for msg in msgs]
