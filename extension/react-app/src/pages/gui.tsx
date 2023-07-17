@@ -1,5 +1,9 @@
 import styled from "styled-components";
-import { defaultBorderRadius } from "../components";
+import {
+  defaultBorderRadius,
+  vscBackground,
+  vscForeground,
+} from "../components";
 import Loader from "../components/Loader";
 import ContinueButton from "../components/ContinueButton";
 import { FullState, HighlightedRangeContext } from "../../../schema/FullState";
@@ -371,12 +375,13 @@ function GUI(props: GUIProps) {
         style={{
           position: "fixed",
           bottom: "50px",
-          backgroundColor: "white",
-          color: "black",
+          backgroundColor: vscBackground,
+          color: vscForeground,
           borderRadius: defaultBorderRadius,
           padding: "16px",
           margin: "16px",
           zIndex: 100,
+          boxShadow: `0px 0px 10px 0px ${vscForeground}`,
         }}
         hidden={!showDataSharingInfo}
       >

@@ -442,6 +442,7 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str = None):
         if session_id is not None:
             session_manager.registered_ides[session_id] = ideProtocolServer
         other_msgs = await ideProtocolServer.initialize(session_id)
+        capture_event(ideProtocolServer.unique_id, "session_started", { "session_id": ideProtocolServer.session_id })
 
         for other_msg in other_msgs:
             handle_msg(other_msg)
@@ -462,4 +463,5 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str = None):
         if websocket.client_state != WebSocketState.DISCONNECTED:
             await websocket.close()
 
+        capture_event(ideProtocolServer.unique_id, "session_ended", { "session_id": ideProtocolServer.session_id })
         session_manager.registered_ides.pop(ideProtocolServer.session_id)

@@ -1,6 +1,11 @@
 import { useContext, useState } from "react";
 import styled from "styled-components";
-import { StyledTooltip, defaultBorderRadius, secondaryDark } from ".";
+import {
+  StyledTooltip,
+  defaultBorderRadius,
+  secondaryDark,
+  vscForeground,
+} from ".";
 import {
   Trash,
   PaintBrush,
@@ -10,7 +15,7 @@ import { GUIClientContext } from "../App";
 
 const Button = styled.button`
   border: none;
-  color: white;
+  color: ${vscForeground};
   background-color: ${secondaryDark};
   border-radius: ${defaultBorderRadius};
   padding: 8px;
@@ -27,7 +32,6 @@ const GridDiv = styled.div`
   height: 100%;
   display: grid;
   grid-gap: 0;
-  grid-template-columns: 1fr 1fr;
   align-items: center;
   border-radius: ${defaultBorderRadius};
 
@@ -69,6 +73,7 @@ interface PillButtonProps {
   editing: boolean;
   pinned: boolean;
   warning?: string;
+  onlyShowDelete?: boolean;
 }
 
 const PillButton = (props: PillButtonProps) => {
@@ -105,19 +110,25 @@ const PillButton = (props: PillButtonProps) => {
           }}
         >
           {isHovered && (
-            <GridDiv>
-              <ButtonDiv
-                data-tooltip-id={`edit-${props.index}`}
-                backgroundColor={"#8800aa55"}
-                onClick={() => {
-                  client?.setEditingAtIndices([props.index]);
-                }}
-              >
-                <PaintBrush
-                  style={{ margin: "auto" }}
-                  width="1.6em"
-                ></PaintBrush>
-              </ButtonDiv>
+            <GridDiv
+              style={{
+                gridTemplateColumns: props.onlyShowDelete ? "1fr" : "1fr 1fr",
+              }}
+            >
+              {props.onlyShowDelete || (
+                <ButtonDiv
+                  data-tooltip-id={`edit-${props.index}`}
+                  backgroundColor={"#8800aa55"}
+                  onClick={() => {
+                    client?.setEditingAtIndices([props.index]);
+                  }}
+                >
+                  <PaintBrush
+                    style={{ margin: "auto" }}
+                    width="1.6em"
+                  ></PaintBrush>
+                </ButtonDiv>
+              )}
 
               {/* <ButtonDiv
             data-tooltip-id={`pin-${props.index}`}
@@ -148,8 +159,8 @@ const PillButton = (props: PillButtonProps) => {
         </Button>
         <StyledTooltip id={`edit-${props.index}`}>
           {props.editing
-            ? "Editing this range (with rest of file as context)"
-            : "Edit this range"}
+            ? "Editing this section (with entire file as context)"
+            : "Edit this section"}
         </StyledTooltip>
         <StyledTooltip id={`delete-${props.index}`}>Delete</StyledTooltip>
         {props.warning && (

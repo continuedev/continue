@@ -12,6 +12,7 @@ from ..models.filesystem import RangeInFile
 from ..libs.llm.hf_inference_api import HuggingFaceInferenceAPI
 from ..libs.llm.openai import OpenAI
 from ..libs.llm.anthropic import Anthropic
+from ..libs.llm.ggml import GGML
 from .observation import Observation
 from ..server.ide_protocol import AbstractIdeProtocolServer
 from .main import Context, ContinueCustomException, History, Step, ChatMessage
@@ -34,10 +35,12 @@ MODEL_PROVIDER_TO_ENV_VAR = {
 class Models:
     provider_keys: Dict[ModelProvider, str] = {}
     model_providers: List[ModelProvider]
+    system_message: str
 
     def __init__(self, sdk: "ContinueSDK", model_providers: List[ModelProvider]):
         self.sdk = sdk
         self.model_providers = model_providers
+        self.system_message = sdk.config.system_message
 
     @classmethod
     async def create(cls, sdk: "ContinueSDK", with_providers: List[ModelProvider] = ["openai"]) -> "Models":
@@ -56,12 +59,12 @@ class Models:
     def __load_openai_model(self, model: str) -> OpenAI:
         api_key = self.provider_keys["openai"]
         if api_key == "":
-            return ProxyServer(self.sdk.ide.unique_id, model)
-        return OpenAI(api_key=api_key, default_model=model)
+            return ProxyServer(self.sdk.ide.unique_id, model, system_message=self.system_message)
+        return OpenAI(api_key=api_key, default_model=model, system_message=self.system_message, azure_info=self.sdk.config.azure_openai_info)
 
     def __load_hf_inference_api_model(self, model: str) -> HuggingFaceInferenceAPI:
         api_key = self.provider_keys["hf_inference_api"]
-        return HuggingFaceInferenceAPI(api_key=api_key, model=model)
+        return HuggingFaceInferenceAPI(api_key=api_key, model=model, system_message=self.system_message)
 
     def __load_anthropic_model(self, model: str) -> Anthropic:
         api_key = self.provider_keys["anthropic"]
@@ -91,6 +94,10 @@ class Models:
     def gpt4(self):
         return self.__load_openai_model("gpt-4")
 
+    @cached_property
+    def ggml(self):
+        return GGML(system_message=self.system_message)
+
     def __model_from_name(self, model_name: str):
         if model_name == "starcoder":
             return self.starcoder
@@ -102,6 +109,8 @@ class Models:
             return self.gpt4
         elif model_name == "claude-2":
             return self.claude2
+        elif model_name == "ggml":
+            return self.ggml
         else:
             raise Exception(f"Unknown model {model_name}")
 

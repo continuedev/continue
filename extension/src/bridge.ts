@@ -1,11 +1,7 @@
 import fetch from "node-fetch";
 import * as path from "path";
 import * as vscode from "vscode";
-import {
-  Configuration,
-  DebugApi,
-  UnittestApi,
-} from "./client";
+import { Configuration, DebugApi, UnittestApi } from "./client";
 import { convertSingleToDoubleQuoteJSON } from "./util/util";
 import { getExtensionUri } from "./util/vscode";
 import { extensionContext } from "./activation/activate";
