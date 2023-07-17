@@ -4,6 +4,7 @@ import subprocess
 from textwrap import dedent
 from typing import Coroutine, List, Literal, Union
 
+from ...libs.llm.ggml import GGML
 from ...models.main import Range
 from ...libs.llm.prompt_utils import MarkdownStyleEncoderDecoder
 from ...models.filesystem_edit import EditDiff, FileEdit, FileEditWithFullContents, FileSystemEdit
@@ -190,8 +191,9 @@ class DefaultModelEditCodeStep(Step):
         # We don't know here all of the functions being passed in.
         # We care because if this prompt itself goes over the limit, then the entire message will have to be cut from the completion.
         # Overflow won't happen, but prune_chat_messages in count_tokens.py will cut out this whole thing, instead of us cutting out only as many lines as we need.
-        model_to_use = sdk.models.gpt4
-        max_tokens = DEFAULT_MAX_TOKENS
+        model_to_use = sdk.models.default
+        max_tokens = MAX_TOKENS_FOR_MODEL.get(
+            model_to_use.name, DEFAULT_MAX_TOKENS) / 2
 
         TOKENS_TO_BE_CONSIDERED_LARGE_RANGE = 1200
         if model_to_use.count_tokens(rif.contents) > TOKENS_TO_BE_CONSIDERED_LARGE_RANGE:
@@ -494,6 +496,10 @@ Please output the code to be inserted at the cursor in order to fulfill the user
         completion_lines_covered = 0
         repeating_file_suffix = False
         line_below_highlighted_range = file_suffix.lstrip().split("\n")[0]
+
+        if isinstance(model_to_use, GGML):
+            messages = [ChatMessage(
+                role="user", content=f"```\n{rif.contents}\n```\n\nUser request: \"{self.user_input}\"\n\nThis is the code after changing to perfectly comply with the user request. It does not include any placeholder code, only real implementations:\n\n```\n", summary=self.user_input)]
 
         generator = model_to_use.stream_chat(
             messages, temperature=0, max_tokens=max_tokens)
