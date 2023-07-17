@@ -400,6 +400,14 @@ function serverPath(): string {
   return sPath;
 }
 
+export function devDataPath(): string {
+  const sPath = path.join(getContinueGlobalPath(), "dev_data");
+  if (!fs.existsSync(sPath)) {
+    fs.mkdirSync(sPath);
+  }
+  return sPath;
+}
+
 function serverVersionPath(): string {
   return path.join(serverPath(), "server_version.txt");
 }

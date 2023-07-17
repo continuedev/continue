@@ -1,9 +1,11 @@
 # These steps are depended upon by ContinueSDK
 import os
 import subprocess
+import difflib
 from textwrap import dedent
 from typing import Coroutine, List, Literal, Union
 
+from ...libs.llm.ggml import GGML
 from ...models.main import Range
 from ...libs.llm.prompt_utils import MarkdownStyleEncoderDecoder
 from ...models.filesystem_edit import EditDiff, FileEdit, FileEditWithFullContents, FileSystemEdit
@@ -11,7 +13,7 @@ from ...models.filesystem import FileSystem, RangeInFile, RangeInFileWithContent
 from ...core.observation import Observation, TextObservation, TracebackObservation, UserInputObservation
 from ...core.main import ChatMessage, ContinueCustomException, Step, SequentialStep
 from ...libs.util.count_tokens import MAX_TOKENS_FOR_MODEL, DEFAULT_MAX_TOKENS
-from ...libs.util.dedent import dedent_and_get_common_whitespace
+from ...libs.util.strings import dedent_and_get_common_whitespace, remove_quotes_and_escapes
 import difflib
 
 
@@ -156,42 +158,32 @@ class DefaultModelEditCodeStep(Step):
     _new_contents: str = ""
     _prompt_and_completion: str = ""
 
-    def _cleanup_output(self, output: str) -> str:
-        output = output.replace('\\"', '"')
-        output = output.replace("\\'", "'")
-        output = output.replace("\\n", "\n")
-        output = output.replace("\\t", "\t")
-        output = output.replace("\\\\", "\\")
-        if output.startswith('"') and output.endswith('"'):
-            output = output[1:-1]
-
-        return output
-
     async def describe(self, models: Models) -> Coroutine[str, None, None]:
         if self._previous_contents.strip() == self._new_contents.strip():
             description = "No edits were made"
         else:
+            changes = '\n'.join(difflib.ndiff(
+                self._previous_contents.splitlines(), self._new_contents.splitlines()))
             description = await models.gpt3516k.complete(dedent(f"""\
-                ```original
-                {self._previous_contents}
-                ```
+                Diff summary: "{self.user_input}"
 
-                ```new
-                {self._new_contents}
+                ```diff
+                {changes}
                 ```
 
                 Please give brief a description of the changes made above using markdown bullet points. Be concise:"""))
         name = await models.gpt3516k.complete(f"Write a very short title to describe this requested change (no quotes): '{self.user_input}'. This is the title:")
-        self.name = self._cleanup_output(name)
+        self.name = remove_quotes_and_escapes(name)
 
-        return f"{self._cleanup_output(description)}"
+        return f"{remove_quotes_and_escapes(description)}"
 
     async def get_prompt_parts(self, rif: RangeInFileWithContents, sdk: ContinueSDK, full_file_contents: str):
         # We don't know here all of the functions being passed in.
         # We care because if this prompt itself goes over the limit, then the entire message will have to be cut from the completion.
         # Overflow won't happen, but prune_chat_messages in count_tokens.py will cut out this whole thing, instead of us cutting out only as many lines as we need.
-        model_to_use = sdk.models.gpt4
-        max_tokens = DEFAULT_MAX_TOKENS
+        model_to_use = sdk.models.default
+        max_tokens = int(MAX_TOKENS_FOR_MODEL.get(
+            model_to_use.name, DEFAULT_MAX_TOKENS) / 2)
 
         TOKENS_TO_BE_CONSIDERED_LARGE_RANGE = 1200
         if model_to_use.count_tokens(rif.contents) > TOKENS_TO_BE_CONSIDERED_LARGE_RANGE:
@@ -494,6 +486,10 @@ Please output the code to be inserted at the cursor in order to fulfill the user
         completion_lines_covered = 0
         repeating_file_suffix = False
         line_below_highlighted_range = file_suffix.lstrip().split("\n")[0]
+
+        if isinstance(model_to_use, GGML):
+            messages = [ChatMessage(
+                role="user", content=f"```\n{rif.contents}\n```\n\nUser request: \"{self.user_input}\"\n\nThis is the code after changing to perfectly comply with the user request. It does not include any placeholder code, only real implementations:\n\n```\n", summary=self.user_input)]
 
         generator = model_to_use.stream_chat(
             messages, temperature=0, max_tokens=max_tokens)

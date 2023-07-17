@@ -58,7 +58,7 @@ class DemoPolicy(Policy):
         if history.get_current() is None:
             return (
                 MessageStep(name="Welcome to Continue", message=dedent("""\
-                    - Highlight code and ask a question or give instructions
+                    - Highlight code section and ask a question or give instructions
                     - Use `cmd+m` (Mac) / `ctrl+m` (Windows) to open Continue
                     - Use `/help` to ask questions about how to use Continue""")) >>
                 WelcomeStep() >>

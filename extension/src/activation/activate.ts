@@ -10,6 +10,7 @@ import {
   startContinuePythonServer,
 } from "./environmentSetup";
 import fetch from "node-fetch";
+import registerQuickFixProvider from "../lang-server/codeActions";
 // import { CapturedTerminal } from "../terminal/terminalEmulator";
 
 const PACKAGE_JSON_RAW_GITHUB_URL =
@@ -55,6 +56,7 @@ export async function activateExtension(context: vscode.ExtensionContext) {
   sendTelemetryEvent(TelemetryEvent.ExtensionActivated);
   registerAllCodeLensProviders(context);
   registerAllCommands(context);
+  registerQuickFixProvider();
 
   // Initialize IDE Protocol Client
   const serverUrl = getContinueServerUrl();

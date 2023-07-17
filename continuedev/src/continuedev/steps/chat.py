@@ -3,6 +3,7 @@ from typing import Any, Coroutine, List
 
 from pydantic import Field
 
+from ..libs.util.strings import remove_quotes_and_escapes
 from .main import EditHighlightedCodeStep
 from .core.core import MessageStep
 from ..core.main import FunctionCall, Models
@@ -43,11 +44,8 @@ class SimpleChatStep(Step):
         finally:
             await generator.aclose()
 
-        self.name = (await sdk.models.gpt35.complete(
-            f"Write a short title for the following chat message: {self.description}")).strip()
-
-        if self.name.startswith('"') and self.name.endswith('"'):
-            self.name = self.name[1:-1]
+        self.name = remove_quotes_and_escapes(await sdk.models.gpt35.complete(
+            f"Write a short title for the following chat message: {self.description}"))
 
         self.chat_context.append(ChatMessage(
             role="assistant",
