@@ -36,8 +36,8 @@ export async function activateExtension(context: vscode.ExtensionContext) {
     })
     .catch((e) => console.log("Error checking for extension updates: ", e));
 
-  // Wrap the server start logic in a new Promise
-  const serverStartPromise = new Promise((resolve, reject) => {
+  // Start the server and display loader if taking > 2 seconds
+  await new Promise((resolve) => {
     let serverStarted = false;
 
     // Start the server and set serverStarted to true when done
@@ -71,15 +71,6 @@ export async function activateExtension(context: vscode.ExtensionContext) {
     }, 2000);
   });
 
-  // Await the server start promise
-  await serverStartPromise;
-
-  // Register commands and providers
-  sendTelemetryEvent(TelemetryEvent.ExtensionActivated);
-  registerAllCodeLensProviders(context);
-  registerAllCommands(context);
-  registerQuickFixProvider();
-
   // Initialize IDE Protocol Client
   const serverUrl = getContinueServerUrl();
   ideProtocolClient = new IdeProtocolClient(
@@ -87,6 +78,7 @@ export async function activateExtension(context: vscode.ExtensionContext) {
     context
   );
 
+  // Register Continue GUI as sidebar webview, and beging a new session
   {
     const sessionIdPromise = await ideProtocolClient.getSessionId();
     const provider = new ContinueGUIWebviewViewProvider(sessionIdPromise);
