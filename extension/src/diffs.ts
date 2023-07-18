@@ -289,7 +289,7 @@ function recordAcceptReject(accepted: boolean, diffInfo: DiffInfo) {
     });
 
     // Send the suggestion to the server
-    ideProtocolClient.sendAcceptRejectSuggestion(accepted);
+    // ideProtocolClient.sendAcceptRejectSuggestion(accepted);
 
     // Write the updated suggestions back to the file
     fs.writeFileSync(
