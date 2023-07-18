@@ -36,21 +36,43 @@ export async function activateExtension(context: vscode.ExtensionContext) {
     })
     .catch((e) => console.log("Error checking for extension updates: ", e));
 
-  // Start the Python server
-  await new Promise((resolve, reject) => {
-    vscode.window.withProgress(
-      {
-        location: vscode.ProgressLocation.Notification,
-        title:
-          "Starting Continue Server... (it may take a minute to download Python packages)",
-        cancellable: false,
-      },
-      async (progress, token) => {
-        await startContinuePythonServer();
-        resolve(null);
+  // Wrap the server start logic in a new Promise
+  const serverStartPromise = new Promise((resolve, reject) => {
+    let serverStarted = false;
+
+    // Start the server and set serverStarted to true when done
+    startContinuePythonServer().then(() => {
+      serverStarted = true;
+      resolve(null);
+    });
+
+    // Wait for 2 seconds
+    setTimeout(() => {
+      // If the server hasn't started after 2 seconds, show the notification
+      if (!serverStarted) {
+        vscode.window.withProgress(
+          {
+            location: vscode.ProgressLocation.Notification,
+            title:
+              "Starting Continue Server... (it may take a minute to download Python packages)",
+            cancellable: false,
+          },
+          async (progress, token) => {
+            // Wait for the server to start
+            while (!serverStarted) {
+              await new Promise((innerResolve) =>
+                setTimeout(innerResolve, 1000)
+              );
+            }
+            return Promise.resolve();
+          }
+        );
       }
-    );
+    }, 2000);
   });
+
+  // Await the server start promise
+  await serverStartPromise;
 
   // Register commands and providers
   sendTelemetryEvent(TelemetryEvent.ExtensionActivated);

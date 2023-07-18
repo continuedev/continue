@@ -120,6 +120,14 @@
           "title": "Active",
           "default": true,
           "type": "boolean"
+        },
+        "logs": {
+          "title": "Logs",
+          "default": [],
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         }
       },
       "required": [
