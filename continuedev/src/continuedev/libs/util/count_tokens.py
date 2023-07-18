@@ -107,3 +107,10 @@ def compile_chat_messages(model: str, msgs: List[ChatMessage], max_tokens: int, 
         })
 
     return history
+
+
+def format_chat_messages(messages: List[ChatMessage]) -> str:
+    formatted = ""
+    for msg in messages:
+        formatted += f"<{msg['role'].capitalize()}>\n{msg['content']}\n\n"
+    return formatted

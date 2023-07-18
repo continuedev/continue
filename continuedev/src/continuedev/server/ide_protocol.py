@@ -24,6 +24,10 @@ class AbstractIdeProtocolServer(ABC):
         """Set whether a file is open"""
 
     @abstractmethod
+    async def showVirtualFile(self, name: str, contents: str):
+        """Show a virtual file"""
+
+    @abstractmethod
     async def setSuggestionsLocked(self, filepath: str, locked: bool = True):
         """Set whether suggestions are locked"""
 

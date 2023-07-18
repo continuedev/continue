@@ -37,6 +37,25 @@ class Models:
     model_providers: List[ModelProvider]
     system_message: str
 
+    """
+    Better to have sdk.llm.stream_chat(messages, model="claude-2").
+    Then you also don't care that it' async.
+    And it's easier to add more models.
+    And intermediate shared code is easier to add.
+    And you can make constants like ContinueModels.GPT35 = "gpt-3.5-turbo"
+    PromptTransformer would be a good concept: You pass a prompt or list of messages and a model, then it outputs the prompt for that model.
+    Easy to reason about, can place anywhere.
+    And you can even pass a Prompt object to sdk.llm.stream_chat maybe, and it'll automatically be transformed for the given model.
+    This can all happen inside of Models?
+
+    class Prompt:
+        def __init__(self, ...info):
+            '''take whatever info is needed to describe the prompt'''
+
+        def to_string(self, model: str) -> str:
+            '''depending on the model, return the single prompt string'''
+    """
+
     def __init__(self, sdk: "ContinueSDK", model_providers: List[ModelProvider]):
         self.sdk = sdk
         self.model_providers = model_providers
@@ -59,8 +78,8 @@ class Models:
     def __load_openai_model(self, model: str) -> OpenAI:
         api_key = self.provider_keys["openai"]
         if api_key == "":
-            return ProxyServer(self.sdk.ide.unique_id, model, system_message=self.system_message)
-        return OpenAI(api_key=api_key, default_model=model, system_message=self.system_message, azure_info=self.sdk.config.azure_openai_info)
+            return ProxyServer(self.sdk.ide.unique_id, model, system_message=self.system_message, write_log=self.sdk.write_log)
+        return OpenAI(api_key=api_key, default_model=model, system_message=self.system_message, azure_info=self.sdk.config.azure_openai_info, write_log=self.sdk.write_log)
 
     def __load_hf_inference_api_model(self, model: str) -> HuggingFaceInferenceAPI:
         api_key = self.provider_keys["hf_inference_api"]
@@ -155,6 +174,9 @@ class ContinueSDK(AbstractContinueSDK):
     @property
     def history(self) -> History:
         return self.__autopilot.history
+
+    def write_log(self, message: str):
+        self.history.timeline[self.history.current_index].logs.append(message)
 
     async def _ensure_absolute_path(self, path: str) -> str:
         if os.path.isabs(path):
@@ -263,7 +285,7 @@ class ContinueSDK(AbstractContinueSDK):
 
         for rif in highlighted_code:
             msg = ChatMessage(content=f"{preface} ({rif.filepath}):\n```\n{rif.contents}\n```",
-                              role="system", summary=f"{preface}: {rif.filepath}")
+                              role="user", summary=f"{preface}: {rif.filepath}")
 
             # Don't insert after latest user message or function call
             i = -1

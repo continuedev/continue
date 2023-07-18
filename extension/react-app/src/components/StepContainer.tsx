@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import styled, { keyframes } from "styled-components";
 import {
   appear,
@@ -13,12 +13,14 @@ import {
   ChevronRight,
   ArrowPath,
   XMark,
+  MagnifyingGlass,
 } from "@styled-icons/heroicons-outline";
 import { StopCircle } from "@styled-icons/heroicons-solid";
 import { HistoryNode } from "../../../schema/HistoryNode";
 import HeaderButtonWithText from "./HeaderButtonWithText";
 import MarkdownPreview from "@uiw/react-markdown-preview";
 import { getMetaKeyLabel, isMetaEquivalentKeyPressed } from "../util";
+import { GUIClientContext } from "../App";
 
 interface StepContainerProps {
   historyNode: HistoryNode;
@@ -32,6 +34,7 @@ interface StepContainerProps {
   onToggle: () => void;
   isFirst: boolean;
   isLast: boolean;
+  index: number;
 }
 
 // #region styled components
@@ -140,6 +143,7 @@ function StepContainer(props: StepContainerProps) {
   const naturalLanguageInputRef = useRef<HTMLTextAreaElement>(null);
   const userInputRef = useRef<HTMLInputElement>(null);
   const isUserInput = props.historyNode.step.name === "UserInputStep";
+  const client = useContext(GUIClientContext);
 
   useEffect(() => {
     if (userInputRef?.current) {
@@ -210,6 +214,17 @@ function StepContainer(props: StepContainerProps) {
             </HeaderButton> */}
 
             <>
+              {(props.historyNode.logs as any)?.length > 0 && (
+                <HeaderButtonWithText
+                  text="Logs"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    client?.showLogsAtIndex(props.index);
+                  }}
+                >
+                  <MagnifyingGlass size="1.4em" />
+                </HeaderButtonWithText>
+              )}
               <HeaderButtonWithText
                 onClick={(e) => {
                   e.stopPropagation();

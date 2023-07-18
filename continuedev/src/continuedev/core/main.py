@@ -102,6 +102,7 @@ class HistoryNode(ContinueBaseModel):
     depth: int
     deleted: bool = False
     active: bool = True
+    logs: List[str] = []
 
     def to_chat_messages(self) -> List[ChatMessage]:
         if self.step.description is None or self.step.manage_own_chat_context:

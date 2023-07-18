@@ -311,6 +311,7 @@ function GUI(props: GUIProps) {
             )
           ) : (
             <StepContainer
+              index={index}
               isLast={index === history.timeline.length - 1}
               isFirst={index === 0}
               open={stepsOpen[index]}
