@@ -86,6 +86,10 @@ class ContinueGUIClientProtocol extends AbstractContinueGUIClientProtocol {
   toggleAddingHighlightedCode(): void {
     this.messenger.send("toggle_adding_highlighted_code", {});
   }
+
+  showLogsAtIndex(index: number): void {
+    this.messenger.send("show_logs_at_index", { index });
+  }
 }
 
 export default ContinueGUIClientProtocol;

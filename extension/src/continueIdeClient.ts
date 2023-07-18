@@ -17,6 +17,8 @@ import { WebsocketMessenger } from "./util/messenger";
 import { diffManager } from "./diffs";
 import path = require("path");
 
+const continueVirtualDocumentScheme = "continue";
+
 class IdeProtocolClient {
   private messenger: WebsocketMessenger | null = null;
   private readonly context: vscode.ExtensionContext;
@@ -136,6 +138,25 @@ class IdeProtocolClient {
         this.sendHighlightedCode(highlightedCode);
       }, 100);
     });
+
+    // Register a content provider for the readonly virtual documents
+    const documentContentProvider = new (class
+      implements vscode.TextDocumentContentProvider
+    {
+      // emitter and its event
+      onDidChangeEmitter = new vscode.EventEmitter<vscode.Uri>();
+      onDidChange = this.onDidChangeEmitter.event;
+
+      provideTextDocumentContent(uri: vscode.Uri): string {
+        return uri.query;
+      }
+    })();
+    context.subscriptions.push(
+      vscode.workspace.registerTextDocumentContentProvider(
+        continueVirtualDocumentScheme,
+        documentContentProvider
+      )
+    );
   }
 
   async handleMessage(
@@ -199,6 +220,9 @@ class IdeProtocolClient {
       case "setFileOpen":
         this.openFile(data.filepath);
         // TODO: Close file if False
+        break;
+      case "showVirtualFile":
+        this.showVirtualFile(data.name, data.contents);
         break;
       case "setSuggestionsLocked":
         this.setSuggestionsLocked(data.filepath, data.locked);
@@ -293,6 +317,20 @@ class IdeProtocolClient {
   openFile(filepath: string) {
     // vscode has a builtin open/get open files
     openEditorAndRevealRange(filepath, undefined, vscode.ViewColumn.One);
+  }
+
+  showVirtualFile(name: string, contents: string) {
+    vscode.workspace
+      .openTextDocument(
+        vscode.Uri.parse(
+          `${continueVirtualDocumentScheme}:${name}?${encodeURIComponent(
+            contents
+          )}`
+        )
+      )
+      .then((doc) => {
+        vscode.window.showTextDocument(doc, { preview: false });
+      });
   }
 
   setSuggestionsLocked(filepath: string, locked: boolean) {

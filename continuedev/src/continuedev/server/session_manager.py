@@ -100,7 +100,7 @@ class SessionManager:
         if session_id not in self.sessions:
             raise SessionNotFound(f"Session {session_id} not found")
         if self.sessions[session_id].ws is None:
-            print(f"Session {session_id} has no websocket")
+            # print(f"Session {session_id} has no websocket")
             return
 
         await self.sessions[session_id].ws.send_json({

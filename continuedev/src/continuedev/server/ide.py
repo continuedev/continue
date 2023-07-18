@@ -224,6 +224,12 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
             "open": open
         })
 
+    async def showVirtualFile(self, name: str, contents: str):
+        await self._send_json("showVirtualFile", {
+            "name": name,
+            "contents": contents
+        })
+
     async def setSuggestionsLocked(self, filepath: str, locked: bool = True):
         # Lock suggestions in the file so they don't ruin the offset before others are inserted
         await self._send_json("setSuggestionsLocked", {
@@ -288,6 +294,8 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
         pass
 
     def __get_autopilot(self):
+        if self.session_id not in self.session_manager.sessions:
+            return None
         return self.session_manager.sessions[self.session_id].autopilot
 
     def onFileEdits(self, edits: List[FileEditWithFullContents]):
@@ -442,7 +450,8 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str = None):
         if session_id is not None:
             session_manager.registered_ides[session_id] = ideProtocolServer
         other_msgs = await ideProtocolServer.initialize(session_id)
-        capture_event(ideProtocolServer.unique_id, "session_started", { "session_id": ideProtocolServer.session_id })
+        capture_event(ideProtocolServer.unique_id, "session_started", {
+                      "session_id": ideProtocolServer.session_id})
 
         for other_msg in other_msgs:
             handle_msg(other_msg)
@@ -463,5 +472,6 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str = None):
         if websocket.client_state != WebSocketState.DISCONNECTED:
             await websocket.close()
 
-        capture_event(ideProtocolServer.unique_id, "session_ended", { "session_id": ideProtocolServer.session_id })
+        capture_event(ideProtocolServer.unique_id, "session_ended", {
+                      "session_id": ideProtocolServer.session_id})
         session_manager.registered_ides.pop(ideProtocolServer.session_id)

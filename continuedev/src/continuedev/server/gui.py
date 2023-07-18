@@ -99,6 +99,8 @@ class GUIProtocolServer(AbstractGUIProtocolServer):
                 self.on_set_editing_at_indices(data["indices"])
             elif message_type == "set_pinned_at_indices":
                 self.on_set_pinned_at_indices(data["indices"])
+            elif message_type == "show_logs_at_index":
+                self.on_show_logs_at_index(data["index"])
         except Exception as e:
             print(e)
 
@@ -165,6 +167,13 @@ class GUIProtocolServer(AbstractGUIProtocolServer):
             self.session.autopilot.set_pinned_at_indices(
                 indices), self.session.autopilot.continue_sdk.ide.unique_id
         )
+
+    def on_show_logs_at_index(self, index: int):
+        name = f"continue_logs.txt"
+        logs = "\n\n############################################\n\n".join(
+            ["This is a log of the exact prompt/completion pairs sent/received from the LLM during this step"] + self.session.autopilot.continue_sdk.history.timeline[index].logs)
+        create_async_task(
+            self.session.autopilot.ide.showVirtualFile(name, logs))
 
 
 @router.websocket("/ws")

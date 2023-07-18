@@ -28,6 +28,8 @@ abstract class AbstractContinueGUIClientProtocol {
   abstract setPinnedAtIndices(indices: number[]): void;
 
   abstract toggleAddingHighlightedCode(): void;
+
+  abstract showLogsAtIndex(index: number): void;
 }
 
 export default AbstractContinueGUIClientProtocol;
