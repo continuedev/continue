@@ -17,15 +17,5 @@ async function dynamicImportAndActivate(context: vscode.ExtensionContext) {
 }
 
 export function activate(context: vscode.ExtensionContext) {
-  // Only show progress if we have to setup
-  vscode.window.withProgress(
-    {
-      location: vscode.ProgressLocation.Notification,
-      title: "Setting up Continue extension...",
-      cancellable: false,
-    },
-    async () => {
-      dynamicImportAndActivate(context);
-    }
-  );
+  dynamicImportAndActivate(context);
 }

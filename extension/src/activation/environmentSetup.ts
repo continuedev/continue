@@ -39,7 +39,7 @@ async function retryThenFail(
 
     // Show corresponding error message depending on the platform
     let msg =
-      "Failed to set up Continue extension. Please email nate@continue.dev and we'll get this fixed ASAP!";
+      "Failed to set up Continue extension. Please email hi@continue.dev and we'll get this fixed ASAP!";
     try {
       switch (process.platform) {
         case "win32":

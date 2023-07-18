@@ -15,7 +15,7 @@ from ..libs.llm.anthropic import AnthropicLLM
 from ..libs.llm.ggml import GGML
 from .observation import Observation
 from ..server.ide_protocol import AbstractIdeProtocolServer
-from .main import Context, ContinueCustomException, History, Step, ChatMessage
+from .main import Context, ContinueCustomException, History, HistoryNode, Step, ChatMessage
 from ..steps.core.core import *
 from ..libs.llm.proxy_server import ProxyServer
 
@@ -155,6 +155,23 @@ class ContinueSDK(AbstractContinueSDK):
     @classmethod
     async def create(cls, autopilot: Autopilot) -> "ContinueSDK":
         sdk = ContinueSDK(autopilot)
+
+        try:
+            config = sdk._load_config()
+            sdk.config = config
+        except Exception as e:
+            print(e)
+            sdk.config = ContinueConfig()
+            msg_step = MessageStep(
+                name="Invalid Continue Config File", message=e.__repr__())
+            msg_step.description = e.__repr__()
+            sdk.history.add_node(HistoryNode(
+                step=msg_step,
+                observation=None,
+                depth=0,
+                active=False
+            ))
+
         sdk.models = await Models.create(sdk)
         return sdk
 

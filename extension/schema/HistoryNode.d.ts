@@ -21,6 +21,7 @@ export type ManageOwnChatContext = boolean;
 export type Depth = number;
 export type Deleted = boolean;
 export type Active = boolean;
+export type Logs = string[];
 
 /**
  * A point in history, a list of which make up History
@@ -31,6 +32,7 @@ export interface HistoryNode1 {
   depth: Depth;
   deleted?: Deleted;
   active?: Active;
+  logs?: Logs;
   [k: string]: unknown;
 }
 export interface Step {
