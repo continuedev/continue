@@ -16,6 +16,10 @@ import fs = require("fs");
 import { WebsocketMessenger } from "./util/messenger";
 import { diffManager } from "./diffs";
 import path = require("path");
+import { sendTelemetryEvent, TelemetryEvent } from "./telemetry";
+import { registerAllCodeLensProviders } from "./lang-server/codeLens";
+import { registerAllCommands } from "./commands";
+import registerQuickFixProvider from "./lang-server/codeActions";
 
 const continueVirtualDocumentScheme = "continue";
 
@@ -75,6 +79,12 @@ class IdeProtocolClient {
     this.context = context;
     this._serverUrl = serverUrl;
     this._newWebsocketMessenger();
+
+    // Register commands and providers
+    sendTelemetryEvent(TelemetryEvent.ExtensionActivated);
+    registerAllCodeLensProviders(context);
+    registerAllCommands(context);
+    registerQuickFixProvider();
 
     // Setup listeners for any file changes in open editors
     // vscode.workspace.onDidChangeTextDocument((event) => {
