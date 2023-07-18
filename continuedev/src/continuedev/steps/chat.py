@@ -35,23 +35,24 @@ class SimpleChatStep(Step):
                 if sdk.current_step_was_deleted():
                     # So that the message doesn't disappear
                     self.hide = False
-                    return
+                    break
 
                 if "content" in chunk:
                     self.description += chunk["content"]
                     completion += chunk["content"]
                     await sdk.update_ui()
         finally:
+            self.name = remove_quotes_and_escapes(await sdk.models.gpt35.complete(
+                f"Write a short title for the following chat message: {self.description}"))
+
+            self.chat_context.append(ChatMessage(
+                role="assistant",
+                content=completion,
+                summary=self.name
+            ))
+
+            # TODO: Never actually closing.
             await generator.aclose()
-
-        self.name = remove_quotes_and_escapes(await sdk.models.gpt35.complete(
-            f"Write a short title for the following chat message: {self.description}"))
-
-        self.chat_context.append(ChatMessage(
-            role="assistant",
-            content=completion,
-            summary=self.name
-        ))
 
 
 class AddFileStep(Step):

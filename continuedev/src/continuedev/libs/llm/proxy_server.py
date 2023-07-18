@@ -58,7 +58,7 @@ class ProxyServer(LLM):
     async def stream_chat(self, messages: List[ChatMessage] = [], **kwargs) -> Coroutine[Any, Any, Generator[Union[Any, List, Dict], None, None]]:
         args = {**self.default_args, **kwargs}
         messages = compile_chat_messages(
-            self.default_model, messages, args["max_tokens"], None, functions=args.get("functions", None), system_message=self.system_message)
+            args["model"], messages, args["max_tokens"], None, functions=args.get("functions", None), system_message=self.system_message)
         self.write_log(f"Prompt: \n\n{format_chat_messages(messages)}")
 
         async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(ssl_context=ssl_context)) as session:
