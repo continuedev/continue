@@ -73,7 +73,7 @@ class AnthropicLLM(LLM):
         args = self._transform_args(args)
 
         messages = compile_chat_messages(
-            args["model"], messages, args["max_tokens_to_sample"], functions=args.get("functions", None))
+            args["model"], messages, args["max_tokens_to_sample"], functions=args.get("functions", None), system_message=self.system_message)
         async for chunk in await self.async_client.completions.create(
             prompt=self.__messages_to_prompt(messages),
             **args
@@ -88,7 +88,7 @@ class AnthropicLLM(LLM):
         args = self._transform_args(args)
 
         messages = compile_chat_messages(
-            args["model"], with_history, args["max_tokens_to_sample"], prompt, functions=None)
+            args["model"], with_history, args["max_tokens_to_sample"], prompt, functions=None, system_message=self.system_message)
         resp = (await self.async_client.completions.create(
             prompt=self.__messages_to_prompt(messages),
             **args
