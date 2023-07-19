@@ -1,15 +1,21 @@
 import json
 from typing import Dict, List, Union
 from ...core.main import ChatMessage
+from .templating import render_templated_string
 import tiktoken
 
-aliases = {}
+aliases = {
+    "ggml": "gpt-3.5-turbo",
+    "claude-2": "gpt-3.5-turbo",
+}
 DEFAULT_MAX_TOKENS = 2048
 MAX_TOKENS_FOR_MODEL = {
     "gpt-3.5-turbo": 4096,
     "gpt-3.5-turbo-0613": 4096,
     "gpt-3.5-turbo-16k": 16384,
-    "gpt-4": 8192
+    "gpt-4": 8192,
+    "ggml": 2048,
+    "claude-2": 100000
 }
 CHAT_MODELS = {
     "gpt-3.5-turbo", "gpt-3.5-turbo-16k", "gpt-4", "gpt-3.5-turbo-0613"
@@ -40,9 +46,17 @@ def prune_raw_prompt_from_top(model: str, prompt: str, tokens_for_completion: in
         return encoding.decode(tokens[-max_tokens:])
 
 
+def count_chat_message_tokens(model: str, chat_message: ChatMessage) -> int:
+    # Doing simpler, safer version of what is here:
+    # https://github.com/openai/openai-cookbook/blob/main/examples/How_to_count_tokens_with_tiktoken.ipynb
+    # every message follows <|start|>{role/name}\n{content}<|end|>\n
+    TOKENS_PER_MESSAGE = 4
+    return count_tokens(model, chat_message.content) + TOKENS_PER_MESSAGE
+
+
 def prune_chat_history(model: str, chat_history: List[ChatMessage], max_tokens: int, tokens_for_completion: int):
     total_tokens = tokens_for_completion + \
-        sum(count_tokens(model, message.content)
+        sum(count_chat_message_tokens(model, message)
             for message in chat_history)
 
     # 1. Replace beyond last 5 messages with summary
@@ -68,34 +82,64 @@ def prune_chat_history(model: str, chat_history: List[ChatMessage], max_tokens: 
         message.content = message.summary
         i += 1
 
-    # 4. Remove entire messages in the last 5
-    while total_tokens > max_tokens and len(chat_history) > 0:
+    # 4. Remove entire messages in the last 5, except last 1
+    while total_tokens > max_tokens and len(chat_history) > 1:
         message = chat_history.pop(0)
         total_tokens -= count_tokens(model, message.content)
+
+    # 5. Truncate last message
+    if total_tokens > max_tokens and len(chat_history) > 0:
+        message = chat_history[0]
+        message.content = prune_raw_prompt_from_top(
+            model, message.content, tokens_for_completion)
+        total_tokens = max_tokens
 
     return chat_history
 
 
-def compile_chat_messages(model: str, msgs: List[ChatMessage], prompt: Union[str, None] = None, functions: Union[List, None] = None, system_message: Union[str, None] = None) -> List[Dict]:
-    prompt_tokens = count_tokens(model, prompt)
+# In case we've missed weird edge cases
+TOKEN_BUFFER_FOR_SAFETY = 100
+
+
+def compile_chat_messages(model: str, msgs: List[ChatMessage], max_tokens: int, prompt: Union[str, None] = None, functions: Union[List, None] = None, system_message: Union[str, None] = None) -> List[Dict]:
+    """
+    The total number of tokens is system_message + sum(msgs) + functions + prompt after it is converted to a message
+    """
+    if prompt is not None:
+        prompt_msg = ChatMessage(role="user", content=prompt, summary=prompt)
+        msgs += [prompt_msg]
+
+    if system_message is not None:
+        # NOTE: System message takes second precedence to user prompt, so it is placed just before
+        # but move back to start after processing
+        rendered_system_message = render_templated_string(system_message)
+        system_chat_msg = ChatMessage(
+            role="system", content=rendered_system_message, summary=rendered_system_message)
+        # insert at second-to-last position
+        msgs.insert(-1, system_chat_msg)
+
+    # Add tokens from functions
+    function_tokens = 0
     if functions is not None:
         for function in functions:
-            prompt_tokens += count_tokens(model, json.dumps(function))
+            function_tokens += count_tokens(model, json.dumps(function))
 
-    msgs = prune_chat_history(model,
-                              msgs, MAX_TOKENS_FOR_MODEL[model], prompt_tokens + DEFAULT_MAX_TOKENS + count_tokens(model, system_message))
-    history = []
-    if system_message:
-        history.append({
-            "role": "system",
-            "content": system_message
-        })
-    history += [msg.to_dict(with_functions=functions is not None)
-                for msg in msgs]
-    if prompt:
-        history.append({
-            "role": "user",
-            "content": prompt
-        })
+    msgs = prune_chat_history(
+        model, msgs, MAX_TOKENS_FOR_MODEL[model], function_tokens + max_tokens + TOKEN_BUFFER_FOR_SAFETY)
+
+    history = [msg.to_dict(with_functions=functions is not None)
+               for msg in msgs]
+
+    # Move system message back to start
+    if system_message is not None and len(history) >= 2 and history[-2]["role"] == "system":
+        system_message_dict = history.pop(-2)
+        history.insert(0, system_message_dict)
 
     return history
+
+
+def format_chat_messages(messages: List[ChatMessage]) -> str:
+    formatted = ""
+    for msg in messages:
+        formatted += f"<{msg['role'].capitalize()}>\n{msg['content']}\n\n"
+    return formatted

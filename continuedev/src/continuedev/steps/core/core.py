@@ -1,17 +1,19 @@
 # These steps are depended upon by ContinueSDK
 import os
 import subprocess
+import difflib
 from textwrap import dedent
 from typing import Coroutine, List, Literal, Union
 
+from ...libs.llm.ggml import GGML
 from ...models.main import Range
 from ...libs.llm.prompt_utils import MarkdownStyleEncoderDecoder
 from ...models.filesystem_edit import EditDiff, FileEdit, FileEditWithFullContents, FileSystemEdit
 from ...models.filesystem import FileSystem, RangeInFile, RangeInFileWithContents
 from ...core.observation import Observation, TextObservation, TracebackObservation, UserInputObservation
-from ...core.main import ChatMessage, Step, SequentialStep
+from ...core.main import ChatMessage, ContinueCustomException, Step, SequentialStep
 from ...libs.util.count_tokens import MAX_TOKENS_FOR_MODEL, DEFAULT_MAX_TOKENS
-from ...libs.util.dedent import dedent_and_get_common_whitespace
+from ...libs.util.strings import dedent_and_get_common_whitespace, remove_quotes_and_escapes
 import difflib
 
 
@@ -152,43 +154,50 @@ class DefaultModelEditCodeStep(Step):
 
         Main task:
         """)
-
+    _previous_contents: str = ""
+    _new_contents: str = ""
     _prompt_and_completion: str = ""
 
-    def _cleanup_output(self, output: str) -> str:
-        output = output.replace('\\"', '"')
-        output = output.replace("\\'", "'")
-        output = output.replace("\\n", "\n")
-        output = output.replace("\\t", "\t")
-        output = output.replace("\\\\", "\\")
-        if output.startswith('"') and output.endswith('"'):
-            output = output[1:-1]
-
-        return output
-
     async def describe(self, models: Models) -> Coroutine[str, None, None]:
-        description = await models.gpt3516k.complete(dedent(f"""\
-            {self._prompt_and_completion}
-            
-            Please give brief a description of the changes made above using markdown bullet points. Be concise and only mention changes made to the commit before, not prefix or suffix:"""))
-        name = await models.gpt3516k.complete(f"Write a very short title to describe this requested change (no quotes): '{self.user_input}'. This is the title:")
-        self.name = self._cleanup_output(name)
+        if self._previous_contents.strip() == self._new_contents.strip():
+            description = "No edits were made"
+        else:
+            changes = '\n'.join(difflib.ndiff(
+                self._previous_contents.splitlines(), self._new_contents.splitlines()))
+            description = await models.gpt3516k.complete(dedent(f"""\
+                Diff summary: "{self.user_input}"
 
-        return f"{self._cleanup_output(description)}"
+                ```diff
+                {changes}
+                ```
+
+                Please give brief a description of the changes made above using markdown bullet points. Be concise:"""))
+        name = await models.gpt3516k.complete(f"Write a very short title to describe this requested change (no quotes): '{self.user_input}'. This is the title:")
+        self.name = remove_quotes_and_escapes(name)
+
+        return f"{remove_quotes_and_escapes(description)}"
 
     async def get_prompt_parts(self, rif: RangeInFileWithContents, sdk: ContinueSDK, full_file_contents: str):
         # We don't know here all of the functions being passed in.
         # We care because if this prompt itself goes over the limit, then the entire message will have to be cut from the completion.
         # Overflow won't happen, but prune_chat_messages in count_tokens.py will cut out this whole thing, instead of us cutting out only as many lines as we need.
-        model_to_use = sdk.models.gpt4
+        model_to_use = sdk.models.default
+        max_tokens = int(MAX_TOKENS_FOR_MODEL.get(
+            model_to_use.name, DEFAULT_MAX_TOKENS) / 2)
+
+        TOKENS_TO_BE_CONSIDERED_LARGE_RANGE = 1200
+        if model_to_use.count_tokens(rif.contents) > TOKENS_TO_BE_CONSIDERED_LARGE_RANGE:
+            self.description += "\n\n**It looks like you've selected a large range to edit, which may take a while to complete. If you'd like to cancel, click the 'X' button above. If you highlight a more specific range, Continue will only edit within it.**"
+
+            # At this point, we also increase the max_tokens parameter so it doesn't stop in the middle of generation
+            # Increase max_tokens to be double the size of the range
+            # But don't exceed twice default max tokens
+            max_tokens = int(min(model_to_use.count_tokens(
+                rif.contents), DEFAULT_MAX_TOKENS) * 2.5)
 
         BUFFER_FOR_FUNCTIONS = 400
         total_tokens = model_to_use.count_tokens(
-            full_file_contents + self._prompt + self.user_input) + BUFFER_FOR_FUNCTIONS + DEFAULT_MAX_TOKENS
-
-        TOKENS_TO_BE_CONSIDERED_LARGE_RANGE = 1000
-        if model_to_use.count_tokens(rif.contents) > TOKENS_TO_BE_CONSIDERED_LARGE_RANGE:
-            self.description += "\n\n**It looks like you've selected a large range to edit, which may take a while to complete. If you'd like to cancel, click the 'X' button above. If you highlight a more specific range, Continue will only edit within it.**"
+            full_file_contents + self._prompt + self.user_input) + BUFFER_FOR_FUNCTIONS + max_tokens
 
         # If using 3.5 and overflows, upgrade to 3.5.16k
         if model_to_use.name == "gpt-3.5-turbo":
@@ -252,9 +261,26 @@ class DefaultModelEditCodeStep(Step):
                 file_suffix = "\n" + file_suffix
                 rif.contents = rif.contents[:-1]
 
-        return file_prefix, rif.contents, file_suffix, model_to_use
+        return file_prefix, rif.contents, file_suffix, model_to_use, max_tokens
 
     def compile_prompt(self, file_prefix: str, contents: str, file_suffix: str, sdk: ContinueSDK) -> str:
+        if contents.strip() == "":
+            # Seperate prompt for insertion at the cursor, the other tends to cause it to repeat whole file
+            prompt = dedent(f"""\
+<file_prefix>
+{file_prefix}
+</file_prefix>
+<insertion_code_here>
+<file_suffix>
+{file_suffix}
+</file_suffix>
+<user_request>
+{self.user_input}
+</user_request>
+
+Please output the code to be inserted at the cursor in order to fulfill the user_request. Do NOT preface your answer or write anything other than code. You should not write any tags, just the code. Make sure to correctly indent the code:""")
+            return prompt
+
         prompt = self._prompt
         if file_prefix.strip() != "":
             prompt += dedent(f"""
@@ -289,22 +315,39 @@ class DefaultModelEditCodeStep(Step):
         await sdk.ide.saveFile(rif.filepath)
         full_file_contents = await sdk.ide.readFile(rif.filepath)
 
-        file_prefix, contents, file_suffix, model_to_use = await self.get_prompt_parts(
+        file_prefix, contents, file_suffix, model_to_use, max_tokens = await self.get_prompt_parts(
             rif, sdk, full_file_contents)
         contents, common_whitespace = dedent_and_get_common_whitespace(
             contents)
         prompt = self.compile_prompt(file_prefix, contents, file_suffix, sdk)
         full_file_contents_lines = full_file_contents.split("\n")
 
-        async def sendDiffUpdate(lines: List[str], sdk: ContinueSDK):
-            nonlocal full_file_contents_lines, rif
+        lines_to_display = []
+
+        async def sendDiffUpdate(lines: List[str], sdk: ContinueSDK, final: bool = False):
+            nonlocal full_file_contents_lines, rif, lines_to_display
 
             completion = "\n".join(lines)
 
             full_prefix_lines = full_file_contents_lines[:rif.range.start.line]
             full_suffix_lines = full_file_contents_lines[rif.range.end.line:]
+
+            # Don't do this at the very end, just show the inserted code
+            if final:
+                lines_to_display = []
+            # Only recalculate at every new-line, because this is sort of expensive
+            elif completion.endswith("\n"):
+                contents_lines = rif.contents.split("\n")
+                rewritten_lines = 0
+                for line in lines:
+                    for i in range(rewritten_lines, len(contents_lines)):
+                        if difflib.SequenceMatcher(None, line, contents_lines[i]).ratio() > 0.7 and contents_lines[i].strip() != "":
+                            rewritten_lines = i + 1
+                            break
+                lines_to_display = contents_lines[rewritten_lines:]
+
             new_file_contents = "\n".join(
-                full_prefix_lines) + "\n" + completion + "\n" + "\n".join(full_suffix_lines)
+                full_prefix_lines) + "\n" + completion + "\n" + ("\n".join(lines_to_display) + "\n" if len(lines_to_display) > 0 else "") + "\n".join(full_suffix_lines)
 
             step_index = sdk.history.current_index
 
@@ -423,6 +466,14 @@ class DefaultModelEditCodeStep(Step):
             current_block_lines.append(line)
 
         messages = await sdk.get_chat_context()
+        # Delete the last user and assistant messages
+        i = len(messages) - 1
+        deleted = 0
+        while i >= 0 and deleted < 2:
+            if messages[i].role == "user" or messages[i].role == "assistant":
+                messages.pop(i)
+                deleted += 1
+            i -= 1
         messages.append(ChatMessage(
             role="user",
             content=prompt,
@@ -435,58 +486,68 @@ class DefaultModelEditCodeStep(Step):
         completion_lines_covered = 0
         repeating_file_suffix = False
         line_below_highlighted_range = file_suffix.lstrip().split("\n")[0]
-        async for chunk in model_to_use.stream_chat(messages, temperature=0):
-            # Stop early if it is repeating the file_suffix or the step was deleted
-            if repeating_file_suffix:
-                break
-            if sdk.current_step_was_deleted():
-                return
 
-            # Accumulate lines
-            if "content" not in chunk:
-                continue
-            chunk = chunk["content"]
-            chunk_lines = chunk.split("\n")
-            chunk_lines[0] = unfinished_line + chunk_lines[0]
-            if chunk.endswith("\n"):
-                unfinished_line = ""
-                chunk_lines.pop()  # because this will be an empty string
-            else:
-                unfinished_line = chunk_lines.pop()
+        if isinstance(model_to_use, GGML):
+            messages = [ChatMessage(
+                role="user", content=f"```\n{rif.contents}\n```\n\nUser request: \"{self.user_input}\"\n\nThis is the code after changing to perfectly comply with the user request. It does not include any placeholder code, only real implementations:\n\n```\n", summary=self.user_input)]
 
-            # Deal with newly accumulated lines
-            for i in range(len(chunk_lines)):
-                # Trailing whitespace doesn't matter
-                chunk_lines[i] = chunk_lines[i].rstrip()
-                chunk_lines[i] = common_whitespace + chunk_lines[i]
+        generator = model_to_use.stream_chat(
+            messages, temperature=sdk.config.temperature, max_tokens=max_tokens)
 
-                # Lines that should signify the end of generation
-                if self.is_end_line(chunk_lines[i]):
+        try:
+            async for chunk in generator:
+                # Stop early if it is repeating the file_suffix or the step was deleted
+                if repeating_file_suffix:
                     break
-                # Lines that should be ignored, like the <> tags
-                elif self.line_to_be_ignored(chunk_lines[i], completion_lines_covered == 0):
+                if sdk.current_step_was_deleted():
+                    return
+
+                # Accumulate lines
+                if "content" not in chunk:
                     continue
-                # Check if we are currently just copying the prefix
-                elif (lines_of_prefix_copied > 0 or completion_lines_covered == 0) and lines_of_prefix_copied < len(file_prefix.splitlines()) and chunk_lines[i] == full_file_contents_lines[lines_of_prefix_copied]:
-                    # This is a sketchy way of stopping it from repeating the file_prefix. Is a bug if output happens to have a matching line
-                    lines_of_prefix_copied += 1
-                    continue
-                # Because really short lines might be expected to be repeated, this is only a !heuristic!
-                # Stop when it starts copying the file_suffix
-                elif chunk_lines[i].strip() == line_below_highlighted_range.strip() and len(chunk_lines[i].strip()) > 4 and not (len(original_lines_below_previous_blocks) > 0 and chunk_lines[i].strip() == original_lines_below_previous_blocks[0].strip()):
-                    repeating_file_suffix = True
-                    break
+                chunk = chunk["content"]
+                chunk_lines = chunk.split("\n")
+                chunk_lines[0] = unfinished_line + chunk_lines[0]
+                if chunk.endswith("\n"):
+                    unfinished_line = ""
+                    chunk_lines.pop()  # because this will be an empty string
+                else:
+                    unfinished_line = chunk_lines.pop()
 
-                # If none of the above, insert the line!
-                if False:
-                    await handle_generated_line(chunk_lines[i])
+                # Deal with newly accumulated lines
+                for i in range(len(chunk_lines)):
+                    # Trailing whitespace doesn't matter
+                    chunk_lines[i] = chunk_lines[i].rstrip()
+                    chunk_lines[i] = common_whitespace + chunk_lines[i]
 
-                lines.append(chunk_lines[i])
-                completion_lines_covered += 1
-                current_line_in_file += 1
+                    # Lines that should signify the end of generation
+                    if self.is_end_line(chunk_lines[i]):
+                        break
+                    # Lines that should be ignored, like the <> tags
+                    elif self.line_to_be_ignored(chunk_lines[i], completion_lines_covered == 0):
+                        continue
+                    # Check if we are currently just copying the prefix
+                    elif (lines_of_prefix_copied > 0 or completion_lines_covered == 0) and lines_of_prefix_copied < len(file_prefix.splitlines()) and chunk_lines[i] == full_file_contents_lines[lines_of_prefix_copied]:
+                        # This is a sketchy way of stopping it from repeating the file_prefix. Is a bug if output happens to have a matching line
+                        lines_of_prefix_copied += 1
+                        continue
+                    # Because really short lines might be expected to be repeated, this is only a !heuristic!
+                    # Stop when it starts copying the file_suffix
+                    elif chunk_lines[i].strip() == line_below_highlighted_range.strip() and len(chunk_lines[i].strip()) > 4 and not (len(original_lines_below_previous_blocks) > 0 and chunk_lines[i].strip() == original_lines_below_previous_blocks[0].strip()):
+                        repeating_file_suffix = True
+                        break
 
-            await sendDiffUpdate(lines + [common_whitespace + unfinished_line], sdk)
+                    # If none of the above, insert the line!
+                    if False:
+                        await handle_generated_line(chunk_lines[i])
 
+                    lines.append(chunk_lines[i])
+                    completion_lines_covered += 1
+                    current_line_in_file += 1
+
+                await sendDiffUpdate(lines + [common_whitespace if unfinished_line.startswith("<") else (common_whitespace + unfinished_line)], sdk)
+        finally:
+            await generator.aclose()
         # Add the unfinished line
         if unfinished_line != "" and not self.line_to_be_ignored(unfinished_line, completion_lines_covered == 0) and not self.is_end_line(unfinished_line):
             unfinished_line = common_whitespace + unfinished_line
@@ -495,7 +556,7 @@ class DefaultModelEditCodeStep(Step):
             completion_lines_covered += 1
             current_line_in_file += 1
 
-        await sendDiffUpdate(lines, sdk)
+        await sendDiffUpdate(lines, sdk, final=True)
 
         if False:
             # If the current block isn't empty, add that suggestion
@@ -529,6 +590,8 @@ class DefaultModelEditCodeStep(Step):
 
         # Record the completion
         completion = "\n".join(lines)
+        self._previous_contents = "\n".join(original_lines)
+        self._new_contents = completion
         self._prompt_and_completion += prompt + completion
 
     async def run(self, sdk: ContinueSDK) -> Coroutine[Observation, None, None]:
@@ -549,6 +612,13 @@ class DefaultModelEditCodeStep(Step):
             rif_dict[rif.filepath] = rif.contents
 
         for rif in rif_with_contents:
+            # If the file doesn't exist, ask them to save it first
+            if not os.path.exists(rif.filepath):
+                message = f"The file {rif.filepath} does not exist. Please save it first."
+                raise ContinueCustomException(
+                    title=message, message=message
+                )
+
             await sdk.ide.setFileOpen(rif.filepath)
             await sdk.ide.setSuggestionsLocked(rif.filepath, True)
             await self.stream_rif(rif, sdk)

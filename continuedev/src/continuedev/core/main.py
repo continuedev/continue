@@ -102,6 +102,7 @@ class HistoryNode(ContinueBaseModel):
     depth: int
     deleted: bool = False
     active: bool = True
+    logs: List[str] = []
 
     def to_chat_messages(self) -> List[ChatMessage]:
         if self.step.description is None or self.step.manage_own_chat_context:
@@ -205,6 +206,7 @@ class HighlightedRangeContext(ContinueBaseModel):
     range: RangeInFileWithContents
     editing: bool
     pinned: bool
+    display_name: str
 
 
 class FullState(ContinueBaseModel):
@@ -257,10 +259,8 @@ class Step(ContinueBaseModel):
 
     def dict(self, *args, **kwargs):
         d = super().dict(*args, **kwargs)
-        if self.description is not None:
-            d["description"] = self.description
-        else:
-            d["description"] = ""
+        # Make sure description is always a string
+        d["description"] = self.description or ""
         return d
 
     @validator("name", pre=True, always=True)

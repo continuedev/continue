@@ -120,6 +120,14 @@
           "title": "Active",
           "default": true,
           "type": "boolean"
+        },
+        "logs": {
+          "title": "Logs",
+          "default": [],
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         }
       },
       "required": [
@@ -222,12 +230,17 @@
         "pinned": {
           "title": "Pinned",
           "type": "boolean"
+        },
+        "display_name": {
+          "title": "Display Name",
+          "type": "string"
         }
       },
       "required": [
         "range",
         "editing",
-        "pinned"
+        "pinned",
+        "display_name"
       ]
     },
     "SlashCommandDescription": {

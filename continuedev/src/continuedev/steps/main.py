@@ -10,7 +10,7 @@ from ..models.filesystem import RangeInFile, RangeInFileWithContents
 from ..core.observation import Observation, TextObservation, TracebackObservation
 from ..libs.llm.prompt_utils import MarkdownStyleEncoderDecoder
 from textwrap import dedent
-from ..core.main import Step
+from ..core.main import ContinueCustomException, Step
 from ..core.sdk import ContinueSDK, Models
 from ..core.observation import Observation
 import subprocess
@@ -97,29 +97,24 @@ class FasterEditHighlightedCodeStep(Step):
         return "Editing highlighted code"
 
     async def run(self, sdk: ContinueSDK) -> Coroutine[Observation, None, None]:
-        range_in_files = await sdk.ide.getHighlightedCode()
+        range_in_files = await sdk.get_code_context(only_editing=True)
         if len(range_in_files) == 0:
-            # Get the full contents of all open files
-            files = await sdk.ide.getOpenFiles()
+            # Get the full contents of all visible files
+            files = await sdk.ide.getVisibleFiles()
             contents = {}
             for file in files:
                 contents[file] = await sdk.ide.readFile(file)
 
-            range_in_files = [RangeInFile.from_entire_file(
+            range_in_files = [RangeInFileWithContents.from_entire_file(
                 filepath, content) for filepath, content in contents.items()]
 
-        rif_with_contents = []
-        for range_in_file in range_in_files:
-            file_contents = await sdk.ide.readRangeInFile(range_in_file)
-            rif_with_contents.append(
-                RangeInFileWithContents.from_range_in_file(range_in_file, file_contents))
-        enc_dec = MarkdownStyleEncoderDecoder(rif_with_contents)
+        enc_dec = MarkdownStyleEncoderDecoder(range_in_files)
         code_string = enc_dec.encode()
         prompt = self._prompt.format(
             code=code_string, user_input=self.user_input)
 
         rif_dict = {}
-        for rif in rif_with_contents:
+        for rif in range_in_files:
             rif_dict[rif.filepath] = rif.contents
 
         completion = await sdk.models.gpt35.complete(prompt)
@@ -193,29 +188,23 @@ class StarCoderEditHighlightedCodeStep(Step):
         return await models.gpt35.complete(f"{self._prompt_and_completion}\n\nPlease give brief a description of the changes made above using markdown bullet points:")
 
     async def run(self, sdk: ContinueSDK) -> Coroutine[Observation, None, None]:
-        range_in_files = await sdk.ide.getHighlightedCode()
+        range_in_files = await sdk.get_code_context(only_editing=True)
         found_highlighted_code = len(range_in_files) > 0
         if not found_highlighted_code:
-            # Get the full contents of all open files
-            files = await sdk.ide.getOpenFiles()
+            # Get the full contents of all visible files
+            files = await sdk.ide.getVisibleFiles()
             contents = {}
             for file in files:
                 contents[file] = await sdk.ide.readFile(file)
 
-            range_in_files = [RangeInFile.from_entire_file(
+            range_in_files = [RangeInFileWithContents.from_entire_file(
                 filepath, content) for filepath, content in contents.items()]
 
-        rif_with_contents = []
-        for range_in_file in range_in_files:
-            file_contents = await sdk.ide.readRangeInFile(range_in_file)
-            rif_with_contents.append(
-                RangeInFileWithContents.from_range_in_file(range_in_file, file_contents))
-
         rif_dict = {}
-        for rif in rif_with_contents:
+        for rif in range_in_files:
             rif_dict[rif.filepath] = rif.contents
 
-        for rif in rif_with_contents:
+        for rif in range_in_files:
             prompt = self._prompt.format(
                 code=rif.contents, user_request=self.user_input)
 
@@ -255,35 +244,35 @@ class EditHighlightedCodeStep(Step):
         return "Editing code"
 
     async def run(self, sdk: ContinueSDK) -> Coroutine[Observation, None, None]:
-        range_in_files = await sdk.ide.getHighlightedCode()
-        if len(range_in_files) == 0:
-            # Get the full contents of all open files
-            files = await sdk.ide.getOpenFiles()
-            contents = {}
-            for file in files:
-                contents[file] = await sdk.ide.readFile(file)
+        range_in_files = sdk.get_code_context(only_editing=True)
 
-            range_in_files = [RangeInFile.from_entire_file(
-                filepath, content) for filepath, content in contents.items()]
-
-        # If still no highlighted code, create a new file and edit there
+        # If nothing highlighted, insert at the cursor if possible
         if len(range_in_files) == 0:
-            # Create a new file
-            new_file_path = "new_file.txt"
-            await sdk.add_file(new_file_path, "")
-            range_in_files = [RangeInFile.from_entire_file(new_file_path, "")]
+            highlighted_code = await sdk.ide.getHighlightedCode()
+            if highlighted_code is not None:
+                for rif in highlighted_code:
+                    if os.path.dirname(rif.filepath) == os.path.expanduser(os.path.join("~", ".continue", "diffs")):
+                        raise ContinueCustomException(
+                            message="Please accept or reject the change before making another edit in this file.", title="Accept/Reject First")
+                    if rif.range.start == rif.range.end:
+                        range_in_files.append(
+                            RangeInFileWithContents.from_range_in_file(rif, ""))
+
+        # If still no highlighted code, raise error
+        if len(range_in_files) == 0:
+            raise ContinueCustomException(
+                message="Please highlight some code and try again.", title="No Code Selected")
+
+        range_in_files = list(map(lambda x: RangeInFile(
+            filepath=x.filepath, range=x.range
+        ), range_in_files))
+
+        for range_in_file in range_in_files:
+            if os.path.dirname(range_in_file.filepath) == os.path.expanduser(os.path.join("~", ".continue", "diffs")):
+                self.description = "Please accept or reject the change before making another edit in this file."
+                return
 
         await sdk.run_step(DefaultModelEditCodeStep(user_input=self.user_input, range_in_files=range_in_files))
-
-
-class FindCodeStep(Step):
-    prompt: str
-
-    async def describe(self, models: Models) -> Coroutine[str, None, None]:
-        return "Finding code"
-
-    async def run(self, sdk: ContinueSDK) -> Coroutine[Observation, None, None]:
-        return await sdk.ide.getOpenFiles()
 
 
 class UserInputStep(Step):

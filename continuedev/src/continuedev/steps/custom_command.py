@@ -1,7 +1,7 @@
+from ..libs.util.templating import render_templated_string
 from ..core.main import Step
 from ..core.sdk import ContinueSDK
-from ..steps.core.core import UserInputStep
-from ..steps.chat import ChatWithFunctions, SimpleChatStep
+from ..steps.chat import SimpleChatStep
 
 
 class CustomCommandStep(Step):
@@ -15,7 +15,9 @@ class CustomCommandStep(Step):
         return self.prompt
 
     async def run(self, sdk: ContinueSDK):
-        prompt_user_input = f"Task: {self.prompt}. Additional info: {self.user_input}"
+        task = render_templated_string(self.prompt)
+
+        prompt_user_input = f"Task: {task}. Additional info: {self.user_input}"
         messages = await sdk.get_chat_context()
         # Find the last chat message with this slash command and replace it with the user input
         for i in range(len(messages) - 1, -1, -1):

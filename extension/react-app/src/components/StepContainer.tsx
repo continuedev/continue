@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import styled, { keyframes } from "styled-components";
 import {
   appear,
@@ -6,18 +6,21 @@ import {
   secondaryDark,
   vscBackground,
   vscBackgroundTransparent,
+  vscForeground,
 } from ".";
 import {
   ChevronDown,
   ChevronRight,
   ArrowPath,
   XMark,
+  MagnifyingGlass,
 } from "@styled-icons/heroicons-outline";
 import { StopCircle } from "@styled-icons/heroicons-solid";
 import { HistoryNode } from "../../../schema/HistoryNode";
-import ReactMarkdown from "react-markdown";
 import HeaderButtonWithText from "./HeaderButtonWithText";
-import CodeBlock from "./CodeBlock";
+import MarkdownPreview from "@uiw/react-markdown-preview";
+import { getMetaKeyLabel, isMetaEquivalentKeyPressed } from "../util";
+import { GUIClientContext } from "../App";
 
 interface StepContainerProps {
   historyNode: HistoryNode;
@@ -31,6 +34,7 @@ interface StepContainerProps {
   onToggle: () => void;
   isFirst: boolean;
   isLast: boolean;
+  index: number;
 }
 
 // #region styled components
@@ -38,7 +42,6 @@ interface StepContainerProps {
 const MainDiv = styled.div<{ stepDepth: number; inFuture: boolean }>`
   opacity: ${(props) => (props.inFuture ? 0.3 : 1)};
   animation: ${appear} 0.3s ease-in-out;
-  /* padding-left: ${(props) => props.stepDepth * 20}px; */
   overflow: hidden;
   margin-left: 0px;
   margin-right: 0px;
@@ -52,12 +55,7 @@ const StepContainerDiv = styled.div<{ open: boolean }>`
 `;
 
 const HeaderDiv = styled.div<{ error: boolean; loading: boolean }>`
-  background-color: ${(props) =>
-    props.error
-      ? "#522"
-      : props.loading
-      ? vscBackgroundTransparent
-      : vscBackground};
+  background-color: ${(props) => (props.error ? "#522" : vscBackground)};
   display: grid;
   grid-template-columns: 1fr auto auto;
   grid-gap: 8px;
@@ -70,19 +68,6 @@ const ContentDiv = styled.div<{ isUserInput: boolean }>`
   background-color: ${(props) =>
     props.isUserInput ? secondaryDark : vscBackground};
   font-size: 13px;
-`;
-
-const MarkdownPre = styled.pre`
-  background-color: ${secondaryDark};
-  padding: 10px;
-  border-radius: ${defaultBorderRadius};
-  border: 0.5px solid white;
-`;
-
-const StyledCode = styled.code`
-  word-wrap: break-word;
-  color: #f69292;
-  background: transparent;
 `;
 
 const gradient = keyframes`
@@ -124,6 +109,33 @@ const GradientBorder = styled.div<{
   background-size: 200% 200%;
 `;
 
+const StyledMarkdownPreview = styled(MarkdownPreview)`
+  pre {
+    background-color: ${secondaryDark};
+    padding: 1px;
+    border-radius: ${defaultBorderRadius};
+    border: 0.5px solid white;
+  }
+
+  code {
+    color: #f78383;
+    word-wrap: break-word;
+    border-radius: ${defaultBorderRadius};
+    background-color: ${secondaryDark};
+  }
+
+  pre > code {
+    background-color: ${secondaryDark};
+    color: ${vscForeground};
+  }
+
+  background-color: ${vscBackground};
+  font-family: "Lexend", sans-serif;
+  font-size: 13px;
+  padding: 8px;
+  color: ${vscForeground};
+`;
+
 // #endregion
 
 function StepContainer(props: StepContainerProps) {
@@ -131,6 +143,7 @@ function StepContainer(props: StepContainerProps) {
   const naturalLanguageInputRef = useRef<HTMLTextAreaElement>(null);
   const userInputRef = useRef<HTMLInputElement>(null);
   const isUserInput = props.historyNode.step.name === "UserInputStep";
+  const client = useContext(GUIClientContext);
 
   useEffect(() => {
     if (userInputRef?.current) {
@@ -158,7 +171,7 @@ function StepContainer(props: StepContainerProps) {
     >
       <StepContainerDiv open={props.open}>
         <GradientBorder
-          loading={props.historyNode.active as boolean | false}
+          loading={(props.historyNode.active as boolean) || false}
           isFirst={props.isFirst}
           isLast={props.isLast}
           borderColor={
@@ -170,7 +183,7 @@ function StepContainer(props: StepContainerProps) {
           }
           className="overflow-hidden cursor-pointer"
           onClick={(e) => {
-            if (e.metaKey) {
+            if (isMetaEquivalentKeyPressed(e)) {
               props.onToggleAll();
             } else {
               props.onToggle();
@@ -178,7 +191,7 @@ function StepContainer(props: StepContainerProps) {
           }}
         >
           <HeaderDiv
-            loading={props.historyNode.active as boolean | false}
+            loading={(props.historyNode.active as boolean) || false}
             error={props.historyNode.observation?.error ? true : false}
           >
             <div className="m-2">
@@ -201,12 +214,27 @@ function StepContainer(props: StepContainerProps) {
             </HeaderButton> */}
 
             <>
+              {(props.historyNode.logs as any)?.length > 0 && (
+                <HeaderButtonWithText
+                  text="Logs"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    client?.showLogsAtIndex(props.index);
+                  }}
+                >
+                  <MagnifyingGlass size="1.4em" />
+                </HeaderButtonWithText>
+              )}
               <HeaderButtonWithText
                 onClick={(e) => {
                   e.stopPropagation();
                   props.onDelete();
                 }}
-                text={props.historyNode.active ? "Stop (⌘⌫)" : "Delete"}
+                text={
+                  props.historyNode.active
+                    ? `Stop (${getMetaKeyLabel()}⌫)`
+                    : "Delete"
+                }
               >
                 {props.historyNode.active ? (
                   <StopCircle size="1.6em" onClick={props.onDelete} />
@@ -242,31 +270,19 @@ function StepContainer(props: StepContainerProps) {
           )}
 
           {props.historyNode.observation?.error ? (
-            <pre className="overflow-x-scroll">
-              {props.historyNode.observation.error as string}
-            </pre>
+            <details>
+              <summary>View Traceback</summary>
+              <pre className="overflow-x-scroll">
+                {props.historyNode.observation.error as string}
+              </pre>
+            </details>
           ) : (
-            <ReactMarkdown
-              key={1}
-              className="overflow-x-scroll"
-              components={{
-                pre: ({ node, ...props }) => {
-                  return (
-                    <CodeBlock
-                      children={(props.children[0] as any).props.children[0]}
-                    />
-                  );
-                },
-                code: ({ node, ...props }) => {
-                  return <StyledCode children={props.children[0] as any} />;
-                },
-                ul: ({ node, ...props }) => {
-                  return <ul className="ml-0" {...props} />;
-                },
+            <StyledMarkdownPreview
+              source={props.historyNode.step.description || ""}
+              wrapperElement={{
+                "data-color-mode": "dark",
               }}
-            >
-              {props.historyNode.step.description as any}
-            </ReactMarkdown>
+            />
           )}
         </ContentDiv>
       </StepContainerDiv>

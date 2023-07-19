@@ -1,13 +1,13 @@
 from functools import cached_property
 import traceback
 import time
-from typing import Any, Callable, Coroutine, Dict, List
+from typing import Any, Callable, Coroutine, Dict, List, Union
 import os
 from aiohttp import ClientPayloadError
+from pydantic import root_validator
 
 from ..models.filesystem import RangeInFileWithContents
 from ..models.filesystem_edit import FileEditWithFullContents
-from ..libs.llm import LLM
 from .observation import Observation, InternalErrorObservation
 from ..server.ide_protocol import AbstractIdeProtocolServer
 from ..libs.util.queue import AsyncSubscriptionQueue
@@ -16,9 +16,10 @@ from .main import Context, ContinueCustomException, HighlightedRangeContext, Pol
 from ..steps.core.core import ReversibleStep, ManualEditStep, UserInputStep
 from ..libs.util.telemetry import capture_event
 from .sdk import ContinueSDK
-import asyncio
+from ..libs.util.step_name_to_steps import get_step_from_name
 from ..libs.util.traceback_parsers import get_python_traceback, get_javascript_traceback
 from openai import error as openai_errors
+from ..libs.util.create_async_task import create_async_task
 
 
 def get_error_title(e: Exception) -> str:
@@ -33,9 +34,11 @@ def get_error_title(e: Exception) -> str:
     elif isinstance(e, ClientPayloadError):
         return "The request to OpenAI failed. Please try again."
     elif isinstance(e, openai_errors.APIConnectionError):
-        return "The request failed. Please check your internet connection and try again."
+        return "The request failed. Please check your internet connection and try again. If this issue persists, you can use our API key for free by going to VS Code settings and changing the value of continue.OPENAI_API_KEY to \"\""
     elif isinstance(e, openai_errors.InvalidRequestError):
-        return 'Your API key does not have access to GPT-4. You can use ours for free by going to VS Code settings and changing the value of continue.OPENAI_API_KEY to ""'
+        return 'Invalid request sent to OpenAI. Please try again.'
+    elif e.__str__().startswith("Cannot connect to host"):
+        return "The request failed. Please check your internet connection and try again."
     return e.__str__() or e.__repr__()
 
 
@@ -44,7 +47,10 @@ class Autopilot(ContinueBaseModel):
     ide: AbstractIdeProtocolServer
     history: History = History.from_empty()
     context: Context = Context()
+    full_state: Union[FullState, None] = None
     _on_update_callbacks: List[Callable[[FullState], None]] = []
+
+    continue_sdk: ContinueSDK = None
 
     _active: bool = False
     _should_halt: bool = False
@@ -53,16 +59,25 @@ class Autopilot(ContinueBaseModel):
     _user_input_queue = AsyncSubscriptionQueue()
     _retry_queue = AsyncSubscriptionQueue()
 
-    @cached_property
-    def continue_sdk(self) -> ContinueSDK:
-        return ContinueSDK(self)
+    @classmethod
+    async def create(cls, policy: Policy, ide: AbstractIdeProtocolServer, full_state: FullState) -> "Autopilot":
+        autopilot = cls(ide=ide, policy=policy)
+        autopilot.continue_sdk = await ContinueSDK.create(autopilot)
+        return autopilot
 
     class Config:
         arbitrary_types_allowed = True
         keep_untouched = (cached_property,)
 
+    @root_validator(pre=True)
+    def fill_in_values(cls, values):
+        full_state: FullState = values.get('full_state')
+        if full_state is not None:
+            values['history'] = full_state.history
+        return values
+
     def get_full_state(self) -> FullState:
-        return FullState(
+        full_state = FullState(
             history=self.history,
             active=self._active,
             user_input_queue=self._main_user_input_queue,
@@ -71,6 +86,8 @@ class Autopilot(ContinueBaseModel):
             slash_commands=self.get_available_slash_commands(),
             adding_highlighted_code=self._adding_highlighted_code,
         )
+        self.full_state = full_state
+        return full_state
 
     def get_available_slash_commands(self) -> List[Dict]:
         custom_commands = list(map(lambda x: {
@@ -83,9 +100,14 @@ class Autopilot(ContinueBaseModel):
         self.continue_sdk.update_default_model(model)
 
     async def clear_history(self):
+        # Reset history
         self.history = History.from_empty()
         self._main_user_input_queue = []
         self._active = False
+
+        # Also remove all context
+        self._highlighted_ranges = []
+
         await self.update_subscribers()
 
     def on_update(self, callback: Coroutine["FullState", None, None]):
@@ -148,31 +170,46 @@ class Autopilot(ContinueBaseModel):
         if not any(map(lambda x: x.editing, self._highlighted_ranges)):
             self._highlighted_ranges[0].editing = True
 
+    def _disambiguate_highlighted_ranges(self):
+        """If any files have the same name, also display their folder name"""
+        name_status: Dict[str, set] = {
+        }  # basename -> set of full paths with that basename
+        for rif in self._highlighted_ranges:
+            basename = os.path.basename(rif.range.filepath)
+            if basename in name_status:
+                name_status[basename].add(rif.range.filepath)
+            else:
+                name_status[basename] = {rif.range.filepath}
+
+        for rif in self._highlighted_ranges:
+            basename = os.path.basename(rif.range.filepath)
+            if len(name_status[basename]) > 1:
+                rif.display_name = os.path.join(
+                    os.path.basename(os.path.dirname(rif.range.filepath)), basename)
+            else:
+                rif.display_name = basename
+
     async def handle_highlighted_code(self, range_in_files: List[RangeInFileWithContents]):
-
-        # If un-highlighting, then remove the range
-        if len(self._highlighted_ranges) == 1 and len(range_in_files) <= 1 and (len(range_in_files) == 0 or range_in_files[0].range.start == range_in_files[0].range.end) and not self._adding_highlighted_code:
-            self._highlighted_ranges = []
-            await self.update_subscribers()
-            return
-
-        # If not toggled to be adding context, only edit or add the first range
-        if not self._adding_highlighted_code and len(self._highlighted_ranges) > 0:
-            if len(range_in_files) == 0:
-                return
-            if range_in_files[0].range.overlaps_with(self._highlighted_ranges[0].range.range) and range_in_files[0].filepath == self._highlighted_ranges[0].range.filepath:
-                self._highlighted_ranges = [HighlightedRangeContext(
-                    range=range_in_files[0].range, editing=True, pinned=False)]
-                await self.update_subscribers()
-                return
-
         # Filter out rifs from ~/.continue/diffs folder
         range_in_files = [
             rif for rif in range_in_files if not os.path.dirname(rif.filepath) == os.path.expanduser("~/.continue/diffs")]
 
+        # Make sure all filepaths are relative to workspace
         workspace_path = self.continue_sdk.ide.workspace_directory
-        for rif in range_in_files:
-            rif.filepath = os.path.basename(rif.filepath)
+
+        # If not adding highlighted code
+        if not self._adding_highlighted_code:
+            if len(self._highlighted_ranges) == 1 and len(range_in_files) <= 1 and (len(range_in_files) == 0 or range_in_files[0].range.start == range_in_files[0].range.end):
+                # If un-highlighting the range to edit, then remove the range
+                self._highlighted_ranges = []
+                await self.update_subscribers()
+            elif len(range_in_files) > 0:
+                # Otherwise, replace the current range with the new one
+                # This is the first range to be highlighted
+                self._highlighted_ranges = [HighlightedRangeContext(
+                    range=range_in_files[0], editing=True, pinned=False, display_name=os.path.basename(range_in_files[0].filepath))]
+                await self.update_subscribers()
+            return
 
         # If current range overlaps with any others, delete them and only keep the new range
         new_ranges = []
@@ -193,10 +230,11 @@ class Autopilot(ContinueBaseModel):
                 new_ranges.append(rif)
 
         self._highlighted_ranges = new_ranges + [HighlightedRangeContext(
-            range=rif, editing=False, pinned=False
+            range=rif, editing=False, pinned=False, display_name=os.path.basename(rif.filepath)
         ) for rif in range_in_files]
 
         self._make_sure_is_editing_range()
+        self._disambiguate_highlighted_ranges()
 
         await self.update_subscribers()
 
@@ -209,6 +247,8 @@ class Autopilot(ContinueBaseModel):
     async def delete_at_index(self, index: int):
         self.history.timeline[index].step.hide = True
         self.history.timeline[index].deleted = True
+        self.history.timeline[index].active = False
+
         await self.update_subscribers()
 
     async def delete_context_at_indices(self, indices: List[int]):
@@ -252,7 +292,7 @@ class Autopilot(ContinueBaseModel):
         #     i -= 1
 
         capture_event(self.continue_sdk.ide.unique_id, 'step run', {
-                      'step_name': step.name, 'params': step.dict()})
+            'step_name': step.name, 'params': step.dict()})
 
         if not is_future_step:
             # Check manual edits buffer, clear out if needed by creating a ManualEditStep
@@ -286,12 +326,13 @@ class Autopilot(ContinueBaseModel):
                 e.__class__, ContinueCustomException)
 
             error_string = e.message if is_continue_custom_exception else '\n'.join(
-                traceback.format_tb(e.__traceback__)) + f"\n\n{e.__repr__()}"
+                traceback.format_exception(e))
             error_title = e.title if is_continue_custom_exception else get_error_title(
                 e)
 
             # Attach an InternalErrorObservation to the step and unhide it.
-            print(f"Error while running step: \n{error_string}\n{error_title}")
+            print(
+                f"Error while running step: \n{error_string}\n{error_title}")
             capture_event(self.continue_sdk.ide.unique_id, 'step error', {
                 'error_message': error_string, 'error_title': error_title, 'step_name': step.name, 'params': step.dict()})
 
@@ -343,7 +384,8 @@ class Autopilot(ContinueBaseModel):
             # Update subscribers with new description
             await self.update_subscribers()
 
-        asyncio.create_task(update_description())
+        create_async_task(update_description(),
+                          self.continue_sdk.ide.unique_id)
 
         return observation
 

@@ -1,30 +1,20 @@
-import React, {
-  useCallback,
-  useEffect,
-  useImperativeHandle,
-  useState,
-} from "react";
+import React, { useEffect, useImperativeHandle, useState } from "react";
 import { useCombobox } from "downshift";
 import styled from "styled-components";
 import {
-  buttonColor,
   defaultBorderRadius,
   lightGray,
   secondaryDark,
   vscBackground,
+  vscForeground,
 } from ".";
 import CodeBlock from "./CodeBlock";
-import { RangeInFile } from "../../../src/client";
 import PillButton from "./PillButton";
 import HeaderButtonWithText from "./HeaderButtonWithText";
-import {
-  Trash,
-  LockClosed,
-  LockOpen,
-  Plus,
-  DocumentPlus,
-} from "@styled-icons/heroicons-outline";
+import { DocumentPlus } from "@styled-icons/heroicons-outline";
 import { HighlightedRangeContext } from "../../../schema/FullState";
+import { postVscMessage } from "../vscode";
+import { getMetaKeyLabel } from "../util";
 
 // #region styled components
 const mainInputFontSize = 13;
@@ -48,21 +38,6 @@ const EmptyPillDiv = styled.div`
   }
 `;
 
-const ContextDropdown = styled.div`
-  position: absolute;
-  padding: 4px;
-  width: calc(100% - 16px - 8px);
-  background-color: ${secondaryDark};
-  color: white;
-  border-bottom-right-radius: ${defaultBorderRadius};
-  border-bottom-left-radius: ${defaultBorderRadius};
-  /* border: 1px solid white; */
-  border-top: none;
-  margin: 8px;
-  outline: 1px solid orange;
-  z-index: 5;
-`;
-
 const MainTextInput = styled.textarea`
   resize: none;
 
@@ -74,7 +49,7 @@ const MainTextInput = styled.textarea`
   height: auto;
   width: 100%;
   background-color: ${secondaryDark};
-  color: white;
+  color: ${vscForeground};
   z-index: 1;
   border: 1px solid transparent;
 
@@ -97,14 +72,15 @@ const Ul = styled.ul<{
   position: absolute;
   background: ${vscBackground};
   background-color: ${secondaryDark};
-  color: white;
+  color: ${vscForeground};
   max-height: ${UlMaxHeight}px;
+  width: calc(100% - 16px);
   overflow-y: scroll;
   overflow-x: hidden;
   padding: 0;
   ${({ hidden }) => hidden && "display: none;"}
   border-radius: ${defaultBorderRadius};
-  border: 0.5px solid gray;
+  outline: 0.5px solid gray;
   z-index: 2;
   // Get rid of scrollbar and its padding
   scrollbar-width: none;
@@ -120,6 +96,7 @@ const Li = styled.li<{
   selected: boolean;
   isLastItem: boolean;
 }>`
+  background-color: ${secondaryDark};
   ${({ highlighted }) => highlighted && "background: #ff000066;"}
   ${({ selected }) => selected && "font-weight: bold;"}
     padding: 0.5rem 0.75rem;
@@ -149,10 +126,6 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
   // The position of the current command you are typing now, so the one that will be appended to history once you press enter
   const [positionInHistory, setPositionInHistory] = React.useState<number>(0);
   const [items, setItems] = React.useState(props.items);
-  const [hoveringButton, setHoveringButton] = React.useState(false);
-  const [hoveringContextDropdown, setHoveringContextDropdown] =
-    React.useState(false);
-  const [pinned, setPinned] = useState(false);
   const [highlightedCodeSections, setHighlightedCodeSections] = React.useState(
     props.highlightedCodeSections || []
   );
@@ -179,6 +152,27 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
   });
 
   useImperativeHandle(ref, () => downshiftProps, [downshiftProps]);
+
+  const [metaKeyPressed, setMetaKeyPressed] = useState(false);
+  const [focused, setFocused] = useState(false);
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Meta") {
+        setMetaKeyPressed(true);
+      }
+    };
+    const handleKeyUp = (e: KeyboardEvent) => {
+      if (e.key === "Meta") {
+        setMetaKeyPressed(false);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("keyup", handleKeyUp);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("keyup", handleKeyUp);
+    };
+  });
 
   useEffect(() => {
     if (!inputRef.current) {
@@ -221,11 +215,19 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
         )} */}
         {highlightedCodeSections.map((section, idx) => (
           <PillButton
+            warning={
+              section.range.contents.length > 4000 && section.editing
+                ? "Editing such a large range may be slow"
+                : undefined
+            }
+            onlyShowDelete={
+              highlightedCodeSections.length <= 1 || section.editing
+            }
             editing={section.editing}
             pinned={section.pinned}
             index={idx}
-            key={`${section.filepath}${idx}`}
-            title={`${section.range.filepath} (${
+            key={`${section.display_name}${idx}`}
+            title={`${section.display_name} (${
               section.range.range.start.line + 1
             }-${section.range.range.end.line + 1})`}
             onDelete={() => {
@@ -238,15 +240,6 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
                 return newSections;
               });
             }}
-            onHover={(val: boolean) => {
-              if (val) {
-                setHoveringButton(val);
-              } else {
-                setTimeout(() => {
-                  setHoveringButton(val);
-                }, 100);
-              }
-            }}
           />
         ))}
         {props.highlightedCodeSections.length > 0 &&
@@ -256,11 +249,11 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
                 props.onToggleAddContext();
               }}
             >
-              Highlight to Add Context
+              Highlight code section
             </EmptyPillDiv>
           ) : (
             <HeaderButtonWithText
-              text="Add to Context"
+              text="Add more code to context"
               onClick={() => {
                 props.onToggleAddContext();
               }}
@@ -272,7 +265,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
       <div className="flex px-2" ref={divRef} hidden={!downshiftProps.isOpen}>
         <MainTextInput
           disabled={props.disabled}
-          placeholder="Ask a question, give instructions, or type '/' to see slash commands"
+          placeholder={`Ask a question, give instructions, or type '/' to see slash commands`}
           {...getInputProps({
             onChange: (e) => {
               const target = e.target as HTMLTextAreaElement;
@@ -284,6 +277,13 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
               ).toString()}px`;
 
               // setShowContextDropdown(target.value.endsWith("@"));
+            },
+            onFocus: (e) => {
+              setFocused(true);
+            },
+            onBlur: (e) => {
+              setFocused(false);
+              postVscMessage("blurContinueInput", {});
             },
             onKeyDown: (event) => {
               if (event.key === "Enter" && event.shiftKey) {
@@ -311,7 +311,6 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
               ) {
                 (event.nativeEvent as any).preventDownshiftDefault = true;
               } else if (event.key === "ArrowUp") {
-                console.log("OWJFOIJO");
                 if (positionInHistory == 0) return;
                 else if (
                   positionInHistory == history.length &&
@@ -340,6 +339,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
           })}
           showAbove={showAbove()}
           ulHeightPixels={ulRef.current?.getBoundingClientRect().height || 0}
+          hidden={!downshiftProps.isOpen || items.length === 0}
         >
           {downshiftProps.isOpen &&
             items.map((item, index) => (
@@ -357,28 +357,15 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
             ))}
         </Ul>
       </div>
-      {/* <span className="text-trueGray-400 ml-auto m-auto text-xs text-right">
-        Highlight code to include as context. Currently open file included by
-        default. {highlightedCodeSections.length === 0 && ""}
-      </span> */}
-      <ContextDropdown
-        onMouseEnter={() => {
-          setHoveringContextDropdown(true);
-        }}
-        onMouseLeave={() => {
-          setHoveringContextDropdown(false);
-        }}
-        hidden={true || (!hoveringContextDropdown && !hoveringButton)}
-      >
-        {highlightedCodeSections.map((section, idx) => (
-          <>
-            <p>{section.range.filepath}</p>
-            <CodeBlock showCopy={false} key={idx}>
-              {section.range.contents}
-            </CodeBlock>
-          </>
-        ))}
-      </ContextDropdown>
+      {highlightedCodeSections.length === 0 &&
+        (downshiftProps.inputValue?.startsWith("/edit") ||
+          (focused &&
+            metaKeyPressed &&
+            downshiftProps.inputValue?.length > 0)) && (
+          <div className="text-trueGray-400 pr-4 text-xs text-right">
+            Inserting at cursor
+          </div>
+        )}
     </>
   );
 });

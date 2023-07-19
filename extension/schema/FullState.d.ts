@@ -21,6 +21,7 @@ export type ManageOwnChatContext = boolean;
 export type Depth = number;
 export type Deleted = boolean;
 export type Active = boolean;
+export type Logs = string[];
 export type Timeline = HistoryNode[];
 export type CurrentIndex = number;
 export type Active1 = boolean;
@@ -32,6 +33,7 @@ export type Character = number;
 export type Contents = string;
 export type Editing = boolean;
 export type Pinned = boolean;
+export type DisplayName = string;
 export type HighlightedRanges = HighlightedRangeContext[];
 export type Name3 = string;
 export type Description1 = string;
@@ -68,6 +70,7 @@ export interface HistoryNode {
   depth: Depth;
   deleted?: Deleted;
   active?: Active;
+  logs?: Logs;
   [k: string]: unknown;
 }
 export interface Step {
@@ -102,6 +105,7 @@ export interface HighlightedRangeContext {
   range: RangeInFileWithContents;
   editing: Editing;
   pinned: Pinned;
+  display_name: DisplayName;
   [k: string]: unknown;
 }
 /**

@@ -3,6 +3,7 @@ from typing import Any, Coroutine, List
 
 from pydantic import Field
 
+from ..libs.util.strings import remove_quotes_and_escapes
 from .main import EditHighlightedCodeStep
 from .core.core import MessageStep
 from ..core.main import FunctionCall, Models
@@ -27,26 +28,32 @@ class SimpleChatStep(Step):
     async def run(self, sdk: ContinueSDK):
         completion = ""
         messages = self.messages or await sdk.get_chat_context()
-        async for chunk in sdk.models.gpt4.stream_chat(messages, temperature=0.5):
-            if sdk.current_step_was_deleted():
-                return
 
-            if "content" in chunk:
-                self.description += chunk["content"]
-                completion += chunk["content"]
-                await sdk.update_ui()
+        generator = sdk.models.default.stream_chat(
+            messages, temperature=sdk.config.temperature)
+        try:
+            async for chunk in generator:
+                if sdk.current_step_was_deleted():
+                    # So that the message doesn't disappear
+                    self.hide = False
+                    break
 
-        self.name = (await sdk.models.gpt35.complete(
-            f"Write a short title for the following chat message: {self.description}")).strip()
+                if "content" in chunk:
+                    self.description += chunk["content"]
+                    completion += chunk["content"]
+                    await sdk.update_ui()
+        finally:
+            self.name = remove_quotes_and_escapes(await sdk.models.gpt35.complete(
+                f"Write a short title for the following chat message: {self.description}"))
 
-        if self.name.startswith('"') and self.name.endswith('"'):
-            self.name = self.name[1:-1]
+            self.chat_context.append(ChatMessage(
+                role="assistant",
+                content=completion,
+                summary=self.name
+            ))
 
-        self.chat_context.append(ChatMessage(
-            role="assistant",
-            content=completion,
-            summary=self.name
-        ))
+            # TODO: Never actually closing.
+            await generator.aclose()
 
 
 class AddFileStep(Step):

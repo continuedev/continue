@@ -24,16 +24,22 @@ class OnTracebackSteps(BaseModel):
     params: Optional[Dict] = {}
 
 
+class AzureInfo(BaseModel):
+    endpoint: str
+    engine: str
+    api_version: str
+
+
 class ContinueConfig(BaseModel):
     """
     A pydantic class for the continue config file.
     """
     steps_on_startup: List[Step] = []
     disallowed_steps: Optional[List[str]] = []
-    server_url: Optional[str] = None
     allow_anonymous_telemetry: Optional[bool] = True
     default_model: Literal["gpt-3.5-turbo", "gpt-3.5-turbo-16k",
-                           "gpt-4"] = 'gpt-4'
+                           "gpt-4", "claude-2", "ggml"] = 'gpt-4'
+    temperature: Optional[float] = 0.5
     custom_commands: Optional[List[CustomCommand]] = [CustomCommand(
         name="test",
         description="This is an example custom command. Use /config to edit it and create more",
@@ -41,21 +47,16 @@ class ContinueConfig(BaseModel):
     )]
     slash_commands: Optional[List[SlashCommand]] = []
     on_traceback: Optional[List[OnTracebackSteps]] = []
+    system_message: Optional[str] = None
+    azure_openai_info: Optional[AzureInfo] = None
 
     # Want to force these to be the slash commands for now
     @validator('slash_commands', pre=True)
     def default_slash_commands_validator(cls, v):
-        from ..steps.core.core import UserInputStep
         from ..steps.open_config import OpenConfigStep
         from ..steps.clear_history import ClearHistoryStep
-        from ..steps.on_traceback import DefaultOnTracebackStep
-        from ..recipes.DeployPipelineAirflowRecipe.main import DeployPipelineAirflowRecipe
-        from ..recipes.DDtoBQRecipe.main import DDtoBQRecipe
-        from ..recipes.CreatePipelineRecipe.main import CreatePipelineRecipe
-        from ..recipes.AddTransformRecipe.main import AddTransformRecipe
         from ..steps.feedback import FeedbackStep
         from ..steps.comment_code import CommentCodeStep
-        from ..steps.chat import SimpleChatStep
         from ..steps.main import EditHighlightedCodeStep
 
         DEFAULT_SLASH_COMMANDS = [
@@ -87,6 +88,10 @@ class ContinueConfig(BaseModel):
         ]
 
         return DEFAULT_SLASH_COMMANDS + v
+
+    @validator('temperature', pre=True)
+    def temperature_validator(cls, v):
+        return max(0.0, min(1.0, v))
 
 
 def load_config(config_file: str) -> ContinueConfig:
@@ -133,7 +138,7 @@ def load_global_config() -> ContinueConfig:
         config_path = os.path.join(global_dir, 'config.json')
         if not os.path.exists(config_path):
             with open(config_path, 'w') as f:
-                json.dump(ContinueConfig().dict(), f)
+                json.dump(ContinueConfig().dict(), f, indent=4)
         with open(config_path, 'r') as f:
             try:
                 config_dict = json.load(f)
@@ -153,7 +158,7 @@ def update_global_config(config: ContinueConfig):
     yaml_path = os.path.join(global_dir, 'config.yaml')
     if os.path.exists(yaml_path):
         with open(config_path, 'w') as f:
-            yaml.dump(config.dict(), f)
+            yaml.dump(config.dict(), f, indent=4)
     else:
         config_path = os.path.join(global_dir, 'config.json')
         with open(config_path, 'w') as f:

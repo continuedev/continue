@@ -1,33 +1,92 @@
-abstract class AbstractContinueGUIClientProtocol {
-  abstract sendMainInput(input: string): void;
+import AbstractContinueGUIClientProtocol from "./AbstractContinueGUIClientProtocol";
+import { Messenger, WebsocketMessenger } from "./messenger";
+import { VscodeMessenger } from "./vscodeMessenger";
 
-  abstract reverseToIndex(index: number): void;
+class ContinueGUIClientProtocol extends AbstractContinueGUIClientProtocol {
+  messenger: Messenger;
+  // Server URL must contain the session ID param
+  serverUrlWithSessionId: string;
 
-  abstract sendRefinementInput(input: string, index: number): void;
+  constructor(
+    serverUrlWithSessionId: string,
+    useVscodeMessagePassing: boolean
+  ) {
+    super();
+    this.serverUrlWithSessionId = serverUrlWithSessionId;
+    this.messenger = useVscodeMessagePassing
+      ? new VscodeMessenger(serverUrlWithSessionId)
+      : new WebsocketMessenger(serverUrlWithSessionId);
+  }
 
-  abstract sendStepUserInput(input: string, index: number): void;
+  sendMainInput(input: string) {
+    this.messenger.send("main_input", { input });
+  }
 
-  abstract onStateUpdate(state: any): void;
+  reverseToIndex(index: number) {
+    this.messenger.send("reverse_to_index", { index });
+  }
 
-  abstract onAvailableSlashCommands(
+  sendRefinementInput(input: string, index: number) {
+    this.messenger.send("refinement_input", { input, index });
+  }
+
+  sendStepUserInput(input: string, index: number) {
+    this.messenger.send("step_user_input", { input, index });
+  }
+
+  onStateUpdate(callback: (state: any) => void) {
+    this.messenger.onMessageType("state_update", (data: any) => {
+      if (data.state) {
+        callback(data.state);
+      }
+    });
+  }
+
+  onAvailableSlashCommands(
     callback: (commands: { name: string; description: string }[]) => void
-  ): void;
+  ) {
+    this.messenger.onMessageType("available_slash_commands", (data: any) => {
+      if (data.commands) {
+        callback(data.commands);
+      }
+    });
+  }
 
-  abstract changeDefaultModel(model: string): void;
+  changeDefaultModel(model: string) {
+    this.messenger.send("change_default_model", { model });
+  }
 
-  abstract sendClear(): void;
+  sendClear() {
+    this.messenger.send("clear_history", {});
+  }
 
-  abstract retryAtIndex(index: number): void;
+  retryAtIndex(index: number) {
+    this.messenger.send("retry_at_index", { index });
+  }
 
-  abstract deleteAtIndex(index: number): void;
+  deleteAtIndex(index: number) {
+    this.messenger.send("delete_at_index", { index });
+  }
 
-  abstract deleteContextAtIndices(indices: number[]): void;
+  deleteContextAtIndices(indices: number[]) {
+    this.messenger.send("delete_context_at_indices", { indices });
+  }
 
-  abstract setEditingAtIndices(indices: number[]): void;
+  setEditingAtIndices(indices: number[]) {
+    this.messenger.send("set_editing_at_indices", { indices });
+  }
 
-  abstract setPinnedAtIndices(indices: number[]): void;
+  setPinnedAtIndices(indices: number[]) {
+    this.messenger.send("set_pinned_at_indices", { indices });
+  }
 
-  abstract toggleAddingHighlightedCode(): void;
+  toggleAddingHighlightedCode(): void {
+    this.messenger.send("toggle_adding_highlighted_code", {});
+  }
+
+  showLogsAtIndex(index: number): void {
+    this.messenger.send("show_logs_at_index", { index });
+  }
 }
 
-export default AbstractContinueGUIClientProtocol;
+export default ContinueGUIClientProtocol;

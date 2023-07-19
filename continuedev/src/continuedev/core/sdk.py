@@ -1,6 +1,6 @@
 import asyncio
 from functools import cached_property
-from typing import Coroutine, Union
+from typing import Coroutine, Dict, Union
 import os
 
 from ..steps.core.core import DefaultModelEditCodeStep
@@ -11,9 +11,11 @@ from ..models.filesystem_edit import FileEdit, FileSystemEdit, AddFile, DeleteFi
 from ..models.filesystem import RangeInFile
 from ..libs.llm.hf_inference_api import HuggingFaceInferenceAPI
 from ..libs.llm.openai import OpenAI
+from ..libs.llm.anthropic import AnthropicLLM
+from ..libs.llm.ggml import GGML
 from .observation import Observation
 from ..server.ide_protocol import AbstractIdeProtocolServer
-from .main import Context, ContinueCustomException, History, Step, ChatMessage, ChatMessageRole
+from .main import Context, ContinueCustomException, History, HistoryNode, Step, ChatMessage
 from ..steps.core.core import *
 from ..libs.llm.proxy_server import ProxyServer
 
@@ -22,26 +24,78 @@ class Autopilot:
     pass
 
 
+ModelProvider = Literal["openai", "hf_inference_api", "ggml", "anthropic"]
+MODEL_PROVIDER_TO_ENV_VAR = {
+    "openai": "OPENAI_API_KEY",
+    "hf_inference_api": "HUGGING_FACE_TOKEN",
+    "anthropic": "ANTHROPIC_API_KEY",
+}
+
+
 class Models:
-    def __init__(self, sdk: "ContinueSDK"):
+    provider_keys: Dict[ModelProvider, str] = {}
+    model_providers: List[ModelProvider]
+    system_message: str
+
+    """
+    Better to have sdk.llm.stream_chat(messages, model="claude-2").
+    Then you also don't care that it' async.
+    And it's easier to add more models.
+    And intermediate shared code is easier to add.
+    And you can make constants like ContinueModels.GPT35 = "gpt-3.5-turbo"
+    PromptTransformer would be a good concept: You pass a prompt or list of messages and a model, then it outputs the prompt for that model.
+    Easy to reason about, can place anywhere.
+    And you can even pass a Prompt object to sdk.llm.stream_chat maybe, and it'll automatically be transformed for the given model.
+    This can all happen inside of Models?
+
+    class Prompt:
+        def __init__(self, ...info):
+            '''take whatever info is needed to describe the prompt'''
+
+        def to_string(self, model: str) -> str:
+            '''depending on the model, return the single prompt string'''
+    """
+
+    def __init__(self, sdk: "ContinueSDK", model_providers: List[ModelProvider]):
         self.sdk = sdk
+        self.model_providers = model_providers
+        self.system_message = sdk.config.system_message
+
+    @classmethod
+    async def create(cls, sdk: "ContinueSDK", with_providers: List[ModelProvider] = ["openai"]) -> "Models":
+        if sdk.config.default_model == "claude-2":
+            with_providers.append("anthropic")
+
+        models = Models(sdk, with_providers)
+        for provider in with_providers:
+            if provider in MODEL_PROVIDER_TO_ENV_VAR:
+                env_var = MODEL_PROVIDER_TO_ENV_VAR[provider]
+                models.provider_keys[provider] = await sdk.get_user_secret(
+                    env_var, f'Please add your {env_var} to the .env file')
+
+        return models
 
     def __load_openai_model(self, model: str) -> OpenAI:
-        async def load_openai_model():
-            api_key = await self.sdk.get_user_secret(
-                'OPENAI_API_KEY', 'Enter your OpenAI API key or press enter to try for free')
-            if api_key == "":
-                return ProxyServer(self.sdk.ide.unique_id, model)
-            return OpenAI(api_key=api_key, default_model=model)
-        return asyncio.get_event_loop().run_until_complete(load_openai_model())
+        api_key = self.provider_keys["openai"]
+        if api_key == "":
+            return ProxyServer(self.sdk.ide.unique_id, model, system_message=self.system_message, write_log=self.sdk.write_log)
+        return OpenAI(api_key=api_key, default_model=model, system_message=self.system_message, azure_info=self.sdk.config.azure_openai_info, write_log=self.sdk.write_log)
+
+    def __load_hf_inference_api_model(self, model: str) -> HuggingFaceInferenceAPI:
+        api_key = self.provider_keys["hf_inference_api"]
+        return HuggingFaceInferenceAPI(api_key=api_key, model=model, system_message=self.system_message)
+
+    def __load_anthropic_model(self, model: str) -> AnthropicLLM:
+        api_key = self.provider_keys["anthropic"]
+        return AnthropicLLM(api_key, model, self.system_message)
+
+    @cached_property
+    def claude2(self):
+        return self.__load_anthropic_model("claude-2")
 
     @cached_property
     def starcoder(self):
-        async def load_starcoder():
-            api_key = await self.sdk.get_user_secret(
-                'HUGGING_FACE_TOKEN', 'Please add your Hugging Face token to the .env file')
-            return HuggingFaceInferenceAPI(api_key=api_key)
-        return asyncio.get_event_loop().run_until_complete(load_starcoder())
+        return self.__load_hf_inference_api_model("bigcode/starcoder")
 
     @cached_property
     def gpt35(self):
@@ -59,6 +113,10 @@ class Models:
     def gpt4(self):
         return self.__load_openai_model("gpt-4")
 
+    @cached_property
+    def ggml(self):
+        return GGML(system_message=self.system_message)
+
     def __model_from_name(self, model_name: str):
         if model_name == "starcoder":
             return self.starcoder
@@ -68,13 +126,17 @@ class Models:
             return self.gpt3516k
         elif model_name == "gpt-4":
             return self.gpt4
+        elif model_name == "claude-2":
+            return self.claude2
+        elif model_name == "ggml":
+            return self.ggml
         else:
             raise Exception(f"Unknown model {model_name}")
 
     @property
     def default(self):
         default_model = self.sdk.config.default_model
-        return self.__model_from_name(default_model) if default_model is not None else self.gpt35
+        return self.__model_from_name(default_model) if default_model is not None else self.gpt4
 
 
 class ContinueSDK(AbstractContinueSDK):
@@ -82,17 +144,43 @@ class ContinueSDK(AbstractContinueSDK):
     ide: AbstractIdeProtocolServer
     models: Models
     context: Context
+    config: ContinueConfig
     __autopilot: Autopilot
 
     def __init__(self, autopilot: Autopilot):
         self.ide = autopilot.ide
         self.__autopilot = autopilot
-        self.models = Models(self)
         self.context = autopilot.context
+
+    @classmethod
+    async def create(cls, autopilot: Autopilot) -> "ContinueSDK":
+        sdk = ContinueSDK(autopilot)
+
+        try:
+            config = sdk._load_config_dot_py()
+            sdk.config = config
+        except Exception as e:
+            print(e)
+            sdk.config = ContinueConfig()
+            msg_step = MessageStep(
+                name="Invalid Continue Config File", message=e.__repr__())
+            msg_step.description = e.__repr__()
+            sdk.history.add_node(HistoryNode(
+                step=msg_step,
+                observation=None,
+                depth=0,
+                active=False
+            ))
+
+        sdk.models = await Models.create(sdk)
+        return sdk
 
     @property
     def history(self) -> History:
         return self.__autopilot.history
+
+    def write_log(self, message: str):
+        self.history.timeline[self.history.current_index].logs.append(message)
 
     async def _ensure_absolute_path(self, path: str) -> str:
         if os.path.isabs(path):
@@ -168,8 +256,9 @@ class ContinueSDK(AbstractContinueSDK):
 
     _last_valid_config: ContinueConfig = None
 
-    def load_config_dot_py(self, path: str) -> ContinueConfig:
+    def _load_config_dot_py(self) -> ContinueConfig:
         # Use importlib to load the config file config.py at the given path
+        path = os.path.join(os.path.expanduser("~"), ".continue", "config.py")
         try:
             import importlib.util
             spec = importlib.util.spec_from_file_location("config", path)
@@ -181,22 +270,10 @@ class ContinueSDK(AbstractContinueSDK):
             print("Error loading config.py: ", e)
             return ContinueConfig() if self._last_valid_config is None else self._last_valid_config
 
-    @property
-    def config(self) -> ContinueConfig:
-        # TODO: Workspace config files should override global
-        dir = self.ide.workspace_directory
-        path = os.path.join(dir, '.continue', 'config.py')
-        if not os.path.exists(path):
-            global_dir = os.path.expanduser('~/.continue')
-            if not os.path.exists(global_dir):
-                os.mkdir(global_dir)
-            path = os.path.join(global_dir, 'config.py')
-            if not os.path.exists(path):
-                # Need to copy over the default config
-                return ContinueConfig()
-
-        config = self.load_config_dot_py(path)
-        return config
+    def get_code_context(self, only_editing: bool = False) -> List[RangeInFileWithContents]:
+        context = list(filter(lambda x: x.editing, self.__autopilot._highlighted_ranges)
+                       ) if only_editing else self.__autopilot._highlighted_ranges
+        return [c.range for c in context]
 
     def update_default_model(self, model: str):
         config = self.config
@@ -217,18 +294,18 @@ class ContinueSDK(AbstractContinueSDK):
 
         preface = "The following code is highlighted"
 
+        # If no higlighted ranges, use first file as context
         if len(highlighted_code) == 0:
             preface = "The following file is open"
-            # Get the full contents of all open files
-            files = await self.ide.getOpenFiles()
-            if len(files) > 0:
-                content = await self.ide.readFile(files[0])
+            visible_files = await self.ide.getVisibleFiles()
+            if len(visible_files) > 0:
+                content = await self.ide.readFile(visible_files[0])
                 highlighted_code = [
-                    RangeInFileWithContents.from_entire_file(files[0], content)]
+                    RangeInFileWithContents.from_entire_file(visible_files[0], content)]
 
         for rif in highlighted_code:
             msg = ChatMessage(content=f"{preface} ({rif.filepath}):\n```\n{rif.contents}\n```",
-                              role="system", summary=f"{preface}: {rif.filepath}")
+                              role="user", summary=f"{preface}: {rif.filepath}")
 
             # Don't insert after latest user message or function call
             i = -1

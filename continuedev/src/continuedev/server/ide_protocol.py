@@ -1,5 +1,6 @@
-from typing import Any, List
+from typing import Any, List, Union
 from abc import ABC, abstractmethod, abstractproperty
+from fastapi import WebSocket
 
 from ..models.main import Traceback
 from ..models.filesystem_edit import FileEdit, FileSystemEdit, EditDiff
@@ -7,6 +8,9 @@ from ..models.filesystem import RangeInFile, RangeInFileWithContents
 
 
 class AbstractIdeProtocolServer(ABC):
+    websocket: WebSocket
+    session_id: Union[str, None]
+
     @abstractmethod
     async def handle_json(self, data: Any):
         """Handle a json message"""
@@ -16,20 +20,20 @@ class AbstractIdeProtocolServer(ABC):
         """Show a suggestion to the user"""
 
     @abstractmethod
-    async def getWorkspaceDirectory(self):
-        """Get the workspace directory"""
-
-    @abstractmethod
     async def setFileOpen(self, filepath: str, open: bool = True):
         """Set whether a file is open"""
+
+    @abstractmethod
+    async def showVirtualFile(self, name: str, contents: str):
+        """Show a virtual file"""
 
     @abstractmethod
     async def setSuggestionsLocked(self, filepath: str, locked: bool = True):
         """Set whether suggestions are locked"""
 
     @abstractmethod
-    async def openGUI(self):
-        """Open a GUI"""
+    async def getSessionId(self):
+        """Get a new session ID"""
 
     @abstractmethod
     async def showSuggestionsAndWait(self, suggestions: List[FileEdit]) -> bool:
@@ -54,6 +58,10 @@ class AbstractIdeProtocolServer(ABC):
     @abstractmethod
     async def getOpenFiles(self) -> List[str]:
         """Get a list of open files"""
+
+    @abstractmethod
+    async def getVisibleFiles(self) -> List[str]:
+        """Get a list of visible files"""
 
     @abstractmethod
     async def getHighlightedCode(self) -> List[RangeInFile]:
@@ -103,10 +111,5 @@ class AbstractIdeProtocolServer(ABC):
     async def showDiff(self, filepath: str, replacement: str, step_index: int):
         """Show a diff"""
 
-    @abstractproperty
-    def workspace_directory(self) -> str:
-        """Get the workspace directory"""
-
-    @abstractproperty
-    def unique_id(self) -> str:
-        """Get a unique ID for this IDE"""
+    workspace_directory: str
+    unique_id: str

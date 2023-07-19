@@ -1,7 +1,8 @@
 // Write a component that displays a dialog box with a text field and a button.
 import React, { useEffect, useState } from "react";
 import styled from "styled-components";
-import { Button, buttonColor, secondaryDark, vscBackground } from ".";
+import { Button, secondaryDark, vscBackground, vscForeground } from ".";
+import { isMetaEquivalentKeyPressed } from "../util";
 
 const ScreenCover = styled.div`
   position: absolute;
@@ -20,13 +21,13 @@ const DialogContainer = styled.div`
 `;
 
 const Dialog = styled.div`
-  background-color: white;
+  color: ${vscForeground};
+  background-color: ${vscBackground};
   border-radius: 8px;
   padding: 8px;
   display: flex;
   flex-direction: column;
-  /* box-shadow: 0 0 10px 0 rgba(255, 255, 255, 0.5); */
-  border: 2px solid ${buttonColor};
+  box-shadow: 0 0 10px 0 ${vscForeground};
   width: fit-content;
   margin: auto;
 `;
@@ -37,14 +38,16 @@ const TextArea = styled.textarea`
   padding: 8px;
   outline: 1px solid black;
   resize: none;
+  background-color: ${secondaryDark};
+  color: ${vscForeground};
 
   &:focus {
-    outline: 1px solid ${buttonColor};
+    outline: 1px solid ${vscForeground};
   }
 `;
 
 const P = styled.p`
-  color: black;
+  color: ${vscForeground};
   margin: 8px auto;
 `;
 
@@ -81,7 +84,11 @@ const TextDialog = (props: {
             rows={10}
             ref={textAreaRef}
             onKeyDown={(e) => {
-              if (e.key === "Enter" && e.metaKey && textAreaRef.current) {
+              if (
+                e.key === "Enter" &&
+                isMetaEquivalentKeyPressed(e) &&
+                textAreaRef.current
+              ) {
                 props.onEnter(textAreaRef.current.value);
                 setText("");
               } else if (e.key === "Escape") {
