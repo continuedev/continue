@@ -82,6 +82,7 @@ class ContinueConfig(BaseModel):
     allow_anonymous_telemetry: Optional[bool] = True
     default_model: Literal["gpt-3.5-turbo", "gpt-3.5-turbo-16k",
                            "gpt-4", "claude-2", "ggml"] = 'gpt-4'
+    temperature: Optional[float] = 0.5
     custom_commands: Optional[List[CustomCommand]] = [CustomCommand(
         name="test",
         description="This is an example custom command. Use /config to edit it and create more",
@@ -97,6 +98,10 @@ class ContinueConfig(BaseModel):
     @validator('slash_commands', pre=True)
     def default_slash_commands_validator(cls, v):
         return DEFAULT_SLASH_COMMANDS
+
+    @validator('temperature', pre=True)
+    def temperature_validator(cls, v):
+        return max(0.0, min(1.0, v))
 
 
 def load_config(config_file: str) -> ContinueConfig:

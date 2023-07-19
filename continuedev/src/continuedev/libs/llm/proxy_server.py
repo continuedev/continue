@@ -1,8 +1,10 @@
 
 from functools import cached_property
 import json
+import traceback
 from typing import Any, Callable, Coroutine, Dict, Generator, List, Literal, Union
 import aiohttp
+from ..util.telemetry import capture_event
 from ...core.main import ChatMessage
 from ..llm import LLM
 from ..util.count_tokens import DEFAULT_ARGS, DEFAULT_MAX_TOKENS, compile_chat_messages, CHAT_MODELS, count_tokens, format_chat_messages
@@ -81,8 +83,10 @@ class ProxyServer(LLM):
                                     yield loaded_chunk
                                     if "content" in loaded_chunk:
                                         completion += loaded_chunk["content"]
-                        except:
-                            raise Exception(str(line[0]))
+                        except Exception as e:
+                            capture_event(self.unique_id, "proxy_server_parse_error", {
+                                "error_title": "Proxy server stream_chat parsing failed", "error_message": '\n'.join(traceback.format_exception(e))})
+
                 self.write_log(f"Completion: \n\n{completion}")
 
     async def stream_complete(self, prompt, with_history: List[ChatMessage] = [], **kwargs) -> Generator[Union[Any, List, Dict], None, None]:
