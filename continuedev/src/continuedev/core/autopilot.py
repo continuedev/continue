@@ -100,9 +100,14 @@ class Autopilot(ContinueBaseModel):
         self.continue_sdk.update_default_model(model)
 
     async def clear_history(self):
+        # Reset history
         self.history = History.from_empty()
         self._main_user_input_queue = []
         self._active = False
+
+        # Also remove all context
+        self._highlighted_ranges = []
+
         await self.update_subscribers()
 
     def on_update(self, callback: Coroutine["FullState", None, None]):
@@ -168,19 +173,22 @@ class Autopilot(ContinueBaseModel):
 
     def _disambiguate_highlighted_ranges(self):
         """If any files have the same name, also display their folder name"""
-        name_counts = {}
+        name_status: Dict[str, set] = {
+        }  # basename -> set of full paths with that basename
         for rif in self._highlighted_ranges:
-            if rif.display_name in name_counts:
-                name_counts[rif.display_name] += 1
+            basename = os.path.basename(rif.range.filepath)
+            if basename in name_status:
+                name_status[basename].add(rif.range.filepath)
             else:
-                name_counts[rif.display_name] = 1
+                name_status[basename] = {rif.range.filepath}
 
         for rif in self._highlighted_ranges:
-            if name_counts[rif.display_name] > 1:
+            basename = os.path.basename(rif.range.filepath)
+            if len(name_status[basename]) > 1:
                 rif.display_name = os.path.join(
-                    os.path.basename(os.path.dirname(rif.range.filepath)), rif.display_name)
+                    os.path.basename(os.path.dirname(rif.range.filepath)), basename)
             else:
-                rif.display_name = os.path.basename(rif.range.filepath)
+                rif.display_name = basename
 
     async def handle_highlighted_code(self, range_in_files: List[RangeInFileWithContents]):
         # Filter out rifs from ~/.continue/diffs folder
