@@ -492,7 +492,7 @@ Please output the code to be inserted at the cursor in order to fulfill the user
                 role="user", content=f"```\n{rif.contents}\n```\n\nUser request: \"{self.user_input}\"\n\nThis is the code after changing to perfectly comply with the user request. It does not include any placeholder code, only real implementations:\n\n```\n", summary=self.user_input)]
 
         generator = model_to_use.stream_chat(
-            messages, temperature=0, max_tokens=max_tokens)
+            messages, temperature=sdk.config.temperature, max_tokens=max_tokens)
 
         try:
             async for chunk in generator:
