@@ -16,7 +16,6 @@ from .main import Context, ContinueCustomException, HighlightedRangeContext, Pol
 from ..steps.core.core import ReversibleStep, ManualEditStep, UserInputStep
 from ..libs.util.telemetry import capture_event
 from .sdk import ContinueSDK
-from ..libs.util.step_name_to_steps import get_step_from_name
 from ..libs.util.traceback_parsers import get_python_traceback, get_javascript_traceback
 from openai import error as openai_errors
 from ..libs.util.create_async_task import create_async_task
