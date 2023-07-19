@@ -1,5 +1,5 @@
 from ..libs.util.templating import render_templated_string
-from ..core.main import Step
+from ..core.main import Models, Step
 from ..core.sdk import ContinueSDK
 from ..steps.chat import SimpleChatStep
 
@@ -11,7 +11,7 @@ class CustomCommandStep(Step):
     slash_command: str
     hide: bool = True
 
-    async def describe(self):
+    async def describe(self, models: Models):
         return self.prompt
 
     async def run(self, sdk: ContinueSDK):
