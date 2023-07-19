@@ -16,19 +16,19 @@ def escape_var(var: str) -> str:
     return var.replace(os.path.sep, '').replace('.', '')
 
 
-def render_system_message(system_message: str) -> str:
+def render_templated_string(template: str) -> str:
     """
-    Render system message with mustache syntax.
+    Render system message or other templated string with mustache syntax.
     Right now it only supports rendering absolute file paths as their contents.
     """
-    vars = get_vars_in_template(system_message)
+    vars = get_vars_in_template(template)
 
     args = {}
     for var in vars:
         if var.startswith(os.path.sep):
             # Escape vars which are filenames, because mustache doesn't allow / in variable names
             escaped_var = escape_var(var)
-            system_message = system_message.replace(
+            template = template.replace(
                 var, escaped_var)
 
             if os.path.exists(var):
@@ -36,4 +36,4 @@ def render_system_message(system_message: str) -> str:
             else:
                 args[escaped_var] = ''
 
-    return chevron.render(system_message, args)
+    return chevron.render(template, args)

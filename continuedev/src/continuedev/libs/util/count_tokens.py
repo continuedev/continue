@@ -1,7 +1,7 @@
 import json
 from typing import Dict, List, Union
 from ...core.main import ChatMessage
-from .templating import render_system_message
+from .templating import render_templated_string
 import tiktoken
 
 aliases = {
@@ -112,7 +112,7 @@ def compile_chat_messages(model: str, msgs: List[ChatMessage], max_tokens: int, 
     if system_message is not None:
         # NOTE: System message takes second precedence to user prompt, so it is placed just before
         # but move back to start after processing
-        rendered_system_message = render_system_message(system_message)
+        rendered_system_message = render_templated_string(system_message)
         system_chat_msg = ChatMessage(
             role="system", content=rendered_system_message, summary=rendered_system_message)
         # insert at second-to-last position
