@@ -38,6 +38,15 @@ class DiffManager {
 
   constructor() {
     this.setupDirectory();
+
+    // Listen for file closes, and if it's a diff file, clean up
+    vscode.workspace.onDidCloseTextDocument((document) => {
+      const newFilepath = document.uri.fsPath;
+      const diffInfo = this.diffs.get(newFilepath);
+      if (diffInfo) {
+        this.cleanUpDiff(diffInfo, false);
+      }
+    });
   }
 
   private escapeFilepath(filepath: string): string {
@@ -160,9 +169,9 @@ class DiffManager {
     return newFilepath;
   }
 
-  cleanUpDiff(diffInfo: DiffInfo) {
+  cleanUpDiff(diffInfo: DiffInfo, hideEditor: boolean = true) {
     // Close the editor, remove the record, delete the file
-    if (diffInfo.editor) {
+    if (hideEditor && diffInfo.editor) {
       vscode.window.showTextDocument(diffInfo.editor.document);
       vscode.commands.executeCommand("workbench.action.closeActiveEditor");
     }
