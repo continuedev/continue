@@ -73,9 +73,9 @@ def prune_chat_history(model: str, chat_history: List[ChatMessage], max_tokens: 
         message = chat_history.pop(0)
         total_tokens -= count_tokens(model, message.content)
 
-    # 3. Truncate message in the last 5
+    # 3. Truncate message in the last 5, except last 1
     i = 0
-    while total_tokens > max_tokens and len(chat_history) > 0 and i < len(chat_history):
+    while total_tokens > max_tokens and len(chat_history) > 0 and i < len(chat_history) - 1:
         message = chat_history[i]
         total_tokens -= count_tokens(model, message.content)
         total_tokens += count_tokens(model, message.summary)
