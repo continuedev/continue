@@ -105,7 +105,8 @@ def compile_chat_messages(model: str, msgs: Union[List[ChatMessage], None], max_
     """
     The total number of tokens is system_message + sum(msgs) + functions + prompt after it is converted to a message
     """
-    msgs_copy = msgs.copy() if msgs is not None else []
+    msgs_copy = [msg.copy(deep=True)
+                 for msg in msgs] if msgs is not None else []
 
     if prompt is not None:
         prompt_msg = ChatMessage(role="user", content=prompt, summary=prompt)
