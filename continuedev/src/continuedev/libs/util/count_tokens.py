@@ -101,13 +101,15 @@ def prune_chat_history(model: str, chat_history: List[ChatMessage], max_tokens: 
 TOKEN_BUFFER_FOR_SAFETY = 100
 
 
-def compile_chat_messages(model: str, msgs: List[ChatMessage], max_tokens: int, prompt: Union[str, None] = None, functions: Union[List, None] = None, system_message: Union[str, None] = None) -> List[Dict]:
+def compile_chat_messages(model: str, msgs: Union[List[ChatMessage], None], max_tokens: int, prompt: Union[str, None] = None, functions: Union[List, None] = None, system_message: Union[str, None] = None) -> List[Dict]:
     """
     The total number of tokens is system_message + sum(msgs) + functions + prompt after it is converted to a message
     """
+    msgs_copy = msgs.copy() if msgs is not None else []
+
     if prompt is not None:
         prompt_msg = ChatMessage(role="user", content=prompt, summary=prompt)
-        msgs += [prompt_msg]
+        msgs_copy += [prompt_msg]
 
     if system_message is not None:
         # NOTE: System message takes second precedence to user prompt, so it is placed just before
@@ -116,7 +118,7 @@ def compile_chat_messages(model: str, msgs: List[ChatMessage], max_tokens: int, 
         system_chat_msg = ChatMessage(
             role="system", content=rendered_system_message, summary=rendered_system_message)
         # insert at second-to-last position
-        msgs.insert(-1, system_chat_msg)
+        msgs_copy.insert(-1, system_chat_msg)
 
     # Add tokens from functions
     function_tokens = 0
@@ -124,11 +126,11 @@ def compile_chat_messages(model: str, msgs: List[ChatMessage], max_tokens: int, 
         for function in functions:
             function_tokens += count_tokens(model, json.dumps(function))
 
-    msgs = prune_chat_history(
-        model, msgs, MAX_TOKENS_FOR_MODEL[model], function_tokens + max_tokens + TOKEN_BUFFER_FOR_SAFETY)
+    msgs_copy = prune_chat_history(
+        model, msgs_copy, MAX_TOKENS_FOR_MODEL[model], function_tokens + max_tokens + TOKEN_BUFFER_FOR_SAFETY)
 
     history = [msg.to_dict(with_functions=functions is not None)
-               for msg in msgs]
+               for msg in msgs_copy]
 
     # Move system message back to start
     if system_message is not None and len(history) >= 2 and history[-2]["role"] == "system":

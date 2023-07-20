@@ -9,15 +9,15 @@ from pydantic import BaseModel
 class LLM(ABC):
     system_message: Union[str, None] = None
 
-    async def complete(self, prompt: str, with_history: List[ChatMessage] = [], **kwargs) -> Coroutine[Any, Any, str]:
+    async def complete(self, prompt: str, with_history: List[ChatMessage] = None, **kwargs) -> Coroutine[Any, Any, str]:
         """Return the completion of the text with the given temperature."""
         raise NotImplementedError
 
-    def stream_complete(self, prompt, with_history: List[ChatMessage] = [], **kwargs) -> Generator[Union[Any, List, Dict], None, None]:
+    def stream_complete(self, prompt, with_history: List[ChatMessage] = None, **kwargs) -> Generator[Union[Any, List, Dict], None, None]:
         """Stream the completion through generator."""
         raise NotImplementedError
 
-    async def stream_chat(self, messages: List[ChatMessage] = [], **kwargs) -> Generator[Union[Any, List, Dict], None, None]:
+    async def stream_chat(self, messages: List[ChatMessage] = None, **kwargs) -> Generator[Union[Any, List, Dict], None, None]:
         """Stream the chat through generator."""
         raise NotImplementedError
 
