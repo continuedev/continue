@@ -71,7 +71,6 @@ const Ul = styled.ul<{
       : `transform: translateY(${2 * mainInputFontSize}px);`}
   position: absolute;
   background: ${vscBackground};
-  background-color: ${secondaryDark};
   color: ${vscForeground};
   max-height: ${UlMaxHeight}px;
   width: calc(100% - 16px);
@@ -96,7 +95,7 @@ const Li = styled.li<{
   selected: boolean;
   isLastItem: boolean;
 }>`
-  background-color: ${secondaryDark};
+  background-color: ${vscBackground};
   ${({ highlighted }) => highlighted && "background: #ff000066;"}
   ${({ selected }) => selected && "font-weight: bold;"}
     padding: 0.5rem 0.75rem;

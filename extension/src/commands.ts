@@ -40,6 +40,9 @@ const commandsMap: { [command: string]: (...args: any) => any } = {
         edit ? "/edit " : ""
       }${code}\n\nHow do I fix this problem in the above code?: ${message}`
     );
+    if (!edit) {
+      vscode.commands.executeCommand("continue.continueGUIView.focus");
+    }
   },
   "continue.focusContinueInput": async () => {
     if (focusedOnContinueInput) {
