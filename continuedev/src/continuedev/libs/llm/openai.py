@@ -81,7 +81,7 @@ class OpenAI(LLM):
             del args["functions"]
 
         messages = compile_chat_messages(
-            args["model"], messages, args["max_tokens"], functions=args.get("functions", None), system_message=self.system_message)
+            args["model"], messages, args["max_tokens"], None, functions=args.get("functions", None), system_message=self.system_message)
         self.write_log(f"Prompt: \n\n{format_chat_messages(messages)}")
         completion = ""
         async for chunk in await openai.ChatCompletion.acreate(
