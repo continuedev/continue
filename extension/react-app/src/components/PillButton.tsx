@@ -4,6 +4,7 @@ import {
   StyledTooltip,
   defaultBorderRadius,
   secondaryDark,
+  vscBackground,
   vscForeground,
 } from ".";
 import {
@@ -113,6 +114,7 @@ const PillButton = (props: PillButtonProps) => {
             <GridDiv
               style={{
                 gridTemplateColumns: props.onlyShowDelete ? "1fr" : "1fr 1fr",
+                backgroundColor: vscBackground,
               }}
             >
               {props.onlyShowDelete || (
