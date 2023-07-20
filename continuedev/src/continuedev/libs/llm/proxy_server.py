@@ -38,7 +38,7 @@ class ProxyServer(LLM):
     def count_tokens(self, text: str):
         return count_tokens(self.default_model, text)
 
-    async def complete(self, prompt: str, with_history: List[ChatMessage] = [], **kwargs) -> Coroutine[Any, Any, str]:
+    async def complete(self, prompt: str, with_history: List[ChatMessage] = None, **kwargs) -> Coroutine[Any, Any, str]:
         args = {**self.default_args, **kwargs}
 
         messages = compile_chat_messages(
@@ -57,7 +57,7 @@ class ProxyServer(LLM):
                 except:
                     raise Exception(await resp.text())
 
-    async def stream_chat(self, messages: List[ChatMessage] = [], **kwargs) -> Coroutine[Any, Any, Generator[Union[Any, List, Dict], None, None]]:
+    async def stream_chat(self, messages: List[ChatMessage] = None, **kwargs) -> Coroutine[Any, Any, Generator[Union[Any, List, Dict], None, None]]:
         args = {**self.default_args, **kwargs}
         messages = compile_chat_messages(
             args["model"], messages, args["max_tokens"], None, functions=args.get("functions", None), system_message=self.system_message)
@@ -89,7 +89,7 @@ class ProxyServer(LLM):
 
                 self.write_log(f"Completion: \n\n{completion}")
 
-    async def stream_complete(self, prompt, with_history: List[ChatMessage] = [], **kwargs) -> Generator[Union[Any, List, Dict], None, None]:
+    async def stream_complete(self, prompt, with_history: List[ChatMessage] = None, **kwargs) -> Generator[Union[Any, List, Dict], None, None]:
         args = {**self.default_args, **kwargs}
         messages = compile_chat_messages(
             self.default_model, with_history, args["max_tokens"], prompt, functions=args.get("functions", None), system_message=self.system_message)
