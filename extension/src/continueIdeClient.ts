@@ -167,6 +167,20 @@ class IdeProtocolClient {
         documentContentProvider
       )
     );
+
+    // Listen for changes to settings.json
+    vscode.workspace.onDidChangeConfiguration((event) => {
+      if (event.affectsConfiguration("continue")) {
+        vscode.window.showInformationMessage(
+          "Please reload VS Code for changes to Continue settings to take effect.",
+          "Reload"
+        ).then((selection) => {
+          if (selection === "Reload") {
+            vscode.commands.executeCommand("workbench.action.reloadWindow");
+          }
+        });
+      }
+    });
   }
 
   async handleMessage(
