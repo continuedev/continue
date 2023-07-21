@@ -139,7 +139,7 @@ export async function getPythonPipCommands() {
 
     if (!versionExists) {
       vscode.window.showErrorMessage(
-        "Continue requires Python3 version 3.8 or greater. Please update your Python3 installation, reload VS Code, and try again."
+        "Continue requires Python version 3.8 or greater. Please update your Python installation, reload VS Code, and try again."
       );
       throw new Error("Python3.8 or greater is not installed.");
     }
