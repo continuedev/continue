@@ -1,5 +1,4 @@
 import * as vscode from "vscode";
-import { sendTelemetryEvent, TelemetryEvent } from "./telemetry";
 import { openEditorAndRevealRange } from "./util/vscode";
 import { translate } from "./util/vscode";
 import { registerAllCodeLensProviders } from "./lang-server/codeLens";
@@ -244,7 +243,6 @@ function selectSuggestion(
 }
 
 export function acceptSuggestionCommand(key: SuggestionRanges | null = null) {
-  sendTelemetryEvent(TelemetryEvent.SuggestionAccepted);
   selectSuggestion("selected", key);
 }
 
@@ -271,7 +269,6 @@ export function rejectAllSuggestionsCommand() {
 export async function rejectSuggestionCommand(
   key: SuggestionRanges | null = null
 ) {
-  sendTelemetryEvent(TelemetryEvent.SuggestionRejected);
   selectSuggestion("old", key);
 }
 
