@@ -75,7 +75,6 @@ function GUI(props: GUIProps) {
     }
   }, [dataSwitchOn]);
 
-  const [usingFastModel, setUsingFastModel] = useState(false);
   const [waitingForSteps, setWaitingForSteps] = useState(false);
   const [userInputQueue, setUserInputQueue] = useState<string[]>([]);
   const [highlightedRanges, setHighlightedRanges] = useState<
@@ -117,6 +116,7 @@ function GUI(props: GUIProps) {
 
   const [showFeedbackDialog, setShowFeedbackDialog] = useState(false);
   const [feedbackDialogMessage, setFeedbackDialogMessage] = useState("");
+  const [feedbackEntryOn, setFeedbackEntryOn] = useState(true);
 
   const topGuiDivRef = useRef<HTMLDivElement>(null);
 
@@ -140,12 +140,9 @@ function GUI(props: GUIProps) {
   }, [topGuiDivRef.current, scrollTimeout]);
 
   useEffect(() => {
+    // Cmd + Backspace to delete current step
     const listener = (e: any) => {
-      // Cmd + i to toggle fast model
-      if (e.key === "i" && isMetaEquivalentKeyPressed(e) && e.shiftKey) {
-        setUsingFastModel((prev) => !prev);
-        // Cmd + backspace to stop currently running step
-      } else if (
+      if (
         e.key === "Backspace" &&
         isMetaEquivalentKeyPressed(e) &&
         typeof history?.current_index !== "undefined" &&
@@ -164,7 +161,6 @@ function GUI(props: GUIProps) {
   useEffect(() => {
     client?.onStateUpdate((state: FullState) => {
       // Scroll only if user is at very bottom of the window.
-      setUsingFastModel(state.default_model === "gpt-3.5-turbo");
       const shouldScrollToBottom =
         topGuiDivRef.current &&
         topGuiDivRef.current?.offsetHeight - window.scrollY < 100;
@@ -281,6 +277,7 @@ function GUI(props: GUIProps) {
           setShowFeedbackDialog(false);
         }}
         message={feedbackDialogMessage}
+        entryOn={feedbackEntryOn}
       />
 
       <TopGUIDiv
@@ -431,24 +428,26 @@ function GUI(props: GUIProps) {
         </div>
         <HeaderButtonWithText
           onClick={() => {
-            // client?.changeDefaultModel(
-            //   usingFastModel ? "gpt-4" : "gpt-3.5-turbo"
-            // );
-            if (!usingFastModel) {
-              // Show the dialog
-              setFeedbackDialogMessage(
-                "We don't yet support local models, but we're working on it! If privacy is a concern of yours, please write a short note to let us know."
-              );
-              setShowFeedbackDialog(true);
-            }
-            setUsingFastModel((prev) => !prev);
+            // Show the dialog
+            setFeedbackDialogMessage(
+              `Continue uses GPT-4 by default, but works with any model. If you'd like to keep your code completely private, there are few options:
+
+Run a local model with ggml: [5 minute quickstart](https://github.com/continuedev/ggml-server-example)
+
+Use Azure OpenAI service, which is GDPR and HIPAA compliant: [Tutorial](https://continue.dev/docs/customization#azure-openai-service)
+
+If you already have an LLM deployed on your own infrastructure, or would like to do so, please contact us at hi@continue.dev.
+              `
+            );
+            setFeedbackEntryOn(false);
+            setShowFeedbackDialog(true);
           }}
-          text={usingFastModel ? "local" : "gpt-4"}
+          text={"Use Private Model"}
         >
           <div
             style={{ fontSize: "18px", marginLeft: "2px", marginRight: "2px" }}
           >
-            {usingFastModel ? "🔒" : "🧠"}
+            🔒
           </div>
         </HeaderButtonWithText>
         <HeaderButtonWithText
@@ -473,6 +472,7 @@ function GUI(props: GUIProps) {
             setFeedbackDialogMessage(
               "Having trouble using Continue? Want a new feature? Let us know! This box is anonymous, but we will promptly address your feedback."
             );
+            setFeedbackEntryOn(true);
             setShowFeedbackDialog(true);
           }}
           text="Feedback"
