@@ -1,7 +1,6 @@
 import * as vscode from "vscode";
 import { registerAllCommands } from "../commands";
 import { registerAllCodeLensProviders } from "../lang-server/codeLens";
-import { sendTelemetryEvent, TelemetryEvent } from "../telemetry";
 import IdeProtocolClient from "../continueIdeClient";
 import { getContinueServerUrl } from "../bridge";
 import { ContinueGUIWebviewViewProvider } from "../debugPanel";
