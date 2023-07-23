@@ -1,12 +1,11 @@
 import json
-from textwrap import dedent
-from typing import Callable, Coroutine, Dict, Generator, List, Literal, Tuple, Union
-
-from ..models.filesystem import RangeInFileWithContents
-from ..models.main import ContinueBaseModel
-from pydantic import validator
-from .observation import Observation
+from typing import Coroutine, Dict, List, Literal, Union
 from pydantic.schema import schema
+
+
+from ..models.main import ContinueBaseModel
+from pydantic import BaseModel, validator
+from .observation import Observation
 
 ChatMessageRole = Literal["assistant", "user", "system", "function"]
 
@@ -201,12 +200,48 @@ class SlashCommandDescription(ContinueBaseModel):
     description: str
 
 
-class HighlightedRangeContext(ContinueBaseModel):
-    """Context for a highlighted range"""
-    range: RangeInFileWithContents
-    editing: bool
-    pinned: bool
-    display_name: str
+class ContextItemId(BaseModel):
+    """
+    A ContextItemId is a unique identifier for a ContextItem.
+    """
+    provider_title: str
+    item_id: str
+
+    def to_string(self) -> str:
+        return f"{self.provider_title}-{self.item_id}"
+
+    @staticmethod
+    def from_string(string: str) -> 'ContextItemId':
+        provider_title, item_id = string.split('-')
+        return ContextItemId(provider_title=provider_title, item_id=item_id)
+
+
+class ContextItemDescription(BaseModel):
+    """
+    A ContextItemDescription is a description of a ContextItem that is displayed to the user when they type '@'.
+
+    The id can be used to retrieve the ContextItem from the ContextManager.
+    """
+    name: str
+    description: str
+    id:  ContextItemId
+
+
+class ContextItem(BaseModel):
+    """
+    A ContextItem is a single item that is stored in the ContextManager.
+    """
+    description: ContextItemDescription
+    content: str
+
+    @validator('content', pre=True)
+    def content_must_be_string(cls, v):
+        if v is None:
+            return ''
+        return v
+
+    editing: bool = False
+    editable: bool = False
 
 
 class FullState(ContinueBaseModel):
@@ -215,9 +250,9 @@ class FullState(ContinueBaseModel):
     active: bool
     user_input_queue: List[str]
     default_model: str
-    highlighted_ranges: List[HighlightedRangeContext]
     slash_commands: List[SlashCommandDescription]
     adding_highlighted_code: bool
+    selected_context_items: List[ContextItem]
 
 
 class ContinueSDK:

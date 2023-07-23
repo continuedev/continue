@@ -74,7 +74,7 @@ class SessionManager:
 
         async def on_update(state: FullState):
             await session_manager.send_ws_data(session_id, "state_update", {
-                "state": autopilot.get_full_state().dict()
+                "state": state.dict()
             })
 
         autopilot.on_update(on_update)
@@ -84,9 +84,9 @@ class SessionManager:
     def remove_session(self, session_id: str):
         del self.sessions[session_id]
 
-    def persist_session(self, session_id: str):
+    async def persist_session(self, session_id: str):
         """Save the session's FullState as a json file"""
-        full_state = self.sessions[session_id].autopilot.get_full_state()
+        full_state = await self.sessions[session_id].autopilot.get_full_state()
         if not os.path.exists(getSessionsFolderPath()):
             os.mkdir(getSessionsFolderPath())
         with open(getSessionFilePath(session_id), "w") as f:

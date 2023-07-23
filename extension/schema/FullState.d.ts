@@ -27,18 +27,18 @@ export type CurrentIndex = number;
 export type Active1 = boolean;
 export type UserInputQueue = string[];
 export type DefaultModel = string;
-export type Filepath = string;
-export type Line = number;
-export type Character = number;
-export type Contents = string;
-export type Editing = boolean;
-export type Pinned = boolean;
-export type DisplayName = string;
-export type HighlightedRanges = HighlightedRangeContext[];
 export type Name3 = string;
 export type Description1 = string;
 export type SlashCommands = SlashCommandDescription[];
 export type AddingHighlightedCode = boolean;
+export type Name4 = string;
+export type Description2 = string;
+export type ProviderTitle = string;
+export type ItemId = string;
+export type Content1 = string;
+export type Editing = boolean;
+export type Editable = boolean;
+export type SelectedContextItems = ContextItem[];
 
 /**
  * A full state of the program, including the history
@@ -48,9 +48,9 @@ export interface FullState1 {
   active: Active1;
   user_input_queue: UserInputQueue;
   default_model: DefaultModel;
-  highlighted_ranges: HighlightedRanges;
   slash_commands: SlashCommands;
   adding_highlighted_code: AddingHighlightedCode;
+  selected_context_items: SelectedContextItems;
   [k: string]: unknown;
 }
 /**
@@ -98,40 +98,37 @@ export interface FunctionCall {
 export interface Observation {
   [k: string]: unknown;
 }
-/**
- * Context for a highlighted range
- */
-export interface HighlightedRangeContext {
-  range: RangeInFileWithContents;
-  editing: Editing;
-  pinned: Pinned;
-  display_name: DisplayName;
-  [k: string]: unknown;
-}
-/**
- * A range in a file with the contents of the range.
- */
-export interface RangeInFileWithContents {
-  filepath: Filepath;
-  range: Range;
-  contents: Contents;
-  [k: string]: unknown;
-}
-/**
- * A range in a file. 0-indexed.
- */
-export interface Range {
-  start: Position;
-  end: Position;
-  [k: string]: unknown;
-}
-export interface Position {
-  line: Line;
-  character: Character;
-  [k: string]: unknown;
-}
 export interface SlashCommandDescription {
   name: Name3;
   description: Description1;
+  [k: string]: unknown;
+}
+/**
+ * A ContextItem is a single item that is stored in the ContextManager.
+ */
+export interface ContextItem {
+  description: ContextItemDescription;
+  content: Content1;
+  editing?: Editing;
+  editable?: Editable;
+  [k: string]: unknown;
+}
+/**
+ * A ContextItemDescription is a description of a ContextItem that is displayed to the user when they type '@'.
+ *
+ * The id can be used to retrieve the ContextItem from the ContextManager.
+ */
+export interface ContextItemDescription {
+  name: Name4;
+  description: Description2;
+  id: ContextItemId;
+  [k: string]: unknown;
+}
+/**
+ * A ContextItemId is a unique identifier for a ContextItem.
+ */
+export interface ContextItemId {
+  provider_title: ProviderTitle;
+  item_id: ItemId;
   [k: string]: unknown;
 }

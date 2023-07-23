@@ -1,6 +1,7 @@
 import json
 import os
 from .main import Step
+from .context import ContextProvider
 from pydantic import BaseModel, validator
 from typing import List, Literal, Optional, Dict, Type, Union
 import yaml
@@ -49,6 +50,8 @@ class ContinueConfig(BaseModel):
     on_traceback: Optional[List[OnTracebackSteps]] = []
     system_message: Optional[str] = None
     azure_openai_info: Optional[AzureInfo] = None
+
+    context_providers: List[ContextProvider] = []
 
     # Want to force these to be the slash commands for now
     @validator('slash_commands', pre=True)

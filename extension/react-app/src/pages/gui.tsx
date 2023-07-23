@@ -6,7 +6,7 @@ import {
 } from "../components";
 import Loader from "../components/Loader";
 import ContinueButton from "../components/ContinueButton";
-import { FullState, HighlightedRangeContext } from "../../../schema/FullState";
+import { ContextItem, FullState } from "../../../schema/FullState";
 import { useCallback, useEffect, useRef, useState, useContext } from "react";
 import { History } from "../../../schema/History";
 import { HistoryNode } from "../../../schema/HistoryNode";
@@ -22,12 +22,16 @@ import TextDialog from "../components/TextDialog";
 import HeaderButtonWithText from "../components/HeaderButtonWithText";
 import ReactSwitch from "react-switch";
 import { usePostHog } from "posthog-js/react";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { RootStore } from "../redux/store";
 import { postVscMessage } from "../vscode";
 import UserInputContainer from "../components/UserInputContainer";
 import Onboarding from "../components/Onboarding";
 import { isMetaEquivalentKeyPressed } from "../util";
+import {
+  setBottomMessage,
+  setBottomMessageCloseTimeout,
+} from "../redux/slices/uiStateSlice";
 
 const TopGUIDiv = styled.div`
   overflow: hidden;
@@ -78,15 +82,13 @@ function GUI(props: GUIProps) {
   const [usingFastModel, setUsingFastModel] = useState(false);
   const [waitingForSteps, setWaitingForSteps] = useState(false);
   const [userInputQueue, setUserInputQueue] = useState<string[]>([]);
-  const [highlightedRanges, setHighlightedRanges] = useState<
-    HighlightedRangeContext[]
-  >([]);
   const [addingHighlightedCode, setAddingHighlightedCode] = useState(false);
+  const [selectedContextItems, setSelectedContextItems] = useState<
+    ContextItem[]
+  >([]);
   const [availableSlashCommands, setAvailableSlashCommands] = useState<
     { name: string; description: string }[]
   >([]);
-  const [pinned, setPinned] = useState(false);
-  const [showDataSharingInfo, setShowDataSharingInfo] = useState(false);
   const [stepsOpen, setStepsOpen] = useState<boolean[]>([
     true,
     true,
@@ -117,6 +119,11 @@ function GUI(props: GUIProps) {
 
   const [showFeedbackDialog, setShowFeedbackDialog] = useState(false);
   const [feedbackDialogMessage, setFeedbackDialogMessage] = useState("");
+
+  const dispatch = useDispatch();
+  const bottomMessage = useSelector(
+    (state: RootStore) => state.uiState.bottomMessage
+  );
 
   const topGuiDivRef = useRef<HTMLDivElement>(null);
 
@@ -179,7 +186,8 @@ function GUI(props: GUIProps) {
 
       setWaitingForSteps(waitingForSteps);
       setHistory(state.history);
-      setHighlightedRanges(state.highlighted_ranges);
+      console.log((state as any).selected_context_items);
+      setSelectedContextItems(state.selected_context_items);
       setUserInputQueue(state.user_input_queue);
       setAddingHighlightedCode(state.adding_highlighted_code);
       setAvailableSlashCommands(
@@ -213,13 +221,6 @@ function GUI(props: GUIProps) {
   }, [waitingForSteps]);
 
   const mainTextInputRef = useRef<HTMLInputElement>(null);
-
-  const deleteContextItems = useCallback(
-    (indices: number[]) => {
-      client?.deleteContextAtIndices(indices);
-    },
-    [client]
-  );
 
   const onMainTextInput = (event?: any) => {
     if (mainTextInputRef.current) {
@@ -360,11 +361,7 @@ function GUI(props: GUIProps) {
           }}
           onInputValueChange={() => {}}
           items={availableSlashCommands}
-          highlightedCodeSections={highlightedRanges}
-          deleteContextItems={deleteContextItems}
-          onTogglePin={() => {
-            setPinned((prev: boolean) => !prev);
-          }}
+          selectedContextItems={selectedContextItems}
           onToggleAddContext={() => {
             client?.toggleAddingHighlightedCode();
           }}
@@ -373,29 +370,30 @@ function GUI(props: GUIProps) {
         <ContinueButton onClick={onMainTextInput} />
       </TopGUIDiv>
       <div
+        onMouseEnter={() => {
+          dispatch(setBottomMessageCloseTimeout(undefined));
+        }}
+        onMouseLeave={() => {
+          dispatch(setBottomMessage(undefined));
+        }}
         style={{
           position: "fixed",
           bottom: "50px",
+          left: "0",
+          right: "0",
+          margin: "16px",
           backgroundColor: vscBackground,
           color: vscForeground,
           borderRadius: defaultBorderRadius,
           padding: "16px",
-          margin: "16px",
           zIndex: 100,
           boxShadow: `0px 0px 10px 0px ${vscForeground}`,
+          maxHeight: "50vh",
+          overflow: "scroll",
         }}
-        hidden={!showDataSharingInfo}
+        hidden={!bottomMessage}
       >
-        By turning on this switch, you will begin collecting accepted and
-        rejected suggestions in .continue/suggestions.json. This data is stored
-        locally on your machine and not sent anywhere.
-        <br />
-        <br />
-        <b>
-          {dataSwitchChecked
-            ? "👍 Data is being collected"
-            : "👎 No data is being collected"}
-        </b>
+        {bottomMessage}
       </div>
       <Footer dataSwitchChecked={dataSwitchChecked}>
         <div
@@ -406,10 +404,25 @@ function GUI(props: GUIProps) {
             alignItems: "center",
           }}
           onMouseEnter={() => {
-            setShowDataSharingInfo(true);
+            dispatch(
+              setBottomMessage(
+                <>
+                  By turning on this switch, you will begin collecting accepted
+                  and rejected suggestions in .continue/suggestions.json. This
+                  data is stored locally on your machine and not sent anywhere.
+                  <br />
+                  <br />
+                  <b>
+                    {dataSwitchChecked
+                      ? "👍 Data is being collected"
+                      : "👎 No data is being collected"}
+                  </b>
+                </>
+              )
+            );
           }}
           onMouseLeave={() => {
-            setShowDataSharingInfo(false);
+            dispatch(setBottomMessage(undefined));
           }}
         >
           <ReactSwitch

@@ -2,6 +2,7 @@ from .main import *
 from .filesystem import RangeInFile, FileEdit
 from .filesystem_edit import FileEditWithFullContents
 from ..core.main import History, HistoryNode, FullState
+from ..core.context import ContextItem
 from pydantic import schema_json_of
 import os
 
@@ -13,6 +14,8 @@ MODELS_TO_GENERATE = [
     FileEditWithFullContents
 ] + [
     History, HistoryNode, FullState
+] + [
+    ContextItem
 ]
 
 RENAMES = {

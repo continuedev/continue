@@ -3,8 +3,10 @@ from functools import cached_property
 from typing import Coroutine, Dict, Union
 import os
 
+
 from ..steps.core.core import DefaultModelEditCodeStep
 from ..models.main import Range
+from .context import ContextItem
 from .abstract_sdk import AbstractContinueSDK
 from .config import ContinueConfig, load_config, load_global_config, update_global_config
 from ..models.filesystem_edit import FileEdit, FileSystemEdit, AddFile, DeleteFile, AddDirectory, DeleteDirectory
@@ -289,28 +291,13 @@ class ContinueSDK(AbstractContinueSDK):
 
     async def get_chat_context(self) -> List[ChatMessage]:
         history_context = self.history.to_chat_history()
-        highlighted_code = [
-            hr.range for hr in self.__autopilot._highlighted_ranges]
 
-        preface = "The following code is highlighted"
+        context_messages: List[ChatMessage] = await self.__autopilot.context_manager.get_chat_messages()
 
-        # If no higlighted ranges, use first file as context
-        if len(highlighted_code) == 0:
-            preface = "The following file is open"
-            visible_files = await self.ide.getVisibleFiles()
-            if len(visible_files) > 0:
-                content = await self.ide.readFile(visible_files[0])
-                highlighted_code = [
-                    RangeInFileWithContents.from_entire_file(visible_files[0], content)]
-
-        for rif in highlighted_code:
-            msg = ChatMessage(content=f"{preface} ({rif.filepath}):\n```\n{rif.contents}\n```",
-                              role="user", summary=f"{preface}: {rif.filepath}")
-
-            # Don't insert after latest user message or function call
-            i = -1
-            if len(history_context) > 0 and (history_context[i].role == "user" or history_context[i].role == "function"):
-                i -= 1
+        # Insert at the end, but don't insert after latest user message or function call
+        i = -2 if (len(history_context) > 0 and (
+            history_context[-1].role == "user" or history_context[-1].role == "function")) else -1
+        for msg in context_messages:
             history_context.insert(i, msg)
 
         return history_context

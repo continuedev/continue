@@ -3,6 +3,7 @@ import debugStateReducer from "./slices/debugContexSlice";
 import chatReducer from "./slices/chatSlice";
 import configReducer from "./slices/configSlice";
 import miscReducer from "./slices/miscSlice";
+import uiStateReducer from "./slices/uiStateSlice";
 import { RangeInFile, SerializedDebugContext } from "../../../src/client";
 
 export interface ChatMessage {
@@ -31,6 +32,10 @@ export interface RootStore {
   misc: {
     highlightedCode: RangeInFile | undefined;
   };
+  uiState: {
+    bottomMessage: JSX.Element | undefined;
+    bottomMessageCloseTimeout: NodeJS.Timeout | undefined;
+  };
 }
 
 const store = configureStore({
@@ -39,6 +44,7 @@ const store = configureStore({
     chat: chatReducer,
     config: configReducer,
     misc: miscReducer,
+    uiState: uiStateReducer,
   },
 });
 

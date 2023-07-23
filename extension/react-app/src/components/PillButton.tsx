@@ -1,9 +1,10 @@
-import { useContext, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import styled from "styled-components";
 import {
   StyledTooltip,
   defaultBorderRadius,
   secondaryDark,
+  vscBackground,
   vscForeground,
 } from ".";
 import {
@@ -12,6 +13,14 @@ import {
   ExclamationTriangle,
 } from "@styled-icons/heroicons-outline";
 import { GUIClientContext } from "../App";
+import { useDispatch } from "react-redux";
+import {
+  setBottomMessage,
+  setBottomMessageCloseTimeout,
+} from "../redux/slices/uiStateSlice";
+import { ContextItem } from "../../../schema/FullState";
+import { ReactMarkdown } from "react-markdown/lib/react-markdown";
+import StyledMarkdownPreview from "./StyledMarkdownPreview";
 
 const Button = styled.button`
   border: none;
@@ -67,18 +76,47 @@ const CircleDiv = styled.div`
 
 interface PillButtonProps {
   onHover?: (arg0: boolean) => void;
-  onDelete?: () => void;
-  title: string;
-  index: number;
-  editing: boolean;
-  pinned: boolean;
+  item: ContextItem;
   warning?: string;
-  onlyShowDelete?: boolean;
+  index: number;
+  addingHighlightedCode?: boolean;
 }
 
 const PillButton = (props: PillButtonProps) => {
   const [isHovered, setIsHovered] = useState(false);
   const client = useContext(GUIClientContext);
+
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    if (isHovered) {
+      dispatch(setBottomMessageCloseTimeout(undefined));
+      dispatch(
+        setBottomMessage(
+          <>
+            <b>{props.item.description.name}</b>:{" "}
+            {props.item.description.description}
+            <StyledMarkdownPreview
+              source={`\`\`\`\n${props.item.content}\n\`\`\``}
+              wrapperElement={{
+                "data-color-mode": "dark",
+              }}
+            />
+          </>
+        )
+      );
+    } else {
+      dispatch(
+        setBottomMessageCloseTimeout(
+          setTimeout(() => {
+            if (!isHovered) {
+              dispatch(setBottomMessage(undefined));
+            }
+          }, 2000)
+        )
+      );
+    }
+  }, [isHovered]);
 
   return (
     <>
@@ -88,10 +126,8 @@ const PillButton = (props: PillButtonProps) => {
             position: "relative",
             borderColor: props.warning
               ? "red"
-              : props.editing
+              : props.item.editing
               ? "#8800aa"
-              : props.pinned
-              ? "#ffff0099"
               : "transparent",
             borderWidth: "1px",
             borderStyle: "solid",
@@ -112,10 +148,14 @@ const PillButton = (props: PillButtonProps) => {
           {isHovered && (
             <GridDiv
               style={{
-                gridTemplateColumns: props.onlyShowDelete ? "1fr" : "1fr 1fr",
+                gridTemplateColumns:
+                  props.item.editable && props.addingHighlightedCode
+                    ? "1fr 1fr"
+                    : "1fr",
+                backgroundColor: vscBackground,
               }}
             >
-              {props.onlyShowDelete || (
+              {props.item.editable && props.addingHighlightedCode && (
                 <ButtonDiv
                   data-tooltip-id={`edit-${props.index}`}
                   backgroundColor={"#8800aa55"}
@@ -130,15 +170,6 @@ const PillButton = (props: PillButtonProps) => {
                 </ButtonDiv>
               )}
 
-              {/* <ButtonDiv
-            data-tooltip-id={`pin-${props.index}`}
-            backgroundColor={"#ffff0055"}
-            onClick={() => {
-              client?.setPinnedAtIndices([props.index]);
-            }}
-            >
-            <MapPin style={{ margin: "auto" }} width="1.6em"></MapPin>
-          </ButtonDiv> */}
               <StyledTooltip id={`pin-${props.index}`}>
                 Edit this range
               </StyledTooltip>
@@ -146,33 +177,33 @@ const PillButton = (props: PillButtonProps) => {
                 data-tooltip-id={`delete-${props.index}`}
                 backgroundColor={"#cc000055"}
                 onClick={() => {
-                  if (props.onDelete) {
-                    props.onDelete();
-                  }
+                  client?.deleteContextWithIds([props.item.description.id]);
                 }}
               >
                 <Trash style={{ margin: "auto" }} width="1.6em"></Trash>
               </ButtonDiv>
             </GridDiv>
           )}
-          {props.title}
+          {props.item.description.name}
         </Button>
         <StyledTooltip id={`edit-${props.index}`}>
-          {props.editing
+          {props.item.editing
             ? "Editing this section (with entire file as context)"
             : "Edit this section"}
         </StyledTooltip>
         <StyledTooltip id={`delete-${props.index}`}>Delete</StyledTooltip>
         {props.warning && (
           <>
-            <CircleDiv data-tooltip-id={`circle-div-${props.title}`}>
+            <CircleDiv
+              data-tooltip-id={`circle-div-${props.item.description.name}`}
+            >
               <ExclamationTriangle
                 style={{ margin: "auto" }}
                 width="1.0em"
                 strokeWidth={2}
               />
             </CircleDiv>
-            <StyledTooltip id={`circle-div-${props.title}`}>
+            <StyledTooltip id={`circle-div-${props.item.description.name}`}>
               {props.warning}
             </StyledTooltip>
           </>

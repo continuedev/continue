@@ -14,6 +14,7 @@
     "@types/vscode-webview": "^1.57.1",
     "@uiw/react-markdown-preview": "^4.1.13",
     "downshift": "^7.6.0",
+    "meilisearch": "^0.33.0",
     "posthog-js": "^1.58.0",
     "prismjs": "^1.29.0",
     "react": "^18.2.0",

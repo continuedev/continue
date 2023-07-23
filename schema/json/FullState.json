@@ -157,92 +157,6 @@
         "current_index"
       ]
     },
-    "Position": {
-      "title": "Position",
-      "type": "object",
-      "properties": {
-        "line": {
-          "title": "Line",
-          "type": "integer"
-        },
-        "character": {
-          "title": "Character",
-          "type": "integer"
-        }
-      },
-      "required": [
-        "line",
-        "character"
-      ]
-    },
-    "Range": {
-      "title": "Range",
-      "description": "A range in a file. 0-indexed.",
-      "type": "object",
-      "properties": {
-        "start": {
-          "$ref": "#/definitions/Position"
-        },
-        "end": {
-          "$ref": "#/definitions/Position"
-        }
-      },
-      "required": [
-        "start",
-        "end"
-      ]
-    },
-    "RangeInFileWithContents": {
-      "title": "RangeInFileWithContents",
-      "description": "A range in a file with the contents of the range.",
-      "type": "object",
-      "properties": {
-        "filepath": {
-          "title": "Filepath",
-          "type": "string"
-        },
-        "range": {
-          "$ref": "#/definitions/Range"
-        },
-        "contents": {
-          "title": "Contents",
-          "type": "string"
-        }
-      },
-      "required": [
-        "filepath",
-        "range",
-        "contents"
-      ]
-    },
-    "HighlightedRangeContext": {
-      "title": "HighlightedRangeContext",
-      "description": "Context for a highlighted range",
-      "type": "object",
-      "properties": {
-        "range": {
-          "$ref": "#/definitions/RangeInFileWithContents"
-        },
-        "editing": {
-          "title": "Editing",
-          "type": "boolean"
-        },
-        "pinned": {
-          "title": "Pinned",
-          "type": "boolean"
-        },
-        "display_name": {
-          "title": "Display Name",
-          "type": "string"
-        }
-      },
-      "required": [
-        "range",
-        "editing",
-        "pinned",
-        "display_name"
-      ]
-    },
     "SlashCommandDescription": {
       "title": "SlashCommandDescription",
       "type": "object",
@@ -259,6 +173,76 @@
       "required": [
         "name",
         "description"
+      ]
+    },
+    "ContextItemId": {
+      "title": "ContextItemId",
+      "description": "A ContextItemId is a unique identifier for a ContextItem.",
+      "type": "object",
+      "properties": {
+        "provider_title": {
+          "title": "Provider Title",
+          "type": "string"
+        },
+        "item_id": {
+          "title": "Item Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "provider_title",
+        "item_id"
+      ]
+    },
+    "ContextItemDescription": {
+      "title": "ContextItemDescription",
+      "description": "A ContextItemDescription is a description of a ContextItem that is displayed to the user when they type '@'.\n\nThe id can be used to retrieve the ContextItem from the ContextManager.",
+      "type": "object",
+      "properties": {
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "description": {
+          "title": "Description",
+          "type": "string"
+        },
+        "id": {
+          "$ref": "#/definitions/ContextItemId"
+        }
+      },
+      "required": [
+        "name",
+        "description",
+        "id"
+      ]
+    },
+    "ContextItem": {
+      "title": "ContextItem",
+      "description": "A ContextItem is a single item that is stored in the ContextManager.",
+      "type": "object",
+      "properties": {
+        "description": {
+          "$ref": "#/definitions/ContextItemDescription"
+        },
+        "content": {
+          "title": "Content",
+          "type": "string"
+        },
+        "editing": {
+          "title": "Editing",
+          "default": false,
+          "type": "boolean"
+        },
+        "editable": {
+          "title": "Editable",
+          "default": false,
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "description",
+        "content"
       ]
     },
     "src__continuedev__core__main__FullState": {
@@ -284,13 +268,6 @@
           "title": "Default Model",
           "type": "string"
         },
-        "highlighted_ranges": {
-          "title": "Highlighted Ranges",
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/HighlightedRangeContext"
-          }
-        },
         "slash_commands": {
           "title": "Slash Commands",
           "type": "array",
@@ -301,6 +278,13 @@
         "adding_highlighted_code": {
           "title": "Adding Highlighted Code",
           "type": "boolean"
+        },
+        "selected_context_items": {
+          "title": "Selected Context Items",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ContextItem"
+          }
         }
       },
       "required": [
@@ -308,9 +292,9 @@
         "active",
         "user_input_queue",
         "default_model",
-        "highlighted_ranges",
         "slash_commands",
-        "adding_highlighted_code"
+        "adding_highlighted_code",
+        "selected_context_items"
       ]
     }
   }
