@@ -13,7 +13,7 @@ from ..server.ide_protocol import AbstractIdeProtocolServer
 from ..libs.util.queue import AsyncSubscriptionQueue
 from ..models.main import ContinueBaseModel
 from .main import Context, ContinueCustomException, HighlightedRangeContext, Policy, History, FullState, Step, HistoryNode
-from ..steps.core.core import ReversibleStep, ManualEditStep, UserInputStep
+from ..plugins.steps.core.core import ReversibleStep, ManualEditStep, UserInputStep
 from ..libs.util.telemetry import capture_event
 from .sdk import ContinueSDK
 from ..libs.util.step_name_to_steps import get_step_from_name

@@ -1,15 +1,15 @@
 from textwrap import dedent
 from typing import Union
 
-from ..steps.chat import SimpleChatStep
-from ..steps.welcome import WelcomeStep
+from ..plugins.steps.chat import SimpleChatStep
+from ..plugins.steps.welcome import WelcomeStep
 from .config import ContinueConfig
-from ..steps.steps_on_startup import StepsOnStartupStep
+from ..plugins.steps.steps_on_startup import StepsOnStartupStep
 from .main import Step, History, Policy
 from .observation import UserInputObservation
-from ..steps.core.core import MessageStep
+from ..plugins.steps.core.core import MessageStep
 from ..libs.util.step_name_to_steps import get_step_from_name
-from ..steps.custom_command import CustomCommandStep
+from ..plugins.steps.custom_command import CustomCommandStep
 
 
 def parse_slash_command(inp: str, config: ContinueConfig) -> Union[None, Step]:
