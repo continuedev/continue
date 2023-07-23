@@ -2,18 +2,75 @@
 
 ## Table of Contents
 
-- [Continue Architecture](#continue-architecture)
-- [Core Concepts](#core-concepts)
+- [❤️ Ways to Contribute](#❤️-ways-to-contribute)
+  - [🐛 Report Bugs](#🐛-report-bugs)
+  - [✨ Suggest Enhancements](#✨-suggest-enhancements)
+  - [📖 Updating / Improving Documentation](#📖-updating--improving-documentation)
+  - [🧑‍💻 Contributing Code](#🧑‍💻-contributing-code)
+    - [Setup Development Environment](#setting-up-the-development-environment)
+    - [Writing Steps](#writing-steps)
+    - [Writing Context Providers](#writing-context-providers)
+- [📐 Continue Architecture](#📐-continue-architecture)
+  - [Continue VS Code Client](#continue-vs-code-client)
+  - [Continue IDE Websockets Protocol](#continue-ide-websockets-protocol)
+  - [Continue GUI Websockets Protocol](#continue-gui-websockets-protocol)
+- [❇️ Core Concepts](#❇️-core-concepts)
   - [Step](#step)
-- [Continue VS Code Client](#continue-vs-code-client)
-- [Continue IDE Websockets Protocol](#continue-ide-websockets-protocol)
-- [Continue GUI Websockets Protocol](#continue-gui-websockets-protocol)
-- [Ways to Contribute](#ways-to-contribute)
-  - [Report Bugs](#report-bugs)
-  - [Suggest Enhancements](#suggest-enhancements)
-  - [Updating / Improving Documentation](#updating--improving-documentation)
+  - [Autopilot](#autopilot)
+  - [Observation](#observation)
+  - [Policy](#policy)
 
-## Continue Architecture
+# ❤️ Ways to Contribute
+
+## 🐛 Report Bugs
+
+If you find a bug, please [create an issue](https://github.com/continuedev/continue/issues) to report it! A great bug report includes:
+
+- A description of the bug
+- Steps to reproduce
+- What you expected to happen
+- What actually happened
+- Screenshots or videos
+
+## ✨ Suggest Enhancements
+
+Continue is quickly adding features, and we'd love to hear which are the most important to you. The best ways to suggest an enhancement are
+
+- Create an issue
+
+  - First, check whether a similar proposal has already been made
+  - If not, [create an issue](https://github.com/continuedev/continue/issues)
+  - Please describe the enhancement in as much detail as you can, and why it would be useful
+
+- Join the [Continue Discord](https://discord.gg/NWtdYexhMs) and tell us about your idea in the `#feedback` channel
+
+## 📖 Updating / Improving Documentation
+
+Continue is continuously improving, but a feature isn't complete until it is reflected in the documentation! If you see something out-of-date or missing, you can help by clicking "Edit this page" at the bottom of any page on [continue.dev/docs](https://continue.dev/docs).
+
+## 🧑‍💻 Contributing Code
+
+### Setting up the Development Environment
+
+There are different levels of setup necessary depending on which part of Continue you are developing. For all of them, first clone the repo:
+
+```bash
+git clone https://github.com/continuedev/continue
+```
+
+If editing only the server (`/continuedev` directory), see the directions in [continuedev/README.md](./continuedev/README.md) to set up the Python server. Once it is running on localhost:8001, you can connect your existing VS Code extension by going to VS Code settings, searching for "Continue: Server URL", and setting it to "http://localhost:8001".
+
+If editing the VS Code extension (`/extension` directory) or GUI (`/extension/react-app`), you can follow the instructions in [`extension/DEV_README.md`](./extension/DEV_README.md) to set up the VS Code extension and GUI in development mode.
+
+### Writing Steps
+
+A Step can be used as a custom slash command, or called otherwise in a `Policy`. See the [steps README](./continuedev/src/continuedev/steps/README.md) to learn how to write a Step.
+
+### Writing Context Providers
+
+A `ContextProvider` is a Continue plugin that lets type '@' to quickly select documents as context for the language model. The simplest way to create a `ContextProvider` is to implement the `provide_context_items` method. You can find a great example of this in [GitHubIssuesContextProvider](./continuedev/src/continuedev/libs/context_providers/github_issues.py), which allows you to search GitHub Issues in a repo.
+
+## 📐 Continue Architecture
 
 Continue consists of 3 components, designed so that Continue can easily be extended to work in any IDE:
 
@@ -26,32 +83,6 @@ Continue consists of 3 components, designed so that Continue can easily be exten
 It is important that the IDE Client and GUI never communicate except when the IDE Client initially sets up the GUI. This ensures that the server is the source-of-truth for state, and that we can easily extend Continue to work in other IDEs.
 
 ![Continue Architecture](https://continue.dev/docs/assets/images/continue-architecture-146a90742e25f6524452c74fe44fa2a0.png)
-
-## Core Concepts
-
-All of Continue's logic happens inside of the server, and it is built around a few core concepts. Most of these are Pydantic Models defined in [core/main.py](./continuedev/src/continuedev/core/main.py).
-
-### `Step`
-
-Everything in Continue is a "Step". The `Step` class defines 2 methods:
-
-1. `async def run(self, sdk: ContinueSDK) -> Coroutine[Observation, None, None]` - This method defines what happens when the Step is run. It has access to the Continue SDK, which lets you take actions in the IDE, call LLMs, run nested Steps, and more. Optionally, a Step can return an `Observation` object, which a `Policy` can use to make decisions about what to do next.
-
-2. `async def describe(self, models: Models) -> Coroutine[str, None, None]` - After each Step is run, this method is called to asynchronously generate a summary title for the step. A `Models` object is passed so that you have access to LLMs to summarize for you.
-
-Steps are designed to be composable, so that you can easily build new Steps by combining existing ones. And because they are Pydantic models, they can instantly be used as tools useable by an LLM, for example with OpenAI's function-calling functionality (see [ChatWithFunctions](./continuedev/src/continuedev/steps/chat.py) for an example of this).
-
-Some of the most commonly used Steps are:
-
-- [`SimpleChatStep`](./continuedev/src/continuedev/steps/chat.py) - This is the default Step that is run when the user enters natural language input. It takes the user's input and runs it through the default LLM, then displays the result in the GUI.
-
-- [`EditHighlightedCodeStep`](./continuedev/src/continuedev/steps/core/core.py) - This is the Step run when a user highlights code, enters natural language, and presses CMD/CTRL+ENTER, or uses the slash command '/edit'. It opens a side-by-side diff editor, where updated code is streamed to fulfil the user's request.
-
-### `Autopilot`
-
-### `Observation`
-
-### `Policy`
 
 ### Continue VS Code Client
 
@@ -77,18 +108,40 @@ When state is updated on the server, we currently send the entirety of the objec
 - `active`, whether the autopilot is currently running a step. Displayed as a loader while step is running.
 - `user_input_queue`, the queue of user inputs that have not yet been processed due to waiting for previous Steps to complete. Displayed below the `active` loader until popped from the queue.
 - `default_model`, the default model used for completions. Displayed as a toggleable button on the bottom of the GUI.
-- `highlighted_ranges`, the ranges of code that have been selected to include as context. Displayed just above the main text input.
+- `selected_context_items`, the ranges of code and other items (like GitHub Issues, files, etc...) that have been selected to include as context. Displayed just above the main text input.
 - `slash_commands`, the list of available slash commands. Displayed in the main text input dropdown.
 - `adding_highlighted_code`, whether highlighting of new code for context is locked. Displayed as a button adjacent to `highlighted_ranges`.
 
 Updates are sent with `await sdk.update_ui()` when needed explicitly or `await autopilot.update_subscribers()` automatically between each Step. The GUI can listen for state updates with `ContinueGUIClientProtocol.onStateUpdate()`.
 
-## Ways to Contribute
+## ❇️ Core Concepts
 
-### Report Bugs
+All of Continue's logic happens inside of the server, and it is built around a few core concepts. Most of these are Pydantic Models defined in [core/main.py](./continuedev/src/continuedev/core/main.py).
 
-### Suggest Enhancements
+### `Step`
 
-### Updating / Improving Documentation
+Everything in Continue is a "Step". The `Step` class defines 2 methods:
 
-Continue is continuously improving, but a feature isn't complete until it is reflected in the documentation!
+1. `async def run(self, sdk: ContinueSDK) -> Coroutine[Observation, None, None]` - This method defines what happens when the Step is run. It has access to the Continue SDK, which lets you take actions in the IDE, call LLMs, run nested Steps, and more. Optionally, a Step can return an `Observation` object, which a `Policy` can use to make decisions about what to do next.
+
+2. `async def describe(self, models: Models) -> Coroutine[str, None, None]` - After each Step is run, this method is called to asynchronously generate a summary title for the step. A `Models` object is passed so that you have access to LLMs to summarize for you.
+
+Steps are designed to be composable, so that you can easily build new Steps by combining existing ones. And because they are Pydantic models, they can instantly be used as tools useable by an LLM, for example with OpenAI's function-calling functionality (see [ChatWithFunctions](./continuedev/src/continuedev/steps/chat.py) for an example of this).
+
+Some of the most commonly used Steps are:
+
+- [`SimpleChatStep`](./continuedev/src/continuedev/steps/chat.py) - This is the default Step that is run when the user enters natural language input. It takes the user's input and runs it through the default LLM, then displays the result in the GUI.
+
+- [`EditHighlightedCodeStep`](./continuedev/src/continuedev/steps/core/core.py) - This is the Step run when a user highlights code, enters natural language, and presses CMD/CTRL+ENTER, or uses the slash command '/edit'. It opens a side-by-side diff editor, where updated code is streamed to fulfil the user's request.
+
+### `Autopilot`
+
+In [autopilot.py](./continuedev/src/continuedev/core/autopilot.py), we define the `Autopilot` class, which is the central entity responsible for keeping track of state and running the input/action loop.
+
+### `Observation`
+
+An `Observation` is a simple Pydantic model that can be used as a trigger to run a `Step`. For example, if running one `Step` results in an error, this can be returned as an `Observation` that can be used to trigger a `Step` that fixes the error. This is not being used frequently in the codebase right now, but we plan to use it as the basis of various "hooks" that will aid in the development of agents acting within the IDE.
+
+### `Policy`
+
+A `Policy` implements a method `def next(self, config: ContinueConfig, history: History) -> Step`, which decides which `Step` the `Autopilot` should run next. The default policy is defined in [policy.py](./continuedev/src/continuedev/core/policy.py) and runs `SimpleChatStep` by default, or a slash command when the input begins with '/'. It also displays a welcome message at the beginning of each session. If interested in developing agents that autonomously take longer sequences of actions in the IDE, the `Policy` class is the place to start.

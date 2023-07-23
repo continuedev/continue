@@ -79,7 +79,7 @@ When you type '@' in the Continue text box, it will display a dropdown of items 
 ```python
 class GitHubIssuesContextProvider(ContextProvider):
     """
-    The GitHubIssuesContextProvider is a ContextProvider that allows you to search GitHub Issues in a repo.
+    The GitHubIssuesContextProvider is a ContextProvider that allows you to search GitHub issues in a repo.
     """
 
     title = "issues"
@@ -93,7 +93,7 @@ class GitHubIssuesContextProvider(ContextProvider):
         repo = gh.get_repo(self.repo_name)
         issues = repo.get_issues().get_page(0)
 
-        items = [ContextItem(
+        return [ContextItem(
             content=issue.body,
             description=ContextItemDescription(
                 name=f"Issue #{issue.number}",
@@ -104,9 +104,6 @@ class GitHubIssuesContextProvider(ContextProvider):
                 )
             )
         ) for issue in issues]
-        self.context_items = {
-            item.description.id.to_string(): item for item in items}
-        return items
 ```
 
 It can then be set in the `ContinueConfig` like so:

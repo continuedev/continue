@@ -7,7 +7,7 @@ import json
 from ..libs.util.paths import getSessionFilePath, getSessionsFolderPath
 from ..models.filesystem_edit import FileEditWithFullContents
 from ..libs.constants.main import CONTINUE_SESSIONS_FOLDER
-from ..core.policy import DemoPolicy
+from ..core.policy import DefaultPolicy
 from ..core.main import FullState
 from ..core.autopilot import Autopilot
 from .ide_protocol import AbstractIdeProtocolServer
@@ -65,7 +65,7 @@ class SessionManager:
                 full_state = FullState(**json.load(f))
 
         autopilot = await DemoAutopilot.create(
-            policy=DemoPolicy(), ide=ide, full_state=full_state)
+            policy=DefaultPolicy(), ide=ide, full_state=full_state)
         session_id = session_id or str(uuid4())
         ide.session_id = session_id
         session = Session(session_id=session_id, autopilot=autopilot)
