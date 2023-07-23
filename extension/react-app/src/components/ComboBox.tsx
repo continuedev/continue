@@ -178,6 +178,9 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
                 };
               })
             );
+          })
+          .catch((err) => {
+            console.error(err);
           });
         return;
       }
@@ -194,10 +197,6 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
   });
 
   useEffect(() => {
-    console.log(
-      "downshiftProps.highlightedIndex",
-      downshiftProps.highlightedIndex
-    );
     if (downshiftProps.highlightedIndex < 0) {
       downshiftProps.setHighlightedIndex(0);
     }
