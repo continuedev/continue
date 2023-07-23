@@ -40,7 +40,7 @@ def parse_custom_command(inp: str, config: ContinueConfig) -> Union[None, Step]:
     return None
 
 
-class DemoPolicy(Policy):
+class DefaultPolicy(Policy):
     ran_code_last: bool = False
 
     def next(self, config: ContinueConfig, history: History) -> Step:
