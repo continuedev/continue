@@ -181,19 +181,6 @@ export function setupDebugPanel(
             .getConfiguration("continue")
             .get<boolean>("dataSwitch"),
         });
-
-        // // Listen for changes to server URL in settings
-        // vscode.workspace.onDidChangeConfiguration((event) => {
-        //   if (event.affectsConfiguration("continue.serverUrl")) {
-        //     debugPanelWebview?.postMessage({
-        //       type: "onLoad",
-        //       vscMachineId: vscode.env.machineId,
-        //       apiUrl: getContinueServerUrl(),
-        //       sessionId,
-        //     });
-        //   }
-        // });
-
         break;
       }
       case "toggleDataSwitch": {
