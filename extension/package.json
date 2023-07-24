@@ -35,8 +35,7 @@
     "chat"
   ],
   "activationEvents": [
-    "onStartupFinished",
-    "onView:continueGUIView"
+    "*"
   ],
   "main": "./out/extension.js",
   "browser": "./out/extension.js",
