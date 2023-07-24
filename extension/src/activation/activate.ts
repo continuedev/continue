@@ -1,6 +1,4 @@
 import * as vscode from "vscode";
-import { registerAllCommands } from "../commands";
-import { registerAllCodeLensProviders } from "../lang-server/codeLens";
 import IdeProtocolClient from "../continueIdeClient";
 import { getContinueServerUrl } from "../bridge";
 import { ContinueGUIWebviewViewProvider } from "../debugPanel";
@@ -9,9 +7,6 @@ import {
   startContinuePythonServer,
 } from "./environmentSetup";
 import fetch from "node-fetch";
-import registerQuickFixProvider from "../lang-server/codeActions";
-import { get } from "http";
-// import { CapturedTerminal } from "../terminal/terminalEmulator";
 
 const PACKAGE_JSON_RAW_GITHUB_URL =
   "https://raw.githubusercontent.com/continuedev/continue/HEAD/extension/package.json";
