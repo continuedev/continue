@@ -16,8 +16,13 @@ import {
 import { acceptDiffCommand, rejectDiffCommand } from "./diffs";
 import * as bridge from "./bridge";
 import { debugPanelWebview } from "./debugPanel";
-import { sendTelemetryEvent, TelemetryEvent } from "./telemetry";
 import { ideProtocolClient } from "./activation/activate";
+
+let focusedOnContinueInput = false;
+
+export const setFocusedOnContinueInput = (value: boolean) => {
+  focusedOnContinueInput = value;
+};
 
 // Copy everything over from extension.ts
 const commandsMap: { [command: string]: (...args: any) => any } = {
@@ -29,11 +34,26 @@ const commandsMap: { [command: string]: (...args: any) => any } = {
   "continue.rejectDiff": rejectDiffCommand,
   "continue.acceptAllSuggestions": acceptAllSuggestionsCommand,
   "continue.rejectAllSuggestions": rejectAllSuggestionsCommand,
+  "continue.quickFix": async (message: string, code: string, edit: boolean) => {
+    ideProtocolClient.sendMainUserInput(
+      `${
+        edit ? "/edit " : ""
+      }${code}\n\nHow do I fix this problem in the above code?: ${message}`
+    );
+    if (!edit) {
+      vscode.commands.executeCommand("continue.continueGUIView.focus");
+    }
+  },
   "continue.focusContinueInput": async () => {
-    vscode.commands.executeCommand("continue.continueGUIView.focus");
-    debugPanelWebview?.postMessage({
-      type: "focusContinueInput",
-    });
+    if (focusedOnContinueInput) {
+      vscode.commands.executeCommand("workbench.action.focusActiveEditorGroup");
+    } else {
+      vscode.commands.executeCommand("continue.continueGUIView.focus");
+      debugPanelWebview?.postMessage({
+        type: "focusContinueInput",
+      });
+    }
+    focusedOnContinueInput = !focusedOnContinueInput;
   },
   "continue.quickTextEntry": async () => {
     const text = await vscode.window.showInputBox({

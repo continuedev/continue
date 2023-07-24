@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { RootStore } from "../redux/store";
 import { useSelector } from "react-redux";
-import ContinueGUIClientProtocol from "./useContinueGUIProtocol";
+import ContinueGUIClientProtocol from "./ContinueGUIClientProtocol";
 import { postVscMessage } from "../vscode";
 
 function useContinueGUIProtocol(useVscodeMessagePassing: boolean = true) {

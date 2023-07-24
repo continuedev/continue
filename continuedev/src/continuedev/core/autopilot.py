@@ -13,7 +13,7 @@ from ..server.ide_protocol import AbstractIdeProtocolServer
 from ..libs.util.queue import AsyncSubscriptionQueue
 from ..models.main import ContinueBaseModel
 from .main import Context, ContinueCustomException, HighlightedRangeContext, Policy, History, FullState, Step, HistoryNode
-from ..steps.core.core import ReversibleStep, ManualEditStep, UserInputStep
+from ..plugins.steps.core.core import ReversibleStep, ManualEditStep, UserInputStep
 from ..libs.util.telemetry import capture_event
 from .sdk import ContinueSDK
 from ..libs.util.step_name_to_steps import get_step_from_name
@@ -36,7 +36,11 @@ def get_error_title(e: Exception) -> str:
     elif isinstance(e, openai_errors.APIConnectionError):
         return "The request failed. Please check your internet connection and try again. If this issue persists, you can use our API key for free by going to VS Code settings and changing the value of continue.OPENAI_API_KEY to \"\""
     elif isinstance(e, openai_errors.InvalidRequestError):
-        return 'Your API key does not have access to GPT-4. You can use ours for free by going to VS Code settings and changing the value of continue.OPENAI_API_KEY to ""'
+        return 'Invalid request sent to OpenAI. Please try again.'
+    elif "rate_limit_ip_middleware" in e.__str__():
+        return 'You have reached your limit for free usage of our token. You can continue using Continue by entering your own OpenAI API key in VS Code settings.'
+    elif e.__str__().startswith("Cannot connect to host"):
+        return "The request failed. Please check your internet connection and try again."
     return e.__str__() or e.__repr__()
 
 
@@ -48,6 +52,8 @@ class Autopilot(ContinueBaseModel):
     full_state: Union[FullState, None] = None
     _on_update_callbacks: List[Callable[[FullState], None]] = []
 
+    continue_sdk: ContinueSDK = None
+
     _active: bool = False
     _should_halt: bool = False
     _main_user_input_queue: List[str] = []
@@ -55,9 +61,11 @@ class Autopilot(ContinueBaseModel):
     _user_input_queue = AsyncSubscriptionQueue()
     _retry_queue = AsyncSubscriptionQueue()
 
-    @cached_property
-    def continue_sdk(self) -> ContinueSDK:
-        return ContinueSDK(self)
+    @classmethod
+    async def create(cls, policy: Policy, ide: AbstractIdeProtocolServer, full_state: FullState) -> "Autopilot":
+        autopilot = cls(ide=ide, policy=policy)
+        autopilot.continue_sdk = await ContinueSDK.create(autopilot)
+        return autopilot
 
     class Config:
         arbitrary_types_allowed = True
@@ -94,9 +102,14 @@ class Autopilot(ContinueBaseModel):
         self.continue_sdk.update_default_model(model)
 
     async def clear_history(self):
+        # Reset history
         self.history = History.from_empty()
         self._main_user_input_queue = []
         self._active = False
+
+        # Also remove all context
+        self._highlighted_ranges = []
+
         await self.update_subscribers()
 
     def on_update(self, callback: Coroutine["FullState", None, None]):
@@ -160,6 +173,25 @@ class Autopilot(ContinueBaseModel):
         if not any(map(lambda x: x.editing, self._highlighted_ranges)):
             self._highlighted_ranges[0].editing = True
 
+    def _disambiguate_highlighted_ranges(self):
+        """If any files have the same name, also display their folder name"""
+        name_status: Dict[str, set] = {
+        }  # basename -> set of full paths with that basename
+        for rif in self._highlighted_ranges:
+            basename = os.path.basename(rif.range.filepath)
+            if basename in name_status:
+                name_status[basename].add(rif.range.filepath)
+            else:
+                name_status[basename] = {rif.range.filepath}
+
+        for rif in self._highlighted_ranges:
+            basename = os.path.basename(rif.range.filepath)
+            if len(name_status[basename]) > 1:
+                rif.display_name = os.path.join(
+                    os.path.basename(os.path.dirname(rif.range.filepath)), basename)
+            else:
+                rif.display_name = basename
+
     async def handle_highlighted_code(self, range_in_files: List[RangeInFileWithContents]):
         # Filter out rifs from ~/.continue/diffs folder
         range_in_files = [
@@ -205,6 +237,7 @@ class Autopilot(ContinueBaseModel):
         ) for rif in range_in_files]
 
         self._make_sure_is_editing_range()
+        self._disambiguate_highlighted_ranges()
 
         await self.update_subscribers()
 

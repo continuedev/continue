@@ -1,5 +1,6 @@
+import time
+import psutil
 import os
-import sys
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from .ide import router as ide_router
@@ -51,9 +52,31 @@ def cleanup():
         session_manager.persist_session(session_id)
 
 
+def cpu_usage_report():
+    process = psutil.Process(os.getpid())
+    # Call cpu_percent once to start measurement, but ignore the result
+    process.cpu_percent(interval=None)
+    # Wait for a short period of time
+    time.sleep(1)
+    # Call cpu_percent again to get the CPU usage over the interval
+    cpu_usage = process.cpu_percent(interval=None)
+    print(f"CPU usage: {cpu_usage}%")
+
+
 atexit.register(cleanup)
+
 if __name__ == "__main__":
     try:
+        # import threading
+
+        # def cpu_usage_loop():
+        #     while True:
+        #         cpu_usage_report()
+        #         time.sleep(2)
+
+        # cpu_thread = threading.Thread(target=cpu_usage_loop)
+        # cpu_thread.start()
+
         run_server()
     except Exception as e:
         cleanup()

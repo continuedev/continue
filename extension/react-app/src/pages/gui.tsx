@@ -1,5 +1,9 @@
 import styled from "styled-components";
-import { defaultBorderRadius } from "../components";
+import {
+  defaultBorderRadius,
+  vscBackground,
+  vscForeground,
+} from "../components";
 import Loader from "../components/Loader";
 import ContinueButton from "../components/ContinueButton";
 import { FullState, HighlightedRangeContext } from "../../../schema/FullState";
@@ -23,6 +27,7 @@ import { RootStore } from "../redux/store";
 import { postVscMessage } from "../vscode";
 import UserInputContainer from "../components/UserInputContainer";
 import Onboarding from "../components/Onboarding";
+import { isMetaEquivalentKeyPressed } from "../util";
 
 const TopGUIDiv = styled.div`
   overflow: hidden;
@@ -70,7 +75,6 @@ function GUI(props: GUIProps) {
     }
   }, [dataSwitchOn]);
 
-  const [usingFastModel, setUsingFastModel] = useState(false);
   const [waitingForSteps, setWaitingForSteps] = useState(false);
   const [userInputQueue, setUserInputQueue] = useState<string[]>([]);
   const [highlightedRanges, setHighlightedRanges] = useState<
@@ -95,11 +99,8 @@ function GUI(props: GUIProps) {
           name: "Welcome to Continue",
           hide: false,
           description: `- Highlight code and ask a question or give instructions
-- Use \`cmd+k\` (Mac) / \`ctrl+k\` (Windows) to open Continue
-- Use \`cmd+shift+e\` / \`ctrl+shift+e\` to open file Explorer
-- Add your own OpenAI API key to VS Code Settings with \`cmd+,\`
-- Use slash commands when you want fine-grained control
-- Past steps are included as part of the context by default`,
+          - Use \`cmd+m\` (Mac) / \`ctrl+m\` (Windows) to open Continue
+          - Use \`/help\` to ask questions about how to use Continue`,
           system_message: null,
           chat_context: [],
           manage_own_chat_context: false,
@@ -115,6 +116,7 @@ function GUI(props: GUIProps) {
 
   const [showFeedbackDialog, setShowFeedbackDialog] = useState(false);
   const [feedbackDialogMessage, setFeedbackDialogMessage] = useState("");
+  const [feedbackEntryOn, setFeedbackEntryOn] = useState(true);
 
   const topGuiDivRef = useRef<HTMLDivElement>(null);
 
@@ -138,14 +140,11 @@ function GUI(props: GUIProps) {
   }, [topGuiDivRef.current, scrollTimeout]);
 
   useEffect(() => {
+    // Cmd + Backspace to delete current step
     const listener = (e: any) => {
-      // Cmd + i to toggle fast model
-      if (e.key === "i" && e.metaKey && e.shiftKey) {
-        setUsingFastModel((prev) => !prev);
-        // Cmd + backspace to stop currently running step
-      } else if (
+      if (
         e.key === "Backspace" &&
-        e.metaKey &&
+        isMetaEquivalentKeyPressed(e) &&
         typeof history?.current_index !== "undefined" &&
         history.timeline[history.current_index]?.active
       ) {
@@ -162,7 +161,6 @@ function GUI(props: GUIProps) {
   useEffect(() => {
     client?.onStateUpdate((state: FullState) => {
       // Scroll only if user is at very bottom of the window.
-      setUsingFastModel(state.default_model === "gpt-3.5-turbo");
       const shouldScrollToBottom =
         topGuiDivRef.current &&
         topGuiDivRef.current?.offsetHeight - window.scrollY < 100;
@@ -223,7 +221,7 @@ function GUI(props: GUIProps) {
     if (mainTextInputRef.current) {
       let input = (mainTextInputRef.current as any).inputValue;
       // cmd+enter to /edit
-      if (event?.metaKey) {
+      if (isMetaEquivalentKeyPressed(event)) {
         input = `/edit ${input}`;
       }
       (mainTextInputRef.current as any).setInputValue("");
@@ -269,15 +267,18 @@ function GUI(props: GUIProps) {
   return (
     <>
       <Onboarding />
-      <TextDialog showDialog={showFeedbackDialog}
-      onEnter={(text) => {
-        client?.sendMainInput(`/feedback ${text}`);
-        setShowFeedbackDialog(false);
-      }}
-      onClose={() => {
-        setShowFeedbackDialog(false);
-      }}
-      message={feedbackDialogMessage} />
+      <TextDialog
+        showDialog={showFeedbackDialog}
+        onEnter={(text) => {
+          client?.sendMainInput(`/feedback ${text}`);
+          setShowFeedbackDialog(false);
+        }}
+        onClose={() => {
+          setShowFeedbackDialog(false);
+        }}
+        message={feedbackDialogMessage}
+        entryOn={feedbackEntryOn}
+      />
 
       <TopGUIDiv
         ref={topGuiDivRef}
@@ -307,6 +308,7 @@ function GUI(props: GUIProps) {
             )
           ) : (
             <StepContainer
+              index={index}
               isLast={index === history.timeline.length - 1}
               isFirst={index === 0}
               open={stepsOpen[index]}
@@ -371,12 +373,13 @@ function GUI(props: GUIProps) {
         style={{
           position: "fixed",
           bottom: "50px",
-          backgroundColor: "white",
-          color: "black",
+          backgroundColor: vscBackground,
+          color: vscForeground,
           borderRadius: defaultBorderRadius,
           padding: "16px",
           margin: "16px",
           zIndex: 100,
+          boxShadow: `0px 0px 10px 0px ${vscForeground}`,
         }}
         hidden={!showDataSharingInfo}
       >
@@ -425,24 +428,26 @@ function GUI(props: GUIProps) {
         </div>
         <HeaderButtonWithText
           onClick={() => {
-            // client?.changeDefaultModel(
-            //   usingFastModel ? "gpt-4" : "gpt-3.5-turbo"
-            // );
-            if (!usingFastModel) {
-              // Show the dialog
-              setFeedbackDialogMessage(
-                "We don't yet support local models, but we're working on it! If privacy is a concern of yours, please write a short note to let us know."
-              );
-              setShowFeedbackDialog(true);
-            }
-            setUsingFastModel((prev) => !prev);
+            // Show the dialog
+            setFeedbackDialogMessage(
+              `Continue uses GPT-4 by default, but works with any model. If you'd like to keep your code completely private, there are few options:
+
+Run a local model with ggml: [5 minute quickstart](https://github.com/continuedev/ggml-server-example)
+
+Use Azure OpenAI service, which is GDPR and HIPAA compliant: [Tutorial](https://continue.dev/docs/customization#azure-openai-service)
+
+If you already have an LLM deployed on your own infrastructure, or would like to do so, please contact us at hi@continue.dev.
+              `
+            );
+            setFeedbackEntryOn(false);
+            setShowFeedbackDialog(true);
           }}
-          text={usingFastModel ? "local" : "gpt-4"}
+          text={"Use Private Model"}
         >
           <div
             style={{ fontSize: "18px", marginLeft: "2px", marginRight: "2px" }}
           >
-            {usingFastModel ? "🔒" : "🧠"}
+            🔒
           </div>
         </HeaderButtonWithText>
         <HeaderButtonWithText
@@ -467,6 +472,7 @@ function GUI(props: GUIProps) {
             setFeedbackDialogMessage(
               "Having trouble using Continue? Want a new feature? Let us know! This box is anonymous, but we will promptly address your feedback."
             );
+            setFeedbackEntryOn(true);
             setShowFeedbackDialog(true);
           }}
           text="Feedback"

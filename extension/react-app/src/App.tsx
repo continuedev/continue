@@ -2,7 +2,7 @@ import DebugPanel from "./components/DebugPanel";
 import GUI from "./pages/gui";
 import { createContext } from "react";
 import useContinueGUIProtocol from "./hooks/useWebsocket";
-import ContinueGUIClientProtocol from "./hooks/useContinueGUIProtocol";
+import ContinueGUIClientProtocol from "./hooks/ContinueGUIClientProtocol";
 
 export const GUIClientContext = createContext<
   ContinueGUIClientProtocol | undefined
@@ -13,11 +13,7 @@ function App() {
 
   return (
     <GUIClientContext.Provider value={client}>
-      <DebugPanel
-        tabs={[
-          { element: <GUI />, title: "GUI" }
-        ]}
-      />
+      <DebugPanel tabs={[{ element: <GUI />, title: "GUI" }]} />
     </GUIClientContext.Provider>
   );
 }

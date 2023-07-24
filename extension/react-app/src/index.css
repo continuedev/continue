@@ -14,13 +14,13 @@ html,
 body,
 #root {
   height: 100%;
-  background-color: var(--vsc-background);
+  background-color: var(--vscode-editor-background);
   font-family: "Lexend", sans-serif;
 }
 
 body {
   padding: 0;
-  color: white;
+  color: var(--vscode-editor-foreground);
   padding: 0px;
   margin: 0px;
   height: 100%;

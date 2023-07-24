@@ -22,22 +22,17 @@ const StyledSpan = styled.span`
   &:hover {
     background-color: #ffffff33;
   }
+  white-space: nowrap;
 `;
 
 const Onboarding = () => {
   const [counter, setCounter] = useState(4);
-  const gifs = ["intro", "explain", "edit", "generate", "intro"];
+  const gifs = ["intro", "highlight", "question", "help"];
   const topMessages = [
-    "Welcome to Continue!",
-    "Answer coding questions",
-    "Edit in natural language",
-    "Generate files from scratch",
-  ];
-  const bottomMessages = [
-    "",
-    "Ask Continue about a part of your code to get another perspective",
-    "Highlight a section of code and instruct Continue to refactor it",
-    "Let Continue build the scaffolding of Python scripts, React components, and more",
+    "Welcome!",
+    "Highlight code",
+    "Ask a question",
+    "Use /help to learn more",
   ];
 
   useEffect(() => {
@@ -107,7 +102,6 @@ const Onboarding = () => {
             />
           )}
         </div>
-        <p>{bottomMessages[counter]}</p>
         <p
           style={{
             paddingLeft: "50px",
@@ -115,6 +109,7 @@ const Onboarding = () => {
             paddingBottom: "50px",
             textAlign: "center",
             cursor: "pointer",
+            whiteSpace: "nowrap",
           }}
         >
           <StyledSpan

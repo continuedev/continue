@@ -1,9 +1,6 @@
 import * as vscode from "vscode";
-import { sendTelemetryEvent, TelemetryEvent } from "./telemetry";
 import { openEditorAndRevealRange } from "./util/vscode";
-import { translate, readFileAtRange } from "./util/vscode";
-import * as fs from "fs";
-import * as path from "path";
+import { translate } from "./util/vscode";
 import { registerAllCodeLensProviders } from "./lang-server/codeLens";
 import { extensionContext, ideProtocolClient } from "./activation/activate";
 
@@ -214,62 +211,6 @@ function selectSuggestion(
         : suggestion.newRange;
   }
 
-  let workspaceDir = vscode.workspace.workspaceFolders
-    ? vscode.workspace.workspaceFolders[0]?.uri.fsPath
-    : undefined;
-
-  let collectOn = vscode.workspace
-    .getConfiguration("continue")
-    .get<boolean>("dataSwitch");
-
-  if (workspaceDir && collectOn) {
-    let continueDir = path.join(workspaceDir, ".continue");
-
-    // Check if .continue directory doesn't exists
-    if (!fs.existsSync(continueDir)) {
-      fs.mkdirSync(continueDir);
-    }
-
-    let suggestionsPath = path.join(continueDir, "suggestions.json");
-
-    // Initialize suggestions list
-    let suggestions = [];
-
-    // Check if suggestions.json exists
-    if (fs.existsSync(suggestionsPath)) {
-      let rawData = fs.readFileSync(suggestionsPath, "utf-8");
-      suggestions = JSON.parse(rawData);
-    }
-
-    const accepted =
-      accept === "new" || (accept === "selected" && suggestion.newSelected);
-    suggestions.push({
-      accepted,
-      timestamp: Date.now(),
-      suggestion: suggestion.newContent,
-    });
-    ideProtocolClient.sendAcceptRejectSuggestion(accepted);
-
-    // Write the updated suggestions back to the file
-    fs.writeFileSync(
-      suggestionsPath,
-      JSON.stringify(suggestions, null, 4),
-      "utf-8"
-    );
-
-    // If it's not already there, add .continue to .gitignore
-    const gitignorePath = path.join(workspaceDir, ".gitignore");
-    if (fs.existsSync(gitignorePath)) {
-      const gitignoreData = fs.readFileSync(gitignorePath, "utf-8");
-      const gitIgnoreLines = gitignoreData.split("\n");
-      if (!gitIgnoreLines.includes(".continue")) {
-        fs.appendFileSync(gitignorePath, "\n.continue\n");
-      }
-    } else {
-      fs.writeFileSync(gitignorePath, ".continue\n");
-    }
-  }
-
   rangeToDelete = new vscode.Range(
     rangeToDelete.start,
     new vscode.Position(rangeToDelete.end.line, 0)
@@ -302,7 +243,6 @@ function selectSuggestion(
 }
 
 export function acceptSuggestionCommand(key: SuggestionRanges | null = null) {
-  sendTelemetryEvent(TelemetryEvent.SuggestionAccepted);
   selectSuggestion("selected", key);
 }
 
@@ -329,7 +269,6 @@ export function rejectAllSuggestionsCommand() {
 export async function rejectSuggestionCommand(
   key: SuggestionRanges | null = null
 ) {
-  sendTelemetryEvent(TelemetryEvent.SuggestionRejected);
   selectSuggestion("old", key);
 }
 

@@ -1,3 +1,4 @@
+import asyncio
 import json
 from fastapi import Depends, Header, WebSocket, APIRouter
 from starlette.websockets import WebSocketState, WebSocketDisconnect
@@ -53,15 +54,19 @@ class GUIProtocolServer(AbstractGUIProtocolServer):
         self.session = session
 
     async def _send_json(self, message_type: str, data: Any):
-        if self.websocket.client_state == WebSocketState.DISCONNECTED:
+        if self.websocket.application_state == WebSocketState.DISCONNECTED:
             return
         await self.websocket.send_json({
             "messageType": message_type,
             "data": data
         })
 
-    async def _receive_json(self, message_type: str) -> Any:
-        return await self.sub_queue.get(message_type)
+    async def _receive_json(self, message_type: str, timeout: int = 5) -> Any:
+        try:
+            return await asyncio.wait_for(self.sub_queue.get(message_type), timeout=timeout)
+        except asyncio.TimeoutError:
+            raise Exception(
+                "GUI Protocol _receive_json timed out after 5 seconds")
 
     async def _send_and_receive_json(self, data: Any, resp_model: Type[T], message_type: str) -> T:
         await self._send_json(message_type, data)
@@ -94,6 +99,8 @@ class GUIProtocolServer(AbstractGUIProtocolServer):
                 self.on_set_editing_at_indices(data["indices"])
             elif message_type == "set_pinned_at_indices":
                 self.on_set_pinned_at_indices(data["indices"])
+            elif message_type == "show_logs_at_index":
+                self.on_show_logs_at_index(data["index"])
         except Exception as e:
             print(e)
 
@@ -160,6 +167,13 @@ class GUIProtocolServer(AbstractGUIProtocolServer):
             self.session.autopilot.set_pinned_at_indices(
                 indices), self.session.autopilot.continue_sdk.ide.unique_id
         )
+
+    def on_show_logs_at_index(self, index: int):
+        name = f"continue_logs.txt"
+        logs = "\n\n############################################\n\n".join(
+            ["This is a log of the exact prompt/completion pairs sent/received from the LLM during this step"] + self.session.autopilot.continue_sdk.history.timeline[index].logs)
+        create_async_task(
+            self.session.autopilot.ide.showVirtualFile(name, logs))
 
 
 @router.websocket("/ws")

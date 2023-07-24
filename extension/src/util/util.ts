@@ -1,5 +1,6 @@
 import { RangeInFile, SerializedDebugContext } from "../client";
 import * as fs from "fs";
+const os = require("os");
 
 function charIsEscapedAtIndex(index: number, str: string): boolean {
   if (index === 0) return false;
@@ -112,4 +113,32 @@ export function debounced(delay: number, fn: Function) {
       timerId = null;
     }, delay);
   };
+}
+
+type Platform = "mac" | "linux" | "windows" | "unknown";
+
+function getPlatform(): Platform {
+  const platform = os.platform();
+  if (platform === "darwin") {
+    return "mac";
+  } else if (platform === "linux") {
+    return "linux";
+  } else if (platform === "win32") {
+    return "windows";
+  } else {
+    return "unknown";
+  }
+}
+
+export function getMetaKeyLabel() {
+  const platform = getPlatform();
+  switch (platform) {
+    case "mac":
+      return "⌘";
+    case "linux":
+    case "windows":
+      return "^";
+    default:
+      return "⌘";
+  }
 }
