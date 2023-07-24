@@ -9,7 +9,8 @@ from pydantic import root_validator
 from ..models.filesystem import RangeInFileWithContents
 from ..models.filesystem_edit import FileEditWithFullContents
 from .observation import Observation, InternalErrorObservation
-from .context import ContextItem, ContextItemDescription, ContextItemId, ContextManager
+from .context import ContextManager
+from ..libs.context_providers.file_context_provider import FileContextProvider
 from ..libs.context_providers.highlighted_code_context_provider import HighlightedCodeContextProvider
 from ..server.ide_protocol import AbstractIdeProtocolServer
 from ..libs.util.queue import AsyncSubscriptionQueue
@@ -69,7 +70,8 @@ class Autopilot(ContinueBaseModel):
         # Load documents into the search index
         autopilot.context_manager = ContextManager(
             autopilot.continue_sdk.config.context_providers + [
-                HighlightedCodeContextProvider(ide=ide)
+                HighlightedCodeContextProvider(ide=ide),
+                FileContextProvider(workspace_dir=ide.workspace_directory)
             ])
         await autopilot.context_manager.load_index()
 

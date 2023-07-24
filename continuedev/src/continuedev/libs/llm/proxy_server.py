@@ -1,5 +1,4 @@
 
-from functools import cached_property
 import json
 import traceback
 from typing import Any, Callable, Coroutine, Dict, Generator, List, Literal, Union
@@ -7,7 +6,7 @@ import aiohttp
 from ..util.telemetry import capture_event
 from ...core.main import ChatMessage
 from ..llm import LLM
-from ..util.count_tokens import DEFAULT_ARGS, DEFAULT_MAX_TOKENS, compile_chat_messages, CHAT_MODELS, count_tokens, format_chat_messages
+from ..util.count_tokens import DEFAULT_ARGS, compile_chat_messages, count_tokens, format_chat_messages
 import certifi
 import ssl
 
