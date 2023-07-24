@@ -15,6 +15,12 @@ import { FileEditWithFullContents } from "../schema/FileEditWithFullContents";
 import fs = require("fs");
 import { WebsocketMessenger } from "./util/messenger";
 import { diffManager } from "./diffs";
+import path = require("path");
+import { registerAllCodeLensProviders } from "./lang-server/codeLens";
+import { registerAllCommands } from "./commands";
+import registerQuickFixProvider from "./lang-server/codeActions";
+
+const continueVirtualDocumentScheme = "continue";
 
 class IdeProtocolClient {
   private messenger: WebsocketMessenger | null = null;
@@ -73,6 +79,11 @@ class IdeProtocolClient {
     this._serverUrl = serverUrl;
     this._newWebsocketMessenger();
 
+    // Register commands and providers
+    registerAllCodeLensProviders(context);
+    registerAllCommands(context);
+    registerQuickFixProvider();
+
     // Setup listeners for any file changes in open editors
     // vscode.workspace.onDidChangeTextDocument((event) => {
     //   if (this._makingEdit === 0) {
@@ -103,8 +114,11 @@ class IdeProtocolClient {
     //   }
     // });
 
-    // Setup listeners for any file changes in open editors
+    // Setup listeners for any selection changes in open editors
     vscode.window.onDidChangeTextEditorSelection((event) => {
+      if (this.editorIsTerminal(event.textEditor)) {
+        return;
+      }
       if (this._highlightDebounce) {
         clearTimeout(this._highlightDebounce);
       }
@@ -131,6 +145,41 @@ class IdeProtocolClient {
           });
         this.sendHighlightedCode(highlightedCode);
       }, 100);
+    });
+
+    // Register a content provider for the readonly virtual documents
+    const documentContentProvider = new (class
+      implements vscode.TextDocumentContentProvider
+    {
+      // emitter and its event
+      onDidChangeEmitter = new vscode.EventEmitter<vscode.Uri>();
+      onDidChange = this.onDidChangeEmitter.event;
+
+      provideTextDocumentContent(uri: vscode.Uri): string {
+        return uri.query;
+      }
+    })();
+    context.subscriptions.push(
+      vscode.workspace.registerTextDocumentContentProvider(
+        continueVirtualDocumentScheme,
+        documentContentProvider
+      )
+    );
+
+    // Listen for changes to settings.json
+    vscode.workspace.onDidChangeConfiguration((event) => {
+      if (event.affectsConfiguration("continue")) {
+        vscode.window
+          .showInformationMessage(
+            "Please reload VS Code for changes to Continue settings to take effect.",
+            "Reload"
+          )
+          .then((selection) => {
+            if (selection === "Reload") {
+              vscode.commands.executeCommand("workbench.action.reloadWindow");
+            }
+          });
+      }
     });
   }
 
@@ -195,6 +244,9 @@ class IdeProtocolClient {
       case "setFileOpen":
         this.openFile(data.filepath);
         // TODO: Close file if False
+        break;
+      case "showVirtualFile":
+        this.showVirtualFile(data.name, data.contents);
         break;
       case "setSuggestionsLocked":
         this.setSuggestionsLocked(data.filepath, data.locked);
@@ -291,6 +343,20 @@ class IdeProtocolClient {
     openEditorAndRevealRange(filepath, undefined, vscode.ViewColumn.One);
   }
 
+  showVirtualFile(name: string, contents: string) {
+    vscode.workspace
+      .openTextDocument(
+        vscode.Uri.parse(
+          `${continueVirtualDocumentScheme}:${name}?${encodeURIComponent(
+            contents
+          )}`
+        )
+      )
+      .then((doc) => {
+        vscode.window.showTextDocument(doc, { preview: false });
+      });
+  }
+
   setSuggestionsLocked(filepath: string, locked: boolean) {
     editorSuggestionsLocked.set(filepath, locked);
     // TODO: Rerender?
@@ -350,44 +416,55 @@ class IdeProtocolClient {
   // ------------------------------------ //
   // Respond to request
 
+  private editorIsTerminal(editor: vscode.TextEditor) {
+    return (
+      !!path.basename(editor.document.uri.fsPath).match(/\d/) ||
+      (editor.document.languageId === "plaintext" &&
+        editor.document.getText() === "accessible-buffer-accessible-buffer-")
+    );
+  }
+
   getOpenFiles(): string[] {
     return vscode.window.visibleTextEditors
-      .filter((editor) => {
-        return !(
-          editor.document.uri.fsPath.endsWith("/1") ||
-          (editor.document.languageId === "plaintext" &&
-            editor.document.getText() ===
-              "accessible-buffer-accessible-buffer-")
-        );
-      })
+      .filter((editor) => !this.editorIsTerminal(editor))
       .map((editor) => {
         return editor.document.uri.fsPath;
       });
   }
 
   getVisibleFiles(): string[] {
-    return vscode.window.visibleTextEditors.map((editor) => {
-      return editor.document.uri.fsPath;
-    });
+    return vscode.window.visibleTextEditors
+      .filter((editor) => !this.editorIsTerminal(editor))
+      .map((editor) => {
+        return editor.document.uri.fsPath;
+      });
   }
 
   saveFile(filepath: string) {
-    vscode.window.visibleTextEditors.forEach((editor) => {
-      if (editor.document.uri.fsPath === filepath) {
-        editor.document.save();
-      }
-    });
+    vscode.window.visibleTextEditors
+      .filter((editor) => !this.editorIsTerminal(editor))
+      .forEach((editor) => {
+        if (editor.document.uri.fsPath === filepath) {
+          editor.document.save();
+        }
+      });
   }
 
   readFile(filepath: string): string {
     let contents: string | undefined;
-    vscode.window.visibleTextEditors.forEach((editor) => {
-      if (editor.document.uri.fsPath === filepath) {
-        contents = editor.document.getText();
+    vscode.window.visibleTextEditors
+      .filter((editor) => !this.editorIsTerminal(editor))
+      .forEach((editor) => {
+        if (editor.document.uri.fsPath === filepath) {
+          contents = editor.document.getText();
+        }
+      });
+    if (typeof contents === "undefined") {
+      if (fs.existsSync(filepath)) {
+        contents = fs.readFileSync(filepath, "utf-8");
+      } else {
+        contents = "";
       }
-    });
-    if (!contents) {
-      contents = fs.readFileSync(filepath, "utf-8");
     }
     return contents;
   }
@@ -421,25 +498,27 @@ class IdeProtocolClient {
   getHighlightedCode(): RangeInFile[] {
     // TODO
     let rangeInFiles: RangeInFile[] = [];
-    vscode.window.visibleTextEditors.forEach((editor) => {
-      editor.selections.forEach((selection) => {
-        // if (!selection.isEmpty) {
-        rangeInFiles.push({
-          filepath: editor.document.uri.fsPath,
-          range: {
-            start: {
-              line: selection.start.line,
-              character: selection.start.character,
+    vscode.window.visibleTextEditors
+      .filter((editor) => !this.editorIsTerminal(editor))
+      .forEach((editor) => {
+        editor.selections.forEach((selection) => {
+          // if (!selection.isEmpty) {
+          rangeInFiles.push({
+            filepath: editor.document.uri.fsPath,
+            range: {
+              start: {
+                line: selection.start.line,
+                character: selection.start.character,
+              },
+              end: {
+                line: selection.end.line,
+                character: selection.end.character,
+              },
             },
-            end: {
-              line: selection.end.line,
-              character: selection.end.character,
-            },
-          },
+          });
+          // }
         });
-        // }
       });
-    });
     return rangeInFiles;
   }
 

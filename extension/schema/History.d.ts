@@ -21,6 +21,7 @@ export type ManageOwnChatContext = boolean;
 export type Depth = number;
 export type Deleted = boolean;
 export type Active = boolean;
+export type Logs = string[];
 export type Timeline = HistoryNode[];
 export type CurrentIndex = number;
 
@@ -41,6 +42,7 @@ export interface HistoryNode {
   depth: Depth;
   deleted?: Deleted;
   active?: Active;
+  logs?: Logs;
   [k: string]: unknown;
 }
 export interface Step {

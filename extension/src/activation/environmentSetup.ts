@@ -9,7 +9,9 @@ import fetch from "node-fetch";
 import * as vscode from "vscode";
 import * as os from "os";
 import fkill from "fkill";
-import { sendTelemetryEvent, TelemetryEvent } from "../telemetry";
+
+const WINDOWS_REMOTE_SIGNED_SCRIPTS_ERROR =
+  "A Python virtual enviroment cannot be activated because running scripts is disabled for this user. In order to use Continue, please enable signed scripts to run with this command in PowerShell: `Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser`, reload VS Code, and then try again.";
 
 const MAX_RETRIES = 3;
 async function retryThenFail(
@@ -17,17 +19,43 @@ async function retryThenFail(
   retries: number = MAX_RETRIES
 ): Promise<any> {
   try {
+    if (retries < MAX_RETRIES && process.platform === "win32") {
+      let [stdout, stderr] = await runCommand("Get-ExecutionPolicy");
+      if (!stdout.includes("RemoteSigned")) {
+        [stdout, stderr] = await runCommand(
+          "Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser"
+        );
+        console.log("Execution policy stdout: ", stdout);
+        console.log("Execution policy stderr: ", stderr);
+      }
+    }
+
     return await fn();
   } catch (e: any) {
     if (retries > 0) {
       return await retryThenFail(fn, retries - 1);
     }
-    vscode.window.showInformationMessage(
-      "Failed to set up Continue extension. Please email nate@continue.dev and we'll get this fixed ASAP!"
-    );
-    sendTelemetryEvent(TelemetryEvent.ExtensionSetupError, {
-      error: e.message,
-    });
+
+    // Show corresponding error message depending on the platform
+    let msg =
+      "Failed to set up Continue extension. Please email hi@continue.dev and we'll get this fixed ASAP!";
+    try {
+      switch (process.platform) {
+        case "win32":
+          msg = WINDOWS_REMOTE_SIGNED_SCRIPTS_ERROR;
+          break;
+        case "darwin":
+          break;
+        case "linux":
+          const [pythonCmd] = await getPythonPipCommands();
+          msg = await getLinuxAptInstallError(pythonCmd);
+          break;
+      }
+    } finally {
+      console.log("After retries, failed to set up Continue extension", msg);
+      vscode.window.showErrorMessage(msg);
+    }
+
     throw e;
   }
 }
@@ -49,12 +77,6 @@ async function runCommand(cmd: string): Promise<[string, string | undefined]> {
   }
   if (typeof stdout === "undefined") {
     stdout = "";
-  }
-
-  if (stderr) {
-    sendTelemetryEvent(TelemetryEvent.ExtensionSetupError, {
-      error: stderr,
-    });
   }
 
   return [stdout, stderr];
@@ -107,7 +129,7 @@ export async function getPythonPipCommands() {
 
     if (!versionExists) {
       vscode.window.showErrorMessage(
-        "Continue requires Python3 version 3.8 or greater. Please update your Python3 installation, reload VS Code, and try again."
+        "Continue requires Python version 3.8 or greater. Please update your Python installation, reload VS Code, and try again."
       );
       throw new Error("Python3.8 or greater is not installed.");
     }
@@ -186,16 +208,22 @@ async function checkRequirementsInstalled() {
   return fs.existsSync(continuePath);
 }
 
-async function setupPythonEnv() {
-  console.log("Setting up python env for Continue extension...");
+async function getLinuxAptInstallError(pythonCmd: string) {
+  // First, try to run the command to install python3-venv
+  let [stdout, stderr] = await runCommand(`${pythonCmd} --version`);
+  if (stderr) {
+    await vscode.window.showErrorMessage(
+      "Python3 is not installed. Please install from https://www.python.org/downloads, reload VS Code, and try again."
+    );
+    throw new Error(stderr);
+  }
+  const version = stdout.split(" ")[1].split(".")[1];
+  const installVenvCommand = `apt-get install python3.${version}-venv`;
+  await runCommand("apt-get update");
+  return `[Important] Continue needs to create a Python virtual environment, but python3.${version}-venv is not installed. Please run this command in your terminal: \`${installVenvCommand}\`, reload VS Code, and then try again.`;
+}
 
-  const [pythonCmd, pipCmd] = await getPythonPipCommands();
-  const [activateCmd, pipUpgradeCmd] = getActivateUpgradeCommands(
-    pythonCmd,
-    pipCmd
-  );
-
-  // First, create the virtual environment
+async function createPythonVenv(pythonCmd: string) {
   if (checkEnvExists()) {
     console.log("Python env already exists, skipping...");
   } else {
@@ -210,32 +238,38 @@ async function setupPythonEnv() {
       stderr &&
       stderr.includes("running scripts is disabled on this system")
     ) {
-      await vscode.window.showErrorMessage(
-        "A Python virtual enviroment cannot be activated because running scripts is disabled for this user. Please enable signed scripts to run with this command in PowerShell: `Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser`, reload VS Code, and then try again."
-      );
+      console.log("Scripts disabled error when trying to create env");
+      await vscode.window.showErrorMessage(WINDOWS_REMOTE_SIGNED_SCRIPTS_ERROR);
       throw new Error(stderr);
     } else if (
       stderr?.includes("On Debian/Ubuntu systems") ||
       stdout?.includes("On Debian/Ubuntu systems")
     ) {
-      // First, try to run the command to install python3-venv
-      let [stdout, stderr] = await runCommand(`${pythonCmd} --version`);
-      if (stderr) {
-        await vscode.window.showErrorMessage(
-          "Python3 is not installed. Please install from https://www.python.org/downloads, reload VS Code, and try again."
-        );
-        throw new Error(stderr);
-      }
-      const version = stdout.split(" ")[1].split(".")[1];
-      const installVenvCommand = `apt-get install python3.${version}-venv`;
-      await runCommand("apt-get update");
-      // Ask the user to run the command to install python3-venv (requires sudo, so we can't)
-      // First, get the python version
-      const msg = `[Important] Continue needs to create a Python virtual environment, but python3.${version}-venv is not installed. Please run this command in your terminal: \`${installVenvCommand}\`, reload VS Code, and then try again.`;
+      const msg = await getLinuxAptInstallError(pythonCmd);
       console.log(msg);
       await vscode.window.showErrorMessage(msg);
     } else if (checkEnvExists()) {
       console.log("Successfully set up python env at ", `${serverPath()}/env`);
+    } else if (
+      stderr?.includes("Permission denied") &&
+      stderr?.includes("python.exe")
+    ) {
+      // This might mean that another window is currently using the python.exe file to install requirements
+      // So we want to wait and try again
+      let i = 0;
+      await new Promise((resolve, reject) =>
+        setInterval(() => {
+          if (i > 5) {
+            reject("Timed out waiting for other window to create env...");
+          }
+          if (checkEnvExists()) {
+            resolve(null);
+          } else {
+            console.log("Waiting for other window to create env...");
+          }
+          i++;
+        }, 5000)
+      );
     } else {
       const msg = [
         "Python environment not successfully created. Trying again. Here was the stdout + stderr: ",
@@ -246,9 +280,22 @@ async function setupPythonEnv() {
       throw new Error(msg);
     }
   }
+}
 
-  // Install the requirements
+async function setupPythonEnv() {
+  console.log("Setting up python env for Continue extension...");
+
+  const [pythonCmd, pipCmd] = await getPythonPipCommands();
+  const [activateCmd, pipUpgradeCmd] = getActivateUpgradeCommands(
+    pythonCmd,
+    pipCmd
+  );
+
   await retryThenFail(async () => {
+    // First, create the virtual environment
+    await createPythonVenv(pythonCmd);
+
+    // Install the requirements
     if (await checkRequirementsInstalled()) {
       console.log("Python requirements already installed, skipping...");
     } else {
@@ -343,6 +390,14 @@ function serverPath(): string {
   return sPath;
 }
 
+export function devDataPath(): string {
+  const sPath = path.join(getContinueGlobalPath(), "dev_data");
+  if (!fs.existsSync(sPath)) {
+    fs.mkdirSync(sPath);
+  }
+  return sPath;
+}
+
 function serverVersionPath(): string {
   return path.join(serverPath(), "server_version.txt");
 }
@@ -409,21 +464,17 @@ export async function startContinuePythonServer() {
           console.log(`stdout: ${data}`);
           if (
             data.includes("Uvicorn running on") || // Successfully started the server
-            data.includes("address already in use") // The server is already running (probably a simultaneously opened VS Code window)
+            data.includes("only one usage of each socket address") || // [windows] The server is already running (probably a simultaneously opened VS Code window)
+            data.includes("address already in use") // [mac/linux] The server is already running (probably a simultaneously opened VS Code window)
           ) {
             console.log("Successfully started Continue python server");
             resolve(null);
           } else if (data.includes("ERROR") || data.includes("Traceback")) {
-            sendTelemetryEvent(TelemetryEvent.ExtensionSetupError, {
-              error: data,
-            });
+            console.log("Error starting Continue python server: ", data);
           }
         });
         child.on("error", (error: any) => {
           console.log(`error: ${error.message}`);
-          sendTelemetryEvent(TelemetryEvent.ExtensionSetupError, {
-            error: error.message,
-          });
         });
 
         // Write the current version of vscode to a file called server_version.txt

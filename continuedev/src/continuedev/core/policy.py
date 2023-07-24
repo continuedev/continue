@@ -1,25 +1,15 @@
 from textwrap import dedent
-from typing import List, Tuple, Type, Union
+from typing import Union
 
-from ..steps.welcome import WelcomeStep
+from ..plugins.steps.chat import SimpleChatStep
+from ..plugins.steps.welcome import WelcomeStep
 from .config import ContinueConfig
-from ..steps.chroma import AnswerQuestionChroma, EditFileChroma, CreateCodebaseIndexChroma
-from ..steps.steps_on_startup import StepsOnStartupStep
-from ..recipes.CreatePipelineRecipe.main import CreatePipelineRecipe
-from ..recipes.DeployPipelineAirflowRecipe.main import DeployPipelineAirflowRecipe
-from ..recipes.AddTransformRecipe.main import AddTransformRecipe
-from .main import Step, Validator, History, Policy
-from .observation import Observation, TracebackObservation, UserInputObservation
-from ..steps.main import EditHighlightedCodeStep, SolveTracebackStep
-from ..recipes.WritePytestsRecipe.main import WritePytestsRecipe
-from ..recipes.ContinueRecipeRecipe.main import ContinueStepStep
-from ..steps.comment_code import CommentCodeStep
-from ..steps.react import NLDecisionStep
-from ..steps.chat import SimpleChatStep, ChatWithFunctions, EditFileStep, AddFileStep
-from ..recipes.DDtoBQRecipe.main import DDtoBQRecipe
-from ..steps.core.core import MessageStep
+from ..plugins.steps.steps_on_startup import StepsOnStartupStep
+from .main import Step, History, Policy
+from .observation import UserInputObservation
+from ..plugins.steps.core.core import MessageStep
 from ..libs.util.step_name_to_steps import get_step_from_name
-from ..steps.custom_command import CustomCommandStep
+from ..plugins.steps.custom_command import CustomCommandStep
 
 
 def parse_slash_command(inp: str, config: ContinueConfig) -> Union[None, Step]:
@@ -50,7 +40,7 @@ def parse_custom_command(inp: str, config: ContinueConfig) -> Union[None, Step]:
     return None
 
 
-class DemoPolicy(Policy):
+class DefaultPolicy(Policy):
     ran_code_last: bool = False
 
     def next(self, config: ContinueConfig, history: History) -> Step:
@@ -58,12 +48,9 @@ class DemoPolicy(Policy):
         if history.get_current() is None:
             return (
                 MessageStep(name="Welcome to Continue", message=dedent("""\
-                    - Highlight code and ask a question or give instructions
-                    - Use `cmd+k` (Mac) / `ctrl+k` (Windows) to open Continue
-                    - Use `cmd+shift+e` / `ctrl+shift+e` to open file Explorer
-                    - Add your own OpenAI API key to VS Code Settings with `cmd+,`
-                    - Use slash commands when you want fine-grained control
-                    - Past steps are included as part of the context by default""")) >>
+                    - Highlight code section and ask a question or give instructions
+                    - Use `cmd+m` (Mac) / `ctrl+m` (Windows) to open Continue
+                    - Use `/help` to ask questions about how to use Continue""")) >>
                 WelcomeStep() >>
                 # SetupContinueWorkspaceStep() >>
                 # CreateCodebaseIndexChroma() >>

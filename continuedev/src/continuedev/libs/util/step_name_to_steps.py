@@ -1,18 +1,19 @@
 from typing import Dict
 
 from ...core.main import Step
-from ...steps.core.core import UserInputStep
-from ...steps.main import EditHighlightedCodeStep
-from ...steps.chat import SimpleChatStep
-from ...steps.comment_code import CommentCodeStep
-from ...steps.feedback import FeedbackStep
-from ...recipes.AddTransformRecipe.main import AddTransformRecipe
-from ...recipes.CreatePipelineRecipe.main import CreatePipelineRecipe
-from ...recipes.DDtoBQRecipe.main import DDtoBQRecipe
-from ...recipes.DeployPipelineAirflowRecipe.main import DeployPipelineAirflowRecipe
-from ...steps.on_traceback import DefaultOnTracebackStep
-from ...steps.clear_history import ClearHistoryStep
-from ...steps.open_config import OpenConfigStep
+from ...plugins.steps.core.core import UserInputStep
+from ...plugins.steps.main import EditHighlightedCodeStep
+from ...plugins.steps.chat import SimpleChatStep
+from ...plugins.steps.comment_code import CommentCodeStep
+from ...plugins.steps.feedback import FeedbackStep
+from ...plugins.recipes.AddTransformRecipe.main import AddTransformRecipe
+from ...plugins.recipes.CreatePipelineRecipe.main import CreatePipelineRecipe
+from ...plugins.recipes.DDtoBQRecipe.main import DDtoBQRecipe
+from ...plugins.recipes.DeployPipelineAirflowRecipe.main import DeployPipelineAirflowRecipe
+from ...plugins.steps.on_traceback import DefaultOnTracebackStep
+from ...plugins.steps.clear_history import ClearHistoryStep
+from ...plugins.steps.open_config import OpenConfigStep
+from ...plugins.steps.help import HelpStep
 
 # This mapping is used to convert from string in ContinueConfig json to corresponding Step class.
 # Used for example in slash_commands and steps_on_startup
@@ -28,7 +29,8 @@ step_name_to_step_class = {
     "DeployPipelineAirflowRecipe": DeployPipelineAirflowRecipe,
     "DefaultOnTracebackStep": DefaultOnTracebackStep,
     "ClearHistoryStep": ClearHistoryStep,
-    "OpenConfigStep": OpenConfigStep
+    "OpenConfigStep": OpenConfigStep,
+    "HelpStep": HelpStep,
 }
 
 

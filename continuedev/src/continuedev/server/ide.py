@@ -123,10 +123,13 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
         self.websocket = websocket
         self.session_manager = session_manager
 
-    workspace_directory: str
+    workspace_directory: str = None
+    unique_id: str = None
 
-    async def initialize(self) -> List[str]:
+    async def initialize(self, session_id: str) -> List[str]:
+        self.session_id = session_id
         await self._send_json("workspaceDirectory", {})
+        await self._send_json("uniqueId", {})
         other_msgs = []
         while True:
             msg_string = await self.websocket.receive_text()
@@ -137,21 +140,29 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
             data = message["data"]
             if message_type == "workspaceDirectory":
                 self.workspace_directory = data["workspaceDirectory"]
-                break
+            elif message_type == "uniqueId":
+                self.unique_id = data["uniqueId"]
             else:
                 other_msgs.append(msg_string)
+
+            if self.workspace_directory is not None and self.unique_id is not None:
+                break
         return other_msgs
 
     async def _send_json(self, message_type: str, data: Any):
-        if self.websocket.client_state == WebSocketState.DISCONNECTED:
+        if self.websocket.application_state == WebSocketState.DISCONNECTED:
             return
         await self.websocket.send_json({
             "messageType": message_type,
             "data": data
         })
 
-    async def _receive_json(self, message_type: str) -> Any:
-        return await self.sub_queue.get(message_type)
+    async def _receive_json(self, message_type: str, timeout: int = 5) -> Any:
+        try:
+            return await asyncio.wait_for(self.sub_queue.get(message_type), timeout=timeout)
+        except asyncio.TimeoutError:
+            raise Exception(
+                "IDE Protocol _receive_json timed out after 5 seconds")
 
     async def _send_and_receive_json(self, data: Any, resp_model: Type[T], message_type: str) -> T:
         await self._send_json(message_type, data)
@@ -183,10 +194,12 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
             self.onMainUserInput(data["input"])
         elif message_type == "deleteAtIndex":
             self.onDeleteAtIndex(data["index"])
-        elif message_type in ["highlightedCode", "openFiles", "visibleFiles", "readFile", "editFile", "getUserSecret", "runCommand", "uniqueId"]:
+        elif message_type in ["highlightedCode", "openFiles", "visibleFiles", "readFile", "editFile", "getUserSecret", "runCommand"]:
             self.sub_queue.post(message_type, data)
         elif message_type == "workspaceDirectory":
             self.workspace_directory = data["workspaceDirectory"]
+        elif message_type == "uniqueId":
+            self.unique_id = data["uniqueId"]
         else:
             raise ValueError("Unknown message type", message_type)
 
@@ -211,6 +224,12 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
             "open": open
         })
 
+    async def showVirtualFile(self, name: str, contents: str):
+        await self._send_json("showVirtualFile", {
+            "name": name,
+            "contents": contents
+        })
+
     async def setSuggestionsLocked(self, filepath: str, locked: bool = True):
         # Lock suggestions in the file so they don't ruin the offset before others are inserted
         await self._send_json("setSuggestionsLocked", {
@@ -219,8 +238,8 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
         })
 
     async def getSessionId(self):
-        session_id = self.session_manager.new_session(
-            self, self.session_id).session_id
+        session_id = (await self.session_manager.new_session(
+            self, self.session_id)).session_id
         await self._send_json("getSessionId", {
             "sessionId": session_id
         })
@@ -274,33 +293,33 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
     def onOpenGUIRequest(self):
         pass
 
+    def __get_autopilot(self):
+        if self.session_id not in self.session_manager.sessions:
+            return None
+        return self.session_manager.sessions[self.session_id].autopilot
+
     def onFileEdits(self, edits: List[FileEditWithFullContents]):
-        # Send the file edits to ALL autopilots.
-        # Maybe not ideal behavior
-        for _, session in self.session_manager.sessions.items():
-            session.autopilot.handle_manual_edits(edits)
+        if autopilot := self.__get_autopilot():
+            autopilot.handle_manual_edits(edits)
 
     def onDeleteAtIndex(self, index: int):
-        for _, session in self.session_manager.sessions.items():
-            create_async_task(
-                session.autopilot.delete_at_index(index), self.unique_id)
+        if autopilot := self.__get_autopilot():
+            create_async_task(autopilot.delete_at_index(index), self.unique_id)
 
     def onCommandOutput(self, output: str):
-        # Send the output to ALL autopilots.
-        # Maybe not ideal behavior
-        for _, session in self.session_manager.sessions.items():
+        if autopilot := self.__get_autopilot():
             create_async_task(
-                session.autopilot.handle_command_output(output), self.unique_id)
+                autopilot.handle_command_output(output), self.unique_id)
 
     def onHighlightedCodeUpdate(self, range_in_files: List[RangeInFileWithContents]):
-        for _, session in self.session_manager.sessions.items():
-            create_async_task(
-                session.autopilot.handle_highlighted_code(range_in_files), self.unique_id)
+        if autopilot := self.__get_autopilot():
+            create_async_task(autopilot.handle_highlighted_code(
+                range_in_files), self.unique_id)
 
     def onMainUserInput(self, input: str):
-        for _, session in self.session_manager.sessions.items():
+        if autopilot := self.__get_autopilot():
             create_async_task(
-                session.autopilot.accept_user_input(input), self.unique_id)
+                autopilot.accept_user_input(input), self.unique_id)
 
     # Request information. Session doesn't matter.
     async def getOpenFiles(self) -> List[str]:
@@ -310,14 +329,6 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
     async def getVisibleFiles(self) -> List[str]:
         resp = await self._send_and_receive_json({}, VisibleFilesResponse, "visibleFiles")
         return resp.visibleFiles
-
-    async def get_unique_id(self) -> str:
-        resp = await self._send_and_receive_json({}, UniqueIdResponse, "uniqueId")
-        return resp.uniqueId
-
-    @cached_property_no_none
-    def unique_id(self) -> str:
-        return asyncio.run(self.get_unique_id())
 
     async def getHighlightedCode(self) -> List[RangeInFile]:
         resp = await self._send_and_receive_json({}, HighlightedCodeResponse, "highlightedCode")
@@ -436,10 +447,11 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str = None):
                 ideProtocolServer.handle_json(message_type, data))
 
         ideProtocolServer = IdeProtocolServer(session_manager, websocket)
-        ideProtocolServer.session_id = session_id
         if session_id is not None:
             session_manager.registered_ides[session_id] = ideProtocolServer
-        other_msgs = await ideProtocolServer.initialize()
+        other_msgs = await ideProtocolServer.initialize(session_id)
+        capture_event(ideProtocolServer.unique_id, "session_started", {
+                      "session_id": ideProtocolServer.session_id})
 
         for other_msg in other_msgs:
             handle_msg(other_msg)
@@ -460,4 +472,6 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str = None):
         if websocket.client_state != WebSocketState.DISCONNECTED:
             await websocket.close()
 
+        capture_event(ideProtocolServer.unique_id, "session_ended", {
+                      "session_id": ideProtocolServer.session_id})
         session_manager.registered_ides.pop(ideProtocolServer.session_id)

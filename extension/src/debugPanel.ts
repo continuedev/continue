@@ -6,6 +6,7 @@ import {
   openEditorAndRevealRange,
 } from "./util/vscode";
 import { RangeInFile } from "./client";
+import { setFocusedOnContinueInput } from "./commands";
 const WebSocket = require("ws");
 
 let websocketConnections: { [url: string]: WebsocketConnection | undefined } =
@@ -224,6 +225,10 @@ export function setupDebugPanel(
       }
       case "openFile": {
         openEditorAndRevealRange(data.path, undefined, vscode.ViewColumn.One);
+        break;
+      }
+      case "blurContinueInput": {
+        setFocusedOnContinueInput(false);
         break;
       }
       case "withProgress": {

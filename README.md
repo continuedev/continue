@@ -44,6 +44,16 @@ Let Continue build the scaffolding of Python scripts, React components, and more
 
 ### [Download for VS Code](https://marketplace.visualstudio.com/items?itemName=Continue.continue)
 
+## Install
+
+Continue requires that you have Python 3.8 or greater. If you do not, please [install](https://python.org) it
+
+If your Continue server is not setting up, please check the console logs:
+1. `cmd+shift+p` (MacOS) / `ctrl+shift+p` (Windows)
+2. Search for and then select "Developer: Toggle Developer Tools"
+3. Select `Console`
+4. Read the console logs
+
 ## OpenAI API Key
 
 New users can try out Continue with GPT-4 using a proxy server that securely makes calls to OpenAI using our API key. Continue should just work the first time you install the extension in VS Code.

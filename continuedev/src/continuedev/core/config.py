@@ -45,6 +45,11 @@ DEFAULT_SLASH_COMMANDS = [
         step_name="OpenConfigStep",
     ),
     SlashCommand(
+        name="help",
+        description="Ask a question like '/help what is given to the llm as context?'",
+        step_name="HelpStep",
+    ),
+    SlashCommand(
         name="comment",
         description="Write comments for the current file or highlighted code",
         step_name="CommentCodeStep",
@@ -62,16 +67,22 @@ DEFAULT_SLASH_COMMANDS = [
 ]
 
 
+class AzureInfo(BaseModel):
+    endpoint: str
+    engine: str
+    api_version: str
+
+
 class ContinueConfig(BaseModel):
     """
     A pydantic class for the continue config file.
     """
     steps_on_startup: Optional[Dict[str, Dict]] = {}
     disallowed_steps: Optional[List[str]] = []
-    server_url: Optional[str] = None
     allow_anonymous_telemetry: Optional[bool] = True
     default_model: Literal["gpt-3.5-turbo", "gpt-3.5-turbo-16k",
-                           "gpt-4"] = 'gpt-4'
+                           "gpt-4", "claude-2", "ggml"] = 'gpt-4'
+    temperature: Optional[float] = 0.5
     custom_commands: Optional[List[CustomCommand]] = [CustomCommand(
         name="test",
         description="This is an example custom command. Use /config to edit it and create more",
@@ -80,11 +91,17 @@ class ContinueConfig(BaseModel):
     slash_commands: Optional[List[SlashCommand]] = DEFAULT_SLASH_COMMANDS
     on_traceback: Optional[List[OnTracebackSteps]] = [
         OnTracebackSteps(step_name="DefaultOnTracebackStep")]
+    system_message: Optional[str] = None
+    azure_openai_info: Optional[AzureInfo] = None
 
     # Want to force these to be the slash commands for now
     @validator('slash_commands', pre=True)
     def default_slash_commands_validator(cls, v):
         return DEFAULT_SLASH_COMMANDS
+
+    @validator('temperature', pre=True)
+    def temperature_validator(cls, v):
+        return max(0.0, min(1.0, v))
 
 
 def load_config(config_file: str) -> ContinueConfig:

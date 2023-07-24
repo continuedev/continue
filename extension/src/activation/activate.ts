@@ -1,7 +1,6 @@
 import * as vscode from "vscode";
 import { registerAllCommands } from "../commands";
 import { registerAllCodeLensProviders } from "../lang-server/codeLens";
-import { sendTelemetryEvent, TelemetryEvent } from "../telemetry";
 import IdeProtocolClient from "../continueIdeClient";
 import { getContinueServerUrl } from "../bridge";
 import { ContinueGUIWebviewViewProvider } from "../debugPanel";
@@ -10,6 +9,8 @@ import {
   startContinuePythonServer,
 } from "./environmentSetup";
 import fetch from "node-fetch";
+import registerQuickFixProvider from "../lang-server/codeActions";
+import { get } from "http";
 // import { CapturedTerminal } from "../terminal/terminalEmulator";
 
 const PACKAGE_JSON_RAW_GITHUB_URL =
@@ -35,21 +36,40 @@ export async function activateExtension(context: vscode.ExtensionContext) {
     })
     .catch((e) => console.log("Error checking for extension updates: ", e));
 
+  // Start the server and display loader if taking > 2 seconds
   const sessionIdPromise = (async () => {
-    // Start the Python server
-    await new Promise((resolve, reject) => {
-      vscode.window.withProgress(
-        {
-          location: vscode.ProgressLocation.Notification,
-          title:
-            "Starting Continue Server... (it may take a minute to download Python packages)",
-          cancellable: false,
-        },
-        async (progress, token) => {
-          await startContinuePythonServer();
-          resolve(null);
+    await new Promise((resolve) => {
+      let serverStarted = false;
+
+      // Start the server and set serverStarted to true when done
+      startContinuePythonServer().then(() => {
+        serverStarted = true;
+        resolve(null);
+      });
+
+      // Wait for 2 seconds
+      setTimeout(() => {
+        // If the server hasn't started after 2 seconds, show the notification
+        if (!serverStarted) {
+          vscode.window.withProgress(
+            {
+              location: vscode.ProgressLocation.Notification,
+              title:
+                "Starting Continue Server... (it may take a minute to download Python packages)",
+              cancellable: false,
+            },
+            async (progress, token) => {
+              // Wait for the server to start
+              while (!serverStarted) {
+                await new Promise((innerResolve) =>
+                  setTimeout(innerResolve, 1000)
+                );
+              }
+              return Promise.resolve();
+            }
+          );
         }
-      );
+      }, 2000);
     });
 
     // Initialize IDE Protocol Client
@@ -58,11 +78,10 @@ export async function activateExtension(context: vscode.ExtensionContext) {
       `${serverUrl.replace("http", "ws")}/ide/ws`,
       context
     );
-
-    return ideProtocolClient.getSessionId();
+    return await ideProtocolClient.getSessionId();
   })();
 
-  // Register the webview
+  // Register Continue GUI as sidebar webview, and beging a new session
   const provider = new ContinueGUIWebviewViewProvider(sessionIdPromise);
 
   context.subscriptions.push(
@@ -74,9 +93,4 @@ export async function activateExtension(context: vscode.ExtensionContext) {
       }
     )
   );
-
-  // Register commands and providers
-  sendTelemetryEvent(TelemetryEvent.ExtensionActivated);
-  registerAllCodeLensProviders(context);
-  registerAllCommands(context);
 }

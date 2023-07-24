@@ -1,19 +1,29 @@
 # Continue PyPI Package
 
-This package contains the [Continue](https://github.com/continuedev.com/continue) server and core classes needed to build your own recipes.
+This package contains the [Continue](https://github.com/continuedev/continue) server and core classes needed to build your own recipes.
 
 Continue is a Python library for automating repetitive sequences of software development tasks using language models. Using our VS Code extension, you can build, run, and refine these recipes as they natively interact with your codebase. Read the docs [here](https://continue.dev/docs) or download the VS Code extension [here](https://marketplace.visualstudio.com/items?itemName=Continue.continue).
 
 ## Continue Server
 
-The Continue server acts as a bridge between the Continue React app and your IDE, running your recipes and acting on the codebase. 
+The Continue server acts as a bridge between the Continue React app and your IDE, running your recipes and acting on the codebase.
 
 Start it by running the following commands:
+
 1. `cd continuedev`
 2. Make sure packages are installed with `poetry install`
-3. `poetry shell`
+   - If poetry is not installed, you can install with
+   ```bash
+   curl -sSL https://install.python-poetry.org | python3 -
+   ```
+   (official instructions [here](https://python-poetry.org/docs/#installing-with-the-official-installer))
+3. `poetry shell` to activate the virtual environment
 4. `cd ..`
-5. `python3 -m continuedev.src.continuedev.server.main`
+5. `python3 -m continuedev.src.continuedev.server.main` to start the server
+
+Once you've validated that this works, you'll often want to use a debugger, in which case we've provided a launch configuration for VS Code in `.vscode/launch.json`. To start the debugger in VS Code, ensure that the workspace directory is the root of the `continue` repo, then press F5.
+
+> Note: To start the debugger, you'll have to select the poetry Python interpreter (`/path-to-poetry-venv/bin/python3`) in the bottom right of the VS Code window. If you don't see this, you may have to install the [Python extension](https://marketplace.visualstudio.com/items?itemName=ms-python.python).
 
 ## Scripts
 
@@ -28,6 +38,8 @@ See the `src/continuedev/libs/steps` folder for examples of writing a Continue s
 ## How to contribute
 
 Open a [new GitHub Issue](https://github.com/continuedev/continue/issues/new) or comment on [an existing one](https://github.com/continuedev/continue/issues). Let us know what you would like to contribute, and we will help you make it happen!
+
+For more a more detailed contributing guide, see [CONTRIBUTING.md](../CONTRIBUTING.md).
 
 ## Install from source
 
