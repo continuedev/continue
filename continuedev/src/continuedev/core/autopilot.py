@@ -10,12 +10,12 @@ from ..models.filesystem import RangeInFileWithContents
 from ..models.filesystem_edit import FileEditWithFullContents
 from .observation import Observation, InternalErrorObservation
 from .context import ContextManager
-from ..libs.context_providers.file_context_provider import FileContextProvider
-from ..libs.context_providers.highlighted_code_context_provider import HighlightedCodeContextProvider
+from ..plugins.context_providers.file_context_provider import FileContextProvider
+from ..plugins.context_providers.highlighted_code_context_provider import HighlightedCodeContextProvider
 from ..server.ide_protocol import AbstractIdeProtocolServer
 from ..libs.util.queue import AsyncSubscriptionQueue
 from ..models.main import ContinueBaseModel
-from .main import Context, ContinueCustomException, HighlightedRangeContext, Policy, History, FullState, Step, HistoryNode
+from .main import Context, ContinueCustomException, Policy, History, FullState, Step, HistoryNode
 from ..plugins.steps.core.core import ReversibleStep, ManualEditStep, UserInputStep
 from ..libs.util.telemetry import capture_event
 from .sdk import ContinueSDK

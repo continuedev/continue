@@ -42,7 +42,8 @@ class FileContextProvider(ContextProvider):
                 filepaths.append(os.path.join(root, file_name))
 
         return [ContextItem(
-            content=get_file_contents(file),
+            content=get_file_contents(file)[:min(
+                2000, len(get_file_contents(file)))],
             description=ContextItemDescription(
                 name=f"File {os.path.basename(file)}",
                 description=file,

@@ -1,6 +1,6 @@
 from ...libs.util.templating import render_templated_string
 from ...core.main import Step
-from ...core.sdk import ContinueSDK
+from ...core.sdk import ContinueSDK, Models
 from ..steps.chat import SimpleChatStep
 
 

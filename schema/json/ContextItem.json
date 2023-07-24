@@ -1,6 +1,6 @@
 {
   "title": "ContextItem",
-  "$ref": "#/definitions/src__continuedev__core__context__ContextItem",
+  "$ref": "#/definitions/src__continuedev__core__main__ContextItem",
   "definitions": {
     "ContextItemId": {
       "title": "ContextItemId",
@@ -44,7 +44,7 @@
         "id"
       ]
     },
-    "src__continuedev__core__context__ContextItem": {
+    "src__continuedev__core__main__ContextItem": {
       "title": "ContextItem",
       "description": "A ContextItem is a single item that is stored in the ContextManager.",
       "type": "object",
