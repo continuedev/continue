@@ -14,7 +14,7 @@
   "displayName": "Continue",
   "pricing": "Free",
   "description": "The open-source coding autopilot",
-  "version": "0.0.181",
+  "version": "0.0.191",
   "publisher": "Continue",
   "engines": {
     "vscode": "^1.67.0"
@@ -35,8 +35,7 @@
     "chat"
   ],
   "activationEvents": [
-    "onStartupFinished",
-    "onView:continueGUIView"
+    "*"
   ],
   "main": "./out/extension.js",
   "browser": "./out/extension.js",
@@ -227,7 +226,7 @@
     "test": "node ./out/test/runTest.js",
     "jest": "jest --config ./jest.config.js",
     "package": "cp ./config/prod_config.json ./config/config.json && mkdir -p ./build && vsce package --out ./build && cp ./config/dev_config.json ./config/config.json",
-    "full-package": "cd ../continuedev && poetry build && cp ./dist/continuedev-0.1.2-py3-none-any.whl ../extension/server/continuedev-0.1.2-py3-none-any.whl && cd ../extension && npm install && npm run typegen && npm run clientgen && cd react-app && npm install && npm run build && cd .. && npm run package",
+    "full-package": "cd ../continuedev && poetry install && poetry build && cp ./dist/continuedev-0.1.2-py3-none-any.whl ../extension/server/continuedev-0.1.2-py3-none-any.whl && cd ../extension && npm install && npm run typegen && npm run clientgen && cd react-app && npm install && npm run build && cd .. && npm run package",
     "install-extension": "code --install-extension ./build/continue-0.0.8.vsix",
     "uninstall": "code --uninstall-extension .continue",
     "reinstall": "rm -rf ./build && npm run package && npm run uninstall && npm run install-extension"

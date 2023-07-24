@@ -15,8 +15,8 @@ from ..libs.context_providers.highlighted_code_context_provider import Highlight
 from ..server.ide_protocol import AbstractIdeProtocolServer
 from ..libs.util.queue import AsyncSubscriptionQueue
 from ..models.main import ContinueBaseModel
-from .main import Context, ContinueCustomException, Policy, History, FullState, Step, HistoryNode
-from ..steps.core.core import ReversibleStep, ManualEditStep, UserInputStep
+from .main import Context, ContinueCustomException, HighlightedRangeContext, Policy, History, FullState, Step, HistoryNode
+from ..plugins.steps.core.core import ReversibleStep, ManualEditStep, UserInputStep
 from ..libs.util.telemetry import capture_event
 from .sdk import ContinueSDK
 from ..libs.util.traceback_parsers import get_python_traceback, get_javascript_traceback
@@ -39,6 +39,8 @@ def get_error_title(e: Exception) -> str:
         return "The request failed. Please check your internet connection and try again. If this issue persists, you can use our API key for free by going to VS Code settings and changing the value of continue.OPENAI_API_KEY to \"\""
     elif isinstance(e, openai_errors.InvalidRequestError):
         return 'Invalid request sent to OpenAI. Please try again.'
+    elif "rate_limit_ip_middleware" in e.__str__():
+        return 'You have reached your limit for free usage of our token. You can continue using Continue by entering your own OpenAI API key in VS Code settings.'
     elif e.__str__().startswith("Cannot connect to host"):
         return "The request failed. Please check your internet connection and try again."
     return e.__str__() or e.__repr__()

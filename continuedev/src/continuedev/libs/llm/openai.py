@@ -42,7 +42,7 @@ class OpenAI(LLM):
     def count_tokens(self, text: str):
         return count_tokens(self.default_model, text)
 
-    async def stream_complete(self, prompt, with_history: List[ChatMessage] = [], **kwargs) -> Generator[Union[Any, List, Dict], None, None]:
+    async def stream_complete(self, prompt, with_history: List[ChatMessage] = None, **kwargs) -> Generator[Union[Any, List, Dict], None, None]:
         args = self.default_args.copy()
         args.update(kwargs)
         args["stream"] = True
@@ -72,7 +72,7 @@ class OpenAI(LLM):
 
             self.write_log(f"Completion:\n\n{completion}")
 
-    async def stream_chat(self, messages: List[ChatMessage] = [], **kwargs) -> Generator[Union[Any, List, Dict], None, None]:
+    async def stream_chat(self, messages: List[ChatMessage] = None, **kwargs) -> Generator[Union[Any, List, Dict], None, None]:
         args = self.default_args.copy()
         args.update(kwargs)
         args["stream"] = True
@@ -81,7 +81,7 @@ class OpenAI(LLM):
             del args["functions"]
 
         messages = compile_chat_messages(
-            args["model"], messages, args["max_tokens"], functions=args.get("functions", None), system_message=self.system_message)
+            args["model"], messages, args["max_tokens"], None, functions=args.get("functions", None), system_message=self.system_message)
         self.write_log(f"Prompt: \n\n{format_chat_messages(messages)}")
         completion = ""
         async for chunk in await openai.ChatCompletion.acreate(
@@ -93,7 +93,7 @@ class OpenAI(LLM):
                 completion += chunk.choices[0].delta.content
         self.write_log(f"Completion: \n\n{completion}")
 
-    async def complete(self, prompt: str, with_history: List[ChatMessage] = [], **kwargs) -> Coroutine[Any, Any, str]:
+    async def complete(self, prompt: str, with_history: List[ChatMessage] = None, **kwargs) -> Coroutine[Any, Any, str]:
         args = {**self.default_args, **kwargs}
 
         if args["model"] in CHAT_MODELS:

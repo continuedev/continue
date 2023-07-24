@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import styled from "styled-components";
 import { Button, secondaryDark, vscBackground, vscForeground } from ".";
 import { isMetaEquivalentKeyPressed } from "../util";
+import { ReactMarkdown } from "react-markdown/lib/react-markdown";
 
 const ScreenCover = styled.div`
   position: fixed;
@@ -56,6 +57,7 @@ const TextDialog = (props: {
   onEnter: (text: string) => void;
   onClose: () => void;
   message?: string;
+  entryOn?: boolean;
 }) => {
   const [text, setText] = useState("");
   const textAreaRef = React.createRef<HTMLTextAreaElement>();
@@ -79,33 +81,37 @@ const TextDialog = (props: {
         }}
       >
         <Dialog>
-          <P>{props.message || ""}</P>
-          <TextArea
-            rows={10}
-            ref={textAreaRef}
-            onKeyDown={(e) => {
-              if (
-                e.key === "Enter" &&
-                isMetaEquivalentKeyPressed(e) &&
-                textAreaRef.current
-              ) {
-                props.onEnter(textAreaRef.current.value);
-                setText("");
-              } else if (e.key === "Escape") {
-                props.onClose();
-              }
-            }}
-          />
-          <Button
-            onClick={() => {
-              if (textAreaRef.current) {
-                props.onEnter(textAreaRef.current.value);
-                setText("");
-              }
-            }}
-          >
-            Enter
-          </Button>
+          <ReactMarkdown>{props.message || ""}</ReactMarkdown>
+          {props.entryOn && (
+            <>
+              <TextArea
+                rows={10}
+                ref={textAreaRef}
+                onKeyDown={(e) => {
+                  if (
+                    e.key === "Enter" &&
+                    isMetaEquivalentKeyPressed(e) &&
+                    textAreaRef.current
+                  ) {
+                    props.onEnter(textAreaRef.current.value);
+                    setText("");
+                  } else if (e.key === "Escape") {
+                    props.onClose();
+                  }
+                }}
+              />
+              <Button
+                onClick={() => {
+                  if (textAreaRef.current) {
+                    props.onEnter(textAreaRef.current.value);
+                    setText("");
+                  }
+                }}
+              >
+                Enter
+              </Button>
+            </>
+          )}
         </Dialog>
       </DialogContainer>
     </ScreenCover>

@@ -39,7 +39,10 @@ class ContinueQuickFixProvider implements vscode.CodeActionProvider {
       };
       return quickFix;
     };
-    return [createQuickFix(true), createQuickFix(false)];
+    return [
+      // createQuickFix(true),
+      createQuickFix(false),
+    ];
   }
 }
 

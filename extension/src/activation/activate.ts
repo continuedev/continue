@@ -1,7 +1,4 @@
 import * as vscode from "vscode";
-import { registerAllCommands } from "../commands";
-import { registerAllCodeLensProviders } from "../lang-server/codeLens";
-import { sendTelemetryEvent, TelemetryEvent } from "../telemetry";
 import IdeProtocolClient from "../continueIdeClient";
 import { getContinueServerUrl } from "../bridge";
 import { ContinueGUIWebviewViewProvider } from "../debugPanel";
@@ -10,8 +7,6 @@ import {
   startContinuePythonServer,
 } from "./environmentSetup";
 import fetch from "node-fetch";
-import registerQuickFixProvider from "../lang-server/codeActions";
-// import { CapturedTerminal } from "../terminal/terminalEmulator";
 
 const PACKAGE_JSON_RAW_GITHUB_URL =
   "https://raw.githubusercontent.com/continuedev/continue/HEAD/extension/package.json";
@@ -37,60 +32,60 @@ export async function activateExtension(context: vscode.ExtensionContext) {
     .catch((e) => console.log("Error checking for extension updates: ", e));
 
   // Start the server and display loader if taking > 2 seconds
-  await new Promise((resolve) => {
-    let serverStarted = false;
+  const sessionIdPromise = (async () => {
+    await new Promise((resolve) => {
+      let serverStarted = false;
 
-    // Start the server and set serverStarted to true when done
-    startContinuePythonServer().then(() => {
-      serverStarted = true;
-      resolve(null);
+      // Start the server and set serverStarted to true when done
+      startContinuePythonServer().then(() => {
+        serverStarted = true;
+        resolve(null);
+      });
+
+      // Wait for 2 seconds
+      setTimeout(() => {
+        // If the server hasn't started after 2 seconds, show the notification
+        if (!serverStarted) {
+          vscode.window.withProgress(
+            {
+              location: vscode.ProgressLocation.Notification,
+              title:
+                "Starting Continue Server... (it may take a minute to download Python packages)",
+              cancellable: false,
+            },
+            async (progress, token) => {
+              // Wait for the server to start
+              while (!serverStarted) {
+                await new Promise((innerResolve) =>
+                  setTimeout(innerResolve, 1000)
+                );
+              }
+              return Promise.resolve();
+            }
+          );
+        }
+      }, 2000);
     });
 
-    // Wait for 2 seconds
-    setTimeout(() => {
-      // If the server hasn't started after 2 seconds, show the notification
-      if (!serverStarted) {
-        vscode.window.withProgress(
-          {
-            location: vscode.ProgressLocation.Notification,
-            title:
-              "Starting Continue Server... (it may take a minute to download Python packages)",
-            cancellable: false,
-          },
-          async (progress, token) => {
-            // Wait for the server to start
-            while (!serverStarted) {
-              await new Promise((innerResolve) =>
-                setTimeout(innerResolve, 1000)
-              );
-            }
-            return Promise.resolve();
-          }
-        );
-      }
-    }, 2000);
-  });
-
-  // Initialize IDE Protocol Client
-  const serverUrl = getContinueServerUrl();
-  ideProtocolClient = new IdeProtocolClient(
-    `${serverUrl.replace("http", "ws")}/ide/ws`,
-    context
-  );
+    // Initialize IDE Protocol Client
+    const serverUrl = getContinueServerUrl();
+    ideProtocolClient = new IdeProtocolClient(
+      `${serverUrl.replace("http", "ws")}/ide/ws`,
+      context
+    );
+    return await ideProtocolClient.getSessionId();
+  })();
 
   // Register Continue GUI as sidebar webview, and beging a new session
-  {
-    const sessionIdPromise = await ideProtocolClient.getSessionId();
-    const provider = new ContinueGUIWebviewViewProvider(sessionIdPromise);
+  const provider = new ContinueGUIWebviewViewProvider(sessionIdPromise);
 
-    context.subscriptions.push(
-      vscode.window.registerWebviewViewProvider(
-        "continue.continueGUIView",
-        provider,
-        {
-          webviewOptions: { retainContextWhenHidden: true },
-        }
-      )
-    );
-  }
+  context.subscriptions.push(
+    vscode.window.registerWebviewViewProvider(
+      "continue.continueGUIView",
+      provider,
+      {
+        webviewOptions: { retainContextWhenHidden: true },
+      }
+    )
+  );
 }

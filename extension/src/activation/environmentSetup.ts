@@ -9,7 +9,6 @@ import fetch from "node-fetch";
 import * as vscode from "vscode";
 import * as os from "os";
 import fkill from "fkill";
-import { sendTelemetryEvent, TelemetryEvent } from "../telemetry";
 
 const WINDOWS_REMOTE_SIGNED_SCRIPTS_ERROR =
   "A Python virtual enviroment cannot be activated because running scripts is disabled for this user. In order to use Continue, please enable signed scripts to run with this command in PowerShell: `Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser`, reload VS Code, and then try again.";
@@ -57,9 +56,6 @@ async function retryThenFail(
       vscode.window.showErrorMessage(msg);
     }
 
-    sendTelemetryEvent(TelemetryEvent.ExtensionSetupError, {
-      error: e.message,
-    });
     throw e;
   }
 }
@@ -81,12 +77,6 @@ async function runCommand(cmd: string): Promise<[string, string | undefined]> {
   }
   if (typeof stdout === "undefined") {
     stdout = "";
-  }
-
-  if (stderr) {
-    sendTelemetryEvent(TelemetryEvent.ExtensionSetupError, {
-      error: stderr,
-    });
   }
 
   return [stdout, stderr];
@@ -139,7 +129,7 @@ export async function getPythonPipCommands() {
 
     if (!versionExists) {
       vscode.window.showErrorMessage(
-        "Continue requires Python3 version 3.8 or greater. Please update your Python3 installation, reload VS Code, and try again."
+        "Continue requires Python version 3.8 or greater. Please update your Python installation, reload VS Code, and try again."
       );
       throw new Error("Python3.8 or greater is not installed.");
     }
@@ -480,16 +470,11 @@ export async function startContinuePythonServer() {
             console.log("Successfully started Continue python server");
             resolve(null);
           } else if (data.includes("ERROR") || data.includes("Traceback")) {
-            sendTelemetryEvent(TelemetryEvent.ExtensionSetupError, {
-              error: data,
-            });
+            console.log("Error starting Continue python server: ", data);
           }
         });
         child.on("error", (error: any) => {
           console.log(`error: ${error.message}`);
-          sendTelemetryEvent(TelemetryEvent.ExtensionSetupError, {
-            error: error.message,
-          });
         });
 
         // Write the current version of vscode to a file called server_version.txt

@@ -1,14 +1,15 @@
 from textwrap import dedent
 from typing import Union
 
-from ..steps.chat import SimpleChatStep
-from ..steps.welcome import WelcomeStep
+from ..plugins.steps.chat import SimpleChatStep
+from ..plugins.steps.welcome import WelcomeStep
 from .config import ContinueConfig
-from ..steps.steps_on_startup import StepsOnStartupStep
+from ..plugins.steps.steps_on_startup import StepsOnStartupStep
 from .main import Step, History, Policy
 from .observation import UserInputObservation
-from ..steps.core.core import MessageStep
-from ..steps.custom_command import CustomCommandStep
+from ..plugins.steps.core.core import MessageStep
+from ..plugins.steps.custom_command import CustomCommandStep
+from ..plugins.steps.main import EditHighlightedCodeStep
 
 
 def parse_slash_command(inp: str, config: ContinueConfig) -> Union[None, Step]:
@@ -43,7 +44,7 @@ def parse_custom_command(inp: str, config: ContinueConfig) -> Union[None, Step]:
     return None
 
 
-class DemoPolicy(Policy):
+class DefaultPolicy(Policy):
     ran_code_last: bool = False
 
     def next(self, config: ContinueConfig, history: History) -> Step:

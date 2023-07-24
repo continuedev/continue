@@ -54,7 +54,7 @@ class AnthropicLLM(LLM):
         prompt += AI_PROMPT
         return prompt
 
-    async def stream_complete(self, prompt, with_history: List[ChatMessage] = [], **kwargs) -> Generator[Union[Any, List, Dict], None, None]:
+    async def stream_complete(self, prompt, with_history: List[ChatMessage] = None, **kwargs) -> Generator[Union[Any, List, Dict], None, None]:
         args = self.default_args.copy()
         args.update(kwargs)
         args["stream"] = True
@@ -66,7 +66,7 @@ class AnthropicLLM(LLM):
         ):
             yield chunk.completion
 
-    async def stream_chat(self, messages: List[ChatMessage] = [], **kwargs) -> Generator[Union[Any, List, Dict], None, None]:
+    async def stream_chat(self, messages: List[ChatMessage] = None, **kwargs) -> Generator[Union[Any, List, Dict], None, None]:
         args = self.default_args.copy()
         args.update(kwargs)
         args["stream"] = True
@@ -83,7 +83,7 @@ class AnthropicLLM(LLM):
                 "content": chunk.completion
             }
 
-    async def complete(self, prompt: str, with_history: List[ChatMessage] = [], **kwargs) -> Coroutine[Any, Any, str]:
+    async def complete(self, prompt: str, with_history: List[ChatMessage] = None, **kwargs) -> Coroutine[Any, Any, str]:
         args = {**self.default_args, **kwargs}
         args = self._transform_args(args)
 

@@ -3,8 +3,7 @@ from functools import cached_property
 from typing import Coroutine, Dict, Union
 import os
 
-
-from ..steps.core.core import DefaultModelEditCodeStep
+from ..plugins.steps.core.core import DefaultModelEditCodeStep
 from ..models.main import Range
 from .context import ContextItem
 from .abstract_sdk import AbstractContinueSDK
@@ -18,7 +17,7 @@ from ..libs.llm.ggml import GGML
 from .observation import Observation
 from ..server.ide_protocol import AbstractIdeProtocolServer
 from .main import Context, ContinueCustomException, History, HistoryNode, Step, ChatMessage
-from ..steps.core.core import *
+from ..plugins.steps.core.core import *
 from ..libs.llm.proxy_server import ProxyServer
 
 

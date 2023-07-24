@@ -16,7 +16,7 @@ class HuggingFaceInferenceAPI(LLM):
         self.model = model
         self.system_message = system_message  # TODO: Nothing being done with this
 
-    def complete(self, prompt: str, with_history: List[ChatMessage] = [], **kwargs):
+    def complete(self, prompt: str, with_history: List[ChatMessage] = None, **kwargs):
         """Return the completion of the text with the given temperature."""
         API_URL = f"https://api-inference.huggingface.co/models/{self.model}"
         headers = {
