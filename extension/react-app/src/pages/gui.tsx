@@ -415,7 +415,7 @@ function GUI(props: GUIProps) {
         {bottomMessage}
       </div>
       <Footer dataSwitchChecked={dataSwitchChecked}>
-        <div
+        {/* <div
           style={{
             display: "flex",
             gap: "4px",
@@ -460,7 +460,7 @@ function GUI(props: GUIProps) {
             checked={dataSwitchChecked}
           />
           <span style={{ cursor: "help", fontSize: "14px" }}>Collect Data</span>
-        </div>
+        </div> */}
         <HeaderButtonWithText
           onClick={() => {
             // Show the dialog

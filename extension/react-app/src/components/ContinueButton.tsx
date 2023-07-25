@@ -26,7 +26,7 @@ function ContinueButton(props: { onClick?: () => void; hidden?: boolean }) {
   return (
     <StyledButton
       hidden={props.hidden}
-      className="m-auto"
+      className="m-auto press-start-2p text-xs"
       onClick={props.onClick}
     >
       {vscMediaUrl ? (
@@ -34,7 +34,7 @@ function ContinueButton(props: { onClick?: () => void; hidden?: boolean }) {
       ) : (
         <Play />
       )}
-      Continue
+      CONTINUE
     </StyledButton>
   );
 }
