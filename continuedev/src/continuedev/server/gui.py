@@ -2,15 +2,15 @@ import asyncio
 import json
 from fastapi import Depends, Header, WebSocket, APIRouter
 from starlette.websockets import WebSocketState, WebSocketDisconnect
-from typing import Any, List, Type, TypeVar, Union
+from typing import Any, List, Type, TypeVar
 from pydantic import BaseModel
 import traceback
 from uvicorn.main import Server
 
-from .session_manager import SessionManager, session_manager, Session
+from .session_manager import session_manager, Session
 from .gui_protocol import AbstractGUIProtocolServer
 from ..libs.util.queue import AsyncSubscriptionQueue
-from ..libs.util.telemetry import capture_event
+from ..libs.util.telemetry import posthog_logger
 from ..libs.util.create_async_task import create_async_task
 
 router = APIRouter(prefix="/gui", tags=["gui"])
@@ -85,8 +85,6 @@ class GUIProtocolServer(AbstractGUIProtocolServer):
                 self.on_reverse_to_index(data["index"])
             elif message_type == "retry_at_index":
                 self.on_retry_at_index(data["index"])
-            elif message_type == "change_default_model":
-                self.on_change_default_model(data["model"])
             elif message_type == "clear_history":
                 self.on_clear_history()
             elif message_type == "delete_at_index":
@@ -125,10 +123,6 @@ class GUIProtocolServer(AbstractGUIProtocolServer):
     def on_retry_at_index(self, index: int):
         create_async_task(
             self.session.autopilot.retry_at_index(index), self.session.autopilot.continue_sdk.ide.unique_id)
-
-    def on_change_default_model(self, model: str):
-        create_async_task(self.session.autopilot.change_default_model(
-            model), self.session.autopilot.continue_sdk.ide.unique_id)
 
     def on_clear_history(self):
         create_async_task(self.session.autopilot.clear_history(
@@ -199,8 +193,8 @@ async def websocket_endpoint(websocket: WebSocket, session: Session = Depends(we
         print("GUI websocket disconnected")
     except Exception as e:
         print("ERROR in gui websocket: ", e)
-        capture_event(session.autopilot.continue_sdk.ide.unique_id, "gui_error", {
-                      "error_title": e.__str__() or e.__repr__(), "error_message": '\n'.join(traceback.format_exception(e))})
+        posthog_logger.capture_event("gui_error", {
+            "error_title": e.__str__() or e.__repr__(), "error_message": '\n'.join(traceback.format_exception(e))})
         raise e
     finally:
         print("Closing gui websocket")

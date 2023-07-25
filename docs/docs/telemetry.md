@@ -14,12 +14,13 @@ We track
 
 ## How to opt out
 
-There is a `.continue` directory, which contains a `config.json` file that looks like this:
+There is a `.continue` directory, which contains a `config.py` file that looks like this:
 
-```json
-{
-  "allow_anonymous_telemetry": true
-}
+```python
+config = ContinueConfig(
+    allow_anonymous_telemetry=True,
+    ...
+)
 ```
 
 You can turn off anonymous telemetry by changing the value of `allow_anonymous_telemetry` to `false`.

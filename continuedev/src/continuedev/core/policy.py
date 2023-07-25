@@ -56,7 +56,6 @@ class DefaultPolicy(Policy):
                     - Use `cmd+m` (Mac) / `ctrl+m` (Windows) to open Continue
                     - Use `/help` to ask questions about how to use Continue""")) >>
                 WelcomeStep() >>
-                # SetupContinueWorkspaceStep() >>
                 # CreateCodebaseIndexChroma() >>
                 StepsOnStartupStep())
 

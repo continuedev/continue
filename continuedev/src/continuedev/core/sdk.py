@@ -1,13 +1,11 @@
-import asyncio
 from functools import cached_property
 from typing import Coroutine, Dict, Union
 import os
 
 from ..plugins.steps.core.core import DefaultModelEditCodeStep
 from ..models.main import Range
-from .context import ContextItem
 from .abstract_sdk import AbstractContinueSDK
-from .config import ContinueConfig, load_config, load_global_config, update_global_config
+from .config import ContinueConfig
 from ..models.filesystem_edit import FileEdit, FileSystemEdit, AddFile, DeleteFile, AddDirectory, DeleteDirectory
 from ..models.filesystem import RangeInFile
 from ..libs.llm.hf_inference_api import HuggingFaceInferenceAPI
@@ -19,6 +17,7 @@ from ..server.ide_protocol import AbstractIdeProtocolServer
 from .main import Context, ContinueCustomException, History, HistoryNode, Step, ChatMessage
 from ..plugins.steps.core.core import *
 from ..libs.llm.proxy_server import ProxyServer
+from ..libs.util.telemetry import posthog_logger
 
 
 class Autopilot:
@@ -266,6 +265,11 @@ class ContinueSDK(AbstractContinueSDK):
             config = importlib.util.module_from_spec(spec)
             spec.loader.exec_module(config)
             self._last_valid_config = config.config
+
+            # When the config is loaded, setup posthog logger
+            posthog_logger.setup(
+                self.ide.unique_id, config.config.allow_anonymous_telemetry or True)
+
             return config.config
         except Exception as e:
             print("Error loading config.py: ", e)
@@ -275,11 +279,6 @@ class ContinueSDK(AbstractContinueSDK):
         context = list(filter(lambda x: x.editing, self.__autopilot._highlighted_ranges)
                        ) if only_editing else self.__autopilot._highlighted_ranges
         return [c.range for c in context]
-
-    def update_default_model(self, model: str):
-        config = self.config
-        config.default_model = model
-        update_global_config(config)
 
     def set_loading_message(self, message: str):
         # self.__autopilot.set_loading_message(message)

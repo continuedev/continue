@@ -2,7 +2,6 @@ from functools import cached_property
 import traceback
 import time
 from typing import Any, Callable, Coroutine, Dict, List, Union
-import os
 from aiohttp import ClientPayloadError
 from pydantic import root_validator
 
@@ -17,11 +16,11 @@ from ..libs.util.queue import AsyncSubscriptionQueue
 from ..models.main import ContinueBaseModel
 from .main import Context, ContinueCustomException, Policy, History, FullState, Step, HistoryNode
 from ..plugins.steps.core.core import ReversibleStep, ManualEditStep, UserInputStep
-from ..libs.util.telemetry import capture_event
 from .sdk import ContinueSDK
 from ..libs.util.traceback_parsers import get_python_traceback, get_javascript_traceback
 from openai import error as openai_errors
 from ..libs.util.create_async_task import create_async_task
+from ..libs.util.telemetry import posthog_logger
 
 
 def get_error_title(e: Exception) -> str:
@@ -110,9 +109,6 @@ class Autopilot(ContinueBaseModel):
         slash_commands = list(map(lambda x: {
                               "name": x.name, "description": x.description}, self.continue_sdk.config.slash_commands)) or []
         return custom_commands + slash_commands
-
-    async def change_default_model(self, model: str):
-        self.continue_sdk.update_default_model(model)
 
     async def clear_history(self):
         # Reset history
@@ -222,8 +218,8 @@ class Autopilot(ContinueBaseModel):
         #     last_depth = self.history.timeline[i].depth
         #     i -= 1
 
-        capture_event(self.continue_sdk.ide.unique_id, 'step run', {
-            'step_name': step.name, 'params': step.dict()})
+        posthog_logger.capture_event(
+            'step run', {'step_name': step.name, 'params': step.dict()})
 
         if not is_future_step:
             # Check manual edits buffer, clear out if needed by creating a ManualEditStep
@@ -264,8 +260,8 @@ class Autopilot(ContinueBaseModel):
             # Attach an InternalErrorObservation to the step and unhide it.
             print(
                 f"Error while running step: \n{error_string}\n{error_title}")
-            capture_event(self.continue_sdk.ide.unique_id, 'step error', {
-                'error_message': error_string, 'error_title': error_title, 'step_name': step.name, 'params': step.dict()})
+            posthog_logger.capture_event('step error', {
+                                         'error_message': error_string, 'error_title': error_title, 'step_name': step.name, 'params': step.dict()})
 
             observation = InternalErrorObservation(
                 error=error_string, title=error_title)
