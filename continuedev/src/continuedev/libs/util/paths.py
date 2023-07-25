@@ -25,3 +25,22 @@ def getSessionFilePath(session_id: str):
     path = os.path.join(getSessionsFolderPath(), f"{session_id}.json")
     os.makedirs(os.path.dirname(path), exist_ok=True)
     return path
+
+
+def getDefaultConfigFile() -> str:
+    current_path = os.path.dirname(os.path.realpath(__file__))
+    config_path = os.path.join(
+        current_path, "..", "constants", "default_config.py.txt")
+    with open(config_path, 'r') as f:
+        return f.read()
+
+
+def getConfigFilePath() -> str:
+    path = os.path.join(getGlobalFolderPath(), "config.py")
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+
+    if not os.path.exists(path):
+        with open(path, 'w') as f:
+            f.write(getDefaultConfigFile())
+
+    return path

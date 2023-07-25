@@ -18,6 +18,7 @@ from .main import Context, ContinueCustomException, History, HistoryNode, Step, 
 from ..plugins.steps.core.core import *
 from ..libs.llm.proxy_server import ProxyServer
 from ..libs.util.telemetry import posthog_logger
+from ..libs.util.paths import getConfigFilePath
 
 
 class Autopilot:
@@ -258,7 +259,7 @@ class ContinueSDK(AbstractContinueSDK):
 
     def _load_config_dot_py(self) -> ContinueConfig:
         # Use importlib to load the config file config.py at the given path
-        path = os.path.join(os.path.expanduser("~"), ".continue", "config.py")
+        path = getConfigFilePath()
         try:
             import importlib.util
             spec = importlib.util.spec_from_file_location("config", path)

@@ -1,6 +1,7 @@
 from textwrap import dedent
 from ...core.main import Step
 from ...core.sdk import ContinueSDK
+from ...libs.util.paths import getConfigFilePath
 import os
 
 
@@ -25,6 +26,4 @@ class OpenConfigStep(Step):
             `prompt` is the instruction given to the model. The overall prompt becomes "Task: {prompt}, Additional info: {user_input}". For example, if you entered "/test exactly 5 assertions", the overall prompt would become "Task: Write a comprehensive...and sophisticated, Additional info: exactly 5 assertions".""")
 
     async def run(self, sdk: ContinueSDK):
-        global_dir = os.path.expanduser('~/.continue')
-        config_path = os.path.join(global_dir, 'config.py')
-        await sdk.ide.setFileOpen(config_path)
+        await sdk.ide.setFileOpen(getConfigFilePath())
