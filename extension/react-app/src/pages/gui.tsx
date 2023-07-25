@@ -205,7 +205,7 @@ function GUI(props: GUIProps) {
 
       setWaitingForSteps(waitingForSteps);
       setHistory(state.history);
-      setSelectedContextItems(state.selected_context_items);
+      setSelectedContextItems(state.selected_context_items || []);
       setUserInputQueue(state.user_input_queue);
       setAddingHighlightedCode(state.adding_highlighted_code);
       setAvailableSlashCommands(
