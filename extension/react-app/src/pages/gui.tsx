@@ -116,6 +116,9 @@ function GUI(props: GUIProps) {
     current_index: 3,
   } as any);
 
+  const vscMediaUrl = useSelector(
+    (state: RootStore) => state.config.vscMediaUrl
+  );
   const [showFeedbackDialog, setShowFeedbackDialog] = useState(false);
   const [feedbackDialogMessage, setFeedbackDialogMessage] = useState("");
   const [feedbackEntryOn, setFeedbackEntryOn] = useState(true);
@@ -415,52 +418,15 @@ function GUI(props: GUIProps) {
         {bottomMessage}
       </div>
       <Footer dataSwitchChecked={dataSwitchChecked}>
-        {/* <div
-          style={{
-            display: "flex",
-            gap: "4px",
-            marginRight: "auto",
-            alignItems: "center",
-          }}
-          onMouseEnter={() => {
-            dispatch(
-              setBottomMessage(
-                <>
-                  By turning on this switch, you will begin collecting accepted
-                  and rejected suggestions in .continue/suggestions.json. This
-                  data is stored locally on your machine and not sent anywhere.
-                  <br />
-                  <br />
-                  <b>
-                    {dataSwitchChecked
-                      ? "👍 Data is being collected"
-                      : "👎 No data is being collected"}
-                  </b>
-                </>
-              )
-            );
-          }}
-          onMouseLeave={() => {
-            dispatch(setBottomMessage(undefined));
-          }}
-        >
-          <ReactSwitch
-            height={20}
-            handleDiameter={20}
-            width={40}
-            onChange={() => {
-              posthog?.capture("data_switch_toggled", {
-                vscMachineId: vscMachineId,
-                dataSwitchChecked: !dataSwitchChecked,
-              });
-              postVscMessage("toggleDataSwitch", { on: !dataSwitchChecked });
-              setDataSwitchChecked((prev) => !prev);
-            }}
-            onColor="#12887a"
-            checked={dataSwitchChecked}
-          />
-          <span style={{ cursor: "help", fontSize: "14px" }}>Collect Data</span>
-        </div> */}
+        {vscMediaUrl && (
+          <a
+            href="https://github.com/continuedev/continue"
+            style={{ margin: "0", marginRight: "auto" }}
+          >
+            <img src={`${vscMediaUrl}/continue-dev-square.png`} width="22px" />
+            <p style={{ margin: "0" }}>Continue</p>
+          </a>
+        )}
         <HeaderButtonWithText
           onClick={() => {
             // Show the dialog

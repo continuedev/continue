@@ -9,8 +9,8 @@ from ..models.filesystem import RangeInFileWithContents
 from ..models.filesystem_edit import FileEditWithFullContents
 from .observation import Observation, InternalErrorObservation
 from .context import ContextManager
-from ..plugins.context_providers.file_context_provider import FileContextProvider
-from ..plugins.context_providers.highlighted_code_context_provider import HighlightedCodeContextProvider
+from ..plugins.context_providers.file import FileContextProvider
+from ..plugins.context_providers.highlighted_code import HighlightedCodeContextProvider
 from ..server.ide_protocol import AbstractIdeProtocolServer
 from ..libs.util.queue import AsyncSubscriptionQueue
 from ..models.main import ContinueBaseModel

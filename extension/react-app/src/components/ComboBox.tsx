@@ -291,7 +291,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
       <div className="flex px-2" ref={divRef} hidden={!downshiftProps.isOpen}>
         <MainTextInput
           disabled={props.disabled}
-          placeholder={`Ask a question, give instructions, or type '/' to see slash commands`}
+          placeholder={`Ask a question, give instructions, type '/' for slash commands, or '@' to add context`}
           {...getInputProps({
             onChange: (e) => {
               const target = e.target as HTMLTextAreaElement;

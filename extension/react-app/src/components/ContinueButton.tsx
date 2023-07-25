@@ -26,7 +26,8 @@ function ContinueButton(props: { onClick?: () => void; hidden?: boolean }) {
   return (
     <StyledButton
       hidden={props.hidden}
-      className="m-auto press-start-2p text-xs"
+      style={{ fontSize: "10px" }}
+      className="m-auto press-start-2p"
       onClick={props.onClick}
     >
       {vscMediaUrl ? (

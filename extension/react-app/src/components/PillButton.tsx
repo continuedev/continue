@@ -100,7 +100,7 @@ const PillButton = (props: PillButtonProps) => {
             <pre>
               <code
                 style={{
-                  fontSize: "10px",
+                  fontSize: "11px",
                   backgroundColor: vscBackground,
                   color: vscForeground,
                   whiteSpace: "pre-wrap",
