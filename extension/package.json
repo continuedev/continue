@@ -14,7 +14,7 @@
   "displayName": "Continue",
   "pricing": "Free",
   "description": "The open-source coding autopilot",
-  "version": "0.0.193",
+  "version": "0.0.195",
   "publisher": "Continue",
   "engines": {
     "vscode": "^1.67.0"
@@ -35,7 +35,8 @@
     "chat"
   ],
   "activationEvents": [
-    "*"
+    "onStartupFinished",
+    "onView:continueGUIView"
   ],
   "main": "./out/extension.js",
   "browser": "./out/extension.js",
