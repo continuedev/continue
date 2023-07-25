@@ -20,6 +20,8 @@ import { ContextItem } from "../../../schema/FullState";
 import { postVscMessage } from "../vscode";
 import { GUIClientContext } from "../App";
 import { MeiliSearch } from "meilisearch";
+import { setBottomMessageCloseTimeout } from "../redux/slices/uiStateSlice";
+import { useDispatch } from "react-redux";
 
 const SEARCH_INDEX_NAME = "continue_context_items";
 
@@ -124,6 +126,7 @@ interface ComboBoxProps {
 const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
   const searchClient = new MeiliSearch({ host: "http://127.0.0.1:7700" });
   const client = useContext(GUIClientContext);
+  const dispatch = useDispatch();
 
   const [history, setHistory] = React.useState<string[]>([]);
   // The position of the current command you are typing now, so the one that will be appended to history once you press enter
@@ -179,8 +182,8 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
               })
             );
           })
-          .catch((err) => {
-            console.error(err);
+          .catch(() => {
+            // Swallow errors, because this simply is not supported on Windows at the moment
           });
         return;
       }
@@ -201,6 +204,12 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
       downshiftProps.setHighlightedIndex(0);
     }
   }, [downshiftProps.inputValue]);
+
+  const divRef = React.useRef<HTMLDivElement>(null);
+  const ulRef = React.useRef<HTMLUListElement>(null);
+  const showAbove = () => {
+    return (divRef.current?.getBoundingClientRect().top || 0) > UlMaxHeight;
+  };
 
   useImperativeHandle(ref, () => downshiftProps, [downshiftProps]);
 
@@ -240,12 +249,6 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
       window.removeEventListener("message", handler);
     };
   }, [inputRef.current]);
-
-  const divRef = React.useRef<HTMLDivElement>(null);
-  const ulRef = React.useRef<HTMLUListElement>(null);
-  const showAbove = () => {
-    return (divRef.current?.getBoundingClientRect().top || 0) > UlMaxHeight;
-  };
 
   return (
     <>
@@ -304,6 +307,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
             },
             onFocus: (e) => {
               setFocused(true);
+              dispatch(setBottomMessageCloseTimeout(undefined));
             },
             onBlur: (e) => {
               setFocused(false);
@@ -357,6 +361,9 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
                 );
                 setCurrentlyInContextQuery(false);
               }
+            },
+            onClick: () => {
+              dispatch(setBottomMessageCloseTimeout(undefined));
             },
             ref: inputRef,
           })}

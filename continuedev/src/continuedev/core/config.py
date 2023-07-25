@@ -56,11 +56,11 @@ class ContinueConfig(BaseModel):
     # Want to force these to be the slash commands for now
     @validator('slash_commands', pre=True)
     def default_slash_commands_validator(cls, v):
-        from ..steps.open_config import OpenConfigStep
-        from ..steps.clear_history import ClearHistoryStep
-        from ..steps.feedback import FeedbackStep
-        from ..steps.comment_code import CommentCodeStep
-        from ..steps.main import EditHighlightedCodeStep
+        from ..plugins.steps.open_config import OpenConfigStep
+        from ..plugins.steps.clear_history import ClearHistoryStep
+        from ..plugins.steps.feedback import FeedbackStep
+        from ..plugins.steps.comment_code import CommentCodeStep
+        from ..plugins.steps.main import EditHighlightedCodeStep
 
         DEFAULT_SLASH_COMMANDS = [
             SlashCommand(

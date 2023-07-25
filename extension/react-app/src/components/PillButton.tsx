@@ -1,8 +1,9 @@
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import styled from "styled-components";
 import {
   StyledTooltip,
   defaultBorderRadius,
+  lightGray,
   secondaryDark,
   vscBackground,
   vscForeground,
@@ -96,12 +97,19 @@ const PillButton = (props: PillButtonProps) => {
           <>
             <b>{props.item.description.name}</b>:{" "}
             {props.item.description.description}
-            <StyledMarkdownPreview
-              source={`\`\`\`\n${props.item.content}\n\`\`\``}
-              wrapperElement={{
-                "data-color-mode": "dark",
-              }}
-            />
+            <pre>
+              <code
+                style={{
+                  fontSize: "10px",
+                  backgroundColor: vscBackground,
+                  color: vscForeground,
+                  whiteSpace: "pre-wrap",
+                  wordWrap: "break-word",
+                }}
+              >
+                {props.item.content}
+              </code>
+            </pre>
           </>
         )
       );
@@ -178,6 +186,7 @@ const PillButton = (props: PillButtonProps) => {
                 backgroundColor={"#cc000055"}
                 onClick={() => {
                   client?.deleteContextWithIds([props.item.description.id]);
+                  dispatch(setBottomMessageCloseTimeout(undefined));
                 }}
               >
                 <Trash style={{ margin: "auto" }} width="1.6em"></Trash>

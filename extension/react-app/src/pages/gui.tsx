@@ -125,6 +125,24 @@ function GUI(props: GUIProps) {
     (state: RootStore) => state.uiState.bottomMessage
   );
 
+  const [displayBottomMessageOnBottom, setDisplayBottomMessageOnBottom] =
+    useState<boolean>(true);
+  const mainTextInputRef = useRef<HTMLInputElement>(null);
+
+  const aboveComboBoxDivRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!aboveComboBoxDivRef.current) return;
+    if (
+      aboveComboBoxDivRef.current.getBoundingClientRect().top >
+      window.innerHeight / 2
+    ) {
+      setDisplayBottomMessageOnBottom(false);
+    } else {
+      setDisplayBottomMessageOnBottom(true);
+    }
+  }, [bottomMessage, aboveComboBoxDivRef.current]);
+
   const topGuiDivRef = useRef<HTMLDivElement>(null);
 
   const [scrollTimeout, setScrollTimeout] = useState<NodeJS.Timeout | null>(
@@ -156,6 +174,8 @@ function GUI(props: GUIProps) {
         history.timeline[history.current_index]?.active
       ) {
         client?.deleteAtIndex(history.current_index);
+      } else if (e.key === "Escape") {
+        dispatch(setBottomMessageCloseTimeout(undefined));
       }
     };
     window.addEventListener("keydown", listener);
@@ -182,7 +202,6 @@ function GUI(props: GUIProps) {
 
       setWaitingForSteps(waitingForSteps);
       setHistory(state.history);
-      console.log((state as any).selected_context_items);
       setSelectedContextItems(state.selected_context_items);
       setUserInputQueue(state.user_input_queue);
       setAddingHighlightedCode(state.adding_highlighted_code);
@@ -215,8 +234,6 @@ function GUI(props: GUIProps) {
   useEffect(() => {
     scrollToBottom();
   }, [waitingForSteps]);
-
-  const mainTextInputRef = useRef<HTMLInputElement>(null);
 
   const onMainTextInput = (event?: any) => {
     if (mainTextInputRef.current) {
@@ -349,6 +366,7 @@ function GUI(props: GUIProps) {
           })}
         </div>
 
+        <div ref={aboveComboBoxDivRef} />
         <ComboBox
           ref={mainTextInputRef}
           onEnter={(e) => {
@@ -370,21 +388,25 @@ function GUI(props: GUIProps) {
         onMouseEnter={() => {
           dispatch(setBottomMessageCloseTimeout(undefined));
         }}
-        onMouseLeave={() => {
-          dispatch(setBottomMessage(undefined));
+        onMouseLeave={(e) => {
+          if (!e.buttons) {
+            dispatch(setBottomMessage(undefined));
+          }
         }}
         style={{
           position: "fixed",
-          bottom: "50px",
+          bottom: displayBottomMessageOnBottom ? "50px" : undefined,
+          top: displayBottomMessageOnBottom ? undefined : "50px",
           left: "0",
           right: "0",
-          margin: "16px",
+          margin: "8px",
+          marginTop: "0px",
           backgroundColor: vscBackground,
           color: vscForeground,
           borderRadius: defaultBorderRadius,
-          padding: "16px",
+          padding: "12px",
           zIndex: 100,
-          boxShadow: `0px 0px 10px 0px ${vscForeground}`,
+          boxShadow: `0px 0px 6px 0px ${vscForeground}`,
           maxHeight: "50vh",
           overflow: "scroll",
         }}

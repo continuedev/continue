@@ -1,4 +1,5 @@
 import os
+import re
 from typing import List
 from ...core.main import ContextItem, ContextItemDescription, ContextItemId
 from ...core.context import ContextProvider
@@ -45,11 +46,11 @@ class FileContextProvider(ContextProvider):
             content=get_file_contents(file)[:min(
                 2000, len(get_file_contents(file)))],
             description=ContextItemDescription(
-                name=f"File {os.path.basename(file)}",
+                name=os.path.basename(file),
                 description=file,
                 id=ContextItemId(
                     provider_title=self.title,
-                    item_id=file
+                    item_id=re.sub(r'[^0-9a-zA-Z_-]', '', file)
                 )
             )
         ) for file in filepaths]

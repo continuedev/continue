@@ -207,12 +207,21 @@ class ContextItemId(BaseModel):
     provider_title: str
     item_id: str
 
+    @validator('provider_title', 'item_id')
+    def must_be_valid_id(cls, v):
+        import re
+        if not re.match(r'^[0-9a-zA-Z_-]*$', v):
+            raise ValueError(
+                "Both provider_title and item_id can only include characters 0-9, a-z, A-Z, -, and _")
+        return v
+
     def to_string(self) -> str:
         return f"{self.provider_title}-{self.item_id}"
 
     @staticmethod
     def from_string(string: str) -> 'ContextItemId':
-        provider_title, item_id = string.split('-')
+        provider_title, *rest = string.split('-')
+        item_id = '-'.join(rest)
         return ContextItemId(provider_title=provider_title, item_id=item_id)
 
 
