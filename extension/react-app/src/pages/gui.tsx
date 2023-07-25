@@ -419,14 +419,11 @@ function GUI(props: GUIProps) {
       </div>
       <Footer dataSwitchChecked={dataSwitchChecked}>
         {vscMediaUrl && (
-          <a
-            href="https://github.com/continuedev/continue"
-            style={{ margin: "0", marginRight: "auto" }}
-          >
+          <a href="https://github.com/continuedev/continue">
             <img src={`${vscMediaUrl}/continue-dev-square.png`} width="22px" />
-            <p style={{ margin: "0" }}>Continue</p>
           </a>
         )}
+        <p style={{ margin: "0", marginRight: "auto" }}>Continue</p>
         <HeaderButtonWithText
           onClick={() => {
             // Show the dialog
