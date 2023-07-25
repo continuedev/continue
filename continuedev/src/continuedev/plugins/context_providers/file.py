@@ -7,8 +7,11 @@ from fnmatch import fnmatch
 
 
 def get_file_contents(filepath: str) -> str:
-    with open(filepath, "r") as f:
-        return f.read()
+    try:
+        with open(filepath, "r") as f:
+            return f.read()
+    except UnicodeDecodeError:
+        return ""
 
 
 class FileContextProvider(ContextProvider):
