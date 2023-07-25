@@ -18,9 +18,9 @@ const sidebars = {
     "getting-started",
     "how-to-use-continue",
     "how-continue-works",
-    "telemetry",
-    "collecting-data",
     "customization",
+    "collecting-data",
+    "telemetry",
   ],
 };
 
