@@ -76,9 +76,8 @@ export async function activateExtension(context: vscode.ExtensionContext) {
     return await ideProtocolClient.getSessionId();
   })();
 
-  const sessionId = await sessionIdPromise;
   // Register Continue GUI as sidebar webview, and beging a new session
-  const provider = new ContinueGUIWebviewViewProvider(sessionId);
+  const provider = new ContinueGUIWebviewViewProvider(sessionIdPromise);
 
   context.subscriptions.push(
     vscode.window.registerWebviewViewProvider(

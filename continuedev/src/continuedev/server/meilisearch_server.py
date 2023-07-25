@@ -1,19 +1,44 @@
 import os
+import shutil
 import subprocess
 
 import meilisearch
 from ..libs.util.paths import getServerFolderPath
 
 
-def check_meilisearch_installed() -> bool:
+def ensure_meilisearch_installed():
     """
     Checks if MeiliSearch is installed.
     """
-
     serverPath = getServerFolderPath()
     meilisearchPath = os.path.join(serverPath, "meilisearch")
+    dumpsPath = os.path.join(serverPath, "dumps")
+    dataMsPath = os.path.join(serverPath, "data.ms")
 
-    return os.path.exists(meilisearchPath)
+    paths = [meilisearchPath, dumpsPath, dataMsPath]
+
+    existing_paths = set()
+    non_existing_paths = set()
+    for path in paths:
+        if os.path.exists(path):
+            existing_paths.add(path)
+        else:
+            non_existing_paths.add(path)
+
+    if len(non_existing_paths) > 0:
+        # Clear the meilisearch binary
+        if meilisearchPath in existing_paths:
+            os.remove(meilisearchPath)
+            non_existing_paths.remove(meilisearchPath)
+
+        # Clear the existing directories
+        for p in existing_paths:
+            shutil.rmtree(p, ignore_errors=True)
+
+        # Download MeiliSearch
+        print("Downloading MeiliSearch...")
+        subprocess.run(
+            f"curl -L https://install.meilisearch.com | sh", shell=True, check=True, cwd=serverPath)
 
 
 def check_meilisearch_running() -> bool:
@@ -42,12 +67,8 @@ def start_meilisearch():
 
     serverPath = getServerFolderPath()
 
-    # Check if MeiliSearch is installed
-    if not check_meilisearch_installed():
-        # Download MeiliSearch
-        print("Downloading MeiliSearch...")
-        subprocess.run(
-            f"curl -L https://install.meilisearch.com | sh", shell=True, check=True, cwd=serverPath)
+    # Check if MeiliSearch is installed, if not download
+    ensure_meilisearch_installed()
 
     # Check if MeiliSearch is running
     if not check_meilisearch_running():
