@@ -273,40 +273,34 @@ class DiffManager {
 export const diffManager = new DiffManager();
 
 function recordAcceptReject(accepted: boolean, diffInfo: DiffInfo) {
-  const collectOn = vscode.workspace
-    .getConfiguration("continue")
-    .get<boolean>("dataSwitch");
+  const devDataDir = devDataPath();
+  const suggestionsPath = path.join(devDataDir, "suggestions.json");
 
-  if (collectOn) {
-    const devDataDir = devDataPath();
-    const suggestionsPath = path.join(devDataDir, "suggestions.json");
+  // Initialize suggestions list
+  let suggestions = [];
 
-    // Initialize suggestions list
-    let suggestions = [];
-
-    // Check if suggestions.json exists
-    if (fs.existsSync(suggestionsPath)) {
-      const rawData = fs.readFileSync(suggestionsPath, "utf-8");
-      suggestions = JSON.parse(rawData);
-    }
-
-    // Add the new suggestion to the list
-    suggestions.push({
-      accepted,
-      timestamp: Date.now(),
-      suggestion: diffInfo.originalFilepath,
-    });
-
-    // Send the suggestion to the server
-    // ideProtocolClient.sendAcceptRejectSuggestion(accepted);
-
-    // Write the updated suggestions back to the file
-    fs.writeFileSync(
-      suggestionsPath,
-      JSON.stringify(suggestions, null, 4),
-      "utf-8"
-    );
+  // Check if suggestions.json exists
+  if (fs.existsSync(suggestionsPath)) {
+    const rawData = fs.readFileSync(suggestionsPath, "utf-8");
+    suggestions = JSON.parse(rawData);
   }
+
+  // Add the new suggestion to the list
+  suggestions.push({
+    accepted,
+    timestamp: Date.now(),
+    suggestion: diffInfo.originalFilepath,
+  });
+
+  // Send the suggestion to the server
+  // ideProtocolClient.sendAcceptRejectSuggestion(accepted);
+
+  // Write the updated suggestions back to the file
+  fs.writeFileSync(
+    suggestionsPath,
+    JSON.stringify(suggestions, null, 4),
+    "utf-8"
+  );
 }
 
 export async function acceptDiffCommand(newFilepath?: string) {

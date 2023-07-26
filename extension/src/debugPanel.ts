@@ -95,6 +95,7 @@ export function setupDebugPanel(
   panel.webview.options = {
     enableScripts: true,
     localResourceRoots: [vscode.Uri.joinPath(extensionUri, "react-app/dist")],
+    enableCommandUris: true,
   };
 
   const nonce = getNonce();

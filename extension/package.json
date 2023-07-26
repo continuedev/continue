@@ -53,11 +53,6 @@
           "type": "string",
           "default": null,
           "description": "The OpenAI API key to use for code generation."
-        },
-        "continue.dataSwitch": {
-          "type": "boolean",
-          "default": false,
-          "description": "If true, collect data on accepted and rejected suggestions."
         }
       }
     },

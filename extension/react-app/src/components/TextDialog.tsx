@@ -81,7 +81,42 @@ const TextDialog = (props: {
         }}
       >
         <Dialog>
-          <ReactMarkdown>{props.message || ""}</ReactMarkdown>
+          {props.message?.includes("Continue uses GPT-4") ? (
+            <div>
+              <p>
+                Continue uses GPT-4 by default, but works with any model. If
+                you'd like to keep your code completely private, there are few
+                options:
+              </p>
+
+              <p>
+                Run a local model with ggml:{" "}
+                <a
+                  href="https://github.com/continuedev/ggml-server-example"
+                  target="_blank"
+                >
+                  5 minute quickstart
+                </a>
+              </p>
+
+              <p>
+                Use Azure OpenAI service, which is GDPR and HIPAA compliant:
+                <a
+                  href="https://continue.dev/docs/customization#azure-openai-service"
+                  target="_blank"
+                >
+                  Tutorial
+                </a>
+              </p>
+
+              <p>
+                If you already have an LLM deployed on your own infrastructure,
+                or would like to do so, please contact us at hi@continue.dev.
+              </p>
+            </div>
+          ) : (
+            <ReactMarkdown>{props.message || ""}</ReactMarkdown>
+          )}
           {props.entryOn && (
             <>
               <TextArea
