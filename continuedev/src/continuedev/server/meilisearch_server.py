@@ -53,11 +53,11 @@ async def check_meilisearch_running() -> bool:
     """
 
     try:
-        client = Client('http://localhost:7700')
-        resp = await client.health()
-        if resp["status"] != "available":
-            return False
-        return True
+        async with Client('http://localhost:7700') as client:
+            resp = await client.health()
+            if resp["status"] != "available":
+                return False
+            return True
     except Exception:
         return False
 
