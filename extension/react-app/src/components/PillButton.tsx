@@ -186,7 +186,7 @@ const PillButton = (props: PillButtonProps) => {
                 backgroundColor={"#cc000055"}
                 onClick={() => {
                   client?.deleteContextWithIds([props.item.description.id]);
-                  dispatch(setBottomMessageCloseTimeout(undefined));
+                  dispatch(setBottomMessage(undefined));
                 }}
               >
                 <Trash style={{ margin: "auto" }} width="1.6em"></Trash>

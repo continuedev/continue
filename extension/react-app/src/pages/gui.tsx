@@ -178,7 +178,7 @@ function GUI(props: GUIProps) {
       ) {
         client?.deleteAtIndex(history.current_index);
       } else if (e.key === "Escape") {
-        dispatch(setBottomMessageCloseTimeout(undefined));
+        dispatch(setBottomMessage(undefined));
       }
     };
     window.addEventListener("keydown", listener);
@@ -409,7 +409,7 @@ function GUI(props: GUIProps) {
           borderRadius: defaultBorderRadius,
           padding: "12px",
           zIndex: 100,
-          boxShadow: `0px 0px 6px 0px ${vscForeground}`,
+          boxShadow: `0px 0px 4px 0px ${vscForeground}`,
           maxHeight: "50vh",
           overflow: "scroll",
         }}
@@ -419,11 +419,17 @@ function GUI(props: GUIProps) {
       </div>
       <Footer dataSwitchChecked={dataSwitchChecked}>
         {vscMediaUrl && (
-          <a href="https://github.com/continuedev/continue">
-            <img src={`${vscMediaUrl}/continue-dev-square.png`} width="22px" />
+          <a
+            href="https://github.com/continuedev/continue"
+            style={{ marginRight: "auto" }}
+          >
+            <img
+              src={`${vscMediaUrl}/continue-dev-square.png`}
+              width="22px"
+              style={{ backgroundColor: "black", color: "red" }}
+            />
           </a>
         )}
-        <p style={{ margin: "0", marginRight: "auto" }}>Continue</p>
         <HeaderButtonWithText
           onClick={() => {
             // Show the dialog

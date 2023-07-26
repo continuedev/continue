@@ -20,7 +20,10 @@ import { ContextItem } from "../../../schema/FullState";
 import { postVscMessage } from "../vscode";
 import { GUIClientContext } from "../App";
 import { MeiliSearch } from "meilisearch";
-import { setBottomMessageCloseTimeout } from "../redux/slices/uiStateSlice";
+import {
+  setBottomMessage,
+  setBottomMessageCloseTimeout,
+} from "../redux/slices/uiStateSlice";
 import { useDispatch } from "react-redux";
 
 const SEARCH_INDEX_NAME = "continue_context_items";
@@ -307,13 +310,14 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
             },
             onFocus: (e) => {
               setFocused(true);
-              dispatch(setBottomMessageCloseTimeout(undefined));
+              dispatch(setBottomMessage(undefined));
             },
             onBlur: (e) => {
               setFocused(false);
               postVscMessage("blurContinueInput", {});
             },
             onKeyDown: (event) => {
+              dispatch(setBottomMessage(undefined));
               if (event.key === "Enter" && event.shiftKey) {
                 // Prevent Downshift's default 'Enter' behavior.
                 (event.nativeEvent as any).preventDownshiftDefault = true;
@@ -363,7 +367,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
               }
             },
             onClick: () => {
-              dispatch(setBottomMessageCloseTimeout(undefined));
+              dispatch(setBottomMessage(undefined));
             },
             ref: inputRef,
           })}
