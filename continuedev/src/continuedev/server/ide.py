@@ -10,6 +10,7 @@ from pydantic import BaseModel
 import traceback
 import asyncio
 
+from .meilisearch_server import start_meilisearch
 from ..libs.util.telemetry import posthog_logger
 from ..libs.util.queue import AsyncSubscriptionQueue
 from ..models.filesystem import FileSystem, RangeInFile, EditDiff, RangeInFileWithContents, RealFileSystem
@@ -139,6 +140,7 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
                 continue
             message_type = message["messageType"]
             data = message["data"]
+            print("Received message while initializing", message_type)
             if message_type == "workspaceDirectory":
                 self.workspace_directory = data["workspaceDirectory"]
             elif message_type == "uniqueId":
@@ -153,17 +155,18 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
     async def _send_json(self, message_type: str, data: Any):
         if self.websocket.application_state == WebSocketState.DISCONNECTED:
             return
+        print("Sending IDE message: ", message_type)
         await self.websocket.send_json({
             "messageType": message_type,
             "data": data
         })
 
-    async def _receive_json(self, message_type: str, timeout: int = 5) -> Any:
+    async def _receive_json(self, message_type: str, timeout: int = 20) -> Any:
         try:
             return await asyncio.wait_for(self.sub_queue.get(message_type), timeout=timeout)
         except asyncio.TimeoutError:
             raise Exception(
-                "IDE Protocol _receive_json timed out after 5 seconds")
+                "IDE Protocol _receive_json timed out after 20 seconds", message_type)
 
     async def _send_and_receive_json(self, data: Any, resp_model: Type[T], message_type: str) -> T:
         await self._send_json(message_type, data)
@@ -432,6 +435,13 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
 @router.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket, session_id: str = None):
     try:
+        # Start meilisearch
+        try:
+            await start_meilisearch()
+        except Exception as e:
+            print("Failed to start MeiliSearch")
+            print(e)
+
         await websocket.accept()
         print("Accepted websocket connection from, ", websocket.client)
         await websocket.send_json({"messageType": "connected", "data": {}})

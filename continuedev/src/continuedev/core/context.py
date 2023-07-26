@@ -1,7 +1,7 @@
 
 from abc import abstractmethod
 from typing import Dict, List
-import meilisearch
+from meilisearch_python_async import Client
 from pydantic import BaseModel
 
 
@@ -50,21 +50,21 @@ class ContextProvider(BaseModel):
         """
         return [ChatMessage(role="user", content=f"{item.description.name}: {item.description.description}\n\n{item.content}", summary=item.description.description) for item in await self.get_selected_items()]
 
-    async def get_item(self, id: ContextItemId, query: str, search_client: meilisearch.Client) -> ContextItem:
+    async def get_item(self, id: ContextItemId, query: str, search_client: Client) -> ContextItem:
         """
         Returns the ContextItem with the given id.
 
         Default implementation uses the search index to get the item.
         """
-        result = search_client.index(
+        result = await search_client.index(
             SEARCH_INDEX_NAME).get_document(id.to_string())
         return ContextItem(
             description=ContextItemDescription(
-                name=result.name,
-                description=result.description,
+                name=result["name"],
+                description=result["description"],
                 id=id
             ),
-            content=result.content
+            content=result["content"]
         )
 
     async def delete_context_with_ids(self, ids: List[ContextItemId]):
@@ -85,7 +85,7 @@ class ContextProvider(BaseModel):
         """
         self.selected_items = []
 
-    async def add_context_item(self, id: ContextItemId, query: str, search_client: meilisearch.Client):
+    async def add_context_item(self, id: ContextItemId, query: str, search_client: Client):
         """
         Adds the given ContextItem to the list of ContextItems.
 
@@ -126,20 +126,25 @@ class ContextManager:
         """
         return sum([await provider.get_chat_messages() for provider in self.context_providers.values()], [])
 
-    search_client: meilisearch.Client
+    search_client: Client
 
-    def __init__(self, context_providers: List[ContextProvider]):
-        self.search_client = meilisearch.Client('http://localhost:7700')
-
-        # If meilisearch isn't running, don't use any ContextProviders that might depend on it
-        if not check_meilisearch_running():
-            context_providers = list(
-                filter(lambda cp: cp.title == "code", context_providers))
-
+    def __init__(self, context_providers: List[ContextProvider], search_client: Client):
+        self.search_client = search_client
         self.context_providers = {
             prov.title: prov for prov in context_providers}
         self.provider_titles = {
             provider.title for provider in context_providers}
+
+    @classmethod
+    async def create(cls, context_providers: List[ContextProvider]):
+        search_client = Client('http://localhost:7700')
+        health = await search_client.health()
+        if not health.status == "available":
+            print("MeiliSearch not running, avoiding any dependent context providers")
+            context_providers = list(
+                filter(lambda cp: cp.title == "code", context_providers))
+
+        return cls(context_providers, search_client)
 
     async def load_index(self):
         for _, provider in self.context_providers.items():
@@ -154,8 +159,7 @@ class ContextManager:
                 for item in context_items
             ]
             if len(documents) > 0:
-                self.search_client.index(
-                    SEARCH_INDEX_NAME).add_documents(documents)
+                await self.search_client.index(SEARCH_INDEX_NAME).add_documents(documents)
 
     # def compile_chat_messages(self, max_tokens: int) -> List[Dict]:
     #     """

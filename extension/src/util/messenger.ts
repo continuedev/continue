@@ -39,6 +39,7 @@ export class WebsocketMessenger extends Messenger {
     //   var WebSocket = require("ws");
     // }
 
+    console.log("Creating websocket at: ", this.serverUrl);
     const newWebsocket = new WebSocket(this.serverUrl);
     for (const listener of this.onOpenListeners) {
       this.onOpen(listener);
@@ -110,6 +111,7 @@ export class WebsocketMessenger extends Messenger {
       if (this.websocket.readyState !== this.websocket.CONNECTING) {
         this.websocket = this._newWebsocket();
       }
+
       this.websocket.addEventListener("open", () => {
         this.websocket.send(payload);
       });

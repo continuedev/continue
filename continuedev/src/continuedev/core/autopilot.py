@@ -69,7 +69,7 @@ class Autopilot(ContinueBaseModel):
         autopilot.continue_sdk = await ContinueSDK.create(autopilot)
 
         # Load documents into the search index
-        autopilot.context_manager = ContextManager(
+        autopilot.context_manager = await ContextManager.create(
             autopilot.continue_sdk.config.context_providers + [
                 HighlightedCodeContextProvider(ide=ide),
                 FileContextProvider(workspace_dir=ide.workspace_directory)
