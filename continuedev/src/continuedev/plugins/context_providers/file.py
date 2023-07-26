@@ -14,6 +14,27 @@ def get_file_contents(filepath: str) -> str:
         return ""
 
 
+DEFAULT_IGNORE_DIRS = [
+    ".git",
+    ".vscode",
+    ".idea",
+    ".vs",
+    ".venv",
+    "env",
+    ".env",
+    "node_modules",
+    "dist",
+    "build",
+    "target",
+    "out",
+    "bin",
+    ".pytest_cache",
+    ".vscode-test",
+    ".continue",
+    "__pycache__"
+]
+
+
 class FileContextProvider(ContextProvider):
     """
     The FileContextProvider is a ContextProvider that allows you to search files in the open workspace.
@@ -21,24 +42,8 @@ class FileContextProvider(ContextProvider):
 
     title = "file"
     workspace_dir: str
-    ignore_patterns: List[str] = [
-        ".git",
-        ".vscode",
-        ".idea",
-        ".vs",
-        ".venv",
-        "env",
-        ".env",
-        "node_modules",
-        "dist",
-        "build",
-        "target",
-        "out",
-        "bin",
-        ".pytest_cache",
-        ".vscode-test",
-        ".continue",
-    ]
+    ignore_patterns: List[str] = DEFAULT_IGNORE_DIRS + \
+        list(filter(lambda d: f"**/{d}", DEFAULT_IGNORE_DIRS))
 
     async def provide_context_items(self) -> List[ContextItem]:
         filepaths = []

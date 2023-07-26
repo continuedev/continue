@@ -6,9 +6,11 @@ from meilisearch_python_async import Client
 from ..libs.util.paths import getServerFolderPath
 
 
-def ensure_meilisearch_installed():
+def ensure_meilisearch_installed() -> bool:
     """
     Checks if MeiliSearch is installed.
+
+    Returns a bool indicating whether it was installed to begin with.
     """
     serverPath = getServerFolderPath()
     meilisearchPath = os.path.join(serverPath, "meilisearch")
@@ -29,7 +31,7 @@ def ensure_meilisearch_installed():
         # Clear the meilisearch binary
         if meilisearchPath in existing_paths:
             os.remove(meilisearchPath)
-            non_existing_paths.remove(meilisearchPath)
+            existing_paths.remove(meilisearchPath)
 
         # Clear the existing directories
         for p in existing_paths:
@@ -39,6 +41,10 @@ def ensure_meilisearch_installed():
         print("Downloading MeiliSearch...")
         subprocess.run(
             f"curl -L https://install.meilisearch.com | sh", shell=True, check=True, cwd=serverPath)
+
+        return False
+
+    return True
 
 
 async def check_meilisearch_running() -> bool:
@@ -68,10 +74,10 @@ async def start_meilisearch():
     serverPath = getServerFolderPath()
 
     # Check if MeiliSearch is installed, if not download
-    ensure_meilisearch_installed()
+    was_already_installed = ensure_meilisearch_installed()
 
     # Check if MeiliSearch is running
-    if not await check_meilisearch_running():
+    if not await check_meilisearch_running() or not was_already_installed:
         print("Starting MeiliSearch...")
         subprocess.Popen(["./meilisearch"], cwd=serverPath, stdout=subprocess.DEVNULL,
                          stderr=subprocess.STDOUT, close_fds=True, start_new_session=True)
