@@ -2,7 +2,7 @@ from typing import Coroutine
 from ...core.main import Models
 from ...core.main import Step
 from ...core.sdk import ContinueSDK
-from ...libs.util.telemetry import capture_event
+from ...libs.util.telemetry import posthog_logger
 
 
 class FeedbackStep(Step):
@@ -13,5 +13,4 @@ class FeedbackStep(Step):
         return f"`{self.user_input}`\n\nWe'll see your feedback and make improvements as soon as possible. If you'd like to directly email us, you can contact [nate@continue.dev](mailto:nate@continue.dev?subject=Feedback%20On%20Continue)."
 
     async def run(self, sdk: ContinueSDK):
-        capture_event(sdk.ide.unique_id, "feedback",
-                      {"feedback": self.user_input})
+        posthog_logger.capture_event("feedback", {"feedback": self.user_input})

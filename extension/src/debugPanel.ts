@@ -166,11 +166,13 @@ export function setupDebugPanel(
     switch (data.type) {
       case "onLoad": {
         let sessionId: string;
+        console.log("Running onLoad");
         if (typeof sessionIdPromise === "string") {
           sessionId = sessionIdPromise;
         } else {
           sessionId = await sessionIdPromise;
         }
+        console.log("Done with onLoad: ", sessionId);
         panel.webview.postMessage({
           type: "onLoad",
           vscMachineId: vscode.env.machineId,

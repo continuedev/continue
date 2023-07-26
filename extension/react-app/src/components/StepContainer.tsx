@@ -18,9 +18,9 @@ import {
 import { StopCircle } from "@styled-icons/heroicons-solid";
 import { HistoryNode } from "../../../schema/HistoryNode";
 import HeaderButtonWithText from "./HeaderButtonWithText";
-import MarkdownPreview from "@uiw/react-markdown-preview";
 import { getMetaKeyLabel, isMetaEquivalentKeyPressed } from "../util";
 import { GUIClientContext } from "../App";
+import StyledMarkdownPreview from "./StyledMarkdownPreview";
 
 interface StepContainerProps {
   historyNode: HistoryNode;
@@ -107,33 +107,6 @@ const GradientBorder = styled.div<{
   )`};
   animation: ${(props) => (props.loading ? gradient : "")} 6s linear infinite;
   background-size: 200% 200%;
-`;
-
-const StyledMarkdownPreview = styled(MarkdownPreview)`
-  pre {
-    background-color: ${secondaryDark};
-    padding: 1px;
-    border-radius: ${defaultBorderRadius};
-    border: 0.5px solid white;
-  }
-
-  code {
-    color: #f78383;
-    word-wrap: break-word;
-    border-radius: ${defaultBorderRadius};
-    background-color: ${secondaryDark};
-  }
-
-  pre > code {
-    background-color: ${secondaryDark};
-    color: ${vscForeground};
-  }
-
-  background-color: ${vscBackground};
-  font-family: "Lexend", sans-serif;
-  font-size: 13px;
-  padding: 8px;
-  color: ${vscForeground};
 `;
 
 // #endregion

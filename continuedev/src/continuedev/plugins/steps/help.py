@@ -1,7 +1,7 @@
 from textwrap import dedent
 from ...core.main import ChatMessage, Step
 from ...core.sdk import ContinueSDK
-from ...libs.util.telemetry import capture_event
+from ...libs.util.telemetry import posthog_logger
 
 help = dedent("""\
         Continue is an open-source coding autopilot. It is a VS Code extension that brings the power of ChatGPT to your IDE.
@@ -55,5 +55,5 @@ class HelpStep(Step):
                 self.description += chunk["content"]
                 await sdk.update_ui()
 
-        capture_event(sdk.ide.unique_id, "help", {
-                      "question": question, "answer": self.description})
+        posthog_logger.capture_event(
+            "help", {"question": question, "answer": self.description})

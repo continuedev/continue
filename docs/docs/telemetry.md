@@ -9,17 +9,20 @@ Continue collects and reports **anonymous** usage information. This data is esse
 We track
 
 - the steps that are run and their parameters
-- toggling of the data collection switch
 - whether you accept or reject suggestions (not the code itself)
+- the traceback when an error occurs
+
+All data is anonymous and cleaned of PII before being sent to PostHog.
 
 ## How to opt out
 
-There is a `.continue` directory, which contains a `config.json` file that looks like this:
+There is a `.continue` directory, which contains a `config.py` file that looks like this:
 
-```json
-{
-  "allow_anonymous_telemetry": true
-}
+```python
+config = ContinueConfig(
+    allow_anonymous_telemetry=True,
+    ...
+)
 ```
 
 You can turn off anonymous telemetry by changing the value of `allow_anonymous_telemetry` to `false`.

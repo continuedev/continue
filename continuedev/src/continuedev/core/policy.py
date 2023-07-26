@@ -8,8 +8,8 @@ from ..plugins.steps.steps_on_startup import StepsOnStartupStep
 from .main import Step, History, Policy
 from .observation import UserInputObservation
 from ..plugins.steps.core.core import MessageStep
-from ..libs.util.step_name_to_steps import get_step_from_name
 from ..plugins.steps.custom_command import CustomCommandStep
+from ..plugins.steps.main import EditHighlightedCodeStep
 
 
 def parse_slash_command(inp: str, config: ContinueConfig) -> Union[None, Step]:
@@ -24,7 +24,11 @@ def parse_slash_command(inp: str, config: ContinueConfig) -> Union[None, Step]:
             if slash_command.name == command_name[1:]:
                 params = slash_command.params
                 params["user_input"] = after_command
-                return get_step_from_name(slash_command.step_name, params)
+                try:
+                    return slash_command.step(**params)
+                except TypeError as e:
+                    raise Exception(
+                        f"Incorrect params used for slash command '{command_name}': {e}")
     return None
 
 
@@ -52,7 +56,6 @@ class DefaultPolicy(Policy):
                     - Use `cmd+m` (Mac) / `ctrl+m` (Windows) to open Continue
                     - Use `/help` to ask questions about how to use Continue""")) >>
                 WelcomeStep() >>
-                # SetupContinueWorkspaceStep() >>
                 # CreateCodebaseIndexChroma() >>
                 StepsOnStartupStep())
 
@@ -68,6 +71,9 @@ class DefaultPolicy(Policy):
             custom_command = parse_custom_command(user_input, config)
             if custom_command is not None:
                 return custom_command
+
+            if user_input.startswith("/edit"):
+                return EditHighlightedCodeStep(user_input=user_input[5:])
 
             return SimpleChatStep()
 

@@ -1,5 +1,3 @@
-import { useSelector } from "react-redux";
-import { RootStore } from "../redux/store";
 import React, { useState, useEffect } from "react";
 import styled from "styled-components";
 import { ArrowLeft, ArrowRight } from "@styled-icons/heroicons-outline";
@@ -14,6 +12,8 @@ const StyledDiv = styled.div`
   height: 100%;
   background-color: #1e1e1e;
   z-index: 200;
+
+  color: white;
 `;
 
 const StyledSpan = styled.span`
@@ -38,7 +38,7 @@ const Onboarding = () => {
   useEffect(() => {
     const hasVisited = localStorage.getItem("hasVisited");
     if (hasVisited) {
-      setCounter(4);
+      setCounter(0);
     } else {
       setCounter(0);
       localStorage.setItem("hasVisited", "true");
@@ -60,13 +60,6 @@ const Onboarding = () => {
           alignItems: "center",
           height: "100%",
           textAlign: "center",
-          background: `linear-gradient(
-            101.79deg,
-            #12887a66 0%,
-            #87245c66 32%,
-            #e1263766 63%,
-            #ffb21566 100%
-          )`,
           paddingLeft: "16px",
           paddingRight: "16px",
         }}
