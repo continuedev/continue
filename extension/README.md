@@ -4,9 +4,9 @@
 
 ## Task, not tab, auto-complete
 
-### Get possible explainations
+### Answer coding questions
 
-Ask Continue about a part of your code to get another perspective
+Highlight sections of code and ask Continue for another perspective
 - “how can I set up a Prisma schema that cascades deletes?”
 - “where in the page should I be making this request to the backend?”
 - “how can I communicate between these iframes?”
@@ -20,12 +20,14 @@ Highlight a section of code and instruct Continue to refactor it
 
 ### Generate files from scratch
 
-Let Continue build the scaffolding of Python scripts, React components, and more
+Open a blank file and let Continue start new Python scripts, React components, etc.
 - “/edit here is a connector for postgres, now write one for kafka”
 - “/edit make an IAM policy that creates a user with read-only access to S3”
 - “/edit use this schema to write me a SQL query that gets recently churned users”
 
-## Install
+## Getting Started
+
+### [Download for VS Code](https://marketplace.visualstudio.com/items?itemName=Continue.continue)
 
 Continue requires that you have Python 3.8 or greater. If you do not, please [install](https://python.org) it
 
@@ -34,17 +36,6 @@ If your Continue server is not setting up, please check the console logs:
 2. Search for and then select "Developer: Toggle Developer Tools"
 3. Select `Console`
 4. Read the console logs
-
-## OpenAI API Key
-
-New users can try out Continue with GPT-4 using a proxy server that securely makes calls to OpenAI using our API key. Continue should just work the first time you install the extension in VS Code.
-
-Once you are using Continue regularly though, you will need to add an OpenAI API key that has access to GPT-4 by following these steps:
-1. Copy your API key from https://platform.openai.com/account/api-keys
-2. Use the `cmd`+`,` (Mac) / `ctrl`+`,` (Windows) to open your VS Code settings 
-3. Type "Continue" in the search bar
-4. Click `Edit in settings.json` under **Continue: OpenAI_API_KEY" section**
-5. Paste your API key as the value for "continue.OPENAI_API_KEY" in `settings.json`
 
 ## License
 
