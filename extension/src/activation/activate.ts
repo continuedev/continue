@@ -17,7 +17,7 @@ export let ideProtocolClient: IdeProtocolClient;
 
 export async function activateExtension(context: vscode.ExtensionContext) {
   extensionContext = context;
-
+  console.log("Using Continue version: ", getExtensionVersion());
   // Before anything else, check whether this is an out-of-date version of the extension
   // Do so by grabbing the package.json off of the GitHub respository for now.
   fetch(PACKAGE_JSON_RAW_GITHUB_URL)
@@ -67,6 +67,7 @@ export async function activateExtension(context: vscode.ExtensionContext) {
       }, 2000);
     });
 
+    console.log("Continue server started");
     // Initialize IDE Protocol Client
     const serverUrl = getContinueServerUrl();
     ideProtocolClient = new IdeProtocolClient(

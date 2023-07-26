@@ -39,6 +39,7 @@ export class WebsocketMessenger extends Messenger {
     //   var WebSocket = require("ws");
     // }
 
+    console.log("Creating websocket at: ", this.serverUrl);
     const newWebsocket = new WebSocket(this.serverUrl);
     for (const listener of this.onOpenListeners) {
       this.onOpen(listener);
@@ -105,12 +106,14 @@ export class WebsocketMessenger extends Messenger {
   send(messageType: string, data: object) {
     const payload = JSON.stringify({ messageType, data });
     if (this.websocket.readyState === this.websocket.OPEN) {
+      console.log("websocket is open, sending message: ", messageType);
       this.websocket.send(payload);
     } else {
-      if (this.websocket.readyState !== this.websocket.CONNECTING) {
-        this.websocket = this._newWebsocket();
-      }
+      console.log("websocket is not open, creating new websocket", messageType);
+      this.websocket = this._newWebsocket();
+
       this.websocket.addEventListener("open", () => {
+        console.log("websocket is open, resending message: ", messageType);
         this.websocket.send(payload);
       });
     }

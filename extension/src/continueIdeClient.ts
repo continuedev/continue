@@ -399,8 +399,9 @@ class IdeProtocolClient {
         }
       }, 1000);
     });
+    console.log("Getting session ID");
     const resp = await this.messenger?.sendAndReceive("getSessionId", {});
-    // console.log("New Continue session with ID: ", sessionId);
+    console.log("New Continue session with ID: ", resp.sessionId);
     this._sessionId = resp.sessionId;
     return resp.sessionId;
   }
