@@ -6,7 +6,7 @@ Continue can be deeply customized by editing the `ContinueConfig` object in `~/.
 
 Change the `default_model` field to any of "gpt-3.5-turbo", "gpt-3.5-turbo-16k", "gpt-4", "claude-2", or "ggml".
 
-## Adding a model API key
+### Adding a model API key
 
 New users can try out Continue with GPT-4 using a proxy server that securely makes calls to OpenAI using our API key. Continue should just work the first time you install the extension in VS Code.
 
