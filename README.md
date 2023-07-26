@@ -13,7 +13,7 @@
     <img src="https://img.shields.io/badge/discord-join-continue.svg?labelColor=191937&color=6F6FF7&logo=discord" />
   </a>
 
-![Editing With Continue](edit.gif)
+![Editing With Continue](readme.gif)
 </div>
 
 ## Task, not tab, auto-complete
