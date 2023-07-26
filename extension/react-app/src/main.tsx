@@ -10,9 +10,10 @@ import { PostHogProvider } from "posthog-js/react";
 
 posthog.init("phc_JS6XFROuNbhJtVCEdTSYk6gl5ArRrTNMpCcguAXlSPs", {
   api_host: "https://app.posthog.com",
+  disable_session_recording: true,
   session_recording: {
     // WARNING: Only enable this if you understand the security implications
-    recordCrossOriginIframes: true,
+    // recordCrossOriginIframes: true,
   } as any,
 });
 
