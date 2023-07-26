@@ -255,8 +255,6 @@
     "@electron/rebuild": "^3.2.10",
     "@nestjs/common": "^8.4.7",
     "@reduxjs/toolkit": "^1.9.3",
-    "@segment/analytics-node": "^0.0.1-beta.16",
-    "@sentry/node": "^7.57.0",
     "@styled-icons/heroicons-outline": "^10.47.0",
     "@styled-icons/heroicons-solid": "^10.47.0",
     "@vitejs/plugin-react-swc": "^3.3.2",
