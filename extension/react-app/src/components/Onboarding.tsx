@@ -38,7 +38,7 @@ const Onboarding = () => {
   useEffect(() => {
     const hasVisited = localStorage.getItem("hasVisited");
     if (hasVisited) {
-      setCounter(0);
+      setCounter(4);
     } else {
       setCounter(0);
       localStorage.setItem("hasVisited", "true");

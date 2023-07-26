@@ -277,9 +277,11 @@ class ContinueSDK(AbstractContinueSDK):
             return ContinueConfig() if self._last_valid_config is None else self._last_valid_config
 
     def get_code_context(self, only_editing: bool = False) -> List[RangeInFileWithContents]:
-        context = list(filter(lambda x: x.editing, self.__autopilot._highlighted_ranges)
-                       ) if only_editing else self.__autopilot._highlighted_ranges
-        return [c.range for c in context]
+        highlighted_ranges = self.__autopilot.context_manager.context_providers[
+            "code"].highlighted_ranges
+        context = list(filter(lambda x: x.item.editing, highlighted_ranges)
+                       ) if only_editing else highlighted_ranges
+        return [c.rif for c in context]
 
     def set_loading_message(self, message: str):
         # self.__autopilot.set_loading_message(message)
