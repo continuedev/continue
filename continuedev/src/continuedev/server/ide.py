@@ -10,6 +10,7 @@ from pydantic import BaseModel
 import traceback
 import asyncio
 
+from .meilisearch_server import start_meilisearch
 from ..libs.util.telemetry import posthog_logger
 from ..libs.util.queue import AsyncSubscriptionQueue
 from ..models.filesystem import FileSystem, RangeInFile, EditDiff, RangeInFileWithContents, RealFileSystem
@@ -434,6 +435,13 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
 @router.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket, session_id: str = None):
     try:
+        # Start meilisearch
+        try:
+            await start_meilisearch()
+        except Exception as e:
+            print("Failed to start MeiliSearch")
+            print(e)
+
         await websocket.accept()
         print("Accepted websocket connection from, ", websocket.client)
         await websocket.send_json({"messageType": "connected", "data": {}})

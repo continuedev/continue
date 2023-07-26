@@ -1,6 +1,5 @@
 import asyncio
 import time
-from meilisearch_python_async import Client
 import psutil
 import os
 from fastapi import FastAPI
@@ -12,7 +11,6 @@ import argparse
 from .ide import router as ide_router
 from .gui import router as gui_router
 from .session_manager import session_manager
-from .meilisearch_server import start_meilisearch
 
 app = FastAPI()
 
@@ -85,12 +83,6 @@ if __name__ == "__main__":
 
         # cpu_thread = threading.Thread(target=cpu_usage_loop)
         # cpu_thread.start()
-
-        # try:
-        #     await start_meilisearch()
-        # except Exception as e:
-        #     print("Failed to start MeiliSearch")
-        #     print(e)
 
         run_server()
     except Exception as e:
