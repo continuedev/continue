@@ -18,7 +18,7 @@
 
 ## Task, not tab, auto-complete
 
-### Get possible explainations
+### Answer coding questions
 
 Highlight sections of code and ask Continue for another perspective
 - “how can I set up a Prisma schema that cascades deletes?”
