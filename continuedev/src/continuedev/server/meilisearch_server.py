@@ -2,7 +2,7 @@ import os
 import shutil
 import subprocess
 
-import meilisearch
+from meilisearch_python_async import Client
 from ..libs.util.paths import getServerFolderPath
 
 
@@ -41,14 +41,14 @@ def ensure_meilisearch_installed():
             f"curl -L https://install.meilisearch.com | sh", shell=True, check=True, cwd=serverPath)
 
 
-def check_meilisearch_running() -> bool:
+async def check_meilisearch_running() -> bool:
     """
     Checks if MeiliSearch is running.
     """
 
     try:
-        client = meilisearch.Client('http://localhost:7700')
-        resp = client.health()
+        client = Client('http://localhost:7700')
+        resp = await client.health()
         if resp["status"] != "available":
             return False
         return True
@@ -56,7 +56,7 @@ def check_meilisearch_running() -> bool:
         return False
 
 
-def start_meilisearch():
+async def start_meilisearch():
     """
     Starts the MeiliSearch server, wait for it.
     """
@@ -71,7 +71,7 @@ def start_meilisearch():
     ensure_meilisearch_installed()
 
     # Check if MeiliSearch is running
-    if not check_meilisearch_running():
+    if not await check_meilisearch_running():
         print("Starting MeiliSearch...")
         subprocess.Popen(["./meilisearch"], cwd=serverPath, stdout=subprocess.DEVNULL,
                          stderr=subprocess.STDOUT, close_fds=True, start_new_session=True)

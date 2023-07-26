@@ -1,7 +1,6 @@
 import asyncio
-import subprocess
 import time
-import meilisearch
+from meilisearch_python_async import Client
 import psutil
 import os
 from fastapi import FastAPI
@@ -87,13 +86,14 @@ if __name__ == "__main__":
         # cpu_thread = threading.Thread(target=cpu_usage_loop)
         # cpu_thread.start()
 
-        try:
-            start_meilisearch()
-        except Exception as e:
-            print("Failed to start MeiliSearch")
-            print(e)
+        # try:
+        #     await start_meilisearch()
+        # except Exception as e:
+        #     print("Failed to start MeiliSearch")
+        #     print(e)
 
         run_server()
     except Exception as e:
+        print("Error starting Continue server: ", e)
         cleanup()
         raise e

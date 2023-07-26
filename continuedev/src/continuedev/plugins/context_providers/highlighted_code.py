@@ -1,7 +1,7 @@
 import os
 from typing import Any, Dict, List
 
-import meilisearch
+from meilisearch_python_async import Client
 from ...core.main import ChatMessage
 from ...models.filesystem import RangeInFile, RangeInFileWithContents
 from ...core.context import ContextItem, ContextItemDescription, ContextItemId
@@ -187,5 +187,5 @@ class HighlightedCodeContextProvider(BaseModel):
         for hr in self.highlighted_ranges:
             hr.item.editing = hr.item.description.id.to_string() in ids
 
-    async def add_context_item(self, id: ContextItemId, query: str, search_client: meilisearch.Client, prev: List[ContextItem] = None) -> List[ContextItem]:
+    async def add_context_item(self, id: ContextItemId, query: str, search_client: Client, prev: List[ContextItem] = None) -> List[ContextItem]:
         raise NotImplementedError()
