@@ -21,7 +21,7 @@ class FileContextProvider(ContextProvider):
 
     title = "file"
     workspace_dir: str
-    ignore_patterns: List[str] = list(map(lambda folder: f"**/{folder}", [
+    ignore_patterns: List[str] = [
         ".git",
         ".vscode",
         ".idea",
@@ -35,7 +35,10 @@ class FileContextProvider(ContextProvider):
         "target",
         "out",
         "bin",
-    ]))
+        ".pytest_cache",
+        ".vscode-test",
+        ".continue",
+    ]
 
     async def provide_context_items(self) -> List[ContextItem]:
         filepaths = []
