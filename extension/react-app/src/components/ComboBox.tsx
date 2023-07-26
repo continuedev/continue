@@ -68,7 +68,7 @@ const Ul = styled.ul<{
   ${(props) =>
     props.showAbove
       ? `transform: translateY(-${props.ulHeightPixels + 8}px);`
-      : `transform: translateY(${2 * mainInputFontSize}px);`}
+      : `transform: translateY(${5 * mainInputFontSize}px);`}
   position: absolute;
   background: ${vscBackground};
   color: ${vscForeground};
@@ -79,15 +79,9 @@ const Ul = styled.ul<{
   padding: 0;
   ${({ hidden }) => hidden && "display: none;"}
   border-radius: ${defaultBorderRadius};
-  outline: 0.5px solid gray;
+  outline: 1px solid ${lightGray};
   z-index: 2;
-  // Get rid of scrollbar and its padding
-  scrollbar-width: none;
   -ms-overflow-style: none;
-  &::-webkit-scrollbar {
-    width: 0px;
-    background: transparent; /* make scrollbar transparent */
-  }
 `;
 
 const Li = styled.li<{
@@ -95,14 +89,15 @@ const Li = styled.li<{
   selected: boolean;
   isLastItem: boolean;
 }>`
-  background-color: ${vscBackground};
-  ${({ highlighted }) => highlighted && "background: #ff000066;"}
+  background-color: ${({ highlighted }) =>
+    highlighted ? lightGray : secondaryDark};
+  ${({ highlighted }) => highlighted && `background: ${vscBackground};`}
   ${({ selected }) => selected && "font-weight: bold;"}
     padding: 0.5rem 0.75rem;
   display: flex;
   flex-direction: column;
   ${({ isLastItem }) => isLastItem && "border-bottom: 1px solid gray;"}
-  border-top: 1px solid gray;
+  /* border-top: 1px solid gray; */
   cursor: pointer;
 `;
 

@@ -14,7 +14,7 @@
   "displayName": "Continue",
   "pricing": "Free",
   "description": "The open-source coding autopilot",
-  "version": "0.0.196",
+  "version": "0.0.197",
   "publisher": "Continue",
   "engines": {
     "vscode": "^1.67.0"
@@ -157,7 +157,7 @@
         {
           "id": "continue",
           "title": "Continue  ",
-          "icon": "react-app/dist/play_button.png"
+          "icon": "react-app/dist/continue-dev-square.png"
         }
       ]
     },
