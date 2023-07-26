@@ -108,7 +108,9 @@ export class WebsocketMessenger extends Messenger {
     if (this.websocket.readyState === this.websocket.OPEN) {
       this.websocket.send(payload);
     } else {
-      this.websocket = this._newWebsocket();
+      if (this.websocket.readyState !== this.websocket.CONNECTING) {
+        this.websocket = this._newWebsocket();
+      }
 
       this.websocket.addEventListener("open", () => {
         this.websocket.send(payload);
