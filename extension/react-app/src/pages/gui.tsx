@@ -64,6 +64,9 @@ function GUI(props: GUIProps) {
   const vscMachineId = useSelector(
     (state: RootStore) => state.config.vscMachineId
   );
+  const vscMediaUrl = useSelector(
+    (state: RootStore) => state.config.vscMediaUrl
+  );
   const [dataSwitchChecked, setDataSwitchChecked] = useState(false);
   const dataSwitchOn = useSelector(
     (state: RootStore) => state.config.dataSwitchOn
@@ -395,37 +398,15 @@ function GUI(props: GUIProps) {
         </b>
       </div>
       <Footer dataSwitchChecked={dataSwitchChecked}>
-        <div
-          style={{
-            display: "flex",
-            gap: "4px",
-            marginRight: "auto",
-            alignItems: "center",
-          }}
-          onMouseEnter={() => {
-            setShowDataSharingInfo(true);
-          }}
-          onMouseLeave={() => {
-            setShowDataSharingInfo(false);
-          }}
-        >
-          <ReactSwitch
-            height={20}
-            handleDiameter={20}
-            width={40}
-            onChange={() => {
-              posthog?.capture("data_switch_toggled", {
-                vscMachineId: vscMachineId,
-                dataSwitchChecked: !dataSwitchChecked,
-              });
-              postVscMessage("toggleDataSwitch", { on: !dataSwitchChecked });
-              setDataSwitchChecked((prev) => !prev);
-            }}
-            onColor="#12887a"
-            checked={dataSwitchChecked}
-          />
-          <span style={{ cursor: "help", fontSize: "14px" }}>Collect Data</span>
-        </div>
+        {vscMediaUrl && (
+          <a
+            href="https://github.com/continuedev/continue"
+            style={{ marginRight: "auto" }}
+          >
+            <img src={`${vscMediaUrl}/continue-dev-square.png`} width="22px" />
+          </a>
+        )}
+        {/* <p style={{ margin: "0", marginRight: "auto" }}>Continue</p> */}
         <HeaderButtonWithText
           onClick={() => {
             // Show the dialog
