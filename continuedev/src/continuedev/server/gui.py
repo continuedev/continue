@@ -179,7 +179,7 @@ async def websocket_endpoint(websocket: WebSocket, session: Session = Depends(we
 
         while AppStatus.should_exit is False:
             message = await websocket.receive_text()
-            print("Received message", message)
+            print("Received GUI message", message)
             if type(message) is str:
                 message = json.loads(message)
 

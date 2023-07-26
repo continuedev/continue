@@ -444,6 +444,7 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str = None):
             message_type = message["messageType"]
             data = message["data"]
 
+            print("Received IDE message: ", message_type)
             create_async_task(
                 ideProtocolServer.handle_json(message_type, data))
 
@@ -475,4 +476,5 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str = None):
 
         posthog_logger.capture_event("session_ended", {
             "session_id": ideProtocolServer.session_id})
-        session_manager.registered_ides.pop(ideProtocolServer.session_id)
+        if ideProtocolServer.session_id in session_manager.registered_ides:
+            session_manager.registered_ides.pop(ideProtocolServer.session_id)
