@@ -136,8 +136,16 @@ class ContextManager:
     @classmethod
     async def create(cls, context_providers: List[ContextProvider]):
         async with Client('http://localhost:7700') as search_client:
-            health = await search_client.health()
-            if not health.status == "available":
+            meilisearch_running = True
+            try:
+
+                health = await search_client.health()
+                if not health.status == "available":
+                    meilisearch_running = False
+            except:
+                meilisearch_running = False
+
+            if not meilisearch_running:
                 print(
                     "MeiliSearch not running, avoiding any dependent context providers")
                 context_providers = list(
