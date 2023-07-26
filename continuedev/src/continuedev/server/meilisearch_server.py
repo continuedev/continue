@@ -3,6 +3,7 @@ import shutil
 import subprocess
 
 from meilisearch_python_async import Client
+
 from ..libs.util.paths import getServerFolderPath
 
 
