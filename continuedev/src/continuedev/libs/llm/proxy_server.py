@@ -3,10 +3,10 @@ import json
 import traceback
 from typing import Any, Callable, Coroutine, Dict, Generator, List, Literal, Union
 import aiohttp
-from ..util.telemetry import capture_event
 from ...core.main import ChatMessage
 from ..llm import LLM
-from ..util.count_tokens import DEFAULT_ARGS, DEFAULT_MAX_TOKENS, compile_chat_messages, CHAT_MODELS, count_tokens, format_chat_messages
+from ..util.telemetry import posthog_logger
+from ..util.count_tokens import DEFAULT_ARGS, compile_chat_messages, count_tokens, format_chat_messages
 import certifi
 import ssl
 
@@ -36,7 +36,7 @@ class ProxyServer(LLM):
 
     def count_tokens(self, text: str):
         return count_tokens(self.default_model, text)
-    
+
     def get_headers(self):
         # headers with unique id
         return {"unique_id": self.unique_id}
@@ -87,7 +87,7 @@ class ProxyServer(LLM):
                                     if "content" in loaded_chunk:
                                         completion += loaded_chunk["content"]
                         except Exception as e:
-                            capture_event(self.unique_id, "proxy_server_parse_error", {
+                            posthog_logger.capture_event(self.unique_id, "proxy_server_parse_error", {
                                 "error_title": "Proxy server stream_chat parsing failed", "error_message": '\n'.join(traceback.format_exception(e))})
                     else:
                         break

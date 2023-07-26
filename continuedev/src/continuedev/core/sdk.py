@@ -1,4 +1,3 @@
-import asyncio
 from functools import cached_property
 from typing import Coroutine, Dict, Union
 import os
@@ -6,7 +5,7 @@ import os
 from ..plugins.steps.core.core import DefaultModelEditCodeStep
 from ..models.main import Range
 from .abstract_sdk import AbstractContinueSDK
-from .config import ContinueConfig, load_config, load_global_config, update_global_config
+from .config import ContinueConfig
 from ..models.filesystem_edit import FileEdit, FileSystemEdit, AddFile, DeleteFile, AddDirectory, DeleteDirectory
 from ..models.filesystem import RangeInFile
 from ..libs.llm.hf_inference_api import HuggingFaceInferenceAPI
@@ -18,6 +17,8 @@ from ..server.ide_protocol import AbstractIdeProtocolServer
 from .main import Context, ContinueCustomException, History, HistoryNode, Step, ChatMessage
 from ..plugins.steps.core.core import *
 from ..libs.llm.proxy_server import ProxyServer
+from ..libs.util.telemetry import posthog_logger
+from ..libs.util.paths import getConfigFilePath
 
 
 class Autopilot:
@@ -144,20 +145,20 @@ class ContinueSDK(AbstractContinueSDK):
     ide: AbstractIdeProtocolServer
     models: Models
     context: Context
+    config: ContinueConfig
     __autopilot: Autopilot
 
     def __init__(self, autopilot: Autopilot):
         self.ide = autopilot.ide
         self.__autopilot = autopilot
         self.context = autopilot.context
-        self.config = self._load_config()
 
     @classmethod
     async def create(cls, autopilot: Autopilot) -> "ContinueSDK":
         sdk = ContinueSDK(autopilot)
 
         try:
-            config = sdk._load_config()
+            config = sdk._load_config_dot_py()
             sdk.config = config
         except Exception as e:
             print(e)
@@ -174,19 +175,6 @@ class ContinueSDK(AbstractContinueSDK):
 
         sdk.models = await Models.create(sdk)
         return sdk
-
-    config: ContinueConfig
-
-    def _load_config(self) -> ContinueConfig:
-        dir = self.ide.workspace_directory
-        yaml_path = os.path.join(dir, '.continue', 'config.yaml')
-        json_path = os.path.join(dir, '.continue', 'config.json')
-        if os.path.exists(yaml_path):
-            return load_config(yaml_path)
-        elif os.path.exists(json_path):
-            return load_config(json_path)
-        else:
-            return load_global_config()
 
     @property
     def history(self) -> History:
@@ -267,15 +255,31 @@ class ContinueSDK(AbstractContinueSDK):
     async def get_user_secret(self, env_var: str, prompt: str) -> str:
         return await self.ide.getUserSecret(env_var)
 
+    _last_valid_config: ContinueConfig = None
+
+    def _load_config_dot_py(self) -> ContinueConfig:
+        # Use importlib to load the config file config.py at the given path
+        path = getConfigFilePath()
+        try:
+            import importlib.util
+            spec = importlib.util.spec_from_file_location("config", path)
+            config = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(config)
+            self._last_valid_config = config.config
+
+            # When the config is loaded, setup posthog logger
+            posthog_logger.setup(
+                self.ide.unique_id, config.config.allow_anonymous_telemetry or True)
+
+            return config.config
+        except Exception as e:
+            print("Error loading config.py: ", e)
+            return ContinueConfig() if self._last_valid_config is None else self._last_valid_config
+
     def get_code_context(self, only_editing: bool = False) -> List[RangeInFileWithContents]:
         context = list(filter(lambda x: x.editing, self.__autopilot._highlighted_ranges)
                        ) if only_editing else self.__autopilot._highlighted_ranges
         return [c.range for c in context]
-
-    def update_default_model(self, model: str):
-        config = self.config
-        config.default_model = model
-        update_global_config(config)
 
     def set_loading_message(self, message: str):
         # self.__autopilot.set_loading_message(message)
@@ -286,28 +290,13 @@ class ContinueSDK(AbstractContinueSDK):
 
     async def get_chat_context(self) -> List[ChatMessage]:
         history_context = self.history.to_chat_history()
-        highlighted_code = [
-            hr.range for hr in self.__autopilot._highlighted_ranges]
 
-        preface = "The following code is highlighted"
+        context_messages: List[ChatMessage] = await self.__autopilot.context_manager.get_chat_messages()
 
-        # If no higlighted ranges, use first file as context
-        if len(highlighted_code) == 0:
-            preface = "The following file is open"
-            visible_files = await self.ide.getVisibleFiles()
-            if len(visible_files) > 0:
-                content = await self.ide.readFile(visible_files[0])
-                highlighted_code = [
-                    RangeInFileWithContents.from_entire_file(visible_files[0], content)]
-
-        for rif in highlighted_code:
-            msg = ChatMessage(content=f"{preface} ({rif.filepath}):\n```\n{rif.contents}\n```",
-                              role="user", summary=f"{preface}: {rif.filepath}")
-
-            # Don't insert after latest user message or function call
-            i = -1
-            if len(history_context) > 0 and (history_context[i].role == "user" or history_context[i].role == "function"):
-                i -= 1
+        # Insert at the end, but don't insert after latest user message or function call
+        i = -2 if (len(history_context) > 0 and (
+            history_context[-1].role == "user" or history_context[-1].role == "function")) else -1
+        for msg in context_messages:
             history_context.insert(i, msg)
 
         return history_context

@@ -1,3 +1,4 @@
+import { ContextItemId } from "../../../schema/FullState";
 import AbstractContinueGUIClientProtocol from "./AbstractContinueGUIClientProtocol";
 import { Messenger, WebsocketMessenger } from "./messenger";
 import { VscodeMessenger } from "./vscodeMessenger";
@@ -52,10 +53,6 @@ class ContinueGUIClientProtocol extends AbstractContinueGUIClientProtocol {
     });
   }
 
-  changeDefaultModel(model: string) {
-    this.messenger.send("change_default_model", { model });
-  }
-
   sendClear() {
     this.messenger.send("clear_history", {});
   }
@@ -68,16 +65,14 @@ class ContinueGUIClientProtocol extends AbstractContinueGUIClientProtocol {
     this.messenger.send("delete_at_index", { index });
   }
 
-  deleteContextAtIndices(indices: number[]) {
-    this.messenger.send("delete_context_at_indices", { indices });
+  deleteContextWithIds(ids: ContextItemId[]) {
+    this.messenger.send("delete_context_with_ids", {
+      ids: ids.map((id) => `${id.provider_title}-${id.item_id}`),
+    });
   }
 
   setEditingAtIndices(indices: number[]) {
     this.messenger.send("set_editing_at_indices", { indices });
-  }
-
-  setPinnedAtIndices(indices: number[]) {
-    this.messenger.send("set_pinned_at_indices", { indices });
   }
 
   toggleAddingHighlightedCode(): void {
@@ -86,6 +81,10 @@ class ContinueGUIClientProtocol extends AbstractContinueGUIClientProtocol {
 
   showLogsAtIndex(index: number): void {
     this.messenger.send("show_logs_at_index", { index });
+  }
+
+  selectContextItem(id: string, query: string): void {
+    this.messenger.send("select_context_item", { id, query });
   }
 }
 

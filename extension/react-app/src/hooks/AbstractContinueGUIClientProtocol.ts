@@ -1,3 +1,5 @@
+import { ContextItemId } from "../../../schema/FullState";
+
 abstract class AbstractContinueGUIClientProtocol {
   abstract sendMainInput(input: string): void;
 
@@ -13,23 +15,21 @@ abstract class AbstractContinueGUIClientProtocol {
     callback: (commands: { name: string; description: string }[]) => void
   ): void;
 
-  abstract changeDefaultModel(model: string): void;
-
   abstract sendClear(): void;
 
   abstract retryAtIndex(index: number): void;
 
   abstract deleteAtIndex(index: number): void;
 
-  abstract deleteContextAtIndices(indices: number[]): void;
+  abstract deleteContextWithIds(ids: ContextItemId[]): void;
 
   abstract setEditingAtIndices(indices: number[]): void;
-
-  abstract setPinnedAtIndices(indices: number[]): void;
 
   abstract toggleAddingHighlightedCode(): void;
 
   abstract showLogsAtIndex(index: number): void;
+
+  abstract selectContextItem(id: string, query: string): void;
 }
 
 export default AbstractContinueGUIClientProtocol;

@@ -6,7 +6,7 @@ import { isMetaEquivalentKeyPressed } from "../util";
 import { ReactMarkdown } from "react-markdown/lib/react-markdown";
 
 const ScreenCover = styled.div`
-  position: absolute;
+  position: fixed;
   width: 100%;
   height: 100%;
   background-color: rgba(168, 168, 168, 0.5);

@@ -1,23 +1,25 @@
 # This is a separate server from server/main.py
-from functools import cached_property
 import json
 import os
-from typing import Any, Dict, List, Type, TypeVar, Union
+from typing import Any, List, Type, TypeVar, Union
 import uuid
-from fastapi import WebSocket, Body, APIRouter
+from fastapi import WebSocket, APIRouter
 from starlette.websockets import WebSocketState, WebSocketDisconnect
 from uvicorn.main import Server
+from pydantic import BaseModel
 import traceback
+import asyncio
 
-from ..libs.util.telemetry import capture_event
+from .meilisearch_server import start_meilisearch
+from ..libs.util.telemetry import posthog_logger
 from ..libs.util.queue import AsyncSubscriptionQueue
 from ..models.filesystem import FileSystem, RangeInFile, EditDiff, RangeInFileWithContents, RealFileSystem
 from ..models.filesystem_edit import AddDirectory, AddFile, DeleteDirectory, DeleteFile, FileSystemEdit, FileEdit, FileEditWithFullContents, RenameDirectory, RenameFile, SequentialFileSystemEdit
-from pydantic import BaseModel
-from .gui import SessionManager, session_manager
+from .gui import session_manager
 from .ide_protocol import AbstractIdeProtocolServer
-import asyncio
 from ..libs.util.create_async_task import create_async_task
+from .session_manager import SessionManager
+
 import nest_asyncio
 nest_asyncio.apply()
 
@@ -138,6 +140,7 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
                 continue
             message_type = message["messageType"]
             data = message["data"]
+            print("Received message while initializing", message_type)
             if message_type == "workspaceDirectory":
                 self.workspace_directory = data["workspaceDirectory"]
             elif message_type == "uniqueId":
@@ -152,17 +155,18 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
     async def _send_json(self, message_type: str, data: Any):
         if self.websocket.application_state == WebSocketState.DISCONNECTED:
             return
+        print("Sending IDE message: ", message_type)
         await self.websocket.send_json({
             "messageType": message_type,
             "data": data
         })
 
-    async def _receive_json(self, message_type: str, timeout: int = 5) -> Any:
+    async def _receive_json(self, message_type: str, timeout: int = 20) -> Any:
         try:
             return await asyncio.wait_for(self.sub_queue.get(message_type), timeout=timeout)
         except asyncio.TimeoutError:
             raise Exception(
-                "IDE Protocol _receive_json timed out after 5 seconds")
+                "IDE Protocol _receive_json timed out after 20 seconds", message_type)
 
     async def _send_and_receive_json(self, data: Any, resp_model: Type[T], message_type: str) -> T:
         await self._send_json(message_type, data)
@@ -273,12 +277,12 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
     # like file changes, tracebacks, etc...
 
     def onAcceptRejectSuggestion(self, accepted: bool):
-        capture_event(self.unique_id, "accept_reject_suggestion", {
+        posthog_logger.capture_event("accept_reject_suggestion", {
             "accepted": accepted
         })
 
     def onAcceptRejectDiff(self, accepted: bool):
-        capture_event(self.unique_id, "accept_reject_diff", {
+        posthog_logger.capture_event("accept_reject_diff", {
             "accepted": accepted
         })
 
@@ -431,6 +435,13 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
 @router.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket, session_id: str = None):
     try:
+        # Start meilisearch
+        try:
+            await start_meilisearch()
+        except Exception as e:
+            print("Failed to start MeiliSearch")
+            print(e)
+
         await websocket.accept()
         print("Accepted websocket connection from, ", websocket.client)
         await websocket.send_json({"messageType": "connected", "data": {}})
@@ -443,6 +454,7 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str = None):
             message_type = message["messageType"]
             data = message["data"]
 
+            print("Received IDE message: ", message_type)
             create_async_task(
                 ideProtocolServer.handle_json(message_type, data))
 
@@ -450,8 +462,8 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str = None):
         if session_id is not None:
             session_manager.registered_ides[session_id] = ideProtocolServer
         other_msgs = await ideProtocolServer.initialize(session_id)
-        capture_event(ideProtocolServer.unique_id, "session_started", {
-                      "session_id": ideProtocolServer.session_id})
+        posthog_logger.capture_event("session_started", {
+            "session_id": ideProtocolServer.session_id})
 
         for other_msg in other_msgs:
             handle_msg(other_msg)
@@ -465,13 +477,14 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str = None):
         print("IDE wbsocket disconnected")
     except Exception as e:
         print("Error in ide websocket: ", e)
-        capture_event(ideProtocolServer.unique_id, "gui_error", {
-                      "error_title": e.__str__() or e.__repr__(), "error_message": '\n'.join(traceback.format_exception(e))})
+        posthog_logger.capture_event("gui_error", {
+            "error_title": e.__str__() or e.__repr__(), "error_message": '\n'.join(traceback.format_exception(e))})
         raise e
     finally:
         if websocket.client_state != WebSocketState.DISCONNECTED:
             await websocket.close()
 
-        capture_event(ideProtocolServer.unique_id, "session_ended", {
-                      "session_id": ideProtocolServer.session_id})
-        session_manager.registered_ides.pop(ideProtocolServer.session_id)
+        posthog_logger.capture_event("session_ended", {
+            "session_id": ideProtocolServer.session_id})
+        if ideProtocolServer.session_id in session_manager.registered_ides:
+            session_manager.registered_ides.pop(ideProtocolServer.session_id)

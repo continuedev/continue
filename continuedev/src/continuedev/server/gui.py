@@ -2,15 +2,15 @@ import asyncio
 import json
 from fastapi import Depends, Header, WebSocket, APIRouter
 from starlette.websockets import WebSocketState, WebSocketDisconnect
-from typing import Any, List, Type, TypeVar, Union
+from typing import Any, List, Type, TypeVar
 from pydantic import BaseModel
 import traceback
 from uvicorn.main import Server
 
-from .session_manager import SessionManager, session_manager, Session
+from .session_manager import session_manager, Session
 from .gui_protocol import AbstractGUIProtocolServer
 from ..libs.util.queue import AsyncSubscriptionQueue
-from ..libs.util.telemetry import capture_event
+from ..libs.util.telemetry import posthog_logger
 from ..libs.util.create_async_task import create_async_task
 
 router = APIRouter(prefix="/gui", tags=["gui"])
@@ -61,12 +61,12 @@ class GUIProtocolServer(AbstractGUIProtocolServer):
             "data": data
         })
 
-    async def _receive_json(self, message_type: str, timeout: int = 5) -> Any:
+    async def _receive_json(self, message_type: str, timeout: int = 20) -> Any:
         try:
             return await asyncio.wait_for(self.sub_queue.get(message_type), timeout=timeout)
         except asyncio.TimeoutError:
             raise Exception(
-                "GUI Protocol _receive_json timed out after 5 seconds")
+                "GUI Protocol _receive_json timed out after 20 seconds")
 
     async def _send_and_receive_json(self, data: Any, resp_model: Type[T], message_type: str) -> T:
         await self._send_json(message_type, data)
@@ -85,30 +85,22 @@ class GUIProtocolServer(AbstractGUIProtocolServer):
                 self.on_reverse_to_index(data["index"])
             elif message_type == "retry_at_index":
                 self.on_retry_at_index(data["index"])
-            elif message_type == "change_default_model":
-                self.on_change_default_model(data["model"])
             elif message_type == "clear_history":
                 self.on_clear_history()
             elif message_type == "delete_at_index":
                 self.on_delete_at_index(data["index"])
-            elif message_type == "delete_context_at_indices":
-                self.on_delete_context_at_indices(data["indices"])
+            elif message_type == "delete_context_with_ids":
+                self.on_delete_context_with_ids(data["ids"])
             elif message_type == "toggle_adding_highlighted_code":
                 self.on_toggle_adding_highlighted_code()
             elif message_type == "set_editing_at_indices":
                 self.on_set_editing_at_indices(data["indices"])
-            elif message_type == "set_pinned_at_indices":
-                self.on_set_pinned_at_indices(data["indices"])
             elif message_type == "show_logs_at_index":
                 self.on_show_logs_at_index(data["index"])
+            elif message_type == "select_context_item":
+                self.select_context_item(data["id"], data["query"])
         except Exception as e:
             print(e)
-
-    async def send_state_update(self):
-        state = self.session.autopilot.get_full_state().dict()
-        await self._send_json("state_update", {
-            "state": state
-        })
 
     def on_main_input(self, input: str):
         # Do something with user input
@@ -132,10 +124,6 @@ class GUIProtocolServer(AbstractGUIProtocolServer):
         create_async_task(
             self.session.autopilot.retry_at_index(index), self.session.autopilot.continue_sdk.ide.unique_id)
 
-    def on_change_default_model(self, model: str):
-        create_async_task(self.session.autopilot.change_default_model(
-            model), self.session.autopilot.continue_sdk.ide.unique_id)
-
     def on_clear_history(self):
         create_async_task(self.session.autopilot.clear_history(
         ), self.session.autopilot.continue_sdk.ide.unique_id)
@@ -144,10 +132,10 @@ class GUIProtocolServer(AbstractGUIProtocolServer):
         create_async_task(self.session.autopilot.delete_at_index(
             index), self.session.autopilot.continue_sdk.ide.unique_id)
 
-    def on_delete_context_at_indices(self, indices: List[int]):
+    def on_delete_context_with_ids(self, ids: List[str]):
         create_async_task(
-            self.session.autopilot.delete_context_at_indices(
-                indices), self.session.autopilot.continue_sdk.ide.unique_id
+            self.session.autopilot.delete_context_with_ids(
+                ids), self.session.autopilot.continue_sdk.ide.unique_id
         )
 
     def on_toggle_adding_highlighted_code(self):
@@ -162,18 +150,17 @@ class GUIProtocolServer(AbstractGUIProtocolServer):
                 indices), self.session.autopilot.continue_sdk.ide.unique_id
         )
 
-    def on_set_pinned_at_indices(self, indices: List[int]):
-        create_async_task(
-            self.session.autopilot.set_pinned_at_indices(
-                indices), self.session.autopilot.continue_sdk.ide.unique_id
-        )
-
     def on_show_logs_at_index(self, index: int):
         name = f"continue_logs.txt"
         logs = "\n\n############################################\n\n".join(
             ["This is a log of the exact prompt/completion pairs sent/received from the LLM during this step"] + self.session.autopilot.continue_sdk.history.timeline[index].logs)
         create_async_task(
-            self.session.autopilot.ide.showVirtualFile(name, logs))
+            self.session.autopilot.ide.showVirtualFile(name, logs), self.session.autopilot.continue_sdk.ide.unique_id)
+
+    def select_context_item(self, id: str, query: str):
+        """Called when user selects an item from the dropdown"""
+        create_async_task(
+            self.session.autopilot.select_context_item(id, query), self.session.autopilot.continue_sdk.ide.unique_id)
 
 
 @router.websocket("/ws")
@@ -188,11 +175,11 @@ async def websocket_endpoint(websocket: WebSocket, session: Session = Depends(we
         protocol.websocket = websocket
 
         # Update any history that may have happened before connection
-        await protocol.send_state_update()
+        await protocol.session.autopilot.update_subscribers()
 
         while AppStatus.should_exit is False:
             message = await websocket.receive_text()
-            print("Received message", message)
+            print("Received GUI message", message)
             if type(message) is str:
                 message = json.loads(message)
 
@@ -206,13 +193,13 @@ async def websocket_endpoint(websocket: WebSocket, session: Session = Depends(we
         print("GUI websocket disconnected")
     except Exception as e:
         print("ERROR in gui websocket: ", e)
-        capture_event(session.autopilot.continue_sdk.ide.unique_id, "gui_error", {
-                      "error_title": e.__str__() or e.__repr__(), "error_message": '\n'.join(traceback.format_exception(e))})
+        posthog_logger.capture_event("gui_error", {
+            "error_title": e.__str__() or e.__repr__(), "error_message": '\n'.join(traceback.format_exception(e))})
         raise e
     finally:
         print("Closing gui websocket")
         if websocket.client_state != WebSocketState.DISCONNECTED:
             await websocket.close()
 
-        session_manager.persist_session(session.session_id)
+        await session_manager.persist_session(session.session_id)
         session_manager.remove_session(session.session_id)

@@ -1,6 +1,8 @@
 from typing import Any, Dict, List
 from abc import ABC, abstractmethod
 
+from ..core.context import ContextItem
+
 
 class AbstractGUIProtocolServer(ABC):
     @abstractmethod
@@ -24,16 +26,8 @@ class AbstractGUIProtocolServer(ABC):
         """Called when the user inputs a step"""
 
     @abstractmethod
-    async def send_state_update(self, state: dict):
-        """Send a state update to the client"""
-
-    @abstractmethod
     def on_retry_at_index(self, index: int):
         """Called when the user requests a retry at a previous index"""
-
-    @abstractmethod
-    def on_change_default_model(self):
-        """Called when the user requests to change the default model"""
 
     @abstractmethod
     def on_clear_history(self):
@@ -42,3 +36,7 @@ class AbstractGUIProtocolServer(ABC):
     @abstractmethod
     def on_delete_at_index(self, index: int):
         """Called when the user requests to delete a step at a given index"""
+
+    @abstractmethod
+    def select_context_item(self, id: str, query: str):
+        """Called when user selects an item from the dropdown"""

@@ -8,13 +8,11 @@ import "./index.css";
 import posthog from "posthog-js";
 import { PostHogProvider } from "posthog-js/react";
 
+console.log("Starting React");
+
 posthog.init("phc_JS6XFROuNbhJtVCEdTSYk6gl5ArRrTNMpCcguAXlSPs", {
   api_host: "https://app.posthog.com",
   disable_session_recording: true,
-  session_recording: {
-    // WARNING: Only enable this if you understand the security implications
-    // recordCrossOriginIframes: true,
-  } as any,
 });
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(

@@ -1,14 +1,16 @@
+import asyncio
 import time
 import psutil
 import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from .ide import router as ide_router
-from .gui import router as gui_router
-from .session_manager import session_manager
 import atexit
 import uvicorn
 import argparse
+
+from .ide import router as ide_router
+from .gui import router as gui_router
+from .session_manager import session_manager
 
 app = FastAPI()
 
@@ -41,15 +43,20 @@ args = parser.parse_args()
 # log_file = open('output.log', 'a')
 # sys.stdout = log_file
 
-
 def run_server():
     uvicorn.run(app, host="0.0.0.0", port=args.port)
 
 
-def cleanup():
+async def cleanup_coroutine():
     print("Cleaning up sessions")
     for session_id in session_manager.sessions:
-        session_manager.persist_session(session_id)
+        await session_manager.persist_session(session_id)
+
+
+def cleanup():
+    loop = asyncio.new_event_loop()
+    loop.run_until_complete(cleanup_coroutine())
+    loop.close()
 
 
 def cpu_usage_report():
@@ -79,5 +86,6 @@ if __name__ == "__main__":
 
         run_server()
     except Exception as e:
+        print("Error starting Continue server: ", e)
         cleanup()
         raise e
