@@ -249,6 +249,16 @@ export function setupDebugPanel(
             });
           }
         );
+        vscode.window
+          .showInformationMessage(
+            "Click here to view the server logs, or use the 'continue.viewLogs' VS Code command.",
+            "View Logs"
+          )
+          .then((selection) => {
+            if (selection === "View Logs") {
+              vscode.commands.executeCommand("continue.viewLogs");
+            }
+          });
         break;
       }
     }
