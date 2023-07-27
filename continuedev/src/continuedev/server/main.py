@@ -43,14 +43,15 @@ parser.add_argument("-p", "--port", help="server port",
                     type=int, default=65432)
 args = parser.parse_args()
 
-LOGGING_CONFIG = {
+log_path = getLogFilePath()
+LOG_CONFIG = {
     'version': 1,
     'disable_existing_loggers': False,
     'handlers': {
         'file': {
             'level': 'DEBUG',
             'class': 'logging.FileHandler',
-            'filename': 'uvicorn.log',
+            'filename': log_path,
         },
     },
     'root': {
@@ -58,13 +59,12 @@ LOGGING_CONFIG = {
         'handlers': ['file']
     }
 }
-
-logging.config.dictConfig(LOGGING_CONFIG)
-sys.stdout = open(getLogFilePath(), 'w')
+print(f"Log path: {log_path}")
 
 
 def run_server():
-    config = uvicorn.Config(app, host="0.0.0.0", port=args.port)
+    config = uvicorn.Config(app, host="0.0.0.0",
+                            port=args.port, log_config=LOG_CONFIG)
     server = uvicorn.Server(config)
 
     server.run()
