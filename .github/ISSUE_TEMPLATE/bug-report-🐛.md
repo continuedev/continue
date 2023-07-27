@@ -26,7 +26,7 @@ If applicable, add screenshots to help explain your problem.
 **Environment**
 - Operating System: [e.g. MacOS]
 - Python Version: [e.g. 3.10.6]
-- Continue Version: [e.g. ]
+- Continue Version: [e.g. v0.0.207]
 
 **Console logs**
 ```
