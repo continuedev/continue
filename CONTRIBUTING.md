@@ -64,7 +64,7 @@ If editing the VS Code extension (`/extension` directory) or GUI (`/extension/re
 
 ### Writing Steps
 
-A Step can be used as a custom slash command, or called otherwise in a `Policy`. See the [steps README](./continuedev/src/continuedev/steps/README.md) to learn how to write a Step.
+A Step can be used as a custom slash command, or called otherwise in a `Policy`. See the [steps README](./continuedev/src/continuedev/plugins/steps/README.md) to learn how to write a Step.
 
 ### Writing Context Providers
 
