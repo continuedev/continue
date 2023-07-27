@@ -31,6 +31,8 @@ class HighlightedCodeContextProvider(BaseModel):
     last_added_fallback: bool = False
 
     async def _get_fallback_context_item(self) -> HighlightedRangeContextItem:
+        return None
+
         if not self.should_get_fallback_context_item:
             return None
 
