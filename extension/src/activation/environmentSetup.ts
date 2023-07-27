@@ -53,7 +53,16 @@ async function retryThenFail(
       }
     } finally {
       console.log("After retries, failed to set up Continue extension", msg);
-      vscode.window.showErrorMessage(msg);
+      vscode.window
+        .showErrorMessage(msg, "View Logs", "Retry")
+        .then((selection) => {
+          if (selection === "View Logs") {
+            vscode.commands.executeCommand("continue.viewLogs");
+          } else if (selection === "Retry") {
+            // Reload VS Code window
+            vscode.commands.executeCommand("workbench.action.reloadWindow");
+          }
+        });
     }
 
     throw e;

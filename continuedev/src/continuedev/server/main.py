@@ -1,4 +1,5 @@
 import asyncio
+import sys
 import time
 import psutil
 import os
@@ -7,10 +8,13 @@ from fastapi.middleware.cors import CORSMiddleware
 import atexit
 import uvicorn
 import argparse
+import logging.config
+
 
 from .ide import router as ide_router
 from .gui import router as gui_router
 from .session_manager import session_manager
+from ..libs.util.paths import getLogFilePath
 
 app = FastAPI()
 
@@ -39,12 +43,31 @@ parser.add_argument("-p", "--port", help="server port",
                     type=int, default=65432)
 args = parser.parse_args()
 
+LOGGING_CONFIG = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'file': {
+            'level': 'DEBUG',
+            'class': 'logging.FileHandler',
+            'filename': 'uvicorn.log',
+        },
+    },
+    'root': {
+        'level': 'DEBUG',
+        'handlers': ['file']
+    }
+}
 
-# log_file = open('output.log', 'a')
-# sys.stdout = log_file
+logging.config.dictConfig(LOGGING_CONFIG)
+sys.stdout = open(getLogFilePath(), 'w')
+
 
 def run_server():
-    uvicorn.run(app, host="0.0.0.0", port=args.port)
+    config = uvicorn.Config(app, host="0.0.0.0", port=args.port)
+    server = uvicorn.Server(config)
+
+    server.run()
 
 
 async def cleanup_coroutine():

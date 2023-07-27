@@ -72,9 +72,16 @@ class IdeProtocolClient {
     });
     messenger.onMessage((messageType, data, messenger) => {
       this.handleMessage(messageType, data, messenger).catch((err) => {
-        vscode.window.showErrorMessage(
-          "Error handling message from Continue server: " + err.message
-        );
+        vscode.window
+          .showErrorMessage(
+            "Error handling message from Continue server: " + err.message,
+            "View Logs"
+          )
+          .then((selection) => {
+            if (selection === "View Logs") {
+              vscode.commands.executeCommand("continue.viewLogs");
+            }
+          });
       });
     });
   }

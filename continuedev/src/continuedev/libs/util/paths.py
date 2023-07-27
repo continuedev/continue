@@ -44,3 +44,8 @@ def getConfigFilePath() -> str:
             f.write(getDefaultConfigFile())
 
     return path
+
+
+def getLogFilePath():
+    path = os.path.join(getGlobalFolderPath(), "continue.log")
+    return path

@@ -1,9 +1,6 @@
 import * as vscode from "vscode";
-import {
-  decorationManager,
-  showAnswerInTextEditor,
-  showGutterSpinner,
-} from "./decorations";
+import * as path from "path";
+import * as os from "os";
 import {
   acceptSuggestionCommand,
   rejectSuggestionCommand,
@@ -64,6 +61,12 @@ const commandsMap: { [command: string]: (...args: any) => any } = {
     if (text) {
       ideProtocolClient.sendMainUserInput(text);
     }
+  },
+  "continue.viewLogs": async () => {
+    // Open ~/.continue/continue.log
+    const logFile = path.join(os.homedir(), ".continue", "continue.log");
+    const uri = vscode.Uri.file(logFile);
+    await vscode.window.showTextDocument(uri);
   },
 };
 

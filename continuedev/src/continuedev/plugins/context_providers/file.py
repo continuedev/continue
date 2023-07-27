@@ -13,14 +13,13 @@ def get_file_contents(filepath: str) -> str:
     try:
         filesize = os.path.getsize(filepath)
         if filesize > MAX_SIZE_IN_BYTES:
-            print("File is over 1MB size limit: ", filepath, filesize)
-            return ""
+            return None
 
         with open(filepath, "r") as f:
             return f.read()
     except Exception as e:
-        print("Error reading file contents", filepath, e)
-        return ""
+        # Some files cannot be read, e.g. binary files
+        return None
 
 
 DEFAULT_IGNORE_DIRS = [
@@ -68,15 +67,21 @@ class FileContextProvider(ContextProvider):
             if len(filepaths) > 1000:
                 break
 
-        return [ContextItem(
-            content=get_file_contents(file)[:min(
-                2000, len(get_file_contents(file)))],
-            description=ContextItemDescription(
-                name=os.path.basename(file),
-                description=file,
-                id=ContextItemId(
-                    provider_title=self.title,
-                    item_id=re.sub(r'[^0-9a-zA-Z_-]', '', file)
+        items = []
+        for file in filepaths:
+            content = get_file_contents(file)
+            if content is None:
+                continue  # no pun intended
+
+            items.append(ContextItem(
+                content=content[:min(2000, len(content))],
+                description=ContextItemDescription(
+                    name=os.path.basename(file),
+                    description=file,
+                    id=ContextItemId(
+                        provider_title=self.title,
+                        item_id=re.sub(r'[^0-9a-zA-Z_-]', '', file)
+                    )
                 )
-            )
-        ) for file in filepaths]
+            ))
+        return items
