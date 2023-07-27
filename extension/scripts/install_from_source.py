@@ -6,7 +6,28 @@ def run(cmd: str):
     return subprocess.run(cmd, shell=True, capture_output=False)
 
 
+def get_latest_version() -> str:
+    latest = None
+    latest_major = 0
+    latest_minor = 0
+    latest_patch = 0
+    for file in os.listdir("../build"):
+        if file.endswith(".vsix"):
+            version = file.split("-")[1].split(".vsix")[0]
+            major, minor, patch = list(
+                map(lambda x: int(x), version.split(".")))
+            if latest is None or (major >= latest_major and minor >= latest_minor and patch > latest_patch):
+                latest = file
+                latest_major = major
+                latest_minor = minor
+                latest_patch = patch
+
+
 def main():
+    # Clear out old stuff
+    run(f"rm -rf ../build/{get_latest_version()}")
+    run("rm ../server/continuedev-0.1.2-py3-none-any.whl")
+
     # Check for Python and Node - we won't install them, but will warn
     resp1 = run("python --version")
     resp2 = run("python3 --version")
@@ -39,21 +60,7 @@ def main():
         print("This was the error: ", resp.stderr)
         return
 
-    latest = None
-    latest_major = 0
-    latest_minor = 0
-    latest_patch = 0
-    for file in os.listdir("../build"):
-        if file.endswith(".vsix"):
-            version = file.split("-")[1].split(".vsix")[0]
-            major, minor, patch = list(
-                map(lambda x: int(x), version.split(".")))
-            if latest is None or (major >= latest_major and minor >= latest_minor and patch > latest_patch):
-                latest = file
-                latest_major = major
-                latest_minor = minor
-                latest_patch = patch
-
+    latest = get_latest_version()
     resp = run(f"cd ..; code --install-extension ./build/{latest}")
 
     print("Continue VS Code extension installed successfully. Please restart VS Code to use it.")

@@ -313,6 +313,9 @@ function GUI(props: GUIProps) {
           <>
             <Loader />
             <p style={{ textAlign: "center" }}>Loading Continue server...</p>
+            {/* <p style={{ textAlign: "center" }}>
+              Make sure you have a folder opened in VS Code
+            </p> */}
           </>
         )}
         {history?.timeline.map((node: HistoryNode, index: number) => {

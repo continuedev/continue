@@ -15,7 +15,10 @@
           "type": "string"
         }
       },
-      "required": ["name", "arguments"]
+      "required": [
+        "name",
+        "arguments"
+      ]
     },
     "ChatMessage": {
       "title": "ChatMessage",
@@ -23,7 +26,12 @@
       "properties": {
         "role": {
           "title": "Role",
-          "enum": ["assistant", "user", "system", "function"],
+          "enum": [
+            "assistant",
+            "user",
+            "system",
+            "function"
+          ],
           "type": "string"
         },
         "content": {
@@ -42,7 +50,10 @@
           "$ref": "#/definitions/FunctionCall"
         }
       },
-      "required": ["role", "summary"]
+      "required": [
+        "role",
+        "summary"
+      ]
     },
     "Step": {
       "title": "Step",
@@ -119,7 +130,10 @@
           }
         }
       },
-      "required": ["step", "depth"]
+      "required": [
+        "step",
+        "depth"
+      ]
     },
     "History": {
       "title": "History",
@@ -138,7 +152,10 @@
           "type": "integer"
         }
       },
-      "required": ["timeline", "current_index"]
+      "required": [
+        "timeline",
+        "current_index"
+      ]
     },
     "SlashCommandDescription": {
       "title": "SlashCommandDescription",
@@ -153,7 +170,10 @@
           "type": "string"
         }
       },
-      "required": ["name", "description"]
+      "required": [
+        "name",
+        "description"
+      ]
     },
     "ContextItemId": {
       "title": "ContextItemId",
@@ -169,7 +189,10 @@
           "type": "string"
         }
       },
-      "required": ["provider_title", "item_id"]
+      "required": [
+        "provider_title",
+        "item_id"
+      ]
     },
     "ContextItemDescription": {
       "title": "ContextItemDescription",
@@ -188,7 +211,11 @@
           "$ref": "#/definitions/ContextItemId"
         }
       },
-      "required": ["name", "description", "id"]
+      "required": [
+        "name",
+        "description",
+        "id"
+      ]
     },
     "ContextItem": {
       "title": "ContextItem",
@@ -213,7 +240,10 @@
           "type": "boolean"
         }
       },
-      "required": ["description", "content"]
+      "required": [
+        "description",
+        "content"
+      ]
     },
     "src__continuedev__core__main__FullState": {
       "title": "FullState",

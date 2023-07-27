@@ -19,6 +19,7 @@ import path = require("path");
 import { registerAllCodeLensProviders } from "./lang-server/codeLens";
 import { registerAllCommands } from "./commands";
 import registerQuickFixProvider from "./lang-server/codeActions";
+const os = require("os");
 
 const continueVirtualDocumentScheme = "continue";
 
@@ -70,7 +71,11 @@ class IdeProtocolClient {
       reconnect();
     });
     messenger.onMessage((messageType, data, messenger) => {
-      this.handleMessage(messageType, data, messenger);
+      this.handleMessage(messageType, data, messenger).catch((err) => {
+        vscode.window.showErrorMessage(
+          "Error handling message from Continue server: " + err.message
+        );
+      });
     });
   }
 
@@ -267,7 +272,7 @@ class IdeProtocolClient {
   getWorkspaceDirectory() {
     if (!vscode.workspace.workspaceFolders) {
       // Return the home directory
-      return process.env.HOME || process.env.USERPROFILE || "/";
+      return os.homedir();
     }
     return vscode.workspace.workspaceFolders[0].uri.fsPath;
   }

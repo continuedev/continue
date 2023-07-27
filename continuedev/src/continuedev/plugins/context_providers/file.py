@@ -10,7 +10,8 @@ def get_file_contents(filepath: str) -> str:
     try:
         with open(filepath, "r") as f:
             return f.read()
-    except UnicodeDecodeError:
+    except Exception as e:
+        print("Error reading file contents", e)
         return ""
 
 
@@ -52,6 +53,12 @@ class FileContextProvider(ContextProvider):
                 fnmatch(d, pattern) for pattern in self.ignore_patterns)]
             for file_name in file_names:
                 filepaths.append(os.path.join(root, file_name))
+
+                if len(filepaths) > 1000:
+                    break
+
+            if len(filepaths) > 1000:
+                break
 
         return [ContextItem(
             content=get_file_contents(file)[:min(
