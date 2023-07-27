@@ -83,5 +83,5 @@ async def start_meilisearch():
     # Check if MeiliSearch is running
     if not await check_meilisearch_running() or not was_already_installed:
         print("Starting MeiliSearch...")
-        subprocess.Popen(["./meilisearch"], cwd=serverPath, stdout=subprocess.DEVNULL,
+        subprocess.Popen(["./meilisearch", "--no-analytics"], cwd=serverPath, stdout=subprocess.DEVNULL,
                          stderr=subprocess.STDOUT, close_fds=True, start_new_session=True)
