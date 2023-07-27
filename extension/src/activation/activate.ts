@@ -15,6 +15,10 @@ export let extensionContext: vscode.ExtensionContext | undefined = undefined;
 
 export let ideProtocolClient: IdeProtocolClient;
 
+function getExtensionVersionInt(versionString: string): number {
+  return parseInt(versionString.replace(/\./g, ""));
+}
+
 export async function activateExtension(context: vscode.ExtensionContext) {
   extensionContext = context;
   console.log("Using Continue version: ", getExtensionVersion());
@@ -23,7 +27,10 @@ export async function activateExtension(context: vscode.ExtensionContext) {
   fetch(PACKAGE_JSON_RAW_GITHUB_URL)
     .then(async (res) => res.json())
     .then((packageJson) => {
-      if (packageJson.version !== getExtensionVersion()) {
+      const n1 = getExtensionVersionInt(packageJson.version);
+      const n2 = getExtensionVersionInt(getExtensionVersion());
+      if (Math.abs(n1 - n2) > 1) {
+        // Accept up to 1 version difference
         vscode.window.showInformationMessage(
           `You are using an out-of-date version of the Continue extension. Please update to the latest version.`
         );
