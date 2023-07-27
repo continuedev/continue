@@ -68,7 +68,7 @@ A Step can be used as a custom slash command, or called otherwise in a `Policy`.
 
 ### Writing Context Providers
 
-A `ContextProvider` is a Continue plugin that lets type '@' to quickly select documents as context for the language model. The simplest way to create a `ContextProvider` is to implement the `provide_context_items` method. You can find a great example of this in [GitHubIssuesContextProvider](./continuedev/src/continuedev/libs/context_providers/github_issues.py), which allows you to search GitHub Issues in a repo.
+A `ContextProvider` is a Continue plugin that lets type '@' to quickly select documents as context for the language model. The simplest way to create a `ContextProvider` is to implement the `provide_context_items` method. You can find a great example of this in [GitHubIssuesContextProvider](./continuedev/src/continuedev/plugins/context_providers/github.py), which allows you to search GitHub Issues in a repo.
 
 ## 📐 Continue Architecture
 
@@ -126,11 +126,11 @@ Everything in Continue is a "Step". The `Step` class defines 2 methods:
 
 2. `async def describe(self, models: Models) -> Coroutine[str, None, None]` - After each Step is run, this method is called to asynchronously generate a summary title for the step. A `Models` object is passed so that you have access to LLMs to summarize for you.
 
-Steps are designed to be composable, so that you can easily build new Steps by combining existing ones. And because they are Pydantic models, they can instantly be used as tools useable by an LLM, for example with OpenAI's function-calling functionality (see [ChatWithFunctions](./continuedev/src/continuedev/steps/chat.py) for an example of this).
+Steps are designed to be composable, so that you can easily build new Steps by combining existing ones. And because they are Pydantic models, they can instantly be used as tools useable by an LLM, for example with OpenAI's function-calling functionality (see [ChatWithFunctions](./continuedev/src/continuedev/plugins/steps/chat.py) for an example of this).
 
 Some of the most commonly used Steps are:
 
-- [`SimpleChatStep`](./continuedev/src/continuedev/steps/chat.py) - This is the default Step that is run when the user enters natural language input. It takes the user's input and runs it through the default LLM, then displays the result in the GUI.
+- [`SimpleChatStep`](./continuedev/src/continuedev/plugins/steps/chat.py) - This is the default Step that is run when the user enters natural language input. It takes the user's input and runs it through the default LLM, then displays the result in the GUI.
 
 - [`EditHighlightedCodeStep`](./continuedev/src/continuedev/steps/core/core.py) - This is the Step run when a user highlights code, enters natural language, and presses CMD/CTRL+ENTER, or uses the slash command '/edit'. It opens a side-by-side diff editor, where updated code is streamed to fulfil the user's request.
 
