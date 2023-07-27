@@ -97,6 +97,10 @@ Examples
 - “/edit here is a connector for postgres, now write one for kafka”
 - "/edit Rewrite this API call to grab all pages"
 
+### Using context from multiple other files
+
+Similar to how you would make changes manually, focus on one file at a time. But if there is key information in other files, highlight those sections of code too
+
 ### Tasks with a few steps
 
 There are many more tasks that Continue can help you complete. Typically, these will be tasks that don't involve too many steps to complete.
@@ -128,10 +132,6 @@ Similarly, if you try to edit too many lines at once, you might run into context
 ### Highlighting really long lines
 
 If you highlight very long lines (e.g. a complex SVG), you might also run into issues like those above.
-
-### Using context from many other files
-
-Similar to how you would make changes manually, focus on one file at a time. If there is key information in another file, try copy and pasting that section into the text input along with your instructions.
 
 ### Tasks with many steps
 
