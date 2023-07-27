@@ -6,12 +6,20 @@ from ...core.context import ContextProvider
 from fnmatch import fnmatch
 
 
+MAX_SIZE_IN_BYTES = 1024 * 1024 * 1
+
+
 def get_file_contents(filepath: str) -> str:
     try:
+        filesize = os.path.getsize(filepath)
+        if filesize > MAX_SIZE_IN_BYTES:
+            print("File is over 1MB size limit: ", filepath, filesize)
+            return ""
+
         with open(filepath, "r") as f:
             return f.read()
     except Exception as e:
-        print("Error reading file contents", e)
+        print("Error reading file contents", filepath, e)
         return ""
 
 
