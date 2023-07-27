@@ -12,7 +12,7 @@ As you use Continue more, you will learn when to trust it. A great way to get st
 
 If you are trying to use it for a new task and don’t have a sense of how much Continue can help you complete it, it can often be helpful to start like this:
 
-1. Highlight any code that you don’t understand and type `tell me how this code works`
+1. Highlight any code that you don’t understand and type `tell me how this code works` in the text box of the Continue side bar
 2. If the explanation seems reasonable, then, while still highlighting the code, type `how would you change this code to [INSERT TASK]?`
 3. If this explanation is also pretty good, then, while still highlighting the code, type `/edit [INSERT TASK]`
 4. If it does not work on first attempt, click `reject` on its suggestions and try again—often it will make a different suggestion each time
