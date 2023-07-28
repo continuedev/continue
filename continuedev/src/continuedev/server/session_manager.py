@@ -4,6 +4,8 @@ from typing import Any, Dict, List, Union
 from uuid import uuid4
 import json
 
+from fastapi.websockets import WebSocketState
+
 from ..libs.util.paths import getSessionFilePath, getSessionsFolderPath
 from ..models.filesystem_edit import FileEditWithFullContents
 from ..libs.constants.main import CONTINUE_SESSIONS_FOLDER
@@ -59,6 +61,8 @@ class SessionManager:
         return self.sessions[session_id]
 
     async def new_session(self, ide: AbstractIdeProtocolServer, session_id: Union[str, None] = None) -> Session:
+        print("New session: ", session_id)
+
         full_state = None
         if session_id is not None and os.path.exists(getSessionFilePath(session_id)):
             with open(getSessionFilePath(session_id), "r") as f:
@@ -82,13 +86,16 @@ class SessionManager:
         return session
 
     def remove_session(self, session_id: str):
-        del self.sessions[session_id]
+        print("Removing session: ", session_id)
+        if session_id in self.sessions:
+            ws_to_close = self.sessions[session_id].ide.websocket
+            if ws_to_close is not None and ws_to_close.client_state != WebSocketState.DISCONNECTED:
+                self.sessions[session_id].autopilot.ide.websocket.close()
+            del self.sessions[session_id]
 
     async def persist_session(self, session_id: str):
         """Save the session's FullState as a json file"""
         full_state = await self.sessions[session_id].autopilot.get_full_state()
-        if not os.path.exists(getSessionsFolderPath()):
-            os.mkdir(getSessionsFolderPath())
         with open(getSessionFilePath(session_id), "w") as f:
             json.dump(full_state.dict(), f)
 

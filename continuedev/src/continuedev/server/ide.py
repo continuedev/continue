@@ -482,6 +482,7 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str = None):
             "error_title": e.__str__() or e.__repr__(), "error_message": '\n'.join(traceback.format_exception(e))})
         raise e
     finally:
+        print("Closing ide websocket")
         if websocket.client_state != WebSocketState.DISCONNECTED:
             await websocket.close()
 

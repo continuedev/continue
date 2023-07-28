@@ -32,10 +32,6 @@ class AppStatus:
 Server.handle_exit = AppStatus.handle_exit
 
 
-async def session(x_continue_session_id: str = Header("anonymous")) -> Session:
-    return await session_manager.get_session(x_continue_session_id)
-
-
 async def websocket_session(session_id: str) -> Session:
     return await session_manager.get_session(session_id)
 

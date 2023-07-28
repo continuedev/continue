@@ -38,6 +38,14 @@ export class VscodeMessenger extends Messenger {
     });
   }
 
+  onError(callback: (error: any) => void): void {
+    window.addEventListener("message", (event: any) => {
+      if (event.data.type === "websocketForwardingError") {
+        callback(event.data.error);
+      }
+    });
+  }
+
   sendAndReceive(messageType: string, data: any): Promise<any> {
     return new Promise((resolve) => {
       const handler = (event: any) => {

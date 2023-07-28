@@ -59,12 +59,17 @@ LOG_CONFIG = {
         'handlers': ['file']
     }
 }
+
 print(f"Log path: {log_path}")
+sys.stdout = open(log_path, "a")
+sys.stderr = open(log_path, "a")
+print("Testing logs")
 
 
 def run_server():
-    config = uvicorn.Config(app, host="0.0.0.0",
-                            port=args.port, log_config=LOG_CONFIG)
+    config = uvicorn.Config(app, host="0.0.0.0", port=args.port,
+                            # log_config=LOG_CONFIG
+                            )
     server = uvicorn.Server(config)
 
     server.run()
