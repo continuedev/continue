@@ -33,37 +33,63 @@ app.add_middleware(
 
 @app.get("/health")
 def health():
-    print("Testing")
+    print("Health check")
     return {"status": "ok"}
 
 
-# add cli arg for server port
-parser = argparse.ArgumentParser()
-parser.add_argument("-p", "--port", help="server port",
-                    type=int, default=65432)
-args = parser.parse_args()
+class Logger(object):
+    def __init__(self, log_file: str):
+        self.terminal = sys.stdout
+        self.log = open(log_file, "a")
 
-log_path = getLogFilePath()
-LOG_CONFIG = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'handlers': {
-        'file': {
-            'level': 'DEBUG',
-            'class': 'logging.FileHandler',
-            'filename': log_path,
+    def write(self, message):
+        self.terminal.write(message)
+        self.log.write(message)
+
+    def flush(self):
+        # this flush method is needed for python 3 compatibility.
+        # this handles the flush command by doing nothing.
+        # you might want to specify some extra behavior here.
+        pass
+
+    def isatty(self):
+        return False
+
+
+def setup_logging():
+    log_path = getLogFilePath()
+    LOG_CONFIG = {
+        'version': 1,
+        'disable_existing_loggers': False,
+        'handlers': {
+            'file': {
+                'level': 'DEBUG',
+                'class': 'logging.FileHandler',
+                'filename': log_path,
+            },
         },
-    },
-    'root': {
-        'level': 'DEBUG',
-        'handlers': ['file']
+        'root': {
+            'level': 'DEBUG',
+            'handlers': ['file']
+        }
     }
-}
 
-print(f"Log path: {log_path}")
-sys.stdout = open(log_path, "a")
-sys.stderr = open(log_path, "a")
-print("Testing logs")
+    logger = Logger(log_path)
+    print(f"Log path: {log_path}")
+    # sys.stdout = logger
+    # sys.stderr = logger
+    print("Testing logs")
+
+
+try:
+    # add cli arg for server port
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-p", "--port", help="server port",
+                        type=int, default=65432)
+    args = parser.parse_args()
+except Exception as e:
+    print("Error parsing command line arguments: ", e)
+    raise e
 
 
 def run_server():
@@ -102,6 +128,7 @@ atexit.register(cleanup)
 
 if __name__ == "__main__":
     try:
+        # Uncomment to get CPU usage reports
         # import threading
 
         # def cpu_usage_loop():
@@ -112,6 +139,7 @@ if __name__ == "__main__":
         # cpu_thread = threading.Thread(target=cpu_usage_loop)
         # cpu_thread.start()
 
+        setup_logging()
         run_server()
     except Exception as e:
         print("Error starting Continue server: ", e)

@@ -463,9 +463,8 @@ export async function startContinuePythonServer() {
 
     const command = `cd "${serverPath()}" && ${activateCmd} && cd .. && ${pythonCmd} -m server.run_continue_server`;
 
-    console.log("Starting Continue python server...");
-
     return new Promise(async (resolve, reject) => {
+      console.log("Starting Continue python server...");
       try {
         const child = spawn(command, {
           shell: true,

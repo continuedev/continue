@@ -62,9 +62,11 @@ class IdeProtocolClient {
       this._lastReloadTime = Math.min(2 * this._lastReloadTime, 5000);
     };
     messenger.onOpen(() => {
+      console.log("IDE protocol websocket opened");
       this._reconnectionTimeouts.forEach((to) => clearTimeout(to));
     });
     messenger.onClose(() => {
+      console.log("IDE protocol websocket closed");
       reconnect();
     });
     messenger.onError(() => {
