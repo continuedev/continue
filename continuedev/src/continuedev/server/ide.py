@@ -19,6 +19,7 @@ from .gui import session_manager
 from .ide_protocol import AbstractIdeProtocolServer
 from ..libs.util.create_async_task import create_async_task
 from .session_manager import SessionManager
+from ..libs.util.logging import logger
 
 import nest_asyncio
 nest_asyncio.apply()
@@ -37,7 +38,7 @@ class AppStatus:
     @staticmethod
     def handle_exit(*args, **kwargs):
         AppStatus.should_exit = True
-        print("Shutting down")
+        logger.debug("Shutting down")
         original_handler(*args, **kwargs)
 
 
@@ -140,7 +141,7 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
                 continue
             message_type = message["messageType"]
             data = message["data"]
-            print("Received message while initializing", message_type)
+            logger.debug(f"Received message while initializing {message_type}")
             if message_type == "workspaceDirectory":
                 self.workspace_directory = data["workspaceDirectory"]
             elif message_type == "uniqueId":
@@ -154,9 +155,10 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
 
     async def _send_json(self, message_type: str, data: Any):
         if self.websocket.application_state == WebSocketState.DISCONNECTED:
-            print("Tried to send message, but websocket is disconnected", message_type)
+            logger.debug(
+                f"Tried to send message, but websocket is disconnected: {message_type}")
             return
-        print("Sending IDE message: ", message_type)
+        logger.debug(f"Sending IDE message: {message_type}")
         await self.websocket.send_json({
             "messageType": message_type,
             "data": data
@@ -167,7 +169,7 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
             return await asyncio.wait_for(self.sub_queue.get(message_type), timeout=timeout)
         except asyncio.TimeoutError:
             raise Exception(
-                "IDE Protocol _receive_json timed out after 20 seconds", message_type)
+                f"IDE Protocol _receive_json timed out after 20 seconds: {message_type}")
 
     async def _send_and_receive_json(self, data: Any, resp_model: Type[T], message_type: str) -> T:
         await self._send_json(message_type, data)
@@ -354,7 +356,7 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
             }, GetUserSecretResponse, "getUserSecret")
             return resp.value
         except Exception as e:
-            print("Error getting user secret", e)
+            logger.debug(f"Error getting user secret: {e}")
             return ""
 
     async def saveFile(self, filepath: str):
@@ -437,15 +439,15 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
 async def websocket_endpoint(websocket: WebSocket, session_id: str = None):
     try:
         await websocket.accept()
-        print("Accepted websocket connection from, ", websocket.client)
+        logger.debug(f"Accepted websocket connection from {websocket.client}")
         await websocket.send_json({"messageType": "connected", "data": {}})
 
         # Start meilisearch
         try:
             await start_meilisearch()
         except Exception as e:
-            print("Failed to start MeiliSearch")
-            print(e)
+            logger.debug("Failed to start MeiliSearch")
+            logger.debug(e)
 
         def handle_msg(msg):
             message = json.loads(msg)
@@ -455,7 +457,7 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str = None):
             message_type = message["messageType"]
             data = message["data"]
 
-            print("Received IDE message: ", message_type)
+            logger.debug(f"Received IDE message: {message_type}")
             create_async_task(
                 ideProtocolServer.handle_json(message_type, data))
 
@@ -473,16 +475,16 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str = None):
             message = await websocket.receive_text()
             handle_msg(message)
 
-        print("Closing ide websocket")
+        logger.debug("Closing ide websocket")
     except WebSocketDisconnect as e:
-        print("IDE wbsocket disconnected")
+        logger.debug("IDE wbsocket disconnected")
     except Exception as e:
-        print("Error in ide websocket: ", e)
+        logger.debug(f"Error in ide websocket: {e}")
         posthog_logger.capture_event("gui_error", {
             "error_title": e.__str__() or e.__repr__(), "error_message": '\n'.join(traceback.format_exception(e))})
         raise e
     finally:
-        print("Closing ide websocket")
+        logger.debug("Closing ide websocket")
         if websocket.client_state != WebSocketState.DISCONNECTED:
             await websocket.close()
 

@@ -12,6 +12,7 @@ from .gui_protocol import AbstractGUIProtocolServer
 from ..libs.util.queue import AsyncSubscriptionQueue
 from ..libs.util.telemetry import posthog_logger
 from ..libs.util.create_async_task import create_async_task
+from ..libs.util.logging import logger
 
 router = APIRouter(prefix="/gui", tags=["gui"])
 
@@ -25,7 +26,7 @@ class AppStatus:
     @staticmethod
     def handle_exit(*args, **kwargs):
         AppStatus.should_exit = True
-        print("Shutting down")
+        logger.debug("Shutting down")
         original_handler(*args, **kwargs)
 
 
@@ -96,7 +97,7 @@ class GUIProtocolServer(AbstractGUIProtocolServer):
             elif message_type == "select_context_item":
                 self.select_context_item(data["id"], data["query"])
         except Exception as e:
-            print(e)
+            logger.debug(e)
 
     def on_main_input(self, input: str):
         # Do something with user input
@@ -162,10 +163,10 @@ class GUIProtocolServer(AbstractGUIProtocolServer):
 @router.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket, session: Session = Depends(websocket_session)):
     try:
-        print("Received websocket connection at url: ", websocket.url)
+        logger.debug(f"Received websocket connection at url: {websocket.url}")
         await websocket.accept()
 
-        print("Session started")
+        logger.debug("Session started")
         session_manager.register_websocket(session.session_id, websocket)
         protocol = GUIProtocolServer(session)
         protocol.websocket = websocket
@@ -175,7 +176,7 @@ async def websocket_endpoint(websocket: WebSocket, session: Session = Depends(we
 
         while AppStatus.should_exit is False:
             message = await websocket.receive_text()
-            print("Received GUI message", message)
+            logger.debug(f"Received GUI message {message}")
             if type(message) is str:
                 message = json.loads(message)
 
@@ -186,14 +187,14 @@ async def websocket_endpoint(websocket: WebSocket, session: Session = Depends(we
 
             protocol.handle_json(message_type, data)
     except WebSocketDisconnect as e:
-        print("GUI websocket disconnected")
+        logger.debug("GUI websocket disconnected")
     except Exception as e:
-        print("ERROR in gui websocket: ", e)
+        logger.debug(f"ERROR in gui websocket: {e}")
         posthog_logger.capture_event("gui_error", {
             "error_title": e.__str__() or e.__repr__(), "error_message": '\n'.join(traceback.format_exception(e))})
         raise e
     finally:
-        print("Closing gui websocket")
+        logger.debug("Closing gui websocket")
         if websocket.client_state != WebSocketState.DISCONNECTED:
             await websocket.close()
 

@@ -1,6 +1,7 @@
 from typing import Coroutine, Union
 import traceback
 from .telemetry import posthog_logger
+from .logging import logger
 import asyncio
 import nest_asyncio
 nest_asyncio.apply()
@@ -14,8 +15,9 @@ def create_async_task(coro: Coroutine, unique_id: Union[str, None] = None):
         try:
             future.result()
         except Exception as e:
-            print("Exception caught from async task: ",
-                  '\n'.join(traceback.format_exception(e)))
+            formatted_tb = '\n'.join(traceback.format_exception(e))
+            logger.critical(
+                f"Exception caught from async task: {formatted_tb}")
             posthog_logger.capture_event("async_task_error", {
                 "error_title": e.__str__() or e.__repr__(), "error_message": '\n'.join(traceback.format_exception(e))
             })

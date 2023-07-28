@@ -3,6 +3,7 @@ from posthog import Posthog
 import os
 from dotenv import load_dotenv
 from .commonregex import clean_pii_from_any
+from .logging import logger
 
 load_dotenv()
 in_codespaces = os.getenv("CODESPACES") == "true"
@@ -24,7 +25,8 @@ class PostHogLogger:
         self.allow_anonymous_telemetry = allow_anonymous_telemetry or True
 
     def capture_event(self, event_name: str, event_properties: Any):
-        print("------- Logging event -------")
+        # logger.debug(
+        #     f"Logging to PostHog: {event_name} ({self.unique_id}, {self.allow_anonymous_telemetry}): {event_properties}")
         telemetry_path = os.path.expanduser("~/.continue/telemetry.log")
 
         # Make sure the telemetry file exists
@@ -45,8 +47,6 @@ class PostHogLogger:
         # Send event to PostHog
         self.posthog.capture(self.unique_id, event_name,
                              clean_pii_from_any(event_properties))
-
-        print("------- Event logged -------")
 
 
 posthog_logger = PostHogLogger(api_key=POSTHOG_API_KEY)

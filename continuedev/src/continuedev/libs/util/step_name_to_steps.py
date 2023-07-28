@@ -14,6 +14,7 @@ from ...plugins.steps.on_traceback import DefaultOnTracebackStep
 from ...plugins.steps.clear_history import ClearHistoryStep
 from ...plugins.steps.open_config import OpenConfigStep
 from ...plugins.steps.help import HelpStep
+from ...libs.util.logging import logger
 
 # This mapping is used to convert from string in ContinueConfig json to corresponding Step class.
 # Used for example in slash_commands and steps_on_startup
@@ -38,6 +39,6 @@ def get_step_from_name(step_name: str, params: Dict) -> Step:
     try:
         return step_name_to_step_class[step_name](**params)
     except:
-        print(
+        logger.error(
             f"Incorrect parameters for step {step_name}. Parameters provided were: {params}")
         raise

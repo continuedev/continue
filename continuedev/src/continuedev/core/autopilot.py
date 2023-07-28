@@ -21,6 +21,7 @@ from ..libs.util.traceback_parsers import get_python_traceback, get_javascript_t
 from openai import error as openai_errors
 from ..libs.util.create_async_task import create_async_task
 from ..libs.util.telemetry import posthog_logger
+from ..libs.util.logging import logger
 
 
 def get_error_title(e: Exception) -> str:
@@ -153,7 +154,7 @@ class Autopilot(ContinueBaseModel):
 
                 await self.update_subscribers()
         except Exception as e:
-            print(e)
+            logger.debug(e)
 
     def handle_manual_edits(self, edits: List[FileEditWithFullContents]):
         for edit in edits:
@@ -258,7 +259,7 @@ class Autopilot(ContinueBaseModel):
                 e)
 
             # Attach an InternalErrorObservation to the step and unhide it.
-            print(
+            logger.error(
                 f"Error while running step: \n{error_string}\n{error_title}")
             posthog_logger.capture_event('step error', {
                                          'error_message': error_string, 'error_title': error_title, 'step_name': step.name, 'params': step.dict()})

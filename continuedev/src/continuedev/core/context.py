@@ -7,7 +7,7 @@ from pydantic import BaseModel
 
 from .main import ChatMessage, ContextItem, ContextItemDescription, ContextItemId
 from ..server.meilisearch_server import check_meilisearch_running
-
+from ..libs.util.logging import logger
 
 SEARCH_INDEX_NAME = "continue_context_items"
 
@@ -57,16 +57,22 @@ class ContextProvider(BaseModel):
         Default implementation uses the search index to get the item.
         """
         async with Client('http://localhost:7700') as search_client:
-            result = await search_client.index(
-                SEARCH_INDEX_NAME).get_document(id.to_string())
-            return ContextItem(
-                description=ContextItemDescription(
-                    name=result["name"],
-                    description=result["description"],
-                    id=id
-                ),
-                content=result["content"]
-            )
+            try:
+                result = await search_client.index(
+                    SEARCH_INDEX_NAME).get_document(id.to_string())
+                return ContextItem(
+                    description=ContextItemDescription(
+                        name=result["name"],
+                        description=result["description"],
+                        id=id
+                    ),
+                    content=result["content"]
+                )
+            except Exception as e:
+                logger.warning(
+                    f"Error while retrieving document from meilisearch: {e}")
+
+            return None
 
     async def delete_context_with_ids(self, ids: List[ContextItemId]):
         """
@@ -100,8 +106,8 @@ class ContextProvider(BaseModel):
             if item.description.id.item_id == id.item_id:
                 return
 
-        new_item = await self.get_item(id, query)
-        self.selected_items.append(new_item)
+        if new_item := await self.get_item(id, query):
+            self.selected_items.append(new_item)
 
 
 class ContextManager:
@@ -146,7 +152,7 @@ class ContextManager:
                 meilisearch_running = False
 
             if not meilisearch_running:
-                print(
+                logger.warning(
                     "MeiliSearch not running, avoiding any dependent context providers")
                 context_providers = list(
                     filter(lambda cp: cp.title == "code", context_providers))
@@ -170,7 +176,7 @@ class ContextManager:
                     async with Client('http://localhost:7700') as search_client:
                         await search_client.index(SEARCH_INDEX_NAME).add_documents(documents)
                 except Exception as e:
-                    print("Error loading meilisearch index: ", e)
+                    logger.debug(f"Error loading meilisearch index: {e}")
 
     # def compile_chat_messages(self, max_tokens: int) -> List[Dict]:
     #     """

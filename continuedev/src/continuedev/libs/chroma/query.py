@@ -5,6 +5,7 @@ from llama_index import GPTVectorStoreIndex, StorageContext, load_index_from_sto
 from llama_index.langchain_helpers.text_splitter import TokenTextSplitter
 import os
 from .update import filter_ignored_files, load_gpt_index_documents
+from ..util.logging import logger
 from functools import cached_property
 
 
@@ -56,7 +57,8 @@ class ChromaIndexManager:
             try:
                 text_chunks = text_splitter.split_text(doc.text)
             except:
-                print("ERROR (probably found special token): ", doc.text)
+                logger.warning(
+                    f"ERROR (probably found special token): {doc.text}")
                 continue
             filename = doc.extra_info["filename"]
             chunks[filename] = len(text_chunks)
@@ -79,7 +81,7 @@ class ChromaIndexManager:
 
         index.storage_context.persist(persist_dir=self.index_dir)
 
-        print("Codebase index created")
+        logger.debug("Codebase index created")
 
     def get_modified_deleted_files(self) -> Tuple[List[str], List[str]]:
         """Get a list of all files that have been modified since the last commit."""
@@ -121,7 +123,7 @@ class ChromaIndexManager:
 
                 del metadata["chunks"][file]
 
-                print(f"Deleted {file}")
+                logger.debug(f"Deleted {file}")
 
             for file in modified_files:
 
@@ -132,7 +134,7 @@ class ChromaIndexManager:
                     for i in range(num_chunks):
                         index.delete(f"{file}::{i}")
 
-                    print(f"Deleted old version of {file}")
+                    logger.debug(f"Deleted old version of {file}")
 
                 with open(file, "r") as f:
                     text = f.read()
@@ -145,19 +147,20 @@ class ChromaIndexManager:
 
                 metadata["chunks"][file] = len(text_chunks)
 
-                print(f"Inserted new version of {file}")
+                logger.debug(f"Inserted new version of {file}")
 
             metadata["commit"] = self.current_commit
 
             with open(f"{self.index_dir}/metadata.json", "w") as f:
                 json.dump(metadata, f, indent=4)
 
-            print("Codebase index updated")
+            logger.debug("Codebase index updated")
 
     def query_codebase_index(self, query: str) -> str:
         """Query the codebase index."""
         if not self.check_index_exists():
-            print("No index found for the codebase at ", self.index_dir)
+            logger.debug(
+                f"No index found for the codebase at {self.index_dir}")
             return ""
 
         storage_context = StorageContext.from_defaults(
@@ -180,4 +183,4 @@ class ChromaIndexManager:
         documents = [Document(info)]
         index = GPTVectorStoreIndex(documents)
         index.save_to_disk(f'{self.index_dir}/additional_index.json')
-        print("Additional index replaced")
+        logger.debug("Additional index replaced")

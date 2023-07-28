@@ -15,6 +15,7 @@ from .ide import router as ide_router
 from .gui import router as gui_router
 from .session_manager import session_manager
 from ..libs.util.paths import getLogFilePath
+from ..libs.util.logging import logger
 
 app = FastAPI()
 
@@ -33,7 +34,7 @@ app.add_middleware(
 
 @app.get("/health")
 def health():
-    print("Health check")
+    logger.debug("Health check")
     return {"status": "ok"}
 
 
@@ -56,31 +57,6 @@ class Logger(object):
         return False
 
 
-def setup_logging():
-    log_path = getLogFilePath()
-    LOG_CONFIG = {
-        'version': 1,
-        'disable_existing_loggers': False,
-        'handlers': {
-            'file': {
-                'level': 'DEBUG',
-                'class': 'logging.FileHandler',
-                'filename': log_path,
-            },
-        },
-        'root': {
-            'level': 'DEBUG',
-            'handlers': ['file']
-        }
-    }
-
-    logger = Logger(log_path)
-    print(f"Log path: {log_path}")
-    # sys.stdout = logger
-    # sys.stderr = logger
-    print("Testing logs")
-
-
 try:
     # add cli arg for server port
     parser = argparse.ArgumentParser()
@@ -88,21 +64,19 @@ try:
                         type=int, default=65432)
     args = parser.parse_args()
 except Exception as e:
-    print("Error parsing command line arguments: ", e)
+    logger.debug(f"Error parsing command line arguments: {e}")
     raise e
 
 
 def run_server():
-    config = uvicorn.Config(app, host="0.0.0.0", port=args.port,
-                            # log_config=LOG_CONFIG
-                            )
+    config = uvicorn.Config(app, host="0.0.0.0", port=args.port)
     server = uvicorn.Server(config)
 
     server.run()
 
 
 async def cleanup_coroutine():
-    print("Cleaning up sessions")
+    logger.debug("Cleaning up sessions")
     for session_id in session_manager.sessions:
         await session_manager.persist_session(session_id)
 
@@ -121,7 +95,7 @@ def cpu_usage_report():
     time.sleep(1)
     # Call cpu_percent again to get the CPU usage over the interval
     cpu_usage = process.cpu_percent(interval=None)
-    print(f"CPU usage: {cpu_usage}%")
+    logger.debug(f"CPU usage: {cpu_usage}%")
 
 
 atexit.register(cleanup)
@@ -139,9 +113,8 @@ if __name__ == "__main__":
         # cpu_thread = threading.Thread(target=cpu_usage_loop)
         # cpu_thread.start()
 
-        setup_logging()
         run_server()
     except Exception as e:
-        print("Error starting Continue server: ", e)
+        logger.debug(f"Error starting Continue server: {e}")
         cleanup()
         raise e

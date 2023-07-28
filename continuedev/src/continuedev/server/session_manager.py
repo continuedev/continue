@@ -15,6 +15,7 @@ from ..core.autopilot import Autopilot
 from .ide_protocol import AbstractIdeProtocolServer
 from ..libs.util.create_async_task import create_async_task
 from ..libs.util.errors import SessionNotFound
+from ..libs.util.logging import logger
 
 
 class Session:
@@ -61,7 +62,7 @@ class SessionManager:
         return self.sessions[session_id]
 
     async def new_session(self, ide: AbstractIdeProtocolServer, session_id: Union[str, None] = None) -> Session:
-        print("New session: ", session_id)
+        logger.debug(f"New session: {session_id}")
 
         full_state = None
         if session_id is not None and os.path.exists(getSessionFilePath(session_id)):
@@ -86,7 +87,7 @@ class SessionManager:
         return session
 
     async def remove_session(self, session_id: str):
-        print("Removing session: ", session_id)
+        logger.debug(f"Removing session: {session_id}")
         if session_id in self.sessions:
             if session_id in self.registered_ides:
                 ws_to_close = self.registered_ides[session_id].websocket
@@ -103,13 +104,13 @@ class SessionManager:
 
     def register_websocket(self, session_id: str, ws: WebSocket):
         self.sessions[session_id].ws = ws
-        print("Registered websocket for session", session_id)
+        logger.debug(f"Registered websocket for session {session_id}")
 
     async def send_ws_data(self, session_id: str, message_type: str, data: Any):
         if session_id not in self.sessions:
             raise SessionNotFound(f"Session {session_id} not found")
         if self.sessions[session_id].ws is None:
-            # print(f"Session {session_id} has no websocket")
+            # logger.debug(f"Session {session_id} has no websocket")
             return
 
         await self.sessions[session_id].ws.send_json({

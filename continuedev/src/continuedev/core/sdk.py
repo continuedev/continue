@@ -19,6 +19,7 @@ from ..plugins.steps.core.core import *
 from ..libs.llm.proxy_server import ProxyServer
 from ..libs.util.telemetry import posthog_logger
 from ..libs.util.paths import getConfigFilePath
+from ..libs.util.logging import logger
 
 
 class Autopilot:
@@ -161,7 +162,7 @@ class ContinueSDK(AbstractContinueSDK):
             config = sdk._load_config_dot_py()
             sdk.config = config
         except Exception as e:
-            print(e)
+            logger.debug(e)
             sdk.config = ContinueConfig()
             msg_step = MessageStep(
                 name="Invalid Continue Config File", message=e.__repr__())
@@ -273,7 +274,7 @@ class ContinueSDK(AbstractContinueSDK):
 
             return config.config
         except Exception as e:
-            print("Error loading config.py: ", e)
+            logger.debug(f"Error loading config.py: {e}")
             return ContinueConfig() if self._last_valid_config is None else self._last_valid_config
 
     def get_code_context(self, only_editing: bool = False) -> List[RangeInFileWithContents]:

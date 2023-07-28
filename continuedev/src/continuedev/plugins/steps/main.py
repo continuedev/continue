@@ -13,6 +13,7 @@ from ...core.sdk import ContinueSDK, Models
 from ...core.observation import Observation
 from .core.core import DefaultModelEditCodeStep
 from ...libs.util.calculate_diff import calculate_diff2
+from ...libs.util.logging import logger
 
 
 class Policy(BaseModel):
@@ -105,7 +106,7 @@ class FasterEditHighlightedCodeStep(Step):
         # Temporarily doing this to generate description.
         self._prompt = prompt
         self._completion = completion
-        print(completion)
+        logger.debug(completion)
 
         # ALTERNATIVE DECODING STEP HERE
         raw_file_edits = []
