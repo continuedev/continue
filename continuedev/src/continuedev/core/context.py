@@ -166,8 +166,11 @@ class ContextManager:
                 for item in context_items
             ]
             if len(documents) > 0:
-                async with Client('http://localhost:7700') as search_client:
-                    await search_client.index(SEARCH_INDEX_NAME).add_documents(documents)
+                try:
+                    async with Client('http://localhost:7700') as search_client:
+                        await search_client.index(SEARCH_INDEX_NAME).add_documents(documents)
+                except Exception as e:
+                    print("Error loading meilisearch index: ", e)
 
     # def compile_chat_messages(self, max_tokens: int) -> List[Dict]:
     #     """

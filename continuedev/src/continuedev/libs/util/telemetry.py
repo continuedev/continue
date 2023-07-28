@@ -24,6 +24,18 @@ class PostHogLogger:
         self.allow_anonymous_telemetry = allow_anonymous_telemetry or True
 
     def capture_event(self, event_name: str, event_properties: Any):
+        print("------- Logging event -------")
+        telemetry_path = os.path.expanduser("~/.continue/telemetry.log")
+
+        # Make sure the telemetry file exists
+        if not os.path.exists(telemetry_path):
+            os.makedirs(os.path.dirname(telemetry_path), exist_ok=True)
+            open(telemetry_path, "w").close()
+
+        with open(telemetry_path, "a") as f:
+            str_to_write = f"{event_name}: {event_properties}\n{self.unique_id}\n{self.allow_anonymous_telemetry}\n\n"
+            f.write(str_to_write)
+
         if not self.allow_anonymous_telemetry:
             return
 
@@ -33,6 +45,8 @@ class PostHogLogger:
         # Send event to PostHog
         self.posthog.capture(self.unique_id, event_name,
                              clean_pii_from_any(event_properties))
+
+        print("------- Event logged -------")
 
 
 posthog_logger = PostHogLogger(api_key=POSTHOG_API_KEY)
