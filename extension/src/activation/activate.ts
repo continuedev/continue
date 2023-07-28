@@ -22,10 +22,14 @@ function getExtensionVersionInt(versionString: string): number {
 export async function activateExtension(context: vscode.ExtensionContext) {
   extensionContext = context;
   console.log("Using Continue version: ", getExtensionVersion());
-  console.log(
-    "In workspace: ",
-    vscode.workspace.workspaceFolders?.[0].uri.fsPath
-  );
+  try {
+    console.log(
+      "In workspace: ",
+      vscode.workspace.workspaceFolders?.[0].uri.fsPath
+    );
+  } catch (e) {
+    console.log("Error getting workspace folder: ", e);
+  }
   // Before anything else, check whether this is an out-of-date version of the extension
   // Do so by grabbing the package.json off of the GitHub respository for now.
   fetch(PACKAGE_JSON_RAW_GITHUB_URL)

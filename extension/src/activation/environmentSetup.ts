@@ -430,6 +430,7 @@ export async function startContinuePythonServer() {
   setupServerPath();
 
   return await retryThenFail(async () => {
+    console.log("Checking if server is old version");
     // Kill the server if it is running an old version
     if (fs.existsSync(serverVersionPath())) {
       const serverVersion = fs.readFileSync(serverVersionPath(), "utf8");

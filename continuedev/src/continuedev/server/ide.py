@@ -154,6 +154,7 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
 
     async def _send_json(self, message_type: str, data: Any):
         if self.websocket.application_state == WebSocketState.DISCONNECTED:
+            print("Tried to send message, but websocket is disconnected", message_type)
             return
         print("Sending IDE message: ", message_type)
         await self.websocket.send_json({
@@ -435,16 +436,16 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
 @router.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket, session_id: str = None):
     try:
+        await websocket.accept()
+        print("Accepted websocket connection from, ", websocket.client)
+        await websocket.send_json({"messageType": "connected", "data": {}})
+
         # Start meilisearch
         try:
             await start_meilisearch()
         except Exception as e:
             print("Failed to start MeiliSearch")
             print(e)
-
-        await websocket.accept()
-        print("Accepted websocket connection from, ", websocket.client)
-        await websocket.send_json({"messageType": "connected", "data": {}})
 
         def handle_msg(msg):
             message = json.loads(msg)
