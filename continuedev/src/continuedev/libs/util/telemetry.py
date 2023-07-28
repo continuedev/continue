@@ -10,20 +10,21 @@ POSTHOG_API_KEY = 'phc_JS6XFROuNbhJtVCEdTSYk6gl5ArRrTNMpCcguAXlSPs'
 
 
 class PostHogLogger:
+    unique_id: str = "NO_UNIQUE_ID"
+    allow_anonymous_telemetry: bool = True
+
     def __init__(self, api_key: str):
         self.api_key = api_key
-        self.unique_id = None
-        self.allow_anonymous_telemetry = True
-
-    def setup(self, unique_id: str, allow_anonymous_telemetry: bool):
-        self.unique_id = unique_id
-        self.allow_anonymous_telemetry = allow_anonymous_telemetry
 
         # The personal API key is necessary only if you want to use local evaluation of feature flags.
         self.posthog = Posthog(self.api_key, host='https://app.posthog.com')
 
+    def setup(self, unique_id: str, allow_anonymous_telemetry: bool):
+        self.unique_id = unique_id or "NO_UNIQUE_ID"
+        self.allow_anonymous_telemetry = allow_anonymous_telemetry or True
+
     def capture_event(self, event_name: str, event_properties: Any):
-        if not self.allow_anonymous_telemetry or self.unique_id is None:
+        if not self.allow_anonymous_telemetry:
             return
 
         if in_codespaces:

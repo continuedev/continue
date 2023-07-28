@@ -269,7 +269,7 @@ class ContinueSDK(AbstractContinueSDK):
 
             # When the config is loaded, setup posthog logger
             posthog_logger.setup(
-                self.ide.unique_id, config.config.allow_anonymous_telemetry or True)
+                self.ide.unique_id, config.config.allow_anonymous_telemetry)
 
             return config.config
         except Exception as e:
