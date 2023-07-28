@@ -30,6 +30,12 @@ class ProxyServer(LLM):
         self.name = default_model
         self.write_log = write_log
 
+    async def start(self):
+        pass
+
+    async def stop(self):
+        pass
+
     @property
     def default_args(self):
         return {**DEFAULT_ARGS, "model": self.default_model}

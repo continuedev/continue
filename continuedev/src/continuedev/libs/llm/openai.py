@@ -10,23 +10,26 @@ from ...core.config import AzureInfo
 
 
 class OpenAI(LLM):
-    api_key: str
     default_model: str
 
-    def __init__(self, api_key: str, default_model: str, system_message: str = None, azure_info: AzureInfo = None, write_log: Callable[[str], None] = None):
-        self.api_key = api_key
+    def __init__(self, default_model: str, system_message: str = None, azure_info: AzureInfo = None, write_log: Callable[[str], None] = None):
         self.default_model = default_model
         self.system_message = system_message
         self.azure_info = azure_info
         self.write_log = write_log
 
-        openai.api_key = api_key
+    async def start(self):
+        self.api_key = await sdk.get_api_key("OPENAI_API_KEY")
+        openai.api_key = self.api_key
 
         # Using an Azure OpenAI deployment
-        if azure_info is not None:
+        if self.azure_info is not None:
             openai.api_type = "azure"
             openai.api_base = azure_info.endpoint
             openai.api_version = azure_info.api_version
+
+    async def stop(self):
+        pass
 
     @cached_property
     def name(self):

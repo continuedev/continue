@@ -35,6 +35,7 @@ class GGML(LLM):
         messages = compile_chat_messages(
             self.name, with_history, args["max_tokens"], prompt, functions=args.get("functions", None), system_message=self.system_message)
 
+        # TODO move to single self.session variable (proxy setting etc)
         async with aiohttp.ClientSession() as session:
             async with session.post(f"{SERVER_URL}/v1/completions", json={
                 "messages": messages,

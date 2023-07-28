@@ -9,6 +9,14 @@ from pydantic import BaseModel
 class LLM(ABC):
     system_message: Union[str, None] = None
 
+    async def start(self):
+        """Start the connection to the LLM."""
+        raise NotImplementedError
+
+    async def stop(self):
+        """Stop the connection to the LLM."""
+        raise NotImplementedError
+
     async def complete(self, prompt: str, with_history: List[ChatMessage] = None, **kwargs) -> Coroutine[Any, Any, str]:
         """Return the completion of the text with the given temperature."""
         raise NotImplementedError

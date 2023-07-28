@@ -2,6 +2,7 @@ import json
 import os
 from .main import Step
 from .context import ContextProvider
+from ..libs.llm.openai import OpenAI
 from pydantic import BaseModel, validator
 from typing import List, Literal, Optional, Dict, Type, Union
 import yaml
@@ -38,8 +39,7 @@ class ContinueConfig(BaseModel):
     steps_on_startup: List[Step] = []
     disallowed_steps: Optional[List[str]] = []
     allow_anonymous_telemetry: Optional[bool] = True
-    default_model: Literal["gpt-3.5-turbo", "gpt-3.5-turbo-16k",
-                           "gpt-4", "claude-2", "ggml"] = 'gpt-4'
+    llm: LLM = OpenAI(default_model="gpt-4")
     temperature: Optional[float] = 0.5
     custom_commands: Optional[List[CustomCommand]] = [CustomCommand(
         name="test",
@@ -49,7 +49,6 @@ class ContinueConfig(BaseModel):
     slash_commands: Optional[List[SlashCommand]] = []
     on_traceback: Optional[List[OnTracebackSteps]] = []
     system_message: Optional[str] = None
-    azure_openai_info: Optional[AzureInfo] = None
 
     context_providers: List[ContextProvider] = []
 
