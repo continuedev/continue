@@ -211,15 +211,16 @@ export function setupDebugPanel(
         let url = data.url;
         if (typeof websocketConnections[url] === "undefined") {
           await connectWebsocket(url);
+        } else {
+          console.log(
+            "Websocket connection requested by GUI already open at",
+            url
+          );
+          panel.webview.postMessage({
+            type: "websocketForwardingOpen",
+            url,
+          });
         }
-        console.log(
-          "Websocket connection requested by GUI already open at",
-          url
-        );
-        panel.webview.postMessage({
-          type: "websocketForwardingOpen",
-          url,
-        });
         break;
       }
       case "websocketForwardingMessage": {

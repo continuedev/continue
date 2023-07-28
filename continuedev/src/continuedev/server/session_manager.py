@@ -85,12 +85,14 @@ class SessionManager:
         create_async_task(autopilot.run_policy())
         return session
 
-    def remove_session(self, session_id: str):
+    async def remove_session(self, session_id: str):
         print("Removing session: ", session_id)
         if session_id in self.sessions:
-            ws_to_close = self.sessions[session_id].ide.websocket
-            if ws_to_close is not None and ws_to_close.client_state != WebSocketState.DISCONNECTED:
-                self.sessions[session_id].autopilot.ide.websocket.close()
+            if session_id in self.registered_ides:
+                ws_to_close = self.registered_ides[session_id].websocket
+                if ws_to_close is not None and ws_to_close.client_state != WebSocketState.DISCONNECTED:
+                    await self.sessions[session_id].autopilot.ide.websocket.close()
+
             del self.sessions[session_id]
 
     async def persist_session(self, session_id: str):

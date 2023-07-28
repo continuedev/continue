@@ -198,4 +198,4 @@ async def websocket_endpoint(websocket: WebSocket, session: Session = Depends(we
             await websocket.close()
 
         await session_manager.persist_session(session.session_id)
-        session_manager.remove_session(session.session_id)
+        await session_manager.remove_session(session.session_id)

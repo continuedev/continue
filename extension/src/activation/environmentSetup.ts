@@ -487,6 +487,14 @@ export async function startContinuePythonServer() {
           console.log(`error: ${error.message}`);
         });
 
+        child.on("close", (code: any) => {
+          console.log(`child process exited with code ${code}`);
+        });
+
+        child.stdout.on("data", (data: any) => {
+          console.log(`stdout: ${data}`);
+        });
+
         // Write the current version of vscode to a file called server_version.txt
         fs.writeFileSync(serverVersionPath(), getExtensionVersion());
       } catch (e) {
