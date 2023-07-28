@@ -116,7 +116,10 @@ class Models:
 
     @cached_property
     def ggml(self):
-        return GGML(system_message=self.system_message)
+        return GGML(
+            system_message=self.system_message,
+            server_url=self.sdk.config.ggml_server_url
+        )
 
     def __model_from_name(self, model_name: str):
         if model_name == "starcoder":

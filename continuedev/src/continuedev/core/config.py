@@ -50,6 +50,7 @@ class ContinueConfig(BaseModel):
     on_traceback: Optional[List[OnTracebackSteps]] = []
     system_message: Optional[str] = None
     azure_openai_info: Optional[AzureInfo] = None
+    ggml_server_url: Optional[str] = None
 
     context_providers: List[ContextProvider] = []
 

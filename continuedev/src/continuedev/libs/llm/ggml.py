@@ -1,19 +1,20 @@
 from functools import cached_property
 import json
-from typing import Any, Coroutine, Dict, Generator, List, Union
+from typing import Any, Coroutine, Dict, Generator, List, Union, Optional
 
 import aiohttp
 from ...core.main import ChatMessage
 from ..llm import LLM
 from ..util.count_tokens import compile_chat_messages, DEFAULT_ARGS, count_tokens
 
-SERVER_URL = "http://localhost:8000"
+DEFAULT_SERVER_URL = "http://localhost:8000"
 
 
 class GGML(LLM):
 
-    def __init__(self, system_message: str = None):
+    def __init__(self, system_message: str = None, server_url: Optional[str] = None):
         self.system_message = system_message
+        self.server_url = server_url or DEFAULT_SERVER_URL
 
     @cached_property
     def name(self):
@@ -36,7 +37,7 @@ class GGML(LLM):
             self.name, with_history, args["max_tokens"], prompt, functions=args.get("functions", None), system_message=self.system_message)
 
         async with aiohttp.ClientSession() as session:
-            async with session.post(f"{SERVER_URL}/v1/completions", json={
+            async with session.post(f"{self.server_url}/v1/completions", json={
                 "messages": messages,
                 **args
             }) as resp:
@@ -54,7 +55,7 @@ class GGML(LLM):
         args["stream"] = True
 
         async with aiohttp.ClientSession() as session:
-            async with session.post(f"{SERVER_URL}/v1/chat/completions", json={
+            async with session.post(f"{self.server_url}/v1/chat/completions", json={
                 "messages": messages,
                 **args
             }) as resp:
@@ -76,7 +77,7 @@ class GGML(LLM):
         args = {**self.default_args, **kwargs}
 
         async with aiohttp.ClientSession() as session:
-            async with session.post(f"{SERVER_URL}/v1/completions", json={
+            async with session.post(f"{self.server_url}/v1/completions", json={
                 "messages": compile_chat_messages(args["model"], with_history, args["max_tokens"], prompt, functions=None, system_message=self.system_message),
                 **args
             }) as resp:
