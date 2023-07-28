@@ -25,6 +25,8 @@ If you have access, simply set `default_model` to the model you would like to us
 
 See our [5 minute quickstart](https://github.com/continuedev/ggml-server-example) to run any model locally with ggml. While these models don't yet perform as well, they are free, entirely private, and run offline.
 
+Once the model is running on localhost:8000, set `default_model` in `~/.continue/config.py` to "ggml".
+
 ### Self-hosting an open-source model
 
 If you want to self-host on Colab, RunPod, Replicate, HuggingFace, Haven, or another hosting provider you will need to wire up a new LLM class. It only needs to implement 3 methods: `stream_complete`, `complete`, and `stream_chat`, and you can see examples in `continuedev/src/continuedev/libs/llm`.
