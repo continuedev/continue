@@ -1,6 +1,7 @@
 from functools import cached_property
 import json
 from typing import Any, Coroutine, Dict, Generator, List, Union
+from pydantic import ConfigDict
 
 import aiohttp
 from ...core.main import ChatMessage
@@ -15,7 +16,6 @@ class GGML(LLM):
     def __init__(self, system_message: str = None):
         self.system_message = system_message
 
-    @cached_property
     def name(self):
         return "ggml"
 

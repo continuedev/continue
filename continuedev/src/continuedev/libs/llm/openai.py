@@ -2,11 +2,17 @@ from functools import cached_property
 import json
 from typing import Any, Callable, Coroutine, Dict, Generator, List, Union
 
+from pydantic import BaseModel
 from ...core.main import ChatMessage
 import openai
 from ..llm import LLM
 from ..util.count_tokens import compile_chat_messages, CHAT_MODELS, DEFAULT_ARGS, count_tokens, format_chat_messages, prune_raw_prompt_from_top
-from ...core.config import AzureInfo
+
+
+class AzureInfo(BaseModel):
+    endpoint: str
+    engine: str
+    api_version: str
 
 
 class OpenAI(LLM):
@@ -32,7 +38,6 @@ class OpenAI(LLM):
     async def stop(self):
         pass
 
-    @cached_property
     def name(self):
         return self.default_model
 

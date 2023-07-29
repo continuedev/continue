@@ -1,12 +1,14 @@
+import functools
 from abc import ABC
-from typing import Any, Coroutine, Dict, Generator, List, Union
+from pydantic import BaseModel, ConfigDict
+from typing import Any, Coroutine, Dict, Generator, List, Union, Optional
 
 from ...core.main import ChatMessage
 from ...models.main import AbstractModel
 from pydantic import BaseModel
 
 
-class LLM(ABC):
+class LLM(BaseModel, ABC):
     required_api_key: Optional[str] = None
     system_message: Union[str, None] = None
 

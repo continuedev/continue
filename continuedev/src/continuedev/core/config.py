@@ -2,7 +2,8 @@ import json
 import os
 from .main import Step
 from .context import ContextProvider
-from ..libs.llm.openai import OpenAI
+from ..libs.llm.maybe_proxy_openai import MaybeProxyOpenAI
+from .models import Models
 from pydantic import BaseModel, validator
 from typing import List, Literal, Optional, Dict, Type, Union
 import yaml
@@ -24,12 +25,6 @@ class CustomCommand(BaseModel):
 class OnTracebackSteps(BaseModel):
     step: Type[Step]
     params: Optional[Dict] = {}
-
-
-class AzureInfo(BaseModel):
-    endpoint: str
-    engine: str
-    api_version: str
 
 
 class ContinueConfig(BaseModel):
