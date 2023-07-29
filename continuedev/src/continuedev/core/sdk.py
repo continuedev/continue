@@ -1,4 +1,5 @@
 from functools import cached_property
+import traceback
 from typing import Coroutine, Dict, Union
 import os
 
@@ -162,17 +163,25 @@ class ContinueSDK(AbstractContinueSDK):
             config = sdk._load_config_dot_py()
             sdk.config = config
         except Exception as e:
-            logger.debug(e)
-            sdk.config = ContinueConfig()
+            logger.error(f"Failed to load config.py: {e}")
+
+            sdk.config = ContinueConfig(
+            ) if sdk._last_valid_config is None else sdk._last_valid_config
+
+            formatted_err = '\n'.join(traceback.format_exception(e))
             msg_step = MessageStep(
-                name="Invalid Continue Config File", message=e.__repr__())
-            msg_step.description = e.__repr__()
+                name="Invalid Continue Config File", message=formatted_err)
+            msg_step.description = f"Falling back to default config settings.\n```\n{formatted_err}\n```"
             sdk.history.add_node(HistoryNode(
                 step=msg_step,
                 observation=None,
                 depth=0,
                 active=False
             ))
+
+        # When the config is loaded, setup posthog logger
+        posthog_logger.setup(
+            sdk.ide.unique_id, sdk.config.allow_anonymous_telemetry)
 
         sdk.models = await Models.create(sdk)
         return sdk
@@ -261,21 +270,14 @@ class ContinueSDK(AbstractContinueSDK):
     def _load_config_dot_py(self) -> ContinueConfig:
         # Use importlib to load the config file config.py at the given path
         path = getConfigFilePath()
-        try:
-            import importlib.util
-            spec = importlib.util.spec_from_file_location("config", path)
-            config = importlib.util.module_from_spec(spec)
-            spec.loader.exec_module(config)
-            self._last_valid_config = config.config
 
-            # When the config is loaded, setup posthog logger
-            posthog_logger.setup(
-                self.ide.unique_id, config.config.allow_anonymous_telemetry)
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("config", path)
+        config = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(config)
+        self._last_valid_config = config.config
 
-            return config.config
-        except Exception as e:
-            logger.debug(f"Error loading config.py: {e}")
-            return ContinueConfig() if self._last_valid_config is None else self._last_valid_config
+        return config.config
 
     def get_code_context(self, only_editing: bool = False) -> List[RangeInFileWithContents]:
         highlighted_ranges = self.__autopilot.context_manager.context_providers[

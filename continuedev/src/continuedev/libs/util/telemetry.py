@@ -21,6 +21,7 @@ class PostHogLogger:
         self.posthog = Posthog(self.api_key, host='https://app.posthog.com')
 
     def setup(self, unique_id: str, allow_anonymous_telemetry: bool):
+        logger.debug(f"Setting unique_id as {unique_id}")
         self.unique_id = unique_id or "NO_UNIQUE_ID"
         self.allow_anonymous_telemetry = allow_anonymous_telemetry or True
 
