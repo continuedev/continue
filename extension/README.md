@@ -2,6 +2,8 @@
 
 **[Continue](https://continue.dev/docs) is the open-source autopilot for software development—a [VS Code extension](https://marketplace.visualstudio.com/items?itemName=Continue.continue) that brings the power of ChatGPT to your IDE**
 
+![Editing with Continue](https://github.com/continuedev/continue/blob/main/readme.gif?raw=true)
+
 ## Task, not tab, auto-complete
 
 ### Get possible explainations
@@ -40,6 +42,8 @@ If your Continue server is not setting up, please check the console logs:
 2. Search for and then select "Developer: Toggle Developer Tools"
 3. Select `Console`
 4. Read the console logs
+
+\*The Continue VS Code extension is currently in beta. It will attempt to start the Continue Python server locally for you, but if this fails you can run the server manually as is explained here: [Running the Continue server manually](https://continue.dev/docs/how-continue-works)
 
 ## License
 
