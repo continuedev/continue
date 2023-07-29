@@ -5,7 +5,7 @@ from pydantic import Field
 
 from ...libs.util.strings import remove_quotes_and_escapes
 from .main import EditHighlightedCodeStep
-from .core.core import MessageStep
+from .core.core import DisplayErrorStep, MessageStep
 from ...core.main import FunctionCall, Models
 from ...core.main import ChatMessage, Step, step_to_json_schema
 from ...core.sdk import ContinueSDK
@@ -26,34 +26,32 @@ class SimpleChatStep(Step):
     messages: List[ChatMessage] = None
 
     async def run(self, sdk: ContinueSDK):
-        completion = ""
         messages = self.messages or await sdk.get_chat_context()
 
         generator = sdk.models.default.stream_chat(
             messages, temperature=sdk.config.temperature)
-        try:
-            async for chunk in generator:
-                if sdk.current_step_was_deleted():
-                    # So that the message doesn't disappear
-                    self.hide = False
-                    break
 
-                if "content" in chunk:
-                    self.description += chunk["content"]
-                    completion += chunk["content"]
-                    await sdk.update_ui()
-        finally:
-            self.name = remove_quotes_and_escapes(await sdk.models.gpt35.complete(
-                f"Write a short title for the following chat message: {self.description}"))
+        async for chunk in generator:
+            if sdk.current_step_was_deleted():
+                # So that the message doesn't disappear
+                self.hide = False
+                break
 
-            self.chat_context.append(ChatMessage(
-                role="assistant",
-                content=completion,
-                summary=self.name
-            ))
+            if "content" in chunk:
+                self.description += chunk["content"]
+                await sdk.update_ui()
 
-            # TODO: Never actually closing.
-            await generator.aclose()
+        self.name = remove_quotes_and_escapes(await sdk.models.gpt35.complete(
+            f"Write a short title for the following chat message: {self.description}"))
+
+        self.chat_context.append(ChatMessage(
+            role="assistant",
+            content=self.description,
+            summary=self.name
+        ))
+
+        # TODO: Never actually closing.
+        await generator.aclose()
 
 
 class AddFileStep(Step):
