@@ -4,6 +4,10 @@ from ...core.main import ChatMessage
 from .templating import render_templated_string
 import tiktoken
 
+# TODO move many of these into specific LLM.properties() function that
+# contains max tokens, if its a chat model or not, default args (not all models
+# want to be run at 0.5 temp). also lets custom models made for long contexts
+# exist here (likg LLongMA)
 aliases = {
     "ggml": "gpt-3.5-turbo",
     "claude-2": "gpt-3.5-turbo",

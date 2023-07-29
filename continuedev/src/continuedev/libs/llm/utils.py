@@ -5,6 +5,7 @@ gpt2_tokenizer = GPT2TokenizerFast.from_pretrained("gpt2")
 def count_tokens(text: str) -> int:
     return len(gpt2_tokenizer.encode(text))
 
+# TODO move this to LLM class itself (especially as prices may change in the future)
 prices = {
     # All prices are per 1k tokens
     "fine-tune-train": {

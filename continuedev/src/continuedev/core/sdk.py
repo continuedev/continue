@@ -54,21 +54,27 @@ class Models:
         self.large = large
         self.system_message = sdk.config.system_message
 
+    async def _start(llm: LLM):
+        kwargs = {}
+        if llm.required_api_key:
+            kwargs["api_key"] = await self.sdk.get_api_secret(llm.required_api_key)
+        await llm.start(**kwargs)
+
     async def start(sdk: "ContinueSDK"):
         self.sdk = sdk
-        await self.default.start()
+        await self._start(self.default)
         if self.small:
-            await self.small.start()
+            await self._start(self.small)
         else:
             self.small = self.default
 
         if self.medium:
-            await self.medium.start()
+            await self._start(self.medium)
         else:
             self.medium = self.default
 
         if self.large:
-            await self.large.start()
+            await self._start(self.large)
         else:
             self.large = self.default
 

@@ -9,6 +9,7 @@ from ..util.count_tokens import DEFAULT_MAX_TOKENS, compile_chat_messages, CHAT_
 
 
 class AnthropicLLM(LLM):
+    required_api_key: str = "ANTHROPIC_API_KEY"
     default_model: str
     async_client: AsyncAnthropic
 
@@ -16,8 +17,8 @@ class AnthropicLLM(LLM):
         self.default_model = default_model
         self.system_message = system_message
 
-    async def start(self):
-        self.async_client = AsyncAnthropic(api_key=await self.sdk.get_api_key("ANTHROPIC_API_KEY"))
+    async def start(self, *, api_key):
+        self.async_client = AsyncAnthropic(api_key=api_key)
 
     async def stop(self):
         pass

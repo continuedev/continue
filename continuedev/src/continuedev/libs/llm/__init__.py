@@ -7,9 +7,10 @@ from pydantic import BaseModel
 
 
 class LLM(ABC):
+    required_api_key: Optional[str] = None
     system_message: Union[str, None] = None
 
-    async def start(self):
+    async def start(self, *, api_key: Optional[str] = None):
         """Start the connection to the LLM."""
         raise NotImplementedError
 
