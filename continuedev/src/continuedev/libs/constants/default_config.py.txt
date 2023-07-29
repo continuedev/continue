@@ -13,6 +13,12 @@ from continuedev.core.config import CustomCommand, SlashCommand, ContinueConfig
 from continuedev.plugins.context_providers.github import GitHubIssuesContextProvider
 from continuedev.plugins.context_providers.google import GoogleContextProvider
 
+from continuedev.plugins.steps.open_config import OpenConfigStep
+from continuedev.plugins.steps.clear_history import ClearHistoryStep
+from continuedev.plugins.steps.feedback import FeedbackStep
+from continuedev.plugins.steps.comment_code import CommentCodeStep
+from continuedev.plugins.steps.main import EditHighlightedCodeStep
+
 
 class CommitMessageStep(Step):
     """
@@ -69,6 +75,31 @@ config = ContinueConfig(
         #     description="This is an example slash command. Use /config to edit it and create more",
         #     step=CommitMessageStep,
         # )
+        SlashCommand(
+            name="edit",
+            description="Edit code in the current file or the highlighted code",
+            step=EditHighlightedCodeStep,
+        ),
+        SlashCommand(
+            name="config",
+            description="Open the config file to create new and edit existing slash commands",
+            step=OpenConfigStep,
+        ),
+        SlashCommand(
+            name="comment",
+            description="Write comments for the current file or highlighted code",
+            step=CommentCodeStep,
+        ),
+        SlashCommand(
+            name="feedback",
+            description="Send feedback to improve Continue",
+            step=FeedbackStep,
+        ),
+        SlashCommand(
+            name="clear",
+            description="Clear step history",
+            step=ClearHistoryStep,
+        )
     ],
 
     # Context providers let you quickly select context by typing '@'

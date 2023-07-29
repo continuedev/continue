@@ -54,45 +54,6 @@ class ContinueConfig(BaseModel):
 
     context_providers: List[ContextProvider] = []
 
-    # Want to force these to be the slash commands for now
-    @validator('slash_commands', pre=True)
-    def default_slash_commands_validator(cls, v):
-        from ..plugins.steps.open_config import OpenConfigStep
-        from ..plugins.steps.clear_history import ClearHistoryStep
-        from ..plugins.steps.feedback import FeedbackStep
-        from ..plugins.steps.comment_code import CommentCodeStep
-        from ..plugins.steps.main import EditHighlightedCodeStep
-
-        DEFAULT_SLASH_COMMANDS = [
-            SlashCommand(
-                name="edit",
-                description="Edit code in the current file or the highlighted code",
-                step=EditHighlightedCodeStep,
-            ),
-            SlashCommand(
-                name="config",
-                description="Open the config file to create new and edit existing slash commands",
-                step=OpenConfigStep,
-            ),
-            SlashCommand(
-                name="comment",
-                description="Write comments for the current file or highlighted code",
-                step=CommentCodeStep,
-            ),
-            SlashCommand(
-                name="feedback",
-                description="Send feedback to improve Continue",
-                step=FeedbackStep,
-            ),
-            SlashCommand(
-                name="clear",
-                description="Clear step history",
-                step=ClearHistoryStep,
-            )
-        ]
-
-        return DEFAULT_SLASH_COMMANDS + v
-
     @validator('temperature', pre=True)
     def temperature_validator(cls, v):
         return max(0.0, min(1.0, v))
