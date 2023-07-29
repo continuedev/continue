@@ -6,27 +6,29 @@ from ...core.main import ChatMessage
 import openai
 from ..llm import LLM
 from ..util.count_tokens import compile_chat_messages, CHAT_MODELS, DEFAULT_ARGS, count_tokens, format_chat_messages, prune_raw_prompt_from_top
-from ...core.config import AzureInfo
+from ...core.config import OpenAIServerInfo
 
 
 class OpenAI(LLM):
     api_key: str
     default_model: str
 
-    def __init__(self, api_key: str, default_model: str, system_message: str = None, azure_info: AzureInfo = None, write_log: Callable[[str], None] = None):
+    def __init__(self, api_key: str, default_model: str, system_message: str = None, openai_server_info: OpenAIServerInfo = None, write_log: Callable[[str], None] = None):
         self.api_key = api_key
         self.default_model = default_model
         self.system_message = system_message
-        self.azure_info = azure_info
+        self.openai_server_info = openai_server_info
         self.write_log = write_log
 
         openai.api_key = api_key
 
         # Using an Azure OpenAI deployment
-        if azure_info is not None:
-            openai.api_type = "azure"
-            openai.api_base = azure_info.endpoint
-            openai.api_version = azure_info.api_version
+        if openai_server_info is not None:
+            openai.api_type = openai_server_info.api_type
+            if openai_server_info.api_base is not None:
+                openai.api_base = openai_server_info.api_base
+            if openai_server_info.api_version is not None:
+                openai.api_version = openai_server_info.api_version
 
     @cached_property
     def name(self):
@@ -35,8 +37,8 @@ class OpenAI(LLM):
     @property
     def default_args(self):
         args = {**DEFAULT_ARGS, "model": self.default_model}
-        if self.azure_info is not None:
-            args["engine"] = self.azure_info.engine
+        if self.openai_server_info is not None:
+            args["engine"] = self.openai_server_info.engine
         return args
 
     def count_tokens(self, text: str):

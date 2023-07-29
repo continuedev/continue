@@ -25,10 +25,11 @@ class OnTracebackSteps(BaseModel):
     params: Optional[Dict] = {}
 
 
-class AzureInfo(BaseModel):
-    endpoint: str
-    engine: str
-    api_version: str
+class OpenAIServerInfo(BaseModel):
+    api_base: Optional[str] = None
+    engine: Optional[str] = None
+    api_version: Optional[str] = None
+    api_type: Literal["azure", "openai"] = "openai"
 
 
 class ContinueConfig(BaseModel):
@@ -49,7 +50,7 @@ class ContinueConfig(BaseModel):
     slash_commands: Optional[List[SlashCommand]] = []
     on_traceback: Optional[List[OnTracebackSteps]] = []
     system_message: Optional[str] = None
-    azure_openai_info: Optional[AzureInfo] = None
+    openai_server_info: Optional[OpenAIServerInfo] = None
 
     context_providers: List[ContextProvider] = []
 
