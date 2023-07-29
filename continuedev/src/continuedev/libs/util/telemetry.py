@@ -4,6 +4,8 @@ import os
 from dotenv import load_dotenv
 from .commonregex import clean_pii_from_any
 from .logging import logger
+from .paths import getServerFolderPath
+from ..constants.main import CONTINUE_SERVER_VERSION_FILE
 
 load_dotenv()
 in_codespaces = os.getenv("CODESPACES") == "true"
@@ -42,12 +44,21 @@ class PostHogLogger:
         if not self.allow_anonymous_telemetry:
             return
 
+        # Clean PII from event properties
+        event_properties = clean_pii_from_any(event_properties)
+
+        # Add additional properties that are on every event
         if in_codespaces:
             event_properties['codespaces'] = True
 
+        server_version_file = os.path.join(
+            getServerFolderPath(), CONTINUE_SERVER_VERSION_FILE)
+        if os.path.exists(server_version_file):
+            with open(server_version_file, "r") as f:
+                event_properties['server_version'] = f.read()
+
         # Send event to PostHog
-        self.posthog.capture(self.unique_id, event_name,
-                             clean_pii_from_any(event_properties))
+        self.posthog.capture(self.unique_id, event_name, event_properties)
 
 
 posthog_logger = PostHogLogger(api_key=POSTHOG_API_KEY)
