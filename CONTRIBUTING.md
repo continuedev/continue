@@ -2,7 +2,7 @@
 
 ## Table of Contents
 
-- [❤️ Ways to Contribute](#❤️-ways-to-contribute)
+- [❤️ Ways to Contribute](#%EF%B8%8F-ways-to-contribute)
   - [🐛 Report Bugs](#🐛-report-bugs)
   - [✨ Suggest Enhancements](#✨-suggest-enhancements)
   - [📖 Updating / Improving Documentation](#📖-updating--improving-documentation)
