@@ -69,7 +69,7 @@ except Exception as e:
 
 
 def run_server():
-    config = uvicorn.Config(app, host="0.0.0.0", port=args.port)
+    config = uvicorn.Config(app, host="127.0.0.1", port=args.port)
     server = uvicorn.Server(config)
 
     server.run()
