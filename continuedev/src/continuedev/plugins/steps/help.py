@@ -34,31 +34,33 @@ class HelpStep(Step):
     description: str = ""
 
     async def run(self, sdk: ContinueSDK):
-
         question = self.user_input
 
-        prompt = dedent(f"""                    
-                    Information:
-                    
-                    {help}
-                    
-                    Instructions:
+        if question.strip() == "":
+            self.description = help
+        else:
+            prompt = dedent(f"""                    
+                        Information:
+                        
+                        {help}
 
-                    Please us the information below to provide a succinct answer to the following question: {question}
+                        Instructions:
 
-                    Do not cite any slash commands other than those you've been told about, which are: /edit and /feedback.""")
+                        Please us the information below to provide a succinct answer to the following question: {question}
 
-        self.chat_context.append(ChatMessage(
-            role="user",
-            content=prompt,
-            summary="Help"
-        ))
-        messages = await sdk.get_chat_context()
-        generator = sdk.models.gpt4.stream_chat(messages)
-        async for chunk in generator:
-            if "content" in chunk:
-                self.description += chunk["content"]
-                await sdk.update_ui()
+                        Do not cite any slash commands other than those you've been told about, which are: /edit and /feedback.""")
+
+            self.chat_context.append(ChatMessage(
+                role="user",
+                content=prompt,
+                summary="Help"
+            ))
+            messages = await sdk.get_chat_context()
+            generator = sdk.models.gpt4.stream_chat(messages)
+            async for chunk in generator:
+                if "content" in chunk:
+                    self.description += chunk["content"]
+                    await sdk.update_ui()
 
         posthog_logger.capture_event(
             "help", {"question": question, "answer": self.description})
