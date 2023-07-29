@@ -15,7 +15,7 @@ from ..server.ide_protocol import AbstractIdeProtocolServer
 from ..libs.util.queue import AsyncSubscriptionQueue
 from ..models.main import ContinueBaseModel
 from .main import Context, ContinueCustomException, Policy, History, FullState, Step, HistoryNode
-from ..plugins.steps.core.core import ReversibleStep, ManualEditStep, UserInputStep
+from ..plugins.steps.core.core import DisplayErrorStep, ReversibleStep, ManualEditStep, UserInputStep
 from .sdk import ContinueSDK
 from ..libs.util.traceback_parsers import get_python_traceback, get_javascript_traceback
 from openai import error as openai_errors
@@ -312,8 +312,8 @@ class Autopilot(ContinueBaseModel):
             # Update subscribers with new description
             await self.update_subscribers()
 
-        create_async_task(update_description(),
-                          self.continue_sdk.ide.unique_id)
+        create_async_task(update_description(
+        ), on_error=lambda e: self.continue_sdk.run_step(DisplayErrorStep(e=e)))
 
         return observation
 

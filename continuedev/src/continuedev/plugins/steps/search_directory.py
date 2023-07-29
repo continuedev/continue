@@ -65,5 +65,5 @@ class EditAllMatchesStep(Step):
             range=range_in_file.range,
             filename=range_in_file.filepath,
             prompt=self.user_request
-        ), sdk.ide.unique_id) for range_in_file in range_in_files]
+        )) for range_in_file in range_in_files]
         await asyncio.gather(*tasks)

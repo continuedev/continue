@@ -1,6 +1,6 @@
 from functools import cached_property
 import traceback
-from typing import Coroutine, Dict, Union
+from typing import Coroutine, Dict, Literal, Union
 import os
 
 from ..plugins.steps.core.core import DefaultModelEditCodeStep

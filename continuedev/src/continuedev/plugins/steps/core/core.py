@@ -1,20 +1,22 @@
 # These steps are depended upon by ContinueSDK
 import os
-import subprocess
+import json
 import difflib
 from textwrap import dedent
-from typing import Coroutine, List, Literal, Union
+import traceback
+from typing import Any, Coroutine, List, Union
+import difflib
+
+from pydantic import validator
 
 from ....libs.llm.ggml import GGML
 from ....models.main import Range
-from ....libs.llm.prompt_utils import MarkdownStyleEncoderDecoder
 from ....models.filesystem_edit import EditDiff, FileEdit, FileEditWithFullContents, FileSystemEdit
 from ....models.filesystem import FileSystem, RangeInFile, RangeInFileWithContents
-from ....core.observation import Observation, TextObservation, TracebackObservation, UserInputObservation
-from ....core.main import ChatMessage, ContinueCustomException, Step, SequentialStep
+from ....core.observation import Observation, TextObservation, UserInputObservation
+from ....core.main import ChatMessage, ContinueCustomException, Step
 from ....libs.util.count_tokens import MAX_TOKENS_FOR_MODEL, DEFAULT_MAX_TOKENS
 from ....libs.util.strings import dedent_and_get_common_whitespace, remove_quotes_and_escapes
-import difflib
 
 
 class ContinueSDK:
@@ -39,6 +41,25 @@ class MessageStep(Step):
 
     async def run(self, sdk: ContinueSDK) -> Coroutine[Observation, None, None]:
         return TextObservation(text=self.message)
+
+
+class DisplayErrorStep(Step):
+    name: str = "Error in the Continue server"
+    e: Any
+
+    class Config:
+        arbitrary_types_allowed = True
+
+    @validator("e", pre=True, always=True)
+    def validate_e(cls, v):
+        if isinstance(v, Exception):
+            return '\n'.join(traceback.format_exception(v))
+
+    async def describe(self, models: Models) -> Coroutine[str, None, None]:
+        return self.e
+
+    async def run(self, sdk: ContinueSDK) -> Coroutine[Observation, None, None]:
+        raise ContinueCustomException(message=self.e, title=self.name)
 
 
 class FileSystemEditStep(ReversibleStep):

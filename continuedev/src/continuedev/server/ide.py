@@ -10,6 +10,7 @@ from pydantic import BaseModel
 import traceback
 import asyncio
 
+from ..plugins.steps.core.core import DisplayErrorStep, MessageStep
 from .meilisearch_server import start_meilisearch
 from ..libs.util.telemetry import posthog_logger
 from ..libs.util.queue import AsyncSubscriptionQueue
@@ -279,6 +280,9 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
     # This is where you might have triggers: plugins can subscribe to certian events
     # like file changes, tracebacks, etc...
 
+    def on_error(self, e: Exception):
+        return self.session_manager.sessions[self.session_id].autopilot.continue_sdk.run_step(DisplayErrorStep(e=e))
+
     def onAcceptRejectSuggestion(self, accepted: bool):
         posthog_logger.capture_event("accept_reject_suggestion", {
             "accepted": accepted
@@ -311,22 +315,22 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
 
     def onDeleteAtIndex(self, index: int):
         if autopilot := self.__get_autopilot():
-            create_async_task(autopilot.delete_at_index(index), self.unique_id)
+            create_async_task(autopilot.delete_at_index(index), self.on_error)
 
     def onCommandOutput(self, output: str):
         if autopilot := self.__get_autopilot():
             create_async_task(
-                autopilot.handle_command_output(output), self.unique_id)
+                autopilot.handle_command_output(output), self.on_error)
 
     def onHighlightedCodeUpdate(self, range_in_files: List[RangeInFileWithContents]):
         if autopilot := self.__get_autopilot():
             create_async_task(autopilot.handle_highlighted_code(
-                range_in_files), self.unique_id)
+                range_in_files), self.on_error)
 
     def onMainUserInput(self, input: str):
         if autopilot := self.__get_autopilot():
             create_async_task(
-                autopilot.accept_user_input(input), self.unique_id)
+                autopilot.accept_user_input(input), self.on_error)
 
     # Request information. Session doesn't matter.
     async def getOpenFiles(self) -> List[str]:
@@ -459,7 +463,7 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str = None):
 
             logger.debug(f"Received IDE message: {message_type}")
             create_async_task(
-                ideProtocolServer.handle_json(message_type, data))
+                ideProtocolServer.handle_json(message_type, data), ideProtocolServer.on_error)
 
         ideProtocolServer = IdeProtocolServer(session_manager, websocket)
         if session_id is not None:
@@ -480,8 +484,12 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str = None):
         logger.debug("IDE wbsocket disconnected")
     except Exception as e:
         logger.debug(f"Error in ide websocket: {e}")
+        err_msg = '\n'.join(traceback.format_exception(e))
         posthog_logger.capture_event("gui_error", {
-            "error_title": e.__str__() or e.__repr__(), "error_message": '\n'.join(traceback.format_exception(e))})
+            "error_title": e.__str__() or e.__repr__(), "error_message": err_msg})
+
+        await session_manager.sessions[session_id].autopilot.continue_sdk.run_step(DisplayErrorStep(e=e))
+
         raise e
     finally:
         logger.debug("Closing ide websocket")

@@ -6,6 +6,7 @@ import json
 
 from fastapi.websockets import WebSocketState
 
+from ..plugins.steps.core.core import DisplayErrorStep
 from ..libs.util.paths import getSessionFilePath, getSessionsFolderPath
 from ..models.filesystem_edit import FileEditWithFullContents
 from ..libs.constants.main import CONTINUE_SESSIONS_FOLDER
@@ -83,7 +84,8 @@ class SessionManager:
             })
 
         autopilot.on_update(on_update)
-        create_async_task(autopilot.run_policy())
+        create_async_task(autopilot.run_policy(
+        ), lambda e: autopilot.continue_sdk.run_step(DisplayErrorStep(e=e)))
         return session
 
     async def remove_session(self, session_id: str):
