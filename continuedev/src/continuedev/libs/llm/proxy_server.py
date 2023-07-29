@@ -1,7 +1,7 @@
 
 import json
 import traceback
-from typing import Any, Callable, Coroutine, Dict, Generator, List, Literal, Union
+from typing import Any, Callable, Coroutine, Dict, Generator, List, Literal, Union, Optional
 import aiohttp
 from ...core.main import ChatMessage
 from ..llm import LLM
@@ -19,29 +19,30 @@ SERVER_URL = "https://proxy-server-l6vsfbzhba-uw.a.run.app"
 
 class ProxyServer(LLM):
     unique_id: str
-    name: str
-    default_model: Literal["gpt-3.5-turbo", "gpt-4"]
+    model: str
+    system_message: Optional[str]
     write_log: Callable[[str], None]
 
-    def __init__(self, unique_id: str, default_model: Literal["gpt-3.5-turbo", "gpt-4"], system_message: str = None, write_log: Callable[[str], None] = None):
-        self.unique_id = unique_id
-        self.default_model = default_model
-        self.system_message = system_message
-        self.name = default_model
-        self.write_log = write_log
+    required_unique_id = True
+    required_write_log = True
 
     async def start(self):
+        # TODO put ClientSession here
         pass
 
     async def stop(self):
         pass
 
     @property
+    def name(self):
+        return self.model
+
+    @property
     def default_args(self):
-        return {**DEFAULT_ARGS, "model": self.default_model}
+        return {**DEFAULT_ARGS, "model": self.model}
 
     def count_tokens(self, text: str):
-        return count_tokens(self.default_model, text)
+        return count_tokens(self.model, text)
 
     def get_headers(self):
         # headers with unique id
@@ -103,7 +104,7 @@ class ProxyServer(LLM):
     async def stream_complete(self, prompt, with_history: List[ChatMessage] = None, **kwargs) -> Generator[Union[Any, List, Dict], None, None]:
         args = {**self.default_args, **kwargs}
         messages = compile_chat_messages(
-            self.default_model, with_history, args["max_tokens"], prompt, functions=args.get("functions", None), system_message=self.system_message)
+            self.model, with_history, args["max_tokens"], prompt, functions=args.get("functions", None), system_message=self.system_message)
         self.write_log(f"Prompt: \n\n{format_chat_messages(messages)}")
 
         async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(ssl_context=ssl_context)) as session:

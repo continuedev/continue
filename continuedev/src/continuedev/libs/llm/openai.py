@@ -1,6 +1,6 @@
 from functools import cached_property
 import json
-from typing import Any, Callable, Coroutine, Dict, Generator, List, Union
+from typing import Any, Callable, Coroutine, Dict, Generator, List, Union, Optional
 
 from pydantic import BaseModel
 from ...core.main import ChatMessage
@@ -16,14 +16,13 @@ class AzureInfo(BaseModel):
 
 
 class OpenAI(LLM):
+    model: str
+    system_message: Optional[str] = None
+    azure_info: Optional[AzureInfo] = None
+    write_log: Optional[Callable[[str], None]] = None
+    
     required_api_key = "OPENAI_API_KEY"
-    default_model: str
-
-    def __init__(self, default_model: str, system_message: str = None, azure_info: AzureInfo = None, write_log: Callable[[str], None] = None):
-        self.default_model = default_model
-        self.system_message = system_message
-        self.azure_info = azure_info
-        self.write_log = write_log
+    required_write_log = True
 
     async def start(self, *, api_key):
         self.api_key = api_key
@@ -38,18 +37,19 @@ class OpenAI(LLM):
     async def stop(self):
         pass
 
+    @property
     def name(self):
-        return self.default_model
+        return self.model
 
     @property
     def default_args(self):
-        args = {**DEFAULT_ARGS, "model": self.default_model}
+        args = {**DEFAULT_ARGS, "model": self.model}
         if self.azure_info is not None:
             args["engine"] = self.azure_info.engine
         return args
 
     def count_tokens(self, text: str):
-        return count_tokens(self.default_model, text)
+        return count_tokens(self.model, text)
 
     async def stream_complete(self, prompt, with_history: List[ChatMessage] = None, **kwargs) -> Generator[Union[Any, List, Dict], None, None]:
         args = self.default_args.copy()
@@ -85,7 +85,8 @@ class OpenAI(LLM):
         args = self.default_args.copy()
         args.update(kwargs)
         args["stream"] = True
-        args["model"] = self.default_model if self.default_model in CHAT_MODELS else "gpt-3.5-turbo-0613"
+        # TODO what to do here? why should we change to gpt-3.5-turbo-0613 if the user didn't ask for it?
+        args["model"] = self.model if self.model in CHAT_MODELS else "gpt-3.5-turbo-0613"
         if not args["model"].endswith("0613") and "functions" in args:
             del args["functions"]
 

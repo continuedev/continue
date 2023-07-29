@@ -38,6 +38,10 @@ class Models(BaseModel):
         kwargs = {}
         if llm.required_api_key:
             kwargs["api_key"] = await self.sdk.get_api_key(llm.required_api_key)
+        if llm.required_unique_id:
+            kwargs["unique_id"] = self.sdk.ide.unique_id
+        if llm.required_write_log:
+            kwargs["write_log"] = self.sdk.write_log
         await llm.start(**kwargs)
 
     async def start(self, sdk: "ContinueSDK"):
