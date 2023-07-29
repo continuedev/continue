@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Any
 from pydantic import BaseModel
 from ..libs.llm import LLM
 
@@ -9,6 +9,11 @@ class Models(BaseModel):
     small: Optional[LLM] = None
     medium: Optional[LLM] = None
     large: Optional[LLM] = None
+
+    # TODO namespace these away to not confuse readers,
+    # or split Models into ModelsConfig, which gets turned into Models
+    sdk: Any = None
+    system_message: Any = None
 
     """
     Better to have sdk.llm.stream_chat(messages, model="claude-2").
@@ -29,13 +34,13 @@ class Models(BaseModel):
             '''depending on the model, return the single prompt string'''
     """
 
-    async def _start(llm: LLM):
+    async def _start(self, llm: LLM):
         kwargs = {}
         if llm.required_api_key:
-            kwargs["api_key"] = await self.sdk.get_api_secret(llm.required_api_key)
+            kwargs["api_key"] = await self.sdk.get_api_key(llm.required_api_key)
         await llm.start(**kwargs)
 
-    async def start(sdk: "ContinueSDK"):
+    async def start(self, sdk: "ContinueSDK"):
         self.sdk = sdk
         self.system_message = self.sdk.config.system_message
         await self._start(self.default)
@@ -54,7 +59,7 @@ class Models(BaseModel):
         else:
             self.large = self.default
 
-    async def stop(sdk: "ContinueSDK"):
+    async def stop(self, sdk: "ContinueSDK"):
         await self.default.stop()
         if self.small:
             await self.small.stop()
