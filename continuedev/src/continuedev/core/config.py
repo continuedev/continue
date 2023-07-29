@@ -39,7 +39,9 @@ class ContinueConfig(BaseModel):
     steps_on_startup: List[Step] = []
     disallowed_steps: Optional[List[str]] = []
     allow_anonymous_telemetry: Optional[bool] = True
-    llm: LLM = OpenAI(default_model="gpt-4")
+    models: Models = Models(
+        default=MaybeProxyOpenAI(model="gpt-4"),
+    )
     temperature: Optional[float] = 0.5
     custom_commands: Optional[List[CustomCommand]] = [CustomCommand(
         name="test",
