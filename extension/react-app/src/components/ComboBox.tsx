@@ -162,33 +162,43 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
       }
     },
     onInputValueChange({ inputValue, highlightedIndex }) {
-      if (!inputValue) return;
+      if (!inputValue) {
+        setItems([]);
+        return;
+      }
       props.onInputValueChange(inputValue);
 
       if (inputValue.endsWith("@") || currentlyInContextQuery) {
-        setCurrentlyInContextQuery(true);
-
         const segs = inputValue.split("@");
-        const providerAndQuery = segs[segs.length - 1];
-        const [provider, query] = providerAndQuery.split(" ");
-        searchClient
-          .index(SEARCH_INDEX_NAME)
-          .search(providerAndQuery)
-          .then((res) => {
-            setItems(
-              res.hits.map((hit) => {
-                return {
-                  name: hit.name,
-                  description: hit.description,
-                  id: hit.id,
-                };
-              })
-            );
-          })
-          .catch(() => {
-            // Swallow errors, because this simply is not supported on Windows at the moment
-          });
-        return;
+
+        if (segs.length > 1) {
+          // Get search results and return
+          setCurrentlyInContextQuery(true);
+          const providerAndQuery = segs[segs.length - 1];
+          const [provider, query] = providerAndQuery.split(" ");
+          searchClient
+            .index(SEARCH_INDEX_NAME)
+            .search(providerAndQuery)
+            .then((res) => {
+              setItems(
+                res.hits.map((hit) => {
+                  return {
+                    name: hit.name,
+                    description: hit.description,
+                    id: hit.id,
+                  };
+                })
+              );
+            })
+            .catch(() => {
+              // Swallow errors, because this simply is not supported on Windows at the moment
+            });
+          return;
+        } else {
+          // Exit the '@' context menu
+          setCurrentlyInContextQuery(false);
+          setItems;
+        }
       }
       setItems(
         props.items.filter((item) =>
@@ -262,7 +272,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
               key={`${item.description.id.item_id}${idx}`}
               item={item}
               warning={
-                false && item.content.length > 4000 && item.editing
+                item.content.length > 4000 && item.editing
                   ? "Editing such a large range may be slow"
                   : undefined
               }
