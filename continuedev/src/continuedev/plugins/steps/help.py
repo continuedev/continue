@@ -37,11 +37,16 @@ class HelpStep(Step):
 
         question = self.user_input
 
-        prompt = dedent(f"""Please us the information below to provide a succinct answer to the following quesiton: {question}
-                    
+        prompt = dedent(f"""                    
                     Information:
+                    
+                    {help}
+                    
+                    Instructions:
 
-                    {help}""")
+                    Please us the information below to provide a succinct answer to the following question: {question}
+
+                    Do not cite any slash commands other than those you've been told about, which are: /edit and /feedback.""")
 
         self.chat_context.append(ChatMessage(
             role="user",
