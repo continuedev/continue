@@ -7,6 +7,9 @@ import {
   startContinuePythonServer,
 } from "./environmentSetup";
 import fetch from "node-fetch";
+import { registerAllCodeLensProviders } from "../lang-server/codeLens";
+import { registerAllCommands } from "../commands";
+import registerQuickFixProvider from "../lang-server/codeActions";
 
 const PACKAGE_JSON_RAW_GITHUB_URL =
   "https://raw.githubusercontent.com/continuedev/continue/HEAD/extension/package.json";
@@ -45,6 +48,11 @@ export async function activateExtension(context: vscode.ExtensionContext) {
       }
     })
     .catch((e) => console.log("Error checking for extension updates: ", e));
+
+  // Register commands and providers
+  registerAllCodeLensProviders(context);
+  registerAllCommands(context);
+  registerQuickFixProvider();
 
   // Start the server and display loader if taking > 2 seconds
   const sessionIdPromise = (async () => {

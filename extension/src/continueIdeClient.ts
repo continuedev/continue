@@ -93,11 +93,6 @@ class IdeProtocolClient {
     this._serverUrl = serverUrl;
     this._newWebsocketMessenger();
 
-    // Register commands and providers
-    registerAllCodeLensProviders(context);
-    registerAllCommands(context);
-    registerQuickFixProvider();
-
     // Setup listeners for any file changes in open editors
     // vscode.workspace.onDidChangeTextDocument((event) => {
     //   if (this._makingEdit === 0) {
