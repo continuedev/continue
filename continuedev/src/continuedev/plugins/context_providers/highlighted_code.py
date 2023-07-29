@@ -3,7 +3,7 @@ from typing import Any, Dict, List
 
 from ...core.main import ChatMessage
 from ...models.filesystem import RangeInFile, RangeInFileWithContents
-from ...core.context import ContextItem, ContextItemDescription, ContextItemId
+from ...core.context import ContextItem, ContextItemDescription, ContextItemId, ContextProvider
 from pydantic import BaseModel
 
 
@@ -12,7 +12,7 @@ class HighlightedRangeContextItem(BaseModel):
     item: ContextItem
 
 
-class HighlightedCodeContextProvider(BaseModel):
+class HighlightedCodeContextProvider(ContextProvider):
     """
     The ContextProvider class is a plugin that lets you provide new information to the LLM by typing '@'.
     When you type '@', the context provider will be asked to populate a list of options.
@@ -98,6 +98,15 @@ class HighlightedCodeContextProvider(BaseModel):
 
     async def provide_context_items(self) -> List[ContextItem]:
         return []
+
+    async def get_item(self, id: ContextItemId, query: str) -> ContextItem:
+        raise NotImplementedError()
+
+    async def clear_context(self):
+        self.highlighted_ranges = []
+        self.adding_highlighted_code = False
+        self.should_get_fallback_context_item = True
+        self.last_added_fallback = False
 
     async def delete_context_with_ids(self, ids: List[ContextItemId]) -> List[ContextItem]:
         indices_to_delete = [

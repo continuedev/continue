@@ -470,7 +470,6 @@ export async function startContinuePythonServer() {
           shell: true,
         });
         child.stderr.on("data", (data: any) => {
-          console.log(`stdout: ${data}`);
           if (
             data.includes("Uvicorn running on") || // Successfully started the server
             data.includes("only one usage of each socket address") || // [windows] The server is already running (probably a simultaneously opened VS Code window)
@@ -480,6 +479,8 @@ export async function startContinuePythonServer() {
             resolve(null);
           } else if (data.includes("ERROR") || data.includes("Traceback")) {
             console.log("Error starting Continue python server: ", data);
+          } else {
+            console.log(`stdout: ${data}`);
           }
         });
         child.on("error", (error: any) => {
