@@ -35,7 +35,7 @@ class ContextProvider(BaseModel):
         return self.selected_items
 
     @abstractmethod
-    async def provide_context_items(self) -> List[ContextItem]:
+    async def provide_context_items(self, workspace_dir: str) -> List[ContextItem]:
         """
         Provide documents for search index. This is run on startup.
 
@@ -159,9 +159,9 @@ class ContextManager:
 
         return cls(context_providers)
 
-    async def load_index(self):
+    async def load_index(self, workspace_dir: str):
         for _, provider in self.context_providers.items():
-            context_items = await provider.provide_context_items()
+            context_items = await provider.provide_context_items(workspace_dir)
             documents = [
                 {
                     "id": item.description.id.to_string(),
