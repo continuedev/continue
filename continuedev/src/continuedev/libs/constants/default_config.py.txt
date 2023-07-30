@@ -45,7 +45,8 @@ config = ContinueConfig(
     allow_anonymous_telemetry=True,
 
     models=Models(
-        default=MaybeProxyOpenAI("gpt4")
+        default=MaybeProxyOpenAI("gpt4"),
+        medium=MaybeProxyOpenAI("gpt-3.5-turbo")
     )
 
     # Set a system message with information that the LLM should always keep in mind

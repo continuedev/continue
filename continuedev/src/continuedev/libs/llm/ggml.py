@@ -13,11 +13,13 @@ SERVER_URL = "http://localhost:8000"
 
 class GGML(LLM):
 
+    _client_session: aiohttp.ClientSession
+
     def __init__(self, system_message: str = None):
         self.system_message = system_message
 
     async def start(self, **kwargs):
-        pass
+        self._client_session = aiohttp.ClientSession()
 
     async def stop(self):
         pass
@@ -43,7 +45,7 @@ class GGML(LLM):
             self.name, with_history, args["max_tokens"], prompt, functions=args.get("functions", None), system_message=self.system_message)
 
         # TODO move to single self.session variable (proxy setting etc)
-        async with aiohttp.ClientSession() as session:
+        async with self._client_session as session:
             async with session.post(f"{SERVER_URL}/v1/completions", json={
                 "messages": messages,
                 **args
@@ -61,7 +63,7 @@ class GGML(LLM):
             self.name, messages, args["max_tokens"], None, functions=args.get("functions", None), system_message=self.system_message)
         args["stream"] = True
 
-        async with aiohttp.ClientSession() as session:
+        async with self._client_session as session:
             async with session.post(f"{SERVER_URL}/v1/chat/completions", json={
                 "messages": messages,
                 **args
@@ -83,7 +85,7 @@ class GGML(LLM):
     async def complete(self, prompt: str, with_history: List[ChatMessage] = None, **kwargs) -> Coroutine[Any, Any, str]:
         args = {**self.default_args, **kwargs}
 
-        async with aiohttp.ClientSession() as session:
+        async with self._client_session as session:
             async with session.post(f"{SERVER_URL}/v1/completions", json={
                 "messages": compile_chat_messages(args["model"], with_history, args["max_tokens"], prompt, functions=None, system_message=self.system_message),
                 **args
