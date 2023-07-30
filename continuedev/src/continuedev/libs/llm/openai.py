@@ -17,12 +17,14 @@ class AzureInfo(BaseModel):
 
 class OpenAI(LLM):
     model: str
+
+    requires_api_key = "OPENAI_API_KEY"
+    requires_write_log = True
+
     system_message: Optional[str] = None
     azure_info: Optional[AzureInfo] = None
     write_log: Optional[Callable[[str], None]] = None
-    
-    required_api_key = "OPENAI_API_KEY"
-    required_write_log = True
+    api_key: str = None
 
     async def start(self, *, api_key):
         self.api_key = api_key
@@ -31,8 +33,8 @@ class OpenAI(LLM):
         # Using an Azure OpenAI deployment
         if self.azure_info is not None:
             openai.api_type = "azure"
-            openai.api_base = azure_info.endpoint
-            openai.api_version = azure_info.api_version
+            openai.api_base = self.azure_info.endpoint
+            openai.api_version = self.azure_info.api_version
 
     async def stop(self):
         pass

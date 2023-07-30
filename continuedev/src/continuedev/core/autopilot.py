@@ -94,7 +94,6 @@ class Autopilot(ContinueBaseModel):
             history=self.history,
             active=self._active,
             user_input_queue=self._main_user_input_queue,
-            default_model=self.continue_sdk.config.default_model,
             slash_commands=self.get_available_slash_commands(),
             adding_highlighted_code=self.context_manager.context_providers[
                 "code"].adding_highlighted_code,

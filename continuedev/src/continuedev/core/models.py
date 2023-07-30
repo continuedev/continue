@@ -1,5 +1,5 @@
 from typing import Optional, Any
-from pydantic import BaseModel
+from pydantic import BaseModel, validator
 from ..libs.llm import LLM
 
 
@@ -12,7 +12,7 @@ class Models(BaseModel):
 
     # TODO namespace these away to not confuse readers,
     # or split Models into ModelsConfig, which gets turned into Models
-    sdk: Any = None
+    sdk: "ContinueSDK" = None
     system_message: Any = None
 
     """
@@ -34,43 +34,42 @@ class Models(BaseModel):
             '''depending on the model, return the single prompt string'''
     """
 
-    async def _start(self, llm: LLM):
+    async def _start_llm(self, llm: LLM):
         kwargs = {}
-        if llm.required_api_key:
-            kwargs["api_key"] = await self.sdk.get_api_key(llm.required_api_key)
-        if llm.required_unique_id:
+        if llm.requires_api_key:
+            kwargs["api_key"] = await self.sdk.get_api_key(llm.requires_api_key)
+        if llm.requires_unique_id:
             kwargs["unique_id"] = self.sdk.ide.unique_id
-        if llm.required_write_log:
+        if llm.requires_write_log:
             kwargs["write_log"] = self.sdk.write_log
         await llm.start(**kwargs)
 
     async def start(self, sdk: "ContinueSDK"):
+        """Start each of the LLMs, or fall back to default"""
         self.sdk = sdk
         self.system_message = self.sdk.config.system_message
-        await self._start(self.default)
+        await self._start_llm(self.default)
         if self.small:
-            await self._start(self.small)
+            await self._start_llm(self.small)
         else:
             self.small = self.default
 
         if self.medium:
-            await self._start(self.medium)
+            await self._start_llm(self.medium)
         else:
             self.medium = self.default
 
         if self.large:
-            await self._start(self.large)
+            await self._start_llm(self.large)
         else:
             self.large = self.default
 
     async def stop(self, sdk: "ContinueSDK"):
+        """Stop each LLM (if it's not the default, which is shared)"""
         await self.default.stop()
-        if self.small:
+        if self.small is not self.default:
             await self.small.stop()
-
-        if self.medium:
+        if self.medium is not self.default:
             await self.medium.stop()
-
-        if self.large:
+        if self.large is not self.default:
             await self.large.stop()
-

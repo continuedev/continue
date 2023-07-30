@@ -9,27 +9,28 @@ from ..util.count_tokens import DEFAULT_MAX_TOKENS, compile_chat_messages, CHAT_
 
 
 class AnthropicLLM(LLM):
-    required_api_key: str = "ANTHROPIC_API_KEY"
-    default_model: str
-    async_client: AsyncAnthropic
+    model: str
 
-    def __init__(self, default_model: str, system_message: str = None):
-        self.default_model = default_model
+    requires_api_key: str = "ANTHROPIC_API_KEY"
+    _async_client: AsyncAnthropic = None
+
+    def __init__(self, model: str, system_message: str = None):
+        self.model = model
         self.system_message = system_message
 
-    async def start(self, *, api_key):
-        self.async_client = AsyncAnthropic(api_key=api_key)
+    async def start(self, *, api_key: str):
+        self._async_client = AsyncAnthropic(api_key=api_key)
 
     async def stop(self):
         pass
 
     @cached_property
     def name(self):
-        return self.default_model
+        return self.model
 
     @property
     def default_args(self):
-        return {**DEFAULT_ARGS, "model": self.default_model}
+        return {**DEFAULT_ARGS, "model": self.model}
 
     def _transform_args(self, args: Dict[str, Any]) -> Dict[str, Any]:
         args = args.copy()
@@ -43,7 +44,7 @@ class AnthropicLLM(LLM):
         return args
 
     def count_tokens(self, text: str):
-        return count_tokens(self.default_model, text)
+        return count_tokens(self.model, text)
 
     def __messages_to_prompt(self, messages: List[Dict[str, str]]) -> str:
         prompt = ""
@@ -63,7 +64,7 @@ class AnthropicLLM(LLM):
         args["stream"] = True
         args = self._transform_args(args)
 
-        async for chunk in await self.async_client.completions.create(
+        async for chunk in await self._async_client.completions.create(
             prompt=f"{HUMAN_PROMPT} {prompt} {AI_PROMPT}",
             **args
         ):
@@ -77,7 +78,7 @@ class AnthropicLLM(LLM):
 
         messages = compile_chat_messages(
             args["model"], messages, args["max_tokens_to_sample"], functions=args.get("functions", None), system_message=self.system_message)
-        async for chunk in await self.async_client.completions.create(
+        async for chunk in await self._async_client.completions.create(
             prompt=self.__messages_to_prompt(messages),
             **args
         ):
@@ -92,7 +93,7 @@ class AnthropicLLM(LLM):
 
         messages = compile_chat_messages(
             args["model"], with_history, args["max_tokens_to_sample"], prompt, functions=None, system_message=self.system_message)
-        resp = (await self.async_client.completions.create(
+        resp = (await self._async_client.completions.create(
             prompt=self.__messages_to_prompt(messages),
             **args
         )).completion

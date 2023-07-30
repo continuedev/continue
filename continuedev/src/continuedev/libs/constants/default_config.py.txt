@@ -12,7 +12,7 @@ from continuedev.src.continuedev.core.sdk import ContinueSDK
 from continuedev.src.continuedev.core.config import CustomCommand, SlashCommand, ContinueConfig
 from continuedev.src.continuedev.plugins.context_providers.github import GitHubIssuesContextProvider
 from continuedev.src.continuedev.plugins.context_providers.google import GoogleContextProvider
-
+from continuedev.src.continuedev.libs.llm.maybe_proxy_openai import MaybeProxyOpenAI
 
 class CommitMessageStep(Step):
     """
@@ -41,9 +41,9 @@ config = ContinueConfig(
     # See here to learn what anonymous data we collect: https://continue.dev/docs/telemetry
     allow_anonymous_telemetry=True,
 
-    # GPT-4 is recommended for best results
-    # See options here: https://continue.dev/docs/customization#change-the-default-llm
-    default_model="gpt-4",
+    models=Models(
+        default=MaybeProxyOpenAI("gpt4")
+    )
 
     # Set a system message with information that the LLM should always keep in mind
     # E.g. "Please give concise answers. Always respond in Spanish."

@@ -16,6 +16,12 @@ class GGML(LLM):
     def __init__(self, system_message: str = None):
         self.system_message = system_message
 
+    async def start(self, **kwargs):
+        pass
+
+    async def stop(self):
+        pass
+
     @property
     def name(self):
         return "ggml"

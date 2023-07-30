@@ -1,4 +1,3 @@
-
 import json
 import traceback
 from typing import Any, Callable, Coroutine, Dict, Generator, List, Literal, Union, Optional
@@ -18,20 +17,24 @@ SERVER_URL = "https://proxy-server-l6vsfbzhba-uw.a.run.app"
 
 
 class ProxyServer(LLM):
-    unique_id: str
     model: str
     system_message: Optional[str]
-    write_log: Callable[[str], None]
 
-    required_unique_id = True
-    required_write_log = True
+    unique_id: str = None
+    write_log: Callable[[str], None] = None
+    _client_session: aiohttp.ClientSession
 
-    async def start(self):
-        # TODO put ClientSession here
-        pass
+    requires_unique_id = True
+    requires_write_log = True
+
+    async def start(self, **kwargs):
+        self._client_session = aiohttp.ClientSession(
+            connector=aiohttp.TCPConnector(ssl_context=ssl_context))
+        self.write_log = kwargs["write_log"]
+        self.unique_id = kwargs["unique_id"]
 
     async def stop(self):
-        pass
+        await self._client_session.close()
 
     @property
     def name(self):
@@ -54,7 +57,7 @@ class ProxyServer(LLM):
         messages = compile_chat_messages(
             args["model"], with_history, args["max_tokens"], prompt, functions=None, system_message=self.system_message)
         self.write_log(f"Prompt: \n\n{format_chat_messages(messages)}")
-        async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(ssl_context=ssl_context)) as session:
+        async with self._client_session as session:
             async with session.post(f"{SERVER_URL}/complete", json={
                 "messages": messages,
                 **args
@@ -72,7 +75,7 @@ class ProxyServer(LLM):
             args["model"], messages, args["max_tokens"], None, functions=args.get("functions", None), system_message=self.system_message)
         self.write_log(f"Prompt: \n\n{format_chat_messages(messages)}")
 
-        async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(ssl_context=ssl_context)) as session:
+        async with self._client_session as session:
             async with session.post(f"{SERVER_URL}/stream_chat", json={
                 "messages": messages,
                 **args
@@ -107,7 +110,7 @@ class ProxyServer(LLM):
             self.model, with_history, args["max_tokens"], prompt, functions=args.get("functions", None), system_message=self.system_message)
         self.write_log(f"Prompt: \n\n{format_chat_messages(messages)}")
 
-        async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(ssl_context=ssl_context)) as session:
+        async with self._client_session as session:
             async with session.post(f"{SERVER_URL}/stream_complete", json={
                 "messages": messages,
                 **args

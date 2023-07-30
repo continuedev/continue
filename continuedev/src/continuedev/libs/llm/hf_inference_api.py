@@ -8,14 +8,16 @@ DEFAULT_MAX_TIME = 120.
 
 
 class HuggingFaceInferenceAPI(LLM):
-    required_api_key: str = "HUGGING_FACE_TOKEN"
     model: str
+
+    requires_api_key: str = "HUGGING_FACE_TOKEN"
+    api_key: str = None
 
     def __init__(self, model: str, system_message: str = None):
         self.model = model
         self.system_message = system_message  # TODO: Nothing being done with this
 
-    async def start(self, *, api_key):
+    async def start(self, *, api_key: str):
         self.api_key = api_key
 
     def complete(self, prompt: str, with_history: List[ChatMessage] = None, **kwargs):

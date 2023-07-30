@@ -107,7 +107,6 @@ When state is updated on the server, we currently send the entirety of the objec
 - `history`, a record of previously run Steps. Displayed in order in the sidebar.
 - `active`, whether the autopilot is currently running a step. Displayed as a loader while step is running.
 - `user_input_queue`, the queue of user inputs that have not yet been processed due to waiting for previous Steps to complete. Displayed below the `active` loader until popped from the queue.
-- `default_model`, the default model used for completions. Displayed as a toggleable button on the bottom of the GUI.
 - `selected_context_items`, the ranges of code and other items (like GitHub Issues, files, etc...) that have been selected to include as context. Displayed just above the main text input.
 - `slash_commands`, the list of available slash commands. Displayed in the main text input dropdown.
 - `adding_highlighted_code`, whether highlighting of new code for context is locked. Displayed as a button adjacent to `highlighted_ranges`.

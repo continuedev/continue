@@ -9,7 +9,10 @@ from pydantic import BaseModel
 
 
 class LLM(BaseModel, ABC):
-    required_api_key: Optional[str] = None
+    requires_api_key: Optional[str] = None
+    requires_unique_id: bool = False
+    requires_write_log: bool = False
+
     system_message: Union[str, None] = None
 
     async def start(self, *, api_key: Optional[str] = None):
