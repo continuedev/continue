@@ -1,7 +1,7 @@
 
 from functools import cached_property
 import time
-from typing import Any, Coroutine, Dict, Generator, List, Union
+from typing import Any, Coroutine, Dict, Generator, List, Optional, Union
 from ...core.main import ChatMessage
 from anthropic import HUMAN_PROMPT, AI_PROMPT, AsyncAnthropic
 from ..llm import LLM
@@ -18,7 +18,7 @@ class AnthropicLLM(LLM):
         self.model = model
         self.system_message = system_message
 
-    async def start(self, *, api_key: str):
+    async def start(self, *, api_key: Optional[str] = None, **kwargs):
         self._async_client = AsyncAnthropic(api_key=api_key)
 
     async def stop(self):

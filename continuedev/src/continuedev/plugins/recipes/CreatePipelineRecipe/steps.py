@@ -27,7 +27,7 @@ class SetupPipelineStep(Step):
     async def run(self, sdk: ContinueSDK):
         sdk.context.set("api_description", self.api_description)
 
-        source_name = (await sdk.models.gpt35.complete(
+        source_name = (await sdk.models.medium.complete(
             f"Write a snake_case name for the data source described by {self.api_description}: ")).strip()
         filename = f'{source_name}.py'
 
@@ -89,7 +89,7 @@ class ValidatePipelineStep(Step):
         if "Traceback" in output or "SyntaxError" in output:
             output = "Traceback" + output.split("Traceback")[-1]
             file_content = await sdk.ide.readFile(os.path.join(workspace_dir, filename))
-            suggestion = await sdk.models.gpt35.complete(dedent(f"""\
+            suggestion = await sdk.models.medium.complete(dedent(f"""\
                 ```python
                 {file_content}
                 ```
@@ -101,7 +101,7 @@ class ValidatePipelineStep(Step):
 
                 This is a brief summary of the error followed by a suggestion on how it can be fixed by editing the resource function:"""))
 
-            api_documentation_url = await sdk.models.gpt35.complete(dedent(f"""\
+            api_documentation_url = await sdk.models.medium.complete(dedent(f"""\
                 The API I am trying to call is the '{sdk.context.get('api_description')}'. I tried calling it in the @resource function like this:
                 ```python       
                 {file_content}
@@ -151,7 +151,7 @@ class RunQueryStep(Step):
         output = await sdk.run('.env/bin/python3 query.py', name="Run test query", description="Running `.env/bin/python3 query.py` to test that the data was loaded into DuckDB as expected", handle_error=False)
 
         if "Traceback" in output or "SyntaxError" in output:
-            suggestion = await sdk.models.gpt35.complete(dedent(f"""\
+            suggestion = await sdk.models.medium.complete(dedent(f"""\
                 ```python
                 {await sdk.ide.readFile(os.path.join(sdk.ide.workspace_directory, "query.py"))}
                 ```

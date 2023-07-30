@@ -1,5 +1,5 @@
 import functools
-from abc import ABC
+from abc import ABC, abstractproperty
 from pydantic import BaseModel, ConfigDict
 from typing import Any, Coroutine, Dict, Generator, List, Union, Optional
 
@@ -15,7 +15,12 @@ class LLM(BaseModel, ABC):
 
     system_message: Union[str, None] = None
 
-    async def start(self, *, api_key: Optional[str] = None):
+    @abstractproperty
+    def name(self):
+        """Return the name of the LLM."""
+        raise NotImplementedError
+
+    async def start(self, *, api_key: Optional[str] = None, **kwargs):
         """Start the connection to the LLM."""
         raise NotImplementedError
 

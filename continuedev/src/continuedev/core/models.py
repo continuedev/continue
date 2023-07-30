@@ -34,33 +34,23 @@ class Models(BaseModel):
             '''depending on the model, return the single prompt string'''
     """
 
-    async def _start_llm(self, llm: LLM):
-        kwargs = {}
-        if llm.requires_api_key:
-            kwargs["api_key"] = await self.sdk.get_api_key(llm.requires_api_key)
-        if llm.requires_unique_id:
-            kwargs["unique_id"] = self.sdk.ide.unique_id
-        if llm.requires_write_log:
-            kwargs["write_log"] = self.sdk.write_log
-        await llm.start(**kwargs)
-
     async def start(self, sdk: "ContinueSDK"):
         """Start each of the LLMs, or fall back to default"""
         self.sdk = sdk
         self.system_message = self.sdk.config.system_message
-        await self._start_llm(self.default)
+        await sdk.start_model(self.default)
         if self.small:
-            await self._start_llm(self.small)
+            await sdk.start_model(self.small)
         else:
             self.small = self.default
 
         if self.medium:
-            await self._start_llm(self.medium)
+            await sdk.start_model(self.medium)
         else:
             self.medium = self.default
 
         if self.large:
-            await self._start_llm(self.large)
+            await sdk.start_model(self.large)
         else:
             self.large = self.default
 

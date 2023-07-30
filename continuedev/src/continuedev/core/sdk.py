@@ -15,11 +15,11 @@ from .main import Context, ContinueCustomException, History, HistoryNode, Step, 
 from ..plugins.steps.core.core import *
 from ..libs.util.telemetry import posthog_logger
 from ..libs.util.paths import getConfigFilePath
+from .models import Models
 
 
 class Autopilot:
     pass
-
 
 
 class ContinueSDK(AbstractContinueSDK):
@@ -65,6 +65,16 @@ class ContinueSDK(AbstractContinueSDK):
 
     def write_log(self, message: str):
         self.history.timeline[self.history.current_index].logs.append(message)
+
+    async def start_model(self, llm: LLM):
+        kwargs = {}
+        if llm.requires_api_key:
+            kwargs["api_key"] = await self.get_api_key(llm.requires_api_key)
+        if llm.requires_unique_id:
+            kwargs["unique_id"] = self.ide.unique_id
+        if llm.requires_write_log:
+            kwargs["write_log"] = self.write_log
+        await llm.start(**kwargs)
 
     async def _ensure_absolute_path(self, path: str) -> str:
         if os.path.isabs(path):

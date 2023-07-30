@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 from ...core.main import ChatMessage
 from ..llm import LLM
 import requests
@@ -17,7 +17,7 @@ class HuggingFaceInferenceAPI(LLM):
         self.model = model
         self.system_message = system_message  # TODO: Nothing being done with this
 
-    async def start(self, *, api_key: str):
+    async def start(self, *, api_key: Optional[str] = None, **kwargs):
         self.api_key = api_key
 
     def complete(self, prompt: str, with_history: List[ChatMessage] = None, **kwargs):

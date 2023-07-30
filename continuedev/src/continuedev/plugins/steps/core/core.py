@@ -7,7 +7,7 @@ from typing import Coroutine, List, Literal, Union
 
 from ....libs.llm.ggml import GGML
 from ....models.main import Range
-from ....libs.llm.prompt_utils import MarkdownStyleEncoderDecoder
+from ....libs.llm.maybe_proxy_openai import MaybeProxyOpenAI
 from ....models.filesystem_edit import EditDiff, FileEdit, FileEditWithFullContents, FileSystemEdit
 from ....models.filesystem import FileSystem, RangeInFile, RangeInFileWithContents
 from ....core.observation import Observation, TextObservation, TracebackObservation, UserInputObservation
@@ -84,7 +84,7 @@ class ShellCommandsStep(Step):
         for cmd in self.cmds:
             output = await sdk.ide.runCommand(cmd)
             if self.handle_error and output is not None and output_contains_error(output):
-                suggestion = await sdk.models.gpt35.complete(dedent(f"""\
+                suggestion = await sdk.models.medium.complete(dedent(f"""\
                     While running the command `{cmd}`, the following error occurred:
 
                     ```ascii
@@ -202,7 +202,8 @@ class DefaultModelEditCodeStep(Step):
         # If using 3.5 and overflows, upgrade to 3.5.16k
         if model_to_use.name == "gpt-3.5-turbo":
             if total_tokens > MAX_TOKENS_FOR_MODEL["gpt-3.5-turbo"]:
-                model_to_use = sdk.models.gpt3516k
+                model_to_use = MaybeProxyOpenAI(model="gpt-3.5-turbo-0613")
+                await sdk.start_model(model_to_use)
 
         # Remove tokens from the end first, and then the start to clear space
         # This part finds the start and end lines

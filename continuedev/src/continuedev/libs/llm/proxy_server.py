@@ -27,7 +27,7 @@ class ProxyServer(LLM):
     requires_unique_id = True
     requires_write_log = True
 
-    async def start(self, **kwargs):
+    async def start(self, *, api_key: Optional[str] = None, **kwargs):
         self._client_session = aiohttp.ClientSession(
             connector=aiohttp.TCPConnector(ssl_context=ssl_context))
         self.write_log = kwargs["write_log"]
