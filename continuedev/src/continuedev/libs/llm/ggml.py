@@ -64,7 +64,7 @@ class GGML(LLM):
                         try:
                             json_chunk = line[0].decode("utf-8")
                             if json_chunk.startswith(": ping - ") or json_chunk.startswith("data: [DONE]"):
-                                continue
+                                continue  # hehe
                             chunks = json_chunk.split("\n")
                             for chunk in chunks:
                                 if chunk.strip() != "":

@@ -525,7 +525,7 @@ Please output the code to be inserted at the cursor in order to fulfill the user
 
                 # Accumulate lines
                 if "content" not in chunk:
-                    continue
+                    continue  # ayo
                 chunk = chunk["content"]
                 chunk_lines = chunk.split("\n")
                 chunk_lines[0] = unfinished_line + chunk_lines[0]
@@ -546,12 +546,12 @@ Please output the code to be inserted at the cursor in order to fulfill the user
                         break
                     # Lines that should be ignored, like the <> tags
                     elif self.line_to_be_ignored(chunk_lines[i], completion_lines_covered == 0):
-                        continue
+                        continue  # noice
                     # Check if we are currently just copying the prefix
                     elif (lines_of_prefix_copied > 0 or completion_lines_covered == 0) and lines_of_prefix_copied < len(file_prefix.splitlines()) and chunk_lines[i] == full_file_contents_lines[lines_of_prefix_copied]:
                         # This is a sketchy way of stopping it from repeating the file_prefix. Is a bug if output happens to have a matching line
                         lines_of_prefix_copied += 1
-                        continue
+                        continue  # also nice
                     # Because really short lines might be expected to be repeated, this is only a !heuristic!
                     # Stop when it starts copying the file_suffix
                     elif chunk_lines[i].strip() == line_below_highlighted_range.strip() and len(chunk_lines[i].strip()) > 4 and not (len(original_lines_below_previous_blocks) > 0 and chunk_lines[i].strip() == original_lines_below_previous_blocks[0].strip()):

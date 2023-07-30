@@ -2,6 +2,7 @@ import json
 from typing import List
 
 import aiohttp
+from .util import remove_meilisearch_disallowed_chars
 from ...core.main import ContextItem, ContextItemDescription, ContextItemId
 from ...core.context import ContextProvider
 
@@ -60,5 +61,6 @@ class GoogleContextProvider(ContextProvider):
 
         ctx_item = self.BASE_CONTEXT_ITEM.copy()
         ctx_item.content = content
-        ctx_item.description.id.item_id = query
+        ctx_item.description.id.item_id = remove_meilisearch_disallowed_chars(
+            query)
         return ctx_item
