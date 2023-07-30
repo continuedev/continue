@@ -69,7 +69,7 @@ class ContinueSDK(AbstractContinueSDK):
     async def start_model(self, llm: LLM):
         kwargs = {}
         if llm.requires_api_key:
-            kwargs["api_key"] = await self.get_api_key(llm.requires_api_key)
+            kwargs["api_key"] = await self.get_user_secret(llm.requires_api_key)
         if llm.requires_unique_id:
             kwargs["unique_id"] = self.ide.unique_id
         if llm.requires_write_log:
@@ -145,11 +145,8 @@ class ContinueSDK(AbstractContinueSDK):
         path = await self._ensure_absolute_path(path)
         return await self.run_step(FileSystemEditStep(edit=DeleteDirectory(path=path)))
 
-    async def get_api_key(self, env_var: str) -> str:
+    async def get_user_secret(self, env_var: str) -> str:
         # TODO support error prompt dynamically set on env_var
-        return await self.ide.getUserSecret(env_var)
-
-    async def get_user_secret(self, env_var: str, prompt: str) -> str:
         return await self.ide.getUserSecret(env_var)
 
     _last_valid_config: ContinueConfig = None
