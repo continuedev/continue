@@ -29,6 +29,10 @@ class GGML(LLM):
         return "ggml"
 
     @property
+    def context_length(self):
+        return 2048
+
+    @property
     def default_args(self):
         return {**DEFAULT_ARGS, "model": self.name, "max_tokens": 1024}
 
@@ -42,7 +46,7 @@ class GGML(LLM):
 
         args = {**self.default_args, **kwargs}
         messages = compile_chat_messages(
-            self.name, with_history, args["max_tokens"], prompt, functions=args.get("functions", None), system_message=self.system_message)
+            self.name, with_history, self.context_length, args["max_tokens"], prompt, functions=args.get("functions", None), system_message=self.system_message)
 
         # TODO move to single self.session variable (proxy setting etc)
         async with self._client_session as session:
@@ -60,7 +64,7 @@ class GGML(LLM):
     async def stream_chat(self, messages: List[ChatMessage] = None, **kwargs) -> Generator[Union[Any, List, Dict], None, None]:
         args = {**self.default_args, **kwargs}
         messages = compile_chat_messages(
-            self.name, messages, args["max_tokens"], None, functions=args.get("functions", None), system_message=self.system_message)
+            self.name, messages, self.context_length, args["max_tokens"], None, functions=args.get("functions", None), system_message=self.system_message)
         args["stream"] = True
 
         async with self._client_session as session:
@@ -87,7 +91,7 @@ class GGML(LLM):
 
         async with self._client_session as session:
             async with session.post(f"{SERVER_URL}/v1/completions", json={
-                "messages": compile_chat_messages(args["model"], with_history, args["max_tokens"], prompt, functions=None, system_message=self.system_message),
+                "messages": compile_chat_messages(args["model"], with_history, self.context_length, args["max_tokens"], prompt, functions=None, system_message=self.system_message),
                 **args
             }) as resp:
                 try:

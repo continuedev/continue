@@ -15,6 +15,13 @@ ssl_context = ssl.create_default_context(cafile=ca_bundle_path)
 # SERVER_URL = "http://127.0.0.1:8080"
 SERVER_URL = "https://proxy-server-l6vsfbzhba-uw.a.run.app"
 
+MAX_TOKENS_FOR_MODEL = {
+    "gpt-3.5-turbo": 4096,
+    "gpt-3.5-turbo-0613": 4096,
+    "gpt-3.5-turbo-16k": 16384,
+    "gpt-4": 8192,
+}
+
 
 class ProxyServer(LLM):
     model: str
@@ -41,6 +48,10 @@ class ProxyServer(LLM):
         return self.model
 
     @property
+    def context_length(self):
+        return MAX_TOKENS_FOR_MODEL[self.model]
+
+    @property
     def default_args(self):
         return {**DEFAULT_ARGS, "model": self.model}
 
@@ -55,7 +66,7 @@ class ProxyServer(LLM):
         args = {**self.default_args, **kwargs}
 
         messages = compile_chat_messages(
-            args["model"], with_history, args["max_tokens"], prompt, functions=None, system_message=self.system_message)
+            args["model"], with_history, self.context_length, args["max_tokens"], prompt, functions=None, system_message=self.system_message)
         self.write_log(f"Prompt: \n\n{format_chat_messages(messages)}")
         async with self._client_session as session:
             async with session.post(f"{SERVER_URL}/complete", json={
@@ -72,7 +83,7 @@ class ProxyServer(LLM):
     async def stream_chat(self, messages: List[ChatMessage] = None, **kwargs) -> Coroutine[Any, Any, Generator[Union[Any, List, Dict], None, None]]:
         args = {**self.default_args, **kwargs}
         messages = compile_chat_messages(
-            args["model"], messages, args["max_tokens"], None, functions=args.get("functions", None), system_message=self.system_message)
+            args["model"], messages, self.context_length, args["max_tokens"], None, functions=args.get("functions", None), system_message=self.system_message)
         self.write_log(f"Prompt: \n\n{format_chat_messages(messages)}")
 
         async with self._client_session as session:
@@ -107,7 +118,7 @@ class ProxyServer(LLM):
     async def stream_complete(self, prompt, with_history: List[ChatMessage] = None, **kwargs) -> Generator[Union[Any, List, Dict], None, None]:
         args = {**self.default_args, **kwargs}
         messages = compile_chat_messages(
-            self.model, with_history, args["max_tokens"], prompt, functions=args.get("functions", None), system_message=self.system_message)
+            self.model, with_history, self.context_length, args["max_tokens"], prompt, functions=args.get("functions", None), system_message=self.system_message)
         self.write_log(f"Prompt: \n\n{format_chat_messages(messages)}")
 
         async with self._client_session as session:

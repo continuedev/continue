@@ -12,7 +12,7 @@ from ....models.filesystem_edit import EditDiff, FileEdit, FileEditWithFullConte
 from ....models.filesystem import FileSystem, RangeInFile, RangeInFileWithContents
 from ....core.observation import Observation, TextObservation, TracebackObservation, UserInputObservation
 from ....core.main import ChatMessage, ContinueCustomException, Step, SequentialStep
-from ....libs.util.count_tokens import MAX_TOKENS_FOR_MODEL, DEFAULT_MAX_TOKENS
+from ....libs.util.count_tokens import DEFAULT_MAX_TOKENS
 from ....libs.util.strings import dedent_and_get_common_whitespace, remove_quotes_and_escapes
 import difflib
 
@@ -182,8 +182,7 @@ class DefaultModelEditCodeStep(Step):
         # We care because if this prompt itself goes over the limit, then the entire message will have to be cut from the completion.
         # Overflow won't happen, but prune_chat_messages in count_tokens.py will cut out this whole thing, instead of us cutting out only as many lines as we need.
         model_to_use = sdk.models.default
-        max_tokens = int(MAX_TOKENS_FOR_MODEL.get(
-            model_to_use.name, DEFAULT_MAX_TOKENS) / 2)
+        max_tokens = int(model_to_use.context_length / 2)
 
         TOKENS_TO_BE_CONSIDERED_LARGE_RANGE = 1200
         if model_to_use.count_tokens(rif.contents) > TOKENS_TO_BE_CONSIDERED_LARGE_RANGE:
@@ -201,7 +200,7 @@ class DefaultModelEditCodeStep(Step):
 
         # If using 3.5 and overflows, upgrade to 3.5.16k
         if model_to_use.name == "gpt-3.5-turbo":
-            if total_tokens > MAX_TOKENS_FOR_MODEL["gpt-3.5-turbo"]:
+            if total_tokens > model_to_use.context_length:
                 model_to_use = MaybeProxyOpenAI(model="gpt-3.5-turbo-0613")
                 await sdk.start_model(model_to_use)
 
@@ -213,20 +212,20 @@ class DefaultModelEditCodeStep(Step):
         cur_start_line = 0
         cur_end_line = len(full_file_contents_lst) - 1
 
-        if total_tokens > MAX_TOKENS_FOR_MODEL[model_to_use.name]:
+        if total_tokens > model_to_use.context_length:
             while cur_end_line > min_end_line:
                 total_tokens -= model_to_use.count_tokens(
                     full_file_contents_lst[cur_end_line])
                 cur_end_line -= 1
-                if total_tokens < MAX_TOKENS_FOR_MODEL[model_to_use.name]:
+                if total_tokens < model_to_use.context_length:
                     break
 
-        if total_tokens > MAX_TOKENS_FOR_MODEL[model_to_use.name]:
+        if total_tokens > model_to_use.context_length:
             while cur_start_line < max_start_line:
                 cur_start_line += 1
                 total_tokens -= model_to_use.count_tokens(
                     full_file_contents_lst[cur_start_line])
-                if total_tokens < MAX_TOKENS_FOR_MODEL[model_to_use.name]:
+                if total_tokens < model_to_use.context_length:
                     break
 
         # Now use the found start/end lines to get the prefix and suffix strings

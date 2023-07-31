@@ -6,7 +6,17 @@ from pydantic import BaseModel
 from ...core.main import ChatMessage
 import openai
 from ..llm import LLM
-from ..util.count_tokens import compile_chat_messages, CHAT_MODELS, DEFAULT_ARGS, count_tokens, format_chat_messages, prune_raw_prompt_from_top
+from ..util.count_tokens import compile_chat_messages, DEFAULT_ARGS, count_tokens, format_chat_messages, prune_raw_prompt_from_top
+
+CHAT_MODELS = {
+    "gpt-3.5-turbo", "gpt-3.5-turbo-16k", "gpt-4", "gpt-3.5-turbo-0613"
+}
+MAX_TOKENS_FOR_MODEL = {
+    "gpt-3.5-turbo": 4096,
+    "gpt-3.5-turbo-0613": 4096,
+    "gpt-3.5-turbo-16k": 16384,
+    "gpt-4": 8192,
+}
 
 
 class AzureInfo(BaseModel):
@@ -44,6 +54,10 @@ class OpenAI(LLM):
         return self.model
 
     @property
+    def context_length(self):
+        return MAX_TOKENS_FOR_MODEL[self.model]
+
+    @property
     def default_args(self):
         args = {**DEFAULT_ARGS, "model": self.model}
         if self.azure_info is not None:
@@ -60,7 +74,7 @@ class OpenAI(LLM):
 
         if args["model"] in CHAT_MODELS:
             messages = compile_chat_messages(
-                args["model"], with_history, args["max_tokens"], prompt, functions=None, system_message=self.system_message)
+                args["model"], with_history, self.context_length, args["max_tokens"], prompt, functions=None, system_message=self.system_message)
             self.write_log(f"Prompt: \n\n{format_chat_messages(messages)}")
             completion = ""
             async for chunk in await openai.ChatCompletion.acreate(
@@ -93,7 +107,7 @@ class OpenAI(LLM):
             del args["functions"]
 
         messages = compile_chat_messages(
-            args["model"], messages, args["max_tokens"], None, functions=args.get("functions", None), system_message=self.system_message)
+            args["model"], messages, self.context_length, args["max_tokens"], None, functions=args.get("functions", None), system_message=self.system_message)
         self.write_log(f"Prompt: \n\n{format_chat_messages(messages)}")
         completion = ""
         async for chunk in await openai.ChatCompletion.acreate(
@@ -110,7 +124,7 @@ class OpenAI(LLM):
 
         if args["model"] in CHAT_MODELS:
             messages = compile_chat_messages(
-                args["model"], with_history, args["max_tokens"], prompt, functions=None, system_message=self.system_message)
+                args["model"], with_history, self.context_length, args["max_tokens"], prompt, functions=None, system_message=self.system_message)
             self.write_log(f"Prompt: \n\n{format_chat_messages(messages)}")
             resp = (await openai.ChatCompletion.acreate(
                 messages=messages,
@@ -119,7 +133,7 @@ class OpenAI(LLM):
             self.write_log(f"Completion: \n\n{resp}")
         else:
             prompt = prune_raw_prompt_from_top(
-                args["model"], prompt, args["max_tokens"])
+                args["model"], self.context_length, prompt, args["max_tokens"])
             self.write_log(f"Prompt:\n\n{prompt}")
             resp = (await openai.Completion.acreate(
                 prompt=prompt,

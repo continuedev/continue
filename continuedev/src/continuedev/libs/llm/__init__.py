@@ -43,3 +43,8 @@ class LLM(BaseModel, ABC):
     def count_tokens(self, text: str):
         """Return the number of tokens in the given text."""
         raise NotImplementedError
+
+    @abstractproperty
+    def context_length(self) -> int:
+        """Return the context length of the LLM in tokens, as counted by count_tokens."""
+        raise NotImplementedError

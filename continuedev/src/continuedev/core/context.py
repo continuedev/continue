@@ -169,12 +169,6 @@ class ContextManager:
                 async with Client('http://localhost:7700') as search_client:
                     await search_client.index(SEARCH_INDEX_NAME).add_documents(documents)
 
-    # def compile_chat_messages(self, max_tokens: int) -> List[Dict]:
-    #     """
-    #     Compiles the chat prompt into a single string.
-    #     """
-    #     return compile_chat_messages(self.model, self.chat_history, max_tokens, self.prompt, self.functions, self.system_message)
-
     async def select_context_item(self, id: str, query: str):
         """
         Selects the ContextItem with the given id.

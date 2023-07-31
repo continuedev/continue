@@ -5,7 +5,7 @@ from typing import Any, Coroutine, Dict, Generator, List, Optional, Union
 from ...core.main import ChatMessage
 from anthropic import HUMAN_PROMPT, AI_PROMPT, AsyncAnthropic
 from ..llm import LLM
-from ..util.count_tokens import DEFAULT_MAX_TOKENS, compile_chat_messages, CHAT_MODELS, DEFAULT_ARGS, count_tokens, prune_raw_prompt_from_top
+from ..util.count_tokens import compile_chat_messages, DEFAULT_ARGS, count_tokens
 
 
 class AnthropicLLM(LLM):
@@ -46,6 +46,12 @@ class AnthropicLLM(LLM):
     def count_tokens(self, text: str):
         return count_tokens(self.model, text)
 
+    @property
+    def context_length(self):
+        if self.model == "claude-2":
+            return 100000
+        raise Exception(f"Unknown Anthropic model {self.model}")
+
     def __messages_to_prompt(self, messages: List[Dict[str, str]]) -> str:
         prompt = ""
 
@@ -77,7 +83,7 @@ class AnthropicLLM(LLM):
         args = self._transform_args(args)
 
         messages = compile_chat_messages(
-            args["model"], messages, args["max_tokens_to_sample"], functions=args.get("functions", None), system_message=self.system_message)
+            args["model"], messages, self.context_length, self.context_length, args["max_tokens_to_sample"], functions=args.get("functions", None), system_message=self.system_message)
         async for chunk in await self._async_client.completions.create(
             prompt=self.__messages_to_prompt(messages),
             **args
@@ -92,7 +98,7 @@ class AnthropicLLM(LLM):
         args = self._transform_args(args)
 
         messages = compile_chat_messages(
-            args["model"], with_history, args["max_tokens_to_sample"], prompt, functions=None, system_message=self.system_message)
+            args["model"], with_history, self.context_length, args["max_tokens_to_sample"], prompt, functions=None, system_message=self.system_message)
         resp = (await self._async_client.completions.create(
             prompt=self.__messages_to_prompt(messages),
             **args

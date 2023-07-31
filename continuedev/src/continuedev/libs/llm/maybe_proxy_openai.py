@@ -19,6 +19,10 @@ class MaybeProxyOpenAI(LLM):
     def name(self):
         return self.llm.name
 
+    @property
+    def context_length(self):
+        return self.llm.context_length
+
     async def start(self, *, api_key: Optional[str] = None, **kwargs):
         if api_key is None or api_key.strip() == "":
             self.llm = ProxyServer(
