@@ -176,7 +176,7 @@ async def websocket_endpoint(websocket: WebSocket, session: Session = Depends(we
                 message = json.loads(message)
 
             if "messageType" not in message or "data" not in message:
-                continue
+                continue  # :o
             message_type = message["messageType"]
             data = message["data"]
 

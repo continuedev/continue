@@ -3,6 +3,7 @@ import re
 from typing import List
 from ...core.main import ContextItem, ContextItemDescription, ContextItemId
 from ...core.context import ContextProvider
+from .util import remove_meilisearch_disallowed_chars
 from fnmatch import fnmatch
 
 
@@ -79,7 +80,7 @@ class FileContextProvider(ContextProvider):
                     description=file,
                     id=ContextItemId(
                         provider_title=self.title,
-                        item_id=re.sub(r'[^0-9a-zA-Z_-]', '', file)
+                        item_id=remove_meilisearch_disallowed_chars(file)
                     )
                 )
             ))

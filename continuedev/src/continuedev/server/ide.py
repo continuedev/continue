@@ -139,7 +139,7 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
             msg_string = await self.websocket.receive_text()
             message = json.loads(msg_string)
             if "messageType" not in message or "data" not in message:
-                continue
+                continue  # <-- hey that's the name of this repo!
             message_type = message["messageType"]
             data = message["data"]
             logger.debug(f"Received message while initializing {message_type}")
@@ -311,7 +311,7 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
 
     def onFileEdits(self, edits: List[FileEditWithFullContents]):
         if autopilot := self.__get_autopilot():
-            autopilot.handle_manual_edits(edits)
+            pass
 
     def onDeleteAtIndex(self, index: int):
         if autopilot := self.__get_autopilot():

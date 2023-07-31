@@ -1,15 +1,15 @@
 from textwrap import dedent
 from typing import Union
 
-from ..plugins.steps.chat import SimpleChatStep
-from ..plugins.steps.welcome import WelcomeStep
-from .config import ContinueConfig
-from ..plugins.steps.steps_on_startup import StepsOnStartupStep
-from .main import Step, History, Policy
-from .observation import UserInputObservation
-from ..plugins.steps.core.core import MessageStep
-from ..plugins.steps.custom_command import CustomCommandStep
-from ..plugins.steps.main import EditHighlightedCodeStep
+from ..steps.chat import SimpleChatStep
+from ..steps.welcome import WelcomeStep
+from ...core.config import ContinueConfig
+from ..steps.steps_on_startup import StepsOnStartupStep
+from ...core.main import Step, History, Policy
+from ...core.observation import UserInputObservation
+from ..steps.core.core import MessageStep
+from ..steps.custom_command import CustomCommandStep
+from ..steps.main import EditHighlightedCodeStep
 
 
 def parse_slash_command(inp: str, config: ContinueConfig) -> Union[None, Step]:
@@ -45,6 +45,9 @@ def parse_custom_command(inp: str, config: ContinueConfig) -> Union[None, Step]:
 
 
 class DefaultPolicy(Policy):
+
+    default_step: Step = SimpleChatStep()
+
     def next(self, config: ContinueConfig, history: History) -> Step:
         # At the very start, run initial Steps spcecified in the config
         if history.get_current() is None:
@@ -54,7 +57,6 @@ class DefaultPolicy(Policy):
                     - Use `cmd+m` (Mac) / `ctrl+m` (Windows) to open Continue
                     - Use `/help` to ask questions about how to use Continue""")) >>
                 WelcomeStep() >>
-                # CreateCodebaseIndexChroma() >>
                 StepsOnStartupStep())
 
         observation = history.get_current().observation
@@ -73,6 +75,6 @@ class DefaultPolicy(Policy):
             if user_input.startswith("/edit"):
                 return EditHighlightedCodeStep(user_input=user_input[5:])
 
-            return SimpleChatStep()
+            return self.default_step.copy()
 
         return None
