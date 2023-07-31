@@ -65,6 +65,7 @@ interface GUIProps {
 function GUI(props: GUIProps) {
   const client = useContext(GUIClientContext);
   const posthog = usePostHog();
+
   const vscMachineId = useSelector(
     (state: RootStore) => state.config.vscMachineId
   );
@@ -120,7 +121,9 @@ function GUI(props: GUIProps) {
     (state: RootStore) => state.config.vscMediaUrl
   );
   const [showFeedbackDialog, setShowFeedbackDialog] = useState(false);
-  const [feedbackDialogMessage, setFeedbackDialogMessage] = useState("");
+  const [feedbackDialogMessage, setFeedbackDialogMessage] = useState<
+    string | JSX.Element
+  >("");
   const [feedbackEntryOn, setFeedbackEntryOn] = useState(true);
 
   const dispatch = useDispatch();
@@ -276,6 +279,76 @@ function GUI(props: GUIProps) {
       setUserInputQueue((queue) => {
         return [...queue, input];
       });
+
+      // Increment localstorage counter
+      const counter = localStorage.getItem("mainTextEntryCounter");
+      if (counter) {
+        let currentCount = parseInt(counter);
+        localStorage.setItem(
+          "mainTextEntryCounter",
+          (currentCount + 1).toString()
+        );
+        if (currentCount === 25) {
+          setFeedbackDialogMessage(
+            <div className="text-center">
+              👋 Thanks for using Continue. We are a beta product and love
+              working closely with our first users. If you're interested in
+              speaking, enter your name and email. We won't use this information
+              for anything other than reaching out.
+              <br />
+              <br />
+              <form
+                onSubmit={(e: any) => {
+                  e.preventDefault();
+                  posthog?.capture("user_interest_form", {
+                    name: e.target.elements[0].value,
+                    email: e.target.elements[1].value,
+                  });
+                  setFeedbackDialogMessage(
+                    <div className="text-center">
+                      Thanks! We'll be in touch soon.
+                    </div>
+                  );
+                }}
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "10px",
+                }}
+              >
+                <input
+                  style={{ padding: "10px", borderRadius: "5px" }}
+                  type="text"
+                  name="name"
+                  placeholder="Name"
+                  required
+                />
+                <input
+                  style={{ padding: "10px", borderRadius: "5px" }}
+                  type="email"
+                  name="email"
+                  placeholder="Email"
+                  required
+                />
+                <button
+                  style={{
+                    padding: "10px",
+                    borderRadius: "5px",
+                    cursor: "pointer",
+                  }}
+                  type="submit"
+                >
+                  Submit
+                </button>
+              </form>
+            </div>
+          );
+          setFeedbackEntryOn(false);
+          setShowFeedbackDialog(true);
+        }
+      } else {
+        localStorage.setItem("mainTextEntryCounter", "1");
+      }
     }
   };
 

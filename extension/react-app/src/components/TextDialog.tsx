@@ -29,8 +29,8 @@ const Dialog = styled.div`
   display: flex;
   flex-direction: column;
   box-shadow: 0 0 10px 0 ${vscForeground};
-  width: fit-content;
   margin: auto;
+  word-wrap: break-word;
 `;
 
 const TextArea = styled.textarea`
@@ -56,7 +56,7 @@ const TextDialog = (props: {
   showDialog: boolean;
   onEnter: (text: string) => void;
   onClose: () => void;
-  message?: string;
+  message?: string | JSX.Element;
   entryOn?: boolean;
 }) => {
   const [text, setText] = useState("");
@@ -81,7 +81,8 @@ const TextDialog = (props: {
         }}
       >
         <Dialog>
-          {props.message?.includes("Continue uses GPT-4") ? (
+          {typeof props.message === "string" &&
+          props.message.includes("Continue uses GPT-4") ? (
             <div>
               <p>
                 Continue uses GPT-4 by default, but works with any model. If
@@ -114,8 +115,10 @@ const TextDialog = (props: {
                 or would like to do so, please contact us at hi@continue.dev.
               </p>
             </div>
-          ) : (
+          ) : typeof props.message === "string" ? (
             <ReactMarkdown>{props.message || ""}</ReactMarkdown>
+          ) : (
+            props.message
           )}
           {props.entryOn && (
             <>
