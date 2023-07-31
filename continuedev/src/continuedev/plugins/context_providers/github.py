@@ -15,7 +15,7 @@ class GitHubIssuesContextProvider(ContextProvider):
     repo_name: str
     auth_token: str
 
-    async def provide_context_items(self) -> List[ContextItem]:
+    async def provide_context_items(self, workspace_dir: str) -> List[ContextItem]:
         auth = Auth.Token(self.auth_token)
         gh = Github(auth=auth)
 

@@ -50,13 +50,12 @@ class FileContextProvider(ContextProvider):
     """
 
     title = "file"
-    workspace_dir: str
     ignore_patterns: List[str] = DEFAULT_IGNORE_DIRS + \
         list(filter(lambda d: f"**/{d}", DEFAULT_IGNORE_DIRS))
 
-    async def provide_context_items(self) -> List[ContextItem]:
+    async def provide_context_items(self, workspace_dir: str) -> List[ContextItem]:
         filepaths = []
-        for root, dir_names, file_names in os.walk(self.workspace_dir):
+        for root, dir_names, file_names in os.walk(workspace_dir):
             dir_names[:] = [d for d in dir_names if not any(
                 fnmatch(d, pattern) for pattern in self.ignore_patterns)]
             for file_name in file_names:

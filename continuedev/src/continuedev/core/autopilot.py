@@ -77,7 +77,8 @@ class Autopilot(ContinueBaseModel):
                 HighlightedCodeContextProvider(ide=self.ide),
                 FileContextProvider(workspace_dir=self.ide.workspace_directory)
             ])
-        await self.context_manager.load_index()
+
+        await self.context_manager.load_index(self.ide.workspace_directory)
 
     class Config:
         arbitrary_types_allowed = True

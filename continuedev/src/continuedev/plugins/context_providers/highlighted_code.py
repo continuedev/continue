@@ -96,7 +96,7 @@ class HighlightedCodeContextProvider(ContextProvider):
                 hr.item.description.name = self._rif_to_name(
                     hr.rif, display_filename=basename)
 
-    async def provide_context_items(self) -> List[ContextItem]:
+    async def provide_context_items(self, workspace_dir: str) -> List[ContextItem]:
         return []
 
     async def get_item(self, id: ContextItemId, query: str) -> ContextItem:

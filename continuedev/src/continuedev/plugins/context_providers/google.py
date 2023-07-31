@@ -43,7 +43,7 @@ class GoogleContextProvider(ContextProvider):
             async with session.post(url, headers=headers, data=payload) as response:
                 return await response.text()
 
-    async def provide_context_items(self) -> List[ContextItem]:
+    async def provide_context_items(self, workspace_dir: str) -> List[ContextItem]:
         return [self.BASE_CONTEXT_ITEM]
 
     async def get_item(self, id: ContextItemId, query: str, _) -> ContextItem:
