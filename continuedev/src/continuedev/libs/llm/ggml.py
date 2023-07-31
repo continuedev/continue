@@ -13,7 +13,7 @@ SERVER_URL = "http://localhost:8000"
 
 class GGML(LLM):
     # this is model-specific
-    max_context_length: int
+    max_context_length: int = 2048
 
     _client_session: aiohttp.ClientSession = None
 

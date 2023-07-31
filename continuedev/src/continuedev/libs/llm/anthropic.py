@@ -9,7 +9,7 @@ from ..util.count_tokens import compile_chat_messages, DEFAULT_ARGS, count_token
 
 
 class AnthropicLLM(LLM):
-    model: str
+    model: str = "claude-2"
 
     requires_api_key: str = "ANTHROPIC_API_KEY"
     _async_client: AsyncAnthropic = None
