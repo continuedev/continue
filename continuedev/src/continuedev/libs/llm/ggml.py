@@ -12,10 +12,13 @@ SERVER_URL = "http://localhost:8000"
 
 
 class GGML(LLM):
+    # this is model-specific
+    max_context_length: int
 
     _client_session: aiohttp.ClientSession = None
 
-    def __init__(self, system_message: str = None):
+    def __init__(self, max_context_length: int = 2048, system_message: str = None):
+        self.max_context_length = max_context_length
         self.system_message = system_message
 
     async def start(self, **kwargs):
@@ -30,7 +33,7 @@ class GGML(LLM):
 
     @property
     def context_length(self):
-        return 2048
+        return self.max_context_length
 
     @property
     def default_args(self):
