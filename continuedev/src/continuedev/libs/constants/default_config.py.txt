@@ -12,6 +12,7 @@ from continuedev.core.sdk import ContinueSDK
 from continuedev.core.config import CustomCommand, SlashCommand, ContinueConfig
 from continuedev.plugins.context_providers.github import GitHubIssuesContextProvider
 from continuedev.plugins.context_providers.google import GoogleContextProvider
+from continuedev.plugins.policies.default import DefaultPolicy
 
 from continuedev.plugins.steps.open_config import OpenConfigStep
 from continuedev.plugins.steps.clear_history import ClearHistoryStep
@@ -114,5 +115,9 @@ config = ContinueConfig(
         # GoogleContextProvider(
         #     serper_api_key="<your serper.dev api key>"
         # )
-    ]
+    ],
+
+    # Policies hold the main logic that decides which Step to take next
+    # You can use them to design agents, or deeply customize Continue
+    policy=DefaultPolicy()
 )

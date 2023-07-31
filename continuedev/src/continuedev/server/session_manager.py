@@ -1,4 +1,5 @@
 import os
+import traceback
 from fastapi import WebSocket
 from typing import Any, Dict, List, Union
 from uuid import uuid4
@@ -6,12 +7,10 @@ import json
 
 from fastapi.websockets import WebSocketState
 
-from ..plugins.steps.core.core import DisplayErrorStep
+from ..plugins.steps.core.core import DisplayErrorStep, MessageStep
 from ..libs.util.paths import getSessionFilePath, getSessionsFolderPath
 from ..models.filesystem_edit import FileEditWithFullContents
-from ..libs.constants.main import CONTINUE_SESSIONS_FOLDER
-from ..core.policy import DefaultPolicy
-from ..core.main import FullState
+from ..core.main import FullState, HistoryNode
 from ..core.autopilot import Autopilot
 from .ide_protocol import AbstractIdeProtocolServer
 from ..libs.util.create_async_task import create_async_task
@@ -29,19 +28,6 @@ class Session:
         self.session_id = session_id
         self.autopilot = autopilot
         self.ws = None
-
-
-class DemoAutopilot(Autopilot):
-    first_seen: bool = False
-    cumulative_edit_string = ""
-
-    def handle_manual_edits(self, edits: List[FileEditWithFullContents]):
-        return
-        for edit in edits:
-            self.cumulative_edit_string += edit.fileEdit.replacement
-            self._manual_edits_buffer.append(edit)
-            # Note that you're storing a lot of unecessary data here. Can compress into EditDiffs on the spot, and merge.
-            # self._manual_edits_buffer = merge_file_edit(self._manual_edits_buffer, edit)
 
 
 class SessionManager:
@@ -65,27 +51,47 @@ class SessionManager:
     async def new_session(self, ide: AbstractIdeProtocolServer, session_id: Union[str, None] = None) -> Session:
         logger.debug(f"New session: {session_id}")
 
+        # Load the persisted state (not being used right now)
         full_state = None
         if session_id is not None and os.path.exists(getSessionFilePath(session_id)):
             with open(getSessionFilePath(session_id), "r") as f:
                 full_state = FullState(**json.load(f))
 
-        autopilot = await DemoAutopilot.create(
-            policy=DefaultPolicy(), ide=ide, full_state=full_state)
+        # Register the session and ide (do this first so that the autopilot can access the session)
+        autopilot = Autopilot(ide=ide)
         session_id = session_id or str(uuid4())
         ide.session_id = session_id
         session = Session(session_id=session_id, autopilot=autopilot)
         self.sessions[session_id] = session
         self.registered_ides[session_id] = ide
 
+        # Set up the autopilot to update the GUI
         async def on_update(state: FullState):
             await session_manager.send_ws_data(session_id, "state_update", {
                 "state": state.dict()
             })
 
         autopilot.on_update(on_update)
-        create_async_task(autopilot.run_policy(
-        ), lambda e: autopilot.continue_sdk.run_step(DisplayErrorStep(e=e)))
+
+        # Start the autopilot (must be after session is added to sessions) and the policy
+        try:
+            await autopilot.start()
+        except Exception as e:
+            # Have to manually add to history because autopilot isn't started
+            formatted_err = '\n'.join(traceback.format_exception(e))
+            msg_step = MessageStep(
+                name="Error loading context manager", message=formatted_err)
+            msg_step.description = f"```\n{formatted_err}\n```"
+            autopilot.history.add_node(HistoryNode(
+                step=msg_step,
+                observation=None,
+                depth=0,
+                active=False
+            ))
+            logger.warning(f"Error loading context manager: {e}")
+
+        create_async_task(autopilot.run_policy(), lambda e: autopilot.continue_sdk.run_step(
+            DisplayErrorStep(e=e)))
         return session
 
     async def remove_session(self, session_id: str):

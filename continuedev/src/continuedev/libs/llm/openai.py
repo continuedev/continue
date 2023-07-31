@@ -62,7 +62,7 @@ class OpenAI(LLM):
                     yield chunk.choices[0].delta.content
                     completion += chunk.choices[0].delta.content
                 else:
-                    continue
+                    continue  # :)
 
             self.write_log(f"Completion: \n\n{completion}")
         else:

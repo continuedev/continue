@@ -12,7 +12,7 @@ def dedent_and_get_common_whitespace(s: str) -> Tuple[str, str]:
     for i in range(1, len(lines)):
         # Empty lines are wildcards
         if lines[i].strip() == "":
-            continue
+            continue  # hey that's us!
         # Iterate through the leading whitespace characters of the current line
         for j in range(0, len(lcp)):
             # If it doesn't have the same whitespace as lcp, then update lcp

@@ -20,10 +20,10 @@ def find_all_matches_in_dir(pattern: str, dirpath: str) -> List[RangeInFile]:
     for root, dirs, files in os.walk(dirpath):
         dirname = os.path.basename(root)
         if dirname.startswith(".") or dirname in IGNORE_DIRS:
-            continue
+            continue  # continue!
         for file in files:
             if file in IGNORE_FILES:
-                continue
+                continue  # pun intended
             with open(os.path.join(root, file), "r") as f:
                 # Find the index of all occurences of the pattern in the file. Use re.
                 file_content = f.read()

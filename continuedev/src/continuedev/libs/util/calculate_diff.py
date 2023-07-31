@@ -92,7 +92,7 @@ def calculate_diff2(filepath: str, original: str, updated: str) -> List[FileEdit
             tag, i1, i2, j1, j2 = s.get_opcodes()[edit_index]
             replacement = updated[j1:j2]
             if tag == "equal":
-                continue
+                continue  # ;)
             elif tag == "delete":
                 edits.append(FileEdit.from_deletion(
                     filepath, Range.from_indices(original, i1, i2)))

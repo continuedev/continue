@@ -1,10 +1,8 @@
-import json
-import os
-from .main import Step
-from .context import ContextProvider
 from pydantic import BaseModel, validator
-from typing import List, Literal, Optional, Dict, Type, Union
-import yaml
+from typing import List, Literal, Optional, Dict, Type
+
+from .main import Policy, Step
+from .context import ContextProvider
 
 
 class SlashCommand(BaseModel):
@@ -51,6 +49,7 @@ class ContinueConfig(BaseModel):
     on_traceback: Optional[List[OnTracebackSteps]] = []
     system_message: Optional[str] = None
     openai_server_info: Optional[OpenAIServerInfo] = None
+    policy_override: Optional[Policy] = None
 
     context_providers: List[ContextProvider] = []
 
