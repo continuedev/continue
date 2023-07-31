@@ -6,9 +6,7 @@ The Continue VS Code extension is currently in beta. It will attempt to start th
 
 In order to activate the Continue virtual environment, you must enable running scripts in PowerShell. In this case, the following error will appear in the console:
 
-```
-A Python virtual enviroment cannot be activated because running scripts is disabled for this user. In order to use Continue, please enable signed scripts to run with this command in PowerShell: `Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser`, reload VS Code, and then try again.
-```
+> A Python virtual enviroment cannot be activated because running scripts is disabled for this user. In order to use Continue, please enable signed scripts to run with this command in PowerShell: `Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser`, reload VS Code, and then try again.
 
 Please open PowerShell, run the command (`Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser`), and reload VS Code.
 
