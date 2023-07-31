@@ -98,7 +98,7 @@ class ShellCommandsStep(Step):
             return f"Error when running shell commands:\n```\n{self._err_text}\n```"
 
         cmds_str = "\n".join(self.cmds)
-        return await models.gpt35.complete(f"{cmds_str}\n\nSummarize what was done in these shell commands, using markdown bullet points:")
+        return await models.medium.complete(f"{cmds_str}\n\nSummarize what was done in these shell commands, using markdown bullet points:")
 
     async def run(self, sdk: ContinueSDK) -> Coroutine[Observation, None, None]:
         cwd = await sdk.ide.getWorkspaceDirectory() if self.cwd is None else self.cwd
@@ -186,7 +186,7 @@ class DefaultModelEditCodeStep(Step):
         else:
             changes = '\n'.join(difflib.ndiff(
                 self._previous_contents.splitlines(), self._new_contents.splitlines()))
-            description = await models.gpt3516k.complete(dedent(f"""\
+            description = await models.medium.complete(dedent(f"""\
                 Diff summary: "{self.user_input}"
 
                 ```diff
@@ -194,7 +194,7 @@ class DefaultModelEditCodeStep(Step):
                 ```
 
                 Please give brief a description of the changes made above using markdown bullet points. Be concise:"""))
-        name = await models.gpt3516k.complete(f"Write a very short title to describe this requested change (no quotes): '{self.user_input}'. This is the title:")
+        name = await models.medium.complete(f"Write a very short title to describe this requested change (no quotes): '{self.user_input}'. This is the title:")
         self.name = remove_quotes_and_escapes(name)
 
         return f"{remove_quotes_and_escapes(description)}"

@@ -11,6 +11,7 @@ class MaybeProxyOpenAI(LLM):
 
     requires_api_key: Optional[str] = "OPENAI_API_KEY"
     requires_write_log: bool = True
+    requires_unique_id: bool = True
     system_message: Union[str, None] = None
 
     llm: Optional[LLM] = None

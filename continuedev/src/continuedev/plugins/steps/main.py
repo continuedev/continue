@@ -169,7 +169,7 @@ class StarCoderEditHighlightedCodeStep(Step):
     _prompt_and_completion: str = ""
 
     async def describe(self, models: Models) -> Coroutine[str, None, None]:
-        return await models.gpt35.complete(f"{self._prompt_and_completion}\n\nPlease give brief a description of the changes made above using markdown bullet points:")
+        return await models.medium.complete(f"{self._prompt_and_completion}\n\nPlease give brief a description of the changes made above using markdown bullet points:")
 
     async def run(self, sdk: ContinueSDK) -> Coroutine[Observation, None, None]:
         range_in_files = await sdk.get_code_context(only_editing=True)

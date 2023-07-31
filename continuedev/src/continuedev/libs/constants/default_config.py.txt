@@ -9,6 +9,7 @@ import subprocess
 
 from continuedev.core.main import Step
 from continuedev.core.sdk import ContinueSDK
+from continuedev.core.models import Models
 from continuedev.core.config import CustomCommand, SlashCommand, ContinueConfig
 from continuedev.plugins.context_providers.github import GitHubIssuesContextProvider
 from continuedev.plugins.context_providers.google import GoogleContextProvider
@@ -48,9 +49,9 @@ config = ContinueConfig(
     allow_anonymous_telemetry=True,
 
     models=Models(
-        default=MaybeProxyOpenAI("gpt4"),
-        medium=MaybeProxyOpenAI("gpt-3.5-turbo")
-    )
+        default=MaybeProxyOpenAI(model="gpt-4"),
+        medium=MaybeProxyOpenAI(model="gpt-3.5-turbo")
+    ),
 
     # Set a system message with information that the LLM should always keep in mind
     # E.g. "Please give concise answers. Always respond in Spanish."
