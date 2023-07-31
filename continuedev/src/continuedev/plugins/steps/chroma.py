@@ -56,7 +56,7 @@ class AnswerQuestionChroma(Step):
 
             Here is the answer:""")
 
-        answer = await sdk.models.gpt35.complete(prompt)
+        answer = await sdk.models.medium.complete(prompt)
         # Make paths relative to the workspace directory
         answer = answer.replace(await sdk.ide.getWorkspaceDirectory(), "")
 

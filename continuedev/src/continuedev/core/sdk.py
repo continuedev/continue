@@ -9,137 +9,19 @@ from .abstract_sdk import AbstractContinueSDK
 from .config import ContinueConfig
 from ..models.filesystem_edit import FileEdit, FileSystemEdit, AddFile, DeleteFile, AddDirectory, DeleteDirectory
 from ..models.filesystem import RangeInFile
-from ..libs.llm.hf_inference_api import HuggingFaceInferenceAPI
-from ..libs.llm.openai import OpenAI
-from ..libs.llm.anthropic import AnthropicLLM
-from ..libs.llm.ggml import GGML
+from ..libs.llm import LLM
 from .observation import Observation
 from ..server.ide_protocol import AbstractIdeProtocolServer
 from .main import Context, ContinueCustomException, History, HistoryNode, Step, ChatMessage
 from ..plugins.steps.core.core import *
-from ..libs.llm.proxy_server import ProxyServer
 from ..libs.util.telemetry import posthog_logger
 from ..libs.util.paths import getConfigFilePath
+from .models import Models
 from ..libs.util.logging import logger
 
 
 class Autopilot:
     pass
-
-
-ModelProvider = Literal["openai", "hf_inference_api", "ggml", "anthropic"]
-MODEL_PROVIDER_TO_ENV_VAR = {
-    "openai": "OPENAI_API_KEY",
-    "hf_inference_api": "HUGGING_FACE_TOKEN",
-    "anthropic": "ANTHROPIC_API_KEY",
-}
-
-
-class Models:
-    provider_keys: Dict[ModelProvider, str] = {}
-    model_providers: List[ModelProvider]
-    system_message: str
-
-    """
-    Better to have sdk.llm.stream_chat(messages, model="claude-2").
-    Then you also don't care that it' async.
-    And it's easier to add more models.
-    And intermediate shared code is easier to add.
-    And you can make constants like ContinueModels.GPT35 = "gpt-3.5-turbo"
-    PromptTransformer would be a good concept: You pass a prompt or list of messages and a model, then it outputs the prompt for that model.
-    Easy to reason about, can place anywhere.
-    And you can even pass a Prompt object to sdk.llm.stream_chat maybe, and it'll automatically be transformed for the given model.
-    This can all happen inside of Models?
-
-    class Prompt:
-        def __init__(self, ...info):
-            '''take whatever info is needed to describe the prompt'''
-
-        def to_string(self, model: str) -> str:
-            '''depending on the model, return the single prompt string'''
-    """
-
-    def __init__(self, sdk: "ContinueSDK", model_providers: List[ModelProvider]):
-        self.sdk = sdk
-        self.model_providers = model_providers
-        self.system_message = sdk.config.system_message
-
-    @classmethod
-    async def create(cls, sdk: "ContinueSDK", with_providers: List[ModelProvider] = ["openai"]) -> "Models":
-        if sdk.config.default_model == "claude-2":
-            with_providers.append("anthropic")
-
-        models = Models(sdk, with_providers)
-        for provider in with_providers:
-            if provider in MODEL_PROVIDER_TO_ENV_VAR:
-                env_var = MODEL_PROVIDER_TO_ENV_VAR[provider]
-                models.provider_keys[provider] = await sdk.get_user_secret(
-                    env_var, f'Please add your {env_var} to the .env file')
-
-        return models
-
-    def __load_openai_model(self, model: str) -> OpenAI:
-        api_key = self.provider_keys["openai"]
-        if api_key == "":
-            return ProxyServer(self.sdk.ide.unique_id, model, system_message=self.system_message, write_log=self.sdk.write_log)
-        return OpenAI(api_key=api_key, default_model=model, system_message=self.system_message, openai_server_info=self.sdk.config.openai_server_info, write_log=self.sdk.write_log)
-
-    def __load_hf_inference_api_model(self, model: str) -> HuggingFaceInferenceAPI:
-        api_key = self.provider_keys["hf_inference_api"]
-        return HuggingFaceInferenceAPI(api_key=api_key, model=model, system_message=self.system_message)
-
-    def __load_anthropic_model(self, model: str) -> AnthropicLLM:
-        api_key = self.provider_keys["anthropic"]
-        return AnthropicLLM(api_key, model, self.system_message)
-
-    @cached_property
-    def claude2(self):
-        return self.__load_anthropic_model("claude-2")
-
-    @cached_property
-    def starcoder(self):
-        return self.__load_hf_inference_api_model("bigcode/starcoder")
-
-    @cached_property
-    def gpt35(self):
-        return self.__load_openai_model("gpt-3.5-turbo")
-
-    @cached_property
-    def gpt350613(self):
-        return self.__load_openai_model("gpt-3.5-turbo-0613")
-
-    @cached_property
-    def gpt3516k(self):
-        return self.__load_openai_model("gpt-3.5-turbo-16k")
-
-    @cached_property
-    def gpt4(self):
-        return self.__load_openai_model("gpt-4")
-
-    @cached_property
-    def ggml(self):
-        return GGML(system_message=self.system_message)
-
-    def __model_from_name(self, model_name: str):
-        if model_name == "starcoder":
-            return self.starcoder
-        elif model_name == "gpt-3.5-turbo":
-            return self.gpt35
-        elif model_name == "gpt-3.5-turbo-16k":
-            return self.gpt3516k
-        elif model_name == "gpt-4":
-            return self.gpt4
-        elif model_name == "claude-2":
-            return self.claude2
-        elif model_name == "ggml":
-            return self.ggml
-        else:
-            raise Exception(f"Unknown model {model_name}")
-
-    @property
-    def default(self):
-        default_model = self.sdk.config.default_model
-        return self.__model_from_name(default_model) if default_model is not None else self.gpt4
 
 
 class ContinueSDK(AbstractContinueSDK):
@@ -179,11 +61,13 @@ class ContinueSDK(AbstractContinueSDK):
                 active=False
             ))
 
+        sdk.models = sdk.config.models
+        await sdk.models.start(sdk)
+
         # When the config is loaded, setup posthog logger
         posthog_logger.setup(
             sdk.ide.unique_id, sdk.config.allow_anonymous_telemetry)
 
-        sdk.models = await Models.create(sdk)
         return sdk
 
     @property
@@ -192,6 +76,16 @@ class ContinueSDK(AbstractContinueSDK):
 
     def write_log(self, message: str):
         self.history.timeline[self.history.current_index].logs.append(message)
+
+    async def start_model(self, llm: LLM):
+        kwargs = {}
+        if llm.requires_api_key:
+            kwargs["api_key"] = await self.get_user_secret(llm.requires_api_key)
+        if llm.requires_unique_id:
+            kwargs["unique_id"] = self.ide.unique_id
+        if llm.requires_write_log:
+            kwargs["write_log"] = self.write_log
+        await llm.start(**kwargs)
 
     async def _ensure_absolute_path(self, path: str) -> str:
         if os.path.isabs(path):
@@ -262,7 +156,8 @@ class ContinueSDK(AbstractContinueSDK):
         path = await self._ensure_absolute_path(path)
         return await self.run_step(FileSystemEditStep(edit=DeleteDirectory(path=path)))
 
-    async def get_user_secret(self, env_var: str, prompt: str) -> str:
+    async def get_user_secret(self, env_var: str) -> str:
+        # TODO support error prompt dynamically set on env_var
         return await self.ide.getUserSecret(env_var)
 
     _last_valid_config: ContinueConfig = None

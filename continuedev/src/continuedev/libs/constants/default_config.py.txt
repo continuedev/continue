@@ -9,9 +9,11 @@ import subprocess
 
 from continuedev.core.main import Step
 from continuedev.core.sdk import ContinueSDK
+from continuedev.core.models import Models
 from continuedev.core.config import CustomCommand, SlashCommand, ContinueConfig
 from continuedev.plugins.context_providers.github import GitHubIssuesContextProvider
 from continuedev.plugins.context_providers.google import GoogleContextProvider
+from continuedev.libs.llm.maybe_proxy_openai import MaybeProxyOpenAI
 from continuedev.plugins.policies.default import DefaultPolicy
 
 from continuedev.plugins.steps.open_config import OpenConfigStep
@@ -36,9 +38,9 @@ class CommitMessageStep(Step):
         diff = subprocess.check_output(
             ["git", "diff"], cwd=dir).decode("utf-8")
 
-        # Ask gpt-3.5-16k to write a commit message,
+        # Ask the LLM to write a commit message,
         # and set it as the description of this step
-        self.description = await sdk.models.gpt3516k.complete(
+        self.description = await sdk.models.default.complete(
             f"{diff}\n\nWrite a short, specific (less than 50 chars) commit message about the above changes:")
 
 
@@ -48,9 +50,10 @@ config = ContinueConfig(
     # See here to learn what anonymous data we collect: https://continue.dev/docs/telemetry
     allow_anonymous_telemetry=True,
 
-    # GPT-4 is recommended for best results
-    # See options here: https://continue.dev/docs/customization#change-the-default-llm
-    default_model="gpt-4",
+    models=Models(
+        default=MaybeProxyOpenAI(model="gpt-4"),
+        medium=MaybeProxyOpenAI(model="gpt-3.5-turbo")
+    ),
 
     # Set a system message with information that the LLM should always keep in mind
     # E.g. "Please give concise answers. Always respond in Spanish."

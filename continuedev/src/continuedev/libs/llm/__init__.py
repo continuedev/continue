@@ -1,13 +1,29 @@
-from abc import ABC
-from typing import Any, Coroutine, Dict, Generator, List, Union
+from abc import ABC, abstractproperty
+from typing import Any, Coroutine, Dict, Generator, List, Union, Optional
 
 from ...core.main import ChatMessage
-from ...models.main import AbstractModel
-from pydantic import BaseModel
+from ...models.main import ContinueBaseModel
 
 
-class LLM(ABC):
+class LLM(ContinueBaseModel, ABC):
+    requires_api_key: Optional[str] = None
+    requires_unique_id: bool = False
+    requires_write_log: bool = False
+
     system_message: Union[str, None] = None
+
+    @abstractproperty
+    def name(self):
+        """Return the name of the LLM."""
+        raise NotImplementedError
+
+    async def start(self, *, api_key: Optional[str] = None, **kwargs):
+        """Start the connection to the LLM."""
+        raise NotImplementedError
+
+    async def stop(self):
+        """Stop the connection to the LLM."""
+        raise NotImplementedError
 
     async def complete(self, prompt: str, with_history: List[ChatMessage] = None, **kwargs) -> Coroutine[Any, Any, str]:
         """Return the completion of the text with the given temperature."""
@@ -23,4 +39,9 @@ class LLM(ABC):
 
     def count_tokens(self, text: str):
         """Return the number of tokens in the given text."""
+        raise NotImplementedError
+
+    @abstractproperty
+    def context_length(self) -> int:
+        """Return the context length of the LLM in tokens, as counted by count_tokens."""
         raise NotImplementedError

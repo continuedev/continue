@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 from ...core.main import ChatMessage
 from ..llm import LLM
 import requests
@@ -8,13 +8,17 @@ DEFAULT_MAX_TIME = 120.
 
 
 class HuggingFaceInferenceAPI(LLM):
-    api_key: str
     model: str
 
-    def __init__(self, api_key: str, model: str, system_message: str = None):
-        self.api_key = api_key
+    requires_api_key: str = "HUGGING_FACE_TOKEN"
+    api_key: str = None
+
+    def __init__(self, model: str, system_message: str = None):
         self.model = model
         self.system_message = system_message  # TODO: Nothing being done with this
+
+    async def start(self, *, api_key: Optional[str] = None, **kwargs):
+        self.api_key = api_key
 
     def complete(self, prompt: str, with_history: List[ChatMessage] = None, **kwargs):
         """Return the completion of the text with the given temperature."""

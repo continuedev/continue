@@ -56,7 +56,7 @@ class HelpStep(Step):
                 summary="Help"
             ))
             messages = await sdk.get_chat_context()
-            generator = sdk.models.gpt4.stream_chat(messages)
+            generator = sdk.models.default.stream_chat(messages)
             async for chunk in generator:
                 if "content" in chunk:
                     self.description += chunk["content"]

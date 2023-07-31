@@ -9,6 +9,7 @@ from .core.core import DisplayErrorStep, MessageStep
 from ...core.main import FunctionCall, Models
 from ...core.main import ChatMessage, Step, step_to_json_schema
 from ...core.sdk import ContinueSDK
+from ...libs.llm.openai import OpenAI
 import openai
 import os
 from dotenv import load_dotenv
@@ -41,7 +42,7 @@ class SimpleChatStep(Step):
                 self.description += chunk["content"]
                 await sdk.update_ui()
 
-        self.name = remove_quotes_and_escapes(await sdk.models.gpt35.complete(
+        self.name = remove_quotes_and_escapes(await sdk.models.medium.complete(
             f"Write a short title for the following chat message: {self.description}"))
 
         self.chat_context.append(ChatMessage(
@@ -166,7 +167,10 @@ class ChatWithFunctions(Step):
             msg_content = ""
             msg_step = None
 
-            async for msg_chunk in sdk.models.gpt350613.stream_chat(await sdk.get_chat_context(), functions=functions):
+            gpt350613 = OpenAI(model="gpt-3.5-turbo-0613")
+            await sdk.start_model(gpt350613)
+
+            async for msg_chunk in gpt350613.stream_chat(await sdk.get_chat_context(), functions=functions):
                 if sdk.current_step_was_deleted():
                     return
 
