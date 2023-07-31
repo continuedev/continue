@@ -98,8 +98,8 @@ class Autopilot(ContinueBaseModel):
             user_input_queue=self._main_user_input_queue,
             slash_commands=self.get_available_slash_commands(),
             adding_highlighted_code=self.context_manager.context_providers[
-                "code"].adding_highlighted_code,
-            selected_context_items=await self.context_manager.get_selected_items()
+                "code"].adding_highlighted_code if self.context_manager is not None else False,
+            selected_context_items=await self.context_manager.get_selected_items() if self.context_manager is not None else [],
         )
         self.full_state = full_state
         return full_state

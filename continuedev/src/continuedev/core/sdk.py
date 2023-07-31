@@ -40,6 +40,7 @@ class ContinueSDK(AbstractContinueSDK):
     @classmethod
     async def create(cls, autopilot: Autopilot) -> "ContinueSDK":
         sdk = ContinueSDK(autopilot)
+        autopilot.continue_sdk = sdk
 
         try:
             config = sdk._load_config_dot_py()
