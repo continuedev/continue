@@ -34,11 +34,11 @@ class ProxyServer(LLM):
     requires_unique_id = True
     requires_write_log = True
 
-    async def start(self, *, api_key: Optional[str] = None, **kwargs):
+    async def start(self, *, api_key: Optional[str] = None, write_log: Callable[[str], None], unique_id: str, **kwargs):
         self._client_session = aiohttp.ClientSession(
             connector=aiohttp.TCPConnector(ssl_context=ssl_context))
-        self.write_log = kwargs["write_log"]
-        self.unique_id = kwargs["unique_id"]
+        self.write_log = write_log
+        self.unique_id = unique_id
 
     async def stop(self):
         await self._client_session.close()

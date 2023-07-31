@@ -36,7 +36,8 @@ class OpenAI(LLM):
     write_log: Optional[Callable[[str], None]] = None
     api_key: str = None
 
-    async def start(self, *, api_key: Optional[str] = None, **kwargs):
+    async def start(self, *, api_key: Optional[str] = None, write_log: Callable[[str], None], **kwargs):
+        self.write_log = write_log
         self.api_key = api_key
         openai.api_key = self.api_key
 

@@ -1,4 +1,4 @@
-from typing import Any, Coroutine, Dict, Generator, List, Union, Optional
+from typing import Any, Coroutine, Dict, Generator, List, Union, Optional, Callable
 
 from ...core.main import ChatMessage
 from . import LLM
@@ -23,14 +23,13 @@ class MaybeProxyOpenAI(LLM):
     def context_length(self):
         return self.llm.context_length
 
-    async def start(self, *, api_key: Optional[str] = None, **kwargs):
+    async def start(self, *, api_key: Optional[str] = None, unique_id: str, write_log: Callable[[str], None]):
         if api_key is None or api_key.strip() == "":
-            self.llm = ProxyServer(
-                unique_id="", model=self.model, write_log=kwargs["write_log"])
+            self.llm = ProxyServer(model=self.model)
         else:
-            self.llm = OpenAI(model=self.model, write_log=kwargs["write_log"])
+            self.llm = OpenAI(model=self.model)
 
-        await self.llm.start(api_key=api_key, **kwargs)
+        await self.llm.start(api_key=api_key, write_log=write_log, unique_id=unique_id)
 
     async def stop(self):
         await self.llm.stop()
