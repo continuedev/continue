@@ -75,6 +75,6 @@ class DefaultPolicy(Policy):
             if user_input.startswith("/edit"):
                 return EditHighlightedCodeStep(user_input=user_input[5:])
 
-            return self.default_step
+            return self.default_step.copy()
 
         return None

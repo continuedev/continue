@@ -171,7 +171,7 @@ class ContinueSDK(AbstractContinueSDK):
             formatted_err = '\n'.join(traceback.format_exception(e))
             msg_step = MessageStep(
                 name="Invalid Continue Config File", message=formatted_err)
-            msg_step.description = f"Falling back to default config settings.\n```\n{formatted_err}\n```"
+            msg_step.description = f"Falling back to default config settings.\n```\n{formatted_err}\n```\n\nIt's possible this error was caused by an update to the Continue config format. If you'd like to see the new recommended default `config.py`, check [here](https://github.com/continuedev/continue/blob/main/continuedev/src/continuedev/libs/constants/default_config.py.txt)."
             sdk.history.add_node(HistoryNode(
                 step=msg_step,
                 observation=None,
