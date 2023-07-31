@@ -1,32 +1,39 @@
 
 from functools import cached_property
 import time
-from typing import Any, Coroutine, Dict, Generator, List, Union
+from typing import Any, Coroutine, Dict, Generator, List, Optional, Union
 from ...core.main import ChatMessage
 from anthropic import HUMAN_PROMPT, AI_PROMPT, AsyncAnthropic
 from ..llm import LLM
-from ..util.count_tokens import DEFAULT_MAX_TOKENS, compile_chat_messages, CHAT_MODELS, DEFAULT_ARGS, count_tokens, prune_raw_prompt_from_top
+from ..util.count_tokens import compile_chat_messages, DEFAULT_ARGS, count_tokens
 
 
 class AnthropicLLM(LLM):
-    api_key: str
-    default_model: str
-    async_client: AsyncAnthropic
+    model: str = "claude-2"
 
-    def __init__(self, api_key: str, default_model: str, system_message: str = None):
-        self.api_key = api_key
-        self.default_model = default_model
+    requires_api_key: str = "ANTHROPIC_API_KEY"
+    _async_client: AsyncAnthropic = None
+
+    class Config:
+        arbitrary_types_allowed = True
+
+    def __init__(self, model: str, system_message: str = None):
+        self.model = model
         self.system_message = system_message
 
-        self.async_client = AsyncAnthropic(api_key=api_key)
+    async def start(self, *, api_key: Optional[str] = None, **kwargs):
+        self._async_client = AsyncAnthropic(api_key=api_key)
+
+    async def stop(self):
+        pass
 
     @cached_property
     def name(self):
-        return self.default_model
+        return self.model
 
     @property
     def default_args(self):
-        return {**DEFAULT_ARGS, "model": self.default_model}
+        return {**DEFAULT_ARGS, "model": self.model}
 
     def _transform_args(self, args: Dict[str, Any]) -> Dict[str, Any]:
         args = args.copy()
@@ -40,7 +47,13 @@ class AnthropicLLM(LLM):
         return args
 
     def count_tokens(self, text: str):
-        return count_tokens(self.default_model, text)
+        return count_tokens(self.model, text)
+
+    @property
+    def context_length(self):
+        if self.model == "claude-2":
+            return 100000
+        raise Exception(f"Unknown Anthropic model {self.model}")
 
     def __messages_to_prompt(self, messages: List[Dict[str, str]]) -> str:
         prompt = ""
@@ -60,7 +73,7 @@ class AnthropicLLM(LLM):
         args["stream"] = True
         args = self._transform_args(args)
 
-        async for chunk in await self.async_client.completions.create(
+        async for chunk in await self._async_client.completions.create(
             prompt=f"{HUMAN_PROMPT} {prompt} {AI_PROMPT}",
             **args
         ):
@@ -73,8 +86,8 @@ class AnthropicLLM(LLM):
         args = self._transform_args(args)
 
         messages = compile_chat_messages(
-            args["model"], messages, args["max_tokens_to_sample"], functions=args.get("functions", None), system_message=self.system_message)
-        async for chunk in await self.async_client.completions.create(
+            args["model"], messages, self.context_length, self.context_length, args["max_tokens_to_sample"], functions=args.get("functions", None), system_message=self.system_message)
+        async for chunk in await self._async_client.completions.create(
             prompt=self.__messages_to_prompt(messages),
             **args
         ):
@@ -88,8 +101,8 @@ class AnthropicLLM(LLM):
         args = self._transform_args(args)
 
         messages = compile_chat_messages(
-            args["model"], with_history, args["max_tokens_to_sample"], prompt, functions=None, system_message=self.system_message)
-        resp = (await self.async_client.completions.create(
+            args["model"], with_history, self.context_length, args["max_tokens_to_sample"], prompt, functions=None, system_message=self.system_message)
+        resp = (await self._async_client.completions.create(
             prompt=self.__messages_to_prompt(messages),
             **args
         )).completion

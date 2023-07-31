@@ -59,7 +59,7 @@ class ChromaIndexManager:
             except:
                 logger.warning(
                     f"ERROR (probably found special token): {doc.text}")
-                continue
+                continue  # lol
             filename = doc.extra_info["filename"]
             chunks[filename] = len(text_chunks)
             for i, text in enumerate(text_chunks):

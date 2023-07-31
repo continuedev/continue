@@ -9,6 +9,7 @@ from ..models.filesystem import RangeInFileWithContents
 from ..models.filesystem_edit import FileEditWithFullContents
 from .observation import Observation, InternalErrorObservation
 from .context import ContextManager
+from ..plugins.policies.default import DefaultPolicy
 from ..plugins.context_providers.file import FileContextProvider
 from ..plugins.context_providers.highlighted_code import HighlightedCodeContextProvider
 from ..server.ide_protocol import AbstractIdeProtocolServer
@@ -47,8 +48,9 @@ def get_error_title(e: Exception) -> str:
 
 
 class Autopilot(ContinueBaseModel):
-    policy: Policy
     ide: AbstractIdeProtocolServer
+
+    policy: Policy = DefaultPolicy()
     history: History = History.from_empty()
     context: Context = Context()
     full_state: Union[FullState, None] = None
@@ -64,20 +66,19 @@ class Autopilot(ContinueBaseModel):
     _user_input_queue = AsyncSubscriptionQueue()
     _retry_queue = AsyncSubscriptionQueue()
 
-    @classmethod
-    async def create(cls, policy: Policy, ide: AbstractIdeProtocolServer, full_state: FullState) -> "Autopilot":
-        autopilot = cls(ide=ide, policy=policy)
-        autopilot.continue_sdk = await ContinueSDK.create(autopilot)
+    async def start(self):
+        self.continue_sdk = await ContinueSDK.create(self)
+        if override_policy := self.continue_sdk.config.policy_override:
+            self.policy = override_policy
 
         # Load documents into the search index
-        autopilot.context_manager = await ContextManager.create(
-            autopilot.continue_sdk.config.context_providers + [
-                HighlightedCodeContextProvider(ide=ide),
-                FileContextProvider(workspace_dir=ide.workspace_directory)
+        self.context_manager = await ContextManager.create(
+            self.continue_sdk.config.context_providers + [
+                HighlightedCodeContextProvider(ide=self.ide),
+                FileContextProvider(workspace_dir=self.ide.workspace_directory)
             ])
-        await autopilot.context_manager.load_index(ide.workspace_directory)
 
-        return autopilot
+        await self.context_manager.load_index(self.ide.workspace_directory)
 
     class Config:
         arbitrary_types_allowed = True
@@ -95,7 +96,6 @@ class Autopilot(ContinueBaseModel):
             history=self.history,
             active=self._active,
             user_input_queue=self._main_user_input_queue,
-            default_model=self.continue_sdk.config.default_model,
             slash_commands=self.get_available_slash_commands(),
             adding_highlighted_code=self.context_manager.context_providers[
                 "code"].adding_highlighted_code,

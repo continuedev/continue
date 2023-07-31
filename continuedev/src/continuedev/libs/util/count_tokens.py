@@ -2,43 +2,47 @@ import json
 from typing import Dict, List, Union
 from ...core.main import ChatMessage
 from .templating import render_templated_string
+from ...libs.llm import LLM
 import tiktoken
 
+# TODO move many of these into specific LLM.properties() function that
+# contains max tokens, if its a chat model or not, default args (not all models
+# want to be run at 0.5 temp). also lets custom models made for long contexts
+# exist here (likg LLongMA)
 aliases = {
     "ggml": "gpt-3.5-turbo",
     "claude-2": "gpt-3.5-turbo",
 }
 DEFAULT_MAX_TOKENS = 2048
-MAX_TOKENS_FOR_MODEL = {
-    "gpt-3.5-turbo": 4096,
-    "gpt-3.5-turbo-0613": 4096,
-    "gpt-3.5-turbo-16k": 16384,
-    "gpt-4": 8192,
-    "ggml": 2048,
-    "claude-2": 100000
-}
-CHAT_MODELS = {
-    "gpt-3.5-turbo", "gpt-3.5-turbo-16k", "gpt-4", "gpt-3.5-turbo-0613"
-}
 DEFAULT_ARGS = {"max_tokens": DEFAULT_MAX_TOKENS, "temperature": 0.5, "top_p": 1,
                 "frequency_penalty": 0, "presence_penalty": 0}
 
 
-def encoding_for_model(model: str):
-    return tiktoken.encoding_for_model(aliases.get(model, model))
+def encoding_for_model(model_name: str):
+    try:
+        return tiktoken.encoding_for_model(aliases.get(model_name, model_name))
+    except:
+        return tiktoken.encoding_for_model("gpt-3.5-turbo")
 
 
-def count_tokens(model: str, text: Union[str, None]):
+def count_tokens(model_name: str, text: Union[str, None]):
     if text is None:
         return 0
-    encoding = encoding_for_model(model)
+    encoding = encoding_for_model(model_name)
     return len(encoding.encode(text, disallowed_special=()))
 
 
-def prune_raw_prompt_from_top(model: str, prompt: str, tokens_for_completion: int):
-    max_tokens = MAX_TOKENS_FOR_MODEL.get(
-        model, DEFAULT_MAX_TOKENS) - tokens_for_completion
-    encoding = encoding_for_model(model)
+def count_chat_message_tokens(model_name: str, chat_message: ChatMessage) -> int:
+    # Doing simpler, safer version of what is here:
+    # https://github.com/openai/openai-cookbook/blob/main/examples/How_to_count_tokens_with_tiktoken.ipynb
+    # every message follows <|start|>{role/name}\n{content}<|end|>\n
+    TOKENS_PER_MESSAGE = 4
+    return count_tokens(model_name, chat_message.content) + TOKENS_PER_MESSAGE
+
+
+def prune_raw_prompt_from_top(model_name: str, context_length: int, prompt: str, tokens_for_completion: int):
+    max_tokens = context_length - tokens_for_completion
+    encoding = encoding_for_model(model_name)
     tokens = encoding.encode(prompt, disallowed_special=())
     if len(tokens) <= max_tokens:
         return prompt
@@ -46,53 +50,45 @@ def prune_raw_prompt_from_top(model: str, prompt: str, tokens_for_completion: in
         return encoding.decode(tokens[-max_tokens:])
 
 
-def count_chat_message_tokens(model: str, chat_message: ChatMessage) -> int:
-    # Doing simpler, safer version of what is here:
-    # https://github.com/openai/openai-cookbook/blob/main/examples/How_to_count_tokens_with_tiktoken.ipynb
-    # every message follows <|start|>{role/name}\n{content}<|end|>\n
-    TOKENS_PER_MESSAGE = 4
-    return count_tokens(model, chat_message.content) + TOKENS_PER_MESSAGE
-
-
-def prune_chat_history(model: str, chat_history: List[ChatMessage], max_tokens: int, tokens_for_completion: int):
+def prune_chat_history(model_name: str, chat_history: List[ChatMessage], context_length: int, tokens_for_completion: int):
     total_tokens = tokens_for_completion + \
-        sum(count_chat_message_tokens(model, message)
+        sum(count_chat_message_tokens(model_name, message)
             for message in chat_history)
 
     # 1. Replace beyond last 5 messages with summary
     i = 0
-    while total_tokens > max_tokens and i < len(chat_history) - 5:
+    while total_tokens > context_length and i < len(chat_history) - 5:
         message = chat_history[0]
-        total_tokens -= count_tokens(model, message.content)
-        total_tokens += count_tokens(model, message.summary)
+        total_tokens -= count_tokens(model_name, message.content)
+        total_tokens += count_tokens(model_name, message.summary)
         message.content = message.summary
         i += 1
 
     # 2. Remove entire messages until the last 5
-    while len(chat_history) > 5 and total_tokens > max_tokens and len(chat_history) > 0:
+    while len(chat_history) > 5 and total_tokens > context_length and len(chat_history) > 0:
         message = chat_history.pop(0)
-        total_tokens -= count_tokens(model, message.content)
+        total_tokens -= count_tokens(model_name, message.content)
 
     # 3. Truncate message in the last 5, except last 1
     i = 0
-    while total_tokens > max_tokens and len(chat_history) > 0 and i < len(chat_history) - 1:
+    while total_tokens > context_length and len(chat_history) > 0 and i < len(chat_history) - 1:
         message = chat_history[i]
-        total_tokens -= count_tokens(model, message.content)
-        total_tokens += count_tokens(model, message.summary)
+        total_tokens -= count_tokens(model_name, message.content)
+        total_tokens += count_tokens(model_name, message.summary)
         message.content = message.summary
         i += 1
 
     # 4. Remove entire messages in the last 5, except last 1
-    while total_tokens > max_tokens and len(chat_history) > 1:
+    while total_tokens > context_length and len(chat_history) > 1:
         message = chat_history.pop(0)
-        total_tokens -= count_tokens(model, message.content)
+        total_tokens -= count_tokens(model_name, message.content)
 
     # 5. Truncate last message
-    if total_tokens > max_tokens and len(chat_history) > 0:
+    if total_tokens > context_length and len(chat_history) > 0:
         message = chat_history[0]
         message.content = prune_raw_prompt_from_top(
-            model, message.content, tokens_for_completion)
-        total_tokens = max_tokens
+            model_name, context_length, message.content, tokens_for_completion)
+        total_tokens = context_length
 
     return chat_history
 
@@ -101,7 +97,7 @@ def prune_chat_history(model: str, chat_history: List[ChatMessage], max_tokens: 
 TOKEN_BUFFER_FOR_SAFETY = 100
 
 
-def compile_chat_messages(model: str, msgs: Union[List[ChatMessage], None], max_tokens: int, prompt: Union[str, None] = None, functions: Union[List, None] = None, system_message: Union[str, None] = None) -> List[Dict]:
+def compile_chat_messages(model_name: str, msgs: Union[List[ChatMessage], None], context_length: int, max_tokens: int, prompt: Union[str, None] = None, functions: Union[List, None] = None, system_message: Union[str, None] = None) -> List[Dict]:
     """
     The total number of tokens is system_message + sum(msgs) + functions + prompt after it is converted to a message
     """
@@ -125,10 +121,10 @@ def compile_chat_messages(model: str, msgs: Union[List[ChatMessage], None], max_
     function_tokens = 0
     if functions is not None:
         for function in functions:
-            function_tokens += count_tokens(model, json.dumps(function))
+            function_tokens += count_tokens(model_name, json.dumps(function))
 
     msgs_copy = prune_chat_history(
-        model, msgs_copy, MAX_TOKENS_FOR_MODEL[model], function_tokens + max_tokens + TOKEN_BUFFER_FOR_SAFETY)
+        model_name, msgs_copy, context_length, function_tokens + max_tokens + TOKEN_BUFFER_FOR_SAFETY)
 
     history = [msg.to_dict(with_functions=functions is not None)
                for msg in msgs_copy]

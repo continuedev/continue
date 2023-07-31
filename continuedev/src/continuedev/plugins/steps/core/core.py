@@ -11,11 +11,12 @@ from pydantic import validator
 
 from ....libs.llm.ggml import GGML
 from ....models.main import Range
+from ....libs.llm.maybe_proxy_openai import MaybeProxyOpenAI
 from ....models.filesystem_edit import EditDiff, FileEdit, FileEditWithFullContents, FileSystemEdit
 from ....models.filesystem import FileSystem, RangeInFile, RangeInFileWithContents
-from ....core.observation import Observation, TextObservation, UserInputObservation
-from ....core.main import ChatMessage, ContinueCustomException, Step
-from ....libs.util.count_tokens import MAX_TOKENS_FOR_MODEL, DEFAULT_MAX_TOKENS
+from ....core.observation import Observation, TextObservation, TracebackObservation, UserInputObservation
+from ....core.main import ChatMessage, ContinueCustomException, Step, SequentialStep
+from ....libs.util.count_tokens import DEFAULT_MAX_TOKENS
 from ....libs.util.strings import dedent_and_get_common_whitespace, remove_quotes_and_escapes
 
 
@@ -97,7 +98,7 @@ class ShellCommandsStep(Step):
             return f"Error when running shell commands:\n```\n{self._err_text}\n```"
 
         cmds_str = "\n".join(self.cmds)
-        return await models.gpt35.complete(f"{cmds_str}\n\nSummarize what was done in these shell commands, using markdown bullet points:")
+        return await models.medium.complete(f"{cmds_str}\n\nSummarize what was done in these shell commands, using markdown bullet points:")
 
     async def run(self, sdk: ContinueSDK) -> Coroutine[Observation, None, None]:
         cwd = await sdk.ide.getWorkspaceDirectory() if self.cwd is None else self.cwd
@@ -105,7 +106,7 @@ class ShellCommandsStep(Step):
         for cmd in self.cmds:
             output = await sdk.ide.runCommand(cmd)
             if self.handle_error and output is not None and output_contains_error(output):
-                suggestion = await sdk.models.gpt35.complete(dedent(f"""\
+                suggestion = await sdk.models.medium.complete(dedent(f"""\
                     While running the command `{cmd}`, the following error occurred:
 
                     ```ascii
@@ -185,7 +186,7 @@ class DefaultModelEditCodeStep(Step):
         else:
             changes = '\n'.join(difflib.ndiff(
                 self._previous_contents.splitlines(), self._new_contents.splitlines()))
-            description = await models.gpt3516k.complete(dedent(f"""\
+            description = await models.medium.complete(dedent(f"""\
                 Diff summary: "{self.user_input}"
 
                 ```diff
@@ -193,7 +194,7 @@ class DefaultModelEditCodeStep(Step):
                 ```
 
                 Please give brief a description of the changes made above using markdown bullet points. Be concise:"""))
-        name = await models.gpt3516k.complete(f"Write a very short title to describe this requested change (no quotes): '{self.user_input}'. This is the title:")
+        name = await models.medium.complete(f"Write a very short title to describe this requested change (no quotes): '{self.user_input}'. This is the title:")
         self.name = remove_quotes_and_escapes(name)
 
         return f"{remove_quotes_and_escapes(description)}"
@@ -203,8 +204,7 @@ class DefaultModelEditCodeStep(Step):
         # We care because if this prompt itself goes over the limit, then the entire message will have to be cut from the completion.
         # Overflow won't happen, but prune_chat_messages in count_tokens.py will cut out this whole thing, instead of us cutting out only as many lines as we need.
         model_to_use = sdk.models.default
-        max_tokens = int(MAX_TOKENS_FOR_MODEL.get(
-            model_to_use.name, DEFAULT_MAX_TOKENS) / 2)
+        max_tokens = int(model_to_use.context_length / 2)
 
         TOKENS_TO_BE_CONSIDERED_LARGE_RANGE = 1200
         if model_to_use.count_tokens(rif.contents) > TOKENS_TO_BE_CONSIDERED_LARGE_RANGE:
@@ -222,8 +222,9 @@ class DefaultModelEditCodeStep(Step):
 
         # If using 3.5 and overflows, upgrade to 3.5.16k
         if model_to_use.name == "gpt-3.5-turbo":
-            if total_tokens > MAX_TOKENS_FOR_MODEL["gpt-3.5-turbo"]:
-                model_to_use = sdk.models.gpt3516k
+            if total_tokens > model_to_use.context_length:
+                model_to_use = MaybeProxyOpenAI(model="gpt-3.5-turbo-0613")
+                await sdk.start_model(model_to_use)
 
         # Remove tokens from the end first, and then the start to clear space
         # This part finds the start and end lines
@@ -233,20 +234,20 @@ class DefaultModelEditCodeStep(Step):
         cur_start_line = 0
         cur_end_line = len(full_file_contents_lst) - 1
 
-        if total_tokens > MAX_TOKENS_FOR_MODEL[model_to_use.name]:
+        if total_tokens > model_to_use.context_length:
             while cur_end_line > min_end_line:
                 total_tokens -= model_to_use.count_tokens(
                     full_file_contents_lst[cur_end_line])
                 cur_end_line -= 1
-                if total_tokens < MAX_TOKENS_FOR_MODEL[model_to_use.name]:
+                if total_tokens < model_to_use.context_length:
                     break
 
-        if total_tokens > MAX_TOKENS_FOR_MODEL[model_to_use.name]:
+        if total_tokens > model_to_use.context_length:
             while cur_start_line < max_start_line:
                 cur_start_line += 1
                 total_tokens -= model_to_use.count_tokens(
                     full_file_contents_lst[cur_start_line])
-                if total_tokens < MAX_TOKENS_FOR_MODEL[model_to_use.name]:
+                if total_tokens < model_to_use.context_length:
                     break
 
         # Now use the found start/end lines to get the prefix and suffix strings
@@ -525,7 +526,7 @@ Please output the code to be inserted at the cursor in order to fulfill the user
 
                 # Accumulate lines
                 if "content" not in chunk:
-                    continue
+                    continue  # ayo
                 chunk = chunk["content"]
                 chunk_lines = chunk.split("\n")
                 chunk_lines[0] = unfinished_line + chunk_lines[0]
@@ -546,12 +547,12 @@ Please output the code to be inserted at the cursor in order to fulfill the user
                         break
                     # Lines that should be ignored, like the <> tags
                     elif self.line_to_be_ignored(chunk_lines[i], completion_lines_covered == 0):
-                        continue
+                        continue  # noice
                     # Check if we are currently just copying the prefix
                     elif (lines_of_prefix_copied > 0 or completion_lines_covered == 0) and lines_of_prefix_copied < len(file_prefix.splitlines()) and chunk_lines[i] == full_file_contents_lines[lines_of_prefix_copied]:
                         # This is a sketchy way of stopping it from repeating the file_prefix. Is a bug if output happens to have a matching line
                         lines_of_prefix_copied += 1
-                        continue
+                        continue  # also nice
                     # Because really short lines might be expected to be repeated, this is only a !heuristic!
                     # Stop when it starts copying the file_suffix
                     elif chunk_lines[i].strip() == line_below_highlighted_range.strip() and len(chunk_lines[i].strip()) > 4 and not (len(original_lines_below_previous_blocks) > 0 and chunk_lines[i].strip() == original_lines_below_previous_blocks[0].strip()):

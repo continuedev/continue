@@ -73,7 +73,7 @@ class AbstractContinueSDK(ABC):
         pass
 
     @abstractmethod
-    async def get_user_secret(self, env_var: str, prompt: str) -> str:
+    async def get_user_secret(self, env_var: str) -> str:
         pass
 
     config: ContinueConfig

@@ -4,11 +4,25 @@ Continue can be deeply customized by editing the `ContinueConfig` object in `~/.
 
 ## Change the default LLM
 
-Change the `default_model` field to any of "gpt-3.5-turbo", "gpt-3.5-turbo-16k", "gpt-4", "claude-2", or "ggml".
+In `config.py`, you'll find the `models` property:
+
+```python
+config = ContinueConfig(
+    ...
+    models=Models(
+        default=MaybeProxyOpenAI(model="gpt-4"),
+        medium=MaybeProxyOpenAI(model="gpt-3.5-turbo")
+    )
+)
+```
+
+The `default` model is the one used for most operations, including responding to your messages and editing code. The `medium` model is used for summarization tasks that require less quality. There are also `small` and `large` roles that can be filled, but all will fall back to `default` if not set. The values of these fields must be of the [`LLM`](https://github.com/continuedev/continue/blob/main/continuedev/src/continuedev/libs/llm/__init__.py) class, which implements methods for retrieving and streaming completions from an LLM.
+
+Below, we describe the `LLM` classes available in the Continue core library, and how they can be used.
 
 ### Adding an OpenAI API key
 
-New users can try out Continue with GPT-4 using a proxy server that securely makes calls to OpenAI using our API key. Continue should just work the first time you install the extension in VS Code.
+With the `MaybeProxyOpenAI` `LLM`, new users can try out Continue with GPT-4 using a proxy server that securely makes calls to OpenAI using our API key. Continue should just work the first time you install the extension in VS Code.
 
 Once you are using Continue regularly though, you will need to add an OpenAI API key that has access to GPT-4 by following these steps:
 
@@ -18,34 +32,55 @@ Once you are using Continue regularly though, you will need to add an OpenAI API
 4. Click Edit in settings.json under Continue: OpenAI_API_KEY" section
 5. Paste your API key as the value for "continue.OPENAI_API_KEY" in settings.json
 
-### claude-2 and gpt-X
+The `MaybeProxyOpenAI` class will automatically switch to using your API key instead of ours. If you'd like to explicitly use one or the other, you can use the `ProxyServer` or `OpenAI` classes instead.
 
-If you have access, simply set `default_model` to the model you would like to use, then you will be prompted for a personal API key after reloading VS Code. If using an OpenAI model, you can press enter to try with our API key for free.
+These classes support any models available through the OpenAI API, assuming your API key has access, including "gpt-4", "gpt-3.5-turbo", "gpt-3.5-turbo-16k", and "gpt-4-32k".
+
+### claude-2
+
+Import the `Anthropic` LLM class and set it as the default model:
+
+```python
+from continuedev.libs.llm.anthropic import Anthropic
+
+config = ContinueConfig(
+    ...
+    models=Models(
+        default=Anthropic(model="claude-2")
+    )
+)
+```
+
+Continue will automatically prompt you for your Anthropic API key, which must have access to Claude 2. You can request early access [here](https://www.anthropic.com/earlyaccess).
 
 ### Local models with ggml
 
 See our [5 minute quickstart](https://github.com/continuedev/ggml-server-example) to run any model locally with ggml. While these models don't yet perform as well, they are free, entirely private, and run offline.
 
-Once the model is running on localhost:8000, set `default_model` in `~/.continue/config.py` to "ggml".
+Once the model is running on localhost:8000, import the `GGML` LLM class from `continuedev.libs.llm.ggml` and set `default=GGML(max_context_length=2048)`.
 
 ### Self-hosting an open-source model
 
-If you want to self-host on Colab, RunPod, Replicate, HuggingFace, Haven, or another hosting provider you will need to wire up a new LLM class. It only needs to implement 3 methods: `stream_complete`, `complete`, and `stream_chat`, and you can see examples in `continuedev/src/continuedev/libs/llm`.
+If you want to self-host on Colab, RunPod, Replicate, HuggingFace, Haven, or another hosting provider you will need to wire up a new LLM class. It only needs to implement 3 primary methods: `stream_complete`, `complete`, and `stream_chat`, and you can see examples in `continuedev/src/continuedev/libs/llm`.
 
 If by chance the provider has the exact same API interface as OpenAI, the `GGML` class will work for you out of the box, after changing the endpoint at the top of the file.
 
 ### Azure OpenAI Service
 
-If you'd like to use OpenAI models but are concerned about privacy, you can use the Azure OpenAI service, which is GDPR and HIPAA compliant. After applying for access [here](https://azure.microsoft.com/en-us/products/ai-services/openai-service), you will typically hear back within only a few days. Once you have access, set `default_model` to "gpt-4", and then set the `openai_server_info` property in the `ContinueConfig` like so:
+If you'd like to use OpenAI models but are concerned about privacy, you can use the Azure OpenAI service, which is GDPR and HIPAA compliant. After applying for access [here](https://azure.microsoft.com/en-us/products/ai-services/openai-service), you will typically hear back within only a few days. Once you have access, instantiate the model like so:
 
 ```python
+from continuedev.libs.llm.openai import OpenAI, OpenAIServerInfo
+
 config = ContinueConfig(
     ...
-    openai_server_info=OpenAIServerInfo(
-        api_base="https://my-azure-openai-instance.openai.azure.com/",
-        engine="my-azure-openai-deployment",
-        api_version="2023-03-15-preview",
-        api_type="azure"
+    models=Models(
+        default=OpenAI(model="gpt-3.5-turbo", server_info=OpenAIServerInfo(
+            api_base="https://my-azure-openai-instance.openai.azure.com/"
+            engine="my-azure-openai-deployment",
+            api_version="2023-03-15-preview",
+            api_type="azure"
+        ))
     )
 )
 ```
