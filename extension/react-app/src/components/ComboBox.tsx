@@ -169,12 +169,12 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
       props.onInputValueChange(inputValue);
 
       if (inputValue.endsWith("@") || currentlyInContextQuery) {
-        const segs = inputValue.split("@");
+        const segs = inputValue?.split("@") || [];
 
         if (segs.length > 1) {
           // Get search results and return
           setCurrentlyInContextQuery(true);
-          const providerAndQuery = segs[segs.length - 1];
+          const providerAndQuery = segs[segs.length - 1] || "";
           const [provider, query] = providerAndQuery.split(" ");
           searchClient
             .index(SEARCH_INDEX_NAME)

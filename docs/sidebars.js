@@ -21,6 +21,7 @@ const sidebars = {
     "customization",
     "collecting-data",
     "telemetry",
+    "troubleshooting",
   ],
 };
 
