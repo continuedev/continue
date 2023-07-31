@@ -14,6 +14,9 @@ class AnthropicLLM(LLM):
     requires_api_key: str = "ANTHROPIC_API_KEY"
     _async_client: AsyncAnthropic = None
 
+    class Config:
+        arbitrary_types_allowed = True
+
     def __init__(self, model: str, system_message: str = None):
         self.model = model
         self.system_message = system_message

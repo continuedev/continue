@@ -45,8 +45,6 @@ def parse_custom_command(inp: str, config: ContinueConfig) -> Union[None, Step]:
 
 
 class DefaultPolicy(Policy):
-    ran_code_last: bool = False
-
     def next(self, config: ContinueConfig, history: History) -> Step:
         # At the very start, run initial Steps spcecified in the config
         if history.get_current() is None:

@@ -1,14 +1,11 @@
-import functools
 from abc import ABC, abstractproperty
-from pydantic import BaseModel, ConfigDict
 from typing import Any, Coroutine, Dict, Generator, List, Union, Optional
 
 from ...core.main import ChatMessage
-from ...models.main import AbstractModel
-from pydantic import BaseModel
+from ...models.main import ContinueBaseModel
 
 
-class LLM(BaseModel, ABC):
+class LLM(ContinueBaseModel, ABC):
     requires_api_key: Optional[str] = None
     requires_unique_id: bool = False
     requires_write_log: bool = False

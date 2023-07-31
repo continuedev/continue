@@ -17,9 +17,8 @@ class GGML(LLM):
 
     _client_session: aiohttp.ClientSession = None
 
-    def __init__(self, max_context_length: int = 2048, system_message: str = None):
-        self.max_context_length = max_context_length
-        self.system_message = system_message
+    class Config:
+        arbitrary_types_allowed = True
 
     async def start(self, **kwargs):
         self._client_session = aiohttp.ClientSession()
