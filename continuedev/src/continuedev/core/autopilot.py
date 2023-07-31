@@ -15,12 +15,13 @@ from ..server.ide_protocol import AbstractIdeProtocolServer
 from ..libs.util.queue import AsyncSubscriptionQueue
 from ..models.main import ContinueBaseModel
 from .main import Context, ContinueCustomException, Policy, History, FullState, Step, HistoryNode
-from ..plugins.steps.core.core import ReversibleStep, ManualEditStep, UserInputStep
+from ..plugins.steps.core.core import DisplayErrorStep, ReversibleStep, ManualEditStep, UserInputStep
 from .sdk import ContinueSDK
 from ..libs.util.traceback_parsers import get_python_traceback, get_javascript_traceback
 from openai import error as openai_errors
 from ..libs.util.create_async_task import create_async_task
 from ..libs.util.telemetry import posthog_logger
+from ..libs.util.logging import logger
 
 
 def get_error_title(e: Exception) -> str:
@@ -74,7 +75,7 @@ class Autopilot(ContinueBaseModel):
                 HighlightedCodeContextProvider(ide=ide),
                 FileContextProvider(workspace_dir=ide.workspace_directory)
             ])
-        await autopilot.context_manager.load_index()
+        await autopilot.context_manager.load_index(ide.workspace_directory)
 
         return autopilot
 
@@ -152,7 +153,7 @@ class Autopilot(ContinueBaseModel):
 
                 await self.update_subscribers()
         except Exception as e:
-            print(e)
+            logger.debug(e)
 
     def handle_manual_edits(self, edits: List[FileEditWithFullContents]):
         for edit in edits:
@@ -257,7 +258,7 @@ class Autopilot(ContinueBaseModel):
                 e)
 
             # Attach an InternalErrorObservation to the step and unhide it.
-            print(
+            logger.error(
                 f"Error while running step: \n{error_string}\n{error_title}")
             posthog_logger.capture_event('step error', {
                                          'error_message': error_string, 'error_title': error_title, 'step_name': step.name, 'params': step.dict()})
@@ -310,8 +311,8 @@ class Autopilot(ContinueBaseModel):
             # Update subscribers with new description
             await self.update_subscribers()
 
-        create_async_task(update_description(),
-                          self.continue_sdk.ide.unique_id)
+        create_async_task(update_description(
+        ), on_error=lambda e: self.continue_sdk.run_step(DisplayErrorStep(e=e)))
 
         return observation
 

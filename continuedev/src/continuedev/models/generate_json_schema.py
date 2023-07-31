@@ -38,7 +38,7 @@ def main():
         try:
             json = schema_json_of(model, indent=2, title=title)
         except Exception as e:
-            print(f"Failed to generate json schema for {title}: ", e)
+            print(f"Failed to generate json schema for {title}: {e}")
             continue
 
         with open(f"{SCHEMA_DIR}/{title}.json", "w") as f:

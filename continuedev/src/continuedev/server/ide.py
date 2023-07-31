@@ -10,6 +10,7 @@ from pydantic import BaseModel
 import traceback
 import asyncio
 
+from ..plugins.steps.core.core import DisplayErrorStep, MessageStep
 from .meilisearch_server import start_meilisearch
 from ..libs.util.telemetry import posthog_logger
 from ..libs.util.queue import AsyncSubscriptionQueue
@@ -19,6 +20,7 @@ from .gui import session_manager
 from .ide_protocol import AbstractIdeProtocolServer
 from ..libs.util.create_async_task import create_async_task
 from .session_manager import SessionManager
+from ..libs.util.logging import logger
 
 import nest_asyncio
 nest_asyncio.apply()
@@ -37,7 +39,7 @@ class AppStatus:
     @staticmethod
     def handle_exit(*args, **kwargs):
         AppStatus.should_exit = True
-        print("Shutting down")
+        logger.debug("Shutting down")
         original_handler(*args, **kwargs)
 
 
@@ -140,7 +142,7 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
                 continue
             message_type = message["messageType"]
             data = message["data"]
-            print("Received message while initializing", message_type)
+            logger.debug(f"Received message while initializing {message_type}")
             if message_type == "workspaceDirectory":
                 self.workspace_directory = data["workspaceDirectory"]
             elif message_type == "uniqueId":
@@ -154,9 +156,10 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
 
     async def _send_json(self, message_type: str, data: Any):
         if self.websocket.application_state == WebSocketState.DISCONNECTED:
-            print("Tried to send message, but websocket is disconnected", message_type)
+            logger.debug(
+                f"Tried to send message, but websocket is disconnected: {message_type}")
             return
-        print("Sending IDE message: ", message_type)
+        logger.debug(f"Sending IDE message: {message_type}")
         await self.websocket.send_json({
             "messageType": message_type,
             "data": data
@@ -167,7 +170,7 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
             return await asyncio.wait_for(self.sub_queue.get(message_type), timeout=timeout)
         except asyncio.TimeoutError:
             raise Exception(
-                "IDE Protocol _receive_json timed out after 20 seconds", message_type)
+                f"IDE Protocol _receive_json timed out after 20 seconds: {message_type}")
 
     async def _send_and_receive_json(self, data: Any, resp_model: Type[T], message_type: str) -> T:
         await self._send_json(message_type, data)
@@ -277,6 +280,9 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
     # This is where you might have triggers: plugins can subscribe to certian events
     # like file changes, tracebacks, etc...
 
+    def on_error(self, e: Exception):
+        return self.session_manager.sessions[self.session_id].autopilot.continue_sdk.run_step(DisplayErrorStep(e=e))
+
     def onAcceptRejectSuggestion(self, accepted: bool):
         posthog_logger.capture_event("accept_reject_suggestion", {
             "accepted": accepted
@@ -309,22 +315,22 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
 
     def onDeleteAtIndex(self, index: int):
         if autopilot := self.__get_autopilot():
-            create_async_task(autopilot.delete_at_index(index), self.unique_id)
+            create_async_task(autopilot.delete_at_index(index), self.on_error)
 
     def onCommandOutput(self, output: str):
         if autopilot := self.__get_autopilot():
             create_async_task(
-                autopilot.handle_command_output(output), self.unique_id)
+                autopilot.handle_command_output(output), self.on_error)
 
     def onHighlightedCodeUpdate(self, range_in_files: List[RangeInFileWithContents]):
         if autopilot := self.__get_autopilot():
             create_async_task(autopilot.handle_highlighted_code(
-                range_in_files), self.unique_id)
+                range_in_files), self.on_error)
 
     def onMainUserInput(self, input: str):
         if autopilot := self.__get_autopilot():
             create_async_task(
-                autopilot.accept_user_input(input), self.unique_id)
+                autopilot.accept_user_input(input), self.on_error)
 
     # Request information. Session doesn't matter.
     async def getOpenFiles(self) -> List[str]:
@@ -354,7 +360,7 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
             }, GetUserSecretResponse, "getUserSecret")
             return resp.value
         except Exception as e:
-            print("Error getting user secret", e)
+            logger.debug(f"Error getting user secret: {e}")
             return ""
 
     async def saveFile(self, filepath: str):
@@ -437,15 +443,15 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
 async def websocket_endpoint(websocket: WebSocket, session_id: str = None):
     try:
         await websocket.accept()
-        print("Accepted websocket connection from, ", websocket.client)
+        logger.debug(f"Accepted websocket connection from {websocket.client}")
         await websocket.send_json({"messageType": "connected", "data": {}})
 
         # Start meilisearch
         try:
             await start_meilisearch()
         except Exception as e:
-            print("Failed to start MeiliSearch")
-            print(e)
+            logger.debug("Failed to start MeiliSearch")
+            logger.debug(e)
 
         def handle_msg(msg):
             message = json.loads(msg)
@@ -455,9 +461,9 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str = None):
             message_type = message["messageType"]
             data = message["data"]
 
-            print("Received IDE message: ", message_type)
+            logger.debug(f"Received IDE message: {message_type}")
             create_async_task(
-                ideProtocolServer.handle_json(message_type, data))
+                ideProtocolServer.handle_json(message_type, data), ideProtocolServer.on_error)
 
         ideProtocolServer = IdeProtocolServer(session_manager, websocket)
         if session_id is not None:
@@ -473,15 +479,20 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str = None):
             message = await websocket.receive_text()
             handle_msg(message)
 
-        print("Closing ide websocket")
+        logger.debug("Closing ide websocket")
     except WebSocketDisconnect as e:
-        print("IDE wbsocket disconnected")
+        logger.debug("IDE wbsocket disconnected")
     except Exception as e:
-        print("Error in ide websocket: ", e)
+        logger.debug(f"Error in ide websocket: {e}")
+        err_msg = '\n'.join(traceback.format_exception(e))
         posthog_logger.capture_event("gui_error", {
-            "error_title": e.__str__() or e.__repr__(), "error_message": '\n'.join(traceback.format_exception(e))})
+            "error_title": e.__str__() or e.__repr__(), "error_message": err_msg})
+
+        await session_manager.sessions[session_id].autopilot.continue_sdk.run_step(DisplayErrorStep(e=e))
+
         raise e
     finally:
+        logger.debug("Closing ide websocket")
         if websocket.client_state != WebSocketState.DISCONNECTED:
             await websocket.close()
 

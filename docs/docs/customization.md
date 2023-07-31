@@ -11,6 +11,7 @@ Change the `default_model` field to any of "gpt-3.5-turbo", "gpt-3.5-turbo-16k",
 New users can try out Continue with GPT-4 using a proxy server that securely makes calls to OpenAI using our API key. Continue should just work the first time you install the extension in VS Code.
 
 Once you are using Continue regularly though, you will need to add an OpenAI API key that has access to GPT-4 by following these steps:
+
 1. Copy your API key from https://platform.openai.com/account/api-keys
 2. Use the cmd+, (Mac) / ctrl+, (Windows) to open your VS Code settings
 3. Type "Continue" in the search bar
@@ -25,6 +26,8 @@ If you have access, simply set `default_model` to the model you would like to us
 
 See our [5 minute quickstart](https://github.com/continuedev/ggml-server-example) to run any model locally with ggml. While these models don't yet perform as well, they are free, entirely private, and run offline.
 
+Once the model is running on localhost:8000, set `default_model` in `~/.continue/config.py` to "ggml".
+
 ### Self-hosting an open-source model
 
 If you want to self-host on Colab, RunPod, Replicate, HuggingFace, Haven, or another hosting provider you will need to wire up a new LLM class. It only needs to implement 3 methods: `stream_complete`, `complete`, and `stream_chat`, and you can see examples in `continuedev/src/continuedev/libs/llm`.
@@ -33,20 +36,23 @@ If by chance the provider has the exact same API interface as OpenAI, the `GGML`
 
 ### Azure OpenAI Service
 
-If you'd like to use OpenAI models but are concerned about privacy, you can use the Azure OpenAI service, which is GDPR and HIPAA compliant. After applying for access [here](https://azure.microsoft.com/en-us/products/ai-services/openai-service), you will typically hear back within only a few days. Once you have access, set `default_model` to "gpt-4", and then set the `azure_openai_info` property in the `ContinueConfig` like so:
+If you'd like to use OpenAI models but are concerned about privacy, you can use the Azure OpenAI service, which is GDPR and HIPAA compliant. After applying for access [here](https://azure.microsoft.com/en-us/products/ai-services/openai-service), you will typically hear back within only a few days. Once you have access, set `default_model` to "gpt-4", and then set the `openai_server_info` property in the `ContinueConfig` like so:
 
 ```python
 config = ContinueConfig(
     ...
-    azure_openai_info=AzureInfo(
-        endpoint="https://my-azure-openai-instance.openai.azure.com/",
+    openai_server_info=OpenAIServerInfo(
+        api_base="https://my-azure-openai-instance.openai.azure.com/",
         engine="my-azure-openai-deployment",
-        api_version="2023-03-15-preview"
+        api_version="2023-03-15-preview",
+        api_type="azure"
     )
 )
 ```
 
 The easiest way to find this information is from the chat playground in the Azure OpenAI portal. Under the "Chat Session" section, click "View Code" to see each of these parameters. Finally, find one of your Azure OpenAI keys and enter it in the VS Code settings under `continue.OPENAI_API_KEY`.
+
+Note that you can also use `OpenAIServerInfo` for uses other than Azure, such as self-hosting a model.
 
 ## Customize System Message
 

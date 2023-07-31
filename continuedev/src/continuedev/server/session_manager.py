@@ -4,6 +4,9 @@ from typing import Any, Dict, List, Union
 from uuid import uuid4
 import json
 
+from fastapi.websockets import WebSocketState
+
+from ..plugins.steps.core.core import DisplayErrorStep
 from ..libs.util.paths import getSessionFilePath, getSessionsFolderPath
 from ..models.filesystem_edit import FileEditWithFullContents
 from ..libs.constants.main import CONTINUE_SESSIONS_FOLDER
@@ -13,6 +16,7 @@ from ..core.autopilot import Autopilot
 from .ide_protocol import AbstractIdeProtocolServer
 from ..libs.util.create_async_task import create_async_task
 from ..libs.util.errors import SessionNotFound
+from ..libs.util.logging import logger
 
 
 class Session:
@@ -59,6 +63,8 @@ class SessionManager:
         return self.sessions[session_id]
 
     async def new_session(self, ide: AbstractIdeProtocolServer, session_id: Union[str, None] = None) -> Session:
+        logger.debug(f"New session: {session_id}")
+
         full_state = None
         if session_id is not None and os.path.exists(getSessionFilePath(session_id)):
             with open(getSessionFilePath(session_id), "r") as f:
@@ -78,29 +84,35 @@ class SessionManager:
             })
 
         autopilot.on_update(on_update)
-        create_async_task(autopilot.run_policy())
+        create_async_task(autopilot.run_policy(
+        ), lambda e: autopilot.continue_sdk.run_step(DisplayErrorStep(e=e)))
         return session
 
-    def remove_session(self, session_id: str):
-        del self.sessions[session_id]
+    async def remove_session(self, session_id: str):
+        logger.debug(f"Removing session: {session_id}")
+        if session_id in self.sessions:
+            if session_id in self.registered_ides:
+                ws_to_close = self.registered_ides[session_id].websocket
+                if ws_to_close is not None and ws_to_close.client_state != WebSocketState.DISCONNECTED:
+                    await self.sessions[session_id].autopilot.ide.websocket.close()
+
+            del self.sessions[session_id]
 
     async def persist_session(self, session_id: str):
         """Save the session's FullState as a json file"""
         full_state = await self.sessions[session_id].autopilot.get_full_state()
-        if not os.path.exists(getSessionsFolderPath()):
-            os.mkdir(getSessionsFolderPath())
         with open(getSessionFilePath(session_id), "w") as f:
             json.dump(full_state.dict(), f)
 
     def register_websocket(self, session_id: str, ws: WebSocket):
         self.sessions[session_id].ws = ws
-        print("Registered websocket for session", session_id)
+        logger.debug(f"Registered websocket for session {session_id}")
 
     async def send_ws_data(self, session_id: str, message_type: str, data: Any):
         if session_id not in self.sessions:
             raise SessionNotFound(f"Session {session_id} not found")
         if self.sessions[session_id].ws is None:
-            # print(f"Session {session_id} has no websocket")
+            # logger.debug(f"Session {session_id} has no websocket")
             return
 
         await self.sessions[session_id].ws.send_json({

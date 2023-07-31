@@ -1,12 +1,21 @@
 from functools import cached_property
 import json
-from typing import Any, Callable, Coroutine, Dict, Generator, List, Union, Optional
+from typing import Any, Callable, Coroutine, Dict, Generator, List, Literal, Union, Optional
 
 from pydantic import BaseModel
-from ...core.main import ChatMessage
 import openai
-from ..llm import LLM
+
+from ...core.main import ChatMessage
 from ..util.count_tokens import compile_chat_messages, DEFAULT_ARGS, count_tokens, format_chat_messages, prune_raw_prompt_from_top
+from ..llm import LLM
+
+
+class OpenAIServerInfo(BaseModel):
+    api_base: Optional[str] = None
+    engine: Optional[str] = None
+    api_version: Optional[str] = None
+    api_type: Literal["azure", "openai"] = "openai"
+
 
 CHAT_MODELS = {
     "gpt-3.5-turbo", "gpt-3.5-turbo-16k", "gpt-4", "gpt-3.5-turbo-0613"
@@ -27,6 +36,7 @@ class AzureInfo(BaseModel):
 
 class OpenAI(LLM):
     model: str
+    openai_server_info: Optional[OpenAIServerInfo] = None
 
     requires_api_key = "OPENAI_API_KEY"
     requires_write_log = True
@@ -41,11 +51,12 @@ class OpenAI(LLM):
         self.api_key = api_key
         openai.api_key = self.api_key
 
-        # Using an Azure OpenAI deployment
-        if self.azure_info is not None:
-            openai.api_type = "azure"
-            openai.api_base = self.azure_info.endpoint
-            openai.api_version = self.azure_info.api_version
+        if self.openai_server_info is not None:
+            openai.api_type = self.openai_server_info.api_type
+            if self.openai_server_info.api_base is not None:
+                openai.api_base = self.openai_server_info.api_base
+            if self.openai_server_info.api_version is not None:
+                openai.api_version = self.openai_server_info.api_version
 
     async def stop(self):
         pass
@@ -61,8 +72,8 @@ class OpenAI(LLM):
     @property
     def default_args(self):
         args = {**DEFAULT_ARGS, "model": self.model}
-        if self.azure_info is not None:
-            args["engine"] = self.azure_info.engine
+        if self.openai_server_info is not None:
+            args["engine"] = self.openai_server_info.engine
         return args
 
     def count_tokens(self, text: str):

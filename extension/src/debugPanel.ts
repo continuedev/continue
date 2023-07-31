@@ -17,17 +17,20 @@ class WebsocketConnection {
   private _onMessage: (message: string) => void;
   private _onOpen: () => void;
   private _onClose: () => void;
+  private _onError: (e: any) => void;
 
   constructor(
     url: string,
     onMessage: (message: string) => void,
     onOpen: () => void,
-    onClose: () => void
+    onClose: () => void,
+    onError: (e: any) => void
   ) {
     this._ws = new WebSocket(url);
     this._onMessage = onMessage;
     this._onOpen = onOpen;
     this._onClose = onClose;
+    this._onError = onError;
 
     this._ws.addEventListener("message", (event) => {
       this._onMessage(event.data);
@@ -37,6 +40,9 @@ class WebsocketConnection {
     });
     this._ws.addEventListener("open", () => {
       this._onOpen();
+    });
+    this._ws.addEventListener("error", (e: any) => {
+      this._onError(e);
     });
   }
 
@@ -147,12 +153,20 @@ export function setupDebugPanel(
           url,
         });
       };
+      const onError = (e: any) => {
+        panel.webview.postMessage({
+          type: "websocketForwardingError",
+          url,
+          error: e,
+        });
+      };
       try {
         const connection = new WebsocketConnection(
           url,
           onMessage,
           onOpen,
-          onClose
+          onClose,
+          onError
         );
         websocketConnections[url] = connection;
         resolve(null);
@@ -197,6 +211,15 @@ export function setupDebugPanel(
         let url = data.url;
         if (typeof websocketConnections[url] === "undefined") {
           await connectWebsocket(url);
+        } else {
+          console.log(
+            "Websocket connection requested by GUI already open at",
+            url
+          );
+          panel.webview.postMessage({
+            type: "websocketForwardingOpen",
+            url,
+          });
         }
         break;
       }
@@ -249,16 +272,7 @@ export function setupDebugPanel(
             });
           }
         );
-        vscode.window
-          .showInformationMessage(
-            "Click here to view the server logs, or use the 'continue.viewLogs' VS Code command.",
-            "View Logs"
-          )
-          .then((selection) => {
-            if (selection === "View Logs") {
-              vscode.commands.executeCommand("continue.viewLogs");
-            }
-          });
+
         break;
       }
     }

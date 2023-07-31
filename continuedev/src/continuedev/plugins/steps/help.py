@@ -34,26 +34,33 @@ class HelpStep(Step):
     description: str = ""
 
     async def run(self, sdk: ContinueSDK):
-
         question = self.user_input
 
-        prompt = dedent(f"""Please us the information below to provide a succinct answer to the following quesiton: {question}
-                    
-                    Information:
+        if question.strip() == "":
+            self.description = help
+        else:
+            prompt = dedent(f"""                    
+                        Information:
+                        
+                        {help}
 
-                    {help}""")
+                        Instructions:
 
-        self.chat_context.append(ChatMessage(
-            role="user",
-            content=prompt,
-            summary="Help"
-        ))
-        messages = await sdk.get_chat_context()
-        generator = sdk.models.default.stream_chat(messages)
-        async for chunk in generator:
-            if "content" in chunk:
-                self.description += chunk["content"]
-                await sdk.update_ui()
+                        Please us the information below to provide a succinct answer to the following question: {question}
+
+                        Do not cite any slash commands other than those you've been told about, which are: /edit and /feedback.""")
+
+            self.chat_context.append(ChatMessage(
+                role="user",
+                content=prompt,
+                summary="Help"
+            ))
+            messages = await sdk.get_chat_context()
+            generator = sdk.models.default.stream_chat(messages)
+            async for chunk in generator:
+                if "content" in chunk:
+                    self.description += chunk["content"]
+                    await sdk.update_ui()
 
         posthog_logger.capture_event(
             "help", {"question": question, "answer": self.description})

@@ -1,12 +1,13 @@
-from typing import Coroutine, Union
+from typing import Callable, Coroutine, Optional, Union
 import traceback
 from .telemetry import posthog_logger
+from .logging import logger
 import asyncio
 import nest_asyncio
 nest_asyncio.apply()
 
 
-def create_async_task(coro: Coroutine, unique_id: Union[str, None] = None):
+def create_async_task(coro: Coroutine, on_error: Optional[Callable[[Exception], Coroutine]] = None):
     """asyncio.create_task and log errors by adding a callback"""
     task = asyncio.create_task(coro)
 
@@ -14,11 +15,16 @@ def create_async_task(coro: Coroutine, unique_id: Union[str, None] = None):
         try:
             future.result()
         except Exception as e:
-            print("Exception caught from async task: ",
-                  '\n'.join(traceback.format_exception(e)))
+            formatted_tb = '\n'.join(traceback.format_exception(e))
+            logger.critical(
+                f"Exception caught from async task: {formatted_tb}")
             posthog_logger.capture_event("async_task_error", {
                 "error_title": e.__str__() or e.__repr__(), "error_message": '\n'.join(traceback.format_exception(e))
             })
+
+            # Log the error to the GUI
+            if on_error is not None:
+                asyncio.create_task(on_error(e))
 
     task.add_done_callback(callback)
     return task

@@ -17,6 +17,13 @@ class ContinueGUIClientProtocol extends AbstractContinueGUIClientProtocol {
     this.messenger = useVscodeMessagePassing
       ? new VscodeMessenger(serverUrlWithSessionId)
       : new WebsocketMessenger(serverUrlWithSessionId);
+
+    this.messenger.onClose(() => {
+      console.log("GUI -> IDE websocket closed");
+    });
+    this.messenger.onError((error) => {
+      console.log("GUI -> IDE websocket error", error);
+    });
   }
 
   sendMainInput(input: string) {

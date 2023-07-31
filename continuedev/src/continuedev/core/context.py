@@ -7,7 +7,7 @@ from pydantic import BaseModel
 
 from .main import ChatMessage, ContextItem, ContextItemDescription, ContextItemId
 from ..server.meilisearch_server import check_meilisearch_running
-
+from ..libs.util.logging import logger
 
 SEARCH_INDEX_NAME = "continue_context_items"
 
@@ -35,7 +35,7 @@ class ContextProvider(BaseModel):
         return self.selected_items
 
     @abstractmethod
-    async def provide_context_items(self) -> List[ContextItem]:
+    async def provide_context_items(self, workspace_dir: str) -> List[ContextItem]:
         """
         Provide documents for search index. This is run on startup.
 
@@ -57,16 +57,22 @@ class ContextProvider(BaseModel):
         Default implementation uses the search index to get the item.
         """
         async with Client('http://localhost:7700') as search_client:
-            result = await search_client.index(
-                SEARCH_INDEX_NAME).get_document(id.to_string())
-            return ContextItem(
-                description=ContextItemDescription(
-                    name=result["name"],
-                    description=result["description"],
-                    id=id
-                ),
-                content=result["content"]
-            )
+            try:
+                result = await search_client.index(
+                    SEARCH_INDEX_NAME).get_document(id.to_string())
+                return ContextItem(
+                    description=ContextItemDescription(
+                        name=result["name"],
+                        description=result["description"],
+                        id=id
+                    ),
+                    content=result["content"]
+                )
+            except Exception as e:
+                logger.warning(
+                    f"Error while retrieving document from meilisearch: {e}")
+
+            return None
 
     async def delete_context_with_ids(self, ids: List[ContextItemId]):
         """
@@ -100,8 +106,8 @@ class ContextProvider(BaseModel):
             if item.description.id.item_id == id.item_id:
                 return
 
-        new_item = await self.get_item(id, query)
-        self.selected_items.append(new_item)
+        if new_item := await self.get_item(id, query):
+            self.selected_items.append(new_item)
 
 
 class ContextManager:
@@ -146,16 +152,16 @@ class ContextManager:
                 meilisearch_running = False
 
             if not meilisearch_running:
-                print(
+                logger.warning(
                     "MeiliSearch not running, avoiding any dependent context providers")
                 context_providers = list(
                     filter(lambda cp: cp.title == "code", context_providers))
 
         return cls(context_providers)
 
-    async def load_index(self):
+    async def load_index(self, workspace_dir: str):
         for _, provider in self.context_providers.items():
-            context_items = await provider.provide_context_items()
+            context_items = await provider.provide_context_items(workspace_dir)
             documents = [
                 {
                     "id": item.description.id.to_string(),
@@ -166,8 +172,11 @@ class ContextManager:
                 for item in context_items
             ]
             if len(documents) > 0:
-                async with Client('http://localhost:7700') as search_client:
-                    await search_client.index(SEARCH_INDEX_NAME).add_documents(documents)
+                try:
+                    async with Client('http://localhost:7700') as search_client:
+                        await search_client.index(SEARCH_INDEX_NAME).add_documents(documents)
+                except Exception as e:
+                    logger.debug(f"Error loading meilisearch index: {e}")
 
     async def select_context_item(self, id: str, query: str):
         """
