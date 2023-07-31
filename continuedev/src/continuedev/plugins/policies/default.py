@@ -45,7 +45,8 @@ def parse_custom_command(inp: str, config: ContinueConfig) -> Union[None, Step]:
 
 
 class DefaultPolicy(Policy):
-    ran_code_last: bool = False
+
+    default_step: Step = SimpleChatStep()
 
     def next(self, config: ContinueConfig, history: History) -> Step:
         # At the very start, run initial Steps spcecified in the config
@@ -74,6 +75,6 @@ class DefaultPolicy(Policy):
             if user_input.startswith("/edit"):
                 return EditHighlightedCodeStep(user_input=user_input[5:])
 
-            return SimpleChatStep()
+            return self.default_step
 
         return None
