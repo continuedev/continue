@@ -54,7 +54,7 @@ class Autopilot(ContinueBaseModel):
     history: History = History.from_empty()
     context: Context = Context()
     full_state: Union[FullState, None] = None
-    context_manager: Union[ContextManager, None] = None
+    context_manager: ContextManager = ContextManager()
     continue_sdk: ContinueSDK = None
 
     _on_update_callbacks: List[Callable[[FullState], None]] = []
@@ -72,7 +72,7 @@ class Autopilot(ContinueBaseModel):
             self.policy = override_policy
 
         # Load documents into the search index
-        self.context_manager = await ContextManager.create(
+        await self.context_manager.start(
             self.continue_sdk.config.context_providers + [
                 HighlightedCodeContextProvider(ide=self.ide),
                 FileContextProvider(workspace_dir=self.ide.workspace_directory)
@@ -98,7 +98,7 @@ class Autopilot(ContinueBaseModel):
             user_input_queue=self._main_user_input_queue,
             slash_commands=self.get_available_slash_commands(),
             adding_highlighted_code=self.context_manager.context_providers[
-                "code"].adding_highlighted_code if self.context_manager is not None else False,
+                "code"].adding_highlighted_code if "code" in self.context_manager.context_providers else False,
             selected_context_items=await self.context_manager.get_selected_items() if self.context_manager is not None else [],
         )
         self.full_state = full_state
