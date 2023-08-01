@@ -10,7 +10,7 @@ jobs:
   pyinstaller:
     strategy:
       matrix:
-        os: [macos-latest, ubuntu-latest, windows-latest]
+        os: [macos-latest]
 
     runs-on: ${{ matrix.os }}
 
@@ -21,16 +21,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
-          python-version: "3.11"
-
-      - name: Setup Python
-        uses: actions/setup-python@v4
-        with:
           python-version: "3.8"
-          architecture: "x64" # optional x64 (default) or x86
-          cache: "pip"
-          cache-dependency-path: |
-            **/requirements*.txt
 
       - name: Install Dependencies
         run: |
