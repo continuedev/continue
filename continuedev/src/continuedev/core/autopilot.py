@@ -247,7 +247,7 @@ class Autopilot(ContinueBaseModel):
         try:
             observation = await step(self.continue_sdk)
         except Exception as e:
-            if self.history.timeline[index_of_history_node].deleted:
+            if index_of_history_node >= len(self.history.timeline) or self.history.timeline[index_of_history_node].deleted:
                 # If step was deleted/cancelled, don't show error or allow retry
                 return None
 
@@ -304,7 +304,7 @@ class Autopilot(ContinueBaseModel):
         self._step_depth -= 1
 
         # Add observation to history, unless already attached error observation
-        if not caught_error:
+        if not caught_error and index_of_history_node < len(self.history.timeline):
             self.history.timeline[index_of_history_node].observation = observation
             self.history.timeline[index_of_history_node].active = False
             await self.update_subscribers()
