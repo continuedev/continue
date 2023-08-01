@@ -53,20 +53,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
-      - name: Set up Python
-        uses: actions/setup-python@v2
-        with:
-          python-version: "3.8"
-
-      - name: Install Poetry
-        run: |
-          curl -sSL https://install.python-poetry.org | python3 -
-
-      - name: Install Python dependencies
-        run: |
-          cd continuedev
-          /Users/runner/.local/bin/poetry install
-
       - name: Cache extension node_modules
         uses: actions/cache@v2
         with:
