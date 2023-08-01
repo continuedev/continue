@@ -1,7 +1,7 @@
 from functools import cached_property
 import traceback
 import time
-from typing import Any, Callable, Coroutine, Dict, List, Union
+from typing import Callable, Coroutine, Dict, List, Union
 from aiohttp import ClientPayloadError
 from pydantic import root_validator
 
@@ -66,6 +66,8 @@ class Autopilot(ContinueBaseModel):
     _user_input_queue = AsyncSubscriptionQueue()
     _retry_queue = AsyncSubscriptionQueue()
 
+    started: bool = False
+
     async def start(self):
         self.continue_sdk = await ContinueSDK.create(self)
         if override_policy := self.continue_sdk.config.policy_override:
@@ -79,6 +81,7 @@ class Autopilot(ContinueBaseModel):
             ])
 
         await self.context_manager.load_index(self.ide.workspace_directory)
+        self.started = True
 
     class Config:
         arbitrary_types_allowed = True
@@ -201,7 +204,7 @@ class Autopilot(ContinueBaseModel):
         await self.update_subscribers()
 
     async def set_editing_at_ids(self, ids: List[str]):
-        self.context_manager.context_providers["code"].set_editing_at_ids(ids)
+        await self.context_manager.context_providers["code"].set_editing_at_ids(ids)
         await self.update_subscribers()
 
     async def _run_singular_step(self, step: "Step", is_future_step: bool = False) -> Coroutine[Observation, None, None]:

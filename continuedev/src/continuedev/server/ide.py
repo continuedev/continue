@@ -309,7 +309,9 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
     def __get_autopilot(self):
         if self.session_id not in self.session_manager.sessions:
             return None
-        return self.session_manager.sessions[self.session_id].autopilot
+
+        autopilot = self.session_manager.sessions[self.session_id].autopilot
+        return autopilot if autopilot.started else None
 
     def onFileEdits(self, edits: List[FileEditWithFullContents]):
         if autopilot := self.__get_autopilot():

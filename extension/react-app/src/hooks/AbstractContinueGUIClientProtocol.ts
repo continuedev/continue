@@ -23,7 +23,7 @@ abstract class AbstractContinueGUIClientProtocol {
 
   abstract deleteContextWithIds(ids: ContextItemId[]): void;
 
-  abstract setEditingAtIndices(indices: number[]): void;
+  abstract setEditingAtIds(ids: string[]): void;
 
   abstract toggleAddingHighlightedCode(): void;
 

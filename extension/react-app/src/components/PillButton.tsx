@@ -168,7 +168,9 @@ const PillButton = (props: PillButtonProps) => {
                   data-tooltip-id={`edit-${props.index}`}
                   backgroundColor={"#8800aa55"}
                   onClick={() => {
-                    client?.setEditingAtIndices([props.index]);
+                    client?.setEditingAtIds([
+                      props.item.description.id.item_id,
+                    ]);
                   }}
                 >
                   <PaintBrush

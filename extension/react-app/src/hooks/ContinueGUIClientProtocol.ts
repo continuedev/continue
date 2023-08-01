@@ -78,8 +78,8 @@ class ContinueGUIClientProtocol extends AbstractContinueGUIClientProtocol {
     });
   }
 
-  setEditingAtIndices(indices: number[]) {
-    this.messenger.send("set_editing_at_indices", { indices });
+  setEditingAtIds(ids: string[]) {
+    this.messenger.send("set_editing_at_ids", { ids });
   }
 
   toggleAddingHighlightedCode(): void {
