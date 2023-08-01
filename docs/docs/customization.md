@@ -55,7 +55,18 @@ Continue will automatically prompt you for your Anthropic API key, which must ha
 
 ### Run Llama-2 locally with Ollama
 
-[Ollama](https://ollama.ai/) is a Mac application that makes it easy to locally run open-source models, including Llama-2. Download the app from the website, and it will walk you through setup in a couple of minutes. You can also read more in their [README](https://github.com/jmorganca/ollama). Configure Continue by importing `from continuedev.libs.llm.ollama import Ollama` and setting `default=Ollama(model="llama-2")`.
+[Ollama](https://ollama.ai/) is a Mac application that makes it easy to locally run open-source models, including Llama-2. Download the app from the website, and it will walk you through setup in a couple of minutes. You can also read more in their [README](https://github.com/jmorganca/ollama). Continue can then be configured to use the `Ollama` LLM class:
+
+```python
+from continuedev.libs.llm.ollama import Ollama
+
+config = ContinueConfig(
+    ...
+    models=Models(
+        default=Ollama(model="llama2")
+    )
+)
+```
 
 ### Local models with ggml
 
