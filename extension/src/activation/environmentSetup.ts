@@ -455,6 +455,8 @@ export async function startContinuePythonServer() {
     exePath = path.join(exeDir, "run-win.exe");
   } else if (os.platform() === "darwin") {
     exePath = path.join(exeDir, "run-darwin");
+    // Add permissions
+    await runCommand(`chmod +x ${exePath}`);
     await runCommand(`xattr -dr com.apple.quarantine ${exePath}`);
   } else {
     exePath = path.join(exeDir, "run-linux");
