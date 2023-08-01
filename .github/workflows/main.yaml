@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - package-python
 
 jobs:
   nuitka-build:
@@ -46,72 +47,72 @@ jobs:
             build/*.bin
             build/*.app/**/*
 
-  publish:
-    runs-on: ubuntu-latest
+  # publish:
+  #   runs-on: ubuntu-latest
 
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
+  #   steps:
+  #     - name: Checkout
+  #       uses: actions/checkout@v2
 
-      - name: Set up Python
-        uses: actions/setup-python@v2
-        with:
-          python-version: "3.8"
+  #     - name: Set up Python
+  #       uses: actions/setup-python@v2
+  #       with:
+  #         python-version: "3.8"
 
-      - name: Install Poetry
-        run: |
-          curl -sSL https://install.python-poetry.org | python3 -
+  #     - name: Install Poetry
+  #       run: |
+  #         curl -sSL https://install.python-poetry.org | python3 -
 
-      - name: Install Python dependencies
-        run: |
-          cd continuedev
-          poetry install
+  #     - name: Install Python dependencies
+  #       run: |
+  #         cd continuedev
+  #         poetry install
 
-      - name: Cache extension node_modules
-        uses: actions/cache@v2
-        with:
-          path: extension/node_modules
-          key: ${{ runner.os }}-node-${{ hashFiles('extension/package-lock.json') }}
+  #     - name: Cache extension node_modules
+  #       uses: actions/cache@v2
+  #       with:
+  #         path: extension/node_modules
+  #         key: ${{ runner.os }}-node-${{ hashFiles('extension/package-lock.json') }}
 
-      - name: Cache react-app node_modules
-        uses: actions/cache@v2
-        with:
-          path: extension/react-app/node_modules
-          key: ${{ runner.os }}-node-${{ hashFiles('extension/react-app/package-lock.json') }}
+  #     - name: Cache react-app node_modules
+  #       uses: actions/cache@v2
+  #       with:
+  #         path: extension/react-app/node_modules
+  #         key: ${{ runner.os }}-node-${{ hashFiles('extension/react-app/package-lock.json') }}
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v2
-        with:
-          node-version: "14"
+  #     - name: Set up Node.js
+  #       uses: actions/setup-node@v2
+  #       with:
+  #         node-version: "14"
 
-      - name: Install extension Dependencies
-        run: |
-          cd extension
-          npm ci --legacy-peer-deps
+  #     - name: Install extension Dependencies
+  #       run: |
+  #         cd extension
+  #         npm ci --legacy-peer-deps
 
-      - name: Install react-app Dependencies
-        run: |
-          cd extension/react-app
-          npm ci --legacy-peer-deps
+  #     - name: Install react-app Dependencies
+  #       run: |
+  #         cd extension/react-app
+  #         npm ci --legacy-peer-deps
 
-      - name: Build and Publish
-        run: |
-          cd extension
-          npm run full-package
+  #     - name: Build and Publish
+  #       run: |
+  #         cd extension
+  #         npm run full-package
 
-      - name: Commit changes
-        run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-          git commit -am "Update package.json version [skip ci]"
+  #     - name: Commit changes
+  #       run: |
+  #         git config --local user.email "action@github.com"
+  #         git config --local user.name "GitHub Action"
+  #         git commit -am "Update package.json version [skip ci]"
 
-      - name: Push changes
-        uses: ad-m/github-push-action@master
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+  #     - name: Push changes
+  #       uses: ad-m/github-push-action@master
+  #       with:
+  #         github_token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Upload .vsix artifact
-        uses: actions/upload-artifact@v2
-        with:
-          name: vsix-artifact
-          path: extension/build/*
+  #     - name: Upload .vsix artifact
+  #       uses: actions/upload-artifact@v2
+  #       with:
+  #         name: vsix-artifact
+  #         path: extension/build/*
