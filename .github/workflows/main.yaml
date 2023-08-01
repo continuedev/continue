@@ -21,7 +21,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
-          python-version: "3.8"
+          python-version: "3.11"
 
       - name: Install Dependencies
         run: |
@@ -33,7 +33,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: ${{ runner.os }} Build
-          path: dist/*
+          path: dist/run
 
   # publish:
   #   runs-on: ubuntu-latest
