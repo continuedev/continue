@@ -3,6 +3,7 @@ from typing import Dict, List, Union
 from ...core.main import ChatMessage
 from .templating import render_templated_string
 from ...libs.llm import LLM
+from tiktoken_ext import openai_public
 import tiktoken
 
 # TODO move many of these into specific LLM.properties() function that
