@@ -190,7 +190,7 @@ async def websocket_endpoint(websocket: WebSocket, session: Session = Depends(we
         posthog_logger.capture_event("gui_error", {
             "error_title": e.__str__() or e.__repr__(), "error_message": err_msg})
 
-        await protocol.session.autopilot.continue_sdk.run_step(DisplayErrorStep(e=e))
+        await session.autopilot.ide.showMessage(err_msg)
 
         raise e
     finally:

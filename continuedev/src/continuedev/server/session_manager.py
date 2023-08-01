@@ -1,15 +1,14 @@
 import os
 import traceback
 from fastapi import WebSocket
-from typing import Any, Dict, List, Union
+from typing import Any, Coroutine, Dict, Union
 from uuid import uuid4
 import json
 
 from fastapi.websockets import WebSocketState
 
-from ..plugins.steps.core.core import DisplayErrorStep, MessageStep
+from ..plugins.steps.core.core import MessageStep
 from ..libs.util.paths import getSessionFilePath, getSessionsFolderPath
-from ..models.filesystem_edit import FileEditWithFullContents
 from ..core.main import FullState, HistoryNode
 from ..core.autopilot import Autopilot
 from .ide_protocol import AbstractIdeProtocolServer
@@ -90,8 +89,11 @@ class SessionManager:
             ))
             logger.warning(f"Error loading context manager: {e}")
 
-        create_async_task(autopilot.run_policy(), lambda e: autopilot.continue_sdk.run_step(
-            DisplayErrorStep(e=e)))
+        def on_error(e: Exception) -> Coroutine:
+            err_msg = '\n'.join(traceback.format_exception(e))
+            return ide.showMessage(f"Error in Continue server: {err_msg}")
+
+        create_async_task(autopilot.run_policy(), on_error)
         return session
 
     async def remove_session(self, session_id: str):

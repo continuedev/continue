@@ -24,6 +24,10 @@ class AbstractIdeProtocolServer(ABC):
         """Set whether a file is open"""
 
     @abstractmethod
+    async def showMessage(self, message: str):
+        """Show a message to the user"""
+
+    @abstractmethod
     async def showVirtualFile(self, name: str, contents: str):
         """Show a virtual file"""
 
