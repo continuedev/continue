@@ -1,7 +1,9 @@
 import os
 from textwrap import dedent
 
+
 from ....plugins.steps.core.core import MessageStep
+from ....libs.util.paths import find_data_file
 from ....core.sdk import Models
 from ....core.main import Step
 from ....core.sdk import ContinueSDK
@@ -54,7 +56,7 @@ class AddTransformStep(Step):
                 - Load the data into a local DuckDB instance
                 - Open up a Streamlit app for you to view the data"""), name="Write transformation function"))
 
-        with open(os.path.join(os.path.dirname(__file__), 'dlt_transform_docs.md')) as f:
+        with open(find_data_file('dlt_transform_docs.md')) as f:
             dlt_transform_docs = f.read()
 
         prompt = dedent(f"""\
