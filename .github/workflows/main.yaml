@@ -36,7 +36,7 @@ jobs:
         run: |
           pip install -r continuedev/requirements.txt pyinstaller
 
-      - run: pyinstaller run.py
+      - run: pyinstaller run.py --exclude-module numpy --exclude-module jedi -F
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v3
