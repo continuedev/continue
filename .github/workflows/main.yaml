@@ -34,7 +34,7 @@ jobs:
 
       - name: Install Dependencies
         run: |
-          pip install -r requirements.txt pyinstaller
+          pip install -r continuedev/requirements.txt pyinstaller
 
       - run: pyinstaller run.py
 
