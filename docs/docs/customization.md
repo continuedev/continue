@@ -53,6 +53,10 @@ config = ContinueConfig(
 
 Continue will automatically prompt you for your Anthropic API key, which must have access to Claude 2. You can request early access [here](https://www.anthropic.com/earlyaccess).
 
+### Run Llama-2 locally with Ollama
+
+[Ollama](https://ollama.ai/) is a Mac application that makes it easy to locally run open-source models, including Llama-2. Download the app from the website, and it will walk you through setup in a couple of minutes. You can also read more in their [README](https://github.com/jmorganca/ollama). Configure Continue by importing `from continuedev.libs.llm.ollama import Ollama` and setting `default=Ollama(model="llama-2")`.
+
 ### Local models with ggml
 
 See our [5 minute quickstart](https://github.com/continuedev/ggml-server-example) to run any model locally with ggml. While these models don't yet perform as well, they are free, entirely private, and run offline.
