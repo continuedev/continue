@@ -7,67 +7,51 @@ on:
       - package-python
 
 jobs:
-  pyinstaller:
-    strategy:
-      matrix:
-        os: [macos-latest, ubuntu-latest, windows-latest]
+  # pyinstaller:
+  #   strategy:
+  #     matrix:
+  #       os: [macos-latest, ubuntu-latest, windows-latest]
 
-    runs-on: ${{ matrix.os }}
+  #   runs-on: ${{ matrix.os }}
 
-    steps:
-      - name: Check-out repository
-        uses: actions/checkout@v3
+  #   steps:
+  #     - name: Check-out repository
+  #       uses: actions/checkout@v3
 
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: "3.10"
+  #     - name: Set up Python
+  #       uses: actions/setup-python@v4
+  #       with:
+  #         python-version: "3.10"
 
-      - name: Install Pyinstaller
-        run: |
-          pip install pyinstaller
+  #     - name: Install Pyinstaller
+  #       run: |
+  #         pip install pyinstaller
 
-      - name: Install Dependencies
-        run: |
-          pip install -r continuedev/requirements.txt
+  #     - name: Install Dependencies
+  #       run: |
+  #         pip install -r continuedev/requirements.txt
 
-      - run: pyinstaller run.py --exclude-module numpy --exclude-module jedi -F
+  #     - run: pyinstaller run.py --exclude-module numpy --exclude-module jedi -F
 
-      - name: Set permissions
-        run: |
-          chmod 777 dist/run
+  #     - name: Set permissions
+  #       run: |
+  #         chmod 777 dist/run
 
-      - name: Upload Artifacts
-        uses: actions/upload-artifact@v3
-        with:
-          name: ${{ runner.os }} Build
-          path: dist/*
+  #     - name: Upload Artifacts
+  #       uses: actions/upload-artifact@v3
+  #       with:
+  #         name: ${{ runner.os }} Build
+  #         path: dist/*
 
   publish:
-    needs: pyinstaller
-    runs-on: macos-latest
+    # needs: pyinstaller
+    runs-on: ubuntu-latest
+    container:
+      image: node:14-buster
 
     steps:
       - name: Checkout
         uses: actions/checkout@v2
-
-      - name: Download Linux build
-        uses: actions/download-artifact@v2
-        with:
-          name: Linux Build
-          path: extension/server/exe/run-linux
-
-      - name: Download macOS build
-        uses: actions/download-artifact@v2
-        with:
-          name: macOS Build
-          path: extension/server/exe/run-darwin
-
-      - name: Download Windows build
-        uses: actions/download-artifact@v2
-        with:
-          name: Windows Build
-          path: extension/server/exe/run-windows.exe
 
       - name: Set up Python
         uses: actions/setup-python@v2
@@ -132,3 +116,21 @@ jobs:
         with:
           name: vsix-artifact
           path: extension/build/*
+
+      - name: Download Linux build
+        uses: actions/download-artifact@v2
+        with:
+          name: Linux Build
+          path: extension/server/exe/run-linux
+
+      - name: Download macOS build
+        uses: actions/download-artifact@v2
+        with:
+          name: macOS Build
+          path: extension/server/exe/run-darwin
+
+      - name: Download Windows build
+        uses: actions/download-artifact@v2
+        with:
+          name: Windows Build
+          path: extension/server/exe/run-windows.exe
