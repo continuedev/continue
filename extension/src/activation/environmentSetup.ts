@@ -427,7 +427,60 @@ export async function startContinuePythonServer() {
     return;
   }
 
-  setupServerPath();
+  console.log("Checking if server is old version");
+  // Kill the server if it is running an old version
+  if (fs.existsSync(serverVersionPath())) {
+    const serverVersion = fs.readFileSync(serverVersionPath(), "utf8");
+    if (
+      serverVersion === getExtensionVersion() &&
+      (await checkServerRunning(serverUrl))
+    ) {
+      // The current version is already up and running, no need to continue
+      return;
+    }
+  }
+  console.log("Killing old server...");
+  try {
+    await fkill(":65432");
+  } catch (e: any) {
+    if (!e.message.includes("Process doesn't exist")) {
+      console.log("Failed to kill old server:", e);
+    }
+  }
+
+  // Get name of the corresponding executable for platform
+  const exeDir = path.join(getExtensionUri().fsPath, "server", "exe");
+  let exePath: string;
+  if (os.platform() === "win32") {
+    exePath = path.join(exeDir, "run-win.exe");
+  } else if (os.platform() === "darwin") {
+    exePath = path.join(exeDir, "run-darwin");
+    await runCommand(`xattr -dr com.apple.quarantine ${exePath}`);
+  } else {
+    exePath = path.join(exeDir, "run-linux");
+  }
+
+  // Run the executable
+  const child = spawn(exePath, {
+    shell: true,
+  });
+  child.stderr.on("data", (data: any) => {
+    console.log(data.toString());
+  });
+
+  child.on("error", (error: any) => {
+    console.log(`error: ${error.message}`);
+  });
+
+  child.on("close", (code: any) => {
+    console.log(`child process exited with code ${code}`);
+  });
+
+  child.stdout.on("data", (data: any) => {
+    console.log(`stdout: ${data.toString()}`);
+  });
+
+  return;
 
   return await retryThenFail(async () => {
     console.log("Checking if server is old version");
