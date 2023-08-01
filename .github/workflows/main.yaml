@@ -7,7 +7,7 @@ on:
       - package-python
 
 jobs:
-  nuitka-build:
+  pyinstaller:
     strategy:
       matrix:
         os: [macos-latest, ubuntu-latest, windows-latest]
@@ -18,6 +18,11 @@ jobs:
       - name: Check-out repository
         uses: actions/checkout@v3
 
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: "3.8"
+
       - name: Install Poetry
         run: |
           curl -sSL https://install.python-poetry.org | python3 -
@@ -27,34 +32,15 @@ jobs:
           cd continuedev
           poetry install
 
-      # - name: Setup Python
-      #   uses: actions/setup-python@v4
-      #   with:
-      #     python-version: "3.10" # Version range or exact version of a Python version to use, using SemVer's version range syntax
-      #     architecture: "x64" # optional x64 or x86. Defaults to x64 if not specified
-      #     cache: "pip"
-      #     cache-dependency-path: |
-      #       **/requirements*.txt
+      - run: pip install -r requirements.txt pyinstaller
 
-      - name: Install Dependencies
-        run: |
-          pip install -r requirements.txt
-
-      - name: Build Executable
-        uses: Nuitka/Nuitka-Action@main
-        with:
-          nuitka-version: main
-          script-name: continuedev/src/run.py
-          onefile: true
+      - run: pyinstaller run.py
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v3
         with:
           name: ${{ runner.os }} Build
-          path: |
-            build/*.exe
-            build/*.bin
-            build/*.app/**/*
+          path: dist/*
 
   # publish:
   #   runs-on: ubuntu-latest
