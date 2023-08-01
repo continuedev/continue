@@ -10,7 +10,7 @@ jobs:
   pyinstaller:
     strategy:
       matrix:
-        os: [macos-latest]
+        os: [macos-latest, ubuntu-latest, windows-latest]
 
     runs-on: ${{ matrix.os }}
 
@@ -21,13 +21,21 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: "3.11"
+          python-version: "3.10"
+
+      - name: Install Pyinstaller
+        run: |
+          pip install pyinstaller
 
       - name: Install Dependencies
         run: |
-          pip install -r continuedev/requirements.txt pyinstaller
+          pip install -r continuedev/requirements.txt
 
       - run: pyinstaller run.py --exclude-module numpy --exclude-module jedi -F
+
+      - name: Set permissions
+        run: |
+          chmod 777 dist/run
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v3
