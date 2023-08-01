@@ -81,7 +81,7 @@ jobs:
       - name: Install Python dependencies
         run: |
           cd continuedev
-          poetry install
+          /Users/runner/.local/bin/poetry install
 
       - name: Cache extension node_modules
         uses: actions/cache@v2
