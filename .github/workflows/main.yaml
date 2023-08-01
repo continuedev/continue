@@ -23,16 +23,18 @@ jobs:
         with:
           python-version: "3.8"
 
-      - name: Install Poetry
-        run: |
-          curl -sSL https://install.python-poetry.org | python3 -
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.8"
+          architecture: "x64" # optional x64 (default) or x86
+          cache: "pip"
+          cache-dependency-path: |
+            **/requirements*.txt
 
-      - name: Install Python dependencies
+      - name: Install Dependencies
         run: |
-          cd continuedev
-          poetry install
-
-      - run: pip install -r requirements.txt pyinstaller
+          pip install -r requirements.txt pyinstaller
 
       - run: pyinstaller run.py
 
