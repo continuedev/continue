@@ -1,7 +1,7 @@
-from functools import cached_property
 import traceback
-from typing import Coroutine, Dict, Literal, Union
+from typing import Coroutine, Union
 import os
+import importlib
 
 from ..plugins.steps.core.core import DefaultModelEditCodeStep
 from ..models.main import Range
@@ -164,6 +164,52 @@ class ContinueSDK(AbstractContinueSDK):
     _last_valid_config: ContinueConfig = None
 
     def _load_config_dot_py(self) -> ContinueConfig:
+        # Read the file content
+        with open(os.path.expanduser('~/.continue/config.py')) as file:
+            config_content = file.read()
+
+        def load_module(module_name: str, class_names: List[str]):
+            # from anthropic import AsyncAnthropic
+            module = importlib.import_module(module_name)
+            for class_name in class_names:
+                globals()[class_name] = getattr(module, class_name)
+
+        while True:
+            # Execute the file content
+            locals_var = {}
+            try:
+                import importlib.util
+                spec = importlib.util.spec_from_file_location(
+                    "config", "/Users/natesesti/.continue/config.py")
+                config = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(config)
+
+                return config.config
+                # exec(config_content, globals(), locals_var)
+                # print("Done executing, ", locals_var)
+                # return locals_var['config']
+            except ModuleNotFoundError as e:
+                print("ModuleNotFoundError")
+                print(e)
+                print(traceback.format_exception(e))
+                formatted = traceback.format_exception(e)
+                line = formatted[-2].split("\n")[-2].strip().split()
+                # Parse the module name and class name from the error message
+                # Example: ModuleNotFoundError: No module named 'continuedev.src.continuedev.plugins.context_providers.google'
+
+                # Get the module name
+                module_name = line[1]
+                # Get the class name
+                class_names = list(map(lambda x: x.replace(",", ""), filter(lambda x: x.strip() != "", line[3:])))
+
+                # Load the module
+                print(
+                    f"Loading module {module_name} with class names {class_names}")
+                load_module(module_name, class_names)
+            except Exception as e:
+                print("Failed to execute config.py: ", e)
+                raise e
+
         # Use importlib to load the config file config.py at the given path
         path = getConfigFilePath()
 
