@@ -10,7 +10,7 @@ class LLM(ContinueBaseModel, ABC):
     requires_unique_id: bool = False
     requires_write_log: bool = False
 
-    system_message: Union[str, None] = None
+    system_message: Optional[str] = None
 
     @abstractproperty
     def name(self):

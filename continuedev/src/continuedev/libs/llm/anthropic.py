@@ -1,33 +1,33 @@
 
 from functools import cached_property
 import time
-from typing import Any, Coroutine, Dict, Generator, List, Optional, Union
+from typing import Any, Callable, Coroutine, Dict, Generator, List, Optional, Union
 from ...core.main import ChatMessage
 from anthropic import HUMAN_PROMPT, AI_PROMPT, AsyncAnthropic
 from ..llm import LLM
-from ..util.count_tokens import compile_chat_messages, DEFAULT_ARGS, count_tokens
+from ..util.count_tokens import compile_chat_messages, DEFAULT_ARGS, count_tokens, format_chat_messages
 
 
 class AnthropicLLM(LLM):
     model: str = "claude-2"
 
     requires_api_key: str = "ANTHROPIC_API_KEY"
+    requires_write_log = True
     _async_client: AsyncAnthropic = None
 
     class Config:
         arbitrary_types_allowed = True
 
-    def __init__(self, model: str, system_message: str = None):
-        self.model = model
-        self.system_message = system_message
+    write_log: Optional[Callable[[str], None]] = None
 
-    async def start(self, *, api_key: Optional[str] = None, **kwargs):
+    async def start(self, *, api_key: Optional[str] = None, write_log: Callable[[str], None], **kwargs):
+        self.write_log = write_log
         self._async_client = AsyncAnthropic(api_key=api_key)
 
     async def stop(self):
         pass
 
-    @cached_property
+    @property
     def name(self):
         return self.model
 
@@ -72,12 +72,18 @@ class AnthropicLLM(LLM):
         args.update(kwargs)
         args["stream"] = True
         args = self._transform_args(args)
+        prompt = f"{HUMAN_PROMPT} {prompt} {AI_PROMPT}"
 
+        self.write_log(f"Prompt: \n\n{prompt}")
+        completion = ""
         async for chunk in await self._async_client.completions.create(
-            prompt=f"{HUMAN_PROMPT} {prompt} {AI_PROMPT}",
+            prompt=prompt,
             **args
         ):
             yield chunk.completion
+            completion += chunk.completion
+
+        self.write_log(f"Completion: \n\n{completion}")
 
     async def stream_chat(self, messages: List[ChatMessage] = None, **kwargs) -> Generator[Union[Any, List, Dict], None, None]:
         args = self.default_args.copy()
@@ -86,7 +92,10 @@ class AnthropicLLM(LLM):
         args = self._transform_args(args)
 
         messages = compile_chat_messages(
-            args["model"], messages, self.context_length, self.context_length, args["max_tokens_to_sample"], functions=args.get("functions", None), system_message=self.system_message)
+            args["model"], messages, self.context_length, args["max_tokens_to_sample"], functions=args.get("functions", None), system_message=self.system_message)
+
+        completion = ""
+        self.write_log(f"Prompt: \n\n{format_chat_messages(messages)}")
         async for chunk in await self._async_client.completions.create(
             prompt=self.__messages_to_prompt(messages),
             **args
@@ -95,6 +104,9 @@ class AnthropicLLM(LLM):
                 "role": "assistant",
                 "content": chunk.completion
             }
+            completion += chunk.completion
+
+        self.write_log(f"Completion: \n\n{completion}")
 
     async def complete(self, prompt: str, with_history: List[ChatMessage] = None, **kwargs) -> Coroutine[Any, Any, str]:
         args = {**self.default_args, **kwargs}
@@ -102,9 +114,13 @@ class AnthropicLLM(LLM):
 
         messages = compile_chat_messages(
             args["model"], with_history, self.context_length, args["max_tokens_to_sample"], prompt, functions=None, system_message=self.system_message)
+
+        completion = ""
+        self.write_log(f"Prompt: \n\n{format_chat_messages(messages)}")
         resp = (await self._async_client.completions.create(
             prompt=self.__messages_to_prompt(messages),
             **args
         )).completion
 
+        self.write_log(f"Completion: \n\n{resp}")
         return resp

@@ -1,5 +1,5 @@
 from textwrap import dedent
-from typing import Union
+from typing import Type, Union
 
 from ..steps.chat import SimpleChatStep
 from ..steps.welcome import WelcomeStep
@@ -46,7 +46,8 @@ def parse_custom_command(inp: str, config: ContinueConfig) -> Union[None, Step]:
 
 class DefaultPolicy(Policy):
 
-    default_step: Step = SimpleChatStep()
+    default_step: Type[Step] = SimpleChatStep
+    default_params: dict = {}
 
     def next(self, config: ContinueConfig, history: History) -> Step:
         # At the very start, run initial Steps spcecified in the config
@@ -75,6 +76,6 @@ class DefaultPolicy(Policy):
             if user_input.startswith("/edit"):
                 return EditHighlightedCodeStep(user_input=user_input[5:])
 
-            return self.default_step.copy()
+            return self.default_step(**self.default_params)
 
         return None

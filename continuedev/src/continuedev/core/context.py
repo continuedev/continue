@@ -159,8 +159,9 @@ class ContextManager:
             if not meilisearch_running:
                 logger.warning(
                     "MeiliSearch not running, avoiding any dependent context providers")
-                self.context_providers = list(
-                    filter(lambda cp: cp.title == "code", self.context_providers))
+                self.context_providers = {
+                    title: provider for title, provider in self.context_providers.items() if title == "code"
+                }
 
     async def load_index(self, workspace_dir: str):
         for _, provider in self.context_providers.items():
