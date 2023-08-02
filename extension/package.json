@@ -225,6 +225,7 @@
     "lint": "eslint src --ext ts",
     "test": "node ./out/test/runTest.js",
     "jest": "jest --config ./jest.config.js",
+    "typegen": "node scripts/typegen.js",
     "package": "mkdir -p ./build && vsce package --out ./build",
     "full-package": "npm install && npm run typegen && npm run clientgen && cd react-app && npm install && npm run build && cd .. && npm run package",
     "install-extension": "code --install-extension ./build/continue-0.0.8.vsix",
