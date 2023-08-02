@@ -46,12 +46,15 @@ jobs:
   publish:
     # needs: pyinstaller
     runs-on: ubuntu-latest
-    container:
-      image: node:16-buster
 
     steps:
       - name: Checkout
         uses: actions/checkout@v2
+
+      - name: Use Node.js 19.0.0
+        uses: actions/setup-node@v3
+        with:
+          node-version: 19.0.0
 
       - name: Cache extension node_modules
         uses: actions/cache@v2
