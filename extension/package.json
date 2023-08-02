@@ -276,5 +276,8 @@
     "vite": "^4.3.9",
     "vscode-languageclient": "^8.0.2",
     "ws": "^8.13.0"
+  },
+  "optionalDependencies": {
+    "@esbuild/android-arm": "^0.18.17"
   }
 }
