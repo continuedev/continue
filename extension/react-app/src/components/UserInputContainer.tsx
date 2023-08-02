@@ -37,7 +37,7 @@ const UserInputContainer = (props: UserInputContainerProps) => {
           }}
           text="Delete"
         >
-          <XMarkIcon className="h-6 w-6" />
+          <XMarkIcon width="1.5em" height="1.5em" />
         </HeaderButtonWithText>
       </div>
     </StyledDiv>

@@ -52,11 +52,12 @@ function CopyButton(props: { textToCopy: string; visible: boolean }) {
         }}
       >
         {clicked ? (
-          <CheckCircleIcon color="#00ff00" className="h-6 w-6" />
+          <CheckCircleIcon color="#00ff00" width="1.5em" height="1.5em" />
         ) : (
           <ClipboardIcon
             color={hovered ? "#00ff00" : "white"}
-            className="h-6 w-6"
+            width="1.5em"
+            height="1.5em"
           />
         )}
       </StyledCopyButton>

@@ -297,7 +297,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
                 props.onToggleAddContext();
               }}
             >
-              <DocumentPlusIcon className="h-6 w-6" />
+              <DocumentPlusIcon width="1.5em" height="1.5em" />
             </HeaderButtonWithText>
           ))}
       </div>

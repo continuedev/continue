@@ -167,12 +167,12 @@ function StepContainer(props: StepContainerProps) {
             loading={(props.historyNode.active as boolean) || false}
             error={props.historyNode.observation?.error ? true : false}
           >
-            <div className="m-2">
+            <div className="m-2 flex items-center">
               {!isUserInput &&
                 (props.open ? (
-                  <ChevronDownIcon className="h-6 w-6" />
+                  <ChevronDownIcon width="1.5em" height="1.5em" />
                 ) : (
-                  <ChevronRightIcon className="h-6 w-6" />
+                  <ChevronRightIcon width="1.5em" height="1.5em" />
                 ))}
               {props.historyNode.observation?.title ||
                 (props.historyNode.step.name as any)}
@@ -195,7 +195,7 @@ function StepContainer(props: StepContainerProps) {
                     client?.showLogsAtIndex(props.index);
                   }}
                 >
-                  <MagnifyingGlassIcon className="h-6 w-6" />
+                  <MagnifyingGlassIcon width="1.5em" height="1.5em" />
                 </HeaderButtonWithText>
               )}
               <HeaderButtonWithText
@@ -211,11 +211,16 @@ function StepContainer(props: StepContainerProps) {
               >
                 {props.historyNode.active ? (
                   <StopCircleIcon
-                    className="h-6 w-6"
+                    width="1.5em"
+                    height="1.5em"
                     onClick={props.onDelete}
                   />
                 ) : (
-                  <XMarkIcon className="h-6 w-6" onClick={props.onDelete} />
+                  <XMarkIcon
+                    width="1.5em"
+                    height="1.5em"
+                    onClick={props.onDelete}
+                  />
                 )}
               </HeaderButtonWithText>
               {props.historyNode.observation?.error ? (
@@ -226,7 +231,11 @@ function StepContainer(props: StepContainerProps) {
                     props.onRetry();
                   }}
                 >
-                  <ArrowPathIcon className="h-6 w-6" onClick={props.onRetry} />
+                  <ArrowPathIcon
+                    width="1.5em"
+                    height="1.5em"
+                    onClick={props.onRetry}
+                  />
                 </HeaderButtonWithText>
               ) : (
                 <></>
