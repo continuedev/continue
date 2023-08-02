@@ -452,14 +452,14 @@ export async function startContinuePythonServer() {
   const exeDir = path.join(getExtensionUri().fsPath, "server", "exe");
   let exePath: string;
   if (os.platform() === "win32") {
-    exePath = path.join(exeDir, "run-win.exe");
+    exePath = path.join(exeDir, "windows", "run.exe");
   } else if (os.platform() === "darwin") {
-    exePath = path.join(exeDir, "run-darwin");
+    exePath = path.join(exeDir, "mac", "run");
     // Add permissions
     await runCommand(`chmod +x ${exePath}`);
     await runCommand(`xattr -dr com.apple.quarantine ${exePath}`);
   } else {
-    exePath = path.join(exeDir, "run-linux");
+    exePath = path.join(exeDir, "linux", "run");
   }
 
   // Run the executable

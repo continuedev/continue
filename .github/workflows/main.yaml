@@ -57,19 +57,19 @@ jobs:
         uses: actions/download-artifact@v2
         with:
           name: Linux Build
-          path: extension/server/exe/run-linux
+          path: extension/server/exe/linux
 
       - name: Download macOS build
         uses: actions/download-artifact@v2
         with:
           name: macOS Build
-          path: extension/server/exe/run-darwin
+          path: extension/server/exe/mac
 
       - name: Download Windows build
         uses: actions/download-artifact@v2
         with:
           name: Windows Build
-          path: extension/server/exe/run-windows.exe
+          path: extension/server/exe/windows
 
       - name: Use Node.js 19.0.0
         uses: actions/setup-node@v3
