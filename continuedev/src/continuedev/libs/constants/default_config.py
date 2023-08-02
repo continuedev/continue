@@ -42,7 +42,7 @@ class CommitMessageStep(Step):
         # Ask the LLM to write a commit message,
         # and set it as the description of this step
         self.description = await sdk.models.default.complete(
-            f"{diff}\n\nWrite a short, specific (less than 50 chars) commit message about the above changes:")
+            f"\{diff\}\n\nWrite a short, specific (less than 50 chars) commit message about the above changes:")
 
 
 config = ContinueConfig(
