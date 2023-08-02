@@ -13,10 +13,10 @@ import { HistoryNode } from "../../../schema/HistoryNode";
 import StepContainer from "../components/StepContainer";
 import { GUIClientContext } from "../App";
 import {
-  BookOpen,
-  ChatBubbleOvalLeftEllipsis,
-  Trash,
-} from "@styled-icons/heroicons-outline";
+  BookOpenIcon,
+  ChatBubbleOvalLeftEllipsisIcon,
+  TrashIcon,
+} from "@heroicons/react/24/outline";
 import ComboBox from "../components/ComboBox";
 import TextDialog from "../components/TextDialog";
 import HeaderButtonWithText from "../components/HeaderButtonWithText";
@@ -536,14 +536,14 @@ If you already have an LLM deployed on your own infrastructure, or would like to
           }}
           text="Clear"
         >
-          <Trash size="1.6em" />
+          <TrashIcon className="h-6 w-6" />
         </HeaderButtonWithText>
         <a
           href="https://continue.dev/docs/how-to-use-continue"
           className="no-underline"
         >
           <HeaderButtonWithText text="Docs">
-            <BookOpen size="1.6em" />
+            <BookOpenIcon className="h-6 w-6" />
           </HeaderButtonWithText>
         </a>
         <HeaderButtonWithText
@@ -557,7 +557,7 @@ If you already have an LLM deployed on your own infrastructure, or would like to
           }}
           text="Feedback"
         >
-          <ChatBubbleOvalLeftEllipsis size="1.6em" />
+          <ChatBubbleOvalLeftEllipsisIcon className="h-6 w-6" />
         </HeaderButtonWithText>
       </Footer>
     </>

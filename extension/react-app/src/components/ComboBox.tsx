@@ -15,7 +15,7 @@ import {
 } from ".";
 import PillButton from "./PillButton";
 import HeaderButtonWithText from "./HeaderButtonWithText";
-import { DocumentPlus } from "@styled-icons/heroicons-outline";
+import { DocumentPlusIcon } from "@heroicons/react/24/outline";
 import { ContextItem } from "../../../schema/FullState";
 import { postVscMessage } from "../vscode";
 import { GUIClientContext } from "../App";
@@ -297,7 +297,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
                 props.onToggleAddContext();
               }}
             >
-              <DocumentPlus width="1.6em"></DocumentPlus>
+              <DocumentPlusIcon className="h-6 w-6" />
             </HeaderButtonWithText>
           ))}
       </div>

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import styled from "styled-components";
-import { ArrowLeft, ArrowRight } from "@styled-icons/heroicons-outline";
+import { ArrowLeftIcon, ArrowRightIcon } from "@heroicons/react/24/outline";
 import { defaultBorderRadius } from ".";
 import Loader from "./Loader";
 
@@ -109,7 +109,7 @@ const Onboarding = () => {
             hidden={counter === 0}
             onClick={() => setCounter((prev) => Math.max(prev - 1, 0))}
           >
-            <ArrowLeft width="18px" strokeWidth="2px" /> Previous
+            <ArrowLeftIcon width="18px" strokeWidth="2px" /> Previous
           </StyledSpan>
           <span hidden={counter === 0}>{" | "}</span>
           <StyledSpan onClick={() => setCounter((prev) => prev + 1)}>
@@ -118,7 +118,7 @@ const Onboarding = () => {
               : counter === 3
               ? "Get Started"
               : "Next"}{" "}
-            <ArrowRight width="18px" strokeWidth="2px" />
+            <ArrowRightIcon width="18px" strokeWidth="2px" />
           </StyledSpan>
         </p>
       </div>

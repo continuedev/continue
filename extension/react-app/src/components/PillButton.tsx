@@ -9,10 +9,10 @@ import {
   vscForeground,
 } from ".";
 import {
-  Trash,
-  PaintBrush,
-  ExclamationTriangle,
-} from "@styled-icons/heroicons-outline";
+  TrashIcon,
+  PaintBrushIcon,
+  ExclamationTriangleIcon,
+} from "@heroicons/react/24/outline";
 import { GUIClientContext } from "../App";
 import { useDispatch } from "react-redux";
 import {
@@ -171,10 +171,7 @@ const PillButton = (props: PillButtonProps) => {
                     client?.setEditingAtIndices([props.index]);
                   }}
                 >
-                  <PaintBrush
-                    style={{ margin: "auto" }}
-                    width="1.6em"
-                  ></PaintBrush>
+                  <PaintBrushIcon style={{ margin: "auto" }} width="1.6em" />
                 </ButtonDiv>
               )}
 
@@ -189,7 +186,7 @@ const PillButton = (props: PillButtonProps) => {
                   dispatch(setBottomMessage(undefined));
                 }}
               >
-                <Trash style={{ margin: "auto" }} width="1.6em"></Trash>
+                <TrashIcon style={{ margin: "auto" }} width="1.6em" />
               </ButtonDiv>
             </GridDiv>
           )}
@@ -206,7 +203,7 @@ const PillButton = (props: PillButtonProps) => {
             <CircleDiv
               data-tooltip-id={`circle-div-${props.item.description.name}`}
             >
-              <ExclamationTriangle
+              <ExclamationTriangleIcon
                 style={{ margin: "auto" }}
                 width="1.0em"
                 strokeWidth={2}

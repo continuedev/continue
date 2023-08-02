@@ -9,13 +9,13 @@ import {
   vscForeground,
 } from ".";
 import {
-  ChevronDown,
-  ChevronRight,
-  ArrowPath,
-  XMark,
-  MagnifyingGlass,
-} from "@styled-icons/heroicons-outline";
-import { StopCircle } from "@styled-icons/heroicons-solid";
+  ChevronDownIcon,
+  ChevronRightIcon,
+  ArrowPathIcon,
+  XMarkIcon,
+  MagnifyingGlassIcon,
+  StopCircleIcon,
+} from "@heroicons/react/24/outline";
 import { HistoryNode } from "../../../schema/HistoryNode";
 import HeaderButtonWithText from "./HeaderButtonWithText";
 import { getMetaKeyLabel, isMetaEquivalentKeyPressed } from "../util";
@@ -170,9 +170,9 @@ function StepContainer(props: StepContainerProps) {
             <div className="m-2">
               {!isUserInput &&
                 (props.open ? (
-                  <ChevronDown size="1.4em" />
+                  <ChevronDownIcon className="h-6 w-6" />
                 ) : (
-                  <ChevronRight size="1.4em" />
+                  <ChevronRightIcon className="h-6 w-6" />
                 ))}
               {props.historyNode.observation?.title ||
                 (props.historyNode.step.name as any)}
@@ -195,7 +195,7 @@ function StepContainer(props: StepContainerProps) {
                     client?.showLogsAtIndex(props.index);
                   }}
                 >
-                  <MagnifyingGlass size="1.4em" />
+                  <MagnifyingGlassIcon className="h-6 w-6" />
                 </HeaderButtonWithText>
               )}
               <HeaderButtonWithText
@@ -210,9 +210,12 @@ function StepContainer(props: StepContainerProps) {
                 }
               >
                 {props.historyNode.active ? (
-                  <StopCircle size="1.6em" onClick={props.onDelete} />
+                  <StopCircleIcon
+                    className="h-6 w-6"
+                    onClick={props.onDelete}
+                  />
                 ) : (
-                  <XMark size="1.6em" onClick={props.onDelete} />
+                  <XMarkIcon className="h-6 w-6" onClick={props.onDelete} />
                 )}
               </HeaderButtonWithText>
               {props.historyNode.observation?.error ? (
@@ -223,7 +226,7 @@ function StepContainer(props: StepContainerProps) {
                     props.onRetry();
                   }}
                 >
-                  <ArrowPath size="1.6em" onClick={props.onRetry} />
+                  <ArrowPathIcon className="h-6 w-6" onClick={props.onRetry} />
                 </HeaderButtonWithText>
               ) : (
                 <></>
