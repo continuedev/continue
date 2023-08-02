@@ -254,15 +254,14 @@
     "mocha": "^10.1.0",
     "ts-jest": "^29.1.1",
     "typescript": "^4.9.3",
+    "vite": "^4.3.9",
     "vsce": "^2.15.0"
   },
   "dependencies": {
     "@electron/rebuild": "^3.2.10",
-    "@nestjs/common": "^8.4.7",
     "@reduxjs/toolkit": "^1.9.3",
     "@styled-icons/heroicons-outline": "^10.47.0",
     "@styled-icons/heroicons-solid": "^10.47.0",
-    "@vitejs/plugin-react-swc": "^3.3.2",
     "axios": "^1.2.5",
     "downshift": "^7.6.0",
     "fkill": "^8.1.0",
@@ -273,11 +272,11 @@
     "react-redux": "^8.0.5",
     "strip-ansi": "^7.1.0",
     "tailwindcss": "^3.3.2",
-    "vite": "^4.3.9",
     "vscode-languageclient": "^8.0.2",
     "ws": "^8.13.0"
   },
   "optionalDependencies": {
-    "@esbuild/android-arm": "^0.18.17"
+    "@esbuild/android-arm": "^0.18.17",
+    "@vitejs/plugin-react-swc": "^3.3.2"
   }
 }
