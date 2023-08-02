@@ -219,7 +219,6 @@
     "esbuild-watch": "npm run esbuild-base -- --sourcemap --watch",
     "test-compile": "tsc -p ./",
     "clientgen": "rm -rf src/client/ && npx @openapitools/openapi-generator-cli generate -i ../schema/openapi.json -g typescript-fetch -o src/client/ --additional-properties=supportsES6=true,npmVersion=8.19.2,typescriptThreePlus=true",
-    "typegen": "node scripts/typegen.js",
     "rebuild": "electron-rebuild -v 19.1.8 node-pty",
     "watch": "tsc -watch -p ./",
     "pretest": "npm run compile && npm run lint",
@@ -233,6 +232,7 @@
     "reinstall": "rm -rf ./build && npm run package && npm run uninstall && npm run install-extension"
   },
   "devDependencies": {
+    "@nestjs/common": "^8.4.7",
     "@openapitools/openapi-generator-cli": "^2.5.2",
     "@types/glob": "^8.0.0",
     "@types/jest": "^29.5.2",
