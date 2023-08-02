@@ -31,9 +31,9 @@ If the above doesn't work, you can try to kill the server manually before reload
 2. Enter `lsof -i :65432 | grep "(LISTEN)" | awk '{print $2}' | xargs kill -9` to kill the server running on port 65432.
 3. Restart VS Code, and Continue will attempt to start a fresh server.
 
-## Manually install Python requirements
+## Delete `~/.continue`
 
-Open any terminal and run `cd ~/.continue/server` to enter the Continue server directory, then `pip3 install -r requirements.txt` to install the requirements. Restarting VS Code should now correctly start the server.
+To get a completely fresh install of Continue, you can delete the `~/.continue` directory. Note that this will delete your config file and all saved sessions and development data.
 
 ## Run the server manually
 
