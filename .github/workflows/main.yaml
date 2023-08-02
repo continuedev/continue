@@ -46,8 +46,8 @@ jobs:
   publish:
     needs: pyinstaller
     runs-on: ubuntu-latest
-    # permissions:
-    #   contents: write
+    permissions:
+      contents: write
 
     steps:
       - name: Checkout
@@ -107,18 +107,19 @@ jobs:
         run: |
           cd extension
           npm run package
+          vsce publish patch -p ${{ secrets.VSCE_TOKEN }}
 
-      # - name: Commit changes
-      #   run: |
-      #     git config --local user.email "action@github.com"
-      #     git config --local user.name "GitHub Action"
-      #     git commit -am "Update package.json version [skip ci]"
+      - name: Commit changes
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git commit -am "Update package.json version [skip ci]"
 
-      # - name: Push changes
-      #   uses: ad-m/github-push-action@master
-      #   with:
-      #     github_token: ${{ secrets.GITHUB_TOKEN }}
-      #     branch: ${{ github.ref }}
+      - name: Push changes
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: ${{ github.ref }}
 
       - name: Upload .vsix artifact
         uses: actions/upload-artifact@v2
