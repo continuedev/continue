@@ -47,7 +47,7 @@ jobs:
     # needs: pyinstaller
     runs-on: ubuntu-latest
     container:
-      image: node:14-buster
+      image: node:16-buster
 
     steps:
       - name: Checkout
