@@ -107,7 +107,7 @@ jobs:
         run: |
           cd extension
           npm run package
-          vsce publish patch -p ${{ secrets.VSCE_TOKEN }}
+          npx vsce publish patch -p ${{ secrets.VSCE_TOKEN }}
 
       - name: Commit changes
         run: |
