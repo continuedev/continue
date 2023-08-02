@@ -276,7 +276,6 @@
     "ws": "^8.13.0"
   },
   "optionalDependencies": {
-    "@esbuild/android-arm": "^0.18.17",
-    "@vitejs/plugin-react-swc": "^3.3.2"
+    "@esbuild/android-arm": "^0.18.17"
   }
 }
