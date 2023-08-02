@@ -53,6 +53,21 @@ config = ContinueConfig(
 
 Continue will automatically prompt you for your Anthropic API key, which must have access to Claude 2. You can request early access [here](https://www.anthropic.com/earlyaccess).
 
+### Run Llama-2 locally with Ollama
+
+[Ollama](https://ollama.ai/) is a Mac application that makes it easy to locally run open-source models, including Llama-2. Download the app from the website, and it will walk you through setup in a couple of minutes. You can also read more in their [README](https://github.com/jmorganca/ollama). Continue can then be configured to use the `Ollama` LLM class:
+
+```python
+from continuedev.libs.llm.ollama import Ollama
+
+config = ContinueConfig(
+    ...
+    models=Models(
+        default=Ollama(model="llama2")
+    )
+)
+```
+
 ### Local models with ggml
 
 See our [5 minute quickstart](https://github.com/continuedev/ggml-server-example) to run any model locally with ggml. While these models don't yet perform as well, they are free, entirely private, and run offline.
@@ -175,5 +190,44 @@ config = ContinueConfig(
             auth_token="my-github-auth-token"
         )
     ]
+)
+```
+
+## Custom Policies
+
+Policies can be used to deeply change the behavior of Continue, or to build agents that take longer sequences of actions on their own. The [`DefaultPolicy`](https://github.com/continuedev/continue/blob/main/continuedev/src/continuedev/plugins/policies/default.py) handles the parsing of slash commands, and otherwise always chooses the `SimpleChatStep`, but you could customize by for example always taking a "review" step after editing code. To do so, create a new `Policy` subclass that implements the `next` method:
+
+```python
+class ReviewEditsPolicy(Policy):
+
+    default_step: Step = SimpleChatStep()
+
+    def next(self, config: ContinueConfig, history: History) -> Step:
+        # Get the last step
+        last_step = history.get_current()
+
+        # If it edited code, then review the changes
+        if isinstance(last_step, EditHighlightedCodeStep):
+            return ReviewStep()  # Not implemented
+
+        # Otherwise, choose between EditHighlightedCodeStep and SimpleChatStep based on slash command
+        if observation is not None and isinstance(last_step.observation, UserInputObservation):
+            if user_input.startswith("/edit"):
+                return EditHighlightedCodeStep(user_input=user_input[5:])
+            else:
+                return SimpleChatStep()
+
+            return self.default_step.copy()
+
+        # Don't do anything until the user enters something else
+        return None
+```
+
+Then, in `~/.continue/config.py`, override the default policy:
+
+```python
+config=ContinueConfig(
+    ...
+    policy_override=ReviewEditsPolicy()
 )
 ```

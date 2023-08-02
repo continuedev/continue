@@ -1,7 +1,7 @@
 from functools import cached_property
 import traceback
 import time
-from typing import Any, Callable, Coroutine, Dict, List, Union
+from typing import Callable, Coroutine, Dict, List, Union
 from aiohttp import ClientPayloadError
 from pydantic import root_validator
 
@@ -54,7 +54,7 @@ class Autopilot(ContinueBaseModel):
     history: History = History.from_empty()
     context: Context = Context()
     full_state: Union[FullState, None] = None
-    context_manager: Union[ContextManager, None] = None
+    context_manager: ContextManager = ContextManager()
     continue_sdk: ContinueSDK = None
 
     _on_update_callbacks: List[Callable[[FullState], None]] = []
@@ -66,19 +66,22 @@ class Autopilot(ContinueBaseModel):
     _user_input_queue = AsyncSubscriptionQueue()
     _retry_queue = AsyncSubscriptionQueue()
 
+    started: bool = False
+
     async def start(self):
         self.continue_sdk = await ContinueSDK.create(self)
         if override_policy := self.continue_sdk.config.policy_override:
             self.policy = override_policy
 
         # Load documents into the search index
-        self.context_manager = await ContextManager.create(
+        await self.context_manager.start(
             self.continue_sdk.config.context_providers + [
                 HighlightedCodeContextProvider(ide=self.ide),
                 FileContextProvider(workspace_dir=self.ide.workspace_directory)
             ])
 
         await self.context_manager.load_index(self.ide.workspace_directory)
+        self.started = True
 
     class Config:
         arbitrary_types_allowed = True
@@ -98,7 +101,7 @@ class Autopilot(ContinueBaseModel):
             user_input_queue=self._main_user_input_queue,
             slash_commands=self.get_available_slash_commands(),
             adding_highlighted_code=self.context_manager.context_providers[
-                "code"].adding_highlighted_code if self.context_manager is not None else False,
+                "code"].adding_highlighted_code if "code" in self.context_manager.context_providers else False,
             selected_context_items=await self.context_manager.get_selected_items() if self.context_manager is not None else [],
         )
         self.full_state = full_state
@@ -201,7 +204,7 @@ class Autopilot(ContinueBaseModel):
         await self.update_subscribers()
 
     async def set_editing_at_ids(self, ids: List[str]):
-        self.context_manager.context_providers["code"].set_editing_at_ids(ids)
+        await self.context_manager.context_providers["code"].set_editing_at_ids(ids)
         await self.update_subscribers()
 
     async def _run_singular_step(self, step: "Step", is_future_step: bool = False) -> Coroutine[Observation, None, None]:
@@ -244,7 +247,7 @@ class Autopilot(ContinueBaseModel):
         try:
             observation = await step(self.continue_sdk)
         except Exception as e:
-            if self.history.timeline[index_of_history_node].deleted:
+            if index_of_history_node >= len(self.history.timeline) or self.history.timeline[index_of_history_node].deleted:
                 # If step was deleted/cancelled, don't show error or allow retry
                 return None
 
@@ -301,7 +304,7 @@ class Autopilot(ContinueBaseModel):
         self._step_depth -= 1
 
         # Add observation to history, unless already attached error observation
-        if not caught_error:
+        if not caught_error and index_of_history_node < len(self.history.timeline):
             self.history.timeline[index_of_history_node].observation = observation
             self.history.timeline[index_of_history_node].active = False
             await self.update_subscribers()

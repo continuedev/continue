@@ -192,6 +192,8 @@ class IdeProtocolClient {
     });
   }
 
+  visibleMessages: Set<string> = new Set();
+
   async handleMessage(
     messageType: string,
     data: any,
@@ -253,6 +255,20 @@ class IdeProtocolClient {
       case "setFileOpen":
         this.openFile(data.filepath);
         // TODO: Close file if False
+        break;
+      case "showMessage":
+        if (!this.visibleMessages.has(data.message)) {
+          this.visibleMessages.add(data.message);
+          vscode.window
+            .showInformationMessage(data.message, "Copy Traceback", "View Logs")
+            .then((selection) => {
+              if (selection === "View Logs") {
+                vscode.commands.executeCommand("continue.viewLogs");
+              } else if (selection === "Copy Traceback") {
+                vscode.env.clipboard.writeText(data.message);
+              }
+            });
+        }
         break;
       case "showVirtualFile":
         this.showVirtualFile(data.name, data.contents);

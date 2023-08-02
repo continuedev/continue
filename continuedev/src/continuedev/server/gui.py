@@ -93,8 +93,8 @@ class GUIProtocolServer(AbstractGUIProtocolServer):
             self.on_delete_context_with_ids(data["ids"])
         elif message_type == "toggle_adding_highlighted_code":
             self.on_toggle_adding_highlighted_code()
-        elif message_type == "set_editing_at_indices":
-            self.on_set_editing_at_indices(data["indices"])
+        elif message_type == "set_editing_at_ids":
+            self.on_set_editing_at_ids(data["ids"])
         elif message_type == "show_logs_at_index":
             self.on_show_logs_at_index(data["index"])
         elif message_type == "select_context_item":
@@ -138,9 +138,9 @@ class GUIProtocolServer(AbstractGUIProtocolServer):
         create_async_task(
             self.session.autopilot.toggle_adding_highlighted_code(), self.on_error)
 
-    def on_set_editing_at_indices(self, indices: List[int]):
+    def on_set_editing_at_ids(self, ids: List[str]):
         create_async_task(
-            self.session.autopilot.set_editing_at_indices(indices), self.on_error)
+            self.session.autopilot.set_editing_at_ids(ids), self.on_error)
 
     def on_show_logs_at_index(self, index: int):
         name = f"continue_logs.txt"
@@ -190,7 +190,7 @@ async def websocket_endpoint(websocket: WebSocket, session: Session = Depends(we
         posthog_logger.capture_event("gui_error", {
             "error_title": e.__str__() or e.__repr__(), "error_message": err_msg})
 
-        await protocol.session.autopilot.continue_sdk.run_step(DisplayErrorStep(e=e))
+        await session.autopilot.ide.showMessage(err_msg)
 
         raise e
     finally:

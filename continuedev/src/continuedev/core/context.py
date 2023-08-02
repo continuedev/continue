@@ -133,14 +133,19 @@ class ContextManager:
         """
         return sum([await provider.get_chat_messages() for provider in self.context_providers.values()], [])
 
-    def __init__(self, context_providers: List[ContextProvider]):
+    def __init__(self):
+        self.context_providers = {}
+        self.provider_titles = set()
+
+    async def start(self, context_providers: List[ContextProvider]):
+        """
+        Starts the context manager.
+        """
         self.context_providers = {
             prov.title: prov for prov in context_providers}
         self.provider_titles = {
             provider.title for provider in context_providers}
 
-    @classmethod
-    async def create(cls, context_providers: List[ContextProvider]):
         async with Client('http://localhost:7700') as search_client:
             meilisearch_running = True
             try:
@@ -154,10 +159,8 @@ class ContextManager:
             if not meilisearch_running:
                 logger.warning(
                     "MeiliSearch not running, avoiding any dependent context providers")
-                context_providers = list(
-                    filter(lambda cp: cp.title == "code", context_providers))
-
-        return cls(context_providers)
+                self.context_providers = list(
+                    filter(lambda cp: cp.title == "code", self.context_providers))
 
     async def load_index(self, workspace_dir: str):
         for _, provider in self.context_providers.items():
