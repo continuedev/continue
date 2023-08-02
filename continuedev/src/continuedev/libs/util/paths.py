@@ -1,6 +1,6 @@
 import os
-import sys
 from ..constants.main import CONTINUE_SESSIONS_FOLDER, CONTINUE_GLOBAL_FOLDER, CONTINUE_SERVER_FOLDER
+from ..constants.default_config import default_config
 
 
 def find_data_file(filename):
@@ -32,20 +32,13 @@ def getSessionFilePath(session_id: str):
     return path
 
 
-def getDefaultConfigFile() -> str:
-    default_config_path = find_data_file(os.path.join(
-        "..", "constants", "default_config.py.txt"))
-    with open(default_config_path, 'r') as f:
-        return f.read()
-
-
 def getConfigFilePath() -> str:
     path = os.path.join(getGlobalFolderPath(), "config.py")
     os.makedirs(os.path.dirname(path), exist_ok=True)
 
     if not os.path.exists(path):
         with open(path, 'w') as f:
-            f.write(getDefaultConfigFile())
+            f.write(default_config)
 
     return path
 

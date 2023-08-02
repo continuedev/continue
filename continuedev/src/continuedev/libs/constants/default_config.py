@@ -1,9 +1,10 @@
-"""
+default_config = """\
+\"\"\"
 This is the Continue configuration file.
 
 If you aren't getting strong typing on these imports,
 be sure to select the Python interpreter in ~/.continue/server/env.
-"""
+\"\"\"
 
 import subprocess
 
@@ -24,11 +25,11 @@ from continuedev.plugins.steps.main import EditHighlightedCodeStep
 
 
 class CommitMessageStep(Step):
-    """
+    \"\"\"
     This is a Step, the building block of Continue.
     It can be used below as a slash command, so that
     run will be called when you type '/commit'.
-    """
+    \"\"\"
     async def run(self, sdk: ContinueSDK):
 
         # Get the root directory of the workspace
@@ -124,3 +125,4 @@ config = ContinueConfig(
     # You can use them to design agents, or deeply customize Continue
     policy=DefaultPolicy()
 )
+"""
