@@ -46,6 +46,8 @@ jobs:
   publish:
     # needs: pyinstaller
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     steps:
       - name: Checkout
@@ -99,8 +101,6 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           branch: ${{ github.ref }}
-        permissions:
-          contents: write
 
       - name: Upload .vsix artifact
         uses: actions/upload-artifact@v2
