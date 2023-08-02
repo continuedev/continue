@@ -125,7 +125,7 @@ class IdeProtocolClient {
 
     // Setup listeners for any selection changes in open editors
     vscode.window.onDidChangeTextEditorSelection((event) => {
-      if (this.editorIsTerminal(event.textEditor)) {
+      if (!this.editorIsCode(event.textEditor)) {
         return;
       }
       if (this._highlightDebounce) {
@@ -426,17 +426,19 @@ class IdeProtocolClient {
   // ------------------------------------ //
   // Respond to request
 
-  private editorIsTerminal(editor: vscode.TextEditor) {
-    return (
-      !!path.basename(editor.document.uri.fsPath).match(/\d/) ||
-      (editor.document.languageId === "plaintext" &&
-        editor.document.getText() === "accessible-buffer-accessible-buffer-")
+  // Checks to see if the editor is a code editor.
+  // In some cases vscode.window.visibleTextEditors can return non-code editors
+  // e.g. terminal editors in side-by-side mode
+  private editorIsCode(editor: vscode.TextEditor) {
+    return !(
+      editor.document.languageId === "plaintext" &&
+      editor.document.getText() === "accessible-buffer-accessible-buffer-"
     );
   }
 
   getOpenFiles(): string[] {
     return vscode.window.visibleTextEditors
-      .filter((editor) => !this.editorIsTerminal(editor))
+      .filter((editor) => this.editorIsCode(editor))
       .map((editor) => {
         return editor.document.uri.fsPath;
       });
@@ -444,7 +446,7 @@ class IdeProtocolClient {
 
   getVisibleFiles(): string[] {
     return vscode.window.visibleTextEditors
-      .filter((editor) => !this.editorIsTerminal(editor))
+      .filter((editor) => this.editorIsCode(editor))
       .map((editor) => {
         return editor.document.uri.fsPath;
       });
@@ -452,7 +454,7 @@ class IdeProtocolClient {
 
   saveFile(filepath: string) {
     vscode.window.visibleTextEditors
-      .filter((editor) => !this.editorIsTerminal(editor))
+      .filter((editor) => this.editorIsCode(editor))
       .forEach((editor) => {
         if (editor.document.uri.fsPath === filepath) {
           editor.document.save();
@@ -463,7 +465,7 @@ class IdeProtocolClient {
   readFile(filepath: string): string {
     let contents: string | undefined;
     vscode.window.visibleTextEditors
-      .filter((editor) => !this.editorIsTerminal(editor))
+      .filter((editor) => this.editorIsCode(editor))
       .forEach((editor) => {
         if (editor.document.uri.fsPath === filepath) {
           contents = editor.document.getText();
@@ -509,7 +511,7 @@ class IdeProtocolClient {
     // TODO
     let rangeInFiles: RangeInFile[] = [];
     vscode.window.visibleTextEditors
-      .filter((editor) => !this.editorIsTerminal(editor))
+      .filter((editor) => this.editorIsCode(editor))
       .forEach((editor) => {
         editor.selections.forEach((selection) => {
           // if (!selection.isEmpty) {
