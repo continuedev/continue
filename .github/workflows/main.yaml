@@ -44,14 +44,32 @@ jobs:
           path: dist/*
 
   publish:
-    # needs: pyinstaller
+    needs: pyinstaller
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
+    # permissions:
+    #   contents: write
 
     steps:
       - name: Checkout
         uses: actions/checkout@v2
+
+      - name: Download Linux build
+        uses: actions/download-artifact@v2
+        with:
+          name: Linux Build
+          path: extension/server/exe/run-linux
+
+      - name: Download macOS build
+        uses: actions/download-artifact@v2
+        with:
+          name: macOS Build
+          path: extension/server/exe/run-darwin
+
+      - name: Download Windows build
+        uses: actions/download-artifact@v2
+        with:
+          name: Windows Build
+          path: extension/server/exe/run-windows.exe
 
       - name: Use Node.js 19.0.0
         uses: actions/setup-node@v3
@@ -90,38 +108,20 @@ jobs:
           cd extension
           npm run full-package
 
-      - name: Commit changes
-        run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-          git commit -am "Update package.json version [skip ci]"
+      # - name: Commit changes
+      #   run: |
+      #     git config --local user.email "action@github.com"
+      #     git config --local user.name "GitHub Action"
+      #     git commit -am "Update package.json version [skip ci]"
 
-      - name: Push changes
-        uses: ad-m/github-push-action@master
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          branch: ${{ github.ref }}
+      # - name: Push changes
+      #   uses: ad-m/github-push-action@master
+      #   with:
+      #     github_token: ${{ secrets.GITHUB_TOKEN }}
+      #     branch: ${{ github.ref }}
 
       - name: Upload .vsix artifact
         uses: actions/upload-artifact@v2
         with:
           name: vsix-artifact
           path: extension/build/*
-
-      - name: Download Linux build
-        uses: actions/download-artifact@v2
-        with:
-          name: Linux Build
-          path: extension/server/exe/run-linux
-
-      - name: Download macOS build
-        uses: actions/download-artifact@v2
-        with:
-          name: macOS Build
-          path: extension/server/exe/run-darwin
-
-      - name: Download Windows build
-        uses: actions/download-artifact@v2
-        with:
-          name: Windows Build
-          path: extension/server/exe/run-windows.exe
