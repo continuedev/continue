@@ -106,7 +106,7 @@ jobs:
       - name: Build and Publish
         run: |
           cd extension
-          npm run full-package
+          npm run package
 
       # - name: Commit changes
       #   run: |

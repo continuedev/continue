@@ -12,7 +12,7 @@
 
 5. From `continue/extension`, run `npm install`
 
-6. Run `npm run full-package`
+6. Run `npm run package`
 
 7. Open `src/activation/activate.ts` file (or any TypeScript file)
 
@@ -21,7 +21,6 @@
 9. `cmd+shift+p` to look at developer console and select Continue commands
 
 10. Every time you make changes to the code, you need to run `npm run esbuild` unless you make changes inside of `react-app` and then you need to run `npm run build` from there
-
 
 ## Alternative: Install from source
 

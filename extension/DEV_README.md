@@ -10,7 +10,7 @@ This is the Continue VS Code Extension. Its primary jobs are
 
 1. Clone this repo
 2. `cd extension`
-3. `npm run full-package`
+3. `npm run package`
 
    > If NPM is not installed, you can use `brew install node` on Mac, or see the [installation page](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm) for other platforms, or more detailed instructions.
 
