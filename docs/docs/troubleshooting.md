@@ -39,6 +39,10 @@ To get a completely fresh install of Continue, you can delete the `~/.continue` 
 
 If none of these work, you can start the server yourself as is explained here: [Running the Continue server manually](https://continue.dev/docs/how-continue-works)
 
+## Python requirement
+
+Continue requires that you have Python 3.8 or greater. You can check what version you have by running either `python3 --version` or `python --version` from a terminal.  If the version is not 3.8.x or higher, please [install](https://python.org) it
+
 ## Still having trouble?
 
 Create a GitHub issue [here](https://github.com/continuedev/continue/issues/new?assignees=&labels=bug&projects=&template=bug-report-%F0%9F%90%9B.md&title=), leaving the details of your problem, and we'll be able to more quickly help you out.
