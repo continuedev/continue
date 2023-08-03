@@ -32,16 +32,9 @@ Open a blank file and let Continue start new Python scripts, React components, e
 
 ## Getting Started
 
-### [Download for VS Code](https://marketplace.visualstudio.com/items?itemName=Continue.continue)
+By default, Continue uses GPT-4 and GPT-3.5-turbo via the OpenAI API.
 
-Continue requires that you have Python 3.8 or greater. If you do not, please [install](https://python.org) it
-
-If your Continue server is not setting up, please check the console logs:
-
-1. `cmd+shift+p` (MacOS) / `ctrl+shift+p` (Windows)
-2. Search for and then select "Developer: Toggle Developer Tools"
-3. Select `Console`
-4. Read the console logs
+You can adjust the config to use different LLMs, including local, private models. Read more [here](https://continue.dev/docs/customization#change-the-default-llm).
 
 # Troubleshooting
 
