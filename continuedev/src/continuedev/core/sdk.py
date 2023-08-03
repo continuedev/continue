@@ -196,10 +196,8 @@ class ContinueSDK(AbstractContinueSDK):
         context_messages: List[ChatMessage] = await self.__autopilot.context_manager.get_chat_messages()
 
         # Insert at the end, but don't insert after latest user message or function call
-        i = -2 if (len(history_context) > 0 and (
-            history_context[-1].role == "user" or history_context[-1].role == "function")) else -1
         for msg in context_messages:
-            history_context.insert(i, msg)
+            history_context.insert(-1, msg)
 
         return history_context
 
