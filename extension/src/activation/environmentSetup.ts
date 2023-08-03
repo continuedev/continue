@@ -201,6 +201,10 @@ export async function startContinuePythonServer() {
     );
     console.log("stdout: ", stdout1);
     console.log("stderr: ", stderr1);
+  } else if (os.platform() === "linux") {
+    // Add necessary permissions
+    console.log("Setting permissions for Continue server...");
+    fs.chmodSync(destination, 0o7_5_5);
   }
 
   // Validate that the file exists
