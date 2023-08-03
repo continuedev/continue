@@ -181,7 +181,7 @@ export function setupDebugPanel(
     switch (data.type) {
       case "onLoad": {
         let sessionId: string;
-        console.log("Running onLoad");
+        console.log("Waiting for session id");
         if (typeof sessionIdPromise === "string") {
           sessionId = sessionIdPromise;
         } else {

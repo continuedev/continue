@@ -15,10 +15,6 @@ import { FileEditWithFullContents } from "../schema/FileEditWithFullContents";
 import fs = require("fs");
 import { WebsocketMessenger } from "./util/messenger";
 import { diffManager } from "./diffs";
-import path = require("path");
-import { registerAllCodeLensProviders } from "./lang-server/codeLens";
-import { registerAllCommands } from "./commands";
-import registerQuickFixProvider from "./lang-server/codeActions";
 const os = require("os");
 
 const continueVirtualDocumentScheme = "continue";
@@ -45,7 +41,6 @@ class IdeProtocolClient {
     this.messenger = messenger;
 
     const reconnect = () => {
-      console.log("Trying to reconnect IDE protocol websocket...");
       this.messenger = null;
 
       // Exponential backoff to reconnect
@@ -62,11 +57,9 @@ class IdeProtocolClient {
       this._lastReloadTime = Math.min(2 * this._lastReloadTime, 5000);
     };
     messenger.onOpen(() => {
-      console.log("IDE protocol websocket opened");
       this._reconnectionTimeouts.forEach((to) => clearTimeout(to));
     });
     messenger.onClose(() => {
-      console.log("IDE protocol websocket closed");
       reconnect();
     });
     messenger.onError(() => {

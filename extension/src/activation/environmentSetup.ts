@@ -11,7 +11,6 @@ import * as os from "os";
 import fkill from "fkill";
 
 async function runCommand(cmd: string): Promise<[string, string | undefined]> {
-  console.log("Running command: ", cmd);
   var stdout: any = "";
   var stderr: any = "";
   try {
@@ -32,66 +31,10 @@ async function runCommand(cmd: string): Promise<[string, string | undefined]> {
   return [stdout, stderr];
 }
 
-export async function getPythonPipCommands() {
-  var [stdout, stderr] = await runCommand("python3 --version");
-  let pythonCmd = "python3";
-  if (stderr) {
-    // If not, first see if python3 is aliased to python
-    var [stdout, stderr] = await runCommand("python --version");
-    if (
-      (typeof stderr === "undefined" || stderr === "") &&
-      stdout.split(" ")[1][0] === "3"
-    ) {
-      // Python3 is aliased to python
-      pythonCmd = "python";
-    } else {
-      // Python doesn't exist at all
-      vscode.window.showErrorMessage(
-        "Continue requires Python3. Please install from https://www.python.org/downloads, reload VS Code, and try again."
-      );
-      throw new Error("Python 3 is not installed.");
-    }
-  }
-
-  let pipCmd = pythonCmd.endsWith("3") ? "pip3" : "pip";
-
-  const version = stdout.split(" ")[1];
-  const [major, minor] = version.split(".");
-  if (parseInt(major) !== 3 || parseInt(minor) < 8) {
-    // Need to check specific versions
-    const checkPython3VersionExists = async (minorVersion: number) => {
-      const [stdout, stderr] = await runCommand(
-        `python3.${minorVersion} --version`
-      );
-      return typeof stderr === "undefined" || stderr === "";
-    };
-
-    const VALID_VERSIONS = [8, 9, 10, 11, 12];
-    let versionExists = false;
-
-    for (const minorVersion of VALID_VERSIONS) {
-      if (await checkPython3VersionExists(minorVersion)) {
-        versionExists = true;
-        pythonCmd = `python3.${minorVersion}`;
-        pipCmd = `pip3.${minorVersion}`;
-      }
-    }
-
-    if (!versionExists) {
-      vscode.window.showErrorMessage(
-        "Continue requires Python version 3.8 or greater. Please update your Python installation, reload VS Code, and try again."
-      );
-      throw new Error("Python3.8 or greater is not installed.");
-    }
-  }
-
-  return [pythonCmd, pipCmd];
-}
-
 async function checkServerRunning(serverUrl: string): Promise<boolean> {
   // Check if already running by calling /health
   try {
-    const response = await fetch(serverUrl + "/health");
+    const response = await fetch(`${serverUrl}/health`);
     if (response.status === 200) {
       console.log("Continue python server already running");
       return true;
@@ -165,12 +108,18 @@ async function checkOrKillRunningServer(serverUrl: string): Promise<boolean> {
 export async function downloadFromS3(
   bucket: string,
   fileName: string,
-  destination: string
+  destination: string,
+  region: string
 ) {
-  const s3Url = `https://${bucket}.s3.amazonaws.com/${fileName}`;
-  const response = await fetch(s3Url);
+  const s3Url = `https://${bucket}.s3.${region}.amazonaws.com/${fileName}`;
+  const response = await fetch(s3Url, {
+    method: "GET",
+  });
   if (!response.ok) {
-    throw new Error(`HTTP error! status: ${response.status}`);
+    const text = await response.text();
+    const errText = `Failed to download Continue server from S3: ${text}`;
+    vscode.window.showErrorMessage(errText);
+    throw new Error(errText);
   }
   const buffer = await response.buffer();
   fs.writeFileSync(destination, buffer);
@@ -189,21 +138,46 @@ export async function startContinuePythonServer() {
   }
 
   // Download the server executable
+
   const bucket = "continue-server-binaries";
-  const fileName = `extension/exe/${
+  const fileName =
     os.platform() === "win32"
       ? "windows/run.exe"
       : os.platform() === "darwin"
       ? "mac/run"
-      : "linux/run"
-  }`;
+      : "linux/run";
+
   const destination = path.join(
     getExtensionUri().fsPath,
     "server",
     "exe",
     "run"
   );
-  await downloadFromS3(bucket, fileName, destination);
+
+  // First, check if the server is already downloaded
+  let shouldDownload = true;
+  if (fs.existsSync(destination)) {
+    // Check if the server is the correct version
+    const serverVersion = fs.readFileSync(serverVersionPath(), "utf8");
+    if (serverVersion === getExtensionVersion()) {
+      // The current version is already up and running, no need to continue
+      console.log("Continue server already downloaded");
+      shouldDownload = false;
+    }
+  }
+
+  if (shouldDownload) {
+    vscode.window.withProgress(
+      {
+        location: vscode.ProgressLocation.Notification,
+        title: "Installing Continue server...",
+        cancellable: false,
+      },
+      async () => {
+        await downloadFromS3(bucket, fileName, destination, "us-west-1");
+      }
+    );
+  }
 
   // Get name of the corresponding executable for platform
   if (os.platform() === "darwin") {
