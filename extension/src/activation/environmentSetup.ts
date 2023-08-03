@@ -178,7 +178,7 @@ export async function startContinuePythonServer() {
   }
 
   if (shouldDownload) {
-    vscode.window.withProgress(
+    await vscode.window.withProgress(
       {
         location: vscode.ProgressLocation.Notification,
         title: "Installing Continue server...",
@@ -194,16 +194,13 @@ export async function startContinuePythonServer() {
   // Get name of the corresponding executable for platform
   if (os.platform() === "darwin") {
     // Add necessary permissions
-    const [stdout, stderr] = await runCommand(`chmod +x ${destination}`);
     console.log("Setting permissions for Continue server...");
-    console.log(stdout);
-    console.log(stderr);
+    fs.chmodSync(destination, 0o7_5_5);
     const [stdout1, stderr1] = await runCommand(
       `xattr -dr com.apple.quarantine ${destination}`
     );
-    console.log("...");
-    console.log(stdout1);
-    console.log(stderr1);
+    console.log("stdout: ", stdout1);
+    console.log("stderr: ", stderr1);
   }
 
   // Run the executable
