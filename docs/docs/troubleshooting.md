@@ -39,6 +39,15 @@ To get a completely fresh install of Continue, you can delete the `~/.continue` 
 
 If none of these work, you can start the server yourself as is explained here: [Running the Continue server manually](https://continue.dev/docs/how-continue-works)
 
+## Check the console logs
+
+If your Continue server is not setting up, try checking the console logs:
+
+1. `cmd+shift+p` (MacOS) / `ctrl+shift+p` (Windows)
+2. Search for and then select "Developer: Toggle Developer Tools"
+3. Select `Console`
+4. Read the console logs
+
 ## Python requirement
 
 Continue requires that you have Python 3.8 or greater. You can check what version you have by running either `python3 --version` or `python --version` from a terminal.  If the version is not 3.8.x or higher, please [install](https://python.org) it
