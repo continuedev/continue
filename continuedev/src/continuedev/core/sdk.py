@@ -18,6 +18,7 @@ from ..libs.util.telemetry import posthog_logger
 from ..libs.util.paths import getConfigFilePath
 from .models import Models
 from ..libs.util.logging import logger
+# __import__("anthropic", globals(), locals(), ["AsyncAnthropic"], 0)
 
 
 class Autopilot:
@@ -46,7 +47,8 @@ class ContinueSDK(AbstractContinueSDK):
             config = sdk._load_config_dot_py()
             sdk.config = config
         except Exception as e:
-            logger.error(f"Failed to load config.py: {e}")
+            logger.error(
+                f"Failed to load config.py: {traceback.format_exception(e)}")
 
             sdk.config = ContinueConfig(
             ) if sdk._last_valid_config is None else sdk._last_valid_config
@@ -170,9 +172,15 @@ class ContinueSDK(AbstractContinueSDK):
 
         def load_module(module_name: str, class_names: List[str]):
             # from anthropic import AsyncAnthropic
-            module = importlib.import_module(module_name)
-            for class_name in class_names:
-                globals()[class_name] = getattr(module, class_name)
+            print("IMPORTING")
+            # exec("from anthropic import AsyncAnthropic", globals(), locals())
+            # imports = __import__("anthropic", globals(), locals(), ["AsyncAnthropic"], 0)
+            # print("IMPORTS: ", imports)
+            # for class_name in class_names:
+            #     globals()[class_name] = getattr(imports, class_name)
+            # module = importlib.import_module(module_name)
+            # for class_name in class_names:
+            #     globals()[class_name] = getattr(module, class_name)
 
         while True:
             # Execute the file content
@@ -200,7 +208,8 @@ class ContinueSDK(AbstractContinueSDK):
                 # Get the module name
                 module_name = line[1]
                 # Get the class name
-                class_names = list(map(lambda x: x.replace(",", ""), filter(lambda x: x.strip() != "", line[3:])))
+                class_names = list(map(lambda x: x.replace(
+                    ",", ""), filter(lambda x: x.strip() != "", line[3:])))
 
                 # Load the module
                 print(
