@@ -105,6 +105,15 @@ async function checkOrKillRunningServer(serverUrl: string): Promise<boolean> {
   return false;
 }
 
+function ensureDirectoryExistence(filePath: string) {
+  const dirname = path.dirname(filePath);
+  if (fs.existsSync(dirname)) {
+    return true;
+  }
+  ensureDirectoryExistence(dirname);
+  fs.mkdirSync(dirname);
+}
+
 export async function downloadFromS3(
   bucket: string,
   fileName: string,
@@ -122,6 +131,7 @@ export async function downloadFromS3(
     throw new Error(errText);
   }
   const buffer = await response.buffer();
+  ensureDirectoryExistence(destination);
   fs.writeFileSync(destination, buffer);
 }
 
