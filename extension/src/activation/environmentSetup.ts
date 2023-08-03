@@ -139,16 +139,17 @@ export async function startContinuePythonServer() {
   // Check vscode settings
   const serverUrl = getContinueServerUrl();
   if (serverUrl !== "http://localhost:65432") {
+    console.log("Continue server is being run manually, skipping start");
     return;
   }
 
   // Check if server is already running
   if (await checkOrKillRunningServer(serverUrl)) {
+    console.log("Continue server already running");
     return;
   }
 
   // Download the server executable
-
   const bucket = "continue-server-binaries";
   const fileName =
     os.platform() === "win32"
@@ -189,14 +190,24 @@ export async function startContinuePythonServer() {
     );
   }
 
+  console.log("Downloaded server executable at ", destination);
   // Get name of the corresponding executable for platform
   if (os.platform() === "darwin") {
     // Add necessary permissions
-    await runCommand(`chmod +x ${destination}`);
-    await runCommand(`xattr -dr com.apple.quarantine ${destination}`);
+    const [stdout, stderr] = await runCommand(`chmod +x ${destination}`);
+    console.log("Setting permissions for Continue server...");
+    console.log(stdout);
+    console.log(stderr);
+    const [stdout1, stderr1] = await runCommand(
+      `xattr -dr com.apple.quarantine ${destination}`
+    );
+    console.log("...");
+    console.log(stdout1);
+    console.log(stderr1);
   }
 
   // Run the executable
+  console.log("Starting Continue server...");
   const child = spawn(destination, {
     shell: true,
   });
