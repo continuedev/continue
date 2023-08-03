@@ -61,6 +61,9 @@ const commandsMap: { [command: string]: (...args: any) => any } = {
   },
   "continue.toggleAuxiliaryBar": () => {
     vscode.commands.executeCommand("workbench.action.toggleAuxiliaryBar");
+    debugPanelWebview?.postMessage({
+      type: "focusContinueInputWithEdit",
+    });
   },
   "continue.quickTextEntry": async () => {
     const text = await vscode.window.showInputBox({

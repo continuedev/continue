@@ -166,7 +166,7 @@
       },
       {
         "command": "continue.toggleAuxiliaryBar",
-        "mac": "option+cmd+m",
+        "mac": "alt+cmd+m",
         "key": "alt+ctrl+m"
       }
     ],
