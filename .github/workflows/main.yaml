@@ -31,13 +31,13 @@ jobs:
         run: |
           pip install -r continuedev/requirements.txt
 
-      - name: Build PyInstaller Executable
-        run: |
-          if [[ "${{ runner.os }}" == "Windows" ]]; then
-            pyinstaller run.py --exclude-module numpy --exclude-module jedi -F --add-data 'continuedev;continuedev' --hidden-import=anthropic --hidden-import=github
-          else
-            pyinstaller run.py --exclude-module numpy --exclude-module jedi -F --add-data 'continuedev:continuedev' --hidden-import=anthropic --hidden-import=github
-          fi
+      - name: Build PyInstaller Executable for Windows
+        run: pyinstaller run.py --exclude-module numpy --exclude-module jedi -F --add-data 'continuedev;continuedev' --hidden-import=anthropic --hidden-import=github
+        if: matrix.os == 'windows-latest'
+
+      - name: Build PyInstaller Executable for Mac/Linux
+        run: pyinstaller run.py --exclude-module numpy --exclude-module jedi -F --add-data 'continuedev:continuedev' --hidden-import=anthropic --hidden-import=github
+        if: matrix.os != 'windows-latest'
 
       - name: Set permissions
         run: |
