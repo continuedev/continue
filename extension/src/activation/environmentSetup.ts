@@ -162,7 +162,7 @@ export async function startContinuePythonServer() {
     getExtensionUri().fsPath,
     "server",
     "exe",
-    "run" + (os.platform() === "win32" ? ".exe" : "")
+    `run${os.platform() === "win32" ? ".exe" : ""}`
   );
 
   // First, check if the server is already downloaded
@@ -201,6 +201,13 @@ export async function startContinuePythonServer() {
     );
     console.log("stdout: ", stdout1);
     console.log("stderr: ", stderr1);
+  }
+
+  // Validate that the file exists
+  if (!fs.existsSync(destination)) {
+    const errText = `- Failed to install Continue server.`;
+    vscode.window.showErrorMessage(errText);
+    throw new Error(errText);
   }
 
   // Run the executable
