@@ -8,12 +8,12 @@ from ...core.main import ChatMessage
 from ..llm import LLM
 from ..util.count_tokens import compile_chat_messages, DEFAULT_ARGS, count_tokens
 
-SERVER_URL = "http://localhost:8000"
-
 
 class GGML(LLM):
     # this is model-specific
     max_context_length: int = 2048
+    server_url: str = "http://localhost:8000"
+    verify_ssl: bool = True
 
     _client_session: aiohttp.ClientSession = None
 
@@ -21,7 +21,8 @@ class GGML(LLM):
         arbitrary_types_allowed = True
 
     async def start(self, **kwargs):
-        self._client_session = aiohttp.ClientSession()
+        self._client_session = aiohttp.ClientSession(
+            connector=aiohttp.TCPConnector(verify_ssl=self.verify_ssl))
 
     async def stop(self):
         await self._client_session.close()
@@ -50,7 +51,7 @@ class GGML(LLM):
         messages = compile_chat_messages(
             self.name, with_history, self.context_length, args["max_tokens"], prompt, functions=args.get("functions", None), system_message=self.system_message)
 
-        async with self._client_session.post(f"{SERVER_URL}/v1/completions", json={
+        async with self._client_session.post(f"{self.server_url}/v1/completions", json={
             "messages": messages,
             **args
         }) as resp:
@@ -67,7 +68,7 @@ class GGML(LLM):
             self.name, messages, self.context_length, args["max_tokens"], None, functions=args.get("functions", None), system_message=self.system_message)
         args["stream"] = True
 
-        async with self._client_session.post(f"{SERVER_URL}/v1/chat/completions", json={
+        async with self._client_session.post(f"{self.server_url}/v1/chat/completions", json={
             "messages": messages,
             **args
         }) as resp:
@@ -88,7 +89,7 @@ class GGML(LLM):
     async def complete(self, prompt: str, with_history: List[ChatMessage] = None, **kwargs) -> Coroutine[Any, Any, str]:
         args = {**self.default_args, **kwargs}
 
-        async with self._client_session.post(f"{SERVER_URL}/v1/completions", json={
+        async with self._client_session.post(f"{self.server_url}/v1/completions", json={
             "messages": compile_chat_messages(args["model"], with_history, self.context_length, args["max_tokens"], prompt, functions=None, system_message=self.system_message),
             **args
         }) as resp:

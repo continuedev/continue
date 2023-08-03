@@ -2,8 +2,7 @@ default_config = """\
 \"\"\"
 This is the Continue configuration file.
 
-If you aren't getting strong typing on these imports,
-be sure to select the Python interpreter in ~/.continue/server/env.
+See https://continue.dev/docs/customization to learn more.
 \"\"\"
 
 import subprocess

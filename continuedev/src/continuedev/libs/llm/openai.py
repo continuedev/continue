@@ -29,6 +29,8 @@ MAX_TOKENS_FOR_MODEL = {
 class OpenAI(LLM):
     model: str
     openai_server_info: Optional[OpenAIServerInfo] = None
+    verify_ssl: bool = True
+    ca_bundle_path: Optional[str] = None
 
     requires_api_key = "OPENAI_API_KEY"
     requires_write_log = True
@@ -48,6 +50,12 @@ class OpenAI(LLM):
                 openai.api_base = self.openai_server_info.api_base
             if self.openai_server_info.api_version is not None:
                 openai.api_version = self.openai_server_info.api_version
+
+        if self.verify_ssl == False:
+            openai.verify_ssl_certs = False
+
+        if self.ca_bundle_path is not None:
+            openai.ca_bundle_path = self.ca_bundle_path
 
     async def stop(self):
         pass
