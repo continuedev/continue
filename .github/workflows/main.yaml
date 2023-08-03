@@ -63,19 +63,19 @@ jobs:
         uses: actions/download-artifact@v2
         with:
           name: Linux Build
-          path: extension/server/exe/linux
+          path: exe/linux
 
       - name: Download macOS build
         uses: actions/download-artifact@v2
         with:
           name: macOS Build
-          path: extension/server/exe/mac
+          path: exe/mac
 
       - name: Download Windows build
         uses: actions/download-artifact@v2
         with:
           name: Windows Build
-          path: extension/server/exe/windows
+          path: exe/windows
 
       - name: Use Node.js 19.0.0
         uses: actions/setup-node@v3
@@ -148,4 +148,4 @@ jobs:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_REGION: "us-west-1"
-          SOURCE_DIR: "extension/server/exe"
+          SOURCE_DIR: "exe"
