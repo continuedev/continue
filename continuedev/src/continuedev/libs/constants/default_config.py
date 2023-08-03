@@ -8,20 +8,20 @@ be sure to select the Python interpreter in ~/.continue/server/env.
 
 import subprocess
 
-from continuedev.core.main import Step
-from continuedev.core.sdk import ContinueSDK
-from continuedev.core.models import Models
-from continuedev.core.config import CustomCommand, SlashCommand, ContinueConfig
-from continuedev.plugins.context_providers.github import GitHubIssuesContextProvider
-from continuedev.plugins.context_providers.google import GoogleContextProvider
-from continuedev.libs.llm.maybe_proxy_openai import MaybeProxyOpenAI
-from continuedev.plugins.policies.default import DefaultPolicy
+from continuedev.src.continuedev.core.main import Step
+from continuedev.src.continuedev.core.sdk import ContinueSDK
+from continuedev.src.continuedev.core.models import Models
+from continuedev.src.continuedev.core.config import CustomCommand, SlashCommand, ContinueConfig
+from continuedev.src.continuedev.plugins.context_providers.github import GitHubIssuesContextProvider
+from continuedev.src.continuedev.plugins.context_providers.google import GoogleContextProvider
+from continuedev.src.continuedev.libs.llm.maybe_proxy_openai import MaybeProxyOpenAI
+from continuedev.src.continuedev.plugins.policies.default import DefaultPolicy
 
-from continuedev.plugins.steps.open_config import OpenConfigStep
-from continuedev.plugins.steps.clear_history import ClearHistoryStep
-from continuedev.plugins.steps.feedback import FeedbackStep
-from continuedev.plugins.steps.comment_code import CommentCodeStep
-from continuedev.plugins.steps.main import EditHighlightedCodeStep
+from continuedev.src.continuedev.plugins.steps.open_config import OpenConfigStep
+from continuedev.src.continuedev.plugins.steps.clear_history import ClearHistoryStep
+from continuedev.src.continuedev.plugins.steps.feedback import FeedbackStep
+from continuedev.src.continuedev.plugins.steps.comment_code import CommentCodeStep
+from continuedev.src.continuedev.plugins.steps.main import EditHighlightedCodeStep
 
 
 class CommitMessageStep(Step):
