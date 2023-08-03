@@ -140,8 +140,12 @@ jobs:
           aws-region: us-west-2
 
       - name: Upload binaries to S3
-        uses: aws-actions/s3-sync@v1
+        uses: jakejarvis/s3-sync-action@master
         with:
-          source_dir: extension/server/exe
-          bucket: continue-server-binaries
-          bucket_path: exe
+          args: --acl public-read --follow-symlinks --delete
+        env:
+          AWS_S3_BUCKET: continue-server-binaries
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: "us-west-1"
+          SOURCE_DIR: "extension/server/exe"
