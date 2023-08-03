@@ -38,15 +38,15 @@ These classes support any models available through the OpenAI API, assuming your
 
 ### claude-2
 
-Import the `Anthropic` LLM class and set it as the default model:
+Import the `AnthropicLLM` LLM class and set it as the default model:
 
 ```python
-from continuedev.libs.llm.anthropic import Anthropic
+from continuedev.libs.llm.anthropic import AnthropicLLM
 
 config = ContinueConfig(
     ...
     models=Models(
-        default=Anthropic(model="claude-2")
+        default=AnthropicLLM(model="claude-2")
     )
 )
 ```
