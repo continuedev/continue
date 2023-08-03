@@ -7,9 +7,12 @@ import {
 } from ".";
 import MarkdownPreview from "@uiw/react-markdown-preview";
 
-const StyledMarkdownPreview = styled(MarkdownPreview)`
+const StyledMarkdownPreview = styled(MarkdownPreview)<{
+  light: boolean | undefined;
+}>`
   pre {
-    background-color: ${secondaryDark};
+    background-color: ${(props) =>
+      props.light ? vscBackground : secondaryDark};
     padding: 1px;
     border-radius: ${defaultBorderRadius};
     border: 0.5px solid white;
@@ -23,11 +26,12 @@ const StyledMarkdownPreview = styled(MarkdownPreview)`
   }
 
   pre > code {
-    background-color: ${secondaryDark};
+    background-color: ${(props) =>
+      props.light ? vscBackground : secondaryDark};
     color: ${vscForeground};
   }
 
-  background-color: ${vscBackground};
+  background-color: ${(props) => (props.light ? "transparent" : vscBackground)};
   font-family: "Lexend", sans-serif;
   font-size: 13px;
   padding: 8px;

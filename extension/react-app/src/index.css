@@ -8,6 +8,10 @@
   --button-color: rgb(113, 28, 59);
   --button-color-hover: rgba(113, 28, 59, 0.667);
   --def-border-radius: 5px;
+
+  /* --vscode-editor-background: rgb(30, 30, 30);
+  --vscode-editor-foreground: rgb(197, 200, 198);
+  --vscode-textBlockQuote-background: rgba(255, 255, 255, 0.05); */
 }
 
 html,

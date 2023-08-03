@@ -174,6 +174,8 @@ export async function startContinuePythonServer() {
       // The current version is already up and running, no need to continue
       console.log("Continue server already downloaded");
       shouldDownload = false;
+    } else {
+      fs.unlinkSync(destination);
     }
   }
 

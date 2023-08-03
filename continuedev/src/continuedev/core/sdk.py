@@ -62,6 +62,7 @@ class ContinueSDK(AbstractContinueSDK):
                 depth=0,
                 active=False
             ))
+            await sdk.ide.setFileOpen(getConfigFilePath())
 
         sdk.models = sdk.config.models
         await sdk.models.start(sdk)
