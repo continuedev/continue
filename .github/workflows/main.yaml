@@ -31,7 +31,7 @@ jobs:
         run: |
           pip install -r continuedev/requirements.txt
 
-      - run: pyinstaller run.py --exclude-module numpy --exclude-module jedi -F
+      - run: pyinstaller run.py --exclude-module numpy --exclude-module jedi -F --add-data 'continuedev:continuedev' --hidden-import=anthropic --hidden-import=github
 
       - name: Set permissions
         run: |
