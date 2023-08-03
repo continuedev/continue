@@ -162,6 +162,20 @@ async function checkOrKillRunningServer(serverUrl: string): Promise<boolean> {
   return false;
 }
 
+export async function downloadFromS3(
+  bucket: string,
+  fileName: string,
+  destination: string
+) {
+  const s3Url = `https://${bucket}.s3.amazonaws.com/${fileName}`;
+  const response = await fetch(s3Url);
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
+  const buffer = await response.buffer();
+  fs.writeFileSync(destination, buffer);
+}
+
 export async function startContinuePythonServer() {
   // Check vscode settings
   const serverUrl = getContinueServerUrl();
@@ -174,22 +188,32 @@ export async function startContinuePythonServer() {
     return;
   }
 
+  // Download the server executable
+  const bucket = "continue-server-binaries";
+  const fileName = `extension/exe/${
+    os.platform() === "win32"
+      ? "windows/run.exe"
+      : os.platform() === "darwin"
+      ? "mac/run"
+      : "linux/run"
+  }`;
+  const destination = path.join(
+    getExtensionUri().fsPath,
+    "server",
+    "exe",
+    "run"
+  );
+  await downloadFromS3(bucket, fileName, destination);
+
   // Get name of the corresponding executable for platform
-  const exeDir = path.join(getExtensionUri().fsPath, "server", "exe");
-  let exePath: string;
-  if (os.platform() === "win32") {
-    exePath = path.join(exeDir, "windows", "run.exe");
-  } else if (os.platform() === "darwin") {
-    exePath = path.join(exeDir, "mac", "run");
-    // Add permissions
-    await runCommand(`chmod +x ${exePath}`);
-    await runCommand(`xattr -dr com.apple.quarantine ${exePath}`);
-  } else {
-    exePath = path.join(exeDir, "linux", "run");
+  if (os.platform() === "darwin") {
+    // Add necessary permissions
+    await runCommand(`chmod +x ${destination}`);
+    await runCommand(`xattr -dr com.apple.quarantine ${destination}`);
   }
 
   // Run the executable
-  const child = spawn(exePath, {
+  const child = spawn(destination, {
     shell: true,
   });
   child.stderr.on("data", (data: any) => {
