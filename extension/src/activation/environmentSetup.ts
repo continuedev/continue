@@ -162,7 +162,7 @@ export async function startContinuePythonServer() {
     getExtensionUri().fsPath,
     "server",
     "exe",
-    "run"
+    "run" + (os.platform() === "win32" ? ".exe" : "")
   );
 
   // First, check if the server is already downloaded
