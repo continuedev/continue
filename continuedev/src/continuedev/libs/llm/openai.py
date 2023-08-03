@@ -26,12 +26,6 @@ MAX_TOKENS_FOR_MODEL = {
 }
 
 
-class AzureInfo(BaseModel):
-    endpoint: str
-    engine: str
-    api_version: str
-
-
 class OpenAI(LLM):
     model: str
     openai_server_info: Optional[OpenAIServerInfo] = None
@@ -40,7 +34,6 @@ class OpenAI(LLM):
     requires_write_log = True
 
     system_message: Optional[str] = None
-    azure_info: Optional[AzureInfo] = None
     write_log: Optional[Callable[[str], None]] = None
     api_key: str = None
 

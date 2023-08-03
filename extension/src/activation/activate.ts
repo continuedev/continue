@@ -57,48 +57,21 @@ export async function activateExtension(context: vscode.ExtensionContext) {
   // Start the server and display loader if taking > 2 seconds
   const sessionIdPromise = (async () => {
     await new Promise((resolve) => {
-      let serverStarted = false;
-
       // Start the server and set serverStarted to true when done
       startContinuePythonServer().then(() => {
-        serverStarted = true;
         resolve(null);
       });
 
-      // Wait for 2 seconds
-      setTimeout(() => {
-        // If the server hasn't started after 2 seconds, show the notification
-        if (!serverStarted) {
-          vscode.window.withProgress(
-            {
-              location: vscode.ProgressLocation.Notification,
-              title:
-                "Starting Continue Server... (it may take a minute to download Python packages)",
-              cancellable: false,
-            },
-            async (progress, token) => {
-              // Wait for the server to start
-              while (!serverStarted) {
-                await new Promise((innerResolve) =>
-                  setTimeout(innerResolve, 1000)
-                );
-              }
-              return Promise.resolve();
-            }
-          );
-
-          vscode.window
-            .showInformationMessage(
-              "Click here to view the server logs, or use the 'continue.viewLogs' VS Code command.",
-              "View Logs"
-            )
-            .then((selection) => {
-              if (selection === "View Logs") {
-                vscode.commands.executeCommand("continue.viewLogs");
-              }
-            });
-        }
-      }, 2000);
+      vscode.window
+        .showInformationMessage(
+          "Click here to view the server logs, or use the 'continue.viewLogs' VS Code command.",
+          "View Logs"
+        )
+        .then((selection) => {
+          if (selection === "View Logs") {
+            vscode.commands.executeCommand("continue.viewLogs");
+          }
+        });
     });
 
     console.log("Continue server started");

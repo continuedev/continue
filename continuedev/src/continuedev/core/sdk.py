@@ -1,7 +1,7 @@
-from functools import cached_property
 import traceback
-from typing import Coroutine, Dict, Literal, Union
+from typing import Coroutine, Union
 import os
+import importlib
 
 from ..plugins.steps.core.core import DefaultModelEditCodeStep
 from ..models.main import Range
@@ -46,7 +46,8 @@ class ContinueSDK(AbstractContinueSDK):
             config = sdk._load_config_dot_py()
             sdk.config = config
         except Exception as e:
-            logger.error(f"Failed to load config.py: {e}")
+            logger.error(
+                f"Failed to load config.py: {traceback.format_exception(e)}")
 
             sdk.config = ContinueConfig(
             ) if sdk._last_valid_config is None else sdk._last_valid_config
@@ -54,7 +55,7 @@ class ContinueSDK(AbstractContinueSDK):
             formatted_err = '\n'.join(traceback.format_exception(e))
             msg_step = MessageStep(
                 name="Invalid Continue Config File", message=formatted_err)
-            msg_step.description = f"Falling back to default config settings.\n```\n{formatted_err}\n```\n\nIt's possible this error was caused by an update to the Continue config format. If you'd like to see the new recommended default `config.py`, check [here](https://github.com/continuedev/continue/blob/main/continuedev/src/continuedev/libs/constants/default_config.py.txt)."
+            msg_step.description = f"Falling back to default config settings.\n```\n{formatted_err}\n```\n\nIt's possible this error was caused by an update to the Continue config format. If you'd like to see the new recommended default `config.py`, check [here](https://github.com/continuedev/continue/blob/main/continuedev/src/continuedev/libs/constants/default_config.py)."
             sdk.history.add_node(HistoryNode(
                 step=msg_step,
                 observation=None,

@@ -1,6 +1,11 @@
 import os
-
 from ..constants.main import CONTINUE_SESSIONS_FOLDER, CONTINUE_GLOBAL_FOLDER, CONTINUE_SERVER_FOLDER
+from ..constants.default_config import default_config
+
+
+def find_data_file(filename):
+    datadir = os.path.dirname(__file__)
+    return os.path.abspath(os.path.join(datadir, filename))
 
 
 def getGlobalFolderPath():
@@ -27,21 +32,24 @@ def getSessionFilePath(session_id: str):
     return path
 
 
-def getDefaultConfigFile() -> str:
-    current_path = os.path.dirname(os.path.realpath(__file__))
-    config_path = os.path.join(
-        current_path, "..", "constants", "default_config.py.txt")
-    with open(config_path, 'r') as f:
-        return f.read()
-
-
 def getConfigFilePath() -> str:
     path = os.path.join(getGlobalFolderPath(), "config.py")
     os.makedirs(os.path.dirname(path), exist_ok=True)
 
     if not os.path.exists(path):
         with open(path, 'w') as f:
-            f.write(getDefaultConfigFile())
+            f.write(default_config)
+    else:
+        with open(path, 'r') as f:
+            existing_content = f.read()
+
+        if existing_content.strip() == "":
+            with open(path, 'w') as f:
+                f.write(default_config)
+        elif " continuedev.core" in existing_content:
+            with open(path, 'w') as f:
+                f.write(existing_content.replace(" continuedev.",
+                                                 " continuedev.src.continuedev."))
 
     return path
 

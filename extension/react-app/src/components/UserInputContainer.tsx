@@ -3,7 +3,7 @@ import ReactMarkdown from "react-markdown";
 import styled from "styled-components";
 import { buttonColor, secondaryDark, vscBackground } from ".";
 import HeaderButtonWithText from "./HeaderButtonWithText";
-import { Play, XMark } from "@styled-icons/heroicons-outline";
+import { XMarkIcon } from "@heroicons/react/24/outline";
 import { RootStore } from "../redux/store";
 import { useSelector } from "react-redux";
 import { HistoryNode } from "../../../schema/HistoryNode";
@@ -37,7 +37,7 @@ const UserInputContainer = (props: UserInputContainerProps) => {
           }}
           text="Delete"
         >
-          <XMark size="1.6em" />
+          <XMarkIcon width="1.5em" height="1.5em" />
         </HeaderButtonWithText>
       </div>
     </StyledDiv>

@@ -239,20 +239,17 @@
     "esbuild-watch": "npm run esbuild-base -- --sourcemap --watch",
     "test-compile": "tsc -p ./",
     "clientgen": "rm -rf src/client/ && npx @openapitools/openapi-generator-cli generate -i ../schema/openapi.json -g typescript-fetch -o src/client/ --additional-properties=supportsES6=true,npmVersion=8.19.2,typescriptThreePlus=true",
-    "typegen": "node scripts/typegen.js",
     "rebuild": "electron-rebuild -v 19.1.8 node-pty",
     "watch": "tsc -watch -p ./",
     "pretest": "npm run compile && npm run lint",
     "lint": "eslint src --ext ts",
     "test": "node ./out/test/runTest.js",
     "jest": "jest --config ./jest.config.js",
-    "package": "mkdir -p ./build && vsce package --out ./build",
-    "full-package": "cd ../continuedev && poetry install && poetry build && cp ./dist/continuedev-0.1.2-py3-none-any.whl ../extension/server/continuedev-0.1.2-py3-none-any.whl && cd ../extension && npm install && npm run typegen && npm run clientgen && cd react-app && npm install && npm run build && cd .. && npm run package",
-    "install-extension": "code --install-extension ./build/continue-0.0.8.vsix",
-    "uninstall": "code --uninstall-extension .continue",
-    "reinstall": "rm -rf ./build && npm run package && npm run uninstall && npm run install-extension"
+    "typegen": "node scripts/typegen.js",
+    "package": "npm install && npm run typegen && npm run clientgen && cd react-app && npm install && npm run build && cd .. && mkdir -p ./build && vsce package --out ./build"
   },
   "devDependencies": {
+    "@nestjs/common": "^8.4.7",
     "@openapitools/openapi-generator-cli": "^2.5.2",
     "@types/glob": "^8.0.0",
     "@types/jest": "^29.5.2",
@@ -260,7 +257,6 @@
     "@types/node": "16.x",
     "@types/node-fetch": "^2.6.2",
     "@types/react-dom": "^18.2.4",
-    "@types/styled-components": "^5.1.26",
     "@types/vscode": "1.67",
     "@types/ws": "^8.5.4",
     "@typescript-eslint/eslint-plugin": "^5.45.0",
@@ -274,15 +270,12 @@
     "mocha": "^10.1.0",
     "ts-jest": "^29.1.1",
     "typescript": "^4.9.3",
+    "vite": "^4.3.9",
     "vsce": "^2.15.0"
   },
   "dependencies": {
     "@electron/rebuild": "^3.2.10",
-    "@nestjs/common": "^8.4.7",
     "@reduxjs/toolkit": "^1.9.3",
-    "@styled-icons/heroicons-outline": "^10.47.0",
-    "@styled-icons/heroicons-solid": "^10.47.0",
-    "@vitejs/plugin-react-swc": "^3.3.2",
     "axios": "^1.2.5",
     "downshift": "^7.6.0",
     "fkill": "^8.1.0",
@@ -293,8 +286,10 @@
     "react-redux": "^8.0.5",
     "strip-ansi": "^7.1.0",
     "tailwindcss": "^3.3.2",
-    "vite": "^4.3.9",
     "vscode-languageclient": "^8.0.2",
     "ws": "^8.13.0"
+  },
+  "optionalDependencies": {
+    "@esbuild/android-arm": "^0.18.17"
   }
 }

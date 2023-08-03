@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import styled from "styled-components";
 import { defaultBorderRadius, secondaryDark, vscBackground } from ".";
 
-import { Clipboard, CheckCircle } from "@styled-icons/heroicons-outline";
+import { ClipboardIcon, CheckCircleIcon } from "@heroicons/react/24/outline";
 
 import StyledCode from "./StyledCode";
 
@@ -52,9 +52,13 @@ function CopyButton(props: { textToCopy: string; visible: boolean }) {
         }}
       >
         {clicked ? (
-          <CheckCircle color="#00ff00" size="1.5em" />
+          <CheckCircleIcon color="#00ff00" width="1.5em" height="1.5em" />
         ) : (
-          <Clipboard color={hovered ? "#00ff00" : "white"} size="1.5em" />
+          <ClipboardIcon
+            color={hovered ? "#00ff00" : "white"}
+            width="1.5em"
+            height="1.5em"
+          />
         )}
       </StyledCopyButton>
     </>

@@ -7,7 +7,7 @@ export function getContinueServerUrl() {
     extensionContext &&
     extensionContext.extensionMode === vscode.ExtensionMode.Development
   ) {
-    return "http://localhost:8001";
+    // return "http://localhost:8001";
   }
   return (
     vscode.workspace.getConfiguration("continue").get<string>("serverUrl") ||

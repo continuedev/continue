@@ -53,7 +53,7 @@ def main():
     resp = run("cd ../../continuedev; poetry install; poetry run typegen")
 
     resp = run(
-        "cd ..; npm i; cd react-app; npm i; cd ..; npm run full-package")
+        "cd ..; npm i; cd react-app; npm i; cd ..; npm run package")
 
     if resp.stderr:
         print("Error packaging the extension. Please try again.")
