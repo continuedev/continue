@@ -83,23 +83,23 @@ export function getExtensionVersion() {
 // Returns whether a server of the current version is already running
 async function checkOrKillRunningServer(serverUrl: string): Promise<boolean> {
   console.log("Checking if server is old version");
+  const serverRunning = await checkServerRunning(serverUrl);
   // Kill the server if it is running an old version
   if (fs.existsSync(serverVersionPath())) {
     const serverVersion = fs.readFileSync(serverVersionPath(), "utf8");
-    if (
-      serverVersion === getExtensionVersion() &&
-      (await checkServerRunning(serverUrl))
-    ) {
+    if (serverVersion === getExtensionVersion() && serverRunning) {
       // The current version is already up and running, no need to continue
       return true;
     }
   }
-  console.log("Killing old server...");
-  try {
-    await fkill(":65432");
-  } catch (e: any) {
-    if (!e.message.includes("Process doesn't exist")) {
-      console.log("Failed to kill old server:", e);
+  if (serverRunning) {
+    console.log("Killing old server...");
+    try {
+      await fkill(":65432");
+    } catch (e: any) {
+      if (!e.message.includes("Process doesn't exist")) {
+        console.log("Failed to kill old server:", e);
+      }
     }
   }
   return false;

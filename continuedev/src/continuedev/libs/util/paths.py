@@ -36,16 +36,20 @@ def getConfigFilePath() -> str:
     path = os.path.join(getGlobalFolderPath(), "config.py")
     os.makedirs(os.path.dirname(path), exist_ok=True)
 
-    with open(path, 'r') as f:
-        existing_content = f.read()
-
-    if not os.path.exists(path) or existing_content.strip() == "":
+    if not os.path.exists(path):
         with open(path, 'w') as f:
             f.write(default_config)
-    elif " continuedev.core" in existing_content:
-        with open(path, 'w') as f:
-            f.write(existing_content.replace(" continuedev.",
-                                             " continuedev.src.continuedev."))
+    else:
+        with open(path, 'r') as f:
+            existing_content = f.read()
+
+        if existing_content.strip() == "":
+            with open(path, 'w') as f:
+                f.write(default_config)
+        elif " continuedev.core" in existing_content:
+            with open(path, 'w') as f:
+                f.write(existing_content.replace(" continuedev.",
+                                                 " continuedev.src.continuedev."))
 
     return path
 
