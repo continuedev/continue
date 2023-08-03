@@ -39,6 +39,12 @@ To get a completely fresh install of Continue, you can delete the `~/.continue` 
 
 If none of these work, you can start the server yourself as is explained here: [Running the Continue server manually](https://continue.dev/docs/how-continue-works)
 
+## Check the server logs
+
+1. `cmd+shift+p` (MacOS) / `ctrl+shift+p` (Windows)
+2. Search for and then select "Developer: Toggle Developer Tools"
+3. Read the `continue.log` file that has opened
+
 ## Check the console logs
 
 If your Continue server is not setting up, try checking the console logs:
