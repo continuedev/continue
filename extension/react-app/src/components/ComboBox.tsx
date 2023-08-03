@@ -255,6 +255,10 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
     const handler = (event: any) => {
       if (event.data.type === "focusContinueInput") {
         inputRef.current!.focus();
+      } else if (event.data.type === "focusContinueInputWithEdit") {
+        inputRef.current!.focus();
+
+        inputRef.current!.value = "/edit";
       }
     };
     window.addEventListener("message", handler);

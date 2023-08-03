@@ -111,6 +111,16 @@
         "command": "continue.viewLogs",
         "category": "Continue",
         "title": "View Logs"
+      },
+      {
+        "command": "continue.toggleAuxiliaryBar",
+        "category": "Continue",
+        "title": "Toggle Auxiliary Bar"
+      },
+      {
+        "command": "continue.focusContinueInputWithEdit",
+        "category": "Continue",
+        "title": "Focus Continue Input With Edit"
       }
     ],
     "keybindings": [
@@ -118,6 +128,11 @@
         "command": "continue.focusContinueInput",
         "mac": "cmd+m",
         "key": "ctrl+m"
+      },
+      {
+        "command": "continue.focusContinueInputWithEdit",
+        "mac": "cmd+shift+m",
+        "key": "ctrl+shift+m"
       },
       {
         "command": "continue.suggestionDown",
@@ -148,6 +163,11 @@
         "command": "continue.quickTextEntry",
         "mac": "cmd+shift+l",
         "key": "ctrl+shift+l"
+      },
+      {
+        "command": "continue.toggleAuxiliaryBar",
+        "mac": "option+cmd+m",
+        "key": "alt+ctrl+m"
       }
     ],
     "menus": {

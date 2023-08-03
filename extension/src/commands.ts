@@ -52,6 +52,16 @@ const commandsMap: { [command: string]: (...args: any) => any } = {
     }
     focusedOnContinueInput = !focusedOnContinueInput;
   },
+  "continue.focusContinueInputWithEdit": async () => {
+    vscode.commands.executeCommand("continue.continueGUIView.focus");
+    debugPanelWebview?.postMessage({
+      type: "focusContinueInputWithEdit",
+    });
+    focusedOnContinueInput = true;
+  },
+  "continue.toggleAuxiliaryBar": () => {
+    vscode.commands.executeCommand("workbench.action.toggleAuxiliaryBar");
+  },
   "continue.quickTextEntry": async () => {
     const text = await vscode.window.showInputBox({
       placeHolder:
