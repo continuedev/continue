@@ -7,9 +7,7 @@ import {
 } from ".";
 import MarkdownPreview from "@uiw/react-markdown-preview";
 
-const StyledMarkdownPreview = styled(MarkdownPreview)<{
-  light: boolean | undefined;
-}>`
+const StyledMarkdownPreview = styled(MarkdownPreview)<{ light?: boolean }>`
   pre {
     background-color: ${(props) =>
       props.light ? vscBackground : secondaryDark};
