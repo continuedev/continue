@@ -41,7 +41,7 @@ These classes support any models available through the OpenAI API, assuming your
 Import the `AnthropicLLM` LLM class and set it as the default model:
 
 ```python
-from continuedev.libs.llm.anthropic import AnthropicLLM
+from continuedev.src.continuedev.libs.llm.anthropic import AnthropicLLM
 
 config = ContinueConfig(
     ...
@@ -58,7 +58,7 @@ Continue will automatically prompt you for your Anthropic API key, which must ha
 [Ollama](https://ollama.ai/) is a Mac application that makes it easy to locally run open-source models, including Llama-2. Download the app from the website, and it will walk you through setup in a couple of minutes. You can also read more in their [README](https://github.com/jmorganca/ollama). Continue can then be configured to use the `Ollama` LLM class:
 
 ```python
-from continuedev.libs.llm.ollama import Ollama
+from continuedev.src.continuedev.libs.llm.ollama import Ollama
 
 config = ContinueConfig(
     ...
@@ -72,7 +72,18 @@ config = ContinueConfig(
 
 See our [5 minute quickstart](https://github.com/continuedev/ggml-server-example) to run any model locally with ggml. While these models don't yet perform as well, they are free, entirely private, and run offline.
 
-Once the model is running on localhost:8000, import the `GGML` LLM class from `continuedev.libs.llm.ggml` and set `default=GGML(max_context_length=2048)`.
+Once the model is running on localhost:8000, change `~/.continue/config.py` to look like this:
+
+```python
+from continuedev.src.continuedev.libs.llm.ggml import GGML
+
+config = ContinueConfig(
+    ...
+    models=Models(
+        default=GGML(max_context_length=2048, server_url="http://localhost:8000")
+    )
+)
+```
 
 ### Self-hosting an open-source model
 
@@ -85,7 +96,7 @@ If by chance the provider has the exact same API interface as OpenAI, the `GGML`
 If you'd like to use OpenAI models but are concerned about privacy, you can use the Azure OpenAI service, which is GDPR and HIPAA compliant. After applying for access [here](https://azure.microsoft.com/en-us/products/ai-services/openai-service), you will typically hear back within only a few days. Once you have access, instantiate the model like so:
 
 ```python
-from continuedev.libs.llm.openai import OpenAI, OpenAIServerInfo
+from continuedev.src.continuedev.libs.llm.openai import OpenAI, OpenAIServerInfo
 
 config = ContinueConfig(
     ...
@@ -110,7 +121,7 @@ You can write your own system message, a set of instructions that will always be
 
 System messages can also reference files. For example, if there is a markdown file (e.g. at `/Users/nate/Documents/docs/reference.md`) you'd like the LLM to know about, you can reference it with [Mustache](http://mustache.github.io/mustache.5.html) templating like this: "Please reference this documentation: {{ Users/nate/Documents/docs/reference.md }}". As of now, you must use an absolute path.
 
-## Custom Commands
+## Custom Commands with Natural Language Prompts
 
 You can add custom slash commands by adding a `CustomCommand` object to the `custom_commands` property. Each `CustomCommand` has
 
@@ -136,6 +147,39 @@ config = ContinueConfig(
             - Anything else that looks wrong
 
             Once you find an error, please explain it as clearly as possible, but without using extra words. For example, instead of saying "I think there is a syntax error on line 5", you should say "Syntax error on line 5". Give your answer as one bullet point per mistake found.""")
+        )
+    ]
+)
+```
+
+## Custom Slash Commands
+
+If you want to go a step further than writing custom commands with natural language, you can use a `SlashCommand` to run an arbitrary Python function, with access to the Continue SDK. To do this, create a subclass of `Step` with the `run` method implemented, and this is the code that will run when you call the command. For example, here is a step that generates a commit message:
+
+```python
+class CommitMessageStep(Step):
+    async def run(self, sdk: ContinueSDK):
+
+        # Get the root directory of the workspace
+        dir = sdk.ide.workspace_directory
+
+        # Run git diff in that directory
+        diff = subprocess.check_output(
+            ["git", "diff"], cwd=dir).decode("utf-8")
+
+        # Ask the LLM to write a commit message,
+        # and set it as the description of this step
+        self.description = await sdk.models.default.complete(
+            f"{diff}\n\nWrite a short, specific (less than 50 chars) commit message about the above changes:")
+
+config=ContinueConfig(
+    ...
+    slash_commands=[
+        ...
+        SlashCommand(
+            name="commit",
+            description="Generate a commit message for the current changes",
+            step=CommitMessageStep,
         )
     ]
 )
