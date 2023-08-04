@@ -1,7 +1,7 @@
 import styled from "styled-components";
 import {
   defaultBorderRadius,
-  vscBackground,
+  secondaryDark,
   vscForeground,
 } from "../components";
 import Loader from "../components/Loader";
@@ -35,6 +35,24 @@ import {
 
 const TopGUIDiv = styled.div`
   overflow: hidden;
+`;
+
+const BottomMessageDiv = styled.div<{ displayOnBottom: boolean }>`
+  position: fixed;
+  bottom: ${(props) => (props.displayOnBottom ? "50px" : undefined)};
+  top: ${(props) => (props.displayOnBottom ? undefined : "50px")};
+  left: 0;
+  right: 0;
+  margin: 8px;
+  margin-top: 0;
+  background-color: ${secondaryDark};
+  color: ${vscForeground};
+  border-radius: ${defaultBorderRadius};
+  padding: 12px;
+  z-index: 100;
+  box-shadow: 0px 0px 2px 0px ${vscForeground};
+  max-height: 50vh;
+  overflow: scroll;
 `;
 
 const UserInputQueueItem = styled.div`
@@ -463,7 +481,8 @@ function GUI(props: GUIProps) {
         />
         <ContinueButton onClick={onMainTextInput} />
       </TopGUIDiv>
-      <div
+      <BottomMessageDiv
+        displayOnBottom={displayBottomMessageOnBottom}
         onMouseEnter={() => {
           dispatch(setBottomMessageCloseTimeout(undefined));
         }}
@@ -472,27 +491,10 @@ function GUI(props: GUIProps) {
             dispatch(setBottomMessage(undefined));
           }
         }}
-        style={{
-          position: "fixed",
-          bottom: displayBottomMessageOnBottom ? "50px" : undefined,
-          top: displayBottomMessageOnBottom ? undefined : "50px",
-          left: "0",
-          right: "0",
-          margin: "8px",
-          marginTop: "0px",
-          backgroundColor: vscBackground,
-          color: vscForeground,
-          borderRadius: defaultBorderRadius,
-          padding: "12px",
-          zIndex: 100,
-          boxShadow: `0px 0px 4px 0px ${vscForeground}`,
-          maxHeight: "50vh",
-          overflow: "scroll",
-        }}
         hidden={!bottomMessage}
       >
         {bottomMessage}
-      </div>
+      </BottomMessageDiv>
       <Footer dataSwitchChecked={dataSwitchChecked}>
         {vscMediaUrl && (
           <a

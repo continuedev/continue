@@ -244,6 +244,13 @@ export function setupDebugPanel(
         setFocusedOnContinueInput(false);
         break;
       }
+      case "focusEditor": {
+        setFocusedOnContinueInput(false);
+        vscode.commands.executeCommand(
+          "workbench.action.focusActiveEditorGroup"
+        );
+        break;
+      }
       case "withProgress": {
         // This message allows withProgress to be used in the webview
         if (data.done) {

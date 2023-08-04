@@ -63,6 +63,14 @@ const HeaderDiv = styled.div<{ error: boolean; loading: boolean }>`
   padding-right: 8px;
 `;
 
+const LeftHeaderSubDiv = styled.div`
+  margin: 8px;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  grid-gap: 2px;
+`;
+
 const ContentDiv = styled.div<{ isUserInput: boolean }>`
   padding: 8px;
   background-color: ${(props) =>
@@ -167,7 +175,7 @@ function StepContainer(props: StepContainerProps) {
             loading={(props.historyNode.active as boolean) || false}
             error={props.historyNode.observation?.error ? true : false}
           >
-            <div className="m-2 flex items-center">
+            <LeftHeaderSubDiv>
               {!isUserInput &&
                 (props.open ? (
                   <ChevronDownIcon width="1.4em" height="1.4em" />
@@ -176,7 +184,7 @@ function StepContainer(props: StepContainerProps) {
                 ))}
               {props.historyNode.observation?.title ||
                 (props.historyNode.step.name as any)}
-            </div>
+            </LeftHeaderSubDiv>
             {/* <HeaderButton
               onClick={(e) => {
                 e.stopPropagation();

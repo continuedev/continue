@@ -21,6 +21,8 @@ const StyledDiv = styled.div`
   align-items: center;
   border-bottom: 1px solid ${vscBackground};
   padding: 8px;
+  padding-top: 4px;
+  padding-bottom: 4px;
 `;
 
 const DeleteButtonDiv = styled.div`
@@ -35,7 +37,7 @@ const UserInputContainer = (props: UserInputContainerProps) => {
       <StyledMarkdownPreview
         light={true}
         source={props.children}
-        className="mr-5"
+        className="mr-6"
       />
       {/* <ReactMarkdown children={props.children} className="w-fit mr-10" /> */}
       <DeleteButtonDiv>

@@ -219,23 +219,10 @@ export async function startContinuePythonServer() {
   // Run the executable
   console.log("Starting Continue server...");
   const child = spawn(destination, {
-    shell: true,
+    detached: true,
+    stdio: "ignore",
   });
-  child.stderr.on("data", (data: any) => {
-    console.log(data.toString());
-  });
-
-  child.on("error", (error: any) => {
-    console.log(`error: ${error.message}`);
-  });
-
-  child.on("close", (code: any) => {
-    console.log(`child process exited with code ${code}`);
-  });
-
-  child.stdout.on("data", (data: any) => {
-    console.log(`stdout: ${data.toString()}`);
-  });
+  child.unref();
 
   // Write the current version of vscode extension to a file called server_version.txt
   fs.writeFileSync(serverVersionPath(), getExtensionVersion());

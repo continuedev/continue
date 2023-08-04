@@ -379,6 +379,14 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
                   Math.min(prev + 1, history.length)
                 );
                 setCurrentlyInContextQuery(false);
+              } else if (event.key === "Escape") {
+                setCurrentlyInContextQuery(false);
+                if (downshiftProps.isOpen) {
+                  downshiftProps.closeMenu();
+                } else {
+                  // Move cursor back over to the editor
+                  postVscMessage("focusEditor", {});
+                }
               }
             },
             onClick: () => {
