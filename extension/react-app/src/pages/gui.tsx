@@ -536,14 +536,14 @@ If you already have an LLM deployed on your own infrastructure, or would like to
           }}
           text="Clear"
         >
-          <TrashIcon width="1.5em" height="1.5em" />
+          <TrashIcon width="1.4em" height="1.4em" />
         </HeaderButtonWithText>
         <a
           href="https://continue.dev/docs/how-to-use-continue"
           className="no-underline"
         >
           <HeaderButtonWithText text="Docs">
-            <BookOpenIcon width="1.5em" height="1.5em" />
+            <BookOpenIcon width="1.4em" height="1.4em" />
           </HeaderButtonWithText>
         </a>
         <HeaderButtonWithText
@@ -557,7 +557,7 @@ If you already have an LLM deployed on your own infrastructure, or would like to
           }}
           text="Feedback"
         >
-          <ChatBubbleOvalLeftEllipsisIcon width="1.5em" height="1.5em" />
+          <ChatBubbleOvalLeftEllipsisIcon width="1.4em" height="1.4em" />
         </HeaderButtonWithText>
       </Footer>
     </>

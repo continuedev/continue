@@ -273,6 +273,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
         {props.selectedContextItems.map((item, idx) => {
           return (
             <PillButton
+              areMultipleItems={props.selectedContextItems.length > 1}
               key={`${item.description.id.item_id}${idx}`}
               item={item}
               warning={
@@ -301,7 +302,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
                 props.onToggleAddContext();
               }}
             >
-              <DocumentPlusIcon width="1.5em" height="1.5em" />
+              <DocumentPlusIcon width="1.4em" height="1.4em" />
             </HeaderButtonWithText>
           ))}
       </div>

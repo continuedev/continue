@@ -28,8 +28,11 @@ const Button = styled.button`
   color: ${vscForeground};
   background-color: ${secondaryDark};
   border-radius: ${defaultBorderRadius};
-  padding: 8px;
+  padding: 4px;
+  padding-left: 8px;
+  padding-right: 8px;
   overflow: hidden;
+  font-size: 13px;
 
   cursor: pointer;
 `;
@@ -50,7 +53,6 @@ const GridDiv = styled.div`
 
 const ButtonDiv = styled.div<{ backgroundColor: string }>`
   background-color: ${secondaryDark};
-  padding: 3px;
   height: 100%;
   display: flex;
   align-items: center;
@@ -81,6 +83,7 @@ interface PillButtonProps {
   warning?: string;
   index: number;
   addingHighlightedCode?: boolean;
+  areMultipleItems?: boolean;
 }
 
 const PillButton = (props: PillButtonProps) => {
@@ -134,8 +137,8 @@ const PillButton = (props: PillButtonProps) => {
             position: "relative",
             borderColor: props.warning
               ? "red"
-              : props.item.editing
-              ? "#8800aa"
+              : props.item.editing && props.areMultipleItems
+              ? vscForeground
               : "transparent",
             borderWidth: "1px",
             borderStyle: "solid",

@@ -170,9 +170,9 @@ function StepContainer(props: StepContainerProps) {
             <div className="m-2 flex items-center">
               {!isUserInput &&
                 (props.open ? (
-                  <ChevronDownIcon width="1.5em" height="1.5em" />
+                  <ChevronDownIcon width="1.4em" height="1.4em" />
                 ) : (
-                  <ChevronRightIcon width="1.5em" height="1.5em" />
+                  <ChevronRightIcon width="1.4em" height="1.4em" />
                 ))}
               {props.historyNode.observation?.title ||
                 (props.historyNode.step.name as any)}
@@ -195,7 +195,7 @@ function StepContainer(props: StepContainerProps) {
                     client?.showLogsAtIndex(props.index);
                   }}
                 >
-                  <MagnifyingGlassIcon width="1.5em" height="1.5em" />
+                  <MagnifyingGlassIcon width="1.4em" height="1.4em" />
                 </HeaderButtonWithText>
               )}
               <HeaderButtonWithText
@@ -211,14 +211,14 @@ function StepContainer(props: StepContainerProps) {
               >
                 {props.historyNode.active ? (
                   <StopCircleIcon
-                    width="1.5em"
-                    height="1.5em"
+                    width="1.4em"
+                    height="1.4em"
                     onClick={props.onDelete}
                   />
                 ) : (
                   <XMarkIcon
-                    width="1.5em"
-                    height="1.5em"
+                    width="1.4em"
+                    height="1.4em"
                     onClick={props.onDelete}
                   />
                 )}
@@ -232,8 +232,8 @@ function StepContainer(props: StepContainerProps) {
                   }}
                 >
                   <ArrowPathIcon
-                    width="1.5em"
-                    height="1.5em"
+                    width="1.4em"
+                    height="1.4em"
                     onClick={props.onRetry}
                   />
                 </HeaderButtonWithText>
