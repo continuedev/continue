@@ -84,7 +84,33 @@ interface PillButtonProps {
   index: number;
   addingHighlightedCode?: boolean;
   areMultipleItems?: boolean;
+  onDelete?: () => void;
 }
+
+interface StyledButtonProps {
+  warning: string;
+  editing?: boolean;
+  areMultipleItems?: boolean;
+}
+
+const StyledButton = styled(Button)<StyledButtonProps>`
+  position: relative;
+  border-color: ${(props) =>
+    props.warning
+      ? "red"
+      : props.editing && props.areMultipleItems
+      ? vscForeground
+      : "transparent"};
+  border-width: 1px;
+  border-style: solid;
+
+  &:focus {
+    outline: none;
+    border-color: red;
+    border-width: 1px;
+    border-style: solid;
+  }
+`;
 
 const PillButton = (props: PillButtonProps) => {
   const [isHovered, setIsHovered] = useState(false);
@@ -132,17 +158,10 @@ const PillButton = (props: PillButtonProps) => {
   return (
     <>
       <div style={{ position: "relative" }}>
-        <Button
-          style={{
-            position: "relative",
-            borderColor: props.warning
-              ? "red"
-              : props.item.editing && props.areMultipleItems
-              ? vscForeground
-              : "transparent",
-            borderWidth: "1px",
-            borderStyle: "solid",
-          }}
+        <StyledButton
+          areMultipleItems={props.areMultipleItems}
+          warning={props.warning || ""}
+          editing={props.item.editing}
           onMouseEnter={() => {
             setIsHovered(true);
             if (props.onHover) {
@@ -158,7 +177,7 @@ const PillButton = (props: PillButtonProps) => {
           className="pill-button"
           onKeyDown={(e) => {
             if (e.key === "Backspace") {
-              client?.deleteContextWithIds([props.item.description.id]);
+              props.onDelete?.();
             }
           }}
         >
@@ -202,7 +221,7 @@ const PillButton = (props: PillButtonProps) => {
             </GridDiv>
           )}
           {props.item.description.name}
-        </Button>
+        </StyledButton>
         <StyledTooltip id={`edit-${props.index}`}>
           {props.item.editing
             ? "Editing this section (with entire file as context)"

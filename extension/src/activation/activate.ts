@@ -61,17 +61,6 @@ export async function activateExtension(context: vscode.ExtensionContext) {
       startContinuePythonServer().then(() => {
         resolve(null);
       });
-
-      vscode.window
-        .showInformationMessage(
-          "Click here to view the server logs, or use the 'continue.viewLogs' VS Code command.",
-          "View Logs"
-        )
-        .then((selection) => {
-          if (selection === "View Logs") {
-            vscode.commands.executeCommand("continue.viewLogs");
-          }
-        });
     });
 
     console.log("Continue server started");

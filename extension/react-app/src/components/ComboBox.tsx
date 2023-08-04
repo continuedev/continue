@@ -244,7 +244,9 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
       (item) => item === document.activeElement
     );
     console.log(focusedItemIndex, focusableItems);
-    if (focusedItemIndex !== -1) {
+    if (focusedItemIndex === focusableItemsArray.length - 1) {
+      inputRef.current?.focus();
+    } else if (focusedItemIndex !== -1) {
       const nextItem =
         focusableItemsArray[
           (focusedItemIndex + 1) % focusableItemsArray.length
@@ -256,15 +258,27 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
     }
   };
 
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const listener = (e: any) => {
+        if (e.key === "Tab") {
+          e.preventDefault();
+          handleTabPressed();
+        }
+      };
+      window.addEventListener("keydown", listener);
+      return () => {
+        window.removeEventListener("keydown", listener);
+      };
+    }
+  }, []);
+
   const [metaKeyPressed, setMetaKeyPressed] = useState(false);
   const [focused, setFocused] = useState(false);
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Meta") {
         setMetaKeyPressed(true);
-      } else if (e.key === "Tab") {
-        e.preventDefault();
-        handleTabPressed();
       }
     };
     const handleKeyUp = (e: KeyboardEvent) => {
@@ -319,6 +333,10 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
               }
               addingHighlightedCode={props.addingHighlightedCode}
               index={idx}
+              onDelete={() => {
+                client?.deleteContextWithIds([item.description.id]);
+                inputRef.current?.focus();
+              }}
             />
           );
         })}
@@ -337,7 +355,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
               onClick={() => {
                 props.onToggleAddContext();
               }}
-              className="pill-button"
+              className="pill-button focus:outline-none focus:border-red-600 focus:border focus:border-solid"
               onKeyDown={(e: KeyboardEvent) => {
                 e.preventDefault();
                 if (e.key === "Enter") {
@@ -395,8 +413,6 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
                 event.preventDefault();
               } else if (event.key === "Tab") {
                 (event.nativeEvent as any).preventDownshiftDefault = true;
-                event.preventDefault();
-                handleTabPressed();
               } else if (
                 (event.key === "ArrowUp" || event.key === "ArrowDown") &&
                 event.currentTarget.value.split("\n").length > 1
