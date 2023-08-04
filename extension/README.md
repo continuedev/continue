@@ -36,6 +36,8 @@ By default, Continue uses GPT-4 and GPT-3.5-turbo via the OpenAI API.
 
 You can adjust the config to use different LLMs, including local, private models. Read more [here](https://continue.dev/docs/customization#change-the-default-llm).
 
+To see the keyboard shortcuts offered by Continue, see the "Feature Contributions" tab above.
+
 # Troubleshooting
 
 The Continue VS Code extension is currently in beta. It will attempt to start the Continue Python server locally for you, but sometimes this will fail, causing the "Starting Continue server..." not to disappear, or other hangups. While we are working on fixes to all of these problems, read here for common solutions:

@@ -75,17 +75,17 @@
       {
         "command": "continue.quickFix",
         "category": "Continue",
-        "title": "Quick Fix"
+        "title": "Quick Fix with Continue"
       },
       {
         "command": "continue.viewLogs",
         "category": "Continue",
-        "title": "View Logs"
+        "title": "View Continue Server Logs"
       },
       {
         "command": "continue.toggleAuxiliaryBar",
         "category": "Continue",
-        "title": "Toggle Auxiliary Bar"
+        "title": "Toggle Right Sidebar"
       },
       {
         "command": "continue.focusContinueInputWithEdit",
