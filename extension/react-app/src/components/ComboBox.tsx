@@ -223,10 +223,38 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
   const divRef = React.useRef<HTMLDivElement>(null);
   const ulRef = React.useRef<HTMLUListElement>(null);
   const showAbove = () => {
-    return (divRef.current?.getBoundingClientRect().top || 0) > UlMaxHeight;
+    return (
+      (divRef.current?.getBoundingClientRect().top || Number.MAX_SAFE_INTEGER) >
+      UlMaxHeight
+    );
   };
 
   useImperativeHandle(ref, () => downshiftProps, [downshiftProps]);
+
+  const contextItemsDivRef = React.useRef<HTMLDivElement>(null);
+  const handleTabPressed = () => {
+    // Set the focus to the next item in the context items div
+    if (!contextItemsDivRef.current) {
+      return;
+    }
+    const focusableItems =
+      contextItemsDivRef.current.querySelectorAll(".pill-button");
+    const focusableItemsArray = Array.from(focusableItems);
+    const focusedItemIndex = focusableItemsArray.findIndex(
+      (item) => item === document.activeElement
+    );
+    console.log(focusedItemIndex, focusableItems);
+    if (focusedItemIndex !== -1) {
+      const nextItem =
+        focusableItemsArray[
+          (focusedItemIndex + 1) % focusableItemsArray.length
+        ];
+      (nextItem as any)?.focus();
+    } else {
+      const firstItem = focusableItemsArray[0];
+      (firstItem as any)?.focus();
+    }
+  };
 
   const [metaKeyPressed, setMetaKeyPressed] = useState(false);
   const [focused, setFocused] = useState(false);
@@ -234,6 +262,9 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Meta") {
         setMetaKeyPressed(true);
+      } else if (e.key === "Tab") {
+        e.preventDefault();
+        handleTabPressed();
       }
     };
     const handleKeyUp = (e: KeyboardEvent) => {
@@ -271,7 +302,10 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
 
   return (
     <>
-      <div className="px-2 flex gap-2 items-center flex-wrap mt-2">
+      <div
+        className="px-2 flex gap-2 items-center flex-wrap mt-2"
+        ref={contextItemsDivRef}
+      >
         {props.selectedContextItems.map((item, idx) => {
           return (
             <PillButton
@@ -303,6 +337,13 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
               onClick={() => {
                 props.onToggleAddContext();
               }}
+              className="pill-button"
+              onKeyDown={(e: KeyboardEvent) => {
+                e.preventDefault();
+                if (e.key === "Enter") {
+                  props.onToggleAddContext();
+                }
+              }}
             >
               <DocumentPlusIcon width="1.4em" height="1.4em" />
             </HeaderButtonWithText>
@@ -329,10 +370,6 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
               setFocused(true);
               dispatch(setBottomMessage(undefined));
             },
-            onBlur: (e) => {
-              setFocused(false);
-              postVscMessage("blurContinueInput", {});
-            },
             onKeyDown: (event) => {
               dispatch(setBottomMessage(undefined));
               if (event.key === "Enter" && event.shiftKey) {
@@ -356,6 +393,10 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
               } else if (event.key === "Tab" && items.length > 0) {
                 downshiftProps.setInputValue(items[0].name);
                 event.preventDefault();
+              } else if (event.key === "Tab") {
+                (event.nativeEvent as any).preventDownshiftDefault = true;
+                event.preventDefault();
+                handleTabPressed();
               } else if (
                 (event.key === "ArrowUp" || event.key === "ArrowDown") &&
                 event.currentTarget.value.split("\n").length > 1
@@ -383,9 +424,12 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
                 setCurrentlyInContextQuery(false);
               } else if (event.key === "Escape") {
                 setCurrentlyInContextQuery(false);
-                if (downshiftProps.isOpen) {
+                if (downshiftProps.isOpen && items.length > 0) {
                   downshiftProps.closeMenu();
                 } else {
+                  (event.nativeEvent as any).preventDownshiftDefault = true;
+                  // Remove focus from the input
+                  inputRef.current?.blur();
                   // Move cursor back over to the editor
                   postVscMessage("focusEditor", {});
                 }

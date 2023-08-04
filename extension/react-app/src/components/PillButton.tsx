@@ -155,6 +155,12 @@ const PillButton = (props: PillButtonProps) => {
               props.onHover(false);
             }
           }}
+          className="pill-button"
+          onKeyDown={(e) => {
+            if (e.key === "Backspace") {
+              client?.deleteContextWithIds([props.item.description.id]);
+            }
+          }}
         >
           {isHovered && (
             <GridDiv

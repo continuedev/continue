@@ -66,11 +66,13 @@ config = ContinueConfig(
     # Custom commands let you map a prompt to a shortened slash command
     # They are like slash commands, but more easily defined - write just a prompt instead of a Step class
     # Their output will always be in chat form
-    custom_commands=[CustomCommand(
-        name="test",
-        description="This is an example custom command. Use /config to edit it and create more",
-        prompt="Write a comprehensive set of unit tests for the selected code. It should setup, run tests that check for correctness including important edge cases, and teardown. Ensure that the tests are complete and sophisticated. Give the tests just as chat output, don't edit any file.",
-    )],
+    custom_commands=[
+        # CustomCommand(
+        #     name="test",
+        #     description="Write unit tests for the higlighted code",
+        #     prompt="Write a comprehensive set of unit tests for the selected code. It should setup, run tests that check for correctness including important edge cases, and teardown. Ensure that the tests are complete and sophisticated. Give the tests just as chat output, don't edit any file.",
+        # )
+    ],
 
     # Slash commands let you run a Step from a slash command
     slash_commands=[
@@ -86,7 +88,7 @@ config = ContinueConfig(
         ),
         SlashCommand(
             name="config",
-            description="Open the config file to create new and edit existing slash commands",
+            description="Customize Continue - slash commands, LLMs, system message, etc.",
             step=OpenConfigStep,
         ),
         SlashCommand(

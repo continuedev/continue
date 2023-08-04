@@ -243,10 +243,6 @@ export function setupDebugPanel(
         vscode.commands.executeCommand("continue.viewLogs");
         break;
       }
-      case "blurContinueInput": {
-        setFocusedOnContinueInput(false);
-        break;
-      }
       case "focusEditor": {
         setFocusedOnContinueInput(false);
         vscode.commands.executeCommand(
