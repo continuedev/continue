@@ -1,4 +1,3 @@
-console.log("Websocket import");
 const WebSocket = require("ws");
 import fetch from "node-fetch";
 

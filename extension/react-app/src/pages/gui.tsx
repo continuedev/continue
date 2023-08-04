@@ -32,6 +32,7 @@ import {
   setBottomMessage,
   setBottomMessageCloseTimeout,
 } from "../redux/slices/uiStateSlice";
+import RingLoader from "../components/RingLoader";
 
 const TopGUIDiv = styled.div`
   overflow: hidden;
@@ -402,11 +403,31 @@ function GUI(props: GUIProps) {
       >
         {typeof client === "undefined" && (
           <>
-            <Loader />
-            <p style={{ textAlign: "center" }}>Loading Continue server...</p>
-            {/* <p style={{ textAlign: "center" }}>
-              Make sure you have a folder opened in VS Code
-            </p> */}
+            <RingLoader />
+            <p
+              style={{
+                textAlign: "center",
+                margin: "0px",
+                fontSize: "14px",
+              }}
+            >
+              Continue Server Starting
+            </p>
+            <p
+              style={{
+                margin: "auto",
+                textAlign: "center",
+                marginTop: "4px",
+                fontSize: "12px",
+                cursor: "pointer",
+                opacity: 0.7,
+              }}
+              onClick={() => {
+                postVscMessage("toggleDevTools", {});
+              }}
+            >
+              <u>Click to view logs</u>
+            </p>
           </>
         )}
         {history?.timeline.map((node: HistoryNode, index: number) => {

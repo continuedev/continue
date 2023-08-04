@@ -413,7 +413,7 @@ class IdeProtocolClient {
           clearInterval(interval);
           resolve(null);
         } else {
-          console.log("Websocket not yet open, trying again...");
+          // console.log("Websocket not yet open, trying again...");
         }
       }, 1000);
     });

@@ -25,8 +25,11 @@ function useContinueGUIProtocol(useVscodeMessagePassing: boolean = true) {
       "/gui/ws?session_id=" +
       encodeURIComponent(sessionId);
 
-    console.log("Creating websocket", serverUrlWithSessionId);
-    console.log("Using vscode message passing", useVscodeMessagePassing);
+    console.log(
+      "Creating GUI websocket",
+      serverUrlWithSessionId,
+      useVscodeMessagePassing
+    );
     const newClient = new ContinueGUIClientProtocol(
       serverUrlWithSessionId,
       useVscodeMessagePassing

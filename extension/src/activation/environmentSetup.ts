@@ -82,18 +82,18 @@ export function getExtensionVersion() {
 
 // Returns whether a server of the current version is already running
 async function checkOrKillRunningServer(serverUrl: string): Promise<boolean> {
-  console.log("Checking if server is old version");
   const serverRunning = await checkServerRunning(serverUrl);
   // Kill the server if it is running an old version
   if (fs.existsSync(serverVersionPath())) {
     const serverVersion = fs.readFileSync(serverVersionPath(), "utf8");
     if (serverVersion === getExtensionVersion() && serverRunning) {
       // The current version is already up and running, no need to continue
+      console.log("Continue server already running");
       return true;
     }
   }
   if (serverRunning) {
-    console.log("Killing old server...");
+    console.log("Killing server from old version of Continue");
     try {
       await fkill(":65432");
     } catch (e: any) {
@@ -196,16 +196,10 @@ export async function startContinuePythonServer() {
   // Get name of the corresponding executable for platform
   if (os.platform() === "darwin") {
     // Add necessary permissions
-    console.log("Setting permissions for Continue server...");
     fs.chmodSync(destination, 0o7_5_5);
-    const [stdout1, stderr1] = await runCommand(
-      `xattr -dr com.apple.quarantine ${destination}`
-    );
-    console.log("stdout: ", stdout1);
-    console.log("stderr: ", stderr1);
+    await runCommand(`xattr -dr com.apple.quarantine ${destination}`);
   } else if (os.platform() === "linux") {
     // Add necessary permissions
-    console.log("Setting permissions for Continue server...");
     fs.chmodSync(destination, 0o7_5_5);
   }
 
@@ -217,7 +211,7 @@ export async function startContinuePythonServer() {
   }
 
   // Run the executable
-  console.log("Starting Continue server...");
+  console.log("Starting Continue server");
   const child = spawn(destination, {
     detached: true,
     stdio: "ignore",

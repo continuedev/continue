@@ -32,7 +32,9 @@ const SEARCH_INDEX_NAME = "continue_context_items";
 const mainInputFontSize = 13;
 
 const EmptyPillDiv = styled.div`
-  padding: 8px;
+  padding: 4px;
+  padding-left: 8px;
+  padding-right: 8px;
   border-radius: ${defaultBorderRadius};
   border: 1px dashed ${lightGray};
   color: ${lightGray};
