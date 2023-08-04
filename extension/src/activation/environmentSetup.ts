@@ -9,6 +9,8 @@ import fetch from "node-fetch";
 import * as vscode from "vscode";
 import * as os from "os";
 import fkill from "fkill";
+import { finished } from "stream/promises";
+const request = require("request");
 
 async function runCommand(cmd: string): Promise<[string, string | undefined]> {
   var stdout: any = "";
@@ -120,19 +122,31 @@ export async function downloadFromS3(
   destination: string,
   region: string
 ) {
-  const s3Url = `https://${bucket}.s3.${region}.amazonaws.com/${fileName}`;
-  const response = await fetch(s3Url, {
-    method: "GET",
-  });
-  if (!response.ok) {
-    const text = await response.text();
-    const errText = `Failed to download Continue server from S3: ${text}`;
+  try {
+    ensureDirectoryExistence(destination);
+    const file = fs.createWriteStream(destination);
+    const download = request({
+      url: `https://${bucket}.s3.${region}.amazonaws.com/${fileName}`,
+    });
+
+    download.on("response", (response: any) => {
+      if (response.statusCode !== 200) {
+        throw new Error("No body returned when downloading from S3 bucket");
+      }
+    });
+
+    download.on("error", (err: any) => {
+      fs.unlink(destination, () => {});
+      throw err;
+    });
+
+    download.pipe(file);
+
+    await finished(download);
+  } catch (err: any) {
+    const errText = `Failed to download Continue server from S3: ${err.message}`;
     vscode.window.showErrorMessage(errText);
-    throw new Error(errText);
   }
-  const buffer = await response.buffer();
-  ensureDirectoryExistence(destination);
-  fs.writeFileSync(destination, buffer);
 }
 
 export async function startContinuePythonServer() {
