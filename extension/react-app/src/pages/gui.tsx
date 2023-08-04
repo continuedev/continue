@@ -428,6 +428,10 @@ function GUI(props: GUIProps) {
             >
               <u>Click to view logs</u>
             </p>
+            <div className="w-3/4 m-auto text-center text-xs">
+              Tip: Drag the Continue logo from the far left of the window to the
+              right, then toggle Continue using option/alt+command+m.
+            </div>
           </>
         )}
         {history?.timeline.map((node: HistoryNode, index: number) => {
