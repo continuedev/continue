@@ -23,14 +23,8 @@ export const setFocusedOnContinueInput = (value: boolean) => {
 
 // Copy everything over from extension.ts
 const commandsMap: { [command: string]: (...args: any) => any } = {
-  "continue.suggestionDown": suggestionDownCommand,
-  "continue.suggestionUp": suggestionUpCommand,
-  "continue.acceptSuggestion": acceptSuggestionCommand,
-  "continue.rejectSuggestion": rejectSuggestionCommand,
   "continue.acceptDiff": acceptDiffCommand,
   "continue.rejectDiff": rejectDiffCommand,
-  "continue.acceptAllSuggestions": acceptAllSuggestionsCommand,
-  "continue.rejectAllSuggestions": rejectAllSuggestionsCommand,
   "continue.quickFix": async (message: string, code: string, edit: boolean) => {
     ideProtocolClient.sendMainUserInput(
       `${

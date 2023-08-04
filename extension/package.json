@@ -58,26 +58,6 @@
     },
     "commands": [
       {
-        "command": "continue.suggestionDown",
-        "category": "Continue",
-        "title": "Suggestion Down"
-      },
-      {
-        "command": "continue.suggestionUp",
-        "category": "Continue",
-        "title": "Suggestion Up"
-      },
-      {
-        "command": "continue.acceptSuggestion",
-        "category": "Continue",
-        "title": "Accept Suggestion"
-      },
-      {
-        "command": "continue.rejectSuggestion",
-        "category": "Continue",
-        "title": "Reject Suggestion"
-      },
-      {
         "command": "continue.acceptDiff",
         "category": "Continue",
         "title": "Accept Diff"
@@ -86,16 +66,6 @@
         "command": "continue.rejectDiff",
         "category": "Continue",
         "title": "Reject Diff"
-      },
-      {
-        "command": "continue.acceptAllSuggestions",
-        "category": "Continue",
-        "title": "Accept All Suggestions"
-      },
-      {
-        "command": "continue.rejectAllSuggestions",
-        "category": "Continue",
-        "title": "Reject All Suggestions"
       },
       {
         "command": "continue.quickTextEntry",
@@ -133,21 +103,6 @@
         "command": "continue.focusContinueInputWithEdit",
         "mac": "cmd+shift+m",
         "key": "ctrl+shift+m"
-      },
-      {
-        "command": "continue.suggestionDown",
-        "mac": "shift+ctrl+down",
-        "key": "shift+ctrl+down"
-      },
-      {
-        "command": "continue.suggestionUp",
-        "mac": "shift+ctrl+up",
-        "key": "shift+ctrl+up"
-      },
-      {
-        "command": "continue.acceptSuggestion",
-        "mac": "shift+ctrl+enter",
-        "key": "shift+ctrl+enter"
       },
       {
         "command": "continue.acceptDiff",
