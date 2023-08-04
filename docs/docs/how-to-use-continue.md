@@ -136,3 +136,9 @@ If you highlight very long lines (e.g. a complex SVG), you might also run into i
 ### Tasks with many steps
 
 There are other tasks that Continue won't be able to take on as a whole. However, typically, if you figure out how to break the task into sub-tasks, you can get help from Continue with those.
+
+## Keyboard shortcuts
+
+Here you will find a list of all of the default keyboard shortcuts in VS Code:
+
+![keyboard-shortucts](/img/keyboard-shortcuts.png)
