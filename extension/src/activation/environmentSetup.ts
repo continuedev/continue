@@ -226,15 +226,29 @@ export async function startContinuePythonServer() {
 
   // Run the executable
   console.log("Starting Continue server");
-  const child = spawn(destination, {
-    detached: true,
-    stdio: "ignore",
-  });
-  child.on("error", (err: any) => {
-    console.error("Failed to start subprocess.", err);
-  });
+  let attempts = 0;
+  let maxAttempts = 5;
+  let delay = 1000; // Delay between each attempt in milliseconds
 
-  child.unref();
+  const spawnChild = () => {
+    const child = spawn(destination, {
+      detached: true,
+      stdio: "ignore",
+    });
+
+    child.on("error", (err: any) => {
+      if (err.code === "EBUSY" && attempts < maxAttempts) {
+        attempts++;
+        console.log(`EBUSY error caught. Retrying attempt ${attempts}...`);
+        setTimeout(spawnChild, delay);
+      } else {
+        console.error("Failed to start subprocess.", err);
+      }
+    });
+    child.unref();
+  };
+
+  spawnChild();
 
   // Write the current version of vscode extension to a file called server_version.txt
   fs.writeFileSync(serverVersionPath(), getExtensionVersion());
