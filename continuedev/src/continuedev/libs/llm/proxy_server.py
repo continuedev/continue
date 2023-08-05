@@ -109,7 +109,7 @@ class ProxyServer(LLM):
                                 if "content" in loaded_chunk:
                                     completion += loaded_chunk["content"]
                     except Exception as e:
-                        posthog_logger.capture_event(self.unique_id, "proxy_server_parse_error", {
+                        posthog_logger.capture_event("proxy_server_parse_error", {
                             "error_title": "Proxy server stream_chat parsing failed", "error_message": '\n'.join(traceback.format_exception(e))})
                 else:
                     break

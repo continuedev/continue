@@ -237,9 +237,11 @@ export async function startContinuePythonServer() {
     });
 
     child.on("error", (err: any) => {
-      if (err.code === "EBUSY" && attempts < maxAttempts) {
+      if (attempts < maxAttempts) {
         attempts++;
-        console.log(`EBUSY error caught. Retrying attempt ${attempts}...`);
+        console.log(
+          `Error caught (likely EBUSY). Retrying attempt ${attempts}...`
+        );
         setTimeout(spawnChild, delay);
       } else {
         console.error("Failed to start subprocess.", err);
