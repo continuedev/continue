@@ -1,0 +1,49 @@
+// See https://go.microsoft.com/fwlink/?LinkId=733558
+// for the documentation about the tasks.json format
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "vscode-extension:build-watch",
+            "type": "npm",
+            "script": "esbuild-watch",
+            "path": "extension",
+            "isBackground": true,
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": [
+                // We rely on tsc to emit type errors in a separate task
+            ],
+            // Depends on prevents the task from running until the other task has completed, not want we want
+            // does not start the extension
+            // "dependsOn": [
+            //     // esbuild does not emit type errors so we need a separate task for that
+            //     // https://esbuild.github.io/content-types/#typescript
+            //     "vscode-extension:tsc-watch"
+            // ]
+        },
+        {
+            "label": "vscode-extension:tsc-watch",
+            "type": "npm",
+            "script": "watch",
+            "path": "extension",
+            "isBackground": true,
+            "problemMatcher": [
+                "$tsc-watch"
+            ],
+            // Problems are currently broken due to path resolution not being relative to the workspace root
+            // The way cursorless does it it by having top level package.json which is not ideal.
+            // Multi root workspaces would help here
+            "presentation": {
+                "revealProblems": "onProblem",
+                "clear": true
+            },
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        }
+    ]
+}
