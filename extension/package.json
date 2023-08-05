@@ -47,12 +47,7 @@
         "continue.serverUrl": {
           "type": "string",
           "default": "http://localhost:65432",
-          "description": "The URL of the Continue server. Only change this if you are running the server manually. If you want to use an LLM hosted at a custom URL, please see https://continue.dev/docs/customization#change-the-default-llm."
-        },
-        "continue.OPENAI_API_KEY": {
-          "type": "string",
-          "default": null,
-          "description": "The OpenAI API key to use for code generation. Leave empty to get limited free usage of Continue."
+          "description": "The URL of the Continue server. Only change this if you are running the server manually. If you want to use an LLM hosted at a custom URL, please see https://continue.dev/docs/customization#change-the-default-llm. All other configuration is done in `~/.continue/config.py`, which you can access by using the '/config' slash command."
         }
       }
     },

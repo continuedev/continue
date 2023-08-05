@@ -54,9 +54,8 @@ export async function activateExtension(context: vscode.ExtensionContext) {
   registerAllCommands(context);
   registerQuickFixProvider();
 
-  // Start the server and display loader if taking > 2 seconds
+  // Start the server
   const sessionIdPromise = (async () => {
-    // Start the server and set serverStarted to true when done
     await startContinuePythonServer();
 
     console.log("Continue server started");

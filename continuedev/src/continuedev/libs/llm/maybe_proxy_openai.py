@@ -8,8 +8,8 @@ from .openai import OpenAI
 
 class MaybeProxyOpenAI(LLM):
     model: str
+    api_key: Optional[str] = None
 
-    requires_api_key: Optional[str] = "OPENAI_API_KEY"
     requires_write_log: bool = True
     requires_unique_id: bool = True
     system_message: Union[str, None] = None
@@ -25,12 +25,12 @@ class MaybeProxyOpenAI(LLM):
         return self.llm.context_length
 
     async def start(self, *, api_key: Optional[str] = None, unique_id: str, write_log: Callable[[str], None]):
-        if api_key is None or api_key.strip() == "":
+        if self.api_key is None or self.api_key.strip() == "":
             self.llm = ProxyServer(model=self.model)
         else:
-            self.llm = OpenAI(model=self.model)
+            self.llm = OpenAI(api_key=self.api_key, model=self.model)
 
-        await self.llm.start(api_key=api_key, write_log=write_log, unique_id=unique_id)
+        await self.llm.start(write_log=write_log, unique_id=unique_id)
 
     async def stop(self):
         await self.llm.stop()

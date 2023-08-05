@@ -8,9 +8,9 @@ from ..util.count_tokens import compile_chat_messages, DEFAULT_ARGS, count_token
 
 
 class AnthropicLLM(LLM):
+    api_key: str
     model: str = "claude-2"
 
-    requires_api_key: str = "ANTHROPIC_API_KEY"
     requires_write_log = True
     _async_client: AsyncAnthropic = None
 
@@ -21,7 +21,7 @@ class AnthropicLLM(LLM):
 
     async def start(self, *, api_key: Optional[str] = None, write_log: Callable[[str], None], **kwargs):
         self.write_log = write_log
-        self._async_client = AsyncAnthropic(api_key=api_key)
+        self._async_client = AsyncAnthropic(api_key=self.api_key)
 
     async def stop(self):
         pass

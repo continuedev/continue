@@ -27,10 +27,19 @@ With the `MaybeProxyOpenAI` `LLM`, new users can try out Continue with GPT-4 usi
 Once you are using Continue regularly though, you will need to add an OpenAI API key that has access to GPT-4 by following these steps:
 
 1. Copy your API key from https://platform.openai.com/account/api-keys
-2. Use the cmd+, (Mac) / ctrl+, (Windows) to open your VS Code settings
-3. Type "Continue" in the search bar
-4. Click Edit in settings.json under Continue: OpenAI_API_KEY" section
-5. Paste your API key as the value for "continue.OPENAI_API_KEY" in settings.json
+2. Open `~/.continue/config.py`. You can do this by using the '/config' command in Continue
+3. Change the default LLMs to look like this:
+
+```python
+API_KEY = "<API_KEY>"
+config = ContinueConfig(
+    ...
+    models=Models(
+        default=MaybeProxyOpenAI(model="gpt-4", api_key=API_KEY),
+        medium=MaybeProxyOpenAI(model="gpt-3.5-turbo", api_key=API_KEY)
+    )
+)
+```
 
 The `MaybeProxyOpenAI` class will automatically switch to using your API key instead of ours. If you'd like to explicitly use one or the other, you can use the `ProxyServer` or `OpenAI` classes instead.
 
@@ -46,7 +55,7 @@ from continuedev.src.continuedev.libs.llm.anthropic import AnthropicLLM
 config = ContinueConfig(
     ...
     models=Models(
-        default=AnthropicLLM(model="claude-2")
+        default=AnthropicLLM(api_key="<API_KEY>", model="claude-2")
     )
 )
 ```
@@ -101,7 +110,7 @@ from continuedev.src.continuedev.libs.llm.openai import OpenAI, OpenAIServerInfo
 config = ContinueConfig(
     ...
     models=Models(
-        default=OpenAI(model="gpt-3.5-turbo", server_info=OpenAIServerInfo(
+        default=OpenAI(api_key="my-api-key", model="gpt-3.5-turbo", server_info=OpenAIServerInfo(
             api_base="https://my-azure-openai-instance.openai.azure.com/"
             engine="my-azure-openai-deployment",
             api_version="2023-03-15-preview",

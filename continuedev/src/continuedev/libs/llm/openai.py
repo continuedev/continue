@@ -27,21 +27,19 @@ MAX_TOKENS_FOR_MODEL = {
 
 
 class OpenAI(LLM):
+    api_key: str
     model: str
     openai_server_info: Optional[OpenAIServerInfo] = None
     verify_ssl: bool = True
     ca_bundle_path: Optional[str] = None
 
-    requires_api_key = "OPENAI_API_KEY"
     requires_write_log = True
 
     system_message: Optional[str] = None
     write_log: Optional[Callable[[str], None]] = None
-    api_key: str = None
 
     async def start(self, *, api_key: Optional[str] = None, write_log: Callable[[str], None], **kwargs):
         self.write_log = write_log
-        self.api_key = api_key
         openai.api_key = self.api_key
 
         if self.openai_server_info is not None:

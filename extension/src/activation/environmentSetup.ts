@@ -231,23 +231,29 @@ export async function startContinuePythonServer() {
   let delay = 1000; // Delay between each attempt in milliseconds
 
   const spawnChild = () => {
-    const child = spawn(destination, {
-      detached: true,
-      stdio: "ignore",
-    });
-
-    child.on("error", (err: any) => {
-      if (attempts < maxAttempts) {
-        attempts++;
-        console.log(
-          `Error caught (likely EBUSY). Retrying attempt ${attempts}...`
-        );
-        setTimeout(spawnChild, delay);
-      } else {
-        console.error("Failed to start subprocess.", err);
-      }
-    });
-    child.unref();
+    const retry = () => {
+      attempts++;
+      console.log(
+        `Error caught (likely EBUSY). Retrying attempt ${attempts}...`
+      );
+      setTimeout(spawnChild, delay);
+    };
+    try {
+      const child = spawn(destination, {
+        detached: true,
+        stdio: "ignore",
+      });
+      child.on("error", (err: any) => {
+        if (attempts < maxAttempts) {
+          retry();
+        } else {
+          console.error("Failed to start subprocess.", err);
+        }
+      });
+      child.unref();
+    } catch (e: any) {
+      retry();
+    }
   };
 
   spawnChild();

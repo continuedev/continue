@@ -51,8 +51,10 @@ config = ContinueConfig(
     allow_anonymous_telemetry=True,
 
     models=Models(
-        default=MaybeProxyOpenAI(model="gpt-4"),
-        medium=MaybeProxyOpenAI(model="gpt-3.5-turbo")
+        # You can try Continue with limited free usage. Please eventually replace with your own API key.
+        # Learn how to customize models here: https://continue.dev/docs/customization#change-the-default-llm
+        default=MaybeProxyOpenAI(api_key="", model="gpt-4"),
+        medium=MaybeProxyOpenAI(api_key="", model="gpt-3.5-turbo")
     ),
 
     # Set a system message with information that the LLM should always keep in mind
