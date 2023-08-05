@@ -1,7 +1,6 @@
 import { useContext, useEffect, useRef, useState } from "react";
 import styled, { keyframes } from "styled-components";
 import {
-  appear,
   defaultBorderRadius,
   secondaryDark,
   vscBackground,
@@ -39,9 +38,11 @@ interface StepContainerProps {
 
 // #region styled components
 
-const MainDiv = styled.div<{ stepDepth: number; inFuture: boolean }>`
+const MainDiv = styled.div<{
+  stepDepth: number;
+  inFuture: boolean;
+}>`
   opacity: ${(props) => (props.inFuture ? 0.3 : 1)};
-  animation: ${appear} 0.3s ease-in-out;
   overflow: hidden;
   margin-left: 0px;
   margin-right: 0px;

@@ -120,9 +120,9 @@ function GUI(props: GUIProps) {
         step: {
           name: "Welcome to Continue",
           hide: false,
-          description: `- Highlight code and ask a question or give instructions
-          - Use \`cmd+m\` (Mac) / \`ctrl+m\` (Windows) to open Continue
-          - Use \`/help\` to ask questions about how to use Continue`,
+          description: `- Highlight code section and ask a question or give instructions
+- Use \`cmd+m\` (Mac) / \`ctrl+m\` (Windows) to open Continue
+- Use \`/help\` to ask questions about how to use Continue`,
           system_message: null,
           chat_context: [],
           manage_own_chat_context: false,
@@ -260,6 +260,16 @@ function GUI(props: GUIProps) {
     scrollToBottom();
   }, [waitingForSteps]);
 
+  const [waitingForClient, setWaitingForClient] = useState(true);
+  useEffect(() => {
+    if (client && waitingForClient) {
+      setWaitingForClient(false);
+      for (const input of userInputQueue) {
+        client.sendMainInput(input);
+      }
+    }
+  }, [client, userInputQueue, waitingForClient]);
+
   const onMainTextInput = (event?: any) => {
     if (mainTextInputRef.current) {
       let input = (mainTextInputRef.current as any).inputValue;
@@ -268,7 +278,12 @@ function GUI(props: GUIProps) {
         input = `/edit ${input}`;
       }
       (mainTextInputRef.current as any).setInputValue("");
-      if (!client) return;
+      if (!client) {
+        setUserInputQueue((queue) => {
+          return [...queue, input];
+        });
+        return;
+      }
 
       setWaitingForSteps(true);
 
@@ -376,6 +391,17 @@ function GUI(props: GUIProps) {
     client.sendStepUserInput(input, index);
   };
 
+  const [showLoading, setShowLoading] = useState(false);
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      setShowLoading(true);
+    }, 3000);
+
+    return () => {
+      clearTimeout(timeout);
+    };
+  }, []);
+
   // const iterations = useSelector(selectIterations);
   return (
     <>
@@ -401,7 +427,7 @@ function GUI(props: GUIProps) {
           }
         }}
       >
-        {typeof client === "undefined" && (
+        {showLoading && typeof client === "undefined" && (
           <>
             <RingLoader />
             <p
