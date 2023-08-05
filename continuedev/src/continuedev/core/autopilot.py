@@ -74,13 +74,16 @@ class Autopilot(ContinueBaseModel):
             self.policy = override_policy
 
         # Load documents into the search index
+        logger.debug("Starting context manager")
         await self.context_manager.start(
             self.continue_sdk.config.context_providers + [
                 HighlightedCodeContextProvider(ide=self.ide),
                 FileContextProvider(workspace_dir=self.ide.workspace_directory)
             ])
 
-        await self.context_manager.load_index(self.ide.workspace_directory)
+        logger.debug("Loading index")
+        create_async_task(self.context_manager.load_index(
+            self.ide.workspace_directory))
         self.started = True
 
     class Config:

@@ -249,8 +249,10 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
         })
 
     async def getSessionId(self):
-        session_id = (await self.session_manager.new_session(
-            self, self.session_id)).session_id
+        new_session = await asyncio.wait_for(self.session_manager.new_session(
+            self, self.session_id), timeout=5)
+        session_id = new_session.session_id
+        logger.debug(f"Sending session id: {session_id}")
         await self._send_json("getSessionId", {
             "sessionId": session_id
         })
@@ -279,11 +281,9 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
         return any([r.accepted for r in responses])
 
     def on_error(self, e: Exception) -> Coroutine:
-        try:
-            return self.session_manager.sessions[self.session_id].autopilot.continue_sdk.run_step(DisplayErrorStep(e=e))
-        except:
-            err_msg = '\n'.join(traceback.format_exception(e))
-            return self.showMessage(f"Error in Continue server: {err_msg}")
+        err_msg = '\n'.join(traceback.format_exception(e))
+        e_title = e.__str__() or e.__repr__()
+        return self.showMessage(f"Error in Continue server: {e_title}\n {err_msg}")
 
     def onAcceptRejectSuggestion(self, accepted: bool):
         posthog_logger.capture_event("accept_reject_suggestion", {

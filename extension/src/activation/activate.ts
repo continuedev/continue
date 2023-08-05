@@ -56,12 +56,8 @@ export async function activateExtension(context: vscode.ExtensionContext) {
 
   // Start the server and display loader if taking > 2 seconds
   const sessionIdPromise = (async () => {
-    await new Promise((resolve) => {
-      // Start the server and set serverStarted to true when done
-      startContinuePythonServer().then(() => {
-        resolve(null);
-      });
-    });
+    // Start the server and set serverStarted to true when done
+    await startContinuePythonServer();
 
     console.log("Continue server started");
     // Initialize IDE Protocol Client

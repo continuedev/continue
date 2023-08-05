@@ -230,6 +230,10 @@ export async function startContinuePythonServer() {
     detached: true,
     stdio: "ignore",
   });
+  child.on("error", (err: any) => {
+    console.error("Failed to start subprocess.", err);
+  });
+
   child.unref();
 
   // Write the current version of vscode extension to a file called server_version.txt

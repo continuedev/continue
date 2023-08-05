@@ -1,5 +1,7 @@
 
 from abc import abstractmethod
+import asyncio
+import time
 from typing import Dict, List
 from meilisearch_python_async import Client
 from pydantic import BaseModel
@@ -165,6 +167,8 @@ class ContextManager:
 
     async def load_index(self, workspace_dir: str):
         for _, provider in self.context_providers.items():
+            ti = time.time()
+
             context_items = await provider.provide_context_items(workspace_dir)
             documents = [
                 {
@@ -178,9 +182,13 @@ class ContextManager:
             if len(documents) > 0:
                 try:
                     async with Client('http://localhost:7700') as search_client:
-                        await search_client.index(SEARCH_INDEX_NAME).add_documents(documents)
+                        await asyncio.wait_for(search_client.index(SEARCH_INDEX_NAME).add_documents(documents), timeout=5)
                 except Exception as e:
                     logger.debug(f"Error loading meilisearch index: {e}")
+
+            tf = time.time()
+            logger.debug(
+                f"Loaded {len(documents)} documents into meilisearch in {tf - ti} seconds for context provider {provider.title}")
 
     async def select_context_item(self, id: str, query: str):
         """
