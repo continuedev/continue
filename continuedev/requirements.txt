@@ -18,3 +18,4 @@ chevron==0.14.0
 psutil==5.9.5
 pygithub==1.59.0
 meilisearch-python-async==1.4.8
+socksio==1.0.0

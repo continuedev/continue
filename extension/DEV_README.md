@@ -6,16 +6,25 @@ This is the Continue VS Code Extension. Its primary jobs are
 2. Open the Continue React app in a side panel. The React app's source code lives in the `react-app` directory. The panel is opened by the `continue.openContinueGUI` command, as defined in `src/commands.ts`.
 3. Run a Continue server in the background, which connects to both the IDE protocol and the React app. The server is launched in `src/activation/environmentSetup.ts` by calling Python code that lives in `server/` (unless extension settings define a server URL other than localhost:65432, in which case the extension will just connect to that).
 
-## Setting up for development
+## How to debug the VS Code Extension
 
-1. Clone this repo
-2. `cd extension`
-3. `npm run package`
+1. Clone the Continue repo
 
-   > If NPM is not installed, you can use `brew install node` on Mac, or see the [installation page](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm) for other platforms, or more detailed instructions.
+2. Open a VS Code window with the `continue` directory as your workspace
 
-4. Open a VS Code window with `/extension` as the workspace root (_this is important, development mode will not work otherwise_)
-5. Open any `.ts` file in the workspace, then press F5 and select "VS Code Extension Development" to begin debugging.
+3. Package and then start the FastAPI server by following instructions outlined in the `Continue Server` section of the `continuedev/README.md`
+
+4. Open a VS Code window with the `extension` directory as your workspace
+
+5. Run `npm run package`
+
+6. Open `src/activation/activate.ts` file (or any TypeScript file)
+
+7. Press `F5` on your keyboard to start `Run and Debug` mode
+
+8. `cmd+shift+p` to look at developer console and select Continue commands
+
+9. Every time you make changes to the code, you need to run `npm run esbuild` unless you make changes inside of `react-app` and then you need to run `npm run build` from there
 
 ## Notes
 
