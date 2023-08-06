@@ -252,6 +252,7 @@ export async function startContinuePythonServer() {
       });
       child.unref();
     } catch (e: any) {
+      console.log("Error starting server:", e);
       retry();
     }
   };

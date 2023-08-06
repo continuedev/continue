@@ -1,17 +1,8 @@
 import * as vscode from "vscode";
 import * as path from "path";
 import * as os from "os";
-import {
-  acceptSuggestionCommand,
-  rejectSuggestionCommand,
-  suggestionDownCommand,
-  suggestionUpCommand,
-  acceptAllSuggestionsCommand,
-  rejectAllSuggestionsCommand,
-} from "./suggestions";
 
 import { acceptDiffCommand, rejectDiffCommand } from "./diffs";
-import * as bridge from "./bridge";
 import { debugPanelWebview } from "./debugPanel";
 import { ideProtocolClient } from "./activation/activate";
 
