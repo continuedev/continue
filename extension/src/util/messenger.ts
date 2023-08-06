@@ -18,6 +18,8 @@ export abstract class Messenger {
   abstract onError(callback: () => void): void;
 
   abstract sendAndReceive(messageType: string, data: any): Promise<any>;
+
+  abstract close(): void;
 }
 
 export class WebsocketMessenger extends Messenger {
@@ -159,5 +161,9 @@ export class WebsocketMessenger extends Messenger {
 
   onError(callback: () => void): void {
     this.websocket.addEventListener("error", callback);
+  }
+
+  close(): void {
+    this.websocket.close();
   }
 }

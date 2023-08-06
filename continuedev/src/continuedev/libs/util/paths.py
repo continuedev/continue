@@ -35,6 +35,9 @@ def getSessionFilePath(session_id: str):
 def getSessionsListFilePath():
     path = os.path.join(getSessionsFolderPath(), "sessions.json")
     os.makedirs(os.path.dirname(path), exist_ok=True)
+    if not os.path.exists(path):
+        with open(path, 'w') as f:
+            f.write("[]")
     return path
 
 

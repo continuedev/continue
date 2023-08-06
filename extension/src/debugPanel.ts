@@ -221,6 +221,15 @@ export function setupDebugPanel(
         }
         break;
       }
+      case "websocketForwardingClose": {
+        let url = data.url;
+        let connection = websocketConnections[url];
+        if (typeof connection !== "undefined") {
+          connection.close();
+          websocketConnections[url] = undefined;
+        }
+        break;
+      }
       case "websocketForwardingMessage": {
         let url = data.url;
         let connection = websocketConnections[url];

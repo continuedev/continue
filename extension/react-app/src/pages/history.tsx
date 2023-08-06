@@ -4,6 +4,23 @@ import { GUIClientContext } from "../App";
 import { useSelector } from "react-redux";
 import { RootStore } from "../redux/store";
 import { useNavigate } from "react-router-dom";
+import { secondaryDark, vscBackground } from "../components";
+import styled from "styled-components";
+
+const Tr = styled.tr`
+  &:hover {
+    background-color: ${secondaryDark};
+  }
+`;
+
+const TdDiv = styled.div`
+  cursor: pointer;
+  padding-left: 1rem;
+  padding-right: 1rem;
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid ${secondaryDark};
+`;
 
 function History() {
   const navigate = useNavigate();
@@ -30,24 +47,23 @@ function History() {
 
   return (
     <div className="w-full">
-      <h1 className="text-2xl font-bold">History</h1>
+      <h1 className="text-2xl font-bold m-4">History</h1>
       <table className="w-full">
         <tbody>
           {sessions.map((session, index) => (
-            <tr key={index}>
+            <Tr key={index}>
               <td>
-                <div
-                  className="cursor-pointer"
+                <TdDiv
                   onClick={() => {
-                    // client?.loadSession(session.id);
+                    client?.loadSession(session.session_id);
                     navigate("/");
                   }}
                 >
                   <div className="text-lg">{session.title}</div>
                   <div className="text-gray-400">{session.date_created}</div>
-                </div>
+                </TdDiv>
               </td>
-            </tr>
+            </Tr>
           ))}
         </tbody>
       </table>

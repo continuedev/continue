@@ -14,9 +14,11 @@ class ContinueGUIClientProtocol extends AbstractContinueGUIClientProtocol {
     useVscodeMessagePassing: boolean
   ) {
     if (this.messenger) {
-      // this.messenger.close(); TODO
+      console.log("Closing session: ", this.serverUrlWithSessionId);
+      this.messenger.close();
     }
     this.serverUrlWithSessionId = serverUrlWithSessionId;
+    this.useVscodeMessagePassing = useVscodeMessagePassing;
     this.messenger = useVscodeMessagePassing
       ? new VscodeMessenger(serverUrlWithSessionId)
       : new WebsocketMessenger(serverUrlWithSessionId);
@@ -45,12 +47,13 @@ class ContinueGUIClientProtocol extends AbstractContinueGUIClientProtocol {
     this.connectMessenger(serverUrlWithSessionId, useVscodeMessagePassing);
   }
 
+  loadSession(session_id: string): void {
+    this.messenger?.send("load_session", { session_id });
+  }
+
   onReconnectAtSession(session_id: string): void {
     this.connectMessenger(
-      this.serverUrlWithSessionId.replace(
-        /\/session\/[a-zA-Z0-9-]+/,
-        `/session/${session_id}`
-      ),
+      `${this.serverUrlWithSessionId.split("?")[0]}?session_id=${session_id}`,
       this.useVscodeMessagePassing
     );
   }

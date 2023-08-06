@@ -99,6 +99,8 @@ class GUIProtocolServer(AbstractGUIProtocolServer):
             self.on_show_logs_at_index(data["index"])
         elif message_type == "select_context_item":
             self.select_context_item(data["id"], data["query"])
+        elif message_type == "load_session":
+            self.load_session(data["session_id"])
 
     def on_main_input(self, input: str):
         # Do something with user input
@@ -154,8 +156,13 @@ class GUIProtocolServer(AbstractGUIProtocolServer):
         create_async_task(
             self.session.autopilot.select_context_item(id, query), self.on_error)
 
-    async def reconnect_at_session(self, session_id: str):
-        await self._send_json("reconnect_at_session", {"session_id": session_id})
+    def load_session(self, session_id: str):
+        async def load_and_tell_to_reconnect():
+            await session_manager.load_session(self.session.session_id, session_id)
+            await self._send_json("reconnect_at_session", {"session_id": session_id})
+
+        create_async_task(
+            load_and_tell_to_reconnect(), self.on_error)
 
 
 @router.websocket("/ws")

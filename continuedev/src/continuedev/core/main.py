@@ -1,5 +1,5 @@
 import json
-from typing import Coroutine, Dict, List, Literal, Union
+from typing import Coroutine, Dict, List, Literal, Optional, Union
 from pydantic.schema import schema
 
 
@@ -253,6 +253,12 @@ class ContextItem(BaseModel):
     editable: bool = False
 
 
+class SessionInfo(ContinueBaseModel):
+    session_id: str
+    title: str
+    date_created: str
+
+
 class FullState(ContinueBaseModel):
     """A full state of the program, including the history"""
     history: History
@@ -261,12 +267,7 @@ class FullState(ContinueBaseModel):
     slash_commands: List[SlashCommandDescription]
     adding_highlighted_code: bool
     selected_context_items: List[ContextItem]
-
-
-class SessionInfo(ContinueBaseModel):
-    session_id: str
-    title: str
-    date_created: str
+    session_info: Optional[SessionInfo] = None
 
 
 class ContinueSDK:
