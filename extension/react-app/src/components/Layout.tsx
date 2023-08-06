@@ -8,6 +8,7 @@ const LayoutTopDiv = styled.div`
   scrollbar-base-color: transparent;
   scrollbar-width: thin;
 `;
+
 const Layout = () => {
   return (
     <LayoutTopDiv>

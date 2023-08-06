@@ -7,14 +7,6 @@ import "./index.css";
 
 import posthog from "posthog-js";
 import { PostHogProvider } from "posthog-js/react";
-import { createBrowserRouter, RouterProvider } from "react-router-dom";
-
-const router = createBrowserRouter([
-  {
-    path: "/",
-    element: <App />,
-  },
-]);
 
 console.log("Starting React");
 
@@ -27,7 +19,7 @@ ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
   <React.StrictMode>
     <PostHogProvider client={posthog}>
       <Provider store={store}>
-        <RouterProvider router={router} />
+        <App />
       </Provider>
     </PostHogProvider>
   </React.StrictMode>

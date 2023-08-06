@@ -34,6 +34,7 @@ import {
   setBottomMessageCloseTimeout,
 } from "../redux/slices/uiStateSlice";
 import RingLoader from "../components/RingLoader";
+import { useNavigate } from "react-router-dom";
 
 const TopGUIDiv = styled.div`
   overflow: hidden;
@@ -83,6 +84,8 @@ interface GUIProps {
 }
 
 function GUI(props: GUIProps) {
+  const navigate = useNavigate();
+
   const client = useContext(GUIClientContext);
   const posthog = usePostHog();
 
@@ -595,7 +598,7 @@ If you already have an LLM deployed on your own infrastructure, or would like to
         <HeaderButtonWithText
           onClick={() => {
             // Go to /history page
-            document.location.href = "/history";
+            navigate("/history");
           }}
           text="History"
         >

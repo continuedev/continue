@@ -4,12 +4,6 @@ import Layout from "./components/Layout";
 import { createContext, useEffect } from "react";
 import useContinueGUIProtocol from "./hooks/useWebsocket";
 import ContinueGUIClientProtocol from "./hooks/ContinueGUIClientProtocol";
-import {
-  BrowserRouter as Router,
-  Route,
-  Routes,
-  BrowserRouter,
-} from "react-router-dom";
 import { useDispatch } from "react-redux";
 import {
   setApiUrl,
@@ -21,6 +15,30 @@ import {
 import { updateFileSystem } from "./redux/slices/debugContexSlice";
 import { setHighlightedCode } from "./redux/slices/miscSlice";
 import { postVscMessage } from "./vscode";
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import ErrorPage from "./pages/error";
+
+const router = createBrowserRouter([
+  {
+    path: "/",
+    element: <Layout />,
+    errorElement: <ErrorPage />,
+    children: [
+      {
+        path: "/index.html",
+        element: <GUI />,
+      },
+      {
+        path: "/",
+        element: <GUI />,
+      },
+      {
+        path: "/history",
+        element: <History />,
+      },
+    ],
+  },
+]);
 
 export const GUIClientContext = createContext<
   ContinueGUIClientProtocol | undefined
@@ -53,11 +71,7 @@ function App() {
 
   return (
     <GUIClientContext.Provider value={client}>
-      <Routes>
-        <Route path="/" element={<Layout />} />
-        <Route path="/gui" element={<GUI />} />
-        <Route path="/history" element={<History />} />
-      </Routes>
+      <RouterProvider router={router} />
     </GUIClientContext.Provider>
   );
 }
