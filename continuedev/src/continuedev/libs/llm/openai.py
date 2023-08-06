@@ -2,6 +2,8 @@ from typing import Any, Callable, Coroutine, Dict, Generator, List, Literal, Uni
 
 from pydantic import BaseModel
 import openai
+from litellm import acompletion
+import litellm
 
 from ...core.main import ChatMessage
 from ..util.count_tokens import compile_chat_messages, DEFAULT_ARGS, count_tokens, format_chat_messages, prune_raw_prompt_from_top
@@ -18,6 +20,8 @@ class OpenAIServerInfo(BaseModel):
 CHAT_MODELS = {
     "gpt-3.5-turbo", "gpt-3.5-turbo-16k", "gpt-4", "gpt-3.5-turbo-0613"
 }
+CHAT_MODELS.update(litellm.model_list) # add litellm supported models
+
 MAX_TOKENS_FOR_MODEL = {
     "gpt-3.5-turbo": 4096,
     "gpt-3.5-turbo-0613": 4096,
@@ -86,7 +90,7 @@ class OpenAI(LLM):
                 args["model"], with_history, self.context_length, args["max_tokens"], prompt, functions=None, system_message=self.system_message)
             self.write_log(f"Prompt: \n\n{format_chat_messages(messages)}")
             completion = ""
-            async for chunk in await openai.ChatCompletion.acreate(
+            async for chunk in await acompletion(
                 messages=messages,
                 **args,
             ):
@@ -97,14 +101,6 @@ class OpenAI(LLM):
                     continue  # :)
 
             self.write_log(f"Completion: \n\n{completion}")
-        else:
-            self.write_log(f"Prompt:\n\n{prompt}")
-            completion = ""
-            async for chunk in await openai.Completion.acreate(prompt=prompt, **args):
-                yield chunk.choices[0].text
-                completion += chunk.choices[0].text
-
-            self.write_log(f"Completion:\n\n{completion}")
 
     async def stream_chat(self, messages: List[ChatMessage] = None, **kwargs) -> Generator[Union[Any, List, Dict], None, None]:
         args = self.default_args.copy()
@@ -119,7 +115,7 @@ class OpenAI(LLM):
             args["model"], messages, self.context_length, args["max_tokens"], None, functions=args.get("functions", None), system_message=self.system_message)
         self.write_log(f"Prompt: \n\n{format_chat_messages(messages)}")
         completion = ""
-        async for chunk in await openai.ChatCompletion.acreate(
+        async for chunk in await acompletion(
             messages=messages,
             **args,
         ):
@@ -135,7 +131,7 @@ class OpenAI(LLM):
             messages = compile_chat_messages(
                 args["model"], with_history, self.context_length, args["max_tokens"], prompt, functions=None, system_message=self.system_message)
             self.write_log(f"Prompt: \n\n{format_chat_messages(messages)}")
-            resp = (await openai.ChatCompletion.acreate(
+            resp = (await acompletion(
                 messages=messages,
                 **args,
             )).choices[0].message.content
