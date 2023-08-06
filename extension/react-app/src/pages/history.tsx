@@ -6,6 +6,7 @@ import { RootStore } from "../redux/store";
 import { useNavigate } from "react-router-dom";
 import { secondaryDark, vscBackground } from "../components";
 import styled from "styled-components";
+import { ArrowLeftIcon } from "@heroicons/react/24/outline";
 
 const Tr = styled.tr`
   &:hover {
@@ -47,7 +48,15 @@ function History() {
 
   return (
     <div className="w-full">
-      <h1 className="text-2xl font-bold m-4">History</h1>
+      <div className="items-center flex">
+        <ArrowLeftIcon
+          width="1.4em"
+          height="1.4em"
+          onClick={() => navigate("/")}
+          className="inline-block ml-4 cursor-pointer"
+        />
+        <h1 className="text-2xl font-bold m-4 inline-block">History</h1>
+      </div>
       <table className="w-full">
         <tbody>
           {sessions.map((session, index) => (
