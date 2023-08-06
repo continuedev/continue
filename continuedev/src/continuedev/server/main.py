@@ -11,13 +11,14 @@ import argparse
 
 from .ide import router as ide_router
 from .gui import router as gui_router
-from .session_manager import session_manager
+from .session_manager import session_manager, router as sessions_router
 from ..libs.util.logging import logger
 
 app = FastAPI()
 
 app.include_router(ide_router)
 app.include_router(gui_router)
+app.include_router(sessions_router)
 
 # Add CORS support
 app.add_middleware(

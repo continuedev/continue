@@ -26,7 +26,6 @@ export type Timeline = HistoryNode[];
 export type CurrentIndex = number;
 export type Active1 = boolean;
 export type UserInputQueue = string[];
-export type DefaultModel = string;
 export type Name3 = string;
 export type Description1 = string;
 export type SlashCommands = SlashCommandDescription[];
@@ -47,7 +46,6 @@ export interface FullState1 {
   history: History;
   active: Active1;
   user_input_queue: UserInputQueue;
-  default_model: DefaultModel;
   slash_commands: SlashCommands;
   adding_highlighted_code: AddingHighlightedCode;
   selected_context_items: SelectedContextItems;

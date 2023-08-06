@@ -4,15 +4,18 @@ import { Messenger, WebsocketMessenger } from "./messenger";
 import { VscodeMessenger } from "./vscodeMessenger";
 
 class ContinueGUIClientProtocol extends AbstractContinueGUIClientProtocol {
-  messenger: Messenger;
+  messenger?: Messenger;
   // Server URL must contain the session ID param
   serverUrlWithSessionId: string;
+  useVscodeMessagePassing: boolean;
 
-  constructor(
+  private connectMessenger(
     serverUrlWithSessionId: string,
     useVscodeMessagePassing: boolean
   ) {
-    super();
+    if (this.messenger) {
+      // this.messenger.close(); TODO
+    }
     this.serverUrlWithSessionId = serverUrlWithSessionId;
     this.messenger = useVscodeMessagePassing
       ? new VscodeMessenger(serverUrlWithSessionId)
@@ -24,26 +27,52 @@ class ContinueGUIClientProtocol extends AbstractContinueGUIClientProtocol {
     this.messenger.onError((error) => {
       console.log("GUI -> IDE websocket error", error);
     });
+
+    this.messenger.onMessageType("reconnect_at_session", (data: any) => {
+      if (data.session_id) {
+        this.onReconnectAtSession(data.session_id);
+      }
+    });
+  }
+
+  constructor(
+    serverUrlWithSessionId: string,
+    useVscodeMessagePassing: boolean
+  ) {
+    super();
+    this.serverUrlWithSessionId = serverUrlWithSessionId;
+    this.useVscodeMessagePassing = useVscodeMessagePassing;
+    this.connectMessenger(serverUrlWithSessionId, useVscodeMessagePassing);
+  }
+
+  onReconnectAtSession(session_id: string): void {
+    this.connectMessenger(
+      this.serverUrlWithSessionId.replace(
+        /\/session\/[a-zA-Z0-9-]+/,
+        `/session/${session_id}`
+      ),
+      this.useVscodeMessagePassing
+    );
   }
 
   sendMainInput(input: string) {
-    this.messenger.send("main_input", { input });
+    this.messenger?.send("main_input", { input });
   }
 
   reverseToIndex(index: number) {
-    this.messenger.send("reverse_to_index", { index });
+    this.messenger?.send("reverse_to_index", { index });
   }
 
   sendRefinementInput(input: string, index: number) {
-    this.messenger.send("refinement_input", { input, index });
+    this.messenger?.send("refinement_input", { input, index });
   }
 
   sendStepUserInput(input: string, index: number) {
-    this.messenger.send("step_user_input", { input, index });
+    this.messenger?.send("step_user_input", { input, index });
   }
 
   onStateUpdate(callback: (state: any) => void) {
-    this.messenger.onMessageType("state_update", (data: any) => {
+    this.messenger?.onMessageType("state_update", (data: any) => {
       if (data.state) {
         callback(data.state);
       }
@@ -53,7 +82,7 @@ class ContinueGUIClientProtocol extends AbstractContinueGUIClientProtocol {
   onAvailableSlashCommands(
     callback: (commands: { name: string; description: string }[]) => void
   ) {
-    this.messenger.onMessageType("available_slash_commands", (data: any) => {
+    this.messenger?.onMessageType("available_slash_commands", (data: any) => {
       if (data.commands) {
         callback(data.commands);
       }
@@ -61,37 +90,37 @@ class ContinueGUIClientProtocol extends AbstractContinueGUIClientProtocol {
   }
 
   sendClear() {
-    this.messenger.send("clear_history", {});
+    this.messenger?.send("clear_history", {});
   }
 
   retryAtIndex(index: number) {
-    this.messenger.send("retry_at_index", { index });
+    this.messenger?.send("retry_at_index", { index });
   }
 
   deleteAtIndex(index: number) {
-    this.messenger.send("delete_at_index", { index });
+    this.messenger?.send("delete_at_index", { index });
   }
 
   deleteContextWithIds(ids: ContextItemId[]) {
-    this.messenger.send("delete_context_with_ids", {
+    this.messenger?.send("delete_context_with_ids", {
       ids: ids.map((id) => `${id.provider_title}-${id.item_id}`),
     });
   }
 
   setEditingAtIds(ids: string[]) {
-    this.messenger.send("set_editing_at_ids", { ids });
+    this.messenger?.send("set_editing_at_ids", { ids });
   }
 
   toggleAddingHighlightedCode(): void {
-    this.messenger.send("toggle_adding_highlighted_code", {});
+    this.messenger?.send("toggle_adding_highlighted_code", {});
   }
 
   showLogsAtIndex(index: number): void {
-    this.messenger.send("show_logs_at_index", { index });
+    this.messenger?.send("show_logs_at_index", { index });
   }
 
   selectContextItem(id: string, query: string): void {
-    this.messenger.send("select_context_item", { id, query });
+    this.messenger?.send("select_context_item", { id, query });
   }
 }
 

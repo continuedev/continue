@@ -264,10 +264,6 @@
             "type": "string"
           }
         },
-        "default_model": {
-          "title": "Default Model",
-          "type": "string"
-        },
         "slash_commands": {
           "title": "Slash Commands",
           "type": "array",
@@ -291,7 +287,6 @@
         "history",
         "active",
         "user_input_queue",
-        "default_model",
         "slash_commands",
         "adding_highlighted_code",
         "selected_context_items"

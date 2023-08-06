@@ -16,11 +16,12 @@ import {
   BookOpenIcon,
   ChatBubbleOvalLeftEllipsisIcon,
   TrashIcon,
+  PlusCircleIcon,
+  FolderIcon,
 } from "@heroicons/react/24/outline";
 import ComboBox from "../components/ComboBox";
 import TextDialog from "../components/TextDialog";
 import HeaderButtonWithText from "../components/HeaderButtonWithText";
-import ReactSwitch from "react-switch";
 import { usePostHog } from "posthog-js/react";
 import { useDispatch, useSelector } from "react-redux";
 import { RootStore } from "../redux/store";
@@ -589,7 +590,16 @@ If you already have an LLM deployed on your own infrastructure, or would like to
           }}
           text="Clear"
         >
-          <TrashIcon width="1.4em" height="1.4em" />
+          <PlusCircleIcon width="1.4em" height="1.4em" />
+        </HeaderButtonWithText>
+        <HeaderButtonWithText
+          onClick={() => {
+            // Go to /history page
+            document.location.href = "/history";
+          }}
+          text="History"
+        >
+          <FolderIcon width="1.4em" height="1.4em" />
         </HeaderButtonWithText>
         <a
           href="https://continue.dev/docs/how-to-use-continue"

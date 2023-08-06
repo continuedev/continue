@@ -263,6 +263,12 @@ class FullState(ContinueBaseModel):
     selected_context_items: List[ContextItem]
 
 
+class SessionInfo(ContinueBaseModel):
+    session_id: str
+    title: str
+    date_created: str
+
+
 class ContinueSDK:
     pass
 

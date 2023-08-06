@@ -154,6 +154,9 @@ class GUIProtocolServer(AbstractGUIProtocolServer):
         create_async_task(
             self.session.autopilot.select_context_item(id, query), self.on_error)
 
+    async def reconnect_at_session(self, session_id: str):
+        await self._send_json("reconnect_at_session", {"session_id": session_id})
+
 
 @router.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket, session: Session = Depends(websocket_session)):

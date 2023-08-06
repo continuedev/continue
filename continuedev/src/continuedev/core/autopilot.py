@@ -1,7 +1,7 @@
 from functools import cached_property
 import traceback
 import time
-from typing import Callable, Coroutine, Dict, List, Union
+from typing import Callable, Coroutine, Dict, List, Optional, Union
 from aiohttp import ClientPayloadError
 from pydantic import root_validator
 
@@ -68,7 +68,7 @@ class Autopilot(ContinueBaseModel):
 
     started: bool = False
 
-    async def start(self):
+    async def start(self, full_state: Optional[FullState] = None):
         self.continue_sdk = await ContinueSDK.create(self)
         if override_policy := self.continue_sdk.config.policy_override:
             self.policy = override_policy
@@ -84,6 +84,12 @@ class Autopilot(ContinueBaseModel):
         logger.debug("Loading index")
         create_async_task(self.context_manager.load_index(
             self.ide.workspace_directory))
+
+        if full_state is not None:
+            self.history = full_state.history
+            self.context_manager.context_providers["code"].adding_highlighted_code = full_state.adding_highlighted_code
+            await self.context_manager.set_selected_items(full_state.selected_context_items)
+
         self.started = True
 
     class Config:
