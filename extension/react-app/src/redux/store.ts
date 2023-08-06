@@ -35,6 +35,10 @@ export interface RootStore {
   uiState: {
     bottomMessage: JSX.Element | undefined;
     bottomMessageCloseTimeout: NodeJS.Timeout | undefined;
+    displayBottomMessageOnBottom: boolean;
+    showDialog: boolean;
+    dialogMessage: string | JSX.Element;
+    dialogEntryOn: boolean;
   };
 }
 

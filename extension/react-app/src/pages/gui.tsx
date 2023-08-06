@@ -1,9 +1,5 @@
 import styled from "styled-components";
-import {
-  defaultBorderRadius,
-  secondaryDark,
-  vscForeground,
-} from "../components";
+import { defaultBorderRadius } from "../components";
 import Loader from "../components/Loader";
 import ContinueButton from "../components/ContinueButton";
 import { ContextItem, FullState } from "../../../schema/FullState";
@@ -12,51 +8,21 @@ import { History } from "../../../schema/History";
 import { HistoryNode } from "../../../schema/HistoryNode";
 import StepContainer from "../components/StepContainer";
 import { GUIClientContext } from "../App";
-import {
-  BookOpenIcon,
-  ChatBubbleOvalLeftEllipsisIcon,
-  TrashIcon,
-  PlusIcon,
-  FolderIcon,
-} from "@heroicons/react/24/outline";
 import ComboBox from "../components/ComboBox";
-import TextDialog from "../components/TextDialog";
-import HeaderButtonWithText from "../components/HeaderButtonWithText";
 import { usePostHog } from "posthog-js/react";
 import { useDispatch, useSelector } from "react-redux";
 import { RootStore } from "../redux/store";
 import { postVscMessage } from "../vscode";
 import UserInputContainer from "../components/UserInputContainer";
-import Onboarding from "../components/Onboarding";
 import { isMetaEquivalentKeyPressed } from "../util";
 import {
   setBottomMessage,
-  setBottomMessageCloseTimeout,
+  setDialogEntryOn,
+  setDialogMessage,
+  setDisplayBottomMessageOnBottom,
+  setShowDialog,
 } from "../redux/slices/uiStateSlice";
 import RingLoader from "../components/RingLoader";
-import { useNavigate } from "react-router-dom";
-
-const TopGUIDiv = styled.div`
-  overflow: hidden;
-`;
-
-const BottomMessageDiv = styled.div<{ displayOnBottom: boolean }>`
-  position: fixed;
-  bottom: ${(props) => (props.displayOnBottom ? "50px" : undefined)};
-  top: ${(props) => (props.displayOnBottom ? undefined : "50px")};
-  left: 0;
-  right: 0;
-  margin: 8px;
-  margin-top: 0;
-  background-color: ${secondaryDark};
-  color: ${vscForeground};
-  border-radius: ${defaultBorderRadius};
-  padding: 12px;
-  z-index: 100;
-  box-shadow: 0px 0px 2px 0px ${vscForeground};
-  max-height: 50vh;
-  overflow: scroll;
-`;
 
 const UserInputQueueItem = styled.div`
   border-radius: ${defaultBorderRadius};
@@ -66,43 +32,19 @@ const UserInputQueueItem = styled.div`
   text-align: center;
 `;
 
-const Footer = styled.footer<{ dataSwitchChecked: boolean }>`
-  display: flex;
-  flex-direction: row;
-  gap: 8px;
-  justify-content: right;
-  padding: 8px;
-  align-items: center;
-  margin-top: 8px;
-  border-top: 0.1px solid gray;
-  background-color: ${(props) =>
-    props.dataSwitchChecked ? "#12887a33" : "transparent"};
-`;
-
 interface GUIProps {
   firstObservation?: any;
 }
 
 function GUI(props: GUIProps) {
-  const navigate = useNavigate();
-
+  // #region Hooks
   const client = useContext(GUIClientContext);
   const posthog = usePostHog();
+  const dispatch = useDispatch();
 
-  const vscMachineId = useSelector(
-    (state: RootStore) => state.config.vscMachineId
-  );
-  const [dataSwitchChecked, setDataSwitchChecked] = useState(false);
-  const dataSwitchOn = useSelector(
-    (state: RootStore) => state.config.dataSwitchOn
-  );
+  // #endregion
 
-  useEffect(() => {
-    if (typeof dataSwitchOn !== "undefined") {
-      setDataSwitchChecked(dataSwitchOn);
-    }
-  }, [dataSwitchOn]);
-
+  // #region State
   const [waitingForSteps, setWaitingForSteps] = useState(false);
   const [userInputQueue, setUserInputQueue] = useState<string[]>([]);
   const [addingHighlightedCode, setAddingHighlightedCode] = useState(false);
@@ -139,40 +81,32 @@ function GUI(props: GUIProps) {
     ],
     current_index: 3,
   } as any);
+  const [waitingForClient, setWaitingForClient] = useState(true);
+  const [showLoading, setShowLoading] = useState(false);
 
-  const vscMediaUrl = useSelector(
-    (state: RootStore) => state.config.vscMediaUrl
-  );
-  const [showFeedbackDialog, setShowFeedbackDialog] = useState(false);
-  const [feedbackDialogMessage, setFeedbackDialogMessage] = useState<
-    string | JSX.Element
-  >("");
-  const [feedbackEntryOn, setFeedbackEntryOn] = useState(true);
+  // #endregion
 
-  const dispatch = useDispatch();
+  // #region Refs
+  const mainTextInputRef = useRef<HTMLInputElement>(null);
+  const topGuiDivRef = useRef<HTMLDivElement>(null);
+  // #endregion
+
+  // #region Effects
+
+  // Set displayBottomMessageOnBottom
+  const aboveComboBoxDivRef = useRef<HTMLDivElement>(null);
   const bottomMessage = useSelector(
     (state: RootStore) => state.uiState.bottomMessage
   );
-
-  const [displayBottomMessageOnBottom, setDisplayBottomMessageOnBottom] =
-    useState<boolean>(true);
-  const mainTextInputRef = useRef<HTMLInputElement>(null);
-
-  const aboveComboBoxDivRef = useRef<HTMLDivElement>(null);
-
   useEffect(() => {
     if (!aboveComboBoxDivRef.current) return;
-    if (
-      aboveComboBoxDivRef.current.getBoundingClientRect().top >
-      window.innerHeight / 2
-    ) {
-      setDisplayBottomMessageOnBottom(false);
-    } else {
-      setDisplayBottomMessageOnBottom(true);
-    }
+    dispatch(
+      setDisplayBottomMessageOnBottom(
+        aboveComboBoxDivRef.current.getBoundingClientRect().top <
+          window.innerHeight / 2
+      )
+    );
   }, [bottomMessage, aboveComboBoxDivRef.current]);
-
-  const topGuiDivRef = useRef<HTMLDivElement>(null);
 
   const [scrollTimeout, setScrollTimeout] = useState<NodeJS.Timeout | null>(
     null
@@ -264,7 +198,8 @@ function GUI(props: GUIProps) {
     scrollToBottom();
   }, [waitingForSteps]);
 
-  const [waitingForClient, setWaitingForClient] = useState(true);
+  // #endregion
+
   useEffect(() => {
     if (client && waitingForClient) {
       setWaitingForClient(false);
@@ -327,62 +262,66 @@ function GUI(props: GUIProps) {
           (currentCount + 1).toString()
         );
         if (currentCount === 25) {
-          setFeedbackDialogMessage(
-            <div className="text-center">
-              👋 Thanks for using Continue. We are a beta product and love
-              working closely with our first users. If you're interested in
-              speaking, enter your name and email. We won't use this information
-              for anything other than reaching out.
-              <br />
-              <br />
-              <form
-                onSubmit={(e: any) => {
-                  e.preventDefault();
-                  posthog?.capture("user_interest_form", {
-                    name: e.target.elements[0].value,
-                    email: e.target.elements[1].value,
-                  });
-                  setFeedbackDialogMessage(
-                    <div className="text-center">
-                      Thanks! We'll be in touch soon.
-                    </div>
-                  );
-                }}
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "10px",
-                }}
-              >
-                <input
-                  style={{ padding: "10px", borderRadius: "5px" }}
-                  type="text"
-                  name="name"
-                  placeholder="Name"
-                  required
-                />
-                <input
-                  style={{ padding: "10px", borderRadius: "5px" }}
-                  type="email"
-                  name="email"
-                  placeholder="Email"
-                  required
-                />
-                <button
-                  style={{
-                    padding: "10px",
-                    borderRadius: "5px",
-                    cursor: "pointer",
+          dispatch(
+            setDialogMessage(
+              <div className="text-center">
+                👋 Thanks for using Continue. We are a beta product and love
+                working closely with our first users. If you're interested in
+                speaking, enter your name and email. We won't use this
+                information for anything other than reaching out.
+                <br />
+                <br />
+                <form
+                  onSubmit={(e: any) => {
+                    e.preventDefault();
+                    posthog?.capture("user_interest_form", {
+                      name: e.target.elements[0].value,
+                      email: e.target.elements[1].value,
+                    });
+                    dispatch(
+                      setDialogMessage(
+                        <div className="text-center">
+                          Thanks! We'll be in touch soon.
+                        </div>
+                      )
+                    );
                   }}
-                  type="submit"
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "10px",
+                  }}
                 >
-                  Submit
-                </button>
-              </form>
-            </div>
+                  <input
+                    style={{ padding: "10px", borderRadius: "5px" }}
+                    type="text"
+                    name="name"
+                    placeholder="Name"
+                    required
+                  />
+                  <input
+                    style={{ padding: "10px", borderRadius: "5px" }}
+                    type="email"
+                    name="email"
+                    placeholder="Email"
+                    required
+                  />
+                  <button
+                    style={{
+                      padding: "10px",
+                      borderRadius: "5px",
+                      cursor: "pointer",
+                    }}
+                    type="submit"
+                  >
+                    Submit
+                  </button>
+                </form>
+              </div>
+            )
           );
-          setFeedbackEntryOn(false);
-          setShowFeedbackDialog(true);
+          dispatch(setDialogEntryOn(false));
+          dispatch(setShowDialog(true));
         }
       } else {
         localStorage.setItem("mainTextEntryCounter", "1");
@@ -395,7 +334,6 @@ function GUI(props: GUIProps) {
     client.sendStepUserInput(input, index);
   };
 
-  const [showLoading, setShowLoading] = useState(false);
   useEffect(() => {
     const timeout = setTimeout(() => {
       setShowLoading(true);
@@ -405,228 +343,121 @@ function GUI(props: GUIProps) {
       clearTimeout(timeout);
     };
   }, []);
-
-  // const iterations = useSelector(selectIterations);
   return (
-    <>
-      <Onboarding />
-      <TextDialog
-        showDialog={showFeedbackDialog}
-        onEnter={(text) => {
-          client?.sendMainInput(`/feedback ${text}`);
-          setShowFeedbackDialog(false);
-        }}
-        onClose={() => {
-          setShowFeedbackDialog(false);
-        }}
-        message={feedbackDialogMessage}
-        entryOn={feedbackEntryOn}
-      />
-
-      <TopGUIDiv
-        ref={topGuiDivRef}
-        onKeyDown={(e) => {
-          if (e.key === "Enter" && e.ctrlKey) {
-            onMainTextInput();
-          }
-        }}
-      >
-        {showLoading && typeof client === "undefined" && (
-          <>
-            <RingLoader />
-            <p
-              style={{
-                textAlign: "center",
-                margin: "0px",
-                fontSize: "14px",
-              }}
-            >
-              Continue Server Starting
-            </p>
-            <p
-              style={{
-                margin: "auto",
-                textAlign: "center",
-                marginTop: "4px",
-                fontSize: "12px",
-                cursor: "pointer",
-                opacity: 0.7,
-              }}
-              onClick={() => {
-                postVscMessage("toggleDevTools", {});
-              }}
-            >
-              <u>Click to view logs</u>
-            </p>
-            <div className="w-3/4 m-auto text-center text-xs">
-              Tip: Drag the Continue logo from the far left of the window to the
-              right, then toggle Continue using option/alt+command+m.
-            </div>
-          </>
-        )}
-        {history?.timeline.map((node: HistoryNode, index: number) => {
-          return node.step.name === "User Input" ? (
-            node.step.hide || (
-              <UserInputContainer
-                onDelete={() => {
-                  client?.deleteAtIndex(index);
-                }}
-                historyNode={node}
-              >
-                {node.step.description as string}
-              </UserInputContainer>
-            )
-          ) : (
-            <StepContainer
-              index={index}
-              isLast={index === history.timeline.length - 1}
-              isFirst={index === 0}
-              open={stepsOpen[index]}
-              onToggle={() => {
-                const nextStepsOpen = [...stepsOpen];
-                nextStepsOpen[index] = !nextStepsOpen[index];
-                setStepsOpen(nextStepsOpen);
-              }}
-              onToggleAll={() => {
-                const shouldOpen = !stepsOpen[index];
-                setStepsOpen((prev) => prev.map(() => shouldOpen));
-              }}
-              key={index}
-              onUserInput={(input: string) => {
-                onStepUserInput(input, index);
-              }}
-              inFuture={index > history?.current_index}
-              historyNode={node}
-              onReverse={() => {
-                client?.reverseToIndex(index);
-              }}
-              onRetry={() => {
-                client?.retryAtIndex(index);
-                setWaitingForSteps(true);
-              }}
+    <div
+      className="overflow-hidden"
+      ref={topGuiDivRef}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" && e.ctrlKey) {
+          onMainTextInput();
+        }
+      }}
+    >
+      {showLoading && typeof client === "undefined" && (
+        <>
+          <RingLoader />
+          <p
+            style={{
+              textAlign: "center",
+              margin: "0px",
+              fontSize: "14px",
+            }}
+          >
+            Continue Server Starting
+          </p>
+          <p
+            style={{
+              margin: "auto",
+              textAlign: "center",
+              marginTop: "4px",
+              fontSize: "12px",
+              cursor: "pointer",
+              opacity: 0.7,
+            }}
+            onClick={() => {
+              postVscMessage("toggleDevTools", {});
+            }}
+          >
+            <u>Click to view logs</u>
+          </p>
+          <div className="w-3/4 m-auto text-center text-xs">
+            Tip: Drag the Continue logo from the far left of the window to the
+            right, then toggle Continue using option/alt+command+m.
+          </div>
+        </>
+      )}
+      {history?.timeline.map((node: HistoryNode, index: number) => {
+        return node.step.name === "User Input" ? (
+          node.step.hide || (
+            <UserInputContainer
               onDelete={() => {
                 client?.deleteAtIndex(index);
               }}
-            />
-          );
+              historyNode={node}
+            >
+              {node.step.description as string}
+            </UserInputContainer>
+          )
+        ) : (
+          <StepContainer
+            index={index}
+            isLast={index === history.timeline.length - 1}
+            isFirst={index === 0}
+            open={stepsOpen[index]}
+            onToggle={() => {
+              const nextStepsOpen = [...stepsOpen];
+              nextStepsOpen[index] = !nextStepsOpen[index];
+              setStepsOpen(nextStepsOpen);
+            }}
+            onToggleAll={() => {
+              const shouldOpen = !stepsOpen[index];
+              setStepsOpen((prev) => prev.map(() => shouldOpen));
+            }}
+            key={index}
+            onUserInput={(input: string) => {
+              onStepUserInput(input, index);
+            }}
+            inFuture={index > history?.current_index}
+            historyNode={node}
+            onReverse={() => {
+              client?.reverseToIndex(index);
+            }}
+            onRetry={() => {
+              client?.retryAtIndex(index);
+              setWaitingForSteps(true);
+            }}
+            onDelete={() => {
+              client?.deleteAtIndex(index);
+            }}
+          />
+        );
+      })}
+      {waitingForSteps && <Loader />}
+
+      <div>
+        {userInputQueue.map((input) => {
+          return <UserInputQueueItem>{input}</UserInputQueueItem>;
         })}
-        {waitingForSteps && <Loader></Loader>}
+      </div>
 
-        <div>
-          {userInputQueue.map((input) => {
-            return <UserInputQueueItem>{input}</UserInputQueueItem>;
-          })}
-        </div>
-
-        <div ref={aboveComboBoxDivRef} />
-        <ComboBox
-          ref={mainTextInputRef}
-          onEnter={(e) => {
-            onMainTextInput(e);
-            e.stopPropagation();
-            e.preventDefault();
-          }}
-          onInputValueChange={() => {}}
-          items={availableSlashCommands}
-          selectedContextItems={selectedContextItems}
-          onToggleAddContext={() => {
-            client?.toggleAddingHighlightedCode();
-          }}
-          addingHighlightedCode={addingHighlightedCode}
-        />
-        <ContinueButton onClick={onMainTextInput} />
-      </TopGUIDiv>
-      <BottomMessageDiv
-        displayOnBottom={displayBottomMessageOnBottom}
-        onMouseEnter={() => {
-          dispatch(setBottomMessageCloseTimeout(undefined));
+      <div ref={aboveComboBoxDivRef} />
+      <ComboBox
+        ref={mainTextInputRef}
+        onEnter={(e) => {
+          onMainTextInput(e);
+          e.stopPropagation();
+          e.preventDefault();
         }}
-        onMouseLeave={(e) => {
-          if (!e.buttons) {
-            dispatch(setBottomMessage(undefined));
-          }
+        onInputValueChange={() => {}}
+        items={availableSlashCommands}
+        selectedContextItems={selectedContextItems}
+        onToggleAddContext={() => {
+          client?.toggleAddingHighlightedCode();
         }}
-        hidden={!bottomMessage}
-      >
-        {bottomMessage}
-      </BottomMessageDiv>
-      <Footer dataSwitchChecked={dataSwitchChecked}>
-        {vscMediaUrl && (
-          <a
-            href="https://github.com/continuedev/continue"
-            style={{ marginRight: "auto" }}
-          >
-            <img
-              src={`${vscMediaUrl}/continue-dev-square.png`}
-              width="22px"
-              style={{ backgroundColor: "black", color: "red" }}
-            />
-          </a>
-        )}
-        <HeaderButtonWithText
-          onClick={() => {
-            // Show the dialog
-            setFeedbackDialogMessage(
-              `Continue uses GPT-4 by default, but works with any model. If you'd like to keep your code completely private, there are few options:
-
-Run a local model with ggml: [5 minute quickstart](https://github.com/continuedev/ggml-server-example)
-
-Use Azure OpenAI service, which is GDPR and HIPAA compliant: [Tutorial](https://continue.dev/docs/customization#azure-openai-service)
-
-If you already have an LLM deployed on your own infrastructure, or would like to do so, please contact us at hi@continue.dev.
-              `
-            );
-            setFeedbackEntryOn(false);
-            setShowFeedbackDialog(true);
-          }}
-          text={"Use Private Model"}
-        >
-          <div
-            style={{ fontSize: "18px", marginLeft: "2px", marginRight: "2px" }}
-          >
-            🔒
-          </div>
-        </HeaderButtonWithText>
-        <HeaderButtonWithText
-          onClick={() => {
-            client?.loadSession(undefined);
-          }}
-          text="New Session"
-        >
-          <PlusIcon width="1.4em" height="1.4em" />
-        </HeaderButtonWithText>
-        <HeaderButtonWithText
-          onClick={() => {
-            // Go to /history page
-            navigate("/history");
-          }}
-          text="History"
-        >
-          <FolderIcon width="1.4em" height="1.4em" />
-        </HeaderButtonWithText>
-        <a
-          href="https://continue.dev/docs/how-to-use-continue"
-          className="no-underline"
-        >
-          <HeaderButtonWithText text="Docs">
-            <BookOpenIcon width="1.4em" height="1.4em" />
-          </HeaderButtonWithText>
-        </a>
-        <HeaderButtonWithText
-          onClick={() => {
-            // Set dialog open
-            setFeedbackDialogMessage(
-              "Having trouble using Continue? Want a new feature? Let us know! This box is anonymous, but we will promptly address your feedback."
-            );
-            setFeedbackEntryOn(true);
-            setShowFeedbackDialog(true);
-          }}
-          text="Feedback"
-        >
-          <ChatBubbleOvalLeftEllipsisIcon width="1.4em" height="1.4em" />
-        </HeaderButtonWithText>
-      </Footer>
-    </>
+        addingHighlightedCode={addingHighlightedCode}
+      />
+      <ContinueButton onClick={onMainTextInput} />
+    </div>
   );
 }
 
