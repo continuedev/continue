@@ -31,7 +31,7 @@ abstract class AbstractContinueGUIClientProtocol {
 
   abstract selectContextItem(id: string, query: string): void;
 
-  abstract loadSession(session_id: string): void;
+  abstract loadSession(session_id?: string): void;
 
   abstract onReconnectAtSession(session_id: string): void;
 }

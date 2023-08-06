@@ -47,7 +47,7 @@ class ContinueGUIClientProtocol extends AbstractContinueGUIClientProtocol {
     this.connectMessenger(serverUrlWithSessionId, useVscodeMessagePassing);
   }
 
-  loadSession(session_id: string): void {
+  loadSession(session_id?: string): void {
     this.messenger?.send("load_session", { session_id });
   }
 

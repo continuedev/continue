@@ -16,7 +16,7 @@ import {
   BookOpenIcon,
   ChatBubbleOvalLeftEllipsisIcon,
   TrashIcon,
-  PlusCircleIcon,
+  PlusIcon,
   FolderIcon,
 } from "@heroicons/react/24/outline";
 import ComboBox from "../components/ComboBox";
@@ -589,11 +589,11 @@ If you already have an LLM deployed on your own infrastructure, or would like to
         </HeaderButtonWithText>
         <HeaderButtonWithText
           onClick={() => {
-            client?.sendClear();
+            client?.loadSession(undefined);
           }}
-          text="Clear"
+          text="New Session"
         >
-          <PlusCircleIcon width="1.4em" height="1.4em" />
+          <PlusIcon width="1.4em" height="1.4em" />
         </HeaderButtonWithText>
         <HeaderButtonWithText
           onClick={() => {

@@ -1,7 +1,7 @@
 import os
 import traceback
 from fastapi import WebSocket, APIRouter
-from typing import Any, Coroutine, Dict, Union
+from typing import Any, Coroutine, Dict, Optional, Union
 from uuid import uuid4
 import json
 
@@ -49,7 +49,7 @@ class SessionManager:
             raise KeyError("Session ID not recognized", session_id)
         return self.sessions[session_id]
 
-    async def new_session(self, ide: AbstractIdeProtocolServer, session_id: Union[str, None] = None) -> Session:
+    async def new_session(self, ide: AbstractIdeProtocolServer, session_id: Optional[str] = None) -> Session:
         logger.debug(f"New session: {session_id}")
 
         # Load the persisted state (not being used right now)
@@ -110,12 +110,14 @@ class SessionManager:
         with open(getSessionsListFilePath(), "r") as f:
             sessions_list = json.load(f)
 
-        sessions_list.append(full_state.session_info.dict())
+        session_ids = [s["session_id"] for s in sessions_list]
+        if session_id not in session_ids:
+            sessions_list.append(full_state.session_info.dict())
 
         with open(getSessionsListFilePath(), "w") as f:
             json.dump(sessions_list, f)
 
-    async def load_session(self, old_session_id: str, new_session_id: str):
+    async def load_session(self, old_session_id: str, new_session_id: Optional[str] = None) -> str:
         """Load the session's FullState from a json file"""
 
         # First persist the current state
@@ -126,7 +128,8 @@ class SessionManager:
         del self.registered_ides[old_session_id]
 
         # Start the new session
-        await self.new_session(ide, session_id=new_session_id)
+        new_session = await self.new_session(ide, session_id=new_session_id)
+        return new_session.session_id
 
     def register_websocket(self, session_id: str, ws: WebSocket):
         self.sessions[session_id].ws = ws

@@ -2,7 +2,7 @@ import asyncio
 import json
 from fastapi import Depends, Header, WebSocket, APIRouter
 from starlette.websockets import WebSocketState, WebSocketDisconnect
-from typing import Any, List, Type, TypeVar
+from typing import Any, List, Optional, Type, TypeVar
 from pydantic import BaseModel
 import traceback
 from uvicorn.main import Server
@@ -100,7 +100,7 @@ class GUIProtocolServer(AbstractGUIProtocolServer):
         elif message_type == "select_context_item":
             self.select_context_item(data["id"], data["query"])
         elif message_type == "load_session":
-            self.load_session(data["session_id"])
+            self.load_session(data.get("session_id", None))
 
     def on_main_input(self, input: str):
         # Do something with user input
@@ -156,10 +156,10 @@ class GUIProtocolServer(AbstractGUIProtocolServer):
         create_async_task(
             self.session.autopilot.select_context_item(id, query), self.on_error)
 
-    def load_session(self, session_id: str):
+    def load_session(self, session_id: Optional[str] = None):
         async def load_and_tell_to_reconnect():
-            await session_manager.load_session(self.session.session_id, session_id)
-            await self._send_json("reconnect_at_session", {"session_id": session_id})
+            new_session_id = await session_manager.load_session(self.session.session_id, session_id)
+            await self._send_json("reconnect_at_session", {"session_id": new_session_id})
 
         create_async_task(
             load_and_tell_to_reconnect(), self.on_error)
