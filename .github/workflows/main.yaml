@@ -32,11 +32,11 @@ jobs:
           pip install -r continuedev/requirements.txt
 
       - name: Build PyInstaller Executable for Windows
-        run: pyinstaller run.py --exclude-module numpy --exclude-module jedi -F --add-data 'continuedev;continuedev' --hidden-import=anthropic --hidden-import=github
+        run: pyinstaller run.py --exclude-module numpy --exclude-module jedi -F --add-data 'continuedev;continuedev' --hidden-import=anthropic --hidden-import=github --hidden-import=ripgrepy
         if: matrix.os == 'windows-latest'
 
       - name: Build PyInstaller Executable for Mac/Linux
-        run: pyinstaller run.py --exclude-module numpy --exclude-module jedi -F --add-data 'continuedev:continuedev' --hidden-import=anthropic --hidden-import=github
+        run: pyinstaller run.py --exclude-module numpy --exclude-module jedi -F --add-data 'continuedev:continuedev' --hidden-import=anthropic --hidden-import=github --hidden-import=ripgrepy
         if: matrix.os != 'windows-latest'
 
       - name: Set permissions
