@@ -11,6 +11,14 @@
         "Server",
         "Extension (VSCode)"
       ]
+    },
+    {
+      "name": "Server + Tests (VSCode)",
+      "stopAll": true,
+      "configurations": [
+        "Server",
+        "Tests (VSCode)"
+      ]
     }
   ],
   "configurations": [
@@ -46,6 +54,7 @@
         "CONTINUE_SERVER_URL": "http://localhost:8001"
       }
     },
+    // Has to be run after starting the server (separately or using the compound configuration)
     {
       "name": "Tests (VSCode)",
       "type": "extensionHost",
@@ -66,6 +75,11 @@
       ],
       "internalConsoleOptions": "openOnSessionStart",
       "preLaunchTask": "vscode-extension:tests:build",
+      "env": {
+        "CONTINUE_SERVER_URL": "http://localhost:8001",
+        // Avoid timing out when stopping on breakpoints during debugging in VSCode
+        "MOCHA_TIMEOUT": "0",
+      },
     }
   ]
 }

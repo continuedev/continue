@@ -10,9 +10,7 @@ describe("Can start python server", () => {
     await startContinuePythonServer();
 
     await new Promise((resolve) => setTimeout(resolve, 500));
-
-    // Currently is flaky, keeping because still feels useful and we can fix in a followup commit
-    //
+    
     // Check if server is running
     const serverUrl = getContinueServerUrl();
     const response = await fetch(`${serverUrl}/health`);
