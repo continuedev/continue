@@ -25,13 +25,14 @@ class URLContextProvider(ContextProvider):
         )
 
     def _get_url_text_contents(self, url: str):
+        from bs4 import BeautifulSoup
         import requests
 
         response = requests.get(url)
-        return response.text
+        soup = BeautifulSoup(response.text, 'html.parser')
+        return soup.get_text()
 
     async def provide_context_items(self, workspace_dir: str) -> List[ContextItem]:
-        self.workspace_dir = workspace_dir
         return [self.BASE_CONTEXT_ITEM]
 
     async def get_item(self, id: ContextItemId, query: str) -> ContextItem:
@@ -40,7 +41,7 @@ class URLContextProvider(ContextProvider):
 
         query = query.lstrip("url ")
         url = query.strip()
-        content = await self._get_url_text_contents(url)
+        content = self._get_url_text_contents(url)
 
         ctx_item = self.BASE_CONTEXT_ITEM.copy()
         ctx_item.content = content
