@@ -34,6 +34,7 @@
       "request": "launch",
       "cwd": "${workspaceFolder}/extension",
       "args": [
+        "${workspaceFolder}/extension/manual-testing-sandbox",
         "--extensionDevelopmentPath=${workspaceFolder}/extension",
       ],
       "outFiles": [
