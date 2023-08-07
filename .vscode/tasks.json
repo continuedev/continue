@@ -49,10 +49,12 @@
                 "revealProblems": "onProblem",
                 "clear": true,
             },
-            "group": {
-                "kind": "build",
-                "isDefault": true
-            }
-        }
+        },
+        // Install or update all dependencies for all projects in the monrepo
+        {
+            "label": "install-all-dependencies",
+            "type": "shell",
+            "command": "./install-dependencies.sh",
+        },
     ]
 }
