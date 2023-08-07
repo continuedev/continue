@@ -5,6 +5,7 @@ from typing import Callable, Coroutine, Dict, List, Optional, Union
 from aiohttp import ClientPayloadError
 from pydantic import root_validator
 
+from ..libs.util.strings import remove_quotes_and_escapes
 from ..models.filesystem import RangeInFileWithContents
 from ..models.filesystem_edit import FileEditWithFullContents
 from .observation import Observation, InternalErrorObservation
@@ -381,11 +382,11 @@ class Autopilot(ContinueBaseModel):
         if self.session_info is None:
             async def create_title():
                 title = await self.continue_sdk.models.medium.complete(f"Give a short title to describe the current chat session. Do not put quotes around the title. The first message was: \"{user_input}\". The title is: ")
+                title = remove_quotes_and_escapes(title)
                 self.session_info = SessionInfo(
                     title=title,
                     session_id=self.ide.session_id,
-                    date_created=time.strftime(
-                        "%Y-%m-%d %H:%M:%S", time.gmtime())
+                    date_created=str(time.time())
                 )
 
             create_async_task(create_title(), on_error=lambda e: self.continue_sdk.run_step(

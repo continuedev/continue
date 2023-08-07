@@ -69,7 +69,18 @@ function History() {
                   }}
                 >
                   <div className="text-lg">{session.title}</div>
-                  <div className="text-gray-400">{session.date_created}</div>
+                  <div className="text-gray-400">
+                    {new Date(
+                      parseInt(session.date_created) * 1000
+                    ).toLocaleString("en-US", {
+                      weekday: "short",
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
+                      hour: "numeric",
+                      minute: "numeric",
+                    })}
+                  </div>
                 </TdDiv>
               </td>
             </Tr>

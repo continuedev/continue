@@ -12,7 +12,6 @@ import {
   setVscMediaUrl,
   setDataSwitchOn,
 } from "./redux/slices/configSlice";
-import { updateFileSystem } from "./redux/slices/debugContexSlice";
 import { setHighlightedCode } from "./redux/slices/miscSlice";
 import { postVscMessage } from "./vscode";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
@@ -60,7 +59,6 @@ function App() {
           break;
         case "highlightedCode":
           dispatch(setHighlightedCode(event.data.rangeInFile));
-          dispatch(updateFileSystem(event.data.filesystem));
           break;
       }
     };

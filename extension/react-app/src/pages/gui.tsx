@@ -2,9 +2,8 @@ import styled from "styled-components";
 import { defaultBorderRadius } from "../components";
 import Loader from "../components/Loader";
 import ContinueButton from "../components/ContinueButton";
-import { ContextItem, FullState } from "../../../schema/FullState";
+import { FullState } from "../../../schema/FullState";
 import { useCallback, useEffect, useRef, useState, useContext } from "react";
-import { History } from "../../../schema/History";
 import { HistoryNode } from "../../../schema/HistoryNode";
 import StepContainer from "../components/StepContainer";
 import { GUIClientContext } from "../App";
@@ -23,6 +22,10 @@ import {
   setShowDialog,
 } from "../redux/slices/uiStateSlice";
 import RingLoader from "../components/RingLoader";
+import {
+  setServerState,
+  temporarilySetUserInputQueue,
+} from "../redux/slices/serverStateReducer";
 
 const UserInputQueueItem = styled.div`
   border-radius: ${defaultBorderRadius};
@@ -44,13 +47,18 @@ function GUI(props: GUIProps) {
 
   // #endregion
 
+  // #region Selectors
+  const {
+    history,
+    user_input_queue,
+    adding_highlighted_code,
+    selected_context_items,
+  } = useSelector((state: RootStore) => state.serverState);
+
+  // #endregion
+
   // #region State
   const [waitingForSteps, setWaitingForSteps] = useState(false);
-  const [userInputQueue, setUserInputQueue] = useState<string[]>([]);
-  const [addingHighlightedCode, setAddingHighlightedCode] = useState(false);
-  const [selectedContextItems, setSelectedContextItems] = useState<
-    ContextItem[]
-  >([]);
   const [availableSlashCommands, setAvailableSlashCommands] = useState<
     { name: string; description: string }[]
   >([]);
@@ -60,27 +68,6 @@ function GUI(props: GUIProps) {
     true,
     true,
   ]);
-  const [history, setHistory] = useState<History | undefined>({
-    timeline: [
-      {
-        step: {
-          name: "Welcome to Continue",
-          hide: false,
-          description: `- Highlight code section and ask a question or give instructions
-- Use \`cmd+m\` (Mac) / \`ctrl+m\` (Windows) to open Continue
-- Use \`/help\` to ask questions about how to use Continue`,
-          system_message: null,
-          chat_context: [],
-          manage_own_chat_context: false,
-          message: "",
-        },
-        depth: 0,
-        deleted: false,
-        active: false,
-      },
-    ],
-    current_index: 3,
-  } as any);
   const [waitingForClient, setWaitingForClient] = useState(true);
   const [showLoading, setShowLoading] = useState(false);
 
@@ -163,11 +150,9 @@ function GUI(props: GUIProps) {
           state.history.current_index
         ].step.description?.trim() === "";
 
+      dispatch(setServerState(state));
+
       setWaitingForSteps(waitingForSteps);
-      setHistory(state.history);
-      setSelectedContextItems(state.selected_context_items || []);
-      setUserInputQueue(state.user_input_queue);
-      setAddingHighlightedCode(state.adding_highlighted_code);
       setAvailableSlashCommands(
         state.slash_commands.map((c: any) => {
           return {
@@ -203,11 +188,11 @@ function GUI(props: GUIProps) {
   useEffect(() => {
     if (client && waitingForClient) {
       setWaitingForClient(false);
-      for (const input of userInputQueue) {
+      for (const input of user_input_queue) {
         client.sendMainInput(input);
       }
     }
-  }, [client, userInputQueue, waitingForClient]);
+  }, [client, user_input_queue, waitingForClient]);
 
   const onMainTextInput = (event?: any) => {
     if (mainTextInputRef.current) {
@@ -218,9 +203,11 @@ function GUI(props: GUIProps) {
       }
       (mainTextInputRef.current as any).setInputValue("");
       if (!client) {
-        setUserInputQueue((queue) => {
-          return [...queue, input];
-        });
+        dispatch(
+          temporarilySetUserInputQueue((queue: string[]) => {
+            return [...queue, input];
+          })
+        );
         return;
       }
 
@@ -249,9 +236,11 @@ function GUI(props: GUIProps) {
       if (input.trim() === "") return;
 
       client.sendMainInput(input);
-      setUserInputQueue((queue) => {
-        return [...queue, input];
-      });
+      dispatch(
+        temporarilySetUserInputQueue((queue: string[]) => {
+          return [...queue, input];
+        })
+      );
 
       // Increment localstorage counter
       const counter = localStorage.getItem("mainTextEntryCounter");
@@ -435,7 +424,7 @@ function GUI(props: GUIProps) {
       {waitingForSteps && <Loader />}
 
       <div>
-        {userInputQueue.map((input) => {
+        {user_input_queue.map((input) => {
           return <UserInputQueueItem>{input}</UserInputQueueItem>;
         })}
       </div>
@@ -450,11 +439,11 @@ function GUI(props: GUIProps) {
         }}
         onInputValueChange={() => {}}
         items={availableSlashCommands}
-        selectedContextItems={selectedContextItems}
+        selectedContextItems={selected_context_items}
         onToggleAddContext={() => {
           client?.toggleAddingHighlightedCode();
         }}
-        addingHighlightedCode={addingHighlightedCode}
+        addingHighlightedCode={adding_highlighted_code}
       />
       <ContinueButton onClick={onMainTextInput} />
     </div>
