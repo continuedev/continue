@@ -3,6 +3,16 @@
   // Hover to view descriptions of existing attributes.
   // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
   "version": "0.2.0",
+  "compounds": [
+    {
+      "name": "Server + Extension (VSCode)",
+      "stopAll": true,
+      "configurations": [
+        "Server",
+        "Extension (VSCode)"
+      ]
+    }
+  ],
   "configurations": [
     {
       "name": "Server",
@@ -19,7 +29,7 @@
       // What about a watch task? - type errors?
     },
     {
-      "name": "VSCode Extension",
+      "name": "Extension (VSCode)",
       "type": "extensionHost",
       "request": "launch",
       "cwd": "${workspaceFolder}/extension",
@@ -29,7 +39,7 @@
       "outFiles": [
         "${workspaceFolder}/extension/out/**/*.js"
       ],
-      "preLaunchTask": "vscode-extension:build-watch",
+      "preLaunchTask": "vscode-extension:build",
       "env": {
         "CONTINUE_SERVER_URL": "http://localhost:8001"
       }

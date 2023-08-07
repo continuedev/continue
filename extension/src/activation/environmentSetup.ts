@@ -10,7 +10,7 @@ import * as vscode from "vscode";
 import * as os from "os";
 import fkill from "fkill";
 import { finished } from "stream/promises";
-import * as request from "request";
+import request = require("request");
 
 const exec = promisify(execCb);
 
