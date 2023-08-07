@@ -67,8 +67,14 @@ const Layout = () => {
   const navigate = useNavigate();
   const client = useContext(GUIClientContext);
   const dispatch = useDispatch();
-  const { showDialog, dialogEntryOn, dialogMessage } = useSelector(
-    (state: RootStore) => state.uiState
+  const dialogMessage = useSelector(
+    (state: RootStore) => state.uiState.dialogMessage
+  );
+  const showDialog = useSelector(
+    (state: RootStore) => state.uiState.showDialog
+  );
+  const dialogEntryOn = useSelector(
+    (state: RootStore) => state.uiState.dialogEntryOn
   );
 
   // #region Selectors
@@ -76,8 +82,11 @@ const Layout = () => {
     (state: RootStore) => state.config.vscMediaUrl
   );
 
-  const { bottomMessage, displayBottomMessageOnBottom } = useSelector(
-    (state: RootStore) => state.uiState
+  const bottomMessage = useSelector(
+    (state: RootStore) => state.uiState.bottomMessage
+  );
+  const displayBottomMessageOnBottom = useSelector(
+    (state: RootStore) => state.uiState.displayBottomMessageOnBottom
   );
 
   // #endregion
