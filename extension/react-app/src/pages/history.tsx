@@ -59,32 +59,34 @@ function History() {
       </div>
       <table className="w-full">
         <tbody>
-          {sessions.map((session, index) => (
-            <Tr key={index}>
-              <td>
-                <TdDiv
-                  onClick={() => {
-                    client?.loadSession(session.session_id);
-                    navigate("/");
-                  }}
-                >
-                  <div className="text-lg">{session.title}</div>
-                  <div className="text-gray-400">
-                    {new Date(
-                      parseInt(session.date_created) * 1000
-                    ).toLocaleString("en-US", {
-                      weekday: "short",
-                      year: "numeric",
-                      month: "long",
-                      day: "numeric",
-                      hour: "numeric",
-                      minute: "numeric",
-                    })}
-                  </div>
-                </TdDiv>
-              </td>
-            </Tr>
-          ))}
+          {sessions
+            .sort((a, b) => parseInt(b.date_created) - parseInt(a.date_created))
+            .map((session, index) => (
+              <Tr key={index}>
+                <td>
+                  <TdDiv
+                    onClick={() => {
+                      client?.loadSession(session.session_id);
+                      navigate("/");
+                    }}
+                  >
+                    <div className="text-lg">{session.title}</div>
+                    <div className="text-gray-400">
+                      {new Date(
+                        parseInt(session.date_created) * 1000
+                      ).toLocaleString("en-US", {
+                        weekday: "short",
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
+                        hour: "numeric",
+                        minute: "numeric",
+                      })}
+                    </div>
+                  </TdDiv>
+                </td>
+              </Tr>
+            ))}
         </tbody>
       </table>
       <br />
