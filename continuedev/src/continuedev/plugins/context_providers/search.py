@@ -20,7 +20,7 @@ class SearchContextProvider(ContextProvider):
             content="",
             description=ContextItemDescription(
                 name="Search",
-                description="Enter a query to search the current workspace",
+                description="Search the workspace for all matches of an exact string (e.g. '@search console.log')",
                 id=ContextItemId(
                     provider_title=self.title,
                     item_id=self.SEARCH_CONTEXT_ITEM_ID
