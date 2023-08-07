@@ -48,12 +48,16 @@ function GUI(props: GUIProps) {
   // #endregion
 
   // #region Selectors
-  const {
-    history,
-    user_input_queue,
-    adding_highlighted_code,
-    selected_context_items,
-  } = useSelector((state: RootStore) => state.serverState);
+  const history = useSelector((state: RootStore) => state.serverState.history);
+  const user_input_queue = useSelector(
+    (state: RootStore) => state.serverState.user_input_queue
+  );
+  const adding_highlighted_code = useSelector(
+    (state: RootStore) => state.serverState.adding_highlighted_code
+  );
+  const selected_context_items = useSelector(
+    (state: RootStore) => state.serverState.selected_context_items
+  );
 
   // #endregion
 
@@ -187,6 +191,7 @@ function GUI(props: GUIProps) {
 
   useEffect(() => {
     if (client && waitingForClient) {
+      console.log("sending user input queue, ", user_input_queue);
       setWaitingForClient(false);
       for (const input of user_input_queue) {
         client.sendMainInput(input);
