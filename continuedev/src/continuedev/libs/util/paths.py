@@ -32,6 +32,15 @@ def getSessionFilePath(session_id: str):
     return path
 
 
+def getSessionsListFilePath():
+    path = os.path.join(getSessionsFolderPath(), "sessions.json")
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    if not os.path.exists(path):
+        with open(path, 'w') as f:
+            f.write("[]")
+    return path
+
+
 def getConfigFilePath() -> str:
     path = os.path.join(getGlobalFolderPath(), "config.py")
     os.makedirs(os.path.dirname(path), exist_ok=True)

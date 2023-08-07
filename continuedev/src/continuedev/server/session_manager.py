@@ -1,20 +1,22 @@
 import os
 import traceback
-from fastapi import WebSocket
-from typing import Any, Coroutine, Dict, Union
+from fastapi import WebSocket, APIRouter
+from typing import Any, Coroutine, Dict, Optional, Union
 from uuid import uuid4
 import json
 
 from fastapi.websockets import WebSocketState
 
 from ..plugins.steps.core.core import MessageStep
-from ..libs.util.paths import getSessionFilePath, getSessionsFolderPath
-from ..core.main import FullState, HistoryNode
+from ..libs.util.paths import getSessionFilePath, getSessionsFolderPath, getSessionsListFilePath
+from ..core.main import FullState, HistoryNode, SessionInfo
 from ..core.autopilot import Autopilot
 from .ide_protocol import AbstractIdeProtocolServer
 from ..libs.util.create_async_task import create_async_task
 from ..libs.util.errors import SessionNotFound
 from ..libs.util.logging import logger
+
+router = APIRouter(prefix="/sessions", tags=["sessions"])
 
 
 class Session:
@@ -47,7 +49,7 @@ class SessionManager:
             raise KeyError("Session ID not recognized", session_id)
         return self.sessions[session_id]
 
-    async def new_session(self, ide: AbstractIdeProtocolServer, session_id: Union[str, None] = None) -> Session:
+    async def new_session(self, ide: AbstractIdeProtocolServer, session_id: Optional[str] = None) -> Session:
         logger.debug(f"New session: {session_id}")
 
         # Load the persisted state (not being used right now)
@@ -74,20 +76,9 @@ class SessionManager:
 
         # Start the autopilot (must be after session is added to sessions) and the policy
         try:
-            await autopilot.start()
+            await autopilot.start(full_state=full_state)
         except Exception as e:
-            # Have to manually add to history because autopilot isn't started
-            formatted_err = '\n'.join(traceback.format_exception(e))
-            msg_step = MessageStep(
-                name="Error loading context manager", message=formatted_err)
-            msg_step.description = f"```\n{formatted_err}\n```"
-            autopilot.history.add_node(HistoryNode(
-                step=msg_step,
-                observation=None,
-                depth=0,
-                active=False
-            ))
-            logger.warning(f"Error loading context manager: {e}")
+            await self.on_error(e)
 
         def on_error(e: Exception) -> Coroutine:
             err_msg = '\n'.join(traceback.format_exception(e))
@@ -99,7 +90,7 @@ class SessionManager:
     async def remove_session(self, session_id: str):
         logger.debug(f"Removing session: {session_id}")
         if session_id in self.sessions:
-            if session_id in self.registered_ides:
+            if session_id in self.registered_ides and self.registered_ides[session_id] is not None:
                 ws_to_close = self.registered_ides[session_id].websocket
                 if ws_to_close is not None and ws_to_close.client_state != WebSocketState.DISCONNECTED:
                     await self.sessions[session_id].autopilot.ide.websocket.close()
@@ -109,8 +100,36 @@ class SessionManager:
     async def persist_session(self, session_id: str):
         """Save the session's FullState as a json file"""
         full_state = await self.sessions[session_id].autopilot.get_full_state()
+        if full_state.session_info is None:
+            return
+
         with open(getSessionFilePath(session_id), "w") as f:
             json.dump(full_state.dict(), f)
+
+        # Read and update the sessions list
+        with open(getSessionsListFilePath(), "r") as f:
+            sessions_list = json.load(f)
+
+        session_ids = [s["session_id"] for s in sessions_list]
+        if session_id not in session_ids:
+            sessions_list.append(full_state.session_info.dict())
+
+        with open(getSessionsListFilePath(), "w") as f:
+            json.dump(sessions_list, f)
+
+    async def load_session(self, old_session_id: str, new_session_id: Optional[str] = None) -> str:
+        """Load the session's FullState from a json file"""
+
+        # First persist the current state
+        await self.persist_session(old_session_id)
+
+        # Delete the old session, but keep the IDE
+        ide = self.registered_ides[old_session_id]
+        del self.registered_ides[old_session_id]
+
+        # Start the new session
+        new_session = await self.new_session(ide, session_id=new_session_id)
+        return new_session.session_id
 
     def register_websocket(self, session_id: str, ws: WebSocket):
         self.sessions[session_id].ws = ws
@@ -130,3 +149,15 @@ class SessionManager:
 
 
 session_manager = SessionManager()
+
+
+@router.get("/list")
+async def list_sessions():
+    """List all sessions"""
+    sessions_list_file = getSessionsListFilePath()
+    if not os.path.exists(sessions_list_file):
+        print("Returning empty sessions list")
+        return []
+    sessions = json.load(open(sessions_list_file, "r"))
+    print("Returning sessions list: ", sessions)
+    return sessions

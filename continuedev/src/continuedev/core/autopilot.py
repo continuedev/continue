@@ -1,10 +1,11 @@
 from functools import cached_property
 import traceback
 import time
-from typing import Callable, Coroutine, Dict, List, Union
+from typing import Callable, Coroutine, Dict, List, Optional, Union
 from aiohttp import ClientPayloadError
 from pydantic import root_validator
 
+from ..libs.util.strings import remove_quotes_and_escapes
 from ..models.filesystem import RangeInFileWithContents
 from ..models.filesystem_edit import FileEditWithFullContents
 from .observation import Observation, InternalErrorObservation
@@ -15,7 +16,7 @@ from ..plugins.context_providers.highlighted_code import HighlightedCodeContextP
 from ..server.ide_protocol import AbstractIdeProtocolServer
 from ..libs.util.queue import AsyncSubscriptionQueue
 from ..models.main import ContinueBaseModel
-from .main import Context, ContinueCustomException, Policy, History, FullState, Step, HistoryNode
+from .main import Context, ContinueCustomException, Policy, History, FullState, SessionInfo, Step, HistoryNode
 from ..plugins.steps.core.core import DisplayErrorStep, ReversibleStep, ManualEditStep, UserInputStep
 from .sdk import ContinueSDK
 from ..libs.util.traceback_parsers import get_python_traceback, get_javascript_traceback
@@ -53,7 +54,8 @@ class Autopilot(ContinueBaseModel):
     policy: Policy = DefaultPolicy()
     history: History = History.from_empty()
     context: Context = Context()
-    full_state: Union[FullState, None] = None
+    full_state: Optional[FullState] = None
+    session_info: Optional[SessionInfo] = None
     context_manager: ContextManager = ContextManager()
     continue_sdk: ContinueSDK = None
 
@@ -68,7 +70,7 @@ class Autopilot(ContinueBaseModel):
 
     started: bool = False
 
-    async def start(self):
+    async def start(self, full_state: Optional[FullState] = None):
         self.continue_sdk = await ContinueSDK.create(self)
         if override_policy := self.continue_sdk.config.policy_override:
             self.policy = override_policy
@@ -84,6 +86,12 @@ class Autopilot(ContinueBaseModel):
         logger.debug("Loading index")
         create_async_task(self.context_manager.load_index(
             self.ide.workspace_directory))
+
+        if full_state is not None:
+            self.history = full_state.history
+            self.context_manager.context_providers["code"].adding_highlighted_code = full_state.adding_highlighted_code
+            self.session_info = full_state.session_info
+
         self.started = True
 
     class Config:
@@ -106,6 +114,7 @@ class Autopilot(ContinueBaseModel):
             adding_highlighted_code=self.context_manager.context_providers[
                 "code"].adding_highlighted_code if "code" in self.context_manager.context_providers else False,
             selected_context_items=await self.context_manager.get_selected_items() if self.context_manager is not None else [],
+            session_info=self.session_info
         )
         self.full_state = full_state
         return full_state
@@ -368,6 +377,20 @@ class Autopilot(ContinueBaseModel):
     async def accept_user_input(self, user_input: str):
         self._main_user_input_queue.append(user_input)
         await self.update_subscribers()
+
+        # Use the first input to create title for session info, and make the session saveable
+        if self.session_info is None:
+            async def create_title():
+                title = await self.continue_sdk.models.medium.complete(f"Give a short title to describe the current chat session. Do not put quotes around the title. The first message was: \"{user_input}\". The title is: ")
+                title = remove_quotes_and_escapes(title)
+                self.session_info = SessionInfo(
+                    title=title,
+                    session_id=self.ide.session_id,
+                    date_created=str(time.time())
+                )
+
+            create_async_task(create_title(), on_error=lambda e: self.continue_sdk.run_step(
+                DisplayErrorStep(e=e)))
 
         if len(self._main_user_input_queue) > 1:
             return

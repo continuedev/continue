@@ -30,6 +30,10 @@ abstract class AbstractContinueGUIClientProtocol {
   abstract showLogsAtIndex(index: number): void;
 
   abstract selectContextItem(id: string, query: string): void;
+
+  abstract loadSession(session_id?: string): void;
+
+  abstract onReconnectAtSession(session_id: string): void;
 }
 
 export default AbstractContinueGUIClientProtocol;

@@ -1,10 +1,11 @@
 import { configureStore } from "@reduxjs/toolkit";
-import debugStateReducer from "./slices/debugContexSlice";
 import chatReducer from "./slices/chatSlice";
 import configReducer from "./slices/configSlice";
 import miscReducer from "./slices/miscSlice";
 import uiStateReducer from "./slices/uiStateSlice";
-import { RangeInFile, SerializedDebugContext } from "../../../src/client";
+import { RangeInFile } from "../../../src/client";
+import { FullState } from "../../../schema/FullState";
+import serverStateReducer from "./slices/serverStateReducer";
 
 export interface ChatMessage {
   role: "system" | "user" | "assistant";
@@ -12,10 +13,6 @@ export interface ChatMessage {
 }
 
 export interface RootStore {
-  debugState: {
-    debugContext: SerializedDebugContext;
-    rangesMask: boolean[];
-  };
   config: {
     workspacePath: string | undefined;
     apiUrl: string;
@@ -35,16 +32,21 @@ export interface RootStore {
   uiState: {
     bottomMessage: JSX.Element | undefined;
     bottomMessageCloseTimeout: NodeJS.Timeout | undefined;
+    displayBottomMessageOnBottom: boolean;
+    showDialog: boolean;
+    dialogMessage: string | JSX.Element;
+    dialogEntryOn: boolean;
   };
+  serverState: FullState;
 }
 
 const store = configureStore({
   reducer: {
-    debugState: debugStateReducer,
     chat: chatReducer,
     config: configReducer,
     misc: miscReducer,
     uiState: uiStateReducer,
+    serverState: serverStateReducer,
   },
 });
 
