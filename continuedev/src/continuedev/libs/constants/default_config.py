@@ -22,7 +22,7 @@ from continuedev.src.continuedev.plugins.steps.feedback import FeedbackStep
 from continuedev.src.continuedev.plugins.steps.comment_code import CommentCodeStep
 from continuedev.src.continuedev.plugins.steps.main import EditHighlightedCodeStep
 from continuedev.src.continuedev.plugins.context_providers.search import SearchContextProvider
-
+from continuedev.src.continuedev.plugins.context_providers.diff import DiffContextProvider
 
 class CommitMessageStep(Step):
     \"\"\"
@@ -123,7 +123,8 @@ config = ContinueConfig(
         # GoogleContextProvider(
         #     serper_api_key="<your serper.dev api key>"
         # )
-        SearchContextProvider()
+        SearchContextProvider(),
+        DiffContextProvider()
     ],
 
     # Policies hold the main logic that decides which Step to take next

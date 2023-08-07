@@ -29,6 +29,7 @@ pygithub = "^1.59.0"
 meilisearch-python-async = "^1.4.8"
 socksio = "^1.0.0"
 ripgrepy = "^2.0.0"
+bs4 = "^0.0.1"
 
 [tool.poetry.scripts]
 typegen = "src.continuedev.models.generate_json_schema:main" 
