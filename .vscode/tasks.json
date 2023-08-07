@@ -1,0 +1,61 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "vscode-extension:build",
+            "dependsOn": [
+                // To detect compile errors
+                "vscode-extension:tsc",
+                // To bundle the code the same way we do for publishing
+                "vscode-extension:esbuild"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
+            "label": "vscode-extension:esbuild",
+            "type": "npm",
+            "script": "esbuild",
+            "path": "extension",
+            "problemMatcher": [
+                {
+                    "pattern": [
+                        {
+                            "regexp": "> (.*?):([0-9]+):([0-9]+): (warning|error): (.+)$",
+                            "file": 1,
+                            "line": 2,
+                            "column": 3,
+                            "severity": 4,
+                            "message": 5
+                        }
+                    ],
+                }
+            ],
+        },
+        // Tsc currently errors out due to testing setup issues, will be resolved in a different PR
+        // This will be useful for preventing debugging if there are compile errors
+        {
+            "label": "vscode-extension:tsc",
+            "type": "shell",
+            "command": "echo lol",
+            // "script": "tsc",
+            // "path": "extension",
+            "problemMatcher": [
+                "$tsc"
+            ],
+            "presentation": {
+                "revealProblems": "onProblem",
+                "clear": true,
+            },
+        },
+        // Install or update all dependencies for all projects in the monrepo
+        {
+            "label": "install-all-dependencies",
+            "type": "shell",
+            "command": "./install-dependencies.sh",
+            "problemMatcher": [], // Empty so users are not promted to select progress reporting
+        },
+    ]
+}

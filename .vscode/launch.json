@@ -3,15 +3,47 @@
   // Hover to view descriptions of existing attributes.
   // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
   "version": "0.2.0",
+  "compounds": [
+    {
+      "name": "Server + Extension (VSCode)",
+      "stopAll": true,
+      "configurations": [
+        "Server",
+        "Extension (VSCode)"
+      ]
+    }
+  ],
   "configurations": [
     {
-      "name": "Python: Module",
+      "name": "Server",
       "type": "python",
       "request": "launch",
       "module": "continuedev.src.continuedev.server.main",
-      "args": ["--port", "8001"],
+      "args": [
+        "--port",
+        "8001"
+      ],
       "justMyCode": false,
-      "subProcess": false
-    }
+      "subProcess": false,
+      // Does it need a build task?
+      // What about a watch task? - type errors?
+    },
+    {
+      "name": "Extension (VSCode)",
+      "type": "extensionHost",
+      "request": "launch",
+      "cwd": "${workspaceFolder}/extension",
+      "args": [
+        "${workspaceFolder}/extension/manual-testing-sandbox",
+        "--extensionDevelopmentPath=${workspaceFolder}/extension",
+      ],
+      "outFiles": [
+        "${workspaceFolder}/extension/out/**/*.js"
+      ],
+      "preLaunchTask": "vscode-extension:build",
+      "env": {
+        "CONTINUE_SERVER_URL": "http://localhost:8001"
+      }
+    },
   ]
 }

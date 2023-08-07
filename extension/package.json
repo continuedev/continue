@@ -183,19 +183,19 @@
     ]
   },
   "scripts": {
+    "esbuild-base": "rm -rf ./out && node esbuild.mjs",
     "vscode:prepublish": "npm run esbuild-base -- --minify",
-    "esbuild-base": "rm -rf ./out && esbuild ./src/extension.ts --bundle --outfile=out/extension.js --external:vscode --format=cjs --platform=node",
-    "esbuild": "rm -rf ./out && node esbuild.mjs",
+    "esbuild": "npm run esbuild-base -- --sourcemap",
     "esbuild-watch": "npm run esbuild-base -- --sourcemap --watch",
-    "test-compile": "tsc -p ./",
+    "tsc": "tsc -p ./",
+    "tsc-watch": "tsc -watch -p ./",
+    "typegen": "node scripts/typegen.js",
     "clientgen": "rm -rf src/client/ && npx @openapitools/openapi-generator-cli generate -i ../schema/openapi.json -g typescript-fetch -o src/client/ --additional-properties=supportsES6=true,npmVersion=8.19.2,typescriptThreePlus=true",
     "rebuild": "electron-rebuild -v 19.1.8 node-pty",
-    "watch": "tsc -watch -p ./",
-    "pretest": "npm run compile && npm run lint",
+    "pretest": "npm run tsc && npm run lint",
     "lint": "eslint src --ext ts",
     "test": "node ./out/test/runTest.js",
     "jest": "jest --config ./jest.config.js",
-    "typegen": "node scripts/typegen.js",
     "package": "npm install && npm run typegen && npm run clientgen && cd react-app && npm install && npm run build && cd .. && mkdir -p ./build && vsce package --out ./build"
   },
   "devDependencies": {

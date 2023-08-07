@@ -131,7 +131,6 @@ dmypy.json
 
 **/node_modules
 **/out
-**/.vscode/settings.json
 notes.txt
 cached_embeddings.pkl
 .ruff_cache

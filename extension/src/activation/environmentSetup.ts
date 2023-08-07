@@ -1,7 +1,7 @@
 import { getExtensionUri } from "../util/vscode";
-const util = require("util");
-const exec = util.promisify(require("child_process").exec);
-const { spawn } = require("child_process");
+import { promisify } from "util";
+import { exec as execCb } from "child_process";
+import { spawn } from "child_process";
 import * as path from "path";
 import * as fs from "fs";
 import { getContinueServerUrl } from "../bridge";
@@ -10,11 +10,13 @@ import * as vscode from "vscode";
 import * as os from "os";
 import fkill from "fkill";
 import { finished } from "stream/promises";
-const request = require("request");
+import request = require("request");
+
+const exec = promisify(execCb);
 
 async function runCommand(cmd: string): Promise<[string, string | undefined]> {
-  var stdout: any = "";
-  var stderr: any = "";
+  var stdout = "";
+  var stderr = "";
   try {
     var { stdout, stderr } = await exec(cmd, {
       shell: process.platform === "win32" ? "powershell.exe" : undefined,
@@ -23,14 +25,9 @@ async function runCommand(cmd: string): Promise<[string, string | undefined]> {
     stderr = e.stderr;
     stdout = e.stdout;
   }
-  if (stderr === "") {
-    stderr = undefined;
-  }
-  if (typeof stdout === "undefined") {
-    stdout = "";
-  }
 
-  return [stdout, stderr];
+  const stderrOrUndefined = stderr === "" ? undefined : stderr;
+  return [stdout, stderrOrUndefined];
 }
 
 async function checkServerRunning(serverUrl: string): Promise<boolean> {
