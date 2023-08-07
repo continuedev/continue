@@ -55,6 +55,7 @@
             "label": "install-all-dependencies",
             "type": "shell",
             "command": "./install-dependencies.sh",
+            "problemMatcher": [], // Empty so users are not promted to select progress reporting
         },
     ]
 }
