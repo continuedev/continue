@@ -192,7 +192,7 @@
     "typegen": "node scripts/typegen.js",
     "clientgen": "rm -rf src/client/ && npx @openapitools/openapi-generator-cli generate -i ../schema/openapi.json -g typescript-fetch -o src/client/ --additional-properties=supportsES6=true,npmVersion=8.19.2,typescriptThreePlus=true",
     "rebuild": "electron-rebuild -v 19.1.8 node-pty",
-    "pretest": "npm run build && npm run lint",
+    "pretest": "npm run tsc && npm run lint",
     "lint": "eslint src --ext ts",
     "test": "node ./out/test/runTest.js",
     "jest": "jest --config ./jest.config.js",
