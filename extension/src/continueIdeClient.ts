@@ -12,7 +12,7 @@ import {
   rejectSuggestionCommand,
 } from "./suggestions";
 import { FileEditWithFullContents } from "../schema/FileEditWithFullContents";
-import fs = require("fs");
+import * as fs from 'fs';
 import { WebsocketMessenger } from "./util/messenger";
 import { diffManager } from "./diffs";
 const os = require("os");
@@ -383,7 +383,7 @@ class IdeProtocolClient {
   async getUserSecret(key: string) {
     // Check if secret already exists in VS Code settings (global)
     let secret = vscode.workspace.getConfiguration("continue").get(key);
-    if (typeof secret !== "undefined" && secret !== null) return secret;
+    if (typeof secret !== "undefined" && secret !== null) {return secret;}
 
     // If not, ask user for secret
     secret = await vscode.window.showInputBox({
