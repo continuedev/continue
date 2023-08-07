@@ -424,7 +424,7 @@ function GUI(props: GUIProps) {
       {waitingForSteps && <Loader />}
 
       <div>
-        {user_input_queue.map((input) => {
+        {user_input_queue?.map?.((input) => {
           return <UserInputQueueItem>{input}</UserInputQueueItem>;
         })}
       </div>
