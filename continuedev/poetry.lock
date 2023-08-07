@@ -1265,6 +1265,16 @@ socks = ["PySocks (>=1.5.6,!=1.5.7)"]
 use-chardet-on-py3 = ["chardet (>=3.0.2,<6)"]
 
 [[package]]
+name = "ripgrepy"
+version = "2.0.0"
+description = ""
+optional = false
+python-versions = "*"
+files = [
+    {file = "ripgrepy-2.0.0.tar.gz", hash = "sha256:6dd871bafe859301097354d1f171540fbc9bd38d3f8f52f8a196dc28522085da"},
+]
+
+[[package]]
 name = "six"
 version = "1.16.0"
 description = "Python 2 and 3 compatibility utilities"
@@ -1767,4 +1777,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.8.1"
-content-hash = "482e5ed42e46d4b422302ab5718a52c6765f5471155ee8ba0885f9436a5be565"
+content-hash = "aacc9ed670fbe067caccc88bf35f1a36541ed3b9446f64fdff7f36fe9b7b558a"
