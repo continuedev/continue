@@ -14,7 +14,7 @@
   "displayName": "Continue",
   "pricing": "Free",
   "description": "The open-source coding autopilot",
-  "version": "0.0.275",
+  "version": "0.0.276",
   "publisher": "Continue",
   "engines": {
     "vscode": "^1.67.0"
