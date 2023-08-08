@@ -35,22 +35,17 @@ export const serverStateSlice = createSlice({
   initialState,
   reducers: {
     setServerState: (state, action) => {
-      return {
-        selected_context_items: [],
-        user_input_queue: [],
-        slash_commands: [],
-        ...action.payload,
-      };
+      state.selected_context_items = [];
+      state.user_input_queue = [];
+      state.slash_commands = [];
+      Object.assign(state, action.payload);
     },
-    temporarilySetUserInputQueue: (state, action) => {
-      return {
-        ...state,
-        user_input_queue: action.payload,
-      };
+    temporarilyPushToUserInputQueue: (state, action) => {
+      state.user_input_queue = [...state.user_input_queue, action.payload];
     },
   },
 });
 
-export const { setServerState, temporarilySetUserInputQueue } =
+export const { setServerState, temporarilyPushToUserInputQueue } =
   serverStateSlice.actions;
 export default serverStateSlice.reducer;

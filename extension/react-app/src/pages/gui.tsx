@@ -24,7 +24,7 @@ import {
 import RingLoader from "../components/RingLoader";
 import {
   setServerState,
-  temporarilySetUserInputQueue,
+  temporarilyPushToUserInputQueue,
 } from "../redux/slices/serverStateReducer";
 
 const UserInputQueueItem = styled.div`
@@ -208,11 +208,7 @@ function GUI(props: GUIProps) {
       }
       (mainTextInputRef.current as any).setInputValue("");
       if (!client) {
-        dispatch(
-          temporarilySetUserInputQueue((queue: string[]) => {
-            return [...queue, input];
-          })
-        );
+        dispatch(temporarilyPushToUserInputQueue(input));
         return;
       }
 
@@ -241,11 +237,7 @@ function GUI(props: GUIProps) {
       if (input.trim() === "") return;
 
       client.sendMainInput(input);
-      dispatch(
-        temporarilySetUserInputQueue((queue: string[]) => {
-          return [...queue, input];
-        })
-      );
+      dispatch(temporarilyPushToUserInputQueue(input));
 
       // Increment localstorage counter
       const counter = localStorage.getItem("mainTextEntryCounter");
