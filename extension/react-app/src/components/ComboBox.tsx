@@ -71,6 +71,10 @@ const MainTextInput = styled.textarea`
     outline: 1px solid ${lightGray};
     border: 1px solid transparent;
   }
+
+  &::placeholder {
+    color: ${lightGray}80;
+  }
 `;
 
 const UlMaxHeight = 300;

@@ -158,7 +158,7 @@ function StepContainer(props: StepContainerProps) {
           isLast={props.isLast}
           borderColor={
             props.historyNode.observation?.error
-              ? "#f00"
+              ? "#f005"
               : props.historyNode.active
               ? undefined
               : "transparent"
@@ -176,7 +176,11 @@ function StepContainer(props: StepContainerProps) {
             loading={(props.historyNode.active as boolean) || false}
             error={props.historyNode.observation?.error ? true : false}
           >
-            <LeftHeaderSubDiv>
+            <LeftHeaderSubDiv
+              style={
+                props.historyNode.observation?.error ? { color: "white" } : {}
+              }
+            >
               {!isUserInput &&
                 (props.open ? (
                   <ChevronDownIcon width="1.4em" height="1.4em" />
