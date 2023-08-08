@@ -44,6 +44,7 @@
       "args": [
         // Pass a directory to manually test in
         "${workspaceFolder}/extension/manual-testing-sandbox",
+        "${workspaceFolder}/extension/manual-testing-sandbox/example.ts",
         "--extensionDevelopmentPath=${workspaceFolder}/extension",
       ],
       "outFiles": [
