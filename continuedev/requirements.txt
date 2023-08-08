@@ -7,7 +7,7 @@ uvicorn==0.21.1
 python-dotenv==1.0.0
 nest-asyncio==1.5.6
 websockets==11.0.2
-urllib3==1.26.15
+urllib3==1.25.11  # Locked to this version per: https://github.com/Significant-Gravitas/Auto-GPT/issues/1909
 posthog==3.0.1
 tiktoken==0.4.0
 jsonref==1.1.0
