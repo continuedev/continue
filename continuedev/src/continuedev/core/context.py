@@ -10,6 +10,7 @@ from pydantic import BaseModel
 from .main import ChatMessage, ContextItem, ContextItemDescription, ContextItemId
 from ..server.meilisearch_server import check_meilisearch_running
 from ..libs.util.logging import logger
+from ..libs.util.telemetry import posthog_logger
 
 SEARCH_INDEX_NAME = "continue_context_items"
 
@@ -199,6 +200,11 @@ class ContextManager:
             raise ValueError(
                 f"Context provider with title {id.provider_title} not found")
 
+        posthog_logger.capture_event("select_context_item", {
+            "provider_title": id.provider_title,
+            "item_id": id.item_id,
+            "query": query
+        })
         await self.context_providers[id.provider_title].add_context_item(id, query)
 
     async def delete_context_with_ids(self, ids: List[str]):

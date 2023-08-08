@@ -139,6 +139,7 @@ class GUIProtocolServer(AbstractGUIProtocolServer):
     def on_toggle_adding_highlighted_code(self):
         create_async_task(
             self.session.autopilot.toggle_adding_highlighted_code(), self.on_error)
+        posthog_logger.capture_event("toggle_adding_highlighted_code", {})
 
     def on_set_editing_at_ids(self, ids: List[str]):
         create_async_task(
@@ -150,6 +151,7 @@ class GUIProtocolServer(AbstractGUIProtocolServer):
             ["This is a log of the exact prompt/completion pairs sent/received from the LLM during this step"] + self.session.autopilot.continue_sdk.history.timeline[index].logs)
         create_async_task(
             self.session.autopilot.ide.showVirtualFile(name, logs), self.on_error)
+        posthog_logger.capture_event("show_logs_at_index", {})
 
     def select_context_item(self, id: str, query: str):
         """Called when user selects an item from the dropdown"""
@@ -163,6 +165,10 @@ class GUIProtocolServer(AbstractGUIProtocolServer):
 
         create_async_task(
             load_and_tell_to_reconnect(), self.on_error)
+
+        posthog_logger.capture_event("load_session", {
+            "session_id": session_id
+        })
 
 
 @router.websocket("/ws")
