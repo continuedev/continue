@@ -36,14 +36,17 @@ export const serverStateSlice = createSlice({
   reducers: {
     setServerState: (state, action) => {
       return {
+        selected_context_items: [],
+        user_input_queue: [],
+        slash_commands: [],
         ...action.payload,
-        selected_context_items: action.payload.selected_context_items || [],
-        user_input_queue: action.payload.user_input_queue || [],
-        slash_commands: action.payload.slash_commands || [],
       };
     },
     temporarilySetUserInputQueue: (state, action) => {
-      state.user_input_queue = action.payload;
+      return {
+        ...state,
+        user_input_queue: action.payload,
+      };
     },
   },
 });
