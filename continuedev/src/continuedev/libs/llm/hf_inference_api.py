@@ -52,7 +52,7 @@ class HuggingFaceInferenceAPI(LLM):
 
         response = requests.post(API_URL, headers=headers, json={
             "inputs": prompt, "parameters": {
-                "max_new_tokens": self.max_context_length - self.count_tokens(prompt),
+                "max_new_tokens": min(250, self.max_context_length - self.count_tokens(prompt)),
                 "max_time": DEFAULT_MAX_TIME,
                 "return_full_text": False,
             }

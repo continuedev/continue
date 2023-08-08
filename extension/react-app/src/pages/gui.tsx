@@ -351,21 +351,57 @@ function GUI(props: GUIProps) {
           >
             Continue Server Starting
           </p>
-          <p
-            style={{
-              margin: "auto",
-              textAlign: "center",
-              marginTop: "4px",
-              fontSize: "12px",
-              cursor: "pointer",
-              opacity: 0.7,
-            }}
-            onClick={() => {
-              postVscMessage("toggleDevTools", {});
-            }}
-          >
-            <u>Click to view logs</u>
-          </p>
+          <div className="flex mx-8 my-2">
+            <p
+              style={{
+                margin: "auto",
+                textAlign: "center",
+                marginTop: "4px",
+                fontSize: "12px",
+                cursor: "pointer",
+                opacity: 0.7,
+              }}
+            >
+              <u>
+                <a
+                  style={{ color: "inherit" }}
+                  href="https://continue.dev/docs/troubleshooting"
+                >
+                  Troubleshooting help
+                </a>
+              </u>
+            </p>
+            <p
+              style={{
+                margin: "auto",
+                textAlign: "center",
+                marginTop: "4px",
+                fontSize: "12px",
+                cursor: "pointer",
+                opacity: 0.7,
+              }}
+              onClick={() => {
+                postVscMessage("toggleDevTools", {});
+              }}
+            >
+              <u>View logs</u>
+            </p>
+            <p
+              style={{
+                margin: "auto",
+                textAlign: "center",
+                marginTop: "4px",
+                fontSize: "12px",
+                cursor: "pointer",
+                opacity: 0.7,
+              }}
+              onClick={() => {
+                postVscMessage("reloadWindow", {});
+              }}
+            >
+              <u>Reload the window</u>
+            </p>
+          </div>
           <div className="w-3/4 m-auto text-center text-xs">
             Tip: Drag the Continue logo from the far left of the window to the
             right, then toggle Continue using option/alt+command+m.

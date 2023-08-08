@@ -252,6 +252,10 @@ export function setupDebugPanel(
         vscode.commands.executeCommand("continue.viewLogs");
         break;
       }
+      case "reloadWindow": {
+        vscode.commands.executeCommand("workbench.action.reloadWindow");
+        break;
+      }
       case "focusEditor": {
         setFocusedOnContinueInput(false);
         vscode.commands.executeCommand(
