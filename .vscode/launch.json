@@ -11,6 +11,14 @@
         "Server",
         "Extension (VSCode)"
       ]
+    },
+    {
+      "name": "Server + Tests (VSCode)",
+      "stopAll": true,
+      "configurations": [
+        "Server",
+        "Tests (VSCode)"
+      ]
     }
   ],
   "configurations": [
@@ -34,6 +42,7 @@
       "request": "launch",
       "cwd": "${workspaceFolder}/extension",
       "args": [
+        // Pass a directory to manually test in
         "${workspaceFolder}/extension/manual-testing-sandbox",
         "--extensionDevelopmentPath=${workspaceFolder}/extension",
       ],
@@ -45,5 +54,32 @@
         "CONTINUE_SERVER_URL": "http://localhost:8001"
       }
     },
+    // Has to be run after starting the server (separately or using the compound configuration)
+    {
+      "name": "Tests (VSCode)",
+      "type": "extensionHost",
+      "request": "launch",
+      "cwd": "${workspaceFolder}/extension",
+      "runtimeExecutable": "${execPath}",
+      "args": [
+        // Pass a directory to run tests in
+        "${workspaceFolder}/extension/manual-testing-sandbox",
+        "--extensionDevelopmentPath=${workspaceFolder}/extension",
+        "--extensionTestsPath=${workspaceFolder}/extension/out/test-runner/mochaRunner"
+      ],
+      "outFiles": [
+        // Allows setting breakpoints in test suites across the /src folder
+        "${workspaceFolder}/extension/out/test-suites/**/*.js",
+        // Allows setting breakpoints in mocha test runner file
+        "${workspaceFolder}/extension/out/test-runner/**/*.js"
+      ],
+      "internalConsoleOptions": "openOnSessionStart",
+      "preLaunchTask": "vscode-extension:tests:build",
+      "env": {
+        "CONTINUE_SERVER_URL": "http://localhost:8001",
+        // Avoid timing out when stopping on breakpoints during debugging in VSCode
+        "MOCHA_TIMEOUT": "0",
+      },
+    }
   ]
 }

@@ -1,6 +1,7 @@
 {
     "version": "2.0.0",
     "tasks": [
+        // Compile and bundle the extension
         {
             "label": "vscode-extension:build",
             "dependsOn": [
@@ -38,10 +39,9 @@
         // This will be useful for preventing debugging if there are compile errors
         {
             "label": "vscode-extension:tsc",
-            "type": "shell",
-            "command": "echo lol",
-            // "script": "tsc",
-            // "path": "extension",
+            "type": "npm",
+            "script": "tsc",
+            "path": "extension",
             "problemMatcher": [
                 "$tsc"
             ],
@@ -50,6 +50,39 @@
                 "clear": true,
             },
         },
+        //
+        // Compile and bundle tests
+        {
+            "label": "vscode-extension:tests:build",
+            "dependsOn": [
+                // Build the extension
+                "vscode-extension:build",
+                // To detect compile errors - this type checks both the extension and the tests
+                "vscode-extension:tsc",
+                "vscode-extension:tests:esbuild"
+            ],
+        },
+        {
+            "label": "vscode-extension:tests:esbuild",
+            "type": "npm",
+            "script": "build-test",
+            "path": "extension",
+            "problemMatcher": [
+                {
+                    "pattern": [
+                        {
+                            "regexp": "> (.*?):([0-9]+):([0-9]+): (warning|error): (.+)$",
+                            "file": 1,
+                            "line": 2,
+                            "column": 3,
+                            "severity": 4,
+                            "message": 5
+                        }
+                    ]
+                }
+            ]
+        },
+        //
         // Install or update all dependencies for all projects in the monrepo
         {
             "label": "install-all-dependencies",
