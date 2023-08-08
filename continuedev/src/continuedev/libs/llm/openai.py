@@ -6,6 +6,7 @@ import openai
 from ...core.main import ChatMessage
 from ..util.count_tokens import compile_chat_messages, DEFAULT_ARGS, count_tokens, format_chat_messages, prune_raw_prompt_from_top
 from ..llm import LLM
+import certifi
 
 
 class OpenAIServerInfo(BaseModel):
@@ -52,8 +53,7 @@ class OpenAI(LLM):
         if self.verify_ssl == False:
             openai.verify_ssl_certs = False
 
-        if self.ca_bundle_path is not None:
-            openai.ca_bundle_path = self.ca_bundle_path
+        openai.ca_bundle_path = self.ca_bundle_path or certifi.where()
 
     async def stop(self):
         pass
