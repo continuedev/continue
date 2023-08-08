@@ -94,11 +94,6 @@ jobs:
           path: extension/react-app/node_modules
           key: ${{ runner.os }}-node-${{ hashFiles('extension/react-app/package-lock.json') }}
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v2
-        with:
-          node-version: "14"
-
       - name: Install extension Dependencies
         run: |
           cd extension
