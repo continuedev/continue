@@ -24,6 +24,7 @@ from continuedev.src.continuedev.plugins.steps.share_session import ShareSession
 from continuedev.src.continuedev.plugins.steps.main import EditHighlightedCodeStep
 from continuedev.src.continuedev.plugins.context_providers.search import SearchContextProvider
 from continuedev.src.continuedev.plugins.context_providers.diff import DiffContextProvider
+from continuedev.src.continuedev.plugins.context_providers.url import URLContextProvider
 
 class CommitMessageStep(Step):
     \"\"\"
@@ -130,7 +131,8 @@ config = ContinueConfig(
         #     serper_api_key="<your serper.dev api key>"
         # )
         SearchContextProvider(),
-        DiffContextProvider()
+        DiffContextProvider(),
+        URLContextProvider()
     ],
 
     # Policies hold the main logic that decides which Step to take next
