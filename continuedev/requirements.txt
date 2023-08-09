@@ -20,3 +20,4 @@ pygithub==1.59.0
 meilisearch-python-async==1.4.8
 socksio==1.0.0
 ripgrepy==2.0.0
+replicate==0.11.0
