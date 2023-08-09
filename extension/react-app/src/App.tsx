@@ -11,6 +11,7 @@ import {
   setSessionId,
   setVscMediaUrl,
   setDataSwitchOn,
+  setWorkspacePaths,
 } from "./redux/slices/configSlice";
 import { setHighlightedCode } from "./redux/slices/miscSlice";
 import { postVscMessage } from "./vscode";
@@ -56,6 +57,7 @@ function App() {
           dispatch(setSessionId(event.data.sessionId));
           dispatch(setVscMediaUrl(event.data.vscMediaUrl));
           dispatch(setDataSwitchOn(event.data.dataSwitchOn));
+          dispatch(setWorkspacePaths(event.data.workspacePaths));
           break;
         case "highlightedCode":
           dispatch(setHighlightedCode(event.data.rangeInFile));

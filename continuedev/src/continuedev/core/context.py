@@ -176,14 +176,21 @@ class ContextManager:
                     "id": item.description.id.to_string(),
                     "name": item.description.name,
                     "description": item.description.description,
-                    "content": item.content
+                    "content": item.content,
+                    "workspace_dir": workspace_dir,
                 }
                 for item in context_items
             ]
             if len(documents) > 0:
                 try:
                     async with Client('http://localhost:7700') as search_client:
-                        await asyncio.wait_for(search_client.index(SEARCH_INDEX_NAME).add_documents(documents), timeout=5)
+                        # The index is currently shared by all workspaces
+                        globalSearchIndex = await search_client.get_index(SEARCH_INDEX_NAME)
+                        await asyncio.wait_for(asyncio.gather(
+                            # Ensure that the index has the correct filterable attributes
+                            globalSearchIndex.update_filterable_attributes(["workspace_dir"]),
+                            globalSearchIndex.add_documents(documents)
+                        ), timeout=5)
                 except Exception as e:
                     logger.debug(f"Error loading meilisearch index: {e}")
 
