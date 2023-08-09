@@ -89,14 +89,35 @@ from continuedev.src.continuedev.libs.llm.ggml import GGML
 config = ContinueConfig(
     ...
     models=Models(
-        default=GGML(max_context_length=2048, server_url="http://localhost:8000")
+        default=GGML(
+            max_context_length=2048,
+            server_url="http://localhost:8000")
     )
 )
 ```
 
+### Replicate (beta)
+
+Replicate is a great option for newly released language models or models that you've deployed through their platform. Sign up for an account [here](https://replicate.ai/), copy your API key, and then select any model from the [Replicate Streaming List](https://replicate.com/collections/streaming-language-models). Change the config file to look like this:
+
+```python
+from continuedev.src.continuedev.libs.llm.replicate import ReplicateLLM
+
+config = ContinueConfig(
+    ...
+    models=Models(
+        default=ReplicateLLM(
+            model="stablecode-completion-alpha-3b-4k",
+            api_key="my-replicate-api-key")
+    )
+)
+```
+
+If you don't specify the `model` parameter, it will default to `stablecode-completion-alpha-3b-4k`.
+
 ### Self-hosting an open-source model
 
-If you want to self-host on Colab, RunPod, Replicate, HuggingFace, Haven, or another hosting provider you will need to wire up a new LLM class. It only needs to implement 3 primary methods: `stream_complete`, `complete`, and `stream_chat`, and you can see examples in `continuedev/src/continuedev/libs/llm`.
+If you want to self-host on Colab, RunPod, HuggingFace, Haven, or another hosting provider you will need to wire up a new LLM class. It only needs to implement 3 primary methods: `stream_complete`, `complete`, and `stream_chat`, and you can see examples in `continuedev/src/continuedev/libs/llm`.
 
 If by chance the provider has the exact same API interface as OpenAI, the `GGML` class will work for you out of the box, after changing the endpoint at the top of the file.
 
