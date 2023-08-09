@@ -12,6 +12,9 @@ class LLM(ContinueBaseModel, ABC):
 
     system_message: Optional[str] = None
 
+    class Config:
+        arbitrary_types_allowed = True
+
     @abstractproperty
     def name(self):
         """Return the name of the LLM."""

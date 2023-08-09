@@ -907,13 +907,13 @@ files = [
 
 [[package]]
 name = "openai"
-version = "0.27.6"
+version = "0.27.8"
 description = "Python client library for the OpenAI API"
 optional = false
 python-versions = ">=3.7.1"
 files = [
-    {file = "openai-0.27.6-py3-none-any.whl", hash = "sha256:1f07ed06f1cfc6c25126107193726fe4cf476edcc4e1485cd9eb708f068f2606"},
-    {file = "openai-0.27.6.tar.gz", hash = "sha256:63ca9f6ac619daef8c1ddec6d987fe6aa1c87a9bfdce31ff253204d077222375"},
+    {file = "openai-0.27.8-py3-none-any.whl", hash = "sha256:e0a7c2f7da26bdbe5354b03c6d4b82a2f34bd4458c7a17ae1a7092c3e397e03c"},
+    {file = "openai-0.27.8.tar.gz", hash = "sha256:2483095c7db1eee274cebac79e315a986c4e55207bb4fa7b82d185b3a2ed9536"},
 ]
 
 [package.dependencies]
@@ -926,6 +926,17 @@ datalib = ["numpy", "openpyxl (>=3.0.7)", "pandas (>=1.2.3)", "pandas-stubs (>=1
 dev = ["black (>=21.6b0,<22.0)", "pytest (==6.*)", "pytest-asyncio", "pytest-mock"]
 embeddings = ["matplotlib", "numpy", "openpyxl (>=3.0.7)", "pandas (>=1.2.3)", "pandas-stubs (>=1.1.0.11)", "plotly", "scikit-learn (>=1.0.2)", "scipy", "tenacity (>=8.0.1)"]
 wandb = ["numpy", "openpyxl (>=3.0.7)", "pandas (>=1.2.3)", "pandas-stubs (>=1.1.0.11)", "wandb"]
+
+[[package]]
+name = "packaging"
+version = "23.1"
+description = "Core utilities for Python packages"
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "packaging-23.1-py3-none-any.whl", hash = "sha256:994793af429502c4ea2ebf6bf664629d07c1a9fe974af92966e4b8d2df7edc61"},
+    {file = "packaging-23.1.tar.gz", hash = "sha256:a392980d2b6cffa644431898be54b0045151319d1e7ec34f0cfed48767dd334f"},
+]
 
 [[package]]
 name = "pkgutil-resolve-name"
@@ -1273,6 +1284,25 @@ files = [
     {file = "regex-2023.5.5-cp39-cp39-win_amd64.whl", hash = "sha256:1307aa4daa1cbb23823d8238e1f61292fd07e4e5d8d38a6efff00b67a7cdb764"},
     {file = "regex-2023.5.5.tar.gz", hash = "sha256:7d76a8a1fc9da08296462a18f16620ba73bcbf5909e42383b253ef34d9d5141e"},
 ]
+
+[[package]]
+name = "replicate"
+version = "0.11.0"
+description = "Python client for Replicate"
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "replicate-0.11.0-py3-none-any.whl", hash = "sha256:fbb8815068864dc822cd4fa7b6103d6f4089d6ef122abd6c3441ca0f0f110c46"},
+    {file = "replicate-0.11.0.tar.gz", hash = "sha256:4d54b5838c1552a6f76cc37c3af8d9a7998105382082d672acad31636ad443b5"},
+]
+
+[package.dependencies]
+packaging = "*"
+pydantic = ">1"
+requests = ">2"
+
+[package.extras]
+dev = ["black", "mypy", "pytest", "responses", "ruff"]
 
 [[package]]
 name = "requests"
@@ -1819,4 +1849,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.8.1"
-content-hash = "19ea56d05ab21d19f2fee6f837f7c8915ca1c597c392a539f43010dd0a4f6a78"
+content-hash = "5500ea86b06a96f5fe45939500936911e622043a67a3a5c3d02473463ff2fd6c"

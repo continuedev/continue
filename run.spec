@@ -12,7 +12,7 @@ a = Analysis(
         ('continuedev', 'continuedev'),
         (certifi.where(), 'ca_bundle')
         ],
-    hiddenimports=['anthropic', 'github', 'ripgrepy'],
+    hiddenimports=['anthropic', 'github', 'ripgrepy', 'bs4'],
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
