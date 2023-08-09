@@ -239,6 +239,7 @@ export async function startContinuePythonServer() {
       const child = spawn(destination, {
         detached: true,
         stdio: "ignore",
+        windowsHide: true,
       });
       child.on("error", (err: any) => {
         if (attempts < maxAttempts) {
