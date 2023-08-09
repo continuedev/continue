@@ -10,6 +10,8 @@ interface HeaderButtonWithTextProps {
   disabled?: boolean;
   inverted?: boolean;
   active?: boolean;
+  className?: string;
+  onKeyDown?: (e: any) => void;
 }
 
 const HeaderButtonWithText = (props: HeaderButtonWithTextProps) => {
@@ -29,6 +31,8 @@ const HeaderButtonWithText = (props: HeaderButtonWithTextProps) => {
           setHover(false);
         }}
         onClick={props.onClick}
+        onKeyDown={props.onKeyDown}
+        className={props.className}
       >
         {props.children}
       </HeaderButton>

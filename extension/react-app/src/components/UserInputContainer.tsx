@@ -1,12 +1,11 @@
 import React from "react";
 import ReactMarkdown from "react-markdown";
 import styled from "styled-components";
-import { buttonColor, secondaryDark, vscBackground } from ".";
+import { secondaryDark, vscBackground } from ".";
 import HeaderButtonWithText from "./HeaderButtonWithText";
-import { Play, XMark } from "@styled-icons/heroicons-outline";
-import { RootStore } from "../redux/store";
-import { useSelector } from "react-redux";
+import { XMarkIcon } from "@heroicons/react/24/outline";
 import { HistoryNode } from "../../../schema/HistoryNode";
+import StyledMarkdownPreview from "./StyledMarkdownPreview";
 
 interface UserInputContainerProps {
   onDelete: () => void;
@@ -15,21 +14,33 @@ interface UserInputContainerProps {
 }
 
 const StyledDiv = styled.div`
+  position: relative;
   background-color: ${secondaryDark};
-  padding: 8px;
-  padding-left: 16px;
-  padding-right: 16px;
   font-size: 13px;
   display: flex;
   align-items: center;
   border-bottom: 1px solid ${vscBackground};
+  padding: 8px;
+  padding-top: 4px;
+  padding-bottom: 4px;
+`;
+
+const DeleteButtonDiv = styled.div`
+  position: absolute;
+  top: 8px;
+  right: 16px;
 `;
 
 const UserInputContainer = (props: UserInputContainerProps) => {
   return (
     <StyledDiv>
-      {props.children}
-      <div style={{ marginLeft: "auto" }}>
+      <StyledMarkdownPreview
+        light={true}
+        source={props.children}
+        className="mr-6"
+      />
+      {/* <ReactMarkdown children={props.children} className="w-fit mr-10" /> */}
+      <DeleteButtonDiv>
         <HeaderButtonWithText
           onClick={(e) => {
             props.onDelete();
@@ -37,11 +48,10 @@ const UserInputContainer = (props: UserInputContainerProps) => {
           }}
           text="Delete"
         >
-          <XMark size="1.6em" />
+          <XMarkIcon width="1.4em" height="1.4em" />
         </HeaderButtonWithText>
-      </div>
+      </DeleteButtonDiv>
     </StyledDiv>
   );
 };
-
 export default UserInputContainer;

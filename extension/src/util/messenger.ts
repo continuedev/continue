@@ -1,4 +1,3 @@
-console.log("Websocket import");
 const WebSocket = require("ws");
 import fetch from "node-fetch";
 
@@ -19,6 +18,8 @@ export abstract class Messenger {
   abstract onError(callback: () => void): void;
 
   abstract sendAndReceive(messageType: string, data: any): Promise<any>;
+
+  abstract close(): void;
 }
 
 export class WebsocketMessenger extends Messenger {
@@ -39,7 +40,6 @@ export class WebsocketMessenger extends Messenger {
     //   var WebSocket = require("ws");
     // }
 
-    console.log("Creating websocket at: ", this.serverUrl);
     const newWebsocket = new WebSocket(this.serverUrl);
     for (const listener of this.onOpenListeners) {
       this.onOpen(listener);
@@ -161,5 +161,9 @@ export class WebsocketMessenger extends Messenger {
 
   onError(callback: () => void): void {
     this.websocket.addEventListener("error", callback);
+  }
+
+  close(): void {
+    this.websocket.close();
   }
 }

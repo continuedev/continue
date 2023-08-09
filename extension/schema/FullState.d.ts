@@ -26,7 +26,6 @@ export type Timeline = HistoryNode[];
 export type CurrentIndex = number;
 export type Active1 = boolean;
 export type UserInputQueue = string[];
-export type DefaultModel = string;
 export type Name3 = string;
 export type Description1 = string;
 export type SlashCommands = SlashCommandDescription[];
@@ -39,6 +38,9 @@ export type Content1 = string;
 export type Editing = boolean;
 export type Editable = boolean;
 export type SelectedContextItems = ContextItem[];
+export type SessionId = string;
+export type Title = string;
+export type DateCreated = string;
 
 /**
  * A full state of the program, including the history
@@ -47,10 +49,10 @@ export interface FullState1 {
   history: History;
   active: Active1;
   user_input_queue: UserInputQueue;
-  default_model: DefaultModel;
   slash_commands: SlashCommands;
   adding_highlighted_code: AddingHighlightedCode;
   selected_context_items: SelectedContextItems;
+  session_info?: SessionInfo;
   [k: string]: unknown;
 }
 /**
@@ -130,5 +132,11 @@ export interface ContextItemDescription {
 export interface ContextItemId {
   provider_title: ProviderTitle;
   item_id: ItemId;
+  [k: string]: unknown;
+}
+export interface SessionInfo {
+  session_id: SessionId;
+  title: Title;
+  date_created: DateCreated;
   [k: string]: unknown;
 }

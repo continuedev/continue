@@ -23,13 +23,17 @@ abstract class AbstractContinueGUIClientProtocol {
 
   abstract deleteContextWithIds(ids: ContextItemId[]): void;
 
-  abstract setEditingAtIndices(indices: number[]): void;
+  abstract setEditingAtIds(ids: string[]): void;
 
   abstract toggleAddingHighlightedCode(): void;
 
   abstract showLogsAtIndex(index: number): void;
 
   abstract selectContextItem(id: string, query: string): void;
+
+  abstract loadSession(session_id?: string): void;
+
+  abstract onReconnectAtSession(session_id: string): void;
 }
 
 export default AbstractContinueGUIClientProtocol;

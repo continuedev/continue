@@ -1,7 +1,6 @@
 import { useContext, useEffect, useRef, useState } from "react";
 import styled, { keyframes } from "styled-components";
 import {
-  appear,
   defaultBorderRadius,
   secondaryDark,
   vscBackground,
@@ -9,13 +8,13 @@ import {
   vscForeground,
 } from ".";
 import {
-  ChevronDown,
-  ChevronRight,
-  ArrowPath,
-  XMark,
-  MagnifyingGlass,
-} from "@styled-icons/heroicons-outline";
-import { StopCircle } from "@styled-icons/heroicons-solid";
+  ChevronDownIcon,
+  ChevronRightIcon,
+  ArrowPathIcon,
+  XMarkIcon,
+  MagnifyingGlassIcon,
+  StopCircleIcon,
+} from "@heroicons/react/24/outline";
 import { HistoryNode } from "../../../schema/HistoryNode";
 import HeaderButtonWithText from "./HeaderButtonWithText";
 import { getMetaKeyLabel, isMetaEquivalentKeyPressed } from "../util";
@@ -39,9 +38,11 @@ interface StepContainerProps {
 
 // #region styled components
 
-const MainDiv = styled.div<{ stepDepth: number; inFuture: boolean }>`
+const MainDiv = styled.div<{
+  stepDepth: number;
+  inFuture: boolean;
+}>`
   opacity: ${(props) => (props.inFuture ? 0.3 : 1)};
-  animation: ${appear} 0.3s ease-in-out;
   overflow: hidden;
   margin-left: 0px;
   margin-right: 0px;
@@ -61,6 +62,14 @@ const HeaderDiv = styled.div<{ error: boolean; loading: boolean }>`
   grid-gap: 8px;
   align-items: center;
   padding-right: 8px;
+`;
+
+const LeftHeaderSubDiv = styled.div`
+  margin: 8px;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  grid-gap: 2px;
 `;
 
 const ContentDiv = styled.div<{ isUserInput: boolean }>`
@@ -149,7 +158,7 @@ function StepContainer(props: StepContainerProps) {
           isLast={props.isLast}
           borderColor={
             props.historyNode.observation?.error
-              ? "#f00"
+              ? "#f005"
               : props.historyNode.active
               ? undefined
               : "transparent"
@@ -167,16 +176,20 @@ function StepContainer(props: StepContainerProps) {
             loading={(props.historyNode.active as boolean) || false}
             error={props.historyNode.observation?.error ? true : false}
           >
-            <div className="m-2">
+            <LeftHeaderSubDiv
+              style={
+                props.historyNode.observation?.error ? { color: "white" } : {}
+              }
+            >
               {!isUserInput &&
                 (props.open ? (
-                  <ChevronDown size="1.4em" />
+                  <ChevronDownIcon width="1.4em" height="1.4em" />
                 ) : (
-                  <ChevronRight size="1.4em" />
+                  <ChevronRightIcon width="1.4em" height="1.4em" />
                 ))}
               {props.historyNode.observation?.title ||
                 (props.historyNode.step.name as any)}
-            </div>
+            </LeftHeaderSubDiv>
             {/* <HeaderButton
               onClick={(e) => {
                 e.stopPropagation();
@@ -195,7 +208,7 @@ function StepContainer(props: StepContainerProps) {
                     client?.showLogsAtIndex(props.index);
                   }}
                 >
-                  <MagnifyingGlass size="1.4em" />
+                  <MagnifyingGlassIcon width="1.4em" height="1.4em" />
                 </HeaderButtonWithText>
               )}
               <HeaderButtonWithText
@@ -210,9 +223,17 @@ function StepContainer(props: StepContainerProps) {
                 }
               >
                 {props.historyNode.active ? (
-                  <StopCircle size="1.6em" onClick={props.onDelete} />
+                  <StopCircleIcon
+                    width="1.4em"
+                    height="1.4em"
+                    onClick={props.onDelete}
+                  />
                 ) : (
-                  <XMark size="1.6em" onClick={props.onDelete} />
+                  <XMarkIcon
+                    width="1.4em"
+                    height="1.4em"
+                    onClick={props.onDelete}
+                  />
                 )}
               </HeaderButtonWithText>
               {props.historyNode.observation?.error ? (
@@ -223,7 +244,11 @@ function StepContainer(props: StepContainerProps) {
                     props.onRetry();
                   }}
                 >
-                  <ArrowPath size="1.6em" onClick={props.onRetry} />
+                  <ArrowPathIcon
+                    width="1.4em"
+                    height="1.4em"
+                    onClick={props.onRetry}
+                  />
                 </HeaderButtonWithText>
               ) : (
                 <></>

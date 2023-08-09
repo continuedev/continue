@@ -1,7 +1,7 @@
-import { Play } from "@styled-icons/heroicons-outline";
 import { useSelector } from "react-redux";
-import styled from "styled-components";
 import { RootStore } from "../redux/store";
+import styled from "styled-components";
+import { PlayIcon } from "@heroicons/react/24/outline";
 
 const DEFAULT_SIZE = "28px";
 
@@ -31,7 +31,7 @@ function Loader(props: { size?: string }) {
       {vscMediaUrl ? (
         <img src={`${vscMediaUrl}/play_button.png`} width="22px" />
       ) : (
-        <Play width={props.size || DEFAULT_SIZE} />
+        <PlayIcon width={props.size || DEFAULT_SIZE} />
       )}
     </FlashingDiv>
   );

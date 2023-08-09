@@ -1,5 +1,7 @@
 
 from abc import abstractmethod
+import asyncio
+import time
 from typing import Dict, List
 from meilisearch_python_async import Client
 from pydantic import BaseModel
@@ -8,6 +10,7 @@ from pydantic import BaseModel
 from .main import ChatMessage, ContextItem, ContextItemDescription, ContextItemId
 from ..server.meilisearch_server import check_meilisearch_running
 from ..libs.util.logging import logger
+from ..libs.util.telemetry import posthog_logger
 
 SEARCH_INDEX_NAME = "continue_context_items"
 
@@ -133,14 +136,19 @@ class ContextManager:
         """
         return sum([await provider.get_chat_messages() for provider in self.context_providers.values()], [])
 
-    def __init__(self, context_providers: List[ContextProvider]):
+    def __init__(self):
+        self.context_providers = {}
+        self.provider_titles = set()
+
+    async def start(self, context_providers: List[ContextProvider]):
+        """
+        Starts the context manager.
+        """
         self.context_providers = {
             prov.title: prov for prov in context_providers}
         self.provider_titles = {
             provider.title for provider in context_providers}
 
-    @classmethod
-    async def create(cls, context_providers: List[ContextProvider]):
         async with Client('http://localhost:7700') as search_client:
             meilisearch_running = True
             try:
@@ -154,13 +162,14 @@ class ContextManager:
             if not meilisearch_running:
                 logger.warning(
                     "MeiliSearch not running, avoiding any dependent context providers")
-                context_providers = list(
-                    filter(lambda cp: cp.title == "code", context_providers))
-
-        return cls(context_providers)
+                self.context_providers = {
+                    title: provider for title, provider in self.context_providers.items() if title == "code"
+                }
 
     async def load_index(self, workspace_dir: str):
         for _, provider in self.context_providers.items():
+            ti = time.time()
+
             context_items = await provider.provide_context_items(workspace_dir)
             documents = [
                 {
@@ -174,15 +183,13 @@ class ContextManager:
             if len(documents) > 0:
                 try:
                     async with Client('http://localhost:7700') as search_client:
-                        await search_client.index(SEARCH_INDEX_NAME).add_documents(documents)
+                        await asyncio.wait_for(search_client.index(SEARCH_INDEX_NAME).add_documents(documents), timeout=5)
                 except Exception as e:
                     logger.debug(f"Error loading meilisearch index: {e}")
 
-    # def compile_chat_messages(self, max_tokens: int) -> List[Dict]:
-    #     """
-    #     Compiles the chat prompt into a single string.
-    #     """
-    #     return compile_chat_messages(self.model, self.chat_history, max_tokens, self.prompt, self.functions, self.system_message)
+            tf = time.time()
+            logger.debug(
+                f"Loaded {len(documents)} documents into meilisearch in {tf - ti} seconds for context provider {provider.title}")
 
     async def select_context_item(self, id: str, query: str):
         """
@@ -193,6 +200,11 @@ class ContextManager:
             raise ValueError(
                 f"Context provider with title {id.provider_title} not found")
 
+        posthog_logger.capture_event("select_context_item", {
+            "provider_title": id.provider_title,
+            "item_id": id.item_id,
+            "query": query
+        })
         await self.context_providers[id.provider_title].add_context_item(id, query)
 
     async def delete_context_with_ids(self, ids: List[str]):

@@ -1,8 +1,21 @@
-# Continue
+<h1 align="center">Continue</h1>
+
+<div align="center">
 
 **[Continue](https://continue.dev/docs) is the open-source autopilot for software development—a [VS Code extension](https://marketplace.visualstudio.com/items?itemName=Continue.continue) that brings the power of ChatGPT to your IDE**
 
+</div>
+
+<div align="center">
+
+[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+<a target="_blank" href="https://discord.gg/vapESyrFmJ" style="background:none">
+<img src="https://img.shields.io/badge/discord-join-continue.svg?labelColor=191937&color=6F6FF7&logo=discord" />
+</a>
+
 ![Editing with Continue](https://github.com/continuedev/continue/blob/main/readme.gif?raw=true)
+
+</div>
 
 ## Task, not tab, auto-complete
 
@@ -32,18 +45,17 @@ Open a blank file and let Continue start new Python scripts, React components, e
 
 ## Getting Started
 
-### [Download for VS Code](https://marketplace.visualstudio.com/items?itemName=Continue.continue)
+By default, Continue uses GPT-4 and GPT-3.5-turbo via the OpenAI API.
 
-Continue requires that you have Python 3.8 or greater. If you do not, please [install](https://python.org) it
+You can adjust the config to use different LLMs, including local, private models. Read more [here](https://continue.dev/docs/customization#change-the-default-llm).
 
-If your Continue server is not setting up, please check the console logs:
+To see the keyboard shortcuts offered by Continue, see the "Feature Contributions" tab above.
 
-1. `cmd+shift+p` (MacOS) / `ctrl+shift+p` (Windows)
-2. Search for and then select "Developer: Toggle Developer Tools"
-3. Select `Console`
-4. Read the console logs
+# Troubleshooting
 
-\*The Continue VS Code extension is currently in beta. It will attempt to start the Continue Python server locally for you, but if this fails you can run the server manually as is explained here: [Running the Continue server manually](https://continue.dev/docs/how-continue-works)
+The Continue VS Code extension is currently in beta. It will attempt to start the Continue Python server locally for you, but sometimes this will fail, causing the "Starting Continue server..." not to disappear, or other hangups. While we are working on fixes to all of these problems, read here for common solutions:
+
+> [Troubleshooting Continue](https://continue.dev/docs/troubleshooting)
 
 ## License
 

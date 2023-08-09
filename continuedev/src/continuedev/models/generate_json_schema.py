@@ -1,7 +1,7 @@
 from .main import *
 from .filesystem import RangeInFile, FileEdit
 from .filesystem_edit import FileEditWithFullContents
-from ..core.main import History, HistoryNode, FullState
+from ..core.main import History, HistoryNode, FullState, SessionInfo
 from ..core.context import ContextItem
 from pydantic import schema_json_of
 import os
@@ -13,7 +13,7 @@ MODELS_TO_GENERATE = [
 ] + [
     FileEditWithFullContents
 ] + [
-    History, HistoryNode, FullState
+    History, HistoryNode, FullState, SessionInfo
 ] + [
     ContextItem
 ]
@@ -39,7 +39,7 @@ def main():
             json = schema_json_of(model, indent=2, title=title)
         except Exception as e:
             print(f"Failed to generate json schema for {title}: {e}")
-            continue
+            continue  # pun intended
 
         with open(f"{SCHEMA_DIR}/{title}.json", "w") as f:
             f.write(json)

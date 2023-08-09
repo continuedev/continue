@@ -1,9 +1,5 @@
 # Getting started
 
-:::note
-Continue requires that you have Python 3.8 or greater. If you do not, please [install](https://python.org) it
-:::
-
 1. Click `Install` on the **[Continue extension in the Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=Continue.continue)**
 
 2. This will open the Continue extension page in VS Code, where you will need to click `Install` again

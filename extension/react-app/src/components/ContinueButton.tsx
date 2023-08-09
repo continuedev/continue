@@ -1,6 +1,6 @@
 import styled, { keyframes } from "styled-components";
 import { Button } from ".";
-import { Play } from "@styled-icons/heroicons-outline";
+import { PlayIcon } from "@heroicons/react/24/outline";
 import { useSelector } from "react-redux";
 import { RootStore } from "../redux/store";
 
@@ -33,7 +33,7 @@ function ContinueButton(props: { onClick?: () => void; hidden?: boolean }) {
       {vscMediaUrl ? (
         <img src={`${vscMediaUrl}/play_button.png`} width="22px" />
       ) : (
-        <Play />
+        <PlayIcon />
       )}
       CONTINUE
     </StyledButton>

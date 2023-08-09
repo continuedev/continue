@@ -1,17 +1,8 @@
 import * as vscode from "vscode";
 import * as path from "path";
 import * as os from "os";
-import {
-  acceptSuggestionCommand,
-  rejectSuggestionCommand,
-  suggestionDownCommand,
-  suggestionUpCommand,
-  acceptAllSuggestionsCommand,
-  rejectAllSuggestionsCommand,
-} from "./suggestions";
 
 import { acceptDiffCommand, rejectDiffCommand } from "./diffs";
-import * as bridge from "./bridge";
 import { debugPanelWebview } from "./debugPanel";
 import { ideProtocolClient } from "./activation/activate";
 
@@ -23,14 +14,8 @@ export const setFocusedOnContinueInput = (value: boolean) => {
 
 // Copy everything over from extension.ts
 const commandsMap: { [command: string]: (...args: any) => any } = {
-  "continue.suggestionDown": suggestionDownCommand,
-  "continue.suggestionUp": suggestionUpCommand,
-  "continue.acceptSuggestion": acceptSuggestionCommand,
-  "continue.rejectSuggestion": rejectSuggestionCommand,
   "continue.acceptDiff": acceptDiffCommand,
   "continue.rejectDiff": rejectDiffCommand,
-  "continue.acceptAllSuggestions": acceptAllSuggestionsCommand,
-  "continue.rejectAllSuggestions": rejectAllSuggestionsCommand,
   "continue.quickFix": async (message: string, code: string, edit: boolean) => {
     ideProtocolClient.sendMainUserInput(
       `${
@@ -51,6 +36,16 @@ const commandsMap: { [command: string]: (...args: any) => any } = {
       });
     }
     focusedOnContinueInput = !focusedOnContinueInput;
+  },
+  "continue.focusContinueInputWithEdit": async () => {
+    vscode.commands.executeCommand("continue.continueGUIView.focus");
+    debugPanelWebview?.postMessage({
+      type: "focusContinueInputWithEdit",
+    });
+    focusedOnContinueInput = true;
+  },
+  "continue.toggleAuxiliaryBar": () => {
+    vscode.commands.executeCommand("workbench.action.toggleAuxiliaryBar");
   },
   "continue.quickTextEntry": async () => {
     const text = await vscode.window.showInputBox({

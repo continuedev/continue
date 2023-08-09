@@ -50,7 +50,7 @@ export const configSlice = createSlice({
     ) => ({
       ...state,
       dataSwitchOn: action.payload,
-    })
+    }),
   },
 });
 
@@ -60,6 +60,6 @@ export const {
   setWorkspacePath,
   setSessionId,
   setVscMediaUrl,
-  setDataSwitchOn
+  setDataSwitchOn,
 } = configSlice.actions;
 export default configSlice.reducer;

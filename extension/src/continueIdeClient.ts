@@ -12,13 +12,9 @@ import {
   rejectSuggestionCommand,
 } from "./suggestions";
 import { FileEditWithFullContents } from "../schema/FileEditWithFullContents";
-import fs = require("fs");
+import * as fs from 'fs';
 import { WebsocketMessenger } from "./util/messenger";
 import { diffManager } from "./diffs";
-import path = require("path");
-import { registerAllCodeLensProviders } from "./lang-server/codeLens";
-import { registerAllCommands } from "./commands";
-import registerQuickFixProvider from "./lang-server/codeActions";
 const os = require("os");
 
 const continueVirtualDocumentScheme = "continue";
@@ -45,7 +41,6 @@ class IdeProtocolClient {
     this.messenger = messenger;
 
     const reconnect = () => {
-      console.log("Trying to reconnect IDE protocol websocket...");
       this.messenger = null;
 
       // Exponential backoff to reconnect
@@ -62,11 +57,9 @@ class IdeProtocolClient {
       this._lastReloadTime = Math.min(2 * this._lastReloadTime, 5000);
     };
     messenger.onOpen(() => {
-      console.log("IDE protocol websocket opened");
       this._reconnectionTimeouts.forEach((to) => clearTimeout(to));
     });
     messenger.onClose(() => {
-      console.log("IDE protocol websocket closed");
       reconnect();
     });
     messenger.onError(() => {
@@ -125,7 +118,7 @@ class IdeProtocolClient {
 
     // Setup listeners for any selection changes in open editors
     vscode.window.onDidChangeTextEditorSelection((event) => {
-      if (this.editorIsTerminal(event.textEditor)) {
+      if (!this.editorIsCode(event.textEditor)) {
         return;
       }
       if (this._highlightDebounce) {
@@ -192,6 +185,8 @@ class IdeProtocolClient {
     });
   }
 
+  visibleMessages: Set<string> = new Set();
+
   async handleMessage(
     messageType: string,
     data: any,
@@ -253,6 +248,20 @@ class IdeProtocolClient {
       case "setFileOpen":
         this.openFile(data.filepath);
         // TODO: Close file if False
+        break;
+      case "showMessage":
+        if (!this.visibleMessages.has(data.message)) {
+          this.visibleMessages.add(data.message);
+          vscode.window
+            .showInformationMessage(data.message, "Copy Traceback", "View Logs")
+            .then((selection) => {
+              if (selection === "View Logs") {
+                vscode.commands.executeCommand("continue.viewLogs");
+              } else if (selection === "Copy Traceback") {
+                vscode.env.clipboard.writeText(data.message);
+              }
+            });
+        }
         break;
       case "showVirtualFile":
         this.showVirtualFile(data.name, data.contents);
@@ -374,7 +383,7 @@ class IdeProtocolClient {
   async getUserSecret(key: string) {
     // Check if secret already exists in VS Code settings (global)
     let secret = vscode.workspace.getConfiguration("continue").get(key);
-    if (typeof secret !== "undefined" && secret !== null) return secret;
+    if (typeof secret !== "undefined" && secret !== null) {return secret;}
 
     // If not, ask user for secret
     secret = await vscode.window.showInputBox({
@@ -404,7 +413,7 @@ class IdeProtocolClient {
           clearInterval(interval);
           resolve(null);
         } else {
-          console.log("Websocket not yet open, trying again...");
+          // console.log("Websocket not yet open, trying again...");
         }
       }, 1000);
     });
@@ -426,17 +435,19 @@ class IdeProtocolClient {
   // ------------------------------------ //
   // Respond to request
 
-  private editorIsTerminal(editor: vscode.TextEditor) {
-    return (
-      !!path.basename(editor.document.uri.fsPath).match(/\d/) ||
-      (editor.document.languageId === "plaintext" &&
-        editor.document.getText() === "accessible-buffer-accessible-buffer-")
+  // Checks to see if the editor is a code editor.
+  // In some cases vscode.window.visibleTextEditors can return non-code editors
+  // e.g. terminal editors in side-by-side mode
+  private editorIsCode(editor: vscode.TextEditor) {
+    return !(
+      editor.document.languageId === "plaintext" &&
+      editor.document.getText() === "accessible-buffer-accessible-buffer-"
     );
   }
 
   getOpenFiles(): string[] {
     return vscode.window.visibleTextEditors
-      .filter((editor) => !this.editorIsTerminal(editor))
+      .filter((editor) => this.editorIsCode(editor))
       .map((editor) => {
         return editor.document.uri.fsPath;
       });
@@ -444,7 +455,7 @@ class IdeProtocolClient {
 
   getVisibleFiles(): string[] {
     return vscode.window.visibleTextEditors
-      .filter((editor) => !this.editorIsTerminal(editor))
+      .filter((editor) => this.editorIsCode(editor))
       .map((editor) => {
         return editor.document.uri.fsPath;
       });
@@ -452,7 +463,7 @@ class IdeProtocolClient {
 
   saveFile(filepath: string) {
     vscode.window.visibleTextEditors
-      .filter((editor) => !this.editorIsTerminal(editor))
+      .filter((editor) => this.editorIsCode(editor))
       .forEach((editor) => {
         if (editor.document.uri.fsPath === filepath) {
           editor.document.save();
@@ -463,7 +474,7 @@ class IdeProtocolClient {
   readFile(filepath: string): string {
     let contents: string | undefined;
     vscode.window.visibleTextEditors
-      .filter((editor) => !this.editorIsTerminal(editor))
+      .filter((editor) => this.editorIsCode(editor))
       .forEach((editor) => {
         if (editor.document.uri.fsPath === filepath) {
           contents = editor.document.getText();
@@ -509,7 +520,7 @@ class IdeProtocolClient {
     // TODO
     let rangeInFiles: RangeInFile[] = [];
     vscode.window.visibleTextEditors
-      .filter((editor) => !this.editorIsTerminal(editor))
+      .filter((editor) => this.editorIsCode(editor))
       .forEach((editor) => {
         editor.selections.forEach((selection) => {
           // if (!selection.isEmpty) {

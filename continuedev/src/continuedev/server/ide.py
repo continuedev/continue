@@ -1,7 +1,7 @@
 # This is a separate server from server/main.py
 import json
 import os
-from typing import Any, List, Type, TypeVar, Union
+from typing import Any, Coroutine, List, Type, TypeVar, Union
 import uuid
 from fastapi import WebSocket, APIRouter
 from starlette.websockets import WebSocketState, WebSocketDisconnect
@@ -139,7 +139,7 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
             msg_string = await self.websocket.receive_text()
             message = json.loads(msg_string)
             if "messageType" not in message or "data" not in message:
-                continue
+                continue  # <-- hey that's the name of this repo!
             message_type = message["messageType"]
             data = message["data"]
             logger.debug(f"Received message while initializing {message_type}")
@@ -165,12 +165,12 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
             "data": data
         })
 
-    async def _receive_json(self, message_type: str, timeout: int = 20) -> Any:
+    async def _receive_json(self, message_type: str, timeout: int = 10) -> Any:
         try:
             return await asyncio.wait_for(self.sub_queue.get(message_type), timeout=timeout)
         except asyncio.TimeoutError:
             raise Exception(
-                f"IDE Protocol _receive_json timed out after 20 seconds: {message_type}")
+                f"IDE Protocol _receive_json timed out after 10 seconds: {message_type}")
 
     async def _send_and_receive_json(self, data: Any, resp_model: Type[T], message_type: str) -> T:
         await self._send_json(message_type, data)
@@ -211,8 +211,6 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
         else:
             raise ValueError("Unknown message type", message_type)
 
-    # ------------------------------- #
-    # Request actions in IDE, doesn't matter which Session
     async def showSuggestion(self, file_edit: FileEdit):
         await self._send_json("showSuggestion", {
             "edit": file_edit.dict()
@@ -232,6 +230,11 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
             "open": open
         })
 
+    async def showMessage(self, message: str):
+        await self._send_json("showMessage", {
+            "message": message
+        })
+
     async def showVirtualFile(self, name: str, contents: str):
         await self._send_json("showVirtualFile", {
             "name": name,
@@ -246,8 +249,10 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
         })
 
     async def getSessionId(self):
-        session_id = (await self.session_manager.new_session(
-            self, self.session_id)).session_id
+        new_session = await asyncio.wait_for(self.session_manager.new_session(
+            self, self.session_id), timeout=5)
+        session_id = new_session.session_id
+        logger.debug(f"Sending session id: {session_id}")
         await self._send_json("getSessionId", {
             "sessionId": session_id
         })
@@ -275,13 +280,10 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
         # Just need connect the suggestionId to the IDE (and the gui)
         return any([r.accepted for r in responses])
 
-    # ------------------------------- #
-    # Here needs to pass message onto the Autopilot OR Autopilot just subscribes.
-    # This is where you might have triggers: plugins can subscribe to certian events
-    # like file changes, tracebacks, etc...
-
-    def on_error(self, e: Exception):
-        return self.session_manager.sessions[self.session_id].autopilot.continue_sdk.run_step(DisplayErrorStep(e=e))
+    def on_error(self, e: Exception) -> Coroutine:
+        err_msg = '\n'.join(traceback.format_exception(e))
+        e_title = e.__str__() or e.__repr__()
+        return self.showMessage(f"Error in Continue server: {e_title}\n {err_msg}")
 
     def onAcceptRejectSuggestion(self, accepted: bool):
         posthog_logger.capture_event("accept_reject_suggestion", {
@@ -307,11 +309,13 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
     def __get_autopilot(self):
         if self.session_id not in self.session_manager.sessions:
             return None
-        return self.session_manager.sessions[self.session_id].autopilot
+
+        autopilot = self.session_manager.sessions[self.session_id].autopilot
+        return autopilot if autopilot.started else None
 
     def onFileEdits(self, edits: List[FileEditWithFullContents]):
         if autopilot := self.__get_autopilot():
-            autopilot.handle_manual_edits(edits)
+            pass
 
     def onDeleteAtIndex(self, index: int):
         if autopilot := self.__get_autopilot():
@@ -442,6 +446,7 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
 @router.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket, session_id: str = None):
     try:
+        # Accept the websocket connection
         await websocket.accept()
         logger.debug(f"Accepted websocket connection from {websocket.client}")
         await websocket.send_json({"messageType": "connected", "data": {}})
@@ -453,6 +458,7 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str = None):
             logger.debug("Failed to start MeiliSearch")
             logger.debug(e)
 
+        # Message handler
         def handle_msg(msg):
             message = json.loads(msg)
 
@@ -465,6 +471,7 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str = None):
             create_async_task(
                 ideProtocolServer.handle_json(message_type, data), ideProtocolServer.on_error)
 
+        # Initialize the IDE Protocol Server
         ideProtocolServer = IdeProtocolServer(session_manager, websocket)
         if session_id is not None:
             session_manager.registered_ides[session_id] = ideProtocolServer
@@ -475,20 +482,23 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str = None):
         for other_msg in other_msgs:
             handle_msg(other_msg)
 
+        # Handle messages
         while AppStatus.should_exit is False:
             message = await websocket.receive_text()
             handle_msg(message)
 
-        logger.debug("Closing ide websocket")
     except WebSocketDisconnect as e:
-        logger.debug("IDE wbsocket disconnected")
+        logger.debug("IDE websocket disconnected")
     except Exception as e:
         logger.debug(f"Error in ide websocket: {e}")
         err_msg = '\n'.join(traceback.format_exception(e))
         posthog_logger.capture_event("gui_error", {
             "error_title": e.__str__() or e.__repr__(), "error_message": err_msg})
 
-        await session_manager.sessions[session_id].autopilot.continue_sdk.run_step(DisplayErrorStep(e=e))
+        if session_id is not None and session_id in session_manager.sessions:
+            await session_manager.sessions[session_id].autopilot.continue_sdk.run_step(DisplayErrorStep(e=e))
+        elif ideProtocolServer is not None:
+            await ideProtocolServer.showMessage(f"Error in Continue server: {err_msg}")
 
         raise e
     finally:

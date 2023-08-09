@@ -6,6 +6,7 @@ from ....plugins.steps.core.core import MessageStep
 from ....core.sdk import Models
 from ....core.main import Step
 from ....core.sdk import ContinueSDK
+from ....libs.util.paths import find_data_file
 
 AI_ASSISTED_STRING = "(✨ AI-Assisted ✨)"
 
@@ -72,7 +73,7 @@ class LoadDataStep(Step):
         output = await sdk.run('.env/bin/python3 chess_pipeline.py', name="Load data to BigQuery", description="Running `.env/bin/python3 chess_pipeline.py` to load data to Google BigQuery")
 
         if "Traceback" in output or "SyntaxError" in output:
-            with open(os.path.join(os.path.dirname(__file__), "dlt_duckdb_to_bigquery_docs.md"), "r") as f:
+            with open(find_data_file("dlt_duckdb_to_bigquery_docs.md"), "r") as f:
                 docs = f.read()
 
             output = "Traceback" + output.split("Traceback")[-1]

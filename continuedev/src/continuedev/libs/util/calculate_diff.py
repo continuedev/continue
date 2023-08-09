@@ -2,41 +2,6 @@ import difflib
 from typing import List
 from ...models.main import Position, Range
 from ...models.filesystem import FileEdit
-from diff_match_patch import diff_match_patch
-
-
-def calculate_diff_match_patch(filepath: str, original: str, updated: str) -> List[FileEdit]:
-    dmp = diff_match_patch()
-    diffs = dmp.diff_main(original, updated)
-    dmp.diff_cleanupSemantic(diffs)
-
-    replacements = []
-
-    current_index = 0
-    deleted_length = 0
-
-    for diff in diffs:
-        if diff[0] == diff_match_patch.DIFF_EQUAL:
-            current_index += len(diff[1])
-            deleted_length = 0
-        elif diff[0] == diff_match_patch.DIFF_INSERT:
-            current_index += deleted_length
-            replacements.append((current_index, current_index, diff[1]))
-            current_index += len(diff[1])
-            deleted_length = 0
-        elif diff[0] == diff_match_patch.DIFF_DELETE:
-            replacements.append(
-                (current_index, current_index + len(diff[1]), ''))
-            deleted_length += len(diff[1])
-        elif diff[0] == diff_match_patch.DIFF_REPLACE:
-            replacements.append(
-                (current_index, current_index + len(diff[1]), ''))
-            current_index += deleted_length
-            replacements.append((current_index, current_index, diff[2]))
-            current_index += len(diff[2])
-            deleted_length = 0
-
-    return [FileEdit(filepath=filepath, range=Range.from_indices(original, r[0], r[1]), replacement=r[2]) for r in replacements]
 
 
 def calculate_diff(filepath: str, original: str, updated: str) -> List[FileEdit]:
@@ -92,7 +57,7 @@ def calculate_diff2(filepath: str, original: str, updated: str) -> List[FileEdit
             tag, i1, i2, j1, j2 = s.get_opcodes()[edit_index]
             replacement = updated[j1:j2]
             if tag == "equal":
-                continue
+                continue  # ;)
             elif tag == "delete":
                 edits.append(FileEdit.from_deletion(
                     filepath, Range.from_indices(original, i1, i2)))

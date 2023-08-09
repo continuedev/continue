@@ -1,5 +1,6 @@
 import * as esbuild from "esbuild";
-// esbuild ./src/extension.ts --bundle --outfile=out/extension.js --external:vscode --format=cjs --platform=node
+
+// Bundles the extension into one file
 await esbuild.build({
   entryPoints: ["src/extension.ts"],
   bundle: true,
@@ -9,6 +10,7 @@ await esbuild.build({
   platform: "node",
   sourcemap: true,
   loader: {
+    // eslint-disable-next-line @typescript-eslint/naming-convention
     ".node": "file",
   },
 });

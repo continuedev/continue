@@ -15,7 +15,7 @@ import {
 } from ".";
 import PillButton from "./PillButton";
 import HeaderButtonWithText from "./HeaderButtonWithText";
-import { DocumentPlus } from "@styled-icons/heroicons-outline";
+import { DocumentPlusIcon } from "@heroicons/react/24/outline";
 import { ContextItem } from "../../../schema/FullState";
 import { postVscMessage } from "../vscode";
 import { GUIClientContext } from "../App";
@@ -32,7 +32,9 @@ const SEARCH_INDEX_NAME = "continue_context_items";
 const mainInputFontSize = 13;
 
 const EmptyPillDiv = styled.div`
-  padding: 8px;
+  padding: 4px;
+  padding-left: 8px;
+  padding-right: 8px;
   border-radius: ${defaultBorderRadius};
   border: 1px dashed ${lightGray};
   color: ${lightGray};
@@ -68,6 +70,10 @@ const MainTextInput = styled.textarea`
   &:focus {
     outline: 1px solid ${lightGray};
     border: 1px solid transparent;
+  }
+
+  &::placeholder {
+    color: ${lightGray}80;
   }
 `;
 
@@ -169,12 +175,12 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
       props.onInputValueChange(inputValue);
 
       if (inputValue.endsWith("@") || currentlyInContextQuery) {
-        const segs = inputValue.split("@");
+        const segs = inputValue?.split("@") || [];
 
         if (segs.length > 1) {
           // Get search results and return
           setCurrentlyInContextQuery(true);
-          const providerAndQuery = segs[segs.length - 1];
+          const providerAndQuery = segs[segs.length - 1] || "";
           const [provider, query] = providerAndQuery.split(" ");
           searchClient
             .index(SEARCH_INDEX_NAME)
@@ -221,10 +227,55 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
   const divRef = React.useRef<HTMLDivElement>(null);
   const ulRef = React.useRef<HTMLUListElement>(null);
   const showAbove = () => {
-    return (divRef.current?.getBoundingClientRect().top || 0) > UlMaxHeight;
+    return (
+      (divRef.current?.getBoundingClientRect().top || Number.MAX_SAFE_INTEGER) >
+      UlMaxHeight
+    );
   };
 
   useImperativeHandle(ref, () => downshiftProps, [downshiftProps]);
+
+  const contextItemsDivRef = React.useRef<HTMLDivElement>(null);
+  const handleTabPressed = () => {
+    // Set the focus to the next item in the context items div
+    if (!contextItemsDivRef.current) {
+      return;
+    }
+    const focusableItems =
+      contextItemsDivRef.current.querySelectorAll(".pill-button");
+    const focusableItemsArray = Array.from(focusableItems);
+    const focusedItemIndex = focusableItemsArray.findIndex(
+      (item) => item === document.activeElement
+    );
+    console.log(focusedItemIndex, focusableItems);
+    if (focusedItemIndex === focusableItemsArray.length - 1) {
+      inputRef.current?.focus();
+    } else if (focusedItemIndex !== -1) {
+      const nextItem =
+        focusableItemsArray[
+          (focusedItemIndex + 1) % focusableItemsArray.length
+        ];
+      (nextItem as any)?.focus();
+    } else {
+      const firstItem = focusableItemsArray[0];
+      (firstItem as any)?.focus();
+    }
+  };
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const listener = (e: any) => {
+        if (e.key === "Tab") {
+          e.preventDefault();
+          handleTabPressed();
+        }
+      };
+      window.addEventListener("keydown", listener);
+      return () => {
+        window.removeEventListener("keydown", listener);
+      };
+    }
+  }, []);
 
   const [metaKeyPressed, setMetaKeyPressed] = useState(false);
   const [focused, setFocused] = useState(false);
@@ -255,6 +306,10 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
     const handler = (event: any) => {
       if (event.data.type === "focusContinueInput") {
         inputRef.current!.focus();
+      } else if (event.data.type === "focusContinueInputWithEdit") {
+        inputRef.current!.focus();
+
+        downshiftProps.setInputValue("/edit ");
       }
     };
     window.addEventListener("message", handler);
@@ -265,10 +320,14 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
 
   return (
     <>
-      <div className="px-2 flex gap-2 items-center flex-wrap mt-2">
+      <div
+        className="px-2 flex gap-2 items-center flex-wrap mt-2"
+        ref={contextItemsDivRef}
+      >
         {props.selectedContextItems.map((item, idx) => {
           return (
             <PillButton
+              areMultipleItems={props.selectedContextItems.length > 1}
               key={`${item.description.id.item_id}${idx}`}
               item={item}
               warning={
@@ -278,6 +337,10 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
               }
               addingHighlightedCode={props.addingHighlightedCode}
               index={idx}
+              onDelete={() => {
+                client?.deleteContextWithIds([item.description.id]);
+                inputRef.current?.focus();
+              }}
             />
           );
         })}
@@ -296,8 +359,15 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
               onClick={() => {
                 props.onToggleAddContext();
               }}
+              className="pill-button focus:outline-none focus:border-red-600 focus:border focus:border-solid"
+              onKeyDown={(e: KeyboardEvent) => {
+                e.preventDefault();
+                if (e.key === "Enter") {
+                  props.onToggleAddContext();
+                }
+              }}
             >
-              <DocumentPlus width="1.6em"></DocumentPlus>
+              <DocumentPlusIcon width="1.4em" height="1.4em" />
             </HeaderButtonWithText>
           ))}
       </div>
@@ -322,10 +392,6 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
               setFocused(true);
               dispatch(setBottomMessage(undefined));
             },
-            onBlur: (e) => {
-              setFocused(false);
-              postVscMessage("blurContinueInput", {});
-            },
             onKeyDown: (event) => {
               dispatch(setBottomMessage(undefined));
               if (event.key === "Enter" && event.shiftKey) {
@@ -349,6 +415,8 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
               } else if (event.key === "Tab" && items.length > 0) {
                 downshiftProps.setInputValue(items[0].name);
                 event.preventDefault();
+              } else if (event.key === "Tab") {
+                (event.nativeEvent as any).preventDownshiftDefault = true;
               } else if (
                 (event.key === "ArrowUp" || event.key === "ArrowDown") &&
                 event.currentTarget.value.split("\n").length > 1
@@ -374,6 +442,17 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
                   Math.min(prev + 1, history.length)
                 );
                 setCurrentlyInContextQuery(false);
+              } else if (event.key === "Escape") {
+                setCurrentlyInContextQuery(false);
+                if (downshiftProps.isOpen && items.length > 0) {
+                  downshiftProps.closeMenu();
+                } else {
+                  (event.nativeEvent as any).preventDownshiftDefault = true;
+                  // Remove focus from the input
+                  inputRef.current?.blur();
+                  // Move cursor back over to the editor
+                  postVscMessage("focusEditor", {});
+                }
               }
             },
             onClick: () => {

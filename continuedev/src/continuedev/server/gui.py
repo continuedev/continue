@@ -2,7 +2,7 @@ import asyncio
 import json
 from fastapi import Depends, Header, WebSocket, APIRouter
 from starlette.websockets import WebSocketState, WebSocketDisconnect
-from typing import Any, List, Type, TypeVar
+from typing import Any, List, Optional, Type, TypeVar
 from pydantic import BaseModel
 import traceback
 from uvicorn.main import Server
@@ -59,12 +59,12 @@ class GUIProtocolServer(AbstractGUIProtocolServer):
             "data": data
         })
 
-    async def _receive_json(self, message_type: str, timeout: int = 20) -> Any:
+    async def _receive_json(self, message_type: str, timeout: int = 10) -> Any:
         try:
             return await asyncio.wait_for(self.sub_queue.get(message_type), timeout=timeout)
         except asyncio.TimeoutError:
             raise Exception(
-                "GUI Protocol _receive_json timed out after 20 seconds")
+                "GUI Protocol _receive_json timed out after 10 seconds")
 
     async def _send_and_receive_json(self, data: Any, resp_model: Type[T], message_type: str) -> T:
         await self._send_json(message_type, data)
@@ -93,12 +93,14 @@ class GUIProtocolServer(AbstractGUIProtocolServer):
             self.on_delete_context_with_ids(data["ids"])
         elif message_type == "toggle_adding_highlighted_code":
             self.on_toggle_adding_highlighted_code()
-        elif message_type == "set_editing_at_indices":
-            self.on_set_editing_at_indices(data["indices"])
+        elif message_type == "set_editing_at_ids":
+            self.on_set_editing_at_ids(data["ids"])
         elif message_type == "show_logs_at_index":
             self.on_show_logs_at_index(data["index"])
         elif message_type == "select_context_item":
             self.select_context_item(data["id"], data["query"])
+        elif message_type == "load_session":
+            self.load_session(data.get("session_id", None))
 
     def on_main_input(self, input: str):
         # Do something with user input
@@ -137,10 +139,11 @@ class GUIProtocolServer(AbstractGUIProtocolServer):
     def on_toggle_adding_highlighted_code(self):
         create_async_task(
             self.session.autopilot.toggle_adding_highlighted_code(), self.on_error)
+        posthog_logger.capture_event("toggle_adding_highlighted_code", {})
 
-    def on_set_editing_at_indices(self, indices: List[int]):
+    def on_set_editing_at_ids(self, ids: List[str]):
         create_async_task(
-            self.session.autopilot.set_editing_at_indices(indices), self.on_error)
+            self.session.autopilot.set_editing_at_ids(ids), self.on_error)
 
     def on_show_logs_at_index(self, index: int):
         name = f"continue_logs.txt"
@@ -148,11 +151,24 @@ class GUIProtocolServer(AbstractGUIProtocolServer):
             ["This is a log of the exact prompt/completion pairs sent/received from the LLM during this step"] + self.session.autopilot.continue_sdk.history.timeline[index].logs)
         create_async_task(
             self.session.autopilot.ide.showVirtualFile(name, logs), self.on_error)
+        posthog_logger.capture_event("show_logs_at_index", {})
 
     def select_context_item(self, id: str, query: str):
         """Called when user selects an item from the dropdown"""
         create_async_task(
             self.session.autopilot.select_context_item(id, query), self.on_error)
+
+    def load_session(self, session_id: Optional[str] = None):
+        async def load_and_tell_to_reconnect():
+            new_session_id = await session_manager.load_session(self.session.session_id, session_id)
+            await self._send_json("reconnect_at_session", {"session_id": new_session_id})
+
+        create_async_task(
+            load_and_tell_to_reconnect(), self.on_error)
+
+        posthog_logger.capture_event("load_session", {
+            "session_id": session_id
+        })
 
 
 @router.websocket("/ws")
@@ -176,7 +192,7 @@ async def websocket_endpoint(websocket: WebSocket, session: Session = Depends(we
                 message = json.loads(message)
 
             if "messageType" not in message or "data" not in message:
-                continue
+                continue  # :o
             message_type = message["messageType"]
             data = message["data"]
 
@@ -190,7 +206,7 @@ async def websocket_endpoint(websocket: WebSocket, session: Session = Depends(we
         posthog_logger.capture_event("gui_error", {
             "error_title": e.__str__() or e.__repr__(), "error_message": err_msg})
 
-        await protocol.session.autopilot.continue_sdk.run_step(DisplayErrorStep(e=e))
+        await session.autopilot.ide.showMessage(err_msg)
 
         raise e
     finally:

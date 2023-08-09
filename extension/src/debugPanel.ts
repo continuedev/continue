@@ -181,13 +181,11 @@ export function setupDebugPanel(
     switch (data.type) {
       case "onLoad": {
         let sessionId: string;
-        console.log("Running onLoad");
         if (typeof sessionIdPromise === "string") {
           sessionId = sessionIdPromise;
         } else {
           sessionId = await sessionIdPromise;
         }
-        console.log("Done with onLoad: ", sessionId);
         panel.webview.postMessage({
           type: "onLoad",
           vscMachineId: vscode.env.machineId,
@@ -223,6 +221,15 @@ export function setupDebugPanel(
         }
         break;
       }
+      case "websocketForwardingClose": {
+        let url = data.url;
+        let connection = websocketConnections[url];
+        if (typeof connection !== "undefined") {
+          connection.close();
+          websocketConnections[url] = undefined;
+        }
+        break;
+      }
       case "websocketForwardingMessage": {
         let url = data.url;
         let connection = websocketConnections[url];
@@ -240,8 +247,20 @@ export function setupDebugPanel(
         openEditorAndRevealRange(data.path, undefined, vscode.ViewColumn.One);
         break;
       }
-      case "blurContinueInput": {
+      case "toggleDevTools": {
+        vscode.commands.executeCommand("workbench.action.toggleDevTools");
+        vscode.commands.executeCommand("continue.viewLogs");
+        break;
+      }
+      case "reloadWindow": {
+        vscode.commands.executeCommand("workbench.action.reloadWindow");
+        break;
+      }
+      case "focusEditor": {
         setFocusedOnContinueInput(false);
+        vscode.commands.executeCommand(
+          "workbench.action.focusActiveEditorGroup"
+        );
         break;
       }
       case "withProgress": {

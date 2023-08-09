@@ -1,4 +1,5 @@
 import json
+from textwrap import dedent
 from typing import Any, Coroutine, List
 
 from pydantic import Field
@@ -9,6 +10,8 @@ from .core.core import DisplayErrorStep, MessageStep
 from ...core.main import FunctionCall, Models
 from ...core.main import ChatMessage, Step, step_to_json_schema
 from ...core.sdk import ContinueSDK
+from ...libs.llm.openai import OpenAI
+from ...libs.llm.maybe_proxy_openai import MaybeProxyOpenAI
 import openai
 import os
 from dotenv import load_dotenv
@@ -18,6 +21,8 @@ load_dotenv()
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 openai.api_key = OPENAI_API_KEY
 
+FREE_USAGE_STEP_NAME = "Please enter OpenAI API key"
+
 
 class SimpleChatStep(Step):
     name: str = "Generating Response..."
@@ -26,6 +31,29 @@ class SimpleChatStep(Step):
     messages: List[ChatMessage] = None
 
     async def run(self, sdk: ContinueSDK):
+        # Check if proxy server API key
+        if isinstance(sdk.models.default, MaybeProxyOpenAI) and (sdk.models.default.api_key is None or sdk.models.default.api_key.strip() == "") and len(list(filter(lambda x: not x.step.hide, sdk.history.timeline))) >= 10 and len(list(filter(lambda x: x.step.name == FREE_USAGE_STEP_NAME, sdk.history.timeline))) == 0:
+            await sdk.run_step(MessageStep(
+                name=FREE_USAGE_STEP_NAME,
+                message=dedent("""\
+                                To make it easier to use Continue, you're getting limited free usage. When you have the chance, please enter your own OpenAI key in `~/.continue/config.py`. You can open the file by using the '/config' slash command in the text box below.
+                                
+                                Here's an example of how to edit the file:
+                                ```python
+                                ...
+                                config=ContinueConfig(
+                                    ...
+                                    models=Models(
+                                        default=MaybeProxyOpenAI(api_key="<API_KEY>", model="gpt-4"),
+                                        medium=MaybeProxyOpenAI(api_key="<API_KEY>", model="gpt-3.5-turbo")
+                                    )
+                                )
+                               ```
+
+                               You can also learn more about customizations [here](https://continue.dev/docs/customization).
+                               """),
+            ))
+
         messages = self.messages or await sdk.get_chat_context()
 
         generator = sdk.models.default.stream_chat(
@@ -41,7 +69,7 @@ class SimpleChatStep(Step):
                 self.description += chunk["content"]
                 await sdk.update_ui()
 
-        self.name = remove_quotes_and_escapes(await sdk.models.gpt35.complete(
+        self.name = remove_quotes_and_escapes(await sdk.models.medium.complete(
             f"Write a short title for the following chat message: {self.description}"))
 
         self.chat_context.append(ChatMessage(
@@ -166,7 +194,10 @@ class ChatWithFunctions(Step):
             msg_content = ""
             msg_step = None
 
-            async for msg_chunk in sdk.models.gpt350613.stream_chat(await sdk.get_chat_context(), functions=functions):
+            gpt350613 = OpenAI(model="gpt-3.5-turbo-0613")
+            await sdk.start_model(gpt350613)
+
+            async for msg_chunk in gpt350613.stream_chat(await sdk.get_chat_context(), functions=functions):
                 if sdk.current_step_was_deleted():
                     return
 

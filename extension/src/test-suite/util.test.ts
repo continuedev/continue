@@ -1,6 +1,6 @@
 import { test, describe } from "mocha";
-import * as assert from "assert";
-import { convertSingleToDoubleQuoteJSON } from "../../util/util";
+import assert from "assert";
+import { convertSingleToDoubleQuoteJSON } from "../util/util";
 
 describe("utils.ts", () => {
   test("convertSingleToDoubleQuoteJson", () => {

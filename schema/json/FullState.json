@@ -245,6 +245,29 @@
         "content"
       ]
     },
+    "SessionInfo": {
+      "title": "SessionInfo",
+      "type": "object",
+      "properties": {
+        "session_id": {
+          "title": "Session Id",
+          "type": "string"
+        },
+        "title": {
+          "title": "Title",
+          "type": "string"
+        },
+        "date_created": {
+          "title": "Date Created",
+          "type": "string"
+        }
+      },
+      "required": [
+        "session_id",
+        "title",
+        "date_created"
+      ]
+    },
     "src__continuedev__core__main__FullState": {
       "title": "FullState",
       "description": "A full state of the program, including the history",
@@ -264,10 +287,6 @@
             "type": "string"
           }
         },
-        "default_model": {
-          "title": "Default Model",
-          "type": "string"
-        },
         "slash_commands": {
           "title": "Slash Commands",
           "type": "array",
@@ -285,13 +304,15 @@
           "items": {
             "$ref": "#/definitions/ContextItem"
           }
+        },
+        "session_info": {
+          "$ref": "#/definitions/SessionInfo"
         }
       },
       "required": [
         "history",
         "active",
         "user_input_queue",
-        "default_model",
         "slash_commands",
         "adding_highlighted_code",
         "selected_context_items"
