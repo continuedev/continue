@@ -10,7 +10,7 @@ import difflib
 from pydantic import validator
 
 from ....libs.llm.ggml import GGML
-from ....libs.llm.replicate import ReplicateLLM
+# from ....libs.llm.replicate import ReplicateLLM
 from ....models.main import Range
 from ....libs.llm.maybe_proxy_openai import MaybeProxyOpenAI
 from ....models.filesystem_edit import EditDiff, FileEdit, FileEditWithFullContents, FileSystemEdit
@@ -513,9 +513,9 @@ Please output the code to be inserted at the cursor in order to fulfill the user
         if isinstance(model_to_use, GGML):
             messages = [ChatMessage(
                 role="user", content=f"```\n{rif.contents}\n```\n\nUser request: \"{self.user_input}\"\n\nThis is the code after changing to perfectly comply with the user request. It does not include any placeholder code, only real implementations:\n\n```\n", summary=self.user_input)]
-        elif isinstance(model_to_use, ReplicateLLM):
-            messages = [ChatMessage(
-                role="user", content=f"// Previous implementation\n\n{rif.contents}\n\n// Updated implementation (after following directions: {self.user_input})\n\n", summary=self.user_input)]
+        # elif isinstance(model_to_use, ReplicateLLM):
+        #     messages = [ChatMessage(
+        #         role="user", content=f"// Previous implementation\n\n{rif.contents}\n\n// Updated implementation (after following directions: {self.user_input})\n\n", summary=self.user_input)]
 
         generator = model_to_use.stream_chat(
             messages, temperature=sdk.config.temperature, max_tokens=max_tokens)
