@@ -10,7 +10,8 @@ const initialState: FullState = {
           hide: false,
           description: `- Highlight code section and ask a question or give instructions
     - Use \`cmd+m\` (Mac) / \`ctrl+m\` (Windows) to open Continue
-    - Use \`/help\` to ask questions about how to use Continue`,
+    - Use \`/help\` to ask questions about how to use Continue
+    - [Customize Continue](https://continue.dev/docs/customization) (e.g. use your own API key) by typing '/config'.`,
           system_message: null,
           chat_context: [],
           manage_own_chat_context: false,

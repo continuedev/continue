@@ -37,10 +37,17 @@ class ReplicateLLM(LLM):
         pass
 
     async def complete(self, prompt: str, with_history: List[ChatMessage] = None, **kwargs):
-        output = self._client.run(self.model, input={"message": prompt})
-        completion = ''
-        for item in output:
-            completion += item
+        def helper():
+            output = self._client.run(self.model, input={"message": prompt})
+            completion = ''
+            for item in output:
+                completion += item
+
+            return completion
+
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            future = executor.submit(helper)
+            completion = future.result()
 
         return completion
 

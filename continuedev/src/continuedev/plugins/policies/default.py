@@ -56,7 +56,8 @@ class DefaultPolicy(Policy):
                 MessageStep(name="Welcome to Continue", message=dedent("""\
                     - Highlight code section and ask a question or give instructions
                     - Use `cmd+m` (Mac) / `ctrl+m` (Windows) to open Continue
-                    - Use `/help` to ask questions about how to use Continue""")) >>
+                    - Use `/help` to ask questions about how to use Continue
+                    - [Customize Continue](https://continue.dev/docs/customization) (e.g. use your own API key) by typing '/config'.""")) >>
                 WelcomeStep() >>
                 StepsOnStartupStep())
 
