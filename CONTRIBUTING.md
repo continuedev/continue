@@ -2,23 +2,25 @@
 
 ## Table of Contents
 
-- [❤️ Ways to Contribute](#%EF%B8%8F-ways-to-contribute)
+- [Contributing to Continue](#contributing-to-continue)
+  - [Table of Contents](#table-of-contents)
+- [❤️ Ways to Contribute](#️-ways-to-contribute)
   - [🐛 Report Bugs](#-report-bugs)
   - [✨ Suggest Enhancements](#-suggest-enhancements)
   - [📖 Updating / Improving Documentation](#-updating--improving-documentation)
   - [🧑‍💻 Contributing Code](#-contributing-code)
-    - [Setup Development Environment](#setting-up-the-development-environment)
+    - [Environment Setup](#environment-setup)
     - [Writing Steps](#writing-steps)
     - [Writing Context Providers](#writing-context-providers)
-- [📐 Continue Architecture](#-continue-architecture)
-  - [Continue VS Code Client](#continue-vs-code-client)
-  - [Continue IDE Websockets Protocol](#continue-ide-websockets-protocol)
-  - [Continue GUI Websockets Protocol](#continue-gui-websockets-protocol)
-- [❇️ Core Concepts](#%EF%B8%8F-core-concepts)
-  - [Step](#step)
-  - [Autopilot](#autopilot)
-  - [Observation](#observation)
-  - [Policy](#policy)
+  - [📐 Continue Architecture](#-continue-architecture)
+    - [Continue VS Code Client](#continue-vs-code-client)
+    - [Continue IDE Websockets Protocol](#continue-ide-websockets-protocol)
+    - [Continue GUI Websockets Protocol](#continue-gui-websockets-protocol)
+  - [❇️ Core Concepts](#️-core-concepts)
+    - [`Step`](#step)
+    - [`Autopilot`](#autopilot)
+    - [`Observation`](#observation)
+    - [`Policy`](#policy)
 
 # ❤️ Ways to Contribute
 
@@ -50,17 +52,28 @@ Continue is continuously improving, but a feature isn't complete until it is ref
 
 ## 🧑‍💻 Contributing Code
 
-### Setting up the Development Environment
+### Environment Setup
 
-There are different levels of setup necessary depending on which part of Continue you are developing. For all of them, first clone the repo:
+VSCode is assumed for development as Continue is primarily a VSCode tool at the moment. Most of the setup and running is automated through VSCode tasks and launch configurations.
 
-```bash
-git clone https://github.com/continuedev/continue
-```
+1. Clone and open in VSCode the Continue repo `https://github.com/continuedev/continue`
 
-If editing only the server (`/continuedev` directory), see the directions in [continuedev/README.md](./continuedev/README.md) to set up the Python server. Once it is running on localhost:8001, you can connect your existing VS Code extension by going to VS Code settings, searching for "Continue: Server URL", and setting it to "http://localhost:8001".
+2. Open VSCode command pallet (`cmd+shift+p`) and select `Tasks: Run Task` and then select `install-all-dependencies`
 
-If editing the VS Code extension (`/extension` directory) or GUI (`/extension/react-app`), you can follow the instructions in [`extension/DEV_README.md`](./extension/DEV_README.md) to set up the VS Code extension and GUI in development mode.
+3. Start debugging:
+   1. Switch to Run and Debug view
+   2. Select `Server + Extension (VSCode)` from drop down
+   3. Hit play button
+   4. This will start both the server and the extension in debug mode and open a new VSCode window with continue extension
+      1. I call the VSCode window with the extension the *Host VSCode*
+      2. The window you started debugging from is reffered to as the *Main VSCode*
+   5. Notice 2 debug sessions are running, one for the server and one for the extension, you can also set breakpoints in both
+
+4. Lets try using breakpoints:
+   1. *In Main VSCode*:
+      1. Search for `class IdeProtocolServer` and set a breakpoint in `handle_json`, this is the method invoked on every message received from the extension related to selection changes, file opens etc
+      2. Search for a method `sendHighlightedCode` and set a breakpoint in it, it is invoked on every selection change on the extension side
+   2. *In Host VSCode*: Select part of the `example.ts` file, your breakpoint should be hit. If you hit play at this point (or F5) you should see the original breakpoint hit again - congratulations, you debugged an end to end interaction from the extension to the server!
 
 ### Writing Steps
 
