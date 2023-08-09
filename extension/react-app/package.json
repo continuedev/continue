@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build --sourcemap",
+    "build": "tsc && vite build --sourcemap 'inline'",
     "preview": "vite preview"
   },
   "dependencies": {
