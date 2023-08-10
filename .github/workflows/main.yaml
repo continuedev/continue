@@ -116,20 +116,19 @@ jobs:
         run: |
           cd extension
           npm run test
-      
+
       - name: Remove exe directory and re-package
         run: |
           cd extension
           rm -rf server/exe
           npm run package
 
-      - Upload .vsix as an artifact
+      - name: Upload .vsix as an artifact
         uses: actions/upload-artifact@v2
         with:
           name: vsix-artifact
           path: extension/build/*
         if: matrix.os == 'ubuntu-20.04'
-
 
   publish:
     needs: test-and-package
@@ -163,12 +162,32 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           branch: ${{ github.ref }}
 
+      # Download binaries and upload to S3
+
+      - name: Download Linux build
+        uses: actions/download-artifact@v2
+        with:
+          name: Linux Build
+          path: exe/linux
+
+      - name: Download macOS build
+        uses: actions/download-artifact@v2
+        with:
+          name: macOS Build
+          path: exe/mac
+
+      - name: Download Windows build
+        uses: actions/download-artifact@v2
+        with:
+          name: Windows Build
+          path: exe/windows
+
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-west-2
+          aws-region: us-west-1
 
       - name: Upload binaries to S3
         uses: jakejarvis/s3-sync-action@master
