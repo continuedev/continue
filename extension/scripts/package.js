@@ -1,5 +1,6 @@
 const { exec } = require("child_process");
 const fs = require("fs");
+const path = require("path");
 
 exec("npm install", (error) => {
   if (error) throw error;
