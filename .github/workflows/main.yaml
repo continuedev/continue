@@ -45,7 +45,7 @@ jobs:
           name: ${{ runner.os }} Build
           path: dist/*
 
-  test-and-package:
+  test-and-publish-extension:
     needs: pyinstaller
     strategy:
       matrix:
@@ -135,7 +135,27 @@ jobs:
           npm run test
         if: matrix.os != 'ubuntu-20.04'
 
-      # Upload .vsix artifact
+      # Publish the extension and commit/push the version change (ONLY on ubuntu-20.04)
+
+      - name: Publish
+        run: |
+          cd extension
+          npx vsce publish patch -p ${{ secrets.VSCE_TOKEN }}
+        if: matrix.os == 'ubuntu-20.04'
+
+      - name: Commit changes
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git commit -am "ci: 💚 Update package.json version [skip ci]"
+        if: matrix.os == 'ubuntu-20.04'
+
+      - name: Push changes
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: ${{ github.ref }}
+        if: matrix.os == 'ubuntu-20.04'
 
       - name: Upload .vsix as an artifact
         uses: actions/upload-artifact@v2
@@ -144,42 +164,13 @@ jobs:
           path: extension/build/*
         if: matrix.os == 'ubuntu-20.04'
 
-  publish:
-    needs: test-and-package
+  publish-binaries:
+    needs: test-and-publish-extension
     runs-on: ubuntu-20.04
     permissions:
       contents: write
 
     steps:
-      # Checkout and download .vsix artifact
-
-      - name: Checkout
-        uses: actions/checkout@v2
-
-      - name: Download .vsix artifact
-        uses: actions/download-artifact@v2
-        with:
-          name: vsix-artifact
-          path: extension/build
-
-      # Publish the extension and commit/push the version change
-
-      - name: Publish
-        run: |
-          cd extension
-          npx vsce publish patch -p ${{ secrets.VSCE_TOKEN }}
-      - name: Commit changes
-        run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-          git commit -am "ci: 💚 Update package.json version [skip ci]"
-
-      - name: Push changes
-        uses: ad-m/github-push-action@master
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          branch: ${{ github.ref }}
-
       # Download binaries and upload to S3
 
       - name: Download Linux build

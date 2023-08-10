@@ -49,6 +49,8 @@ class TogetherLLM(LLM):
             prompt += f"<human>: Hi!\n<bot>: {system_message}\n"
         for message in chat_messages:
             prompt += f'<{"human" if message["role"] == "user" else "bot"}>: {message["content"]}\n'
+
+        prompt += "<bot>:"
         return prompt
 
     async def stream_complete(self, prompt, with_history: List[ChatMessage] = None, **kwargs) -> Generator[Union[Any, List, Dict], None, None]:
@@ -113,6 +115,8 @@ class TogetherLLM(LLM):
             "Authorization": f"Bearer {self.api_key}"
         }) as resp:
             try:
-                return await resp.text()
+                text = await resp.text()
+                j = json.loads(text)
+                return j["output"]["choices"][0]["text"]
             except:
                 raise Exception(await resp.text())
