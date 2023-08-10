@@ -136,10 +136,18 @@ jobs:
         if: matrix.os != 'ubuntu-20.04'
 
       # Package again and build+upload the .vsix
-      - name: Remove exe directory and re-package
+
+      - name: Remove exe directory (Windows)
+        run: rmdir /s /q extension/server/exe
+        if: matrix.os == 'windows-latest'
+
+      - name: Remove exe directory (Mac/Linux)
+        run: rm -rf extension/server/exe
+        if: matrix.os != 'windows-latest'
+
+      - name: Re-package the extension
         run: |
           cd extension
-          rm -rf server/exe
           npm run package
 
       - name: Upload .vsix as an artifact
