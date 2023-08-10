@@ -135,22 +135,7 @@ jobs:
           npm run test
         if: matrix.os != 'ubuntu-20.04'
 
-      # Package again and build+upload the .vsix
-
-      - name: Remove exe directory (Windows)
-        run: |
-          FOR /F "tokens=5" %a IN ('netstat -ano ^| findstr "65432"') DO taskkill /PID %a /F
-          Remove-Item -Path "extension/server/exe" -Recurse -Force
-        if: matrix.os == 'windows-latest'
-
-      - name: Remove exe directory (Mac/Linux)
-        run: rm -rf extension/server/exe
-        if: matrix.os != 'windows-latest'
-
-      - name: Re-package the extension
-        run: |
-          cd extension
-          npm run package
+      # Upload .vsix artifact
 
       - name: Upload .vsix as an artifact
         uses: actions/upload-artifact@v2

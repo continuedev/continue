@@ -25,3 +25,5 @@ react-app/src
 scripts/data
 scripts/env
 scripts/.continue_env_installed
+
+server/exe/**
