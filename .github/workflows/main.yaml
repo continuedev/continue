@@ -43,33 +43,42 @@ jobs:
           name: ${{ runner.os }} Build
           path: dist/*
 
-  publish:
+  test-and-package:
     needs: pyinstaller
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
+    strategy:
+      matrix:
+        os: [macos-latest, ubuntu-20.04, windows-latest]
+
+    runs-on: ${{ matrix.os }}
 
     steps:
       - name: Checkout
         uses: actions/checkout@v2
 
+      - name: Create exe directory
+        run: |
+          mkdir extension/server/exe
+
       - name: Download Linux build
         uses: actions/download-artifact@v2
         with:
           name: Linux Build
-          path: exe/linux
+          path: extension/server/exe/linux
+        if: matrix.os == 'ubuntu-20.04'
 
       - name: Download macOS build
         uses: actions/download-artifact@v2
         with:
           name: macOS Build
-          path: exe/mac
+          path: extension/server/exe/mac
+        if: matrix.os == 'macos-latest'
 
       - name: Download Windows build
         uses: actions/download-artifact@v2
         with:
           name: Windows Build
-          path: exe/windows
+          path: extension/server/exe/windows
+        if: matrix.os == 'windows-latest'
 
       - name: Use Node.js 19.0.0
         uses: actions/setup-node@v3
@@ -98,48 +107,76 @@ jobs:
           cd extension/react-app
           npm ci --legacy-peer-deps
 
-      - name: Test extension
+      - name: Package the extension
+        run: |
+          cd extension
+          npm run package
+
+      - name: Run extension tests
         run: |
           cd extension
           npm run test
+      
+      - name: Remove exe directory and re-package
+        run: |
+          cd extension
+          rm -rf server/exe
+          npm run package
 
-      # - name: Build and Publish
-      #   run: |
-      #     cd extension
-      #     npm run package
-      #     npx vsce publish patch -p ${{ secrets.VSCE_TOKEN }}
-      # - name: Commit changes
-      #   run: |
-      #     git config --local user.email "action@github.com"
-      #     git config --local user.name "GitHub Action"
-      #     git commit -am "ci: 💚 Update package.json version [skip ci]"
+      - Upload .vsix as an artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: vsix-artifact
+          path: extension/build/*
+        if: matrix.os == 'ubuntu-20.04'
 
-      # - name: Push changes
-      #   uses: ad-m/github-push-action@master
-      #   with:
-      #     github_token: ${{ secrets.GITHUB_TOKEN }}
-      #     branch: ${{ github.ref }}
 
-      # - name: Upload .vsix artifact
-      #   uses: actions/upload-artifact@v2
-      #   with:
-      #     name: vsix-artifact
-      #     path: extension/build/*
+  publish:
+    needs: test-and-package
+    runs-on: ubuntu-20.04
+    permissions:
+      contents: write
 
-      # - name: Configure AWS Credentials
-      #   uses: aws-actions/configure-aws-credentials@v1
-      #   with:
-      #     aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-      #     aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      #     aws-region: us-west-2
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
 
-      # - name: Upload binaries to S3
-      #   uses: jakejarvis/s3-sync-action@master
-      #   with:
-      #     args: --acl public-read --follow-symlinks --delete
-      #   env:
-      #     AWS_S3_BUCKET: continue-server-binaries
-      #     AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-      #     AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      #     AWS_REGION: "us-west-1"
-      #     SOURCE_DIR: "exe"
+      - name: Download .vsix artifact
+        uses: actions/download-artifact@v2
+        with:
+          name: vsix-artifact
+          path: extension/build
+
+      - name: Publish
+        run: |
+          cd extension
+          npx vsce publish patch -p ${{ secrets.VSCE_TOKEN }}
+      - name: Commit changes
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git commit -am "ci: 💚 Update package.json version [skip ci]"
+
+      - name: Push changes
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: ${{ github.ref }}
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-west-2
+
+      - name: Upload binaries to S3
+        uses: jakejarvis/s3-sync-action@master
+        with:
+          args: --acl public-read --follow-symlinks --delete
+        env:
+          AWS_S3_BUCKET: continue-server-binaries
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: "us-west-1"
+          SOURCE_DIR: "exe"
