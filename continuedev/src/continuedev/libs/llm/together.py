@@ -1,7 +1,5 @@
-from functools import cached_property
 import json
 from typing import Any, Coroutine, Dict, Generator, List, Union
-from pydantic import ConfigDict
 
 import aiohttp
 from ...core.main import ChatMessage
@@ -9,16 +7,15 @@ from ..llm import LLM
 from ..util.count_tokens import compile_chat_messages, DEFAULT_ARGS, count_tokens
 
 
-class GGML(LLM):
+class TogetherLLM(LLM):
     # this is model-specific
+    api_key: str
+    model: str = "togethercomputer/RedPajama-INCITE-7B-Instruct"
     max_context_length: int = 2048
-    server_url: str = "http://localhost:8000"
+    base_url: str = "https://api.together.xyz"
     verify_ssl: bool = True
 
     _client_session: aiohttp.ClientSession = None
-
-    class Config:
-        arbitrary_types_allowed = True
 
     async def start(self, **kwargs):
         self._client_session = aiohttp.ClientSession(
@@ -29,7 +26,7 @@ class GGML(LLM):
 
     @property
     def name(self):
-        return "ggml"
+        return self.model
 
     @property
     def context_length(self):
@@ -37,23 +34,37 @@ class GGML(LLM):
 
     @property
     def default_args(self):
-        return {**DEFAULT_ARGS, "model": self.name, "max_tokens": 1024}
+        return {**DEFAULT_ARGS, "model": self.model, "max_tokens": 1024}
 
     def count_tokens(self, text: str):
         return count_tokens(self.name, text)
 
+    def convert_to_prompt(self, chat_messages: List[ChatMessage]) -> str:
+        system_message = None
+        if chat_messages[0]["role"] == "system":
+            system_message = chat_messages.pop(0)["content"]
+
+        prompt = "\n"
+        if system_message:
+            prompt += f"<human>: Hi!\n<bot>: {system_message}\n"
+        for message in chat_messages:
+            prompt += f'<{"human" if message["role"] == "user" else "bot"}>: {message["content"]}\n'
+        return prompt
+
     async def stream_complete(self, prompt, with_history: List[ChatMessage] = None, **kwargs) -> Generator[Union[Any, List, Dict], None, None]:
         args = self.default_args.copy()
         args.update(kwargs)
-        args["stream"] = True
+        args["stream_tokens"] = True
 
         args = {**self.default_args, **kwargs}
         messages = compile_chat_messages(
             self.name, with_history, self.context_length, args["max_tokens"], prompt, functions=args.get("functions", None), system_message=self.system_message)
 
-        async with self._client_session.post(f"{self.server_url}/v1/completions", json={
-            "messages": messages,
+        async with self._client_session.post(f"{self.base_url}/inference", json={
+            "prompt": self.convert_to_prompt(messages),
             **args
+        }, headers={
+            "Authorization": f"Bearer {self.api_key}"
         }) as resp:
             async for line in resp.content.iter_any():
                 if line:
@@ -66,13 +77,14 @@ class GGML(LLM):
         args = {**self.default_args, **kwargs}
         messages = compile_chat_messages(
             self.name, messages, self.context_length, args["max_tokens"], None, functions=args.get("functions", None), system_message=self.system_message)
-        args["stream"] = True
+        args["stream_tokens"] = True
 
-        async with self._client_session.post(f"{self.server_url}/v1/chat/completions", json={
-            "messages": messages,
+        async with self._client_session.post(f"{self.base_url}/inference", json={
+            "prompt": self.convert_to_prompt(messages),
             **args
+        }, headers={
+            "Authorization": f"Bearer {self.api_key}"
         }) as resp:
-            # This is streaming application/json instaed of text/event-stream
             async for line in resp.content.iter_chunks():
                 if line[1]:
                     try:
@@ -84,7 +96,7 @@ class GGML(LLM):
                             if chunk.strip() != "":
                                 yield {
                                     "role": "assistant",
-                                    "content": json.loads(chunk[6:])["choices"][0]["delta"]
+                                    "content": json.loads(chunk[6:])["choices"][0]["text"]
                                 }
                     except:
                         raise Exception(str(line[0]))
@@ -92,9 +104,13 @@ class GGML(LLM):
     async def complete(self, prompt: str, with_history: List[ChatMessage] = None, **kwargs) -> Coroutine[Any, Any, str]:
         args = {**self.default_args, **kwargs}
 
-        async with self._client_session.post(f"{self.server_url}/v1/completions", json={
-            "messages": compile_chat_messages(args["model"], with_history, self.context_length, args["max_tokens"], prompt, functions=None, system_message=self.system_message),
+        messages = compile_chat_messages(args["model"], with_history, self.context_length,
+                                         args["max_tokens"], prompt, functions=None, system_message=self.system_message)
+        async with self._client_session.post(f"{self.base_url}/inference", json={
+            "prompt": self.convert_to_prompt(messages),
             **args
+        }, headers={
+            "Authorization": f"Bearer {self.api_key}"
         }) as resp:
             try:
                 return await resp.text()

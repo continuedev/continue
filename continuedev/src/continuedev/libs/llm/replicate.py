@@ -25,7 +25,7 @@ class ReplicateLLM(LLM):
 
     @property
     def default_args(self):
-        return {**DEFAULT_ARGS, "model": self.name, "max_tokens": 1024}
+        return {**DEFAULT_ARGS, "model": self.model, "max_tokens": 1024}
 
     def count_tokens(self, text: str):
         return count_tokens(self.name, text)
