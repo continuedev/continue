@@ -183,7 +183,7 @@ jobs:
       - name: Publish
         run: |
           cd extension
-          npx vsce publish patch -p ${{ secrets.VSCE_TOKEN }}
+          npx vsce publish patch -p ${{ secrets.VSCE_TOKEN }} --packagePath ./build/*.vsix
 
       - name: Commit changes
         run: |
