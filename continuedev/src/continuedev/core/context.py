@@ -8,9 +8,10 @@ from pydantic import BaseModel
 
 
 from .main import ChatMessage, ContextItem, ContextItemDescription, ContextItemId
-from ..server.meilisearch_server import check_meilisearch_running
+from ..server.meilisearch_server import poll_meilisearch_running
 from ..libs.util.logging import logger
 from ..libs.util.telemetry import posthog_logger
+from ..libs.util.create_async_task import create_async_task
 
 SEARCH_INDEX_NAME = "continue_context_items"
 
@@ -140,31 +141,32 @@ class ContextManager:
         self.context_providers = {}
         self.provider_titles = set()
 
-    async def start(self, context_providers: List[ContextProvider]):
+    async def start(self, context_providers: List[ContextProvider], workspace_directory: str):
         """
         Starts the context manager.
         """
+        # Use only non-meilisearch-dependent providers until it is loaded
         self.context_providers = {
-            prov.title: prov for prov in context_providers}
+            title: provider for title, provider in self.context_providers.items() if title == "code"
+        }
         self.provider_titles = {
             provider.title for provider in context_providers}
 
-        async with Client('http://localhost:7700') as search_client:
-            meilisearch_running = True
+        # Start MeiliSearch in the background without blocking
+        async def start_meilisearch(context_providers):
             try:
-
-                health = await search_client.health()
-                if not health.status == "available":
-                    meilisearch_running = False
-            except:
-                meilisearch_running = False
-
-            if not meilisearch_running:
+                await asyncio.wait_for(poll_meilisearch_running(), timeout=20)
+                self.context_providers = {
+                    prov.title: prov for prov in context_providers}
+                logger.debug("Loading Meilisearch index...")
+                await self.load_index(workspace_directory)
+                logger.debug("Loaded Meilisearch index")
+            except asyncio.TimeoutError:
+                logger.warning("MeiliSearch did not start within 5 seconds")
                 logger.warning(
                     "MeiliSearch not running, avoiding any dependent context providers")
-                self.context_providers = {
-                    title: provider for title, provider in self.context_providers.items() if title == "code"
-                }
+
+        create_async_task(start_meilisearch(context_providers))
 
     async def load_index(self, workspace_dir: str):
         for _, provider in self.context_providers.items():
@@ -184,11 +186,14 @@ class ContextManager:
             if len(documents) > 0:
                 try:
                     async with Client('http://localhost:7700') as search_client:
+                        # First, create the index if it doesn't exist
+                        await search_client.create_index(SEARCH_INDEX_NAME)
                         # The index is currently shared by all workspaces
                         globalSearchIndex = await search_client.get_index(SEARCH_INDEX_NAME)
                         await asyncio.wait_for(asyncio.gather(
                             # Ensure that the index has the correct filterable attributes
-                            globalSearchIndex.update_filterable_attributes(["workspace_dir"]),
+                            globalSearchIndex.update_filterable_attributes(
+                                ["workspace_dir"]),
                             globalSearchIndex.add_documents(documents)
                         ), timeout=5)
                 except Exception as e:
