@@ -240,7 +240,7 @@ export async function startContinuePythonServer() {
         windowsHide: true,
       });
       child.stdout.on("data", (data: any) => {
-        console.log(`stdout: ${data}`);
+        // console.log(`stdout: ${data}`);
       });
       child.stderr.on("data", (data: any) => {
         console.log(`stderr: ${data}`);
