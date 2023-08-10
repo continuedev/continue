@@ -138,7 +138,7 @@ jobs:
       # Package again and build+upload the .vsix
 
       - name: Remove exe directory (Windows)
-        run: rmdir /s /q extension/server/exe
+        run: Remove-Item -Path "extension/server/exe" -Recurse -Force
         if: matrix.os == 'windows-latest'
 
       - name: Remove exe directory (Mac/Linux)
