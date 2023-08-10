@@ -1,4 +1,4 @@
-import { RangeInFile, SerializedDebugContext } from "../client";
+import { RangeInFile } from "../../schema/RangeInFile";
 import * as fs from "fs";
 const os = require("os");
 
@@ -93,13 +93,6 @@ export function codeSelectionsToVirtualFileSystem(
     virtualFileSystem[cs.filepath] = content;
   }
   return virtualFileSystem;
-}
-
-export function addFileSystemToDebugContext(
-  ctx: SerializedDebugContext
-): SerializedDebugContext {
-  ctx.filesystem = codeSelectionsToVirtualFileSystem(ctx.rangesInFiles);
-  return ctx;
 }
 
 export function debounced(delay: number, fn: Function) {

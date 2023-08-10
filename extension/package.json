@@ -14,7 +14,7 @@
   "displayName": "Continue",
   "pricing": "Free",
   "description": "The open-source coding autopilot",
-  "version": "0.0.290",
+  "version": "0.0.291",
   "publisher": "Continue",
   "engines": {
     "vscode": "^1.67.0"
@@ -183,14 +183,13 @@
     ]
   },
   "scripts": {
-    "esbuild-base": "rm -rf ./out && node esbuild.mjs",
+    "esbuild-base": "node esbuild.mjs",
     "vscode:prepublish": "npm run esbuild-base -- --minify",
     "esbuild": "npm run esbuild-base -- --sourcemap",
     "esbuild-watch": "npm run esbuild-base -- --sourcemap --watch",
     "tsc": "tsc -p ./",
     "tsc-watch": "tsc -watch -p ./",
     "typegen": "node scripts/typegen.js",
-    "clientgen": "rm -rf src/client/ && npx @openapitools/openapi-generator-cli generate -i ../schema/openapi.json -g typescript-fetch -o src/client/ --additional-properties=supportsES6=true,npmVersion=8.19.2,typescriptThreePlus=true",
     "rebuild": "electron-rebuild -v 19.1.8 node-pty",
     "lint": "eslint src --ext ts",
     "build-test": "tsc && node esbuild.test.mjs",

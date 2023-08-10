@@ -9,30 +9,25 @@ exec("npm install", (error) => {
     if (error) throw error;
     console.log("npm run typegen completed");
 
-    exec("npm run clientgen", (error) => {
+    process.chdir("react-app");
+
+    exec("npm install", (error) => {
       if (error) throw error;
-      console.log("npm run clientgen completed");
+      console.log("npm install in react-app completed");
 
-      process.chdir("react-app");
-
-      exec("npm install", (error) => {
+      exec("npm run build", (error) => {
         if (error) throw error;
-        console.log("npm install in react-app completed");
+        console.log("npm run build in react-app completed");
 
-        exec("npm run build", (error) => {
+        process.chdir("..");
+
+        if (!fs.existsSync("build")) {
+          fs.mkdirSync("build");
+        }
+
+        exec("vsce package --out ./build", (error) => {
           if (error) throw error;
-          console.log("npm run build in react-app completed");
-
-          process.chdir("..");
-
-          if (!fs.existsSync("build")) {
-            fs.mkdirSync("build");
-          }
-
-          exec("vsce package --out ./build", (error) => {
-            if (error) throw error;
-            console.log("vsce package completed");
-          });
+          console.log("vsce package completed");
         });
       });
     });

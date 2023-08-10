@@ -3,8 +3,8 @@ import chatReducer from "./slices/chatSlice";
 import configReducer from "./slices/configSlice";
 import miscReducer from "./slices/miscSlice";
 import uiStateReducer from "./slices/uiStateSlice";
-import { RangeInFile } from "../../../src/client";
 import { FullState } from "../../../schema/FullState";
+import { RangeInFile } from "../../../schema/RangeInFile";
 import serverStateReducer from "./slices/serverStateReducer";
 
 export interface ChatMessage {

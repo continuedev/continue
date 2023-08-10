@@ -237,9 +237,13 @@ export async function startContinuePythonServer() {
     };
     try {
       const child = spawn(destination, {
-        detached: true,
-        stdio: "ignore",
         windowsHide: true,
+      });
+      child.stdout.on("data", (data: any) => {
+        console.log(`stdout: ${data}`);
+      });
+      child.stderr.on("data", (data: any) => {
+        console.log(`stderr: ${data}`);
       });
       child.on("error", (err: any) => {
         if (attempts < maxAttempts) {
@@ -248,7 +252,12 @@ export async function startContinuePythonServer() {
           console.error("Failed to start subprocess.", err);
         }
       });
-      child.unref();
+      child.on("exit", (code: any, signal: any) => {
+        console.log("Subprocess exited with code", code, signal);
+      });
+      child.on("close", (code: any, signal: any) => {
+        console.log("Subprocess closed with code", code, signal);
+      });
     } catch (e: any) {
       console.log("Error starting server:", e);
       retry();
