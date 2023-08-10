@@ -14,7 +14,7 @@ export interface ChatMessage {
 
 export interface RootStore {
   config: {
-    workspacePath: string | undefined;
+    workspacePaths: string[] | undefined;
     apiUrl: string;
     vscMachineId: string | undefined;
     sessionId: string | undefined;

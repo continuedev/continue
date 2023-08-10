@@ -1,3 +1,4 @@
+import asyncio
 import os
 import shutil
 import subprocess
@@ -58,13 +59,24 @@ async def check_meilisearch_running() -> bool:
         async with Client('http://localhost:7700') as client:
             try:
                 resp = await client.health()
-                if resp["status"] != "available":
+                if resp.status != "available":
                     return False
                 return True
-            except:
+            except Exception as e:
+                logger.debug(e)
                 return False
     except Exception:
         return False
+
+
+async def poll_meilisearch_running(frequency: int = 0.1) -> bool:
+    """
+    Polls MeiliSearch to see if it is running.
+    """
+    while True:
+        if await check_meilisearch_running():
+            return True
+        await asyncio.sleep(frequency)
 
 
 async def start_meilisearch():
