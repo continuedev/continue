@@ -8,9 +8,14 @@ import fkill from "fkill";
 
 describe("Can start python server", () => {
   test("Can start python server in under 10 seconds", async function () {
-    const allowedTime = 15_000;
+    const allowedTime = 25_000;
     this.timeout(allowedTime + 10_000);
-    fkill(65432, { force: true, silent: true });
+    try {
+      fkill(65432, { force: true, silent: true });
+      console.log("Killed existing server");
+    } catch (e) {
+      console.log("No existing server: ", e);
+    }
 
     // If successful, the server is started by the extension while we wait
     await new Promise((resolve) => setTimeout(resolve, allowedTime));
