@@ -183,7 +183,7 @@ jobs:
       - name: Upload .vsix a second time
         uses: actions/upload-artifact@v2
         with:
-          name: vsix-artifact
+          name: vsix-artifact-2
           path: extension/build
 
       # - name: Publish
