@@ -183,19 +183,18 @@
     ]
   },
   "scripts": {
-    "esbuild-base": "rm -rf ./out && node esbuild.mjs",
+    "esbuild-base": "node esbuild.mjs",
     "vscode:prepublish": "npm run esbuild-base -- --minify",
     "esbuild": "npm run esbuild-base -- --sourcemap",
     "esbuild-watch": "npm run esbuild-base -- --sourcemap --watch",
     "tsc": "tsc -p ./",
     "tsc-watch": "tsc -watch -p ./",
     "typegen": "node scripts/typegen.js",
-    "clientgen": "rm -rf src/client/ && npx @openapitools/openapi-generator-cli generate -i ../schema/openapi.json -g typescript-fetch -o src/client/ --additional-properties=supportsES6=true,npmVersion=8.19.2,typescriptThreePlus=true",
     "rebuild": "electron-rebuild -v 19.1.8 node-pty",
     "lint": "eslint src --ext ts",
     "build-test": "tsc && node esbuild.test.mjs",
     "test": "npm run build-test && node ./out/test-runner/runTestOnVSCodeHost.js",
-    "package": "npm install && npm run typegen && npm run clientgen && cd react-app && npm install && npm run build && cd .. && mkdir -p ./build && vsce package --out ./build"
+    "package": "npm install && npm run typegen && cd react-app && npm install && npm run build && cd .. && mkdir -p ./build && vsce package --out ./build"
   },
   "devDependencies": {
     "@nestjs/common": "^8.4.7",

@@ -5,7 +5,7 @@ import {
   getNonce,
   openEditorAndRevealRange,
 } from "./util/vscode";
-import { RangeInFile } from "./client";
+import { RangeInFile } from "../schema/RangeInFile";
 import { setFocusedOnContinueInput } from "./commands";
 const WebSocket = require("ws");
 
@@ -112,7 +112,7 @@ export function setupDebugPanel(
     }
 
     const rangeInFile: RangeInFile = {
-      range: e.selections[0],
+      range: e.selections[0] as any,
       filepath: e.textEditor.document.fileName,
     };
     const filesystem = {
