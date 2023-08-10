@@ -120,17 +120,20 @@ jobs:
           cd extension
           npm run package
 
-      - name: Install Xvfb for Linux
+      - name: Install Xvfb for Linux and run tests
         run: |
           sudo apt-get install -y xvfb # Install Xvfb
           Xvfb :99 & # Start Xvfb
           export DISPLAY=:99 # Export the display number to the environment
+          cd extension
+          npm run test
         if: matrix.os == 'ubuntu-20.04'
 
       - name: Run extension tests
         run: |
           cd extension
           npm run test
+        if: matrix.os != 'ubuntu-20.04'
 
       # Package again and build+upload the .vsix
       - name: Remove exe directory and re-package
