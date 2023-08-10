@@ -14,6 +14,8 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
+      # Install Python requirements and build+upload binaries for each platform
+
       - name: Check-out repository
         uses: actions/checkout@v3
 
@@ -55,6 +57,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
+      # Download corresponding binary artifact for the platform
+
       - name: Create exe directory
         run: |
           mkdir extension/server/exe
@@ -79,6 +83,8 @@ jobs:
           name: Windows Build
           path: extension/server/exe/windows
         if: matrix.os == 'windows-latest'
+
+      # Setup Node.js and install dependencies
 
       - name: Use Node.js 19.0.0
         uses: actions/setup-node@v3
@@ -107,16 +113,26 @@ jobs:
           cd extension/react-app
           npm ci --legacy-peer-deps
 
+      # Run tests
+
       - name: Package the extension
         run: |
           cd extension
           npm run package
+
+      - name: Install Xvfb for Linux
+        run: |
+          sudo apt-get install -y xvfb # Install Xvfb
+          Xvfb :99 & # Start Xvfb
+          export DISPLAY=:99 # Export the display number to the environment
+        if: matrix.os == 'ubuntu-20.04'
 
       - name: Run extension tests
         run: |
           cd extension
           npm run test
 
+      # Package again and build+upload the .vsix
       - name: Remove exe directory and re-package
         run: |
           cd extension
@@ -137,6 +153,8 @@ jobs:
       contents: write
 
     steps:
+      # Checkout and download .vsix artifact
+
       - name: Checkout
         uses: actions/checkout@v2
 
@@ -145,6 +163,8 @@ jobs:
         with:
           name: vsix-artifact
           path: extension/build
+
+      # Publish the extension and commit/push the version change
 
       - name: Publish
         run: |
