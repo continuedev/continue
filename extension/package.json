@@ -195,7 +195,7 @@
     "lint": "eslint src --ext ts",
     "build-test": "tsc && node esbuild.test.mjs",
     "test": "npm run build-test && node ./out/test-runner/runTestOnVSCodeHost.js",
-    "package": "npm install && npm run typegen && npm run clientgen && cd react-app && npm install && npm run build && cd .. && mkdir build && vsce package --out ./build"
+    "package": "node scripts/package.js"
   },
   "devDependencies": {
     "@nestjs/common": "^8.4.7",

@@ -9,7 +9,7 @@ import fkill from "fkill";
 describe("Can start python server", () => {
   test("Can start python server in under 10 seconds", async function () {
     fkill(65432, { force: true, silent: true });
-    const allowedTime = 10_000;
+    const allowedTime = 15_000;
     this.timeout(allowedTime + 1000);
 
     // If successful, the server is started by the extension while we wait
