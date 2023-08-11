@@ -3,7 +3,7 @@ name: Publish Extension
 on:
   push:
     branches:
-      - ci-testing
+      - main
 
 jobs:
   pyinstaller:
