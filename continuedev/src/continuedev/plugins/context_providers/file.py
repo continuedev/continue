@@ -54,33 +54,37 @@ class FileContextProvider(ContextProvider):
         list(filter(lambda d: f"**/{d}", DEFAULT_IGNORE_DIRS))
 
     async def provide_context_items(self, workspace_dir: str) -> List[ContextItem]:
-        filepaths = []
+        absolute_filepaths: List[str] = []
         for root, dir_names, file_names in os.walk(workspace_dir):
             dir_names[:] = [d for d in dir_names if not any(
                 fnmatch(d, pattern) for pattern in self.ignore_patterns)]
             for file_name in file_names:
-                filepaths.append(os.path.join(root, file_name))
+                absolute_filepaths.append(os.path.join(root, file_name))
 
-                if len(filepaths) > 1000:
+                if len(absolute_filepaths) > 1000:
                     break
 
-            if len(filepaths) > 1000:
+            if len(absolute_filepaths) > 1000:
                 break
 
         items = []
-        for file in filepaths:
-            content = get_file_contents(file)
+        for absolute_filepath in absolute_filepaths:
+            content = get_file_contents(absolute_filepath)
             if content is None:
                 continue  # no pun intended
+            
+            relative_to_workspace = os.path.relpath(absolute_filepath, workspace_dir)
 
             items.append(ContextItem(
                 content=content[:min(2000, len(content))],
                 description=ContextItemDescription(
-                    name=os.path.basename(file),
-                    description=file,
+                    name=os.path.basename(absolute_filepath),
+                    # We should add the full path to the ContextItem
+                    # It warrants a data modeling discussion and has no immediate use case
+                    description=relative_to_workspace,
                     id=ContextItemId(
                         provider_title=self.title,
-                        item_id=remove_meilisearch_disallowed_chars(file)
+                        item_id=remove_meilisearch_disallowed_chars(absolute_filepath)
                     )
                 )
             ))

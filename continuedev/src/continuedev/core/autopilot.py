@@ -81,11 +81,7 @@ class Autopilot(ContinueBaseModel):
             self.continue_sdk.config.context_providers + [
                 HighlightedCodeContextProvider(ide=self.ide),
                 FileContextProvider(workspace_dir=self.ide.workspace_directory)
-            ])
-
-        logger.debug("Loading index")
-        create_async_task(self.context_manager.load_index(
-            self.ide.workspace_directory))
+            ], self.ide.workspace_directory)
 
         if full_state is not None:
             self.history = full_state.history

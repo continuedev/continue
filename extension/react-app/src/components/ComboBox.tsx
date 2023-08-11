@@ -24,7 +24,8 @@ import {
   setBottomMessage,
   setBottomMessageCloseTimeout,
 } from "../redux/slices/uiStateSlice";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
+import { RootStore } from "../redux/store";
 
 const SEARCH_INDEX_NAME = "continue_context_items";
 
@@ -136,6 +137,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
   const searchClient = new MeiliSearch({ host: "http://127.0.0.1:7700" });
   const client = useContext(GUIClientContext);
   const dispatch = useDispatch();
+  const workspacePaths = useSelector((state: RootStore) => state.config.workspacePaths);
 
   const [history, setHistory] = React.useState<string[]>([]);
   // The position of the current command you are typing now, so the one that will be appended to history once you press enter
@@ -181,10 +183,16 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
           // Get search results and return
           setCurrentlyInContextQuery(true);
           const providerAndQuery = segs[segs.length - 1] || "";
-          const [provider, query] = providerAndQuery.split(" ");
+          // Only return context items from the current workspace - the index is currently shared between all sessions
+          const workspaceFilter = 
+            workspacePaths && workspacePaths.length > 0 
+            ? `workspace_dir IN [ ${workspacePaths.map((path) => `"${path}"`).join(", ")} ]` 
+            : undefined;
           searchClient
             .index(SEARCH_INDEX_NAME)
-            .search(providerAndQuery)
+            .search(providerAndQuery, {
+              filter: workspaceFilter,
+            })
             .then((res) => {
               setItems(
                 res.hits.map((hit) => {
@@ -410,7 +418,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
                 // Prevent Downshift's default 'Enter' behavior.
                 (event.nativeEvent as any).preventDownshiftDefault = true;
 
-                if (props.onEnter) props.onEnter(event);
+                if (props.onEnter) {props.onEnter(event);}
                 setCurrentlyInContextQuery(false);
               } else if (event.key === "Tab" && items.length > 0) {
                 downshiftProps.setInputValue(items[0].name);
@@ -423,7 +431,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
               ) {
                 (event.nativeEvent as any).preventDownshiftDefault = true;
               } else if (event.key === "ArrowUp") {
-                if (positionInHistory == 0) return;
+                if (positionInHistory == 0) {return;}
                 else if (
                   positionInHistory == history.length &&
                   (history.length === 0 ||
