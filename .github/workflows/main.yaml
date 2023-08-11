@@ -185,6 +185,11 @@ jobs:
           cd extension
           npx vsce publish -p ${{ secrets.VSCE_TOKEN }} --packagePath ./build/*.vsix
 
+      - name: Update version in package.json
+        run: |
+          cd extension
+          npm version patch
+
       - name: Commit changes
         run: |
           git config --local user.email "action@github.com"
