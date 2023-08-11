@@ -32,7 +32,7 @@ exec("npm install", (error) => {
           fs.mkdirSync("build");
         }
 
-        exec("vsce package --out ./build", (error) => {
+        exec("vsce package --out ./build patch", (error) => {
           if (error) throw error;
           console.log("vsce package completed");
         });
