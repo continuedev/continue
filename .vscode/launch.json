@@ -41,7 +41,7 @@
       "outFiles": ["${workspaceFolder}/extension/out/**/*.js"],
       "preLaunchTask": "vscode-extension:build",
       "env": {
-        "CONTINUE_SERVER_URL": "http://localhost:65432"
+        "CONTINUE_SERVER_URL": "http://localhost:8001"
       }
     },
     // Has to be run after starting the server (separately or using the compound configuration)
