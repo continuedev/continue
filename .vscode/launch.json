@@ -7,18 +7,12 @@
     {
       "name": "Server + Extension (VSCode)",
       "stopAll": true,
-      "configurations": [
-        "Server",
-        "Extension (VSCode)"
-      ]
+      "configurations": ["Server", "Extension (VSCode)"]
     },
     {
       "name": "Server + Tests (VSCode)",
       "stopAll": true,
-      "configurations": [
-        "Server",
-        "Tests (VSCode)"
-      ]
+      "configurations": ["Server", "Tests (VSCode)"]
     }
   ],
   "configurations": [
@@ -27,12 +21,9 @@
       "type": "python",
       "request": "launch",
       "module": "continuedev.src.continuedev.server.main",
-      "args": [
-        "--port",
-        "8001"
-      ],
+      "args": ["--port", "8001"],
       "justMyCode": false,
-      "subProcess": false,
+      "subProcess": false
       // Does it need a build task?
       // What about a watch task? - type errors?
     },
@@ -45,14 +36,12 @@
         // Pass a directory to manually test in
         "${workspaceFolder}/extension/manual-testing-sandbox",
         "${workspaceFolder}/extension/manual-testing-sandbox/example.ts",
-        "--extensionDevelopmentPath=${workspaceFolder}/extension",
+        "--extensionDevelopmentPath=${workspaceFolder}/extension"
       ],
-      "outFiles": [
-        "${workspaceFolder}/extension/out/**/*.js"
-      ],
+      "outFiles": ["${workspaceFolder}/extension/out/**/*.js"],
       "preLaunchTask": "vscode-extension:build",
       "env": {
-        "CONTINUE_SERVER_URL": "http://localhost:65432"
+        "CONTINUE_SERVER_URL": "http://localhost:8001"
       }
     },
     // Has to be run after starting the server (separately or using the compound configuration)
@@ -77,10 +66,10 @@
       "internalConsoleOptions": "openOnSessionStart",
       "preLaunchTask": "vscode-extension:tests:build",
       "env": {
-        "CONTINUE_SERVER_URL": "http://localhost:8001",
+        "CONTINUE_SERVER_URL": "http://localhost:65432",
         // Avoid timing out when stopping on breakpoints during debugging in VSCode
-        "MOCHA_TIMEOUT": "0",
-      },
+        "MOCHA_TIMEOUT": "0"
+      }
     }
   ]
 }

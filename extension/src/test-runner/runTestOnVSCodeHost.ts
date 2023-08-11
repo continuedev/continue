@@ -11,7 +11,10 @@ async function main() {
 
     // The path to test runner
     // Passed to --extensionTestsPath
-    const extensionTestsPath = path.resolve(extensionDevelopmentPath, "out/test-runner/mochaRunner");
+    const extensionTestsPath = path.resolve(
+      extensionDevelopmentPath,
+      "out/test-runner/mochaRunner"
+    );
 
     // Download VS Code, unzip it and run the integration test
     await runTests({ extensionDevelopmentPath, extensionTestsPath });

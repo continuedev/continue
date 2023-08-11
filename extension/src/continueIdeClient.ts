@@ -12,7 +12,7 @@ import {
   rejectSuggestionCommand,
 } from "./suggestions";
 import { FileEditWithFullContents } from "../schema/FileEditWithFullContents";
-import * as fs from 'fs';
+import * as fs from "fs";
 import { WebsocketMessenger } from "./util/messenger";
 import { diffManager } from "./diffs";
 const os = require("os");
@@ -30,13 +30,12 @@ class IdeProtocolClient {
   private _lastReloadTime: number = 16;
   private _reconnectionTimeouts: NodeJS.Timeout[] = [];
 
-  private _sessionId: string | null = null;
+  sessionId: string | null = null;
   private _serverUrl: string;
 
   private _newWebsocketMessenger() {
     const requestUrl =
-      this._serverUrl +
-      (this._sessionId ? `?session_id=${this._sessionId}` : "");
+      this._serverUrl + (this.sessionId ? `?session_id=${this.sessionId}` : "");
     const messenger = new WebsocketMessenger(requestUrl);
     this.messenger = messenger;
 
@@ -383,7 +382,9 @@ class IdeProtocolClient {
   async getUserSecret(key: string) {
     // Check if secret already exists in VS Code settings (global)
     let secret = vscode.workspace.getConfiguration("continue").get(key);
-    if (typeof secret !== "undefined" && secret !== null) {return secret;}
+    if (typeof secret !== "undefined" && secret !== null) {
+      return secret;
+    }
 
     // If not, ask user for secret
     secret = await vscode.window.showInputBox({
@@ -420,7 +421,7 @@ class IdeProtocolClient {
     console.log("Getting session ID");
     const resp = await this.messenger?.sendAndReceive("getSessionId", {});
     console.log("New Continue session with ID: ", resp.sessionId);
-    this._sessionId = resp.sessionId;
+    this.sessionId = resp.sessionId;
     return resp.sessionId;
   }
 

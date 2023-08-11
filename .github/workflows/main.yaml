@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-      - package-python
 
 jobs:
   pyinstaller:
@@ -15,6 +14,8 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
+      # Install Python requirements and build+upload binaries for each platform
+
       - name: Check-out repository
         uses: actions/checkout@v3
 
@@ -44,33 +45,46 @@ jobs:
           name: ${{ runner.os }} Build
           path: dist/*
 
-  publish:
+  test-and-package:
     needs: pyinstaller
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
+    strategy:
+      matrix:
+        os: [macos-latest, ubuntu-20.04, windows-latest]
+
+    runs-on: ${{ matrix.os }}
 
     steps:
       - name: Checkout
         uses: actions/checkout@v2
 
+      # Download corresponding binary artifact for the platform
+
+      - name: Create exe directory
+        run: |
+          mkdir extension/server/exe
+
       - name: Download Linux build
         uses: actions/download-artifact@v2
         with:
           name: Linux Build
-          path: exe/linux
+          path: extension/server/exe/linux
+        if: matrix.os == 'ubuntu-20.04'
 
       - name: Download macOS build
         uses: actions/download-artifact@v2
         with:
           name: macOS Build
-          path: exe/mac
+          path: extension/server/exe/mac
+        if: matrix.os == 'macos-latest'
 
       - name: Download Windows build
         uses: actions/download-artifact@v2
         with:
           name: Windows Build
-          path: exe/windows
+          path: extension/server/exe/windows
+        if: matrix.os == 'windows-latest'
+
+      # Setup Node.js and install dependencies
 
       - name: Use Node.js 19.0.0
         uses: actions/setup-node@v3
@@ -99,11 +113,83 @@ jobs:
           cd extension/react-app
           npm ci --legacy-peer-deps
 
-      - name: Build and Publish
+      # Run tests
+
+      - name: Package the extension
         run: |
           cd extension
           npm run package
-          npx vsce publish patch -p ${{ secrets.VSCE_TOKEN }}
+
+      - name: Install Xvfb for Linux and run tests
+        run: |
+          sudo apt-get install -y xvfb # Install Xvfb
+          Xvfb :99 & # Start Xvfb
+          export DISPLAY=:99 # Export the display number to the environment
+          cd extension
+          npm run test
+        if: matrix.os == 'ubuntu-20.04'
+
+      - name: Run extension tests
+        run: |
+          cd extension
+          npm run test
+        if: matrix.os != 'ubuntu-20.04'
+
+      # Upload .vsix artifact
+
+      - name: Upload .vsix as an artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: vsix-artifact
+          path: extension/build/*
+        if: matrix.os == 'ubuntu-20.04'
+
+  publish:
+    needs: test-and-package
+    runs-on: ubuntu-20.04
+    permissions:
+      contents: write
+
+    steps:
+      # Checkout and download .vsix artifact
+
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Download .vsix artifact
+        uses: actions/download-artifact@v2
+        with:
+          name: vsix-artifact
+          path: extension/build
+
+      # Publish the extension and commit/push the version change
+
+      - name: Use Node.js 19.0.0
+        uses: actions/setup-node@v3
+        with:
+          node-version: 19.0.0
+
+      - name: Cache extension node_modules
+        uses: actions/cache@v2
+        with:
+          path: extension/node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('extension/package-lock.json') }}
+
+      - name: Install extension Dependencies
+        run: |
+          cd extension
+          npm ci
+
+      - name: Publish
+        run: |
+          cd extension
+          npx vsce publish -p ${{ secrets.VSCE_TOKEN }} --packagePath ./build/*.vsix
+
+      - name: Update version in package.json
+        run: |
+          cd extension
+          npm version patch
+
       - name: Commit changes
         run: |
           git config --local user.email "action@github.com"
@@ -116,18 +202,32 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           branch: ${{ github.ref }}
 
-      - name: Upload .vsix artifact
-        uses: actions/upload-artifact@v2
+      # Download binaries and upload to S3
+
+      - name: Download Linux build
+        uses: actions/download-artifact@v2
         with:
-          name: vsix-artifact
-          path: extension/build/*
+          name: Linux Build
+          path: exe/linux
+
+      - name: Download macOS build
+        uses: actions/download-artifact@v2
+        with:
+          name: macOS Build
+          path: exe/mac
+
+      - name: Download Windows build
+        uses: actions/download-artifact@v2
+        with:
+          name: Windows Build
+          path: exe/windows
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-west-2
+          aws-region: us-west-1
 
       - name: Upload binaries to S3
         uses: jakejarvis/s3-sync-action@master

@@ -487,7 +487,8 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
                 selected={downshiftProps.selectedItem === item}
               >
                 <span>
-                  {item.name}:{"  "}
+                  {item.name}
+                  {"  "}
                   <span style={{ color: lightGray }}>{item.description}</span>
                 </span>
               </Li>
