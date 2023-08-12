@@ -20,10 +20,7 @@ import { ContextItem } from "../../../schema/FullState";
 import { postVscMessage } from "../vscode";
 import { GUIClientContext } from "../App";
 import { MeiliSearch } from "meilisearch";
-import {
-  setBottomMessage,
-  setBottomMessageCloseTimeout,
-} from "../redux/slices/uiStateSlice";
+import { setBottomMessage } from "../redux/slices/uiStateSlice";
 import { useDispatch, useSelector } from "react-redux";
 import { RootStore } from "../redux/store";
 
@@ -124,7 +121,7 @@ const Li = styled.li<{
 // #endregion
 
 interface ComboBoxProps {
-  items: { name: string; description: string; id?: string }[];
+  items: { name: string; description: string; id?: string; content?: string }[];
   onInputValueChange: (inputValue: string) => void;
   disabled?: boolean;
   onEnter: (e: React.KeyboardEvent<HTMLInputElement>) => void;
@@ -204,6 +201,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
                     name: hit.name,
                     description: hit.description,
                     id: hit.id,
+                    content: hit.content,
                   };
                 })
               );
@@ -513,6 +511,15 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
                   {item.name}
                   {"  "}
                   <span style={{ color: lightGray }}>{item.description}</span>
+                  {downshiftProps.highlightedIndex === index &&
+                    item.content && (
+                      <>
+                        <br />
+                        <pre style={{ color: lightGray }}>
+                        {item.content.split('\n').slice(0, 5).join('\n')}
+                        </pre>
+                      </>
+                    )}
                 </span>
               </Li>
             ))}
