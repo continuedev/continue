@@ -31,6 +31,7 @@ class HighlightedCodeContextProvider(ContextProvider):
     last_added_fallback: bool = False
 
     async def _get_fallback_context_item(self) -> HighlightedRangeContextItem:
+        # Used to automatically include the currently open file. Disabled for now.
         return None
 
         if not self.should_get_fallback_context_item:
@@ -89,6 +90,7 @@ class HighlightedCodeContextProvider(ContextProvider):
                 name_status[basename] = {hr.rif.filepath}
 
         for hr in self.highlighted_ranges:
+            basename = os.path.basename(hr.rif.filepath)
             if len(name_status[basename]) > 1:
                 hr.item.description.name = self._rif_to_name(hr.rif, display_filename=os.path.join(
                     os.path.basename(os.path.dirname(hr.rif.filepath)), basename))
@@ -109,13 +111,11 @@ class HighlightedCodeContextProvider(ContextProvider):
         self.last_added_fallback = False
 
     async def delete_context_with_ids(self, ids: List[ContextItemId]) -> List[ContextItem]:
-        indices_to_delete = [
-            int(id.item_id) for id in ids
-        ]
+        ids_to_delete = [id.item_id for id in ids]
 
         kept_ranges = []
-        for i, hr in enumerate(self.highlighted_ranges):
-            if i not in indices_to_delete:
+        for hr in self.highlighted_ranges:
+            if hr.item.description.id.item_id not in ids_to_delete:
                 kept_ranges.append(hr)
         self.highlighted_ranges = kept_ranges
 

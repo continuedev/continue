@@ -94,7 +94,7 @@ async function checkOrKillRunningServer(serverUrl: string): Promise<boolean> {
   if (serverRunning) {
     console.log("Killing server from old version of Continue");
     try {
-      await fkill(":65432");
+      await fkill(":65432", { force: true });
     } catch (e: any) {
       if (!e.message.includes("Process doesn't exist")) {
         console.log("Failed to kill old server:", e);
@@ -236,28 +236,45 @@ export async function startContinuePythonServer() {
       setTimeout(spawnChild, delay);
     };
     try {
-      const child = spawn(destination, {
+      // NodeJS bug requires not using detached on Windows, otherwise windowsHide is ineffective
+      // Otherwise, detach is preferable
+      const windowsSettings = {
         windowsHide: true,
-      });
-      child.stdout.on("data", (data: any) => {
-        // console.log(`stdout: ${data}`);
-      });
-      child.stderr.on("data", (data: any) => {
-        console.log(`stderr: ${data}`);
-      });
-      child.on("error", (err: any) => {
-        if (attempts < maxAttempts) {
-          retry();
-        } else {
-          console.error("Failed to start subprocess.", err);
-        }
-      });
-      child.on("exit", (code: any, signal: any) => {
-        console.log("Subprocess exited with code", code, signal);
-      });
-      child.on("close", (code: any, signal: any) => {
-        console.log("Subprocess closed with code", code, signal);
-      });
+      };
+      const macLinuxSettings = {
+        detached: true,
+        stdio: "ignore",
+      };
+      const settings: any =
+        os.platform() === "win32" ? windowsSettings : macLinuxSettings;
+
+      // Spawn the server
+      const child = spawn(destination, settings);
+
+      // Either unref to avoid zombie process, or listen to events because you can
+      if (os.platform() === "win32") {
+        child.stdout.on("data", (data: any) => {
+          // console.log(`stdout: ${data}`);
+        });
+        child.stderr.on("data", (data: any) => {
+          console.log(`stderr: ${data}`);
+        });
+        child.on("error", (err: any) => {
+          if (attempts < maxAttempts) {
+            retry();
+          } else {
+            console.error("Failed to start subprocess.", err);
+          }
+        });
+        child.on("exit", (code: any, signal: any) => {
+          console.log("Subprocess exited with code", code, signal);
+        });
+        child.on("close", (code: any, signal: any) => {
+          console.log("Subprocess closed with code", code, signal);
+        });
+      } else {
+        child.unref();
+      }
     } catch (e: any) {
       console.log("Error starting server:", e);
       retry();

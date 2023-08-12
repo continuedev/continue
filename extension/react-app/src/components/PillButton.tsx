@@ -106,7 +106,7 @@ const StyledButton = styled(Button)<StyledButtonProps>`
 
   &:focus {
     outline: none;
-    border-color: red;
+    border-color: ${vscForeground};
     border-width: 1px;
     border-style: solid;
   }
@@ -185,13 +185,13 @@ const PillButton = (props: PillButtonProps) => {
             <GridDiv
               style={{
                 gridTemplateColumns:
-                  props.item.editable && props.addingHighlightedCode
+                  props.item.editable && props.areMultipleItems
                     ? "1fr 1fr"
                     : "1fr",
                 backgroundColor: vscBackground,
               }}
             >
-              {props.item.editable && props.addingHighlightedCode && (
+              {props.item.editable && props.areMultipleItems && (
                 <ButtonDiv
                   data-tooltip-id={`edit-${props.index}`}
                   backgroundColor={"#8800aa55"}
