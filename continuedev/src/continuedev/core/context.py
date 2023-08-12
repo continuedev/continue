@@ -169,39 +169,45 @@ class ContextManager:
         create_async_task(start_meilisearch(context_providers))
 
     async def load_index(self, workspace_dir: str):
-        for _, provider in self.context_providers.items():
-            ti = time.time()
+        try:
+            async with Client('http://localhost:7700') as search_client:
+                # First, create the index if it doesn't exist
+                # The index is currently shared by all workspaces
+                await search_client.create_index(SEARCH_INDEX_NAME)
+                globalSearchIndex = await search_client.get_index(SEARCH_INDEX_NAME)
+                await globalSearchIndex.update_ranking_rules([
+                    "attribute",
+                    "words",
+                    "typo",
+                    "proximity",
+                    "sort",
+                    "exactness"
+                ])
+                await globalSearchIndex.update_filterable_attributes(
+                    ["workspace_dir"])
 
-            context_items = await provider.provide_context_items(workspace_dir)
-            documents = [
-                {
-                    "id": item.description.id.to_string(),
-                    "name": item.description.name,
-                    "description": item.description.description,
-                    "content": item.content,
-                    "workspace_dir": workspace_dir,
-                }
-                for item in context_items
-            ]
-            if len(documents) > 0:
-                try:
-                    async with Client('http://localhost:7700') as search_client:
-                        # First, create the index if it doesn't exist
-                        await search_client.create_index(SEARCH_INDEX_NAME)
-                        # The index is currently shared by all workspaces
-                        globalSearchIndex = await search_client.get_index(SEARCH_INDEX_NAME)
-                        await asyncio.wait_for(asyncio.gather(
-                            # Ensure that the index has the correct filterable attributes
-                            globalSearchIndex.update_filterable_attributes(
-                                ["workspace_dir"]),
-                            globalSearchIndex.add_documents(documents)
-                        ), timeout=5)
-                except Exception as e:
-                    logger.debug(f"Error loading meilisearch index: {e}")
+                for _, provider in self.context_providers.items():
+                    ti = time.time()
 
-            tf = time.time()
-            logger.debug(
-                f"Loaded {len(documents)} documents into meilisearch in {tf - ti} seconds for context provider {provider.title}")
+                    context_items = await provider.provide_context_items(workspace_dir)
+                    documents = [
+                        {
+                            "id": item.description.id.to_string(),
+                            "name": item.description.name,
+                            "description": item.description.description,
+                            "content": item.content,
+                            "workspace_dir": workspace_dir,
+                        }
+                        for item in context_items
+                    ]
+                    if len(documents) > 0:
+                        await asyncio.wait_for(globalSearchIndex.add_documents(documents), timeout=5)
+
+                    tf = time.time()
+                    logger.debug(
+                        f"Loaded {len(documents)} documents into meilisearch in {tf - ti} seconds for context provider {provider.title}")
+        except Exception as e:
+            logger.debug(f"Error loading meilisearch index: {e}")
 
     async def select_context_item(self, id: str, query: str):
         """

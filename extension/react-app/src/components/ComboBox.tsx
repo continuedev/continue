@@ -431,6 +431,11 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
                 event.preventDefault();
               } else if (event.key === "Tab") {
                 (event.nativeEvent as any).preventDownshiftDefault = true;
+              } else if (
+                (event.key === "ArrowUp" || event.key === "ArrowDown") &&
+                items.length > 0
+              ) {
+                return;
               } else if (event.key === "ArrowUp") {
                 // Only go back in history if selectionStart is 0
                 // (i.e. the cursor is at the beginning of the input)
@@ -438,11 +443,6 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
                   positionInHistory == 0 ||
                   event.currentTarget.selectionStart !== 0
                 ) {
-                  console.log(
-                    "returning",
-                    positionInHistory,
-                    event.currentTarget.selectionStart
-                  );
                   (event.nativeEvent as any).preventDownshiftDefault = true;
                   return;
                 } else if (
