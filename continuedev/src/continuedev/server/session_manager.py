@@ -78,7 +78,7 @@ class SessionManager:
         try:
             await autopilot.start(full_state=full_state)
         except Exception as e:
-            await self.on_error(e)
+            await ide.on_error(e)
 
         def on_error(e: Exception) -> Coroutine:
             err_msg = '\n'.join(traceback.format_exception(e))

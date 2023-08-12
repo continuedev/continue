@@ -85,7 +85,6 @@ class Autopilot(ContinueBaseModel):
 
         if full_state is not None:
             self.history = full_state.history
-            self.context_manager.context_providers["code"].adding_highlighted_code = full_state.adding_highlighted_code
             self.session_info = full_state.session_info
 
         self.started = True

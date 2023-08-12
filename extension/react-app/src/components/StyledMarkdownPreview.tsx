@@ -11,7 +11,6 @@ const StyledMarkdownPreview = styled(MarkdownPreview)<{ light?: boolean }>`
   pre {
     background-color: ${(props) =>
       props.light ? vscBackground : secondaryDark};
-    padding: 1px;
     border-radius: ${defaultBorderRadius};
     border: 0.5px solid white;
   }
@@ -27,6 +26,7 @@ const StyledMarkdownPreview = styled(MarkdownPreview)<{ light?: boolean }>`
     background-color: ${(props) =>
       props.light ? vscBackground : secondaryDark};
     color: ${vscForeground};
+    padding: 10px;
   }
 
   background-color: ${(props) => (props.light ? "transparent" : vscBackground)};
