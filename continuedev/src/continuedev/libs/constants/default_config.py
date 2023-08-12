@@ -133,8 +133,8 @@ config = ContinueConfig(
         SearchContextProvider(),
         DiffContextProvider(),
         URLContextProvider(
-            commonly_referenced_urls = [
-                # Add any common urls you reference here so they appear in auto complete
+            preset_urls = [
+                # Add any common urls you reference here so they appear in autocomplete
             ]
         )
     ],
