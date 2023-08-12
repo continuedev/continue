@@ -1,4 +1,7 @@
-from typing import List, Optional
+
+from typing import List
+from bs4 import BeautifulSoup
+import requests
 
 from .util import remove_meilisearch_disallowed_chars
 from ...core.main import ContextItem, ContextItemDescription, ContextItemId
@@ -8,69 +11,80 @@ from ...core.context import ContextProvider
 class URLContextProvider(ContextProvider):
     title = "url"
 
-    url: Optional[str] = None
-    display_name: Optional[str] = None
-    URL_CONTEXT_ITEM_ID = "url"
+    # Allows users to provide a list of preset urls
+    preset_urls: List[str] = []
 
+    # Static items loaded from preset_urls
+    static_url_context_items: List[ContextItem] = []
+
+    # There is only a single dynamic url context item, so it has a static id
+    DYNAMIC_URL_CONTEXT_ITEM_ID = "url"
+
+    # This is a template dynamic item that will generate context item on demand
+    # when get item is called
     @property
-    def optional_url_item_id(self) -> str:
-        return remove_meilisearch_disallowed_chars(self.url)
-
-    @property
-    def optional_url_item(self) -> ContextItem:
-        cp = self.BASE_CONTEXT_ITEM.copy()
-        if self.display_name:
-            cp.description.name = self.display_name
-        cp.description.description = f"Contents of {self.url}"
-        cp.description.id.item_id = self.optional_url_item_id
-
-        return cp
-
-    @property
-    def BASE_CONTEXT_ITEM(self):
+    def DYNAMIC_CONTEXT_ITEM(self):
         return ContextItem(
             content="",
             description=ContextItemDescription(
-                name="URL",
+                name="Dynamic URL",
                 description="Reference the contents of a webpage (e.g. '@url https://www.w3schools.com/python/python_ref_functions.asp')",
                 id=ContextItemId(
                     provider_title=self.title,
-                    item_id=self.URL_CONTEXT_ITEM_ID
+                    item_id=self.DYNAMIC_URL_CONTEXT_ITEM_ID
                 )
             )
         )
 
-    def _get_url_text_contents(self, url: str):
-        from bs4 import BeautifulSoup
-        import requests
+    def static_url_context_item_from_url(self, url: str) -> ContextItem:
+        content, title = self._get_url_text_contents_and_title(url)
+        return ContextItem(
+            content=content,
+            description=ContextItemDescription(
+                name=title,
+                description=f"Contents of {url}",
+                id=ContextItemId(
+                    provider_title=self.title,
+                    item_id=remove_meilisearch_disallowed_chars(url)
+                )
+            )
+        )
 
+    def _get_url_text_contents_and_title(self, url: str) -> (str, str):
         response = requests.get(url)
         soup = BeautifulSoup(response.text, 'html.parser')
-        return soup.get_text()
+        title = url.replace(
+            "https://", "").replace("http://", "").replace("www.", "")
+        if soup.title is not None:
+            title = soup.title.string
+        return soup.get_text(), title
 
     async def provide_context_items(self, workspace_dir: str) -> List[ContextItem]:
-        items = [self.BASE_CONTEXT_ITEM]
-        if self.url:
-            items.append(self.optional_url_item)
+        self.static_url_context_items = [
+            self.static_url_context_item_from_url(url) for url in self.preset_urls]
 
-        return items
+        return [self.DYNAMIC_CONTEXT_ITEM] + self.static_url_context_items
 
     async def get_item(self, id: ContextItemId, query: str) -> ContextItem:
-        if id.item_id == self.optional_url_item_id:
-            item = self.optional_url_item
-            item.content = self._get_url_text_contents(self.url)
-            return item
+        # Check if the item is a static item
+        matching_static_item = next(
+            (item for item in self.static_url_context_items if item.description.id.item_id == id.item_id), None)
+        if matching_static_item:
+            return matching_static_item
 
-        if not id.item_id == self.URL_CONTEXT_ITEM_ID:
+        # Check if the item is the dynamic item
+        if not id.item_id == self.DYNAMIC_URL_CONTEXT_ITEM_ID:
             raise Exception("Invalid item id")
 
+        # Generate the dynamic item
         url = query.lstrip("url ").strip()
-        content = self._get_url_text_contents(url)
+        if url is None or url == "":
+            return None
+        content, title = self._get_url_text_contents_and_title(url)
 
-        ctx_item = self.BASE_CONTEXT_ITEM.copy()
+        ctx_item = self.DYNAMIC_CONTEXT_ITEM.copy()
         ctx_item.content = content
-        ctx_item.description.name = url.replace(
-            "https://", "").replace("http://", "")
+        ctx_item.description.name = title
         ctx_item.description.id.item_id = remove_meilisearch_disallowed_chars(
             url)
         return ctx_item

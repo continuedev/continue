@@ -132,7 +132,11 @@ config = ContinueConfig(
         # )
         SearchContextProvider(),
         DiffContextProvider(),
-        URLContextProvider()
+        URLContextProvider(
+            preset_urls = [
+                # Add any common urls you reference here so they appear in autocomplete
+            ]
+        )
     ],
 
     # Policies hold the main logic that decides which Step to take next
