@@ -20,19 +20,17 @@
     "vscode": "^1.67.0"
   },
   "categories": [
-    "Other",
+    "Programming Languages",
     "Education",
-    "Machine Learning"
+    "Machine Learning",
+    "Snippets"
   ],
   "keywords": [
-    "openai",
-    "chatbot",
+    "github",
+    "copilot",
     "chatgpt",
-    "autocomplete",
-    "llm",
-    "ai",
-    "assistant",
-    "chat"
+    "openai",
+    "gpt4"
   ],
   "activationEvents": [
     "onStartupFinished",
