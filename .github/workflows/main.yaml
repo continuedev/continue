@@ -71,7 +71,7 @@ jobs:
         if: matrix.os == 'ubuntu-20.04'
 
       - name: Rename file (Linux)
-        run: mv extension/server/exe/mac/Linux\ Build extension/server/exe/linux/run
+        run: mv extension/server/exe/linux/Linux\ Build extension/server/exe/linux/run
         if: matrix.os == 'ubuntu-20.04'
 
       - name: Download macOS build
@@ -93,7 +93,7 @@ jobs:
         if: matrix.os == 'windows-latest'
 
       - name: Rename file (Windows)
-        run: mv extension/server/exe/mac/Windows\ Build extension/server/exe/windows/run.exe
+        run: mv extension/server/exe/windows/Windows\ Build extension/server/exe/windows/run.exe
         shell: bash
         if: matrix.os == 'windows-latest'
 
