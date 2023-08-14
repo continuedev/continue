@@ -115,10 +115,10 @@ jobs:
 
       # Run tests
 
-      - name: Package the extension
+      - name: Prepare the extension
         run: |
           cd extension
-          npm run package
+          npm run prepackage
 
       - name: Install Xvfb for Linux and run tests
         run: |
@@ -135,7 +135,11 @@ jobs:
           npm run test
         if: matrix.os != 'ubuntu-20.04'
 
-      # Upload .vsix artifact
+      # Create and upload .vsix artifact
+      - name: Package the extension
+        run: |
+          cd extension
+          npm run package
 
       - name: Upload .vsix as an artifact
         uses: actions/upload-artifact@v2

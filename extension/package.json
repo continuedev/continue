@@ -193,6 +193,7 @@
     "lint": "eslint src --ext ts",
     "build-test": "tsc && node esbuild.test.mjs",
     "test": "npm run build-test && node ./out/test-runner/runTestOnVSCodeHost.js",
+    "prepackage": "node scripts/prepackage.js",
     "package": "node scripts/package.js"
   },
   "devDependencies": {
