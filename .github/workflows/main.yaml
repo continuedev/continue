@@ -70,6 +70,10 @@ jobs:
           path: extension/server/exe/linux
         if: matrix.os == 'ubuntu-20.04'
 
+      - name: Rename file (Linux)
+        run: mv extension/server/exe/mac/Linux\ Build extension/server/exe/linux/run
+        if: matrix.os == 'ubuntu-20.04'
+
       - name: Download macOS build
         uses: actions/download-artifact@v2
         with:
@@ -77,11 +81,20 @@ jobs:
           path: extension/server/exe/mac
         if: matrix.os == 'macos-latest'
 
+      - name: Rename file (MacOS)
+        run: mv extension/server/exe/mac/macOS\ Build extension/server/exe/mac/run
+        if: matrix.os == 'macos-latest'
+
       - name: Download Windows build
         uses: actions/download-artifact@v2
         with:
           name: Windows Build
           path: extension/server/exe/windows
+        if: matrix.os == 'windows-latest'
+
+      - name: Rename file (Windows)
+        run: move extension\server\exe\windows\Windows Build extension\server\exe\windows\run.exe
+        shell: powershell
         if: matrix.os == 'windows-latest'
 
       # Setup Node.js and install dependencies
