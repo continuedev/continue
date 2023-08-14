@@ -186,6 +186,7 @@ export async function startContinuePythonServer() {
       console.log("Continue server already downloaded");
       shouldDownload = false;
     } else {
+      console.log("Old version of the server downloaded");
       fs.unlinkSync(destination);
     }
   }
@@ -201,9 +202,9 @@ export async function startContinuePythonServer() {
         await downloadFromS3(bucket, fileName, destination, "us-west-1");
       }
     );
+    console.log("Downloaded server executable at ", destination);
   }
 
-  console.log("Downloaded server executable at ", destination);
   // Get name of the corresponding executable for platform
   if (os.platform() === "darwin") {
     // Add necessary permissions
@@ -245,16 +246,16 @@ export async function startContinuePythonServer() {
         detached: true,
         stdio: "ignore",
       };
-      const settings: any =
-        os.platform() === "win32" ? windowsSettings : macLinuxSettings;
+      const settings: any = windowsSettings;
+      // os.platform() === "win32" ? windowsSettings : macLinuxSettings;
 
       // Spawn the server
       const child = spawn(destination, settings);
 
       // Either unref to avoid zombie process, or listen to events because you can
-      if (os.platform() === "win32") {
+      if (os.platform() === "win32" || true) {
         child.stdout.on("data", (data: any) => {
-          // console.log(`stdout: ${data}`);
+          console.log(`stdout: ${data}`);
         });
         child.stderr.on("data", (data: any) => {
           console.log(`stderr: ${data}`);

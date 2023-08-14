@@ -49,7 +49,7 @@ jobs:
     needs: pyinstaller
     strategy:
       matrix:
-        os: [windows-latest]
+        os: [macos-latest, ubuntu-20.04, windows-latest]
 
     runs-on: ${{ matrix.os }}
 
