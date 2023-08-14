@@ -146,7 +146,7 @@ export async function downloadFromS3(
   }
 }
 
-export async function startContinuePythonServer() {
+export async function startContinuePythonServer(redownload: boolean = true) {
   // Check vscode settings
   const serverUrl = getContinueServerUrl();
   if (serverUrl !== "http://localhost:65432") {
@@ -191,7 +191,7 @@ export async function startContinuePythonServer() {
     }
   }
 
-  if (shouldDownload) {
+  if (shouldDownload && redownload) {
     await vscode.window.withProgress(
       {
         location: vscode.ProgressLocation.Notification,
