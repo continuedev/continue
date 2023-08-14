@@ -71,7 +71,9 @@ jobs:
         if: matrix.os == 'ubuntu-20.04'
 
       - name: List files (Linux)
-        run: ls extension/server/exe/linux
+        run: |
+          pwd
+          ls extension/server/exe/linux
         if: matrix.os == 'ubuntu-20.04'
 
       - name: Download macOS build
@@ -82,7 +84,9 @@ jobs:
         if: matrix.os == 'macos-latest'
 
       - name: List files (MacOS)
-        run: ls extension/server/exe/mac
+        run: |
+          pwd
+          ls extension/server/exe/mac
         if: matrix.os == 'macos-latest'
 
       - name: Download Windows build
@@ -93,7 +97,9 @@ jobs:
         if: matrix.os == 'windows-latest'
 
       - name: List files (Windows)
-        run: ls extension/server/exe/windows
+        run: |
+          pwd
+          ls extension/server/exe/windows
         shell: bash
         if: matrix.os == 'windows-latest'
 
