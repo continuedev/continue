@@ -93,8 +93,8 @@ jobs:
         if: matrix.os == 'windows-latest'
 
       - name: Rename file (Windows)
-        run: move extension\server\exe\windows\Windows Build extension\server\exe\windows\run.exe
-        shell: powershell
+        run: move extension/server/exe/mac/Windows\ Build extension/server/exe/windows/run.exe
+        shell: bash
         if: matrix.os == 'windows-latest'
 
       # Setup Node.js and install dependencies
