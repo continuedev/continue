@@ -178,7 +178,7 @@ export async function startContinuePythonServer(redownload: boolean = true) {
 
   // First, check if the server is already downloaded
   let shouldDownload = true;
-  if (fs.existsSync(destination)) {
+  if (fs.existsSync(destination) && redownload) {
     // Check if the server is the correct version
     const serverVersion = fs.readFileSync(serverVersionPath(), "utf8");
     if (serverVersion === getExtensionVersion()) {
@@ -203,16 +203,15 @@ export async function startContinuePythonServer(redownload: boolean = true) {
       }
     );
     console.log("Downloaded server executable at ", destination);
-  }
-
-  // Get name of the corresponding executable for platform
-  if (os.platform() === "darwin") {
-    // Add necessary permissions
-    fs.chmodSync(destination, 0o7_5_5);
-    await runCommand(`xattr -dr com.apple.quarantine ${destination}`);
-  } else if (os.platform() === "linux") {
-    // Add necessary permissions
-    fs.chmodSync(destination, 0o7_5_5);
+    // Get name of the corresponding executable for platform
+    if (os.platform() === "darwin") {
+      // Add necessary permissions
+      fs.chmodSync(destination, 0o7_5_5);
+      await runCommand(`xattr -dr com.apple.quarantine ${destination}`);
+    } else if (os.platform() === "linux") {
+      // Add necessary permissions
+      fs.chmodSync(destination, 0o7_5_5);
+    }
   }
 
   // Validate that the file exists
