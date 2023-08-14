@@ -22,11 +22,12 @@ CHAT_MODELS = {
 MAX_TOKENS_FOR_MODEL = {
     "gpt-3.5-turbo": 4096,
     "gpt-3.5-turbo-0613": 4096,
-    "gpt-3.5-turbo-16k": 16384,
+    "gpt-3.5-turbo-16k": 16_384,
     "gpt-4": 8192,
-    "gpt-35-turbo-16k": 16384,
+    "gpt-35-turbo-16k": 16_384,
     "gpt-35-turbo-0613": 4096,
     "gpt-35-turbo": 4096,
+    "gpt-4-32k": 32_768
 }
 
 
@@ -67,7 +68,7 @@ class OpenAI(LLM):
 
     @property
     def context_length(self):
-        return MAX_TOKENS_FOR_MODEL[self.model]
+        return MAX_TOKENS_FOR_MODEL.get(self.model, 4096)
 
     @property
     def default_args(self):

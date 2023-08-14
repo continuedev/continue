@@ -2,13 +2,11 @@ import { test, describe } from "mocha";
 import * as assert from "assert";
 
 import { getContinueServerUrl } from "../bridge";
-import { ideProtocolClient } from "../activation/activate";
 import fetch from "node-fetch";
-import fkill from "fkill";
 
 describe("Can start python server", () => {
   test("Can start python server in under 35 seconds", async function () {
-    const allowedTime = 35_000;
+    const allowedTime = 25_000;
     this.timeout(allowedTime + 10_000);
     // try {
     //   fkill(65432, { force: true });
