@@ -209,6 +209,7 @@ export async function startContinuePythonServer(redownload: boolean = true) {
     );
     console.log("Downloaded server executable at ", destination);
   }
+  console.log("4");
 
   // Get name of the corresponding executable for platform
   if (os.platform() === "darwin") {
@@ -220,10 +221,12 @@ export async function startContinuePythonServer(redownload: boolean = true) {
     fs.chmodSync(destination, 0o7_5_5);
   }
 
+  console.log("5");
   // Validate that the file exists
   if (!fs.existsSync(destination)) {
     const errText = `- Failed to install Continue server.`;
     vscode.window.showErrorMessage(errText);
+    console.log("6: throwing error message: ", errText);
     throw new Error(errText);
   }
 
