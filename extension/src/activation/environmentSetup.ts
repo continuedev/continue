@@ -147,8 +147,6 @@ export async function downloadFromS3(
 }
 
 export async function startContinuePythonServer(redownload: boolean = true) {
-  console.log("Starting Continue Python");
-
   // Check vscode settings
   const serverUrl = getContinueServerUrl();
   if (serverUrl !== "http://localhost:65432") {
@@ -156,7 +154,6 @@ export async function startContinuePythonServer(redownload: boolean = true) {
     return;
   }
 
-  console.log("1");
   // Check if server is already running
   if (await checkOrKillRunningServer(serverUrl)) {
     console.log("Continue server already running");
@@ -180,7 +177,6 @@ export async function startContinuePythonServer(redownload: boolean = true) {
   );
 
   // First, check if the server is already downloaded
-  console.log("2");
   let shouldDownload = true;
   if (fs.existsSync(destination)) {
     // Check if the server is the correct version
@@ -195,7 +191,6 @@ export async function startContinuePythonServer(redownload: boolean = true) {
     }
   }
 
-  console.log("3");
   if (shouldDownload && redownload) {
     await vscode.window.withProgress(
       {
@@ -209,7 +204,6 @@ export async function startContinuePythonServer(redownload: boolean = true) {
     );
     console.log("Downloaded server executable at ", destination);
   }
-  console.log("4");
 
   // Get name of the corresponding executable for platform
   if (os.platform() === "darwin") {
@@ -221,8 +215,8 @@ export async function startContinuePythonServer(redownload: boolean = true) {
     fs.chmodSync(destination, 0o7_5_5);
   }
 
-  console.log("5");
   // Validate that the file exists
+  console.log("Looking for file at ", destination);
   if (!fs.existsSync(destination)) {
     const errText = `- Failed to install Continue server.`;
     vscode.window.showErrorMessage(errText);
