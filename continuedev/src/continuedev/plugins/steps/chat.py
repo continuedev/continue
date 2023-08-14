@@ -6,12 +6,13 @@ from pydantic import Field
 
 from ...libs.util.strings import remove_quotes_and_escapes
 from .main import EditHighlightedCodeStep
-from .core.core import DisplayErrorStep, MessageStep
+from .core.core import MessageStep
 from ...core.main import FunctionCall, Models
 from ...core.main import ChatMessage, Step, step_to_json_schema
 from ...core.sdk import ContinueSDK
 from ...libs.llm.openai import OpenAI
 from ...libs.llm.maybe_proxy_openai import MaybeProxyOpenAI
+from ...libs.util.telemetry import posthog_logger
 import openai
 import os
 from dotenv import load_dotenv
@@ -58,6 +59,10 @@ class SimpleChatStep(Step):
 
         generator = sdk.models.default.stream_chat(
             messages, temperature=sdk.config.temperature)
+
+        posthog_logger.capture_event("model_use", {
+            "model": sdk.models.default.name
+        })
 
         async for chunk in generator:
             if sdk.current_step_was_deleted():

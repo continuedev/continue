@@ -26,6 +26,11 @@ class PostHogLogger:
         self.unique_id = unique_id or "NO_UNIQUE_ID"
         self.allow_anonymous_telemetry = allow_anonymous_telemetry or True
 
+        # Capture initial event
+        self.capture_event("session_start", {
+            "os": os.name
+        })
+
     def capture_event(self, event_name: str, event_properties: Any):
         # logger.debug(
         #     f"Logging to PostHog: {event_name} ({self.unique_id}, {self.allow_anonymous_telemetry}): {event_properties}")

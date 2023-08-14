@@ -11,6 +11,8 @@ We track
 - the steps that are run and their parameters
 - whether you accept or reject suggestions (not the code itself)
 - the traceback when an error occurs
+- the name of your OS
+- the name of the default model you configured
 
 All data is anonymous and cleaned of PII before being sent to PostHog.
 

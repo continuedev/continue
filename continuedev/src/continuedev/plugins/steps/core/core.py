@@ -19,6 +19,7 @@ from ....core.observation import Observation, TextObservation, TracebackObservat
 from ....core.main import ChatMessage, ContinueCustomException, Step, SequentialStep
 from ....libs.util.count_tokens import DEFAULT_MAX_TOKENS
 from ....libs.util.strings import dedent_and_get_common_whitespace, remove_quotes_and_escapes
+from ....libs.util.telemetry import posthog_logger
 
 
 class ContinueSDK:
@@ -519,6 +520,10 @@ Please output the code to be inserted at the cursor in order to fulfill the user
 
         generator = model_to_use.stream_chat(
             messages, temperature=sdk.config.temperature, max_tokens=max_tokens)
+
+        posthog_logger.capture_event("model_use", {
+            "model": model_to_use.name
+        })
 
         try:
             async for chunk in generator:
