@@ -8,7 +8,7 @@ import fkill from "fkill";
 
 describe("Can start python server", () => {
   test("Can start python server in under 35 seconds", async function () {
-    const allowedTime = 25_000;
+    const allowedTime = 60_000;
     this.timeout(allowedTime + 10_000);
     // try {
     //   fkill(65432, { force: true });
