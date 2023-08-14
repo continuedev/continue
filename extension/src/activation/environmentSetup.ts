@@ -147,6 +147,8 @@ export async function downloadFromS3(
 }
 
 export async function startContinuePythonServer(redownload: boolean = true) {
+  console.log("Starting Continue Python");
+
   // Check vscode settings
   const serverUrl = getContinueServerUrl();
   if (serverUrl !== "http://localhost:65432") {
@@ -154,6 +156,7 @@ export async function startContinuePythonServer(redownload: boolean = true) {
     return;
   }
 
+  console.log("1");
   // Check if server is already running
   if (await checkOrKillRunningServer(serverUrl)) {
     console.log("Continue server already running");
@@ -177,6 +180,7 @@ export async function startContinuePythonServer(redownload: boolean = true) {
   );
 
   // First, check if the server is already downloaded
+  console.log("2");
   let shouldDownload = true;
   if (fs.existsSync(destination)) {
     // Check if the server is the correct version
@@ -191,6 +195,7 @@ export async function startContinuePythonServer(redownload: boolean = true) {
     }
   }
 
+  console.log("3");
   if (shouldDownload && redownload) {
     await vscode.window.withProgress(
       {
@@ -223,7 +228,7 @@ export async function startContinuePythonServer(redownload: boolean = true) {
   }
 
   // Run the executable
-  console.log("Starting Continue server");
+  console.log("---- Starting Continue server ----");
   let attempts = 0;
   let maxAttempts = 5;
   let delay = 1000; // Delay between each attempt in milliseconds
