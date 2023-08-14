@@ -70,10 +70,8 @@ jobs:
           path: extension/server/exe/linux
         if: matrix.os == 'ubuntu-20.04'
 
-      - name: Rename file (Linux)
-        run: |
-          ls extension/server/exe/linux
-          mv extension/server/exe/linux/LinuxBuild extension/server/exe/linux/run
+      - name: List files (Linux)
+        run: ls extension/server/exe/linux
         if: matrix.os == 'ubuntu-20.04'
 
       - name: Download macOS build
@@ -83,8 +81,8 @@ jobs:
           path: extension/server/exe/mac
         if: matrix.os == 'macos-latest'
 
-      - name: Rename file (MacOS)
-        run: mv extension/server/exe/mac/macOSBuild extension/server/exe/mac/run
+      - name: List files (MacOS)
+        run: ls extension/server/exe/mac
         if: matrix.os == 'macos-latest'
 
       - name: Download Windows build
@@ -94,8 +92,8 @@ jobs:
           path: extension/server/exe/windows
         if: matrix.os == 'windows-latest'
 
-      - name: Rename file (Windows)
-        run: mv extension/server/exe/windows/WindowsBuild extension/server/exe/windows/run.exe
+      - name: List files (Windows)
+        run: ls extension/server/exe/windows
         shell: bash
         if: matrix.os == 'windows-latest'
 
