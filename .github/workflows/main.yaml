@@ -42,7 +42,7 @@ jobs:
       - name: Upload Artifacts
         uses: actions/upload-artifact@v3
         with:
-          name: ${{ runner.os }} Build
+          name: ${{ runner.os }}Build
           path: dist/*
 
   test-and-package:
@@ -66,34 +66,36 @@ jobs:
       - name: Download Linux build
         uses: actions/download-artifact@v2
         with:
-          name: Linux Build
+          name: LinuxBuild
           path: extension/server/exe/linux
         if: matrix.os == 'ubuntu-20.04'
 
       - name: Rename file (Linux)
-        run: mv extension/server/exe/linux/Linux\ Build extension/server/exe/linux/run
+        run: |
+          ls extension/server/exe/linux
+          mv extension/server/exe/linux/LinuxBuild extension/server/exe/linux/run
         if: matrix.os == 'ubuntu-20.04'
 
       - name: Download macOS build
         uses: actions/download-artifact@v2
         with:
-          name: macOS Build
+          name: macOSBuild
           path: extension/server/exe/mac
         if: matrix.os == 'macos-latest'
 
       - name: Rename file (MacOS)
-        run: mv extension/server/exe/mac/macOS\ Build extension/server/exe/mac/run
+        run: mv extension/server/exe/mac/macOSBuild extension/server/exe/mac/run
         if: matrix.os == 'macos-latest'
 
       - name: Download Windows build
         uses: actions/download-artifact@v2
         with:
-          name: Windows Build
+          name: WindowsBuild
           path: extension/server/exe/windows
         if: matrix.os == 'windows-latest'
 
       - name: Rename file (Windows)
-        run: mv extension/server/exe/windows/Windows Build extension/server/exe/windows/run.exe
+        run: mv extension/server/exe/windows/WindowsBuild extension/server/exe/windows/run.exe
         shell: bash
         if: matrix.os == 'windows-latest'
 
@@ -224,19 +226,19 @@ jobs:
       - name: Download Linux build
         uses: actions/download-artifact@v2
         with:
-          name: Linux Build
+          name: LinuxBuild
           path: exe/linux
 
       - name: Download macOS build
         uses: actions/download-artifact@v2
         with:
-          name: macOS Build
+          name: macOSBuild
           path: exe/mac
 
       - name: Download Windows build
         uses: actions/download-artifact@v2
         with:
-          name: Windows Build
+          name: WindowsBuild
           path: exe/windows
 
       - name: Configure AWS Credentials
