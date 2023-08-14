@@ -154,6 +154,3 @@ class OpenAI(LLM):
             self.write_log(f"Completion:\n\n{resp}")
 
         return resp
-
-
-openai.Completion.create(prompt="HI", model="text-davinci-003")

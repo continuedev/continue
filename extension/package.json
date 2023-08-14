@@ -11,6 +11,7 @@
     "email": "nate@continue.dev"
   },
   "homepage": "https://continue.dev",
+  "qna": "https://github.com/continuedev/continue/issues/new/choose",
   "license": "Apache-2.0",
   "displayName": "Continue",
   "pricing": "Free",
@@ -26,11 +27,11 @@
     "Snippets"
   ],
   "keywords": [
-    "github",
     "copilot",
-    "chatgpt",
-    "openai",
-    "gpt4"
+    "copilot",
+    "copilot",
+    "copilot",
+    "copilot"
   ],
   "activationEvents": [
     "onStartupFinished",
