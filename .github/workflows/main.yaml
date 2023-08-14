@@ -74,6 +74,7 @@ jobs:
         run: |
           pwd
           ls extension/server/exe/linux
+          chmod 777 extension/server/exe/linux/run
         if: matrix.os == 'ubuntu-20.04'
 
       - name: Download macOS build
@@ -87,6 +88,7 @@ jobs:
         run: |
           pwd
           ls extension/server/exe/mac
+          chmod 777 extension/server/exe/mac/run
         if: matrix.os == 'macos-latest'
 
       - name: Download Windows build
@@ -100,6 +102,7 @@ jobs:
         run: |
           pwd
           ls extension/server/exe/windows
+          chmod 777 extension/server/exe/windows/run.exe
         shell: bash
         if: matrix.os == 'windows-latest'
 
