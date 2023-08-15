@@ -203,17 +203,18 @@ export async function startContinuePythonServer(redownload: boolean = true) {
       }
     );
     console.log("Downloaded server executable at ", destination);
-    // Get name of the corresponding executable for platform
-    if (os.platform() === "darwin") {
-      // Add necessary permissions
-      fs.chmodSync(destination, 0o7_5_5);
-      await runCommand(`xattr -dr com.apple.quarantine ${destination}`);
-    } else if (os.platform() === "linux") {
-      // Add necessary permissions
-      fs.chmodSync(destination, 0o7_5_5);
-    }
   }
-
+  
+  // Get name of the corresponding executable for platform
+  if (os.platform() === "darwin") {
+    // Add necessary permissions
+    fs.chmodSync(destination, 0o7_5_5);
+    await runCommand(`xattr -dr com.apple.quarantine ${destination}`);
+  } else if (os.platform() === "linux") {
+    // Add necessary permissions
+    fs.chmodSync(destination, 0o7_5_5);
+  }
+  
   // Validate that the file exists
   console.log("Looking for file at ", destination);
   if (!fs.existsSync(destination)) {

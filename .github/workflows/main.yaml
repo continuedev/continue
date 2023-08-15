@@ -84,6 +84,11 @@ jobs:
           path: extension/server/exe
         if: matrix.os == 'windows-latest'
 
+      - name: Set permissions
+        shell: bash
+        run: |
+          chmod -R 777 extension/server/exe
+
       # Setup Node.js and install dependencies
 
       - name: Use Node.js 19.0.0
