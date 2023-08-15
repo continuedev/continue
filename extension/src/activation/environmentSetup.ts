@@ -218,7 +218,7 @@ export async function startContinuePythonServer(redownload: boolean = true) {
   console.log("Looking for file at ", destination);
   if (!fs.existsSync(destination)) {
     // List the contents of the folder
-    const files = fs.readdirSync(path.join(getExtensionUri().fsPath, "server"));
+    const files = fs.readdirSync(path.join(getExtensionUri().fsPath, "server", "exe"));
     console.log("Files in server folder: ", files);
     const errText = `- Failed to install Continue server.`;
     vscode.window.showErrorMessage(errText);
