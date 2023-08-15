@@ -233,10 +233,10 @@ export async function startContinuePythonServer(redownload: boolean = true) {
   let delay = 1000; // Delay between each attempt in milliseconds
 
   const spawnChild = () => {
-    const retry = () => {
+    const retry = (e: any) => {
       attempts++;
       console.log(
-        `Error caught (likely EBUSY). Retrying attempt ${attempts}...`
+        `Error caught: ${e}.\n\nRetrying attempt ${attempts}...`
       );
       setTimeout(spawnChild, delay);
     };
@@ -266,7 +266,7 @@ export async function startContinuePythonServer(redownload: boolean = true) {
         });
         child.on("error", (err: any) => {
           if (attempts < maxAttempts) {
-            retry();
+            retry(err);
           } else {
             console.error("Failed to start subprocess.", err);
           }
@@ -282,7 +282,7 @@ export async function startContinuePythonServer(redownload: boolean = true) {
       }
     } catch (e: any) {
       console.log("Error starting server:", e);
-      retry();
+      retry(e);
     }
   };
 
