@@ -67,43 +67,21 @@ jobs:
         uses: actions/download-artifact@v2
         with:
           name: LinuxBuild
-          path: extension/server/exe/linux
-        if: matrix.os == 'ubuntu-20.04'
-
-      - name: List files (Linux)
-        run: |
-          pwd
-          ls extension/server/exe/linux
-          chmod 777 extension/server/exe/linux/run
+          path: extension/server/exe
         if: matrix.os == 'ubuntu-20.04'
 
       - name: Download macOS build
         uses: actions/download-artifact@v2
         with:
           name: macOSBuild
-          path: extension/server/exe/mac
-        if: matrix.os == 'macos-latest'
-
-      - name: List files (MacOS)
-        run: |
-          pwd
-          ls extension/server/exe/mac
-          chmod 777 extension/server/exe/mac/run
+          path: extension/server/exe
         if: matrix.os == 'macos-latest'
 
       - name: Download Windows build
         uses: actions/download-artifact@v2
         with:
           name: WindowsBuild
-          path: extension/server/exe/windows
-        if: matrix.os == 'windows-latest'
-
-      - name: List files (Windows)
-        run: |
-          pwd
-          ls extension/server/exe/windows
-          chmod 777 extension/server/exe/windows/run.exe
-        shell: bash
+          path: extension/server/exe
         if: matrix.os == 'windows-latest'
 
       # Setup Node.js and install dependencies
