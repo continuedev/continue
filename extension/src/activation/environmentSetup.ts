@@ -204,7 +204,7 @@ export async function startContinuePythonServer(redownload: boolean = true) {
     );
     console.log("Downloaded server executable at ", destination);
   }
-  
+
   // Get name of the corresponding executable for platform
   if (os.platform() === "darwin") {
     // Add necessary permissions
@@ -214,12 +214,14 @@ export async function startContinuePythonServer(redownload: boolean = true) {
     // Add necessary permissions
     fs.chmodSync(destination, 0o7_5_5);
   }
-  
+
   // Validate that the file exists
   console.log("Looking for file at ", destination);
   if (!fs.existsSync(destination)) {
     // List the contents of the folder
-    const files = fs.readdirSync(path.join(getExtensionUri().fsPath, "server", "exe"));
+    const files = fs.readdirSync(
+      path.join(getExtensionUri().fsPath, "server", "exe")
+    );
     console.log("Files in server folder: ", files);
     const errText = `- Failed to install Continue server.`;
     vscode.window.showErrorMessage(errText);
@@ -236,9 +238,7 @@ export async function startContinuePythonServer(redownload: boolean = true) {
   const spawnChild = () => {
     const retry = (e: any) => {
       attempts++;
-      console.log(
-        `Error caught: ${e}.\n\nRetrying attempt ${attempts}...`
-      );
+      console.log(`Error caught: ${e}.\n\nRetrying attempt ${attempts}...`);
       setTimeout(spawnChild, delay);
     };
     try {
@@ -251,14 +251,14 @@ export async function startContinuePythonServer(redownload: boolean = true) {
         detached: true,
         stdio: "ignore",
       };
-      const settings: any = windowsSettings;
-      // os.platform() === "win32" ? windowsSettings : macLinuxSettings;
+      const settings: any =
+        os.platform() === "win32" ? windowsSettings : macLinuxSettings;
 
       // Spawn the server
       const child = spawn(destination, settings);
 
       // Either unref to avoid zombie process, or listen to events because you can
-      if (os.platform() === "win32" || true) {
+      if (os.platform() === "win32") {
         child.stdout.on("data", (data: any) => {
           console.log(`stdout: ${data}`);
         });
