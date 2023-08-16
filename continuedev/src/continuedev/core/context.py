@@ -147,7 +147,7 @@ class ContextManager:
         """
         # Use only non-meilisearch-dependent providers until it is loaded
         self.context_providers = {
-            title: provider for title, provider in self.context_providers.items() if title == "code"
+            provider.title: provider for provider in context_providers if provider.title == "code"
         }
         self.provider_titles = {
             provider.title for provider in context_providers}
