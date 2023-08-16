@@ -1,7 +1,5 @@
 # Collecting data
 
-You might have noticed the `Collect Data` toggle at the bottom of the Continue GUI. If you turn it on, it automatically collects accepted and rejected suggestions, so you can fine-tune an LLM to give better answers.
+When you use Continue, you automatically collect data on how you build software. By default, this development data is saved to `.continue/dev_data` on your local machine. When combined with the code that you ultimately commit, it can be used to improve the LLM that you or your team use (if you allow).
 
-Right now, it stores them in `.continue/suggestions.json` within your workspace. Going forward, we plan to enable you to join them with data from other developers on your team and help you fine-tune an LLM to better follow your team's best practices.
-
-If you are interested in working with us to fine-tune models based on your coding data, reach out to hi@continue.dev!
+You can read more about how development data is generated as a byproduct of LLM-aided development and why we believe that you should start collecting it now: blog.continue.dev/its-time-to-collect-data-on-how-you-build-software
