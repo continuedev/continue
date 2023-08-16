@@ -7,6 +7,8 @@ Continue can be deeply customized by editing the `ContinueConfig` object in `~/.
 In `config.py`, you'll find the `models` property:
 
 ```python
+from continuedev.src.continuedev.core.sdk import Models
+
 config = ContinueConfig(
     ...
     models=Models(
@@ -92,6 +94,24 @@ config = ContinueConfig(
         default=GGML(
             max_context_length=2048,
             server_url="http://localhost:8000")
+    )
+)
+```
+
+### Together
+
+The Together API is a cloud platform for running large AI models. You can sign up [here](https://api.together.xyz/signup), copy your API key on the initial welcome screen, and then hit the play button on any model from the [Together Models list](https://docs.together.ai/docs/models-inference). Change the config file to look like this:
+
+```python
+from continuedev.src.continuedev.libs.llm.replicate import ReplicateLLM
+
+config = ContinueConfig(
+    ...
+    models=Models(
+        default=TogetherLLM(
+            api_key="<API_KEY>",
+            model="togethercomputer/llama-2-13b-chat"
+        )
     )
 )
 ```
