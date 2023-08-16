@@ -89,19 +89,20 @@ class TogetherLLM(LLM):
         }) as resp:
             async for line in resp.content.iter_chunks():
                 if line[1]:
-                    try:
-                        json_chunk = line[0].decode("utf-8")
-                        if json_chunk.startswith(": ping - ") or json_chunk.startswith("data: [DONE]"):
-                            continue
-                        chunks = json_chunk.split("\n")
-                        for chunk in chunks:
-                            if chunk.strip() != "":
+                    json_chunk = line[0].decode("utf-8")
+                    if json_chunk.startswith(": ping - ") or json_chunk.startswith("data: [DONE]"):
+                        continue
+                    if json_chunk.startswith("data: "):
+                        json_chunk = json_chunk[6:]
+                    chunks = json_chunk.split("\n")
+                    for chunk in chunks:
+                        if chunk.strip() != "":
+                            json_chunk = json.loads(chunk)
+                            if "choices" in json_chunk:
                                 yield {
                                     "role": "assistant",
-                                    "content": json.loads(chunk[6:])["choices"][0]["text"]
+                                    "content": json_chunk["choices"][0]["text"]
                                 }
-                    except:
-                        raise Exception(str(line[0]))
 
     async def complete(self, prompt: str, with_history: List[ChatMessage] = None, **kwargs) -> Coroutine[Any, Any, str]:
         args = {**self.default_args, **kwargs}
@@ -117,6 +118,9 @@ class TogetherLLM(LLM):
             try:
                 text = await resp.text()
                 j = json.loads(text)
-                return j["output"]["choices"][0]["text"]
+                if "choices" not in j["output"]:
+                    raise Exception(text)
+                if "output" in j:
+                    return j["output"]["choices"][0]["text"]
             except:
                 raise Exception(await resp.text())
