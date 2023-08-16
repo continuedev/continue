@@ -86,7 +86,7 @@ const Layout = () => {
 
   useEffect(() => {
     const handleKeyDown = (event: any) => {
-      if (event.metaKey && event.altKey && event.key === "n") {
+      if (event.metaKey && event.altKey && event.code === "KeyN") {
         client?.loadSession(undefined);
       }
     };
