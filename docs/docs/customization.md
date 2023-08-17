@@ -241,53 +241,9 @@ config=ContinueConfig(
 
 Set `temperature` to any value between 0 and 1. Higher values will make the LLM more creative, while lower values will make it more predictable. The default is 0.5.
 
-## Custom Context Providers
+## Context Providers
 
-When you type '@' in the Continue text box, it will display a dropdown of items that can be selected to include in your message as context. For example, you might want to reference a GitHub Issue, file, or Slack thread. All of these options are provided by a `ContextProvider` class, and we make it easy to write your own. As an example, here is the `GitHubIssuesContextProvider`, which lets you search all open GitHub Issues in a repo:
-
-```python
-class GitHubIssuesContextProvider(ContextProvider):
-    """
-    The GitHubIssuesContextProvider is a ContextProvider that allows you to search GitHub issues in a repo.
-    """
-
-    title = "issues"
-    repo_name: str
-    auth_token: str
-
-    async def provide_context_items(self) -> List[ContextItem]:
-        auth = Auth.Token(self.auth_token)
-        gh = Github(auth=auth)
-
-        repo = gh.get_repo(self.repo_name)
-        issues = repo.get_issues().get_page(0)
-
-        return [ContextItem(
-            content=issue.body,
-            description=ContextItemDescription(
-                name=f"Issue #{issue.number}",
-                description=issue.title,
-                id=ContextItemId(
-                    provider_title=self.title,
-                    item_id=issue.id
-                )
-            )
-        ) for issue in issues]
-```
-
-It can then be set in the `ContinueConfig` like so:
-
-```python
-config = ContinueConfig(
-    ...
-    context_providers=[
-        GitHubIssuesContextProvider(
-            repo_name="my-github-username-or-org/my-github-repo",
-            auth_token="my-github-auth-token"
-        )
-    ]
-)
-```
+When you type '@' in the Continue text box, it will display a dropdown of items that can be selected to include in your message as context. For example, you might want to reference a GitHub Issue, file, or Slack thread. All of these options are provided by a `ContextProvider` class, and we make it easy to write your own or use our builtin options. See the [Context Providers](./context-providers.md) page for more info.
 
 ## Custom Policies
 
