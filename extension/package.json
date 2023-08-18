@@ -13,9 +13,9 @@
   "homepage": "https://continue.dev",
   "qna": "https://github.com/continuedev/continue/issues/new/choose",
   "license": "Apache-2.0",
-  "displayName": "Continue",
+  "displayName": "Continue - ChatGPT for VS Code",
   "pricing": "Free",
-  "description": "The open-source coding autopilot",
+  "description": "Open-source copilot for software development - bring the power of ChatGPT to your IDE",
   "publisher": "Continue",
   "engines": {
     "vscode": "^1.67.0"
@@ -27,11 +27,12 @@
     "Snippets"
   ],
   "keywords": [
+    "chatgpt",
+    "github",
     "copilot",
-    "copilot",
-    "copilot",
-    "copilot",
-    "copilot"
+    "openai",
+    "gpt4",
+    "ai"
   ],
   "activationEvents": [
     "onStartupFinished",
