@@ -1,13 +1,12 @@
 import os
-from typing import List, Optional
 import uuid
+from typing import List, Optional
+
 from pydantic import BaseModel
 
-from ...core.main import ContextItemId
 from ...core.context import ContextProvider
 from ...core.main import ContextItem, ContextItemDescription, ContextItemId
 from ...libs.chroma.query import ChromaIndexManager
-from .util import remove_meilisearch_disallowed_chars
 
 
 class EmbeddingResult(BaseModel):
@@ -41,10 +40,9 @@ class EmbeddingsProvider(ContextProvider):
                 name="Embedding Search",
                 description="Enter a query to embedding search codebase",
                 id=ContextItemId(
-                    provider_title=self.title,
-                    item_id=self.EMBEDDINGS_CONTEXT_ITEM_ID
-                )
-            )
+                    provider_title=self.title, item_id=self.EMBEDDINGS_CONTEXT_ITEM_ID
+                ),
+            ),
         )
 
     async def _get_query_results(self, query: str) -> str:
@@ -53,9 +51,8 @@ class EmbeddingsProvider(ContextProvider):
         ret = []
         for node in results.source_nodes:
             resource_name = list(node.node.relationships.values())[0]
-            filepath = resource_name[:resource_name.index("::")]
-            ret.append(EmbeddingResult(
-                filename=filepath, content=node.node.text))
+            filepath = resource_name[: resource_name.index("::")]
+            ret.append(EmbeddingResult(filename=filepath, content=node.node.text))
 
         return ret
 

@@ -1,10 +1,13 @@
-from typing import Optional, Any
-from pydantic import BaseModel, validator
+from typing import Any, Optional
+
+from pydantic import BaseModel
+
 from ..libs.llm import LLM
 
 
 class Models(BaseModel):
     """Main class that holds the current model configuration"""
+
     default: LLM
     small: Optional[LLM] = None
     medium: Optional[LLM] = None

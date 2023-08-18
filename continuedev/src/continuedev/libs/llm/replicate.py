@@ -1,10 +1,10 @@
-from abc import abstractproperty
-from typing import List, Optional
-import replicate
 import concurrent.futures
+from typing import List
 
-from ..util.count_tokens import DEFAULT_ARGS, count_tokens
+import replicate
+
 from ...core.main import ChatMessage
+from ..util.count_tokens import DEFAULT_ARGS, count_tokens
 from . import LLM
 
 
@@ -36,10 +36,12 @@ class ReplicateLLM(LLM):
     async def stop(self):
         pass
 
-    async def complete(self, prompt: str, with_history: List[ChatMessage] = None, **kwargs):
+    async def complete(
+        self, prompt: str, with_history: List[ChatMessage] = None, **kwargs
+    ):
         def helper():
             output = self._client.run(self.model, input={"message": prompt})
-            completion = ''
+            completion = ""
             for item in output:
                 completion += item
 
@@ -51,13 +53,14 @@ class ReplicateLLM(LLM):
 
         return completion
 
-    async def stream_complete(self, prompt, with_history: List[ChatMessage] = None, **kwargs):
+    async def stream_complete(
+        self, prompt, with_history: List[ChatMessage] = None, **kwargs
+    ):
         for item in self._client.run(self.model, input={"message": prompt}):
             yield item
 
     async def stream_chat(self, messages: List[ChatMessage] = None, **kwargs):
-        for item in self._client.run(self.model, input={"message": messages[-1].content}):
-            yield {
-                "content": item,
-                "role": "assistant"
-            }
+        for item in self._client.run(
+            self.model, input={"message": messages[-1].content}
+        ):
+            yield {"content": item, "role": "assistant"}

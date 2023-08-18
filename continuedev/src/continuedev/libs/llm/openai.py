@@ -1,12 +1,28 @@
-from typing import Any, Callable, Coroutine, Dict, Generator, List, Literal, Union, Optional
+from typing import (
+    Any,
+    Callable,
+    Coroutine,
+    Dict,
+    Generator,
+    List,
+    Literal,
+    Optional,
+    Union,
+)
 
-from pydantic import BaseModel
+import certifi
 import openai
+from pydantic import BaseModel
 
 from ...core.main import ChatMessage
-from ..util.count_tokens import compile_chat_messages, DEFAULT_ARGS, count_tokens, format_chat_messages, prune_raw_prompt_from_top
 from ..llm import LLM
-import certifi
+from ..util.count_tokens import (
+    DEFAULT_ARGS,
+    compile_chat_messages,
+    count_tokens,
+    format_chat_messages,
+    prune_raw_prompt_from_top,
+)
 
 
 class OpenAIServerInfo(BaseModel):
@@ -16,9 +32,7 @@ class OpenAIServerInfo(BaseModel):
     api_type: Literal["azure", "openai"] = "openai"
 
 
-CHAT_MODELS = {
-    "gpt-3.5-turbo", "gpt-3.5-turbo-16k", "gpt-4", "gpt-3.5-turbo-0613"
-}
+CHAT_MODELS = {"gpt-3.5-turbo", "gpt-3.5-turbo-16k", "gpt-4", "gpt-3.5-turbo-0613"}
 MAX_TOKENS_FOR_MODEL = {
     "gpt-3.5-turbo": 4096,
     "gpt-3.5-turbo-0613": 4096,
@@ -27,7 +41,7 @@ MAX_TOKENS_FOR_MODEL = {
     "gpt-35-turbo-16k": 16_384,
     "gpt-35-turbo-0613": 4096,
     "gpt-35-turbo": 4096,
-    "gpt-4-32k": 32_768
+    "gpt-4-32k": 32_768,
 }
 
 
@@ -43,7 +57,13 @@ class OpenAI(LLM):
     system_message: Optional[str] = None
     write_log: Optional[Callable[[str], None]] = None
 
-    async def start(self, *, api_key: Optional[str] = None, write_log: Callable[[str], None], **kwargs):
+    async def start(
+        self,
+        *,
+        api_key: Optional[str] = None,
+        write_log: Callable[[str], None],
+        **kwargs,
+    ):
         self.write_log = write_log
         openai.api_key = self.api_key
 
@@ -54,7 +74,7 @@ class OpenAI(LLM):
             if self.openai_server_info.api_version is not None:
                 openai.api_version = self.openai_server_info.api_version
 
-        if self.verify_ssl == False:
+        if self.verify_ssl is False:
             openai.verify_ssl_certs = False
 
         openai.ca_bundle_path = self.ca_bundle_path or certifi.where()
@@ -80,14 +100,23 @@ class OpenAI(LLM):
     def count_tokens(self, text: str):
         return count_tokens(self.model, text)
 
-    async def stream_complete(self, prompt, with_history: List[ChatMessage] = None, **kwargs) -> Generator[Union[Any, List, Dict], None, None]:
+    async def stream_complete(
+        self, prompt, with_history: List[ChatMessage] = None, **kwargs
+    ) -> Generator[Union[Any, List, Dict], None, None]:
         args = self.default_args.copy()
         args.update(kwargs)
         args["stream"] = True
 
         if args["model"] in CHAT_MODELS:
             messages = compile_chat_messages(
-                args["model"], with_history, self.context_length, args["max_tokens"], prompt, functions=None, system_message=self.system_message)
+                args["model"],
+                with_history,
+                self.context_length,
+                args["max_tokens"],
+                prompt,
+                functions=None,
+                system_message=self.system_message,
+            )
             self.write_log(f"Prompt: \n\n{format_chat_messages(messages)}")
             completion = ""
             async for chunk in await openai.ChatCompletion.acreate(
@@ -110,17 +139,28 @@ class OpenAI(LLM):
 
             self.write_log(f"Completion:\n\n{completion}")
 
-    async def stream_chat(self, messages: List[ChatMessage] = None, **kwargs) -> Generator[Union[Any, List, Dict], None, None]:
+    async def stream_chat(
+        self, messages: List[ChatMessage] = None, **kwargs
+    ) -> Generator[Union[Any, List, Dict], None, None]:
         args = self.default_args.copy()
         args.update(kwargs)
         args["stream"] = True
         # TODO what to do here? why should we change to gpt-3.5-turbo-0613 if the user didn't ask for it?
-        args["model"] = self.model if self.model in CHAT_MODELS else "gpt-3.5-turbo-0613"
+        args["model"] = (
+            self.model if self.model in CHAT_MODELS else "gpt-3.5-turbo-0613"
+        )
         if not args["model"].endswith("0613") and "functions" in args:
             del args["functions"]
 
         messages = compile_chat_messages(
-            args["model"], messages, self.context_length, args["max_tokens"], None, functions=args.get("functions", None), system_message=self.system_message)
+            args["model"],
+            messages,
+            self.context_length,
+            args["max_tokens"],
+            None,
+            functions=args.get("functions", None),
+            system_message=self.system_message,
+        )
         self.write_log(f"Prompt: \n\n{format_chat_messages(messages)}")
         completion = ""
         async for chunk in await openai.ChatCompletion.acreate(
@@ -132,26 +172,48 @@ class OpenAI(LLM):
                 completion += chunk.choices[0].delta.content
         self.write_log(f"Completion: \n\n{completion}")
 
-    async def complete(self, prompt: str, with_history: List[ChatMessage] = None, **kwargs) -> Coroutine[Any, Any, str]:
+    async def complete(
+        self, prompt: str, with_history: List[ChatMessage] = None, **kwargs
+    ) -> Coroutine[Any, Any, str]:
         args = {**self.default_args, **kwargs}
 
         if args["model"] in CHAT_MODELS:
             messages = compile_chat_messages(
-                args["model"], with_history, self.context_length, args["max_tokens"], prompt, functions=None, system_message=self.system_message)
+                args["model"],
+                with_history,
+                self.context_length,
+                args["max_tokens"],
+                prompt,
+                functions=None,
+                system_message=self.system_message,
+            )
             self.write_log(f"Prompt: \n\n{format_chat_messages(messages)}")
-            resp = (await openai.ChatCompletion.acreate(
-                messages=messages,
-                **args,
-            )).choices[0].message.content
+            resp = (
+                (
+                    await openai.ChatCompletion.acreate(
+                        messages=messages,
+                        **args,
+                    )
+                )
+                .choices[0]
+                .message.content
+            )
             self.write_log(f"Completion: \n\n{resp}")
         else:
             prompt = prune_raw_prompt_from_top(
-                args["model"], self.context_length, prompt, args["max_tokens"])
+                args["model"], self.context_length, prompt, args["max_tokens"]
+            )
             self.write_log(f"Prompt:\n\n{prompt}")
-            resp = (await openai.Completion.acreate(
-                prompt=prompt,
-                **args,
-            )).choices[0].text
+            resp = (
+                (
+                    await openai.Completion.acreate(
+                        prompt=prompt,
+                        **args,
+                    )
+                )
+                .choices[0]
+                .text
+            )
             self.write_log(f"Completion:\n\n{resp}")
 
         return resp

@@ -1,26 +1,22 @@
-from .main import *
-from .filesystem import RangeInFile, FileEdit
-from .filesystem_edit import FileEditWithFullContents
-from ..core.main import History, HistoryNode, FullState, SessionInfo
-from ..core.context import ContextItem
-from pydantic import schema_json_of
 import os
 
-MODELS_TO_GENERATE = [
-    Position, Range, Traceback, TracebackFrame
-] + [
-    RangeInFile, FileEdit
-] + [
-    FileEditWithFullContents
-] + [
-    History, HistoryNode, FullState, SessionInfo
-] + [
-    ContextItem
-]
+from pydantic import schema_json_of
 
-RENAMES = {
-    "ExampleClass": "RenamedName"
-}
+from ..core.context import ContextItem
+from ..core.main import FullState, History, HistoryNode, SessionInfo
+from .filesystem import FileEdit, RangeInFile
+from .filesystem_edit import FileEditWithFullContents
+from .main import *
+
+MODELS_TO_GENERATE = (
+    [Position, Range, Traceback, TracebackFrame]
+    + [RangeInFile, FileEdit]
+    + [FileEditWithFullContents]
+    + [History, HistoryNode, FullState, SessionInfo]
+    + [ContextItem]
+)
+
+RENAMES = {"ExampleClass": "RenamedName"}
 
 SCHEMA_DIR = "../schema/json"
 

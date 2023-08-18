@@ -1,8 +1,13 @@
 from typing import List
-from github import Github
-from github import Auth
 
-from ...core.context import ContextProvider, ContextItemDescription, ContextItem, ContextItemId
+from github import Auth, Github
+
+from ...core.context import (
+    ContextItem,
+    ContextItemDescription,
+    ContextItemId,
+    ContextProvider,
+)
 
 
 class GitHubIssuesContextProvider(ContextProvider):
@@ -22,14 +27,14 @@ class GitHubIssuesContextProvider(ContextProvider):
         repo = gh.get_repo(self.repo_name)
         issues = repo.get_issues().get_page(0)
 
-        return [ContextItem(
-            content=issue.body,
-            description=ContextItemDescription(
-                name=f"Issue #{issue.number}",
-                description=issue.title,
-                id=ContextItemId(
-                    provider_title=self.title,
-                    item_id=issue.id
-                )
+        return [
+            ContextItem(
+                content=issue.body,
+                description=ContextItemDescription(
+                    name=f"Issue #{issue.number}",
+                    description=issue.title,
+                    id=ContextItemId(provider_title=self.title, item_id=issue.id),
+                ),
             )
-        ) for issue in issues]
+            for issue in issues
+        ]

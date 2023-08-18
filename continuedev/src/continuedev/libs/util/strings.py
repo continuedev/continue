@@ -43,7 +43,9 @@ def remove_quotes_and_escapes(output: str) -> str:
     output = output.replace("\\n", "\n")
     output = output.replace("\\t", "\t")
     output = output.replace("\\\\", "\\")
-    if (output.startswith('"') and output.endswith('"')) or (output.startswith("'") and output.endswith("'")):
+    if (output.startswith('"') and output.endswith('"')) or (
+        output.startswith("'") and output.endswith("'")
+    ):
         output = output[1:-1]
 
     return output

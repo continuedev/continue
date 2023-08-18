@@ -1,11 +1,10 @@
-from abc import ABC, abstractmethod, abstractproperty
+from abc import ABC, abstractmethod
 from typing import Coroutine, List, Union
 
-from .config import ContinueConfig
 from ..models.filesystem_edit import FileSystemEdit
+from .config import ContinueConfig
+from .main import ChatMessage, History, Step
 from .observation import Observation
-from .main import ChatMessage, History, Step, ChatMessageRole
-
 
 """
 [[Generate]]

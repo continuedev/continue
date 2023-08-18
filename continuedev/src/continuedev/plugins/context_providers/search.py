@@ -1,10 +1,11 @@
 import os
 from typing import List
+
 from ripgrepy import Ripgrepy
 
-from .util import remove_meilisearch_disallowed_chars
-from ...core.main import ContextItem, ContextItemDescription, ContextItemId
 from ...core.context import ContextProvider
+from ...core.main import ContextItem, ContextItemDescription, ContextItemId
+from .util import remove_meilisearch_disallowed_chars
 
 
 class SearchContextProvider(ContextProvider):
@@ -22,17 +23,16 @@ class SearchContextProvider(ContextProvider):
                 name="Search",
                 description="Search the workspace for all matches of an exact string (e.g. '@search console.log')",
                 id=ContextItemId(
-                    provider_title=self.title,
-                    item_id=self.SEARCH_CONTEXT_ITEM_ID
-                )
-            )
+                    provider_title=self.title, item_id=self.SEARCH_CONTEXT_ITEM_ID
+                ),
+            ),
         )
 
     def _get_rg_path(self):
-        if os.name == 'nt':
+        if os.name == "nt":
             rg_path = f"C:\\Users\\{os.getlogin()}\\AppData\\Local\\Programs\\Microsoft VS Code\\resources\\app\\node_modules.asar.unpacked\\vscode-ripgrep\\bin\\rg.exe"
-        elif os.name == 'posix':
-            if 'darwin' in os.sys.platform:
+        elif os.name == "posix":
+            if "darwin" in os.sys.platform:
                 rg_path = "/Applications/Visual Studio Code.app/Contents/Resources/app/node_modules.asar.unpacked/@vscode/ripgrep/bin/rg"
             else:
                 rg_path = "/usr/share/code/resources/app/node_modules.asar.unpacked/vscode-ripgrep/bin/rg"
@@ -87,6 +87,5 @@ class SearchContextProvider(ContextProvider):
         ctx_item = self.BASE_CONTEXT_ITEM.copy()
         ctx_item.content = results
         ctx_item.description.name = f"Search: '{query}'"
-        ctx_item.description.id.item_id = remove_meilisearch_disallowed_chars(
-            query)
+        ctx_item.description.id.item_id = remove_meilisearch_disallowed_chars(query)
         return ctx_item

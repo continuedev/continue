@@ -1,11 +1,10 @@
 import os
-import re
-from typing import List
-from ...core.main import ContextItem, ContextItemDescription, ContextItemId
-from ...core.context import ContextProvider
-from .util import remove_meilisearch_disallowed_chars
 from fnmatch import fnmatch
+from typing import List
 
+from ...core.context import ContextProvider
+from ...core.main import ContextItem, ContextItemDescription, ContextItemId
+from .util import remove_meilisearch_disallowed_chars
 
 MAX_SIZE_IN_BYTES = 1024 * 1024 * 1
 
@@ -18,7 +17,7 @@ def get_file_contents(filepath: str) -> str:
 
         with open(filepath, "r") as f:
             return f.read()
-    except Exception as e:
+    except Exception:
         # Some files cannot be read, e.g. binary files
         return None
 
@@ -40,7 +39,7 @@ DEFAULT_IGNORE_DIRS = [
     ".pytest_cache",
     ".vscode-test",
     ".continue",
-    "__pycache__"
+    "__pycache__",
 ]
 
 
@@ -50,14 +49,18 @@ class FileContextProvider(ContextProvider):
     """
 
     title = "file"
-    ignore_patterns: List[str] = DEFAULT_IGNORE_DIRS + \
-        list(filter(lambda d: f"**/{d}", DEFAULT_IGNORE_DIRS))
+    ignore_patterns: List[str] = DEFAULT_IGNORE_DIRS + list(
+        filter(lambda d: f"**/{d}", DEFAULT_IGNORE_DIRS)
+    )
 
     async def provide_context_items(self, workspace_dir: str) -> List[ContextItem]:
         absolute_filepaths: List[str] = []
         for root, dir_names, file_names in os.walk(workspace_dir):
-            dir_names[:] = [d for d in dir_names if not any(
-                fnmatch(d, pattern) for pattern in self.ignore_patterns)]
+            dir_names[:] = [
+                d
+                for d in dir_names
+                if not any(fnmatch(d, pattern) for pattern in self.ignore_patterns)
+            ]
             for file_name in file_names:
                 absolute_filepaths.append(os.path.join(root, file_name))
 
@@ -72,20 +75,24 @@ class FileContextProvider(ContextProvider):
             content = get_file_contents(absolute_filepath)
             if content is None:
                 continue  # no pun intended
-            
+
             relative_to_workspace = os.path.relpath(absolute_filepath, workspace_dir)
 
-            items.append(ContextItem(
-                content=content[:min(2000, len(content))],
-                description=ContextItemDescription(
-                    name=os.path.basename(absolute_filepath),
-                    # We should add the full path to the ContextItem
-                    # It warrants a data modeling discussion and has no immediate use case
-                    description=relative_to_workspace,
-                    id=ContextItemId(
-                        provider_title=self.title,
-                        item_id=remove_meilisearch_disallowed_chars(absolute_filepath)
-                    )
+            items.append(
+                ContextItem(
+                    content=content[: min(2000, len(content))],
+                    description=ContextItemDescription(
+                        name=os.path.basename(absolute_filepath),
+                        # We should add the full path to the ContextItem
+                        # It warrants a data modeling discussion and has no immediate use case
+                        description=relative_to_workspace,
+                        id=ContextItemId(
+                            provider_title=self.title,
+                            item_id=remove_meilisearch_disallowed_chars(
+                                absolute_filepath
+                            ),
+                        ),
+                    ),
                 )
-            ))
+            )
         return items

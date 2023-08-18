@@ -1,7 +1,5 @@
-from typing import Any, Dict, List
 from abc import ABC, abstractmethod
-
-from ..core.context import ContextItem
+from typing import Any
 
 
 class AbstractGUIProtocolServer(ABC):

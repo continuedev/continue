@@ -5,8 +5,8 @@ import subprocess
 
 from meilisearch_python_async import Client
 
-from ..libs.util.paths import getServerFolderPath
 from ..libs.util.logging import logger
+from ..libs.util.paths import getServerFolderPath
 
 
 def ensure_meilisearch_installed() -> bool:
@@ -43,7 +43,11 @@ def ensure_meilisearch_installed() -> bool:
         # Download MeiliSearch
         logger.debug("Downloading MeiliSearch...")
         subprocess.run(
-            f"curl -L https://install.meilisearch.com | sh", shell=True, check=True, cwd=serverPath)
+            "curl -L https://install.meilisearch.com | sh",
+            shell=True,
+            check=True,
+            cwd=serverPath,
+        )
 
         return False
 
@@ -56,7 +60,7 @@ async def check_meilisearch_running() -> bool:
     """
 
     try:
-        async with Client('http://localhost:7700') as client:
+        async with Client("http://localhost:7700") as client:
             try:
                 resp = await client.health()
                 if resp.status != "available":
@@ -96,5 +100,11 @@ async def start_meilisearch():
     # Check if MeiliSearch is running
     if not await check_meilisearch_running() or not was_already_installed:
         logger.debug("Starting MeiliSearch...")
-        subprocess.Popen(["./meilisearch", "--no-analytics"], cwd=serverPath, stdout=subprocess.DEVNULL,
-                         stderr=subprocess.STDOUT, close_fds=True, start_new_session=True)
+        subprocess.Popen(
+            ["./meilisearch", "--no-analytics"],
+            cwd=serverPath,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.STDOUT,
+            close_fds=True,
+            start_new_session=True,
+        )

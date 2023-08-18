@@ -1,5 +1,5 @@
 from ...core.main import Step
-from ...core.sdk import Models, ContinueSDK
+from ...core.sdk import ContinueSDK, Models
 
 
 class StepsOnStartupStep(Step):

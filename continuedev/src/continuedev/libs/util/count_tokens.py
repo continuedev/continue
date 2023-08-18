@@ -1,10 +1,10 @@
 import json
 from typing import Dict, List, Union
+
+import tiktoken
+
 from ...core.main import ChatMessage
 from .templating import render_templated_string
-from ...libs.llm import LLM
-from tiktoken_ext import openai_public
-import tiktoken
 
 # TODO move many of these into specific LLM.properties() function that
 # contains max tokens, if its a chat model or not, default args (not all models
@@ -15,8 +15,13 @@ aliases = {
     "claude-2": "gpt-3.5-turbo",
 }
 DEFAULT_MAX_TOKENS = 2048
-DEFAULT_ARGS = {"max_tokens": DEFAULT_MAX_TOKENS, "temperature": 0.5, "top_p": 1,
-                "frequency_penalty": 0, "presence_penalty": 0}
+DEFAULT_ARGS = {
+    "max_tokens": DEFAULT_MAX_TOKENS,
+    "temperature": 0.5,
+    "top_p": 1,
+    "frequency_penalty": 0,
+    "presence_penalty": 0,
+}
 
 
 def encoding_for_model(model_name: str):
@@ -41,7 +46,9 @@ def count_chat_message_tokens(model_name: str, chat_message: ChatMessage) -> int
     return count_tokens(model_name, chat_message.content) + TOKENS_PER_MESSAGE
 
 
-def prune_raw_prompt_from_top(model_name: str, context_length: int, prompt: str, tokens_for_completion: int):
+def prune_raw_prompt_from_top(
+    model_name: str, context_length: int, prompt: str, tokens_for_completion: int
+):
     max_tokens = context_length - tokens_for_completion
     encoding = encoding_for_model(model_name)
     tokens = encoding.encode(prompt, disallowed_special=())
@@ -51,10 +58,15 @@ def prune_raw_prompt_from_top(model_name: str, context_length: int, prompt: str,
         return encoding.decode(tokens[-max_tokens:])
 
 
-def prune_chat_history(model_name: str, chat_history: List[ChatMessage], context_length: int, tokens_for_completion: int):
-    total_tokens = tokens_for_completion + \
-        sum(count_chat_message_tokens(model_name, message)
-            for message in chat_history)
+def prune_chat_history(
+    model_name: str,
+    chat_history: List[ChatMessage],
+    context_length: int,
+    tokens_for_completion: int,
+):
+    total_tokens = tokens_for_completion + sum(
+        count_chat_message_tokens(model_name, message) for message in chat_history
+    )
 
     # 1. Replace beyond last 5 messages with summary
     i = 0
@@ -66,13 +78,21 @@ def prune_chat_history(model_name: str, chat_history: List[ChatMessage], context
         i += 1
 
     # 2. Remove entire messages until the last 5
-    while len(chat_history) > 5 and total_tokens > context_length and len(chat_history) > 0:
+    while (
+        len(chat_history) > 5
+        and total_tokens > context_length
+        and len(chat_history) > 0
+    ):
         message = chat_history.pop(0)
         total_tokens -= count_tokens(model_name, message.content)
 
     # 3. Truncate message in the last 5, except last 1
     i = 0
-    while total_tokens > context_length and len(chat_history) > 0 and i < len(chat_history) - 1:
+    while (
+        total_tokens > context_length
+        and len(chat_history) > 0
+        and i < len(chat_history) - 1
+    ):
         message = chat_history[i]
         total_tokens -= count_tokens(model_name, message.content)
         total_tokens += count_tokens(model_name, message.summary)
@@ -88,7 +108,8 @@ def prune_chat_history(model_name: str, chat_history: List[ChatMessage], context
     if total_tokens > context_length and len(chat_history) > 0:
         message = chat_history[0]
         message.content = prune_raw_prompt_from_top(
-            model_name, context_length, message.content, tokens_for_completion)
+            model_name, context_length, message.content, tokens_for_completion
+        )
         total_tokens = context_length
 
     return chat_history
@@ -98,12 +119,19 @@ def prune_chat_history(model_name: str, chat_history: List[ChatMessage], context
 TOKEN_BUFFER_FOR_SAFETY = 100
 
 
-def compile_chat_messages(model_name: str, msgs: Union[List[ChatMessage], None], context_length: int, max_tokens: int, prompt: Union[str, None] = None, functions: Union[List, None] = None, system_message: Union[str, None] = None) -> List[Dict]:
+def compile_chat_messages(
+    model_name: str,
+    msgs: Union[List[ChatMessage], None],
+    context_length: int,
+    max_tokens: int,
+    prompt: Union[str, None] = None,
+    functions: Union[List, None] = None,
+    system_message: Union[str, None] = None,
+) -> List[Dict]:
     """
     The total number of tokens is system_message + sum(msgs) + functions + prompt after it is converted to a message
     """
-    msgs_copy = [msg.copy(deep=True)
-                 for msg in msgs] if msgs is not None else []
+    msgs_copy = [msg.copy(deep=True) for msg in msgs] if msgs is not None else []
 
     if prompt is not None:
         prompt_msg = ChatMessage(role="user", content=prompt, summary=prompt)
@@ -114,7 +142,10 @@ def compile_chat_messages(model_name: str, msgs: Union[List[ChatMessage], None],
         # but move back to start after processing
         rendered_system_message = render_templated_string(system_message)
         system_chat_msg = ChatMessage(
-            role="system", content=rendered_system_message, summary=rendered_system_message)
+            role="system",
+            content=rendered_system_message,
+            summary=rendered_system_message,
+        )
         # insert at second-to-last position
         msgs_copy.insert(-1, system_chat_msg)
 
@@ -125,13 +156,20 @@ def compile_chat_messages(model_name: str, msgs: Union[List[ChatMessage], None],
             function_tokens += count_tokens(model_name, json.dumps(function))
 
     msgs_copy = prune_chat_history(
-        model_name, msgs_copy, context_length, function_tokens + max_tokens + TOKEN_BUFFER_FOR_SAFETY)
+        model_name,
+        msgs_copy,
+        context_length,
+        function_tokens + max_tokens + TOKEN_BUFFER_FOR_SAFETY,
+    )
 
-    history = [msg.to_dict(with_functions=functions is not None)
-               for msg in msgs_copy]
+    history = [msg.to_dict(with_functions=functions is not None) for msg in msgs_copy]
 
     # Move system message back to start
-    if system_message is not None and len(history) >= 2 and history[-2]["role"] == "system":
+    if (
+        system_message is not None
+        and len(history) >= 2
+        and history[-2]["role"] == "system"
+    ):
         system_message_dict = history.pop(-2)
         history.insert(0, system_message_dict)
 

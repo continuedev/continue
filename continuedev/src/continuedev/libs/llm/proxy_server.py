@@ -1,13 +1,29 @@
 import json
+import ssl
 import traceback
-from typing import Any, Callable, Coroutine, Dict, Generator, List, Literal, Union, Optional
+from typing import (
+    Any,
+    Callable,
+    Coroutine,
+    Dict,
+    Generator,
+    List,
+    Optional,
+    Union,
+)
+
 import aiohttp
+import certifi
+
 from ...core.main import ChatMessage
 from ..llm import LLM
+from ..util.count_tokens import (
+    DEFAULT_ARGS,
+    compile_chat_messages,
+    count_tokens,
+    format_chat_messages,
+)
 from ..util.telemetry import posthog_logger
-from ..util.count_tokens import DEFAULT_ARGS, compile_chat_messages, count_tokens, format_chat_messages
-import certifi
-import ssl
 
 ca_bundle_path = certifi.where()
 ssl_context = ssl.create_default_context(cafile=ca_bundle_path)
@@ -37,9 +53,17 @@ class ProxyServer(LLM):
     class Config:
         arbitrary_types_allowed = True
 
-    async def start(self, *, api_key: Optional[str] = None, write_log: Callable[[str], None], unique_id: str, **kwargs):
+    async def start(
+        self,
+        *,
+        api_key: Optional[str] = None,
+        write_log: Callable[[str], None],
+        unique_id: str,
+        **kwargs,
+    ):
         self._client_session = aiohttp.ClientSession(
-            connector=aiohttp.TCPConnector(ssl_context=ssl_context))
+            connector=aiohttp.TCPConnector(ssl_context=ssl_context)
+        )
         self.write_log = write_log
         self.unique_id = unique_id
 
@@ -65,16 +89,26 @@ class ProxyServer(LLM):
         # headers with unique id
         return {"unique_id": self.unique_id}
 
-    async def complete(self, prompt: str, with_history: List[ChatMessage] = None, **kwargs) -> Coroutine[Any, Any, str]:
+    async def complete(
+        self, prompt: str, with_history: List[ChatMessage] = None, **kwargs
+    ) -> Coroutine[Any, Any, str]:
         args = {**self.default_args, **kwargs}
 
         messages = compile_chat_messages(
-            args["model"], with_history, self.context_length, args["max_tokens"], prompt, functions=None, system_message=self.system_message)
+            args["model"],
+            with_history,
+            self.context_length,
+            args["max_tokens"],
+            prompt,
+            functions=None,
+            system_message=self.system_message,
+        )
         self.write_log(f"Prompt: \n\n{format_chat_messages(messages)}")
-        async with self._client_session.post(f"{SERVER_URL}/complete", json={
-            "messages": messages,
-            **args
-        }, headers=self.get_headers()) as resp:
+        async with self._client_session.post(
+            f"{SERVER_URL}/complete",
+            json={"messages": messages, **args},
+            headers=self.get_headers(),
+        ) as resp:
             if resp.status != 200:
                 raise Exception(await resp.text())
 
@@ -82,16 +116,26 @@ class ProxyServer(LLM):
             self.write_log(f"Completion: \n\n{response_text}")
             return response_text
 
-    async def stream_chat(self, messages: List[ChatMessage] = None, **kwargs) -> Coroutine[Any, Any, Generator[Union[Any, List, Dict], None, None]]:
+    async def stream_chat(
+        self, messages: List[ChatMessage] = None, **kwargs
+    ) -> Coroutine[Any, Any, Generator[Union[Any, List, Dict], None, None]]:
         args = {**self.default_args, **kwargs}
         messages = compile_chat_messages(
-            args["model"], messages, self.context_length, args["max_tokens"], None, functions=args.get("functions", None), system_message=self.system_message)
+            args["model"],
+            messages,
+            self.context_length,
+            args["max_tokens"],
+            None,
+            functions=args.get("functions", None),
+            system_message=self.system_message,
+        )
         self.write_log(f"Prompt: \n\n{format_chat_messages(messages)}")
 
-        async with self._client_session.post(f"{SERVER_URL}/stream_chat", json={
-            "messages": messages,
-            **args
-        }, headers=self.get_headers()) as resp:
+        async with self._client_session.post(
+            f"{SERVER_URL}/stream_chat",
+            json={"messages": messages, **args},
+            headers=self.get_headers(),
+        ) as resp:
             # This is streaming application/json instaed of text/event-stream
             completion = ""
             if resp.status != 200:
@@ -109,23 +153,40 @@ class ProxyServer(LLM):
                                 if "content" in loaded_chunk:
                                     completion += loaded_chunk["content"]
                     except Exception as e:
-                        posthog_logger.capture_event("proxy_server_parse_error", {
-                            "error_title": "Proxy server stream_chat parsing failed", "error_message": '\n'.join(traceback.format_exception(e))})
+                        posthog_logger.capture_event(
+                            "proxy_server_parse_error",
+                            {
+                                "error_title": "Proxy server stream_chat parsing failed",
+                                "error_message": "\n".join(
+                                    traceback.format_exception(e)
+                                ),
+                            },
+                        )
                 else:
                     break
 
             self.write_log(f"Completion: \n\n{completion}")
 
-    async def stream_complete(self, prompt, with_history: List[ChatMessage] = None, **kwargs) -> Generator[Union[Any, List, Dict], None, None]:
+    async def stream_complete(
+        self, prompt, with_history: List[ChatMessage] = None, **kwargs
+    ) -> Generator[Union[Any, List, Dict], None, None]:
         args = {**self.default_args, **kwargs}
         messages = compile_chat_messages(
-            self.model, with_history, self.context_length, args["max_tokens"], prompt, functions=args.get("functions", None), system_message=self.system_message)
+            self.model,
+            with_history,
+            self.context_length,
+            args["max_tokens"],
+            prompt,
+            functions=args.get("functions", None),
+            system_message=self.system_message,
+        )
         self.write_log(f"Prompt: \n\n{format_chat_messages(messages)}")
 
-        async with self._client_session.post(f"{SERVER_URL}/stream_complete", json={
-            "messages": messages,
-            **args
-        }, headers=self.get_headers()) as resp:
+        async with self._client_session.post(
+            f"{SERVER_URL}/stream_complete",
+            json={"messages": messages, **args},
+            headers=self.get_headers(),
+        ) as resp:
             completion = ""
             if resp.status != 200:
                 raise Exception(await resp.text())

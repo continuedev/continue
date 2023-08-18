@@ -1,9 +1,9 @@
-from textwrap import dedent
 import os
+from textwrap import dedent
 
-from ...models.filesystem_edit import AddFile
 from ...core.main import Step
 from ...core.sdk import ContinueSDK, Models
+from ...models.filesystem_edit import AddFile
 
 
 class WelcomeStep(Step):
@@ -21,13 +21,20 @@ class WelcomeStep(Step):
         if not os.path.exists(continue_dir):
             os.mkdir(continue_dir)
 
-        await sdk.ide.applyFileSystemEdit(AddFile(filepath=filepath, content=dedent("""\
+        await sdk.ide.applyFileSystemEdit(
+            AddFile(
+                filepath=filepath,
+                content=dedent(
+                    """\
             \"\"\"
             Welcome to Continue! To learn how to use it, delete this comment and try to use Continue for the following:
             - "Write me a calculator class"
             - Ask for a new method (e.g. "exp", "mod", "sqrt")
             - Type /comment to write comments for the entire class
             - Ask about how the class works, how to write it in another language, etc.
-            \"\"\"""")))
+            \"\"\""""
+                ),
+            )
+        )
 
         # await sdk.ide.setFileOpen(filepath=filepath)

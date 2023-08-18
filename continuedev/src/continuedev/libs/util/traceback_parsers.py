@@ -15,11 +15,16 @@ def get_javascript_traceback(output: str) -> str:
     first_line = None
     for i in range(len(lines) - 1):
         segs = lines[i].split(":")
-        if len(segs) > 1 and segs[0] != "" and segs[1].startswith(" ") and lines[i + 1].strip().startswith("at"):
+        if (
+            len(segs) > 1
+            and segs[0] != ""
+            and segs[1].startswith(" ")
+            and lines[i + 1].strip().startswith("at")
+        ):
             first_line = lines[i]
             break
 
     if first_line is not None:
-        return "\n".join(lines[lines.index(first_line):])
+        return "\n".join(lines[lines.index(first_line) :])
     else:
         return None

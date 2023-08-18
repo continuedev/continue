@@ -1,6 +1,4 @@
-from typing import Coroutine
-from ...core.main import Models
-from ...core.main import Step
+from ...core.main import Models, Step
 from ...core.sdk import ContinueSDK
 from ...libs.util.telemetry import posthog_logger
 

@@ -1,25 +1,36 @@
 # These steps are depended upon by ContinueSDK
+import difflib
 import os
-import json
-import difflib
-from textwrap import dedent
 import traceback
+from textwrap import dedent
 from typing import Any, Coroutine, List, Union
-import difflib
 
 from pydantic import validator
 
+from ....core.main import ChatMessage, ContinueCustomException, Step
+from ....core.observation import (
+    Observation,
+    TextObservation,
+    UserInputObservation,
+)
 from ....libs.llm.ggml import GGML
+from ....libs.llm.maybe_proxy_openai import MaybeProxyOpenAI
+from ....libs.util.count_tokens import DEFAULT_MAX_TOKENS
+from ....libs.util.strings import (
+    dedent_and_get_common_whitespace,
+    remove_quotes_and_escapes,
+)
+from ....libs.util.telemetry import posthog_logger
+from ....models.filesystem import FileSystem, RangeInFile, RangeInFileWithContents
+from ....models.filesystem_edit import (
+    EditDiff,
+    FileEdit,
+    FileEditWithFullContents,
+    FileSystemEdit,
+)
+
 # from ....libs.llm.replicate import ReplicateLLM
 from ....models.main import Range
-from ....libs.llm.maybe_proxy_openai import MaybeProxyOpenAI
-from ....models.filesystem_edit import EditDiff, FileEdit, FileEditWithFullContents, FileSystemEdit
-from ....models.filesystem import FileSystem, RangeInFile, RangeInFileWithContents
-from ....core.observation import Observation, TextObservation, TracebackObservation, UserInputObservation
-from ....core.main import ChatMessage, ContinueCustomException, Step, SequentialStep
-from ....libs.util.count_tokens import DEFAULT_MAX_TOKENS
-from ....libs.util.strings import dedent_and_get_common_whitespace, remove_quotes_and_escapes
-from ....libs.util.telemetry import posthog_logger
 
 
 class ContinueSDK:
@@ -56,7 +67,7 @@ class DisplayErrorStep(Step):
     @validator("e", pre=True, always=True)
     def validate_e(cls, v):
         if isinstance(v, Exception):
-            return '\n'.join(traceback.format_exception(v))
+            return "\n".join(traceback.format_exception(v))
 
     async def describe(self, models: Models) -> Coroutine[str, None, None]:
         return self.e
@@ -100,25 +111,41 @@ class ShellCommandsStep(Step):
             return f"Error when running shell commands:\n```\n{self._err_text}\n```"
 
         cmds_str = "\n".join(self.cmds)
-        return await models.medium.complete(f"{cmds_str}\n\nSummarize what was done in these shell commands, using markdown bullet points:")
+        return await models.medium.complete(
+            f"{cmds_str}\n\nSummarize what was done in these shell commands, using markdown bullet points:"
+        )
 
     async def run(self, sdk: ContinueSDK) -> Coroutine[Observation, None, None]:
-        cwd = await sdk.ide.getWorkspaceDirectory() if self.cwd is None else self.cwd
+        await sdk.ide.getWorkspaceDirectory() if self.cwd is None else self.cwd
 
         for cmd in self.cmds:
             output = await sdk.ide.runCommand(cmd)
-            if self.handle_error and output is not None and output_contains_error(output):
-                suggestion = await sdk.models.medium.complete(dedent(f"""\
+            if (
+                self.handle_error
+                and output is not None
+                and output_contains_error(output)
+            ):
+                suggestion = await sdk.models.medium.complete(
+                    dedent(
+                        f"""\
                     While running the command `{cmd}`, the following error occurred:
 
                     ```ascii
                     {output}
                     ```
 
-                    This is a brief summary of the error followed by a suggestion on how it can be fixed:"""), with_history=await sdk.get_chat_context())
+                    This is a brief summary of the error followed by a suggestion on how it can be fixed:"""
+                    ),
+                    with_history=await sdk.get_chat_context(),
+                )
 
                 sdk.raise_exception(
-                    title="Error while running query", message=output, with_step=MessageStep(name=f"Suggestion to solve error {AI_ASSISTED_STRING}", message=f"{suggestion}\n\nYou can click the retry button on the failed step to try again.")
+                    title="Error while running query",
+                    message=output,
+                    with_step=MessageStep(
+                        name=f"Suggestion to solve error {AI_ASSISTED_STRING}",
+                        message=f"{suggestion}\n\nYou can click the retry button on the failed step to try again.",
+                    ),
                 )
 
         return TextObservation(text=output)
@@ -143,7 +170,8 @@ class DefaultModelEditCodeStep(Step):
     name: str = "Editing Code"
     hide = False
     description: str = ""
-    _prompt: str = dedent("""\
+    _prompt: str = dedent(
+        """\
         Take the file prefix and suffix into account, but only rewrite the code_to_edit as specified in the user_request. The code you write in modified_code_to_edit will replace the code between the code_to_edit tags. Do NOT preface your answer or write anything other than code. The </modified_code_to_edit> tag should be written to indicate the end of the modified code section. Do not ever use nested tags.
 
         Example:
@@ -177,7 +205,8 @@ class DefaultModelEditCodeStep(Step):
         </modified_code_to_edit>
 
         Main task:
-        """)
+        """
+    )
     _previous_contents: str = ""
     _new_contents: str = ""
     _prompt_and_completion: str = ""
@@ -186,22 +215,34 @@ class DefaultModelEditCodeStep(Step):
         if self._previous_contents.strip() == self._new_contents.strip():
             description = "No edits were made"
         else:
-            changes = '\n'.join(difflib.ndiff(
-                self._previous_contents.splitlines(), self._new_contents.splitlines()))
-            description = await models.medium.complete(dedent(f"""\
+            changes = "\n".join(
+                difflib.ndiff(
+                    self._previous_contents.splitlines(),
+                    self._new_contents.splitlines(),
+                )
+            )
+            description = await models.medium.complete(
+                dedent(
+                    f"""\
                 Diff summary: "{self.user_input}"
 
                 ```diff
                 {changes}
                 ```
 
-                Please give brief a description of the changes made above using markdown bullet points. Be concise:"""))
-        name = await models.medium.complete(f"Write a very short title to describe this requested change (no quotes): '{self.user_input}'. This is the title:")
+                Please give brief a description of the changes made above using markdown bullet points. Be concise:"""
+                )
+            )
+        name = await models.medium.complete(
+            f"Write a very short title to describe this requested change (no quotes): '{self.user_input}'. This is the title:"
+        )
         self.name = remove_quotes_and_escapes(name)
 
         return f"{remove_quotes_and_escapes(description)}"
 
-    async def get_prompt_parts(self, rif: RangeInFileWithContents, sdk: ContinueSDK, full_file_contents: str):
+    async def get_prompt_parts(
+        self, rif: RangeInFileWithContents, sdk: ContinueSDK, full_file_contents: str
+    ):
         # We don't know here all of the functions being passed in.
         # We care because if this prompt itself goes over the limit, then the entire message will have to be cut from the completion.
         # Overflow won't happen, but prune_chat_messages in count_tokens.py will cut out this whole thing, instead of us cutting out only as many lines as we need.
@@ -209,18 +250,27 @@ class DefaultModelEditCodeStep(Step):
         max_tokens = int(model_to_use.context_length / 2)
 
         TOKENS_TO_BE_CONSIDERED_LARGE_RANGE = 1200
-        if model_to_use.count_tokens(rif.contents) > TOKENS_TO_BE_CONSIDERED_LARGE_RANGE:
+        if (
+            model_to_use.count_tokens(rif.contents)
+            > TOKENS_TO_BE_CONSIDERED_LARGE_RANGE
+        ):
             self.description += "\n\n**It looks like you've selected a large range to edit, which may take a while to complete. If you'd like to cancel, click the 'X' button above. If you highlight a more specific range, Continue will only edit within it.**"
 
             # At this point, we also increase the max_tokens parameter so it doesn't stop in the middle of generation
             # Increase max_tokens to be double the size of the range
             # But don't exceed twice default max tokens
-            max_tokens = int(min(model_to_use.count_tokens(
-                rif.contents), DEFAULT_MAX_TOKENS) * 2.5)
+            max_tokens = int(
+                min(model_to_use.count_tokens(rif.contents), DEFAULT_MAX_TOKENS) * 2.5
+            )
 
         BUFFER_FOR_FUNCTIONS = 400
-        total_tokens = model_to_use.count_tokens(
-            full_file_contents + self._prompt + self.user_input) + BUFFER_FOR_FUNCTIONS + max_tokens
+        total_tokens = (
+            model_to_use.count_tokens(
+                full_file_contents + self._prompt + self.user_input
+            )
+            + BUFFER_FOR_FUNCTIONS
+            + max_tokens
+        )
 
         # If using 3.5 and overflows, upgrade to 3.5.16k
         if model_to_use.name == "gpt-3.5-turbo":
@@ -239,7 +289,8 @@ class DefaultModelEditCodeStep(Step):
         if total_tokens > model_to_use.context_length:
             while cur_end_line > min_end_line:
                 total_tokens -= model_to_use.count_tokens(
-                    full_file_contents_lst[cur_end_line])
+                    full_file_contents_lst[cur_end_line]
+                )
                 cur_end_line -= 1
                 if total_tokens < model_to_use.context_length:
                     break
@@ -248,33 +299,30 @@ class DefaultModelEditCodeStep(Step):
             while cur_start_line < max_start_line:
                 cur_start_line += 1
                 total_tokens -= model_to_use.count_tokens(
-                    full_file_contents_lst[cur_start_line])
+                    full_file_contents_lst[cur_start_line]
+                )
                 if total_tokens < model_to_use.context_length:
                     break
 
         # Now use the found start/end lines to get the prefix and suffix strings
-        file_prefix = "\n".join(
-            full_file_contents_lst[cur_start_line:max_start_line])
-        file_suffix = "\n".join(
-            full_file_contents_lst[min_end_line:cur_end_line - 1])
+        file_prefix = "\n".join(full_file_contents_lst[cur_start_line:max_start_line])
+        file_suffix = "\n".join(full_file_contents_lst[min_end_line : cur_end_line - 1])
 
         # Move any surrounding blank line in rif.contents to the prefix/suffix
         # TODO: Keep track of start line of the range, because it's needed below for offset stuff
-        rif_start_line = rif.range.start.line
         if len(rif.contents) > 0:
             lines = rif.contents.splitlines(keepends=True)
             first_line = lines[0] if lines else None
             while first_line and first_line.strip() == "":
                 file_prefix += first_line
-                rif.contents = rif.contents[len(first_line):]
+                rif.contents = rif.contents[len(first_line) :]
                 lines = rif.contents.splitlines(keepends=True)
                 first_line = lines[0] if lines else None
 
             last_line = lines[-1] if lines else None
             while last_line and last_line.strip() == "":
                 file_suffix = last_line + file_suffix
-                rif.contents = rif.contents[:len(
-                    rif.contents) - len(last_line)]
+                rif.contents = rif.contents[: len(rif.contents) - len(last_line)]
                 lines = rif.contents.splitlines(keepends=True)
                 last_line = lines[-1] if lines else None
 
@@ -287,10 +335,13 @@ class DefaultModelEditCodeStep(Step):
 
         return file_prefix, rif.contents, file_suffix, model_to_use, max_tokens
 
-    def compile_prompt(self, file_prefix: str, contents: str, file_suffix: str, sdk: ContinueSDK) -> str:
+    def compile_prompt(
+        self, file_prefix: str, contents: str, file_suffix: str, sdk: ContinueSDK
+    ) -> str:
         if contents.strip() == "":
             # Seperate prompt for insertion at the cursor, the other tends to cause it to repeat whole file
-            prompt = dedent(f"""\
+            prompt = dedent(
+                f"""\
 <file_prefix>
 {file_prefix}
 </file_prefix>
@@ -302,30 +353,39 @@ class DefaultModelEditCodeStep(Step):
 {self.user_input}
 </user_request>
 
-Please output the code to be inserted at the cursor in order to fulfill the user_request. Do NOT preface your answer or write anything other than code. You should not write any tags, just the code. Make sure to correctly indent the code:""")
+Please output the code to be inserted at the cursor in order to fulfill the user_request. Do NOT preface your answer or write anything other than code. You should not write any tags, just the code. Make sure to correctly indent the code:"""
+            )
             return prompt
 
         prompt = self._prompt
         if file_prefix.strip() != "":
-            prompt += dedent(f"""
+            prompt += dedent(
+                f"""
 <file_prefix>
 {file_prefix}
-</file_prefix>""")
-        prompt += dedent(f"""
+</file_prefix>"""
+            )
+        prompt += dedent(
+            f"""
 <code_to_edit>
 {contents}
-</code_to_edit>""")
+</code_to_edit>"""
+        )
         if file_suffix.strip() != "":
-            prompt += dedent(f"""
+            prompt += dedent(
+                f"""
 <file_suffix>
 {file_suffix}
-</file_suffix>""")
-        prompt += dedent(f"""
+</file_suffix>"""
+            )
+        prompt += dedent(
+            f"""
 <user_request>
 {self.user_input}
 </user_request>
 <modified_code_to_edit>
-""")
+"""
+        )
 
         return prompt
 
@@ -333,28 +393,44 @@ Please output the code to be inserted at the cursor in order to fulfill the user
         return "</modified_code_to_edit>" in line or "</code_to_edit>" in line
 
     def line_to_be_ignored(self, line: str, is_first_line: bool = False) -> bool:
-        return "```" in line or "<modified_code_to_edit>" in line or "<file_prefix>" in line or "</file_prefix>" in line or "<file_suffix>" in line or "</file_suffix>" in line or "<user_request>" in line or "</user_request>" in line or "<code_to_edit>" in line
+        return (
+            "```" in line
+            or "<modified_code_to_edit>" in line
+            or "<file_prefix>" in line
+            or "</file_prefix>" in line
+            or "<file_suffix>" in line
+            or "</file_suffix>" in line
+            or "<user_request>" in line
+            or "</user_request>" in line
+            or "<code_to_edit>" in line
+        )
 
     async def stream_rif(self, rif: RangeInFileWithContents, sdk: ContinueSDK):
         await sdk.ide.saveFile(rif.filepath)
         full_file_contents = await sdk.ide.readFile(rif.filepath)
 
-        file_prefix, contents, file_suffix, model_to_use, max_tokens = await self.get_prompt_parts(
-            rif, sdk, full_file_contents)
-        contents, common_whitespace = dedent_and_get_common_whitespace(
-            contents)
+        (
+            file_prefix,
+            contents,
+            file_suffix,
+            model_to_use,
+            max_tokens,
+        ) = await self.get_prompt_parts(rif, sdk, full_file_contents)
+        contents, common_whitespace = dedent_and_get_common_whitespace(contents)
         prompt = self.compile_prompt(file_prefix, contents, file_suffix, sdk)
         full_file_contents_lines = full_file_contents.split("\n")
 
         lines_to_display = []
 
-        async def sendDiffUpdate(lines: List[str], sdk: ContinueSDK, final: bool = False):
+        async def sendDiffUpdate(
+            lines: List[str], sdk: ContinueSDK, final: bool = False
+        ):
             nonlocal full_file_contents_lines, rif, lines_to_display
 
             completion = "\n".join(lines)
 
-            full_prefix_lines = full_file_contents_lines[:rif.range.start.line]
-            full_suffix_lines = full_file_contents_lines[rif.range.end.line:]
+            full_prefix_lines = full_file_contents_lines[: rif.range.start.line]
+            full_suffix_lines = full_file_contents_lines[rif.range.end.line :]
 
             # Don't do this at the very end, just show the inserted code
             if final:
@@ -365,13 +441,29 @@ Please output the code to be inserted at the cursor in order to fulfill the user
                 rewritten_lines = 0
                 for line in lines:
                     for i in range(rewritten_lines, len(contents_lines)):
-                        if difflib.SequenceMatcher(None, line, contents_lines[i]).ratio() > 0.7 and contents_lines[i].strip() != "":
+                        if (
+                            difflib.SequenceMatcher(
+                                None, line, contents_lines[i]
+                            ).ratio()
+                            > 0.7
+                            and contents_lines[i].strip() != ""
+                        ):
                             rewritten_lines = i + 1
                             break
                 lines_to_display = contents_lines[rewritten_lines:]
 
-            new_file_contents = "\n".join(
-                full_prefix_lines) + "\n" + completion + "\n" + ("\n".join(lines_to_display) + "\n" if len(lines_to_display) > 0 else "") + "\n".join(full_suffix_lines)
+            new_file_contents = (
+                "\n".join(full_prefix_lines)
+                + "\n"
+                + completion
+                + "\n"
+                + (
+                    "\n".join(lines_to_display) + "\n"
+                    if len(lines_to_display) > 0
+                    else ""
+                )
+                + "\n".join(full_suffix_lines)
+            )
 
             step_index = sdk.history.current_index
 
@@ -403,30 +495,61 @@ Please output the code to be inserted at the cursor in order to fulfill the user
             # Highlight the line to show progress
             line_to_highlight = current_line_in_file - len(current_block_lines)
             if False:
-                await sdk.ide.highlightCode(RangeInFile(filepath=rif.filepath, range=Range.from_shorthand(
-                    line_to_highlight, 0, line_to_highlight, 0)), "#FFFFFF22" if len(current_block_lines) == 0 else "#00FF0022")
+                await sdk.ide.highlightCode(
+                    RangeInFile(
+                        filepath=rif.filepath,
+                        range=Range.from_shorthand(
+                            line_to_highlight, 0, line_to_highlight, 0
+                        ),
+                    ),
+                    "#FFFFFF22" if len(current_block_lines) == 0 else "#00FF0022",
+                )
 
             if len(current_block_lines) == 0:
                 # Set this as the start of the next block
-                current_block_start = rif.range.start.line + len(original_lines) - len(
-                    original_lines_below_previous_blocks) + offset_from_blocks
-                if len(original_lines_below_previous_blocks) > 0 and line == original_lines_below_previous_blocks[0]:
+                current_block_start = (
+                    rif.range.start.line
+                    + len(original_lines)
+                    - len(original_lines_below_previous_blocks)
+                    + offset_from_blocks
+                )
+                if (
+                    len(original_lines_below_previous_blocks) > 0
+                    and line == original_lines_below_previous_blocks[0]
+                ):
                     # Line is equal to the next line in file, move past this line
-                    original_lines_below_previous_blocks = original_lines_below_previous_blocks[
-                        1:]
+                    original_lines_below_previous_blocks = (
+                        original_lines_below_previous_blocks[1:]
+                    )
                     return
 
             # In a block, and have already matched at least one line
             # Check if the next line matches, for each of the candidates
             matches_found = []
             first_valid_match = None
-            for index_of_last_matched_line, num_lines_matched in indices_of_last_matched_lines:
-                if index_of_last_matched_line + 1 < len(original_lines_below_previous_blocks) and line == original_lines_below_previous_blocks[index_of_last_matched_line + 1]:
+            for (
+                index_of_last_matched_line,
+                num_lines_matched,
+            ) in indices_of_last_matched_lines:
+                if (
+                    index_of_last_matched_line + 1
+                    < len(original_lines_below_previous_blocks)
+                    and line
+                    == original_lines_below_previous_blocks[
+                        index_of_last_matched_line + 1
+                    ]
+                ):
                     matches_found.append(
-                        (index_of_last_matched_line + 1, num_lines_matched + 1))
-                    if first_valid_match is None and num_lines_matched + 1 >= LINES_TO_MATCH_BEFORE_ENDING_BLOCK:
+                        (index_of_last_matched_line + 1, num_lines_matched + 1)
+                    )
+                    if (
+                        first_valid_match is None
+                        and num_lines_matched + 1 >= LINES_TO_MATCH_BEFORE_ENDING_BLOCK
+                    ):
                         first_valid_match = (
-                            index_of_last_matched_line + 1, num_lines_matched + 1)
+                            index_of_last_matched_line + 1,
+                            num_lines_matched + 1,
+                        )
             indices_of_last_matched_lines = matches_found
 
             if first_valid_match is not None:
@@ -436,7 +559,13 @@ Please output the code to be inserted at the cursor in order to fulfill the user
                 # So here we will strip all matching lines from the end of current_block_lines
                 lines_stripped = []
                 index_of_last_line_in_block = first_valid_match[0]
-                while len(current_block_lines) > 0 and current_block_lines[-1] == original_lines_below_previous_blocks[index_of_last_line_in_block - 1]:
+                while (
+                    len(current_block_lines) > 0
+                    and current_block_lines[-1]
+                    == original_lines_below_previous_blocks[
+                        index_of_last_line_in_block - 1
+                    ]
+                ):
                     lines_stripped.append(current_block_lines.pop())
                     index_of_last_line_in_block -= 1
 
@@ -455,18 +584,22 @@ Please output the code to be inserted at the cursor in order to fulfill the user
                 end_line = current_block_start + index_of_last_line_in_block
 
                 if False:
-                    await sdk.ide.showSuggestion(FileEdit(
-                        filepath=rif.filepath,
-                        range=Range.from_shorthand(
-                            start_line, 0, end_line, 0),
-                        replacement=replacement
-                    ))
+                    await sdk.ide.showSuggestion(
+                        FileEdit(
+                            filepath=rif.filepath,
+                            range=Range.from_shorthand(start_line, 0, end_line, 0),
+                            replacement=replacement,
+                        )
+                    )
 
                 # Reset current block / update variables
                 current_line_in_file += 1
                 offset_from_blocks += len(current_block_lines)
-                original_lines_below_previous_blocks = original_lines_below_previous_blocks[
-                    index_of_last_line_in_block + 1:]
+                original_lines_below_previous_blocks = (
+                    original_lines_below_previous_blocks[
+                        index_of_last_line_in_block + 1 :
+                    ]
+                )
                 current_block_lines = []
                 current_block_start = -1
                 indices_of_last_matched_lines = []
@@ -485,7 +618,8 @@ Please output the code to be inserted at the cursor in order to fulfill the user
 
             # Make sure they are sorted by index
             indices_of_last_matched_lines = sorted(
-                indices_of_last_matched_lines, key=lambda x: x[0])
+                indices_of_last_matched_lines, key=lambda x: x[0]
+            )
 
             current_block_lines.append(line)
 
@@ -498,11 +632,9 @@ Please output the code to be inserted at the cursor in order to fulfill the user
                 messages.pop(i)
                 deleted += 1
             i -= 1
-        messages.append(ChatMessage(
-            role="user",
-            content=prompt,
-            summary=self.user_input
-        ))
+        messages.append(
+            ChatMessage(role="user", content=prompt, summary=self.user_input)
+        )
 
         lines_of_prefix_copied = 0
         lines = []
@@ -512,18 +644,22 @@ Please output the code to be inserted at the cursor in order to fulfill the user
         line_below_highlighted_range = file_suffix.lstrip().split("\n")[0]
 
         if isinstance(model_to_use, GGML):
-            messages = [ChatMessage(
-                role="user", content=f"```\n{rif.contents}\n```\n\nUser request: \"{self.user_input}\"\n\nThis is the code after changing to perfectly comply with the user request. It does not include any placeholder code, only real implementations:\n\n```\n", summary=self.user_input)]
+            messages = [
+                ChatMessage(
+                    role="user",
+                    content=f'```\n{rif.contents}\n```\n\nUser request: "{self.user_input}"\n\nThis is the code after changing to perfectly comply with the user request. It does not include any placeholder code, only real implementations:\n\n```\n',
+                    summary=self.user_input,
+                )
+            ]
         # elif isinstance(model_to_use, ReplicateLLM):
         #     messages = [ChatMessage(
         #         role="user", content=f"// Previous implementation\n\n{rif.contents}\n\n// Updated implementation (after following directions: {self.user_input})\n\n", summary=self.user_input)]
 
         generator = model_to_use.stream_chat(
-            messages, temperature=sdk.config.temperature, max_tokens=max_tokens)
+            messages, temperature=sdk.config.temperature, max_tokens=max_tokens
+        )
 
-        posthog_logger.capture_event("model_use", {
-            "model": model_to_use.name
-        })
+        posthog_logger.capture_event("model_use", {"model": model_to_use.name})
 
         try:
             async for chunk in generator:
@@ -555,16 +691,31 @@ Please output the code to be inserted at the cursor in order to fulfill the user
                     if self.is_end_line(chunk_lines[i]):
                         break
                     # Lines that should be ignored, like the <> tags
-                    elif self.line_to_be_ignored(chunk_lines[i], completion_lines_covered == 0):
+                    elif self.line_to_be_ignored(
+                        chunk_lines[i], completion_lines_covered == 0
+                    ):
                         continue  # noice
                     # Check if we are currently just copying the prefix
-                    elif (lines_of_prefix_copied > 0 or completion_lines_covered == 0) and lines_of_prefix_copied < len(file_prefix.splitlines()) and chunk_lines[i] == full_file_contents_lines[lines_of_prefix_copied]:
+                    elif (
+                        (lines_of_prefix_copied > 0 or completion_lines_covered == 0)
+                        and lines_of_prefix_copied < len(file_prefix.splitlines())
+                        and chunk_lines[i]
+                        == full_file_contents_lines[lines_of_prefix_copied]
+                    ):
                         # This is a sketchy way of stopping it from repeating the file_prefix. Is a bug if output happens to have a matching line
                         lines_of_prefix_copied += 1
                         continue  # also nice
                     # Because really short lines might be expected to be repeated, this is only a !heuristic!
                     # Stop when it starts copying the file_suffix
-                    elif chunk_lines[i].strip() == line_below_highlighted_range.strip() and len(chunk_lines[i].strip()) > 4 and not (len(original_lines_below_previous_blocks) > 0 and chunk_lines[i].strip() == original_lines_below_previous_blocks[0].strip()):
+                    elif (
+                        chunk_lines[i].strip() == line_below_highlighted_range.strip()
+                        and len(chunk_lines[i].strip()) > 4
+                        and not (
+                            len(original_lines_below_previous_blocks) > 0
+                            and chunk_lines[i].strip()
+                            == original_lines_below_previous_blocks[0].strip()
+                        )
+                    ):
                         repeating_file_suffix = True
                         break
 
@@ -576,11 +727,25 @@ Please output the code to be inserted at the cursor in order to fulfill the user
                     completion_lines_covered += 1
                     current_line_in_file += 1
 
-                await sendDiffUpdate(lines + [common_whitespace if unfinished_line.startswith("<") else (common_whitespace + unfinished_line)], sdk)
+                await sendDiffUpdate(
+                    lines
+                    + [
+                        common_whitespace
+                        if unfinished_line.startswith("<")
+                        else (common_whitespace + unfinished_line)
+                    ],
+                    sdk,
+                )
         finally:
             await generator.aclose()
         # Add the unfinished line
-        if unfinished_line != "" and not self.line_to_be_ignored(unfinished_line, completion_lines_covered == 0) and not self.is_end_line(unfinished_line):
+        if (
+            unfinished_line != ""
+            and not self.line_to_be_ignored(
+                unfinished_line, completion_lines_covered == 0
+            )
+            and not self.is_end_line(unfinished_line)
+        ):
             unfinished_line = common_whitespace + unfinished_line
             lines.append(unfinished_line)
             await handle_generated_line(unfinished_line)
@@ -598,13 +763,19 @@ Please output the code to be inserted at the cursor in order to fulfill the user
                 for i in range(-1, -len(current_block_lines) - 1, -1):
                     if len(original_lines_below_previous_blocks) == 0:
                         break
-                    if current_block_lines[i] == original_lines_below_previous_blocks[-1]:
+                    if (
+                        current_block_lines[i]
+                        == original_lines_below_previous_blocks[-1]
+                    ):
                         num_to_remove += 1
                         original_lines_below_previous_blocks.pop()
                     else:
                         break
-                current_block_lines = current_block_lines[:-
-                                                          num_to_remove] if num_to_remove > 0 else current_block_lines
+                current_block_lines = (
+                    current_block_lines[:-num_to_remove]
+                    if num_to_remove > 0
+                    else current_block_lines
+                )
 
                 # It's also possible that some lines match at the beginning of the block
                 # while len(current_block_lines) > 0 and len(original_lines_below_previous_blocks) > 0 and current_block_lines[0] == original_lines_below_previous_blocks[0]:
@@ -612,12 +783,19 @@ Please output the code to be inserted at the cursor in order to fulfill the user
                 #     original_lines_below_previous_blocks.pop(0)
                 #     current_block_start += 1
 
-                await sdk.ide.showSuggestion(FileEdit(
-                    filepath=rif.filepath,
-                    range=Range.from_shorthand(
-                        current_block_start, 0, current_block_start + len(original_lines_below_previous_blocks), 0),
-                    replacement="\n".join(current_block_lines)
-                ))
+                await sdk.ide.showSuggestion(
+                    FileEdit(
+                        filepath=rif.filepath,
+                        range=Range.from_shorthand(
+                            current_block_start,
+                            0,
+                            current_block_start
+                            + len(original_lines_below_previous_blocks),
+                            0,
+                        ),
+                        replacement="\n".join(current_block_lines),
+                    )
+                )
 
         # Record the completion
         completion = "\n".join(lines)
@@ -629,14 +807,18 @@ Please output the code to be inserted at the cursor in order to fulfill the user
         await sdk.update_ui()
 
         rif_with_contents = []
-        for range_in_file in map(lambda x: RangeInFile(
-            filepath=x.filepath,
-            # Only consider the range line-by-line. Maybe later don't if it's only a single line.
-            range=x.range.to_full_lines()
-        ), self.range_in_files):
+        for range_in_file in map(
+            lambda x: RangeInFile(
+                filepath=x.filepath,
+                # Only consider the range line-by-line. Maybe later don't if it's only a single line.
+                range=x.range.to_full_lines(),
+            ),
+            self.range_in_files,
+        ):
             file_contents = await sdk.ide.readRangeInFile(range_in_file)
             rif_with_contents.append(
-                RangeInFileWithContents.from_range_in_file(range_in_file, file_contents))
+                RangeInFileWithContents.from_range_in_file(range_in_file, file_contents)
+            )
 
         rif_dict = {}
         for rif in rif_with_contents:
@@ -645,10 +827,10 @@ Please output the code to be inserted at the cursor in order to fulfill the user
         for rif in rif_with_contents:
             # If the file doesn't exist, ask them to save it first
             if not os.path.exists(rif.filepath):
-                message = f"The file {rif.filepath} does not exist. Please save it first."
-                raise ContinueCustomException(
-                    title=message, message=message
+                message = (
+                    f"The file {rif.filepath} does not exist. Please save it first."
                 )
+                raise ContinueCustomException(title=message, message=message)
 
             await sdk.ide.setFileOpen(rif.filepath)
             await sdk.ide.setSuggestionsLocked(rif.filepath, True)
@@ -666,11 +848,14 @@ class EditFileStep(Step):
 
     async def run(self, sdk: ContinueSDK) -> Coroutine[Observation, None, None]:
         file_contents = await sdk.ide.readFile(self.filepath)
-        await sdk.run_step(DefaultModelEditCodeStep(
-            range_in_files=[RangeInFile.from_entire_file(
-                self.filepath, file_contents)],
-            user_input=self.prompt
-        ))
+        await sdk.run_step(
+            DefaultModelEditCodeStep(
+                range_in_files=[
+                    RangeInFile.from_entire_file(self.filepath, file_contents)
+                ],
+                user_input=self.prompt,
+            )
+        )
 
 
 class ManualEditStep(ReversibleStep):
@@ -698,8 +883,7 @@ class ManualEditStep(ReversibleStep):
     def from_sequence(cls, edits: List[FileEditWithFullContents]) -> "ManualEditStep":
         diffs = []
         for edit in edits:
-            _, diff = FileSystem.apply_edit_to_str(
-                edit.fileContents, edit.fileEdit)
+            _, diff = FileSystem.apply_edit_to_str(edit.fileContents, edit.fileEdit)
             diffs.append(diff)
         return cls(edit_diff=EditDiff.from_sequence(diffs))
 
@@ -720,12 +904,12 @@ class UserInputStep(Step):
     async def describe(self, models: Models) -> Coroutine[str, None, None]:
         return self.user_input
 
-    async def run(self, sdk: ContinueSDK) -> Coroutine[UserInputObservation, None, None]:
-        self.chat_context.append(ChatMessage(
-            role="user",
-            content=self.user_input,
-            summary=self.user_input
-        ))
+    async def run(
+        self, sdk: ContinueSDK
+    ) -> Coroutine[UserInputObservation, None, None]:
+        self.chat_context.append(
+            ChatMessage(role="user", content=self.user_input, summary=self.user_input)
+        )
         return UserInputObservation(user_input=self.user_input)
 
 

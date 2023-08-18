@@ -1,12 +1,19 @@
 import json
-import subprocess
-from typing import List, Tuple
-from llama_index import GPTVectorStoreIndex, StorageContext, load_index_from_storage, Document
-from llama_index.langchain_helpers.text_splitter import TokenTextSplitter
 import os
-from .update import filter_ignored_files, load_gpt_index_documents
-from ..util.logging import logger
+import subprocess
 from functools import cached_property
+from typing import List, Tuple
+
+from llama_index import (
+    Document,
+    GPTVectorStoreIndex,
+    StorageContext,
+    load_index_from_storage,
+)
+from llama_index.langchain_helpers.text_splitter import TokenTextSplitter
+
+from ..util.logging import logger
+from .update import filter_ignored_files, load_gpt_index_documents
 
 
 class ChromaIndexManager:
@@ -18,23 +25,42 @@ class ChromaIndexManager:
     @cached_property
     def current_commit(self) -> str:
         """Get the current commit."""
-        return subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=self.workspace_dir).decode("utf-8").strip()
+        return (
+            subprocess.check_output(
+                ["git", "rev-parse", "HEAD"], cwd=self.workspace_dir
+            )
+            .decode("utf-8")
+            .strip()
+        )
 
     @cached_property
     def current_branch(self) -> str:
         """Get the current branch."""
-        return subprocess.check_output(
-            ["git", "rev-parse", "--abbrev-ref", "HEAD"], cwd=self.workspace_dir).decode("utf-8").strip()
+        return (
+            subprocess.check_output(
+                ["git", "rev-parse", "--abbrev-ref", "HEAD"], cwd=self.workspace_dir
+            )
+            .decode("utf-8")
+            .strip()
+        )
 
     @cached_property
     def index_dir(self) -> str:
-        return os.path.join(self.workspace_dir, ".continue", "chroma", self.current_branch)
+        return os.path.join(
+            self.workspace_dir, ".continue", "chroma", self.current_branch
+        )
 
     @cached_property
     def git_root_dir(self):
         """Get the root directory of a Git repository."""
         try:
-            return subprocess.check_output(['git', 'rev-parse', '--show-toplevel'], cwd=self.workspace_dir).strip().decode()
+            return (
+                subprocess.check_output(
+                    ["git", "rev-parse", "--show-toplevel"], cwd=self.workspace_dir
+                )
+                .strip()
+                .decode()
+            )
         except subprocess.CalledProcessError:
             return None
 
@@ -57,8 +83,7 @@ class ChromaIndexManager:
             try:
                 text_chunks = text_splitter.split_text(doc.text)
             except:
-                logger.warning(
-                    f"ERROR (probably found special token): {doc.text}")
+                logger.warning(f"ERROR (probably found special token): {doc.text}")
                 continue  # lol
             filename = doc.extra_info["filename"]
             chunks[filename] = len(text_chunks)
@@ -66,8 +91,7 @@ class ChromaIndexManager:
                 doc_chunks.append(Document(text, doc_id=f"{filename}::{i}"))
 
         with open(f"{self.index_dir}/metadata.json", "w") as f:
-            json.dump({"commit": self.current_commit,
-                       "chunks": chunks}, f, indent=4)
+            json.dump({"commit": self.current_commit, "chunks": chunks}, f, indent=4)
 
         index = GPTVectorStoreIndex([])
 
@@ -89,17 +113,30 @@ class ChromaIndexManager:
         with open(metadata, "r") as f:
             previous_commit = json.load(f)["commit"]
 
-        modified_deleted_files = subprocess.check_output(
-            ["git", "diff", "--name-only", previous_commit, self.current_commit]).decode("utf-8").strip()
+        modified_deleted_files = (
+            subprocess.check_output(
+                ["git", "diff", "--name-only", previous_commit, self.current_commit]
+            )
+            .decode("utf-8")
+            .strip()
+        )
         modified_deleted_files = modified_deleted_files.split("\n")
         modified_deleted_files = [f for f in modified_deleted_files if f]
 
         deleted_files = [
-            f for f in modified_deleted_files if not os.path.exists(os.path.join(self.workspace_dir, f))]
+            f
+            for f in modified_deleted_files
+            if not os.path.exists(os.path.join(self.workspace_dir, f))
+        ]
         modified_files = [
-            f for f in modified_deleted_files if os.path.exists(os.path.join(self.workspace_dir, f))]
+            f
+            for f in modified_deleted_files
+            if os.path.exists(os.path.join(self.workspace_dir, f))
+        ]
 
-        return filter_ignored_files(modified_files, self.index_dir), filter_ignored_files(deleted_files, self.index_dir)
+        return filter_ignored_files(
+            modified_files, self.index_dir
+        ), filter_ignored_files(deleted_files, self.index_dir)
 
     def update_codebase_index(self):
         """Update the index with a list of files."""
@@ -108,15 +145,13 @@ class ChromaIndexManager:
             self.create_codebase_index()
         else:
             # index = GPTFaissIndex.load_from_disk(f"{index_dir_for(branch)}/index.json", faiss_index_save_path=f"{index_dir_for(branch)}/index_faiss_core.index")
-            index = GPTVectorStoreIndex.load_from_disk(
-                f"{self.index_dir}/index.json")
+            index = GPTVectorStoreIndex.load_from_disk(f"{self.index_dir}/index.json")
             modified_files, deleted_files = self.get_modified_deleted_files()
 
             with open(f"{self.index_dir}/metadata.json", "r") as f:
                 metadata = json.load(f)
 
             for file in deleted_files:
-
                 num_chunks = metadata["chunks"][file]
                 for i in range(num_chunks):
                     index.delete(f"{file}::{i}")
@@ -126,9 +161,7 @@ class ChromaIndexManager:
                 logger.debug(f"Deleted {file}")
 
             for file in modified_files:
-
                 if file in metadata["chunks"]:
-
                     num_chunks = metadata["chunks"][file]
 
                     for i in range(num_chunks):
@@ -159,12 +192,10 @@ class ChromaIndexManager:
     def query_codebase_index(self, query: str) -> str:
         """Query the codebase index."""
         if not self.check_index_exists():
-            logger.debug(
-                f"No index found for the codebase at {self.index_dir}")
+            logger.debug(f"No index found for the codebase at {self.index_dir}")
             return ""
 
-        storage_context = StorageContext.from_defaults(
-            persist_dir=self.index_dir)
+        storage_context = StorageContext.from_defaults(persist_dir=self.index_dir)
         index = load_index_from_storage(storage_context)
         # index = GPTVectorStoreIndex.load_from_disk(path)
         engine = index.as_query_engine()
@@ -173,14 +204,15 @@ class ChromaIndexManager:
     def query_additional_index(self, query: str) -> str:
         """Query the additional index."""
         index = GPTVectorStoreIndex.load_from_disk(
-            os.path.join(self.index_dir, 'additional_index.json'))
+            os.path.join(self.index_dir, "additional_index.json")
+        )
         return index.query(query)
 
     def replace_additional_index(self, info: str):
         """Replace the additional index with the given info."""
-        with open(f'{self.index_dir}/additional_context.txt', 'w') as f:
+        with open(f"{self.index_dir}/additional_context.txt", "w") as f:
             f.write(info)
         documents = [Document(info)]
         index = GPTVectorStoreIndex(documents)
-        index.save_to_disk(f'{self.index_dir}/additional_index.json')
+        index.save_to_disk(f"{self.index_dir}/additional_index.json")
         logger.debug("Additional index replaced")

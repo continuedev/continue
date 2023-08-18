@@ -1,10 +1,15 @@
-from functools import cached_property
-import time
 from typing import Any, Callable, Coroutine, Dict, Generator, List, Optional, Union
+
+from anthropic import AI_PROMPT, HUMAN_PROMPT, AsyncAnthropic
+
 from ...core.main import ChatMessage
-from anthropic import HUMAN_PROMPT, AI_PROMPT, AsyncAnthropic
 from ..llm import LLM
-from ..util.count_tokens import compile_chat_messages, DEFAULT_ARGS, count_tokens, format_chat_messages
+from ..util.count_tokens import (
+    DEFAULT_ARGS,
+    compile_chat_messages,
+    count_tokens,
+    format_chat_messages,
+)
 
 
 class AnthropicLLM(LLM):
@@ -19,7 +24,13 @@ class AnthropicLLM(LLM):
 
     write_log: Optional[Callable[[str], None]] = None
 
-    async def start(self, *, api_key: Optional[str] = None, write_log: Callable[[str], None], **kwargs):
+    async def start(
+        self,
+        *,
+        api_key: Optional[str] = None,
+        write_log: Callable[[str], None],
+        **kwargs,
+    ):
         self.write_log = write_log
         self._async_client = AsyncAnthropic(api_key=self.api_key)
 
@@ -58,7 +69,11 @@ class AnthropicLLM(LLM):
         prompt = ""
 
         # Anthropic prompt must start with a Human turn
-        if len(messages) > 0 and messages[0]["role"] != "user" and messages[0]["role"] != "system":
+        if (
+            len(messages) > 0
+            and messages[0]["role"] != "user"
+            and messages[0]["role"] != "system"
+        ):
             prompt += f"{HUMAN_PROMPT} Hello."
         for msg in messages:
             prompt += f"{HUMAN_PROMPT if (msg['role'] == 'user' or msg['role'] == 'system') else AI_PROMPT} {msg['content']} "
@@ -66,7 +81,9 @@ class AnthropicLLM(LLM):
         prompt += AI_PROMPT
         return prompt
 
-    async def stream_complete(self, prompt, with_history: List[ChatMessage] = None, **kwargs) -> Generator[Union[Any, List, Dict], None, None]:
+    async def stream_complete(
+        self, prompt, with_history: List[ChatMessage] = None, **kwargs
+    ) -> Generator[Union[Any, List, Dict], None, None]:
         args = self.default_args.copy()
         args.update(kwargs)
         args["stream"] = True
@@ -76,50 +93,62 @@ class AnthropicLLM(LLM):
         self.write_log(f"Prompt: \n\n{prompt}")
         completion = ""
         async for chunk in await self._async_client.completions.create(
-            prompt=prompt,
-            **args
+            prompt=prompt, **args
         ):
             yield chunk.completion
             completion += chunk.completion
 
         self.write_log(f"Completion: \n\n{completion}")
 
-    async def stream_chat(self, messages: List[ChatMessage] = None, **kwargs) -> Generator[Union[Any, List, Dict], None, None]:
+    async def stream_chat(
+        self, messages: List[ChatMessage] = None, **kwargs
+    ) -> Generator[Union[Any, List, Dict], None, None]:
         args = self.default_args.copy()
         args.update(kwargs)
         args["stream"] = True
         args = self._transform_args(args)
 
         messages = compile_chat_messages(
-            args["model"], messages, self.context_length, args["max_tokens_to_sample"], functions=args.get("functions", None), system_message=self.system_message)
+            args["model"],
+            messages,
+            self.context_length,
+            args["max_tokens_to_sample"],
+            functions=args.get("functions", None),
+            system_message=self.system_message,
+        )
 
         completion = ""
         self.write_log(f"Prompt: \n\n{format_chat_messages(messages)}")
         async for chunk in await self._async_client.completions.create(
-            prompt=self.__messages_to_prompt(messages),
-            **args
+            prompt=self.__messages_to_prompt(messages), **args
         ):
-            yield {
-                "role": "assistant",
-                "content": chunk.completion
-            }
+            yield {"role": "assistant", "content": chunk.completion}
             completion += chunk.completion
 
         self.write_log(f"Completion: \n\n{completion}")
 
-    async def complete(self, prompt: str, with_history: List[ChatMessage] = None, **kwargs) -> Coroutine[Any, Any, str]:
+    async def complete(
+        self, prompt: str, with_history: List[ChatMessage] = None, **kwargs
+    ) -> Coroutine[Any, Any, str]:
         args = {**self.default_args, **kwargs}
         args = self._transform_args(args)
 
         messages = compile_chat_messages(
-            args["model"], with_history, self.context_length, args["max_tokens_to_sample"], prompt, functions=None, system_message=self.system_message)
+            args["model"],
+            with_history,
+            self.context_length,
+            args["max_tokens_to_sample"],
+            prompt,
+            functions=None,
+            system_message=self.system_message,
+        )
 
-        completion = ""
         self.write_log(f"Prompt: \n\n{format_chat_messages(messages)}")
-        resp = (await self._async_client.completions.create(
-            prompt=self.__messages_to_prompt(messages),
-            **args
-        )).completion
+        resp = (
+            await self._async_client.completions.create(
+                prompt=self.__messages_to_prompt(messages), **args
+            )
+        ).completion
 
         self.write_log(f"Completion: \n\n{resp}")
         return resp

@@ -1,10 +1,10 @@
+from abc import ABC, abstractmethod
 from typing import Any, List, Union
-from abc import ABC, abstractmethod, abstractproperty
+
 from fastapi import WebSocket
 
-from ..models.main import Traceback
-from ..models.filesystem_edit import FileEdit, FileSystemEdit, EditDiff
 from ..models.filesystem import RangeInFile, RangeInFileWithContents
+from ..models.filesystem_edit import EditDiff, FileEdit, FileSystemEdit
 
 
 class AbstractIdeProtocolServer(ABC):

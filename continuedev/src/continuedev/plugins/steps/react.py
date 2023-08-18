@@ -1,5 +1,6 @@
 from textwrap import dedent
-from typing import List, Union, Tuple
+from typing import List, Tuple, Union
+
 from ...core.main import Step
 from ...core.sdk import ContinueSDK
 
@@ -13,11 +14,11 @@ class NLDecisionStep(Step):
     name: str = "Deciding what to do next"
 
     async def run(self, sdk: ContinueSDK):
-        step_descriptions = "\n".join([
-            f"- {step[0].name}: {step[1]}"
-            for step in self.steps
-        ])
-        prompt = dedent(f"""\
+        step_descriptions = "\n".join(
+            [f"- {step[0].name}: {step[1]}" for step in self.steps]
+        )
+        prompt = dedent(
+            f"""\
             The following steps are available, in the format "- [step name]: [step description]":
             {step_descriptions}
             
@@ -25,7 +26,8 @@ class NLDecisionStep(Step):
             
             {self.user_input}
             
-            Select the step which should be taken next to satisfy the user input. Say only the name of the selected step. You must choose one:""")
+            Select the step which should be taken next to satisfy the user input. Say only the name of the selected step. You must choose one:"""
+        )
 
         resp = (await sdk.models.medium.complete(prompt)).lower()
 

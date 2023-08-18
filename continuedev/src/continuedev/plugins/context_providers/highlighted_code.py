@@ -1,10 +1,16 @@
 import os
 from typing import Any, Dict, List
 
-from ...core.main import ChatMessage
-from ...models.filesystem import RangeInFile, RangeInFileWithContents
-from ...core.context import ContextItem, ContextItemDescription, ContextItemId, ContextProvider
 from pydantic import BaseModel
+
+from ...core.context import (
+    ContextItem,
+    ContextItemDescription,
+    ContextItemId,
+    ContextProvider,
+)
+from ...core.main import ChatMessage
+from ...models.filesystem import RangeInFileWithContents
 
 
 class HighlightedRangeContextItem(BaseModel):
@@ -40,12 +46,10 @@ class HighlightedCodeContextProvider(ContextProvider):
         visible_files = await self.ide.getVisibleFiles()
         if len(visible_files) > 0:
             content = await self.ide.readFile(visible_files[0])
-            rif = RangeInFileWithContents.from_entire_file(
-                visible_files[0], content)
+            rif = RangeInFileWithContents.from_entire_file(visible_files[0], content)
 
             item = self._rif_to_context_item(rif, 0, True)
-            item.description.name = self._rif_to_name(
-                rif, show_line_nums=False)
+            item.description.name = self._rif_to_name(rif, show_line_nums=False)
 
             self.last_added_fallback = True
             return HighlightedRangeContextItem(rif=rif, item=item)
@@ -55,21 +59,28 @@ class HighlightedCodeContextProvider(ContextProvider):
     async def get_selected_items(self) -> List[ContextItem]:
         items = [hr.item for hr in self.highlighted_ranges]
 
-        if len(items) == 0 and (fallback_item := await self._get_fallback_context_item()):
+        if len(items) == 0 and (
+            fallback_item := await self._get_fallback_context_item()
+        ):
             items = [fallback_item.item]
 
         return items
 
     async def get_chat_messages(self) -> List[ContextItem]:
         ranges = self.highlighted_ranges
-        if len(ranges) == 0 and (fallback_item := await self._get_fallback_context_item()):
+        if len(ranges) == 0 and (
+            fallback_item := await self._get_fallback_context_item()
+        ):
             ranges = [fallback_item]
 
-        return [ChatMessage(
-            role="user",
-            content=f"Code in this file is highlighted ({r.rif.filepath}):\n```\n{r.rif.contents}\n```",
-            summary=f"Code in this file is highlighted: {r.rif.filepath}"
-        ) for r in ranges]
+        return [
+            ChatMessage(
+                role="user",
+                content=f"Code in this file is highlighted ({r.rif.filepath}):\n```\n{r.rif.contents}\n```",
+                summary=f"Code in this file is highlighted: {r.rif.filepath}",
+            )
+            for r in ranges
+        ]
 
     def _make_sure_is_editing_range(self):
         """If none of the highlighted ranges are currently being edited, the first should be selected"""
@@ -80,8 +91,9 @@ class HighlightedCodeContextProvider(ContextProvider):
 
     def _disambiguate_highlighted_ranges(self):
         """If any files have the same name, also display their folder name"""
-        name_status: Dict[str, set] = {
-        }  # basename -> set of full paths with that basename
+        name_status: Dict[
+            str, set
+        ] = {}  # basename -> set of full paths with that basename
         for hr in self.highlighted_ranges:
             basename = os.path.basename(hr.rif.filepath)
             if basename in name_status:
@@ -92,11 +104,16 @@ class HighlightedCodeContextProvider(ContextProvider):
         for hr in self.highlighted_ranges:
             basename = os.path.basename(hr.rif.filepath)
             if len(name_status[basename]) > 1:
-                hr.item.description.name = self._rif_to_name(hr.rif, display_filename=os.path.join(
-                    os.path.basename(os.path.dirname(hr.rif.filepath)), basename))
+                hr.item.description.name = self._rif_to_name(
+                    hr.rif,
+                    display_filename=os.path.join(
+                        os.path.basename(os.path.dirname(hr.rif.filepath)), basename
+                    ),
+                )
             else:
                 hr.item.description.name = self._rif_to_name(
-                    hr.rif, display_filename=basename)
+                    hr.rif, display_filename=basename
+                )
 
     async def provide_context_items(self, workspace_dir: str) -> List[ContextItem]:
         return []
@@ -110,7 +127,9 @@ class HighlightedCodeContextProvider(ContextProvider):
         self.should_get_fallback_context_item = True
         self.last_added_fallback = False
 
-    async def delete_context_with_ids(self, ids: List[ContextItemId]) -> List[ContextItem]:
+    async def delete_context_with_ids(
+        self, ids: List[ContextItemId]
+    ) -> List[ContextItem]:
         ids_to_delete = [id.item_id for id in ids]
 
         kept_ranges = []
@@ -126,36 +145,57 @@ class HighlightedCodeContextProvider(ContextProvider):
 
         return [hr.item for hr in self.highlighted_ranges]
 
-    def _rif_to_name(self, rif: RangeInFileWithContents, display_filename: str = None, show_line_nums: bool = True) -> str:
-        line_nums = f" ({rif.range.start.line + 1}-{rif.range.end.line + 1})" if show_line_nums else ""
+    def _rif_to_name(
+        self,
+        rif: RangeInFileWithContents,
+        display_filename: str = None,
+        show_line_nums: bool = True,
+    ) -> str:
+        line_nums = (
+            f" ({rif.range.start.line + 1}-{rif.range.end.line + 1})"
+            if show_line_nums
+            else ""
+        )
         return f"{display_filename or os.path.basename(rif.filepath)}{line_nums}"
 
-    def _rif_to_context_item(self, rif: RangeInFileWithContents, idx: int, editing: bool) -> ContextItem:
+    def _rif_to_context_item(
+        self, rif: RangeInFileWithContents, idx: int, editing: bool
+    ) -> ContextItem:
         return ContextItem(
             description=ContextItemDescription(
                 name=self._rif_to_name(rif),
                 description=rif.filepath,
-                id=ContextItemId(
-                    provider_title=self.title,
-                    item_id=str(idx)
-                )
+                id=ContextItemId(provider_title=self.title, item_id=str(idx)),
             ),
             content=rif.contents,
             editing=editing,
-            editable=True
+            editable=True,
         )
 
-    async def handle_highlighted_code(self, range_in_files: List[RangeInFileWithContents]):
+    async def handle_highlighted_code(
+        self, range_in_files: List[RangeInFileWithContents]
+    ):
         self.should_get_fallback_context_item = True
         self.last_added_fallback = False
 
         # Filter out rifs from ~/.continue/diffs folder
         range_in_files = [
-            rif for rif in range_in_files if not os.path.dirname(rif.filepath) == os.path.expanduser("~/.continue/diffs")]
+            rif
+            for rif in range_in_files
+            if not os.path.dirname(rif.filepath)
+            == os.path.expanduser("~/.continue/diffs")
+        ]
 
         # If not adding highlighted code
         if not self.adding_highlighted_code:
-            if len(self.highlighted_ranges) == 1 and len(range_in_files) <= 1 and (len(range_in_files) == 0 or range_in_files[0].range.start == range_in_files[0].range.end):
+            if (
+                len(self.highlighted_ranges) == 1
+                and len(range_in_files) <= 1
+                and (
+                    len(range_in_files) == 0
+                    or range_in_files[0].range.start == range_in_files[0].range.end
+                )
+            ):
                 # If un-highlighting the range to edit, then remove the range
                 self.highlighted_ranges = []
             elif len(range_in_files) > 0:
@@ -164,7 +204,9 @@ class HighlightedCodeContextProvider(ContextProvider):
                 self.highlighted_ranges = [
                     HighlightedRangeContextItem(
                         rif=range_in_files[0],
-                        item=self._rif_to_context_item(range_in_files[0], 0, True))]
+                        item=self._rif_to_context_item(range_in_files[0], 0, True),
+                    )
+                ]
 
             return
 
@@ -173,22 +215,36 @@ class HighlightedCodeContextProvider(ContextProvider):
         for i, hr in enumerate(self.highlighted_ranges):
             found_overlap = False
             for new_rif in range_in_files:
-                if hr.rif.filepath == new_rif.filepath and hr.rif.range.overlaps_with(new_rif.range):
+                if hr.rif.filepath == new_rif.filepath and hr.rif.range.overlaps_with(
+                    new_rif.range
+                ):
                     found_overlap = True
                     break
 
                 # Also don't allow multiple ranges in same file with same content. This is useless to the model, and avoids
                 # the bug where cmd+f causes repeated highlights
-                if hr.rif.filepath == new_rif.filepath and hr.rif.contents == new_rif.contents:
+                if (
+                    hr.rif.filepath == new_rif.filepath
+                    and hr.rif.contents == new_rif.contents
+                ):
                     found_overlap = True
                     break
 
             if not found_overlap:
-                new_ranges.append(HighlightedRangeContextItem(rif=hr.rif, item=self._rif_to_context_item(
-                    hr.rif, len(new_ranges), False)))
+                new_ranges.append(
+                    HighlightedRangeContextItem(
+                        rif=hr.rif,
+                        item=self._rif_to_context_item(hr.rif, len(new_ranges), False),
+                    )
+                )
 
-        self.highlighted_ranges = new_ranges + [HighlightedRangeContextItem(rif=rif, item=self._rif_to_context_item(
-            rif, len(new_ranges) + idx, False)) for idx, rif in enumerate(range_in_files)]
+        self.highlighted_ranges = new_ranges + [
+            HighlightedRangeContextItem(
+                rif=rif,
+                item=self._rif_to_context_item(rif, len(new_ranges) + idx, False),
+            )
+            for idx, rif in enumerate(range_in_files)
+        ]
 
         self._make_sure_is_editing_range()
         self._disambiguate_highlighted_ranges()
@@ -197,5 +253,7 @@ class HighlightedCodeContextProvider(ContextProvider):
         for hr in self.highlighted_ranges:
             hr.item.editing = hr.item.description.id.to_string() in ids
 
-    async def add_context_item(self, id: ContextItemId, query: str, prev: List[ContextItem] = None) -> List[ContextItem]:
+    async def add_context_item(
+        self, id: ContextItemId, query: str, prev: List[ContextItem] = None
+    ) -> List[ContextItem]:
         raise NotImplementedError()

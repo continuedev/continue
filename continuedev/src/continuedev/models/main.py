@@ -1,7 +1,8 @@
 from abc import ABC
-from typing import List, Union, Tuple
-from pydantic import BaseModel, root_validator
 from functools import total_ordering
+from typing import List, Tuple, Union
+
+from pydantic import BaseModel, root_validator
 
 
 class ContinueBaseModel(BaseModel):
@@ -46,16 +47,19 @@ class Position(BaseModel):
     def to_index(self, string: str) -> int:
         """Convert line and character to index in string"""
         lines = string.splitlines()
-        return sum(map(len, lines[:self.line])) + self.character
+        return sum(map(len, lines[: self.line])) + self.character
 
 
 class Range(BaseModel):
     """A range in a file. 0-indexed."""
+
     start: Position
     end: Position
 
     def __lt__(self, other: "Range") -> bool:
-        return self.start < other.start or (self.start == other.start and self.end < other.end)
+        return self.start < other.start or (
+            self.start == other.start and self.end < other.end
+        )
 
     def __eq__(self, other: "Range") -> bool:
         return self.start == other.start and self.end == other.end
@@ -78,10 +82,13 @@ class Range(BaseModel):
         if len(lines) == 0:
             return (0, 0)
 
-        start_index = sum(
-            [len(line) + 1 for line in lines[:self.start.line]]) + self.start.character
-        end_index = sum(
-            [len(line) + 1 for line in lines[:self.end.line]]) + self.end.character
+        start_index = (
+            sum([len(line) + 1 for line in lines[: self.start.line]])
+            + self.start.character
+        )
+        end_index = (
+            sum([len(line) + 1 for line in lines[: self.end.line]]) + self.end.character
+        )
         return (start_index, end_index)
 
     def overlaps_with(self, other: "Range") -> bool:
@@ -90,27 +97,23 @@ class Range(BaseModel):
     def to_full_lines(self) -> "Range":
         return Range(
             start=Position(line=self.start.line, character=0),
-            end=Position(line=self.end.line + 1, character=0)
+            end=Position(line=self.end.line + 1, character=0),
         )
 
     @staticmethod
     def from_indices(string: str, start_index: int, end_index: int) -> "Range":
         return Range(
             start=Position.from_index(string, start_index),
-            end=Position.from_index(string, end_index)
+            end=Position.from_index(string, end_index),
         )
 
     @staticmethod
-    def from_shorthand(start_line: int, start_char: int, end_line: int, end_char: int) -> "Range":
+    def from_shorthand(
+        start_line: int, start_char: int, end_line: int, end_char: int
+    ) -> "Range":
         return Range(
-            start=Position(
-                line=start_line,
-                character=start_char
-            ),
-            end=Position(
-                line=end_line,
-                character=end_char
-            )
+            start=Position(line=start_line, character=start_char),
+            end=Position(line=end_line, character=end_char),
         )
 
     @staticmethod
@@ -148,7 +151,9 @@ class Range(BaseModel):
         if start_line == -1 or end_line == -1:
             raise ValueError("Snippet not found in content")
 
-        return Range.from_shorthand(start_line, 0, end_line, len(content_lines[end_line]) - 1)
+        return Range.from_shorthand(
+            start_line, 0, end_line, len(content_lines[end_line]) - 1
+        )
 
     @staticmethod
     def from_position(position: Position) -> "Range":
@@ -160,7 +165,8 @@ class AbstractModel(ABC, BaseModel):
     def check_is_subclass(cls, values):
         if not issubclass(cls, AbstractModel):
             raise TypeError(
-                "AbstractModel subclasses must be subclasses of AbstractModel")
+                "AbstractModel subclasses must be subclasses of AbstractModel"
+            )
 
 
 class TracebackFrame(BaseModel):
@@ -170,7 +176,11 @@ class TracebackFrame(BaseModel):
     code: Union[str, None]
 
     def __eq__(self, other):
-        return self.filepath == other.filepath and self.lineno == other.lineno and self.function == other.function
+        return (
+            self.filepath == other.filepath
+            and self.lineno == other.lineno
+            and self.function == other.function
+        )
 
 
 class Traceback(BaseModel):

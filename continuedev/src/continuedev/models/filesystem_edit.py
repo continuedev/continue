@@ -1,9 +1,11 @@
+import os
 from abc import abstractmethod
 from typing import Generator, List
+
 from pydantic import BaseModel
-from .main import Position, Range
+
 from ..libs.util.map_path import map_path
-import os
+from .main import Position, Range
 
 
 class FileSystemEdit(BaseModel):
@@ -27,7 +29,9 @@ class FileEdit(AtomicFileSystemEdit):
     replacement: str
 
     def with_mapped_paths(self, orig_root: str, copy_root: str) -> "FileSystemEdit":
-        return FileEdit(map_path(self.filepath, orig_root, copy_root), self.range, self.replacement)
+        return FileEdit(
+            map_path(self.filepath, orig_root, copy_root), self.range, self.replacement
+        )
 
     @staticmethod
     def from_deletion(filepath: str, range: Range) -> "FileEdit":
@@ -35,11 +39,23 @@ class FileEdit(AtomicFileSystemEdit):
 
     @staticmethod
     def from_insertion(filepath: str, position: Position, content: str) -> "FileEdit":
-        return FileEdit(filepath=filepath, range=Range.from_shorthand(position.line, position.character, position.line, position.character), replacement=content)
+        return FileEdit(
+            filepath=filepath,
+            range=Range.from_shorthand(
+                position.line, position.character, position.line, position.character
+            ),
+            replacement=content,
+        )
 
     @staticmethod
-    def from_append(filepath: str, previous_content: str, appended_content: str) -> "FileEdit":
-        return FileEdit(filepath=filepath, range=Range.from_position(Position.from_end_of_file(previous_content)), replacement=appended_content)
+    def from_append(
+        filepath: str, previous_content: str, appended_content: str
+    ) -> "FileEdit":
+        return FileEdit(
+            filepath=filepath,
+            range=Range.from_position(Position.from_end_of_file(previous_content)),
+            replacement=appended_content,
+        )
 
 
 class FileEditWithFullContents(BaseModel):
@@ -52,7 +68,9 @@ class AddFile(AtomicFileSystemEdit):
     content: str
 
     def with_mapped_paths(self, orig_root: str, copy_root: str) -> "FileSystemEdit":
-        return AddFile(self, map_path(self.filepath, orig_root, copy_root), self.content)
+        return AddFile(
+            self, map_path(self.filepath, orig_root, copy_root), self.content
+        )
 
 
 class DeleteFile(AtomicFileSystemEdit):
@@ -67,7 +85,10 @@ class RenameFile(AtomicFileSystemEdit):
     new_filepath: str
 
     def with_mapped_paths(self, orig_root: str, copy_root: str) -> "FileSystemEdit":
-        return RenameFile(map_path(self.filepath, orig_root, copy_root), map_path(self.new_filepath, orig_root, copy_root))
+        return RenameFile(
+            map_path(self.filepath, orig_root, copy_root),
+            map_path(self.new_filepath, orig_root, copy_root),
+        )
 
 
 class AddDirectory(AtomicFileSystemEdit):
@@ -89,7 +110,10 @@ class RenameDirectory(AtomicFileSystemEdit):
     new_path: str
 
     def with_mapped_paths(self, orig_root: str, copy_root: str) -> "FileSystemEdit":
-        return RenameDirectory(map_path(self.filepath, orig_root, copy_root), map_path(self.new_path, orig_root, copy_root))
+        return RenameDirectory(
+            map_path(self.filepath, orig_root, copy_root),
+            map_path(self.new_path, orig_root, copy_root),
+        )
 
 
 class DeleteDirectoryRecursive(FileSystemEdit):
@@ -112,10 +136,9 @@ class SequentialFileSystemEdit(FileSystemEdit):
     edits: List[FileSystemEdit]
 
     def with_mapped_paths(self, orig_root: str, copy_root: str) -> "FileSystemEdit":
-        return SequentialFileSystemEdit([
-            edit.with_mapped_paths(orig_root, copy_root)
-            for edit in self.edits
-        ])
+        return SequentialFileSystemEdit(
+            [edit.with_mapped_paths(orig_root, copy_root) for edit in self.edits]
+        )
 
     def next_edit(self) -> Generator["FileSystemEdit", None, None]:
         for edit in self.edits:
@@ -124,6 +147,7 @@ class SequentialFileSystemEdit(FileSystemEdit):
 
 class EditDiff(BaseModel):
     """A reversible edit that can be applied to a file."""
+
     forward: FileSystemEdit
     backward: FileSystemEdit
 
@@ -136,5 +160,5 @@ class EditDiff(BaseModel):
             backwards.insert(0, diff.backward)
         return cls(
             forward=SequentialFileSystemEdit(edits=forwards),
-            backward=SequentialFileSystemEdit(edits=backwards)
+            backward=SequentialFileSystemEdit(edits=backwards),
         )

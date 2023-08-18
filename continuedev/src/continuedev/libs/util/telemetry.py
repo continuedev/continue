@@ -1,15 +1,16 @@
-from typing import Any
-from posthog import Posthog
 import os
+from typing import Any
+
 from dotenv import load_dotenv
-from .commonregex import clean_pii_from_any
-from .logging import logger
-from .paths import getServerFolderPath
+from posthog import Posthog
+
 from ..constants.main import CONTINUE_SERVER_VERSION_FILE
+from .commonregex import clean_pii_from_any
+from .paths import getServerFolderPath
 
 load_dotenv()
 in_codespaces = os.getenv("CODESPACES") == "true"
-POSTHOG_API_KEY = 'phc_JS6XFROuNbhJtVCEdTSYk6gl5ArRrTNMpCcguAXlSPs'
+POSTHOG_API_KEY = "phc_JS6XFROuNbhJtVCEdTSYk6gl5ArRrTNMpCcguAXlSPs"
 
 
 class PostHogLogger:
@@ -20,16 +21,14 @@ class PostHogLogger:
         self.api_key = api_key
 
         # The personal API key is necessary only if you want to use local evaluation of feature flags.
-        self.posthog = Posthog(self.api_key, host='https://app.posthog.com')
+        self.posthog = Posthog(self.api_key, host="https://app.posthog.com")
 
     def setup(self, unique_id: str, allow_anonymous_telemetry: bool):
         self.unique_id = unique_id or "NO_UNIQUE_ID"
         self.allow_anonymous_telemetry = allow_anonymous_telemetry or True
 
         # Capture initial event
-        self.capture_event("session_start", {
-            "os": os.name
-        })
+        self.capture_event("session_start", {"os": os.name})
 
     def capture_event(self, event_name: str, event_properties: Any):
         # logger.debug(
@@ -53,13 +52,14 @@ class PostHogLogger:
 
         # Add additional properties that are on every event
         if in_codespaces:
-            event_properties['codespaces'] = True
+            event_properties["codespaces"] = True
 
         server_version_file = os.path.join(
-            getServerFolderPath(), CONTINUE_SERVER_VERSION_FILE)
+            getServerFolderPath(), CONTINUE_SERVER_VERSION_FILE
+        )
         if os.path.exists(server_version_file):
             with open(server_version_file, "r") as f:
-                event_properties['server_version'] = f.read()
+                event_properties["server_version"] = f.read()
 
         # Send event to PostHog
         self.posthog.capture(self.unique_id, event_name, event_properties)

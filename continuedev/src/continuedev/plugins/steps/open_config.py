@@ -1,15 +1,16 @@
 from textwrap import dedent
+
 from ...core.main import Step
 from ...core.sdk import ContinueSDK
 from ...libs.util.paths import getConfigFilePath
-import os
 
 
 class OpenConfigStep(Step):
     name: str = "Open config"
 
     async def describe(self, models):
-        return dedent("""\
+        return dedent(
+            """\
             `\"config.py\"` is now open. You can add a custom slash command in the `\"custom_commands\"` section, like in this example:
             ```python
             config = ContinueConfig(
@@ -23,7 +24,8 @@ class OpenConfigStep(Step):
             ```
             `name` is the command you will type.
             `description` is the description displayed in the slash command menu.
-            `prompt` is the instruction given to the model. The overall prompt becomes "Task: {prompt}, Additional info: {user_input}". For example, if you entered "/test exactly 5 assertions", the overall prompt would become "Task: Write a comprehensive...and sophisticated, Additional info: exactly 5 assertions".""")
+            `prompt` is the instruction given to the model. The overall prompt becomes "Task: {prompt}, Additional info: {user_input}". For example, if you entered "/test exactly 5 assertions", the overall prompt would become "Task: Write a comprehensive...and sophisticated, Additional info: exactly 5 assertions"."""
+        )
 
     async def run(self, sdk: ContinueSDK):
         await sdk.ide.setFileOpen(getConfigFilePath())

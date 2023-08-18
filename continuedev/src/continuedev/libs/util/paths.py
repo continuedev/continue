@@ -1,6 +1,11 @@
 import os
-from ..constants.main import CONTINUE_SESSIONS_FOLDER, CONTINUE_GLOBAL_FOLDER, CONTINUE_SERVER_FOLDER
+
 from ..constants.default_config import default_config
+from ..constants.main import (
+    CONTINUE_GLOBAL_FOLDER,
+    CONTINUE_SERVER_FOLDER,
+    CONTINUE_SESSIONS_FOLDER,
+)
 
 
 def find_data_file(filename):
@@ -36,7 +41,7 @@ def getSessionsListFilePath():
     path = os.path.join(getSessionsFolderPath(), "sessions.json")
     os.makedirs(os.path.dirname(path), exist_ok=True)
     if not os.path.exists(path):
-        with open(path, 'w') as f:
+        with open(path, "w") as f:
             f.write("[]")
     return path
 
@@ -46,19 +51,22 @@ def getConfigFilePath() -> str:
     os.makedirs(os.path.dirname(path), exist_ok=True)
 
     if not os.path.exists(path):
-        with open(path, 'w') as f:
+        with open(path, "w") as f:
             f.write(default_config)
     else:
-        with open(path, 'r') as f:
+        with open(path, "r") as f:
             existing_content = f.read()
 
         if existing_content.strip() == "":
-            with open(path, 'w') as f:
+            with open(path, "w") as f:
                 f.write(default_config)
         elif " continuedev.core" in existing_content:
-            with open(path, 'w') as f:
-                f.write(existing_content.replace(" continuedev.",
-                                                 " continuedev.src.continuedev."))
+            with open(path, "w") as f:
+                f.write(
+                    existing_content.replace(
+                        " continuedev.", " continuedev.src.continuedev."
+                    )
+                )
 
     return path
 
