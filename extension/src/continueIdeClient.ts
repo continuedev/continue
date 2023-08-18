@@ -227,6 +227,11 @@ class IdeProtocolClient {
           contents: this.readFile(data.filepath),
         });
         break;
+      case "getTerminalContents":
+        messenger.send("getTerminalContents", {
+          contents: await this.getTerminalContents(),
+        });
+        break;
       case "editFile":
         const fileEdit = await this.editFile(data.edit);
         messenger.send("editFile", {
@@ -491,6 +496,18 @@ class IdeProtocolClient {
     return contents;
   }
 
+  async getTerminalContents(): Promise<string> {
+    await vscode.commands.executeCommand("workbench.action.terminal.selectAll");
+    await vscode.commands.executeCommand(
+      "workbench.action.terminal.copySelection"
+    );
+    await vscode.commands.executeCommand(
+      "workbench.action.terminal.clearSelection"
+    );
+    let terminalContents = await vscode.env.clipboard.readText();
+    return terminalContents;
+  }
+
   editFile(edit: FileEdit): Promise<FileEditWithFullContents> {
     return new Promise((resolve, reject) => {
       openEditorAndRevealRange(
@@ -572,6 +589,11 @@ class IdeProtocolClient {
 
   sendMainUserInput(input: string) {
     this.messenger?.send("mainUserInput", { input });
+  }
+
+  async debugTerminal() {
+    const contents = await this.getTerminalContents();
+    this.messenger?.send("debugTerminal", { contents });
   }
 
   deleteAtIndex(index: number) {

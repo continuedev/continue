@@ -25,6 +25,7 @@ from ..plugins.steps.core.core import (
     ReversibleStep,
     UserInputStep,
 )
+from ..plugins.steps.on_traceback import DefaultOnTracebackStep
 from ..server.ide_protocol import AbstractIdeProtocolServer
 from .context import ContextManager
 from .main import (
@@ -219,10 +220,18 @@ class Autopilot(ContinueBaseModel):
         get_traceback_funcs = [get_python_traceback, get_javascript_traceback]
         for get_tb_func in get_traceback_funcs:
             traceback = get_tb_func(output)
-            if traceback is not None:
-                for tb_step in self.continue_sdk.config.on_traceback:
-                    step = tb_step.step({"output": output, **tb_step.params})
-                    await self._run_singular_step(step)
+            if (
+                traceback is not None
+                and self.continue_sdk.config.on_traceback is not None
+            ):
+                step = self.continue_sdk.config.on_traceback(output=output)
+                await self._run_singular_step(step)
+
+    async def handle_debug_terminal(self, content: str):
+        """Run the debug terminal step"""
+        # step = self.continue_sdk.config.on_traceback(output=content)
+        step = DefaultOnTracebackStep(output=content)
+        await self._run_singular_step(step)
 
     async def handle_highlighted_code(
         self, range_in_files: List[RangeInFileWithContents]

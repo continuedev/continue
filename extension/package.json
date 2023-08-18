@@ -85,6 +85,11 @@
         "command": "continue.focusContinueInputWithEdit",
         "category": "Continue",
         "title": "Focus Continue Input With Edit"
+      },
+      {
+        "command": "continue.debugTerminal",
+        "category": "Continue",
+        "title": "Debug Terminal"
       }
     ],
     "keybindings": [
@@ -117,6 +122,11 @@
         "command": "continue.toggleAuxiliaryBar",
         "mac": "alt+cmd+m",
         "key": "alt+ctrl+m"
+      },
+      {
+        "command": "continue.debugTerminal",
+        "mac": "alt+cmd+d",
+        "key": "alt+ctrl+d"
       }
     ],
     "menus": {

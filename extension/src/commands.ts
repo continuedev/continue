@@ -63,6 +63,9 @@ const commandsMap: { [command: string]: (...args: any) => any } = {
     const uri = vscode.Uri.file(logFile);
     await vscode.window.showTextDocument(uri);
   },
+  "continue.debugTerminal": async () => {
+    await ideProtocolClient.debugTerminal();
+  },
 };
 
 export function registerAllCommands(context: vscode.ExtensionContext) {

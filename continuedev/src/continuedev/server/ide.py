@@ -1,28 +1,46 @@
 # This is a separate server from server/main.py
+import asyncio
 import json
 import os
-from typing import Any, Coroutine, List, Type, TypeVar, Union
-import uuid
-from fastapi import WebSocket, APIRouter
-from starlette.websockets import WebSocketState, WebSocketDisconnect
-from uvicorn.main import Server
-from pydantic import BaseModel
 import traceback
-import asyncio
-
-from ..plugins.steps.core.core import DisplayErrorStep, MessageStep
-from .meilisearch_server import start_meilisearch
-from ..libs.util.telemetry import posthog_logger
-from ..libs.util.queue import AsyncSubscriptionQueue
-from ..models.filesystem import FileSystem, RangeInFile, EditDiff, RangeInFileWithContents, RealFileSystem
-from ..models.filesystem_edit import AddDirectory, AddFile, DeleteDirectory, DeleteFile, FileSystemEdit, FileEdit, FileEditWithFullContents, RenameDirectory, RenameFile, SequentialFileSystemEdit
-from .gui import session_manager
-from .ide_protocol import AbstractIdeProtocolServer
-from ..libs.util.create_async_task import create_async_task
-from .session_manager import SessionManager
-from ..libs.util.logging import logger
+import uuid
+from typing import Any, Coroutine, List, Type, TypeVar, Union
 
 import nest_asyncio
+from fastapi import APIRouter, WebSocket
+from pydantic import BaseModel
+from starlette.websockets import WebSocketDisconnect, WebSocketState
+from uvicorn.main import Server
+
+from ..libs.util.create_async_task import create_async_task
+from ..libs.util.logging import logger
+from ..libs.util.queue import AsyncSubscriptionQueue
+from ..libs.util.telemetry import posthog_logger
+from ..models.filesystem import (
+    EditDiff,
+    FileSystem,
+    RangeInFile,
+    RangeInFileWithContents,
+    RealFileSystem,
+)
+from ..models.filesystem_edit import (
+    AddDirectory,
+    AddFile,
+    DeleteDirectory,
+    DeleteFile,
+    FileEdit,
+    FileEditWithFullContents,
+    FileSystemEdit,
+    RenameDirectory,
+    RenameFile,
+    SequentialFileSystemEdit,
+)
+from ..plugins.steps.core.core import DisplayErrorStep
+from .gui import session_manager
+from .ide_protocol import AbstractIdeProtocolServer
+from .meilisearch_server import start_meilisearch
+from .session_manager import SessionManager
+
 nest_asyncio.apply()
 
 
@@ -98,6 +116,10 @@ class UniqueIdResponse(BaseModel):
     uniqueId: str
 
 
+class TerminalContentsResponse(BaseModel):
+    contents: str
+
+
 T = TypeVar("T", bound=BaseModel)
 
 
@@ -157,22 +179,25 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
     async def _send_json(self, message_type: str, data: Any):
         if self.websocket.application_state == WebSocketState.DISCONNECTED:
             logger.debug(
-                f"Tried to send message, but websocket is disconnected: {message_type}")
+                f"Tried to send message, but websocket is disconnected: {message_type}"
+            )
             return
         logger.debug(f"Sending IDE message: {message_type}")
-        await self.websocket.send_json({
-            "messageType": message_type,
-            "data": data
-        })
+        await self.websocket.send_json({"messageType": message_type, "data": data})
 
     async def _receive_json(self, message_type: str, timeout: int = 20) -> Any:
         try:
-            return await asyncio.wait_for(self.sub_queue.get(message_type), timeout=timeout)
+            return await asyncio.wait_for(
+                self.sub_queue.get(message_type), timeout=timeout
+            )
         except asyncio.TimeoutError:
             raise Exception(
-                f"IDE Protocol _receive_json timed out after 20 seconds: {message_type}")
+                f"IDE Protocol _receive_json timed out after 20 seconds: {message_type}"
+            )
 
-    async def _send_and_receive_json(self, data: Any, resp_model: Type[T], message_type: str) -> T:
+    async def _send_and_receive_json(
+        self, data: Any, resp_model: Type[T], message_type: str
+    ) -> T:
         await self._send_json(message_type, data)
         resp = await self._receive_json(message_type)
         return resp_model.parse_obj(resp)
@@ -186,14 +211,19 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
             await self.setSuggestionsLocked(data["filepath"], data["locked"])
         elif message_type == "fileEdits":
             fileEdits = list(
-                map(lambda d: FileEditWithFullContents.parse_obj(d), data["fileEdits"]))
+                map(lambda d: FileEditWithFullContents.parse_obj(d), data["fileEdits"])
+            )
             self.onFileEdits(fileEdits)
         elif message_type == "highlightedCodePush":
             self.onHighlightedCodeUpdate(
-                [RangeInFileWithContents(**rif) for rif in data["highlightedCode"]])
+                [RangeInFileWithContents(**rif) for rif in data["highlightedCode"]]
+            )
         elif message_type == "commandOutput":
             output = data["output"]
             self.onCommandOutput(output)
+        elif message_type == "debugTerminal":
+            content = data["contents"]
+            self.onDebugTerminal(content)
         elif message_type == "acceptRejectSuggestion":
             self.onAcceptRejectSuggestion(data["accepted"])
         elif message_type == "acceptRejectDiff":
@@ -202,7 +232,16 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
             self.onMainUserInput(data["input"])
         elif message_type == "deleteAtIndex":
             self.onDeleteAtIndex(data["index"])
-        elif message_type in ["highlightedCode", "openFiles", "visibleFiles", "readFile", "editFile", "getUserSecret", "runCommand"]:
+        elif message_type in [
+            "highlightedCode",
+            "openFiles",
+            "visibleFiles",
+            "readFile",
+            "editFile",
+            "getUserSecret",
+            "runCommand",
+            "getTerminalContents",
+        ]:
             self.sub_queue.post(message_type, data)
         elif message_type == "workspaceDirectory":
             self.workspace_directory = data["workspaceDirectory"]
@@ -212,88 +251,79 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
             raise ValueError("Unknown message type", message_type)
 
     async def showSuggestion(self, file_edit: FileEdit):
-        await self._send_json("showSuggestion", {
-            "edit": file_edit.dict()
-        })
+        await self._send_json("showSuggestion", {"edit": file_edit.dict()})
 
     async def showDiff(self, filepath: str, replacement: str, step_index: int):
-        await self._send_json("showDiff", {
-            "filepath": filepath,
-            "replacement": replacement,
-            "step_index": step_index
-        })
+        await self._send_json(
+            "showDiff",
+            {
+                "filepath": filepath,
+                "replacement": replacement,
+                "step_index": step_index,
+            },
+        )
 
     async def setFileOpen(self, filepath: str, open: bool = True):
         # Autopilot needs access to this.
-        await self._send_json("setFileOpen", {
-            "filepath": filepath,
-            "open": open
-        })
+        await self._send_json("setFileOpen", {"filepath": filepath, "open": open})
 
     async def showMessage(self, message: str):
-        await self._send_json("showMessage", {
-            "message": message
-        })
+        await self._send_json("showMessage", {"message": message})
 
     async def showVirtualFile(self, name: str, contents: str):
-        await self._send_json("showVirtualFile", {
-            "name": name,
-            "contents": contents
-        })
+        await self._send_json("showVirtualFile", {"name": name, "contents": contents})
 
     async def setSuggestionsLocked(self, filepath: str, locked: bool = True):
         # Lock suggestions in the file so they don't ruin the offset before others are inserted
-        await self._send_json("setSuggestionsLocked", {
-            "filepath": filepath,
-            "locked": locked
-        })
+        await self._send_json(
+            "setSuggestionsLocked", {"filepath": filepath, "locked": locked}
+        )
 
     async def getSessionId(self):
-        new_session = await asyncio.wait_for(self.session_manager.new_session(
-            self, self.session_id), timeout=5)
+        new_session = await asyncio.wait_for(
+            self.session_manager.new_session(self, self.session_id), timeout=5
+        )
         session_id = new_session.session_id
         logger.debug(f"Sending session id: {session_id}")
-        await self._send_json("getSessionId", {
-            "sessionId": session_id
-        })
+        await self._send_json("getSessionId", {"sessionId": session_id})
 
     async def highlightCode(self, range_in_file: RangeInFile, color: str = "#00ff0022"):
-        await self._send_json("highlightCode", {
-            "rangeInFile": range_in_file.dict(),
-            "color": color
-        })
+        await self._send_json(
+            "highlightCode", {"rangeInFile": range_in_file.dict(), "color": color}
+        )
 
     async def runCommand(self, command: str) -> str:
-        return (await self._send_and_receive_json({"command": command}, RunCommandResponse, "runCommand")).output
+        return (
+            await self._send_and_receive_json(
+                {"command": command}, RunCommandResponse, "runCommand"
+            )
+        ).output
 
     async def showSuggestionsAndWait(self, suggestions: List[FileEdit]) -> bool:
         ids = [str(uuid.uuid4()) for _ in suggestions]
         for i in range(len(suggestions)):
-            self._send_json("showSuggestion", {
-                "suggestion": suggestions[i],
-                "suggestionId": ids[i]
-            })
-        responses = await asyncio.gather(*[
-            self._receive_json(ShowSuggestionResponse)
-            for i in range(len(suggestions))
-        ])  # WORKING ON THIS FLOW HERE. Fine now to just await for response, instead of doing something fancy with a "waiting" state on the autopilot.
+            self._send_json(
+                "showSuggestion", {"suggestion": suggestions[i], "suggestionId": ids[i]}
+            )
+        responses = await asyncio.gather(
+            *[
+                self._receive_json(ShowSuggestionResponse)
+                for i in range(len(suggestions))
+            ]
+        )  # WORKING ON THIS FLOW HERE. Fine now to just await for response, instead of doing something fancy with a "waiting" state on the autopilot.
         # Just need connect the suggestionId to the IDE (and the gui)
         return any([r.accepted for r in responses])
 
     def on_error(self, e: Exception) -> Coroutine:
-        err_msg = '\n'.join(traceback.format_exception(e))
+        err_msg = "\n".join(traceback.format_exception(e))
         e_title = e.__str__() or e.__repr__()
         return self.showMessage(f"Error in Continue server: {e_title}\n {err_msg}")
 
     def onAcceptRejectSuggestion(self, accepted: bool):
-        posthog_logger.capture_event("accept_reject_suggestion", {
-            "accepted": accepted
-        })
+        posthog_logger.capture_event("accept_reject_suggestion", {"accepted": accepted})
 
     def onAcceptRejectDiff(self, accepted: bool):
-        posthog_logger.capture_event("accept_reject_diff", {
-            "accepted": accepted
-        })
+        posthog_logger.capture_event("accept_reject_diff", {"accepted": accepted})
 
     def onFileSystemUpdate(self, update: FileSystemEdit):
         # Access to Autopilot (so SessionManager)
@@ -323,18 +353,21 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
 
     def onCommandOutput(self, output: str):
         if autopilot := self.__get_autopilot():
-            create_async_task(
-                autopilot.handle_command_output(output), self.on_error)
+            create_async_task(autopilot.handle_command_output(output), self.on_error)
+
+    def onDebugTerminal(self, content: str):
+        if autopilot := self.__get_autopilot():
+            create_async_task(autopilot.handle_debug_terminal(content), self.on_error)
 
     def onHighlightedCodeUpdate(self, range_in_files: List[RangeInFileWithContents]):
         if autopilot := self.__get_autopilot():
-            create_async_task(autopilot.handle_highlighted_code(
-                range_in_files), self.on_error)
+            create_async_task(
+                autopilot.handle_highlighted_code(range_in_files), self.on_error
+            )
 
     def onMainUserInput(self, input: str):
         if autopilot := self.__get_autopilot():
-            create_async_task(
-                autopilot.accept_user_input(input), self.on_error)
+            create_async_task(autopilot.accept_user_input(input), self.on_error)
 
     # Request information. Session doesn't matter.
     async def getOpenFiles(self) -> List[str]:
@@ -342,26 +375,36 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
         return resp.openFiles
 
     async def getVisibleFiles(self) -> List[str]:
-        resp = await self._send_and_receive_json({}, VisibleFilesResponse, "visibleFiles")
+        resp = await self._send_and_receive_json(
+            {}, VisibleFilesResponse, "visibleFiles"
+        )
         return resp.visibleFiles
 
+    async def getTerminalContents(self) -> str:
+        resp = await self._send_and_receive_json(
+            {}, TerminalContentsResponse, "getTerminalContents"
+        )
+        return resp.contents
+
     async def getHighlightedCode(self) -> List[RangeInFile]:
-        resp = await self._send_and_receive_json({}, HighlightedCodeResponse, "highlightedCode")
+        resp = await self._send_and_receive_json(
+            {}, HighlightedCodeResponse, "highlightedCode"
+        )
         return resp.highlightedCode
 
     async def readFile(self, filepath: str) -> str:
         """Read a file"""
-        resp = await self._send_and_receive_json({
-            "filepath": filepath
-        }, ReadFileResponse, "readFile")
+        resp = await self._send_and_receive_json(
+            {"filepath": filepath}, ReadFileResponse, "readFile"
+        )
         return resp.contents
 
     async def getUserSecret(self, key: str) -> str:
         """Get a user secret"""
         try:
-            resp = await self._send_and_receive_json({
-                "key": key
-            }, GetUserSecretResponse, "getUserSecret")
+            resp = await self._send_and_receive_json(
+                {"key": key}, GetUserSecretResponse, "getUserSecret"
+            )
             return resp.value
         except Exception as e:
             logger.debug(f"Error getting user secret: {e}")
@@ -369,9 +412,7 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
 
     async def saveFile(self, filepath: str):
         """Save a file"""
-        await self._send_json("saveFile", {
-            "filepath": filepath
-        })
+        await self._send_json("saveFile", {"filepath": filepath})
 
     async def readRangeInFile(self, range_in_file: RangeInFile) -> str:
         """Read a range in a file"""
@@ -380,9 +421,9 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
 
     async def editFile(self, edit: FileEdit) -> FileEditWithFullContents:
         """Edit a file"""
-        resp = await self._send_and_receive_json({
-            "edit": edit.dict()
-        }, EditFileResponse, "editFile")
+        resp = await self._send_and_receive_json(
+            {"edit": edit.dict()}, EditFileResponse, "editFile"
+        )
         return resp.fileEdit
 
     async def applyFileSystemEdit(self, edit: FileSystemEdit) -> EditDiff:
@@ -392,7 +433,8 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
         if isinstance(edit, FileEdit):
             file_edit = await self.editFile(edit)
             _, diff = FileSystem.apply_edit_to_str(
-                file_edit.fileContents, file_edit.fileEdit)
+                file_edit.fileContents, file_edit.fileEdit
+            )
             backward = diff.backward
         elif isinstance(edit, AddFile):
             fs.write(edit.filepath, edit.content)
@@ -403,8 +445,9 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
             fs.delete_file(edit.filepath)
         elif isinstance(edit, RenameFile):
             fs.rename_file(edit.filepath, edit.new_filepath)
-            backward = RenameFile(filepath=edit.new_filepath,
-                                  new_filepath=edit.filepath)
+            backward = RenameFile(
+                filepath=edit.new_filepath, new_filepath=edit.filepath
+            )
         elif isinstance(edit, AddDirectory):
             fs.add_directory(edit.path)
             backward = DeleteDirectory(path=edit.path)
@@ -414,11 +457,15 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
             for root, dirs, files in os.walk(edit.path, topdown=False):
                 for f in files:
                     path = os.path.join(root, f)
-                    edit_diff = await self.applyFileSystemEdit(DeleteFile(filepath=path))
+                    edit_diff = await self.applyFileSystemEdit(
+                        DeleteFile(filepath=path)
+                    )
                     backward_edits.append(edit_diff)
                 for d in dirs:
                     path = os.path.join(root, d)
-                    edit_diff = await self.applyFileSystemEdit(DeleteDirectory(path=path))
+                    edit_diff = await self.applyFileSystemEdit(
+                        DeleteDirectory(path=path)
+                    )
                     backward_edits.append(edit_diff)
 
             edit_diff = await self.applyFileSystemEdit(DeleteDirectory(path=edit.path))
@@ -437,10 +484,7 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
         else:
             raise TypeError("Unknown FileSystemEdit type: " + str(type(edit)))
 
-        return EditDiff(
-            forward=edit,
-            backward=backward
-        )
+        return EditDiff(forward=edit, backward=backward)
 
 
 @router.websocket("/ws")
@@ -469,15 +513,18 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str = None):
 
             logger.debug(f"Received IDE message: {message_type}")
             create_async_task(
-                ideProtocolServer.handle_json(message_type, data), ideProtocolServer.on_error)
+                ideProtocolServer.handle_json(message_type, data),
+                ideProtocolServer.on_error,
+            )
 
         # Initialize the IDE Protocol Server
         ideProtocolServer = IdeProtocolServer(session_manager, websocket)
         if session_id is not None:
             session_manager.registered_ides[session_id] = ideProtocolServer
         other_msgs = await ideProtocolServer.initialize(session_id)
-        posthog_logger.capture_event("session_started", {
-            "session_id": ideProtocolServer.session_id})
+        posthog_logger.capture_event(
+            "session_started", {"session_id": ideProtocolServer.session_id}
+        )
 
         for other_msg in other_msgs:
             handle_msg(other_msg)
@@ -487,16 +534,20 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str = None):
             message = await websocket.receive_text()
             handle_msg(message)
 
-    except WebSocketDisconnect as e:
+    except WebSocketDisconnect:
         logger.debug("IDE websocket disconnected")
     except Exception as e:
         logger.debug(f"Error in ide websocket: {e}")
-        err_msg = '\n'.join(traceback.format_exception(e))
-        posthog_logger.capture_event("gui_error", {
-            "error_title": e.__str__() or e.__repr__(), "error_message": err_msg})
+        err_msg = "\n".join(traceback.format_exception(e))
+        posthog_logger.capture_event(
+            "gui_error",
+            {"error_title": e.__str__() or e.__repr__(), "error_message": err_msg},
+        )
 
         if session_id is not None and session_id in session_manager.sessions:
-            await session_manager.sessions[session_id].autopilot.continue_sdk.run_step(DisplayErrorStep(e=e))
+            await session_manager.sessions[session_id].autopilot.continue_sdk.run_step(
+                DisplayErrorStep(e=e)
+            )
         elif ideProtocolServer is not None:
             await ideProtocolServer.showMessage(f"Error in Continue server: {err_msg}")
 
@@ -506,7 +557,8 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str = None):
         if websocket.client_state != WebSocketState.DISCONNECTED:
             await websocket.close()
 
-        posthog_logger.capture_event("session_ended", {
-            "session_id": ideProtocolServer.session_id})
+        posthog_logger.capture_event(
+            "session_ended", {"session_id": ideProtocolServer.session_id}
+        )
         if ideProtocolServer.session_id in session_manager.registered_ides:
             session_manager.registered_ides.pop(ideProtocolServer.session_id)

@@ -1,5 +1,4 @@
 import React, { useContext, useEffect, useRef, useState } from "react";
-import ReactMarkdown from "react-markdown";
 import styled from "styled-components";
 import {
   defaultBorderRadius,
@@ -8,11 +7,9 @@ import {
   vscForeground,
 } from ".";
 import HeaderButtonWithText from "./HeaderButtonWithText";
-import { XMarkIcon, PencilIcon, CheckIcon } from "@heroicons/react/24/outline";
+import { XMarkIcon, CheckIcon } from "@heroicons/react/24/outline";
 import { HistoryNode } from "../../../schema/HistoryNode";
-import StyledMarkdownPreview from "./StyledMarkdownPreview";
 import { GUIClientContext } from "../App";
-import { text } from "stream/consumers";
 
 interface UserInputContainerProps {
   onDelete: () => void;
@@ -80,13 +77,19 @@ const UserInputContainer = (props: UserInputContainerProps) => {
   const client = useContext(GUIClientContext);
 
   useEffect(() => {
-    if (isEditing) {
-      textAreaRef.current?.focus();
+    if (isEditing && textAreaRef.current) {
+      textAreaRef.current.focus();
       // Select all text
-      textAreaRef.current?.setSelectionRange(
+      textAreaRef.current.setSelectionRange(
         0,
         textAreaRef.current.value.length
       );
+      // Change the size to match the contents (up to a max)
+      textAreaRef.current.style.height = "auto";
+      textAreaRef.current.style.height =
+        (textAreaRef.current.scrollHeight > 500
+          ? 500
+          : textAreaRef.current.scrollHeight) + "px";
     }
   }, [isEditing]);
 
@@ -130,6 +133,9 @@ const UserInputContainer = (props: UserInputContainerProps) => {
             }
           }}
           defaultValue={props.children}
+          onBlur={() => {
+            setIsEditing(false);
+          }}
         />
       ) : (
         <StyledPre
@@ -155,27 +161,15 @@ const UserInputContainer = (props: UserInputContainerProps) => {
                 <CheckIcon width="1.4em" height="1.4em" />
               </HeaderButtonWithText>
             ) : (
-              <>
-                <HeaderButtonWithText
-                  onClick={(e) => {
-                    setIsEditing((prev) => !prev);
-                    e.stopPropagation();
-                  }}
-                  text="Edit"
-                >
-                  <PencilIcon width="1.4em" height="1.4em" />
-                </HeaderButtonWithText>
-
-                <HeaderButtonWithText
-                  onClick={(e) => {
-                    props.onDelete();
-                    e.stopPropagation();
-                  }}
-                  text="Delete"
-                >
-                  <XMarkIcon width="1.4em" height="1.4em" />
-                </HeaderButtonWithText>
-              </>
+              <HeaderButtonWithText
+                onClick={(e) => {
+                  props.onDelete();
+                  e.stopPropagation();
+                }}
+                text="Delete"
+              >
+                <XMarkIcon width="1.4em" height="1.4em" />
+              </HeaderButtonWithText>
             )}
           </div>
         )}
