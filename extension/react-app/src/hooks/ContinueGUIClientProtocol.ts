@@ -125,6 +125,13 @@ class ContinueGUIClientProtocol extends AbstractContinueGUIClientProtocol {
   selectContextItem(id: string, query: string): void {
     this.messenger?.send("select_context_item", { id, query });
   }
+
+  editStepAtIndex(userInput: string, index: number): void {
+    this.messenger?.send("edit_step_at_index", {
+      user_input: userInput,
+      index,
+    });
+  }
 }
 
 export default ContinueGUIClientProtocol;

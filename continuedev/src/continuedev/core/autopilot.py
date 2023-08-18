@@ -1,29 +1,44 @@
-from functools import cached_property
-import traceback
 import time
-from typing import Callable, Coroutine, Dict, List, Optional, Union
+import traceback
+from functools import cached_property
+from typing import Callable, Coroutine, Dict, List, Optional
+
 from aiohttp import ClientPayloadError
+from openai import error as openai_errors
 from pydantic import root_validator
 
+from ..libs.util.create_async_task import create_async_task
+from ..libs.util.logging import logger
+from ..libs.util.queue import AsyncSubscriptionQueue
 from ..libs.util.strings import remove_quotes_and_escapes
+from ..libs.util.telemetry import posthog_logger
+from ..libs.util.traceback_parsers import get_javascript_traceback, get_python_traceback
 from ..models.filesystem import RangeInFileWithContents
 from ..models.filesystem_edit import FileEditWithFullContents
-from .observation import Observation, InternalErrorObservation
-from .context import ContextManager
-from ..plugins.policies.default import DefaultPolicy
+from ..models.main import ContinueBaseModel
 from ..plugins.context_providers.file import FileContextProvider
 from ..plugins.context_providers.highlighted_code import HighlightedCodeContextProvider
+from ..plugins.policies.default import DefaultPolicy
+from ..plugins.steps.core.core import (
+    DisplayErrorStep,
+    ManualEditStep,
+    ReversibleStep,
+    UserInputStep,
+)
 from ..server.ide_protocol import AbstractIdeProtocolServer
-from ..libs.util.queue import AsyncSubscriptionQueue
-from ..models.main import ContinueBaseModel
-from .main import Context, ContinueCustomException, Policy, History, FullState, SessionInfo, Step, HistoryNode
-from ..plugins.steps.core.core import DisplayErrorStep, ReversibleStep, ManualEditStep, UserInputStep
+from .context import ContextManager
+from .main import (
+    Context,
+    ContinueCustomException,
+    FullState,
+    History,
+    HistoryNode,
+    Policy,
+    SessionInfo,
+    Step,
+)
+from .observation import InternalErrorObservation, Observation
 from .sdk import ContinueSDK
-from ..libs.util.traceback_parsers import get_python_traceback, get_javascript_traceback
-from openai import error as openai_errors
-from ..libs.util.create_async_task import create_async_task
-from ..libs.util.telemetry import posthog_logger
-from ..libs.util.logging import logger
 
 
 def get_error_title(e: Exception) -> str:
@@ -33,18 +48,23 @@ def get_error_title(e: Exception) -> str:
         return "This OpenAI API key has been rate limited. Please try again."
     elif isinstance(e, openai_errors.Timeout):
         return "OpenAI timed out. Please try again."
-    elif isinstance(e, openai_errors.InvalidRequestError) and e.code == "context_length_exceeded":
+    elif (
+        isinstance(e, openai_errors.InvalidRequestError)
+        and e.code == "context_length_exceeded"
+    ):
         return e._message
     elif isinstance(e, ClientPayloadError):
         return "The request to OpenAI failed. Please try again."
     elif isinstance(e, openai_errors.APIConnectionError):
-        return "The request failed. Please check your internet connection and try again. If this issue persists, you can use our API key for free by going to VS Code settings and changing the value of continue.OPENAI_API_KEY to \"\""
+        return 'The request failed. Please check your internet connection and try again. If this issue persists, you can use our API key for free by going to VS Code settings and changing the value of continue.OPENAI_API_KEY to ""'
     elif isinstance(e, openai_errors.InvalidRequestError):
-        return 'Invalid request sent to OpenAI. Please try again.'
+        return "Invalid request sent to OpenAI. Please try again."
     elif "rate_limit_ip_middleware" in e.__str__():
-        return 'You have reached your limit for free usage of our token. You can continue using Continue by entering your own OpenAI API key in VS Code settings.'
+        return "You have reached your limit for free usage of our token. You can continue using Continue by entering your own OpenAI API key in VS Code settings."
     elif e.__str__().startswith("Cannot connect to host"):
-        return "The request failed. Please check your internet connection and try again."
+        return (
+            "The request failed. Please check your internet connection and try again."
+        )
     return e.__str__() or e.__repr__()
 
 
@@ -78,10 +98,13 @@ class Autopilot(ContinueBaseModel):
         # Load documents into the search index
         logger.debug("Starting context manager")
         await self.context_manager.start(
-            self.continue_sdk.config.context_providers + [
+            self.continue_sdk.config.context_providers
+            + [
                 HighlightedCodeContextProvider(ide=self.ide),
-                FileContextProvider(workspace_dir=self.ide.workspace_directory)
-            ], self.ide.workspace_directory)
+                FileContextProvider(workspace_dir=self.ide.workspace_directory),
+            ],
+            self.ide.workspace_directory,
+        )
 
         if full_state is not None:
             self.history = full_state.history
@@ -95,9 +118,9 @@ class Autopilot(ContinueBaseModel):
 
     @root_validator(pre=True)
     def fill_in_values(cls, values):
-        full_state: FullState = values.get('full_state')
+        full_state: FullState = values.get("full_state")
         if full_state is not None:
-            values['history'] = full_state.history
+            values["history"] = full_state.history
         return values
 
     async def get_full_state(self) -> FullState:
@@ -107,18 +130,37 @@ class Autopilot(ContinueBaseModel):
             user_input_queue=self._main_user_input_queue,
             slash_commands=self.get_available_slash_commands(),
             adding_highlighted_code=self.context_manager.context_providers[
-                "code"].adding_highlighted_code if "code" in self.context_manager.context_providers else False,
-            selected_context_items=await self.context_manager.get_selected_items() if self.context_manager is not None else [],
-            session_info=self.session_info
+                "code"
+            ].adding_highlighted_code
+            if "code" in self.context_manager.context_providers
+            else False,
+            selected_context_items=await self.context_manager.get_selected_items()
+            if self.context_manager is not None
+            else [],
+            session_info=self.session_info,
         )
         self.full_state = full_state
         return full_state
 
     def get_available_slash_commands(self) -> List[Dict]:
-        custom_commands = list(map(lambda x: {
-                               "name": x.name, "description": x.description}, self.continue_sdk.config.custom_commands)) or []
-        slash_commands = list(map(lambda x: {
-                              "name": x.name, "description": x.description}, self.continue_sdk.config.slash_commands)) or []
+        custom_commands = (
+            list(
+                map(
+                    lambda x: {"name": x.name, "description": x.description},
+                    self.continue_sdk.config.custom_commands,
+                )
+            )
+            or []
+        )
+        slash_commands = (
+            list(
+                map(
+                    lambda x: {"name": x.name, "description": x.description},
+                    self.continue_sdk.config.slash_commands,
+                )
+            )
+            or []
+        )
         return custom_commands + slash_commands
 
     async def clear_history(self):
@@ -182,13 +224,16 @@ class Autopilot(ContinueBaseModel):
                     step = tb_step.step({"output": output, **tb_step.params})
                     await self._run_singular_step(step)
 
-    async def handle_highlighted_code(self, range_in_files: List[RangeInFileWithContents]):
+    async def handle_highlighted_code(
+        self, range_in_files: List[RangeInFileWithContents]
+    ):
         if "code" not in self.context_manager.context_providers:
             return
 
         # Add to context manager
         await self.context_manager.context_providers["code"].handle_highlighted_code(
-            range_in_files)
+            range_in_files
+        )
 
         await self.update_subscribers()
 
@@ -205,6 +250,23 @@ class Autopilot(ContinueBaseModel):
 
         await self.update_subscribers()
 
+    async def edit_step_at_index(self, user_input: str, index: int):
+        step_to_rerun = self.history.timeline[index].step.copy()
+        step_to_rerun.user_input = user_input
+
+        # Halt the agent's currently running jobs (delete them)
+        while len(self.history.timeline) > index:
+            # Remove from timeline
+            node_to_delete = self.history.timeline.pop()
+            # Delete so it is stopped if in the middle of running
+            node_to_delete.deleted = True
+
+        self.history.current_index = index - 1
+        await self.update_subscribers()
+
+        # Rerun from the current step
+        await self.run_from_step(step_to_rerun)
+
     async def delete_context_with_ids(self, ids: List[str]):
         await self.context_manager.delete_context_with_ids(ids)
         await self.update_subscribers()
@@ -213,7 +275,11 @@ class Autopilot(ContinueBaseModel):
         if "code" not in self.context_manager.context_providers:
             return
 
-        self.context_manager.context_providers["code"].adding_highlighted_code = not self.context_manager.context_providers["code"].adding_highlighted_code
+        self.context_manager.context_providers[
+            "code"
+        ].adding_highlighted_code = not self.context_manager.context_providers[
+            "code"
+        ].adding_highlighted_code
         await self.update_subscribers()
 
     async def set_editing_at_ids(self, ids: List[str]):
@@ -223,7 +289,9 @@ class Autopilot(ContinueBaseModel):
         await self.context_manager.context_providers["code"].set_editing_at_ids(ids)
         await self.update_subscribers()
 
-    async def _run_singular_step(self, step: "Step", is_future_step: bool = False) -> Coroutine[Observation, None, None]:
+    async def _run_singular_step(
+        self, step: "Step", is_future_step: bool = False
+    ) -> Coroutine[Observation, None, None]:
         # Allow config to set disallowed steps
         if step.__class__.__name__ in self.continue_sdk.config.disallowed_steps:
             return None
@@ -239,19 +307,22 @@ class Autopilot(ContinueBaseModel):
         #     i -= 1
 
         posthog_logger.capture_event(
-            'step run', {'step_name': step.name, 'params': step.dict()})
+            "step run", {"step_name": step.name, "params": step.dict()}
+        )
 
         if not is_future_step:
             # Check manual edits buffer, clear out if needed by creating a ManualEditStep
             if len(self._manual_edits_buffer) > 0:
                 manualEditsStep = ManualEditStep.from_sequence(
-                    self._manual_edits_buffer)
+                    self._manual_edits_buffer
+                )
                 self._manual_edits_buffer = []
                 await self._run_singular_step(manualEditsStep)
 
         # Update history - do this first so we get top-first tree ordering
-        index_of_history_node = self.history.add_node(HistoryNode(
-            step=step, observation=None, depth=self._step_depth))
+        index_of_history_node = self.history.add_node(
+            HistoryNode(step=step, observation=None, depth=self._step_depth)
+        )
 
         # Call all subscribed callbacks
         await self.update_subscribers()
@@ -263,28 +334,43 @@ class Autopilot(ContinueBaseModel):
         try:
             observation = await step(self.continue_sdk)
         except Exception as e:
-            if index_of_history_node >= len(self.history.timeline) or self.history.timeline[index_of_history_node].deleted:
+            if (
+                index_of_history_node >= len(self.history.timeline)
+                or self.history.timeline[index_of_history_node].deleted
+            ):
                 # If step was deleted/cancelled, don't show error or allow retry
                 return None
 
             caught_error = True
 
             is_continue_custom_exception = issubclass(
-                e.__class__, ContinueCustomException)
+                e.__class__, ContinueCustomException
+            )
 
-            error_string = e.message if is_continue_custom_exception else '\n'.join(
-                traceback.format_exception(e))
-            error_title = e.title if is_continue_custom_exception else get_error_title(
-                e)
+            error_string = (
+                e.message
+                if is_continue_custom_exception
+                else "\n".join(traceback.format_exception(e))
+            )
+            error_title = (
+                e.title if is_continue_custom_exception else get_error_title(e)
+            )
 
             # Attach an InternalErrorObservation to the step and unhide it.
-            logger.error(
-                f"Error while running step: \n{error_string}\n{error_title}")
-            posthog_logger.capture_event('step error', {
-                                         'error_message': error_string, 'error_title': error_title, 'step_name': step.name, 'params': step.dict()})
+            logger.error(f"Error while running step: \n{error_string}\n{error_title}")
+            posthog_logger.capture_event(
+                "step error",
+                {
+                    "error_message": error_string,
+                    "error_title": error_title,
+                    "step_name": step.name,
+                    "params": step.dict(),
+                },
+            )
 
             observation = InternalErrorObservation(
-                error=error_string, title=error_title)
+                error=error_string, title=error_title
+            )
 
             # Reveal this step, but hide all of the following steps (its substeps)
             step_was_hidden = step.hide
@@ -331,8 +417,10 @@ class Autopilot(ContinueBaseModel):
             # Update subscribers with new description
             await self.update_subscribers()
 
-        create_async_task(update_description(
-        ), on_error=lambda e: self.continue_sdk.run_step(DisplayErrorStep(e=e)))
+        create_async_task(
+            update_description(),
+            on_error=lambda e: self.continue_sdk.run_step(DisplayErrorStep(e=e)),
+        )
 
         return observation
 
@@ -384,17 +472,22 @@ class Autopilot(ContinueBaseModel):
 
         # Use the first input to create title for session info, and make the session saveable
         if self.session_info is None:
+
             async def create_title():
-                title = await self.continue_sdk.models.medium.complete(f"Give a short title to describe the current chat session. Do not put quotes around the title. The first message was: \"{user_input}\". The title is: ")
+                title = await self.continue_sdk.models.medium.complete(
+                    f'Give a short title to describe the current chat session. Do not put quotes around the title. The first message was: "{user_input}". The title is: '
+                )
                 title = remove_quotes_and_escapes(title)
                 self.session_info = SessionInfo(
                     title=title,
                     session_id=self.ide.session_id,
-                    date_created=str(time.time())
+                    date_created=str(time.time()),
                 )
 
-            create_async_task(create_title(), on_error=lambda e: self.continue_sdk.run_step(
-                DisplayErrorStep(e=e)))
+            create_async_task(
+                create_title(),
+                on_error=lambda e: self.continue_sdk.run_step(DisplayErrorStep(e=e)),
+            )
 
         if len(self._main_user_input_queue) > 1:
             return
@@ -407,8 +500,9 @@ class Autopilot(ContinueBaseModel):
         await self.run_from_step(UserInputStep(user_input=user_input))
 
         while len(self._main_user_input_queue) > 0:
-            await self.run_from_step(UserInputStep(
-                user_input=self._main_user_input_queue.pop(0)))
+            await self.run_from_step(
+                UserInputStep(user_input=self._main_user_input_queue.pop(0))
+            )
 
     async def accept_refinement_input(self, user_input: str, index: int):
         await self._request_halt()

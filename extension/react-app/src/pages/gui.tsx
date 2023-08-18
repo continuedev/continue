@@ -412,6 +412,7 @@ function GUI(props: GUIProps) {
         return node.step.name === "User Input" ? (
           node.step.hide || (
             <UserInputContainer
+              index={index}
               onDelete={() => {
                 client?.deleteAtIndex(index);
               }}

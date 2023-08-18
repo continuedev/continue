@@ -34,6 +34,8 @@ abstract class AbstractContinueGUIClientProtocol {
   abstract loadSession(session_id?: string): void;
 
   abstract onReconnectAtSession(session_id: string): void;
+
+  abstract editStepAtIndex(userInput: string, index: number): void;
 }
 
 export default AbstractContinueGUIClientProtocol;
