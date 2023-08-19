@@ -73,4 +73,5 @@ def getConfigFilePath() -> str:
 
 def getLogFilePath():
     path = os.path.join(getGlobalFolderPath(), "continue.log")
+    os.makedirs(os.path.dirname(path), exist_ok=True)
     return path

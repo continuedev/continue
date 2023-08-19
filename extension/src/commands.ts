@@ -1,6 +1,7 @@
 import * as vscode from "vscode";
 import * as path from "path";
 import * as os from "os";
+import * as fs from "fs";
 
 import { acceptDiffCommand, rejectDiffCommand } from "./diffs";
 import { debugPanelWebview } from "./debugPanel";
@@ -60,6 +61,12 @@ const commandsMap: { [command: string]: (...args: any) => any } = {
   "continue.viewLogs": async () => {
     // Open ~/.continue/continue.log
     const logFile = path.join(os.homedir(), ".continue", "continue.log");
+    // Make sure the file/directory exist
+    if (!fs.existsSync(logFile)) {
+      fs.mkdirSync(path.dirname(logFile), { recursive: true });
+      fs.writeFileSync(logFile, "");
+    }
+
     const uri = vscode.Uri.file(logFile);
     await vscode.window.showTextDocument(uri);
   },

@@ -180,11 +180,16 @@ export async function startContinuePythonServer(redownload: boolean = true) {
   let shouldDownload = true;
   if (fs.existsSync(destination) && redownload) {
     // Check if the server is the correct version
-    const serverVersion = fs.readFileSync(serverVersionPath(), "utf8");
-    if (serverVersion === getExtensionVersion()) {
-      // The current version is already up and running, no need to continue
-      console.log("Continue server already downloaded");
-      shouldDownload = false;
+    if (fs.existsSync(serverVersionPath())) {
+      const serverVersion = fs.readFileSync(serverVersionPath(), "utf8");
+      if (serverVersion === getExtensionVersion()) {
+        // The current version is already up and running, no need to continue
+        console.log("Continue server already downloaded");
+        shouldDownload = false;
+      } else {
+        console.log("Old version of the server downloaded");
+        fs.unlinkSync(destination);
+      }
     } else {
       console.log("Old version of the server downloaded");
       fs.unlinkSync(destination);

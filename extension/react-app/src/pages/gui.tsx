@@ -405,8 +405,8 @@ function GUI(props: GUIProps) {
           <div className="w-3/4 m-auto text-center text-xs">
             {/* Tip: Drag the Continue logo from the far left of the window to the
             right, then toggle Continue using option/alt+command+m. */}
-            Tip: If there is an error in the terminal, use COMMAND+D to
-            automatically debug
+            {/* Tip: If there is an error in the terminal, use COMMAND+D to
+            automatically debug */}
           </div>
         </>
       )}

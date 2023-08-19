@@ -17,6 +17,7 @@ import {
   FolderIcon,
   BookOpenIcon,
   ChatBubbleOvalLeftEllipsisIcon,
+  SparklesIcon,
 } from "@heroicons/react/24/outline";
 import HeaderButtonWithText from "./HeaderButtonWithText";
 import { useNavigate } from "react-router-dom";
@@ -138,6 +139,30 @@ const Layout = () => {
           {bottomMessage}
         </BottomMessageDiv>
         <Footer>
+          <SparklesIcon
+            visibility={
+              localStorage.getItem("hideFeature") === "true"
+                ? "hidden"
+                : "visible"
+            }
+            className="mr-auto cursor-pointer"
+            onClick={() => {
+              localStorage.setItem("hideFeature", "true");
+            }}
+            onMouseEnter={() => {
+              dispatch(
+                setBottomMessage(
+                  "🎁 New Feature: Use ⌘D automatically debug errors in the terminal"
+                )
+              );
+            }}
+            onMouseLeave={() => {
+              dispatch(setBottomMessage(undefined));
+            }}
+            width="1.3em"
+            height="1.3em"
+            color="yellow"
+          />
           <HeaderButtonWithText
             onClick={() => {
               client?.loadSession(undefined);
