@@ -90,25 +90,21 @@ class GGML(LLM):
             json={"messages": messages, **args},
         ) as resp:
             # This is streaming application/json instaed of text/event-stream
-            async for line in resp.content.iter_chunks():
-                if line[1]:
-                    try:
-                        json_chunk = line[0].decode("utf-8")
-                        if json_chunk.startswith(": ping - ") or json_chunk.startswith(
-                            "data: [DONE]"
-                        ):
-                            continue
-                        chunks = json_chunk.split("\n")
-                        for chunk in chunks:
-                            if chunk.strip() != "":
-                                yield {
-                                    "role": "assistant",
-                                    "content": json.loads(chunk[6:])["choices"][0][
-                                        "delta"
-                                    ],
-                                }
-                    except:
-                        raise Exception(str(line[0]))
+            async for line, end in resp.content.iter_chunks():
+                if end:
+                    continue
+
+                json_chunk = line.decode("utf-8")
+                if json_chunk.startswith(": ping - ") or json_chunk.startswith(
+                    "data: [DONE]"
+                ):
+                    continue
+                chunks = json_chunk.split("\n")
+                for chunk in chunks:
+                    if chunk.strip() != "":
+                        yield json.loads(chunk[6:])["choices"][0][
+                            "delta"
+                        ]  # {"role": "assistant", "content": "..."}
 
     async def complete(
         self, prompt: str, with_history: List[ChatMessage] = None, **kwargs
@@ -130,7 +126,4 @@ class GGML(LLM):
                 **args,
             },
         ) as resp:
-            try:
-                return await resp.text()
-            except:
-                raise Exception(await resp.text())
+            return json.loads(await resp.text())["choices"][0]["text"]
