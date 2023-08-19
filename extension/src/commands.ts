@@ -71,6 +71,7 @@ const commandsMap: { [command: string]: (...args: any) => any } = {
     await vscode.window.showTextDocument(uri);
   },
   "continue.debugTerminal": async () => {
+    vscode.commands.executeCommand("continue.continueGUIView.focus");
     await ideProtocolClient.debugTerminal();
   },
 };

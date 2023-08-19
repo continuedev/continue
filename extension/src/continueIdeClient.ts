@@ -497,6 +497,7 @@ class IdeProtocolClient {
   }
 
   async getTerminalContents(): Promise<string> {
+    const tempCopyBuffer = await vscode.env.clipboard.readText();
     await vscode.commands.executeCommand("workbench.action.terminal.selectAll");
     await vscode.commands.executeCommand(
       "workbench.action.terminal.copySelection"
@@ -504,7 +505,8 @@ class IdeProtocolClient {
     await vscode.commands.executeCommand(
       "workbench.action.terminal.clearSelection"
     );
-    let terminalContents = await vscode.env.clipboard.readText();
+    const terminalContents = await vscode.env.clipboard.readText();
+    await vscode.env.clipboard.writeText(tempCopyBuffer);
     return terminalContents;
   }
 
