@@ -2,6 +2,7 @@ import json
 from typing import Dict, List, Union
 
 import tiktoken
+from tiktoken_ext import openai_public  # noqa: F401
 
 from ...core.main import ChatMessage
 from .templating import render_templated_string
