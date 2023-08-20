@@ -277,6 +277,11 @@ class SessionInfo(ContinueBaseModel):
     date_created: str
 
 
+class ContinueConfig(BaseModel):
+    system_message: str
+    temperature: float
+
+
 class FullState(ContinueBaseModel):
     """A full state of the program, including the history"""
 
@@ -287,6 +292,7 @@ class FullState(ContinueBaseModel):
     adding_highlighted_code: bool
     selected_context_items: List[ContextItem]
     session_info: Optional[SessionInfo] = None
+    config: ContinueConfig
 
 
 class ContinueSDK:
@@ -294,10 +300,6 @@ class ContinueSDK:
 
 
 class Models:
-    pass
-
-
-class ContinueConfig:
     pass
 
 

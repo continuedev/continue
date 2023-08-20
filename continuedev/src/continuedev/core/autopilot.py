@@ -3,11 +3,13 @@ import traceback
 from functools import cached_property
 from typing import Callable, Coroutine, Dict, List, Optional
 
+import redbaron
 from aiohttp import ClientPayloadError
 from openai import error as openai_errors
 from pydantic import root_validator
 
 from ..libs.util.create_async_task import create_async_task
+from ..libs.util.edit_config import edit_config_property
 from ..libs.util.logging import logger
 from ..libs.util.queue import AsyncSubscriptionQueue
 from ..libs.util.strings import remove_quotes_and_escapes
@@ -139,6 +141,7 @@ class Autopilot(ContinueBaseModel):
             if self.context_manager is not None
             else [],
             session_info=self.session_info,
+            config=self.continue_sdk.config,
         )
         self.full_state = full_state
         return full_state
@@ -520,4 +523,8 @@ class Autopilot(ContinueBaseModel):
 
     async def select_context_item(self, id: str, query: str):
         await self.context_manager.select_context_item(id, query)
+        await self.update_subscribers()
+
+    async def set_config_attr(self, key_path: List[str], value: redbaron.RedBaron):
+        edit_config_property(key_path, value)
         await self.update_subscribers()

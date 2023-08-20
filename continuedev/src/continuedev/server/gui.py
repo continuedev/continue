@@ -9,6 +9,7 @@ from starlette.websockets import WebSocketDisconnect, WebSocketState
 from uvicorn.main import Server
 
 from ..libs.util.create_async_task import create_async_task
+from ..libs.util.edit_config import create_float_node, create_string_node
 from ..libs.util.logging import logger
 from ..libs.util.queue import AsyncSubscriptionQueue
 from ..libs.util.telemetry import posthog_logger
@@ -104,6 +105,10 @@ class GUIProtocolServer(AbstractGUIProtocolServer):
             self.load_session(data.get("session_id", None))
         elif message_type == "edit_step_at_index":
             self.edit_step_at_index(data.get("user_input", ""), data["index"])
+        elif message_type == "set_system_message":
+            self.set_system_message(data["message"])
+        elif message_type == "set_temperature":
+            self.set_temperature(float(data["temperature"]))
 
     def on_main_input(self, input: str):
         # Do something with user input
@@ -185,6 +190,26 @@ class GUIProtocolServer(AbstractGUIProtocolServer):
         create_async_task(load_and_tell_to_reconnect(), self.on_error)
 
         posthog_logger.capture_event("load_session", {"session_id": session_id})
+
+    def set_system_message(self, message: str):
+        self.session.autopilot.continue_sdk.config.system_message = message
+        self.session.autopilot.continue_sdk.models.set_system_message(message)
+
+        create_async_task(
+            self.session.autopilot.set_config_attr(
+                ["system_message"], create_string_node(message)
+            ),
+            self.on_error,
+        )
+
+    def set_temperature(self, temperature: float):
+        self.session.autopilot.continue_sdk.config.temperature = temperature
+        create_async_task(
+            self.session.autopilot.set_config_attr(
+                ["temperature"], create_float_node(temperature)
+            ),
+            self.on_error,
+        )
 
 
 @router.websocket("/ws")

@@ -36,6 +36,10 @@ abstract class AbstractContinueGUIClientProtocol {
   abstract onReconnectAtSession(session_id: string): void;
 
   abstract editStepAtIndex(userInput: string, index: number): void;
+
+  abstract setSystemMessage(message: string): void;
+
+  abstract setTemperature(temperature: number): void;
 }
 
 export default AbstractContinueGUIClientProtocol;

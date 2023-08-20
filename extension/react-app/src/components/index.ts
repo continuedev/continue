@@ -40,21 +40,29 @@ export const StyledTooltip = styled(Tooltip)`
   padding-left: 12px;
   padding-right: 12px;
   z-index: 100;
+
+  max-width: 80vw;
 `;
 
 export const TextArea = styled.textarea`
-  width: 100%;
+  padding: 8px;
+  font-family: inherit;
   border-radius: ${defaultBorderRadius};
-  border: none;
+  margin: 16px auto;
+  height: auto;
+  width: calc(100% - 32px);
   background-color: ${secondaryDark};
-  resize: vertical;
-
-  padding: 4px;
-  caret-color: ${vscForeground};
-  color: #{vscForeground};
+  color: ${vscForeground};
+  z-index: 1;
+  border: 1px solid transparent;
 
   &:focus {
-    outline: 1px solid ${buttonColor};
+    outline: 1px solid ${lightGray};
+    border: 1px solid transparent;
+  }
+
+  &::placeholder {
+    color: ${lightGray}80;
   }
 `;
 

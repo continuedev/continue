@@ -268,6 +268,24 @@
         "date_created"
       ]
     },
+    "ContinueConfig": {
+      "title": "ContinueConfig",
+      "type": "object",
+      "properties": {
+        "system_message": {
+          "title": "System Message",
+          "type": "string"
+        },
+        "temperature": {
+          "title": "Temperature",
+          "type": "number"
+        }
+      },
+      "required": [
+        "system_message",
+        "temperature"
+      ]
+    },
     "src__continuedev__core__main__FullState": {
       "title": "FullState",
       "description": "A full state of the program, including the history",
@@ -307,6 +325,9 @@
         },
         "session_info": {
           "$ref": "#/definitions/SessionInfo"
+        },
+        "config": {
+          "$ref": "#/definitions/ContinueConfig"
         }
       },
       "required": [
@@ -315,7 +336,8 @@
         "user_input_queue",
         "slash_commands",
         "adding_highlighted_code",
-        "selected_context_items"
+        "selected_context_items",
+        "config"
       ]
     }
   }

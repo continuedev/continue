@@ -41,6 +41,8 @@ export type SelectedContextItems = ContextItem[];
 export type SessionId = string;
 export type Title = string;
 export type DateCreated = string;
+export type SystemMessage1 = string;
+export type Temperature = number;
 
 /**
  * A full state of the program, including the history
@@ -53,6 +55,7 @@ export interface FullState1 {
   adding_highlighted_code: AddingHighlightedCode;
   selected_context_items: SelectedContextItems;
   session_info?: SessionInfo;
+  config: ContinueConfig;
   [k: string]: unknown;
 }
 /**
@@ -138,5 +141,10 @@ export interface SessionInfo {
   session_id: SessionId;
   title: Title;
   date_created: DateCreated;
+  [k: string]: unknown;
+}
+export interface ContinueConfig {
+  system_message: SystemMessage1;
+  temperature: Temperature;
   [k: string]: unknown;
 }

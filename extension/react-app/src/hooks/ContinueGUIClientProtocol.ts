@@ -132,6 +132,14 @@ class ContinueGUIClientProtocol extends AbstractContinueGUIClientProtocol {
       index,
     });
   }
+
+  setSystemMessage(message: string): void {
+    this.messenger?.send("set_system_message", { message });
+  }
+
+  setTemperature(temperature: number): void {
+    this.messenger?.send("set_temperature", { temperature });
+  }
 }
 
 export default ContinueGUIClientProtocol;

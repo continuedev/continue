@@ -29,6 +29,10 @@ const initialState: FullState = {
   slash_commands: [],
   adding_highlighted_code: false,
   selected_context_items: [],
+  config: {
+    system_message: "",
+    temperature: 0.5,
+  },
 };
 
 export const serverStateSlice = createSlice({
