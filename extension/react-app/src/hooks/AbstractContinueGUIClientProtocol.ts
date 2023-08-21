@@ -1,4 +1,4 @@
-import { ContextItemId } from "../../../schema/FullState";
+import { ContextItem, ContextItemId } from "../../../schema/FullState";
 
 abstract class AbstractContinueGUIClientProtocol {
   abstract sendMainInput(input: string): void;
@@ -36,6 +36,10 @@ abstract class AbstractContinueGUIClientProtocol {
   abstract onReconnectAtSession(session_id: string): void;
 
   abstract editStepAtIndex(userInput: string, index: number): void;
+
+  abstract saveContextGroup(title: string, contextItems: ContextItem[]): void;
+
+  abstract selectContextGroup(id: string): void;
 }
 
 export default AbstractContinueGUIClientProtocol;

@@ -287,6 +287,7 @@ class FullState(ContinueBaseModel):
     adding_highlighted_code: bool
     selected_context_items: List[ContextItem]
     session_info: Optional[SessionInfo] = None
+    saved_context_groups: Dict[str, List[ContextItem]] = {}
 
 
 class ContinueSDK:

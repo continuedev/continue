@@ -121,6 +121,13 @@ class ContextProvider(BaseModel):
         if new_item := await self.get_item(id, query):
             self.selected_items.append(new_item)
 
+    async def manually_add_context_item(self, context_item: ContextItem):
+        for item in self.selected_items:
+            if item.description.id.item_id == context_item.description.id.item_id:
+                return
+
+        self.selected_items.append(context_item)
+
 
 class ContextManager:
     """
@@ -277,6 +284,17 @@ class ContextManager:
         """
         for provider in self.context_providers.values():
             await self.context_providers[provider.title].clear_context()
+
+    async def manually_add_context_item(self, item: ContextItem):
+        """
+        Adds the given ContextItem to the list of ContextItems.
+        """
+        if item.description.id.provider_title not in self.provider_titles:
+            return
+
+        await self.context_providers[
+            item.description.id.provider_title
+        ].manually_add_context_item(item)
 
 
 """

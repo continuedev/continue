@@ -8,6 +8,7 @@ from pydantic import BaseModel
 from starlette.websockets import WebSocketDisconnect, WebSocketState
 from uvicorn.main import Server
 
+from ..core.main import ContextItem
 from ..libs.util.create_async_task import create_async_task
 from ..libs.util.logging import logger
 from ..libs.util.queue import AsyncSubscriptionQueue
@@ -104,6 +105,12 @@ class GUIProtocolServer(AbstractGUIProtocolServer):
             self.load_session(data.get("session_id", None))
         elif message_type == "edit_step_at_index":
             self.edit_step_at_index(data.get("user_input", ""), data["index"])
+        elif message_type == "save_context_group":
+            self.save_context_group(
+                data["title"], [ContextItem(**item) for item in data["context_items"]]
+            )
+        elif message_type == "select_context_group":
+            self.select_context_group(data["id"])
 
     def on_main_input(self, input: str):
         # Do something with user input
@@ -185,6 +192,17 @@ class GUIProtocolServer(AbstractGUIProtocolServer):
         create_async_task(load_and_tell_to_reconnect(), self.on_error)
 
         posthog_logger.capture_event("load_session", {"session_id": session_id})
+
+    def save_context_group(self, title: str, context_items: List[ContextItem]):
+        create_async_task(
+            self.session.autopilot.save_context_group(title, context_items),
+            self.on_error,
+        )
+
+    def select_context_group(self, id: str):
+        create_async_task(
+            self.session.autopilot.select_context_group(id), self.on_error
+        )
 
 
 @router.websocket("/ws")

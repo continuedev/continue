@@ -75,3 +75,12 @@ def getLogFilePath():
     path = os.path.join(getGlobalFolderPath(), "continue.log")
     os.makedirs(os.path.dirname(path), exist_ok=True)
     return path
+
+
+def getSavedContextGroupsPath():
+    path = os.path.join(getGlobalFolderPath(), "saved_context_groups.json")
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    if not os.path.exists(path):
+        with open(path, "w") as f:
+            f.write("\{\}")
+    return path

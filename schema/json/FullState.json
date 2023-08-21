@@ -307,6 +307,17 @@
         },
         "session_info": {
           "$ref": "#/definitions/SessionInfo"
+        },
+        "saved_context_groups": {
+          "title": "Saved Context Groups",
+          "default": {},
+          "type": "object",
+          "additionalProperties": {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/ContextItem"
+            }
+          }
         }
       },
       "required": [

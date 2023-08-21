@@ -112,15 +112,13 @@ const Layout = () => {
         <Onboarding />
         <TextDialog
           showDialog={showDialog}
-          onEnter={(text) => {
-            client?.sendMainInput(`/feedback ${text}`);
+          onEnter={() => {
             dispatch(setShowDialog(false));
           }}
           onClose={() => {
             dispatch(setShowDialog(false));
           }}
           message={dialogMessage}
-          entryOn={dialogEntryOn}
         />
         <Outlet />
 

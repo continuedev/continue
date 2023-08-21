@@ -53,6 +53,7 @@ export interface FullState1 {
   adding_highlighted_code: AddingHighlightedCode;
   selected_context_items: SelectedContextItems;
   session_info?: SessionInfo;
+  saved_context_groups?: SavedContextGroups;
   [k: string]: unknown;
 }
 /**
@@ -139,4 +140,7 @@ export interface SessionInfo {
   title: Title;
   date_created: DateCreated;
   [k: string]: unknown;
+}
+export interface SavedContextGroups {
+  [k: string]: ContextItem[];
 }

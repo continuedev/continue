@@ -1,3 +1,5 @@
+import json
+import os
 import time
 import traceback
 from functools import cached_property
@@ -9,6 +11,7 @@ from pydantic import root_validator
 
 from ..libs.util.create_async_task import create_async_task
 from ..libs.util.logging import logger
+from ..libs.util.paths import getSavedContextGroupsPath
 from ..libs.util.queue import AsyncSubscriptionQueue
 from ..libs.util.strings import remove_quotes_and_escapes
 from ..libs.util.telemetry import posthog_logger
@@ -30,6 +33,7 @@ from ..server.ide_protocol import AbstractIdeProtocolServer
 from .context import ContextManager
 from .main import (
     Context,
+    ContextItem,
     ContinueCustomException,
     FullState,
     History,
@@ -111,6 +115,21 @@ class Autopilot(ContinueBaseModel):
             self.history = full_state.history
             self.session_info = full_state.session_info
 
+        # Load saved context groups
+        context_groups_file = getSavedContextGroupsPath()
+        try:
+            with open(context_groups_file, "r") as f:
+                json_ob = json.load(f)
+                for title, context_group in json_ob.items():
+                    self._saved_context_groups[title] = [
+                        ContextItem(**item) for item in context_group
+                    ]
+        except Exception as e:
+            logger.warning(
+                f"Failed to load saved_context_groups.json: {e}. Reverting to empty list."
+            )
+            self._saved_context_groups = {}
+
         self.started = True
 
     class Config:
@@ -139,6 +158,7 @@ class Autopilot(ContinueBaseModel):
             if self.context_manager is not None
             else [],
             session_info=self.session_info,
+            saved_context_groups=self._saved_context_groups,
         )
         self.full_state = full_state
         return full_state
@@ -521,3 +541,37 @@ class Autopilot(ContinueBaseModel):
     async def select_context_item(self, id: str, query: str):
         await self.context_manager.select_context_item(id, query)
         await self.update_subscribers()
+
+    _saved_context_groups: Dict[str, List[ContextItem]] = {}
+
+    async def save_context_group(self, title: str, context_items: List[ContextItem]):
+        self._saved_context_groups[title] = context_items
+        await self.update_subscribers()
+
+        # Update saved context groups
+        context_groups_file = getSavedContextGroupsPath()
+        if os.path.exists(context_groups_file):
+            with open(context_groups_file, "w") as f:
+                dict_to_save = {
+                    title: [item.dict() for item in context_items]
+                    for title, context_items in self._saved_context_groups.items()
+                }
+                json.dump(dict_to_save, f)
+
+        posthog_logger.capture_event(
+            "save_context_group", {"title": title, "length": len(context_items)}
+        )
+
+    async def select_context_group(self, id: str):
+        if id not in self._saved_context_groups:
+            logger.warning(f"Context group {id} not found")
+            return
+        context_group = self._saved_context_groups[id]
+        await self.context_manager.clear_context()
+        for item in context_group:
+            await self.context_manager.manually_add_context_item(item)
+        await self.update_subscribers()
+
+        posthog_logger.capture_event(
+            "select_context_group", {"title": id, "length": len(context_group)}
+        )
