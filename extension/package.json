@@ -126,8 +126,8 @@
       },
       {
         "command": "continue.debugTerminal",
-        "mac": "cmd+d",
-        "key": "ctrl+d"
+        "mac": "cmd+shift+r",
+        "key": "ctrl+shift+r"
       }
     ],
     "menus": {

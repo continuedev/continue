@@ -150,7 +150,7 @@ const Layout = () => {
             onMouseEnter={() => {
               dispatch(
                 setBottomMessage(
-                  "🎁 New Feature: Use ⌘D automatically debug errors in the terminal"
+                  "🎁 New Feature: Use ⌘⇧R automatically debug errors in the terminal"
                 )
               );
             }}
