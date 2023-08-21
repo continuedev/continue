@@ -41,7 +41,7 @@ class GoogleContextProvider(ContextProvider):
     async def provide_context_items(self, workspace_dir: str) -> List[ContextItem]:
         return [self.BASE_CONTEXT_ITEM]
 
-    async def get_item(self, id: ContextItemId, query: str, _) -> ContextItem:
+    async def get_item(self, id: ContextItemId, query: str) -> ContextItem:
         if not id.item_id == self.GOOGLE_CONTEXT_ITEM_ID:
             raise Exception("Invalid item id")
 
