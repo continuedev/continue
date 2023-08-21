@@ -143,6 +143,10 @@ class ContinueGUIClientProtocol extends AbstractContinueGUIClientProtocol {
   selectContextGroup(id: string): void {
     this.messenger?.send("select_context_group", { id });
   }
+
+  deleteContextGroup(id: string): void {
+    this.messenger?.send("delete_context_group", { id });
+  }
 }
 
 export default ContinueGUIClientProtocol;

@@ -40,6 +40,8 @@ abstract class AbstractContinueGUIClientProtocol {
   abstract saveContextGroup(title: string, contextItems: ContextItem[]): void;
 
   abstract selectContextGroup(id: string): void;
+
+  abstract deleteContextGroup(id: string): void;
 }
 
 export default AbstractContinueGUIClientProtocol;

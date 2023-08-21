@@ -544,11 +544,7 @@ class Autopilot(ContinueBaseModel):
 
     _saved_context_groups: Dict[str, List[ContextItem]] = {}
 
-    async def save_context_group(self, title: str, context_items: List[ContextItem]):
-        self._saved_context_groups[title] = context_items
-        await self.update_subscribers()
-
-        # Update saved context groups
+    def _persist_context_groups(self):
         context_groups_file = getSavedContextGroupsPath()
         if os.path.exists(context_groups_file):
             with open(context_groups_file, "w") as f:
@@ -557,6 +553,13 @@ class Autopilot(ContinueBaseModel):
                     for title, context_items in self._saved_context_groups.items()
                 }
                 json.dump(dict_to_save, f)
+
+    async def save_context_group(self, title: str, context_items: List[ContextItem]):
+        self._saved_context_groups[title] = context_items
+        await self.update_subscribers()
+
+        # Update saved context groups
+        self._persist_context_groups()
 
         posthog_logger.capture_event(
             "save_context_group", {"title": title, "length": len(context_items)}
@@ -575,3 +578,15 @@ class Autopilot(ContinueBaseModel):
         posthog_logger.capture_event(
             "select_context_group", {"title": id, "length": len(context_group)}
         )
+
+    async def delete_context_group(self, id: str):
+        if id not in self._saved_context_groups:
+            logger.warning(f"Context group {id} not found")
+            return
+        del self._saved_context_groups[id]
+        await self.update_subscribers()
+
+        # Update saved context groups
+        self._persist_context_groups()
+
+        posthog_logger.capture_event("delete_context_group", {"title": id})

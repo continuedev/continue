@@ -7,8 +7,6 @@ import React, {
 import { useCombobox } from "downshift";
 import styled from "styled-components";
 import {
-  Button,
-  TextInput,
   defaultBorderRadius,
   lightGray,
   secondaryDark,
@@ -33,43 +31,13 @@ import {
 } from "../redux/slices/uiStateSlice";
 import { useDispatch, useSelector } from "react-redux";
 import { RootStore } from "../redux/store";
+import SelectContextGroupDialog from "./dialogs/SelectContextGroupDialog";
+import AddContextGroupDialog from "./dialogs/AddContextGroupDialog";
 
 const SEARCH_INDEX_NAME = "continue_context_items";
 
 // #region styled components
 const mainInputFontSize = 13;
-
-const MiniPillSpan = styled.span`
-  padding: 3px;
-  padding-left: 6px;
-  padding-right: 6px;
-  border-radius: ${defaultBorderRadius};
-  color: ${vscForeground};
-  background-color: #fff3;
-  overflow: hidden;
-  font-size: 12px;
-  display: flex;
-  align-items: center;
-  text-align: center;
-  justify-content: center;
-`;
-
-const ContextGroupSelectDiv = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px;
-  border-radius: ${defaultBorderRadius};
-  background-color: ${secondaryDark};
-  color: ${vscForeground};
-  margin-top: 8px;
-  cursor: pointer;
-
-  &:hover {
-    background-color: ${vscBackground};
-    color: ${vscForeground};
-  }
-`;
 
 const EmptyPillDiv = styled.div`
   padding: 4px;
@@ -374,81 +342,16 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
   }, [inputRef.current]);
 
   const showSelectContextGroupDialog = () => {
-    dispatch(
-      setDialogMessage(
-        <div className="px-4">
-          <h2>Saved Context Groups</h2>
-
-          {savedContextGroups && Object.keys(savedContextGroups).length > 0 ? (
-            <div className="overflow-scroll">
-              {Object.keys(savedContextGroups).map((key: string) => {
-                const contextGroup = savedContextGroups[key];
-                return (
-                  <ContextGroupSelectDiv
-                    onClick={() => {
-                      dispatch(setDialogMessage(undefined));
-                      dispatch(setShowDialog(false));
-                      client?.selectContextGroup(key);
-                    }}
-                  >
-                    <b>{key}: </b>
-
-                    {contextGroup.map((contextItem) => {
-                      return (
-                        <MiniPillSpan>
-                          {contextItem.description.name}
-                        </MiniPillSpan>
-                      );
-                    })}
-                  </ContextGroupSelectDiv>
-                );
-              })}
-            </div>
-          ) : (
-            <div>No saved context groups</div>
-          )}
-          <Button
-            className="ml-auto"
-            onClick={() => {
-              dispatch(setDialogMessage(undefined));
-              dispatch(setShowDialog(false));
-            }}
-          >
-            Cancel
-          </Button>
-        </div>
-      )
-    );
+    dispatch(setDialogMessage(<SelectContextGroupDialog />));
     dispatch(setShowDialog(true));
   };
 
   const showDialogToSaveContextGroup = () => {
-    let inputElement: HTMLInputElement | null = null;
     dispatch(
       setDialogMessage(
-        <div>
-          <TextInput
-            defaultValue="My Context Group"
-            type="text"
-            ref={(input) => {
-              inputElement = input;
-            }}
-          />
-          <br />
-          <Button
-            className="ml-auto"
-            onClick={() => {
-              dispatch(setDialogMessage(undefined));
-              dispatch(setShowDialog(false));
-              const title = inputElement
-                ? inputElement.value
-                : "My Context Group";
-              client?.saveContextGroup(title, props.selectedContextItems);
-            }}
-          >
-            Create
-          </Button>
-        </div>
+        <AddContextGroupDialog
+          selectedContextItems={props.selectedContextItems}
+        />
       )
     );
     dispatch(setShowDialog(true));

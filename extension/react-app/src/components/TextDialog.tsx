@@ -58,6 +58,19 @@ const TextDialog = (props: {
   onClose: () => void;
   message?: string | JSX.Element;
 }) => {
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        props.onClose();
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [props]);
+
   return (
     <ScreenCover
       onClick={() => {

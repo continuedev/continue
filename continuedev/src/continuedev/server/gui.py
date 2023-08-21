@@ -111,6 +111,8 @@ class GUIProtocolServer(AbstractGUIProtocolServer):
             )
         elif message_type == "select_context_group":
             self.select_context_group(data["id"])
+        elif message_type == "delete_context_group":
+            self.delete_context_group(data["id"])
 
     def on_main_input(self, input: str):
         # Do something with user input
@@ -202,6 +204,11 @@ class GUIProtocolServer(AbstractGUIProtocolServer):
     def select_context_group(self, id: str):
         create_async_task(
             self.session.autopilot.select_context_group(id), self.on_error
+        )
+
+    def delete_context_group(self, id: str):
+        create_async_task(
+            self.session.autopilot.delete_context_group(id), self.on_error
         )
 
 
