@@ -37,6 +37,13 @@ class ContextProvider(BaseModel):
 
     selected_items: List[ContextItem] = []
 
+    def dict(self, *args, **kwargs):
+        original_dict = super().dict(*args, **kwargs)
+        original_dict.pop("sdk", None)
+        original_dict.pop("delete_documents", None)
+        original_dict.pop("update_documents", None)
+        return original_dict
+
     async def start(self, sdk: ContinueSDK, delete_documents, update_documents):
         """
         Starts the context provider.
