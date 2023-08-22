@@ -1,0 +1,412 @@
+{
+  "title": "ContinueConfig",
+  "$ref": "#/definitions/src__continuedev__core__config__ContinueConfig",
+  "definitions": {
+    "FunctionCall": {
+      "title": "FunctionCall",
+      "type": "object",
+      "properties": {
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "arguments": {
+          "title": "Arguments",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "arguments"
+      ]
+    },
+    "ChatMessage": {
+      "title": "ChatMessage",
+      "type": "object",
+      "properties": {
+        "role": {
+          "title": "Role",
+          "enum": [
+            "assistant",
+            "user",
+            "system",
+            "function"
+          ],
+          "type": "string"
+        },
+        "content": {
+          "title": "Content",
+          "type": "string"
+        },
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "summary": {
+          "title": "Summary",
+          "type": "string"
+        },
+        "function_call": {
+          "$ref": "#/definitions/FunctionCall"
+        }
+      },
+      "required": [
+        "role",
+        "summary"
+      ]
+    },
+    "Step": {
+      "title": "Step",
+      "type": "object",
+      "properties": {
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "hide": {
+          "title": "Hide",
+          "default": false,
+          "type": "boolean"
+        },
+        "description": {
+          "title": "Description",
+          "type": "string"
+        },
+        "system_message": {
+          "title": "System Message",
+          "type": "string"
+        },
+        "chat_context": {
+          "title": "Chat Context",
+          "default": [],
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ChatMessage"
+          }
+        },
+        "manage_own_chat_context": {
+          "title": "Manage Own Chat Context",
+          "default": false,
+          "type": "boolean"
+        }
+      }
+    },
+    "LLM": {
+      "title": "LLM",
+      "type": "object",
+      "properties": {
+        "requires_api_key": {
+          "title": "Requires Api Key",
+          "type": "string"
+        },
+        "requires_unique_id": {
+          "title": "Requires Unique Id",
+          "default": false,
+          "type": "boolean"
+        },
+        "requires_write_log": {
+          "title": "Requires Write Log",
+          "default": false,
+          "type": "boolean"
+        },
+        "system_message": {
+          "title": "System Message",
+          "type": "string"
+        }
+      }
+    },
+    "ContinueSDK": {
+      "title": "ContinueSDK",
+      "type": "object",
+      "properties": {}
+    },
+    "Models": {
+      "title": "Models",
+      "description": "Main class that holds the current model configuration",
+      "type": "object",
+      "properties": {
+        "default": {
+          "$ref": "#/definitions/LLM"
+        },
+        "small": {
+          "$ref": "#/definitions/LLM"
+        },
+        "medium": {
+          "$ref": "#/definitions/LLM"
+        },
+        "large": {
+          "$ref": "#/definitions/LLM"
+        },
+        "edit": {
+          "$ref": "#/definitions/LLM"
+        },
+        "chat": {
+          "$ref": "#/definitions/LLM"
+        },
+        "sdk": {
+          "$ref": "#/definitions/ContinueSDK"
+        }
+      },
+      "required": [
+        "default"
+      ]
+    },
+    "CustomCommand": {
+      "title": "CustomCommand",
+      "type": "object",
+      "properties": {
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "prompt": {
+          "title": "Prompt",
+          "type": "string"
+        },
+        "description": {
+          "title": "Description",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "prompt",
+        "description"
+      ]
+    },
+    "SlashCommand": {
+      "title": "SlashCommand",
+      "type": "object",
+      "properties": {
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "description": {
+          "title": "Description",
+          "type": "string"
+        },
+        "step": {
+          "title": "Step"
+        },
+        "params": {
+          "title": "Params",
+          "default": {},
+          "type": "object"
+        }
+      },
+      "required": [
+        "name",
+        "description",
+        "step"
+      ]
+    },
+    "Policy": {
+      "title": "Policy",
+      "description": "A rule that determines which step to take next",
+      "type": "object",
+      "properties": {}
+    },
+    "ContextItemId": {
+      "title": "ContextItemId",
+      "description": "A ContextItemId is a unique identifier for a ContextItem.",
+      "type": "object",
+      "properties": {
+        "provider_title": {
+          "title": "Provider Title",
+          "type": "string"
+        },
+        "item_id": {
+          "title": "Item Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "provider_title",
+        "item_id"
+      ]
+    },
+    "ContextItemDescription": {
+      "title": "ContextItemDescription",
+      "description": "A ContextItemDescription is a description of a ContextItem that is displayed to the user when they type '@'.\n\nThe id can be used to retrieve the ContextItem from the ContextManager.",
+      "type": "object",
+      "properties": {
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "description": {
+          "title": "Description",
+          "type": "string"
+        },
+        "id": {
+          "$ref": "#/definitions/ContextItemId"
+        }
+      },
+      "required": [
+        "name",
+        "description",
+        "id"
+      ]
+    },
+    "ContextItem": {
+      "title": "ContextItem",
+      "description": "A ContextItem is a single item that is stored in the ContextManager.",
+      "type": "object",
+      "properties": {
+        "description": {
+          "$ref": "#/definitions/ContextItemDescription"
+        },
+        "content": {
+          "title": "Content",
+          "type": "string"
+        },
+        "editing": {
+          "title": "Editing",
+          "default": false,
+          "type": "boolean"
+        },
+        "editable": {
+          "title": "Editable",
+          "default": false,
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "description",
+        "content"
+      ]
+    },
+    "ContextProvider": {
+      "title": "ContextProvider",
+      "description": "The ContextProvider class is a plugin that lets you provide new information to the LLM by typing '@'.\nWhen you type '@', the context provider will be asked to populate a list of options.\nThese options will be updated on each keystroke.\nWhen you hit enter on an option, the context provider will add that item to the autopilot's list of context (which is all stored in the ContextManager object).",
+      "type": "object",
+      "properties": {
+        "title": {
+          "title": "Title",
+          "type": "string"
+        },
+        "selected_items": {
+          "title": "Selected Items",
+          "default": [],
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ContextItem"
+          }
+        }
+      },
+      "required": [
+        "title"
+      ]
+    },
+    "src__continuedev__core__config__ContinueConfig": {
+      "title": "ContinueConfig",
+      "description": "A pydantic class for the continue config file.",
+      "type": "object",
+      "properties": {
+        "steps_on_startup": {
+          "title": "Steps On Startup",
+          "default": [],
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Step"
+          }
+        },
+        "disallowed_steps": {
+          "title": "Disallowed Steps",
+          "default": [],
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "allow_anonymous_telemetry": {
+          "title": "Allow Anonymous Telemetry",
+          "default": true,
+          "type": "boolean"
+        },
+        "models": {
+          "title": "Models",
+          "default": {
+            "default": {
+              "requires_api_key": null,
+              "requires_unique_id": true,
+              "requires_write_log": true,
+              "system_message": null,
+              "model": "gpt-4",
+              "api_key": null,
+              "llm": null,
+              "name": null,
+              "class_name": "MaybeProxyOpenAI"
+            },
+            "small": null,
+            "medium": {
+              "requires_api_key": null,
+              "requires_unique_id": true,
+              "requires_write_log": true,
+              "system_message": null,
+              "model": "gpt-3.5-turbo",
+              "api_key": null,
+              "llm": null,
+              "name": null,
+              "class_name": "MaybeProxyOpenAI"
+            },
+            "large": null,
+            "edit": null,
+            "chat": null
+          },
+          "allOf": [
+            {
+              "$ref": "#/definitions/Models"
+            }
+          ]
+        },
+        "temperature": {
+          "title": "Temperature",
+          "default": 0.5,
+          "type": "number"
+        },
+        "custom_commands": {
+          "title": "Custom Commands",
+          "default": [
+            {
+              "name": "test",
+              "prompt": "Write a comprehensive set of unit tests for the selected code. It should setup, run tests that check for correctness including important edge cases, and teardown. Ensure that the tests are complete and sophisticated. Give the tests just as chat output, don't edit any file.",
+              "description": "This is an example custom command. Use /config to edit it and create more"
+            }
+          ],
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/CustomCommand"
+          }
+        },
+        "slash_commands": {
+          "title": "Slash Commands",
+          "default": [],
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/SlashCommand"
+          }
+        },
+        "on_traceback": {
+          "$ref": "#/definitions/Step"
+        },
+        "system_message": {
+          "title": "System Message",
+          "type": "string"
+        },
+        "policy_override": {
+          "$ref": "#/definitions/Policy"
+        },
+        "context_providers": {
+          "title": "Context Providers",
+          "default": [],
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ContextProvider"
+          }
+        }
+      }
+    }
+  }
+}

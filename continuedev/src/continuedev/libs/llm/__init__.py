@@ -14,6 +14,14 @@ class LLM(ContinueBaseModel, ABC):
 
     class Config:
         arbitrary_types_allowed = True
+        extra = "allow"
+
+    def dict(self, **kwargs):
+        original_dict = super().dict(**kwargs)
+        original_dict.pop("write_log", None)
+        original_dict["name"] = self.name
+        original_dict["class_name"] = self.__class__.__name__
+        return original_dict
 
     @abstractproperty
     def name(self):

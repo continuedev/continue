@@ -16,9 +16,16 @@ class MaybeProxyOpenAI(LLM):
 
     llm: Optional[LLM] = None
 
+    def update_llm_properties(self):
+        if self.llm is not None:
+            self.llm.system_message = self.system_message
+
     @property
     def name(self):
-        return self.llm.name
+        if self.llm is not None:
+            return self.llm.name
+        else:
+            return None
 
     @property
     def context_length(self):
@@ -44,11 +51,13 @@ class MaybeProxyOpenAI(LLM):
     async def complete(
         self, prompt: str, with_history: List[ChatMessage] = None, **kwargs
     ) -> Coroutine[Any, Any, str]:
+        self.update_llm_properties()
         return await self.llm.complete(prompt, with_history=with_history, **kwargs)
 
     async def stream_complete(
         self, prompt, with_history: List[ChatMessage] = None, **kwargs
     ) -> Generator[Union[Any, List, Dict], None, None]:
+        self.update_llm_properties()
         resp = self.llm.stream_complete(prompt, with_history=with_history, **kwargs)
         async for item in resp:
             yield item
@@ -56,6 +65,7 @@ class MaybeProxyOpenAI(LLM):
     async def stream_chat(
         self, messages: List[ChatMessage] = None, **kwargs
     ) -> Generator[Union[Any, List, Dict], None, None]:
+        self.update_llm_properties()
         resp = self.llm.stream_chat(messages=messages, **kwargs)
         async for item in resp:
             yield item

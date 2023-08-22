@@ -1,7 +1,5 @@
 import React, { useState } from "react";
-import { Tooltip } from "react-tooltip";
-import styled from "styled-components";
-import { HeaderButton, StyledTooltip, defaultBorderRadius } from ".";
+import { HeaderButton, StyledTooltip } from ".";
 
 interface HeaderButtonWithTextProps {
   text: string;

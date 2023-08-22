@@ -277,6 +277,19 @@ class SessionInfo(ContinueBaseModel):
     date_created: str
 
 
+class ContinueConfig(ContinueBaseModel):
+    system_message: str
+    temperature: float
+
+    class Config:
+        extra = "allow"
+
+    def dict(self, **kwargs):
+        original_dict = super().dict(**kwargs)
+        original_dict.pop("policy", None)
+        return original_dict
+
+
 class FullState(ContinueBaseModel):
     """A full state of the program, including the history"""
 
@@ -287,19 +300,16 @@ class FullState(ContinueBaseModel):
     adding_highlighted_code: bool
     selected_context_items: List[ContextItem]
     session_info: Optional[SessionInfo] = None
+    config: ContinueConfig
     saved_context_groups: Dict[str, List[ContextItem]] = {}
 
 
 class ContinueSDK:
-    pass
+    ...
 
 
 class Models:
-    pass
-
-
-class ContinueConfig:
-    pass
+    ...
 
 
 class Policy(ContinueBaseModel):

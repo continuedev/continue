@@ -133,6 +133,18 @@ class ContinueGUIClientProtocol extends AbstractContinueGUIClientProtocol {
     });
   }
 
+  setSystemMessage(message: string): void {
+    this.messenger?.send("set_system_message", { message });
+  }
+
+  setTemperature(temperature: number): void {
+    this.messenger?.send("set_temperature", { temperature });
+  }
+
+  setModelForRole(role: string, model_class: string, model: any): void {
+    this.messenger?.send("set_model_for_role", { role, model, model_class });
+  }
+
   saveContextGroup(title: string, contextItems: ContextItem[]): void {
     this.messenger?.send("save_context_group", {
       context_items: contextItems,

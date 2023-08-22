@@ -18,6 +18,7 @@ import {
   BookOpenIcon,
   ChatBubbleOvalLeftEllipsisIcon,
   SparklesIcon,
+  Cog6ToothIcon,
 } from "@heroicons/react/24/outline";
 import HeaderButtonWithText from "./HeaderButtonWithText";
 import { useNavigate } from "react-router-dom";
@@ -193,6 +194,14 @@ const Layout = () => {
               <ChatBubbleOvalLeftEllipsisIcon width="1.4em" height="1.4em" />
             </HeaderButtonWithText>
           </a>
+          <HeaderButtonWithText
+            onClick={() => {
+              navigate("/settings");
+            }}
+            text="Settings"
+          >
+            <Cog6ToothIcon width="1.4em" height="1.4em" />
+          </HeaderButtonWithText>
         </Footer>
       </div>
     </LayoutTopDiv>

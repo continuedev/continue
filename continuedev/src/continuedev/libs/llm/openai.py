@@ -54,7 +54,6 @@ class OpenAI(LLM):
 
     requires_write_log = True
 
-    system_message: Optional[str] = None
     write_log: Optional[Callable[[str], None]] = None
 
     async def start(

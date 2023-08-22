@@ -37,6 +37,16 @@ abstract class AbstractContinueGUIClientProtocol {
 
   abstract editStepAtIndex(userInput: string, index: number): void;
 
+  abstract setSystemMessage(message: string): void;
+
+  abstract setTemperature(temperature: number): void;
+
+  abstract setModelForRole(
+    role: string,
+    model_class: string,
+    model: string
+  ): void;
+
   abstract saveContextGroup(title: string, contextItems: ContextItem[]): void;
 
   abstract selectContextGroup(id: string): void;
