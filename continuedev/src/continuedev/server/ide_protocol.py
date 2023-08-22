@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Any, List, Union
+from typing import Any, Callable, List, Union
 
 from fastapi import WebSocket
 
@@ -114,6 +114,38 @@ class AbstractIdeProtocolServer(ABC):
     @abstractmethod
     async def showDiff(self, filepath: str, replacement: str, step_index: int):
         """Show a diff"""
+
+    @abstractmethod
+    def subscribeToFilesCreated(self, callback: Callable[[List[str]], None]):
+        """Subscribe to files created event"""
+
+    @abstractmethod
+    def subscribeToFilesDeleted(self, callback: Callable[[List[str]], None]):
+        """Subscribe to files deleted event"""
+
+    @abstractmethod
+    def subscribeToFilesRenamed(self, callback: Callable[[List[str], List[str]], None]):
+        """Subscribe to files renamed event"""
+
+    @abstractmethod
+    def subscribeToFileSaved(self, callback: Callable[[str, str], None]):
+        """Subscribe to file saved event"""
+
+    @abstractmethod
+    def onFilesCreated(self, filepaths: List[str]):
+        """Called when files are created"""
+
+    @abstractmethod
+    def onFilesDeleted(self, filepaths: List[str]):
+        """Called when files are deleted"""
+
+    @abstractmethod
+    def onFilesRenamed(self, old_filepaths: List[str], new_filepaths: List[str]):
+        """Called when files are renamed"""
+
+    @abstractmethod
+    def onFileSaved(self, filepath: str, contents: str):
+        """Called when a file is saved"""
 
     workspace_directory: str
     unique_id: str

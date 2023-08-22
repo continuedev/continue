@@ -115,6 +115,35 @@ class IdeProtocolClient {
     //   }
     // });
 
+    // Listen for new file creation
+    vscode.workspace.onDidCreateFiles((event) => {
+      const filepaths = event.files.map((file) => file.fsPath);
+      this.messenger?.send("filesCreated", { filepaths });
+    });
+
+    // Listen for file deletion
+    vscode.workspace.onDidDeleteFiles((event) => {
+      const filepaths = event.files.map((file) => file.fsPath);
+      this.messenger?.send("filesDeleted", { filepaths });
+    });
+
+    // Listen for file renaming
+    vscode.workspace.onDidRenameFiles((event) => {
+      const oldFilepaths = event.files.map((file) => file.oldUri.fsPath);
+      const newFilepaths = event.files.map((file) => file.newUri.fsPath);
+      this.messenger?.send("filesRenamed", {
+        old_filepaths: oldFilepaths,
+        new_filepaths: newFilepaths,
+      });
+    });
+
+    // Listen for file saving
+    vscode.workspace.onDidSaveTextDocument((event) => {
+      const filepath = event.uri.fsPath;
+      const contents = event.getText();
+      this.messenger?.send("fileSaved", { filepath, contents });
+    });
+
     // Setup listeners for any selection changes in open editors
     vscode.window.onDidChangeTextEditorSelection((event) => {
       if (!this.editorIsCode(event.textEditor)) {

@@ -108,7 +108,7 @@ class Autopilot(ContinueBaseModel):
                 HighlightedCodeContextProvider(ide=self.ide),
                 FileContextProvider(workspace_dir=self.ide.workspace_directory),
             ],
-            self.ide.workspace_directory,
+            self.continue_sdk,
         )
 
         if full_state is not None:

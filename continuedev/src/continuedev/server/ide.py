@@ -4,7 +4,7 @@ import json
 import os
 import traceback
 import uuid
-from typing import Any, Coroutine, List, Type, TypeVar, Union
+from typing import Any, Callable, Coroutine, List, Type, TypeVar, Union
 
 import nest_asyncio
 from fastapi import APIRouter, WebSocket
@@ -247,6 +247,14 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
             self.workspace_directory = data["workspaceDirectory"]
         elif message_type == "uniqueId":
             self.unique_id = data["uniqueId"]
+        elif message_type == "filesCreated":
+            self.onFilesCreated(data["filepaths"])
+        elif message_type == "filesDeleted":
+            self.onFilesDeleted(data["filepaths"])
+        elif message_type == "filesRenamed":
+            self.onFilesRenamed(data["old_filepaths"], data["new_filepaths"])
+        elif message_type == "fileSaved":
+            self.onFileSaved(data["filepath"], data["contents"])
         else:
             raise ValueError("Unknown message type", message_type)
 
@@ -364,6 +372,49 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
             create_async_task(
                 autopilot.handle_highlighted_code(range_in_files), self.on_error
             )
+
+    ## Subscriptions ##
+
+    _files_created_callbacks = []
+    _files_deleted_callbacks = []
+    _files_renamed_callbacks = []
+    _file_saved_callbacks = []
+
+    def call_callback(self, callback, *args, **kwargs):
+        if asyncio.iscoroutinefunction(callback):
+            create_async_task(callback(*args, **kwargs), self.on_error)
+        else:
+            callback(*args, **kwargs)
+
+    def subscribeToFilesCreated(self, callback: Callable[[List[str]], None]):
+        self._files_created_callbacks.append(callback)
+
+    def subscribeToFilesDeleted(self, callback: Callable[[List[str]], None]):
+        self._files_deleted_callbacks.append(callback)
+
+    def subscribeToFilesRenamed(self, callback: Callable[[List[str], List[str]], None]):
+        self._files_renamed_callbacks.append(callback)
+
+    def subscribeToFileSaved(self, callback: Callable[[str, str], None]):
+        self._file_saved_callbacks.append(callback)
+
+    def onFilesCreated(self, filepaths: List[str]):
+        for callback in self._files_created_callbacks:
+            self.call_callback(callback, filepaths)
+
+    def onFilesDeleted(self, filepaths: List[str]):
+        for callback in self._files_deleted_callbacks:
+            self.call_callback(callback, filepaths)
+
+    def onFilesRenamed(self, old_filepaths: List[str], new_filepaths: List[str]):
+        for callback in self._files_renamed_callbacks:
+            self.call_callback(callback, old_filepaths, new_filepaths)
+
+    def onFileSaved(self, filepath: str, contents: str):
+        for callback in self._file_saved_callbacks:
+            self.call_callback(callback, filepath, contents)
+
+    ## END Subscriptions ##
 
     def onMainUserInput(self, input: str):
         if autopilot := self.__get_autopilot():

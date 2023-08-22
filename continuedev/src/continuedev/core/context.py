@@ -1,7 +1,7 @@
 import asyncio
 import time
 from abc import abstractmethod
-from typing import Dict, List
+from typing import Awaitable, Callable, Dict, List
 
 from meilisearch_python_async import Client
 from pydantic import BaseModel
@@ -11,6 +11,13 @@ from ..libs.util.logging import logger
 from ..libs.util.telemetry import posthog_logger
 from ..server.meilisearch_server import poll_meilisearch_running
 from .main import ChatMessage, ContextItem, ContextItemDescription, ContextItemId
+
+
+class ContinueSDK(BaseModel):
+    """To avoid circular imports"""
+
+    ...
+
 
 SEARCH_INDEX_NAME = "continue_context_items"
 
@@ -24,8 +31,21 @@ class ContextProvider(BaseModel):
     """
 
     title: str
+    sdk: ContinueSDK = None
+    delete_documents: Callable[[List[str]], Awaitable] = None
+    update_documents: Callable[[List[ContextItem], str], Awaitable] = None
 
     selected_items: List[ContextItem] = []
+
+    async def start(self, sdk: ContinueSDK, delete_documents, update_documents):
+        """
+        Starts the context provider.
+
+        Default implementation sets the sdk.
+        """
+        self.sdk = sdk
+        self.delete_documents = delete_documents
+        self.update_documents = update_documents
 
     async def get_selected_items(self) -> List[ContextItem]:
         """
@@ -168,9 +188,7 @@ class ContextManager:
         self.context_providers = {}
         self.provider_titles = set()
 
-    async def start(
-        self, context_providers: List[ContextProvider], workspace_directory: str
-    ):
+    async def start(self, context_providers: List[ContextProvider], sdk: ContinueSDK):
         """
         Starts the context manager.
         """
@@ -189,16 +207,55 @@ class ContextManager:
                 self.context_providers = {
                     prov.title: prov for prov in context_providers
                 }
+                for provider in context_providers:
+                    await provider.start(
+                        sdk,
+                        ContextManager.delete_documents,
+                        ContextManager.update_documents,
+                    )
+
                 logger.debug("Loading Meilisearch index...")
-                await self.load_index(workspace_directory)
+                await self.load_index(sdk.ide.workspace_directory)
                 logger.debug("Loaded Meilisearch index")
             except asyncio.TimeoutError:
-                logger.warning("MeiliSearch did not start within 5 seconds")
+                logger.warning("MeiliSearch did not start within 20 seconds")
                 logger.warning(
                     "MeiliSearch not running, avoiding any dependent context providers"
                 )
 
         create_async_task(start_meilisearch(context_providers))
+
+    @staticmethod
+    async def update_documents(context_items: List[ContextItem], workspace_dir: str):
+        """
+        Updates the documents in the search index.
+        """
+        documents = [
+            {
+                "id": item.description.id.to_string(),
+                "name": item.description.name,
+                "description": item.description.description,
+                "content": item.content,
+                "workspace_dir": workspace_dir,
+            }
+            for item in context_items
+        ]
+        async with Client("http://localhost:7700") as search_client:
+            await asyncio.wait_for(
+                search_client.index(SEARCH_INDEX_NAME).add_documents(documents),
+                timeout=5,
+            )
+
+    @staticmethod
+    async def delete_documents(ids):
+        """
+        Deletes the documents in the search index.
+        """
+        async with Client("http://localhost:7700") as search_client:
+            await asyncio.wait_for(
+                search_client.index(SEARCH_INDEX_NAME).delete_documents(ids),
+                timeout=5,
+            )
 
     async def load_index(self, workspace_dir: str):
         try:
