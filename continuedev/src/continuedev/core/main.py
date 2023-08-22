@@ -278,8 +278,8 @@ class SessionInfo(ContinueBaseModel):
 
 
 class ContinueConfig(ContinueBaseModel):
-    system_message: str
-    temperature: float
+    system_message: Optional[str]
+    temperature: Optional[float]
 
     class Config:
         extra = "allow"
