@@ -341,8 +341,7 @@
               "api_key": null,
               "llm": null
             },
-            "large": null,
-            "sdk": null
+            "large": null
           },
           "allOf": [
             {

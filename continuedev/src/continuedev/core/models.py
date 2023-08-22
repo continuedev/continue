@@ -9,6 +9,16 @@ class ContinueSDK(BaseModel):
     pass
 
 
+ALL_MODEL_ROLES = [
+    "default",
+    "small",
+    "medium",
+    "large",
+    "edit",
+    "chat",
+]
+
+
 class Models(BaseModel):
     """Main class that holds the current model configuration"""
 
@@ -16,14 +26,21 @@ class Models(BaseModel):
     small: Optional[LLM] = None
     medium: Optional[LLM] = None
     large: Optional[LLM] = None
+    edit: Optional[LLM] = None
+    chat: Optional[LLM] = None
 
     # TODO namespace these away to not confuse readers,
     # or split Models into ModelsConfig, which gets turned into Models
     sdk: ContinueSDK = None
 
+    def dict(self, **kwargs):
+        original_dict = super().dict(**kwargs)
+        original_dict.pop("sdk", None)
+        return original_dict
+
     @property
     def all_models(self):
-        models = [self.default, self.small, self.medium, self.large]
+        models = [getattr(self, role) for role in ALL_MODEL_ROLES]
         return [model for model in models if model is not None]
 
     @property
@@ -39,30 +56,17 @@ class Models(BaseModel):
     async def start(self, sdk: "ContinueSDK"):
         """Start each of the LLMs, or fall back to default"""
         self.sdk = sdk
-        await sdk.start_model(self.default)
-        if self.small:
-            await sdk.start_model(self.small)
-        else:
-            self.small = self.default
 
-        if self.medium:
-            await sdk.start_model(self.medium)
-        else:
-            self.medium = self.default
-
-        if self.large:
-            await sdk.start_model(self.large)
-        else:
-            self.large = self.default
+        for role in ALL_MODEL_ROLES:
+            model = getattr(self, role)
+            if model is None:
+                setattr(self, role, self.default)
+            else:
+                await sdk.start_model(model)
 
         self.set_system_message(self.system_message)
 
     async def stop(self, sdk: "ContinueSDK"):
         """Stop each LLM (if it's not the default, which is shared)"""
-        await self.default.stop()
-        if self.small is not self.default:
-            await self.small.stop()
-        if self.medium is not self.default:
-            await self.medium.stop()
-        if self.large is not self.default:
-            await self.large.stop()
+        for model in self.all_models:
+            await model.stop()

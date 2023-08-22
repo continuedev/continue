@@ -140,6 +140,10 @@ class ContinueGUIClientProtocol extends AbstractContinueGUIClientProtocol {
   setTemperature(temperature: number): void {
     this.messenger?.send("set_temperature", { temperature });
   }
+
+  setModelForRole(role: string, model_class: string, model: any): void {
+    this.messenger?.send("set_model_for_role", { role, model, model_class });
+  }
 }
 
 export default ContinueGUIClientProtocol;

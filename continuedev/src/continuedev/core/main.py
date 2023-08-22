@@ -277,9 +277,17 @@ class SessionInfo(ContinueBaseModel):
     date_created: str
 
 
-class ContinueConfig(BaseModel):
+class ContinueConfig(ContinueBaseModel):
     system_message: str
     temperature: float
+
+    class Config:
+        extra = "allow"
+
+    def dict(self, **kwargs):
+        original_dict = super().dict(**kwargs)
+        original_dict.pop("policy", None)
+        return original_dict
 
 
 class FullState(ContinueBaseModel):
@@ -296,11 +304,11 @@ class FullState(ContinueBaseModel):
 
 
 class ContinueSDK:
-    pass
+    ...
 
 
 class Models:
-    pass
+    ...
 
 
 class Policy(ContinueBaseModel):

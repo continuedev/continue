@@ -9,7 +9,11 @@ from starlette.websockets import WebSocketDisconnect, WebSocketState
 from uvicorn.main import Server
 
 from ..libs.util.create_async_task import create_async_task
-from ..libs.util.edit_config import create_float_node, create_string_node
+from ..libs.util.edit_config import (
+    create_float_node,
+    create_obj_node,
+    create_string_node,
+)
 from ..libs.util.logging import logger
 from ..libs.util.queue import AsyncSubscriptionQueue
 from ..libs.util.telemetry import posthog_logger
@@ -109,6 +113,8 @@ class GUIProtocolServer(AbstractGUIProtocolServer):
             self.set_system_message(data["message"])
         elif message_type == "set_temperature":
             self.set_temperature(float(data["temperature"]))
+        elif message_type == "set_model_for_role":
+            self.set_model_for_role(data["role"], data["model_class"], data["model"])
 
     def on_main_input(self, input: str):
         # Do something with user input
@@ -207,6 +213,18 @@ class GUIProtocolServer(AbstractGUIProtocolServer):
         create_async_task(
             self.session.autopilot.set_config_attr(
                 ["temperature"], create_float_node(temperature)
+            ),
+            self.on_error,
+        )
+
+    def set_model_for_role(self, role: str, model_class: str, model: Any):
+        prev_model = self.session.autopilot.continue_sdk.models.__getattr__(role)
+        if prev_model is not None:
+            prev_model.update(model)
+        self.session.autopilot.continue_sdk.models.__setattr__(role, model)
+        create_async_task(
+            self.session.autopilot.set_config_attr(
+                ["models", role], create_obj_node(model_class, {**model})
             ),
             self.on_error,
         )

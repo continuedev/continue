@@ -92,11 +92,33 @@ export const H3 = styled.h3`
 
 export const TextInput = styled.input.attrs({ type: "text" })`
   width: 100%;
-  padding: 12px 20px;
+  padding: 8px 12px;
   margin: 8px 0;
   box-sizing: border-box;
   border-radius: ${defaultBorderRadius};
-  border: 2px solid gray;
+  outline: 1px solid ${lightGray};
+  border: none;
+  background-color: ${vscBackground};
+  color: ${vscForeground};
+
+  &:focus {
+    background: ${secondaryDark};
+  }
+`;
+
+export const Select = styled.select`
+  padding: 8px 12px;
+  margin: 8px 0;
+  box-sizing: border-box;
+  border-radius: ${defaultBorderRadius};
+  outline: 1px solid ${lightGray};
+  border: none;
+  background-color: ${vscBackground};
+  color: ${vscForeground};
+`;
+
+export const Label = styled.label`
+  font-size: 13px;
 `;
 
 const spin = keyframes`

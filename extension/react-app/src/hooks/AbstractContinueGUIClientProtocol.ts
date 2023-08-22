@@ -40,6 +40,12 @@ abstract class AbstractContinueGUIClientProtocol {
   abstract setSystemMessage(message: string): void;
 
   abstract setTemperature(temperature: number): void;
+
+  abstract setModelForRole(
+    role: string,
+    model_class: string,
+    model: string
+  ): void;
 }
 
 export default AbstractContinueGUIClientProtocol;

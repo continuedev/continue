@@ -14,6 +14,14 @@ class SlashCommand(BaseModel):
     step: Type[Step]
     params: Optional[Dict] = {}
 
+    def dict(self, *args, **kwargs):
+        return {
+            "name": self.name,
+            "description": self.description,
+            "params": self.params,
+            "step": self.step.__name__,
+        }
+
 
 class CustomCommand(BaseModel):
     name: str
