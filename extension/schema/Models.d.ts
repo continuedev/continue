@@ -19,6 +19,8 @@ export interface Models1 {
   small?: LLM;
   medium?: LLM;
   large?: LLM;
+  edit?: LLM;
+  chat?: LLM;
   sdk?: ContinueSDK;
   [k: string]: unknown;
 }

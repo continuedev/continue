@@ -1,4 +1,4 @@
-import { ContextItemId } from "../../../schema/FullState";
+import { ContextItem, ContextItemId } from "../../../schema/FullState";
 import AbstractContinueGUIClientProtocol from "./AbstractContinueGUIClientProtocol";
 import { Messenger, WebsocketMessenger } from "./messenger";
 import { VscodeMessenger } from "./vscodeMessenger";
@@ -143,6 +143,21 @@ class ContinueGUIClientProtocol extends AbstractContinueGUIClientProtocol {
 
   setModelForRole(role: string, model_class: string, model: any): void {
     this.messenger?.send("set_model_for_role", { role, model, model_class });
+  }
+
+  saveContextGroup(title: string, contextItems: ContextItem[]): void {
+    this.messenger?.send("save_context_group", {
+      context_items: contextItems,
+      title,
+    });
+  }
+
+  selectContextGroup(id: string): void {
+    this.messenger?.send("select_context_group", { id });
+  }
+
+  deleteContextGroup(id: string): void {
+    this.messenger?.send("delete_context_group", { id });
   }
 }
 

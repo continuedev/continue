@@ -22,7 +22,10 @@ class MaybeProxyOpenAI(LLM):
 
     @property
     def name(self):
-        return self.llm.name
+        if self.llm is not None:
+            return self.llm.name
+        else:
+            return None
 
     @property
     def context_length(self):

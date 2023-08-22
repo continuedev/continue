@@ -113,15 +113,13 @@ const Layout = () => {
         <Onboarding />
         <TextDialog
           showDialog={showDialog}
-          onEnter={(text) => {
-            client?.sendMainInput(`/feedback ${text}`);
+          onEnter={() => {
             dispatch(setShowDialog(false));
           }}
           onClose={() => {
             dispatch(setShowDialog(false));
           }}
           message={dialogMessage}
-          entryOn={dialogEntryOn}
         />
         <Outlet />
 
@@ -153,7 +151,7 @@ const Layout = () => {
             onMouseEnter={() => {
               dispatch(
                 setBottomMessage(
-                  "🎁 New Feature: Use ⌘D automatically debug errors in the terminal"
+                  "🎁 New Feature: Use ⌘⇧R automatically debug errors in the terminal"
                 )
               );
             }}

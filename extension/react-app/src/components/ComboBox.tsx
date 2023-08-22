@@ -15,14 +15,24 @@ import {
 } from ".";
 import PillButton from "./PillButton";
 import HeaderButtonWithText from "./HeaderButtonWithText";
-import { DocumentPlusIcon } from "@heroicons/react/24/outline";
+import {
+  BookmarkIcon,
+  DocumentPlusIcon,
+  FolderArrowDownIcon,
+} from "@heroicons/react/24/outline";
 import { ContextItem } from "../../../schema/FullState";
 import { postVscMessage } from "../vscode";
 import { GUIClientContext } from "../App";
 import { MeiliSearch } from "meilisearch";
-import { setBottomMessage } from "../redux/slices/uiStateSlice";
+import {
+  setBottomMessage,
+  setDialogMessage,
+  setShowDialog,
+} from "../redux/slices/uiStateSlice";
 import { useDispatch, useSelector } from "react-redux";
 import { RootStore } from "../redux/store";
+import SelectContextGroupDialog from "./dialogs/SelectContextGroupDialog";
+import AddContextGroupDialog from "./dialogs/AddContextGroupDialog";
 
 const SEARCH_INDEX_NAME = "continue_context_items";
 
@@ -136,6 +146,9 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
   const dispatch = useDispatch();
   const workspacePaths = useSelector(
     (state: RootStore) => state.config.workspacePaths
+  );
+  const savedContextGroups = useSelector(
+    (state: RootStore) => state.serverState.saved_context_groups
   );
 
   const [history, setHistory] = React.useState<string[]>([]);
@@ -328,6 +341,22 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
     };
   }, [inputRef.current]);
 
+  const showSelectContextGroupDialog = () => {
+    dispatch(setDialogMessage(<SelectContextGroupDialog />));
+    dispatch(setShowDialog(true));
+  };
+
+  const showDialogToSaveContextGroup = () => {
+    dispatch(
+      setDialogMessage(
+        <AddContextGroupDialog
+          selectedContextItems={props.selectedContextItems}
+        />
+      )
+    );
+    dispatch(setShowDialog(true));
+  };
+
   return (
     <>
       <div
@@ -354,32 +383,65 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
             />
           );
         })}
-        {props.selectedContextItems.length > 0 &&
-          (props.addingHighlightedCode ? (
-            <EmptyPillDiv
-              onClick={() => {
-                props.onToggleAddContext();
-              }}
-            >
-              Highlight code section
-            </EmptyPillDiv>
-          ) : (
+        <HeaderButtonWithText
+          text="Load bookmarked context"
+          onClick={() => {
+            showSelectContextGroupDialog();
+          }}
+          className="pill-button focus:outline-none focus:border-red-600 focus:border focus:border-solid"
+          onKeyDown={(e: KeyboardEvent) => {
+            e.preventDefault();
+            if (e.key === "Enter") {
+              showSelectContextGroupDialog();
+            }
+          }}
+        >
+          <FolderArrowDownIcon width="1.4em" height="1.4em" />
+        </HeaderButtonWithText>
+        {props.selectedContextItems.length > 0 && (
+          <>
             <HeaderButtonWithText
-              text="Add more code to context"
+              text="Bookmark context"
               onClick={() => {
-                props.onToggleAddContext();
+                showDialogToSaveContextGroup();
               }}
               className="pill-button focus:outline-none focus:border-red-600 focus:border focus:border-solid"
               onKeyDown={(e: KeyboardEvent) => {
                 e.preventDefault();
                 if (e.key === "Enter") {
-                  props.onToggleAddContext();
+                  showDialogToSaveContextGroup();
                 }
               }}
             >
-              <DocumentPlusIcon width="1.4em" height="1.4em" />
+              <BookmarkIcon width="1.4em" height="1.4em" />
             </HeaderButtonWithText>
-          ))}
+            {props.addingHighlightedCode ? (
+              <EmptyPillDiv
+                onClick={() => {
+                  props.onToggleAddContext();
+                }}
+              >
+                Highlight code section
+              </EmptyPillDiv>
+            ) : (
+              <HeaderButtonWithText
+                text="Add more code to context"
+                onClick={() => {
+                  props.onToggleAddContext();
+                }}
+                className="pill-button focus:outline-none focus:border-red-600 focus:border focus:border-solid"
+                onKeyDown={(e: KeyboardEvent) => {
+                  e.preventDefault();
+                  if (e.key === "Enter") {
+                    props.onToggleAddContext();
+                  }
+                }}
+              >
+                <DocumentPlusIcon width="1.4em" height="1.4em" />
+              </HeaderButtonWithText>
+            )}
+          </>
+        )}
       </div>
       <div className="flex px-2" ref={divRef} hidden={!downshiftProps.isOpen}>
         <MainTextInput
@@ -516,7 +578,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
                       <>
                         <br />
                         <pre style={{ color: lightGray }}>
-                        {item.content.split('\n').slice(0, 5).join('\n')}
+                          {item.content.split("\n").slice(0, 5).join("\n")}
                         </pre>
                       </>
                     )}

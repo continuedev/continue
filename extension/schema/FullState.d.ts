@@ -56,6 +56,7 @@ export interface FullState1 {
   selected_context_items: SelectedContextItems;
   session_info?: SessionInfo;
   config: ContinueConfig;
+  saved_context_groups?: SavedContextGroups;
   [k: string]: unknown;
 }
 /**
@@ -147,4 +148,7 @@ export interface ContinueConfig {
   system_message: SystemMessage1;
   temperature: Temperature;
   [k: string]: unknown;
+}
+export interface SavedContextGroups {
+  [k: string]: ContextItem[];
 }

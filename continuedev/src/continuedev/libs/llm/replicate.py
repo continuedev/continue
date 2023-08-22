@@ -10,7 +10,7 @@ from . import LLM
 
 class ReplicateLLM(LLM):
     api_key: str
-    model: str = "nateraw/stablecode-completion-alpha-3b-4k:e82ebe958f0a5be6846d1a82041925767edb1d1f162596c643e48fbea332b1bb"
+    model: str = "replicate/llama-2-70b-chat:58d078176e02c219e11eb4da5a02a7830a283b14cf8f94537af893ccff5ee781"
     max_context_length: int = 2048
 
     _client: replicate.Client = None
@@ -40,7 +40,9 @@ class ReplicateLLM(LLM):
         self, prompt: str, with_history: List[ChatMessage] = None, **kwargs
     ):
         def helper():
-            output = self._client.run(self.model, input={"message": prompt})
+            output = self._client.run(
+                self.model, input={"message": prompt, "prompt": prompt}
+            )
             completion = ""
             for item in output:
                 completion += item
@@ -56,11 +58,14 @@ class ReplicateLLM(LLM):
     async def stream_complete(
         self, prompt, with_history: List[ChatMessage] = None, **kwargs
     ):
-        for item in self._client.run(self.model, input={"message": prompt}):
+        for item in self._client.run(
+            self.model, input={"message": prompt, "prompt": prompt}
+        ):
             yield item
 
     async def stream_chat(self, messages: List[ChatMessage] = None, **kwargs):
         for item in self._client.run(
-            self.model, input={"message": messages[-1].content}
+            self.model,
+            input={"message": messages[-1].content, "prompt": messages[-1].content},
         ):
             yield {"content": item, "role": "assistant"}

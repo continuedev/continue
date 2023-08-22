@@ -137,6 +137,12 @@
         "large": {
           "$ref": "#/definitions/LLM"
         },
+        "edit": {
+          "$ref": "#/definitions/LLM"
+        },
+        "chat": {
+          "$ref": "#/definitions/LLM"
+        },
         "sdk": {
           "$ref": "#/definitions/ContinueSDK"
         }
@@ -329,7 +335,9 @@
               "system_message": null,
               "model": "gpt-4",
               "api_key": null,
-              "llm": null
+              "llm": null,
+              "name": null,
+              "class_name": "MaybeProxyOpenAI"
             },
             "small": null,
             "medium": {
@@ -339,9 +347,13 @@
               "system_message": null,
               "model": "gpt-3.5-turbo",
               "api_key": null,
-              "llm": null
+              "llm": null,
+              "name": null,
+              "class_name": "MaybeProxyOpenAI"
             },
-            "large": null
+            "large": null,
+            "edit": null,
+            "chat": null
           },
           "allOf": [
             {

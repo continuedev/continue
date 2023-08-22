@@ -48,6 +48,12 @@
         "large": {
           "$ref": "#/definitions/LLM"
         },
+        "edit": {
+          "$ref": "#/definitions/LLM"
+        },
+        "chat": {
+          "$ref": "#/definitions/LLM"
+        },
         "sdk": {
           "$ref": "#/definitions/ContinueSDK"
         }

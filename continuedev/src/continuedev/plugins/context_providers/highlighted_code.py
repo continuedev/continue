@@ -11,6 +11,7 @@ from ...core.context import (
 )
 from ...core.main import ChatMessage
 from ...models.filesystem import RangeInFileWithContents
+from ...models.main import Range
 
 
 class HighlightedRangeContextItem(BaseModel):
@@ -257,3 +258,21 @@ class HighlightedCodeContextProvider(ContextProvider):
         self, id: ContextItemId, query: str, prev: List[ContextItem] = None
     ) -> List[ContextItem]:
         raise NotImplementedError()
+
+    async def manually_add_context_item(self, context_item: ContextItem):
+        full_file_content = await self.ide.readFile(
+            context_item.description.description
+        )
+        self.highlighted_ranges.append(
+            HighlightedRangeContextItem(
+                rif=RangeInFileWithContents(
+                    filepath=context_item.description.description,
+                    range=Range.from_lines_snippet_in_file(
+                        content=full_file_content,
+                        snippet=context_item.content,
+                    ),
+                    contents=context_item.content,
+                ),
+                item=context_item,
+            )
+        )

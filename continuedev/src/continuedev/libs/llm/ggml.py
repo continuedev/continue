@@ -85,45 +85,54 @@ class GGML(LLM):
         )
         args["stream"] = True
 
-        async with self._client_session.post(
-            f"{self.server_url}/v1/chat/completions",
-            json={"messages": messages, **args},
-        ) as resp:
-            # This is streaming application/json instaed of text/event-stream
-            async for line, end in resp.content.iter_chunks():
-                if end:
-                    continue
+        async def generator():
+            async with self._client_session.post(
+                f"{self.server_url}/v1/chat/completions",
+                json={"messages": messages, **args},
+            ) as resp:
+                # This is streaming application/json instaed of text/event-stream
+                async for line, end in resp.content.iter_chunks():
+                    json_chunk = line.decode("utf-8")
+                    if json_chunk.startswith(": ping - ") or json_chunk.startswith(
+                        "data: [DONE]"
+                    ):
+                        continue
+                    chunks = json_chunk.split("\n")
+                    for chunk in chunks:
+                        if chunk.strip() != "":
+                            yield json.loads(chunk[6:])["choices"][0][
+                                "delta"
+                            ]  # {"role": "assistant", "content": "..."}
 
-                json_chunk = line.decode("utf-8")
-                if json_chunk.startswith(": ping - ") or json_chunk.startswith(
-                    "data: [DONE]"
-                ):
-                    continue
-                chunks = json_chunk.split("\n")
-                for chunk in chunks:
-                    if chunk.strip() != "":
-                        yield json.loads(chunk[6:])["choices"][0][
-                            "delta"
-                        ]  # {"role": "assistant", "content": "..."}
+        # Because quite often the first attempt fails, and it works thereafter
+        try:
+            async for chunk in generator():
+                yield chunk
+        except:
+            async for chunk in generator():
+                yield chunk
 
     async def complete(
         self, prompt: str, with_history: List[ChatMessage] = None, **kwargs
     ) -> Coroutine[Any, Any, str]:
         args = {**self.default_args, **kwargs}
 
+        # messages = compile_chat_messages(
+        #     args["model"],
+        #     with_history,
+        #     self.context_length,
+        #     args["max_tokens"],
+        #     prompt,
+        #     functions=None,
+        #     system_message=self.system_message,
+        # )
+
         async with self._client_session.post(
             f"{self.server_url}/v1/completions",
             json={
-                "messages": compile_chat_messages(
-                    args["model"],
-                    with_history,
-                    self.context_length,
-                    args["max_tokens"],
-                    prompt,
-                    functions=None,
-                    system_message=self.system_message,
-                ),
+                "prompt": prompt,
                 **args,
             },
         ) as resp:
-            return json.loads(await resp.text())["choices"][0]["text"]
+            text = await resp.text()
+            return json.loads(text)["choices"][0]["text"]

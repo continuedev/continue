@@ -301,6 +301,7 @@ class FullState(ContinueBaseModel):
     selected_context_items: List[ContextItem]
     session_info: Optional[SessionInfo] = None
     config: ContinueConfig
+    saved_context_groups: Dict[str, List[ContextItem]] = {}
 
 
 class ContinueSDK:
