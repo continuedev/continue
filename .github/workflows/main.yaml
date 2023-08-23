@@ -3,7 +3,7 @@ name: Publish Extension
 on:
   push:
     branches:
-      - main
+      - testing-gh-workflow
 
 jobs:
   pyinstaller:

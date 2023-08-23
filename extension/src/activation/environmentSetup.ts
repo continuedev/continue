@@ -263,7 +263,7 @@ export async function startContinuePythonServer(redownload: boolean = true) {
       const child = spawn(destination, settings);
 
       // Either unref to avoid zombie process, or listen to events because you can
-      if (os.platform() === "win32") {
+      if (true || os.platform() === "win32") {
         child.stdout.on("data", (data: any) => {
           console.log(`stdout: ${data}`);
         });
