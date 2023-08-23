@@ -27,7 +27,7 @@ def get_mac_address():
 class LocalIdeProtocol(AbstractIdeProtocolServer):
     websocket: WebSocket = None
     session_id: Optional[str]
-    workspace_directory: str = None
+    workspace_directory: str = os.getcwd()
     unique_id: str = get_mac_address()
 
     filesystem: FileSystem = RealFileSystem()

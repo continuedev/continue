@@ -17,7 +17,10 @@ from ..libs.util.paths import getSavedContextGroupsPath
 from ..libs.util.queue import AsyncSubscriptionQueue
 from ..libs.util.strings import remove_quotes_and_escapes
 from ..libs.util.telemetry import posthog_logger
-from ..libs.util.traceback_parsers import get_javascript_traceback, get_python_traceback
+from ..libs.util.traceback.traceback_parsers import (
+    get_javascript_traceback,
+    get_python_traceback,
+)
 from ..models.filesystem import RangeInFileWithContents
 from ..models.filesystem_edit import FileEditWithFullContents
 from ..models.main import ContinueBaseModel

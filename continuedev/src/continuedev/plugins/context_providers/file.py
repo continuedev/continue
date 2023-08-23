@@ -1,10 +1,10 @@
 import asyncio
 import os
-from fnmatch import fnmatch
 from typing import List
 
 from ...core.context import ContextProvider
 from ...core.main import ContextItem, ContextItemDescription, ContextItemId
+from ...libs.util.filter_files import DEFAULT_IGNORE_PATTERNS, should_filter_path
 from .util import remove_meilisearch_disallowed_chars
 
 MAX_SIZE_IN_BYTES = 1024 * 1024 * 1
@@ -23,36 +23,13 @@ def get_file_contents(filepath: str) -> str:
         return None
 
 
-DEFAULT_IGNORE_DIRS = [
-    ".git",
-    ".vscode",
-    ".idea",
-    ".vs",
-    ".venv",
-    "env",
-    ".env",
-    "node_modules",
-    "dist",
-    "build",
-    "target",
-    "out",
-    "bin",
-    ".pytest_cache",
-    ".vscode-test",
-    ".continue",
-    "__pycache__",
-]
-
-
 class FileContextProvider(ContextProvider):
     """
     The FileContextProvider is a ContextProvider that allows you to search files in the open workspace.
     """
 
     title = "file"
-    ignore_patterns: List[str] = DEFAULT_IGNORE_DIRS + list(
-        filter(lambda d: f"**/{d}", DEFAULT_IGNORE_DIRS)
-    )
+    ignore_patterns: List[str] = DEFAULT_IGNORE_PATTERNS
 
     async def start(self, *args):
         await super().start(*args)
@@ -126,9 +103,7 @@ class FileContextProvider(ContextProvider):
         absolute_filepaths: List[str] = []
         for root, dir_names, file_names in os.walk(workspace_dir):
             dir_names[:] = [
-                d
-                for d in dir_names
-                if not any(fnmatch(d, pattern) for pattern in self.ignore_patterns)
+                d for d in dir_names if not should_filter_path(d, self.ignore_patterns)
             ]
             for file_name in file_names:
                 absolute_filepaths.append(os.path.join(root, file_name))

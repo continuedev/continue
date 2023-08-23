@@ -14,7 +14,8 @@ app = typer.Typer()
 async def async_main(config: Optional[str] = None):
     if config is not None:
         config: ContinueConfig = ContinueConfig.from_filepath(config)
-        config.policy_override = HeadlessPolicy(command="echo hi")
+        if config.policy_override is None:
+            config.policy_override = HeadlessPolicy(command="echo hi")
 
     ide = LocalIdeProtocol()
     await session_manager.new_session(ide, config=config)
