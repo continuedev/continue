@@ -153,6 +153,13 @@ jobs:
           path: extension/build/*
         if: matrix.os == 'ubuntu-20.04'
 
+      - name: Upload continue.log
+        uses: actions/upload-artifact@v2
+        with:
+          name: continue-log
+          path: ${{ env.HOME }}/.continue/continue.log
+        if: always()
+
   publish:
     needs: test-and-package
     runs-on: ubuntu-20.04
