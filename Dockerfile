@@ -13,7 +13,7 @@ RUN pip install pyinstaller
 
 RUN pip install -r /app/continuedev/requirements.txt
 
-RUN sh /app/buildm1.sh
+RUN pyinstaller run.spec
 
 RUN chmod +x /app/dist/run
 
