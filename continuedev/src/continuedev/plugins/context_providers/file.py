@@ -77,6 +77,9 @@ class FileContextProvider(ContextProvider):
             await self.delete_documents(ids)
 
         async def on_files_renamed(old_filepaths: List[str], new_filepaths: List[str]):
+            if self.sdk.ide.workspace_directory is None:
+                return
+
             old_ids = [self.get_id_for_filepath(filepath) for filepath in old_filepaths]
             new_docs = await asyncio.gather(
                 *[

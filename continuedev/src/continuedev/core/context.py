@@ -251,7 +251,7 @@ class ContextManager:
 
             async def add_docs():
                 index = await search_client.get_index(SEARCH_INDEX_NAME)
-                await index.add_documents(documents)
+                await index.add_documents(documents or [])
 
             await asyncio.wait_for(add_docs(), timeout=5)
 
