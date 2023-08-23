@@ -258,7 +258,7 @@ export async function startContinuePythonServer(redownload: boolean = true) {
       };
       const settings: any = windowsSettings;
       // os.platform() === "win32" ? windowsSettings : macLinuxSettings;
-
+      console.log(`The expanded home path is: ${os.homedir()}`);
       // Spawn the server
       const child = spawn(destination, settings);
 
