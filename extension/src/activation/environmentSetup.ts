@@ -258,7 +258,6 @@ export async function startContinuePythonServer(redownload: boolean = true) {
       };
       const settings: any =
         os.platform() === "win32" ? windowsSettings : macLinuxSettings;
-
       // Spawn the server
       const child = spawn(destination, settings);
 

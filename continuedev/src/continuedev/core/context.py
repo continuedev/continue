@@ -248,10 +248,12 @@ class ContextManager:
             for item in context_items
         ]
         async with Client("http://localhost:7700") as search_client:
-            await asyncio.wait_for(
-                search_client.index(SEARCH_INDEX_NAME).add_documents(documents),
-                timeout=5,
-            )
+
+            async def add_docs():
+                index = await search_client.get_index(SEARCH_INDEX_NAME)
+                await index.add_documents(documents)
+
+            await asyncio.wait_for(add_docs(), timeout=5)
 
     @staticmethod
     async def delete_documents(ids):

@@ -157,8 +157,14 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: continue-log
-          path: ${{ env.HOME }}/.continue/continue.log
+          path: /home/runner/.continue/continue.log
         if: always()
+
+      - name: Try to run linux binary
+        run: |
+          cd extension/server/exe
+          ./run
+        if: always() && matrix.os == 'ubuntu-20.04'
 
   publish:
     needs: test-and-package
