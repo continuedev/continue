@@ -157,14 +157,7 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: continue-log
-          path: ${{ env.HOME }}/.continue/continue.log
-        if: always()
-
-      - name: Upload continue.log
-        uses: actions/upload-artifact@v2
-        with:
-          name: continue-log
-          path: ${{ github.workspace }}/.continue/continue.log
+          path: /home/runner/.continue/continue.log
         if: always()
 
   # publish:
