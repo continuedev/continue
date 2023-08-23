@@ -32,6 +32,7 @@ from ..plugins.steps.core.core import (
 )
 from ..plugins.steps.on_traceback import DefaultOnTracebackStep
 from ..server.ide_protocol import AbstractIdeProtocolServer
+from .config import ContinueConfig
 from .context import ContextManager
 from .main import (
     Context,
@@ -97,8 +98,12 @@ class Autopilot(ContinueBaseModel):
 
     started: bool = False
 
-    async def start(self, full_state: Optional[FullState] = None):
-        self.continue_sdk = await ContinueSDK.create(self)
+    async def start(
+        self,
+        full_state: Optional[FullState] = None,
+        config: Optional[ContinueConfig] = None,
+    ):
+        self.continue_sdk = await ContinueSDK.create(self, config=config)
         if override_policy := self.continue_sdk.config.policy_override:
             self.policy = override_policy
 

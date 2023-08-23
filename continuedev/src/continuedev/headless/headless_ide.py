@@ -1,6 +1,9 @@
+import os
 import subprocess
-from typing import Any, List, Optional
+import uuid
+from typing import Any, Callable, List, Optional
 
+from dotenv import load_dotenv
 from fastapi import WebSocket
 
 from ..models.filesystem import (
@@ -10,14 +13,22 @@ from ..models.filesystem import (
     RealFileSystem,
 )
 from ..models.filesystem_edit import EditDiff, FileEdit, FileSystemEdit
-from ..server.ide_protocol import AbstractIdeProtocol
+from ..server.ide_protocol import AbstractIdeProtocolServer
+
+load_dotenv()
 
 
-class LocalIdeProtocol(AbstractIdeProtocol):
-    websocket: WebSocket
+def get_mac_address():
+    mac_num = hex(uuid.getnode()).replace("0x", "").upper()
+    mac = "-".join(mac_num[i : i + 2] for i in range(0, 11, 2))
+    return mac
+
+
+class LocalIdeProtocol(AbstractIdeProtocolServer):
+    websocket: WebSocket = None
     session_id: Optional[str]
-    workspace_directory: str
-    unique_id: str
+    workspace_directory: str = None
+    unique_id: str = get_mac_address()
 
     filesystem: FileSystem = RealFileSystem()
 
@@ -35,7 +46,7 @@ class LocalIdeProtocol(AbstractIdeProtocol):
 
     async def showMessage(self, message: str):
         """Show a message to the user"""
-        pass
+        print(message)
 
     async def showVirtualFile(self, name: str, contents: str):
         """Show a virtual file"""
@@ -103,7 +114,7 @@ class LocalIdeProtocol(AbstractIdeProtocol):
 
     async def getUserSecret(self, key: str):
         """Get a user secret"""
-        pass
+        return os.environ.get(key)
 
     async def highlightCode(self, range_in_file: RangeInFile, color: str):
         """Highlight code"""
@@ -123,4 +134,36 @@ class LocalIdeProtocol(AbstractIdeProtocol):
 
     async def showDiff(self, filepath: str, replacement: str, step_index: int):
         """Show a diff"""
+        pass
+
+    def subscribeToFilesCreated(self, callback: Callable[[List[str]], None]):
+        """Subscribe to files created event"""
+        pass
+
+    def subscribeToFilesDeleted(self, callback: Callable[[List[str]], None]):
+        """Subscribe to files deleted event"""
+        pass
+
+    def subscribeToFilesRenamed(self, callback: Callable[[List[str], List[str]], None]):
+        """Subscribe to files renamed event"""
+        pass
+
+    def subscribeToFileSaved(self, callback: Callable[[str, str], None]):
+        """Subscribe to file saved event"""
+        pass
+
+    def onFilesCreated(self, filepaths: List[str]):
+        """Called when files are created"""
+        pass
+
+    def onFilesDeleted(self, filepaths: List[str]):
+        """Called when files are deleted"""
+        pass
+
+    def onFilesRenamed(self, old_filepaths: List[str], new_filepaths: List[str]):
+        """Called when files are renamed"""
+        pass
+
+    def onFileSaved(self, filepath: str, contents: str):
+        """Called when a file is saved"""
         pass
