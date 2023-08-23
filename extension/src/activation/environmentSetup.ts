@@ -166,7 +166,9 @@ export async function startContinuePythonServer(redownload: boolean = true) {
     os.platform() === "win32"
       ? "windows/run.exe"
       : os.platform() === "darwin"
-      ? "mac/run"
+      ? os.arch() === "arm64"
+        ? "apple-silicon/run"
+        : "mac/run"
       : "linux/run";
 
   const destination = path.join(

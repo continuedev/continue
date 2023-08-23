@@ -160,12 +160,6 @@ jobs:
           path: /home/runner/.continue/continue.log
         if: always()
 
-      - name: Try to run linux binary
-        run: |
-          cd extension/server/exe
-          ./run
-        if: always() && matrix.os == 'ubuntu-20.04'
-
   publish:
     needs: test-and-package
     runs-on: ubuntu-20.04
