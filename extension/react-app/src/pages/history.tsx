@@ -14,6 +14,14 @@ const Tr = styled.tr`
   }
 `;
 
+const parseDate = (date: string): Date => {
+  let dateObj = new Date(date);
+  if (isNaN(dateObj.getTime())) {
+    dateObj = new Date(parseInt(date) * 1000);
+  }
+  return dateObj;
+};
+
 const TdDiv = styled.div`
   cursor: pointer;
   padding-left: 1rem;
@@ -46,6 +54,8 @@ function History() {
     fetchSessions();
   }, [client]);
 
+  console.log(sessions.map((session) => session.date_created));
+
   return (
     <div className="w-full">
       <div className="items-center flex">
@@ -60,7 +70,11 @@ function History() {
       <table className="w-full">
         <tbody>
           {sessions
-            .sort((a, b) => parseInt(b.date_created) - parseInt(a.date_created))
+            .sort(
+              (a, b) =>
+                parseDate(b.date_created).getTime() -
+                parseDate(a.date_created).getTime()
+            )
             .map((session, index) => (
               <Tr key={index}>
                 <td>
@@ -72,9 +86,7 @@ function History() {
                   >
                     <div className="text-lg">{session.title}</div>
                     <div className="text-gray-400">
-                      {new Date(
-                        parseInt(session.date_created) * 1000
-                      ).toLocaleString("en-US", {
+                      {parseDate(session.date_created).toLocaleString("en-US", {
                         weekday: "short",
                         year: "numeric",
                         month: "long",
