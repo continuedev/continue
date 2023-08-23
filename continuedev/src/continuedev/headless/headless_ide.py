@@ -1,9 +1,14 @@
-
-import os
+import subprocess
 from typing import Any, List, Optional
+
 from fastapi import WebSocket
 
-from ..models.filesystem import RangeInFile, RangeInFileWithContents
+from ..models.filesystem import (
+    FileSystem,
+    RangeInFile,
+    RangeInFileWithContents,
+    RealFileSystem,
+)
 from ..models.filesystem_edit import EditDiff, FileEdit, FileSystemEdit
 from ..server.ide_protocol import AbstractIdeProtocol
 
@@ -13,6 +18,8 @@ class LocalIdeProtocol(AbstractIdeProtocol):
     session_id: Optional[str]
     workspace_directory: str
     unique_id: str
+
+    filesystem: FileSystem = RealFileSystem()
 
     async def handle_json(self, data: Any):
         """Handle a json message"""
@@ -76,19 +83,19 @@ class LocalIdeProtocol(AbstractIdeProtocol):
 
     async def readFile(self, filepath: str) -> str:
         """Read a file"""
-        return open(filepath, 'r').read()
+        return self.filesystem.read(filepath)
 
     async def readRangeInFile(self, range_in_file: RangeInFile) -> str:
         """Read a range in a file"""
-        return range_in_file.get
+        return self.filesystem.read_range_in_file(range_in_file)
 
     async def editFile(self, edit: FileEdit):
         """Edit a file"""
-        pass
+        self.filesystem.apply_file_edit(edit)
 
     async def applyFileSystemEdit(self, edit: FileSystemEdit) -> EditDiff:
         """Apply a file edit"""
-        pass
+        return self.filesystem.apply_edit(edit)
 
     async def saveFile(self, filepath: str):
         """Save a file"""
@@ -103,8 +110,8 @@ class LocalIdeProtocol(AbstractIdeProtocol):
         pass
 
     async def runCommand(self, command: str) -> str:
-        """Run a command"""
-        pass
+        """Run a command using subprocess (don't pass, actually implement)"""
+        return subprocess.check_output(command, shell=True).decode("utf-8")
 
     def onHighlightedCodeUpdate(self, range_in_files: List[RangeInFileWithContents]):
         """Called when highlighted code is updated"""
