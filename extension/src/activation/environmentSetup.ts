@@ -256,14 +256,14 @@ export async function startContinuePythonServer(redownload: boolean = true) {
         detached: true,
         stdio: "ignore",
       };
-      const settings: any =
-        os.platform() === "win32" ? windowsSettings : macLinuxSettings;
+      const settings: any = windowsSettings;
+      // os.platform() === "win32" ? windowsSettings : macLinuxSettings;
 
       // Spawn the server
       const child = spawn(destination, settings);
 
       // Either unref to avoid zombie process, or listen to events because you can
-      if (true || os.platform() === "win32") {
+      if (os.platform() === "win32") {
         child.stdout.on("data", (data: any) => {
           console.log(`stdout: ${data}`);
         });
