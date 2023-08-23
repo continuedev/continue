@@ -154,7 +154,7 @@ config = ContinueConfig(
     ...
     models=Models(
         default=OpenAI(api_key="my-api-key", model="gpt-3.5-turbo", openai_server_info=OpenAIServerInfo(
-            api_base="https://my-azure-openai-instance.openai.azure.com/"
+            api_base="https://my-azure-openai-instance.openai.azure.com/",
             engine="my-azure-openai-deployment",
             api_version="2023-03-15-preview",
             api_type="azure"
