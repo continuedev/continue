@@ -1,7 +1,8 @@
 from textwrap import dedent
-from ....plugins.steps.main import EditHighlightedCodeStep
+
 from ....core.main import Step
 from ....core.sdk import ContinueSDK
+from ....plugins.steps.main import EditHighlightedCodeStep
 
 
 class ContinueStepStep(Step):
@@ -9,7 +10,10 @@ class ContinueStepStep(Step):
     prompt: str
 
     async def run(self, sdk: ContinueSDK):
-        await sdk.run_step(EditHighlightedCodeStep(user_input=dedent(f"""\
+        await sdk.run_step(
+            EditHighlightedCodeStep(
+                user_input=dedent(
+                    f"""\
         Here is an example of a Step that runs a command and then edits a file.
 
         ```python
@@ -33,4 +37,7 @@ class ContinueStepStep(Step):
 
         It should be a subclass of Step as above, implementing the `run` method, and using pydantic attributes to define the parameters.
 
-        """)))
+        """
+                )
+            )
+        )

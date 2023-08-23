@@ -1,7 +1,7 @@
 import { getExtensionUri } from "../util/vscode";
-const util = require("util");
-const exec = util.promisify(require("child_process").exec);
-const { spawn } = require("child_process");
+import { promisify } from "util";
+import { exec as execCb } from "child_process";
+import { spawn } from "child_process";
 import * as path from "path";
 import * as fs from "fs";
 import { getContinueServerUrl } from "../bridge";
@@ -9,10 +9,14 @@ import fetch from "node-fetch";
 import * as vscode from "vscode";
 import * as os from "os";
 import fkill from "fkill";
+import { finished } from "stream/promises";
+import request = require("request");
+
+const exec = promisify(execCb);
 
 async function runCommand(cmd: string): Promise<[string, string | undefined]> {
-  var stdout: any = "";
-  var stderr: any = "";
+  var stdout = "";
+  var stderr = "";
   try {
     var { stdout, stderr } = await exec(cmd, {
       shell: process.platform === "win32" ? "powershell.exe" : undefined,
@@ -21,14 +25,9 @@ async function runCommand(cmd: string): Promise<[string, string | undefined]> {
     stderr = e.stderr;
     stdout = e.stdout;
   }
-  if (stderr === "") {
-    stderr = undefined;
-  }
-  if (typeof stdout === "undefined") {
-    stdout = "";
-  }
 
-  return [stdout, stderr];
+  const stderrOrUndefined = stderr === "" ? undefined : stderr;
+  return [stdout, stderrOrUndefined];
 }
 
 async function checkServerRunning(serverUrl: string): Promise<boolean> {
@@ -95,7 +94,7 @@ async function checkOrKillRunningServer(serverUrl: string): Promise<boolean> {
   if (serverRunning) {
     console.log("Killing server from old version of Continue");
     try {
-      await fkill(":65432");
+      await fkill(":65432", { force: true });
     } catch (e: any) {
       if (!e.message.includes("Process doesn't exist")) {
         console.log("Failed to kill old server:", e);
@@ -120,22 +119,34 @@ export async function downloadFromS3(
   destination: string,
   region: string
 ) {
-  const s3Url = `https://${bucket}.s3.${region}.amazonaws.com/${fileName}`;
-  const response = await fetch(s3Url, {
-    method: "GET",
-  });
-  if (!response.ok) {
-    const text = await response.text();
-    const errText = `Failed to download Continue server from S3: ${text}`;
+  try {
+    ensureDirectoryExistence(destination);
+    const file = fs.createWriteStream(destination);
+    const download = request({
+      url: `https://${bucket}.s3.${region}.amazonaws.com/${fileName}`,
+    });
+
+    download.on("response", (response: any) => {
+      if (response.statusCode !== 200) {
+        throw new Error("No body returned when downloading from S3 bucket");
+      }
+    });
+
+    download.on("error", (err: any) => {
+      fs.unlink(destination, () => {});
+      throw err;
+    });
+
+    download.pipe(file);
+
+    await finished(download);
+  } catch (err: any) {
+    const errText = `Failed to download Continue server from S3: ${err.message}`;
     vscode.window.showErrorMessage(errText);
-    throw new Error(errText);
   }
-  const buffer = await response.buffer();
-  ensureDirectoryExistence(destination);
-  fs.writeFileSync(destination, buffer);
 }
 
-export async function startContinuePythonServer() {
+export async function startContinuePythonServer(redownload: boolean = true) {
   // Check vscode settings
   const serverUrl = getContinueServerUrl();
   if (serverUrl !== "http://localhost:65432") {
@@ -167,19 +178,25 @@ export async function startContinuePythonServer() {
 
   // First, check if the server is already downloaded
   let shouldDownload = true;
-  if (fs.existsSync(destination)) {
+  if (fs.existsSync(destination) && redownload) {
     // Check if the server is the correct version
-    const serverVersion = fs.readFileSync(serverVersionPath(), "utf8");
-    if (serverVersion === getExtensionVersion()) {
-      // The current version is already up and running, no need to continue
-      console.log("Continue server already downloaded");
-      shouldDownload = false;
+    if (fs.existsSync(serverVersionPath())) {
+      const serverVersion = fs.readFileSync(serverVersionPath(), "utf8");
+      if (serverVersion === getExtensionVersion()) {
+        // The current version is already up and running, no need to continue
+        console.log("Continue server already downloaded");
+        shouldDownload = false;
+      } else {
+        console.log("Old version of the server downloaded");
+        fs.unlinkSync(destination);
+      }
     } else {
+      console.log("Old version of the server downloaded");
       fs.unlinkSync(destination);
     }
   }
 
-  if (shouldDownload) {
+  if (shouldDownload && redownload) {
     await vscode.window.withProgress(
       {
         location: vscode.ProgressLocation.Notification,
@@ -190,9 +207,9 @@ export async function startContinuePythonServer() {
         await downloadFromS3(bucket, fileName, destination, "us-west-1");
       }
     );
+    console.log("Downloaded server executable at ", destination);
   }
 
-  console.log("Downloaded server executable at ", destination);
   // Get name of the corresponding executable for platform
   if (os.platform() === "darwin") {
     // Add necessary permissions
@@ -204,19 +221,78 @@ export async function startContinuePythonServer() {
   }
 
   // Validate that the file exists
+  console.log("Looking for file at ", destination);
   if (!fs.existsSync(destination)) {
+    // List the contents of the folder
+    const files = fs.readdirSync(
+      path.join(getExtensionUri().fsPath, "server", "exe")
+    );
+    console.log("Files in server folder: ", files);
     const errText = `- Failed to install Continue server.`;
     vscode.window.showErrorMessage(errText);
+    console.log("6: throwing error message: ", errText);
     throw new Error(errText);
   }
 
   // Run the executable
-  console.log("Starting Continue server");
-  const child = spawn(destination, {
-    detached: true,
-    stdio: "ignore",
-  });
-  child.unref();
+  console.log("---- Starting Continue server ----");
+  let attempts = 0;
+  let maxAttempts = 5;
+  let delay = 1000; // Delay between each attempt in milliseconds
+
+  const spawnChild = () => {
+    const retry = (e: any) => {
+      attempts++;
+      console.log(`Error caught: ${e}.\n\nRetrying attempt ${attempts}...`);
+      setTimeout(spawnChild, delay);
+    };
+    try {
+      // NodeJS bug requires not using detached on Windows, otherwise windowsHide is ineffective
+      // Otherwise, detach is preferable
+      const windowsSettings = {
+        windowsHide: true,
+      };
+      const macLinuxSettings = {
+        detached: true,
+        stdio: "ignore",
+      };
+      const settings: any =
+        os.platform() === "win32" ? windowsSettings : macLinuxSettings;
+
+      // Spawn the server
+      const child = spawn(destination, settings);
+
+      // Either unref to avoid zombie process, or listen to events because you can
+      if (os.platform() === "win32") {
+        child.stdout.on("data", (data: any) => {
+          console.log(`stdout: ${data}`);
+        });
+        child.stderr.on("data", (data: any) => {
+          console.log(`stderr: ${data}`);
+        });
+        child.on("error", (err: any) => {
+          if (attempts < maxAttempts) {
+            retry(err);
+          } else {
+            console.error("Failed to start subprocess.", err);
+          }
+        });
+        child.on("exit", (code: any, signal: any) => {
+          console.log("Subprocess exited with code", code, signal);
+        });
+        child.on("close", (code: any, signal: any) => {
+          console.log("Subprocess closed with code", code, signal);
+        });
+      } else {
+        child.unref();
+      }
+    } catch (e: any) {
+      console.log("Error starting server:", e);
+      retry(e);
+    }
+  };
+
+  spawnChild();
 
   // Write the current version of vscode extension to a file called server_version.txt
   fs.writeFileSync(serverVersionPath(), getExtensionVersion());

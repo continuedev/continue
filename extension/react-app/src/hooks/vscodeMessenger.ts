@@ -76,4 +76,8 @@ export class VscodeMessenger extends Messenger {
       }
     });
   }
+
+  close(): void {
+    postVscMessage("websocketForwardingClose", { url: this.serverUrl });
+  }
 }

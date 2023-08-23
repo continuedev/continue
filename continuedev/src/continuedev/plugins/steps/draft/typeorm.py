@@ -1,4 +1,5 @@
 from textwrap import dedent
+
 from ....core.main import Step
 from ....core.sdk import ContinueSDK
 
@@ -12,17 +13,23 @@ class CreateTableStep(Step):
         entity_name = self.sql_str.split(" ")[2].capitalize()
         await sdk.edit_file(
             f"src/entity/{entity_name}.ts",
-            dedent(f"""\
+            dedent(
+                f"""\
             {self.sql_str}
             
-            Write a TypeORM entity called {entity_name} for this table, importing as necessary:""")
+            Write a TypeORM entity called {entity_name} for this table, importing as necessary:"""
+            ),
         )
 
         # Add entity to data-source.ts
-        await sdk.edit_file(filepath="src/data-source.ts", prompt=f"Add the {entity_name} entity:")
+        await sdk.edit_file(
+            filepath="src/data-source.ts", prompt=f"Add the {entity_name} entity:"
+        )
 
         # Generate blank migration for the entity
-        out = await sdk.run(f"npx typeorm migration:create ./src/migration/Create{entity_name}Table")
+        out = await sdk.run(
+            f"npx typeorm migration:create ./src/migration/Create{entity_name}Table"
+        )
         migration_filepath = out.text.split(" ")[1]
 
         # Wait for user input
@@ -31,13 +38,17 @@ class CreateTableStep(Step):
         # Fill in the migration
         await sdk.edit_file(
             migration_filepath,
-            dedent(f"""\
+            dedent(
+                f"""\
                 This is the table that was created:
                 
                 {self.sql_str}
                 
-                Fill in the migration for the table:"""),
+                Fill in the migration for the table:"""
+            ),
         )
 
         # Run the migration
-        await sdk.run("npx typeorm-ts-node-commonjs migration:run -d ./src/data-source.ts")
+        await sdk.run(
+            "npx typeorm-ts-node-commonjs migration:run -d ./src/data-source.ts"
+        )

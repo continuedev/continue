@@ -1,11 +1,10 @@
 {
   "name": "react-app",
   "private": true,
-  "version": "0.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build --sourcemap",
+    "build": "tsc && vite build --sourcemap 'inline'",
     "preview": "vite preview"
   },
   "dependencies": {
@@ -18,7 +17,9 @@
     "prismjs": "^1.29.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "react-hook-form": "^7.45.4",
     "react-redux": "^8.0.5",
+    "react-router-dom": "^6.14.2",
     "react-switch": "^7.0.0",
     "react-syntax-highlighter": "^15.5.0",
     "react-tooltip": "^5.18.0",
@@ -28,6 +29,7 @@
   "devDependencies": {
     "@types/react": "^18.0.27",
     "@types/react-dom": "^18.0.10",
+    "@types/react-router-dom": "^5.3.3",
     "@types/react-syntax-highlighter": "^15.5.7",
     "@types/styled-components": "^5.1.26",
     "@vitejs/plugin-react-swc": "^3.0.0",

@@ -1,5 +1,6 @@
+from transformers import AutoModelForCausalLM, AutoTokenizer
+
 from .llm import LLM
-from transformers import AutoTokenizer, AutoModelForCausalLM
 
 
 class HuggingFace(LLM):
@@ -12,6 +13,5 @@ class HuggingFace(LLM):
         args = {"max_tokens": 100}
         args.update(kwargs)
         input_ids = self.tokenizer(prompt, return_tensors="pt").input_ids
-        generated_ids = self.model.generate(
-            input_ids, max_length=args["max_tokens"])
+        generated_ids = self.model.generate(input_ids, max_length=args["max_tokens"])
         return self.tokenizer.decode(generated_ids[0], skip_special_tokens=True)

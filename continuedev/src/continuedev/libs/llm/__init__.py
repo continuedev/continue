@@ -1,5 +1,5 @@
 from abc import ABC, abstractproperty
-from typing import Any, Coroutine, Dict, Generator, List, Union, Optional
+from typing import Any, Coroutine, Dict, Generator, List, Optional, Union
 
 from ...core.main import ChatMessage
 from ...models.main import ContinueBaseModel
@@ -11,6 +11,17 @@ class LLM(ContinueBaseModel, ABC):
     requires_write_log: bool = False
 
     system_message: Optional[str] = None
+
+    class Config:
+        arbitrary_types_allowed = True
+        extra = "allow"
+
+    def dict(self, **kwargs):
+        original_dict = super().dict(**kwargs)
+        original_dict.pop("write_log", None)
+        original_dict["name"] = self.name
+        original_dict["class_name"] = self.__class__.__name__
+        return original_dict
 
     @abstractproperty
     def name(self):
@@ -25,15 +36,21 @@ class LLM(ContinueBaseModel, ABC):
         """Stop the connection to the LLM."""
         raise NotImplementedError
 
-    async def complete(self, prompt: str, with_history: List[ChatMessage] = None, **kwargs) -> Coroutine[Any, Any, str]:
+    async def complete(
+        self, prompt: str, with_history: List[ChatMessage] = None, **kwargs
+    ) -> Coroutine[Any, Any, str]:
         """Return the completion of the text with the given temperature."""
         raise NotImplementedError
 
-    def stream_complete(self, prompt, with_history: List[ChatMessage] = None, **kwargs) -> Generator[Union[Any, List, Dict], None, None]:
+    def stream_complete(
+        self, prompt, with_history: List[ChatMessage] = None, **kwargs
+    ) -> Generator[Union[Any, List, Dict], None, None]:
         """Stream the completion through generator."""
         raise NotImplementedError
 
-    async def stream_chat(self, messages: List[ChatMessage] = None, **kwargs) -> Generator[Union[Any, List, Dict], None, None]:
+    async def stream_chat(
+        self, messages: List[ChatMessage] = None, **kwargs
+    ) -> Generator[Union[Any, List, Dict], None, None]:
         """Stream the chat through generator."""
         raise NotImplementedError
 

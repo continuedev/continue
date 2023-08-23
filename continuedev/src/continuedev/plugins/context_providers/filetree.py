@@ -1,21 +1,19 @@
-import json
-from typing import List
 import os
-import aiohttp
+from typing import List
 
-from ...core.main import ContextItem, ContextItemDescription, ContextItemId
 from ...core.context import ContextProvider
+from ...core.main import ContextItem, ContextItemDescription, ContextItemId
 
 
 def format_file_tree(startpath) -> str:
     result = ""
     for root, dirs, files in os.walk(startpath):
-        level = root.replace(startpath, '').count(os.sep)
-        indent = ' ' * 4 * (level)
-        result += '{}{}/'.format(indent, os.path.basename(root)) + "\n"
-        subindent = ' ' * 4 * (level + 1)
+        level = root.replace(startpath, "").count(os.sep)
+        indent = " " * 4 * (level)
+        result += "{}{}/".format(indent, os.path.basename(root)) + "\n"
+        subindent = " " * 4 * (level + 1)
         for f in files:
-            result += '{}{}'.format(subindent, f) + "\n"
+            result += "{}{}".format(subindent, f) + "\n"
 
     return result
 
@@ -31,11 +29,8 @@ class FileTreeContextProvider(ContextProvider):
             description=ContextItemDescription(
                 name="File Tree",
                 description="Add a formatted file tree of this directory to the context",
-                id=ContextItemId(
-                    provider_title=self.title,
-                    item_id=self.title
-                )
-            )
+                id=ContextItemId(provider_title=self.title, item_id=self.title),
+            ),
         )
 
     async def provide_context_items(self, workspace_dir: str) -> List[ContextItem]:

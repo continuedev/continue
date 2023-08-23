@@ -1,9 +1,10 @@
+import os
 from textwrap import dedent
 from typing import Union
-from ....models.filesystem_edit import AddDirectory, AddFile
+
 from ....core.main import Step
 from ....core.sdk import ContinueSDK
-import os
+from ....models.filesystem_edit import AddDirectory, AddFile
 
 
 class WritePytestsRecipe(Step):
@@ -30,7 +31,8 @@ class WritePytestsRecipe(Step):
 
         for_file_contents = await sdk.ide.readFile(self.for_filepath)
 
-        prompt = dedent(f"""\
+        prompt = dedent(
+            f"""\
             This is the file you will write unit tests for:
 
             ```python
@@ -41,7 +43,8 @@ class WritePytestsRecipe(Step):
 
             "{self.user_input}"
 
-            Here is a complete set of pytest unit tests:""")
+            Here is a complete set of pytest unit tests:"""
+        )
         tests = await sdk.models.medium.complete(prompt)
 
         await sdk.apply_filesystem_edit(AddFile(filepath=path, content=tests))

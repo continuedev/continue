@@ -1,6 +1,7 @@
 {
   "name": "continue",
   "icon": "media/terminal-continue.png",
+  "version": "0.0.321",
   "repository": {
     "type": "git",
     "url": "https://github.com/continuedev/continue"
@@ -10,29 +11,28 @@
     "email": "nate@continue.dev"
   },
   "homepage": "https://continue.dev",
+  "qna": "https://github.com/continuedev/continue/issues/new/choose",
   "license": "Apache-2.0",
-  "displayName": "Continue",
+  "displayName": "Continue - ChatGPT for VS Code",
   "pricing": "Free",
-  "description": "The open-source coding autopilot",
-  "version": "0.0.253",
+  "description": "Open-source copilot for software development - bring the power of ChatGPT to your IDE",
   "publisher": "Continue",
   "engines": {
     "vscode": "^1.67.0"
   },
   "categories": [
-    "Other",
+    "Programming Languages",
     "Education",
-    "Machine Learning"
+    "Machine Learning",
+    "Snippets"
   ],
   "keywords": [
-    "openai",
-    "chatbot",
     "chatgpt",
-    "autocomplete",
-    "llm",
-    "ai",
-    "assistant",
-    "chat"
+    "github",
+    "copilot",
+    "openai",
+    "gpt4",
+    "ai"
   ],
   "activationEvents": [
     "onStartupFinished",
@@ -47,36 +47,11 @@
         "continue.serverUrl": {
           "type": "string",
           "default": "http://localhost:65432",
-          "description": "The URL of the Continue server to use."
-        },
-        "continue.OPENAI_API_KEY": {
-          "type": "string",
-          "default": null,
-          "description": "The OpenAI API key to use for code generation."
+          "description": "The URL of the Continue server. Only change this if you are running the server manually. If you want to use an LLM hosted at a custom URL, please see https://continue.dev/docs/customization#change-the-default-llm. All other configuration is done in `~/.continue/config.py`, which you can access by using the '/config' slash command."
         }
       }
     },
     "commands": [
-      {
-        "command": "continue.suggestionDown",
-        "category": "Continue",
-        "title": "Suggestion Down"
-      },
-      {
-        "command": "continue.suggestionUp",
-        "category": "Continue",
-        "title": "Suggestion Up"
-      },
-      {
-        "command": "continue.acceptSuggestion",
-        "category": "Continue",
-        "title": "Accept Suggestion"
-      },
-      {
-        "command": "continue.rejectSuggestion",
-        "category": "Continue",
-        "title": "Reject Suggestion"
-      },
       {
         "command": "continue.acceptDiff",
         "category": "Continue",
@@ -88,16 +63,6 @@
         "title": "Reject Diff"
       },
       {
-        "command": "continue.acceptAllSuggestions",
-        "category": "Continue",
-        "title": "Accept All Suggestions"
-      },
-      {
-        "command": "continue.rejectAllSuggestions",
-        "category": "Continue",
-        "title": "Reject All Suggestions"
-      },
-      {
         "command": "continue.quickTextEntry",
         "category": "Continue",
         "title": "Quick Text Entry"
@@ -105,22 +70,27 @@
       {
         "command": "continue.quickFix",
         "category": "Continue",
-        "title": "Quick Fix"
+        "title": "Quick Fix with Continue"
       },
       {
         "command": "continue.viewLogs",
         "category": "Continue",
-        "title": "View Logs"
+        "title": "View Continue Server Logs"
       },
       {
         "command": "continue.toggleAuxiliaryBar",
         "category": "Continue",
-        "title": "Toggle Auxiliary Bar"
+        "title": "Toggle Right Sidebar"
       },
       {
         "command": "continue.focusContinueInputWithEdit",
         "category": "Continue",
         "title": "Focus Continue Input With Edit"
+      },
+      {
+        "command": "continue.debugTerminal",
+        "category": "Continue",
+        "title": "Debug Terminal"
       }
     ],
     "keybindings": [
@@ -133,21 +103,6 @@
         "command": "continue.focusContinueInputWithEdit",
         "mac": "cmd+shift+m",
         "key": "ctrl+shift+m"
-      },
-      {
-        "command": "continue.suggestionDown",
-        "mac": "shift+ctrl+down",
-        "key": "shift+ctrl+down"
-      },
-      {
-        "command": "continue.suggestionUp",
-        "mac": "shift+ctrl+up",
-        "key": "shift+ctrl+up"
-      },
-      {
-        "command": "continue.acceptSuggestion",
-        "mac": "shift+ctrl+enter",
-        "key": "shift+ctrl+enter"
       },
       {
         "command": "continue.acceptDiff",
@@ -168,6 +123,11 @@
         "command": "continue.toggleAuxiliaryBar",
         "mac": "alt+cmd+m",
         "key": "alt+ctrl+m"
+      },
+      {
+        "command": "continue.debugTerminal",
+        "mac": "cmd+shift+r",
+        "key": "ctrl+shift+r"
       }
     ],
     "menus": {
@@ -233,30 +193,29 @@
     ]
   },
   "scripts": {
+    "esbuild-base": "node esbuild.mjs",
     "vscode:prepublish": "npm run esbuild-base -- --minify",
-    "esbuild-base": "rm -rf ./out && esbuild ./src/extension.ts --bundle --outfile=out/extension.js --external:vscode --format=cjs --platform=node",
-    "esbuild": "rm -rf ./out && node esbuild.mjs",
+    "esbuild": "npm run esbuild-base -- --sourcemap",
     "esbuild-watch": "npm run esbuild-base -- --sourcemap --watch",
-    "test-compile": "tsc -p ./",
-    "clientgen": "rm -rf src/client/ && npx @openapitools/openapi-generator-cli generate -i ../schema/openapi.json -g typescript-fetch -o src/client/ --additional-properties=supportsES6=true,npmVersion=8.19.2,typescriptThreePlus=true",
-    "rebuild": "electron-rebuild -v 19.1.8 node-pty",
-    "watch": "tsc -watch -p ./",
-    "pretest": "npm run compile && npm run lint",
-    "lint": "eslint src --ext ts",
-    "test": "node ./out/test/runTest.js",
-    "jest": "jest --config ./jest.config.js",
+    "tsc": "tsc -p ./",
+    "tsc-watch": "tsc -watch -p ./",
     "typegen": "node scripts/typegen.js",
-    "package": "npm install && npm run typegen && npm run clientgen && cd react-app && npm install && npm run build && cd .. && mkdir -p ./build && vsce package --out ./build"
+    "rebuild": "electron-rebuild -v 19.1.8 node-pty",
+    "lint": "eslint src --ext ts",
+    "build-test": "tsc && node esbuild.test.mjs",
+    "test": "npm run build-test && node ./out/test-runner/runTestOnVSCodeHost.js",
+    "prepackage": "node scripts/prepackage.js",
+    "package": "node scripts/package.js"
   },
   "devDependencies": {
     "@nestjs/common": "^8.4.7",
     "@openapitools/openapi-generator-cli": "^2.5.2",
     "@types/glob": "^8.0.0",
-    "@types/jest": "^29.5.2",
     "@types/mocha": "^10.0.1",
     "@types/node": "16.x",
     "@types/node-fetch": "^2.6.2",
     "@types/react-dom": "^18.2.4",
+    "@types/request": "^2.48.8",
     "@types/vscode": "1.67",
     "@types/ws": "^8.5.4",
     "@typescript-eslint/eslint-plugin": "^5.45.0",
@@ -265,7 +224,6 @@
     "esbuild": "^0.17.19",
     "eslint": "^8.28.0",
     "glob": "^8.0.3",
-    "jest": "^29.5.0",
     "json-schema-to-typescript": "^12.0.0",
     "mocha": "^10.1.0",
     "ts-jest": "^29.1.1",
@@ -284,6 +242,7 @@
     "posthog-js": "^1.68.3",
     "react-markdown": "^8.0.7",
     "react-redux": "^8.0.5",
+    "request": "^2.88.2",
     "strip-ansi": "^7.1.0",
     "tailwindcss": "^3.3.2",
     "vscode-languageclient": "^8.0.2",

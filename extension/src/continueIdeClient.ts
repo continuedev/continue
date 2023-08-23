@@ -12,7 +12,7 @@ import {
   rejectSuggestionCommand,
 } from "./suggestions";
 import { FileEditWithFullContents } from "../schema/FileEditWithFullContents";
-import fs = require("fs");
+import * as fs from "fs";
 import { WebsocketMessenger } from "./util/messenger";
 import { diffManager } from "./diffs";
 const os = require("os");
@@ -30,13 +30,12 @@ class IdeProtocolClient {
   private _lastReloadTime: number = 16;
   private _reconnectionTimeouts: NodeJS.Timeout[] = [];
 
-  private _sessionId: string | null = null;
+  sessionId: string | null = null;
   private _serverUrl: string;
 
   private _newWebsocketMessenger() {
     const requestUrl =
-      this._serverUrl +
-      (this._sessionId ? `?session_id=${this._sessionId}` : "");
+      this._serverUrl + (this.sessionId ? `?session_id=${this.sessionId}` : "");
     const messenger = new WebsocketMessenger(requestUrl);
     this.messenger = messenger;
 
@@ -115,6 +114,35 @@ class IdeProtocolClient {
     //     this._makingEdit--;
     //   }
     // });
+
+    // Listen for new file creation
+    vscode.workspace.onDidCreateFiles((event) => {
+      const filepaths = event.files.map((file) => file.fsPath);
+      this.messenger?.send("filesCreated", { filepaths });
+    });
+
+    // Listen for file deletion
+    vscode.workspace.onDidDeleteFiles((event) => {
+      const filepaths = event.files.map((file) => file.fsPath);
+      this.messenger?.send("filesDeleted", { filepaths });
+    });
+
+    // Listen for file renaming
+    vscode.workspace.onDidRenameFiles((event) => {
+      const oldFilepaths = event.files.map((file) => file.oldUri.fsPath);
+      const newFilepaths = event.files.map((file) => file.newUri.fsPath);
+      this.messenger?.send("filesRenamed", {
+        old_filepaths: oldFilepaths,
+        new_filepaths: newFilepaths,
+      });
+    });
+
+    // Listen for file saving
+    vscode.workspace.onDidSaveTextDocument((event) => {
+      const filepath = event.uri.fsPath;
+      const contents = event.getText();
+      this.messenger?.send("fileSaved", { filepath, contents });
+    });
 
     // Setup listeners for any selection changes in open editors
     vscode.window.onDidChangeTextEditorSelection((event) => {
@@ -226,6 +254,11 @@ class IdeProtocolClient {
       case "readFile":
         messenger.send("readFile", {
           contents: this.readFile(data.filepath),
+        });
+        break;
+      case "getTerminalContents":
+        messenger.send("getTerminalContents", {
+          contents: await this.getTerminalContents(),
         });
         break;
       case "editFile":
@@ -383,7 +416,9 @@ class IdeProtocolClient {
   async getUserSecret(key: string) {
     // Check if secret already exists in VS Code settings (global)
     let secret = vscode.workspace.getConfiguration("continue").get(key);
-    if (typeof secret !== "undefined" && secret !== null) return secret;
+    if (typeof secret !== "undefined" && secret !== null) {
+      return secret;
+    }
 
     // If not, ask user for secret
     secret = await vscode.window.showInputBox({
@@ -420,7 +455,7 @@ class IdeProtocolClient {
     console.log("Getting session ID");
     const resp = await this.messenger?.sendAndReceive("getSessionId", {});
     console.log("New Continue session with ID: ", resp.sessionId);
-    this._sessionId = resp.sessionId;
+    this.sessionId = resp.sessionId;
     return resp.sessionId;
   }
 
@@ -488,6 +523,20 @@ class IdeProtocolClient {
       }
     }
     return contents;
+  }
+
+  async getTerminalContents(): Promise<string> {
+    const tempCopyBuffer = await vscode.env.clipboard.readText();
+    await vscode.commands.executeCommand("workbench.action.terminal.selectAll");
+    await vscode.commands.executeCommand(
+      "workbench.action.terminal.copySelection"
+    );
+    await vscode.commands.executeCommand(
+      "workbench.action.terminal.clearSelection"
+    );
+    const terminalContents = await vscode.env.clipboard.readText();
+    await vscode.env.clipboard.writeText(tempCopyBuffer);
+    return terminalContents;
   }
 
   editFile(edit: FileEdit): Promise<FileEditWithFullContents> {
@@ -571,6 +620,11 @@ class IdeProtocolClient {
 
   sendMainUserInput(input: string) {
     this.messenger?.send("mainUserInput", { input });
+  }
+
+  async debugTerminal() {
+    const contents = await this.getTerminalContents();
+    this.messenger?.send("debugTerminal", { contents });
   }
 
   deleteAtIndex(index: number) {

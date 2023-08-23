@@ -1,11 +1,11 @@
-from functools import cached_property
 import json
 from typing import Any, Coroutine, Dict, Generator, List, Union
 
 import aiohttp
+
 from ...core.main import ChatMessage
 from ..llm import LLM
-from ..util.count_tokens import compile_chat_messages, DEFAULT_ARGS, count_tokens
+from ..util.count_tokens import DEFAULT_ARGS, compile_chat_messages, count_tokens
 
 
 class Ollama(LLM):
@@ -62,20 +62,32 @@ class Ollama(LLM):
             if msgs[i]["role"] == "user":
                 prompt += f"[INST] {msgs[i]['content']} [/INST]"
             else:
-                prompt += msgs[i]['content']
+                prompt += msgs[i]["content"]
 
         return prompt
 
-    async def stream_complete(self, prompt, with_history: List[ChatMessage] = None, **kwargs) -> Generator[Union[Any, List, Dict], None, None]:
+    async def stream_complete(
+        self, prompt, with_history: List[ChatMessage] = None, **kwargs
+    ) -> Generator[Union[Any, List, Dict], None, None]:
         args = {**self.default_args, **kwargs}
         messages = compile_chat_messages(
-            self.name, with_history, self.context_length, args["max_tokens"], prompt, functions=None, system_message=self.system_message)
+            self.name,
+            with_history,
+            self.context_length,
+            args["max_tokens"],
+            prompt,
+            functions=None,
+            system_message=self.system_message,
+        )
         prompt = self.convert_to_chat(messages)
 
-        async with self._client_session.post(f"{self.server_url}/api/generate", json={
-            "prompt": prompt,
-            "model": self.model,
-        }) as resp:
+        async with self._client_session.post(
+            f"{self.server_url}/api/generate",
+            json={
+                "prompt": prompt,
+                "model": self.model,
+            },
+        ) as resp:
             async for line in resp.content.iter_any():
                 if line:
                     try:
@@ -89,16 +101,28 @@ class Ollama(LLM):
                     except:
                         raise Exception(str(line[0]))
 
-    async def stream_chat(self, messages: List[ChatMessage] = None, **kwargs) -> Generator[Union[Any, List, Dict], None, None]:
+    async def stream_chat(
+        self, messages: List[ChatMessage] = None, **kwargs
+    ) -> Generator[Union[Any, List, Dict], None, None]:
         args = {**self.default_args, **kwargs}
         messages = compile_chat_messages(
-            self.name, messages, self.context_length, args["max_tokens"], None, functions=None, system_message=self.system_message)
+            self.name,
+            messages,
+            self.context_length,
+            args["max_tokens"],
+            None,
+            functions=None,
+            system_message=self.system_message,
+        )
         prompt = self.convert_to_chat(messages)
 
-        async with self._client_session.post(f"{self.server_url}/api/generate", json={
-            "prompt": prompt,
-            "model": self.model,
-        }) as resp:
+        async with self._client_session.post(
+            f"{self.server_url}/api/generate",
+            json={
+                "prompt": prompt,
+                "model": self.model,
+            },
+        ) as resp:
             # This is streaming application/json instaed of text/event-stream
             async for line in resp.content.iter_chunks():
                 if line[1]:
@@ -111,18 +135,23 @@ class Ollama(LLM):
                                 if "response" in j:
                                     yield {
                                         "role": "assistant",
-                                        "content": j["response"]
+                                        "content": j["response"],
                                     }
                     except:
                         raise Exception(str(line[0]))
 
-    async def complete(self, prompt: str, with_history: List[ChatMessage] = None, **kwargs) -> Coroutine[Any, Any, str]:
+    async def complete(
+        self, prompt: str, with_history: List[ChatMessage] = None, **kwargs
+    ) -> Coroutine[Any, Any, str]:
         completion = ""
 
-        async with self._client_session.post(f"{self.server_url}/api/generate", json={
-            "prompt": prompt,
-            "model": self.model,
-        }) as resp:
+        async with self._client_session.post(
+            f"{self.server_url}/api/generate",
+            json={
+                "prompt": prompt,
+                "model": self.model,
+            },
+        ) as resp:
             async for line in resp.content.iter_any():
                 if line:
                     try:

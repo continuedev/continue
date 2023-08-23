@@ -6,16 +6,13 @@ This is the Continue VS Code Extension. Its primary jobs are
 2. Open the Continue React app in a side panel. The React app's source code lives in the `react-app` directory. The panel is opened by the `continue.openContinueGUI` command, as defined in `src/commands.ts`.
 3. Run a Continue server in the background, which connects to both the IDE protocol and the React app. The server is launched in `src/activation/environmentSetup.ts` by calling Python code that lives in `server/` (unless extension settings define a server URL other than localhost:65432, in which case the extension will just connect to that).
 
-## Setting up for development
+# How to run the extension
 
-1. Clone this repo
-2. `cd extension`
-3. `npm run package`
+See [Environment Setup](../CONTRIBUTING.md#environment-setup)
 
-   > If NPM is not installed, you can use `brew install node` on Mac, or see the [installation page](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm) for other platforms, or more detailed instructions.
+# How to run and debug tests
 
-4. Open a VS Code window with `/extension` as the workspace root (_this is important, development mode will not work otherwise_)
-5. Open any `.ts` file in the workspace, then press F5 and select "VS Code Extension Development" to begin debugging.
+After following the setup in [Environment Setup](../CONTRIBUTING.md#environment-setup) you can run `npm run test` in the command line or the `Server + Tests (VSCode)` launch configuration in VS Code to debug tests + server.
 
 ## Notes
 

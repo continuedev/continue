@@ -7,6 +7,8 @@ Continue can be deeply customized by editing the `ContinueConfig` object in `~/.
 In `config.py`, you'll find the `models` property:
 
 ```python
+from continuedev.src.continuedev.core.models import Models
+
 config = ContinueConfig(
     ...
     models=Models(
@@ -27,10 +29,19 @@ With the `MaybeProxyOpenAI` `LLM`, new users can try out Continue with GPT-4 usi
 Once you are using Continue regularly though, you will need to add an OpenAI API key that has access to GPT-4 by following these steps:
 
 1. Copy your API key from https://platform.openai.com/account/api-keys
-2. Use the cmd+, (Mac) / ctrl+, (Windows) to open your VS Code settings
-3. Type "Continue" in the search bar
-4. Click Edit in settings.json under Continue: OpenAI_API_KEY" section
-5. Paste your API key as the value for "continue.OPENAI_API_KEY" in settings.json
+2. Open `~/.continue/config.py`. You can do this by using the '/config' command in Continue
+3. Change the default LLMs to look like this:
+
+```python
+API_KEY = "<API_KEY>"
+config = ContinueConfig(
+    ...
+    models=Models(
+        default=MaybeProxyOpenAI(model="gpt-4", api_key=API_KEY),
+        medium=MaybeProxyOpenAI(model="gpt-3.5-turbo", api_key=API_KEY)
+    )
+)
+```
 
 The `MaybeProxyOpenAI` class will automatically switch to using your API key instead of ours. If you'd like to explicitly use one or the other, you can use the `ProxyServer` or `OpenAI` classes instead.
 
@@ -41,12 +52,12 @@ These classes support any models available through the OpenAI API, assuming your
 Import the `AnthropicLLM` LLM class and set it as the default model:
 
 ```python
-from continuedev.libs.llm.anthropic import AnthropicLLM
+from continuedev.src.continuedev.libs.llm.anthropic import AnthropicLLM
 
 config = ContinueConfig(
     ...
     models=Models(
-        default=AnthropicLLM(model="claude-2")
+        default=AnthropicLLM(api_key="<API_KEY>", model="claude-2")
     )
 )
 ```
@@ -58,7 +69,7 @@ Continue will automatically prompt you for your Anthropic API key, which must ha
 [Ollama](https://ollama.ai/) is a Mac application that makes it easy to locally run open-source models, including Llama-2. Download the app from the website, and it will walk you through setup in a couple of minutes. You can also read more in their [README](https://github.com/jmorganca/ollama). Continue can then be configured to use the `Ollama` LLM class:
 
 ```python
-from continuedev.libs.llm.ollama import Ollama
+from continuedev.src.continuedev.libs.llm.ollama import Ollama
 
 config = ContinueConfig(
     ...
@@ -72,11 +83,63 @@ config = ContinueConfig(
 
 See our [5 minute quickstart](https://github.com/continuedev/ggml-server-example) to run any model locally with ggml. While these models don't yet perform as well, they are free, entirely private, and run offline.
 
-Once the model is running on localhost:8000, import the `GGML` LLM class from `continuedev.libs.llm.ggml` and set `default=GGML(max_context_length=2048)`.
+Once the model is running on localhost:8000, change `~/.continue/config.py` to look like this:
+
+```python
+from continuedev.src.continuedev.libs.llm.ggml import GGML
+
+config = ContinueConfig(
+    ...
+    models=Models(
+        default=GGML(
+            max_context_length=2048,
+            server_url="http://localhost:8000")
+    )
+)
+```
+
+### Together
+
+The Together API is a cloud platform for running large AI models. You can sign up [here](https://api.together.xyz/signup), copy your API key on the initial welcome screen, and then hit the play button on any model from the [Together Models list](https://docs.together.ai/docs/models-inference). Change `~/.continue/config.py` to look like this:
+
+```python
+from continuedev.src.continuedev.core.models import Models
+from continuedev.src.continuedev.libs.llm.together import TogetherLLM
+
+config = ContinueConfig(
+    ...
+    models=Models(
+        default=TogetherLLM(
+            api_key="<API_KEY>",
+            model="togethercomputer/llama-2-13b-chat"
+        )
+    )
+)
+```
+
+### Replicate
+
+Replicate is a great option for newly released language models or models that you've deployed through their platform. Sign up for an account [here](https://replicate.ai/), copy your API key, and then select any model from the [Replicate Streaming List](https://replicate.com/collections/streaming-language-models). Change `~/.continue/config.py` to look like this:
+
+```python
+from continuedev.src.continuedev.core.models import Models
+from continuedev.src.continuedev.libs.llm.replicate import ReplicateLLM
+
+config = ContinueConfig(
+    ...
+    models=Models(
+        default=ReplicateLLM(
+            model="replicate/llama-2-70b-chat:58d078176e02c219e11eb4da5a02a7830a283b14cf8f94537af893ccff5ee781",
+            api_key="my-replicate-api-key")
+    )
+)
+```
+
+If you don't specify the `model` parameter, it will default to `replicate/llama-2-70b-chat:58d078176e02c219e11eb4da5a02a7830a283b14cf8f94537af893ccff5ee781`.
 
 ### Self-hosting an open-source model
 
-If you want to self-host on Colab, RunPod, Replicate, HuggingFace, Haven, or another hosting provider you will need to wire up a new LLM class. It only needs to implement 3 primary methods: `stream_complete`, `complete`, and `stream_chat`, and you can see examples in `continuedev/src/continuedev/libs/llm`.
+If you want to self-host on Colab, RunPod, HuggingFace, Haven, or another hosting provider you will need to wire up a new LLM class. It only needs to implement 3 primary methods: `stream_complete`, `complete`, and `stream_chat`, and you can see examples in `continuedev/src/continuedev/libs/llm`.
 
 If by chance the provider has the exact same API interface as OpenAI, the `GGML` class will work for you out of the box, after changing the endpoint at the top of the file.
 
@@ -85,12 +148,12 @@ If by chance the provider has the exact same API interface as OpenAI, the `GGML`
 If you'd like to use OpenAI models but are concerned about privacy, you can use the Azure OpenAI service, which is GDPR and HIPAA compliant. After applying for access [here](https://azure.microsoft.com/en-us/products/ai-services/openai-service), you will typically hear back within only a few days. Once you have access, instantiate the model like so:
 
 ```python
-from continuedev.libs.llm.openai import OpenAI, OpenAIServerInfo
+from continuedev.src.continuedev.libs.llm.openai import OpenAI, OpenAIServerInfo
 
 config = ContinueConfig(
     ...
     models=Models(
-        default=OpenAI(model="gpt-3.5-turbo", server_info=OpenAIServerInfo(
+        default=OpenAI(api_key="my-api-key", model="gpt-3.5-turbo", openai_server_info=OpenAIServerInfo(
             api_base="https://my-azure-openai-instance.openai.azure.com/"
             engine="my-azure-openai-deployment",
             api_version="2023-03-15-preview",
@@ -110,7 +173,7 @@ You can write your own system message, a set of instructions that will always be
 
 System messages can also reference files. For example, if there is a markdown file (e.g. at `/Users/nate/Documents/docs/reference.md`) you'd like the LLM to know about, you can reference it with [Mustache](http://mustache.github.io/mustache.5.html) templating like this: "Please reference this documentation: {{ Users/nate/Documents/docs/reference.md }}". As of now, you must use an absolute path.
 
-## Custom Commands
+## Custom Commands with Natural Language Prompts
 
 You can add custom slash commands by adding a `CustomCommand` object to the `custom_commands` property. Each `CustomCommand` has
 
@@ -141,57 +204,46 @@ config = ContinueConfig(
 )
 ```
 
-## Temperature
+## Custom Slash Commands
 
-Set `temperature` to any value between 0 and 1. Higher values will make the LLM more creative, while lower values will make it more predictable. The default is 0.5.
-
-## Custom Context Providers
-
-When you type '@' in the Continue text box, it will display a dropdown of items that can be selected to include in your message as context. For example, you might want to reference a GitHub Issue, file, or Slack thread. All of these options are provided by a `ContextProvider` class, and we make it easy to write your own. As an example, here is the `GitHubIssuesContextProvider`, which lets you search all open GitHub Issues in a repo:
+If you want to go a step further than writing custom commands with natural language, you can use a `SlashCommand` to run an arbitrary Python function, with access to the Continue SDK. To do this, create a subclass of `Step` with the `run` method implemented, and this is the code that will run when you call the command. For example, here is a step that generates a commit message:
 
 ```python
-class GitHubIssuesContextProvider(ContextProvider):
-    """
-    The GitHubIssuesContextProvider is a ContextProvider that allows you to search GitHub issues in a repo.
-    """
+class CommitMessageStep(Step):
+    async def run(self, sdk: ContinueSDK):
 
-    title = "issues"
-    repo_name: str
-    auth_token: str
+        # Get the root directory of the workspace
+        dir = sdk.ide.workspace_directory
 
-    async def provide_context_items(self) -> List[ContextItem]:
-        auth = Auth.Token(self.auth_token)
-        gh = Github(auth=auth)
+        # Run git diff in that directory
+        diff = subprocess.check_output(
+            ["git", "diff"], cwd=dir).decode("utf-8")
 
-        repo = gh.get_repo(self.repo_name)
-        issues = repo.get_issues().get_page(0)
+        # Ask the LLM to write a commit message,
+        # and set it as the description of this step
+        self.description = await sdk.models.default.complete(
+            f"{diff}\n\nWrite a short, specific (less than 50 chars) commit message about the above changes:")
 
-        return [ContextItem(
-            content=issue.body,
-            description=ContextItemDescription(
-                name=f"Issue #{issue.number}",
-                description=issue.title,
-                id=ContextItemId(
-                    provider_title=self.title,
-                    item_id=issue.id
-                )
-            )
-        ) for issue in issues]
-```
-
-It can then be set in the `ContinueConfig` like so:
-
-```python
-config = ContinueConfig(
+config=ContinueConfig(
     ...
-    context_providers=[
-        GitHubIssuesContextProvider(
-            repo_name="my-github-username-or-org/my-github-repo",
-            auth_token="my-github-auth-token"
+    slash_commands=[
+        ...
+        SlashCommand(
+            name="commit",
+            description="Generate a commit message for the current changes",
+            step=CommitMessageStep,
         )
     ]
 )
 ```
+
+## Temperature
+
+Set `temperature` to any value between 0 and 1. Higher values will make the LLM more creative, while lower values will make it more predictable. The default is 0.5.
+
+## Context Providers
+
+When you type '@' in the Continue text box, it will display a dropdown of items that can be selected to include in your message as context. For example, you might want to reference a GitHub Issue, file, or Slack thread. All of these options are provided by a `ContextProvider` class, and we make it easy to write your own or use our builtin options. See the [Context Providers](./context-providers.md) page for more info.
 
 ## Custom Policies
 

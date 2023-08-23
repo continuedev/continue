@@ -1,13 +1,23 @@
-
+import asyncio
+import time
 from abc import abstractmethod
-from typing import Dict, List
+from typing import Awaitable, Callable, Dict, List
+
 from meilisearch_python_async import Client
 from pydantic import BaseModel
 
-
-from .main import ChatMessage, ContextItem, ContextItemDescription, ContextItemId
-from ..server.meilisearch_server import check_meilisearch_running
+from ..libs.util.create_async_task import create_async_task
 from ..libs.util.logging import logger
+from ..libs.util.telemetry import posthog_logger
+from ..server.meilisearch_server import poll_meilisearch_running
+from .main import ChatMessage, ContextItem, ContextItemDescription, ContextItemId
+
+
+class ContinueSDK(BaseModel):
+    """To avoid circular imports"""
+
+    ...
+
 
 SEARCH_INDEX_NAME = "continue_context_items"
 
@@ -21,8 +31,28 @@ class ContextProvider(BaseModel):
     """
 
     title: str
+    sdk: ContinueSDK = None
+    delete_documents: Callable[[List[str]], Awaitable] = None
+    update_documents: Callable[[List[ContextItem], str], Awaitable] = None
 
     selected_items: List[ContextItem] = []
+
+    def dict(self, *args, **kwargs):
+        original_dict = super().dict(*args, **kwargs)
+        original_dict.pop("sdk", None)
+        original_dict.pop("delete_documents", None)
+        original_dict.pop("update_documents", None)
+        return original_dict
+
+    async def start(self, sdk: ContinueSDK, delete_documents, update_documents):
+        """
+        Starts the context provider.
+
+        Default implementation sets the sdk.
+        """
+        self.sdk = sdk
+        self.delete_documents = delete_documents
+        self.update_documents = update_documents
 
     async def get_selected_items(self) -> List[ContextItem]:
         """
@@ -48,7 +78,14 @@ class ContextProvider(BaseModel):
 
         Default implementation has a string template.
         """
-        return [ChatMessage(role="user", content=f"{item.description.name}: {item.description.description}\n\n{item.content}", summary=item.description.description) for item in await self.get_selected_items()]
+        return [
+            ChatMessage(
+                role="user",
+                content=f"{item.description.name}: {item.description.description}\n\n{item.content}",
+                summary=item.description.description,
+            )
+            for item in await self.get_selected_items()
+        ]
 
     async def get_item(self, id: ContextItemId, query: str) -> ContextItem:
         """
@@ -56,21 +93,19 @@ class ContextProvider(BaseModel):
 
         Default implementation uses the search index to get the item.
         """
-        async with Client('http://localhost:7700') as search_client:
+        async with Client("http://localhost:7700") as search_client:
             try:
-                result = await search_client.index(
-                    SEARCH_INDEX_NAME).get_document(id.to_string())
+                result = await search_client.index(SEARCH_INDEX_NAME).get_document(
+                    id.to_string()
+                )
                 return ContextItem(
                     description=ContextItemDescription(
-                        name=result["name"],
-                        description=result["description"],
-                        id=id
+                        name=result["name"], description=result["description"], id=id
                     ),
-                    content=result["content"]
+                    content=result["content"],
                 )
             except Exception as e:
-                logger.warning(
-                    f"Error while retrieving document from meilisearch: {e}")
+                logger.warning(f"Error while retrieving document from meilisearch: {e}")
 
             return None
 
@@ -82,7 +117,11 @@ class ContextProvider(BaseModel):
         """
         id_strings = {id.to_string() for id in ids}
         self.selected_items = list(
-            filter(lambda item: item.description.id.to_string() not in id_strings, self.selected_items))
+            filter(
+                lambda item: item.description.id.to_string() not in id_strings,
+                self.selected_items,
+            )
+        )
 
     async def clear_context(self):
         """
@@ -109,6 +148,13 @@ class ContextProvider(BaseModel):
         if new_item := await self.get_item(id, query):
             self.selected_items.append(new_item)
 
+    async def manually_add_context_item(self, context_item: ContextItem):
+        for item in self.selected_items:
+            if item.description.id.item_id == context_item.description.id.item_id:
+                return
+
+        self.selected_items.append(context_item)
+
 
 class ContextManager:
     """
@@ -125,62 +171,139 @@ class ContextManager:
         """
         Returns all of the selected ContextItems.
         """
-        return sum([await provider.get_selected_items() for provider in self.context_providers.values()], [])
+        return sum(
+            [
+                await provider.get_selected_items()
+                for provider in self.context_providers.values()
+            ],
+            [],
+        )
 
     async def get_chat_messages(self) -> List[ChatMessage]:
         """
         Returns chat messages from each provider.
         """
-        return sum([await provider.get_chat_messages() for provider in self.context_providers.values()], [])
+        return sum(
+            [
+                await provider.get_chat_messages()
+                for provider in self.context_providers.values()
+            ],
+            [],
+        )
 
     def __init__(self):
         self.context_providers = {}
         self.provider_titles = set()
 
-    async def start(self, context_providers: List[ContextProvider]):
+    async def start(self, context_providers: List[ContextProvider], sdk: ContinueSDK):
         """
         Starts the context manager.
         """
+        # Use only non-meilisearch-dependent providers until it is loaded
         self.context_providers = {
-            prov.title: prov for prov in context_providers}
-        self.provider_titles = {
-            provider.title for provider in context_providers}
+            provider.title: provider
+            for provider in context_providers
+            if provider.title == "code"
+        }
+        self.provider_titles = {provider.title for provider in context_providers}
 
-        async with Client('http://localhost:7700') as search_client:
-            meilisearch_running = True
+        # Start MeiliSearch in the background without blocking
+        async def start_meilisearch(context_providers):
             try:
-
-                health = await search_client.health()
-                if not health.status == "available":
-                    meilisearch_running = False
-            except:
-                meilisearch_running = False
-
-            if not meilisearch_running:
-                logger.warning(
-                    "MeiliSearch not running, avoiding any dependent context providers")
+                await asyncio.wait_for(poll_meilisearch_running(), timeout=20)
                 self.context_providers = {
-                    title: provider for title, provider in self.context_providers.items() if title == "code"
+                    prov.title: prov for prov in context_providers
                 }
+                for provider in context_providers:
+                    await provider.start(
+                        sdk,
+                        ContextManager.delete_documents,
+                        ContextManager.update_documents,
+                    )
+
+                logger.debug("Loading Meilisearch index...")
+                await self.load_index(sdk.ide.workspace_directory)
+                logger.debug("Loaded Meilisearch index")
+            except asyncio.TimeoutError:
+                logger.warning("MeiliSearch did not start within 20 seconds")
+                logger.warning(
+                    "MeiliSearch not running, avoiding any dependent context providers"
+                )
+
+        create_async_task(start_meilisearch(context_providers))
+
+    @staticmethod
+    async def update_documents(context_items: List[ContextItem], workspace_dir: str):
+        """
+        Updates the documents in the search index.
+        """
+        documents = [
+            {
+                "id": item.description.id.to_string(),
+                "name": item.description.name,
+                "description": item.description.description,
+                "content": item.content,
+                "workspace_dir": workspace_dir,
+            }
+            for item in context_items
+        ]
+        async with Client("http://localhost:7700") as search_client:
+            await asyncio.wait_for(
+                search_client.index(SEARCH_INDEX_NAME).add_documents(documents),
+                timeout=5,
+            )
+
+    @staticmethod
+    async def delete_documents(ids):
+        """
+        Deletes the documents in the search index.
+        """
+        async with Client("http://localhost:7700") as search_client:
+            await asyncio.wait_for(
+                search_client.index(SEARCH_INDEX_NAME).delete_documents(ids),
+                timeout=5,
+            )
 
     async def load_index(self, workspace_dir: str):
-        for _, provider in self.context_providers.items():
-            context_items = await provider.provide_context_items(workspace_dir)
-            documents = [
-                {
-                    "id": item.description.id.to_string(),
-                    "name": item.description.name,
-                    "description": item.description.description,
-                    "content": item.content
-                }
-                for item in context_items
-            ]
-            if len(documents) > 0:
-                try:
-                    async with Client('http://localhost:7700') as search_client:
-                        await search_client.index(SEARCH_INDEX_NAME).add_documents(documents)
-                except Exception as e:
-                    logger.debug(f"Error loading meilisearch index: {e}")
+        try:
+            async with Client("http://localhost:7700") as search_client:
+                # First, create the index if it doesn't exist
+                # The index is currently shared by all workspaces
+                await search_client.create_index(SEARCH_INDEX_NAME)
+                globalSearchIndex = await search_client.get_index(SEARCH_INDEX_NAME)
+                await globalSearchIndex.update_ranking_rules(
+                    ["attribute", "words", "typo", "proximity", "sort", "exactness"]
+                )
+                await globalSearchIndex.update_searchable_attributes(
+                    ["name", "description"]
+                )
+                await globalSearchIndex.update_filterable_attributes(["workspace_dir"])
+
+                for _, provider in self.context_providers.items():
+                    ti = time.time()
+
+                    context_items = await provider.provide_context_items(workspace_dir)
+                    documents = [
+                        {
+                            "id": item.description.id.to_string(),
+                            "name": item.description.name,
+                            "description": item.description.description,
+                            "content": item.content,
+                            "workspace_dir": workspace_dir,
+                        }
+                        for item in context_items
+                    ]
+                    if len(documents) > 0:
+                        await asyncio.wait_for(
+                            globalSearchIndex.add_documents(documents), timeout=5
+                        )
+
+                    tf = time.time()
+                    logger.debug(
+                        f"Loaded {len(documents)} documents into meilisearch in {tf - ti} seconds for context provider {provider.title}"
+                    )
+        except Exception as e:
+            logger.debug(f"Error loading meilisearch index: {e}")
 
     async def select_context_item(self, id: str, query: str):
         """
@@ -189,8 +312,17 @@ class ContextManager:
         id: ContextItemId = ContextItemId.from_string(id)
         if id.provider_title not in self.provider_titles:
             raise ValueError(
-                f"Context provider with title {id.provider_title} not found")
+                f"Context provider with title {id.provider_title} not found"
+            )
 
+        posthog_logger.capture_event(
+            "select_context_item",
+            {
+                "provider_title": id.provider_title,
+                "item_id": id.item_id,
+                "query": query,
+            },
+        )
         await self.context_providers[id.provider_title].add_context_item(id, query)
 
     async def delete_context_with_ids(self, ids: List[str]):
@@ -216,6 +348,17 @@ class ContextManager:
         """
         for provider in self.context_providers.values():
             await self.context_providers[provider.title].clear_context()
+
+    async def manually_add_context_item(self, item: ContextItem):
+        """
+        Adds the given ContextItem to the list of ContextItems.
+        """
+        if item.description.id.provider_title not in self.provider_titles:
+            return
+
+        await self.context_providers[
+            item.description.id.provider_title
+        ].manually_add_context_item(item)
 
 
 """

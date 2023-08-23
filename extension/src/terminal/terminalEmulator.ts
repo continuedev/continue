@@ -1,7 +1,7 @@
 /* Terminal emulator - commented because node-pty is causing problems. */
 
 import * as vscode from "vscode";
-import os = require("os");
+import * as os from 'os';
 import stripAnsi from "strip-ansi";
 import { longestCommonSubsequence } from "../util/lcs";
 

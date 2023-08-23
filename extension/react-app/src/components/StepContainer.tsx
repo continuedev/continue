@@ -1,13 +1,6 @@
 import { useContext, useEffect, useRef, useState } from "react";
 import styled, { keyframes } from "styled-components";
-import {
-  appear,
-  defaultBorderRadius,
-  secondaryDark,
-  vscBackground,
-  vscBackgroundTransparent,
-  vscForeground,
-} from ".";
+import { secondaryDark, vscBackground } from ".";
 import {
   ChevronDownIcon,
   ChevronRightIcon,
@@ -39,26 +32,20 @@ interface StepContainerProps {
 
 // #region styled components
 
-const MainDiv = styled.div<{ stepDepth: number; inFuture: boolean }>`
+const MainDiv = styled.div<{
+  stepDepth: number;
+  inFuture: boolean;
+}>`
   opacity: ${(props) => (props.inFuture ? 0.3 : 1)};
-  animation: ${appear} 0.3s ease-in-out;
   overflow: hidden;
   margin-left: 0px;
   margin-right: 0px;
-`;
-
-const StepContainerDiv = styled.div<{ open: boolean }>`
-  /* background-color: ${(props) =>
-    props.open ? vscBackground : secondaryDark}; */
-  /* border-radius: ${defaultBorderRadius}; */
-  /* padding: 8px; */
 `;
 
 const HeaderDiv = styled.div<{ error: boolean; loading: boolean }>`
   background-color: ${(props) => (props.error ? "#522" : vscBackground)};
   display: grid;
   grid-template-columns: 1fr auto auto;
-  grid-gap: 8px;
   align-items: center;
   padding-right: 8px;
 `;
@@ -72,7 +59,8 @@ const LeftHeaderSubDiv = styled.div`
 `;
 
 const ContentDiv = styled.div<{ isUserInput: boolean }>`
-  padding: 8px;
+  padding-left: 4px;
+  padding-right: 2px;
   background-color: ${(props) =>
     props.isUserInput ? secondaryDark : vscBackground};
   font-size: 13px;
@@ -150,14 +138,14 @@ function StepContainer(props: StepContainerProps) {
       }}
       hidden={props.historyNode.step.hide as any}
     >
-      <StepContainerDiv open={props.open}>
+      <div>
         <GradientBorder
-          loading={(props.historyNode.active as boolean) || false}
+          loading={props.historyNode.active as boolean}
           isFirst={props.isFirst}
           isLast={props.isLast}
           borderColor={
             props.historyNode.observation?.error
-              ? "#f00"
+              ? "#f005"
               : props.historyNode.active
               ? undefined
               : "transparent"
@@ -175,7 +163,11 @@ function StepContainer(props: StepContainerProps) {
             loading={(props.historyNode.active as boolean) || false}
             error={props.historyNode.observation?.error ? true : false}
           >
-            <LeftHeaderSubDiv>
+            <LeftHeaderSubDiv
+              style={
+                props.historyNode.observation?.error ? { color: "white" } : {}
+              }
+            >
               {!isUserInput &&
                 (props.open ? (
                   <ChevronDownIcon width="1.4em" height="1.4em" />
@@ -193,62 +185,63 @@ function StepContainer(props: StepContainerProps) {
             >
               <Backward size="1.6em" onClick={props.onReverse}></Backward>
             </HeaderButton> */}
-
-            <>
-              {(props.historyNode.logs as any)?.length > 0 && (
-                <HeaderButtonWithText
-                  text="Logs"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    client?.showLogsAtIndex(props.index);
-                  }}
-                >
-                  <MagnifyingGlassIcon width="1.4em" height="1.4em" />
-                </HeaderButtonWithText>
-              )}
-              <HeaderButtonWithText
-                onClick={(e) => {
-                  e.stopPropagation();
-                  props.onDelete();
-                }}
-                text={
-                  props.historyNode.active
-                    ? `Stop (${getMetaKeyLabel()}⌫)`
-                    : "Delete"
-                }
-              >
-                {props.historyNode.active ? (
-                  <StopCircleIcon
-                    width="1.4em"
-                    height="1.4em"
-                    onClick={props.onDelete}
-                  />
-                ) : (
-                  <XMarkIcon
-                    width="1.4em"
-                    height="1.4em"
-                    onClick={props.onDelete}
-                  />
+            {(isHovered || (props.historyNode.active as boolean)) && (
+              <div className="flex gap-2 items-center">
+                {(props.historyNode.logs as any)?.length > 0 && (
+                  <HeaderButtonWithText
+                    text="Logs"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      client?.showLogsAtIndex(props.index);
+                    }}
+                  >
+                    <MagnifyingGlassIcon width="1.4em" height="1.4em" />
+                  </HeaderButtonWithText>
                 )}
-              </HeaderButtonWithText>
-              {props.historyNode.observation?.error ? (
                 <HeaderButtonWithText
-                  text="Retry"
                   onClick={(e) => {
                     e.stopPropagation();
-                    props.onRetry();
+                    props.onDelete();
                   }}
+                  text={
+                    props.historyNode.active
+                      ? `Stop (${getMetaKeyLabel()}⌫)`
+                      : "Delete"
+                  }
                 >
-                  <ArrowPathIcon
-                    width="1.4em"
-                    height="1.4em"
-                    onClick={props.onRetry}
-                  />
+                  {props.historyNode.active ? (
+                    <StopCircleIcon
+                      width="1.4em"
+                      height="1.4em"
+                      onClick={props.onDelete}
+                    />
+                  ) : (
+                    <XMarkIcon
+                      width="1.4em"
+                      height="1.4em"
+                      onClick={props.onDelete}
+                    />
+                  )}
                 </HeaderButtonWithText>
-              ) : (
-                <></>
-              )}
-            </>
+                {props.historyNode.observation?.error ? (
+                  <HeaderButtonWithText
+                    text="Retry"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      props.onRetry();
+                    }}
+                  >
+                    <ArrowPathIcon
+                      width="1.4em"
+                      height="1.4em"
+                      onClick={props.onRetry}
+                    />
+                  </HeaderButtonWithText>
+                ) : (
+                  <></>
+                )}
+              </div>
+            )}
           </HeaderDiv>
         </GradientBorder>
         <ContentDiv hidden={!props.open} isUserInput={isUserInput}>
@@ -278,7 +271,7 @@ function StepContainer(props: StepContainerProps) {
             />
           )}
         </ContentDiv>
-      </StepContainerDiv>
+      </div>
     </MainDiv>
   );
 }

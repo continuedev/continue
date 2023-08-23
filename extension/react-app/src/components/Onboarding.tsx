@@ -71,29 +71,30 @@ const Onboarding = () => {
               <Loader />
             </div>
           )}
-          {counter % 2 === 0 ? (
-            <img
-              src={`https://github.com/continuedev/continue/blob/main/media/${gifs[counter]}.gif?raw=true`}
-              width="100%"
-              key={"even-gif"}
-              alt={topMessages[counter]}
-              onLoad={() => {
-                setLoading(false);
-              }}
-              style={{ zIndex: 1 }}
-            />
-          ) : (
-            <img
-              src={`https://github.com/continuedev/continue/blob/main/media/${gifs[counter]}.gif?raw=true`}
-              width="100%"
-              key={"odd-gif"}
-              alt={topMessages[counter]}
-              onLoad={() => {
-                setLoading(false);
-              }}
-              style={{ zIndex: 1 }}
-            />
-          )}
+          {counter < 4 &&
+            (counter % 2 === 0 ? (
+              <img
+                src={`https://github.com/continuedev/continue/blob/main/media/${gifs[counter]}.gif?raw=true`}
+                width="100%"
+                key={"even-gif"}
+                alt={topMessages[counter]}
+                onLoad={() => {
+                  setLoading(false);
+                }}
+                style={{ zIndex: 1 }}
+              />
+            ) : (
+              <img
+                src={`https://github.com/continuedev/continue/blob/main/media/${gifs[counter]}.gif?raw=true`}
+                width="100%"
+                key={"odd-gif"}
+                alt={topMessages[counter]}
+                onLoad={() => {
+                  setLoading(false);
+                }}
+                style={{ zIndex: 1 }}
+              />
+            ))}
         </div>
         <p
           style={{

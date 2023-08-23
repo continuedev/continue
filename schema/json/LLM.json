@@ -1,0 +1,30 @@
+{
+  "title": "LLM",
+  "$ref": "#/definitions/src__continuedev__libs__llm__LLM",
+  "definitions": {
+    "src__continuedev__libs__llm__LLM": {
+      "title": "LLM",
+      "type": "object",
+      "properties": {
+        "requires_api_key": {
+          "title": "Requires Api Key",
+          "type": "string"
+        },
+        "requires_unique_id": {
+          "title": "Requires Unique Id",
+          "default": false,
+          "type": "boolean"
+        },
+        "requires_write_log": {
+          "title": "Requires Write Log",
+          "default": false,
+          "type": "boolean"
+        },
+        "system_message": {
+          "title": "System Message",
+          "type": "string"
+        }
+      }
+    }
+  }
+}

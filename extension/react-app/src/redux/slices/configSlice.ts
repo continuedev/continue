@@ -7,13 +7,13 @@ export const configSlice = createSlice({
     apiUrl: "http://localhost:65432",
   } as RootStore["config"],
   reducers: {
-    setWorkspacePath: (
+    setWorkspacePaths: (
       state: RootStore["config"],
-      action: { type: string; payload: string }
+      action: { type: string; payload: string[] }
     ) => {
       return {
         ...state,
-        workspacePath: action.payload,
+        workspacePaths: action.payload,
       };
     },
     setApiUrl: (
@@ -50,16 +50,16 @@ export const configSlice = createSlice({
     ) => ({
       ...state,
       dataSwitchOn: action.payload,
-    })
+    }),
   },
 });
 
 export const {
   setVscMachineId,
   setApiUrl,
-  setWorkspacePath,
+  setWorkspacePaths,
   setSessionId,
   setVscMediaUrl,
-  setDataSwitchOn
+  setDataSwitchOn,
 } = configSlice.actions;
 export default configSlice.reducer;

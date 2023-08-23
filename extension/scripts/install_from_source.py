@@ -1,3 +1,5 @@
+# Run from extension/scripts directory
+
 import os
 import subprocess
 
@@ -5,23 +7,22 @@ import subprocess
 def run(cmd: str):
     return subprocess.run(cmd, shell=True, capture_output=False)
 
-
 def get_latest_version() -> str:
-    latest = None
-    latest_major = 0
-    latest_minor = 0
-    latest_patch = 0
-    for file in os.listdir("../build"):
-        if file.endswith(".vsix"):
-            version = file.split("-")[1].split(".vsix")[0]
-            major, minor, patch = list(
-                map(lambda x: int(x), version.split(".")))
-            if latest is None or (major >= latest_major and minor >= latest_minor and patch > latest_patch):
-                latest = file
-                latest_major = major
-                latest_minor = minor
-                latest_patch = patch
+    # Ensure build directory exists
+    if not os.path.exists("../build"):
+        os.mkdir("../build")
+    
+    def version_tuple(filename):
+        version = filename.split("-")[1].split(".vsix")[0]
+        return tuple(map(int, version.split(".")))
 
+    versions = [file for file in os.listdir("../build") if file.endswith(".vsix")]
+    
+    # Ensure we have at least one version
+    if len(versions) == 0:
+        return None
+    
+    return max(versions, key=version_tuple)
 
 def main():
     # Clear out old stuff
@@ -62,7 +63,7 @@ def main():
 
     latest = get_latest_version()
     resp = run(f"cd ..; code --install-extension ./build/{latest}")
-
+    
     print("Continue VS Code extension installed successfully. Please restart VS Code to use it.")
 
 

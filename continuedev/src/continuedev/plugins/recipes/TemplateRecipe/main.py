@@ -1,7 +1,7 @@
 from typing import Coroutine
-from ....core.main import Step, Observation
-from ....core.sdk import ContinueSDK
-from ....core.sdk import Models
+
+from ....core.main import Observation, Step
+from ....core.sdk import ContinueSDK, Models
 
 
 class TemplateRecipe(Step):
@@ -25,5 +25,5 @@ class TemplateRecipe(Step):
         visible_files = await sdk.ide.getVisibleFiles()
         await sdk.edit_file(
             filename=visible_files[0],
-            prompt=f"Append a statement to print `Hello, {self.name}!` at the end of the file."
+            prompt=f"Append a statement to print `Hello, {self.name}!` at the end of the file.",
         )

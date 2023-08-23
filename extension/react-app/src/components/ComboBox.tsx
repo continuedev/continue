@@ -15,16 +15,24 @@ import {
 } from ".";
 import PillButton from "./PillButton";
 import HeaderButtonWithText from "./HeaderButtonWithText";
-import { DocumentPlusIcon } from "@heroicons/react/24/outline";
+import {
+  BookmarkIcon,
+  DocumentPlusIcon,
+  FolderArrowDownIcon,
+} from "@heroicons/react/24/outline";
 import { ContextItem } from "../../../schema/FullState";
 import { postVscMessage } from "../vscode";
 import { GUIClientContext } from "../App";
 import { MeiliSearch } from "meilisearch";
 import {
   setBottomMessage,
-  setBottomMessageCloseTimeout,
+  setDialogMessage,
+  setShowDialog,
 } from "../redux/slices/uiStateSlice";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
+import { RootStore } from "../redux/store";
+import SelectContextGroupDialog from "./dialogs/SelectContextGroupDialog";
+import AddContextGroupDialog from "./dialogs/AddContextGroupDialog";
 
 const SEARCH_INDEX_NAME = "continue_context_items";
 
@@ -70,6 +78,10 @@ const MainTextInput = styled.textarea`
   &:focus {
     outline: 1px solid ${lightGray};
     border: 1px solid transparent;
+  }
+
+  &::placeholder {
+    color: ${lightGray}80;
   }
 `;
 
@@ -119,7 +131,7 @@ const Li = styled.li<{
 // #endregion
 
 interface ComboBoxProps {
-  items: { name: string; description: string; id?: string }[];
+  items: { name: string; description: string; id?: string; content?: string }[];
   onInputValueChange: (inputValue: string) => void;
   disabled?: boolean;
   onEnter: (e: React.KeyboardEvent<HTMLInputElement>) => void;
@@ -132,6 +144,12 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
   const searchClient = new MeiliSearch({ host: "http://127.0.0.1:7700" });
   const client = useContext(GUIClientContext);
   const dispatch = useDispatch();
+  const workspacePaths = useSelector(
+    (state: RootStore) => state.config.workspacePaths
+  );
+  const savedContextGroups = useSelector(
+    (state: RootStore) => state.serverState.saved_context_groups
+  );
 
   const [history, setHistory] = React.useState<string[]>([]);
   // The position of the current command you are typing now, so the one that will be appended to history once you press enter
@@ -177,10 +195,18 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
           // Get search results and return
           setCurrentlyInContextQuery(true);
           const providerAndQuery = segs[segs.length - 1] || "";
-          const [provider, query] = providerAndQuery.split(" ");
+          // Only return context items from the current workspace - the index is currently shared between all sessions
+          const workspaceFilter =
+            workspacePaths && workspacePaths.length > 0
+              ? `workspace_dir IN [ ${workspacePaths
+                  .map((path) => `"${path}"`)
+                  .join(", ")} ]`
+              : undefined;
           searchClient
             .index(SEARCH_INDEX_NAME)
-            .search(providerAndQuery)
+            .search(providerAndQuery, {
+              filter: workspaceFilter,
+            })
             .then((res) => {
               setItems(
                 res.hits.map((hit) => {
@@ -188,6 +214,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
                     name: hit.name,
                     description: hit.description,
                     id: hit.id,
+                    content: hit.content,
                   };
                 })
               );
@@ -223,10 +250,55 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
   const divRef = React.useRef<HTMLDivElement>(null);
   const ulRef = React.useRef<HTMLUListElement>(null);
   const showAbove = () => {
-    return (divRef.current?.getBoundingClientRect().top || 0) > UlMaxHeight;
+    return (
+      (divRef.current?.getBoundingClientRect().top || Number.MAX_SAFE_INTEGER) >
+      UlMaxHeight
+    );
   };
 
   useImperativeHandle(ref, () => downshiftProps, [downshiftProps]);
+
+  const contextItemsDivRef = React.useRef<HTMLDivElement>(null);
+  const handleTabPressed = () => {
+    // Set the focus to the next item in the context items div
+    if (!contextItemsDivRef.current) {
+      return;
+    }
+    const focusableItems =
+      contextItemsDivRef.current.querySelectorAll(".pill-button");
+    const focusableItemsArray = Array.from(focusableItems);
+    const focusedItemIndex = focusableItemsArray.findIndex(
+      (item) => item === document.activeElement
+    );
+    console.log(focusedItemIndex, focusableItems);
+    if (focusedItemIndex === focusableItemsArray.length - 1) {
+      inputRef.current?.focus();
+    } else if (focusedItemIndex !== -1) {
+      const nextItem =
+        focusableItemsArray[
+          (focusedItemIndex + 1) % focusableItemsArray.length
+        ];
+      (nextItem as any)?.focus();
+    } else {
+      const firstItem = focusableItemsArray[0];
+      (firstItem as any)?.focus();
+    }
+  };
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const listener = (e: any) => {
+        if (e.key === "Tab") {
+          e.preventDefault();
+          handleTabPressed();
+        }
+      };
+      window.addEventListener("keydown", listener);
+      return () => {
+        window.removeEventListener("keydown", listener);
+      };
+    }
+  }, []);
 
   const [metaKeyPressed, setMetaKeyPressed] = useState(false);
   const [focused, setFocused] = useState(false);
@@ -269,9 +341,28 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
     };
   }, [inputRef.current]);
 
+  const showSelectContextGroupDialog = () => {
+    dispatch(setDialogMessage(<SelectContextGroupDialog />));
+    dispatch(setShowDialog(true));
+  };
+
+  const showDialogToSaveContextGroup = () => {
+    dispatch(
+      setDialogMessage(
+        <AddContextGroupDialog
+          selectedContextItems={props.selectedContextItems}
+        />
+      )
+    );
+    dispatch(setShowDialog(true));
+  };
+
   return (
     <>
-      <div className="px-2 flex gap-2 items-center flex-wrap mt-2">
+      <div
+        className="px-2 flex gap-2 items-center flex-wrap mt-2"
+        ref={contextItemsDivRef}
+      >
         {props.selectedContextItems.map((item, idx) => {
           return (
             <PillButton
@@ -285,28 +376,72 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
               }
               addingHighlightedCode={props.addingHighlightedCode}
               index={idx}
+              onDelete={() => {
+                client?.deleteContextWithIds([item.description.id]);
+                inputRef.current?.focus();
+              }}
             />
           );
         })}
-        {props.selectedContextItems.length > 0 &&
-          (props.addingHighlightedCode ? (
-            <EmptyPillDiv
-              onClick={() => {
-                props.onToggleAddContext();
-              }}
-            >
-              Highlight code section
-            </EmptyPillDiv>
-          ) : (
+        <HeaderButtonWithText
+          text="Load bookmarked context"
+          onClick={() => {
+            showSelectContextGroupDialog();
+          }}
+          className="pill-button focus:outline-none focus:border-red-600 focus:border focus:border-solid"
+          onKeyDown={(e: KeyboardEvent) => {
+            e.preventDefault();
+            if (e.key === "Enter") {
+              showSelectContextGroupDialog();
+            }
+          }}
+        >
+          <FolderArrowDownIcon width="1.4em" height="1.4em" />
+        </HeaderButtonWithText>
+        {props.selectedContextItems.length > 0 && (
+          <>
             <HeaderButtonWithText
-              text="Add more code to context"
+              text="Bookmark context"
               onClick={() => {
-                props.onToggleAddContext();
+                showDialogToSaveContextGroup();
+              }}
+              className="pill-button focus:outline-none focus:border-red-600 focus:border focus:border-solid"
+              onKeyDown={(e: KeyboardEvent) => {
+                e.preventDefault();
+                if (e.key === "Enter") {
+                  showDialogToSaveContextGroup();
+                }
               }}
             >
-              <DocumentPlusIcon width="1.4em" height="1.4em" />
+              <BookmarkIcon width="1.4em" height="1.4em" />
             </HeaderButtonWithText>
-          ))}
+            {props.addingHighlightedCode ? (
+              <EmptyPillDiv
+                onClick={() => {
+                  props.onToggleAddContext();
+                }}
+              >
+                Highlight code section
+              </EmptyPillDiv>
+            ) : (
+              <HeaderButtonWithText
+                text="Add more code to context"
+                onClick={() => {
+                  props.onToggleAddContext();
+                }}
+                className="pill-button focus:outline-none focus:border-red-600 focus:border focus:border-solid"
+                onKeyDown={(e: KeyboardEvent) => {
+                  e.preventDefault();
+                  if (e.key === "Enter") {
+                    props.onToggleAddContext();
+                  }
+                }}
+              >
+                <DocumentPlusIcon width="1.4em" height="1.4em" />
+              </HeaderButtonWithText>
+            )}
+          </>
+        )}
       </div>
       <div className="flex px-2" ref={divRef} hidden={!downshiftProps.isOpen}>
         <MainTextInput
@@ -329,10 +464,6 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
               setFocused(true);
               dispatch(setBottomMessage(undefined));
             },
-            onBlur: (e) => {
-              setFocused(false);
-              postVscMessage("blurContinueInput", {});
-            },
             onKeyDown: (event) => {
               dispatch(setBottomMessage(undefined));
               if (event.key === "Enter" && event.shiftKey) {
@@ -351,19 +482,30 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
                 // Prevent Downshift's default 'Enter' behavior.
                 (event.nativeEvent as any).preventDownshiftDefault = true;
 
-                if (props.onEnter) props.onEnter(event);
+                if (props.onEnter) {
+                  props.onEnter(event);
+                }
                 setCurrentlyInContextQuery(false);
               } else if (event.key === "Tab" && items.length > 0) {
                 downshiftProps.setInputValue(items[0].name);
                 event.preventDefault();
+              } else if (event.key === "Tab") {
+                (event.nativeEvent as any).preventDownshiftDefault = true;
               } else if (
                 (event.key === "ArrowUp" || event.key === "ArrowDown") &&
-                event.currentTarget.value.split("\n").length > 1
+                items.length > 0
               ) {
-                (event.nativeEvent as any).preventDownshiftDefault = true;
+                return;
               } else if (event.key === "ArrowUp") {
-                if (positionInHistory == 0) return;
-                else if (
+                // Only go back in history if selectionStart is 0
+                // (i.e. the cursor is at the beginning of the input)
+                if (
+                  positionInHistory == 0 ||
+                  event.currentTarget.selectionStart !== 0
+                ) {
+                  (event.nativeEvent as any).preventDownshiftDefault = true;
+                  return;
+                } else if (
                   positionInHistory == history.length &&
                   (history.length === 0 ||
                     history[history.length - 1] !== event.currentTarget.value)
@@ -374,6 +516,15 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
                 setPositionInHistory((prev) => prev - 1);
                 setCurrentlyInContextQuery(false);
               } else if (event.key === "ArrowDown") {
+                if (
+                  positionInHistory === history.length ||
+                  event.currentTarget.selectionStart !==
+                    event.currentTarget.value.length
+                ) {
+                  (event.nativeEvent as any).preventDownshiftDefault = true;
+                  return;
+                }
+
                 if (positionInHistory < history.length) {
                   downshiftProps.setInputValue(history[positionInHistory + 1]);
                 }
@@ -383,9 +534,13 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
                 setCurrentlyInContextQuery(false);
               } else if (event.key === "Escape") {
                 setCurrentlyInContextQuery(false);
-                if (downshiftProps.isOpen) {
+                if (downshiftProps.isOpen && items.length > 0) {
                   downshiftProps.closeMenu();
+                  (event.nativeEvent as any).preventDownshiftDefault = true;
                 } else {
+                  (event.nativeEvent as any).preventDownshiftDefault = true;
+                  // Remove focus from the input
+                  inputRef.current?.blur();
                   // Move cursor back over to the editor
                   postVscMessage("focusEditor", {});
                 }
@@ -415,8 +570,18 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
                 selected={downshiftProps.selectedItem === item}
               >
                 <span>
-                  {item.name}:{"  "}
+                  {item.name}
+                  {"  "}
                   <span style={{ color: lightGray }}>{item.description}</span>
+                  {downshiftProps.highlightedIndex === index &&
+                    item.content && (
+                      <>
+                        <br />
+                        <pre style={{ color: lightGray }}>
+                          {item.content.split("\n").slice(0, 5).join("\n")}
+                        </pre>
+                      </>
+                    )}
                 </span>
               </Li>
             ))}
