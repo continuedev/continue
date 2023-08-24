@@ -103,7 +103,9 @@ async function checkOrKillRunningServer(serverUrl: string): Promise<boolean> {
         console.log("Failed to kill old server:", e);
       }
     }
-    fs.unlinkSync(serverVersionPath());
+    if (fs.existsSync(serverVersionPath())) {
+      fs.unlinkSync(serverVersionPath());
+    }
     // Also delete the server binary
     const serverBinaryPath = path.join(
       getExtensionUri().fsPath,
@@ -148,7 +150,9 @@ export async function downloadFromS3(
     });
 
     download.on("error", (err: any) => {
-      fs.unlink(destination, () => {});
+      if (fs.existsSync(destination)) {
+        fs.unlink(destination, () => {});
+      }
       throw err;
     });
 
@@ -205,11 +209,15 @@ export async function startContinuePythonServer(redownload: boolean = true) {
         shouldDownload = false;
       } else {
         console.log("Old version of the server downloaded");
-        fs.unlinkSync(destination);
+        if (fs.existsSync(destination)) {
+          fs.unlinkSync(destination);
+        }
       }
     } else {
       console.log("Old version of the server downloaded");
-      fs.unlinkSync(destination);
+      if (fs.existsSync(destination)) {
+        fs.unlinkSync(destination);
+      }
     }
   }
 
