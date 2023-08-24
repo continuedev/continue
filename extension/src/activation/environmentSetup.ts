@@ -170,7 +170,7 @@ export async function startContinuePythonServer(redownload: boolean = true) {
   }
 
   // Check if server is already running
-  if (await checkOrKillRunningServer(serverUrl)) {
+  if (redownload && (await checkOrKillRunningServer(serverUrl))) {
     console.log("Continue server already running");
     return;
   }
