@@ -44,9 +44,16 @@ class DefaultOnTracebackStep(Step):
                 tb = parsed_tb
                 break
 
+        tb_first_last_lines = (
+            ("\n".join(tb.split("\n")[:3]) + "\n...\n" + "\n".join(tb.split("\n")[-3:]))
+            if len(tb.split("\n")) > 6
+            else tb
+        )
+
         await sdk.run_step(
             UserInputStep(
-                user_input=f"""I got the following error, can you please help explain how to fix it?\n\n{tb}"""
+                description=f"""I got the following error, can you please help explain how to fix it?\n\n{tb_first_last_lines}""",
+                user_input=f"""I got the following error, can you please help explain how to fix it?\n\n{tb}""",
             )
         )
         await sdk.run_step(SimpleChatStep(name="Help With Traceback"))

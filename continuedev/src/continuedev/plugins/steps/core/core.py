@@ -898,6 +898,8 @@ class UserInputStep(Step):
     manage_own_chat_context: bool = True
 
     async def describe(self, models: Models) -> Coroutine[str, None, None]:
+        if self.description is not None:
+            return self.description
         return self.user_input
 
     async def run(

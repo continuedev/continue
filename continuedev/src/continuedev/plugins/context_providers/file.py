@@ -59,6 +59,8 @@ class FileContextProvider(ContextProvider):
 
         async def on_file_saved(filepath: str, contents: str):
             item = await self.get_context_item_for_filepath(filepath)
+            if item is None:
+                return
             await self.update_documents([item], self.sdk.ide.workspace_directory)
 
         async def on_files_created(filepaths: List[str]):
