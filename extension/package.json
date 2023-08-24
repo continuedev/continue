@@ -13,7 +13,7 @@
   "homepage": "https://continue.dev",
   "qna": "https://github.com/continuedev/continue/issues/new/choose",
   "license": "Apache-2.0",
-  "displayName": "Continue - ChatGPT for VS Code",
+  "displayName": "Continue - Use Code Llama in VS Code",
   "pricing": "Free",
   "description": "Open-source copilot for software development - bring the power of ChatGPT to your IDE",
   "publisher": "Continue",
@@ -30,8 +30,8 @@
     "chatgpt",
     "github",
     "copilot",
-    "openai",
-    "gpt4",
+    "llama",
+    "codellama",
     "ai"
   ],
   "activationEvents": [

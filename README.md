@@ -1,3 +1,5 @@
+> 🎁 **New!: [Use Code Llama with Continue](https://continue.dev/docs/walkthroughs/codellama)**
+
 <h1 align="center">Continue</h1>
 
 <div align="center">
@@ -47,7 +49,7 @@ Open a blank file and let Continue start new Python scripts, React components, e
 
 ### [Download for VS Code](https://marketplace.visualstudio.com/items?itemName=Continue.continue)
 
-By default, Continue uses `GPT-4` and `GPT-3.5-turbo` via the OpenAI API. 
+By default, Continue uses `GPT-4` and `GPT-3.5-turbo` via the OpenAI API.
 
 You can adjust the config to use different LLMs, including local, private models. Read more [here](https://continue.dev/docs/customization#change-the-default-llm).
 
