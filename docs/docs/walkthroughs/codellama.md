@@ -2,7 +2,7 @@
 
 With Continue, you can use Code Llama as a drop-in replacement for GPT-4, either by running locally with Ollama or GGML or through Replicate.
 
-For more general information on customizing Continue, read [our customization docs](../customization.md).
+If you haven't already installed Continue, you can do that [here](https://marketplace.visualstudio.com/items?itemName=Continue.continue). For more general information on customizing Continue, read [our customization docs](../customization.md).
 
 ## Ollama
 
