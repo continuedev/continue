@@ -194,7 +194,7 @@ class Autopilot(ContinueBaseModel):
         self._active = False
 
         # Clear context
-        await self.context_manager.clear_context()
+        # await self.context_manager.clear_context()
 
         await self.update_subscribers()
 
