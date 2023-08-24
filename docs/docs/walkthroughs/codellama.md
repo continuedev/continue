@@ -37,7 +37,7 @@ from continuedev.src.continuedev.libs.llm.ollama import Ollama
 config = ContinueConfig(
     ...
     models=Models(
-        default=Ollama(model="codellama:7b")
+        default=Ollama(model="codellama")
     )
 )
 ```
