@@ -3,10 +3,11 @@ from typing import Dict, List
 
 import redbaron
 
-config_file_path = "/Users/natesesti/.continue/config.py"
+from .paths import getConfigFilePath
 
 
 def load_red():
+    config_file_path = getConfigFilePath()
     with open(config_file_path, "r") as file:
         source_code = file.read()
 
@@ -48,7 +49,7 @@ def edit_config_property(key_path: List[str], value: redbaron.RedBaron):
         config_args = config.value.value[1].value
         edit_property(config_args, key_path, value)
 
-        with open(config_file_path, "w") as file:
+        with open(getConfigFilePath(), "w") as file:
             file.write(red.dumps())
 
 
