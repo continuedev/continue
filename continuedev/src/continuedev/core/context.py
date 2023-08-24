@@ -253,7 +253,10 @@ class ContextManager:
                 index = await search_client.get_index(SEARCH_INDEX_NAME)
                 await index.add_documents(documents or [])
 
-            await asyncio.wait_for(add_docs(), timeout=5)
+            try:
+                await asyncio.wait_for(add_docs(), timeout=5)
+            except asyncio.TimeoutError:
+                logger.warning("Failed to add document to meilisearch in 5 seconds")
 
     @staticmethod
     async def delete_documents(ids):

@@ -273,6 +273,10 @@ class EditHighlightedCodeStep(Step):
                 title="No Code Selected",
             )
 
+        # If all of the ranges are point ranges, only edit the last one
+        if all([rif.range.start == rif.range.end for rif in range_in_files]):
+            range_in_files = [range_in_files[-1]]
+
         range_in_files = list(
             map(
                 lambda x: RangeInFile(filepath=x.filepath, range=x.range),
