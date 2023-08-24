@@ -82,16 +82,19 @@ export function getExtensionVersion() {
 // Returns whether a server of the current version is already running
 async function checkOrKillRunningServer(serverUrl: string): Promise<boolean> {
   const serverRunning = await checkServerRunning(serverUrl);
-  // Kill the server if it is running an old version
+  let shouldKillAndReplace = true;
+
   if (fs.existsSync(serverVersionPath())) {
     const serverVersion = fs.readFileSync(serverVersionPath(), "utf8");
     if (serverVersion === getExtensionVersion() && serverRunning) {
       // The current version is already up and running, no need to continue
-      console.log("Continue server already running");
-      return true;
+      console.log("Continue server of correct version already running");
+      shouldKillAndReplace = false;
     }
   }
-  if (serverRunning) {
+
+  // Kill the server if it is running an old version
+  if (shouldKillAndReplace) {
     console.log("Killing server from old version of Continue");
     try {
       await fkill(":65432", { force: true });
@@ -100,8 +103,20 @@ async function checkOrKillRunningServer(serverUrl: string): Promise<boolean> {
         console.log("Failed to kill old server:", e);
       }
     }
+    fs.unlinkSync(serverVersionPath());
+    // Also delete the server binary
+    const serverBinaryPath = path.join(
+      getExtensionUri().fsPath,
+      "server",
+      "exe",
+      `run${os.platform() === "win32" ? ".exe" : ""}`
+    );
+    if (fs.existsSync(serverBinaryPath)) {
+      fs.unlinkSync(serverBinaryPath);
+    }
   }
-  return false;
+
+  return serverRunning && !shouldKillAndReplace;
 }
 
 function ensureDirectoryExistence(filePath: string) {

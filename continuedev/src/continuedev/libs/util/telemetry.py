@@ -60,6 +60,9 @@ class PostHogLogger:
         if os.path.exists(server_version_file):
             with open(server_version_file, "r") as f:
                 event_properties["server_version"] = f.read()
+        
+        # Add operating system
+        event_properties["os"] = os.name
 
         # Send event to PostHog
         self.posthog.capture(self.unique_id, event_name, event_properties)
