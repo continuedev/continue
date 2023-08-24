@@ -29,9 +29,8 @@ config = ContinueConfig(
 ## Ollama
 
 1. Download Ollama [here](https://ollama.ai/) (it should walk you through the rest of these steps)
-2. Open a terminal and run `ollama pull codellama:7b-q4_0`\*
-3. Run `ollama serve codellama:7b-q4_0`
-4. Change your Continue config file to look like this:
+2. Open a terminal and run `ollama pull codellama`\*
+3. Change your Continue config file to look like this:
 
 ```python
 from continuedev.src.continuedev.libs.llm.ollama import Ollama
@@ -39,7 +38,7 @@ from continuedev.src.continuedev.libs.llm.ollama import Ollama
 config = ContinueConfig(
     ...
     models=Models(
-        default=Ollama(model="codellama:7b-q4_0")
+        default=Ollama(model="codellama")
     )
 )
 ```
