@@ -21,6 +21,7 @@ from ..plugins.steps.core.core import DefaultModelEditCodeStep
 from ..server.ide_protocol import AbstractIdeProtocolServer
 from .abstract_sdk import AbstractContinueSDK
 from .config import ContinueConfig
+from .lsp import ContinueLSPClient
 from .main import (
     ChatMessage,
     Context,
@@ -42,6 +43,7 @@ class ContinueSDK(AbstractContinueSDK):
 
     ide: AbstractIdeProtocolServer
     models: Models
+    lsp: ContinueLSPClient
     context: Context
     config: ContinueConfig
     __autopilot: Autopilot
@@ -78,8 +80,15 @@ class ContinueSDK(AbstractContinueSDK):
             )
             await sdk.ide.setFileOpen(getConfigFilePath())
 
+        # Start models
         sdk.models = sdk.config.models
         await sdk.models.start(sdk)
+
+        # Start LSP
+        sdk.lsp = ContinueLSPClient(
+            sdk.ide.workspace_directory, use_subprocess="python3.10 -m pylsp"
+        )
+        await sdk.lsp.start()
 
         # When the config is loaded, setup posthog logger
         posthog_logger.setup(sdk.ide.unique_id, sdk.config.allow_anonymous_telemetry)

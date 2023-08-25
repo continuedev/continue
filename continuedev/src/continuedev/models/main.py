@@ -50,6 +50,11 @@ class Position(BaseModel):
         return sum(map(len, lines[: self.line])) + self.character
 
 
+class PositionInFile(BaseModel):
+    position: Position
+    filepath: str
+
+
 class Range(BaseModel):
     """A range in a file. 0-indexed."""
 
