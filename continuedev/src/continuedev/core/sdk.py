@@ -1,6 +1,6 @@
 import os
 import traceback
-from typing import Coroutine, Union
+from typing import Coroutine, Optional, Union
 
 from ..libs.llm import LLM
 from ..libs.util.logging import logger
@@ -54,13 +54,14 @@ class ContinueSDK(AbstractContinueSDK):
         self.context = autopilot.context
 
     @classmethod
-    async def create(cls, autopilot: Autopilot) -> "ContinueSDK":
+    async def create(
+        cls, autopilot: Autopilot, config: Optional[ContinueConfig] = None
+    ) -> "ContinueSDK":
         sdk = ContinueSDK(autopilot)
         autopilot.continue_sdk = sdk
 
         try:
-            config = sdk._load_config_dot_py()
-            sdk.config = config
+            sdk.config = config or sdk._load_config_dot_py()
         except Exception as e:
             logger.error(f"Failed to load config.py: {traceback.format_exception(e)}")
 
@@ -227,17 +228,10 @@ class ContinueSDK(AbstractContinueSDK):
     _last_valid_config: ContinueConfig = None
 
     def _load_config_dot_py(self) -> ContinueConfig:
-        # Use importlib to load the config file config.py at the given path
         path = getConfigFilePath()
-
-        import importlib.util
-
-        spec = importlib.util.spec_from_file_location("config", path)
-        config = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(config)
-        self._last_valid_config = config.config
-
-        return config.config
+        config = ContinueConfig.from_filepath(path)
+        self._last_valid_config = config
+        return config
 
     def get_code_context(
         self, only_editing: bool = False

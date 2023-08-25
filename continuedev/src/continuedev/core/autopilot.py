@@ -17,7 +17,10 @@ from ..libs.util.paths import getSavedContextGroupsPath
 from ..libs.util.queue import AsyncSubscriptionQueue
 from ..libs.util.strings import remove_quotes_and_escapes
 from ..libs.util.telemetry import posthog_logger
-from ..libs.util.traceback_parsers import get_javascript_traceback, get_python_traceback
+from ..libs.util.traceback.traceback_parsers import (
+    get_javascript_traceback,
+    get_python_traceback,
+)
 from ..models.filesystem import RangeInFileWithContents
 from ..models.filesystem_edit import FileEditWithFullContents
 from ..models.main import ContinueBaseModel
@@ -32,6 +35,7 @@ from ..plugins.steps.core.core import (
 )
 from ..plugins.steps.on_traceback import DefaultOnTracebackStep
 from ..server.ide_protocol import AbstractIdeProtocolServer
+from .config import ContinueConfig
 from .context import ContextManager
 from .main import (
     Context,
@@ -97,8 +101,12 @@ class Autopilot(ContinueBaseModel):
 
     started: bool = False
 
-    async def start(self, full_state: Optional[FullState] = None):
-        self.continue_sdk = await ContinueSDK.create(self)
+    async def start(
+        self,
+        full_state: Optional[FullState] = None,
+        config: Optional[ContinueConfig] = None,
+    ):
+        self.continue_sdk = await ContinueSDK.create(self, config=config)
         if override_policy := self.continue_sdk.config.policy_override:
             self.policy = override_policy
 

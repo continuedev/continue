@@ -1,3 +1,7 @@
+from boltons import tbutils
+
+from ....models.main import Traceback
+
 PYTHON_TRACEBACK_PREFIX = "Traceback (most recent call last):"
 
 
@@ -28,3 +32,8 @@ def get_javascript_traceback(output: str) -> str:
         return "\n".join(lines[lines.index(first_line) :])
     else:
         return None
+
+
+def parse_python_traceback(tb_string: str) -> Traceback:
+    exc = tbutils.ParsedException().from_string(tb_string)
+    return Traceback.from_tbutil_parsed_exc(exc)
