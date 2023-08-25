@@ -6,6 +6,10 @@
     "type": "git",
     "url": "https://github.com/continuedev/continue"
   },
+  "extensionKind": [
+    "ui",
+    "workspace"
+  ],
   "bugs": {
     "url": "https://github.com/continuedev/continue/issues",
     "email": "nate@continue.dev"

@@ -5,7 +5,7 @@ export function getContinueServerUrl() {
   if (process.env.CONTINUE_SERVER_URL) {
     return process.env.CONTINUE_SERVER_URL;
   }
-  
+
   return (
     vscode.workspace.getConfiguration("continue").get<string>("serverUrl") ||
     "http://localhost:65432"
