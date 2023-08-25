@@ -12,10 +12,10 @@ import {
   rejectSuggestionCommand,
 } from "./suggestions";
 import { FileEditWithFullContents } from "../schema/FileEditWithFullContents";
-import * as fs from "fs";
 import { WebsocketMessenger } from "./util/messenger";
 import { diffManager } from "./diffs";
 const os = require("os");
+const path = require("path");
 
 const continueVirtualDocumentScheme = "continue";
 
@@ -253,12 +253,50 @@ class IdeProtocolClient {
         break;
       case "readFile":
         messenger.send("readFile", {
-          contents: this.readFile(data.filepath),
+          contents: await this.readFile(data.filepath),
         });
         break;
       case "getTerminalContents":
         messenger.send("getTerminalContents", {
           contents: await this.getTerminalContents(),
+        });
+        break;
+      case "listDirectoryContents":
+        messenger.send("listDirectoryContents", {
+          contents: (
+            await vscode.workspace.fs.readDirectory(
+              vscode.Uri.file(data.directory)
+            )
+          )
+            .map(([name, type]) => name)
+            .filter((name) => {
+              const DEFAULT_IGNORE_DIRS = [
+                ".git",
+                ".vscode",
+                ".idea",
+                ".vs",
+                ".venv",
+                "env",
+                ".env",
+                "node_modules",
+                "dist",
+                "build",
+                "target",
+                "out",
+                "bin",
+                ".pytest_cache",
+                ".vscode-test",
+                ".continue",
+                "__pycache__",
+              ];
+              if (
+                !DEFAULT_IGNORE_DIRS.some((dir) =>
+                  name.split(path.sep).includes(dir)
+                )
+              ) {
+                return name;
+              }
+            }),
         });
         break;
       case "editFile":
@@ -306,7 +344,7 @@ class IdeProtocolClient {
         this.showSuggestion(data.edit);
         break;
       case "showDiff":
-        this.showDiff(data.filepath, data.replacement, data.step_index);
+        await this.showDiff(data.filepath, data.replacement, data.step_index);
         break;
       case "getSessionId":
       case "connected":
@@ -385,8 +423,8 @@ class IdeProtocolClient {
     );
   }
 
-  showDiff(filepath: string, replacement: string, step_index: number) {
-    diffManager.writeDiff(filepath, replacement, step_index);
+  async showDiff(filepath: string, replacement: string, step_index: number) {
+    await diffManager.writeDiff(filepath, replacement, step_index);
   }
 
   openFile(filepath: string) {
@@ -506,19 +544,14 @@ class IdeProtocolClient {
       });
   }
 
-  readFile(filepath: string): string {
+  async readFile(filepath: string): Promise<string> {
     let contents: string | undefined;
-    vscode.window.visibleTextEditors
-      .filter((editor) => this.editorIsCode(editor))
-      .forEach((editor) => {
-        if (editor.document.uri.fsPath === filepath) {
-          contents = editor.document.getText();
-        }
-      });
     if (typeof contents === "undefined") {
-      if (fs.existsSync(filepath)) {
-        contents = fs.readFileSync(filepath, "utf-8");
-      } else {
+      try {
+        contents = await vscode.workspace.fs
+          .readFile(vscode.Uri.file(filepath))
+          .then((bytes) => new TextDecoder().decode(bytes));
+      } catch {
         contents = "";
       }
     }

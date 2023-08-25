@@ -120,6 +120,10 @@ class TerminalContentsResponse(BaseModel):
     contents: str
 
 
+class ListDirectoryContentsResponse(BaseModel):
+    contents: List[str]
+
+
 T = TypeVar("T", bound=BaseModel)
 
 
@@ -241,6 +245,7 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
             "getUserSecret",
             "runCommand",
             "getTerminalContents",
+            "listDirectoryContents",
         ]:
             self.sub_queue.post(message_type, data)
         elif message_type == "workspaceDirectory":
@@ -476,6 +481,15 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
             {"edit": edit.dict()}, EditFileResponse, "editFile"
         )
         return resp.fileEdit
+
+    async def listDirectoryContents(self, directory: str) -> List[str]:
+        """List the contents of a directory"""
+        resp = await self._send_and_receive_json(
+            {"directory": directory},
+            ListDirectoryContentsResponse,
+            "listDirectoryContents",
+        )
+        return resp.contents
 
     async def applyFileSystemEdit(self, edit: FileSystemEdit) -> EditDiff:
         """Apply a file edit"""

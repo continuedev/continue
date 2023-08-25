@@ -147,5 +147,9 @@ class AbstractIdeProtocolServer(ABC):
     def onFileSaved(self, filepath: str, contents: str):
         """Called when a file is saved"""
 
+    @abstractmethod
+    async def listDirectoryContents(self, directory: str) -> List[str]:
+        """List directory contents"""
+
     workspace_directory: str
     unique_id: str

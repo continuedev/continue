@@ -1,25 +1,20 @@
 import asyncio
 import os
-from fnmatch import fnmatch
 from typing import List
 
 from ...core.context import ContextProvider
 from ...core.main import ContextItem, ContextItemDescription, ContextItemId
+from ...core.sdk import ContinueSDK
 from .util import remove_meilisearch_disallowed_chars
 
-MAX_SIZE_IN_BYTES = 1024 * 1024 * 1
+MAX_SIZE_IN_CHARS = 25_000
 
 
-def get_file_contents(filepath: str) -> str:
+async def get_file_contents(filepath: str, sdk: ContinueSDK) -> str:
     try:
-        filesize = os.path.getsize(filepath)
-        if filesize > MAX_SIZE_IN_BYTES:
-            return None
-
-        with open(filepath, "r") as f:
-            return f.read()
-    except Exception:
-        # Some files cannot be read, e.g. binary files
+        return (await sdk.ide.readFile(filepath))[:MAX_SIZE_IN_CHARS]
+    except Exception as e:
+        print(f"Failed to read file {filepath}: {e}")
         return None
 
 
@@ -105,7 +100,7 @@ class FileContextProvider(ContextProvider):
     async def get_context_item_for_filepath(
         self, absolute_filepath: str
     ) -> ContextItem:
-        content = get_file_contents(absolute_filepath)
+        content = await get_file_contents(absolute_filepath, self.sdk)
         if content is None:
             return None
 
@@ -128,26 +123,35 @@ class FileContextProvider(ContextProvider):
         )
 
     async def provide_context_items(self, workspace_dir: str) -> List[ContextItem]:
+        contents = await self.sdk.ide.listDirectoryContents(workspace_dir)
+        if contents is None:
+            return []
+
         absolute_filepaths: List[str] = []
-        for root, dir_names, file_names in os.walk(workspace_dir):
-            dir_names[:] = [
-                d
-                for d in dir_names
-                if not any(fnmatch(d, pattern) for pattern in self.ignore_patterns)
+        for filepath in contents[:1000]:
+            absolute_filepaths.append(filepath)
+
+        # for root, dir_names, file_names in os.walk(workspace_dir):
+        #     dir_names[:] = [
+        #         d
+        #         for d in dir_names
+        #         if not any(fnmatch(d, pattern) for pattern in self.ignore_patterns)
+        #     ]
+        #     for file_name in file_names:
+        #         absolute_filepaths.append(os.path.join(root, file_name))
+
+        #         if len(absolute_filepaths) > 1000:
+        #             break
+
+        #     if len(absolute_filepaths) > 1000:
+        #         break
+
+        items = await asyncio.gather(
+            *[
+                self.get_context_item_for_filepath(filepath)
+                for filepath in absolute_filepaths
             ]
-            for file_name in file_names:
-                absolute_filepaths.append(os.path.join(root, file_name))
-
-                if len(absolute_filepaths) > 1000:
-                    break
-
-            if len(absolute_filepaths) > 1000:
-                break
-
-        items = []
-        for absolute_filepath in absolute_filepaths:
-            item = await self.get_context_item_for_filepath(absolute_filepath)
-            if item is not None:
-                items.append(item)
+        )
+        items = list(filter(lambda item: item is not None, items))
 
         return items
