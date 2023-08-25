@@ -17,6 +17,10 @@
         "date_created": {
           "title": "Date Created",
           "type": "string"
+        },
+        "workspace_directory": {
+          "title": "Workspace Directory",
+          "type": "string"
         }
       },
       "required": [

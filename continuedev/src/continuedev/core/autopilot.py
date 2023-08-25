@@ -514,6 +514,7 @@ class Autopilot(ContinueBaseModel):
                     title=title,
                     session_id=self.ide.session_id,
                     date_created=str(time.time()),
+                    workspace_directory=self.ide.workspace_directory,
                 )
 
             create_async_task(

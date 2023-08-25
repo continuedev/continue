@@ -41,6 +41,7 @@ export type SelectedContextItems = ContextItem[];
 export type SessionId = string;
 export type Title = string;
 export type DateCreated = string;
+export type WorkspaceDirectory = string;
 export type SystemMessage1 = string;
 export type Temperature = number;
 
@@ -142,11 +143,12 @@ export interface SessionInfo {
   session_id: SessionId;
   title: Title;
   date_created: DateCreated;
+  workspace_directory?: WorkspaceDirectory;
   [k: string]: unknown;
 }
 export interface ContinueConfig {
-  system_message: SystemMessage1;
-  temperature: Temperature;
+  system_message?: SystemMessage1;
+  temperature?: Temperature;
   [k: string]: unknown;
 }
 export interface SavedContextGroups {

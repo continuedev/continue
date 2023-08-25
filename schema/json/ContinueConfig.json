@@ -115,7 +115,7 @@
         }
       }
     },
-    "ContinueSDK": {
+    "src__continuedev__core__models__ContinueSDK": {
       "title": "ContinueSDK",
       "type": "object",
       "properties": {}
@@ -144,7 +144,7 @@
           "$ref": "#/definitions/LLM"
         },
         "sdk": {
-          "$ref": "#/definitions/ContinueSDK"
+          "$ref": "#/definitions/src__continuedev__core__models__ContinueSDK"
         }
       },
       "required": [
@@ -204,6 +204,12 @@
     "Policy": {
       "title": "Policy",
       "description": "A rule that determines which step to take next",
+      "type": "object",
+      "properties": {}
+    },
+    "src__continuedev__core__context__ContinueSDK": {
+      "title": "ContinueSDK",
+      "description": "To avoid circular imports",
       "type": "object",
       "properties": {}
     },
@@ -285,6 +291,9 @@
         "title": {
           "title": "Title",
           "type": "string"
+        },
+        "sdk": {
+          "$ref": "#/definitions/src__continuedev__core__context__ContinueSDK"
         },
         "selected_items": {
           "title": "Selected Items",

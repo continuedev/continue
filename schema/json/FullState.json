@@ -260,6 +260,10 @@
         "date_created": {
           "title": "Date Created",
           "type": "string"
+        },
+        "workspace_directory": {
+          "title": "Workspace Directory",
+          "type": "string"
         }
       },
       "required": [
@@ -280,11 +284,7 @@
           "title": "Temperature",
           "type": "number"
         }
-      },
-      "required": [
-        "system_message",
-        "temperature"
-      ]
+      }
     },
     "src__continuedev__core__main__FullState": {
       "title": "FullState",

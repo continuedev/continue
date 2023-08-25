@@ -141,7 +141,14 @@ export interface Policy {
  */
 export interface ContextProvider {
   title: Title;
+  sdk?: ContinueSDK1;
   selected_items?: SelectedItems;
+  [k: string]: unknown;
+}
+/**
+ * To avoid circular imports
+ */
+export interface ContinueSDK1 {
   [k: string]: unknown;
 }
 /**
