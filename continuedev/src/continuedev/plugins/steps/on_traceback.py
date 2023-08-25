@@ -10,6 +10,8 @@ from ...libs.util.traceback.traceback_parsers import (
     get_python_traceback,
     parse_python_traceback,
 )
+from ...models.filesystem import RangeInFile
+from ...models.main import Range, Traceback, TracebackFrame
 from .chat import SimpleChatStep
 from .core.core import UserInputStep
 
@@ -49,6 +51,10 @@ class DefaultOnTracebackStep(Step):
         # And this function is where you can get arbitrarily fancy about adding context
 
     async def run(self, sdk: ContinueSDK):
+        if get_python_traceback(self.output) is not None:
+            await sdk.run_step(SolvePythonTracebackStep(output=self.output))
+            return
+
         tb = extract_traceback_str(self.output)
 
         tb_first_last_lines = (
@@ -66,19 +72,21 @@ class DefaultOnTracebackStep(Step):
         await sdk.run_step(SimpleChatStep(name="Help With Traceback"))
 
 
-def filter_frames(frames: List[Dict]) -> List[Dict]:
+def filter_frames(frames: List[TracebackFrame]) -> List[TracebackFrame]:
     """Filter out frames that are not relevant to the user's code."""
-    return list(filter(lambda x: should_filter_path(x["filepath"]), frames))
+    return list(filter(lambda x: should_filter_path(x.filepath), frames))
 
 
-def find_external_call(frames: List[Dict]) -> Optional[Tuple[Dict, Dict]]:
+def find_external_call(
+    frames: List[TracebackFrame],
+) -> Optional[Tuple[TracebackFrame, TracebackFrame]]:
     """Moving up from the bottom of the stack, if the frames are not user code, then find the last frame before it becomes user code."""
-    if not should_filter_path(frames[-1]["filepath"]):
+    if not should_filter_path(frames[-1].filepath):
         # No external call, error comes directly from user code
         return None
 
     for i in range(len(frames) - 2, -1, -1):
-        if not should_filter_path(frames[i]["filepath"]):
+        if not should_filter_path(frames[i].filepath):
             return frames[i], frames[i + 1]
 
 
@@ -95,10 +103,11 @@ async def fetch_docs_for_external_call(external_call: Dict, next_frame: Dict) ->
 class SolvePythonTracebackStep(Step):
     output: str
     name: str = "Solve Traceback"
+    hide: bool = True
 
-    async def handle_external_call(
+    async def external_call_prompt(
         self, sdk: ContinueSDK, external_call: Tuple[Dict, Dict], tb_string: str
-    ):
+    ) -> str:
         external_call, next_frame = external_call
         source_line = external_call["source_line"]
         external_func_source = get_func_source_for_frame(next_frame)
@@ -130,14 +139,67 @@ class SolvePythonTracebackStep(Step):
                     """
         )
 
-        completion = await sdk.models.default.complete(prompt)
-        print(completion)
+        return prompt
+
+    async def normal_traceback_prompt(
+        self, sdk: ContinueSDK, tb: Traceback, tb_string: str
+    ) -> str:
+        function_bodies = await get_functions_from_traceback(tb, sdk)
+
+        prompt = (
+            "Here are the functions from the traceback (most recent call last):\n\n"
+        )
+        for i, function_body in enumerate(function_bodies):
+            prompt += f'File "{tb.frames[i].filepath}", line {tb.frames[i].lineno}, in {tb.frames[i].function}\n\n```python\n{function_body or tb.frames[i].code}\n```\n\n'
+
+        prompt += (
+            "Here is the traceback:\n\n```\n"
+            + tb_string
+            + "\n```\n\nExplain how to fix the error."
+        )
+
+        return prompt
 
     async def run(self, sdk: ContinueSDK):
         tb_string = get_python_traceback(self.output)
         tb = parse_python_traceback(tb_string)
 
         if external_call := find_external_call(tb.frames):
-            await self.handle_external_call(sdk, external_call, tb_string)
+            prompt = await self.external_call_prompt(sdk, external_call, tb_string)
         else:
-            pass
+            prompt = await self.normal_traceback_prompt(sdk, tb, tb_string)
+
+        await sdk.run_step(
+            UserInputStep(
+                description="Solving stack trace",
+                user_input=prompt,
+            )
+        )
+        await sdk.run_step(SimpleChatStep(name="Help With Traceback"))
+
+
+async def get_function_body(frame: TracebackFrame, sdk: ContinueSDK) -> Optional[str]:
+    """Get the function body from the traceback frame."""
+    document_symbols = sdk.lsp.get_symbols(frame.filepath)
+    for symbol in document_symbols:
+        if symbol.name == frame.function:
+            r = symbol.location.range
+            return await sdk.ide.readRangeInFile(
+                RangeInFile(
+                    filepath=frame.filepath,
+                    range=Range.from_shorthand(
+                        r.start.line, r.start.character, r.end.line, r.end.character
+                    ),
+                )
+            )
+    return None
+
+
+async def get_functions_from_traceback(tb: Traceback, sdk: ContinueSDK) -> List[str]:
+    """Get the function bodies from the traceback."""
+    function_bodies = []
+    for frame in tb.frames:
+        if frame.function:
+            function_bodies.append(await get_function_body(frame, sdk))
+
+    return function_bodies

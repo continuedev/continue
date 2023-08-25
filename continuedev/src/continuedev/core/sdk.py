@@ -87,7 +87,8 @@ class ContinueSDK(AbstractContinueSDK):
 
         # Start LSP
         sdk.lsp = ContinueLSPClient(
-            sdk.ide.workspace_directory, use_subprocess="python3.10 -m pylsp"
+            workspace_dir=sdk.ide.workspace_directory,
+            use_subprocess="python3.10 -m pylsp",
         )
         await sdk.lsp.start()
 

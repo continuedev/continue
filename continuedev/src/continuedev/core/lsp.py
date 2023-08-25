@@ -10,7 +10,7 @@ from ..libs.lspclient.json_rpc_endpoint import JsonRpcEndpoint
 from ..libs.lspclient.lsp_client import LspClient
 from ..libs.lspclient.lsp_endpoint import LspEndpoint
 from ..libs.lspclient.lsp_structs import Position as LspPosition
-from ..libs.lspclient.lsp_structs import TextDocumentIdentifier
+from ..libs.lspclient.lsp_structs import SymbolInformation, TextDocumentIdentifier
 from ..models.filesystem import RangeInFile
 from ..models.main import Position, Range
 
@@ -254,12 +254,21 @@ def create_lsp_client(workspace_dir: str, use_subprocess: Optional[str] = None):
         workspace_folders,
     )
     lsp_client.initialized()
+    return lsp_client
 
 
 class ContinueLSPClient(BaseModel):
     workspace_dir: str
     lsp_client: LspClient = None
     use_subprocess: Optional[str] = None
+
+    class Config:
+        arbitrary_types_allowed = True
+
+    def dict(self, **kwargs):
+        original_dict = super().dict(**kwargs)
+        original_dict.pop("lsp_client", None)
+        return original_dict
 
     async def start(self):
         self.lsp_client = create_lsp_client(
@@ -288,19 +297,9 @@ class ContinueLSPClient(BaseModel):
             for x in response
         ]
 
-    def get_symbols(self, filepath: str):
+    def get_symbols(self, filepath: str) -> List[SymbolInformation]:
         response = self.lsp_client.documentSymbol(
             TextDocumentIdentifier(filename_to_uri(filepath))
         )
 
         return response
-
-
-#     print(
-#         list(
-#             map(
-#                 lambda x: f"{x.uri}: {x.range.start.line}:{x.range.start.character}-{x.range.end.line}:{x.range.end.character}",
-#                 response,
-#             )
-#         )
-#     )
