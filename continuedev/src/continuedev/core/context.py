@@ -257,6 +257,8 @@ class ContextManager:
                 await asyncio.wait_for(add_docs(), timeout=5)
             except asyncio.TimeoutError:
                 logger.warning("Failed to add document to meilisearch in 5 seconds")
+            except Exception as e:
+                logger.warning(f"Error adding document to meilisearch: {e}")
 
     @staticmethod
     async def delete_documents(ids):

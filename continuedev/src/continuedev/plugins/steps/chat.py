@@ -95,7 +95,8 @@ class SimpleChatStep(Step):
 
         self.name = remove_quotes_and_escapes(
             await sdk.models.medium.complete(
-                f"{self.description}\n\nHere is a short title for the above chat message:"
+                f"{self.description}\n\nHere is a short title for the above chat message (no more than 10 words):",
+                max_tokens=20,
             )
         )
 
