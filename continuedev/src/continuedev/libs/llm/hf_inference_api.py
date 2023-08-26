@@ -1,4 +1,4 @@
-from typing import Any, Coroutine, Dict, Generator, List
+from typing import Any, Coroutine, Dict, Generator, List, Optional
 
 import aiohttp
 import requests
@@ -15,7 +15,7 @@ class HuggingFaceInferenceAPI(LLM):
     hf_token: str
 
     max_context_length: int = 2048
-    verify_ssl: bool = True
+    verify_ssl: Optional[bool] = None
 
     _client_session: aiohttp.ClientSession = None
 

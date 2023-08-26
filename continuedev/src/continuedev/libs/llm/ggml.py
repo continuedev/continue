@@ -17,7 +17,7 @@ class GGML(LLM):
     # this is model-specific
     max_context_length: int = 2048
     server_url: str = "http://localhost:8000"
-    verify_ssl: bool = True
+    verify_ssl: Optional[bool] = None
 
     requires_write_log = True
 

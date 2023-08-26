@@ -1,5 +1,5 @@
 import json
-from typing import Any, Coroutine, Dict, Generator, List, Union
+from typing import Any, Coroutine, Dict, Generator, List, Optional, Union
 
 import aiohttp
 
@@ -14,7 +14,7 @@ class TogetherLLM(LLM):
     model: str = "togethercomputer/RedPajama-INCITE-7B-Instruct"
     max_context_length: int = 2048
     base_url: str = "https://api.together.xyz"
-    verify_ssl: bool = True
+    verify_ssl: Optional[bool] = None
 
     _client_session: aiohttp.ClientSession = None
 

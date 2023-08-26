@@ -1,5 +1,5 @@
 import threading
-from typing import Dict, List
+from typing import Any, Dict, List
 
 import redbaron
 
@@ -51,6 +51,47 @@ def edit_config_property(key_path: List[str], value: redbaron.RedBaron):
 
         with open(getConfigFilePath(), "w") as file:
             file.write(red.dumps())
+
+
+def add_config_import(line: str):
+    with edit_lock:
+        red = load_red()
+        # check if the import already exists
+        for node in red:
+            if node.type == "import" and node.dumps() == line:
+                return
+        # if it doesn't exist, add it
+        red.insert(1, line)
+
+        with open(getConfigFilePath(), "w") as file:
+            file.write(red.dumps())
+
+
+filtered_attrs = {
+    "requires_api_key",
+    "requires_unique_id",
+    "requires_write_log",
+    "class_name",
+    "name",
+    "llm",
+}
+
+
+def display_val(v: Any):
+    if isinstance(v, str):
+        return f'"{v}"'
+    return str(v)
+
+
+def display_llm_class(llm):
+    args = ", ".join(
+        [
+            f"{k}={display_val(v)}"
+            for k, v in llm.dict().items()
+            if k not in filtered_attrs and v is not None
+        ]
+    )
+    return f"{llm.__class__.__name__}({args})"
 
 
 def create_obj_node(class_name: str, args: Dict[str, str]) -> redbaron.RedBaron:

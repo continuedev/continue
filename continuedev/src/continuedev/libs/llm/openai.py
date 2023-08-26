@@ -49,7 +49,7 @@ class OpenAI(LLM):
     api_key: str
     model: str
     openai_server_info: Optional[OpenAIServerInfo] = None
-    verify_ssl: bool = True
+    verify_ssl: Optional[bool] = None
     ca_bundle_path: Optional[str] = None
 
     requires_write_log = True
@@ -73,7 +73,7 @@ class OpenAI(LLM):
             if self.openai_server_info.api_version is not None:
                 openai.api_version = self.openai_server_info.api_version
 
-        if self.verify_ssl is False:
+        if self.verify_ssl is not None and self.verify_ssl is False:
             openai.verify_ssl_certs = False
 
         openai.ca_bundle_path = self.ca_bundle_path or certifi.where()

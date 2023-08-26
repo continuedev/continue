@@ -22,6 +22,7 @@ import {
 } from "@heroicons/react/24/outline";
 import HeaderButtonWithText from "./HeaderButtonWithText";
 import { useNavigate } from "react-router-dom";
+import ModelSelect from "./ModelSelect";
 
 // #region Styled Components
 
@@ -138,30 +139,29 @@ const Layout = () => {
           {bottomMessage}
         </BottomMessageDiv>
         <Footer>
-          <SparklesIcon
-            visibility={
-              localStorage.getItem("hideFeature") === "true"
-                ? "hidden"
-                : "visible"
-            }
-            className="mr-auto cursor-pointer"
-            onClick={() => {
-              localStorage.setItem("hideFeature", "true");
-            }}
-            onMouseEnter={() => {
-              dispatch(
-                setBottomMessage(
-                  "🎁 New Feature: Use ⌘⇧R automatically debug errors in the terminal"
-                )
-              );
-            }}
-            onMouseLeave={() => {
-              dispatch(setBottomMessage(undefined));
-            }}
-            width="1.3em"
-            height="1.3em"
-            color="yellow"
-          />
+          {localStorage.getItem("hideFeature") === "true" || (
+            <SparklesIcon
+              className="mr-auto cursor-pointer"
+              onClick={() => {
+                localStorage.setItem("hideFeature", "true");
+              }}
+              onMouseEnter={() => {
+                dispatch(
+                  setBottomMessage(
+                    "🎁 New Feature: Use ⌘⇧R automatically debug errors in the terminal (you can click the sparkle icon to make it go away)"
+                  )
+                );
+              }}
+              onMouseLeave={() => {
+                dispatch(setBottomMessage(undefined));
+              }}
+              width="1.3em"
+              height="1.3em"
+              color="yellow"
+            />
+          )}
+
+          <ModelSelect />
           <HeaderButtonWithText
             onClick={() => {
               client?.loadSession(undefined);
