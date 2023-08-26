@@ -130,6 +130,10 @@ class SessionManager:
         if session_id not in session_ids:
             sessions_list.append(full_state.session_info.dict())
 
+        for session_info in sessions_list:
+            if "workspace_directory" not in session_info:
+                session_info["workspace_directory"] = ""
+
         with open(getSessionsListFilePath(), "w") as f:
             json.dump(sessions_list, f)
 
