@@ -101,6 +101,25 @@ async function checkOrKillRunningServer(serverUrl: string): Promise<boolean> {
     } catch (e: any) {
       if (!e.message.includes("Process doesn't exist")) {
         console.log("Failed to kill old server:", e);
+
+        // Try again, on Windows. This time with taskkill
+        if (os.platform() === "win32") {
+          try {
+            const exePath = path.join(
+              getExtensionUri().fsPath,
+              "server",
+              "exe",
+              "run.exe"
+            );
+
+            await runCommand(`taskkill /F /IM ${exePath}`);
+          } catch (e: any) {
+            console.log(
+              "Failed to kill old server second time on windows with taskkill:",
+              e
+            );
+          }
+        }
       }
     }
     if (fs.existsSync(serverVersionPath())) {
