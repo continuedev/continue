@@ -1,4 +1,5 @@
 import json
+import urllib.parse
 from textwrap import dedent
 from typing import Any, Coroutine, Dict, Generator, List, Union
 
@@ -100,7 +101,7 @@ class Ollama(LLM):
                             if chunk.strip() != "":
                                 j = json.loads(chunk)
                                 if "response" in j:
-                                    yield j["response"]
+                                    yield urllib.parse.unquote(j["response"])
                     except:
                         raise Exception(str(line[0]))
 
@@ -138,7 +139,7 @@ class Ollama(LLM):
                                 if "response" in j:
                                     yield {
                                         "role": "assistant",
-                                        "content": j["response"],
+                                        "content": urllib.parse.unquote(j["response"]),
                                     }
                     except:
                         raise Exception(str(line[0]))
@@ -164,7 +165,7 @@ class Ollama(LLM):
                             if chunk.strip() != "":
                                 j = json.loads(chunk)
                                 if "response" in j:
-                                    completion += j["response"]
+                                    completion += urllib.parse.unquote(j["response"])
                     except:
                         raise Exception(str(line[0]))
 

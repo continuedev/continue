@@ -8,8 +8,9 @@ from pydantic import validator
 
 from ....core.main import ChatMessage, ContinueCustomException, Step
 from ....core.observation import Observation, TextObservation, UserInputObservation
-from ....libs.llm.ggml import GGML
+from ....libs.llm.anthropic import AnthropicLLM
 from ....libs.llm.maybe_proxy_openai import MaybeProxyOpenAI
+from ....libs.llm.openai import OpenAI
 from ....libs.util.count_tokens import DEFAULT_MAX_TOKENS
 from ....libs.util.strings import (
     dedent_and_get_common_whitespace,
@@ -638,7 +639,11 @@ Please output the code to be inserted at the cursor in order to fulfill the user
         repeating_file_suffix = False
         line_below_highlighted_range = file_suffix.lstrip().split("\n")[0]
 
-        if isinstance(model_to_use, GGML):
+        if not (
+            isinstance(model_to_use, OpenAI)
+            or isinstance(model_to_use, MaybeProxyOpenAI)
+            or isinstance(model_to_use, AnthropicLLM)
+        ):
             messages = [
                 ChatMessage(
                     role="user",

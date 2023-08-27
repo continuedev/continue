@@ -262,12 +262,11 @@ class GUIProtocolServer(AbstractGUIProtocolServer):
                 # Set and start the default model if didn't already exist from unused
                 if models.default is None:
                     models.default = MODEL_CLASSES[model_class](**model)
-                    await self.session.autopilot.continue_sdk.start_model(
-                        models.default
-                    )
                     await self.session.autopilot.continue_sdk.run_step(
                         SetupModelStep(model_class=model_class)
                     )
+
+                await self.session.autopilot.continue_sdk.start_model(models.default)
 
                 models_args = {}
 
