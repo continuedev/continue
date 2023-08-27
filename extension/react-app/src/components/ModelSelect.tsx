@@ -64,6 +64,11 @@ const MODEL_INFO: { title: string; class: string; args: any }[] = [
       api_key: "<TOGETHER_API_KEY>",
     },
   },
+  {
+    title: "llama.cpp",
+    class: "LlamaCpp",
+    args: {},
+  },
 ];
 
 const Select = styled.select`
