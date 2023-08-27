@@ -28,6 +28,7 @@ async function writeFile(path: string, contents: string) {
   );
 }
 
+// THIS IS LOCAL
 export const DIFF_DIRECTORY = path
   .join(os.homedir(), ".continue", "diffs")
   .replace(/^C:/, "c:");
@@ -43,7 +44,11 @@ class DiffManager {
 
   private async setupDirectory() {
     // Make sure the diff directory exists
-    await vscode.workspace.fs.createDirectory(uriFromFilePath(DIFF_DIRECTORY));
+    if (!fs.existsSync(DIFF_DIRECTORY)) {
+      fs.mkdirSync(DIFF_DIRECTORY, {
+        recursive: true,
+      });
+    }
   }
 
   constructor() {
@@ -96,7 +101,7 @@ class DiffManager {
 
     const editor = vscode.window.activeTextEditor;
     if (!editor) {
-      throw new Error("No active text editor found for Continue Diff");
+      return;
     }
 
     // Change the vscode setting to allow codeLens in diff editor
@@ -187,8 +192,13 @@ class DiffManager {
   cleanUpDiff(diffInfo: DiffInfo, hideEditor: boolean = true) {
     // Close the editor, remove the record, delete the file
     if (hideEditor && diffInfo.editor) {
-      vscode.window.showTextDocument(diffInfo.editor.document);
-      vscode.commands.executeCommand("workbench.action.closeActiveEditor");
+      try {
+        vscode.window.showTextDocument(diffInfo.editor.document);
+        vscode.commands.executeCommand("workbench.action.closeActiveEditor");
+      } catch {
+      } finally {
+        vscode.commands.executeCommand("workbench.action.closeActiveEditor");
+      }
     }
     this.diffs.delete(diffInfo.newFilepath);
     fs.unlinkSync(diffInfo.newFilepath);
