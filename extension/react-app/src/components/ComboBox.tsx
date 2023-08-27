@@ -357,6 +357,8 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
     dispatch(setShowDialog(true));
   };
 
+  const [isComposing, setIsComposing] = useState(false);
+
   return (
     <>
       <div
@@ -448,6 +450,8 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
           disabled={props.disabled}
           placeholder={`Ask a question, give instructions, type '/' for slash commands, or '@' to add context`}
           {...getInputProps({
+            onCompositionStart: () => setIsComposing(true),
+            onCompositionEnd: () => setIsComposing(false),
             onChange: (e) => {
               const target = e.target as HTMLTextAreaElement;
               // Update the height of the textarea to match the content, up to a max of 200px.
@@ -472,7 +476,8 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
                 setCurrentlyInContextQuery(false);
               } else if (
                 event.key === "Enter" &&
-                (!downshiftProps.isOpen || items.length === 0)
+                (!downshiftProps.isOpen || items.length === 0) &&
+                !isComposing
               ) {
                 const value = downshiftProps.inputValue;
                 if (value !== "") {

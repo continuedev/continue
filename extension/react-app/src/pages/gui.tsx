@@ -247,7 +247,7 @@ function GUI(props: GUIProps) {
           "mainTextEntryCounter",
           (currentCount + 1).toString()
         );
-        if (currentCount === 40) {
+        if (currentCount === 100) {
           dispatch(
             setDialogMessage(
               <div className="text-center">

@@ -65,7 +65,20 @@ class DiffManager {
     return filepath.replace(/\\/g, "_").replace(/\//g, "_");
   }
 
+  private remoteTmpDir: string = "/tmp/continue";
   private getNewFilepath(originalFilepath: string): string {
+    if (vscode.env.remoteName) {
+      // If we're in a remote, use the remote's temp directory
+      // Doing this because there's no easy way to find the home directory,
+      // and there aren't write permissions to the root directory
+      // and writing these to local causes separate issues
+      // because the vscode.diff command will always try to read from remote
+      vscode.workspace.fs.createDirectory(uriFromFilePath(this.remoteTmpDir));
+      return path.join(
+        this.remoteTmpDir,
+        this.escapeFilepath(originalFilepath)
+      );
+    }
     return path.join(DIFF_DIRECTORY, this.escapeFilepath(originalFilepath));
   }
 
@@ -76,7 +89,8 @@ class DiffManager {
     // If the file doesn't yet exist or the basename is a single digit number (vscode terminal), don't open the diff editor
     try {
       await vscode.workspace.fs.stat(uriFromFilePath(newFilepath));
-    } catch {
+    } catch (e) {
+      console.log("File doesn't exist, not opening diff editor", e);
       return undefined;
     }
     if (path.basename(originalFilepath).match(/^\d$/)) {
@@ -151,12 +165,12 @@ class DiffManager {
 
     // Create or update existing diff
     const newFilepath = this.getNewFilepath(originalFilepath);
-    await writeFile(vscode.Uri.file(newFilepath), newContent);
+    await writeFile(uriFromFilePath(newFilepath), newContent);
 
     // Open the diff editor if this is a new diff
     if (!this.diffs.has(newFilepath)) {
       // Figure out the first line that is different
-      const oldContent = await ideProtocolClient.readFile(originalFilepath);
+      const oldContent = await readFile(originalFilepath);
       const line = this._findFirstDifferentLine(oldContent, newContent);
 
       const diffInfo: DiffInfo = {
@@ -192,13 +206,10 @@ class DiffManager {
       try {
         vscode.window.showTextDocument(diffInfo.editor.document);
         vscode.commands.executeCommand("workbench.action.closeActiveEditor");
-      } catch {
-      } finally {
-        vscode.commands.executeCommand("workbench.action.closeActiveEditor");
-      }
+      } catch {}
     }
     this.diffs.delete(diffInfo.newFilepath);
-    fs.unlinkSync(diffInfo.newFilepath);
+    vscode.workspace.fs.delete(uriFromFilePath(diffInfo.newFilepath));
   }
 
   private inferNewFilepath() {
