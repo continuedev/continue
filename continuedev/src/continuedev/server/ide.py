@@ -124,6 +124,10 @@ class ListDirectoryContentsResponse(BaseModel):
     contents: List[str]
 
 
+class FileExistsResponse(BaseModel):
+    exists: bool
+
+
 T = TypeVar("T", bound=BaseModel)
 
 
@@ -246,6 +250,7 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
             "runCommand",
             "getTerminalContents",
             "listDirectoryContents",
+            "fileExists",
         ]:
             self.sub_queue.post(message_type, data)
         elif message_type == "workspaceDirectory":
@@ -454,6 +459,13 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
             {"filepath": filepath}, ReadFileResponse, "readFile"
         )
         return resp.contents
+
+    async def fileExists(self, filepath: str) -> str:
+        """Check whether file exists"""
+        resp = await self._send_and_receive_json(
+            {"filepath": filepath}, FileExistsResponse, "fileExists"
+        )
+        return resp.exists
 
     async def getUserSecret(self, key: str) -> str:
         """Get a user secret"""

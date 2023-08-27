@@ -1,16 +1,7 @@
 import json
 import ssl
 import traceback
-from typing import (
-    Any,
-    Callable,
-    Coroutine,
-    Dict,
-    Generator,
-    List,
-    Optional,
-    Union,
-)
+from typing import Any, Callable, Coroutine, Dict, Generator, List, Optional, Union
 
 import aiohttp
 import certifi

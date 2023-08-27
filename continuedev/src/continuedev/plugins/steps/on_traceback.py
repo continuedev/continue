@@ -22,7 +22,7 @@ class DefaultOnTracebackStep(Step):
             for seg in segs:
                 if (
                     seg.startswith(os.path.sep)
-                    and os.path.exists(seg)
+                    and os.path.exists(seg)  # TODO: Use sdk.ide.fileExists
                     and os.path.commonprefix([seg, sdk.ide.workspace_directory])
                     == sdk.ide.workspace_directory
                 ):

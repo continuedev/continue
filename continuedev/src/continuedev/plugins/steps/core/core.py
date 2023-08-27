@@ -1,6 +1,5 @@
 # These steps are depended upon by ContinueSDK
 import difflib
-import os
 import traceback
 from textwrap import dedent
 from typing import Any, Coroutine, List, Union
@@ -822,7 +821,8 @@ Please output the code to be inserted at the cursor in order to fulfill the user
 
         for rif in rif_with_contents:
             # If the file doesn't exist, ask them to save it first
-            if not os.path.exists(rif.filepath):
+            exists = await sdk.ide.fileExists(rif.filepath)
+            if not exists:
                 message = (
                     f"The file {rif.filepath} does not exist. Please save it first."
                 )

@@ -236,6 +236,11 @@ class IdeProtocolClient {
           uniqueId: this.getUniqueId(),
         });
         break;
+      case "fileExists":
+        messenger.send("fileExists", {
+          exists: await this.fileExists(data.filepath),
+        });
+        break;
       case "getUserSecret":
         messenger.send("getUserSecret", {
           value: await this.getUserSecret(data.key),
@@ -430,6 +435,15 @@ class IdeProtocolClient {
   openFile(filepath: string) {
     // vscode has a builtin open/get open files
     openEditorAndRevealRange(filepath, undefined, vscode.ViewColumn.One);
+  }
+
+  async fileExists(filepath: string): Promise<boolean> {
+    try {
+      await vscode.workspace.fs.stat(vscode.Uri.file(filepath));
+      return true;
+    } catch {
+      return false;
+    }
   }
 
   showVirtualFile(name: string, contents: string) {

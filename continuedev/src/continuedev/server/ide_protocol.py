@@ -151,5 +151,9 @@ class AbstractIdeProtocolServer(ABC):
     async def listDirectoryContents(self, directory: str) -> List[str]:
         """List directory contents"""
 
+    @abstractmethod
+    async def fileExists(self, filepath: str) -> str:
+        """Check if a file exists"""
+
     workspace_directory: str
     unique_id: str

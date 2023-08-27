@@ -1,4 +1,5 @@
 import json
+from textwrap import dedent
 from typing import Any, Coroutine, Dict, Generator, List, Union
 
 import aiohttp
@@ -46,12 +47,14 @@ class Ollama(LLM):
         prompt = ""
         has_system = msgs[0]["role"] == "system"
         if has_system:
-            system_message = f"""\
+            system_message = dedent(
+                f"""\
                 <<SYS>>
                 {self.system_message}
                 <</SYS>>
                 
                 """
+            )
             if len(msgs) > 1:
                 prompt += f"[INST] {system_message}{msgs[1]['content']} [/INST]"
             else:
