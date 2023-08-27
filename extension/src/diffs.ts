@@ -21,11 +21,8 @@ async function readFile(path: string): Promise<string> {
     .then((bytes) => new TextDecoder().decode(bytes));
 }
 
-async function writeFile(path: string, contents: string) {
-  await vscode.workspace.fs.writeFile(
-    uriFromFilePath(path),
-    new TextEncoder().encode(contents)
-  );
+async function writeFile(uri: vscode.Uri, contents: string) {
+  await vscode.workspace.fs.writeFile(uri, new TextEncoder().encode(contents));
 }
 
 // THIS IS LOCAL
@@ -154,7 +151,7 @@ class DiffManager {
 
     // Create or update existing diff
     const newFilepath = this.getNewFilepath(originalFilepath);
-    await writeFile(newFilepath, newContent);
+    await writeFile(vscode.Uri.file(newFilepath), newContent);
 
     // Open the diff editor if this is a new diff
     if (!this.diffs.has(newFilepath)) {
@@ -254,7 +251,7 @@ class DiffManager {
       ?.save()
       .then(async () => {
         await writeFile(
-          diffInfo.originalFilepath,
+          uriFromFilePath(diffInfo.originalFilepath),
           await readFile(diffInfo.newFilepath)
         );
         this.cleanUpDiff(diffInfo);
@@ -321,7 +318,10 @@ async function recordAcceptReject(accepted: boolean, diffInfo: DiffInfo) {
   // ideProtocolClient.sendAcceptRejectSuggestion(accepted);
 
   // Write the updated suggestions back to the file
-  await writeFile(suggestionsPath, JSON.stringify(suggestions, null, 4));
+  await writeFile(
+    vscode.Uri.file(suggestionsPath),
+    JSON.stringify(suggestions, null, 4)
+  );
 }
 
 export async function acceptDiffCommand(newFilepath?: string) {
