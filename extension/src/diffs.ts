@@ -5,6 +5,7 @@ import * as vscode from "vscode";
 import { extensionContext, ideProtocolClient } from "./activation/activate";
 import { getMetaKeyLabel } from "./util/util";
 import { devDataPath } from "./activation/environmentSetup";
+import { uriFromFilePath } from "./util/vscode";
 
 interface DiffInfo {
   originalFilepath: string;
@@ -16,13 +17,13 @@ interface DiffInfo {
 
 async function readFile(path: string): Promise<string> {
   return await vscode.workspace.fs
-    .readFile(vscode.Uri.file(path))
+    .readFile(uriFromFilePath(path))
     .then((bytes) => new TextDecoder().decode(bytes));
 }
 
 async function writeFile(path: string, contents: string) {
   await vscode.workspace.fs.writeFile(
-    vscode.Uri.file(path),
+    uriFromFilePath(path),
     new TextEncoder().encode(contents)
   );
 }
@@ -42,7 +43,7 @@ class DiffManager {
 
   private async setupDirectory() {
     // Make sure the diff directory exists
-    await vscode.workspace.fs.createDirectory(vscode.Uri.file(DIFF_DIRECTORY));
+    await vscode.workspace.fs.createDirectory(uriFromFilePath(DIFF_DIRECTORY));
   }
 
   constructor() {
@@ -72,7 +73,7 @@ class DiffManager {
   ): Promise<vscode.TextEditor | undefined> {
     // If the file doesn't yet exist or the basename is a single digit number (vscode terminal), don't open the diff editor
     try {
-      await vscode.workspace.fs.stat(vscode.Uri.file(newFilepath));
+      await vscode.workspace.fs.stat(uriFromFilePath(newFilepath));
     } catch {
       return undefined;
     }
@@ -80,8 +81,8 @@ class DiffManager {
       return undefined;
     }
 
-    const rightUri = vscode.Uri.file(newFilepath);
-    const leftUri = vscode.Uri.file(originalFilepath);
+    const rightUri = uriFromFilePath(newFilepath);
+    const leftUri = uriFromFilePath(originalFilepath);
     const title = "Continue Diff";
     console.log(
       "Opening diff window with ",
@@ -177,7 +178,7 @@ class DiffManager {
 
     vscode.commands.executeCommand(
       "workbench.action.files.revert",
-      vscode.Uri.file(newFilepath)
+      uriFromFilePath(newFilepath)
     );
 
     return newFilepath;

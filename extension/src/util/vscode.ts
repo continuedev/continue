@@ -102,3 +102,13 @@ export function openEditorAndRevealRange(
     });
   });
 }
+
+export function uriFromFilePath(filepath: string): vscode.Uri {
+  if (vscode.env.remoteName) {
+    return vscode.Uri.parse(
+      `vscode-remote://${vscode.env.remoteName}${filepath}`
+    );
+  } else {
+    return vscode.Uri.file(filepath);
+  }
+}

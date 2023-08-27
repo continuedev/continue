@@ -820,14 +820,6 @@ Please output the code to be inserted at the cursor in order to fulfill the user
             rif_dict[rif.filepath] = rif.contents
 
         for rif in rif_with_contents:
-            # If the file doesn't exist, ask them to save it first
-            exists = await sdk.ide.fileExists(rif.filepath)
-            if not exists:
-                message = (
-                    f"The file {rif.filepath} does not exist. Please save it first."
-                )
-                raise ContinueCustomException(title=message, message=message)
-
             await sdk.ide.setFileOpen(rif.filepath)
             await sdk.ide.setSuggestionsLocked(rif.filepath, True)
             await self.stream_rif(rif, sdk)

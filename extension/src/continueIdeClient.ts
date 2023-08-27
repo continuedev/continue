@@ -3,7 +3,7 @@ import {
   showSuggestion as showSuggestionInEditor,
   SuggestionRanges,
 } from "./suggestions";
-import { openEditorAndRevealRange } from "./util/vscode";
+import { openEditorAndRevealRange, uriFromFilePath } from "./util/vscode";
 import { FileEdit } from "../schema/FileEdit";
 import { RangeInFile } from "../schema/RangeInFile";
 import * as vscode from "vscode";
@@ -270,7 +270,7 @@ class IdeProtocolClient {
         messenger.send("listDirectoryContents", {
           contents: (
             await vscode.workspace.fs.readDirectory(
-              vscode.Uri.file(data.directory)
+              uriFromFilePath(data.directory)
             )
           )
             .map(([name, type]) => name)
@@ -439,7 +439,7 @@ class IdeProtocolClient {
 
   async fileExists(filepath: string): Promise<boolean> {
     try {
-      await vscode.workspace.fs.stat(vscode.Uri.file(filepath));
+      await vscode.workspace.fs.stat(uriFromFilePath(filepath));
       return true;
     } catch {
       return false;
@@ -563,7 +563,7 @@ class IdeProtocolClient {
     if (typeof contents === "undefined") {
       try {
         contents = await vscode.workspace.fs
-          .readFile(vscode.Uri.file(filepath))
+          .readFile(uriFromFilePath(filepath))
           .then((bytes) => new TextDecoder().decode(bytes));
       } catch {
         contents = "";
