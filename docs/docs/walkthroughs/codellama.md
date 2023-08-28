@@ -31,6 +31,7 @@ config = ContinueConfig(
 1. Download Ollama [here](https://ollama.ai/) (it should walk you through the rest of these steps)
 2. Open a terminal and run `ollama pull codellama`\*
 3. Change your Continue config file to look like this:
+
 ```python
 from continuedev.src.continuedev.libs.llm.ollama import Ollama
 
@@ -59,7 +60,7 @@ config = ContinueConfig(
     ...
     models=Models(
         default=ReplicateLLM(
-            model="<CODE_LLAMA_MODEL_ID>",
+            model="replicate/codellama-13b-instruct:da5676342de1a5a335b848383af297f592b816b950a43d251a0a9edd0113604b",
             api_key="<MY_REPLICATE_API_KEY>")
     )
 )

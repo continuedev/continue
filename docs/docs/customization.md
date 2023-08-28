@@ -129,7 +129,7 @@ config = ContinueConfig(
     ...
     models=Models(
         default=ReplicateLLM(
-            model="replicate/llama-2-70b-chat:58d078176e02c219e11eb4da5a02a7830a283b14cf8f94537af893ccff5ee781",
+            model="replicate/codellama-13b-instruct:da5676342de1a5a335b848383af297f592b816b950a43d251a0a9edd0113604b",
             api_key="my-replicate-api-key")
     )
 )
