@@ -196,6 +196,11 @@ jobs:
           cd extension
           npm ci
 
+      - name: Publish (Open VSX Registry)
+        run: |
+          cd extension
+          npx ovsx publish -p ${{ secrets.VSX_REGISTRY_TOKEN }} --packagePath ./build/*.vsix
+
       - name: Publish
         run: |
           cd extension
