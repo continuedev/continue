@@ -8,15 +8,14 @@ from pydantic import validator
 
 from ....core.main import ChatMessage, ContinueCustomException, Step
 from ....core.observation import Observation, TextObservation, UserInputObservation
-from ....libs.llm.anthropic import AnthropicLLM
 from ....libs.llm.maybe_proxy_openai import MaybeProxyOpenAI
-from ....libs.llm.openai import OpenAI
 from ....libs.util.count_tokens import DEFAULT_MAX_TOKENS
 from ....libs.util.strings import (
     dedent_and_get_common_whitespace,
     remove_quotes_and_escapes,
 )
 from ....libs.util.telemetry import posthog_logger
+from ....libs.util.templating import render_prompt_template
 from ....models.filesystem import FileSystem, RangeInFile, RangeInFileWithContents
 from ....models.filesystem_edit import (
     EditDiff,
@@ -639,21 +638,23 @@ Please output the code to be inserted at the cursor in order to fulfill the user
         repeating_file_suffix = False
         line_below_highlighted_range = file_suffix.lstrip().split("\n")[0]
 
-        if not (
-            isinstance(model_to_use, OpenAI)
-            or isinstance(model_to_use, MaybeProxyOpenAI)
-            or isinstance(model_to_use, AnthropicLLM)
-        ):
-            messages = [
-                ChatMessage(
-                    role="user",
-                    content=f'```\n{rif.contents}\n```\n\nUser request: "{self.user_input}"\n\nThis is the code after changing to perfectly comply with the user request. It does not include any placeholder code, only real implementations:\n\n```\n',
-                    summary=self.user_input,
-                )
-            ]
-        # elif isinstance(model_to_use, ReplicateLLM):
-        #     messages = [ChatMessage(
-        #         role="user", content=f"// Previous implementation\n\n{rif.contents}\n\n// Updated implementation (after following directions: {self.user_input})\n\n", summary=self.user_input)]
+        # Use custom templates defined by the model
+        if template := model_to_use.prompt_templates.get("edit"):
+            rendered = render_prompt_template(
+                template,
+                messages[:-1],
+                {"code_to_edit": rif.contents, "user_input": self.user_input},
+            )
+            if isinstance(rendered, str):
+                messages = [
+                    ChatMessage(
+                        role="user",
+                        content=rendered,
+                        summary=self.user_input,
+                    )
+                ]
+            else:
+                messages = rendered
 
         generator = model_to_use.stream_chat(
             messages, temperature=sdk.config.temperature, max_tokens=max_tokens

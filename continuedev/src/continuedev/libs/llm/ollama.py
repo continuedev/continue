@@ -16,12 +16,28 @@ class Ollama(LLM):
     max_context_length: int = 2048
 
     _client_session: aiohttp.ClientSession = None
+    requires_write_log = True
+
+    prompt_templates = {
+        "edit": dedent(
+            """\
+            [INST] Consider the following code:
+            ```
+            {{code_to_edit}}
+            ```
+            Edit the code to perfectly satisfy the following user request:
+            {{user_input}}
+            Output nothing except for the code. No code block, no English explanation, no start/end tags.
+            [/INST]"""
+        ),
+    }
 
     class Config:
         arbitrary_types_allowed = True
 
-    async def start(self, **kwargs):
+    async def start(self, write_log, **kwargs):
         self._client_session = aiohttp.ClientSession()
+        self.write_log = write_log
 
     async def stop(self):
         await self._client_session.close()
@@ -47,6 +63,14 @@ class Ollama(LLM):
 
         prompt = ""
         has_system = msgs[0]["role"] == "system"
+        if has_system and msgs[0]["content"] == "":
+            has_system = False
+            msgs.pop(0)
+
+        # TODO: Instead make stream_complete and stream_chat the same method.
+        if len(msgs) == 1 and "[INST]" in msgs[0]["content"]:
+            return msgs[0]["content"]
+
         if has_system:
             system_message = dedent(
                 f"""\
@@ -120,6 +144,7 @@ class Ollama(LLM):
         )
         prompt = self.convert_to_chat(messages)
 
+        self.write_log(f"Prompt: {prompt}")
         async with self._client_session.post(
             f"{self.server_url}/api/generate",
             json={

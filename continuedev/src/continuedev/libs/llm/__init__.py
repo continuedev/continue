@@ -12,6 +12,8 @@ class LLM(ContinueBaseModel, ABC):
 
     system_message: Optional[str] = None
 
+    prompt_templates: dict = {}
+
     class Config:
         arbitrary_types_allowed = True
         extra = "allow"
