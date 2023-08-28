@@ -186,8 +186,12 @@ export async function downloadFromS3(
 
 export async function startContinuePythonServer(redownload: boolean = true) {
   // Check vscode settings
+  const manuallyRunningServer =
+    vscode.workspace
+      .getConfiguration("continue")
+      .get<boolean>("manuallyRunningServer") || false;
   const serverUrl = getContinueServerUrl();
-  if (serverUrl !== "http://localhost:65432") {
+  if (serverUrl !== "http://localhost:65432" || manuallyRunningServer) {
     console.log("Continue server is being run manually, skipping start");
     return;
   }
