@@ -105,6 +105,9 @@ export function openEditorAndRevealRange(
 
 export function uriFromFilePath(filepath: string): vscode.Uri {
   if (vscode.env.remoteName) {
+    if (vscode.env.remoteName === "wsl") {
+      filepath = filepath.replace(/\\/g, "/");
+    }
     return vscode.Uri.parse(
       `vscode-remote://${vscode.env.remoteName}${filepath}`
     );
