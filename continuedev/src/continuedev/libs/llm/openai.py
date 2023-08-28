@@ -166,6 +166,8 @@ class OpenAI(LLM):
             messages=messages,
             **args,
         ):
+            if len(chunk.choices) == 0:
+                continue
             yield chunk.choices[0].delta
             if "content" in chunk.choices[0].delta:
                 completion += chunk.choices[0].delta.content
