@@ -6,6 +6,7 @@ import aiohttp
 from ...core.main import ChatMessage
 from ..llm import LLM
 from ..util.count_tokens import DEFAULT_ARGS, compile_chat_messages, count_tokens
+from .prompts.chat import llama2_template_messages
 
 
 class TogetherLLM(LLM):
@@ -41,20 +42,6 @@ class TogetherLLM(LLM):
     def count_tokens(self, text: str):
         return count_tokens(self.name, text)
 
-    def convert_to_prompt(self, chat_messages: List[ChatMessage]) -> str:
-        system_message = None
-        if chat_messages[0]["role"] == "system":
-            system_message = chat_messages.pop(0)["content"]
-
-        prompt = "\n"
-        if system_message:
-            prompt += f"<human>: Hi!\n<bot>: {system_message}\n"
-        for message in chat_messages:
-            prompt += f'<{"human" if message["role"] == "user" else "bot"}>: {message["content"]}\n'
-
-        prompt += "<bot>:"
-        return prompt
-
     async def stream_complete(
         self, prompt, with_history: List[ChatMessage] = None, **kwargs
     ) -> Generator[Union[Any, List, Dict], None, None]:
@@ -75,7 +62,7 @@ class TogetherLLM(LLM):
 
         async with self._client_session.post(
             f"{self.base_url}/inference",
-            json={"prompt": self.convert_to_prompt(messages), **args},
+            json={"prompt": llama2_template_messages(messages), **args},
             headers={"Authorization": f"Bearer {self.api_key}"},
         ) as resp:
             async for line in resp.content.iter_any():
@@ -102,7 +89,7 @@ class TogetherLLM(LLM):
 
         async with self._client_session.post(
             f"{self.base_url}/inference",
-            json={"prompt": self.convert_to_prompt(messages), **args},
+            json={"prompt": llama2_template_messages(messages), **args},
             headers={"Authorization": f"Bearer {self.api_key}"},
         ) as resp:
             async for line in resp.content.iter_chunks():
@@ -141,7 +128,7 @@ class TogetherLLM(LLM):
         )
         async with self._client_session.post(
             f"{self.base_url}/inference",
-            json={"prompt": self.convert_to_prompt(messages), **args},
+            json={"prompt": llama2_template_messages(messages), **args},
             headers={"Authorization": f"Bearer {self.api_key}"},
         ) as resp:
             try:

@@ -330,8 +330,11 @@ export async function startContinuePythonServer(redownload: boolean = true) {
         child.unref();
       }
     } catch (e: any) {
-      console.log("Error starting server:", e);
-      retry(e);
+      if (attempts < maxAttempts) {
+        retry(e);
+      } else {
+        throw e;
+      }
     }
   };
 
