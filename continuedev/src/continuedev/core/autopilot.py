@@ -285,6 +285,7 @@ class Autopilot(ContinueBaseModel):
     async def edit_step_at_index(self, user_input: str, index: int):
         step_to_rerun = self.history.timeline[index].step.copy()
         step_to_rerun.user_input = user_input
+        step_to_rerun.description = user_input
 
         # Halt the agent's currently running jobs (delete them)
         while len(self.history.timeline) > index:

@@ -13,6 +13,7 @@ DEFAULT_MAX_TIME = 120.0
 class HuggingFaceInferenceAPI(LLM):
     model: str
     hf_token: str
+    self_hosted_url: str = None
 
     max_context_length: int = 2048
     verify_ssl: Optional[bool] = None
@@ -49,7 +50,9 @@ class HuggingFaceInferenceAPI(LLM):
         self, prompt: str, with_history: List[ChatMessage] = None, **kwargs
     ):
         """Return the completion of the text with the given temperature."""
-        API_URL = f"https://api-inference.huggingface.co/models/{self.model}"
+        API_URL = (
+            self.base_url or f"https://api-inference.huggingface.co/models/{self.model}"
+        )
         headers = {"Authorization": f"Bearer {self.hf_token}"}
 
         response = requests.post(

@@ -15,22 +15,28 @@ POSTHOG_API_KEY = "phc_JS6XFROuNbhJtVCEdTSYk6gl5ArRrTNMpCcguAXlSPs"
 
 class PostHogLogger:
     unique_id: str = "NO_UNIQUE_ID"
-    allow_anonymous_telemetry: bool = True
+    allow_anonymous_telemetry: bool = False
+    posthog: Posthog = None
 
     def __init__(self, api_key: str):
         self.api_key = api_key
 
-        # The personal API key is necessary only if you want to use local evaluation of feature flags.
-        self.posthog = Posthog(self.api_key, host="https://app.posthog.com")
-
     def setup(self, unique_id: str, allow_anonymous_telemetry: bool):
         self.unique_id = unique_id or "NO_UNIQUE_ID"
-        self.allow_anonymous_telemetry = allow_anonymous_telemetry or True
+        self.allow_anonymous_telemetry = allow_anonymous_telemetry or False
 
         # Capture initial event
         self.capture_event("session_start", {"os": os.name})
 
     def capture_event(self, event_name: str, event_properties: Any):
+        """Safely capture event. Telemetry should never be the reason Continue doesn't work"""
+        try:
+            self._capture_event(event_name, event_properties)
+        except Exception as e:
+            print(f"Failed to capture event: {e}")
+            pass
+
+    def _capture_event(self, event_name: str, event_properties: Any):
         # logger.debug(
         #     f"Logging to PostHog: {event_name} ({self.unique_id}, {self.allow_anonymous_telemetry}): {event_properties}")
         telemetry_path = os.path.expanduser("~/.continue/telemetry.log")
@@ -60,11 +66,15 @@ class PostHogLogger:
         if os.path.exists(server_version_file):
             with open(server_version_file, "r") as f:
                 event_properties["server_version"] = f.read()
-        
+
         # Add operating system
         event_properties["os"] = os.name
 
         # Send event to PostHog
+        if self.posthog is None:
+            # The personal API key is necessary only if you want to use local evaluation of feature flags.
+            self.posthog = Posthog(self.api_key, host="https://app.posthog.com")
+
         self.posthog.capture(self.unique_id, event_name, event_properties)
 
 
