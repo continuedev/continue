@@ -318,6 +318,16 @@ class GUIProtocolServer(AbstractGUIProtocolServer):
         )
 
 
+@router.get("/sessions")
+async def get_session(session_id: Optional[str] = None):
+    try:
+        # Assuming load_session is a method of a class, and you have an instance `instance_of_that_class`
+        await protocol.load_session(session_id)
+        return {"message": "Session loaded successfully", "session_id": session_id}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @router.websocket("/ws")
 async def websocket_endpoint(
     websocket: WebSocket, session: Session = Depends(websocket_session)

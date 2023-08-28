@@ -138,3 +138,10 @@ codeql
 **/.continue
 .DS_Store
 .continue
+
+
+# IntelliJ Plugin 
+**/**/.gradle
+**/**/.idea
+**/**/.qodana
+**/**/build

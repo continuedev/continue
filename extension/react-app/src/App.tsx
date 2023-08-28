@@ -50,13 +50,13 @@ export const GUIClientContext = createContext<
 >(undefined);
 
 function App() {
-  const client = useContinueGUIProtocol();
+  const client = useContinueGUIProtocol(false);
 
   const dispatch = useDispatch();
   useEffect(() => {
     const eventListener = (event: any) => {
       switch (event.data.type) {
-        case "onLoad":
+        case "onUILoad":
           dispatch(setApiUrl(event.data.apiUrl));
           dispatch(setVscMachineId(event.data.vscMachineId));
           dispatch(setSessionId(event.data.sessionId));
@@ -70,7 +70,7 @@ function App() {
       }
     };
     window.addEventListener("message", eventListener);
-    postVscMessage("onLoad", {});
+    // postVscMessage("onLoad", {});
     return () => window.removeEventListener("message", eventListener);
   }, []);
 

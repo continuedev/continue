@@ -169,6 +169,8 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
             message_type = message["messageType"]
             data = message["data"]
             logger.debug(f"Received message while initializing {message_type}")
+            logger.debug(data)
+            logger.debug(message)
             if message_type == "workspaceDirectory":
                 self.workspace_directory = data["workspaceDirectory"]
             elif message_type == "uniqueId":
@@ -176,7 +178,7 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
             else:
                 other_msgs.append(msg_string)
 
-            if self.workspace_directory is not None and self.unique_id is not None:
+            # if self.workspace_directory is not None and self.unique_id is not None:
                 break
         return other_msgs
 
@@ -570,6 +572,7 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str = None):
         # Message handler
         def handle_msg(msg):
             message = json.loads(msg)
+            logger.debug(msg)
 
             if "messageType" not in message or "data" not in message:
                 return
@@ -587,11 +590,13 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str = None):
         if session_id is not None:
             session_manager.registered_ides[session_id] = ideProtocolServer
         other_msgs = await ideProtocolServer.initialize(session_id)
-        posthog_logger.capture_event(
-            "session_started", {"session_id": ideProtocolServer.session_id}
-        )
+        logger.debug(other_msgs)
+        # posthog_logger.capture_event(
+        #     "session_started", {"session_id": ideProtocolServer.session_id}
+        # )
 
         for other_msg in other_msgs:
+            logger.debug("processing....:")
             handle_msg(other_msg)
 
         # Handle messages
