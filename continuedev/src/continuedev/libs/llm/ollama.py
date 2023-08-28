@@ -116,6 +116,7 @@ class Ollama(LLM):
                 "model": self.model,
             },
         ) as resp:
+            url_decode_buffer = ""
             async for line in resp.content.iter_any():
                 if line:
                     try:
@@ -125,7 +126,16 @@ class Ollama(LLM):
                             if chunk.strip() != "":
                                 j = json.loads(chunk)
                                 if "response" in j:
-                                    yield urllib.parse.unquote(j["response"])
+                                    url_decode_buffer += j["response"]
+
+                                    if (
+                                        "&" in url_decode_buffer
+                                        and url_decode_buffer.index("&")
+                                        > len(url_decode_buffer) - 5
+                                    ):
+                                        continue
+                                    yield urllib.parse.unquote(url_decode_buffer)
+                                    url_decode_buffer = ""
                     except:
                         raise Exception(str(line[0]))
 
@@ -153,6 +163,7 @@ class Ollama(LLM):
             },
         ) as resp:
             # This is streaming application/json instaed of text/event-stream
+            url_decode_buffer = ""
             async for line in resp.content.iter_chunks():
                 if line[1]:
                     try:
@@ -162,10 +173,20 @@ class Ollama(LLM):
                             if chunk.strip() != "":
                                 j = json.loads(chunk)
                                 if "response" in j:
+                                    url_decode_buffer += j["response"]
+                                    if (
+                                        "&" in url_decode_buffer
+                                        and url_decode_buffer.index("&")
+                                        > len(url_decode_buffer) - 5
+                                    ):
+                                        continue
                                     yield {
                                         "role": "assistant",
-                                        "content": urllib.parse.unquote(j["response"]),
+                                        "content": urllib.parse.unquote(
+                                            url_decode_buffer
+                                        ),
                                     }
+                                    url_decode_buffer = ""
                     except:
                         raise Exception(str(line[0]))
 
