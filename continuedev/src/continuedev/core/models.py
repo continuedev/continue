@@ -46,6 +46,7 @@ MODEL_MODULE_NAMES = {
     "AnthropicLLM": "anthropic",
     "ReplicateLLM": "replicate",
     "Ollama": "ollama",
+    "LlamaCpp": "llamacpp",
 }
 
 

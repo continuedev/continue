@@ -112,11 +112,12 @@ class TogetherLLM(LLM):
                         "data: [DONE]"
                     ):
                         continue
-                    if json_chunk.startswith("data: "):
-                        json_chunk = json_chunk[6:]
+
                     chunks = json_chunk.split("\n")
                     for chunk in chunks:
                         if chunk.strip() != "":
+                            if chunk.startswith("data: "):
+                                chunk = chunk[6:]
                             json_chunk = json.loads(chunk)
                             if "choices" in json_chunk:
                                 yield {

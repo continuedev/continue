@@ -60,7 +60,7 @@ const MODEL_INFO: { title: string; class: string; args: any }[] = [
     title: "TogetherAI",
     class: "TogetherLLM",
     args: {
-      model: "gpt-4",
+      model: "togethercomputer/CodeLlama-13b-Instruct",
       api_key: "<TOGETHER_API_KEY>",
     },
   },

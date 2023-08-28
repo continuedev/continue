@@ -255,7 +255,9 @@ class GUIProtocolServer(AbstractGUIProtocolServer):
                 # Replace default with either new one or existing from unused_models
                 for unused_model in unused_models:
                     if model_class == unused_model.__class__.__name__ and (
-                        "model" not in model or model["model"] == unused_model.model
+                        "model" not in model
+                        or model["model"] == unused_model.model
+                        and model["model"].startswith("gpt")
                     ):
                         models.default = unused_model
 
