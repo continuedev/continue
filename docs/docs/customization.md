@@ -2,6 +2,25 @@
 
 Continue can be deeply customized by editing the `ContinueConfig` object in `~/.continue/config.py` on your machine. This file is created the first time you run Continue.
 
+## Summary of Models
+
+Commercial Models
+
+- [MaybeProxyOpenAI](#adding-an-openai-api-key) - Use gpt-4 or gpt-3.5-turbo free with our API key, or with your API key. gpt-4 is probably the most capable model.
+- [OpenAI](#azure-openai-service) - Use any OpenAI model with your own key. Can also change the base URL if you have a server that uses the OpenAI API format, including using the Azure OpenAI service, LocalAI, etc.
+- [AnthropicLLM](#claude-2) - Use claude-2 with your Anthropic API key. Claude 2 is also highly capable, and has a 100,000 token context window.
+
+Local Models
+
+- [Ollama](#run-llama-2-locally-with-ollama) - If you have a Mac, Ollama is the simplest way to run open-source models like Code Llama.
+- [GGML](#local-models-with-ggml) - Use llama-cpp-python to run a local server with any open-source model.
+- [LlamaCpp](#llama-cpp) - Use llama.cpp directly instead of llama-cpp-python.
+
+Open-Source Models (not local)
+
+- [TogetherLLM](#together) - Use any model from the [Together Models list](https://docs.together.ai/docs/models-inference) with your Together API key.
+- [ReplicateLLM](#replicate) - Use any open-source model from the [Replicate Streaming List](https://replicate.com/collections/streaming-language-models) with your Replicate API key.
+
 ## Change the default LLM
 
 In `config.py`, you'll find the `models` property:
@@ -18,7 +37,7 @@ config = ContinueConfig(
 )
 ```
 
-The `default` model is the one used for most operations, including responding to your messages and editing code. The `medium` model is used for summarization tasks that require less quality. There are also `small` and `large` roles that can be filled, but all will fall back to `default` if not set. The values of these fields must be of the [`LLM`](https://github.com/continuedev/continue/blob/main/continuedev/src/continuedev/libs/llm/__init__.py) class, which implements methods for retrieving and streaming completions from an LLM.
+The `default` and `medium` properties are different _model roles_. This allows different models to be used for different tasks. The available roles are `default`, `small`, `medium`, `large`, `edit`, and `chat`. `edit` is used when you use the '/edit' slash command, `chat` is used for all chat responses, and `medium` is used for summarizing. If not set, all roles will fall back to `default`. The values of these fields must be of the [`LLM`](https://github.com/continuedev/continue/blob/main/continuedev/src/continuedev/libs/llm/__init__.py) class, which implements methods for retrieving and streaming completions from an LLM.
 
 Below, we describe the `LLM` classes available in the Continue core library, and how they can be used.
 
