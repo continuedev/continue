@@ -550,6 +550,12 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
                   postVscMessage("focusEditor", {});
                 }
               }
+              // Home and end keys
+              else if (event.key === "Home") {
+                (event.nativeEvent as any).preventDownshiftDefault = true;
+              } else if (event.key === "End") {
+                (event.nativeEvent as any).preventDownshiftDefault = true;
+              }
             },
             onClick: () => {
               dispatch(setBottomMessage(undefined));

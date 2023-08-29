@@ -92,8 +92,7 @@ const Select = styled.select`
 function ModelSelect(props: {}) {
   const client = useContext(GUIClientContext);
   const defaultModel = useSelector(
-    (state: RootStore) =>
-      (state.serverState.config as any)?.models?.default?.class_name
+    (state: RootStore) => (state.serverState.config as any)?.models?.default
   );
 
   return (
@@ -106,7 +105,14 @@ function ModelSelect(props: {}) {
     >
       {MODEL_INFO.map((model, idx) => {
         return (
-          <option selected={defaultModel === model.class} value={idx}>
+          <option
+            selected={
+              defaultModel?.class_name === model.class &&
+              (!defaultModel?.model?.startsWith("gpt") ||
+                defaultModel?.model === model.args.model)
+            }
+            value={idx}
+          >
             {model.title}
           </option>
         );
