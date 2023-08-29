@@ -202,6 +202,13 @@ function GUI(props: GUIProps) {
   const onMainTextInput = (event?: any) => {
     if (mainTextInputRef.current) {
       let input = (mainTextInputRef.current as any).inputValue;
+
+      if (input.startsWith("#") && (input.length === 7 || input.length === 4)) {
+        localStorage.setItem("continueButtonColor", input);
+        (mainTextInputRef.current as any).setInputValue("");
+        return;
+      }
+
       // cmd+enter to /edit
       if (isMetaEquivalentKeyPressed(event)) {
         input = `/edit ${input}`;
