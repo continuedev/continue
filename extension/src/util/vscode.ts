@@ -1,4 +1,5 @@
 import * as vscode from "vscode";
+import { machineIdSync } from "node-machine-id";
 
 export function translate(range: vscode.Range, lines: number): vscode.Range {
   return new vscode.Range(
@@ -114,4 +115,12 @@ export function uriFromFilePath(filepath: string): vscode.Uri {
   } else {
     return vscode.Uri.file(filepath);
   }
+}
+
+export function getUniqueId() {
+  const id = vscode.env.machineId;
+  if (id === "someValue.machineId") {
+    return machineIdSync();
+  }
+  return vscode.env.machineId;
 }

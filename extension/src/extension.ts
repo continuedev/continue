@@ -4,6 +4,7 @@
 
 import * as vscode from "vscode";
 import { getExtensionVersion } from "./activation/environmentSetup";
+import { getUniqueId } from "./util/vscode";
 
 let client: any = undefined;
 async function capture(args: any) {
@@ -21,7 +22,7 @@ async function dynamicImportAndActivate(context: vscode.ExtensionContext) {
   if (!context.globalState.get("hasBeenInstalled")) {
     context.globalState.update("hasBeenInstalled", true);
     capture({
-      distinctId: vscode.env.machineId,
+      distinctId: getUniqueId(),
       event: "install",
       properties: {
         extensionVersion: getExtensionVersion(),
@@ -57,7 +58,7 @@ export function activate(context: vscode.ExtensionContext) {
 
 export function deactivate() {
   capture({
-    distinctId: vscode.env.machineId,
+    distinctId: getUniqueId(),
     event: "deactivate",
     properties: {
       extensionVersion: getExtensionVersion(),

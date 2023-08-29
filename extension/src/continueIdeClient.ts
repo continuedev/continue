@@ -3,7 +3,11 @@ import {
   showSuggestion as showSuggestionInEditor,
   SuggestionRanges,
 } from "./suggestions";
-import { openEditorAndRevealRange, uriFromFilePath } from "./util/vscode";
+import {
+  getUniqueId,
+  openEditorAndRevealRange,
+  uriFromFilePath,
+} from "./util/vscode";
 import { FileEdit } from "../schema/FileEdit";
 import { RangeInFile } from "../schema/RangeInFile";
 import * as vscode from "vscode";
@@ -367,7 +371,7 @@ class IdeProtocolClient {
   }
 
   getUniqueId() {
-    return vscode.env.machineId;
+    return getUniqueId();
   }
 
   // ------------------------------------ //
