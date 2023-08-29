@@ -19,6 +19,7 @@ from continuedev.src.continuedev.plugins.steps.main import EditHighlightedCodeSt
 from continuedev.src.continuedev.plugins.context_providers.search import SearchContextProvider
 from continuedev.src.continuedev.plugins.context_providers.diff import DiffContextProvider
 from continuedev.src.continuedev.plugins.context_providers.url import URLContextProvider
+from continuedev.src.continuedev.plugins.context_providers.terminal import TerminalContextProvider
 
 config = ContinueConfig(
     allow_anonymous_telemetry=True,
@@ -78,7 +79,8 @@ config = ContinueConfig(
             preset_urls = [
                 # Add any common urls you reference here so they appear in autocomplete
             ]
-        )
+        ),
+        TerminalContextProvider(),
     ],
 )
 """
