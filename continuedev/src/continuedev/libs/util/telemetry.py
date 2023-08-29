@@ -1,8 +1,8 @@
 import os
+import socket
 from typing import Any
 
 from dotenv import load_dotenv
-from posthog import Posthog
 
 from ..constants.main import CONTINUE_SERVER_VERSION_FILE
 from .commonregex import clean_pii_from_any
@@ -13,10 +13,20 @@ in_codespaces = os.getenv("CODESPACES") == "true"
 POSTHOG_API_KEY = "phc_JS6XFROuNbhJtVCEdTSYk6gl5ArRrTNMpCcguAXlSPs"
 
 
+def is_connected():
+    try:
+        # connect to the host -- tells us if the host is actually reachable
+        socket.create_connection(("www.google.com", 80))
+        return True
+    except OSError:
+        pass
+    return False
+
+
 class PostHogLogger:
     unique_id: str = "NO_UNIQUE_ID"
     allow_anonymous_telemetry: bool = False
-    posthog: Posthog = None
+    posthog = None
 
     def __init__(self, api_key: str):
         self.api_key = api_key
@@ -35,6 +45,8 @@ class PostHogLogger:
         except Exception as e:
             print(f"Failed to capture event: {e}")
             pass
+
+    _found_disconnected: bool = False
 
     def _capture_event(self, event_name: str, event_properties: Any):
         # logger.debug(
@@ -72,10 +84,17 @@ class PostHogLogger:
 
         # Send event to PostHog
         if self.posthog is None:
+            from posthog import Posthog
+
             # The personal API key is necessary only if you want to use local evaluation of feature flags.
             self.posthog = Posthog(self.api_key, host="https://app.posthog.com")
 
-        self.posthog.capture(self.unique_id, event_name, event_properties)
+        if is_connected():
+            self.posthog.capture(self.unique_id, event_name, event_properties)
+        else:
+            if not self._found_disconnected:
+                self._found_disconnected = True
+                raise ConnectionError("No internet connection")
 
 
 posthog_logger = PostHogLogger(api_key=POSTHOG_API_KEY)
