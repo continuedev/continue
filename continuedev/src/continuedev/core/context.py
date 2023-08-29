@@ -225,10 +225,7 @@ class ContextManager:
                 await self.load_index(sdk.ide.workspace_directory)
                 logger.debug("Loaded Meilisearch index")
             except asyncio.TimeoutError:
-                logger.warning("MeiliSearch did not start within 20 seconds")
-                logger.warning(
-                    "MeiliSearch not running, avoiding any dependent context providers"
-                )
+                logger.warning("Meilisearch is not running. As of now, Continue does not attempt to download Meilisearch on Windows because the download process is more involved. If you'd like install Meilisearch (which allows you to reference context by typing '@' (e.g. files, GitHub issues, etc.)), follow the instructions here: https://www.meilisearch.com/docs/learn/getting_started/installation. Alternatively, you can track our progress on support for Meilisearch on Windows here: https://github.com/continuedev/continue/issues/408.")
 
         create_async_task(start_meilisearch(context_providers))
 

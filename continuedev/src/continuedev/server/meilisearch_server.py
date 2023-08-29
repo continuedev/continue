@@ -67,7 +67,6 @@ async def check_meilisearch_running() -> bool:
                     return False
                 return True
             except Exception as e:
-                logger.debug(e)
                 return False
     except Exception:
         return False
