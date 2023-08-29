@@ -30,7 +30,7 @@ class GGML(LLM):
         self.write_log = write_log
 
     async def stop(self):
-        await self._client_session.close()
+        pass
 
     @property
     def name(self):
@@ -106,20 +106,25 @@ class GGML(LLM):
                 async with client_session.post(
                     f"{self.server_url}/v1/chat/completions",
                     json={"messages": messages, **args},
+                    headers={"Content-Type": "application/json"},
                 ) as resp:
                     # This is streaming application/json instaed of text/event-stream
                     async for line, end in resp.content.iter_chunks():
                         json_chunk = line.decode("utf-8")
-                        if json_chunk.startswith(": ping - ") or json_chunk.startswith(
-                            "data: [DONE]"
-                        ):
-                            continue
                         chunks = json_chunk.split("\n")
                         for chunk in chunks:
-                            if chunk.strip() != "":
+                            if (
+                                chunk.strip() == ""
+                                or json_chunk.startswith(": ping - ")
+                                or json_chunk.startswith("data: [DONE]")
+                            ):
+                                continue
+                            try:
                                 yield json.loads(chunk[6:])["choices"][0][
                                     "delta"
                                 ]  # {"role": "assistant", "content": "..."}
+                            except:
+                                pass
 
         # Because quite often the first attempt fails, and it works thereafter
         self.write_log(f"Prompt: \n\n{format_chat_messages(messages)}")
