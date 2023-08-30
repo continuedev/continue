@@ -10,7 +10,7 @@ from ..libs.llm.ollama import Ollama
 from ..libs.llm.openai import OpenAI
 from ..libs.llm.replicate import ReplicateLLM
 from ..libs.llm.together import TogetherLLM
-
+from ..libs.llm.llamacpp import LlamaCpp
 
 class ContinueSDK(BaseModel):
     pass
@@ -35,6 +35,7 @@ MODEL_CLASSES = {
         AnthropicLLM,
         ReplicateLLM,
         Ollama,
+        LlamaCpp
     ]
 }
 

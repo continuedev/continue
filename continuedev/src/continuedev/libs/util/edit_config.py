@@ -5,11 +5,14 @@ import redbaron
 
 from .paths import getConfigFilePath
 
-
-def load_red():
+def get_config_source():
     config_file_path = getConfigFilePath()
     with open(config_file_path, "r") as file:
         source_code = file.read()
+    return source_code
+
+def load_red():
+    source_code = get_config_source()
 
     red = redbaron.RedBaron(source_code)
     return red
@@ -54,12 +57,13 @@ def edit_config_property(key_path: List[str], value: redbaron.RedBaron):
 
 
 def add_config_import(line: str):
+    # check if the import already exists
+    source = get_config_source()
+    if line in source:
+        return
+
     with edit_lock:
         red = load_red()
-        # check if the import already exists
-        for node in red:
-            if node.type == "import" and node.dumps() == line:
-                return
         # if it doesn't exist, add it
         red.insert(1, line)
 
