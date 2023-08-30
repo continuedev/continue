@@ -574,7 +574,9 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str = None):
 
         # Start meilisearch
         try:
-            await start_meilisearch()
+            async def on_err(e):
+                logger.debug(f"Failed to start MeiliSearch: {e}")
+            create_async_task(start_meilisearch(), on_err)
         except Exception as e:
             logger.debug("Failed to start MeiliSearch")
             logger.debug(e)

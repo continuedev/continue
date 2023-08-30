@@ -20,7 +20,7 @@ async def download_file(url: str, filename: str):
                 await f.close()
 
 
-def download_meilisearch():
+async def download_meilisearch():
     """
     Downloads MeiliSearch.
     """
@@ -48,7 +48,7 @@ def download_meilisearch():
         )
 
 
-def ensure_meilisearch_installed() -> bool:
+async def ensure_meilisearch_installed() -> bool:
     """
     Checks if MeiliSearch is installed.
 
@@ -79,14 +79,7 @@ def ensure_meilisearch_installed() -> bool:
         for p in existing_paths:
             shutil.rmtree(p, ignore_errors=True)
 
-        # Download MeiliSearch
-        logger.debug("Downloading MeiliSearch...")
-        subprocess.run(
-            "curl -L https://install.meilisearch.com | sh",
-            shell=True,
-            check=True,
-            cwd=serverPath,
-        )
+        await download_meilisearch()
 
         return False
 
@@ -128,12 +121,12 @@ async def start_meilisearch():
     serverPath = getServerFolderPath()
 
     # Check if MeiliSearch is installed, if not download
-    was_already_installed = ensure_meilisearch_installed()
+    was_already_installed = await ensure_meilisearch_installed()
 
     # Check if MeiliSearch is running
     if not await check_meilisearch_running() or not was_already_installed:
         logger.debug("Starting MeiliSearch...")
-        binary_name = "./meilisearch.exe" if os.name == "nt" else "./meilisearch"
+        binary_name = "meilisearch" if os.name == "nt" else "./meilisearch"
         subprocess.Popen(
             [binary_name, "--no-analytics"],
             cwd=serverPath,
@@ -141,4 +134,5 @@ async def start_meilisearch():
             stderr=subprocess.STDOUT,
             close_fds=True,
             start_new_session=True,
+            shell=True
         )
