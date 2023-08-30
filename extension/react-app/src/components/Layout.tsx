@@ -101,6 +101,15 @@ const Layout = () => {
       if (event.metaKey && event.altKey && event.code === "KeyN") {
         client?.loadSession(undefined);
       }
+      if (event.metaKey && event.code === "KeyC") {
+        const selection = window.getSelection()?.toString();
+        if (selection) {
+          // Copy to clipboard
+          setTimeout(() => {
+            navigator.clipboard.writeText(selection);
+          }, 100);
+        }
+      }
     };
 
     window.addEventListener("keydown", handleKeyDown);
