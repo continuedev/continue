@@ -1,3 +1,4 @@
+import html
 import json
 import os
 from textwrap import dedent
@@ -99,11 +100,11 @@ class SimpleChatStep(Step):
                 self.description += chunk["content"]
 
                 # HTML unencode
-                # end_size = len(chunk["content"]) - 6
-                # if "&" in self.description[-end_size:]:
-                #     self.description = self.description[:-end_size] + html.unescape(
-                #         self.description[-end_size:]
-                #     )
+                end_size = len(chunk["content"]) - 6
+                if "&" in self.description[-end_size:]:
+                    self.description = self.description[:-end_size] + html.unescape(
+                        self.description[-end_size:]
+                    )
 
                 await sdk.update_ui()
 
