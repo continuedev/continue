@@ -117,7 +117,8 @@ class Ollama(LLM):
         )
         prompt = llama2_template_messages(messages)
 
-        self.write_log(f"Prompt: {prompt}")
+        self.write_log(f"Prompt:\n{prompt}")
+        completion = ""
         async with self._client_session.post(
             f"{self.server_url}/api/generate",
             json={
@@ -127,8 +128,6 @@ class Ollama(LLM):
                 "options": {"temperature": args["temperature"]},
             },
         ) as resp:
-            # This is streaming application/json instaed of text/event-stream
-            url_decode_buffer = ""
             async for line in resp.content.iter_chunks():
                 if line[1]:
                     json_chunk = line[0].decode("utf-8")
@@ -137,18 +136,12 @@ class Ollama(LLM):
                         if chunk.strip() != "":
                             j = json.loads(chunk)
                             if "response" in j:
-                                url_decode_buffer += j["response"]
-                                if (
-                                    "&" in url_decode_buffer
-                                    and url_decode_buffer.index("&")
-                                    > len(url_decode_buffer) - 5
-                                ):
-                                    continue
                                 yield {
                                     "role": "assistant",
-                                    "content": urllib.parse.unquote(url_decode_buffer),
+                                    "content": j["response"],
                                 }
-                                url_decode_buffer = ""
+                                completion += j["response"]
+        self.write_log(f"Completion:\n{completion}")
 
     async def complete(
         self, prompt: str, with_history: List[ChatMessage] = None, **kwargs

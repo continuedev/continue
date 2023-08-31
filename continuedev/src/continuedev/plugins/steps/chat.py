@@ -24,6 +24,12 @@ openai.api_key = OPENAI_API_KEY
 FREE_USAGE_STEP_NAME = "Please enter OpenAI API key"
 
 
+def add_ellipsis(text: str, max_length: int = 200) -> str:
+    if len(text) > max_length:
+        return text[: max_length - 3] + "..."
+    return text
+
+
 class SimpleChatStep(Step):
     name: str = "Generating Response..."
     manage_own_chat_context: bool = True
@@ -91,13 +97,26 @@ class SimpleChatStep(Step):
 
             if "content" in chunk:
                 self.description += chunk["content"]
+
+                # HTML unencode
+                # end_size = len(chunk["content"]) - 6
+                # if "&" in self.description[-end_size:]:
+                #     self.description = self.description[:-end_size] + html.unescape(
+                #         self.description[-end_size:]
+                #     )
+
                 await sdk.update_ui()
 
-        self.name = remove_quotes_and_escapes(
-            await sdk.models.medium.complete(
-                f'"{self.description}"\n\nPlease write a short title summarizing the message quoted above. Use no more than 10 words:',
-                max_tokens=20,
-            )
+        self.name = "Generating title..."
+        await sdk.update_ui()
+        self.name = add_ellipsis(
+            remove_quotes_and_escapes(
+                await sdk.models.medium.complete(
+                    f'"{self.description}"\n\nPlease write a short title summarizing the message quoted above. Use no more than 10 words:',
+                    max_tokens=20,
+                )
+            ),
+            200,
         )
 
         self.chat_context.append(
