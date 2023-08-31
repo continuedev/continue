@@ -14,7 +14,7 @@ Local Models
 
 - [Ollama](#run-llama-2-locally-with-ollama) - If you have a Mac, Ollama is the simplest way to run open-source models like Code Llama.
 - [GGML](#local-models-with-ggml) - Use llama-cpp-python to run a local server with any open-source model.
-- [LlamaCpp](#llama.cpp) - Use llama.cpp directly instead of llama-cpp-python.
+- [LlamaCpp](#llamacpp) - Use llama.cpp directly instead of llama-cpp-python.
 
 Open-Source Models (not local)
 
