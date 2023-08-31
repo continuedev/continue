@@ -14,7 +14,7 @@ Local Models
 
 - [Ollama](#run-llama-2-locally-with-ollama) - If you have a Mac, Ollama is the simplest way to run open-source models like Code Llama.
 - [GGML](#local-models-with-ggml) - Use llama-cpp-python to run a local server with any open-source model.
-- [LlamaCpp](#llama-cpp) - Use llama.cpp directly instead of llama-cpp-python.
+- [LlamaCpp](#llamacpp) - Use llama.cpp directly instead of llama-cpp-python.
 
 Open-Source Models (not local)
 
@@ -113,6 +113,28 @@ config = ContinueConfig(
         default=GGML(
             max_context_length=2048,
             server_url="http://localhost:8000")
+    )
+)
+```
+
+### Llama.cpp
+
+Run the llama.cpp server binary to start the API server. If running on a remote server, be sure to set host to 0.0.0.0:
+```shell
+.\server.exe -c 4096 --host 0.0.0.0 -t 16 --mlock -m models\meta\llama\codellama-7b-instruct.Q8_0.gguf
+```
+
+After it's up and running, change `~/.continue/config.py` to look like this:
+
+```python
+from continuedev.src.continuedev.libs.llm.ggml import GGML
+
+config = ContinueConfig(
+    ...
+    models=Models(
+        default=LlamaCpp(
+            max_context_length=4096,
+            server_url="http://localhost:8080")
     )
 )
 ```

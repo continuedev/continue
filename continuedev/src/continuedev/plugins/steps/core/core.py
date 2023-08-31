@@ -334,7 +334,7 @@ class DefaultModelEditCodeStep(Step):
         self, file_prefix: str, contents: str, file_suffix: str, sdk: ContinueSDK
     ) -> str:
         if contents.strip() == "":
-            # Seperate prompt for insertion at the cursor, the other tends to cause it to repeat whole file
+            # Separate prompt for insertion at the cursor, the other tends to cause it to repeat whole file
             prompt = dedent(
                 f"""\
 <file_prefix>
