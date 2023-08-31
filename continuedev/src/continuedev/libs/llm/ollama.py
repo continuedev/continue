@@ -8,6 +8,7 @@ import aiohttp
 from ...core.main import ChatMessage
 from ..llm import LLM
 from ..util.count_tokens import DEFAULT_ARGS, compile_chat_messages, count_tokens
+from .prompts.chat import llama2_template_messages
 
 
 class Ollama(LLM):
@@ -57,43 +58,6 @@ class Ollama(LLM):
     def count_tokens(self, text: str):
         return count_tokens(self.name, text)
 
-    def convert_to_chat(self, msgs: ChatMessage) -> str:
-        if len(msgs) == 0:
-            return ""
-
-        prompt = ""
-        has_system = msgs[0]["role"] == "system"
-        if has_system and msgs[0]["content"] == "":
-            has_system = False
-            msgs.pop(0)
-
-        # TODO: Instead make stream_complete and stream_chat the same method.
-        if len(msgs) == 1 and "[INST]" in msgs[0]["content"]:
-            return msgs[0]["content"]
-
-        if has_system:
-            system_message = dedent(
-                f"""\
-                <<SYS>>
-                {self.system_message}
-                <</SYS>>
-                
-                """
-            )
-            if len(msgs) > 1:
-                prompt += f"[INST] {system_message}{msgs[1]['content']} [/INST]"
-            else:
-                prompt += f"[INST] {system_message} [/INST]"
-                return
-
-        for i in range(2 if has_system else 0, len(msgs)):
-            if msgs[i]["role"] == "user":
-                prompt += f"[INST] {msgs[i]['content']} [/INST]"
-            else:
-                prompt += msgs[i]["content"]
-
-        return prompt
-
     async def stream_complete(
         self, prompt, with_history: List[ChatMessage] = None, **kwargs
     ) -> Generator[Union[Any, List, Dict], None, None]:
@@ -107,37 +71,36 @@ class Ollama(LLM):
             functions=None,
             system_message=self.system_message,
         )
-        prompt = self.convert_to_chat(messages)
+        prompt = llama2_template_messages(messages)
 
         async with self._client_session.post(
             f"{self.server_url}/api/generate",
             json={
-                "prompt": prompt,
+                "template": prompt,
                 "model": self.model,
+                "system": self.system_message,
+                "options": {"temperature": args["temperature"]},
             },
         ) as resp:
             url_decode_buffer = ""
             async for line in resp.content.iter_any():
                 if line:
-                    try:
-                        json_chunk = line.decode("utf-8")
-                        chunks = json_chunk.split("\n")
-                        for chunk in chunks:
-                            if chunk.strip() != "":
-                                j = json.loads(chunk)
-                                if "response" in j:
-                                    url_decode_buffer += j["response"]
+                    json_chunk = line.decode("utf-8")
+                    chunks = json_chunk.split("\n")
+                    for chunk in chunks:
+                        if chunk.strip() != "":
+                            j = json.loads(chunk)
+                            if "response" in j:
+                                url_decode_buffer += j["response"]
 
-                                    if (
-                                        "&" in url_decode_buffer
-                                        and url_decode_buffer.index("&")
-                                        > len(url_decode_buffer) - 5
-                                    ):
-                                        continue
-                                    yield urllib.parse.unquote(url_decode_buffer)
-                                    url_decode_buffer = ""
-                    except:
-                        raise Exception(str(line[0]))
+                                if (
+                                    "&" in url_decode_buffer
+                                    and url_decode_buffer.index("&")
+                                    > len(url_decode_buffer) - 5
+                                ):
+                                    continue
+                                yield urllib.parse.unquote(url_decode_buffer)
+                                url_decode_buffer = ""
 
     async def stream_chat(
         self, messages: List[ChatMessage] = None, **kwargs
@@ -152,67 +115,63 @@ class Ollama(LLM):
             functions=None,
             system_message=self.system_message,
         )
-        prompt = self.convert_to_chat(messages)
+        prompt = llama2_template_messages(messages)
 
         self.write_log(f"Prompt: {prompt}")
         async with self._client_session.post(
             f"{self.server_url}/api/generate",
             json={
-                "prompt": prompt,
+                "template": prompt,
                 "model": self.model,
+                "system": self.system_message,
+                "options": {"temperature": args["temperature"]},
             },
         ) as resp:
             # This is streaming application/json instaed of text/event-stream
             url_decode_buffer = ""
             async for line in resp.content.iter_chunks():
                 if line[1]:
-                    try:
-                        json_chunk = line[0].decode("utf-8")
-                        chunks = json_chunk.split("\n")
-                        for chunk in chunks:
-                            if chunk.strip() != "":
-                                j = json.loads(chunk)
-                                if "response" in j:
-                                    url_decode_buffer += j["response"]
-                                    if (
-                                        "&" in url_decode_buffer
-                                        and url_decode_buffer.index("&")
-                                        > len(url_decode_buffer) - 5
-                                    ):
-                                        continue
-                                    yield {
-                                        "role": "assistant",
-                                        "content": urllib.parse.unquote(
-                                            url_decode_buffer
-                                        ),
-                                    }
-                                    url_decode_buffer = ""
-                    except:
-                        raise Exception(str(line[0]))
+                    json_chunk = line[0].decode("utf-8")
+                    chunks = json_chunk.split("\n")
+                    for chunk in chunks:
+                        if chunk.strip() != "":
+                            j = json.loads(chunk)
+                            if "response" in j:
+                                url_decode_buffer += j["response"]
+                                if (
+                                    "&" in url_decode_buffer
+                                    and url_decode_buffer.index("&")
+                                    > len(url_decode_buffer) - 5
+                                ):
+                                    continue
+                                yield {
+                                    "role": "assistant",
+                                    "content": urllib.parse.unquote(url_decode_buffer),
+                                }
+                                url_decode_buffer = ""
 
     async def complete(
         self, prompt: str, with_history: List[ChatMessage] = None, **kwargs
     ) -> Coroutine[Any, Any, str]:
         completion = ""
-
+        args = {**self.default_args, **kwargs}
         async with self._client_session.post(
             f"{self.server_url}/api/generate",
             json={
-                "prompt": prompt,
+                "template": prompt,
                 "model": self.model,
+                "system": self.system_message,
+                "options": {"temperature": args["temperature"]},
             },
         ) as resp:
             async for line in resp.content.iter_any():
                 if line:
-                    try:
-                        json_chunk = line.decode("utf-8")
-                        chunks = json_chunk.split("\n")
-                        for chunk in chunks:
-                            if chunk.strip() != "":
-                                j = json.loads(chunk)
-                                if "response" in j:
-                                    completion += urllib.parse.unquote(j["response"])
-                    except:
-                        raise Exception(str(line[0]))
+                    json_chunk = line.decode("utf-8")
+                    chunks = json_chunk.split("\n")
+                    for chunk in chunks:
+                        if chunk.strip() != "":
+                            j = json.loads(chunk)
+                            if "response" in j:
+                                completion += urllib.parse.unquote(j["response"])
 
         return completion

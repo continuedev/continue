@@ -346,4 +346,13 @@ export async function startContinuePythonServer(redownload: boolean = true) {
 
   // Write the current version of vscode extension to a file called server_version.txt
   fs.writeFileSync(serverVersionPath(), getExtensionVersion());
+
+  // If running on remote, forward the port
+  if (
+    vscode.env.remoteName &&
+    vscode.extensions.getExtension("continue.continue")?.extensionKind ===
+      vscode.ExtensionKind.Workspace
+  ) {
+    await vscode.env.asExternalUri(vscode.Uri.parse(getContinueServerUrl()));
+  }
 }

@@ -60,13 +60,6 @@ def getConfigFilePath() -> str:
         if existing_content.strip() == "":
             with open(path, "w") as f:
                 f.write(default_config)
-        elif " continuedev.core" in existing_content:
-            with open(path, "w") as f:
-                f.write(
-                    existing_content.replace(
-                        " continuedev.", " continuedev.src.continuedev."
-                    )
-                )
 
     return path
 

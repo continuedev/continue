@@ -7,6 +7,11 @@ def llama2_template_messages(msgs: ChatMessage) -> str:
     if len(msgs) == 0:
         return ""
 
+    if msgs[0]["role"] == "assistant":
+        # These models aren't trained to handle assistant message coming first,
+        # and typically these are just introduction messages from Continue
+        msgs.pop(0)
+
     prompt = ""
     has_system = msgs[0]["role"] == "system"
 

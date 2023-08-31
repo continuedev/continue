@@ -6,12 +6,7 @@ import aiohttp
 
 from ...core.main import ChatMessage
 from ..llm import LLM
-from ..util.count_tokens import (
-    DEFAULT_ARGS,
-    compile_chat_messages,
-    count_tokens,
-    format_chat_messages,
-)
+from ..util.count_tokens import DEFAULT_ARGS, compile_chat_messages, count_tokens
 from .prompts.chat import code_llama_template_messages
 
 
@@ -108,7 +103,8 @@ class LlamaCpp(LLM):
             system_message=self.system_message,
         )
 
-        self.write_log(f"Prompt: \n\n{format_chat_messages(messages)}")
+        prompt = self.convert_to_chat(messages)
+        self.write_log(f"Prompt: \n\n{prompt}")
         completion = ""
         async with aiohttp.ClientSession(
             connector=aiohttp.TCPConnector(verify_ssl=self.verify_ssl)
@@ -116,7 +112,7 @@ class LlamaCpp(LLM):
             async with client_session.post(
                 f"{self.server_url}/completion",
                 json={
-                    "prompt": self.convert_to_chat(messages),
+                    "prompt": prompt,
                     **self._transform_args(args),
                 },
                 headers={"Content-Type": "application/json"},

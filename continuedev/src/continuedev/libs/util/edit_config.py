@@ -5,11 +5,13 @@ import redbaron
 
 from .paths import getConfigFilePath
 
+
 def get_config_source():
     config_file_path = getConfigFilePath()
     with open(config_file_path, "r") as file:
         source_code = file.read()
     return source_code
+
 
 def load_red():
     source_code = get_config_source()
@@ -104,6 +106,8 @@ def create_obj_node(class_name: str, args: Dict[str, str]) -> redbaron.RedBaron:
 
 
 def create_string_node(string: str) -> redbaron.RedBaron:
+    if "\n" in string:
+        return redbaron.RedBaron(f'"""{string}"""')[0]
     return redbaron.RedBaron(f'"{string}"')[0]
 
 

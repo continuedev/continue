@@ -4,12 +4,7 @@ from anthropic import AI_PROMPT, HUMAN_PROMPT, AsyncAnthropic
 
 from ...core.main import ChatMessage
 from ..llm import LLM
-from ..util.count_tokens import (
-    DEFAULT_ARGS,
-    compile_chat_messages,
-    count_tokens,
-    format_chat_messages,
-)
+from ..util.count_tokens import DEFAULT_ARGS, compile_chat_messages, count_tokens
 
 
 class AnthropicLLM(LLM):
@@ -118,9 +113,10 @@ class AnthropicLLM(LLM):
         )
 
         completion = ""
-        self.write_log(f"Prompt: \n\n{format_chat_messages(messages)}")
+        prompt = self.__messages_to_prompt(messages)
+        self.write_log(f"Prompt: \n\n{prompt}")
         async for chunk in await self._async_client.completions.create(
-            prompt=self.__messages_to_prompt(messages), **args
+            prompt=prompt, **args
         ):
             yield {"role": "assistant", "content": chunk.completion}
             completion += chunk.completion
@@ -143,11 +139,10 @@ class AnthropicLLM(LLM):
             system_message=self.system_message,
         )
 
-        self.write_log(f"Prompt: \n\n{format_chat_messages(messages)}")
+        prompt = self.__messages_to_prompt(messages)
+        self.write_log(f"Prompt: \n\n{prompt}")
         resp = (
-            await self._async_client.completions.create(
-                prompt=self.__messages_to_prompt(messages), **args
-            )
+            await self._async_client.completions.create(prompt=prompt, **args)
         ).completion
 
         self.write_log(f"Completion: \n\n{resp}")

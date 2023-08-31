@@ -182,7 +182,7 @@ class GUIProtocolServer(AbstractGUIProtocolServer):
         name = "continue_logs.txt"
         logs = "\n\n############################################\n\n".join(
             [
-                "This is a log of the exact prompt/completion pairs sent/received from the LLM during this step"
+                "This is a log of the prompt/completion pairs sent/received from the LLM during this step"
             ]
             + self.session.autopilot.continue_sdk.history.timeline[index].logs
         )
@@ -244,8 +244,13 @@ class GUIProtocolServer(AbstractGUIProtocolServer):
                     if prev_model is not None:
                         exists = False
                         for other in unused_models:
-                            if display_llm_class(prev_model) == display_llm_class(
-                                other
+                            if (
+                                prev_model.__class__.__name__
+                                == other.__class__.__name__
+                                and (
+                                    not other.name.startswith("gpt")
+                                    or prev_model.name == other.name
+                                )
                             ):
                                 exists = True
                                 break

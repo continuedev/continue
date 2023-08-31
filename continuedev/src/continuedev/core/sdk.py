@@ -228,6 +228,8 @@ class ContinueSDK(AbstractContinueSDK):
         spec.loader.exec_module(config)
         self._last_valid_config = config.config
 
+        logger.debug("Loaded Continue config file from %s", path)
+
         return config.config
 
     def get_code_context(

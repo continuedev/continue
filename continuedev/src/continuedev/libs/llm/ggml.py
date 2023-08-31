@@ -147,16 +147,6 @@ class GGML(LLM):
     ) -> Coroutine[Any, Any, str]:
         args = {**self.default_args, **kwargs}
 
-        # messages = compile_chat_messages(
-        #     args["model"],
-        #     with_history,
-        #     self.context_length,
-        #     args["max_tokens"],
-        #     prompt,
-        #     functions=None,
-        #     system_message=self.system_message,
-        # )
-
         self.write_log(f"Prompt: \n\n{prompt}")
         async with aiohttp.ClientSession(
             connector=aiohttp.TCPConnector(verify_ssl=self.verify_ssl)
