@@ -117,6 +117,28 @@ config = ContinueConfig(
 )
 ```
 
+### Llama.cpp
+
+Run the llama.cpp server binary to start the API server. If running on a remote server, be sure to set host to 0.0.0.0:
+```shell
+.\server.exe -c 4096 --host 0.0.0.0 -t 16 --mlock -m models\meta\llama\codellama-7b-instruct.Q8_0.gguf
+```
+
+After it's up and running, change `~/.continue/config.py` to look like this:
+
+```python
+from continuedev.src.continuedev.libs.llm.ggml import GGML
+
+config = ContinueConfig(
+    ...
+    models=Models(
+        default=LlamaCpp(
+            max_context_length=4096,
+            server_url="http://localhost:8080")
+    )
+)
+```
+
 ### Together
 
 The Together API is a cloud platform for running large AI models. You can sign up [here](https://api.together.xyz/signup), copy your API key on the initial welcome screen, and then hit the play button on any model from the [Together Models list](https://docs.together.ai/docs/models-inference). Change `~/.continue/config.py` to look like this:
