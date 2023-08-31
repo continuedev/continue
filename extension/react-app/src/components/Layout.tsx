@@ -101,7 +101,7 @@ const Layout = () => {
       if (event.metaKey && event.altKey && event.code === "KeyN") {
         client?.loadSession(undefined);
       }
-      if (event.metaKey && event.code === "KeyC") {
+      if ((event.metaKey || event.ctrlKey) && event.code === "KeyC") {
         const selection = window.getSelection()?.toString();
         if (selection) {
           // Copy to clipboard
