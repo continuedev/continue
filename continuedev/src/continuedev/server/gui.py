@@ -248,8 +248,11 @@ class GUIProtocolServer(AbstractGUIProtocolServer):
                                 prev_model.__class__.__name__
                                 == other.__class__.__name__
                                 and (
-                                    not other.name.startswith("gpt")
-                                    or prev_model.name == other.name
+                                    other.name is not None
+                                    and (
+                                        not other.name.startswith("gpt")
+                                        or prev_model.name == other.name
+                                    )
                                 )
                             ):
                                 exists = True
