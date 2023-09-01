@@ -1,12 +1,13 @@
 import os
 from textwrap import dedent
-from typing import Coroutine, List, Union
+from typing import Coroutine, List, Optional, Union
 
 from pydantic import BaseModel, Field
 
 from ...core.main import ContinueCustomException, Step
 from ...core.observation import Observation
 from ...core.sdk import ContinueSDK, Models
+from ...libs.llm import LLM
 from ...libs.llm.prompt_utils import MarkdownStyleEncoderDecoder
 from ...libs.util.calculate_diff import calculate_diff2
 from ...libs.util.logging import logger
@@ -240,6 +241,7 @@ class EditHighlightedCodeStep(Step):
         title="User Input",
         description="The natural language request describing how to edit the code",
     )
+    model: Optional[LLM] = None
     hide = True
     description: str = "Change the contents of the currently highlighted code or open file. You should call this function if the user asks seems to be asking for a code change."
 
@@ -293,7 +295,9 @@ class EditHighlightedCodeStep(Step):
 
         await sdk.run_step(
             DefaultModelEditCodeStep(
-                user_input=self.user_input, range_in_files=range_in_files
+                user_input=self.user_input,
+                range_in_files=range_in_files,
+                model=self.model,
             )
         )
 

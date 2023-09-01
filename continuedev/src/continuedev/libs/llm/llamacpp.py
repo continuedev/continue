@@ -7,7 +7,7 @@ import aiohttp
 from ...core.main import ChatMessage
 from ..llm import LLM
 from ..util.count_tokens import DEFAULT_ARGS, compile_chat_messages, count_tokens
-from .prompts.chat import code_llama_template_messages
+from .prompts.chat import llama2_template_messages
 
 
 class LlamaCpp(LLM):
@@ -15,7 +15,7 @@ class LlamaCpp(LLM):
     server_url: str = "http://localhost:8080"
     verify_ssl: Optional[bool] = None
 
-    template_messages: Callable[[List[ChatMessage]], str] = code_llama_template_messages
+    template_messages: Callable[[List[ChatMessage]], str] = llama2_template_messages
     llama_cpp_args: Dict[str, Any] = {"stop": ["[INST]"], "grammar": "root ::= "}
 
     use_command: Optional[str] = None
