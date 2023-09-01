@@ -272,40 +272,10 @@ class IdeProtocolClient {
         break;
       case "listDirectoryContents":
         messenger.send("listDirectoryContents", {
-          contents: (
-            await vscode.workspace.fs.readDirectory(
-              uriFromFilePath(data.directory)
-            )
-          )
-            .map(([name, type]) => name)
-            .filter((name) => {
-              const DEFAULT_IGNORE_DIRS = [
-                ".git",
-                ".vscode",
-                ".idea",
-                ".vs",
-                ".venv",
-                "env",
-                ".env",
-                "node_modules",
-                "dist",
-                "build",
-                "target",
-                "out",
-                "bin",
-                ".pytest_cache",
-                ".vscode-test",
-                ".continue",
-                "__pycache__",
-              ];
-              if (
-                !DEFAULT_IGNORE_DIRS.some((dir) =>
-                  name.split(path.sep).includes(dir)
-                )
-              ) {
-                return name;
-              }
-            }),
+          contents: await this.getDirectoryContents(
+            data.directory,
+            data.recursive || false
+          ),
         });
         break;
       case "editFile":
@@ -560,6 +530,57 @@ class IdeProtocolClient {
           editor.document.save();
         }
       });
+  }
+
+  async getDirectoryContents(
+    directory: string,
+    recursive: boolean
+  ): Promise<string[]> {
+    let nameAndType = (
+      await vscode.workspace.fs.readDirectory(uriFromFilePath(directory))
+    ).filter(([name, type]) => {
+      const DEFAULT_IGNORE_DIRS = [
+        ".git",
+        ".vscode",
+        ".idea",
+        ".vs",
+        ".venv",
+        "env",
+        ".env",
+        "node_modules",
+        "dist",
+        "build",
+        "target",
+        "out",
+        "bin",
+        ".pytest_cache",
+        ".vscode-test",
+        ".continue",
+        "__pycache__",
+      ];
+      if (
+        !DEFAULT_IGNORE_DIRS.some((dir) => name.split(path.sep).includes(dir))
+      ) {
+        return name;
+      }
+    });
+
+    let absolutePaths = nameAndType
+      .filter(([name, type]) => type === vscode.FileType.File)
+      .map(([name, type]) => path.join(directory, name));
+    if (recursive) {
+      for (const [name, type] of nameAndType) {
+        if (type === vscode.FileType.Directory) {
+          const subdirectory = path.join(directory, name);
+          const subdirectoryContents = await this.getDirectoryContents(
+            subdirectory,
+            recursive
+          );
+          absolutePaths = absolutePaths.concat(subdirectoryContents);
+        }
+      }
+    }
+    return absolutePaths;
   }
 
   async readFile(filepath: string): Promise<string> {

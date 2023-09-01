@@ -148,7 +148,9 @@ class AbstractIdeProtocolServer(ABC):
         """Called when a file is saved"""
 
     @abstractmethod
-    async def listDirectoryContents(self, directory: str) -> List[str]:
+    async def listDirectoryContents(
+        self, directory: str, recursive: bool = False
+    ) -> List[str]:
         """List directory contents"""
 
     @abstractmethod
