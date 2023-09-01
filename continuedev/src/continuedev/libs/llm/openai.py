@@ -51,6 +51,7 @@ class OpenAI(LLM):
     openai_server_info: Optional[OpenAIServerInfo] = None
     verify_ssl: Optional[bool] = None
     ca_bundle_path: Optional[str] = None
+    proxy: Optional[str] = None
 
     requires_write_log = True
 
@@ -75,6 +76,9 @@ class OpenAI(LLM):
 
         if self.verify_ssl is not None and self.verify_ssl is False:
             openai.verify_ssl_certs = False
+
+        if self.proxy is not None:
+            openai.proxy = self.proxy
 
         openai.ca_bundle_path = self.ca_bundle_path or certifi.where()
 
@@ -144,10 +148,7 @@ class OpenAI(LLM):
         args = self.default_args.copy()
         args.update(kwargs)
         args["stream"] = True
-        # TODO what to do here? why should we change to gpt-3.5-turbo-0613 if the user didn't ask for it?
-        args["model"] = (
-            self.model if self.model in CHAT_MODELS else "gpt-3.5-turbo-0613"
-        )
+
         if not args["model"].endswith("0613") and "functions" in args:
             del args["functions"]
 
