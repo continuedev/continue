@@ -86,7 +86,7 @@ jobs:
       - name: Set permissions
         shell: bash
         run: |
-          chmod -R 777 extension/server/exe
+          chmod -R 777 ~/.continue/server/exe
 
       # Setup Node.js and install dependencies
 
