@@ -494,10 +494,12 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
         )
         return resp.fileEdit
 
-    async def listDirectoryContents(self, directory: str) -> List[str]:
+    async def listDirectoryContents(
+        self, directory: str, recursive: bool = False
+    ) -> List[str]:
         """List the contents of a directory"""
         resp = await self._send_and_receive_json(
-            {"directory": directory},
+            {"directory": directory, "recursive": recursive},
             ListDirectoryContentsResponse,
             "listDirectoryContents",
         )
@@ -574,7 +576,11 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str = None):
 
         # Start meilisearch
         try:
-            await start_meilisearch()
+
+            async def on_err(e):
+                logger.debug(f"Failed to start MeiliSearch: {e}")
+
+            create_async_task(start_meilisearch(), on_err)
         except Exception as e:
             logger.debug("Failed to start MeiliSearch")
             logger.debug(e)
