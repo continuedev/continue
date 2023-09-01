@@ -59,29 +59,29 @@ jobs:
 
       # Download corresponding binary artifact for the platform
 
-      - name: Create exe directory
+      - name: Create server directory
         run: |
-          mkdir extension/server/exe
+        mkdir -p ~/.continue/server/exe
 
       - name: Download Linux build
         uses: actions/download-artifact@v2
         with:
           name: LinuxBuild
-          path: extension/server/exe
+          path: ~/.continue/server/exe
         if: matrix.os == 'ubuntu-20.04'
 
       - name: Download macOS build
         uses: actions/download-artifact@v2
         with:
           name: macOSBuild
-          path: extension/server/exe
+          path: ~/.continue/server/exe
         if: matrix.os == 'macos-latest'
 
       - name: Download Windows build
         uses: actions/download-artifact@v2
         with:
           name: WindowsBuild
-          path: extension/server/exe
+          path: ~/.continue/server/exe
         if: matrix.os == 'windows-latest'
 
       - name: Set permissions
