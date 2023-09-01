@@ -67,3 +67,27 @@ config = ContinueConfig(
 ```
 
 3. Reload the VS Code window for changes to take effect
+
+## FastChat API
+1. Setup the FastChat api (https://github.com/lm-sys/FastChat/tree/main) to use one of the Codellama models on huggingface (e.g: codellama/CodeLlama-7b-Instruct-hf).
+2. Start the OpenAI compatible api (ref: https://github.com/lm-sys/FastChat/blob/main/docs/openai_api.md).
+3. Change your Continue config file to look like this:
+
+```python
+config = ContinueConfig(
+
+    # If set to False, we will not collect any usage data
+    # See here to learn what anonymous data we collect: https://continue.dev/docs/telemetry
+    allow_anonymous_telemetry=False,
+
+    models=Models(
+        default=MaybeProxyOpenAI(
+            prompt_templates={}, model="gpt-3.5-turbo", api_key=""), 
+            unused=[OpenAI(prompt_templates={},
+                           api_key="EMPTY",
+                           model="CodeLlama-7b-Instruct-hf",
+                           openai_server_info={'api_base': 'YOUR API:8000/v1',
+                                               'engine': 'CodeLlama-7b-Instruct-hf', 'api_version': None, 'api_type': 'openai'})]),
+
+```
+4. Reload the VS Code window for changes to take effect.
