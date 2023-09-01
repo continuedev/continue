@@ -31,6 +31,12 @@ def getServerFolderPath():
     return path
 
 
+def getMeilisearchExePath():
+    binary_name = "meilisearch.exe" if os.name == "nt" else "meilisearch"
+    path = os.path.join(getServerFolderPath(), binary_name)
+    return path
+
+
 def getSessionFilePath(session_id: str):
     path = os.path.join(getSessionsFolderPath(), f"{session_id}.json")
     os.makedirs(os.path.dirname(path), exist_ok=True)

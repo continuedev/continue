@@ -2,12 +2,13 @@
 import difflib
 import traceback
 from textwrap import dedent
-from typing import Any, Coroutine, List, Union
+from typing import Any, Coroutine, List, Optional, Union
 
 from pydantic import validator
 
 from ....core.main import ChatMessage, ContinueCustomException, Step
 from ....core.observation import Observation, TextObservation, UserInputObservation
+from ....libs.llm import LLM
 from ....libs.llm.maybe_proxy_openai import MaybeProxyOpenAI
 from ....libs.util.count_tokens import DEFAULT_MAX_TOKENS
 from ....libs.util.strings import (
@@ -161,6 +162,7 @@ class ShellCommandsStep(Step):
 
 class DefaultModelEditCodeStep(Step):
     user_input: str
+    model: Optional[LLM] = None
     range_in_files: List[RangeInFile]
     name: str = "Editing Code"
     hide = False
@@ -241,7 +243,10 @@ class DefaultModelEditCodeStep(Step):
         # We don't know here all of the functions being passed in.
         # We care because if this prompt itself goes over the limit, then the entire message will have to be cut from the completion.
         # Overflow won't happen, but prune_chat_messages in count_tokens.py will cut out this whole thing, instead of us cutting out only as many lines as we need.
-        model_to_use = sdk.models.edit
+        if self.model is not None:
+            await sdk.start_model(self.model)
+
+        model_to_use = self.model or sdk.models.edit
         max_tokens = int(model_to_use.context_length / 2)
 
         TOKENS_TO_BE_CONSIDERED_LARGE_RANGE = 1200
@@ -836,6 +841,7 @@ class EditFileStep(Step):
     filepath: str
     prompt: str
     hide: bool = True
+    model: Optional[LLM] = None
 
     async def describe(self, models: Models) -> Coroutine[str, None, None]:
         return "Editing file: " + self.filepath
@@ -848,6 +854,7 @@ class EditFileStep(Step):
                     RangeInFile.from_entire_file(self.filepath, file_contents)
                 ],
                 user_input=self.prompt,
+                model=self.model,
             )
         )
 

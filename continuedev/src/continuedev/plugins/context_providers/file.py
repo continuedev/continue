@@ -123,7 +123,7 @@ class FileContextProvider(ContextProvider):
         )
 
     async def provide_context_items(self, workspace_dir: str) -> List[ContextItem]:
-        contents = await self.sdk.ide.listDirectoryContents(workspace_dir)
+        contents = await self.sdk.ide.listDirectoryContents(workspace_dir, True)
         if contents is None:
             return []
 

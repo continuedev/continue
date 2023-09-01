@@ -148,10 +148,7 @@ class OpenAI(LLM):
         args = self.default_args.copy()
         args.update(kwargs)
         args["stream"] = True
-        # TODO what to do here? why should we change to gpt-3.5-turbo-0613 if the user didn't ask for it?
-        args["model"] = (
-            self.model if self.model in CHAT_MODELS else "gpt-3.5-turbo-0613"
-        )
+
         if not args["model"].endswith("0613") and "functions" in args:
             del args["functions"]
 
