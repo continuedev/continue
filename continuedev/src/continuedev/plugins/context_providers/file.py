@@ -129,7 +129,7 @@ class FileContextProvider(ContextProvider):
 
         absolute_filepaths: List[str] = []
         for filepath in contents[:1000]:
-            absolute_filepaths.append(filepath)
+            absolute_filepaths.append(os.path.join(workspace_dir, filepath))
 
         # for root, dir_names, file_names in os.walk(workspace_dir):
         #     dir_names[:] = [

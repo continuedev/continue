@@ -74,6 +74,14 @@ function serverVersionPath(): string {
   return path.join(serverPath(), "server_version.txt");
 }
 
+function serverBinaryPath(): string {
+  return path.join(
+    serverPath(),
+    "exe",
+    `run${os.platform() === "win32" ? ".exe" : ""}`
+  );
+}
+
 export function getExtensionVersion() {
   const extension = vscode.extensions.getExtension("continue.continue");
   return extension?.packageJSON.version || "";
@@ -105,14 +113,7 @@ async function checkOrKillRunningServer(serverUrl: string): Promise<boolean> {
         // Try again, on Windows. This time with taskkill
         if (os.platform() === "win32") {
           try {
-            const exePath = path.join(
-              getExtensionUri().fsPath,
-              "server",
-              "exe",
-              "run.exe"
-            );
-
-            await runCommand(`taskkill /F /IM ${exePath}`);
+            await runCommand(`taskkill /F /IM run.exe`);
           } catch (e: any) {
             console.log(
               "Failed to kill old server second time on windows with taskkill:",
@@ -126,14 +127,9 @@ async function checkOrKillRunningServer(serverUrl: string): Promise<boolean> {
       fs.unlinkSync(serverVersionPath());
     }
     // Also delete the server binary
-    const serverBinaryPath = path.join(
-      getExtensionUri().fsPath,
-      "server",
-      "exe",
-      `run${os.platform() === "win32" ? ".exe" : ""}`
-    );
-    if (fs.existsSync(serverBinaryPath)) {
-      fs.unlinkSync(serverBinaryPath);
+    const serverBinary = serverBinaryPath();
+    if (fs.existsSync(serverBinary)) {
+      fs.unlinkSync(serverBinary);
     }
   }
 
@@ -213,12 +209,7 @@ export async function startContinuePythonServer(redownload: boolean = true) {
         : "mac/run"
       : "linux/run";
 
-  const destination = path.join(
-    getExtensionUri().fsPath,
-    "server",
-    "exe",
-    `run${os.platform() === "win32" ? ".exe" : ""}`
-  );
+  const destination = serverBinaryPath();
 
   // First, check if the server is already downloaded
   let shouldDownload = true;
