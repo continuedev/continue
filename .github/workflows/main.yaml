@@ -60,8 +60,7 @@ jobs:
       # Download corresponding binary artifact for the platform
 
       - name: Create server directory
-        run: |
-        mkdir -p ~/.continue/server/exe
+        run: mkdir -p ~/.continue/server/exe
 
       - name: Download Linux build
         uses: actions/download-artifact@v2
