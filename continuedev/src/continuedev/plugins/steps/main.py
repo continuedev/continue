@@ -245,6 +245,8 @@ class EditHighlightedCodeStep(Step):
     hide = True
     description: str = "Change the contents of the currently highlighted code or open file. You should call this function if the user asks seems to be asking for a code change."
 
+    summary_prompt: Optional[str] = None
+
     async def describe(self, models: Models) -> Coroutine[str, None, None]:
         return "Editing code"
 
@@ -293,13 +295,15 @@ class EditHighlightedCodeStep(Step):
                 self.description = "Please accept or reject the change before making another edit in this file."
                 return
 
-        await sdk.run_step(
-            DefaultModelEditCodeStep(
-                user_input=self.user_input,
-                range_in_files=range_in_files,
-                model=self.model,
-            )
-        )
+        args = {
+            "user_input": self.user_input,
+            "range_in_files": range_in_files,
+            "model": self.model,
+        }
+        if self.summary_prompt:
+            args["summary_prompt"] = self.summary_prompt
+
+        await sdk.run_step(DefaultModelEditCodeStep(**args))
 
 
 class UserInputStep(Step):
