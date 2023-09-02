@@ -74,9 +74,6 @@ def add_config_import(line: str):
 
 
 filtered_attrs = {
-    "requires_api_key",
-    "requires_unique_id",
-    "requires_write_log",
     "class_name",
     "name",
     "llm",

@@ -105,7 +105,7 @@ class FasterEditHighlightedCodeStep(Step):
         for rif in range_in_files:
             rif_dict[rif.filepath] = rif.contents
 
-        completion = await sdk.models.medium.complete(prompt)
+        completion = await sdk.models.medium._complete(prompt)
 
         # Temporarily doing this to generate description.
         self._prompt = prompt
@@ -180,7 +180,7 @@ class StarCoderEditHighlightedCodeStep(Step):
     _prompt_and_completion: str = ""
 
     async def describe(self, models: Models) -> Coroutine[str, None, None]:
-        return await models.medium.complete(
+        return await models.medium._complete(
             f"{self._prompt_and_completion}\n\nPlease give brief a description of the changes made above using markdown bullet points:"
         )
 

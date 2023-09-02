@@ -5,17 +5,14 @@ import requests
 
 from ...core.main import ChatMessage
 from ..llm import LLM
-from ..util.count_tokens import DEFAULT_ARGS, count_tokens
 
 DEFAULT_MAX_TIME = 120.0
 
 
 class HuggingFaceInferenceAPI(LLM):
-    model: str
     hf_token: str
     self_hosted_url: str = None
 
-    max_context_length: int = 2048
     verify_ssl: Optional[bool] = None
 
     _client_session: aiohttp.ClientSession = None
@@ -24,6 +21,7 @@ class HuggingFaceInferenceAPI(LLM):
         arbitrary_types_allowed = True
 
     async def start(self, **kwargs):
+        await super().start(**kwargs)
         self._client_session = aiohttp.ClientSession(
             connector=aiohttp.TCPConnector(verify_ssl=self.verify_ssl)
         )
@@ -31,22 +29,7 @@ class HuggingFaceInferenceAPI(LLM):
     async def stop(self):
         await self._client_session.close()
 
-    @property
-    def name(self):
-        return self.model
-
-    @property
-    def context_length(self):
-        return self.max_context_length
-
-    @property
-    def default_args(self):
-        return {**DEFAULT_ARGS, "model": self.name, "max_tokens": 1024}
-
-    def count_tokens(self, text: str):
-        return count_tokens(self.name, text)
-
-    async def complete(
+    async def _complete(
         self, prompt: str, with_history: List[ChatMessage] = None, **kwargs
     ):
         """Return the completion of the text with the given temperature."""
@@ -77,14 +60,14 @@ class HuggingFaceInferenceAPI(LLM):
 
         return data[0]["generated_text"]
 
-    async def stream_chat(
+    async def _stream_chat(
         self, messages: List[ChatMessage] = None, **kwargs
     ) -> Coroutine[Any, Any, Generator[Any | List | Dict, None, None]]:
-        response = await self.complete(messages[-1].content, messages[:-1])
+        response = await self._complete(messages[-1].content, messages[:-1])
         yield {"content": response, "role": "assistant"}
 
-    async def stream_complete(
+    async def _stream_complete(
         self, prompt, with_history: List[ChatMessage] = None, **kwargs
     ) -> Generator[Any | List | Dict, None, None]:
-        response = await self.complete(prompt, with_history)
+        response = await self._complete(prompt, with_history)
         yield response

@@ -71,10 +71,6 @@ class AbstractContinueSDK(ABC):
     async def delete_directory(self, path: str):
         pass
 
-    @abstractmethod
-    async def get_user_secret(self, env_var: str) -> str:
-        pass
-
     config: ContinueConfig
 
     @abstractmethod

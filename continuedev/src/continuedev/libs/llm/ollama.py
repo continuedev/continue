@@ -7,17 +7,15 @@ import aiohttp
 
 from ...core.main import ChatMessage
 from ..llm import LLM
-from ..util.count_tokens import DEFAULT_ARGS, compile_chat_messages, count_tokens
+from ..util.count_tokens import compile_chat_messages
 from .prompts.chat import llama2_template_messages
 
 
 class Ollama(LLM):
     model: str = "llama2"
     server_url: str = "http://localhost:11434"
-    max_context_length: int = 2048
 
     _client_session: aiohttp.ClientSession = None
-    requires_write_log = True
 
     prompt_templates = {
         "edit": dedent(
@@ -36,34 +34,19 @@ class Ollama(LLM):
     class Config:
         arbitrary_types_allowed = True
 
-    async def start(self, write_log, **kwargs):
+    async def start(self, **kwargs):
+        await super().start(**kwargs)
         self._client_session = aiohttp.ClientSession()
-        self.write_log = write_log
 
     async def stop(self):
         await self._client_session.close()
 
-    @property
-    def name(self):
-        return self.model
-
-    @property
-    def context_length(self) -> int:
-        return self.max_context_length
-
-    @property
-    def default_args(self):
-        return {**DEFAULT_ARGS, "model": self.name, "max_tokens": 1024}
-
-    def count_tokens(self, text: str):
-        return count_tokens(self.name, text)
-
-    async def stream_complete(
+    async def _stream_complete(
         self, prompt, with_history: List[ChatMessage] = None, **kwargs
     ) -> Generator[Union[Any, List, Dict], None, None]:
-        args = {**self.default_args, **kwargs}
+        args = self.collect_args(**kwargs)
         messages = compile_chat_messages(
-            self.name,
+            self.model,
             with_history,
             self.context_length,
             args["max_tokens"],
@@ -102,12 +85,12 @@ class Ollama(LLM):
                                 yield urllib.parse.unquote(url_decode_buffer)
                                 url_decode_buffer = ""
 
-    async def stream_chat(
+    async def _stream_chat(
         self, messages: List[ChatMessage] = None, **kwargs
     ) -> Generator[Union[Any, List, Dict], None, None]:
-        args = {**self.default_args, **kwargs}
+        args = self.collect_args(**kwargs)
         messages = compile_chat_messages(
-            self.name,
+            self.model,
             messages,
             self.context_length,
             args["max_tokens"],
@@ -143,11 +126,11 @@ class Ollama(LLM):
                                 completion += j["response"]
         self.write_log(f"Completion:\n{completion}")
 
-    async def complete(
+    async def _complete(
         self, prompt: str, with_history: List[ChatMessage] = None, **kwargs
     ) -> Coroutine[Any, Any, str]:
         completion = ""
-        args = {**self.default_args, **kwargs}
+        args = self.collect_args(**kwargs)
         async with self._client_session.post(
             f"{self.server_url}/api/generate",
             json={

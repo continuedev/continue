@@ -12,25 +12,14 @@ from typing import (
 
 import certifi
 import openai
-from pydantic import BaseModel
 
 from ...core.main import ChatMessage
 from ..llm import LLM
 from ..util.count_tokens import (
-    DEFAULT_ARGS,
     compile_chat_messages,
-    count_tokens,
     format_chat_messages,
     prune_raw_prompt_from_top,
 )
-
-
-class OpenAIServerInfo(BaseModel):
-    api_base: Optional[str] = None
-    engine: Optional[str] = None
-    api_version: Optional[str] = None
-    api_type: Literal["azure", "openai"] = "openai"
-
 
 CHAT_MODELS = {"gpt-3.5-turbo", "gpt-3.5-turbo-16k", "gpt-4", "gpt-3.5-turbo-0613"}
 MAX_TOKENS_FOR_MODEL = {
@@ -47,32 +36,43 @@ MAX_TOKENS_FOR_MODEL = {
 
 class OpenAI(LLM):
     api_key: str
-    model: str
-    openai_server_info: Optional[OpenAIServerInfo] = None
+    "OpenAI API key"
+
     verify_ssl: Optional[bool] = None
+    "Whether to verify SSL certificates for requests."
+
     ca_bundle_path: Optional[str] = None
+    "Path to CA bundle to use for requests."
+
     proxy: Optional[str] = None
+    "Proxy URL to use for requests."
 
-    requires_write_log = True
+    api_base: Optional[str] = None
+    "OpenAI API base URL."
 
-    write_log: Optional[Callable[[str], None]] = None
+    api_type: Optional[Literal["azure", "openai"]] = None
+    "OpenAI API type."
+
+    api_version: Optional[str] = None
+    "OpenAI API version. For use with Azure OpenAI Service."
+
+    engine: Optional[str] = None
+    "OpenAI engine. For use with Azure OpenAI Service."
 
     async def start(
-        self,
-        *,
-        api_key: Optional[str] = None,
-        write_log: Callable[[str], None],
-        **kwargs,
+        self, unique_id: Optional[str] = None, write_log: Callable[[str], None] = None
     ):
-        self.write_log = write_log
-        openai.api_key = self.api_key
+        await super().start(write_log=write_log, unique_id=unique_id)
 
-        if self.openai_server_info is not None:
-            openai.api_type = self.openai_server_info.api_type
-            if self.openai_server_info.api_base is not None:
-                openai.api_base = self.openai_server_info.api_base
-            if self.openai_server_info.api_version is not None:
-                openai.api_version = self.openai_server_info.api_version
+        self.context_length = MAX_TOKENS_FOR_MODEL.get(self.model, 4096)
+
+        openai.api_key = self.api_key
+        if self.api_type is not None:
+            openai.api_type = self.api_type
+        if self.api_base is not None:
+            openai.api_base = self.api_base
+        if self.api_version is not None:
+            openai.api_version = self.api_version
 
         if self.verify_ssl is not None and self.verify_ssl is False:
             openai.verify_ssl_certs = False
@@ -82,32 +82,16 @@ class OpenAI(LLM):
 
         openai.ca_bundle_path = self.ca_bundle_path or certifi.where()
 
-    async def stop(self):
-        pass
-
-    @property
-    def name(self):
-        return self.model
-
-    @property
-    def context_length(self):
-        return MAX_TOKENS_FOR_MODEL.get(self.model, 4096)
-
-    @property
-    def default_args(self):
-        args = {**DEFAULT_ARGS, "model": self.model}
-        if self.openai_server_info is not None:
-            args["engine"] = self.openai_server_info.engine
+    def collect_args(self, **kwargs):
+        args = super().collect_args()
+        if self.engine is not None:
+            args["engine"] = self.engine
         return args
 
-    def count_tokens(self, text: str):
-        return count_tokens(self.model, text)
-
-    async def stream_complete(
+    async def _stream_complete(
         self, prompt, with_history: List[ChatMessage] = None, **kwargs
     ) -> Generator[Union[Any, List, Dict], None, None]:
-        args = self.default_args.copy()
-        args.update(kwargs)
+        args = self.collect_args(**kwargs)
         args["stream"] = True
 
         if args["model"] in CHAT_MODELS:
@@ -142,11 +126,10 @@ class OpenAI(LLM):
 
             self.write_log(f"Completion:\n\n{completion}")
 
-    async def stream_chat(
+    async def _stream_chat(
         self, messages: List[ChatMessage] = None, **kwargs
     ) -> Generator[Union[Any, List, Dict], None, None]:
-        args = self.default_args.copy()
-        args.update(kwargs)
+        args = self.collect_args(**kwargs)
         args["stream"] = True
 
         if not args["model"].endswith("0613") and "functions" in args:
@@ -174,10 +157,10 @@ class OpenAI(LLM):
                 completion += chunk.choices[0].delta.content
         self.write_log(f"Completion: \n\n{completion}")
 
-    async def complete(
+    async def _complete(
         self, prompt: str, with_history: List[ChatMessage] = None, **kwargs
     ) -> Coroutine[Any, Any, str]:
-        args = {**self.default_args, **kwargs}
+        args = self.collect_args(**kwargs)
 
         if args["model"] in CHAT_MODELS:
             messages = compile_chat_messages(

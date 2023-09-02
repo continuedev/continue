@@ -1,19 +1,14 @@
 import json
 import ssl
 import traceback
-from typing import Any, Callable, Coroutine, Dict, Generator, List, Optional, Union
+from typing import Any, Coroutine, Dict, Generator, List, Union
 
 import aiohttp
 import certifi
 
 from ...core.main import ChatMessage
 from ..llm import LLM
-from ..util.count_tokens import (
-    DEFAULT_ARGS,
-    compile_chat_messages,
-    count_tokens,
-    format_chat_messages,
-)
+from ..util.count_tokens import compile_chat_messages, format_chat_messages
 from ..util.telemetry import posthog_logger
 
 ca_bundle_path = certifi.where()
@@ -31,59 +26,32 @@ MAX_TOKENS_FOR_MODEL = {
 
 
 class ProxyServer(LLM):
-    model: str
-    system_message: Optional[str]
-
-    unique_id: str = None
-    write_log: Callable[[str], None] = None
     _client_session: aiohttp.ClientSession
-
-    requires_unique_id = True
-    requires_write_log = True
 
     class Config:
         arbitrary_types_allowed = True
 
     async def start(
         self,
-        *,
-        api_key: Optional[str] = None,
-        write_log: Callable[[str], None],
-        unique_id: str,
         **kwargs,
     ):
+        await super().start(**kwargs)
         self._client_session = aiohttp.ClientSession(
             connector=aiohttp.TCPConnector(ssl_context=ssl_context)
         )
-        self.write_log = write_log
-        self.unique_id = unique_id
+        self.context_length = MAX_TOKENS_FOR_MODEL[self.model]
 
     async def stop(self):
         await self._client_session.close()
-
-    @property
-    def name(self):
-        return self.model
-
-    @property
-    def context_length(self):
-        return MAX_TOKENS_FOR_MODEL[self.model]
-
-    @property
-    def default_args(self):
-        return {**DEFAULT_ARGS, "model": self.model}
-
-    def count_tokens(self, text: str):
-        return count_tokens(self.model, text)
 
     def get_headers(self):
         # headers with unique id
         return {"unique_id": self.unique_id}
 
-    async def complete(
+    async def _complete(
         self, prompt: str, with_history: List[ChatMessage] = None, **kwargs
     ) -> Coroutine[Any, Any, str]:
-        args = {**self.default_args, **kwargs}
+        args = self.collect_args(**kwargs)
 
         messages = compile_chat_messages(
             args["model"],
@@ -107,10 +75,10 @@ class ProxyServer(LLM):
             self.write_log(f"Completion: \n\n{response_text}")
             return response_text
 
-    async def stream_chat(
+    async def _stream_chat(
         self, messages: List[ChatMessage] = None, **kwargs
     ) -> Coroutine[Any, Any, Generator[Union[Any, List, Dict], None, None]]:
-        args = {**self.default_args, **kwargs}
+        args = self.collect_args(**kwargs)
         messages = compile_chat_messages(
             args["model"],
             messages,
@@ -158,10 +126,10 @@ class ProxyServer(LLM):
 
             self.write_log(f"Completion: \n\n{completion}")
 
-    async def stream_complete(
+    async def _stream_complete(
         self, prompt, with_history: List[ChatMessage] = None, **kwargs
     ) -> Generator[Union[Any, List, Dict], None, None]:
-        args = {**self.default_args, **kwargs}
+        args = self.collect_args(**kwargs)
         messages = compile_chat_messages(
             self.model,
             with_history,

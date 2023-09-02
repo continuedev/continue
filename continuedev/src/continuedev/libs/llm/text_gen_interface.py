@@ -1,50 +1,22 @@
 import json
-from typing import Any, Callable, Coroutine, Dict, Generator, List, Optional, Union
+from typing import Any, Coroutine, Dict, Generator, List, Optional, Union
 
 import websockets
 
 from ...core.main import ChatMessage
-from ..util.count_tokens import (
-    DEFAULT_ARGS,
-    compile_chat_messages,
-    count_tokens,
-    format_chat_messages,
-)
+from ..util.count_tokens import compile_chat_messages, format_chat_messages
 from . import LLM
 
 
 class TextGenUI(LLM):
     # this is model-specific
     model: str = "text-gen-ui"
-    max_context_length: int = 2048
     server_url: str = "http://localhost:5000"
     streaming_url: str = "http://localhost:5005"
     verify_ssl: Optional[bool] = None
 
-    requires_write_log = True
-
-    write_log: Optional[Callable[[str], None]] = None
-
     class Config:
         arbitrary_types_allowed = True
-
-    async def start(self, write_log: Callable[[str], None], **kwargs):
-        self.write_log = write_log
-
-    async def stop(self):
-        pass
-
-    @property
-    def name(self):
-        return self.model
-
-    @property
-    def context_length(self):
-        return self.max_context_length
-
-    @property
-    def default_args(self):
-        return {**DEFAULT_ARGS, "model": self.name, "max_tokens": 1024}
 
     def _transform_args(self, args):
         args = {
@@ -54,17 +26,11 @@ class TextGenUI(LLM):
         args.pop("max_tokens", None)
         return args
 
-    def count_tokens(self, text: str):
-        return count_tokens(self.name, text)
-
-    async def stream_complete(
+    async def _stream_complete(
         self, prompt, with_history: List[ChatMessage] = None, **kwargs
     ) -> Generator[Union[Any, List, Dict], None, None]:
-        args = self.default_args.copy()
-        args.update(kwargs)
+        args = self.collect_args(**kwargs)
         args["stream"] = True
-
-        args = {**self.default_args, **kwargs}
 
         self.write_log(f"Prompt: \n\n{prompt}")
         completion = ""
@@ -89,12 +55,12 @@ class TextGenUI(LLM):
 
         self.write_log(f"Completion: \n\n{completion}")
 
-    async def stream_chat(
+    async def _stream_chat(
         self, messages: List[ChatMessage] = None, **kwargs
     ) -> Generator[Union[Any, List, Dict], None, None]:
-        args = {**self.default_args, **kwargs}
+        args = self.collect_args(**kwargs)
         messages = compile_chat_messages(
-            self.name,
+            self.model,
             messages,
             self.context_length,
             args["max_tokens"],
@@ -146,10 +112,10 @@ class TextGenUI(LLM):
 
         self.write_log(f"Completion: \n\n{completion}")
 
-    async def complete(
+    async def _complete(
         self, prompt: str, with_history: List[ChatMessage] = None, **kwargs
     ) -> Coroutine[Any, Any, str]:
-        generator = self.stream_chat(
+        generator = self._stream_chat(
             [ChatMessage(role="user", content=prompt, summary=prompt)], **kwargs
         )
 

@@ -275,7 +275,7 @@ class DefaultModelEditCodeStep(Step):
         )
 
         # If using 3.5 and overflows, upgrade to 3.5.16k
-        if model_to_use.name == "gpt-3.5-turbo":
+        if model_to_use.model == "gpt-3.5-turbo":
             if total_tokens > model_to_use.context_length:
                 model_to_use = MaybeProxyOpenAI(model="gpt-3.5-turbo-0613")
                 await sdk.start_model(model_to_use)
@@ -663,11 +663,14 @@ Please output the code to be inserted at the cursor in order to fulfill the user
             else:
                 messages = rendered
 
-        generator = model_to_use.stream_chat(
+        generator = model_to_use._stream_chat(
             messages, temperature=sdk.config.temperature, max_tokens=max_tokens
         )
 
-        posthog_logger.capture_event("model_use", {"model": model_to_use.name})
+        posthog_logger.capture_event(
+            "model_use",
+            {"model": model_to_use.model, "provider": model_to_use.__class__.__name__},
+        )
 
         try:
             async for chunk in generator:

@@ -1,18 +1,31 @@
-from abc import ABC, abstractproperty
-from typing import Any, Coroutine, Dict, Generator, List, Optional, Union
+from abc import ABC
+from typing import Any, Callable, Coroutine, Dict, Generator, List, Optional, Union
 
 from ...core.main import ChatMessage
 from ...models.main import ContinueBaseModel
+from ..util.count_tokens import DEFAULT_ARGS, count_tokens
 
 
 class LLM(ContinueBaseModel, ABC):
-    requires_api_key: Optional[str] = None
-    requires_unique_id: bool = False
-    requires_write_log: bool = False
     title: Optional[str] = None
     system_message: Optional[str] = None
 
+    context_length: int = 2048
+    "The maximum context length of the LLM in tokens, as counted by count_tokens."
+
+    unique_id: Optional[str] = None
+    "The unique ID of the user."
+
+    model: str
+    "The model name"
+
     prompt_templates: dict = {}
+
+    write_log: Optional[Callable[[str], None]] = None
+    "A function that takes a string and writes it to the log."
+
+    api_key: Optional[str] = None
+    "The API key for the LLM provider."
 
     class Config:
         arbitrary_types_allowed = True
@@ -21,36 +34,39 @@ class LLM(ContinueBaseModel, ABC):
     def dict(self, **kwargs):
         original_dict = super().dict(**kwargs)
         original_dict.pop("write_log", None)
-        original_dict["name"] = self.name
         original_dict["class_name"] = self.__class__.__name__
         return original_dict
 
-    @abstractproperty
-    def name(self):
-        """Return the name of the LLM."""
-        raise NotImplementedError
+    def collect_args(self, **kwargs) -> Any:
+        """Collect the arguments for the LLM."""
+        args = {**DEFAULT_ARGS.copy(), "model": self.model, "max_tokens": 1024}
+        args.update(kwargs)
+        return args
 
-    async def start(self, *, api_key: Optional[str] = None, **kwargs):
+    async def start(
+        self, write_log: Callable[[str], None] = None, unique_id: Optional[str] = None
+    ):
         """Start the connection to the LLM."""
-        raise NotImplementedError
+        self.write_log = write_log
+        self.unique_id = unique_id
 
     async def stop(self):
         """Stop the connection to the LLM."""
-        raise NotImplementedError
+        pass
 
-    async def complete(
+    async def _complete(
         self, prompt: str, with_history: List[ChatMessage] = None, **kwargs
     ) -> Coroutine[Any, Any, str]:
         """Return the completion of the text with the given temperature."""
         raise NotImplementedError
 
-    def stream_complete(
+    def _stream_complete(
         self, prompt, with_history: List[ChatMessage] = None, **kwargs
     ) -> Generator[Union[Any, List, Dict], None, None]:
         """Stream the completion through generator."""
         raise NotImplementedError
 
-    async def stream_chat(
+    async def _stream_chat(
         self, messages: List[ChatMessage] = None, **kwargs
     ) -> Generator[Union[Any, List, Dict], None, None]:
         """Stream the chat through generator."""
@@ -58,9 +74,4 @@ class LLM(ContinueBaseModel, ABC):
 
     def count_tokens(self, text: str):
         """Return the number of tokens in the given text."""
-        raise NotImplementedError
-
-    @abstractproperty
-    def context_length(self) -> int:
-        """Return the context length of the LLM in tokens, as counted by count_tokens."""
-        raise NotImplementedError
+        return count_tokens(self.model, text)

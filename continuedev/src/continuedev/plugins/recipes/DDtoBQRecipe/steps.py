@@ -92,7 +92,7 @@ class LoadDataStep(Step):
                 docs = f.read()
 
             output = "Traceback" + output.split("Traceback")[-1]
-            suggestion = await sdk.models.default.complete(
+            suggestion = await sdk.models.default._complete(
                 dedent(
                     f"""\
                 When trying to load data into BigQuery, the following error occurred:

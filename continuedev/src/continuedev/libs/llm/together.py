@@ -5,21 +5,23 @@ import aiohttp
 
 from ...core.main import ChatMessage
 from ..llm import LLM
-from ..util.count_tokens import DEFAULT_ARGS, compile_chat_messages, count_tokens
+from ..util.count_tokens import compile_chat_messages
 from .prompts.chat import llama2_template_messages
 
 
 class TogetherLLM(LLM):
     # this is model-specific
     api_key: str
+    "Together API key"
+
     model: str = "togethercomputer/RedPajama-INCITE-7B-Instruct"
-    max_context_length: int = 2048
     base_url: str = "https://api.together.xyz"
     verify_ssl: Optional[bool] = None
 
     _client_session: aiohttp.ClientSession = None
 
     async def start(self, **kwargs):
+        await super().start(**kwargs)
         self._client_session = aiohttp.ClientSession(
             connector=aiohttp.TCPConnector(verify_ssl=self.verify_ssl)
         )
@@ -27,31 +29,14 @@ class TogetherLLM(LLM):
     async def stop(self):
         await self._client_session.close()
 
-    @property
-    def name(self):
-        return self.model
-
-    @property
-    def context_length(self):
-        return self.max_context_length
-
-    @property
-    def default_args(self):
-        return {**DEFAULT_ARGS, "model": self.model, "max_tokens": 1024}
-
-    def count_tokens(self, text: str):
-        return count_tokens(self.name, text)
-
-    async def stream_complete(
+    async def _stream_complete(
         self, prompt, with_history: List[ChatMessage] = None, **kwargs
     ) -> Generator[Union[Any, List, Dict], None, None]:
-        args = self.default_args.copy()
-        args.update(kwargs)
+        args = self.collect_args(**kwargs)
         args["stream_tokens"] = True
 
-        args = {**self.default_args, **kwargs}
         messages = compile_chat_messages(
-            self.name,
+            self.model,
             with_history,
             self.context_length,
             args["max_tokens"],
@@ -72,12 +57,12 @@ class TogetherLLM(LLM):
                     except:
                         raise Exception(str(line))
 
-    async def stream_chat(
+    async def _stream_chat(
         self, messages: List[ChatMessage] = None, **kwargs
     ) -> Generator[Union[Any, List, Dict], None, None]:
-        args = {**self.default_args, **kwargs}
+        args = self.collect_args(**kwargs)
         messages = compile_chat_messages(
-            self.name,
+            self.model,
             messages,
             self.context_length,
             args["max_tokens"],
@@ -112,10 +97,10 @@ class TogetherLLM(LLM):
                                     "content": json_chunk["choices"][0]["text"],
                                 }
 
-    async def complete(
+    async def _complete(
         self, prompt: str, with_history: List[ChatMessage] = None, **kwargs
     ) -> Coroutine[Any, Any, str]:
-        args = {**self.default_args, **kwargs}
+        args = self.collect_args(**kwargs)
 
         messages = compile_chat_messages(
             args["model"],

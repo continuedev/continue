@@ -6,12 +6,12 @@ import aiohttp
 
 from ...core.main import ChatMessage
 from ..llm import LLM
-from ..util.count_tokens import DEFAULT_ARGS, compile_chat_messages, count_tokens
+from ..util.count_tokens import compile_chat_messages
 from .prompts.chat import llama2_template_messages
 
 
 class LlamaCpp(LLM):
-    max_context_length: int = 2048
+    model: str = "llamacpp"
     server_url: str = "http://localhost:8080"
     verify_ssl: Optional[bool] = None
 
@@ -19,9 +19,6 @@ class LlamaCpp(LLM):
     llama_cpp_args: Dict[str, Any] = {"stop": ["[INST]"], "grammar": "root ::= "}
 
     use_command: Optional[str] = None
-
-    requires_write_log = True
-    write_log: Optional[Callable[[str], None]] = None
 
     class Config:
         arbitrary_types_allowed = True
@@ -31,29 +28,8 @@ class LlamaCpp(LLM):
         d.pop("template_messages")
         return d
 
-    async def start(self, write_log: Callable[[str], None], **kwargs):
-        self.write_log = write_log
-
-    async def stop(self):
-        await self._client_session.close()
-
-    @property
-    def name(self):
-        return "llamacpp"
-
-    @property
-    def context_length(self):
-        return self.max_context_length
-
-    @property
-    def default_args(self):
-        return {**DEFAULT_ARGS, "model": self.name, "max_tokens": 1024}
-
-    def count_tokens(self, text: str):
-        return count_tokens(self.name, text)
-
-    def _transform_args(self, args: Dict[str, Any]) -> Dict[str, Any]:
-        args = args.copy()
+    def collect_args(self, **kwargs) -> Any:
+        args = super().collect_args(**kwargs)
         if "max_tokens" in args:
             args["n_predict"] = args["max_tokens"]
             del args["max_tokens"]
@@ -85,16 +61,14 @@ class LlamaCpp(LLM):
 
         await process.wait()
 
-    async def stream_complete(
+    async def _stream_complete(
         self, prompt, with_history: List[ChatMessage] = None, **kwargs
     ) -> Generator[Union[Any, List, Dict], None, None]:
-        args = self.default_args.copy()
-        args.update(kwargs)
+        args = self.collect_args(**kwargs)
         args["stream"] = True
 
-        args = {**self.default_args, **kwargs}
         messages = compile_chat_messages(
-            self.name,
+            self.model,
             with_history,
             self.context_length,
             args["max_tokens"],
@@ -125,12 +99,12 @@ class LlamaCpp(LLM):
 
         self.write_log(f"Completion: \n\n{completion}")
 
-    async def stream_chat(
+    async def _stream_chat(
         self, messages: List[ChatMessage] = None, **kwargs
     ) -> Generator[Union[Any, List, Dict], None, None]:
-        args = {**self.default_args, **kwargs}
+        args = self.collect_args(**kwargs)
         messages = compile_chat_messages(
-            self.name,
+            self.model,
             messages,
             self.context_length,
             args["max_tokens"],
@@ -177,10 +151,10 @@ class LlamaCpp(LLM):
 
         self.write_log(f"Completion: \n\n{completion}")
 
-    async def complete(
+    async def _complete(
         self, prompt: str, with_history: List[ChatMessage] = None, **kwargs
     ) -> Coroutine[Any, Any, str]:
-        args = {**self.default_args, **kwargs}
+        args = self.collect_args(**kwargs)
 
         self.write_log(f"Prompt: \n\n{prompt}")
 
