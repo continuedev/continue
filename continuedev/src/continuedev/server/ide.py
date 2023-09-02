@@ -185,13 +185,20 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
         return other_msgs
 
     async def _send_json(self, message_type: str, data: Any):
-        if self.websocket.application_state == WebSocketState.DISCONNECTED:
-            logger.debug(
-                f"Tried to send message, but websocket is disconnected: {message_type}"
-            )
-            return
-        logger.debug(f"Sending IDE message: {message_type}")
-        await self.websocket.send_json({"messageType": message_type, "data": data})
+        # TODO: You breakpointed here, set it to disconnected, and then saw
+        # that even after reloading, it couldn't connect the server.
+        # Is this because there is an IDE registered without a websocket?
+        # This shouldn't count as registered in that case.
+        try:
+            if self.websocket.application_state == WebSocketState.DISCONNECTED:
+                logger.debug(
+                    f"Tried to send message, but websocket is disconnected: {message_type}"
+                )
+                return
+            logger.debug(f"Sending IDE message: {message_type}")
+            await self.websocket.send_json({"messageType": message_type, "data": data})
+        except RuntimeError as e:
+            logger.warning(f"Error sending IDE message, websocket probably closed: {e}")
 
     async def _receive_json(self, message_type: str, timeout: int = 20) -> Any:
         try:

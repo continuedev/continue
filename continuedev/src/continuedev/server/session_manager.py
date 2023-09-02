@@ -159,9 +159,9 @@ class SessionManager:
 
     async def send_ws_data(self, session_id: str, message_type: str, data: Any):
         if session_id not in self.sessions:
-            raise SessionNotFound(f"Session {session_id} not found")
+            logger.warning(f"Session {session_id} not found")
+            return
         if self.sessions[session_id].ws is None:
-            # logger.debug(f"Session {session_id} has no websocket")
             return
 
         await self.sessions[session_id].ws.send_json(

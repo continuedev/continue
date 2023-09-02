@@ -69,10 +69,13 @@ async def ensure_meilisearch_installed() -> bool:
         else:
             non_existing_paths.add(path)
 
-    if len(non_existing_paths) > 0 and os.name != "nt":
+    if len(non_existing_paths) > 0:
         # Clear the meilisearch binary
         if meilisearchPath in existing_paths:
-            os.remove(meilisearchPath)
+            try:
+                os.remove(meilisearchPath)
+            except:
+                pass
             existing_paths.remove(meilisearchPath)
 
         # Clear the existing directories

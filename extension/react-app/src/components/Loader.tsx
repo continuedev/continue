@@ -6,6 +6,7 @@ import { PlayIcon } from "@heroicons/react/24/outline";
 const DEFAULT_SIZE = "28px";
 
 const FlashingDiv = styled.div`
+  margin-top: 16px;
   margin: auto;
   width: ${DEFAULT_SIZE};
   animation: flash 1.2s infinite ease-in-out;
