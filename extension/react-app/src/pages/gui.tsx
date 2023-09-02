@@ -203,6 +203,8 @@ function GUI(props: GUIProps) {
     if (mainTextInputRef.current) {
       let input = (mainTextInputRef.current as any).inputValue;
 
+      if (input.trim() === "") return;
+
       if (input.startsWith("#") && (input.length === 7 || input.length === 4)) {
         localStorage.setItem("continueButtonColor", input);
         (mainTextInputRef.current as any).setInputValue("");
@@ -241,7 +243,6 @@ function GUI(props: GUIProps) {
           return;
         }
       }
-      if (input.trim() === "") return;
 
       client.sendMainInput(input);
       dispatch(temporarilyPushToUserInputQueue(input));
