@@ -213,7 +213,7 @@ class StarCoderEditHighlightedCodeStep(Step):
                 segs = full_file_contents.split(rif.contents)
                 prompt = f"<file_prefix>{segs[0]}<file_suffix>{segs[1]}" + prompt
 
-            completion = str(await sdk.models.starcoder.complete(prompt))
+            completion = str(await sdk.models.starcoder._complete(prompt))
             eot_token = "<|endoftext|>"
             completion = completion.removesuffix(eot_token)
 
