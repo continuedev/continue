@@ -72,7 +72,8 @@ class IdeProtocolClient {
       this.handleMessage(messageType, data, messenger).catch((err) => {
         vscode.window
           .showErrorMessage(
-            "Error handling message from Continue server: " + err.message,
+            `Error handling message (${messageType}) from Continue server: ` +
+              err.message,
             "View Logs"
           )
           .then((selection) => {
@@ -613,6 +614,13 @@ class IdeProtocolClient {
     let contents: string | undefined;
     if (typeof contents === "undefined") {
       try {
+        const fileStats = await vscode.workspace.fs.stat(
+          uriFromFilePath(filepath)
+        );
+        if (fileStats.size > 1000000) {
+          return "";
+        }
+
         contents = await vscode.workspace.fs
           .readFile(uriFromFilePath(filepath))
           .then((bytes) => new TextDecoder().decode(bytes));

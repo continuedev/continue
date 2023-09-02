@@ -87,7 +87,7 @@ class LlamaCpp(LLM):
                 f"{self.server_url}/completion",
                 json={
                     "prompt": prompt,
-                    **self._transform_args(args),
+                    **args,
                 },
                 headers={"Content-Type": "application/json"},
             ) as resp:
@@ -107,7 +107,7 @@ class LlamaCpp(LLM):
             self.model,
             messages,
             self.context_length,
-            args["max_tokens"],
+            args["n_predict"] if "n_predict" in args else 1024,
             None,
             functions=args.get("functions", None),
             system_message=self.system_message,
@@ -123,7 +123,7 @@ class LlamaCpp(LLM):
             ) as client_session:
                 async with client_session.post(
                     f"{self.server_url}/completion",
-                    json={"prompt": prompt, **self._transform_args(args)},
+                    json={"prompt": prompt, **args},
                     headers=headers,
                 ) as resp:
                     async for line in resp.content:
@@ -170,7 +170,7 @@ class LlamaCpp(LLM):
             ) as client_session:
                 async with client_session.post(
                     f"{self.server_url}/completion",
-                    json={"prompt": prompt, **self._transform_args(args)},
+                    json={"prompt": prompt, **args},
                     headers={"Content-Type": "application/json"},
                 ) as resp:
                     json_resp = await resp.json()

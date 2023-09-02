@@ -52,7 +52,7 @@ class HuggingFaceTGI(LLM):
         ) as client_session:
             async with client_session.post(
                 f"{self.server_url}",
-                json={"inputs": prompt, **self._transform_args(args)},
+                json={"inputs": prompt, **args},
             ) as resp:
                 async for line in resp.content.iter_any():
                     if line:
