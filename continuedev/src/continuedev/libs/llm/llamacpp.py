@@ -71,7 +71,7 @@ class LlamaCpp(LLM):
             self.model,
             with_history,
             self.context_length,
-            args["max_tokens"],
+            args["n_predict"] if "n_predict" in args else 1024,
             prompt,
             functions=args.get("functions", None),
             system_message=self.system_message,
