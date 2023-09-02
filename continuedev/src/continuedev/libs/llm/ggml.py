@@ -126,6 +126,11 @@ class GGML(LLM):
                 },
             ) as resp:
                 text = await resp.text()
-                completion = json.loads(text)["choices"][0]["text"]
-                self.write_log(f"Completion: \n\n{completion}")
-                return completion
+                try:
+                    completion = json.loads(text)["choices"][0]["text"]
+                    self.write_log(f"Completion: \n\n{completion}")
+                    return completion
+                except Exception as e:
+                    raise Exception(
+                        f"Error calling /completion endpoint: {e}\n\nResponse text: {text}"
+                    )
