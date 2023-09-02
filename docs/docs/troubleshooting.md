@@ -50,10 +50,6 @@ If your Continue server is not setting up, try checking the console logs:
 3. Select `Console`
 4. Read the console logs
 
-## Meilisearch on Windows
-
-As of now Windows users must manually download and start Meilisearch to use the '@' context referencing feature. To do so, follow the instructions here: https://www.meilisearch.com/docs/learn/getting_started/installation. Alternatively, you can track our progress on support for Meilisearch on Windows here: https://github.com/continuedev/continue/issues/408. Once Meilisearch is up and running on http://localhost:7700, Continue should be able to automatically connect. You may just have to reload the VS Code window first.
-
 ## Still having trouble?
 
 Create a GitHub issue [here](https://github.com/continuedev/continue/issues/new?assignees=&labels=bug&projects=&template=bug-report-%F0%9F%90%9B.md&title=), leaving the details of your problem, and we'll be able to more quickly help you out.

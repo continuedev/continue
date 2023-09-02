@@ -190,23 +190,18 @@ class OpenAI(LLM):
                 system_message=self.system_message,
             )
             self.write_log(f"Prompt: \n\n{format_chat_messages(messages)}")
-            resp = (
-                (
-                    await openai.ChatCompletion.acreate(
-                        messages=messages,
-                        **args,
-                    )
-                )
-                .choices[0]
-                .message.content
+            resp = await openai.ChatCompletion.acreate(
+                messages=messages,
+                **args,
             )
-            self.write_log(f"Completion: \n\n{resp}")
+            completion = resp.choices[0].message.content
+            self.write_log(f"Completion: \n\n{completion}")
         else:
             prompt = prune_raw_prompt_from_top(
                 args["model"], self.context_length, prompt, args["max_tokens"]
             )
             self.write_log(f"Prompt:\n\n{prompt}")
-            resp = (
+            completion = (
                 (
                     await openai.Completion.acreate(
                         prompt=prompt,
@@ -216,6 +211,6 @@ class OpenAI(LLM):
                 .choices[0]
                 .text
             )
-            self.write_log(f"Completion:\n\n{resp}")
+            self.write_log(f"Completion:\n\n{completion}")
 
-        return resp
+        return completion

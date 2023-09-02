@@ -73,12 +73,11 @@ const MODEL_INFO: { title: string; class: string; args: any }[] = [
 
 const Select = styled.select`
   border: none;
-  width: fit-content;
+  width: 25vw;
   background-color: ${secondaryDark};
   color: ${vscForeground};
   border-radius: ${defaultBorderRadius};
   padding: 6px;
-  /* box-shadow: 0px 0px 1px 0px ${vscForeground}; */
   max-height: 35vh;
   overflow: scroll;
   cursor: pointer;
@@ -89,34 +88,81 @@ const Select = styled.select`
   }
 `;
 
+function modelSelectTitle(model: any): string {
+  if (model.title) return model.title;
+  if (model.model !== undefined && model.model.trim() !== "") {
+    if (model.class_name) {
+      return `${model.class_name} - ${model.model}`;
+    }
+    return model.model;
+  }
+  return model.class_name;
+}
+
 function ModelSelect(props: {}) {
   const client = useContext(GUIClientContext);
   const defaultModel = useSelector(
     (state: RootStore) => (state.serverState.config as any)?.models?.default
   );
+  const unusedModels = useSelector(
+    (state: RootStore) => (state.serverState.config as any)?.models?.unused
+  );
 
   return (
     <Select
+      value={JSON.stringify({
+        t: "default",
+        idx: -1,
+      })}
       defaultValue={0}
       onChange={(e) => {
-        const model = MODEL_INFO[parseInt(e.target.value)];
-        client?.setModelForRole("*", model.class, model.args);
+        const value = JSON.parse(e.target.value);
+        if (value.t === "unused") {
+          client?.setModelForRoleFromIndex("*", value.idx);
+        } else if (value.t === "new") {
+          const model = MODEL_INFO[value.idx];
+          client?.addModelForRole("*", model.class, model.args);
+        }
       }}
     >
-      {MODEL_INFO.map((model, idx) => {
-        return (
+      <optgroup label="My Saved Models">
+        {defaultModel && (
           <option
-            selected={
-              defaultModel?.class_name === model.class &&
-              (!defaultModel?.model?.startsWith("gpt") ||
-                defaultModel?.model === model.args.model)
-            }
-            value={idx}
+            value={JSON.stringify({
+              t: "default",
+              idx: -1,
+            })}
           >
-            {model.title}
+            {modelSelectTitle(defaultModel)}
           </option>
-        );
-      })}
+        )}
+        {unusedModels?.map((model: any, idx: number) => {
+          return (
+            <option
+              value={JSON.stringify({
+                t: "unused",
+                idx,
+              })}
+            >
+              {modelSelectTitle(model)}
+            </option>
+          );
+        })}
+      </optgroup>
+      <optgroup label="Add New Model">
+        {MODEL_INFO.map((model, idx) => {
+          return (
+            <option
+              value={JSON.stringify({
+                t: "new",
+                idx,
+              })}
+            >
+              {model.title}
+            </option>
+          );
+        })}
+      </optgroup>
     </Select>
   );
 }

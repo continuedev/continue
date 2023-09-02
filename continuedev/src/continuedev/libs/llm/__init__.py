@@ -9,7 +9,7 @@ class LLM(ContinueBaseModel, ABC):
     requires_api_key: Optional[str] = None
     requires_unique_id: bool = False
     requires_write_log: bool = False
-
+    title: Optional[str] = None
     system_message: Optional[str] = None
 
     prompt_templates: dict = {}
