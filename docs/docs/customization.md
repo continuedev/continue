@@ -6,15 +6,16 @@ Continue can be deeply customized by editing the `ContinueConfig` object in `~/.
 
 Commercial Models
 
-- [MaybeProxyOpenAI](#adding-an-openai-api-key) - Use gpt-4 or gpt-3.5-turbo free with our API key, or with your API key. gpt-4 is probably the most capable model.
+- [MaybeProxyOpenAI](#adding-an-openai-api-key) (default) - Use gpt-4 or gpt-3.5-turbo free with our API key, or with your API key. gpt-4 is probably the most capable model of all options.
 - [OpenAI](#azure-openai-service) - Use any OpenAI model with your own key. Can also change the base URL if you have a server that uses the OpenAI API format, including using the Azure OpenAI service, LocalAI, etc.
 - [AnthropicLLM](#claude-2) - Use claude-2 with your Anthropic API key. Claude 2 is also highly capable, and has a 100,000 token context window.
 
 Local Models
 
 - [Ollama](#run-llama-2-locally-with-ollama) - If you have a Mac, Ollama is the simplest way to run open-source models like Code Llama.
-- [GGML](#local-models-with-ggml) - Use llama-cpp-python to run a local server with any open-source model.
-- [LlamaCpp](#llamacpp) - Use llama.cpp directly instead of llama-cpp-python.
+- [OpenAI](#local-models-with-openai-compatible-server) - If you have access to an OpenAI-compatible server (e.g. llama-cpp-python, LocalAI, FastChat, TextGenWebUI, etc.), you can use the `OpenAI` class and just change the base URL.
+- [GGML](#local-models-with-ggml) - An alternative way to connect to OpenAI-compatible servers. Will use `aiohttp` directly instead of the `openai` Python package.
+- [LlamaCpp](#llamacpp) - Build llama.cpp from source and use its built-in API server.
 
 Open-Source Models (not local)
 
@@ -97,6 +98,32 @@ config = ContinueConfig(
     )
 )
 ```
+
+### Local models with OpenAI-compatible server
+
+If you are locally serving a model that uses an OpenAI-compatible server, you can simply change the `api_base` in the `OpenAI` class like this:
+
+```python
+from continuedev.src.continuedev.libs.llm.openai import OpenAI
+
+config = ContinueConfig(
+    ...
+    models=Models(
+        default=OpenAI(
+            api_key="EMPTY",
+            model="<MODEL_NAME>",
+            api_base="http://localhost:8000", # change to your server
+        )
+    )
+)
+```
+
+Options for serving models locally with an OpenAI-compatible server include:
+
+- [text-gen-webui](https://github.com/oobabooga/text-generation-webui/tree/main/extensions/openai#setup--installation)
+- [FastChat](https://github.com/lm-sys/FastChat/blob/main/docs/openai_api.md)
+- [LocalAI](https://localai.io/basics/getting_started/)
+- [llama-cpp-python](https://github.com/abetlen/llama-cpp-python#web-server)
 
 ### Local models with ggml
 
