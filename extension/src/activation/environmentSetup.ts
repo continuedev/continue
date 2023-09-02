@@ -236,7 +236,13 @@ export async function startContinuePythonServer(redownload: boolean = true) {
   }
 
   if (shouldDownload && redownload) {
-    await vscode.window.withProgress(
+    let timeout = setTimeout(() => {
+      vscode.window.showErrorMessage(
+        `It looks like the Continue server is taking a while to download. If this persists, you can manually download the binary or run it from source: https://continue.dev/docs/troubleshooting#run-the-server-manually.`
+      );
+    }, 20_000);
+
+    let download = vscode.window.withProgress(
       {
         location: vscode.ProgressLocation.Notification,
         title: "Installing Continue server...",
@@ -246,7 +252,13 @@ export async function startContinuePythonServer(redownload: boolean = true) {
         await downloadFromS3(bucket, fileName, destination, "us-west-1");
       }
     );
-    console.log("Downloaded server executable at ", destination);
+    try {
+      await download;
+      console.log("Downloaded server executable at ", destination);
+      clearTimeout(timeout);
+    } catch (e) {
+      console.log("Failed to download server executable", e);
+    }
   }
 
   // Get name of the corresponding executable for platform

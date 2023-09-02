@@ -38,7 +38,7 @@ class GGML(LLM):
         completion = ""
         async with aiohttp.ClientSession(
             connector=aiohttp.TCPConnector(verify_ssl=self.verify_ssl),
-            timeout=self.timeout
+            timeout=aiohttp.ClientTimeout(total=self.timeout),
         ) as client_session:
             async with client_session.post(
                 f"{self.server_url}/v1/completions", json={"messages": messages, **args}
@@ -72,7 +72,7 @@ class GGML(LLM):
         async def generator():
             async with aiohttp.ClientSession(
                 connector=aiohttp.TCPConnector(verify_ssl=self.verify_ssl),
-                timeout=self.timeout
+                timeout=aiohttp.ClientTimeout(total=self.timeout),
             ) as client_session:
                 async with client_session.post(
                     f"{self.server_url}/v1/chat/completions",
@@ -121,7 +121,7 @@ class GGML(LLM):
         self.write_log(f"Prompt: \n\n{prompt}")
         async with aiohttp.ClientSession(
             connector=aiohttp.TCPConnector(verify_ssl=self.verify_ssl),
-            timeout=self.timeout
+            timeout=aiohttp.ClientTimeout(total=self.timeout),
         ) as client_session:
             async with client_session.post(
                 f"{self.server_url}/v1/completions",
