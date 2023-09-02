@@ -120,6 +120,7 @@ config = ContinueConfig(
 ### Llama.cpp
 
 Run the llama.cpp server binary to start the API server. If running on a remote server, be sure to set host to 0.0.0.0:
+
 ```shell
 .\server.exe -c 4096 --host 0.0.0.0 -t 16 --mlock -m models\meta\llama\codellama-7b-instruct.Q8_0.gguf
 ```
@@ -189,24 +190,26 @@ If by chance the provider has the exact same API interface as OpenAI, the `GGML`
 If you'd like to use OpenAI models but are concerned about privacy, you can use the Azure OpenAI service, which is GDPR and HIPAA compliant. After applying for access [here](https://azure.microsoft.com/en-us/products/ai-services/openai-service), you will typically hear back within only a few days. Once you have access, instantiate the model like so:
 
 ```python
-from continuedev.src.continuedev.libs.llm.openai import OpenAI, OpenAIServerInfo
+from continuedev.src.continuedev.libs.llm.openai import OpenAI
 
 config = ContinueConfig(
     ...
     models=Models(
-        default=OpenAI(api_key="my-api-key", model="gpt-3.5-turbo", openai_server_info=OpenAIServerInfo(
+        default=OpenAI(
+            api_key="my-api-key",
+            model="gpt-3.5-turbo",
             api_base="https://my-azure-openai-instance.openai.azure.com/",
             engine="my-azure-openai-deployment",
             api_version="2023-03-15-preview",
             api_type="azure"
-        ))
+        )
     )
 )
 ```
 
 The easiest way to find this information is from the chat playground in the Azure OpenAI portal. Under the "Chat Session" section, click "View Code" to see each of these parameters. Finally, find one of your Azure OpenAI keys and enter it in the VS Code settings under `continue.OPENAI_API_KEY`.
 
-Note that you can also use `OpenAIServerInfo` for uses other than Azure, such as self-hosting a model.
+Note that you can also use these parameters for uses other than Azure, such as self-hosting a model.
 
 ## Customize System Message
 
