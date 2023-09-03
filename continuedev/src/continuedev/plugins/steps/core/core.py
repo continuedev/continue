@@ -107,7 +107,7 @@ class ShellCommandsStep(Step):
             return f"Error when running shell commands:\n```\n{self._err_text}\n```"
 
         cmds_str = "\n".join(self.cmds)
-        return await models.medium._complete(
+        return await models.medium.complete(
             f"{cmds_str}\n\nSummarize what was done in these shell commands, using markdown bullet points:"
         )
 
@@ -121,7 +121,7 @@ class ShellCommandsStep(Step):
                 and output is not None
                 and output_contains_error(output)
             ):
-                suggestion = await sdk.models.medium._complete(
+                suggestion = await sdk.models.medium.complete(
                     dedent(
                         f"""\
                     While running the command `{cmd}`, the following error occurred:
@@ -220,7 +220,7 @@ class DefaultModelEditCodeStep(Step):
                     self._new_contents.splitlines(),
                 )
             )
-            description = await models.medium._complete(
+            description = await models.medium.complete(
                 dedent(
                     f"""\
                 Diff summary: "{self.user_input}"
@@ -232,7 +232,7 @@ class DefaultModelEditCodeStep(Step):
                 {self.summary_prompt}"""
                 )
             )
-        name = await models.medium._complete(
+        name = await models.medium.complete(
             f"Write a very short title to describe this requested change (no quotes): '{self.user_input}'. This is the title:"
         )
         self.name = remove_quotes_and_escapes(name)
@@ -663,7 +663,7 @@ Please output the code to be inserted at the cursor in order to fulfill the user
             else:
                 messages = rendered
 
-        generator = model_to_use._stream_chat(
+        generator = model_to_use.stream_chat(
             messages, temperature=sdk.config.temperature, max_tokens=max_tokens
         )
 
@@ -874,7 +874,7 @@ class ManualEditStep(ReversibleStep):
         return "Manual edit step"
         # TODO - only handling FileEdit here, but need all other types of FileSystemEdits
         # Also requires the merge_file_edit function
-        # return llm._complete(dedent(f"""This code was replaced:
+        # return llm.complete(dedent(f"""This code was replaced:
 
         #     {self.edit_diff.backward.replacement}
 
