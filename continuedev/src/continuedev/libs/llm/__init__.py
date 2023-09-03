@@ -9,6 +9,7 @@ from ..util.count_tokens import (
     compile_chat_messages,
     count_tokens,
     format_chat_messages,
+    prune_raw_prompt_from_top,
 )
 
 
@@ -118,6 +119,16 @@ class LLM(ContinueBaseModel):
             system_message=self.system_message,
         )
 
+    def template_prompt_like_messages(self, prompt: str) -> str:
+        if self.template_messages is None:
+            return prompt
+
+        msgs = [{"role": "user", "content": prompt}]
+        if self.system_message is not None:
+            msgs.insert(0, {"role": "system", "content": self.system_message})
+
+        return self.template_messages(msgs)
+
     async def stream_complete(
         self,
         prompt: str,
@@ -143,6 +154,11 @@ class LLM(ContinueBaseModel):
             max_tokens=max_tokens,
             functions=functions,
         )
+
+        prompt = prune_raw_prompt_from_top(
+            self.model, self.context_length, prompt, options.max_tokens
+        )
+        prompt = self.template_prompt_like_messages(prompt)
 
         self.write_log(f"Prompt: \n\n{prompt}")
 
@@ -178,6 +194,11 @@ class LLM(ContinueBaseModel):
             max_tokens=max_tokens,
             functions=functions,
         )
+
+        prompt = prune_raw_prompt_from_top(
+            self.model, self.context_length, prompt, options.max_tokens
+        )
+        prompt = self.template_prompt_like_messages(prompt)
 
         self.write_log(f"Prompt: \n\n{prompt}")
 
