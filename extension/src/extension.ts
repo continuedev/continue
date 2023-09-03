@@ -7,7 +7,7 @@ import { getExtensionVersion } from "./activation/environmentSetup";
 import { getUniqueId } from "./util/vscode";
 
 let client: any = undefined;
-async function capture(args: any) {
+export async function capture(args: any) {
   console.log("Capturing posthog event: ", args);
   if (!client) {
     const { PostHog } = await import("posthog-node");

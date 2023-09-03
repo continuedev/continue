@@ -13,7 +13,7 @@ class LlamaCpp(LLM):
     server_url: str = "http://localhost:8080"
     verify_ssl: Optional[bool] = None
 
-    llama_cpp_args: Dict[str, Any] = {"stop": ["[INST]"], "grammar": "root ::= "}
+    llama_cpp_args: Dict[str, Any] = {"stop": ["[INST]"]}
 
     use_command: Optional[str] = None
 
