@@ -1,10 +1,11 @@
 import asyncio
 import json
-from typing import Any, Dict, Optional
+from typing import Any, Callable, Dict, Optional
 
 import aiohttp
 
 from ..llm import LLM
+from .prompts.chat import llama2_template_messages
 
 
 class LlamaCpp(LLM):
@@ -15,6 +16,8 @@ class LlamaCpp(LLM):
     llama_cpp_args: Dict[str, Any] = {"stop": ["[INST]"], "grammar": "root ::= "}
 
     use_command: Optional[str] = None
+
+    template_messages: Callable = llama2_template_messages
 
     class Config:
         arbitrary_types_allowed = True

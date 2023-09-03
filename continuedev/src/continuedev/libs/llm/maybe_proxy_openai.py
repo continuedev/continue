@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import Callable, List, Optional
 
 from ...core.main import ChatMessage
 from . import LLM
@@ -15,13 +15,16 @@ class MaybeProxyOpenAI(LLM):
         if self.llm is not None:
             self.llm.system_message = self.system_message
 
-    async def start(self, **kwargs):
+    async def start(
+        self, write_log: Callable[[str], None] = None, unique_id: Optional[str] = None
+    ):
+        await super().start(write_log=lambda *args, **kwargs: None, unique_id=unique_id)
         if self.api_key is None or self.api_key.strip() == "":
             self.llm = ProxyServer(model=self.model)
         else:
             self.llm = OpenAI(api_key=self.api_key, model=self.model)
 
-        await self.llm.start(**kwargs)
+        await self.llm.start(write_log=write_log, unique_id=unique_id)
 
     async def stop(self):
         await self.llm.stop()

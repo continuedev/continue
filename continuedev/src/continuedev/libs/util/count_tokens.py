@@ -16,9 +16,6 @@ DEFAULT_MAX_TOKENS = 2048
 DEFAULT_ARGS = {
     "max_tokens": DEFAULT_MAX_TOKENS,
     "temperature": 0.5,
-    "top_p": 1,
-    "frequency_penalty": 0,
-    "presence_penalty": 0,
 }
 
 

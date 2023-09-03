@@ -1,9 +1,10 @@
 import json
-from typing import Optional
+from typing import Callable, Optional
 
 import aiohttp
 
 from ..llm import LLM
+from .prompts.chat import llama2_template_messages
 
 
 class TogetherLLM(LLM):
@@ -15,6 +16,8 @@ class TogetherLLM(LLM):
     verify_ssl: Optional[bool] = None
 
     _client_session: aiohttp.ClientSession = None
+
+    template_messages: Callable = llama2_template_messages
 
     async def start(self, **kwargs):
         await super().start(**kwargs)

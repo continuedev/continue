@@ -27,7 +27,7 @@ class GGML(LLM):
             async with client_session.post(
                 f"{self.server_url}/v1/completions",
                 json={
-                    "messages": [{"role": "user", "content": prompt}],
+                    "prompt": prompt,
                     "stream": True,
                     **args,
                 },
@@ -35,7 +35,16 @@ class GGML(LLM):
                 async for line in resp.content.iter_any():
                     if line:
                         chunk = line.decode("utf-8")
-                        yield chunk
+                        if chunk.startswith(": ping - ") or chunk.startswith(
+                            "data: [DONE]"
+                        ):
+                            continue
+                        elif chunk.startswith("data: "):
+                            chunk = chunk[6:]
+
+                        j = json.loads(chunk)
+                        if "choices" in j:
+                            yield j["choices"][0]["text"]
 
     async def _stream_chat(self, messages: List[ChatMessage], options):
         args = self.collect_args(options)

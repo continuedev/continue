@@ -1,5 +1,6 @@
-from abc import ABC
 from typing import Any, Callable, Coroutine, Dict, Generator, List, Optional, Union
+
+from pydantic import validator
 
 from ...core.main import ChatMessage
 from ...models.main import ContinueBaseModel
@@ -14,35 +15,42 @@ from ..util.count_tokens import (
 class CompletionOptions(ContinueBaseModel):
     """Options for the completion."""
 
+    @validator(
+        "*",
+        pre=True,
+        always=True,
+    )
+    def ignore_none_and_set_default(cls, value, field):
+        return value if value is not None else field.default
+
     model: str = None
     "The model name"
-
-    temperature: float = 0.5
+    temperature: Optional[float] = None
     "The temperature of the completion."
 
-    top_p: float = 1.0
+    top_p: Optional[float] = None
     "The top_p of the completion."
 
-    top_k: int = 0
+    top_k: Optional[int] = None
     "The top_k of the completion."
 
-    presence_penalty: float = 0.0
+    presence_penalty: Optional[float] = None
     "The presence penalty of the completion."
 
-    frequency_penalty: float = 0.0
+    frequency_penalty: Optional[float] = None
     "The frequency penalty of the completion."
 
     stop: Optional[List[str]] = None
     "The stop tokens of the completion."
 
-    max_tokens: Optional[int] = 1024
+    max_tokens: int = 1024
     "The maximum number of tokens to generate."
 
     functions: Optional[List[Any]] = None
     "The functions/tools to make available to the model."
 
 
-class LLM(ContinueBaseModel, ABC):
+class LLM(ContinueBaseModel):
     title: Optional[str] = None
     system_message: Optional[str] = None
 
@@ -72,8 +80,9 @@ class LLM(ContinueBaseModel, ABC):
 
     def dict(self, **kwargs):
         original_dict = super().dict(**kwargs)
-        original_dict.pop("write_log", None)
-        original_dict.pop("template_messages", None)
+        original_dict.pop("write_log")
+        original_dict.pop("template_messages")
+        original_dict.pop("unique_id")
         original_dict["class_name"] = self.__class__.__name__
         return original_dict
 
@@ -91,7 +100,7 @@ class LLM(ContinueBaseModel, ABC):
     def collect_args(self, options: CompletionOptions) -> Dict[str, Any]:
         """Collect the arguments for the LLM."""
         args = {**DEFAULT_ARGS.copy(), "model": self.model, "max_tokens": 1024}
-        args.update(options.dict(exclude_unset=True))
+        args.update(options.dict(exclude_unset=True, exclude_none=True))
         return args
 
     def compile_chat_messages(
@@ -203,6 +212,9 @@ class LLM(ContinueBaseModel, ABC):
             functions=functions,
         )
 
+        messages = self.compile_chat_messages(
+            options=options, msgs=messages, functions=functions
+        )
         if self.template_messages is not None:
             prompt = self.template_messages(messages)
         else:
@@ -212,18 +224,15 @@ class LLM(ContinueBaseModel, ABC):
 
         completion = ""
 
-        messages = self.compile_chat_messages(
-            options=options, msgs=messages, functions=functions
-        )
-
         # Use the template_messages function if it exists and do a raw completion
         if self.template_messages is None:
             async for chunk in self._stream_chat(messages=messages, options=options):
                 yield chunk
-                completion += chunk["content"]
+                if "content" in chunk:
+                    completion += chunk["content"]
         else:
             async for chunk in self._stream_complete(prompt=prompt, options=options):
-                yield chunk
+                yield {"role": "assistant", "content": chunk}
                 completion += chunk
 
         self.write_log(f"Completion: \n\n{completion}")

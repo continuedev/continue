@@ -1,5 +1,6 @@
 import json
 from textwrap import dedent
+from typing import Callable
 
 import aiohttp
 
@@ -13,7 +14,7 @@ class Ollama(LLM):
 
     _client_session: aiohttp.ClientSession = None
 
-    template_messages = llama2_template_messages
+    template_messages: Callable = llama2_template_messages
 
     prompt_templates = {
         "edit": dedent(

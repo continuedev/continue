@@ -45,6 +45,9 @@ class ReplicateLLM(LLM):
     async def _stream_chat(self, messages: List[ChatMessage], options):
         for item in self._client.run(
             self.model,
-            input={"message": messages[-1].content, "prompt": messages[-1].content},
+            input={
+                "message": messages[-1]["content"],
+                "prompt": messages[-1]["content"],
+            },
         ):
             yield {"content": item, "role": "assistant"}

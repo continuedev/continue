@@ -1,4 +1,4 @@
-from typing import Any, Coroutine
+from typing import Any, Callable, Coroutine
 
 from anthropic import AI_PROMPT, HUMAN_PROMPT, AsyncAnthropic
 
@@ -14,7 +14,7 @@ class AnthropicLLM(LLM):
 
     _async_client: AsyncAnthropic = None
 
-    template_messages = anthropic_template_messages
+    template_messages: Callable = anthropic_template_messages
 
     class Config:
         arbitrary_types_allowed = True
@@ -27,6 +27,7 @@ class AnthropicLLM(LLM):
             self.context_length = 100_000
 
     def collect_args(self, options: CompletionOptions):
+        options.stop = None
         args = super().collect_args(options)
 
         if "max_tokens" in args:
