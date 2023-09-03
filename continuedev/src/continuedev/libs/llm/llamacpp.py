@@ -16,7 +16,7 @@ class LlamaCpp(LLM):
     verify_ssl: Optional[bool] = None
 
     template_messages: Callable[[List[ChatMessage]], str] = llama2_template_messages
-    llama_cpp_args: Dict[str, Any] = {"stop": ["[INST]"], "grammar": "root ::= "}
+    llama_cpp_args: Dict[str, Any] = {"stop": ["[INST]"]}
 
     use_command: Optional[str] = None
 
