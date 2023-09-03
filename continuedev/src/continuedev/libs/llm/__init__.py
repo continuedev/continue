@@ -3,7 +3,43 @@ from typing import Any, Callable, Coroutine, Dict, Generator, List, Optional, Un
 
 from ...core.main import ChatMessage
 from ...models.main import ContinueBaseModel
-from ..util.count_tokens import DEFAULT_ARGS, count_tokens
+from ..util.count_tokens import (
+    DEFAULT_ARGS,
+    compile_chat_messages,
+    count_tokens,
+    format_chat_messages,
+)
+
+
+class CompletionOptions(ContinueBaseModel):
+    """Options for the completion."""
+
+    model: str = None
+    "The model name"
+
+    temperature: float = 0.5
+    "The temperature of the completion."
+
+    top_p: float = 1.0
+    "The top_p of the completion."
+
+    top_k: int = 0
+    "The top_k of the completion."
+
+    presence_penalty: float = 0.0
+    "The presence penalty of the completion."
+
+    frequency_penalty: float = 0.0
+    "The frequency penalty of the completion."
+
+    stop: Optional[List[str]] = None
+    "The stop tokens of the completion."
+
+    max_tokens: Optional[int] = 1024
+    "The maximum number of tokens to generate."
+
+    functions: Optional[List[Any]] = None
+    "The functions/tools to make available to the model."
 
 
 class LLM(ContinueBaseModel, ABC):
@@ -21,6 +57,9 @@ class LLM(ContinueBaseModel, ABC):
 
     prompt_templates: dict = {}
 
+    template_messages: Optional[Callable[[List[Dict[str, str]]], str]] = None
+    "A function that takes a list of messages and returns a prompt."
+
     write_log: Optional[Callable[[str], None]] = None
     "A function that takes a string and writes it to the log."
 
@@ -34,14 +73,9 @@ class LLM(ContinueBaseModel, ABC):
     def dict(self, **kwargs):
         original_dict = super().dict(**kwargs)
         original_dict.pop("write_log", None)
+        original_dict.pop("template_messages", None)
         original_dict["class_name"] = self.__class__.__name__
         return original_dict
-
-    def collect_args(self, **kwargs) -> Any:
-        """Collect the arguments for the LLM."""
-        args = {**DEFAULT_ARGS.copy(), "model": self.model, "max_tokens": 1024}
-        args.update(kwargs)
-        return args
 
     async def start(
         self, write_log: Callable[[str], None] = None, unique_id: Optional[str] = None
@@ -54,23 +88,174 @@ class LLM(ContinueBaseModel, ABC):
         """Stop the connection to the LLM."""
         pass
 
-    async def _complete(
-        self, prompt: str, with_history: List[ChatMessage] = None, **kwargs
+    def collect_args(self, options: CompletionOptions) -> Dict[str, Any]:
+        """Collect the arguments for the LLM."""
+        args = {**DEFAULT_ARGS.copy(), "model": self.model, "max_tokens": 1024}
+        args.update(options.dict(exclude_unset=True))
+        return args
+
+    def compile_chat_messages(
+        self,
+        options: CompletionOptions,
+        msgs: List[ChatMessage],
+        functions: Optional[List[Any]] = None,
+    ) -> List[Dict]:
+        return compile_chat_messages(
+            model_name=options.model,
+            msgs=msgs,
+            context_length=self.context_length,
+            max_tokens=options.max_tokens,
+            functions=functions,
+            system_message=self.system_message,
+        )
+
+    async def stream_complete(
+        self,
+        prompt: str,
+        model: str = None,
+        temperature: float = None,
+        top_p: float = None,
+        top_k: int = None,
+        presence_penalty: float = None,
+        frequency_penalty: float = None,
+        stop: Optional[List[str]] = None,
+        max_tokens: Optional[int] = None,
+        functions: Optional[List[Any]] = None,
+    ) -> Generator[Union[Any, List, Dict], None, None]:
+        """Yield completion response, either streamed or not."""
+        options = CompletionOptions(
+            model=model or self.model,
+            temperature=temperature,
+            top_p=top_p,
+            top_k=top_k,
+            presence_penalty=presence_penalty,
+            frequency_penalty=frequency_penalty,
+            stop=stop,
+            max_tokens=max_tokens,
+            functions=functions,
+        )
+
+        self.write_log(f"Prompt: \n\n{prompt}")
+
+        completion = ""
+        async for chunk in self._stream_complete(prompt=prompt, options=options):
+            yield chunk
+            completion += chunk
+
+        self.write_log(f"Completion: \n\n{completion}")
+
+    async def complete(
+        self,
+        prompt: str,
+        model: str = None,
+        temperature: float = None,
+        top_p: float = None,
+        top_k: int = None,
+        presence_penalty: float = None,
+        frequency_penalty: float = None,
+        stop: Optional[List[str]] = None,
+        max_tokens: Optional[int] = None,
+        functions: Optional[List[Any]] = None,
     ) -> Coroutine[Any, Any, str]:
-        """Return the completion of the text with the given temperature."""
-        raise NotImplementedError
+        """Yield completion response, either streamed or not."""
+        options = CompletionOptions(
+            model=model or self.model,
+            temperature=temperature,
+            top_p=top_p,
+            top_k=top_k,
+            presence_penalty=presence_penalty,
+            frequency_penalty=frequency_penalty,
+            stop=stop,
+            max_tokens=max_tokens,
+            functions=functions,
+        )
+
+        self.write_log(f"Prompt: \n\n{prompt}")
+
+        completion = await self._complete(prompt=prompt, options=options)
+
+        self.write_log(f"Completion: \n\n{completion}")
+        return completion
+
+    async def stream_chat(
+        self,
+        messages: List[ChatMessage],
+        model: str = None,
+        temperature: float = None,
+        top_p: float = None,
+        top_k: int = None,
+        presence_penalty: float = None,
+        frequency_penalty: float = None,
+        stop: Optional[List[str]] = None,
+        max_tokens: Optional[int] = None,
+        functions: Optional[List[Any]] = None,
+    ) -> Generator[Union[Any, List, Dict], None, None]:
+        """Yield completion response, either streamed or not."""
+        options = CompletionOptions(
+            model=model or self.model,
+            temperature=temperature,
+            top_p=top_p,
+            top_k=top_k,
+            presence_penalty=presence_penalty,
+            frequency_penalty=frequency_penalty,
+            stop=stop,
+            max_tokens=max_tokens,
+            functions=functions,
+        )
+
+        if self.template_messages is not None:
+            prompt = self.template_messages(messages)
+        else:
+            prompt = format_chat_messages(messages)
+
+        self.write_log(f"Prompt: \n\n{prompt}")
+
+        completion = ""
+
+        messages = self.compile_chat_messages(
+            options=options, msgs=messages, functions=functions
+        )
+
+        # Use the template_messages function if it exists and do a raw completion
+        if self.template_messages is None:
+            async for chunk in self._stream_chat(messages=messages, options=options):
+                yield chunk
+                completion += chunk["content"]
+        else:
+            async for chunk in self._stream_complete(prompt=prompt, options=options):
+                yield chunk
+                completion += chunk
+
+        self.write_log(f"Completion: \n\n{completion}")
 
     def _stream_complete(
-        self, prompt, with_history: List[ChatMessage] = None, **kwargs
-    ) -> Generator[Union[Any, List, Dict], None, None]:
+        self, prompt, options: CompletionOptions
+    ) -> Generator[str, None, None]:
         """Stream the completion through generator."""
         raise NotImplementedError
 
+    async def _complete(
+        self, prompt: str, options: CompletionOptions
+    ) -> Coroutine[Any, Any, str]:
+        """Return the completion of the text with the given temperature."""
+        completion = ""
+        async for chunk in self._stream_complete(prompt=prompt, options=options):
+            completion += chunk
+        return completion
+
     async def _stream_chat(
-        self, messages: List[ChatMessage] = None, **kwargs
+        self, messages: List[ChatMessage], options: CompletionOptions
     ) -> Generator[Union[Any, List, Dict], None, None]:
         """Stream the chat through generator."""
-        raise NotImplementedError
+        if self.template_messages is None:
+            raise NotImplementedError(
+                "You must either implement template_messages or _stream_chat"
+            )
+
+        async for chunk in self._stream_complete(
+            prompt=self.template_messages(messages), options=options
+        ):
+            yield {"role": "assistant", "content": chunk}
 
     def count_tokens(self, text: str):
         """Return the number of tokens in the given text."""

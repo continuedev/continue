@@ -1,4 +1,4 @@
-from typing import Any, Coroutine, Dict, Generator, List, Optional
+from typing import List, Optional
 
 import aiohttp
 import requests
@@ -29,9 +29,7 @@ class HuggingFaceInferenceAPI(LLM):
     async def stop(self):
         await self._client_session.close()
 
-    async def _complete(
-        self, prompt: str, with_history: List[ChatMessage] = None, **kwargs
-    ):
+    async def _complete(self, prompt: str, options):
         """Return the completion of the text with the given temperature."""
         API_URL = (
             self.base_url or f"https://api-inference.huggingface.co/models/{self.model}"
@@ -60,14 +58,10 @@ class HuggingFaceInferenceAPI(LLM):
 
         return data[0]["generated_text"]
 
-    async def _stream_chat(
-        self, messages: List[ChatMessage] = None, **kwargs
-    ) -> Coroutine[Any, Any, Generator[Any | List | Dict, None, None]]:
+    async def _stream_chat(self, messages: List[ChatMessage], options):
         response = await self._complete(messages[-1].content, messages[:-1])
         yield {"content": response, "role": "assistant"}
 
-    async def _stream_complete(
-        self, prompt, with_history: List[ChatMessage] = None, **kwargs
-    ) -> Generator[Any | List | Dict, None, None]:
-        response = await self._complete(prompt, with_history)
+    async def _stream_complete(self, prompt, options):
+        response = await self._complete(prompt, options)
         yield response
