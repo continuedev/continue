@@ -180,6 +180,9 @@ class SolvePythonTracebackStep(Step):
 
 async def get_function_body(frame: TracebackFrame, sdk: ContinueSDK) -> Optional[str]:
     """Get the function body from the traceback frame."""
+    if sdk.lsp is None:
+        return None
+
     document_symbols = sdk.lsp.get_symbols(frame.filepath)
     for symbol in document_symbols:
         if symbol.name == frame.function:
