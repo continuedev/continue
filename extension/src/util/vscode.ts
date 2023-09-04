@@ -104,13 +104,23 @@ export function openEditorAndRevealRange(
   });
 }
 
+function windowsToPosix(windowsPath: string): string {
+  let posixPath = windowsPath.split("\\").join("/");
+  if (posixPath[1] === ":") {
+    posixPath = posixPath.slice(2);
+  }
+  posixPath = posixPath.replace(" ", "\\ ");
+  return posixPath;
+}
+
 export function uriFromFilePath(filepath: string): vscode.Uri {
   if (vscode.env.remoteName) {
     if (
-      vscode.env.remoteName === "wsl" ||
-      vscode.env.remoteName === "ssh-remote"
+      (vscode.env.remoteName === "wsl" ||
+        vscode.env.remoteName === "ssh-remote") &&
+      process.platform === "win32"
     ) {
-      filepath = filepath.replace(/\\/g, "/");
+      filepath = windowsToPosix(filepath);
     }
     return vscode.Uri.parse(
       `vscode-remote://${vscode.env.remoteName}${filepath}`
