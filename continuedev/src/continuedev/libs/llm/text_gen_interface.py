@@ -5,6 +5,7 @@ import websockets
 
 from ...core.main import ChatMessage
 from . import LLM
+from .prompts.edit import simplified_edit_prompt
 
 
 class TextGenUI(LLM):
@@ -12,6 +13,10 @@ class TextGenUI(LLM):
     server_url: str = "http://localhost:5000"
     streaming_url: str = "http://localhost:5005"
     verify_ssl: Optional[bool] = None
+
+    prompt_templates = {
+        "edit": simplified_edit_prompt,
+    }
 
     class Config:
         arbitrary_types_allowed = True

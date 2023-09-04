@@ -5,6 +5,7 @@ import requests
 
 from ...core.main import ChatMessage
 from ..llm import LLM
+from .prompts.edit import simplified_edit_prompt
 
 DEFAULT_MAX_TIME = 120.0
 
@@ -16,6 +17,10 @@ class HuggingFaceInferenceAPI(LLM):
     verify_ssl: Optional[bool] = None
 
     _client_session: aiohttp.ClientSession = None
+
+    prompt_templates = {
+        "edit": simplified_edit_prompt,
+    }
 
     class Config:
         arbitrary_types_allowed = True

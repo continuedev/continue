@@ -6,6 +6,7 @@ import aiohttp
 from ...core.main import ChatMessage
 from ..llm import LLM, CompletionOptions
 from .prompts.chat import code_llama_template_messages
+from .prompts.edit import simplified_edit_prompt
 
 
 class HuggingFaceTGI(LLM):
@@ -14,6 +15,10 @@ class HuggingFaceTGI(LLM):
     verify_ssl: Optional[bool] = None
 
     template_messages: Callable[[List[ChatMessage]], str] = code_llama_template_messages
+
+    prompt_templates = {
+        "edit": simplified_edit_prompt,
+    }
 
     class Config:
         arbitrary_types_allowed = True

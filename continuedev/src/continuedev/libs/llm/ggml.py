@@ -5,6 +5,8 @@ import aiohttp
 
 from ...core.main import ChatMessage
 from ..llm import LLM
+from ..util.logging import logger
+from .prompts.edit import simplified_edit_prompt
 
 
 class GGML(LLM):
@@ -13,6 +15,10 @@ class GGML(LLM):
     model: str = "ggml"
 
     timeout: int = 300
+
+    prompt_templates = {
+        "edit": simplified_edit_prompt,
+    }
 
     class Config:
         arbitrary_types_allowed = True
@@ -78,7 +84,8 @@ class GGML(LLM):
         try:
             async for chunk in generator():
                 yield chunk
-        except:
+        except Exception as e:
+            logger.warning(f"Error calling /chat/completions endpoint: {e}")
             async for chunk in generator():
                 yield chunk
 

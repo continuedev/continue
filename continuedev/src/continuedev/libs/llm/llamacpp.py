@@ -6,6 +6,7 @@ import aiohttp
 
 from ..llm import LLM
 from .prompts.chat import llama2_template_messages
+from .prompts.edit import simplified_edit_prompt
 
 
 class LlamaCpp(LLM):
@@ -18,6 +19,9 @@ class LlamaCpp(LLM):
     use_command: Optional[str] = None
 
     template_messages: Callable = llama2_template_messages
+    prompt_templates = {
+        "edit": simplified_edit_prompt,
+    }
 
     class Config:
         arbitrary_types_allowed = True

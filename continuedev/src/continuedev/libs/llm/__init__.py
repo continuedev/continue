@@ -6,6 +6,7 @@ from ...core.main import ChatMessage
 from ...models.main import ContinueBaseModel
 from ..util.count_tokens import (
     DEFAULT_ARGS,
+    DEFAULT_MAX_TOKENS,
     compile_chat_messages,
     count_tokens,
     format_chat_messages,
@@ -44,7 +45,7 @@ class CompletionOptions(ContinueBaseModel):
     stop: Optional[List[str]] = None
     "The stop tokens of the completion."
 
-    max_tokens: int = 1024
+    max_tokens: int = DEFAULT_MAX_TOKENS
     "The maximum number of tokens to generate."
 
     functions: Optional[List[Any]] = None
@@ -100,7 +101,7 @@ class LLM(ContinueBaseModel):
 
     def collect_args(self, options: CompletionOptions) -> Dict[str, Any]:
         """Collect the arguments for the LLM."""
-        args = {**DEFAULT_ARGS.copy(), "model": self.model, "max_tokens": 1024}
+        args = {**DEFAULT_ARGS.copy(), "model": self.model}
         args.update(options.dict(exclude_unset=True, exclude_none=True))
         return args
 

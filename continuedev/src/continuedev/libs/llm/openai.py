@@ -83,7 +83,8 @@ class OpenAI(LLM):
 
         if args["model"] in CHAT_MODELS:
             async for chunk in await openai.ChatCompletion.acreate(
-                messages=[{"role": "user", "content": prompt}] ** args,
+                messages=[{"role": "user", "content": prompt}],
+                **args,
             ):
                 if "content" in chunk.choices[0].delta:
                     yield chunk.choices[0].delta.content

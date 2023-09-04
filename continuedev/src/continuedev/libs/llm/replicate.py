@@ -5,6 +5,7 @@ import replicate
 
 from ...core.main import ChatMessage
 from . import LLM
+from .prompts.edit import simplified_edit_prompt
 
 
 class ReplicateLLM(LLM):
@@ -14,6 +15,10 @@ class ReplicateLLM(LLM):
     model: str = "replicate/llama-2-70b-chat:58d078176e02c219e11eb4da5a02a7830a283b14cf8f94537af893ccff5ee781"
 
     _client: replicate.Client = None
+
+    prompt_templates = {
+        "edit": simplified_edit_prompt,
+    }
 
     async def start(self, **kwargs):
         await super().start(**kwargs)

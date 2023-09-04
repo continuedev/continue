@@ -1,11 +1,11 @@
 import json
-from textwrap import dedent
 from typing import Callable
 
 import aiohttp
 
 from ..llm import LLM
 from .prompts.chat import llama2_template_messages
+from .prompts.edit import simplified_edit_prompt
 
 
 class Ollama(LLM):
@@ -17,17 +17,7 @@ class Ollama(LLM):
     template_messages: Callable = llama2_template_messages
 
     prompt_templates = {
-        "edit": dedent(
-            """\
-            [INST] Consider the following code:
-            ```
-            {{code_to_edit}}
-            ```
-            Edit the code to perfectly satisfy the following user request:
-            {{user_input}}
-            Output nothing except for the code. No code block, no English explanation, no start/end tags.
-            [/INST]"""
-        ),
+        "edit": simplified_edit_prompt,
     }
 
     class Config:
