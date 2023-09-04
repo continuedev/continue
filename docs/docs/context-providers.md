@@ -96,6 +96,18 @@ GoogleContextProvider(
 
 Note: You can get an API key for free at [serper.dev](https://serper.dev).
 
+### Terminal
+
+Type '@terminal' to reference the contents of your IDE's terminal.
+
+```python
+from continuedev.src.continuedev.plugins.context_providers.terminal import TerminalContextProvider
+```
+
+```python
+TerminalContextProvider()
+```
+
 ### Requesting Context Providers
 
 Not seeing what you want? Create an issue [here](https://github.com/continuedev/continue/issues/new?assignees=TyDunn&labels=enhancement&projects=&template=feature-request-%F0%9F%92%AA.md&title=) to request a new ContextProvider.

@@ -225,10 +225,7 @@ class ContextManager:
                 await self.load_index(sdk.ide.workspace_directory)
                 logger.debug("Loaded Meilisearch index")
             except asyncio.TimeoutError:
-                logger.warning("MeiliSearch did not start within 20 seconds")
-                logger.warning(
-                    "MeiliSearch not running, avoiding any dependent context providers"
-                )
+                logger.warning("Meilisearch is not running.")
 
         create_async_task(start_meilisearch(context_providers))
 
@@ -257,6 +254,8 @@ class ContextManager:
                 await asyncio.wait_for(add_docs(), timeout=5)
             except asyncio.TimeoutError:
                 logger.warning("Failed to add document to meilisearch in 5 seconds")
+            except Exception as e:
+                logger.warning(f"Error adding document to meilisearch: {e}")
 
     @staticmethod
     async def delete_documents(ids):

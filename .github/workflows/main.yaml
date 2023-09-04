@@ -39,6 +39,17 @@ jobs:
         run: |
           chmod 777 dist/run
 
+      - name: Test Python Server
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          TOGETHER_API_KEY: ${{ secrets.TOGETHER_API_KEY }}
+        run: |
+          cd continuedev
+          pip install -r dev_requirements.txt
+          cd src
+          python -m pytest
+
       - name: Upload Artifacts
         uses: actions/upload-artifact@v3
         with:
@@ -59,35 +70,34 @@ jobs:
 
       # Download corresponding binary artifact for the platform
 
-      - name: Create exe directory
-        run: |
-          mkdir extension/server/exe
+      - name: Create server directory
+        run: mkdir -p ~/.continue/server/exe
 
       - name: Download Linux build
         uses: actions/download-artifact@v2
         with:
           name: LinuxBuild
-          path: extension/server/exe
+          path: ~/.continue/server/exe
         if: matrix.os == 'ubuntu-20.04'
 
       - name: Download macOS build
         uses: actions/download-artifact@v2
         with:
           name: macOSBuild
-          path: extension/server/exe
+          path: ~/.continue/server/exe
         if: matrix.os == 'macos-latest'
 
       - name: Download Windows build
         uses: actions/download-artifact@v2
         with:
           name: WindowsBuild
-          path: extension/server/exe
+          path: ~/.continue/server/exe
         if: matrix.os == 'windows-latest'
 
       - name: Set permissions
         shell: bash
         run: |
-          chmod -R 777 extension/server/exe
+          chmod -R 777 ~/.continue/server/exe
 
       # Setup Node.js and install dependencies
 
@@ -196,6 +206,11 @@ jobs:
           cd extension
           npm ci
 
+      - name: Publish (Open VSX Registry)
+        run: |
+          cd extension
+          npx ovsx publish -p ${{ secrets.VSX_REGISTRY_TOKEN }} --packagePath ./build/*.vsix
+
       - name: Publish
         run: |
           cd extension
@@ -245,12 +260,23 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-west-1
 
-      - name: Upload binaries to S3
+      - name: Upload binaries to S3 (continue-server-binaries)
         uses: jakejarvis/s3-sync-action@master
         with:
           args: --acl public-read --follow-symlinks
         env:
           AWS_S3_BUCKET: continue-server-binaries
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: "us-west-1"
+          SOURCE_DIR: "exe"
+
+      - name: Upload binaries to S3 (s3.continue.dev)
+        uses: jakejarvis/s3-sync-action@master
+        with:
+          args: --acl public-read --follow-symlinks
+        env:
+          AWS_S3_BUCKET: s3.continue.dev
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_REGION: "us-west-1"

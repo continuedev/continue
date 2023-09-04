@@ -141,8 +141,12 @@ class ContinueGUIClientProtocol extends AbstractContinueGUIClientProtocol {
     this.messenger?.send("set_temperature", { temperature });
   }
 
-  setModelForRole(role: string, model_class: string, model: any): void {
-    this.messenger?.send("set_model_for_role", { role, model, model_class });
+  addModelForRole(role: string, model_class: string, model: any): void {
+    this.messenger?.send("add_model_for_role", { role, model, model_class });
+  }
+
+  setModelForRoleFromIndex(role: string, index: number): void {
+    this.messenger?.send("set_model_for_role_from_index", { role, index });
   }
 
   saveContextGroup(title: string, contextItems: ContextItem[]): void {

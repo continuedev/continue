@@ -9,17 +9,20 @@ from starlette.websockets import WebSocketDisconnect, WebSocketState
 from uvicorn.main import Server
 
 from ..core.main import ContextItem
+from ..core.models import ALL_MODEL_ROLES, MODEL_CLASSES, MODEL_MODULE_NAMES
 from ..libs.util.create_async_task import create_async_task
 from ..libs.util.edit_config import (
+    add_config_import,
     create_float_node,
     create_obj_node,
     create_string_node,
+    display_llm_class,
 )
 from ..libs.util.logging import logger
 from ..libs.util.queue import AsyncSubscriptionQueue
 from ..libs.util.telemetry import posthog_logger
 from ..plugins.steps.core.core import DisplayErrorStep
-from .gui_protocol import AbstractGUIProtocolServer
+from ..plugins.steps.setup_model import SetupModelStep
 from .session_manager import Session, session_manager
 
 router = APIRouter(prefix="/gui", tags=["gui"])
@@ -50,7 +53,7 @@ T = TypeVar("T", bound=BaseModel)
 # You should probably abstract away the websocket stuff into a separate class
 
 
-class GUIProtocolServer(AbstractGUIProtocolServer):
+class GUIProtocolServer:
     websocket: WebSocket
     session: Session
     sub_queue: AsyncSubscriptionQueue = AsyncSubscriptionQueue()
@@ -114,8 +117,10 @@ class GUIProtocolServer(AbstractGUIProtocolServer):
             self.set_system_message(data["message"])
         elif message_type == "set_temperature":
             self.set_temperature(float(data["temperature"]))
-        elif message_type == "set_model_for_role":
-            self.set_model_for_role(data["role"], data["model_class"], data["model"])
+        elif message_type == "add_model_for_role":
+            self.add_model_for_role(data["role"], data["model_class"], data["model"])
+        elif message_type == "set_model_for_role_from_index":
+            self.set_model_for_role_from_index(data["role"], data["index"])
         elif message_type == "save_context_group":
             self.save_context_group(
                 data["title"], [ContextItem(**item) for item in data["context_items"]]
@@ -178,7 +183,7 @@ class GUIProtocolServer(AbstractGUIProtocolServer):
         name = "continue_logs.txt"
         logs = "\n\n############################################\n\n".join(
             [
-                "This is a log of the exact prompt/completion pairs sent/received from the LLM during this step"
+                "This is a log of the prompt/completion pairs sent/received from the LLM during this step"
             ]
             + self.session.autopilot.continue_sdk.history.timeline[index].logs
         )
@@ -226,17 +231,84 @@ class GUIProtocolServer(AbstractGUIProtocolServer):
             self.on_error,
         )
 
-    def set_model_for_role(self, role: str, model_class: str, model: Any):
-        prev_model = self.session.autopilot.continue_sdk.models.__getattr__(role)
-        if prev_model is not None:
-            prev_model.update(model)
-        self.session.autopilot.continue_sdk.models.__setattr__(role, model)
-        create_async_task(
-            self.session.autopilot.set_config_attr(
-                ["models", role], create_obj_node(model_class, {**model})
-            ),
-            self.on_error,
-        )
+    def set_model_for_role_from_index(self, role: str, index: int):
+        async def async_stuff():
+            models = self.session.autopilot.continue_sdk.config.models
+
+            # Set models in SDK
+            temp = models.default
+            models.default = models.unused[index]
+            models.unused[index] = temp
+            await self.session.autopilot.continue_sdk.start_model(models.default)
+
+            # Set models in config.py
+            JOINER = ", "
+            models_args = {
+                "unused": f"[{JOINER.join([display_llm_class(llm) for llm in models.unused])}]",
+                ("default" if role == "*" else role): display_llm_class(models.default),
+            }
+
+            await self.session.autopilot.set_config_attr(
+                ["models"],
+                create_obj_node("Models", models_args),
+            )
+
+            for other_role in ALL_MODEL_ROLES:
+                if other_role != "default":
+                    models.__setattr__(other_role, models.default)
+
+            await self.session.autopilot.continue_sdk.update_ui()
+
+        create_async_task(async_stuff(), self.on_error)
+
+    def add_model_for_role(self, role: str, model_class: str, model: Any):
+        models = self.session.autopilot.continue_sdk.config.models
+        unused_models = models.unused
+        if role == "*":
+
+            async def async_stuff():
+                for role in ALL_MODEL_ROLES:
+                    models.__setattr__(role, None)
+
+                # Set and start the default model if didn't already exist from unused
+                models.default = MODEL_CLASSES[model_class](**model)
+                await self.session.autopilot.continue_sdk.run_step(
+                    SetupModelStep(model_class=model_class)
+                )
+
+                await self.session.autopilot.continue_sdk.start_model(models.default)
+
+                models_args = {}
+
+                for role in ALL_MODEL_ROLES:
+                    val = models.__getattribute__(role)
+                    if val is None:
+                        continue  # no pun intended
+
+                    models_args[role] = display_llm_class(val)
+
+                JOINER = ", "
+                models_args[
+                    "unused"
+                ] = f"[{JOINER.join([display_llm_class(llm) for llm in unused_models])}]"
+
+                await self.session.autopilot.set_config_attr(
+                    ["models"],
+                    create_obj_node("Models", models_args),
+                )
+
+                add_config_import(
+                    f"from continuedev.src.continuedev.libs.llm.{MODEL_MODULE_NAMES[model_class]} import {model_class}"
+                )
+
+                for role in ALL_MODEL_ROLES:
+                    if role != "default":
+                        models.__setattr__(role, models.default)
+
+            create_async_task(async_stuff(), self.on_error)
+        else:
+            # TODO
+            pass
 
     def save_context_group(self, title: str, context_items: List[ContextItem]):
         create_async_task(

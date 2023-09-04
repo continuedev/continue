@@ -1,5 +1,3 @@
-import { RangeInFile } from "../../schema/RangeInFile";
-import * as fs from "fs";
 const os = require("os");
 
 function charIsEscapedAtIndex(index: number, str: string): boolean {
@@ -50,49 +48,6 @@ export function convertSingleToDoubleQuoteJSON(json: string): string {
   }
 
   return newJson;
-}
-
-export async function readRangeInFile(
-  rangeInFile: RangeInFile
-): Promise<string> {
-  const range = rangeInFile.range;
-  return new Promise((resolve, reject) => {
-    fs.readFile(rangeInFile.filepath, (err, data) => {
-      if (err) {
-        reject(err);
-      } else {
-        let lines = data.toString().split("\n");
-        if (range.start.line === range.end.line) {
-          resolve(
-            lines[rangeInFile.range.start.line].slice(
-              rangeInFile.range.start.character,
-              rangeInFile.range.end.character
-            )
-          );
-        } else {
-          let firstLine = lines[range.start.line].slice(range.start.character);
-          let lastLine = lines[range.end.line].slice(0, range.end.character);
-          let middleLines = lines.slice(range.start.line + 1, range.end.line);
-          resolve([firstLine, ...middleLines, lastLine].join("\n"));
-        }
-      }
-    });
-  });
-}
-
-export function codeSelectionsToVirtualFileSystem(
-  codeSelections: RangeInFile[]
-): {
-  [filepath: string]: string;
-} {
-  let virtualFileSystem: { [filepath: string]: string } = {};
-  for (let cs of codeSelections) {
-    if (!cs.filepath) continue;
-    if (cs.filepath in virtualFileSystem) continue;
-    let content = fs.readFileSync(cs.filepath, "utf8");
-    virtualFileSystem[cs.filepath] = content;
-  }
-  return virtualFileSystem;
 }
 
 export function debounced(delay: number, fn: Function) {

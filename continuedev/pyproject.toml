@@ -34,7 +34,11 @@ replicate = "^0.11.0"
 redbaron = "^0.9.2"
 
 [tool.poetry.scripts]
-typegen = "src.continuedev.models.generate_json_schema:main" 
+typegen = "src.continuedev.models.generate_json_schema:main"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^7.4.1"
+pytest-asyncio = "^0.21.1"
 
 [build-system]
 requires = ["poetry-core"]

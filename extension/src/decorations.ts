@@ -1,12 +1,13 @@
 import * as vscode from "vscode";
 import * as path from "path";
+import { uriFromFilePath } from "./util/vscode";
 
 export function showAnswerInTextEditor(
   filename: string,
   range: vscode.Range,
   answer: string
 ) {
-  vscode.workspace.openTextDocument(vscode.Uri.file(filename)).then((doc) => {
+  vscode.workspace.openTextDocument(uriFromFilePath(filename)).then((doc) => {
     const editor = vscode.window.activeTextEditor;
     if (!editor) {
       return;

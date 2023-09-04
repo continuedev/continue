@@ -275,6 +275,7 @@ class SessionInfo(ContinueBaseModel):
     session_id: str
     title: str
     date_created: str
+    workspace_directory: Optional[str] = None
 
 
 class ContinueConfig(ContinueBaseModel):

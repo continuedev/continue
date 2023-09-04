@@ -41,7 +41,7 @@ abstract class AbstractContinueGUIClientProtocol {
 
   abstract setTemperature(temperature: number): void;
 
-  abstract setModelForRole(
+  abstract addModelForRole(
     role: string,
     model_class: string,
     model: string

@@ -22,8 +22,10 @@ import {
 } from "@heroicons/react/24/outline";
 import HeaderButtonWithText from "./HeaderButtonWithText";
 import { useNavigate } from "react-router-dom";
+import ModelSelect from "./ModelSelect";
 
 // #region Styled Components
+const FOOTER_HEIGHT = "1.8em";
 
 const LayoutTopDiv = styled.div`
   height: 100%;
@@ -57,6 +59,14 @@ const Footer = styled.footer`
   justify-content: right;
   padding: 8px;
   align-items: center;
+  width: calc(100% - 16px);
+  height: ${FOOTER_HEIGHT};
+`;
+
+const GridDiv = styled.div`
+  display: grid;
+  grid-template-rows: 1fr auto;
+  height: 100vh;
 `;
 
 // #endregion
@@ -91,6 +101,15 @@ const Layout = () => {
       if (event.metaKey && event.altKey && event.code === "KeyN") {
         client?.loadSession(undefined);
       }
+      if ((event.metaKey || event.ctrlKey) && event.code === "KeyC") {
+        const selection = window.getSelection()?.toString();
+        if (selection) {
+          // Copy to clipboard
+          setTimeout(() => {
+            navigator.clipboard.writeText(selection);
+          }, 100);
+        }
+      }
     };
 
     window.addEventListener("keydown", handleKeyDown);
@@ -121,7 +140,77 @@ const Layout = () => {
           }}
           message={dialogMessage}
         />
-        <Outlet />
+
+        <GridDiv>
+          <div style={{ overflow: "scroll" }}>
+            <Outlet />
+          </div>
+          <Footer>
+            {localStorage.getItem("hideFeature") === "true" || (
+              <SparklesIcon
+                className="mr-auto cursor-pointer"
+                onClick={() => {
+                  localStorage.setItem("hideFeature", "true");
+                }}
+                onMouseEnter={() => {
+                  dispatch(
+                    setBottomMessage(
+                      "🎁 New Feature: Use ⌘⇧R automatically debug errors in the terminal (you can click the sparkle icon to make it go away)"
+                    )
+                  );
+                }}
+                onMouseLeave={() => {
+                  dispatch(setBottomMessage(undefined));
+                }}
+                width="1.3em"
+                height="1.3em"
+                color="yellow"
+              />
+            )}
+
+            <ModelSelect />
+            <HeaderButtonWithText
+              onClick={() => {
+                client?.loadSession(undefined);
+              }}
+              text="New Session (⌥⌘N)"
+            >
+              <PlusIcon width="1.4em" height="1.4em" />
+            </HeaderButtonWithText>
+            <HeaderButtonWithText
+              onClick={() => {
+                navigate("/history");
+              }}
+              text="History"
+            >
+              <FolderIcon width="1.4em" height="1.4em" />
+            </HeaderButtonWithText>
+            <a
+              href="https://continue.dev/docs/how-to-use-continue"
+              className="no-underline"
+            >
+              <HeaderButtonWithText text="Docs">
+                <BookOpenIcon width="1.4em" height="1.4em" />
+              </HeaderButtonWithText>
+            </a>
+            <a
+              href="https://github.com/continuedev/continue/issues/new/choose"
+              className="no-underline"
+            >
+              <HeaderButtonWithText text="Feedback">
+                <ChatBubbleOvalLeftEllipsisIcon width="1.4em" height="1.4em" />
+              </HeaderButtonWithText>
+            </a>
+            <HeaderButtonWithText
+              onClick={() => {
+                navigate("/settings");
+              }}
+              text="Settings"
+            >
+              <Cog6ToothIcon width="1.4em" height="1.4em" />
+            </HeaderButtonWithText>
+          </Footer>
+        </GridDiv>
 
         <BottomMessageDiv
           displayOnBottom={displayBottomMessageOnBottom}
@@ -137,72 +226,6 @@ const Layout = () => {
         >
           {bottomMessage}
         </BottomMessageDiv>
-        <Footer>
-          <SparklesIcon
-            visibility={
-              localStorage.getItem("hideFeature") === "true"
-                ? "hidden"
-                : "visible"
-            }
-            className="mr-auto cursor-pointer"
-            onClick={() => {
-              localStorage.setItem("hideFeature", "true");
-            }}
-            onMouseEnter={() => {
-              dispatch(
-                setBottomMessage(
-                  "🎁 New Feature: Use ⌘⇧R automatically debug errors in the terminal"
-                )
-              );
-            }}
-            onMouseLeave={() => {
-              dispatch(setBottomMessage(undefined));
-            }}
-            width="1.3em"
-            height="1.3em"
-            color="yellow"
-          />
-          <HeaderButtonWithText
-            onClick={() => {
-              client?.loadSession(undefined);
-            }}
-            text="New Session (⌥⌘N)"
-          >
-            <PlusIcon width="1.4em" height="1.4em" />
-          </HeaderButtonWithText>
-          <HeaderButtonWithText
-            onClick={() => {
-              navigate("/history");
-            }}
-            text="History"
-          >
-            <FolderIcon width="1.4em" height="1.4em" />
-          </HeaderButtonWithText>
-          <a
-            href="https://continue.dev/docs/how-to-use-continue"
-            className="no-underline"
-          >
-            <HeaderButtonWithText text="Docs">
-              <BookOpenIcon width="1.4em" height="1.4em" />
-            </HeaderButtonWithText>
-          </a>
-          <a
-            href="https://github.com/continuedev/continue/issues/new/choose"
-            className="no-underline"
-          >
-            <HeaderButtonWithText text="Feedback">
-              <ChatBubbleOvalLeftEllipsisIcon width="1.4em" height="1.4em" />
-            </HeaderButtonWithText>
-          </a>
-          <HeaderButtonWithText
-            onClick={() => {
-              navigate("/settings");
-            }}
-            text="Settings"
-          >
-            <Cog6ToothIcon width="1.4em" height="1.4em" />
-          </HeaderButtonWithText>
-        </Footer>
       </div>
     </LayoutTopDiv>
   );

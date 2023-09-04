@@ -1,6 +1,5 @@
 import * as vscode from "vscode";
-import * as path from "path";
-import * as fs from "fs";
+import { machineIdSync } from "node-machine-id";
 
 export function translate(range: vscode.Range, lines: number): vscode.Range {
   return new vscode.Range(
@@ -19,39 +18,6 @@ export function getNonce() {
     text += possible.charAt(Math.floor(Math.random() * possible.length));
   }
   return text;
-}
-
-export function getTestFile(
-  filename: string,
-  createFile: boolean = false
-): string {
-  let basename = path.basename(filename).split(".")[0];
-  switch (path.extname(filename)) {
-    case ".py":
-      basename += "_test";
-      break;
-    case ".js":
-    case ".jsx":
-    case ".ts":
-    case ".tsx":
-      basename += ".test";
-      break;
-    default:
-      basename += "_test";
-  }
-
-  const directory = path.join(path.dirname(filename), "tests");
-  const testFilename = path.join(directory, basename + path.extname(filename));
-
-  // Optionally, create the file if it doesn't exist
-  if (createFile && !fs.existsSync(testFilename)) {
-    if (!fs.existsSync(directory)) {
-      fs.mkdirSync(directory);
-    }
-    fs.writeFileSync(testFilename, "");
-  }
-
-  return testFilename;
 }
 
 export function getExtensionUri(): vscode.Uri {
@@ -100,36 +66,6 @@ export function getRightViewColumn(): vscode.ViewColumn {
   return column;
 }
 
-export async function readFileAtRange(
-  range: vscode.Range,
-  filepath: string
-): Promise<string> {
-  return new Promise((resolve, reject) => {
-    fs.readFile(filepath, (err, data) => {
-      if (err) {
-        reject(err);
-      } else {
-        let lines = data.toString().split("\n");
-        if (range.isSingleLine) {
-          resolve(
-            lines[range.start.line].slice(
-              range.start.character,
-              range.end.character
-            )
-          );
-        } else {
-          const firstLine = lines[range.start.line].slice(
-            range.start.character
-          );
-          const lastLine = lines[range.end.line].slice(0, range.end.character);
-          const middleLines = lines.slice(range.start.line + 1, range.end.line);
-          resolve([firstLine, ...middleLines, lastLine].join("\n"));
-        }
-      }
-    });
-  });
-}
-
 let showTextDocumentInProcess = false;
 
 export function openEditorAndRevealRange(
@@ -166,4 +102,25 @@ export function openEditorAndRevealRange(
       }
     });
   });
+}
+
+export function uriFromFilePath(filepath: string): vscode.Uri {
+  if (vscode.env.remoteName) {
+    if (vscode.env.remoteName === "wsl") {
+      filepath = filepath.replace(/\\/g, "/");
+    }
+    return vscode.Uri.parse(
+      `vscode-remote://${vscode.env.remoteName}${filepath}`
+    );
+  } else {
+    return vscode.Uri.file(filepath);
+  }
+}
+
+export function getUniqueId() {
+  const id = vscode.env.machineId;
+  if (id === "someValue.machineId") {
+    return machineIdSync();
+  }
+  return vscode.env.machineId;
 }

@@ -1,15 +1,20 @@
 import threading
-from typing import Dict, List
+from typing import Any, Dict, List
 
 import redbaron
 
 from .paths import getConfigFilePath
 
 
-def load_red():
+def get_config_source():
     config_file_path = getConfigFilePath()
     with open(config_file_path, "r") as file:
         source_code = file.read()
+    return source_code
+
+
+def load_red():
+    source_code = get_config_source()
 
     red = redbaron.RedBaron(source_code)
     return red
@@ -53,12 +58,58 @@ def edit_config_property(key_path: List[str], value: redbaron.RedBaron):
             file.write(red.dumps())
 
 
+def add_config_import(line: str):
+    # check if the import already exists
+    source = get_config_source()
+    if line in source:
+        return
+
+    with edit_lock:
+        red = load_red()
+        # if it doesn't exist, add it
+        red.insert(1, line)
+
+        with open(getConfigFilePath(), "w") as file:
+            file.write(red.dumps())
+
+
+filtered_attrs = {
+    "class_name",
+    "name",
+    "llm",
+}
+
+
+def escape_string(string: str) -> str:
+    return string.replace('"', '\\"').replace("'", "\\'")
+
+
+def display_val(v: Any):
+    if isinstance(v, str):
+        return f'"{escape_string(v)}"'
+    return str(v)
+
+
+def display_llm_class(llm):
+    args = ", ".join(
+        [
+            f"{k}={display_val(v)}"
+            for k, v in llm.dict().items()
+            if k not in filtered_attrs and v is not None
+        ]
+    )
+    return f"{llm.__class__.__name__}({args})"
+
+
 def create_obj_node(class_name: str, args: Dict[str, str]) -> redbaron.RedBaron:
     args = [f"{key}={value}" for key, value in args.items()]
     return redbaron.RedBaron(f"{class_name}({', '.join(args)})")[0]
 
 
 def create_string_node(string: str) -> redbaron.RedBaron:
+    string = escape_string(string)
+    if "\n" in string:
+        return redbaron.RedBaron(f'"""{string}"""')[0]
     return redbaron.RedBaron(f'"{string}"')[0]
 
 

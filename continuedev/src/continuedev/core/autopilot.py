@@ -293,6 +293,7 @@ class Autopilot(ContinueBaseModel):
     async def edit_step_at_index(self, user_input: str, index: int):
         step_to_rerun = self.history.timeline[index].step.copy()
         step_to_rerun.user_input = user_input
+        step_to_rerun.description = user_input
 
         # Halt the agent's currently running jobs (delete them)
         while len(self.history.timeline) > index:
@@ -515,13 +516,15 @@ class Autopilot(ContinueBaseModel):
 
             async def create_title():
                 title = await self.continue_sdk.models.medium.complete(
-                    f'Give a short title to describe the current chat session. Do not put quotes around the title. The first message was: "{user_input}". The title is: '
+                    f'Give a short title to describe the current chat session. Do not put quotes around the title. The first message was: "{user_input}". Do not use more than 10 words. The title is: ',
+                    max_tokens=20,
                 )
                 title = remove_quotes_and_escapes(title)
                 self.session_info = SessionInfo(
                     title=title,
                     session_id=self.ide.session_id,
                     date_created=str(time.time()),
+                    workspace_directory=self.ide.workspace_directory,
                 )
 
             create_async_task(

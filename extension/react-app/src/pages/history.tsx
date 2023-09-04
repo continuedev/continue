@@ -7,6 +7,7 @@ import { useNavigate } from "react-router-dom";
 import { secondaryDark, vscBackground } from "../components";
 import styled from "styled-components";
 import { ArrowLeftIcon } from "@heroicons/react/24/outline";
+import CheckDiv from "../components/CheckDiv";
 
 const Tr = styled.tr`
   &:hover {
@@ -36,6 +37,11 @@ function History() {
   const [sessions, setSessions] = useState<SessionInfo[]>([]);
   const client = useContext(GUIClientContext);
   const apiUrl = useSelector((state: RootStore) => state.config.apiUrl);
+  const workspacePaths = useSelector(
+    (state: RootStore) => state.config.workspacePaths
+  );
+
+  const [filteringByWorkspace, setFilteringByWorkspace] = useState(false);
 
   useEffect(() => {
     const fetchSessions = async () => {
@@ -67,9 +73,24 @@ function History() {
         />
         <h1 className="text-2xl font-bold m-4 inline-block">History</h1>
       </div>
+      <CheckDiv
+        checked={filteringByWorkspace}
+        onClick={() => setFilteringByWorkspace((prev) => !prev)}
+        title="Filter by workspace"
+      />
       <table className="w-full">
         <tbody>
           {sessions
+            .filter((session) => {
+              if (
+                !filteringByWorkspace ||
+                typeof workspacePaths === "undefined" ||
+                typeof session.workspace_directory === "undefined"
+              ) {
+                return true;
+              }
+              return workspacePaths.includes(session.workspace_directory);
+            })
             .sort(
               (a, b) =>
                 parseDate(b.date_created).getTime() -

@@ -1,5 +1,6 @@
 # -*- mode: python ; coding: utf-8 -*-
 import certifi
+from PyInstaller.utils.hooks import copy_metadata
 
 block_cipher = None
 
@@ -12,7 +13,7 @@ a = Analysis(
         ('continuedev', 'continuedev'),
         (certifi.where(), 'ca_bundle')
         ],
-    hiddenimports=['anthropic', 'github', 'ripgrepy', 'bs4', 'redbaron', 'python-lsp-server'],
+    hiddenimports=['anthropic', 'github', 'ripgrepy', 'bs4', 'redbaron', 'python-lsp-server', 'replicate'] + copy_metadata('replicate'),
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],

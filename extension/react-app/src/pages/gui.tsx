@@ -202,6 +202,15 @@ function GUI(props: GUIProps) {
   const onMainTextInput = (event?: any) => {
     if (mainTextInputRef.current) {
       let input = (mainTextInputRef.current as any).inputValue;
+
+      if (input.trim() === "") return;
+
+      if (input.startsWith("#") && (input.length === 7 || input.length === 4)) {
+        localStorage.setItem("continueButtonColor", input);
+        (mainTextInputRef.current as any).setInputValue("");
+        return;
+      }
+
       // cmd+enter to /edit
       if (isMetaEquivalentKeyPressed(event)) {
         input = `/edit ${input}`;
@@ -234,7 +243,6 @@ function GUI(props: GUIProps) {
           return;
         }
       }
-      if (input.trim() === "") return;
 
       client.sendMainInput(input);
       dispatch(temporarilyPushToUserInputQueue(input));
@@ -247,7 +255,7 @@ function GUI(props: GUIProps) {
           "mainTextEntryCounter",
           (currentCount + 1).toString()
         );
-        if (currentCount === 25) {
+        if (currentCount === 100) {
           dispatch(
             setDialogMessage(
               <div className="text-center">

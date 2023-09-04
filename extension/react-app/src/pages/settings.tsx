@@ -94,7 +94,7 @@ function Settings() {
     const temperature = formMethods.watch("temperature");
     // const models = formMethods.watch("models");
 
-    if (systemMessage) client.setSystemMessage(systemMessage);
+    client.setSystemMessage(systemMessage || "");
     if (temperature) client.setTemperature(temperature);
 
     // if (models) {

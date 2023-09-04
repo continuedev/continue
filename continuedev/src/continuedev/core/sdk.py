@@ -1,6 +1,6 @@
 import os
 import traceback
-from typing import Coroutine, Optional, Union
+from typing import Coroutine, List, Optional, Union
 
 from ..libs.llm import LLM
 from ..libs.util.logging import logger
@@ -16,8 +16,14 @@ from ..models.filesystem_edit import (
     FileSystemEdit,
 )
 from ..models.main import Range
-from ..plugins.steps.core.core import *
-from ..plugins.steps.core.core import DefaultModelEditCodeStep
+from ..plugins.steps.core.core import (
+    DefaultModelEditCodeStep,
+    FileSystemEditStep,
+    MessageStep,
+    RangeInFileWithContents,
+    ShellCommandsStep,
+    WaitForUserConfirmationStep,
+)
 from ..server.ide_protocol import AbstractIdeProtocolServer
 from .abstract_sdk import AbstractContinueSDK
 from .config import ContinueConfig
@@ -75,7 +81,7 @@ class ContinueSDK(AbstractContinueSDK):
             msg_step = MessageStep(
                 name="Invalid Continue Config File", message=formatted_err
             )
-            msg_step.description = f"Falling back to default config settings due to the following error in `~/.continue/config.py`.\n```\n{formatted_err}\n```\n\nIt's possible this was caused by an update to the Continue config format. If you'd like to see the new recommended default `config.py`, check [here](https://github.com/continuedev/continue/blob/main/continuedev/src/continuedev/libs/constants/default_config.py)."
+            msg_step.description = f"Falling back to default config settings due to the following error in `~/.continue/config.py`.\n```\n{formatted_err}\n```\n\nIt's possible this was caused by an update to the Continue config format. If you'd like to see the new recommended default `config.py`, check [here](https://github.com/continuedev/continue/blob/main/continuedev/src/continuedev/libs/constants/default_config.py).\n\nIf the error is related to OpenAIServerInfo, see the updated way of using these parameters [here](https://continue.dev/docs/customization#azure-openai-service)."
             sdk.history.add_node(
                 HistoryNode(step=msg_step, observation=None, depth=0, active=False)
             )
@@ -105,14 +111,7 @@ class ContinueSDK(AbstractContinueSDK):
         self.history.timeline[self.history.current_index].logs.append(message)
 
     async def start_model(self, llm: LLM):
-        kwargs = {}
-        if llm.requires_api_key:
-            kwargs["api_key"] = await self.get_user_secret(llm.requires_api_key)
-        if llm.requires_unique_id:
-            kwargs["unique_id"] = self.ide.unique_id
-        if llm.requires_write_log:
-            kwargs["write_log"] = self.write_log
-        await llm.start(**kwargs)
+        await llm.start(unique_id=self.ide.unique_id, write_log=self.write_log)
 
     async def _ensure_absolute_path(self, path: str) -> str:
         if os.path.isabs(path):
@@ -222,16 +221,15 @@ class ContinueSDK(AbstractContinueSDK):
         path = await self._ensure_absolute_path(path)
         return await self.run_step(FileSystemEditStep(edit=DeleteDirectory(path=path)))
 
-    async def get_user_secret(self, env_var: str) -> str:
-        # TODO support error prompt dynamically set on env_var
-        return await self.ide.getUserSecret(env_var)
-
     _last_valid_config: ContinueConfig = None
 
     def _load_config_dot_py(self) -> ContinueConfig:
         path = getConfigFilePath()
         config = ContinueConfig.from_filepath(path)
         self._last_valid_config = config
+
+        logger.debug("Loaded Continue config file from %s", path)
+
         return config
 
     def get_code_context(

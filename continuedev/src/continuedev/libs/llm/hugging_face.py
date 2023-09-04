@@ -1,3 +1,5 @@
+# TODO: This class is far out of date
+
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
 from .llm import LLM
