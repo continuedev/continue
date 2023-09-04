@@ -1,13 +1,12 @@
 import asyncio
 import json
-from typing import Any, Callable, Coroutine, Dict, Generator, List, Optional, Union
+from typing import Any, Callable, Dict, Optional
 
 import aiohttp
 
-from ...core.main import ChatMessage
 from ..llm import LLM
-from ..util.count_tokens import compile_chat_messages
 from .prompts.chat import llama2_template_messages
+from .prompts.edit import simplified_edit_prompt
 
 
 class LlamaCpp(LLM):
@@ -15,21 +14,20 @@ class LlamaCpp(LLM):
     server_url: str = "http://localhost:8080"
     verify_ssl: Optional[bool] = None
 
-    template_messages: Callable[[List[ChatMessage]], str] = llama2_template_messages
     llama_cpp_args: Dict[str, Any] = {"stop": ["[INST]"]}
 
     use_command: Optional[str] = None
 
+    template_messages: Callable = llama2_template_messages
+    prompt_templates = {
+        "edit": simplified_edit_prompt,
+    }
+
     class Config:
         arbitrary_types_allowed = True
 
-    def dict(self, **kwargs):
-        d = super().dict(**kwargs)
-        d.pop("template_messages")
-        return d
-
-    def collect_args(self, **kwargs) -> Any:
-        args = super().collect_args(**kwargs)
+    def collect_args(self, options) -> Any:
+        args = super().collect_args(options)
         if "max_tokens" in args:
             args["n_predict"] = args["max_tokens"]
             del args["max_tokens"]
@@ -61,119 +59,30 @@ class LlamaCpp(LLM):
 
         await process.wait()
 
-    async def _stream_complete(
-        self, prompt, with_history: List[ChatMessage] = None, **kwargs
-    ) -> Generator[Union[Any, List, Dict], None, None]:
-        args = self.collect_args(**kwargs)
-        args["stream"] = True
-
-        messages = compile_chat_messages(
-            self.model,
-            with_history,
-            self.context_length,
-            args["n_predict"] if "n_predict" in args else 1024,
-            prompt,
-            functions=args.get("functions", None),
-            system_message=self.system_message,
-        )
-
-        prompt = self.convert_to_chat(messages)
-        self.write_log(f"Prompt: \n\n{prompt}")
-        completion = ""
-        async with aiohttp.ClientSession(
-            connector=aiohttp.TCPConnector(verify_ssl=self.verify_ssl)
-        ) as client_session:
-            async with client_session.post(
-                f"{self.server_url}/completion",
-                json={
-                    "prompt": prompt,
-                    **args,
-                },
-                headers={"Content-Type": "application/json"},
-            ) as resp:
-                async for line in resp.content.iter_any():
-                    if line:
-                        chunk = line.decode("utf-8")
-                        yield chunk
-                        completion += chunk
-
-        self.write_log(f"Completion: \n\n{completion}")
-
-    async def _stream_chat(
-        self, messages: List[ChatMessage] = None, **kwargs
-    ) -> Generator[Union[Any, List, Dict], None, None]:
-        args = self.collect_args(**kwargs)
-        messages = compile_chat_messages(
-            self.model,
-            messages,
-            self.context_length,
-            args["n_predict"] if "n_predict" in args else 1024,
-            None,
-            functions=args.get("functions", None),
-            system_message=self.system_message,
-        )
-        args["stream"] = True
-
-        prompt = self.template_messages(messages)
+    async def _stream_complete(self, prompt, options):
+        args = self.collect_args(options)
         headers = {"Content-Type": "application/json"}
 
         async def server_generator():
             async with aiohttp.ClientSession(
-                connector=aiohttp.TCPConnector(verify_ssl=self.verify_ssl)
+                connector=aiohttp.TCPConnector(verify_ssl=self.verify_ssl),
+                timeout=aiohttp.ClientTimeout(total=self.timeout),
             ) as client_session:
                 async with client_session.post(
                     f"{self.server_url}/completion",
-                    json={"prompt": prompt, **args},
+                    json={"prompt": prompt, "stream": True, **args},
                     headers=headers,
                 ) as resp:
                     async for line in resp.content:
                         content = line.decode("utf-8")
                         if content.strip() == "":
                             continue
-                        yield {
-                            "content": json.loads(content[6:])["content"],
-                            "role": "assistant",
-                        }
+                        yield json.loads(content[6:])["content"]
 
         async def command_generator():
             async for line in self.stream_from_main(prompt):
-                yield {"content": line, "role": "assistant"}
+                yield line
 
         generator = command_generator if self.use_command else server_generator
-
-        # Because quite often the first attempt fails, and it works thereafter
-        self.write_log(f"Prompt: \n\n{prompt}")
-        completion = ""
         async for chunk in generator():
             yield chunk
-            if "content" in chunk:
-                completion += chunk["content"]
-
-        self.write_log(f"Completion: \n\n{completion}")
-
-    async def _complete(
-        self, prompt: str, with_history: List[ChatMessage] = None, **kwargs
-    ) -> Coroutine[Any, Any, str]:
-        args = self.collect_args(**kwargs)
-
-        self.write_log(f"Prompt: \n\n{prompt}")
-
-        if self.use_command:
-            completion = ""
-            async for line in self.stream_from_main(prompt):
-                completion += line
-            self.write_log(f"Completion: \n\n{completion}")
-            return completion
-        else:
-            async with aiohttp.ClientSession(
-                connector=aiohttp.TCPConnector(verify_ssl=self.verify_ssl)
-            ) as client_session:
-                async with client_session.post(
-                    f"{self.server_url}/completion",
-                    json={"prompt": prompt, **args},
-                    headers={"Content-Type": "application/json"},
-                ) as resp:
-                    json_resp = await resp.json()
-                    completion = json_resp["content"]
-                    self.write_log(f"Completion: \n\n{completion}")
-                    return completion

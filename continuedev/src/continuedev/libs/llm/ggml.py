@@ -1,11 +1,12 @@
 import json
-from typing import Any, Coroutine, Dict, Generator, List, Optional, Union
+from typing import Any, Coroutine, List, Optional
 
 import aiohttp
 
 from ...core.main import ChatMessage
 from ..llm import LLM
-from ..util.count_tokens import compile_chat_messages, format_chat_messages
+from ..util.logging import logger
+from .prompts.edit import simplified_edit_prompt
 
 
 class GGML(LLM):
@@ -13,61 +14,44 @@ class GGML(LLM):
     verify_ssl: Optional[bool] = None
     model: str = "ggml"
 
-    timeout: int = 300
+    prompt_templates = {
+        "edit": simplified_edit_prompt,
+    }
 
     class Config:
         arbitrary_types_allowed = True
 
-    async def _stream_complete(
-        self, prompt, with_history: List[ChatMessage] = None, **kwargs
-    ) -> Generator[Union[Any, List, Dict], None, None]:
-        args = self.collect_args(**kwargs)
-        args["stream"] = True
+    async def _stream_complete(self, prompt, options):
+        args = self.collect_args(options)
 
-        messages = compile_chat_messages(
-            self.model,
-            with_history,
-            self.context_length,
-            args["max_tokens"],
-            prompt,
-            functions=args.get("functions", None),
-            system_message=self.system_message,
-        )
-
-        self.write_log(f"Prompt: \n\n{format_chat_messages(messages)}")
-        completion = ""
         async with aiohttp.ClientSession(
             connector=aiohttp.TCPConnector(verify_ssl=self.verify_ssl),
             timeout=aiohttp.ClientTimeout(total=self.timeout),
         ) as client_session:
             async with client_session.post(
-                f"{self.server_url}/v1/completions", json={"messages": messages, **args}
+                f"{self.server_url}/v1/completions",
+                json={
+                    "prompt": prompt,
+                    "stream": True,
+                    **args,
+                },
             ) as resp:
                 async for line in resp.content.iter_any():
                     if line:
-                        try:
-                            chunk = line.decode("utf-8")
-                            yield chunk
-                            completion += chunk
-                        except:
-                            raise Exception(str(line))
+                        chunk = line.decode("utf-8")
+                        if chunk.startswith(": ping - ") or chunk.startswith(
+                            "data: [DONE]"
+                        ):
+                            continue
+                        elif chunk.startswith("data: "):
+                            chunk = chunk[6:]
 
-        self.write_log(f"Completion: \n\n{completion}")
+                        j = json.loads(chunk)
+                        if "choices" in j:
+                            yield j["choices"][0]["text"]
 
-    async def _stream_chat(
-        self, messages: List[ChatMessage] = None, **kwargs
-    ) -> Generator[Union[Any, List, Dict], None, None]:
-        args = self.collect_args(**kwargs)
-        messages = compile_chat_messages(
-            self.model,
-            messages,
-            self.context_length,
-            args["max_tokens"],
-            None,
-            functions=args.get("functions", None),
-            system_message=self.system_message,
-        )
-        args["stream"] = True
+    async def _stream_chat(self, messages: List[ChatMessage], options):
+        args = self.collect_args(options)
 
         async def generator():
             async with aiohttp.ClientSession(
@@ -76,10 +60,9 @@ class GGML(LLM):
             ) as client_session:
                 async with client_session.post(
                     f"{self.server_url}/v1/chat/completions",
-                    json={"messages": messages, **args},
+                    json={"messages": messages, "stream": True, **args},
                     headers={"Content-Type": "application/json"},
                 ) as resp:
-                    # This is streaming application/json instaed of text/event-stream
                     async for line, end in resp.content.iter_chunks():
                         json_chunk = line.decode("utf-8")
                         chunks = json_chunk.split("\n")
@@ -91,34 +74,22 @@ class GGML(LLM):
                             ):
                                 continue
                             try:
-                                yield json.loads(chunk[6:])["choices"][0][
-                                    "delta"
-                                ]  # {"role": "assistant", "content": "..."}
+                                yield json.loads(chunk[6:])["choices"][0]["delta"]
                             except:
                                 pass
 
         # Because quite often the first attempt fails, and it works thereafter
-        self.write_log(f"Prompt: \n\n{format_chat_messages(messages)}")
-        completion = ""
         try:
             async for chunk in generator():
                 yield chunk
-                if "content" in chunk:
-                    completion += chunk["content"]
-        except:
+        except Exception as e:
+            logger.warning(f"Error calling /chat/completions endpoint: {e}")
             async for chunk in generator():
                 yield chunk
-                if "content" in chunk:
-                    completion += chunk["content"]
 
-        self.write_log(f"Completion: \n\n{completion}")
+    async def _complete(self, prompt: str, options) -> Coroutine[Any, Any, str]:
+        args = self.collect_args(options)
 
-    async def _complete(
-        self, prompt: str, with_history: List[ChatMessage] = None, **kwargs
-    ) -> Coroutine[Any, Any, str]:
-        args = self.collect_args(**kwargs)
-
-        self.write_log(f"Prompt: \n\n{prompt}")
         async with aiohttp.ClientSession(
             connector=aiohttp.TCPConnector(verify_ssl=self.verify_ssl),
             timeout=aiohttp.ClientTimeout(total=self.timeout),
@@ -133,7 +104,6 @@ class GGML(LLM):
                 text = await resp.text()
                 try:
                     completion = json.loads(text)["choices"][0]["text"]
-                    self.write_log(f"Completion: \n\n{completion}")
                     return completion
                 except Exception as e:
                     raise Exception(

@@ -80,9 +80,13 @@ filtered_attrs = {
 }
 
 
+def escape_string(string: str) -> str:
+    return string.replace('"', '\\"').replace("'", "\\'")
+
+
 def display_val(v: Any):
     if isinstance(v, str):
-        return f'"{v}"'
+        return f'"{escape_string(v)}"'
     return str(v)
 
 
@@ -103,6 +107,7 @@ def create_obj_node(class_name: str, args: Dict[str, str]) -> redbaron.RedBaron:
 
 
 def create_string_node(string: str) -> redbaron.RedBaron:
+    string = escape_string(string)
     if "\n" in string:
         return redbaron.RedBaron(f'"""{string}"""')[0]
     return redbaron.RedBaron(f'"{string}"')[0]

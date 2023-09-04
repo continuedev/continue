@@ -83,7 +83,7 @@ class SimpleChatStep(Step):
 
         messages = self.messages or await sdk.get_chat_context()
 
-        generator = sdk.models.chat._stream_chat(
+        generator = sdk.models.chat.stream_chat(
             messages, temperature=sdk.config.temperature
         )
 
@@ -118,7 +118,7 @@ class SimpleChatStep(Step):
         await sdk.update_ui()
         self.name = add_ellipsis(
             remove_quotes_and_escapes(
-                await sdk.models.medium._complete(
+                await sdk.models.medium.complete(
                     f'"{self.description}"\n\nPlease write a short title summarizing the message quoted above. Use no more than 10 words:',
                     max_tokens=20,
                 )
@@ -260,7 +260,7 @@ class ChatWithFunctions(Step):
             gpt350613 = OpenAI(model="gpt-3.5-turbo-0613")
             await sdk.start_model(gpt350613)
 
-            async for msg_chunk in gpt350613._stream_chat(
+            async for msg_chunk in gpt350613.stream_chat(
                 await sdk.get_chat_context(), functions=functions
             ):
                 if sdk.current_step_was_deleted():

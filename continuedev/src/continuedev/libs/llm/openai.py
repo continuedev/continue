@@ -1,25 +1,10 @@
-from typing import (
-    Any,
-    Callable,
-    Coroutine,
-    Dict,
-    Generator,
-    List,
-    Literal,
-    Optional,
-    Union,
-)
+from typing import Callable, List, Literal, Optional
 
 import certifi
 import openai
 
 from ...core.main import ChatMessage
 from ..llm import LLM
-from ..util.count_tokens import (
-    compile_chat_messages,
-    format_chat_messages,
-    prune_raw_prompt_from_top,
-)
 
 CHAT_MODELS = {"gpt-3.5-turbo", "gpt-3.5-turbo-16k", "gpt-4", "gpt-3.5-turbo-0613"}
 MAX_TOKENS_FOR_MODEL = {
@@ -82,118 +67,53 @@ class OpenAI(LLM):
 
         openai.ca_bundle_path = self.ca_bundle_path or certifi.where()
 
-    def collect_args(self, **kwargs):
-        args = super().collect_args()
+    def collect_args(self, options):
+        args = super().collect_args(options)
         if self.engine is not None:
             args["engine"] = self.engine
-        return args
-
-    async def _stream_complete(
-        self, prompt, with_history: List[ChatMessage] = None, **kwargs
-    ) -> Generator[Union[Any, List, Dict], None, None]:
-        args = self.collect_args(**kwargs)
-        args["stream"] = True
-
-        if args["model"] in CHAT_MODELS:
-            messages = compile_chat_messages(
-                args["model"],
-                with_history,
-                self.context_length,
-                args["max_tokens"],
-                prompt,
-                functions=None,
-                system_message=self.system_message,
-            )
-            self.write_log(f"Prompt: \n\n{format_chat_messages(messages)}")
-            completion = ""
-            async for chunk in await openai.ChatCompletion.acreate(
-                messages=messages,
-                **args,
-            ):
-                if "content" in chunk.choices[0].delta:
-                    yield chunk.choices[0].delta.content
-                    completion += chunk.choices[0].delta.content
-                else:
-                    continue  # :)
-
-            self.write_log(f"Completion: \n\n{completion}")
-        else:
-            self.write_log(f"Prompt:\n\n{prompt}")
-            completion = ""
-            async for chunk in await openai.Completion.acreate(prompt=prompt, **args):
-                yield chunk.choices[0].text
-                completion += chunk.choices[0].text
-
-            self.write_log(f"Completion:\n\n{completion}")
-
-    async def _stream_chat(
-        self, messages: List[ChatMessage] = None, **kwargs
-    ) -> Generator[Union[Any, List, Dict], None, None]:
-        args = self.collect_args(**kwargs)
-        args["stream"] = True
 
         if not args["model"].endswith("0613") and "functions" in args:
             del args["functions"]
 
-        messages = compile_chat_messages(
-            args["model"],
-            messages,
-            self.context_length,
-            args["max_tokens"],
-            None,
-            functions=args.get("functions", None),
-            system_message=self.system_message,
-        )
-        self.write_log(f"Prompt: \n\n{format_chat_messages(messages)}")
-        completion = ""
+        return args
+
+    async def _stream_complete(self, prompt, options):
+        args = self.collect_args(options)
+        args["stream"] = True
+
+        if args["model"] in CHAT_MODELS:
+            async for chunk in await openai.ChatCompletion.acreate(
+                messages=[{"role": "user", "content": prompt}],
+                **args,
+            ):
+                if "content" in chunk.choices[0].delta:
+                    yield chunk.choices[0].delta.content
+        else:
+            async for chunk in await openai.Completion.acreate(prompt=prompt, **args):
+                yield chunk.choices[0].text
+
+    async def _stream_chat(self, messages: List[ChatMessage], options):
+        args = self.collect_args(options)
+
         async for chunk in await openai.ChatCompletion.acreate(
             messages=messages,
+            stream=True,
             **args,
         ):
             if len(chunk.choices) == 0:
                 continue
             yield chunk.choices[0].delta
-            if "content" in chunk.choices[0].delta:
-                completion += chunk.choices[0].delta.content
-        self.write_log(f"Completion: \n\n{completion}")
 
-    async def _complete(
-        self, prompt: str, with_history: List[ChatMessage] = None, **kwargs
-    ) -> Coroutine[Any, Any, str]:
-        args = self.collect_args(**kwargs)
+    async def _complete(self, prompt: str, options):
+        args = self.collect_args(options)
 
         if args["model"] in CHAT_MODELS:
-            messages = compile_chat_messages(
-                args["model"],
-                with_history,
-                self.context_length,
-                args["max_tokens"],
-                prompt,
-                functions=None,
-                system_message=self.system_message,
-            )
-            self.write_log(f"Prompt: \n\n{format_chat_messages(messages)}")
             resp = await openai.ChatCompletion.acreate(
-                messages=messages,
+                messages=[{"role": "user", "content": prompt}],
                 **args,
             )
-            completion = resp.choices[0].message.content
-            self.write_log(f"Completion: \n\n{completion}")
+            return resp.choices[0].message.content
         else:
-            prompt = prune_raw_prompt_from_top(
-                args["model"], self.context_length, prompt, args["max_tokens"]
+            return (
+                (await openai.Completion.acreate(prompt=prompt, **args)).choices[0].text
             )
-            self.write_log(f"Prompt:\n\n{prompt}")
-            completion = (
-                (
-                    await openai.Completion.acreate(
-                        prompt=prompt,
-                        **args,
-                    )
-                )
-                .choices[0]
-                .text
-            )
-            self.write_log(f"Completion:\n\n{completion}")
-
-        return completion

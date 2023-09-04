@@ -13,17 +13,9 @@ import { useSelector } from "react-redux";
 const MODEL_INFO: { title: string; class: string; args: any }[] = [
   {
     title: "gpt-4",
-    class: "MaybeProxyOpenAI",
+    class: "OpenAI",
     args: {
       model: "gpt-4",
-      api_key: "",
-    },
-  },
-  {
-    title: "gpt-3.5-turbo",
-    class: "MaybeProxyOpenAI",
-    args: {
-      model: "gpt-3.5-turbo",
       api_key: "",
     },
   },

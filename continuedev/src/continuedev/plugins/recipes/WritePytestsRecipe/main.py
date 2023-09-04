@@ -45,7 +45,7 @@ class WritePytestsRecipe(Step):
 
             Here is a complete set of pytest unit tests:"""
         )
-        tests = await sdk.models.medium._complete(prompt)
+        tests = await sdk.models.medium.complete(prompt)
 
         await sdk.apply_filesystem_edit(AddFile(filepath=path, content=tests))
 

@@ -12,13 +12,10 @@ aliases = {
     "ggml": "gpt-3.5-turbo",
     "claude-2": "gpt-3.5-turbo",
 }
-DEFAULT_MAX_TOKENS = 2048
+DEFAULT_MAX_TOKENS = 1024
 DEFAULT_ARGS = {
     "max_tokens": DEFAULT_MAX_TOKENS,
     "temperature": 0.5,
-    "top_p": 1,
-    "frequency_penalty": 0,
-    "presence_penalty": 0,
 }
 
 
@@ -144,13 +141,14 @@ def compile_chat_messages(
     """
     The total number of tokens is system_message + sum(msgs) + functions + prompt after it is converted to a message
     """
+
     msgs_copy = [msg.copy(deep=True) for msg in msgs] if msgs is not None else []
 
     if prompt is not None:
         prompt_msg = ChatMessage(role="user", content=prompt, summary=prompt)
         msgs_copy += [prompt_msg]
 
-    if system_message is not None:
+    if system_message is not None and system_message.strip() != "":
         # NOTE: System message takes second precedence to user prompt, so it is placed just before
         # but move back to start after processing
         rendered_system_message = render_templated_string(system_message)
@@ -167,6 +165,11 @@ def compile_chat_messages(
     if functions is not None:
         for function in functions:
             function_tokens += count_tokens(model_name, json.dumps(function))
+
+    if max_tokens + function_tokens + TOKEN_BUFFER_FOR_SAFETY >= context_length:
+        raise ValueError(
+            f"max_tokens ({max_tokens}) is too close to context_length ({context_length}), which doesn't leave room for chat history. This would cause incoherent responses. Try increasing the context_length parameter of the model in your config file."
+        )
 
     msgs_copy = prune_chat_history(
         model_name,

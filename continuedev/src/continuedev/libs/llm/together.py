@@ -1,16 +1,14 @@
 import json
-from typing import Any, Coroutine, Dict, Generator, List, Optional, Union
+from typing import Callable, Optional
 
 import aiohttp
 
-from ...core.main import ChatMessage
 from ..llm import LLM
-from ..util.count_tokens import compile_chat_messages
 from .prompts.chat import llama2_template_messages
+from .prompts.edit import simplified_edit_prompt
 
 
 class TogetherLLM(LLM):
-    # this is model-specific
     api_key: str
     "Together API key"
 
@@ -20,61 +18,32 @@ class TogetherLLM(LLM):
 
     _client_session: aiohttp.ClientSession = None
 
+    template_messages: Callable = llama2_template_messages
+
+    prompt_templates = {
+        "edit": simplified_edit_prompt,
+    }
+
     async def start(self, **kwargs):
         await super().start(**kwargs)
         self._client_session = aiohttp.ClientSession(
-            connector=aiohttp.TCPConnector(verify_ssl=self.verify_ssl)
+            connector=aiohttp.TCPConnector(verify_ssl=self.verify_ssl),
+            timeout=aiohttp.ClientTimeout(total=self.timeout),
         )
 
     async def stop(self):
         await self._client_session.close()
 
-    async def _stream_complete(
-        self, prompt, with_history: List[ChatMessage] = None, **kwargs
-    ) -> Generator[Union[Any, List, Dict], None, None]:
-        args = self.collect_args(**kwargs)
-        args["stream_tokens"] = True
-
-        messages = compile_chat_messages(
-            self.model,
-            with_history,
-            self.context_length,
-            args["max_tokens"],
-            prompt,
-            functions=args.get("functions", None),
-            system_message=self.system_message,
-        )
+    async def _stream_complete(self, prompt, options):
+        args = self.collect_args(options)
 
         async with self._client_session.post(
             f"{self.base_url}/inference",
-            json={"prompt": llama2_template_messages(messages), **args},
-            headers={"Authorization": f"Bearer {self.api_key}"},
-        ) as resp:
-            async for line in resp.content.iter_any():
-                if line:
-                    try:
-                        yield line.decode("utf-8")
-                    except:
-                        raise Exception(str(line))
-
-    async def _stream_chat(
-        self, messages: List[ChatMessage] = None, **kwargs
-    ) -> Generator[Union[Any, List, Dict], None, None]:
-        args = self.collect_args(**kwargs)
-        messages = compile_chat_messages(
-            self.model,
-            messages,
-            self.context_length,
-            args["max_tokens"],
-            None,
-            functions=args.get("functions", None),
-            system_message=self.system_message,
-        )
-        args["stream_tokens"] = True
-
-        async with self._client_session.post(
-            f"{self.base_url}/inference",
-            json={"prompt": llama2_template_messages(messages), **args},
+            json={
+                "prompt": prompt,
+                "stream_tokens": True,
+                **args,
+            },
             headers={"Authorization": f"Bearer {self.api_key}"},
         ) as resp:
             async for line in resp.content.iter_chunks():
@@ -92,36 +61,19 @@ class TogetherLLM(LLM):
                                 chunk = chunk[6:]
                             json_chunk = json.loads(chunk)
                             if "choices" in json_chunk:
-                                yield {
-                                    "role": "assistant",
-                                    "content": json_chunk["choices"][0]["text"],
-                                }
+                                yield json_chunk["choices"][0]["text"]
 
-    async def _complete(
-        self, prompt: str, with_history: List[ChatMessage] = None, **kwargs
-    ) -> Coroutine[Any, Any, str]:
-        args = self.collect_args(**kwargs)
+    async def _complete(self, prompt: str, options):
+        args = self.collect_args(options)
 
-        messages = compile_chat_messages(
-            args["model"],
-            with_history,
-            self.context_length,
-            args["max_tokens"],
-            prompt,
-            functions=None,
-            system_message=self.system_message,
-        )
         async with self._client_session.post(
             f"{self.base_url}/inference",
-            json={"prompt": llama2_template_messages(messages), **args},
+            json={"prompt": prompt, **args},
             headers={"Authorization": f"Bearer {self.api_key}"},
         ) as resp:
-            try:
-                text = await resp.text()
-                j = json.loads(text)
-                if "choices" not in j["output"]:
-                    raise Exception(text)
-                if "output" in j:
-                    return j["output"]["choices"][0]["text"]
-            except:
-                raise Exception(await resp.text())
+            text = await resp.text()
+            j = json.loads(text)
+            if "choices" not in j["output"]:
+                raise Exception(text)
+            if "output" in j:
+                return j["output"]["choices"][0]["text"]

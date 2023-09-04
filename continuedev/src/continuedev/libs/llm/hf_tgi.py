@@ -1,12 +1,12 @@
 import json
-from typing import Any, Callable, Coroutine, Dict, Generator, List, Optional, Union
+from typing import Any, Callable, List, Optional
 
 import aiohttp
 
 from ...core.main import ChatMessage
-from ..llm import LLM
-from ..util.count_tokens import compile_chat_messages
+from ..llm import LLM, CompletionOptions
 from .prompts.chat import code_llama_template_messages
+from .prompts.edit import simplified_edit_prompt
 
 
 class HuggingFaceTGI(LLM):
@@ -16,11 +16,15 @@ class HuggingFaceTGI(LLM):
 
     template_messages: Callable[[List[ChatMessage]], str] = code_llama_template_messages
 
+    prompt_templates = {
+        "edit": simplified_edit_prompt,
+    }
+
     class Config:
         arbitrary_types_allowed = True
 
-    def collect_args(self, **kwargs) -> Any:
-        args = super().collect_args(**kwargs)
+    def collect_args(self, options: CompletionOptions) -> Any:
+        args = super().collect_args(options)
         args = {
             **args,
             "max_new_tokens": args.get("max_tokens", 1024),
@@ -28,31 +32,16 @@ class HuggingFaceTGI(LLM):
         args.pop("max_tokens", None)
         return args
 
-    async def _stream_complete(
-        self, prompt, with_history: List[ChatMessage] = None, **kwargs
-    ) -> Generator[Union[Any, List, Dict], None, None]:
-        args = self.collect_args(**kwargs)
-        args["stream"] = True
+    async def _stream_complete(self, prompt, options):
+        args = self.collect_args(options)
 
-        messages = compile_chat_messages(
-            self.model,
-            with_history,
-            self.context_length,
-            args["max_tokens"],
-            prompt,
-            functions=args.get("functions", None),
-            system_message=self.system_message,
-        )
-
-        prompt = self.template_messages(messages)
-        self.write_log(f"Prompt: \n\n{prompt}")
-        completion = ""
         async with aiohttp.ClientSession(
-            connector=aiohttp.TCPConnector(verify_ssl=self.verify_ssl)
+            connector=aiohttp.TCPConnector(verify_ssl=self.verify_ssl),
+            timeout=aiohttp.ClientTimeout(total=self.timeout),
         ) as client_session:
             async with client_session.post(
                 f"{self.server_url}",
-                json={"inputs": prompt, **args},
+                json={"inputs": prompt, "stream": True, **args},
             ) as resp:
                 async for line in resp.content.iter_any():
                     if line:
@@ -62,39 +51,3 @@ class HuggingFaceTGI(LLM):
                             "generated_text"
                         ]
                         yield text
-                        completion += text
-
-        self.write_log(f"Completion: \n\n{completion}")
-
-    async def _stream_chat(
-        self, messages: List[ChatMessage] = None, **kwargs
-    ) -> Generator[Union[Any, List, Dict], None, None]:
-        args = self.collect_args(**kwargs)
-        messages = compile_chat_messages(
-            self.model,
-            messages,
-            self.context_length,
-            args["max_tokens"],
-            None,
-            functions=args.get("functions", None),
-            system_message=self.system_message,
-        )
-
-        async for chunk in self._stream_complete(
-            None, self.template_messages(messages), **args
-        ):
-            yield {
-                "role": "assistant",
-                "content": chunk,
-            }
-
-    async def _complete(
-        self, prompt: str, with_history: List[ChatMessage] = None, **kwargs
-    ) -> Coroutine[Any, Any, str]:
-        args = self.collect_args(**kwargs)
-
-        completion = ""
-        async for chunk in self._stream_complete(prompt, with_history, **args):
-            completion += chunk
-
-        return completion

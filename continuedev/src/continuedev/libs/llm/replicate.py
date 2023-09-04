@@ -5,6 +5,7 @@ import replicate
 
 from ...core.main import ChatMessage
 from . import LLM
+from .prompts.edit import simplified_edit_prompt
 
 
 class ReplicateLLM(LLM):
@@ -15,13 +16,15 @@ class ReplicateLLM(LLM):
 
     _client: replicate.Client = None
 
+    prompt_templates = {
+        "edit": simplified_edit_prompt,
+    }
+
     async def start(self, **kwargs):
         await super().start(**kwargs)
         self._client = replicate.Client(api_token=self.api_key)
 
-    async def _complete(
-        self, prompt: str, with_history: List[ChatMessage] = None, **kwargs
-    ):
+    async def _complete(self, prompt: str, options):
         def helper():
             output = self._client.run(
                 self.model, input={"message": prompt, "prompt": prompt}
@@ -38,17 +41,18 @@ class ReplicateLLM(LLM):
 
         return completion
 
-    async def _stream_complete(
-        self, prompt, with_history: List[ChatMessage] = None, **kwargs
-    ):
+    async def _stream_complete(self, prompt, options):
         for item in self._client.run(
             self.model, input={"message": prompt, "prompt": prompt}
         ):
             yield item
 
-    async def _stream_chat(self, messages: List[ChatMessage] = None, **kwargs):
+    async def _stream_chat(self, messages: List[ChatMessage], options):
         for item in self._client.run(
             self.model,
-            input={"message": messages[-1].content, "prompt": messages[-1].content},
+            input={
+                "message": messages[-1]["content"],
+                "prompt": messages[-1]["content"],
+            },
         ):
             yield {"content": item, "role": "assistant"}

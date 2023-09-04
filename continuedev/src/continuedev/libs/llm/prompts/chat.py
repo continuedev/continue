@@ -1,9 +1,27 @@
 from textwrap import dedent
+from typing import Dict, List
 
-from ....core.main import ChatMessage
+from anthropic import AI_PROMPT, HUMAN_PROMPT
 
 
-def llama2_template_messages(msgs: ChatMessage) -> str:
+def anthropic_template_messages(messages: List[Dict[str, str]]) -> str:
+    prompt = ""
+
+    # Anthropic prompt must start with a Human turn
+    if (
+        len(messages) > 0
+        and messages[0]["role"] != "user"
+        and messages[0]["role"] != "system"
+    ):
+        prompt += f"{HUMAN_PROMPT} Hello."
+    for msg in messages:
+        prompt += f"{HUMAN_PROMPT if (msg['role'] == 'user' or msg['role'] == 'system') else AI_PROMPT} {msg['content']} "
+
+    prompt += AI_PROMPT
+    return prompt
+
+
+def llama2_template_messages(msgs: List[Dict[str, str]]) -> str:
     if len(msgs) == 0:
         return ""
 
@@ -38,20 +56,20 @@ def llama2_template_messages(msgs: ChatMessage) -> str:
         if msgs[i]["role"] == "user":
             prompt += f"[INST] {msgs[i]['content']} [/INST]"
         else:
-            prompt += msgs[i]["content"]
+            prompt += msgs[i]["content"] + " "
 
     return prompt
 
 
-def code_llama_template_messages(msgs: ChatMessage) -> str:
+def code_llama_template_messages(msgs: List[Dict[str, str]]) -> str:
     return f"[INST] {msgs[-1]['content']}\n[/INST]"
 
 
-def extra_space_template_messages(msgs: ChatMessage) -> str:
+def extra_space_template_messages(msgs: List[Dict[str, str]]) -> str:
     return f" {msgs[-1]['content']}"
 
 
-def code_llama_python_template_messages(msgs: ChatMessage) -> str:
+def code_llama_python_template_messages(msgs: List[Dict[str, str]]) -> str:
     return dedent(
         f"""\
         [INST]

@@ -17,6 +17,15 @@
   ],
   "configurations": [
     {
+      "name": "Pytest",
+      "type": "python",
+      "request": "launch",
+      "program": "continuedev/src/continuedev/tests/llm_test.py",
+      "console": "integratedTerminal",
+      "justMyCode": true,
+      "subProcess": true
+    },
+    {
       "name": "Server",
       "type": "python",
       "request": "launch",
