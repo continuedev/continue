@@ -28,7 +28,8 @@ class HuggingFaceInferenceAPI(LLM):
     async def start(self, **kwargs):
         await super().start(**kwargs)
         self._client_session = aiohttp.ClientSession(
-            connector=aiohttp.TCPConnector(verify_ssl=self.verify_ssl)
+            connector=aiohttp.TCPConnector(verify_ssl=self.verify_ssl),
+            timeout=aiohttp.ClientTimeout(total=self.timeout),
         )
 
     async def stop(self):

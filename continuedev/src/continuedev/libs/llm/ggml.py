@@ -14,8 +14,6 @@ class GGML(LLM):
     verify_ssl: Optional[bool] = None
     model: str = "ggml"
 
-    timeout: int = 300
-
     prompt_templates = {
         "edit": simplified_edit_prompt,
     }

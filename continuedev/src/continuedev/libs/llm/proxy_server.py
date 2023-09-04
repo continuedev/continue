@@ -36,7 +36,8 @@ class ProxyServer(LLM):
     ):
         await super().start(**kwargs)
         self._client_session = aiohttp.ClientSession(
-            connector=aiohttp.TCPConnector(ssl_context=ssl_context)
+            connector=aiohttp.TCPConnector(ssl_context=ssl_context),
+            timeout=aiohttp.ClientTimeout(total=self.timeout),
         )
         self.context_length = MAX_TOKENS_FOR_MODEL[self.model]
 

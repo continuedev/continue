@@ -65,7 +65,8 @@ class LlamaCpp(LLM):
 
         async def server_generator():
             async with aiohttp.ClientSession(
-                connector=aiohttp.TCPConnector(verify_ssl=self.verify_ssl)
+                connector=aiohttp.TCPConnector(verify_ssl=self.verify_ssl),
+                timeout=aiohttp.ClientTimeout(total=self.timeout),
             ) as client_session:
                 async with client_session.post(
                     f"{self.server_url}/completion",

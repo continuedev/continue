@@ -65,6 +65,9 @@ class LLM(ContinueBaseModel):
     model: str
     "The model name"
 
+    timeout: int = 300
+    "The timeout for the request in seconds."
+
     prompt_templates: dict = {}
 
     template_messages: Optional[Callable[[List[Dict[str, str]]], str]] = None

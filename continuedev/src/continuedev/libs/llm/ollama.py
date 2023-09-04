@@ -25,7 +25,9 @@ class Ollama(LLM):
 
     async def start(self, **kwargs):
         await super().start(**kwargs)
-        self._client_session = aiohttp.ClientSession()
+        self._client_session = aiohttp.ClientSession(
+            timeout=aiohttp.ClientTimeout(total=self.timeout)
+        )
 
     async def stop(self):
         await self._client_session.close()
