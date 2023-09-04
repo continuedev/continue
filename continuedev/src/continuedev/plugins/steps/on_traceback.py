@@ -51,7 +51,7 @@ class DefaultOnTracebackStep(Step):
         # And this function is where you can get arbitrarily fancy about adding context
 
     async def run(self, sdk: ContinueSDK):
-        if get_python_traceback(self.output) is not None:
+        if get_python_traceback(self.output) is not None and sdk.lsp is not None:
             await sdk.run_step(SolvePythonTracebackStep(output=self.output))
             return
 

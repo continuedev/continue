@@ -3,7 +3,6 @@ import traceback
 from typing import Coroutine, List, Optional, Union
 
 from ..libs.llm import LLM
-from ..libs.util.create_async_task import create_async_task
 from ..libs.util.logging import logger
 from ..libs.util.paths import getConfigFilePath
 from ..libs.util.telemetry import posthog_logger
@@ -97,16 +96,16 @@ class ContinueSDK(AbstractContinueSDK):
             try:
                 sdk.lsp = ContinueLSPClient(
                     workspace_dir=sdk.ide.workspace_directory,
-                    use_subprocess="python3.10 -m pylsp",
+                    # use_subprocess="python3.10 -m pylsp",
                 )
                 await sdk.lsp.start()
             except:
                 logger.warning("Failed to start LSP client", exc_info=True)
                 sdk.lsp = None
 
-        create_async_task(
-            start_lsp(), on_error=lambda e: logger.error("Failed to setup LSP: %s", e)
-        )
+        # create_async_task(
+        #     start_lsp(), on_error=lambda e: logger.error("Failed to setup LSP: %s", e)
+        # )
 
         # When the config is loaded, setup posthog logger
         posthog_logger.setup(sdk.ide.unique_id, sdk.config.allow_anonymous_telemetry)

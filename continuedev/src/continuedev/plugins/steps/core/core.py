@@ -635,7 +635,9 @@ Please output the code to be inserted at the cursor in order to fulfill the user
                 messages = rendered
 
         generator = model_to_use.stream_chat(
-            messages, temperature=sdk.config.temperature, max_tokens=max_tokens
+            messages,
+            temperature=sdk.config.temperature,
+            max_tokens=min(max_tokens, model_to_use.context_length // 2),
         )
 
         posthog_logger.capture_event(

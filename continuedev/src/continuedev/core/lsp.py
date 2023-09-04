@@ -5,12 +5,14 @@ import threading
 from typing import List, Optional
 
 from pydantic import BaseModel
+from pylsp.python_lsp import PythonLSPServer, start_tcp_lang_server
 
 from ..libs.lspclient.json_rpc_endpoint import JsonRpcEndpoint
 from ..libs.lspclient.lsp_client import LspClient
 from ..libs.lspclient.lsp_endpoint import LspEndpoint
 from ..libs.lspclient.lsp_structs import Position as LspPosition
 from ..libs.lspclient.lsp_structs import SymbolInformation, TextDocumentIdentifier
+from ..libs.util.logging import logger
 from ..models.filesystem import RangeInFile
 from ..models.main import Position, Range
 
@@ -57,6 +59,14 @@ class SocketFileWrapper:
 
 def create_json_rpc_endpoint(use_subprocess: Optional[str] = None):
     if use_subprocess is None:
+        try:
+            threading.Thread(
+                target=start_tcp_lang_server,
+                args=("localhost", 8080, False, PythonLSPServer),
+            ).start()
+        except Exception as e:
+            logger.warning("Could not start TCP server: %s", e)
+
         # Connect to the server
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.connect(("localhost", 8080))
