@@ -12,20 +12,26 @@ As you use Continue more, you will learn when to trust it. A great way to get st
 
 If you are trying to use it for a new task and don’t have a sense of how much Continue can help you complete it, it can often be helpful to start like this:
 
-1. Highlight any code that you don’t understand and type `tell me how this code works` in the text box of the Continue side bar
-2. If the explanation seems reasonable, then, while still highlighting the code, type `how would you change this code to [INSERT TASK]?`
-3. If this explanation is also pretty good, then, while still highlighting the code, type `/edit [INSERT TASK]`
+1. Highlight the code section(s) that you don’t understand and type "tell me how this code works" in the intput box
+2. If the explanation seems reasonable, then, while still highlighting the code section(s), type "how would you change this code to [INSERT TASK]?"
+3. If this explanation is also pretty good, then, while still highlighting the code section(s), type `/edit [INSERT TASK]`
 4. If it does not work on first attempt, click `reject` on its suggestions and try again—often it will make a different suggestion each time
-5. If it not giving you what you want, click `reject` and try again with more specific / clear instructions, articulating exactly what you want it to do and not to do
+5. If it is not giving you what you want after another attempt, click `reject` and try again with more specific / clear instructions, articulating exactly what you want it to do and not to do
 6. If this still does not work, then you likely need to break down the task into smaller sub-tasks and ask the LLM to do each of those one at a time or just do it yourself manually
 
 Remember: You are responsible for all code that you ship, whether it was written by you or by an LLM that you directed. This means it is crucial that you review what the LLM writes. To make this easier, we provide natural language descriptions of the actions the LLM took in the Continue GUI.
+
+## Keyboard shortcuts
+
+Here you will find a list of all of the default keyboard shortcuts in VS Code:
+
+![keyboard-shortucts](/img/keyboard-shortcuts.png)
 
 ## When to use Continue
 
 Here are tasks that Continue excels at helping you complete:
 
-### Laborious edits 
+### Laborious edits
 
 Continue works well in situations where find and replace does not work (i.e. “/edit change all of these to be like that”)
 
@@ -35,13 +41,13 @@ Examples
 
 ### Writing files from scratch
 
-Continue can help you get started building React components, Python scripts, Shell scripts, Makefiles, Unit tests, etc.
+Continue can help you get started building React components, Python scripts, Shell scripts, Makefiles, unit tests, etc.
 
 Examples
-- “/edit write a python script to get Posthog events"
-- “/edit add a React component for syntax highlighted code"
+- “/edit write a python script to get posthog events"
+- “/edit add a react component for syntax highlighted code"
 
-### Creating projects from scratch
+### Creating boilerplate from scratch
 
 Continue can go even further. For example, it can help build the scaffolding for a Python package, which includes a typer cli app to sort the arguments and print them back out.
 
@@ -51,7 +57,7 @@ Examples
 
 ### Fix highlighted code
 
-After selecting a code section, try to refactor it with Continue (e.g “/edit change the function to work like this”, “/edit do this everywhere”)
+After selecting the code section(s), try to refactor it with Continue (e.g “/edit change the function to work like this” or “/edit do this everywhere”)
 
 Examples
 - “/edit migrate this digital ocean terraform file into one that works for GCP”
@@ -67,11 +73,7 @@ Examples
 
 ### Ask about errors
 
-Continue can also help explain errors and offer possible solutions. You will need to copy and paste the error text into the text input though.
-
-Examples
-- “explain this error to me in human understandable way”
-- "what are some ideas for how I might solve this problem?"
+Continue can also help explain errors / exceptions and offer possible solutions. When you come across an error / exception in your terminal, press `cmd+shift+r` (MacOS) / `ctrl+shift+r` (Windows). This will throw the stack trace into Continue and ask for it to explain the issue to you.
 
 ### Figure out what shell command to run
 
@@ -99,7 +101,7 @@ Examples
 
 ### Using context from multiple other files
 
-Similar to how you would make changes manually, focus on one file at a time. But if there is key information in other files, highlight those sections of code too
+Similar to how you would make changes manually, focus on one file at a time. But if there is key information in other files, highlight those sections of code too to be used as additional context
 
 ### Tasks with a few steps
 
@@ -119,7 +121,7 @@ If you are 20 minutes into debugging a complicated issue across many files, then
 
 ### Multi-file edits in parallel
 
-At the moment, Continue can only edit one file at a time. If you figure out which files need to change, you can direct Continue to help with you change them one-by-one though.
+At the moment, Continue can only edit one file at a time. If you figure out which files need to change, you can direct Continue to help you change them one at a time though.
 
 ### Using context of the entire file
 
@@ -135,10 +137,4 @@ If you highlight very long lines (e.g. a complex SVG), you might also run into i
 
 ### Tasks with many steps
 
-There are other tasks that Continue won't be able to take on as a whole. However, typically, if you figure out how to break the task into sub-tasks, you can get help from Continue with those.
-
-## Keyboard shortcuts
-
-Here you will find a list of all of the default keyboard shortcuts in VS Code:
-
-![keyboard-shortucts](/img/keyboard-shortcuts.png)
+There are other tasks that Continue won't be able to take on entirely at once. However, typically, if you figure out how to break the task into sub-tasks, you can get help from Continue with those.
