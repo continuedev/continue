@@ -123,8 +123,6 @@ async def mock_chat_completion(item: ChatBody):
 def start_openai(port: int = 8000):
     server = subprocess.Popen(
         [
-            "poetry",
-            "run",
             "uvicorn",
             "openai_mock:openai",
             "--host",
