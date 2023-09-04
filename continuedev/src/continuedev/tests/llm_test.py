@@ -37,7 +37,7 @@ def async_test(func):
 
 class TestBaseLLM:
     model = "gpt-3.5-turbo"
-    context_length = 1024
+    context_length = 4096
     system_message = "test_system_message"
 
     def setup_class(cls):
