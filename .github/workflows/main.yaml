@@ -43,6 +43,7 @@ jobs:
         run: |
           cd continuedev
           pip install -r dev_requirements.txt
+          cd src
           python -m pytest
 
       - name: Upload Artifacts

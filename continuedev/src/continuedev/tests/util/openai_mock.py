@@ -7,7 +7,6 @@ from typing import Dict, List, Optional
 from fastapi import FastAPI
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
-from sse_starlette.sse import EventSourceResponse
 
 openai = FastAPI()
 
@@ -100,8 +99,7 @@ async def mock_chat_completion(item: ChatBody):
                 }
                 await asyncio.sleep(0.1)
 
-        return EventSourceResponse(stream_text())
-        # return StreamingResponse(stream_text(), media_type="text/plain")
+        return StreamingResponse(stream_text(), media_type="text/plain")
 
     return {
         "id": "chatcmpl-123",
