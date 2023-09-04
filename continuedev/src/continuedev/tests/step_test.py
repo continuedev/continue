@@ -20,8 +20,7 @@ async def test_step():
         == tokyo_test_pair[1]
     )
 
-    # TODO: Close out subprocesses. Probably want session.close() method to clean up.
-    # (I can handle this unless you're inclined)
+    await session.autopilot.cleanup()
 
 
 # TODO: Test other properties of full_state after the UserInputStep. Also test with other config properties and models, etc...

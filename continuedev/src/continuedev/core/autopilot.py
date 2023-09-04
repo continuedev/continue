@@ -35,6 +35,7 @@ from ..plugins.steps.core.core import (
 )
 from ..plugins.steps.on_traceback import DefaultOnTracebackStep
 from ..server.ide_protocol import AbstractIdeProtocolServer
+from ..server.meilisearch_server import stop_meilisearch
 from .config import ContinueConfig
 from .context import ContextManager
 from .main import (
@@ -141,6 +142,11 @@ class Autopilot(ContinueBaseModel):
             self._saved_context_groups = {}
 
         self.started = True
+
+    async def cleanup(self):
+        if self.continue_sdk.lsp is not None:
+            await self.continue_sdk.lsp.stop()
+        stop_meilisearch()
 
     class Config:
         arbitrary_types_allowed = True

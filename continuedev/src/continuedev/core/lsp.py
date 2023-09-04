@@ -64,7 +64,7 @@ def create_json_rpc_endpoint(use_subprocess: Optional[str] = None):
         # Create a file-like object from the socket
         sockfile = s.makefile("rw")
         wrapped_sockfile = SocketFileWrapper(sockfile)
-        return JsonRpcEndpoint(wrapped_sockfile, wrapped_sockfile)
+        return JsonRpcEndpoint(wrapped_sockfile, wrapped_sockfile), None
 
     else:
         pyls_cmd = use_subprocess.split()
@@ -76,7 +76,7 @@ def create_json_rpc_endpoint(use_subprocess: Optional[str] = None):
         )
         read_pipe = ReadPipe(p.stderr)
         read_pipe.start()
-        return JsonRpcEndpoint(p.stdin, p.stdout)
+        return JsonRpcEndpoint(p.stdin, p.stdout), p
 
 
 def filename_to_uri(filename: str) -> str:
@@ -91,7 +91,7 @@ def uri_to_filename(uri: str) -> str:
 
 
 def create_lsp_client(workspace_dir: str, use_subprocess: Optional[str] = None):
-    json_rpc_endpoint = create_json_rpc_endpoint(use_subprocess=use_subprocess)
+    json_rpc_endpoint, process = create_json_rpc_endpoint(use_subprocess=use_subprocess)
     lsp_endpoint = LspEndpoint(json_rpc_endpoint)
     lsp_client = LspClient(lsp_endpoint)
     capabilities = {
@@ -254,13 +254,14 @@ def create_lsp_client(workspace_dir: str, use_subprocess: Optional[str] = None):
         workspace_folders,
     )
     lsp_client.initialized()
-    return lsp_client
+    return lsp_client, process
 
 
 class ContinueLSPClient(BaseModel):
     workspace_dir: str
     lsp_client: LspClient = None
     use_subprocess: Optional[str] = None
+    lsp_process: Optional[subprocess.Popen] = None
 
     class Config:
         arbitrary_types_allowed = True
@@ -271,13 +272,17 @@ class ContinueLSPClient(BaseModel):
         return original_dict
 
     async def start(self):
-        self.lsp_client = create_lsp_client(
+        self.lsp_client, self.lsp_process = create_lsp_client(
             self.workspace_dir, use_subprocess=self.use_subprocess
         )
 
     async def stop(self):
         self.lsp_client.shutdown()
         self.lsp_client.exit()
+        if self.lsp_process is not None:
+            self.lsp_process.terminate()
+            self.lsp_process.wait()
+            self.lsp_process = None
 
     def goto_definition(self, position: Position, filename: str) -> List[RangeInFile]:
         response = self.lsp_client.definition(
