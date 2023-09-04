@@ -40,6 +40,10 @@ jobs:
           chmod 777 dist/run
 
       - name: Test Python Server
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          TOGETHER_API_KEY: ${{ secrets.TOGETHER_API_KEY }}
         run: |
           cd continuedev
           pip install -r dev_requirements.txt
