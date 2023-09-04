@@ -5,6 +5,7 @@ from typing import List
 from ...core.context import ContextProvider
 from ...core.main import ContextItem, ContextItemDescription, ContextItemId
 from ...core.sdk import ContinueSDK
+from ...libs.util.filter_files import DEFAULT_IGNORE_PATTERNS
 from .util import remove_meilisearch_disallowed_chars
 
 MAX_SIZE_IN_CHARS = 25_000
@@ -18,36 +19,13 @@ async def get_file_contents(filepath: str, sdk: ContinueSDK) -> str:
         return None
 
 
-DEFAULT_IGNORE_DIRS = [
-    ".git",
-    ".vscode",
-    ".idea",
-    ".vs",
-    ".venv",
-    "env",
-    ".env",
-    "node_modules",
-    "dist",
-    "build",
-    "target",
-    "out",
-    "bin",
-    ".pytest_cache",
-    ".vscode-test",
-    ".continue",
-    "__pycache__",
-]
-
-
 class FileContextProvider(ContextProvider):
     """
     The FileContextProvider is a ContextProvider that allows you to search files in the open workspace.
     """
 
     title = "file"
-    ignore_patterns: List[str] = DEFAULT_IGNORE_DIRS + list(
-        filter(lambda d: f"**/{d}", DEFAULT_IGNORE_DIRS)
-    )
+    ignore_patterns: List[str] = DEFAULT_IGNORE_PATTERNS
 
     async def start(self, *args):
         await super().start(*args)

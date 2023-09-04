@@ -13,10 +13,11 @@ from continuedev.libs.llm.openai import OpenAI
 from continuedev.libs.llm.together import TogetherLLM
 from continuedev.libs.util.count_tokens import DEFAULT_ARGS
 from continuedev.tests.util.openai_mock import start_openai
+from continuedev.tests.util.prompts import tokyo_test_pair
 
 load_dotenv()
 
-TEST_PROMPT = "Output a single word, that being the capital of Japan:"
+
 SPEND_MONEY = True
 
 
@@ -65,9 +66,9 @@ class TestBaseLLM:
         if self.llm.__class__.__name__ == "LLM":
             pytest.skip("Skipping abstract LLM")
 
-        resp = await self.llm.complete(TEST_PROMPT, temperature=0.0)
+        resp = await self.llm.complete(tokyo_test_pair[0], temperature=0.0)
         assert isinstance(resp, str)
-        assert resp.strip().lower() == "tokyo"
+        assert resp.strip().lower() == tokyo_test_pair[1]
 
     @pytest.mark.skipif(SPEND_MONEY is False, reason="Costs money")
     @async_test
@@ -79,7 +80,9 @@ class TestBaseLLM:
         role = None
         async for chunk in self.llm.stream_chat(
             messages=[
-                ChatMessage(role="user", content=TEST_PROMPT, summary=TEST_PROMPT)
+                ChatMessage(
+                    role="user", content=tokyo_test_pair[0], summary=tokyo_test_pair[0]
+                )
             ],
             temperature=0.0,
         ):
@@ -90,7 +93,7 @@ class TestBaseLLM:
                 role = chunk["role"]
 
         assert role == "assistant"
-        assert completion.strip().lower() == "tokyo"
+        assert completion.strip().lower() == tokyo_test_pair[1]
 
     @pytest.mark.skipif(SPEND_MONEY is False, reason="Costs money")
     @async_test
@@ -99,11 +102,13 @@ class TestBaseLLM:
             pytest.skip("Skipping abstract LLM")
 
         completion = ""
-        async for chunk in self.llm.stream_complete(TEST_PROMPT, temperature=0.0):
+        async for chunk in self.llm.stream_complete(
+            tokyo_test_pair[0], temperature=0.0
+        ):
             assert isinstance(chunk, str)
             completion += chunk
 
-        assert completion.strip().lower() == "tokyo"
+        assert completion.strip().lower() == tokyo_test_pair[1]
 
 
 class TestOpenAI(TestBaseLLM):
@@ -129,7 +134,7 @@ class TestOpenAI(TestBaseLLM):
             "Output a single word, that being the capital of Japan:"
         )
         assert isinstance(resp, str)
-        assert resp.strip().lower() == "tokyo"
+        assert resp.strip().lower() == tokyo_test_pair[1]
 
 
 class TestGGML(TestBaseLLM):

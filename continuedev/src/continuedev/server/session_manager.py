@@ -8,6 +8,7 @@ from fastapi import APIRouter, WebSocket
 from fastapi.websockets import WebSocketState
 
 from ..core.autopilot import Autopilot
+from ..core.config import ContinueConfig
 from ..core.main import FullState
 from ..libs.util.create_async_task import create_async_task
 from ..libs.util.logging import logger
@@ -57,7 +58,10 @@ class SessionManager:
         return self.sessions[session_id]
 
     async def new_session(
-        self, ide: AbstractIdeProtocolServer, session_id: Optional[str] = None
+        self,
+        ide: AbstractIdeProtocolServer,
+        session_id: Optional[str] = None,
+        config: Optional[ContinueConfig] = None,
     ) -> Session:
         logger.debug(f"New session: {session_id}")
 
@@ -85,7 +89,7 @@ class SessionManager:
 
         # Start the autopilot (must be after session is added to sessions) and the policy
         try:
-            await autopilot.start(full_state=full_state)
+            await autopilot.start(full_state=full_state, config=config)
         except Exception as e:
             await ide.on_error(e)
 

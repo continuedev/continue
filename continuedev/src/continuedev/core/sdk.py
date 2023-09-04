@@ -1,8 +1,9 @@
 import os
 import traceback
-from typing import Coroutine, Union
+from typing import Coroutine, List, Optional, Union
 
 from ..libs.llm import LLM
+from ..libs.util.create_async_task import create_async_task
 from ..libs.util.logging import logger
 from ..libs.util.paths import getConfigFilePath
 from ..libs.util.telemetry import posthog_logger
@@ -16,11 +17,18 @@ from ..models.filesystem_edit import (
     FileSystemEdit,
 )
 from ..models.main import Range
-from ..plugins.steps.core.core import *
-from ..plugins.steps.core.core import DefaultModelEditCodeStep
+from ..plugins.steps.core.core import (
+    DefaultModelEditCodeStep,
+    FileSystemEditStep,
+    MessageStep,
+    RangeInFileWithContents,
+    ShellCommandsStep,
+    WaitForUserConfirmationStep,
+)
 from ..server.ide_protocol import AbstractIdeProtocolServer
 from .abstract_sdk import AbstractContinueSDK
 from .config import ContinueConfig
+from .lsp import ContinueLSPClient
 from .main import (
     ChatMessage,
     Context,
@@ -42,6 +50,7 @@ class ContinueSDK(AbstractContinueSDK):
 
     ide: AbstractIdeProtocolServer
     models: Models
+    lsp: Optional[ContinueLSPClient] = None
     context: Context
     config: ContinueConfig
     __autopilot: Autopilot
@@ -52,13 +61,14 @@ class ContinueSDK(AbstractContinueSDK):
         self.context = autopilot.context
 
     @classmethod
-    async def create(cls, autopilot: Autopilot) -> "ContinueSDK":
+    async def create(
+        cls, autopilot: Autopilot, config: Optional[ContinueConfig] = None
+    ) -> "ContinueSDK":
         sdk = ContinueSDK(autopilot)
         autopilot.continue_sdk = sdk
 
         try:
-            config = sdk._load_config_dot_py()
-            sdk.config = config
+            sdk.config = config or sdk._load_config_dot_py()
         except Exception as e:
             logger.error(f"Failed to load config.py: {traceback.format_exception(e)}")
 
@@ -78,8 +88,25 @@ class ContinueSDK(AbstractContinueSDK):
             )
             await sdk.ide.setFileOpen(getConfigFilePath())
 
+        # Start models
         sdk.models = sdk.config.models
         await sdk.models.start(sdk)
+
+        # Start LSP
+        async def start_lsp():
+            try:
+                sdk.lsp = ContinueLSPClient(
+                    workspace_dir=sdk.ide.workspace_directory,
+                    use_subprocess="python3.10 -m pylsp",
+                )
+                await sdk.lsp.start()
+            except:
+                logger.warning("Failed to start LSP client", exc_info=True)
+                sdk.lsp = None
+
+        create_async_task(
+            start_lsp(), on_error=lambda e: logger.error("Failed to setup LSP: %s", e)
+        )
 
         # When the config is loaded, setup posthog logger
         posthog_logger.setup(sdk.ide.unique_id, sdk.config.allow_anonymous_telemetry)
@@ -207,19 +234,13 @@ class ContinueSDK(AbstractContinueSDK):
     _last_valid_config: ContinueConfig = None
 
     def _load_config_dot_py(self) -> ContinueConfig:
-        # Use importlib to load the config file config.py at the given path
         path = getConfigFilePath()
-
-        import importlib.util
-
-        spec = importlib.util.spec_from_file_location("config", path)
-        config = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(config)
-        self._last_valid_config = config.config
+        config = ContinueConfig.from_filepath(path)
+        self._last_valid_config = config
 
         logger.debug("Loaded Continue config file from %s", path)
 
-        return config.config
+        return config
 
     def get_code_context(
         self, only_editing: bool = False

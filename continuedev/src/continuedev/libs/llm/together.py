@@ -4,6 +4,7 @@ from typing import Callable, Optional
 import aiohttp
 
 from ..llm import LLM
+from ..util.logging import logger
 from .prompts.chat import llama2_template_messages
 from .prompts.edit import simplified_edit_prompt
 
@@ -59,7 +60,13 @@ class TogetherLLM(LLM):
                         if chunk.strip() != "":
                             if chunk.startswith("data: "):
                                 chunk = chunk[6:]
-                            json_chunk = json.loads(chunk)
+                            if chunk == "[DONE]":
+                                break
+                            try:
+                                json_chunk = json.loads(chunk)
+                            except Exception as e:
+                                logger.warning(f"Invalid JSON chunk: {chunk}\n\n{e}")
+                                continue
                             if "choices" in json_chunk:
                                 yield json_chunk["choices"][0]["text"]
 

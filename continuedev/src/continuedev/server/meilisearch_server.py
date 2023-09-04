@@ -117,10 +117,15 @@ async def poll_meilisearch_running(frequency: int = 0.1) -> bool:
         await asyncio.sleep(frequency)
 
 
+meilisearch_process = None
+
+
 async def start_meilisearch():
     """
     Starts the MeiliSearch server, wait for it.
     """
+    global meilisearch_process
+
     serverPath = getServerFolderPath()
 
     # Check if MeiliSearch is installed, if not download
@@ -130,7 +135,7 @@ async def start_meilisearch():
     if not await check_meilisearch_running() or not was_already_installed:
         logger.debug("Starting MeiliSearch...")
         binary_name = "meilisearch" if os.name == "nt" else "./meilisearch"
-        subprocess.Popen(
+        meilisearch_process = subprocess.Popen(
             [binary_name, "--no-analytics"],
             cwd=serverPath,
             stdout=subprocess.DEVNULL,
@@ -139,3 +144,14 @@ async def start_meilisearch():
             start_new_session=True,
             shell=True,
         )
+
+
+def stop_meilisearch():
+    """
+    Stops the MeiliSearch server.
+    """
+    global meilisearch_process
+    if meilisearch_process is not None:
+        meilisearch_process.terminate()
+        meilisearch_process.wait()
+        meilisearch_process = None

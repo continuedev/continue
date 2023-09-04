@@ -37,6 +37,17 @@
       // What about a watch task? - type errors?
     },
     {
+      "name": "Headless",
+      "type": "python",
+      "request": "launch",
+      "module": "continuedev.headless",
+      "args": ["--config", "continuedev/config.py"],
+      "justMyCode": false,
+      "subProcess": false
+      // Does it need a build task?
+      // What about a watch task? - type errors?
+    },
+    {
       "name": "Extension (VSCode)",
       "type": "extensionHost",
       "request": "launch",

@@ -1,5 +1,6 @@
 # These steps are depended upon by ContinueSDK
 import difflib
+import subprocess
 import traceback
 from textwrap import dedent
 from typing import Any, Coroutine, List, Optional, Union
@@ -112,52 +113,22 @@ class ShellCommandsStep(Step):
         )
 
     async def run(self, sdk: ContinueSDK) -> Coroutine[Observation, None, None]:
-        await sdk.ide.getWorkspaceDirectory() if self.cwd is None else self.cwd
+        process = subprocess.Popen(
+            "/bin/bash",
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            cwd=self.cwd or sdk.ide.workspace_directory,
+        )
 
-        for cmd in self.cmds:
-            output = await sdk.ide.runCommand(cmd)
-            if (
-                self.handle_error
-                and output is not None
-                and output_contains_error(output)
-            ):
-                suggestion = await sdk.models.medium.complete(
-                    dedent(
-                        f"""\
-                    While running the command `{cmd}`, the following error occurred:
+        stdin_input = "\n".join(self.cmds)
+        out, err = process.communicate(stdin_input.encode())
 
-                    ```ascii
-                    {output}
-                    ```
+        # If it fails, return the error
+        if err is not None and err != "":
+            self._err_text = err
+            return TextObservation(text=err)
 
-                    This is a brief summary of the error followed by a suggestion on how it can be fixed:"""
-                    ),
-                    with_history=await sdk.get_chat_context(),
-                )
-
-                sdk.raise_exception(
-                    title="Error while running query",
-                    message=output,
-                    with_step=MessageStep(
-                        name=f"Suggestion to solve error {AI_ASSISTED_STRING}",
-                        message=f"{suggestion}\n\nYou can click the retry button on the failed step to try again.",
-                    ),
-                )
-
-        return TextObservation(text=output)
-
-        # process = subprocess.Popen(
-        #     '/bin/bash', stdin=subprocess.PIPE, stdout=subprocess.PIPE, cwd=cwd)
-
-        # stdin_input = "\n".join(self.cmds)
-        # out, err = process.communicate(stdin_input.encode())
-
-        # # If it fails, return the error
-        # if err is not None and err != "":
-        #     self._err_text = err
-        #     return TextObservation(text=err)
-
-        # return None
+        return None
 
 
 class DefaultModelEditCodeStep(Step):

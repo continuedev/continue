@@ -1,0 +1,1 @@
+tokyo_test_pair = ("Output a single word, that being the capital of Japan:", "tokyo")
