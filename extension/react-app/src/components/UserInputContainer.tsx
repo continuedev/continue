@@ -69,6 +69,13 @@ const TextArea = styled.textarea`
   }
 `;
 
+function stringWithEllipsis(str: string, maxLen: number) {
+  if (str.length > maxLen) {
+    return str.substring(0, maxLen - 3) + "...\n(Click to expand)";
+  }
+  return str;
+}
+
 const UserInputContainer = (props: UserInputContainerProps) => {
   const [isHovered, setIsHovered] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -144,7 +151,7 @@ const UserInputContainer = (props: UserInputContainerProps) => {
           }}
           className="mr-6 cursor-text w-full"
         >
-          {props.children}
+          {stringWithEllipsis(props.children, 600)}
         </StyledPre>
       )}
       {/* <ReactMarkdown children={props.children} className="w-fit mr-10" /> */}

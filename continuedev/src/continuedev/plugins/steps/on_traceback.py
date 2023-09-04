@@ -55,17 +55,10 @@ class DefaultOnTracebackStep(Step):
             await sdk.run_step(SolvePythonTracebackStep(output=self.output))
             return
 
-        tb = extract_traceback_str(self.output)
-
-        tb_first_last_lines = (
-            ("\n".join(tb.split("\n")[:3]) + "\n...\n" + "\n".join(tb.split("\n")[-3:]))
-            if len(tb.split("\n")) > 6
-            else tb
-        )
+        tb = extract_traceback_str(self.output) or self.output[-8000:]
 
         await sdk.run_step(
             UserInputStep(
-                description=f"""I got the following error, can you please help explain how to fix it?\n\n{tb_first_last_lines}""",
                 user_input=f"""I got the following error, can you please help explain how to fix it?\n\n{tb}""",
             )
         )
@@ -171,7 +164,6 @@ class SolvePythonTracebackStep(Step):
 
         await sdk.run_step(
             UserInputStep(
-                description="Solving stack trace",
                 user_input=prompt,
             )
         )

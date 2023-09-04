@@ -13,7 +13,7 @@ a = Analysis(
         ('continuedev', 'continuedev'),
         (certifi.where(), 'ca_bundle'),
         ] + copy_metadata('replicate'),
-    hiddenimports=['anthropic', 'github', 'ripgrepy', 'bs4', 'redbaron', 'replicate'],
+    hiddenimports=['anthropic', 'github', 'ripgrepy', 'bs4', 'redbaron', 'python-lsp-server'],
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
