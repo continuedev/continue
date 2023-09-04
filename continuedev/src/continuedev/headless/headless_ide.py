@@ -1,7 +1,7 @@
 import os
 import subprocess
 import uuid
-from typing import Any, Callable, List, Optional
+from typing import Any, Callable, Coroutine, List, Optional
 
 from dotenv import load_dotenv
 from fastapi import WebSocket
@@ -167,3 +167,15 @@ class LocalIdeProtocol(AbstractIdeProtocolServer):
     def onFileSaved(self, filepath: str, contents: str):
         """Called when a file is saved"""
         pass
+
+    async def fileExists(self, filepath: str) -> Coroutine[Any, Any, str]:
+        """Check if a file exists"""
+        return self.filesystem.exists(filepath)
+
+    async def getTerminalContents(self) -> Coroutine[Any, Any, str]:
+        return ""
+
+    async def listDirectoryContents(
+        self, directory: str, recursive: bool = False
+    ) -> List[str]:
+        return self.filesystem.list_directory_contents(directory, recursive=recursive)
