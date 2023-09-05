@@ -16,6 +16,7 @@ from continuedev.src.continuedev.plugins.steps.feedback import FeedbackStep
 from continuedev.src.continuedev.plugins.steps.comment_code import CommentCodeStep
 from continuedev.src.continuedev.plugins.steps.share_session import ShareSessionStep
 from continuedev.src.continuedev.plugins.steps.main import EditHighlightedCodeStep
+from continuedev.src.continuedev.plugins.steps.cmd import GenerateShellCommandStep
 from continuedev.src.continuedev.plugins.context_providers.search import SearchContextProvider
 from continuedev.src.continuedev.plugins.context_providers.diff import DiffContextProvider
 from continuedev.src.continuedev.plugins.context_providers.url import URLContextProvider
@@ -66,7 +67,12 @@ config = ContinueConfig(
             name="share",
             description="Download and share the session transcript",
             step=ShareSessionStep,
-        )
+        ),
+        SlashCommand(
+            name="cmd",
+            description="Generate a shell command",
+            step=GenerateShellCommandStep,
+        ),
     ],
     context_providers=[
         # GitHubIssuesContextProvider(

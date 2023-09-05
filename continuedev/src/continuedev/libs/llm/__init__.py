@@ -185,7 +185,7 @@ class LLM(ContinueBaseModel):
         stop: Optional[List[str]] = None,
         max_tokens: Optional[int] = None,
         functions: Optional[List[Any]] = None,
-    ) -> Coroutine[Any, Any, str]:
+    ) -> str:
         """Yield completion response, either streamed or not."""
         options = CompletionOptions(
             model=model or self.model,

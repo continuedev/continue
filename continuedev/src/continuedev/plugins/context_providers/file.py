@@ -8,7 +8,7 @@ from ...core.sdk import ContinueSDK
 from ...libs.util.filter_files import DEFAULT_IGNORE_PATTERNS
 from .util import remove_meilisearch_disallowed_chars
 
-MAX_SIZE_IN_CHARS = 25_000
+MAX_SIZE_IN_CHARS = 50_000
 
 
 async def get_file_contents(filepath: str, sdk: ContinueSDK) -> str:
