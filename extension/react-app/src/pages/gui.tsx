@@ -3,7 +3,13 @@ import { defaultBorderRadius } from "../components";
 import Loader from "../components/Loader";
 import ContinueButton from "../components/ContinueButton";
 import { FullState } from "../../../schema/FullState";
-import { useCallback, useEffect, useRef, useState, useContext } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  useContext,
+  useLayoutEffect,
+} from "react";
 import { HistoryNode } from "../../../schema/HistoryNode";
 import StepContainer from "../components/StepContainer";
 import { GUIClientContext } from "../App";
@@ -99,70 +105,39 @@ function GUI(props: GUIProps) {
     );
   }, [bottomMessage, aboveComboBoxDivRef.current]);
 
-  const [isScrolling, setIsScrolling] = useState(false);
+  const [userScrolledAwayFromBottom, setUserScrolledAwayFromBottom] =
+    useState<boolean>(false);
 
-  const [scrollTimeoutId, setScrollTimeoutId] = useState<NodeJS.Timeout>();
-
-  const scrollToBottom = useCallback(
-    (force: boolean = false) => {
-      if (scrollTimeoutId) {
-        return;
-      }
-
-      // Scroll only if user is within 100 pixels of the bottom of the window.
-      const edgeOffset = 50;
-      const scrollPosition = window.scrollY || 0;
+  useEffect(() => {
+    const handleScroll = () => {
+      // Scroll only if user is within 200 pixels of the bottom of the window.
+      const edgeOffset = -25;
+      const scrollPosition = topGuiDivRef.current?.scrollTop || 0;
       const scrollHeight = topGuiDivRef.current?.scrollHeight || 0;
       const clientHeight = window.innerHeight || 0;
 
-      const atBottomEdge =
-        scrollPosition + clientHeight + edgeOffset >= scrollHeight;
-
-      if (isScrolling || (!atBottomEdge && !force)) {
-        return;
+      if (scrollPosition + clientHeight + edgeOffset >= scrollHeight) {
+        setUserScrolledAwayFromBottom(false);
+      } else {
+        setUserScrolledAwayFromBottom(true);
       }
-
-      window.scrollTo({
-        top: scrollHeight,
-        behavior: "smooth",
-      });
-
-      setScrollTimeoutId(
-        setTimeout(() => {
-          setScrollTimeoutId(undefined);
-        }, 800)
-      );
-    },
-    [
-      window.scrollY,
-      topGuiDivRef.current?.scrollHeight,
-      topGuiDivRef.current?.clientHeight,
-      isScrolling,
-      scrollTimeoutId,
-    ]
-  );
-
-  const [timerId, setTimerId] = useState<NodeJS.Timeout>();
-
-  useEffect(() => {
-    const handleScrollEnd = () => {
-      setIsScrolling(false);
     };
 
-    const handleScroll = () => {
-      window.clearTimeout(timerId);
-
-      setIsScrolling(true);
-
-      setTimerId(setTimeout(() => handleScrollEnd(), 800));
-    };
-
-    window.addEventListener("scroll", handleScroll);
+    topGuiDivRef.current?.addEventListener("wheel", handleScroll);
 
     return () => {
-      window.removeEventListener("scroll", handleScroll);
+      window.removeEventListener("wheel", handleScroll);
     };
-  }, []);
+  }, [topGuiDivRef.current]);
+
+  useLayoutEffect(() => {
+    if (userScrolledAwayFromBottom) return;
+
+    topGuiDivRef.current?.scrollTo({
+      top: topGuiDivRef.current?.scrollHeight,
+      behavior: "smooth" as any,
+    });
+  }, [topGuiDivRef.current?.scrollHeight, history.timeline]);
 
   useEffect(() => {
     // Cmd + Backspace to delete current step
@@ -217,14 +192,8 @@ function GUI(props: GUIProps) {
         }
         return nextStepsOpen;
       });
-
-      scrollToBottom();
     });
   }, [client]);
-
-  useEffect(() => {
-    scrollToBottom(true);
-  }, [waitingForSteps]);
 
   // #endregion
 
@@ -378,6 +347,7 @@ function GUI(props: GUIProps) {
   }, []);
   return (
     <div
+      className="overflow-scroll"
       ref={topGuiDivRef}
       onKeyDown={(e) => {
         if (e.key === "Enter" && e.ctrlKey) {
