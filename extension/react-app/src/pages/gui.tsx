@@ -378,7 +378,6 @@ function GUI(props: GUIProps) {
   }, []);
   return (
     <div
-      className="overflow-scroll"
       ref={topGuiDivRef}
       onKeyDown={(e) => {
         if (e.key === "Enter" && e.ctrlKey) {

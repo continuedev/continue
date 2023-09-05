@@ -3,6 +3,7 @@ from typing import Callable, Optional
 
 import aiohttp
 
+from ...core.main import ContinueCustomException
 from ..llm import LLM
 from ..util.logging import logger
 from .prompts.chat import llama2_template_messages
@@ -80,7 +81,22 @@ class TogetherLLM(LLM):
         ) as resp:
             text = await resp.text()
             j = json.loads(text)
-            if "choices" not in j["output"]:
-                raise Exception(text)
-            if "output" in j:
-                return j["output"]["choices"][0]["text"]
+            try:
+                if "choices" not in j["output"]:
+                    raise Exception(text)
+                if "output" in j:
+                    return j["output"]["choices"][0]["text"]
+            except Exception as e:
+                j = await resp.json()
+                if "error" in j:
+                    if j["error"].startswith("invalid hexlify value"):
+                        raise ContinueCustomException(
+                            message=f"Invalid Together API key:\n\n{j['error']}",
+                            title="Together API Error",
+                        )
+                    else:
+                        raise ContinueCustomException(
+                            message=j["error"], title="Together API Error"
+                        )
+
+                raise e

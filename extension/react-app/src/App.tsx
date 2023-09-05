@@ -15,11 +15,11 @@ import {
 } from "./redux/slices/configSlice";
 import { setHighlightedCode } from "./redux/slices/miscSlice";
 import { postVscMessage } from "./vscode";
-import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import { RouterProvider, createMemoryRouter } from "react-router-dom";
 import ErrorPage from "./pages/error";
 import SettingsPage from "./pages/settings";
 
-const router = createBrowserRouter([
+const router = createMemoryRouter([
   {
     path: "/",
     element: <Layout />,
