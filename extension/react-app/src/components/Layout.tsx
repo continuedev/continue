@@ -142,7 +142,7 @@ const Layout = () => {
         />
 
         <GridDiv>
-          <div style={{ overflow: "scroll" }}>
+          <div>
             <Outlet />
           </div>
           <Footer>

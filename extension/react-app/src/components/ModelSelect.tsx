@@ -61,6 +61,13 @@ const MODEL_INFO: { title: string; class: string; args: any }[] = [
     class: "LlamaCpp",
     args: {},
   },
+  {
+    title: "gpt-4 (limited free usage)",
+    class: "MaybeProxyOpenAI",
+    args: {
+      model: "gpt-4",
+    },
+  },
 ];
 
 const Select = styled.select`
