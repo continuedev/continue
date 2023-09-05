@@ -13,6 +13,8 @@ const Tr = styled.tr`
   &:hover {
     background-color: ${secondaryDark};
   }
+
+  overflow-wrap: anywhere;
 `;
 
 const parseDate = (date: string): Date => {

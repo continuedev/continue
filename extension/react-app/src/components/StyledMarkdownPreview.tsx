@@ -14,6 +14,8 @@ const StyledMarkdownPreview = styled(MarkdownPreview)<{ light?: boolean }>`
       props.light ? vscBackground : secondaryDark};
     border-radius: ${defaultBorderRadius};
     border: 0.5px solid ${lightGray};
+
+    max-width: calc(100vw - 24px);
   }
 
   code {

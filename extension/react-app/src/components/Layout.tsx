@@ -67,6 +67,7 @@ const GridDiv = styled.div`
   display: grid;
   grid-template-rows: 1fr auto;
   height: 100vh;
+  overflow-x: visible;
 `;
 
 // #endregion
@@ -142,9 +143,7 @@ const Layout = () => {
         />
 
         <GridDiv>
-          <div>
-            <Outlet />
-          </div>
+          <Outlet />
           <Footer>
             {localStorage.getItem("hideFeature") === "true" || (
               <SparklesIcon
