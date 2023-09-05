@@ -1,10 +1,10 @@
-from typing import Any, List, Union
-from abc import ABC, abstractmethod, abstractproperty
+from abc import ABC, abstractmethod
+from typing import Any, Callable, List, Union
+
 from fastapi import WebSocket
 
-from ..models.main import Traceback
-from ..models.filesystem_edit import FileEdit, FileSystemEdit, EditDiff
 from ..models.filesystem import RangeInFile, RangeInFileWithContents
+from ..models.filesystem_edit import EditDiff, FileEdit, FileSystemEdit
 
 
 class AbstractIdeProtocolServer(ABC):
@@ -114,6 +114,52 @@ class AbstractIdeProtocolServer(ABC):
     @abstractmethod
     async def showDiff(self, filepath: str, replacement: str, step_index: int):
         """Show a diff"""
+
+    @abstractmethod
+    def subscribeToFilesCreated(self, callback: Callable[[List[str]], None]):
+        """Subscribe to files created event"""
+
+    @abstractmethod
+    def subscribeToFilesDeleted(self, callback: Callable[[List[str]], None]):
+        """Subscribe to files deleted event"""
+
+    @abstractmethod
+    def subscribeToFilesRenamed(self, callback: Callable[[List[str], List[str]], None]):
+        """Subscribe to files renamed event"""
+
+    @abstractmethod
+    def subscribeToFileSaved(self, callback: Callable[[str, str], None]):
+        """Subscribe to file saved event"""
+
+    @abstractmethod
+    def onFilesCreated(self, filepaths: List[str]):
+        """Called when files are created"""
+
+    @abstractmethod
+    def onFilesDeleted(self, filepaths: List[str]):
+        """Called when files are deleted"""
+
+    @abstractmethod
+    def onFilesRenamed(self, old_filepaths: List[str], new_filepaths: List[str]):
+        """Called when files are renamed"""
+
+    @abstractmethod
+    def onFileSaved(self, filepath: str, contents: str):
+        """Called when a file is saved"""
+
+    @abstractmethod
+    async def listDirectoryContents(
+        self, directory: str, recursive: bool = False
+    ) -> List[str]:
+        """List directory contents"""
+
+    @abstractmethod
+    async def fileExists(self, filepath: str) -> str:
+        """Check if a file exists"""
+
+    @abstractmethod
+    async def getTerminalContents(self) -> str:
+        """Get the terminal contents"""
 
     workspace_directory: str
     unique_id: str

@@ -3,9 +3,10 @@ import { getContinueServerUrl } from "./bridge";
 import {
   getExtensionUri,
   getNonce,
+  getUniqueId,
   openEditorAndRevealRange,
 } from "./util/vscode";
-import { RangeInFile } from "./client";
+import { RangeInFile } from "../schema/RangeInFile";
 import { setFocusedOnContinueInput } from "./commands";
 const WebSocket = require("ws");
 
@@ -67,7 +68,7 @@ class WebsocketConnection {
 export let debugPanelWebview: vscode.Webview | undefined;
 export function setupDebugPanel(
   panel: vscode.WebviewPanel | vscode.WebviewView,
-  sessionIdPromise: Promise<string> | string
+  sessionIdPromise: Promise<string>
 ): string {
   debugPanelWebview = panel.webview;
   panel.onDidDispose(() => {
@@ -112,7 +113,7 @@ export function setupDebugPanel(
     }
 
     const rangeInFile: RangeInFile = {
-      range: e.selections[0],
+      range: e.selections[0] as any,
       filepath: e.textEditor.document.fileName,
     };
     const filesystem = {
@@ -180,16 +181,14 @@ export function setupDebugPanel(
   panel.webview.onDidReceiveMessage(async (data) => {
     switch (data.type) {
       case "onLoad": {
-        let sessionId: string;
-        if (typeof sessionIdPromise === "string") {
-          sessionId = sessionIdPromise;
-        } else {
-          sessionId = await sessionIdPromise;
-        }
+        const sessionId = await sessionIdPromise;
         panel.webview.postMessage({
           type: "onLoad",
-          vscMachineId: vscode.env.machineId,
+          vscMachineId: getUniqueId(),
           apiUrl: getContinueServerUrl(),
+          workspacePaths: vscode.workspace.workspaceFolders?.map(
+            (folder) => folder.uri.fsPath
+          ),
           sessionId,
           vscMediaUrl,
           dataSwitchOn: vscode.workspace
@@ -323,9 +322,9 @@ export class ContinueGUIWebviewViewProvider
   implements vscode.WebviewViewProvider
 {
   public static readonly viewType = "continue.continueGUIView";
-  private readonly sessionIdPromise: Promise<string> | string;
+  private readonly sessionIdPromise: Promise<string>;
 
-  constructor(sessionIdPromise: Promise<string> | string) {
+  constructor(sessionIdPromise: Promise<string>) {
     this.sessionIdPromise = sessionIdPromise;
   }
 

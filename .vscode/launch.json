@@ -7,32 +7,43 @@
     {
       "name": "Server + Extension (VSCode)",
       "stopAll": true,
-      "configurations": [
-        "Server",
-        "Extension (VSCode)"
-      ]
+      "configurations": ["Server", "Extension (VSCode)"]
     },
     {
       "name": "Server + Tests (VSCode)",
       "stopAll": true,
-      "configurations": [
-        "Server",
-        "Tests (VSCode)"
-      ]
+      "configurations": ["Server", "Tests (VSCode)"]
     }
   ],
   "configurations": [
+    {
+      "name": "Pytest",
+      "type": "python",
+      "request": "launch",
+      "program": "continuedev/src/continuedev/tests/llm_test.py",
+      "console": "integratedTerminal",
+      "justMyCode": true,
+      "subProcess": true
+    },
     {
       "name": "Server",
       "type": "python",
       "request": "launch",
       "module": "continuedev.src.continuedev.server.main",
-      "args": [
-        "--port",
-        "8001"
-      ],
+      "args": ["--port", "8001"],
       "justMyCode": false,
-      "subProcess": false,
+      "subProcess": false
+      // Does it need a build task?
+      // What about a watch task? - type errors?
+    },
+    {
+      "name": "Headless",
+      "type": "python",
+      "request": "launch",
+      "module": "continuedev.headless",
+      "args": ["--config", "continuedev/config.py"],
+      "justMyCode": false,
+      "subProcess": false
       // Does it need a build task?
       // What about a watch task? - type errors?
     },
@@ -44,11 +55,10 @@
       "args": [
         // Pass a directory to manually test in
         "${workspaceFolder}/extension/manual-testing-sandbox",
-        "--extensionDevelopmentPath=${workspaceFolder}/extension",
+        "${workspaceFolder}/extension/manual-testing-sandbox/example.ts",
+        "--extensionDevelopmentPath=${workspaceFolder}/extension"
       ],
-      "outFiles": [
-        "${workspaceFolder}/extension/out/**/*.js"
-      ],
+      "outFiles": ["${workspaceFolder}/extension/out/**/*.js"],
       "preLaunchTask": "vscode-extension:build",
       "env": {
         "CONTINUE_SERVER_URL": "http://localhost:8001"
@@ -76,10 +86,10 @@
       "internalConsoleOptions": "openOnSessionStart",
       "preLaunchTask": "vscode-extension:tests:build",
       "env": {
-        "CONTINUE_SERVER_URL": "http://localhost:8001",
+        "CONTINUE_SERVER_URL": "http://localhost:65432",
         // Avoid timing out when stopping on breakpoints during debugging in VSCode
-        "MOCHA_TIMEOUT": "0",
-      },
+        "MOCHA_TIMEOUT": "0"
+      }
     }
   ]
 }

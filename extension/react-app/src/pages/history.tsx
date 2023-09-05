@@ -7,12 +7,23 @@ import { useNavigate } from "react-router-dom";
 import { secondaryDark, vscBackground } from "../components";
 import styled from "styled-components";
 import { ArrowLeftIcon } from "@heroicons/react/24/outline";
+import CheckDiv from "../components/CheckDiv";
 
 const Tr = styled.tr`
   &:hover {
     background-color: ${secondaryDark};
   }
+
+  overflow-wrap: anywhere;
 `;
+
+const parseDate = (date: string): Date => {
+  let dateObj = new Date(date);
+  if (isNaN(dateObj.getTime())) {
+    dateObj = new Date(parseInt(date) * 1000);
+  }
+  return dateObj;
+};
 
 const TdDiv = styled.div`
   cursor: pointer;
@@ -28,6 +39,11 @@ function History() {
   const [sessions, setSessions] = useState<SessionInfo[]>([]);
   const client = useContext(GUIClientContext);
   const apiUrl = useSelector((state: RootStore) => state.config.apiUrl);
+  const workspacePaths = useSelector(
+    (state: RootStore) => state.config.workspacePaths
+  );
+
+  const [filteringByWorkspace, setFilteringByWorkspace] = useState(false);
 
   useEffect(() => {
     const fetchSessions = async () => {
@@ -46,6 +62,8 @@ function History() {
     fetchSessions();
   }, [client]);
 
+  console.log(sessions.map((session) => session.date_created));
+
   return (
     <div className="w-full">
       <div className="items-center flex">
@@ -57,10 +75,29 @@ function History() {
         />
         <h1 className="text-2xl font-bold m-4 inline-block">History</h1>
       </div>
+      <CheckDiv
+        checked={filteringByWorkspace}
+        onClick={() => setFilteringByWorkspace((prev) => !prev)}
+        title="Filter by workspace"
+      />
       <table className="w-full">
         <tbody>
           {sessions
-            .sort((a, b) => parseInt(b.date_created) - parseInt(a.date_created))
+            .filter((session) => {
+              if (
+                !filteringByWorkspace ||
+                typeof workspacePaths === "undefined" ||
+                typeof session.workspace_directory === "undefined"
+              ) {
+                return true;
+              }
+              return workspacePaths.includes(session.workspace_directory);
+            })
+            .sort(
+              (a, b) =>
+                parseDate(b.date_created).getTime() -
+                parseDate(a.date_created).getTime()
+            )
             .map((session, index) => (
               <Tr key={index}>
                 <td>
@@ -72,9 +109,7 @@ function History() {
                   >
                     <div className="text-lg">{session.title}</div>
                     <div className="text-gray-400">
-                      {new Date(
-                        parseInt(session.date_created) * 1000
-                      ).toLocaleString("en-US", {
+                      {parseDate(session.date_created).toLocaleString("en-US", {
                         weekday: "short",
                         year: "numeric",
                         month: "long",

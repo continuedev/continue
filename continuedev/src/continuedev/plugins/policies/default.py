@@ -1,15 +1,16 @@
+import os
 from textwrap import dedent
 from typing import Type, Union
 
-from ..steps.chat import SimpleChatStep
-from ..steps.welcome import WelcomeStep
 from ...core.config import ContinueConfig
-from ..steps.steps_on_startup import StepsOnStartupStep
-from ...core.main import Step, History, Policy
+from ...core.main import History, Policy, Step
 from ...core.observation import UserInputObservation
+from ...libs.util.paths import getServerFolderPath
+from ..steps.chat import SimpleChatStep
 from ..steps.core.core import MessageStep
 from ..steps.custom_command import CustomCommandStep
 from ..steps.main import EditHighlightedCodeStep
+from ..steps.steps_on_startup import StepsOnStartupStep
 
 
 def parse_slash_command(inp: str, config: ContinueConfig) -> Union[None, Step]:
@@ -28,7 +29,8 @@ def parse_slash_command(inp: str, config: ContinueConfig) -> Union[None, Step]:
                     return slash_command.step(**params)
                 except TypeError as e:
                     raise Exception(
-                        f"Incorrect params used for slash command '{command_name}': {e}")
+                        f"Incorrect params used for slash command '{command_name}': {e}"
+                    )
     return None
 
 
@@ -40,26 +42,42 @@ def parse_custom_command(inp: str, config: ContinueConfig) -> Union[None, Step]:
             slash_command = parse_slash_command(custom_cmd.prompt, config)
             if slash_command is not None:
                 return slash_command
-            return CustomCommandStep(name=custom_cmd.name, description=custom_cmd.description, prompt=custom_cmd.prompt, user_input=after_command, slash_command=command_name)
+            return CustomCommandStep(
+                name=custom_cmd.name,
+                description=custom_cmd.description,
+                prompt=custom_cmd.prompt,
+                user_input=after_command,
+                slash_command=command_name,
+            )
     return None
 
 
 class DefaultPolicy(Policy):
-
     default_step: Type[Step] = SimpleChatStep
     default_params: dict = {}
 
     def next(self, config: ContinueConfig, history: History) -> Step:
         # At the very start, run initial Steps spcecified in the config
         if history.get_current() is None:
+            shown_welcome_file = os.path.join(getServerFolderPath(), ".shown_welcome")
+            if os.path.exists(shown_welcome_file):
+                return StepsOnStartupStep()
+
+            with open(shown_welcome_file, "w") as f:
+                f.write("")
             return (
-                MessageStep(name="Welcome to Continue", message=dedent("""\
+                MessageStep(
+                    name="Welcome to Continue",
+                    message=dedent(
+                        """\
                     - Highlight code section and ask a question or give instructions
                     - Use `cmd+m` (Mac) / `ctrl+m` (Windows) to open Continue
                     - Use `/help` to ask questions about how to use Continue
-                    - [Customize Continue](https://continue.dev/docs/customization) (e.g. use your own API key) by typing '/config'.""")) >>
-                WelcomeStep() >>
-                StepsOnStartupStep())
+                    - [Customize Continue](https://continue.dev/docs/customization) (e.g. use your own API key) by typing '/config'."""
+                    ),
+                )
+                >> StepsOnStartupStep()
+            )
 
         observation = history.get_current().observation
         if observation is not None and isinstance(observation, UserInputObservation):

@@ -1,23 +1,43 @@
-import traceback
-from typing import Coroutine, Union
 import os
-import importlib
+import traceback
+from typing import Coroutine, List, Optional, Union
 
-from ..plugins.steps.core.core import DefaultModelEditCodeStep
+from ..libs.llm import LLM
+from ..libs.util.logging import logger
+from ..libs.util.paths import getConfigFilePath
+from ..libs.util.telemetry import posthog_logger
+from ..models.filesystem import RangeInFile
+from ..models.filesystem_edit import (
+    AddDirectory,
+    AddFile,
+    DeleteDirectory,
+    DeleteFile,
+    FileEdit,
+    FileSystemEdit,
+)
 from ..models.main import Range
+from ..plugins.steps.core.core import (
+    DefaultModelEditCodeStep,
+    FileSystemEditStep,
+    MessageStep,
+    RangeInFileWithContents,
+    ShellCommandsStep,
+    WaitForUserConfirmationStep,
+)
+from ..server.ide_protocol import AbstractIdeProtocolServer
 from .abstract_sdk import AbstractContinueSDK
 from .config import ContinueConfig
-from ..models.filesystem_edit import FileEdit, FileSystemEdit, AddFile, DeleteFile, AddDirectory, DeleteDirectory
-from ..models.filesystem import RangeInFile
-from ..libs.llm import LLM
-from .observation import Observation
-from ..server.ide_protocol import AbstractIdeProtocolServer
-from .main import Context, ContinueCustomException, History, HistoryNode, Step, ChatMessage
-from ..plugins.steps.core.core import *
-from ..libs.util.telemetry import posthog_logger
-from ..libs.util.paths import getConfigFilePath
+from .lsp import ContinueLSPClient
+from .main import (
+    ChatMessage,
+    Context,
+    ContinueCustomException,
+    History,
+    HistoryNode,
+    Step,
+)
 from .models import Models
-from ..libs.util.logging import logger
+from .observation import Observation
 
 
 class Autopilot:
@@ -26,8 +46,10 @@ class Autopilot:
 
 class ContinueSDK(AbstractContinueSDK):
     """The SDK provided as parameters to a step"""
+
     ide: AbstractIdeProtocolServer
     models: Models
+    lsp: Optional[ContinueLSPClient] = None
     context: Context
     config: ContinueConfig
     __autopilot: Autopilot
@@ -38,38 +60,55 @@ class ContinueSDK(AbstractContinueSDK):
         self.context = autopilot.context
 
     @classmethod
-    async def create(cls, autopilot: Autopilot) -> "ContinueSDK":
+    async def create(
+        cls, autopilot: Autopilot, config: Optional[ContinueConfig] = None
+    ) -> "ContinueSDK":
         sdk = ContinueSDK(autopilot)
         autopilot.continue_sdk = sdk
 
         try:
-            config = sdk._load_config_dot_py()
-            sdk.config = config
+            sdk.config = config or sdk._load_config_dot_py()
         except Exception as e:
-            logger.error(
-                f"Failed to load config.py: {traceback.format_exception(e)}")
+            logger.error(f"Failed to load config.py: {traceback.format_exception(e)}")
 
-            sdk.config = ContinueConfig(
-            ) if sdk._last_valid_config is None else sdk._last_valid_config
+            sdk.config = (
+                ContinueConfig()
+                if sdk._last_valid_config is None
+                else sdk._last_valid_config
+            )
 
-            formatted_err = '\n'.join(traceback.format_exception(e))
+            formatted_err = "\n".join(traceback.format_exception(e))
             msg_step = MessageStep(
-                name="Invalid Continue Config File", message=formatted_err)
-            msg_step.description = f"Falling back to default config settings due to the following error in `~/.continue/config.py`.\n```\n{formatted_err}\n```\n\nIt's possible this was caused by an update to the Continue config format. If you'd like to see the new recommended default `config.py`, check [here](https://github.com/continuedev/continue/blob/main/continuedev/src/continuedev/libs/constants/default_config.py)."
-            sdk.history.add_node(HistoryNode(
-                step=msg_step,
-                observation=None,
-                depth=0,
-                active=False
-            ))
+                name="Invalid Continue Config File", message=formatted_err
+            )
+            msg_step.description = f"Falling back to default config settings due to the following error in `~/.continue/config.py`.\n```\n{formatted_err}\n```\n\nIt's possible this was caused by an update to the Continue config format. If you'd like to see the new recommended default `config.py`, check [here](https://github.com/continuedev/continue/blob/main/continuedev/src/continuedev/libs/constants/default_config.py).\n\nIf the error is related to OpenAIServerInfo, see the updated way of using these parameters [here](https://continue.dev/docs/customization#azure-openai-service)."
+            sdk.history.add_node(
+                HistoryNode(step=msg_step, observation=None, depth=0, active=False)
+            )
             await sdk.ide.setFileOpen(getConfigFilePath())
 
+        # Start models
         sdk.models = sdk.config.models
         await sdk.models.start(sdk)
 
+        # Start LSP
+        async def start_lsp():
+            try:
+                sdk.lsp = ContinueLSPClient(
+                    workspace_dir=sdk.ide.workspace_directory,
+                    # use_subprocess="python3.10 -m pylsp",
+                )
+                await sdk.lsp.start()
+            except:
+                logger.warning("Failed to start LSP client", exc_info=True)
+                sdk.lsp = None
+
+        # create_async_task(
+        #     start_lsp(), on_error=lambda e: logger.error("Failed to setup LSP: %s", e)
+        # )
+
         # When the config is loaded, setup posthog logger
-        posthog_logger.setup(
-            sdk.ide.unique_id, sdk.config.allow_anonymous_telemetry)
+        posthog_logger.setup(sdk.ide.unique_id, sdk.config.allow_anonymous_telemetry)
 
         return sdk
 
@@ -81,14 +120,7 @@ class ContinueSDK(AbstractContinueSDK):
         self.history.timeline[self.history.current_index].logs.append(message)
 
     async def start_model(self, llm: LLM):
-        kwargs = {}
-        if llm.requires_api_key:
-            kwargs["api_key"] = await self.get_user_secret(llm.requires_api_key)
-        if llm.requires_unique_id:
-            kwargs["unique_id"] = self.ide.unique_id
-        if llm.requires_write_log:
-            kwargs["write_log"] = self.write_log
-        await llm.start(**kwargs)
+        await llm.start(unique_id=self.ide.unique_id, write_log=self.write_log)
 
     async def _ensure_absolute_path(self, path: str) -> str:
         if os.path.isabs(path):
@@ -109,8 +141,14 @@ class ContinueSDK(AbstractContinueSDK):
     async def run_step(self, step: Step) -> Coroutine[Observation, None, None]:
         return await self.__autopilot._run_singular_step(step)
 
-    async def apply_filesystem_edit(self, edit: FileSystemEdit, name: str = None, description: str = None):
-        return await self.run_step(FileSystemEditStep(edit=edit, description=description, **({'name': name} if name else {})))
+    async def apply_filesystem_edit(
+        self, edit: FileSystemEdit, name: str = None, description: str = None
+    ):
+        return await self.run_step(
+            FileSystemEditStep(
+                edit=edit, description=description, **({"name": name} if name else {})
+            )
+        )
 
     async def wait_for_user_input(self) -> str:
         return await self.__autopilot.wait_for_user_input()
@@ -118,22 +156,51 @@ class ContinueSDK(AbstractContinueSDK):
     async def wait_for_user_confirmation(self, prompt: str):
         return await self.run_step(WaitForUserConfirmationStep(prompt=prompt))
 
-    async def run(self, commands: Union[List[str], str], cwd: str = None, name: str = None, description: str = None, handle_error: bool = True) -> Coroutine[str, None, None]:
+    async def run(
+        self,
+        commands: Union[List[str], str],
+        cwd: str = None,
+        name: str = None,
+        description: str = None,
+        handle_error: bool = True,
+    ) -> Coroutine[str, None, None]:
         commands = commands if isinstance(commands, List) else [commands]
-        return (await self.run_step(ShellCommandsStep(cmds=commands, cwd=cwd, description=description, handle_error=handle_error, **({'name': name} if name else {})))).text
+        return (
+            await self.run_step(
+                ShellCommandsStep(
+                    cmds=commands,
+                    cwd=cwd,
+                    description=description,
+                    handle_error=handle_error,
+                    **({"name": name} if name else {}),
+                )
+            )
+        ).text
 
-    async def edit_file(self, filename: str, prompt: str, name: str = None, description: str = "", range: Range = None):
+    async def edit_file(
+        self,
+        filename: str,
+        prompt: str,
+        name: str = None,
+        description: str = "",
+        range: Range = None,
+    ):
         filepath = await self._ensure_absolute_path(filename)
 
         await self.ide.setFileOpen(filepath)
         contents = await self.ide.readFile(filepath)
-        await self.run_step(DefaultModelEditCodeStep(
-            range_in_files=[RangeInFile(filepath=filepath, range=range) if range is not None else RangeInFile.from_entire_file(
-                filepath, contents)],
-            user_input=prompt,
-            description=description,
-            **({'name': name} if name else {})
-        ))
+        await self.run_step(
+            DefaultModelEditCodeStep(
+                range_in_files=[
+                    RangeInFile(filepath=filepath, range=range)
+                    if range is not None
+                    else RangeInFile.from_entire_file(filepath, contents)
+                ],
+                user_input=prompt,
+                description=description,
+                **({"name": name} if name else {}),
+            )
+        )
 
     async def append_to_file(self, filename: str, content: str):
         filepath = await self._ensure_absolute_path(filename)
@@ -145,11 +212,15 @@ class ContinueSDK(AbstractContinueSDK):
         filepath = await self._ensure_absolute_path(filename)
         dir_name = os.path.dirname(filepath)
         os.makedirs(dir_name, exist_ok=True)
-        return await self.run_step(FileSystemEditStep(edit=AddFile(filepath=filepath, content=content)))
+        return await self.run_step(
+            FileSystemEditStep(edit=AddFile(filepath=filepath, content=content))
+        )
 
     async def delete_file(self, filename: str):
         filename = await self._ensure_absolute_path(filename)
-        return await self.run_step(FileSystemEditStep(edit=DeleteFile(filepath=filename)))
+        return await self.run_step(
+            FileSystemEditStep(edit=DeleteFile(filepath=filename))
+        )
 
     async def add_directory(self, path: str):
         path = await self._ensure_absolute_path(path)
@@ -159,42 +230,45 @@ class ContinueSDK(AbstractContinueSDK):
         path = await self._ensure_absolute_path(path)
         return await self.run_step(FileSystemEditStep(edit=DeleteDirectory(path=path)))
 
-    async def get_user_secret(self, env_var: str) -> str:
-        # TODO support error prompt dynamically set on env_var
-        return await self.ide.getUserSecret(env_var)
-
     _last_valid_config: ContinueConfig = None
 
     def _load_config_dot_py(self) -> ContinueConfig:
-        # Use importlib to load the config file config.py at the given path
         path = getConfigFilePath()
+        config = ContinueConfig.from_filepath(path)
+        self._last_valid_config = config
 
-        import importlib.util
-        spec = importlib.util.spec_from_file_location("config", path)
-        config = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(config)
-        self._last_valid_config = config.config
+        logger.debug("Loaded Continue config file from %s", path)
 
-        return config.config
+        return config
 
-    def get_code_context(self, only_editing: bool = False) -> List[RangeInFileWithContents]:
+    def get_code_context(
+        self, only_editing: bool = False
+    ) -> List[RangeInFileWithContents]:
         highlighted_ranges = self.__autopilot.context_manager.context_providers[
-            "code"].highlighted_ranges
-        context = list(filter(lambda x: x.item.editing, highlighted_ranges)
-                       ) if only_editing else highlighted_ranges
+            "code"
+        ].highlighted_ranges
+        context = (
+            list(filter(lambda x: x.item.editing, highlighted_ranges))
+            if only_editing
+            else highlighted_ranges
+        )
         return [c.rif for c in context]
 
     def set_loading_message(self, message: str):
         # self.__autopilot.set_loading_message(message)
         raise NotImplementedError()
 
-    def raise_exception(self, message: str, title: str, with_step: Union[Step, None] = None):
+    def raise_exception(
+        self, message: str, title: str, with_step: Union[Step, None] = None
+    ):
         raise ContinueCustomException(message, title, with_step)
 
     async def get_chat_context(self) -> List[ChatMessage]:
         history_context = self.history.to_chat_history()
 
-        context_messages: List[ChatMessage] = await self.__autopilot.context_manager.get_chat_messages()
+        context_messages: List[
+            ChatMessage
+        ] = await self.__autopilot.context_manager.get_chat_messages()
 
         # Insert at the end, but don't insert after latest user message or function call
         for msg in context_messages:

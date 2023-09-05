@@ -2,11 +2,33 @@
 
 Continue can be deeply customized by editing the `ContinueConfig` object in `~/.continue/config.py` on your machine. This file is created the first time you run Continue.
 
+## Summary of Models
+
+Commercial Models
+
+- [MaybeProxyOpenAI](#adding-an-openai-api-key) (default) - Use gpt-4 or gpt-3.5-turbo free with our API key, or with your API key. gpt-4 is probably the most capable model of all options.
+- [OpenAI](#azure-openai-service) - Use any OpenAI model with your own key. Can also change the base URL if you have a server that uses the OpenAI API format, including using the Azure OpenAI service, LocalAI, etc.
+- [AnthropicLLM](#claude-2) - Use claude-2 with your Anthropic API key. Claude 2 is also highly capable, and has a 100,000 token context window.
+
+Local Models
+
+- [Ollama](#run-llama-2-locally-with-ollama) - If you have a Mac, Ollama is the simplest way to run open-source models like Code Llama.
+- [OpenAI](#local-models-with-openai-compatible-server) - If you have access to an OpenAI-compatible server (e.g. llama-cpp-python, LocalAI, FastChat, TextGenWebUI, etc.), you can use the `OpenAI` class and just change the base URL.
+- [GGML](#local-models-with-ggml) - An alternative way to connect to OpenAI-compatible servers. Will use `aiohttp` directly instead of the `openai` Python package.
+- [LlamaCpp](#llamacpp) - Build llama.cpp from source and use its built-in API server.
+
+Open-Source Models (not local)
+
+- [TogetherLLM](#together) - Use any model from the [Together Models list](https://docs.together.ai/docs/models-inference) with your Together API key.
+- [ReplicateLLM](#replicate) - Use any open-source model from the [Replicate Streaming List](https://replicate.com/collections/streaming-language-models) with your Replicate API key.
+
 ## Change the default LLM
 
 In `config.py`, you'll find the `models` property:
 
 ```python
+from continuedev.src.continuedev.core.models import Models
+
 config = ContinueConfig(
     ...
     models=Models(
@@ -16,7 +38,7 @@ config = ContinueConfig(
 )
 ```
 
-The `default` model is the one used for most operations, including responding to your messages and editing code. The `medium` model is used for summarization tasks that require less quality. There are also `small` and `large` roles that can be filled, but all will fall back to `default` if not set. The values of these fields must be of the [`LLM`](https://github.com/continuedev/continue/blob/main/continuedev/src/continuedev/libs/llm/__init__.py) class, which implements methods for retrieving and streaming completions from an LLM.
+The `default` and `medium` properties are different _model roles_. This allows different models to be used for different tasks. The available roles are `default`, `small`, `medium`, `large`, `edit`, and `chat`. `edit` is used when you use the '/edit' slash command, `chat` is used for all chat responses, and `medium` is used for summarizing. If not set, all roles will fall back to `default`. The values of these fields must be of the [`LLM`](https://github.com/continuedev/continue/blob/main/continuedev/src/continuedev/libs/llm/__init__.py) class, which implements methods for retrieving and streaming completions from an LLM.
 
 Below, we describe the `LLM` classes available in the Continue core library, and how they can be used.
 
@@ -77,6 +99,32 @@ config = ContinueConfig(
 )
 ```
 
+### Local models with OpenAI-compatible server
+
+If you are locally serving a model that uses an OpenAI-compatible server, you can simply change the `api_base` in the `OpenAI` class like this:
+
+```python
+from continuedev.src.continuedev.libs.llm.openai import OpenAI
+
+config = ContinueConfig(
+    ...
+    models=Models(
+        default=OpenAI(
+            api_key="EMPTY",
+            model="<MODEL_NAME>",
+            api_base="http://localhost:8000", # change to your server
+        )
+    )
+)
+```
+
+Options for serving models locally with an OpenAI-compatible server include:
+
+- [text-gen-webui](https://github.com/oobabooga/text-generation-webui/tree/main/extensions/openai#setup--installation)
+- [FastChat](https://github.com/lm-sys/FastChat/blob/main/docs/openai_api.md)
+- [LocalAI](https://localai.io/basics/getting_started/)
+- [llama-cpp-python](https://github.com/abetlen/llama-cpp-python#web-server)
+
 ### Local models with ggml
 
 See our [5 minute quickstart](https://github.com/continuedev/ggml-server-example) to run any model locally with ggml. While these models don't yet perform as well, they are free, entirely private, and run offline.
@@ -96,24 +144,67 @@ config = ContinueConfig(
 )
 ```
 
-### Replicate (beta)
+### Llama.cpp
 
-Replicate is a great option for newly released language models or models that you've deployed through their platform. Sign up for an account [here](https://replicate.ai/), copy your API key, and then select any model from the [Replicate Streaming List](https://replicate.com/collections/streaming-language-models). Change the config file to look like this:
+Run the llama.cpp server binary to start the API server. If running on a remote server, be sure to set host to 0.0.0.0:
+
+```shell
+.\server.exe -c 4096 --host 0.0.0.0 -t 16 --mlock -m models\meta\llama\codellama-7b-instruct.Q8_0.gguf
+```
+
+After it's up and running, change `~/.continue/config.py` to look like this:
 
 ```python
+from continuedev.src.continuedev.libs.llm.llamacpp import LlamaCpp
+
+config = ContinueConfig(
+    ...
+    models=Models(
+        default=LlamaCpp(
+            max_context_length=4096,
+            server_url="http://localhost:8080")
+    )
+)
+```
+
+### Together
+
+The Together API is a cloud platform for running large AI models. You can sign up [here](https://api.together.xyz/signup), copy your API key on the initial welcome screen, and then hit the play button on any model from the [Together Models list](https://docs.together.ai/docs/models-inference). Change `~/.continue/config.py` to look like this:
+
+```python
+from continuedev.src.continuedev.core.models import Models
+from continuedev.src.continuedev.libs.llm.together import TogetherLLM
+
+config = ContinueConfig(
+    ...
+    models=Models(
+        default=TogetherLLM(
+            api_key="<API_KEY>",
+            model="togethercomputer/llama-2-13b-chat"
+        )
+    )
+)
+```
+
+### Replicate
+
+Replicate is a great option for newly released language models or models that you've deployed through their platform. Sign up for an account [here](https://replicate.ai/), copy your API key, and then select any model from the [Replicate Streaming List](https://replicate.com/collections/streaming-language-models). Change `~/.continue/config.py` to look like this:
+
+```python
+from continuedev.src.continuedev.core.models import Models
 from continuedev.src.continuedev.libs.llm.replicate import ReplicateLLM
 
 config = ContinueConfig(
     ...
     models=Models(
         default=ReplicateLLM(
-            model="stablecode-completion-alpha-3b-4k",
+            model="replicate/codellama-13b-instruct:da5676342de1a5a335b848383af297f592b816b950a43d251a0a9edd0113604b",
             api_key="my-replicate-api-key")
     )
 )
 ```
 
-If you don't specify the `model` parameter, it will default to `stablecode-completion-alpha-3b-4k`.
+If you don't specify the `model` parameter, it will default to `replicate/llama-2-70b-chat:58d078176e02c219e11eb4da5a02a7830a283b14cf8f94537af893ccff5ee781`.
 
 ### Self-hosting an open-source model
 
@@ -126,24 +217,26 @@ If by chance the provider has the exact same API interface as OpenAI, the `GGML`
 If you'd like to use OpenAI models but are concerned about privacy, you can use the Azure OpenAI service, which is GDPR and HIPAA compliant. After applying for access [here](https://azure.microsoft.com/en-us/products/ai-services/openai-service), you will typically hear back within only a few days. Once you have access, instantiate the model like so:
 
 ```python
-from continuedev.src.continuedev.libs.llm.openai import OpenAI, OpenAIServerInfo
+from continuedev.src.continuedev.libs.llm.openai import OpenAI
 
 config = ContinueConfig(
     ...
     models=Models(
-        default=OpenAI(api_key="my-api-key", model="gpt-3.5-turbo", server_info=OpenAIServerInfo(
-            api_base="https://my-azure-openai-instance.openai.azure.com/"
+        default=OpenAI(
+            api_key="my-api-key",
+            model="gpt-3.5-turbo",
+            api_base="https://my-azure-openai-instance.openai.azure.com/",
             engine="my-azure-openai-deployment",
             api_version="2023-03-15-preview",
             api_type="azure"
-        ))
+        )
     )
 )
 ```
 
 The easiest way to find this information is from the chat playground in the Azure OpenAI portal. Under the "Chat Session" section, click "View Code" to see each of these parameters. Finally, find one of your Azure OpenAI keys and enter it in the VS Code settings under `continue.OPENAI_API_KEY`.
 
-Note that you can also use `OpenAIServerInfo` for uses other than Azure, such as self-hosting a model.
+Note that you can also use these parameters for uses other than Azure, such as self-hosting a model.
 
 ## Customize System Message
 
@@ -219,53 +312,9 @@ config=ContinueConfig(
 
 Set `temperature` to any value between 0 and 1. Higher values will make the LLM more creative, while lower values will make it more predictable. The default is 0.5.
 
-## Custom Context Providers
+## Context Providers
 
-When you type '@' in the Continue text box, it will display a dropdown of items that can be selected to include in your message as context. For example, you might want to reference a GitHub Issue, file, or Slack thread. All of these options are provided by a `ContextProvider` class, and we make it easy to write your own. As an example, here is the `GitHubIssuesContextProvider`, which lets you search all open GitHub Issues in a repo:
-
-```python
-class GitHubIssuesContextProvider(ContextProvider):
-    """
-    The GitHubIssuesContextProvider is a ContextProvider that allows you to search GitHub issues in a repo.
-    """
-
-    title = "issues"
-    repo_name: str
-    auth_token: str
-
-    async def provide_context_items(self) -> List[ContextItem]:
-        auth = Auth.Token(self.auth_token)
-        gh = Github(auth=auth)
-
-        repo = gh.get_repo(self.repo_name)
-        issues = repo.get_issues().get_page(0)
-
-        return [ContextItem(
-            content=issue.body,
-            description=ContextItemDescription(
-                name=f"Issue #{issue.number}",
-                description=issue.title,
-                id=ContextItemId(
-                    provider_title=self.title,
-                    item_id=issue.id
-                )
-            )
-        ) for issue in issues]
-```
-
-It can then be set in the `ContinueConfig` like so:
-
-```python
-config = ContinueConfig(
-    ...
-    context_providers=[
-        GitHubIssuesContextProvider(
-            repo_name="my-github-username-or-org/my-github-repo",
-            auth_token="my-github-auth-token"
-        )
-    ]
-)
-```
+When you type '@' in the Continue text box, it will display a dropdown of items that can be selected to include in your message as context. For example, you might want to reference a GitHub Issue, file, or Slack thread. All of these options are provided by a `ContextProvider` class, and we make it easy to write your own or use our builtin options. See the [Context Providers](./context-providers.md) page for more info.
 
 ## Custom Policies
 

@@ -1,18 +1,16 @@
+import argparse
 import asyncio
-import time
-import psutil
-import os
+import atexit
+
+import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-import atexit
-import uvicorn
-import argparse
 
-
-from .ide import router as ide_router
-from .gui import router as gui_router
-from .session_manager import session_manager, router as sessions_router
 from ..libs.util.logging import logger
+from .gui import router as gui_router
+from .ide import router as ide_router
+from .session_manager import router as sessions_router
+from .session_manager import session_manager
 
 app = FastAPI()
 
@@ -39,8 +37,7 @@ def health():
 try:
     # add cli arg for server port
     parser = argparse.ArgumentParser()
-    parser.add_argument("-p", "--port", help="server port",
-                        type=int, default=65432)
+    parser.add_argument("-p", "--port", help="server port", type=int, default=65432)
     args = parser.parse_args()
 except Exception as e:
     logger.debug(f"Error parsing command line arguments: {e}")

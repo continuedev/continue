@@ -1,45 +1,35 @@
-from abc import abstractproperty
-from typing import List, Optional
-import replicate
 import concurrent.futures
+from typing import List
 
-from ..util.count_tokens import DEFAULT_ARGS, count_tokens
+import replicate
+
 from ...core.main import ChatMessage
 from . import LLM
+from .prompts.edit import simplified_edit_prompt
 
 
 class ReplicateLLM(LLM):
     api_key: str
-    model: str = "nateraw/stablecode-completion-alpha-3b-4k:e82ebe958f0a5be6846d1a82041925767edb1d1f162596c643e48fbea332b1bb"
-    max_context_length: int = 2048
+    "Replicate API key"
+
+    model: str = "replicate/llama-2-70b-chat:58d078176e02c219e11eb4da5a02a7830a283b14cf8f94537af893ccff5ee781"
 
     _client: replicate.Client = None
 
-    @property
-    def name(self):
-        return self.model
+    prompt_templates = {
+        "edit": simplified_edit_prompt,
+    }
 
-    @property
-    def context_length(self):
-        return self.max_context_length
-
-    @property
-    def default_args(self):
-        return {**DEFAULT_ARGS, "model": self.name, "max_tokens": 1024}
-
-    def count_tokens(self, text: str):
-        return count_tokens(self.name, text)
-
-    async def start(self):
+    async def start(self, **kwargs):
+        await super().start(**kwargs)
         self._client = replicate.Client(api_token=self.api_key)
 
-    async def stop(self):
-        pass
-
-    async def complete(self, prompt: str, with_history: List[ChatMessage] = None, **kwargs):
+    async def _complete(self, prompt: str, options):
         def helper():
-            output = self._client.run(self.model, input={"message": prompt})
-            completion = ''
+            output = self._client.run(
+                self.model, input={"message": prompt, "prompt": prompt}
+            )
+            completion = ""
             for item in output:
                 completion += item
 
@@ -51,13 +41,18 @@ class ReplicateLLM(LLM):
 
         return completion
 
-    async def stream_complete(self, prompt, with_history: List[ChatMessage] = None, **kwargs):
-        for item in self._client.run(self.model, input={"message": prompt}):
+    async def _stream_complete(self, prompt, options):
+        for item in self._client.run(
+            self.model, input={"message": prompt, "prompt": prompt}
+        ):
             yield item
 
-    async def stream_chat(self, messages: List[ChatMessage] = None, **kwargs):
-        for item in self._client.run(self.model, input={"message": messages[-1].content}):
-            yield {
-                "content": item,
-                "role": "assistant"
-            }
+    async def _stream_chat(self, messages: List[ChatMessage], options):
+        for item in self._client.run(
+            self.model,
+            input={
+                "message": messages[-1]["content"],
+                "prompt": messages[-1]["content"],
+            },
+        ):
+            yield {"content": item, "role": "assistant"}

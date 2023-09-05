@@ -1,3 +1,5 @@
+> 🎁 **New!: [Use Code Llama with Continue](https://continue.dev/docs/walkthroughs/codellama)**
+
 <h1 align="center">Continue</h1>
 
 <div align="center">

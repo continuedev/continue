@@ -9,10 +9,12 @@ export type SessionInfo = SessionInfo1;
 export type SessionId = string;
 export type Title = string;
 export type DateCreated = string;
+export type WorkspaceDirectory = string;
 
 export interface SessionInfo1 {
   session_id: SessionId;
   title: Title;
   date_created: DateCreated;
+  workspace_directory?: WorkspaceDirectory;
   [k: string]: unknown;
 }

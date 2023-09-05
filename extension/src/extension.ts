@@ -3,8 +3,33 @@
  */
 
 import * as vscode from "vscode";
+import { getExtensionVersion } from "./activation/environmentSetup";
+import { getUniqueId } from "./util/vscode";
+
+let client: any = undefined;
+export async function capture(args: any) {
+  console.log("Capturing posthog event: ", args);
+  if (!client) {
+    const { PostHog } = await import("posthog-node");
+    client = new PostHog("phc_JS6XFROuNbhJtVCEdTSYk6gl5ArRrTNMpCcguAXlSPs", {
+      host: "https://app.posthog.com",
+    });
+  }
+  client.capture(args);
+}
 
 async function dynamicImportAndActivate(context: vscode.ExtensionContext) {
+  if (!context.globalState.get("hasBeenInstalled")) {
+    context.globalState.update("hasBeenInstalled", true);
+    capture({
+      distinctId: getUniqueId(),
+      event: "install",
+      properties: {
+        extensionVersion: getExtensionVersion(),
+      },
+    });
+  }
+
   const { activateExtension } = await import("./activation/activate");
   try {
     await activateExtension(context);
@@ -29,4 +54,16 @@ async function dynamicImportAndActivate(context: vscode.ExtensionContext) {
 
 export function activate(context: vscode.ExtensionContext) {
   dynamicImportAndActivate(context);
+}
+
+export function deactivate() {
+  capture({
+    distinctId: getUniqueId(),
+    event: "deactivate",
+    properties: {
+      extensionVersion: getExtensionVersion(),
+    },
+  });
+
+  client?.shutdown();
 }

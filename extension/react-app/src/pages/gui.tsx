@@ -99,24 +99,70 @@ function GUI(props: GUIProps) {
     );
   }, [bottomMessage, aboveComboBoxDivRef.current]);
 
-  const [scrollTimeout, setScrollTimeout] = useState<NodeJS.Timeout | null>(
-    null
+  const [isScrolling, setIsScrolling] = useState(false);
+
+  const [scrollTimeoutId, setScrollTimeoutId] = useState<NodeJS.Timeout>();
+
+  const scrollToBottom = useCallback(
+    (force: boolean = false) => {
+      if (scrollTimeoutId) {
+        return;
+      }
+
+      // Scroll only if user is within 100 pixels of the bottom of the window.
+      const edgeOffset = 50;
+      const scrollPosition = window.scrollY || 0;
+      const scrollHeight = topGuiDivRef.current?.scrollHeight || 0;
+      const clientHeight = window.innerHeight || 0;
+
+      const atBottomEdge =
+        scrollPosition + clientHeight + edgeOffset >= scrollHeight;
+
+      if (isScrolling || (!atBottomEdge && !force)) {
+        return;
+      }
+
+      window.scrollTo({
+        top: scrollHeight,
+        behavior: "smooth",
+      });
+
+      setScrollTimeoutId(
+        setTimeout(() => {
+          setScrollTimeoutId(undefined);
+        }, 800)
+      );
+    },
+    [
+      window.scrollY,
+      topGuiDivRef.current?.scrollHeight,
+      topGuiDivRef.current?.clientHeight,
+      isScrolling,
+      scrollTimeoutId,
+    ]
   );
-  const scrollToBottom = useCallback(() => {
-    if (scrollTimeout) {
-      clearTimeout(scrollTimeout);
-    }
-    // Debounced smooth scroll to bottom of screen
-    if (topGuiDivRef.current) {
-      const timeout = setTimeout(() => {
-        window.scrollTo({
-          top: topGuiDivRef.current!.offsetHeight,
-          behavior: "smooth",
-        });
-      }, 200);
-      setScrollTimeout(timeout);
-    }
-  }, [topGuiDivRef.current, scrollTimeout]);
+
+  const [timerId, setTimerId] = useState<NodeJS.Timeout>();
+
+  useEffect(() => {
+    const handleScrollEnd = () => {
+      setIsScrolling(false);
+    };
+
+    const handleScroll = () => {
+      window.clearTimeout(timerId);
+
+      setIsScrolling(true);
+
+      setTimerId(setTimeout(() => handleScrollEnd(), 800));
+    };
+
+    window.addEventListener("scroll", handleScroll);
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+    };
+  }, []);
 
   useEffect(() => {
     // Cmd + Backspace to delete current step
@@ -141,11 +187,6 @@ function GUI(props: GUIProps) {
 
   useEffect(() => {
     client?.onStateUpdate((state: FullState) => {
-      // Scroll only if user is at very bottom of the window.
-      const shouldScrollToBottom =
-        topGuiDivRef.current &&
-        topGuiDivRef.current?.offsetHeight - window.scrollY < 100;
-
       const waitingForSteps =
         state.active &&
         state.history.current_index < state.history.timeline.length &&
@@ -177,14 +218,12 @@ function GUI(props: GUIProps) {
         return nextStepsOpen;
       });
 
-      if (shouldScrollToBottom) {
-        scrollToBottom();
-      }
+      scrollToBottom();
     });
   }, [client]);
 
   useEffect(() => {
-    scrollToBottom();
+    scrollToBottom(true);
   }, [waitingForSteps]);
 
   // #endregion
@@ -202,6 +241,15 @@ function GUI(props: GUIProps) {
   const onMainTextInput = (event?: any) => {
     if (mainTextInputRef.current) {
       let input = (mainTextInputRef.current as any).inputValue;
+
+      if (input.trim() === "") return;
+
+      if (input.startsWith("#") && (input.length === 7 || input.length === 4)) {
+        localStorage.setItem("continueButtonColor", input);
+        (mainTextInputRef.current as any).setInputValue("");
+        return;
+      }
+
       // cmd+enter to /edit
       if (isMetaEquivalentKeyPressed(event)) {
         input = `/edit ${input}`;
@@ -234,7 +282,6 @@ function GUI(props: GUIProps) {
           return;
         }
       }
-      if (input.trim() === "") return;
 
       client.sendMainInput(input);
       dispatch(temporarilyPushToUserInputQueue(input));
@@ -247,7 +294,7 @@ function GUI(props: GUIProps) {
           "mainTextEntryCounter",
           (currentCount + 1).toString()
         );
-        if (currentCount === 25) {
+        if (currentCount === 100) {
           dispatch(
             setDialogMessage(
               <div className="text-center">
@@ -331,7 +378,6 @@ function GUI(props: GUIProps) {
   }, []);
   return (
     <div
-      className="overflow-hidden"
       ref={topGuiDivRef}
       onKeyDown={(e) => {
         if (e.key === "Enter" && e.ctrlKey) {
@@ -403,8 +449,10 @@ function GUI(props: GUIProps) {
             </p>
           </div>
           <div className="w-3/4 m-auto text-center text-xs">
-            Tip: Drag the Continue logo from the far left of the window to the
-            right, then toggle Continue using option/alt+command+m.
+            {/* Tip: Drag the Continue logo from the far left of the window to the
+            right, then toggle Continue using option/alt+command+m. */}
+            {/* Tip: If there is an error in the terminal, use COMMAND+D to
+            automatically debug */}
           </div>
         </>
       )}
@@ -412,6 +460,7 @@ function GUI(props: GUIProps) {
         return node.step.name === "User Input" ? (
           node.step.hide || (
             <UserInputContainer
+              index={index}
               onDelete={() => {
                 client?.deleteAtIndex(index);
               }}

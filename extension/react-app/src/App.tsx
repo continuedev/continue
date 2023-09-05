@@ -11,13 +11,15 @@ import {
   setSessionId,
   setVscMediaUrl,
   setDataSwitchOn,
+  setWorkspacePaths,
 } from "./redux/slices/configSlice";
 import { setHighlightedCode } from "./redux/slices/miscSlice";
 import { postVscMessage } from "./vscode";
-import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import { RouterProvider, createMemoryRouter } from "react-router-dom";
 import ErrorPage from "./pages/error";
+import SettingsPage from "./pages/settings";
 
-const router = createBrowserRouter([
+const router = createMemoryRouter([
   {
     path: "/",
     element: <Layout />,
@@ -34,6 +36,10 @@ const router = createBrowserRouter([
       {
         path: "/history",
         element: <History />,
+      },
+      {
+        path: "/settings",
+        element: <SettingsPage />,
       },
     ],
   },
@@ -56,6 +62,7 @@ function App() {
           dispatch(setSessionId(event.data.sessionId));
           dispatch(setVscMediaUrl(event.data.vscMediaUrl));
           dispatch(setDataSwitchOn(event.data.dataSwitchOn));
+          dispatch(setWorkspacePaths(event.data.workspacePaths));
           break;
         case "highlightedCode":
           dispatch(setHighlightedCode(event.data.rangeInFile));

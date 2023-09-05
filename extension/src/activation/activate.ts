@@ -49,6 +49,19 @@ export async function activateExtension(context: vscode.ExtensionContext) {
     })
     .catch((e) => console.log("Error checking for extension updates: ", e));
 
+  // Add to python.analysis.extraPaths global setting
+  // const pythonConfig = vscode.workspace.getConfiguration("python");
+  // const extraPaths = pythonConfig.get<string[]>("analysis.extraPaths");
+  // const pathToAdd = path.join(os.homedir(), ".continue", "server");
+  // if (extraPaths) {
+  //   if (!extraPaths.includes(pathToAdd)) {
+  //     extraPaths.push(pathToAdd);
+  //     pythonConfig.update("analysis.extraPaths", extraPaths);
+  //   }
+  // } else {
+  //   pythonConfig.update("analysis.extraPaths", [pathToAdd]);
+  // }
+
   // Register commands and providers
   registerAllCodeLensProviders(context);
   registerAllCommands(context);

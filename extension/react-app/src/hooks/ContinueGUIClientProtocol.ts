@@ -1,4 +1,4 @@
-import { ContextItemId } from "../../../schema/FullState";
+import { ContextItem, ContextItemId } from "../../../schema/FullState";
 import AbstractContinueGUIClientProtocol from "./AbstractContinueGUIClientProtocol";
 import { Messenger, WebsocketMessenger } from "./messenger";
 import { VscodeMessenger } from "./vscodeMessenger";
@@ -124,6 +124,44 @@ class ContinueGUIClientProtocol extends AbstractContinueGUIClientProtocol {
 
   selectContextItem(id: string, query: string): void {
     this.messenger?.send("select_context_item", { id, query });
+  }
+
+  editStepAtIndex(userInput: string, index: number): void {
+    this.messenger?.send("edit_step_at_index", {
+      user_input: userInput,
+      index,
+    });
+  }
+
+  setSystemMessage(message: string): void {
+    this.messenger?.send("set_system_message", { message });
+  }
+
+  setTemperature(temperature: number): void {
+    this.messenger?.send("set_temperature", { temperature });
+  }
+
+  addModelForRole(role: string, model_class: string, model: any): void {
+    this.messenger?.send("add_model_for_role", { role, model, model_class });
+  }
+
+  setModelForRoleFromIndex(role: string, index: number): void {
+    this.messenger?.send("set_model_for_role_from_index", { role, index });
+  }
+
+  saveContextGroup(title: string, contextItems: ContextItem[]): void {
+    this.messenger?.send("save_context_group", {
+      context_items: contextItems,
+      title,
+    });
+  }
+
+  selectContextGroup(id: string): void {
+    this.messenger?.send("select_context_group", { id });
+  }
+
+  deleteContextGroup(id: string): void {
+    this.messenger?.send("delete_context_group", { id });
   }
 }
 

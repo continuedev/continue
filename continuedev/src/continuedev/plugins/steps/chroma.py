@@ -1,9 +1,9 @@
 from textwrap import dedent
 from typing import Coroutine, Union
-from ...core.observation import Observation, TextObservation
+
 from ...core.main import Step
+from ...core.observation import Observation
 from ...core.sdk import ContinueSDK
-from .core.core import EditFileStep
 from ...libs.chroma.query import ChromaIndexManager
 from .core.core import EditFileStep
 
@@ -42,11 +42,12 @@ class AnswerQuestionChroma(Step):
         files = []
         for node in results.source_nodes:
             resource_name = list(node.node.relationships.values())[0]
-            filepath = resource_name[:resource_name.index("::")]
+            filepath = resource_name[: resource_name.index("::")]
             files.append(filepath)
             code_snippets += f"""{filepath}```\n{node.node.text}\n```\n\n"""
 
-        prompt = dedent(f"""Here are a few snippets of code that might be useful in answering the question:
+        prompt = dedent(
+            f"""Here are a few snippets of code that might be useful in answering the question:
 
             {code_snippets}
 
@@ -54,7 +55,8 @@ class AnswerQuestionChroma(Step):
 
             {self.question}
 
-            Here is the answer:""")
+            Here is the answer:"""
+        )
 
         answer = await sdk.models.medium.complete(prompt)
         # Make paths relative to the workspace directory
@@ -73,8 +75,12 @@ class EditFileChroma(Step):
         index = ChromaIndexManager(await sdk.ide.getWorkspaceDirectory())
         results = index.query_codebase_index(self.request)
 
-        resource_name = list(
-            results.source_nodes[0].node.relationships.values())[0]
-        filepath = resource_name[:resource_name.index("::")]
+        resource_name = list(results.source_nodes[0].node.relationships.values())[0]
+        filepath = resource_name[: resource_name.index("::")]
 
-        await sdk.run_step(EditFileStep(filepath=filepath, prompt=f"Here is the code:\n\n{{code}}\n\nHere is the user request:\n\n{self.request}\n\nHere is the code after making the requested changes:\n"))
+        await sdk.run_step(
+            EditFileStep(
+                filepath=filepath,
+                prompt=f"Here is the code:\n\n{{code}}\n\nHere is the user request:\n\n{self.request}\n\nHere is the code after making the requested changes:\n",
+            )
+        )

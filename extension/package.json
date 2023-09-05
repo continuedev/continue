@@ -1,38 +1,42 @@
 {
   "name": "continue",
   "icon": "media/terminal-continue.png",
+  "version": "0.0.374",
   "repository": {
     "type": "git",
     "url": "https://github.com/continuedev/continue"
   },
+  "extensionKind": [
+    "ui",
+    "workspace"
+  ],
   "bugs": {
     "url": "https://github.com/continuedev/continue/issues",
     "email": "nate@continue.dev"
   },
   "homepage": "https://continue.dev",
+  "qna": "https://github.com/continuedev/continue/issues/new/choose",
   "license": "Apache-2.0",
-  "displayName": "Continue",
+  "displayName": "Continue - Use Code Llama in VS Code",
   "pricing": "Free",
-  "description": "The open-source coding autopilot",
-  "version": "0.0.284",
+  "description": "Open-source copilot for software development - bring the power of ChatGPT to your IDE",
   "publisher": "Continue",
   "engines": {
     "vscode": "^1.67.0"
   },
   "categories": [
-    "Other",
+    "Programming Languages",
     "Education",
-    "Machine Learning"
+    "Machine Learning",
+    "Snippets"
   ],
   "keywords": [
-    "openai",
-    "chatbot",
     "chatgpt",
-    "autocomplete",
-    "llm",
-    "ai",
-    "assistant",
-    "chat"
+    "github",
+    "copilot",
+    "llama",
+    "codellama",
+    "ai"
   ],
   "activationEvents": [
     "onStartupFinished",
@@ -48,6 +52,11 @@
           "type": "string",
           "default": "http://localhost:65432",
           "description": "The URL of the Continue server. Only change this if you are running the server manually. If you want to use an LLM hosted at a custom URL, please see https://continue.dev/docs/customization#change-the-default-llm. All other configuration is done in `~/.continue/config.py`, which you can access by using the '/config' slash command."
+        },
+        "continue.manuallyRunningServer": {
+          "type": "boolean",
+          "default": false,
+          "description": "If you are manually running the Continue server, you should update the Server URL and check this box. This will stop Continue from attempting to remove your server and download a new version."
         }
       }
     },
@@ -86,6 +95,11 @@
         "command": "continue.focusContinueInputWithEdit",
         "category": "Continue",
         "title": "Focus Continue Input With Edit"
+      },
+      {
+        "command": "continue.debugTerminal",
+        "category": "Continue",
+        "title": "Debug Terminal"
       }
     ],
     "keybindings": [
@@ -118,6 +132,11 @@
         "command": "continue.toggleAuxiliaryBar",
         "mac": "alt+cmd+m",
         "key": "alt+ctrl+m"
+      },
+      {
+        "command": "continue.debugTerminal",
+        "mac": "cmd+shift+r",
+        "key": "ctrl+shift+r"
       }
     ],
     "menus": {
@@ -183,19 +202,19 @@
     ]
   },
   "scripts": {
-    "esbuild-base": "rm -rf ./out && node esbuild.mjs",
+    "esbuild-base": "node esbuild.mjs",
     "vscode:prepublish": "npm run esbuild-base -- --minify",
     "esbuild": "npm run esbuild-base -- --sourcemap",
     "esbuild-watch": "npm run esbuild-base -- --sourcemap --watch",
     "tsc": "tsc -p ./",
     "tsc-watch": "tsc -watch -p ./",
     "typegen": "node scripts/typegen.js",
-    "clientgen": "rm -rf src/client/ && npx @openapitools/openapi-generator-cli generate -i ../schema/openapi.json -g typescript-fetch -o src/client/ --additional-properties=supportsES6=true,npmVersion=8.19.2,typescriptThreePlus=true",
     "rebuild": "electron-rebuild -v 19.1.8 node-pty",
     "lint": "eslint src --ext ts",
     "build-test": "tsc && node esbuild.test.mjs",
     "test": "npm run build-test && node ./out/test-runner/runTestOnVSCodeHost.js",
-    "package": "npm install && npm run typegen && npm run clientgen && cd react-app && npm install && npm run build && cd .. && mkdir -p ./build && vsce package --out ./build"
+    "prepackage": "node scripts/prepackage.js",
+    "package": "node scripts/package.js"
   },
   "devDependencies": {
     "@nestjs/common": "^8.4.7",
@@ -216,6 +235,7 @@
     "glob": "^8.0.3",
     "json-schema-to-typescript": "^12.0.0",
     "mocha": "^10.1.0",
+    "ovsx": "^0.8.3",
     "ts-jest": "^29.1.1",
     "typescript": "^4.9.3",
     "vite": "^4.3.9",
@@ -229,7 +249,8 @@
     "fkill": "^8.1.0",
     "highlight.js": "^11.7.0",
     "highlightable": "^1.3.0-beta.0",
-    "posthog-js": "^1.68.3",
+    "node-machine-id": "^1.1.12",
+    "posthog-node": "^3.1.2",
     "react-markdown": "^8.0.7",
     "react-redux": "^8.0.5",
     "request": "^2.88.2",

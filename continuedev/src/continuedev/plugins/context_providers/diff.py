@@ -1,9 +1,8 @@
 import subprocess
 from typing import List
 
-from .util import remove_meilisearch_disallowed_chars
-from ...core.main import ContextItem, ContextItemDescription, ContextItemId
 from ...core.context import ContextProvider
+from ...core.main import ContextItem, ContextItemDescription, ContextItemId
 
 
 class DiffContextProvider(ContextProvider):
@@ -21,10 +20,9 @@ class DiffContextProvider(ContextProvider):
                 name="Diff",
                 description="Reference the output of 'git diff' for the current workspace",
                 id=ContextItemId(
-                    provider_title=self.title,
-                    item_id=self.DIFF_CONTEXT_ITEM_ID
-                )
-            )
+                    provider_title=self.title, item_id=self.DIFF_CONTEXT_ITEM_ID
+                ),
+            ),
         )
 
     async def provide_context_items(self, workspace_dir: str) -> List[ContextItem]:
@@ -35,8 +33,9 @@ class DiffContextProvider(ContextProvider):
         if not id.item_id == self.DIFF_CONTEXT_ITEM_ID:
             raise Exception("Invalid item id")
 
-        diff = subprocess.check_output(
-            ["git", "diff"], cwd=self.workspace_dir).decode("utf-8")
+        diff = subprocess.check_output(["git", "diff"], cwd=self.workspace_dir).decode(
+            "utf-8"
+        )
 
         ctx_item = self.BASE_CONTEXT_ITEM.copy()
         ctx_item.content = diff

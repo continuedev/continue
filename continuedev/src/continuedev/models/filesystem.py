@@ -1,9 +1,22 @@
-from abc import ABC, abstractmethod
-from typing import Dict, List, Tuple
 import os
-from ..models.main import Position, Range, AbstractModel
+from abc import abstractmethod
+from typing import Dict, List, Tuple
+
 from pydantic import BaseModel
-from .filesystem_edit import FileSystemEdit, FileEdit, AddFile, DeleteFile, RenameDirectory, RenameFile, AddDirectory, DeleteDirectory, EditDiff, SequentialFileSystemEdit
+
+from ..models.main import AbstractModel, Position, Range
+from .filesystem_edit import (
+    AddDirectory,
+    AddFile,
+    DeleteDirectory,
+    DeleteFile,
+    EditDiff,
+    FileEdit,
+    FileSystemEdit,
+    RenameDirectory,
+    RenameFile,
+    SequentialFileSystemEdit,
+)
 
 
 class RangeInFile(BaseModel):
@@ -16,14 +29,12 @@ class RangeInFile(BaseModel):
     @staticmethod
     def from_entire_file(filepath: str, content: str) -> "RangeInFile":
         range = Range.from_entire_file(content)
-        return RangeInFile(
-            filepath=filepath,
-            range=range
-        )
+        return RangeInFile(filepath=filepath, range=range)
 
 
 class RangeInFileWithContents(RangeInFile):
     """A range in a file with the contents of the range."""
+
     contents: str
 
     def __hash__(self):
@@ -42,13 +53,15 @@ class RangeInFileWithContents(RangeInFile):
 
         # Calculate union of contents
         num_overlapping_lines = first.range.end.line - second.range.start.line + 1
-        union_lines = first.contents.splitlines()[:-num_overlapping_lines] + \
-            second.contents.splitlines()
+        union_lines = (
+            first.contents.splitlines()[:-num_overlapping_lines]
+            + second.contents.splitlines()
+        )
 
         return RangeInFileWithContents(
             filepath=first.filepath,
             range=first.range.union(second.range),
-            contents="\n".join(union_lines)
+            contents="\n".join(union_lines),
         )
 
     @staticmethod
@@ -56,28 +69,24 @@ class RangeInFileWithContents(RangeInFile):
         lines = content.splitlines()
         if not lines:
             return RangeInFileWithContents(
-                filepath=filepath,
-                range=Range.from_shorthand(0, 0, 0, 0),
-                contents=""
+                filepath=filepath, range=Range.from_shorthand(0, 0, 0, 0), contents=""
             )
         return RangeInFileWithContents(
             filepath=filepath,
-            range=Range.from_shorthand(
-                0, 0, len(lines) - 1, len(lines[-1]) - 1),
-            contents=content
+            range=Range.from_shorthand(0, 0, len(lines) - 1, len(lines[-1]) - 1),
+            contents=content,
         )
 
     @staticmethod
     def from_range_in_file(rif: RangeInFile, content: str) -> "RangeInFileWithContents":
         return RangeInFileWithContents(
-            filepath=rif.filepath,
-            range=rif.range,
-            contents=content
+            filepath=rif.filepath, range=rif.range, contents=content
         )
 
 
 class FileSystem(AbstractModel):
     """An abstract filesystem that can read/write from a set of files."""
+
     @abstractmethod
     def read(self, path) -> str:
         raise NotImplementedError
@@ -127,14 +136,19 @@ class FileSystem(AbstractModel):
         """Apply edit to filesystem, calculate the reverse edit, and return and EditDiff"""
         raise NotImplementedError
 
+    @abstractmethod
+    def list_directory_contents(self, path: str, recursive: bool = False) -> List[str]:
+        """List the contents of a directory"""
+        raise NotImplementedError
+
     @classmethod
     def read_range_in_str(self, s: str, r: Range) -> str:
-        lines = s.split("\n")[r.start.line:r.end.line + 1]
+        lines = s.split("\n")[r.start.line : r.end.line + 1]
         if len(lines) == 0:
             return ""
 
-        lines[0] = lines[0][r.start.character:]
-        lines[-1] = lines[-1][:r.end.character + 1]
+        lines[0] = lines[0][r.start.character :]
+        lines[-1] = lines[-1][: r.end.character + 1]
         return "\n".join(lines)
 
     @classmethod
@@ -151,37 +165,40 @@ class FileSystem(AbstractModel):
         if len(lines) == 0:
             lines = [""]
 
-        end = Position(line=edit.range.end.line,
-                       character=edit.range.end.character)
+        end = Position(line=edit.range.end.line, character=edit.range.end.character)
         if edit.range.end.line == len(lines) and edit.range.end.character == 0:
-            end = Position(line=edit.range.end.line - 1,
-                           character=len(lines[min(len(lines) - 1, edit.range.end.line - 1)]))
+            end = Position(
+                line=edit.range.end.line - 1,
+                character=len(lines[min(len(lines) - 1, edit.range.end.line - 1)]),
+            )
 
-        before_lines = lines[:edit.range.start.line]
-        after_lines = lines[end.line + 1:]
-        between_str = lines[min(len(lines) - 1, edit.range.start.line)][:edit.range.start.character] + \
-            edit.replacement + \
-            lines[min(len(lines) - 1, end.line)][end.character + 1:]
+        before_lines = lines[: edit.range.start.line]
+        after_lines = lines[end.line + 1 :]
+        between_str = (
+            lines[min(len(lines) - 1, edit.range.start.line)][
+                : edit.range.start.character
+            ]
+            + edit.replacement
+            + lines[min(len(lines) - 1, end.line)][end.character + 1 :]
+        )
 
         new_range = Range(
             start=edit.range.start,
             end=Position(
-                line=edit.range.start.line +
-                len(edit.replacement.splitlines()) - 1,
-                character=edit.range.start.character +
-                len(edit.replacement.splitlines()
-                    [-1]) if edit.replacement != "" else 0
-            )
+                line=edit.range.start.line + len(edit.replacement.splitlines()) - 1,
+                character=edit.range.start.character
+                + len(edit.replacement.splitlines()[-1])
+                if edit.replacement != ""
+                else 0,
+            ),
         )
 
         lines = before_lines + between_str.splitlines() + after_lines
         return "\n".join(lines), EditDiff(
             forward=edit,
             backward=FileEdit(
-                filepath=edit.filepath,
-                range=new_range,
-                replacement=original
-            )
+                filepath=edit.filepath, range=new_range, replacement=original
+            ),
         )
 
     def reverse_edit_on_str(self, s: str, diff: EditDiff) -> str:
@@ -194,15 +211,17 @@ class FileSystem(AbstractModel):
             start=diff.edit.range.start,
             end=Position(
                 line=diff.edit.range.start + replacement_d_lines,
-                character=diff.edit.range.start.character + replacement_d_chars
-            )
+                character=diff.edit.range.start.character + replacement_d_chars,
+            ),
         )
 
-        before_lines = lines[:replacement_range.start.line]
-        after_lines = lines[replacement_range.end.line + 1:]
-        between_str = lines[replacement_range.start.line][:replacement_range.start.character] + \
-            diff.original + \
-            lines[replacement_range.end.line][replacement_range.end.character + 1:]
+        before_lines = lines[: replacement_range.start.line]
+        after_lines = lines[replacement_range.end.line + 1 :]
+        between_str = (
+            lines[replacement_range.start.line][: replacement_range.start.character]
+            + diff.original
+            + lines[replacement_range.end.line][replacement_range.end.character + 1 :]
+        )
 
         lines = before_lines + between_str.splitlines() + after_lines
         return "\n".join(lines)
@@ -221,8 +240,9 @@ class FileSystem(AbstractModel):
             self.delete_file(edit.filepath)
         elif isinstance(edit, RenameFile):
             self.rename_file(edit.filepath, edit.new_filepath)
-            backward = RenameFile(filepath=edit.new_filepath,
-                                  new_filepath=edit.filepath)
+            backward = RenameFile(
+                filepath=edit.new_filepath, new_filepath=edit.filepath
+            )
         elif isinstance(edit, AddDirectory):
             self.add_directory(edit.path)
             backward = DeleteDirectory(edit.path)
@@ -235,8 +255,7 @@ class FileSystem(AbstractModel):
                     backward_edits.append(self.apply_edit(DeleteFile(path)))
                 for d in dirs:
                     path = os.path.join(root, d)
-                    backward_edits.append(
-                        self.apply_edit(DeleteDirectory(path)))
+                    backward_edits.append(self.apply_edit(DeleteDirectory(path)))
 
             backward_edits.append(self.apply_edit(DeleteDirectory(edit.path)))
             backward_edits.reverse()
@@ -253,10 +272,7 @@ class FileSystem(AbstractModel):
         else:
             raise TypeError("Unknown FileSystemEdit type: " + str(type(edit)))
 
-        return EditDiff(
-            forward=edit,
-            backward=backward
-        )
+        return EditDiff(forward=edit, backward=backward)
 
 
 class RealFileSystem(FileSystem):
@@ -301,9 +317,22 @@ class RealFileSystem(FileSystem):
         self.write(edit.filepath, new_content)
         return diff
 
+    def list_directory_contents(self, path: str, recursive: bool = False) -> List[str]:
+        """List the contents of a directory"""
+        if recursive:
+            # Walk
+            paths = []
+            for root, dirs, files in os.walk(path):
+                for f in files:
+                    paths.append(os.path.join(root, f))
+
+            return paths
+        return list(map(lambda x: os.path.join(path, x), os.listdir(path)))
+
 
 class VirtualFileSystem(FileSystem):
     """A simulated filesystem from a mapping of filepath to file contents."""
+
     files: Dict[str, str]
 
     def __init__(self, files: Dict[str, str]):
@@ -331,7 +360,7 @@ class VirtualFileSystem(FileSystem):
     def rename_directory(self, path: str, new_path: str):
         for filepath in self.files:
             if filepath.startswith(path):
-                new_filepath = new_path + filepath[len(path):]
+                new_filepath = new_path + filepath[len(path) :]
                 self.files[new_filepath] = self.files[filepath]
                 del self.files[filepath]
 
@@ -349,9 +378,18 @@ class VirtualFileSystem(FileSystem):
         old_content = self.read(edit.filepath)
         new_content, original = FileSystem.apply_edit_to_str(old_content, edit)
         self.write(edit.filepath, new_content)
-        return EditDiff(
-            edit=edit,
-            original=original
-        )
+        return EditDiff(edit=edit, original=original)
+
+    def list_directory_contents(self, path: str, recursive: bool = False) -> List[str]:
+        """List the contents of a directory"""
+        if recursive:
+            for filepath in self.files:
+                if filepath.startswith(path):
+                    yield filepath
+
+        for filepath in self.files:
+            if filepath.startswith(path) and "/" not in filepath[len(path) :]:
+                yield filepath
+
 
 # TODO: Uniform errors thrown by any FileSystem subclass.

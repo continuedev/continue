@@ -1,28 +1,24 @@
 # import faiss
 import os
 import subprocess
-
-from llama_index import SimpleDirectoryReader, Document
 from typing import List
+
 from dotenv import load_dotenv
+from llama_index import Document, SimpleDirectoryReader
 
 load_dotenv()
 
-FILE_TYPES_TO_IGNORE = [
-    '.pyc',
-    '.png',
-    '.jpg',
-    '.jpeg',
-    '.gif',
-    '.svg',
-    '.ico'
-]
+FILE_TYPES_TO_IGNORE = [".pyc", ".png", ".jpg", ".jpeg", ".gif", ".svg", ".ico"]
 
 
 def filter_ignored_files(files: List[str], root_dir: str):
     """Further filter files before indexing."""
     for file in files:
-        if file.endswith(tuple(FILE_TYPES_TO_IGNORE)) or file.startswith('.git') or file.startswith('archive'):
+        if (
+            file.endswith(tuple(FILE_TYPES_TO_IGNORE))
+            or file.startswith(".git")
+            or file.startswith("archive")
+        ):
             continue  # nice
         yield root_dir + "/" + file
 
@@ -30,9 +26,15 @@ def filter_ignored_files(files: List[str], root_dir: str):
 def get_git_ignored_files(root_dir: str):
     """Get the list of ignored files in a Git repository."""
     try:
-        output = subprocess.check_output(
-            ['git', 'ls-files', '--ignored', '--others', '--exclude-standard'], cwd=root_dir).strip().decode()
-        return output.split('\n')
+        output = (
+            subprocess.check_output(
+                ["git", "ls-files", "--ignored", "--others", "--exclude-standard"],
+                cwd=root_dir,
+            )
+            .strip()
+            .decode()
+        )
+        return output.split("\n")
     except subprocess.CalledProcessError:
         return []
 
@@ -57,4 +59,8 @@ def load_gpt_index_documents(root: str) -> List[Document]:
     # Get input files
     input_files = get_input_files(root)
     # Use SimpleDirectoryReader to load the files into Documents
-    return SimpleDirectoryReader(root, input_files=input_files, file_metadata=lambda filename: {"filename": filename}).load_data()
+    return SimpleDirectoryReader(
+        root,
+        input_files=input_files,
+        file_metadata=lambda filename: {"filename": filename},
+    ).load_data()

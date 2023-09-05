@@ -1,30 +1,24 @@
-from typing import Any, Coroutine, Dict, Generator, List, Union, Optional, Callable
+from typing import Callable, List, Optional
 
 from ...core.main import ChatMessage
 from . import LLM
-from .proxy_server import ProxyServer
 from .openai import OpenAI
+from .proxy_server import ProxyServer
 
 
 class MaybeProxyOpenAI(LLM):
-    model: str
     api_key: Optional[str] = None
-
-    requires_write_log: bool = True
-    requires_unique_id: bool = True
-    system_message: Union[str, None] = None
 
     llm: Optional[LLM] = None
 
-    @property
-    def name(self):
-        return self.llm.name
+    def update_llm_properties(self):
+        if self.llm is not None:
+            self.llm.system_message = self.system_message
 
-    @property
-    def context_length(self):
-        return self.llm.context_length
-
-    async def start(self, *, api_key: Optional[str] = None, unique_id: str, write_log: Callable[[str], None]):
+    async def start(
+        self, write_log: Callable[[str], None] = None, unique_id: Optional[str] = None
+    ):
+        await super().start(write_log=lambda *args, **kwargs: None, unique_id=unique_id)
         if self.api_key is None or self.api_key.strip() == "":
             self.llm = ProxyServer(model=self.model)
         else:
@@ -35,17 +29,19 @@ class MaybeProxyOpenAI(LLM):
     async def stop(self):
         await self.llm.stop()
 
-    async def complete(self, prompt: str, with_history: List[ChatMessage] = None, **kwargs) -> Coroutine[Any, Any, str]:
-        return await self.llm.complete(prompt, with_history=with_history, **kwargs)
+    async def _complete(self, prompt: str, options):
+        self.update_llm_properties()
+        return await self.llm._complete(prompt, options)
 
-    async def stream_complete(self, prompt, with_history: List[ChatMessage] = None, **kwargs) -> Generator[Union[Any, List, Dict], None, None]:
-        resp = self.llm.stream_complete(
-            prompt, with_history=with_history, **kwargs)
+    async def _stream_complete(self, prompt, options):
+        self.update_llm_properties()
+        resp = self.llm._stream_complete(prompt, options)
         async for item in resp:
             yield item
 
-    async def stream_chat(self, messages: List[ChatMessage] = None, **kwargs) -> Generator[Union[Any, List, Dict], None, None]:
-        resp = self.llm.stream_chat(messages=messages, **kwargs)
+    async def _stream_chat(self, messages: List[ChatMessage], options):
+        self.update_llm_properties()
+        resp = self.llm._stream_chat(messages=messages, options=options)
         async for item in resp:
             yield item
 

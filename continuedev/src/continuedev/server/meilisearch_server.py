@@ -1,21 +1,61 @@
+import asyncio
 import os
 import shutil
 import subprocess
 
+import aiofiles
+import aiohttp
 from meilisearch_python_async import Client
 
-from ..libs.util.paths import getServerFolderPath
 from ..libs.util.logging import logger
+from ..libs.util.paths import getMeilisearchExePath, getServerFolderPath
 
 
-def ensure_meilisearch_installed() -> bool:
+async def download_file(url: str, filename: str):
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url) as resp:
+            if resp.status == 200:
+                f = await aiofiles.open(filename, mode="wb")
+                await f.write(await resp.read())
+                await f.close()
+
+
+async def download_meilisearch():
+    """
+    Downloads MeiliSearch.
+    """
+
+    serverPath = getServerFolderPath()
+    logger.debug("Downloading MeiliSearch...")
+
+    if os.name == "nt":
+        download_url = "https://github.com/meilisearch/meilisearch/releases/download/v1.3.2/meilisearch-windows-amd64.exe"
+        download_path = getMeilisearchExePath()
+        if not os.path.exists(download_path):
+            await download_file(download_url, download_path)
+            # subprocess.run(
+            #     f"curl -L {download_url} -o {download_path}",
+            #     shell=True,
+            #     check=True,
+            #     cwd=serverPath,
+            # )
+    else:
+        subprocess.run(
+            "curl -L https://install.meilisearch.com | sh",
+            shell=True,
+            check=True,
+            cwd=serverPath,
+        )
+
+
+async def ensure_meilisearch_installed() -> bool:
     """
     Checks if MeiliSearch is installed.
 
     Returns a bool indicating whether it was installed to begin with.
     """
     serverPath = getServerFolderPath()
-    meilisearchPath = os.path.join(serverPath, "meilisearch")
+    meilisearchPath = getMeilisearchExePath()
     dumpsPath = os.path.join(serverPath, "dumps")
     dataMsPath = os.path.join(serverPath, "data.ms")
 
@@ -32,17 +72,17 @@ def ensure_meilisearch_installed() -> bool:
     if len(non_existing_paths) > 0:
         # Clear the meilisearch binary
         if meilisearchPath in existing_paths:
-            os.remove(meilisearchPath)
+            try:
+                os.remove(meilisearchPath)
+            except:
+                pass
             existing_paths.remove(meilisearchPath)
 
         # Clear the existing directories
         for p in existing_paths:
             shutil.rmtree(p, ignore_errors=True)
 
-        # Download MeiliSearch
-        logger.debug("Downloading MeiliSearch...")
-        subprocess.run(
-            f"curl -L https://install.meilisearch.com | sh", shell=True, check=True, cwd=serverPath)
+        await download_meilisearch()
 
         return False
 
@@ -55,34 +95,63 @@ async def check_meilisearch_running() -> bool:
     """
 
     try:
-        async with Client('http://localhost:7700') as client:
+        async with Client("http://localhost:7700") as client:
             try:
                 resp = await client.health()
-                if resp["status"] != "available":
+                if resp.status != "available":
                     return False
                 return True
-            except:
+            except Exception:
                 return False
     except Exception:
         return False
+
+
+async def poll_meilisearch_running(frequency: int = 0.1) -> bool:
+    """
+    Polls MeiliSearch to see if it is running.
+    """
+    while True:
+        if await check_meilisearch_running():
+            return True
+        await asyncio.sleep(frequency)
+
+
+meilisearch_process = None
 
 
 async def start_meilisearch():
     """
     Starts the MeiliSearch server, wait for it.
     """
-
-    # Doesn't work on windows for now
-    if not os.name == "posix":
-        return
+    global meilisearch_process
 
     serverPath = getServerFolderPath()
 
     # Check if MeiliSearch is installed, if not download
-    was_already_installed = ensure_meilisearch_installed()
+    was_already_installed = await ensure_meilisearch_installed()
 
     # Check if MeiliSearch is running
     if not await check_meilisearch_running() or not was_already_installed:
         logger.debug("Starting MeiliSearch...")
-        subprocess.Popen(["./meilisearch", "--no-analytics"], cwd=serverPath, stdout=subprocess.DEVNULL,
-                         stderr=subprocess.STDOUT, close_fds=True, start_new_session=True)
+        binary_name = "meilisearch" if os.name == "nt" else "./meilisearch"
+        meilisearch_process = subprocess.Popen(
+            [binary_name, "--no-analytics"],
+            cwd=serverPath,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.STDOUT,
+            close_fds=True,
+            start_new_session=True,
+            shell=True,
+        )
+
+
+def stop_meilisearch():
+    """
+    Stops the MeiliSearch server.
+    """
+    global meilisearch_process
+    if meilisearch_process is not None:
+        meilisearch_process.terminate()
+        meilisearch_process.wait()
+        meilisearch_process = None

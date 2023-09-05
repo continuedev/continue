@@ -1,14 +1,24 @@
 import os
+import shutil
 from pathlib import Path
 from typing import Iterable, List, Union
-from watchdog.observers import Observer
+
 from watchdog.events import PatternMatchingEventHandler
-from ...models.main import FileEdit, DeleteDirectory, DeleteFile, AddDirectory, AddFile, FileSystemEdit, RenameFile, RenameDirectory, SequentialFileSystemEdit
-from ...models.filesystem import FileSystem
+from watchdog.observers import Observer
+
 from ...core.autopilot import Autopilot
+from ...models.filesystem import FileSystem
+from ...models.main import (
+    AddDirectory,
+    AddFile,
+    DeleteDirectory,
+    DeleteFile,
+    FileSystemEdit,
+    RenameDirectory,
+    RenameFile,
+    SequentialFileSystemEdit,
+)
 from .map_path import map_path
-from ...core.sdk import ManualEditStep
-import shutil
 
 
 def create_copy(orig_root: str, copy_root: str = None, ignore: Iterable[str] = []):
@@ -24,8 +34,7 @@ def create_copy(orig_root: str, copy_root: str = None, ignore: Iterable[str] = [
         if os.path.isdir(child):
             if child not in ignore:
                 os.mkdir(map_path(child))
-                create_copy(Path(orig_root) / child,
-                            Path(copy_root) / child, ignore)
+                create_copy(Path(orig_root) / child, Path(copy_root) / child, ignore)
             else:
                 os.symlink(child, map_path(child))
         else:
@@ -37,8 +46,18 @@ def create_copy(orig_root: str, copy_root: str = None, ignore: Iterable[str] = [
 
 # The whole usage of watchdog here should only be specific to RealFileSystem, you want to have a different "Observer" class for VirtualFileSystem, which would depend on being sent notifications
 class CopyCodebaseEventHandler(PatternMatchingEventHandler):
-    def __init__(self, ignore_directories: List[str], ignore_patterns: List[str], autopilot: Autopilot, orig_root: str, copy_root: str, filesystem: FileSystem):
-        super().__init__(ignore_directories=ignore_directories, ignore_patterns=ignore_patterns)
+    def __init__(
+        self,
+        ignore_directories: List[str],
+        ignore_patterns: List[str],
+        autopilot: Autopilot,
+        orig_root: str,
+        copy_root: str,
+        filesystem: FileSystem,
+    ):
+        super().__init__(
+            ignore_directories=ignore_directories, ignore_patterns=ignore_patterns
+        )
         self.autopilot = autopilot
         self.orig_root = orig_root
         self.copy_root = copy_root
@@ -85,10 +104,13 @@ class CopyCodebaseEventHandler(PatternMatchingEventHandler):
         self.autopilot.act(action)
 
 
-def maintain_copy_workspace(autopilot: Autopilot, filesystem: FileSystem, orig_root: str, copy_root: str):
+def maintain_copy_workspace(
+    autopilot: Autopilot, filesystem: FileSystem, orig_root: str, copy_root: str
+):
     observer = Observer()
     event_handler = CopyCodebaseEventHandler(
-        [".git"], [], autopilot, orig_root, copy_root, filesystem)
+        [".git"], [], autopilot, orig_root, copy_root, filesystem
+    )
     observer.schedule(event_handler, orig_root, recursive=True)
     observer.start()
     try:

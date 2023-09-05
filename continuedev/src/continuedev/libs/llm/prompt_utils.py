@@ -1,4 +1,5 @@
 from typing import Dict, List, Union
+
 from ...models.filesystem import RangeInFileWithContents
 from ...models.filesystem_edit import FileEdit
 
@@ -11,23 +12,28 @@ class MarkdownStyleEncoderDecoder:
         self.range_in_files = range_in_files
 
     def encode(self) -> str:
-        return "\n\n".join([
-            f"File ({rif.filepath})\n```\n{rif.contents}\n```"
-            for rif in self.range_in_files
-        ])
+        return "\n\n".join(
+            [
+                f"File ({rif.filepath})\n```\n{rif.contents}\n```"
+                for rif in self.range_in_files
+            ]
+        )
 
     def _suggestions_to_file_edits(self, suggestions: Dict[str, str]) -> List[FileEdit]:
         file_edits: List[FileEdit] = []
         for suggestion_filepath, suggestion in suggestions.items():
             matching_rifs = list(
-                filter(lambda r: r.filepath == suggestion_filepath, self.range_in_files))
-            if (len(matching_rifs) > 0):
+                filter(lambda r: r.filepath == suggestion_filepath, self.range_in_files)
+            )
+            if len(matching_rifs) > 0:
                 range_in_file = matching_rifs[0]
-                file_edits.append(FileEdit(
-                    range=range_in_file.range,
-                    filepath=range_in_file.filepath,
-                    replacement=suggestion
-                ))
+                file_edits.append(
+                    FileEdit(
+                        range=range_in_file.range,
+                        filepath=range_in_file.filepath,
+                        replacement=suggestion,
+                    )
+                )
 
         return file_edits
 
@@ -35,9 +41,9 @@ class MarkdownStyleEncoderDecoder:
         if len(self.range_in_files) == 0:
             return {}
 
-        if not '```' in completion:
+        if "```" not in completion:
             completion = "```\n" + completion + "\n```"
-        if completion.strip().splitlines()[0].strip() == '```':
+        if completion.strip().splitlines()[0].strip() == "```":
             first_filepath = self.range_in_files[0].filepath
             completion = f"File ({first_filepath})\n" + completion
 
@@ -56,8 +62,7 @@ class MarkdownStyleEncoderDecoder:
             elif inside_file:
                 if line.startswith("```"):
                     inside_file = False
-                    suggestions[current_filepath] = "\n".join(
-                        current_file_lines)
+                    suggestions[current_filepath] = "\n".join(current_file_lines)
                     current_file_lines = []
                     current_filepath = None
                 else:

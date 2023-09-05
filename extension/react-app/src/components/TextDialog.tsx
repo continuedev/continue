@@ -54,19 +54,22 @@ const P = styled.p`
 
 const TextDialog = (props: {
   showDialog: boolean;
-  onEnter: (text: string) => void;
+  onEnter: () => void;
   onClose: () => void;
   message?: string | JSX.Element;
-  entryOn?: boolean;
 }) => {
-  const [text, setText] = useState("");
-  const textAreaRef = React.createRef<HTMLTextAreaElement>();
-
   useEffect(() => {
-    if (textAreaRef.current) {
-      textAreaRef.current.focus();
-    }
-  }, [props.showDialog]);
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        props.onClose();
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [props]);
 
   return (
     <ScreenCover
@@ -119,36 +122,6 @@ const TextDialog = (props: {
             <ReactMarkdown>{props.message || ""}</ReactMarkdown>
           ) : (
             props.message
-          )}
-          {props.entryOn && (
-            <>
-              <TextArea
-                rows={10}
-                ref={textAreaRef}
-                onKeyDown={(e) => {
-                  if (
-                    e.key === "Enter" &&
-                    isMetaEquivalentKeyPressed(e) &&
-                    textAreaRef.current
-                  ) {
-                    props.onEnter(textAreaRef.current.value);
-                    setText("");
-                  } else if (e.key === "Escape") {
-                    props.onClose();
-                  }
-                }}
-              />
-              <Button
-                onClick={() => {
-                  if (textAreaRef.current) {
-                    props.onEnter(textAreaRef.current.value);
-                    setText("");
-                  }
-                }}
-              >
-                Enter
-              </Button>
-            </>
           )}
         </Dialog>
       </DialogContainer>

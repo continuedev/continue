@@ -1,10 +1,10 @@
 import json
 from typing import Coroutine, Dict, List, Literal, Optional, Union
+
+from pydantic import BaseModel, validator
 from pydantic.schema import schema
 
-
 from ..models.main import ContinueBaseModel
-from pydantic import BaseModel, validator
 from .observation import Observation
 
 ChatMessageRole = Literal["assistant", "user", "system", "function"]
@@ -27,8 +27,7 @@ class ChatMessage(ContinueBaseModel):
         d = self.dict()
         del d["summary"]
         if d["function_call"] is not None:
-            d["function_call"]["name"] = d["function_call"]["name"].replace(
-                " ", "")
+            d["function_call"]["name"] = d["function_call"]["name"].replace(" ", "")
 
         if d["content"] is None:
             d["content"] = ""
@@ -49,9 +48,9 @@ class ChatMessage(ContinueBaseModel):
 def resolve_refs(schema_data):
     def traverse(obj):
         if isinstance(obj, dict):
-            if '$ref' in obj:
-                ref = obj['$ref']
-                parts = ref.split('/')
+            if "$ref" in obj:
+                ref = obj["$ref"]
+                parts = ref.split("/")
                 ref_obj = schema_data
                 for part in parts[1:]:
                     ref_obj = ref_obj[part]
@@ -67,8 +66,14 @@ def resolve_refs(schema_data):
     return traverse(schema_data)
 
 
-unincluded_parameters = ["system_message", "chat_context",
-                         "manage_own_chat_context", "hide", "name", "description"]
+unincluded_parameters = [
+    "system_message",
+    "chat_context",
+    "manage_own_chat_context",
+    "hide",
+    "name",
+    "description",
+]
 
 
 def step_to_json_schema(step) -> str:
@@ -82,7 +87,7 @@ def step_to_json_schema(step) -> str:
     return {
         "name": step.name.replace(" ", ""),
         "description": step.description or "",
-        "parameters": parameters
+        "parameters": parameters,
     }
 
 
@@ -96,6 +101,7 @@ def step_to_fn_call_arguments(step: "Step") -> str:
 
 class HistoryNode(ContinueBaseModel):
     """A point in history, a list of which make up History"""
+
     step: "Step"
     observation: Union[Observation, None]
     depth: int
@@ -111,12 +117,14 @@ class HistoryNode(ContinueBaseModel):
                 role="assistant",
                 name=self.step.__class__.__name__,
                 content=self.step.description or f"Ran function {self.step.name}",
-                summary=f"Called function {self.step.name}"
-            )]
+                summary=f"Called function {self.step.name}",
+            )
+        ]
 
 
 class History(ContinueBaseModel):
     """A history of steps taken and their results"""
+
     timeline: List[HistoryNode]
     current_index: int
 
@@ -128,7 +136,7 @@ class History(ContinueBaseModel):
         return msgs
 
     def add_node(self, node: HistoryNode) -> int:
-        """ Add node and return the index where it was added """
+        """Add node and return the index where it was added"""
         self.timeline.insert(self.current_index + 1, node)
         self.current_index += 1
         return self.current_index
@@ -138,10 +146,15 @@ class History(ContinueBaseModel):
             return None
         return self.timeline[self.current_index]
 
-    def get_last_at_depth(self, depth: int, include_current: bool = False) -> Union[HistoryNode, None]:
+    def get_last_at_depth(
+        self, depth: int, include_current: bool = False
+    ) -> Union[HistoryNode, None]:
         i = self.current_index if include_current else self.current_index - 1
         while i >= 0:
-            if self.timeline[i].depth == depth and type(self.timeline[i].step).__name__ != "ManualEditStep":
+            if (
+                self.timeline[i].depth == depth
+                and type(self.timeline[i].step).__name__ != "ManualEditStep"
+            ):
                 return self.timeline[i]
             i -= 1
         return None
@@ -204,24 +217,27 @@ class ContextItemId(BaseModel):
     """
     A ContextItemId is a unique identifier for a ContextItem.
     """
+
     provider_title: str
     item_id: str
 
-    @validator('provider_title', 'item_id')
+    @validator("provider_title", "item_id")
     def must_be_valid_id(cls, v):
         import re
-        if not re.match(r'^[0-9a-zA-Z_-]*$', v):
+
+        if not re.match(r"^[0-9a-zA-Z_-]*$", v):
             raise ValueError(
-                "Both provider_title and item_id can only include characters 0-9, a-z, A-Z, -, and _")
+                "Both provider_title and item_id can only include characters 0-9, a-z, A-Z, -, and _"
+            )
         return v
 
     def to_string(self) -> str:
         return f"{self.provider_title}-{self.item_id}"
 
     @staticmethod
-    def from_string(string: str) -> 'ContextItemId':
-        provider_title, *rest = string.split('-')
-        item_id = '-'.join(rest)
+    def from_string(string: str) -> "ContextItemId":
+        provider_title, *rest = string.split("-")
+        item_id = "-".join(rest)
         return ContextItemId(provider_title=provider_title, item_id=item_id)
 
 
@@ -231,22 +247,24 @@ class ContextItemDescription(BaseModel):
 
     The id can be used to retrieve the ContextItem from the ContextManager.
     """
+
     name: str
     description: str
-    id:  ContextItemId
+    id: ContextItemId
 
 
 class ContextItem(BaseModel):
     """
     A ContextItem is a single item that is stored in the ContextManager.
     """
+
     description: ContextItemDescription
     content: str
 
-    @validator('content', pre=True)
+    @validator("content", pre=True)
     def content_must_be_string(cls, v):
         if v is None:
-            return ''
+            return ""
         return v
 
     editing: bool = False
@@ -257,10 +275,25 @@ class SessionInfo(ContinueBaseModel):
     session_id: str
     title: str
     date_created: str
+    workspace_directory: Optional[str] = None
+
+
+class ContinueConfig(ContinueBaseModel):
+    system_message: Optional[str]
+    temperature: Optional[float]
+
+    class Config:
+        extra = "allow"
+
+    def dict(self, **kwargs):
+        original_dict = super().dict(**kwargs)
+        original_dict.pop("policy", None)
+        return original_dict
 
 
 class FullState(ContinueBaseModel):
     """A full state of the program, including the history"""
+
     history: History
     active: bool
     user_input_queue: List[str]
@@ -268,25 +301,25 @@ class FullState(ContinueBaseModel):
     adding_highlighted_code: bool
     selected_context_items: List[ContextItem]
     session_info: Optional[SessionInfo] = None
+    config: ContinueConfig
+    saved_context_groups: Dict[str, List[ContextItem]] = {}
 
 
 class ContinueSDK:
-    pass
+    ...
 
 
 class Models:
-    pass
-
-
-class ContinueConfig:
-    pass
+    ...
 
 
 class Policy(ContinueBaseModel):
     """A rule that determines which step to take next"""
 
     # Note that history is mutable, kinda sus
-    def next(self, config: ContinueConfig, history: History = History.from_empty()) -> "Step":
+    def next(
+        self, config: ContinueConfig, history: History = History.from_empty()
+    ) -> "Step":
         raise NotImplementedError
 
 
@@ -373,7 +406,12 @@ class ContinueCustomException(Exception):
     message: str
     with_step: Union[Step, None]
 
-    def __init__(self, message: str, title: str = "Error while running step:", with_step: Union[Step, None] = None):
+    def __init__(
+        self,
+        message: str,
+        title: str = "Error while running step:",
+        with_step: Union[Step, None] = None,
+    ):
         self.message = message
         self.title = title
         self.with_step = with_step

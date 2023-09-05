@@ -1,20 +1,23 @@
+import json
 import os
 import traceback
-from fastapi import WebSocket, APIRouter
 from typing import Any, Coroutine, Dict, Optional, Union
 from uuid import uuid4
-import json
 
+from fastapi import APIRouter, WebSocket
 from fastapi.websockets import WebSocketState
 
-from ..plugins.steps.core.core import MessageStep
-from ..libs.util.paths import getSessionFilePath, getSessionsFolderPath, getSessionsListFilePath
-from ..core.main import FullState, HistoryNode, SessionInfo
 from ..core.autopilot import Autopilot
-from .ide_protocol import AbstractIdeProtocolServer
+from ..core.config import ContinueConfig
+from ..core.main import FullState
 from ..libs.util.create_async_task import create_async_task
-from ..libs.util.errors import SessionNotFound
 from ..libs.util.logging import logger
+from ..libs.util.paths import (
+    getSessionFilePath,
+    getSessionsFolderPath,
+    getSessionsListFilePath,
+)
+from .ide_protocol import AbstractIdeProtocolServer
 
 router = APIRouter(prefix="/sessions", tags=["sessions"])
 
@@ -42,14 +45,24 @@ class SessionManager:
             # And only if the IDE is still alive
             sessions_folder = getSessionsFolderPath()
             session_files = os.listdir(sessions_folder)
-            if f"{session_id}.json" in session_files and session_id in self.registered_ides:
+            if (
+                f"{session_id}.json" in session_files
+                and session_id in self.registered_ides
+            ):
                 if self.registered_ides[session_id].session_id is not None:
-                    return await self.new_session(self.registered_ides[session_id], session_id=session_id)
+                    return await self.new_session(
+                        self.registered_ides[session_id], session_id=session_id
+                    )
 
             raise KeyError("Session ID not recognized", session_id)
         return self.sessions[session_id]
 
-    async def new_session(self, ide: AbstractIdeProtocolServer, session_id: Optional[str] = None) -> Session:
+    async def new_session(
+        self,
+        ide: AbstractIdeProtocolServer,
+        session_id: Optional[str] = None,
+        config: Optional[ContinueConfig] = None,
+    ) -> Session:
         logger.debug(f"New session: {session_id}")
 
         # Load the persisted state (not being used right now)
@@ -68,20 +81,20 @@ class SessionManager:
 
         # Set up the autopilot to update the GUI
         async def on_update(state: FullState):
-            await session_manager.send_ws_data(session_id, "state_update", {
-                "state": state.dict()
-            })
+            await session_manager.send_ws_data(
+                session_id, "state_update", {"state": state.dict()}
+            )
 
         autopilot.on_update(on_update)
 
         # Start the autopilot (must be after session is added to sessions) and the policy
         try:
-            await autopilot.start(full_state=full_state)
+            await autopilot.start(full_state=full_state, config=config)
         except Exception as e:
-            await self.on_error(e)
+            await ide.on_error(e)
 
         def on_error(e: Exception) -> Coroutine:
-            err_msg = '\n'.join(traceback.format_exception(e))
+            err_msg = "\n".join(traceback.format_exception(e))
             return ide.showMessage(f"Error in Continue server: {err_msg}")
 
         create_async_task(autopilot.run_policy(), on_error)
@@ -90,9 +103,15 @@ class SessionManager:
     async def remove_session(self, session_id: str):
         logger.debug(f"Removing session: {session_id}")
         if session_id in self.sessions:
-            if session_id in self.registered_ides and self.registered_ides[session_id] is not None:
+            if (
+                session_id in self.registered_ides
+                and self.registered_ides[session_id] is not None
+            ):
                 ws_to_close = self.registered_ides[session_id].websocket
-                if ws_to_close is not None and ws_to_close.client_state != WebSocketState.DISCONNECTED:
+                if (
+                    ws_to_close is not None
+                    and ws_to_close.client_state != WebSocketState.DISCONNECTED
+                ):
                     await self.sessions[session_id].autopilot.ide.websocket.close()
 
             del self.sessions[session_id]
@@ -108,16 +127,27 @@ class SessionManager:
 
         # Read and update the sessions list
         with open(getSessionsListFilePath(), "r") as f:
-            sessions_list = json.load(f)
+            try:
+                sessions_list = json.load(f)
+            except json.JSONDecodeError:
+                raise Exception(
+                    f"It looks like there is a JSON formatting error in your sessions.json file ({getSessionsListFilePath()}). Please fix this before creating a new session."
+                )
 
         session_ids = [s["session_id"] for s in sessions_list]
         if session_id not in session_ids:
             sessions_list.append(full_state.session_info.dict())
 
+        for session_info in sessions_list:
+            if "workspace_directory" not in session_info:
+                session_info["workspace_directory"] = ""
+
         with open(getSessionsListFilePath(), "w") as f:
             json.dump(sessions_list, f)
 
-    async def load_session(self, old_session_id: str, new_session_id: Optional[str] = None) -> str:
+    async def load_session(
+        self, old_session_id: str, new_session_id: Optional[str] = None
+    ) -> str:
         """Load the session's FullState from a json file"""
 
         # First persist the current state
@@ -137,15 +167,14 @@ class SessionManager:
 
     async def send_ws_data(self, session_id: str, message_type: str, data: Any):
         if session_id not in self.sessions:
-            raise SessionNotFound(f"Session {session_id} not found")
+            logger.warning(f"Session {session_id} not found")
+            return
         if self.sessions[session_id].ws is None:
-            # logger.debug(f"Session {session_id} has no websocket")
             return
 
-        await self.sessions[session_id].ws.send_json({
-            "messageType": message_type,
-            "data": data
-        })
+        await self.sessions[session_id].ws.send_json(
+            {"messageType": message_type, "data": data}
+        )
 
 
 session_manager = SessionManager()

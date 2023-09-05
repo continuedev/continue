@@ -19,6 +19,7 @@ const sidebars = {
     "how-to-use-continue",
     "how-continue-works",
     "customization",
+    "context-providers",
     "collecting-data",
     "telemetry",
     "troubleshooting",

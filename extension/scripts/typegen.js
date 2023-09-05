@@ -4,7 +4,7 @@ const { compile } = require("json-schema-to-typescript");
 
 function generateTypesForFile(inputPath, outputPath) {
   let schema = JSON.parse(fs.readFileSync(inputPath, "utf8"));
-  let name = (inputPath.split("/").pop() || inputPath).split(".")[0];
+  let name = path.parse(path.basename(inputPath)).name;
   // This is to solve the issue of json-schema-to-typescript not supporting $ref at the top-level, which is what Pydantic generates for recursive types
   if ("$ref" in schema) {
     let temp = schema["$ref"];
@@ -46,8 +46,15 @@ function deleteAllInDir(dir) {
   });
 }
 
-OUTPUT_DIR = "schema";
-INPUT_DIR = "../schema/json";
+const OUTPUT_DIR = path.join("schema");
+const INPUT_DIR = path.join("..", "schema", "json");
+if (!fs.existsSync(INPUT_DIR)) {
+  throw new Error(`Input directory does not exist: ${INPUT_DIR}`);
+}
+
+if (!fs.existsSync(OUTPUT_DIR)) {
+  throw new Error(`Output directory does not exist: ${OUTPUT_DIR}`);
+}
 
 deleteAllInDir(OUTPUT_DIR);
 generateAllSchemas(INPUT_DIR, OUTPUT_DIR);

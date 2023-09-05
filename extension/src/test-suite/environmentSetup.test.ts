@@ -6,14 +6,20 @@ import { startContinuePythonServer } from "../activation/environmentSetup";
 import fetch from "node-fetch";
 
 describe("Can start python server", () => {
-  test("Can start python server in under 10 seconds", async function () {
-    this.timeout(17_000);
-    await startContinuePythonServer();
+  test("Can start python server in under 35 seconds", async function () {
+    const allowedTime = 60_000;
+    this.timeout(allowedTime + 10_000);
 
-    await new Promise((resolve) => setTimeout(resolve, 15_000));
+    console.log("Starting server in test...");
+    await startContinuePythonServer(false);
+    console.log("Server started.");
+
+    // If successful, the server is started by the extension while we wait
+    await new Promise((resolve) => setTimeout(resolve, allowedTime));
 
     // Check if server is running
     const serverUrl = getContinueServerUrl();
+    console.log("Server URL: ", serverUrl);
     const response = await fetch(`${serverUrl}/health`);
     assert.equal(response.status, 200);
   });

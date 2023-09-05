@@ -1,0 +1,66 @@
+{
+  "title": "Models",
+  "$ref": "#/definitions/src__continuedev__core__models__Models",
+  "definitions": {
+    "LLM": {
+      "title": "LLM",
+      "type": "object",
+      "properties": {
+        "requires_api_key": {
+          "title": "Requires Api Key",
+          "type": "string"
+        },
+        "requires_unique_id": {
+          "title": "Requires Unique Id",
+          "default": false,
+          "type": "boolean"
+        },
+        "requires_write_log": {
+          "title": "Requires Write Log",
+          "default": false,
+          "type": "boolean"
+        },
+        "system_message": {
+          "title": "System Message",
+          "type": "string"
+        }
+      }
+    },
+    "ContinueSDK": {
+      "title": "ContinueSDK",
+      "type": "object",
+      "properties": {}
+    },
+    "src__continuedev__core__models__Models": {
+      "title": "Models",
+      "description": "Main class that holds the current model configuration",
+      "type": "object",
+      "properties": {
+        "default": {
+          "$ref": "#/definitions/LLM"
+        },
+        "small": {
+          "$ref": "#/definitions/LLM"
+        },
+        "medium": {
+          "$ref": "#/definitions/LLM"
+        },
+        "large": {
+          "$ref": "#/definitions/LLM"
+        },
+        "edit": {
+          "$ref": "#/definitions/LLM"
+        },
+        "chat": {
+          "$ref": "#/definitions/LLM"
+        },
+        "sdk": {
+          "$ref": "#/definitions/ContinueSDK"
+        }
+      },
+      "required": [
+        "default"
+      ]
+    }
+  }
+}
