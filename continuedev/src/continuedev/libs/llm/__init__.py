@@ -3,6 +3,7 @@ from typing import Any, Callable, Coroutine, Dict, Generator, List, Optional, Un
 from pydantic import validator
 
 from ...core.main import ChatMessage
+from ...libs.util.devdata import dev_data_logger
 from ...models.main import ContinueBaseModel
 from ..util.count_tokens import (
     DEFAULT_ARGS,
@@ -172,6 +173,10 @@ class LLM(ContinueBaseModel):
             completion += chunk
 
         self.write_log(f"Completion: \n\n{completion}")
+        dev_data_logger.capture(
+            "tokens_generated",
+            {"model": self.model, "tokens": self.count_tokens(completion)},
+        )
 
     async def complete(
         self,
@@ -209,6 +214,11 @@ class LLM(ContinueBaseModel):
         completion = await self._complete(prompt=prompt, options=options)
 
         self.write_log(f"Completion: \n\n{completion}")
+        dev_data_logger.capture(
+            "tokens_generated",
+            {"model": self.model, "tokens": self.count_tokens(completion)},
+        )
+
         return completion
 
     async def stream_chat(
@@ -261,6 +271,10 @@ class LLM(ContinueBaseModel):
                 completion += chunk
 
         self.write_log(f"Completion: \n\n{completion}")
+        dev_data_logger.capture(
+            "tokens_generated",
+            {"model": self.model, "tokens": self.count_tokens(completion)},
+        )
 
     def _stream_complete(
         self, prompt, options: CompletionOptions
