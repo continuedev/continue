@@ -28,8 +28,23 @@ jobs:
       - name: Configure Poetry Token
         run: cd continuedev && poetry config pypi-token.pypi ${{ secrets.PYPI_API_TOKEN }}
 
+      - name: Bump the version
+        run: cd continuedev && poetry version patch
+
       - name: Build and publish the package
         run: cd continuedev && poetry publish --build
+
+      - name: Commit changes
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git commit -am "ci: 🏷 Update PyPI version [skip ci]"
+
+      - name: Push changes
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: ${{ github.ref }}
 
   pyinstaller:
     strategy:
