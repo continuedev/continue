@@ -3,6 +3,7 @@ import traceback
 from typing import Coroutine, List, Optional, Union
 
 from ..libs.llm import LLM
+from ..libs.util.devdata import dev_data_logger
 from ..libs.util.logging import logger
 from ..libs.util.paths import getConfigFilePath
 from ..libs.util.telemetry import posthog_logger
@@ -109,6 +110,7 @@ class ContinueSDK(AbstractContinueSDK):
 
         # When the config is loaded, setup posthog logger
         posthog_logger.setup(sdk.ide.unique_id, sdk.config.allow_anonymous_telemetry)
+        dev_data_logger.setup(sdk.config.user_token, sdk.config.data_server_url)
 
         return sdk
 

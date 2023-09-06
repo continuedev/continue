@@ -13,6 +13,7 @@ from starlette.websockets import WebSocketDisconnect, WebSocketState
 from uvicorn.main import Server
 
 from ..libs.util.create_async_task import create_async_task
+from ..libs.util.devdata import dev_data_logger
 from ..libs.util.logging import logger
 from ..libs.util.queue import AsyncSubscriptionQueue
 from ..libs.util.telemetry import posthog_logger
@@ -346,9 +347,11 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
 
     def onAcceptRejectSuggestion(self, accepted: bool):
         posthog_logger.capture_event("accept_reject_suggestion", {"accepted": accepted})
+        dev_data_logger.capture("accept_reject_suggestion", {"accepted": accepted})
 
     def onAcceptRejectDiff(self, accepted: bool):
         posthog_logger.capture_event("accept_reject_diff", {"accepted": accepted})
+        dev_data_logger.capture("accept_reject_diff", {"accepted": accepted})
 
     def onFileSystemUpdate(self, update: FileSystemEdit):
         # Access to Autopilot (so SessionManager)

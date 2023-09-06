@@ -11,6 +11,7 @@ from openai import error as openai_errors
 from pydantic import root_validator
 
 from ..libs.util.create_async_task import create_async_task
+from ..libs.util.devdata import dev_data_logger
 from ..libs.util.edit_config import edit_config_property
 from ..libs.util.logging import logger
 from ..libs.util.paths import getSavedContextGroupsPath
@@ -356,6 +357,9 @@ class Autopilot(ContinueBaseModel):
         posthog_logger.capture_event(
             "step run", {"step_name": step.name, "params": step.dict()}
         )
+        dev_data_logger.capture(
+            "step_run", {"step_name": step.name, "params": step.dict()}
+        )
 
         if not is_future_step:
             # Check manual edits buffer, clear out if needed by creating a ManualEditStep
@@ -532,6 +536,7 @@ class Autopilot(ContinueBaseModel):
                     date_created=str(time.time()),
                     workspace_directory=self.ide.workspace_directory,
                 )
+                dev_data_logger.capture("new_session", self.session_info.dict())
 
             create_async_task(
                 create_title(),
@@ -601,6 +606,9 @@ class Autopilot(ContinueBaseModel):
 
         posthog_logger.capture_event(
             "select_context_group", {"title": id, "length": len(context_group)}
+        )
+        dev_data_logger.capture(
+            "select_context_group", {"title": id, "items": context_group}
         )
 
     async def delete_context_group(self, id: str):

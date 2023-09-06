@@ -53,8 +53,9 @@ class ContinueConfig(BaseModel):
     on_traceback: Optional[Step] = None
     system_message: Optional[str] = None
     policy_override: Optional[Policy] = None
-
     context_providers: List[ContextProvider] = []
+    user_token: Optional[str] = None
+    data_server_url: Optional[str] = "https://us-west1-autodebug.cloudfunctions.net"
 
     @validator("temperature", pre=True)
     def temperature_validator(cls, v):

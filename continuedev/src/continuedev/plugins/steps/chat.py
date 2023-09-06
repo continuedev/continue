@@ -13,6 +13,7 @@ from ...core.main import ChatMessage, FunctionCall, Models, Step, step_to_json_s
 from ...core.sdk import ContinueSDK
 from ...libs.llm.maybe_proxy_openai import MaybeProxyOpenAI
 from ...libs.llm.openai import OpenAI
+from ...libs.util.devdata import dev_data_logger
 from ...libs.util.strings import remove_quotes_and_escapes
 from ...libs.util.telemetry import posthog_logger
 from .core.core import MessageStep
@@ -88,6 +89,13 @@ class SimpleChatStep(Step):
         )
 
         posthog_logger.capture_event(
+            "model_use",
+            {
+                "model": sdk.models.default.model,
+                "provider": sdk.models.default.__class__.__name__,
+            },
+        )
+        dev_data_logger.capture(
             "model_use",
             {
                 "model": sdk.models.default.model,
