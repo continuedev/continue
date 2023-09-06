@@ -1,3 +1,4 @@
+import asyncio
 import os
 import socket
 import subprocess
@@ -57,7 +58,7 @@ class SocketFileWrapper:
         return self.sockfile.close()
 
 
-def create_json_rpc_endpoint(use_subprocess: Optional[str] = None):
+async def create_json_rpc_endpoint(use_subprocess: Optional[str] = None):
     if use_subprocess is None:
         try:
             threading.Thread(
@@ -66,6 +67,8 @@ def create_json_rpc_endpoint(use_subprocess: Optional[str] = None):
             ).start()
         except Exception as e:
             logger.warning("Could not start TCP server: %s", e)
+
+        await asyncio.sleep(2)
 
         # Connect to the server
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -100,8 +103,10 @@ def uri_to_filename(uri: str) -> str:
         return uri
 
 
-def create_lsp_client(workspace_dir: str, use_subprocess: Optional[str] = None):
-    json_rpc_endpoint, process = create_json_rpc_endpoint(use_subprocess=use_subprocess)
+async def create_lsp_client(workspace_dir: str, use_subprocess: Optional[str] = None):
+    json_rpc_endpoint, process = await create_json_rpc_endpoint(
+        use_subprocess=use_subprocess
+    )
     lsp_endpoint = LspEndpoint(json_rpc_endpoint)
     lsp_client = LspClient(lsp_endpoint)
     capabilities = {
@@ -282,7 +287,7 @@ class ContinueLSPClient(BaseModel):
         return original_dict
 
     async def start(self):
-        self.lsp_client, self.lsp_process = create_lsp_client(
+        self.lsp_client, self.lsp_process = await create_lsp_client(
             self.workspace_dir, use_subprocess=self.use_subprocess
         )
 

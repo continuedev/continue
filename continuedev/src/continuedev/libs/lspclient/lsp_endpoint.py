@@ -1,6 +1,7 @@
 from __future__ import print_function
 
 import threading
+import time
 
 
 class LspEndpoint(threading.Thread):
@@ -27,6 +28,7 @@ class LspEndpoint(threading.Thread):
 
     def run(self):
         while not self.shutdown_flag:
+            time.sleep(0.1)
             jsonrpc_message = self.json_rpc_endpoint.recv_response()
 
             if jsonrpc_message is None:
