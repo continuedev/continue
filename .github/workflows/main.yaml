@@ -8,6 +8,8 @@ on:
 jobs:
   pypi-deployment:
     runs-on: ubuntu-20.04
+    permissions:
+      contents: write
     steps:
       - name: Check out code
         uses: actions/checkout@v2
