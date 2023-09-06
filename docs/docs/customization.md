@@ -1,6 +1,6 @@
 # Customization
 
-Continue can be deeply customized by editing the `ContinueConfig` object in `~/.continue/config.py` on your machine. This file is created the first time you run Continue.
+Continue can be deeply customized by editing the `ContinueConfig` object in `~/.continue/config.py` (`%userprofile%\.continue\config.py` for Windows) on your machine. This file is created the first time you run Continue.
 
 ## Summary of Models
 
