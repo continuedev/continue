@@ -31,6 +31,21 @@ def getServerFolderPath():
     return path
 
 
+def getDevDataFolderPath():
+    path = os.path.join(getGlobalFolderPath(), "dev_data")
+    os.makedirs(path, exist_ok=True)
+    return path
+
+
+def getDevDataFilePath(table_name: str):
+    filepath = os.path.join(getDevDataFolderPath(), f"{table_name}.jsonl")
+    if not os.path.exists(filepath):
+        with open(filepath, "w") as f:
+            f.write("")
+
+    return filepath
+
+
 def getMeilisearchExePath():
     binary_name = "meilisearch.exe" if os.name == "nt" else "meilisearch"
     path = os.path.join(getServerFolderPath(), binary_name)

@@ -7,6 +7,7 @@ from meilisearch_python_async import Client
 from pydantic import BaseModel
 
 from ..libs.util.create_async_task import create_async_task
+from ..libs.util.devdata import dev_data_logger
 from ..libs.util.logging import logger
 from ..libs.util.telemetry import posthog_logger
 from ..server.meilisearch_server import poll_meilisearch_running
@@ -320,6 +321,14 @@ class ContextManager:
             )
 
         posthog_logger.capture_event(
+            "select_context_item",
+            {
+                "provider_title": id.provider_title,
+                "item_id": id.item_id,
+                "query": query,
+            },
+        )
+        dev_data_logger.capture(
             "select_context_item",
             {
                 "provider_title": id.provider_title,

@@ -3,71 +3,62 @@ This file contains mechanisms for logging development data to files, SQL databas
 """
 
 
-import os
-from dotenv import load_dotenv
-from typing import Dict, Generic, List, Literal, Optional, Type, TypeVar, Union
-import dlt
-from pydantic import BaseModel, validator
-import requests
+import json
+from datetime import datetime
+from typing import Any, Dict
+
+import aiohttp
+
+from .create_async_task import create_async_task
+from .logging import logger
+from .paths import getDevDataFilePath
 
 
-class BaseDevDataModel(BaseModel):
-    """
-    A base class for all dev data models.
-    """
-    org_id: str
-    dev_id: str
+class DevDataLogger:
+    user_token: str = None
+    data_server_url: str = None
 
+    def setup(self, user_token: str = None, data_server_url: str = None):
+        self.user_token = user_token
+        self.data_server_url = data_server_url
 
-class DevDataEntry(BaseModel):
-    table_name: str
-    data: Union[List[BaseDevDataModel], BaseDevDataModel]
+    def _to_data_server(self, table_name: str, data: Dict[str, Any]):
+        async def _async_helper(self, table_name: str, data: Dict[str, Any]):
+            if self.user_token is None or self.data_server_url is None:
+                return
 
-    def __init__(self, **data):
-        if self.__class__ is DevDataEntry:
-            raise TypeError('DevDataEntry cannot be directly instantiated')
-        super().__init__(**data)
+            async with aiohttp.ClientSession() as session:
+                await session.post(
+                    f"{self.data_server_url}/event",
+                    headers={"Authorization": f"Bearer {self.user_token}"},
+                    json={
+                        "table_name": table_name,
+                        "data": data,
+                        "user_token": self.user_token,
+                    },
+                )
 
-    @validator('data', pre=True)
-    def data_validator(cls, v):
-        if isinstance(v, list):
-            return v
-        return [v]
-
-
-T = TypeVar("T", bound=BaseDevDataModel)
-
-
-class Pipeline:
-
-    def __init__(self, name: str, destination: str, dataset_name: str):
-        self.pipeline = dlt.pipeline(
-            pipeline_name=name,
-            destination=destination,
-            dataset_name=dataset_name
+        create_async_task(
+            _async_helper(self, table_name, data),
+            lambda e: logger.warning(f"Failed to send dev data: {e}"),
         )
 
-    def run(self, data: List[BaseDevDataModel], table_name: str):
-        self.pipeline.run(list(map(lambda x: x.dict(), data)),
-                          table_name=table_name, credentials={
+    def _static_columns(self):
+        return {
+            "user_token": self.user_token or "NO_USER_TOKEN",
+            "timestamp": datetime.now().isoformat(),
+        }
 
-        })
+    def _to_local(self, table_name: str, data: Dict[str, Any]):
+        filepath = getDevDataFilePath(table_name)
+        with open(filepath, "a") as f:
+            json_line = json.dumps(data)
+            f.write(f"{json_line}\n")
+
+    def capture(self, table_name: str, data: Dict[str, Any]):
+        data = {**self._static_columns(), **data}
+        self._to_data_server(table_name, data)
+        self._to_local(table_name, data)
 
 
-load_dotenv()
-
-
-class DevDataLoader(BaseModel):
-    destination: Literal["json", "bigquery", "duckdb"]
-    credentials: Optional[BaseModel] = None
-
-
-class BigQueryCredentials(BaseModel):
-    project_id: str = None
-    private_key: str = None
-    client_email: str = None
-
-    @validator('private_key', pre=True)
-    def private_key_validator(cls, v):
-        if v is None:
-            return os.getenv("GOOGLE_PRIVATE_KEY")
+dev_data_logger = DevDataLogger()

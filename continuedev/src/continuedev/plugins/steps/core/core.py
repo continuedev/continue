@@ -12,6 +12,7 @@ from ....core.observation import Observation, TextObservation, UserInputObservat
 from ....libs.llm import LLM
 from ....libs.llm.maybe_proxy_openai import MaybeProxyOpenAI
 from ....libs.util.count_tokens import DEFAULT_MAX_TOKENS
+from ....libs.util.devdata import dev_data_logger
 from ....libs.util.strings import (
     dedent_and_get_common_whitespace,
     remove_quotes_and_escapes,
@@ -644,6 +645,10 @@ Please output the code to be inserted at the cursor in order to fulfill the user
             "model_use",
             {"model": model_to_use.model, "provider": model_to_use.__class__.__name__},
         )
+        dev_data_logger.capture(
+            "model_use",
+            {"model": model_to_use.model, "provider": model_to_use.__class__.__name__},
+        )
 
         try:
             async for chunk in generator:
@@ -813,6 +818,8 @@ Please output the code to be inserted at the cursor in order to fulfill the user
             await sdk.ide.setSuggestionsLocked(rif.filepath, True)
             await self.stream_rif(rif, sdk)
             await sdk.ide.setSuggestionsLocked(rif.filepath, False)
+
+        self.name = "Generating summary"
 
 
 class EditFileStep(Step):
