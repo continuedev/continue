@@ -7,12 +7,14 @@ from ...core.main import ChatMessage
 from ..llm import LLM
 from .prompts.edit import simplified_edit_prompt
 
+from huggingface_hub import InferenceClient
+
 DEFAULT_MAX_TIME = 120.0
 
 
 class HuggingFaceInferenceAPI(LLM):
     hf_token: str
-    self_hosted_url: str = None
+    endpoint_url: str = None
 
     verify_ssl: Optional[bool] = None
 
@@ -69,5 +71,35 @@ class HuggingFaceInferenceAPI(LLM):
         yield {"content": response, "role": "assistant"}
 
     async def _stream_complete(self, prompt, options):
-        response = await self._complete(prompt, options)
-        yield response
+        # response = await self._complete(prompt, options)
+        # yield response
+
+        client = InferenceClient(self.endpoint_url, token=self.hf_token)
+
+        gen_kwargs = dict(
+            max_new_tokens=512,
+            top_k=30,
+            top_p=0.9,
+            temperature=0.2,
+            repetition_penalty=1.02,
+            stop_sequences=["\nUser:", "<|endoftext|>", "</s>"],
+        )
+
+        stream = client.text_generation(prompt, stream=True, details=True, **gen_kwargs)
+
+        for r in stream:
+
+            # skip special tokens
+            if 'special' in r.token:
+                if r.token.special:
+                    continue
+            
+            # stop if we encounter a stop sequence
+            if 'text' in r.token:
+                if r.token.text in gen_kwargs["stop_sequences"]:
+                    break
+            
+            # yield the generated token
+            if 'text' in r.token:
+                # print(r.token['text'], end = "")
+                yield r.token.text
