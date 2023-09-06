@@ -47,7 +47,7 @@ class ContinuePluginStartupActivity : StartupActivity, Disposable {
                     val dataMap = mutableMapOf(
                             "type" to "onUILoad",
                             "sessionId" to sessionId,
-                            "apiUrl" to "http://localhost:65432/",
+                            "apiUrl" to "http://localhost:65432",
                             "workspacePaths" to emptyList<String>(),  // or your actual workspace paths
                             "vscMachineId" to "yourMachineId",
                             "vscMediaUrl" to "yourMediaUrl",
@@ -76,7 +76,7 @@ class ContinuePluginStartupActivity : StartupActivity, Disposable {
     }
 
     private fun buildJavaScript(type: String, jsonData: String): String {
-        return """window.dispatchEvent(new CustomEvent('${type}', { data: $jsonData }));"""
+        return """window.postMessage($jsonData, "*");"""
     }
 
 

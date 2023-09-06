@@ -5,6 +5,10 @@ import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.*
 import okhttp3.*
 
+data class WebSocketMessage<T>(val messageType: String, val data: T)
+data class WorkspaceDirectory(val workspaceDirectory: String);
+data class UniqueId(val uniqueId: String);
+
 class IdeProtocolClient(
     private val serverUrl: String = "ws://localhost:65432/ide/ws",
     private val coroutineScope: CoroutineScope
@@ -66,6 +70,18 @@ class IdeProtocolClient(
                     val parsedMessage: Map<String, Any> = Gson().fromJson(text, object : TypeToken<Map<String, Any>>() {}.type)
                     val messageType = parsedMessage["messageType"] as? String
                     if (messageType != null) {
+                        if (messageType == "workspaceDirectory") {
+                            webSocket?.send(
+                                    Gson().toJson(
+                                            WebSocketMessage(
+                                                    "workspaceDirectory",
+                                                    WorkspaceDirectory(workspaceDirectory())
+                                            )
+                                    )
+                            );
+                        } else if (messageType == "uniqueId") {
+                            webSocket?.send(Gson().toJson(WebSocketMessage("uniqueId", UniqueId(uniqueId()))));
+                        }
                         pendingResponses[messageType]?.complete(parsedMessage)
                         pendingResponses.remove(messageType)
                     }
@@ -100,6 +116,13 @@ class IdeProtocolClient(
         webSocket?.send(message)
     }
 
+    fun workspaceDirectory(): String {
+        return "/fake/path";
+    }
+
+    fun uniqueId(): String {
+        return "NOT_UNIQUE";
+    }
     fun onTextSelected(
         selectedText: String,
         filepath: String,
