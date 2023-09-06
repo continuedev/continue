@@ -525,6 +525,12 @@ class Autopilot(ContinueBaseModel):
         if self.session_info is None:
 
             async def create_title():
+                if (
+                    self.session_info is not None
+                    and self.session_info.title is not None
+                ):
+                    return
+
                 title = await self.continue_sdk.models.medium.complete(
                     f'Give a short title to describe the current chat session. Do not put quotes around the title. The first message was: "{user_input}". Do not use more than 10 words. The title is: ',
                     max_tokens=20,
