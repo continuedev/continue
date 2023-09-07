@@ -1,4 +1,5 @@
 import json
+import ssl
 from typing import Any, Coroutine, List, Optional
 
 import aiohttp
@@ -6,12 +7,15 @@ import aiohttp
 from ...core.main import ChatMessage
 from ..llm import LLM
 from ..util.logging import logger
+from . import CompletionOptions
+from .openai import CHAT_MODELS
 from .prompts.edit import simplified_edit_prompt
 
 
 class GGML(LLM):
     server_url: str = "http://localhost:8000"
     verify_ssl: Optional[bool] = None
+    ca_bundle_path: str = None
     model: str = "ggml"
 
     prompt_templates = {
@@ -21,13 +25,33 @@ class GGML(LLM):
     class Config:
         arbitrary_types_allowed = True
 
-    async def _stream_complete(self, prompt, options):
+    def create_client_session(self):
+        if self.ca_bundle_path is None:
+            ssl_context = ssl.create_default_context(cafile=self.ca_bundle_path)
+            tcp_connector = aiohttp.TCPConnector(
+                verify_ssl=self.verify_ssl, ssl=ssl_context
+            )
+        else:
+            tcp_connector = aiohttp.TCPConnector(verify_ssl=self.verify_ssl)
+
+        return aiohttp.ClientSession(
+            connector=tcp_connector,
+            timeout=aiohttp.ClientTimeout(total=self.timeout),
+        )
+
+    def get_headers(self):
+        headers = {
+            "Content-Type": "application/json",
+        }
+        if self.api_key is not None:
+            headers["Authorization"] = f"Bearer {self.api_key}"
+
+        return headers
+
+    async def _raw_stream_complete(self, prompt, options):
         args = self.collect_args(options)
 
-        async with aiohttp.ClientSession(
-            connector=aiohttp.TCPConnector(verify_ssl=self.verify_ssl),
-            timeout=aiohttp.ClientTimeout(total=self.timeout),
-        ) as client_session:
+        async with self.create_client_session() as client_session:
             async with client_session.post(
                 f"{self.server_url}/v1/completions",
                 json={
@@ -35,6 +59,7 @@ class GGML(LLM):
                     "stream": True,
                     **args,
                 },
+                headers=self.get_headers(),
             ) as resp:
                 async for line in resp.content.iter_any():
                     if line:
@@ -54,14 +79,11 @@ class GGML(LLM):
         args = self.collect_args(options)
 
         async def generator():
-            async with aiohttp.ClientSession(
-                connector=aiohttp.TCPConnector(verify_ssl=self.verify_ssl),
-                timeout=aiohttp.ClientTimeout(total=self.timeout),
-            ) as client_session:
+            async with self.create_client_session() as client_session:
                 async with client_session.post(
                     f"{self.server_url}/v1/chat/completions",
                     json={"messages": messages, "stream": True, **args},
-                    headers={"Content-Type": "application/json"},
+                    headers=self.get_headers(),
                 ) as resp:
                     async for line, end in resp.content.iter_chunks():
                         json_chunk = line.decode("utf-8")
@@ -87,19 +109,17 @@ class GGML(LLM):
             async for chunk in generator():
                 yield chunk
 
-    async def _complete(self, prompt: str, options) -> Coroutine[Any, Any, str]:
+    async def _raw_complete(self, prompt: str, options) -> Coroutine[Any, Any, str]:
         args = self.collect_args(options)
 
-        async with aiohttp.ClientSession(
-            connector=aiohttp.TCPConnector(verify_ssl=self.verify_ssl),
-            timeout=aiohttp.ClientTimeout(total=self.timeout),
-        ) as client_session:
+        async with self.create_client_session() as client_session:
             async with client_session.post(
                 f"{self.server_url}/v1/completions",
                 json={
                     "prompt": prompt,
                     **args,
                 },
+                headers=self.get_headers(),
             ) as resp:
                 text = await resp.text()
                 try:
@@ -109,3 +129,30 @@ class GGML(LLM):
                     raise Exception(
                         f"Error calling /completion endpoint: {e}\n\nResponse text: {text}"
                     )
+
+    async def _complete(self, prompt: str, options: CompletionOptions):
+        completion = ""
+        if self.model in CHAT_MODELS:
+            async for chunk in self._stream_chat(
+                [{"role": "user", "content": prompt}], options
+            ):
+                if "content" in chunk:
+                    completion += chunk["content"]
+
+        else:
+            async for chunk in self._raw_stream_complete(prompt, options):
+                completion += chunk
+
+        return completion
+
+    async def _stream_complete(self, prompt, options: CompletionOptions):
+        if self.model in CHAT_MODELS:
+            async for chunk in self._stream_chat(
+                [{"role": "user", "content": prompt}], options
+            ):
+                if "content" in chunk:
+                    yield chunk["content"]
+
+        else:
+            async for chunk in self._raw_stream_complete(prompt, options):
+                yield chunk
