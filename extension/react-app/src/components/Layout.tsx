@@ -145,8 +145,8 @@ const Layout = () => {
         <GridDiv>
           <Outlet />
           <Footer>
-            {(localStorage.getItem("hideFeature") === "true" && false) || (
-              <div className="mr-auto flex gap-2 items-center">
+            <div className="mr-auto flex gap-2 items-center">
+              {localStorage.getItem("hideFeature") === "true" || (
                 <SparklesIcon
                   className="cursor-pointer"
                   onClick={() => {
@@ -172,10 +172,10 @@ const Layout = () => {
                   height="1.3em"
                   color="yellow"
                 />
+              )}
 
-                <ModelSelect />
-              </div>
-            )}
+              <ModelSelect />
+            </div>
             <HeaderButtonWithText
               onClick={() => {
                 client?.loadSession(undefined);

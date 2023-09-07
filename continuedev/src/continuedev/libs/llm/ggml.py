@@ -9,6 +9,7 @@ from ..llm import LLM
 from ..util.logging import logger
 from . import CompletionOptions
 from .openai import CHAT_MODELS
+from .prompts.chat import llama2_template_messages
 from .prompts.edit import simplified_edit_prompt
 
 
@@ -17,6 +18,8 @@ class GGML(LLM):
     verify_ssl: Optional[bool] = None
     ca_bundle_path: str = None
     model: str = "ggml"
+
+    template_messages = llama2_template_messages
 
     prompt_templates = {
         "edit": simplified_edit_prompt,
@@ -63,17 +66,26 @@ class GGML(LLM):
             ) as resp:
                 async for line in resp.content.iter_any():
                     if line:
-                        chunk = line.decode("utf-8")
-                        if chunk.startswith(": ping - ") or chunk.startswith(
-                            "data: [DONE]"
-                        ):
-                            continue
-                        elif chunk.startswith("data: "):
-                            chunk = chunk[6:]
-
-                        j = json.loads(chunk)
-                        if "choices" in j:
-                            yield j["choices"][0]["text"]
+                        chunks = line.decode("utf-8")
+                        for chunk in chunks.split("\n"):
+                            if (
+                                chunk.startswith(": ping - ")
+                                or chunk.startswith("data: [DONE]")
+                                or chunk.strip() == ""
+                            ):
+                                continue
+                            elif chunk.startswith("data: "):
+                                chunk = chunk[6:]
+                            try:
+                                j = json.loads(chunk)
+                            except Exception:
+                                continue
+                            if (
+                                "choices" in j
+                                and len(j["choices"]) > 0
+                                and "text" in j["choices"][0]
+                            ):
+                                yield j["choices"][0]["text"]
 
     async def _stream_chat(self, messages: List[ChatMessage], options):
         args = self.collect_args(options)
