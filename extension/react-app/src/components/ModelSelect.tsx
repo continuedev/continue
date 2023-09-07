@@ -62,6 +62,14 @@ const MODEL_INFO: { title: string; class: string; args: any }[] = [
     args: {},
   },
   {
+    title: "HuggingFace Inference API",
+    class: "HuggingFaceInferenceAPI",
+    args: {
+      endpoint_url: "<INFERENCE_API_ENDPOINT_URL>", 
+      hf_token: "<HUGGING_FACE_TOKEN>",
+    },
+  },
+  {
     title: "gpt-4 (limited free usage)",
     class: "MaybeProxyOpenAI",
     args: {
