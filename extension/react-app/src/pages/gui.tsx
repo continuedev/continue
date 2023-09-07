@@ -66,6 +66,10 @@ function GUI(props: GUIProps) {
 
   // #region Selectors
   const history = useSelector((state: RootStore) => state.serverState.history);
+  const defaultModel = useSelector(
+    (state: RootStore) =>
+      (state.serverState.config as any).models?.default?.class_name
+  );
   const user_input_queue = useSelector(
     (state: RootStore) => state.serverState.user_input_queue
   );
@@ -240,6 +244,43 @@ function GUI(props: GUIProps) {
         return;
       }
 
+      // Increment localstorage counter for usage of free trial
+      if (
+        defaultModel === "MaybeProxyOpenAI" &&
+        (!input.startsWith("/") || input.startsWith("/edit"))
+      ) {
+        const freeTrialCounter = localStorage.getItem("freeTrialCounter");
+        if (freeTrialCounter) {
+          const usages = parseInt(freeTrialCounter);
+          localStorage.setItem("freeTrialCounter", (usages + 1).toString());
+
+          if (usages >= 250) {
+            console.log("Free trial limit reached");
+            dispatch(setShowDialog(true));
+            dispatch(
+              setDialogMessage(
+                <div className="p-4">
+                  <h3>Free Trial Limit Reached</h3>
+                  You've reached the free trial limit of 250 free inputs with
+                  Continue's OpenAI API key. To keep using Continue, you can
+                  either use your own API key, or use a local LLM. To read more
+                  about the options, see our{" "}
+                  <a href="https://continue.dev/docs/customization">
+                    documentation
+                  </a>
+                  . If you're just looking for fastest way to keep going, type
+                  '/config' to open your Continue config file and paste your API
+                  key into the MaybeProxyOpenAI object.
+                </div>
+              )
+            );
+            return;
+          }
+        } else {
+          localStorage.setItem("freeTrialCounter", "1");
+        }
+      }
+
       setWaitingForSteps(true);
 
       if (
@@ -266,7 +307,7 @@ function GUI(props: GUIProps) {
       client.sendMainInput(input);
       dispatch(temporarilyPushToUserInputQueue(input));
 
-      // Increment localstorage counter
+      // Increment localstorage counter for popup
       const counter = localStorage.getItem("mainTextEntryCounter");
       if (counter) {
         let currentCount = parseInt(counter);

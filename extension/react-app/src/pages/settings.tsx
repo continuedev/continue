@@ -4,19 +4,12 @@ import { useSelector } from "react-redux";
 import { RootStore } from "../redux/store";
 import { useNavigate } from "react-router-dom";
 import { ContinueConfig } from "../../../schema/ContinueConfig";
-import {
-  Button,
-  Select,
-  TextArea,
-  lightGray,
-  secondaryDark,
-} from "../components";
+import { Button, TextArea, lightGray, secondaryDark } from "../components";
 import styled from "styled-components";
 import { ArrowLeftIcon } from "@heroicons/react/24/outline";
 import Loader from "../components/Loader";
 import InfoHover from "../components/InfoHover";
 import { FormProvider, useForm } from "react-hook-form";
-import ModelSettings from "../components/ModelSettings";
 
 const Hr = styled.hr`
   border: 0.5px solid ${lightGray};
