@@ -48,8 +48,8 @@ class HuggingFaceInferenceAPI(LLM):
                     continue
             
             # stop if we encounter a stop sequence
-            if 'text' in r.token:
-                if r.token.text in gen_kwargs["stop_sequences"]:
+            if 'text' in r.token and options.stop is not None:
+                if r.token.text in options.stop:
                     break
             
             # yield the generated token
