@@ -60,6 +60,14 @@ const MODEL_INFO: { title: string; class: string; args: any }[] = [
     args: {},
   },
   {
+    title: "HuggingFace Inference API",
+    class: "HuggingFaceInferenceAPI",
+    args: {
+      endpoint_url: "<INFERENCE_API_ENDPOINT_URL>", 
+      hf_token: "<HUGGING_FACE_TOKEN>",
+    },
+  },
+  {
     title: "Other OpenAI-compatible API",
     class: "GGML",
     args: {
