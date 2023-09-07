@@ -10,7 +10,7 @@ from ..libs.util.create_async_task import create_async_task
 from ..libs.util.devdata import dev_data_logger
 from ..libs.util.logging import logger
 from ..libs.util.telemetry import posthog_logger
-from ..server.meilisearch_server import poll_meilisearch_running
+from ..server.meilisearch_server import poll_meilisearch_running, restart_meilisearch
 from .main import ChatMessage, ContextItem, ContextItemDescription, ContextItemId
 
 
@@ -269,7 +269,7 @@ class ContextManager:
                 timeout=5,
             )
 
-    async def load_index(self, workspace_dir: str):
+    async def load_index(self, workspace_dir: str, should_retry: bool = True):
         try:
             async with Client("http://localhost:7700") as search_client:
                 # First, create the index if it doesn't exist
@@ -309,6 +309,13 @@ class ContextManager:
                     )
         except Exception as e:
             logger.debug(f"Error loading meilisearch index: {e}")
+            if should_retry:
+                await restart_meilisearch()
+                try:
+                    asyncio.wait_for(await poll_meilisearch_running(), timeout=20)
+                except asyncio.TimeoutError:
+                    logger.warning("Meilisearch did not restart in less than 20 seconds. Stopping polling.")
+                await self.load_index(workspace_dir, False)
 
     async def select_context_item(self, id: str, query: str):
         """
