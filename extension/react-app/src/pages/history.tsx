@@ -34,6 +34,11 @@ const TdDiv = styled.div`
   border-bottom: 1px solid ${secondaryDark};
 `;
 
+function lastPartOfPath(path: string): string {
+  const sep = path.includes("/") ? "/" : "\\";
+  return path.split(sep).pop() || path;
+}
+
 function History() {
   const navigate = useNavigate();
   const [sessions, setSessions] = useState<SessionInfo[]>([]);
@@ -75,11 +80,15 @@ function History() {
         />
         <h1 className="text-2xl font-bold m-4 inline-block">History</h1>
       </div>
-      <CheckDiv
-        checked={filteringByWorkspace}
-        onClick={() => setFilteringByWorkspace((prev) => !prev)}
-        title="Filter by workspace"
-      />
+      {workspacePaths && workspacePaths.length > 0 && (
+        <CheckDiv
+          checked={filteringByWorkspace}
+          onClick={() => setFilteringByWorkspace((prev) => !prev)}
+          title={`Show only sessions from ${lastPartOfPath(
+            workspacePaths[workspacePaths.length - 1]
+          )}/`}
+        />
+      )}
       <table className="w-full">
         <tbody>
           {sessions
@@ -117,6 +126,8 @@ function History() {
                         hour: "numeric",
                         minute: "numeric",
                       })}
+                      {" | "}
+                      {lastPartOfPath(session.workspace_directory || "")}
                     </div>
                   </TdDiv>
                 </td>

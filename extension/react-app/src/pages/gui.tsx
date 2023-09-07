@@ -33,6 +33,17 @@ import {
   temporarilyPushToUserInputQueue,
 } from "../redux/slices/serverStateReducer";
 
+const TopGuiDiv = styled.div`
+  overflow-y: scroll;
+
+  scrollbar-width: none; /* Firefox */
+
+  /* Hide scrollbar for Chrome, Safari and Opera */
+  &::-webkit-scrollbar {
+    display: none;
+  }
+`;
+
 const UserInputQueueItem = styled.div`
   border-radius: ${defaultBorderRadius};
   color: gray;
@@ -346,8 +357,7 @@ function GUI(props: GUIProps) {
     };
   }, []);
   return (
-    <div
-      className="overflow-scroll"
+    <TopGuiDiv
       ref={topGuiDivRef}
       onKeyDown={(e) => {
         if (e.key === "Enter" && e.ctrlKey) {
@@ -498,7 +508,7 @@ function GUI(props: GUIProps) {
         addingHighlightedCode={adding_highlighted_code}
       />
       <ContinueButton onClick={onMainTextInput} />
-    </div>
+    </TopGuiDiv>
   );
 }
 
