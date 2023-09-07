@@ -19,6 +19,9 @@ class QueuedLLM(LLM):
         await self.llm.start(*args, **kwargs)
         self._lock = asyncio.Lock()
         self.model = self.llm.model
+        self.template_messages = self.llm.template_messages
+        self.prompt_templates = self.llm.prompt_templates
+        self.context_length = self.llm.context_length
 
     async def stop(self):
         await self.llm.stop()

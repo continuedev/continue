@@ -1,6 +1,6 @@
 import json
 import ssl
-from typing import Any, Coroutine, List, Optional
+from typing import Any, Callable, Coroutine, Dict, List, Optional
 
 import aiohttp
 
@@ -19,7 +19,9 @@ class GGML(LLM):
     ca_bundle_path: str = None
     model: str = "ggml"
 
-    template_messages = llama2_template_messages
+    template_messages: Optional[
+        Callable[[List[Dict[str, str]]], str]
+    ] = llama2_template_messages
 
     prompt_templates = {
         "edit": simplified_edit_prompt,
