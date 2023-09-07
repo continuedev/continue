@@ -67,7 +67,7 @@ const MODEL_INFO: { title: string; class: string; args: any }[] = [
     },
   },
   {
-    title: "Continue Free Trial (gpt-4)",
+    title: "GPT-4 limited free trial",
     class: "MaybeProxyOpenAI",
     args: {
       model: "gpt-4",

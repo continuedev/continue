@@ -78,7 +78,7 @@ function History() {
           onClick={() => navigate("/")}
           className="inline-block ml-4 cursor-pointer"
         />
-        <h1 className="text-2xl font-bold m-4 inline-block">History</h1>
+        <h1 className="text-xl font-bold m-4 inline-block">History</h1>
       </div>
       {workspacePaths && workspacePaths.length > 0 && (
         <CheckDiv
@@ -116,7 +116,7 @@ function History() {
                       navigate("/");
                     }}
                   >
-                    <div className="text-lg">{session.title}</div>
+                    <div className="text-md">{session.title}</div>
                     <div className="text-gray-400">
                       {parseDate(session.date_created).toLocaleString("en-US", {
                         weekday: "short",
