@@ -26,7 +26,7 @@ function AddContextGroupDialog({
   };
 
   return (
-    <div>
+    <div className="p-4">
       <TextInput
         defaultValue="My Context Group"
         type="text"

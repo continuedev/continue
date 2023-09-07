@@ -29,7 +29,7 @@
       "name": "Server",
       "type": "python",
       "request": "launch",
-      "module": "continuedev.src.continuedev.server.main",
+      "module": "continuedev.src.continuedev.__main__",
       "args": ["--port", "8001"],
       "justMyCode": false,
       "subProcess": false
@@ -44,8 +44,6 @@
       "args": ["--config", "continuedev/config.py"],
       "justMyCode": false,
       "subProcess": false
-      // Does it need a build task?
-      // What about a watch task? - type errors?
     },
     {
       "name": "Extension (VSCode)",

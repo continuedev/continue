@@ -34,18 +34,8 @@ def health():
     return {"status": "ok"}
 
 
-try:
-    # add cli arg for server port
-    parser = argparse.ArgumentParser()
-    parser.add_argument("-p", "--port", help="server port", type=int, default=65432)
-    args = parser.parse_args()
-except Exception as e:
-    logger.debug(f"Error parsing command line arguments: {e}")
-    raise e
-
-
-def run_server():
-    config = uvicorn.Config(app, host="127.0.0.1", port=args.port)
+def run_server(port: int = 65432, host: str = "127.0.0.1"):
+    config = uvicorn.Config(app, host=host, port=port)
     server = uvicorn.Server(config)
     server.run()
 
@@ -66,7 +56,21 @@ atexit.register(cleanup)
 
 if __name__ == "__main__":
     try:
-        run_server()
+        try:
+            # add cli arg for server port
+            parser = argparse.ArgumentParser()
+            parser.add_argument(
+                "-p", "--port", help="server port", type=int, default=65432
+            )
+            parser.add_argument(
+                "-h", "--host", help="server host", type=str, default="127.0.0.1"
+            )
+            args = parser.parse_args()
+        except Exception as e:
+            logger.debug(f"Error parsing command line arguments: {e}")
+            raise e
+
+        run_server(args.port, args.host)
     except Exception as e:
         logger.debug(f"Error starting Continue server: {e}")
         cleanup()

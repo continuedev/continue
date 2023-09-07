@@ -97,11 +97,10 @@ class ContinueSDK(AbstractContinueSDK):
             try:
                 sdk.lsp = ContinueLSPClient(
                     workspace_dir=sdk.ide.workspace_directory,
-                    # use_subprocess="python3.10 -m pylsp",
                 )
                 await sdk.lsp.start()
-            except:
-                logger.warning("Failed to start LSP client", exc_info=True)
+            except Exception as e:
+                logger.warning(f"Failed to start LSP client: {e}", exc_info=True)
                 sdk.lsp = None
 
         # create_async_task(

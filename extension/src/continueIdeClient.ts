@@ -294,7 +294,7 @@ class IdeProtocolClient {
         break;
       case "getTerminalContents":
         messenger.send("getTerminalContents", {
-          contents: await this.getTerminalContents(),
+          contents: await this.getTerminalContents(data.commands),
         });
         break;
       case "listDirectoryContents":
@@ -631,9 +631,19 @@ class IdeProtocolClient {
     return contents;
   }
 
-  async getTerminalContents(): Promise<string> {
+  async getTerminalContents(commands: number = -1): Promise<string> {
     const tempCopyBuffer = await vscode.env.clipboard.readText();
-    await vscode.commands.executeCommand("workbench.action.terminal.selectAll");
+    if (commands < 0) {
+      await vscode.commands.executeCommand(
+        "workbench.action.terminal.selectAll"
+      );
+    } else {
+      for (let i = 0; i < commands; i++) {
+        await vscode.commands.executeCommand(
+          "workbench.action.terminal.selectToPreviousCommand"
+        );
+      }
+    }
     await vscode.commands.executeCommand(
       "workbench.action.terminal.copySelection"
     );

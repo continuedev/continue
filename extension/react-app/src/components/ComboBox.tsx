@@ -109,6 +109,13 @@ const Ul = styled.ul<{
   outline: 1px solid ${lightGray};
   z-index: 2;
   -ms-overflow-style: none;
+
+  scrollbar-width: none; /* Firefox */
+
+  /* Hide scrollbar for Chrome, Safari and Opera */
+  &::-webkit-scrollbar {
+    display: none;
+  }
 `;
 
 const Li = styled.li<{
@@ -584,15 +591,6 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
                   {item.name}
                   {"  "}
                   <span style={{ color: lightGray }}>{item.description}</span>
-                  {downshiftProps.highlightedIndex === index &&
-                    item.content && (
-                      <>
-                        <br />
-                        <pre style={{ color: lightGray }}>
-                          {item.content.split("\n").slice(0, 5).join("\n")}
-                        </pre>
-                      </>
-                    )}
                 </span>
               </Li>
             ))}

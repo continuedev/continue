@@ -158,7 +158,7 @@ class AbstractIdeProtocolServer(ABC):
         """Check if a file exists"""
 
     @abstractmethod
-    async def getTerminalContents(self) -> str:
+    async def getTerminalContents(self, commands: int = -1) -> str:
         """Get the terminal contents"""
 
     workspace_directory: str

@@ -10,7 +10,7 @@ let StyledButton = styled(Button)<{ color?: string | null }>`
   margin-top: 8px;
   margin-bottom: 16px;
   display: grid;
-  grid-template-columns: 30px 1fr;
+  grid-template-columns: 22px 1fr;
   align-items: center;
   background: ${(props) => props.color || "#be1b55"};
 
@@ -52,7 +52,7 @@ function ContinueButton(props: { onClick?: () => void; hidden?: boolean }) {
       onClick={props.onClick}
     >
       {vscMediaUrl ? (
-        <img src={`${vscMediaUrl}/play_button.png`} width="22px" />
+        <img src={`${vscMediaUrl}/play_button.png`} width="16px" />
       ) : (
         <PlayIcon />
       )}
