@@ -11,6 +11,7 @@ from ..libs.llm.ollama import Ollama
 from ..libs.llm.openai import OpenAI
 from ..libs.llm.replicate import ReplicateLLM
 from ..libs.llm.together import TogetherLLM
+from ..libs.llm.hf_inference_api import HuggingFaceInferenceAPI
 
 
 class ContinueSDK(BaseModel):
@@ -37,6 +38,7 @@ MODEL_CLASSES = {
         ReplicateLLM,
         Ollama,
         LlamaCpp,
+        HuggingFaceInferenceAPI,
     ]
 }
 
@@ -49,6 +51,7 @@ MODEL_MODULE_NAMES = {
     "ReplicateLLM": "replicate",
     "Ollama": "ollama",
     "LlamaCpp": "llamacpp",
+    "HuggingFaceInferenceAPI": "hf_inference_api",
 }
 
 
