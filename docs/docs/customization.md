@@ -21,6 +21,7 @@ Open-Source Models (not local)
 
 - [TogetherLLM](#together) - Use any model from the [Together Models list](https://docs.together.ai/docs/models-inference) with your Together API key.
 - [ReplicateLLM](#replicate) - Use any open-source model from the [Replicate Streaming List](https://replicate.com/collections/streaming-language-models) with your Replicate API key.
+- [HuggingFaceInferenceAPI](#huggingface) - Use any open-source model from the [Hugging Face Inference API](https://huggingface.co/inference-api) with your Hugging Face token.
 
 ## Change the default LLM
 
@@ -205,6 +206,24 @@ config = ContinueConfig(
 ```
 
 If you don't specify the `model` parameter, it will default to `replicate/llama-2-70b-chat:58d078176e02c219e11eb4da5a02a7830a283b14cf8f94537af893ccff5ee781`.
+
+### Hugging Face
+
+Hugging Face Inference API is a great option for newly released language models. Sign up for an account and add billing [here](https://huggingface.co/settings/billing), access the Inference Endpoints [here](https://ui.endpoints.huggingface.co), click on “New endpoint”, and fill out the form (e.g. select a model like [WizardCoder-Python-34B-V1.0](https://huggingface.co/WizardLM/WizardCoder-Python-34B-V1.0)), and then deploy your model by clicking “Create Endpoint”. Change `~/.continue/config.py` to look like this:
+
+```python
+from continuedev.src.continuedev.core.models import Models
+from continuedev.src.continuedev.libs.llm.hf_inference_api import HuggingFaceInferenceAPI
+
+config = ContinueConfig(
+    ...
+    models=Models(
+        default=HuggingFaceInferenceAPI(
+            endpoint_url: "<INFERENCE_API_ENDPOINT_URL>", 
+            hf_token: "<HUGGING_FACE_TOKEN>",
+    )
+)
+```
 
 ### Self-hosting an open-source model
 
