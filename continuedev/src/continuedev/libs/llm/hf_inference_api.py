@@ -30,6 +30,8 @@ class HuggingFaceInferenceAPI(LLM):
         if "stop" in args:
             args["stop_sequences"] = args["stop"]
             del args["stop"]
+        if "model" in args:
+            del args["model"]
         return args
 
 
@@ -38,21 +40,14 @@ class HuggingFaceInferenceAPI(LLM):
 
         client = InferenceClient(self.endpoint_url, token=self.hf_token)
 
-        stream = client.text_generation(prompt, stream=True, details=True, **args)
+        stream = client.text_generation(prompt, stream=True, details=True)
 
         for r in stream:
-
             # skip special tokens
-            if 'special' in r.token:
-                if r.token.special:
-                    continue
-            
+            if r.token.special:
+                continue
             # stop if we encounter a stop sequence
-            if 'text' in r.token and options.stop is not None:
+            if options.stop is not None:
                 if r.token.text in options.stop:
                     break
-            
-            # yield the generated token
-            if 'text' in r.token:
-                # print(r.token['text'], end = "")
-                yield r.token.text
+            yield r.token.text
