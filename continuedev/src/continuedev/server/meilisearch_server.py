@@ -77,12 +77,13 @@ async def ensure_meilisearch_installed() -> bool:
             except:
                 pass
             existing_paths.remove(meilisearchPath)
+            
+            await download_meilisearch()
 
         # Clear the existing directories
         for p in existing_paths:
             shutil.rmtree(p, ignore_errors=True)
 
-        await download_meilisearch()
 
         return False
 
@@ -155,3 +156,21 @@ def stop_meilisearch():
         meilisearch_process.terminate()
         meilisearch_process.wait()
         meilisearch_process = None
+
+
+import psutil
+
+def kill_proc(port):
+    for proc in psutil.process_iter():
+        try:
+            for conns in proc.connections(kind='inet'):
+                if conns.laddr.port == port:
+                    proc.send_signal(psutil.signal.SIGTERM) # or SIGKILL
+        except psutil.AccessDenied:
+            logger.warning(f"Failed to kill process on port {port}")
+
+
+async def restart_meilisearch():
+    stop_meilisearch()
+    kill_proc(7700)
+    await start_meilisearch()
