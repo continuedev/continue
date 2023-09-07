@@ -277,7 +277,7 @@ function GUI(props: GUIProps) {
         if (currentCount === 100) {
           dispatch(
             setDialogMessage(
-              <div className="text-center">
+              <div className="text-center p-4">
                 👋 Thanks for using Continue. We are a beta product and love
                 working closely with our first users. If you're interested in
                 speaking, enter your name and email. We won't use this
@@ -293,7 +293,7 @@ function GUI(props: GUIProps) {
                     });
                     dispatch(
                       setDialogMessage(
-                        <div className="text-center">
+                        <div className="text-center p-4">
                           Thanks! We'll be in touch soon.
                         </div>
                       )

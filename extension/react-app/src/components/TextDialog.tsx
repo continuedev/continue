@@ -25,12 +25,12 @@ const Dialog = styled.div`
   color: ${vscForeground};
   background-color: ${vscBackground};
   border-radius: 8px;
-  padding: 8px;
   display: flex;
   flex-direction: column;
   box-shadow: 0 0 10px 0 ${vscForeground};
   margin: auto;
   word-wrap: break-word;
+  overflow: hidden;
 `;
 
 const TextArea = styled.textarea`

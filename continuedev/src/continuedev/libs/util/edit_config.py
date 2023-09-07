@@ -79,6 +79,8 @@ filtered_attrs = {
     "llm",
 }
 
+filtered_attrs_when_new = {"timeout", "prompt_templates"}
+
 
 def escape_string(string: str) -> str:
     return string.replace('"', '\\"').replace("'", "\\'")
@@ -90,20 +92,27 @@ def display_val(v: Any):
     return str(v)
 
 
-def display_llm_class(llm):
-    args = ", ".join(
+def display_llm_class(llm, new: bool = False):
+    sep = ",\n\t\t\t"
+    args = sep.join(
         [
             f"{k}={display_val(v)}"
             for k, v in llm.dict().items()
             if k not in filtered_attrs and v is not None
         ]
     )
-    return f"{llm.__class__.__name__}({args})"
+    return f"{llm.__class__.__name__}(\n\t\t\t{args}\n\t\t)"
 
 
-def create_obj_node(class_name: str, args: Dict[str, str]) -> redbaron.RedBaron:
+def create_obj_node(
+    class_name: str, args: Dict[str, str], tabs: int = 1
+) -> redbaron.RedBaron:
     args = [f"{key}={value}" for key, value in args.items()]
-    return redbaron.RedBaron(f"{class_name}({', '.join(args)})")[0]
+    t = "\t" * tabs
+    new_line = "\n\t" + t
+    sep = "," + new_line
+
+    return redbaron.RedBaron(f"{class_name}({new_line}{sep.join(args)}\n{t})")[0]
 
 
 def create_string_node(string: str) -> redbaron.RedBaron:

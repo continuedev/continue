@@ -221,6 +221,7 @@ class GUIProtocolServer:
             ),
             self.on_error,
         )
+        posthog_logger.capture_event("set_system_message", {"system_message": message})
 
     def set_temperature(self, temperature: float):
         self.session.autopilot.continue_sdk.config.temperature = temperature
@@ -230,6 +231,7 @@ class GUIProtocolServer:
             ),
             self.on_error,
         )
+        posthog_logger.capture_event("set_temperature", {"temperature": temperature})
 
     def set_model_for_role_from_index(self, role: str, index: int):
         async def async_stuff():
@@ -242,7 +244,7 @@ class GUIProtocolServer:
             await self.session.autopilot.continue_sdk.start_model(models.default)
 
             # Set models in config.py
-            JOINER = ", "
+            JOINER = ",\n\t\t"
             models_args = {
                 "unused": f"[{JOINER.join([display_llm_class(llm) for llm in models.unused])}]",
                 ("default" if role == "*" else role): display_llm_class(models.default),
@@ -285,9 +287,9 @@ class GUIProtocolServer:
                     if val is None:
                         continue  # no pun intended
 
-                    models_args[role] = display_llm_class(val)
+                    models_args[role] = display_llm_class(val, True)
 
-                JOINER = ", "
+                JOINER = ",\n\t\t"
                 models_args[
                     "unused"
                 ] = f"[{JOINER.join([display_llm_class(llm) for llm in unused_models])}]"
@@ -346,7 +348,7 @@ async def websocket_endpoint(
         while AppStatus.should_exit is False:
             message = await websocket.receive_text()
             logger.debug(f"Received GUI message {message}")
-            if type(message) is str:
+            if isinstance(message, str):
                 message = json.loads(message)
 
             if "messageType" not in message or "data" not in message:

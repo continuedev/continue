@@ -57,7 +57,7 @@ function SelectContextGroupDialog() {
   const client = useContext(GUIClientContext);
 
   return (
-    <div className="px-4">
+    <div className="p-4">
       <h2>Saved Context Groups</h2>
 
       {savedContextGroups && Object.keys(savedContextGroups).length > 0 ? (

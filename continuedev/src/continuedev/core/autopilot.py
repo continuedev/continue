@@ -464,7 +464,9 @@ class Autopilot(ContinueBaseModel):
 
         # Update its description
         async def update_description():
-            step.description = await step.describe(self.continue_sdk.models)
+            description = await step.describe(self.continue_sdk.models)
+            if description is not None:
+                step.description = description
             # Update subscribers with new description
             await self.update_subscribers()
 
