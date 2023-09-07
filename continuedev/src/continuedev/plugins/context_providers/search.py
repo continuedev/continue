@@ -5,6 +5,7 @@ from ripgrepy import Ripgrepy
 
 from ...core.context import ContextProvider
 from ...core.main import ContextItem, ContextItemDescription, ContextItemId
+from ...libs.util.logging import logger
 from .util import remove_meilisearch_disallowed_chars
 
 
@@ -75,6 +76,13 @@ class SearchContextProvider(ContextProvider):
 
     async def provide_context_items(self, workspace_dir: str) -> List[ContextItem]:
         self.workspace_dir = workspace_dir
+
+        try:
+            Ripgrepy("", workspace_dir, rg_path=self._get_rg_path())
+        except Exception as e:
+            logger.warning(f"Failed to initialize ripgrepy: {e}")
+            return []
+
         return [self.BASE_CONTEXT_ITEM]
 
     async def get_item(self, id: ContextItemId, query: str) -> ContextItem:

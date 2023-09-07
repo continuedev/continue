@@ -451,9 +451,10 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
         )
         return resp.visibleFiles
 
-    async def getTerminalContents(self) -> str:
+    async def getTerminalContents(self, commands: int = -1) -> str:
+        """Get the contents of the terminal, up to the last 'commands' commands, or all if commands is -1"""
         resp = await self._send_and_receive_json(
-            {}, TerminalContentsResponse, "getTerminalContents"
+            {"commands": commands}, TerminalContentsResponse, "getTerminalContents"
         )
         return resp.contents
 
@@ -604,7 +605,7 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str = None):
             message_type = message["messageType"]
             data = message["data"]
 
-            logger.debug(f"Received IDE message: {message_type}")
+            # logger.debug(f"Received IDE message: {message_type}")
             create_async_task(
                 ideProtocolServer.handle_json(message_type, data),
                 ideProtocolServer.on_error,
