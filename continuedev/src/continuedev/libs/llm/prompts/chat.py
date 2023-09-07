@@ -21,6 +21,22 @@ def anthropic_template_messages(messages: List[Dict[str, str]]) -> str:
     return prompt
 
 
+def template_alpaca_messages(msgs: List[Dict[str, str]]) -> str:
+    prompt = ""
+
+    if msgs[0]["role"] == "system":
+        prompt += f"{msgs[0]['content']}\n"
+        msgs.pop(0)
+
+    prompt += "### Instruction:\n"
+    for msg in msgs:
+        prompt += f"{msg['content']}\n"
+
+    prompt += "### Response:\n"
+
+    return prompt
+
+
 def llama2_template_messages(msgs: List[Dict[str, str]]) -> str:
     if len(msgs) == 0:
         return ""

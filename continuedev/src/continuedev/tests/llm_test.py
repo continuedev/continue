@@ -12,7 +12,6 @@ from continuedev.libs.llm.ggml import GGML
 from continuedev.libs.llm.openai import OpenAI
 from continuedev.libs.llm.together import TogetherLLM
 from continuedev.libs.util.count_tokens import DEFAULT_ARGS
-from continuedev.tests.util.openai_mock import start_openai
 from continuedev.tests.util.prompts import tokyo_test_pair
 
 load_dotenv()
@@ -140,30 +139,14 @@ class TestOpenAI(TestBaseLLM):
 class TestGGML(TestBaseLLM):
     def setup_class(cls):
         super().setup_class(cls)
-        port = 8000
         cls.llm = GGML(
-            model=cls.model,
+            model="gpt-3.5-turbo",
             context_length=cls.context_length,
             system_message=cls.system_message,
-            api_base=f"http://localhost:{port}",
+            server_url="https://api.openai.com",
+            api_key=os.environ["OPENAI_API_KEY"],
         )
         start_model(cls.llm)
-        cls.server = start_openai(port=port)
-
-    def teardown_class(cls):
-        cls.server.terminate()
-
-    @pytest.mark.asyncio
-    async def test_stream_chat(self):
-        pytest.skip(reason="GGML is not working")
-
-    @pytest.mark.asyncio
-    async def test_stream_complete(self):
-        pytest.skip(reason="GGML is not working")
-
-    @pytest.mark.asyncio
-    async def test_completion(self):
-        pytest.skip(reason="GGML is not working")
 
 
 @pytest.mark.skipif(True, reason="Together is not working")

@@ -33,6 +33,17 @@ import {
   temporarilyPushToUserInputQueue,
 } from "../redux/slices/serverStateReducer";
 
+const TopGuiDiv = styled.div`
+  overflow-y: scroll;
+
+  scrollbar-width: none; /* Firefox */
+
+  /* Hide scrollbar for Chrome, Safari and Opera */
+  &::-webkit-scrollbar {
+    display: none;
+  }
+`;
+
 const UserInputQueueItem = styled.div`
   border-radius: ${defaultBorderRadius};
   color: gray;
@@ -266,7 +277,7 @@ function GUI(props: GUIProps) {
         if (currentCount === 100) {
           dispatch(
             setDialogMessage(
-              <div className="text-center">
+              <div className="text-center p-4">
                 👋 Thanks for using Continue. We are a beta product and love
                 working closely with our first users. If you're interested in
                 speaking, enter your name and email. We won't use this
@@ -282,7 +293,7 @@ function GUI(props: GUIProps) {
                     });
                     dispatch(
                       setDialogMessage(
-                        <div className="text-center">
+                        <div className="text-center p-4">
                           Thanks! We'll be in touch soon.
                         </div>
                       )
@@ -346,8 +357,7 @@ function GUI(props: GUIProps) {
     };
   }, []);
   return (
-    <div
-      className="overflow-scroll"
+    <TopGuiDiv
       ref={topGuiDivRef}
       onKeyDown={(e) => {
         if (e.key === "Enter" && e.ctrlKey) {
@@ -498,7 +508,7 @@ function GUI(props: GUIProps) {
         addingHighlightedCode={adding_highlighted_code}
       />
       <ContinueButton onClick={onMainTextInput} />
-    </div>
+    </TopGuiDiv>
   );
 }
 

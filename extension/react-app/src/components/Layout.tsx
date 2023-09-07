@@ -3,7 +3,7 @@ import { defaultBorderRadius, secondaryDark, vscForeground } from ".";
 import { Outlet } from "react-router-dom";
 import Onboarding from "./Onboarding";
 import TextDialog from "./TextDialog";
-import { useContext, useEffect } from "react";
+import { useContext, useEffect, useState } from "react";
 import { GUIClientContext } from "../App";
 import { useDispatch, useSelector } from "react-redux";
 import { RootStore } from "../redux/store";
@@ -145,29 +145,37 @@ const Layout = () => {
         <GridDiv>
           <Outlet />
           <Footer>
-            {localStorage.getItem("hideFeature") === "true" || (
-              <SparklesIcon
-                className="mr-auto cursor-pointer"
-                onClick={() => {
-                  localStorage.setItem("hideFeature", "true");
-                }}
-                onMouseEnter={() => {
-                  dispatch(
-                    setBottomMessage(
-                      "🎁 New Feature: Use ⌘⇧R automatically debug errors in the terminal (you can click the sparkle icon to make it go away)"
-                    )
-                  );
-                }}
-                onMouseLeave={() => {
-                  dispatch(setBottomMessage(undefined));
-                }}
-                width="1.3em"
-                height="1.3em"
-                color="yellow"
-              />
-            )}
+            {(localStorage.getItem("hideFeature") === "true" && false) || (
+              <div className="mr-auto flex gap-2 items-center">
+                <SparklesIcon
+                  className="cursor-pointer"
+                  onClick={() => {
+                    localStorage.setItem("hideFeature", "true");
+                  }}
+                  onMouseEnter={() => {
+                    dispatch(
+                      setBottomMessage(
+                        "🎁 New Feature: Use ⌘⇧R automatically debug errors in the terminal (you can click the sparkle icon to make it go away)"
+                      )
+                    );
+                  }}
+                  onMouseLeave={() => {
+                    dispatch(
+                      setBottomMessageCloseTimeout(
+                        setTimeout(() => {
+                          dispatch(setBottomMessage(undefined));
+                        }, 2000)
+                      )
+                    );
+                  }}
+                  width="1.3em"
+                  height="1.3em"
+                  color="yellow"
+                />
 
-            <ModelSelect />
+                <ModelSelect />
+              </div>
+            )}
             <HeaderButtonWithText
               onClick={() => {
                 client?.loadSession(undefined);

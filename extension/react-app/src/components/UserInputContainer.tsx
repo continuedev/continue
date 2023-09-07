@@ -2,6 +2,7 @@ import React, { useContext, useEffect, useRef, useState } from "react";
 import styled from "styled-components";
 import {
   defaultBorderRadius,
+  lightGray,
   secondaryDark,
   vscBackground,
   vscForeground,
@@ -28,6 +29,9 @@ const StyledDiv = styled.div`
   padding: 8px;
   padding-top: 0px;
   padding-bottom: 0px;
+
+  border-bottom: 0.5px solid ${lightGray};
+  border-top: 0.5px solid ${lightGray};
 `;
 
 const DeleteButtonDiv = styled.div`

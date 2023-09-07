@@ -1,6 +1,8 @@
 from ...core.main import Step
 from ...core.sdk import ContinueSDK
 from ...libs.util.paths import getConfigFilePath
+from ...models.filesystem import RangeInFile
+from ...models.main import Range
 
 MODEL_CLASS_TO_MESSAGE = {
     "OpenAI": "Obtain your OpenAI API key from [here](https://platform.openai.com/account/api-keys) and paste it into the `api_key` field at config.models.default.api_key in `config.py`. Then reload the VS Code window for changes to take effect.",
@@ -22,4 +24,13 @@ class SetupModelStep(Step):
         await sdk.ide.setFileOpen(getConfigFilePath())
         self.description = MODEL_CLASS_TO_MESSAGE.get(
             self.model_class, "Please finish setting up this model in `config.py`"
+        )
+
+        config_contents = await sdk.ide.readFile(getConfigFilePath())
+        start = config_contents.find("default=") + len("default=")
+        end = config_contents.find("unused=") - 1
+        range = Range.from_indices(config_contents, start, end)
+        range.end.line -= 1
+        await sdk.ide.highlightCode(
+            RangeInFile(filepath=getConfigFilePath(), range=range)
         )

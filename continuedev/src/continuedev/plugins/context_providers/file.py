@@ -101,28 +101,13 @@ class FileContextProvider(ContextProvider):
         )
 
     async def provide_context_items(self, workspace_dir: str) -> List[ContextItem]:
-        contents = await self.sdk.ide.listDirectoryContents(workspace_dir, False)
+        contents = await self.sdk.ide.listDirectoryContents(workspace_dir, True)
         if contents is None:
             return []
 
         absolute_filepaths: List[str] = []
         for filepath in contents[:1000]:
             absolute_filepaths.append(filepath)
-
-        # for root, dir_names, file_names in os.walk(workspace_dir):
-        #     dir_names[:] = [
-        #         d
-        #         for d in dir_names
-        #         if not any(fnmatch(d, pattern) for pattern in self.ignore_patterns)
-        #     ]
-        #     for file_name in file_names:
-        #         absolute_filepaths.append(os.path.join(root, file_name))
-
-        #         if len(absolute_filepaths) > 1000:
-        #             break
-
-        #     if len(absolute_filepaths) > 1000:
-        #         break
 
         items = await asyncio.gather(
             *[

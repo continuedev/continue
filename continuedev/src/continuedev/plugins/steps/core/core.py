@@ -183,33 +183,15 @@ class DefaultModelEditCodeStep(Step):
     summary_prompt: str = "Please give brief a description of the changes made above using markdown bullet points. Be concise:"
 
     async def describe(self, models: Models) -> Coroutine[str, None, None]:
-        if self._previous_contents.strip() == self._new_contents.strip():
-            description = "No edits were made"
-        else:
-            changes = "\n".join(
-                difflib.ndiff(
-                    self._previous_contents.splitlines(),
-                    self._new_contents.splitlines(),
-                )
-            )
-            description = await models.medium.complete(
-                dedent(
-                    f"""\
-                Diff summary: "{self.user_input}"
-
-                ```diff
-                {changes}
-                ```
-
-                {self.summary_prompt}"""
-                )
-            )
         name = await models.medium.complete(
             f"Write a very short title to describe this requested change (no quotes): '{self.user_input}'. This is the title:"
         )
         self.name = remove_quotes_and_escapes(name)
 
-        return f"{remove_quotes_and_escapes(description)}"
+        if self._previous_contents.strip() == self._new_contents.strip():
+            return "No edits were made"
+        else:
+            return None
 
     async def get_prompt_parts(
         self, rif: RangeInFileWithContents, sdk: ContinueSDK, full_file_contents: str
@@ -820,6 +802,29 @@ Please output the code to be inserted at the cursor in order to fulfill the user
             await sdk.ide.setSuggestionsLocked(rif.filepath, False)
 
         self.name = "Generating summary"
+
+        changes = "\n".join(
+            difflib.ndiff(
+                self._previous_contents.splitlines(),
+                self._new_contents.splitlines(),
+            )
+        )
+
+        self.description = ""
+        async for chunk in sdk.models.medium.stream_complete(
+            dedent(
+                f"""\
+        Diff summary: "{self.user_input}"
+
+        ```diff
+        {changes}
+        ```
+
+        {self.summary_prompt}"""
+            )
+        ):
+            self.description += chunk
+            await sdk.update_ui()
 
 
 class EditFileStep(Step):

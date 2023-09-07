@@ -18,7 +18,7 @@ class MaybeProxyOpenAI(LLM):
     async def start(
         self, write_log: Callable[[str], None] = None, unique_id: Optional[str] = None
     ):
-        await super().start(write_log=lambda *args, **kwargs: None, unique_id=unique_id)
+        await super().start(write_log=write_log, unique_id=unique_id)
         if self.api_key is None or self.api_key.strip() == "":
             self.llm = ProxyServer(model=self.model)
         else:
