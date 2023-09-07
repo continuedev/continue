@@ -63,7 +63,7 @@ if __name__ == "__main__":
                 "-p", "--port", help="server port", type=int, default=65432
             )
             parser.add_argument(
-                "-h", "--host", help="server host", type=str, default="127.0.0.1"
+                "--host", help="server host", type=str, default="127.0.0.1"
             )
             args = parser.parse_args()
         except Exception as e:

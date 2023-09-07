@@ -194,7 +194,11 @@ export async function startContinuePythonServer(redownload: boolean = true) {
       .getConfiguration("continue")
       .get<boolean>("manuallyRunningServer") || false;
   const serverUrl = getContinueServerUrl();
-  if (serverUrl !== "http://localhost:65432" || manuallyRunningServer) {
+  if (
+    (serverUrl !== "http://localhost:65432" &&
+      serverUrl !== "http://127.0.0.1:65432") ||
+    manuallyRunningServer
+  ) {
     console.log("Continue server is being run manually, skipping start");
     return;
   }
