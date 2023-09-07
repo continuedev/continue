@@ -1,21 +1,36 @@
-import os
 from typing import List
+
+from pydantic import BaseModel
 
 from ...core.context import ContextProvider
 from ...core.main import ContextItem, ContextItemDescription, ContextItemId
 
 
-def format_file_tree(startpath) -> str:
+class Directory(BaseModel):
+    name: str
+    files: List[str]
+    directories: List["Directory"]
+
+
+def format_file_tree(tree: Directory, indentation: str = "") -> str:
     result = ""
-    for root, dirs, files in os.walk(startpath):
-        level = root.replace(startpath, "").count(os.sep)
-        indent = " " * 4 * (level)
-        result += "{}{}/".format(indent, os.path.basename(root)) + "\n"
-        subindent = " " * 4 * (level + 1)
-        for f in files:
-            result += "{}{}".format(subindent, f) + "\n"
+    for file in tree.files:
+        result += f"{indentation}{file}\n"
+
+    for directory in tree.directories:
+        result += f"{indentation}{directory.name}/\n"
+        result += format_file_tree(directory, indentation + "  ")
 
     return result
+
+
+def split_path(path: str, with_root=None) -> List[str]:
+    parts = path.split("/") if "/" in path else path.split("\\")
+    if with_root is not None:
+        root_parts = split_path(with_root)
+        parts = parts[len(root_parts) - 1 :]
+
+    return parts
 
 
 class FileTreeContextProvider(ContextProvider):
@@ -23,9 +38,34 @@ class FileTreeContextProvider(ContextProvider):
 
     workspace_dir: str = None
 
-    def _filetree_context_item(self):
+    async def _get_file_tree(self, directory: str) -> str:
+        contents = await self.sdk.ide.listDirectoryContents(directory, recursive=True)
+
+        tree = Directory(
+            name=split_path(self.workspace_dir)[-1], files=[], directories=[]
+        )
+
+        for file in contents:
+            parts = split_path(file, with_root=self.workspace_dir)
+
+            current_tree = tree
+            for part in parts[:-1]:
+                if part not in [d.name for d in current_tree.directories]:
+                    current_tree.directories.append(
+                        Directory(name=part, files=[], directories=[])
+                    )
+
+                current_tree = [d for d in current_tree.directories if d.name == part][
+                    0
+                ]
+
+            current_tree.files.append(parts[-1])
+
+        return format_file_tree(tree)
+
+    async def _filetree_context_item(self):
         return ContextItem(
-            content=format_file_tree(self.workspace_dir),
+            content=await self._get_file_tree(self.workspace_dir),
             description=ContextItemDescription(
                 name="File Tree",
                 description="Add a formatted file tree of this directory to the context",
@@ -35,10 +75,10 @@ class FileTreeContextProvider(ContextProvider):
 
     async def provide_context_items(self, workspace_dir: str) -> List[ContextItem]:
         self.workspace_dir = workspace_dir
-        return [self._filetree_context_item()]
+        return [await self._filetree_context_item()]
 
     async def get_item(self, id: ContextItemId, query: str) -> ContextItem:
         if not id.item_id == self.title:
             raise Exception("Invalid item id")
 
-        return self._filetree_context_item()
+        return await self._filetree_context_item()

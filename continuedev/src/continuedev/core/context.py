@@ -285,8 +285,6 @@ class ContextManager:
                 await globalSearchIndex.update_filterable_attributes(["workspace_dir"])
 
                 async def load_context_provider(provider: ContextProvider):
-                    ti = time.time()
-
                     context_items = await provider.provide_context_items(workspace_dir)
                     documents = [
                         {
@@ -299,28 +297,34 @@ class ContextManager:
                         for item in context_items
                     ]
                     if len(documents) > 0:
-                        try:
-                            await asyncio.wait_for(
-                                globalSearchIndex.add_documents(documents), timeout=20
-                            )
-                        except asyncio.TimeoutError:
-                            logger.warning(
-                                f"Failed to add documents to meilisearch for context provider {provider.__class__.__name__} in 20 seconds"
-                            )
-                            return
-                        except Exception as e:
-                            logger.warning(
-                                f"Error adding documents to meilisearch for context provider {provider.__class__.__name__}: {e}"
-                            )
-                            return
+                        await globalSearchIndex.add_documents(documents)
+
+                    return len(documents)
+
+                async def safe_load(provider: ContextProvider):
+                    ti = time.time()
+                    try:
+                        num_documents = await asyncio.wait_for(
+                            load_context_provider(provider), timeout=20
+                        )
+                    except asyncio.TimeoutError:
+                        logger.warning(
+                            f"Failed to add documents to meilisearch for context provider {provider.__class__.__name__} in 20 seconds"
+                        )
+                        return
+                    except Exception as e:
+                        logger.warning(
+                            f"Error adding documents to meilisearch for context provider {provider.__class__.__name__}: {e}"
+                        )
+                        return
 
                     tf = time.time()
                     logger.debug(
-                        f"Loaded {len(documents)} documents into meilisearch in {tf - ti} seconds for context provider {provider.title}"
+                        f"Loaded {num_documents} documents into meilisearch in {tf - ti} seconds for context provider {provider.title}"
                     )
 
                 tasks = [
-                    load_context_provider(provider)
+                    safe_load(provider)
                     for _, provider in self.context_providers.items()
                 ]
                 await asyncio.wait_for(asyncio.gather(*tasks), timeout=20)
@@ -330,9 +334,11 @@ class ContextManager:
             if should_retry:
                 await restart_meilisearch()
                 try:
-                    asyncio.wait_for(await poll_meilisearch_running(), timeout=20)
+                    await asyncio.wait_for(poll_meilisearch_running(), timeout=20)
                 except asyncio.TimeoutError:
-                    logger.warning("Meilisearch did not restart in less than 20 seconds. Stopping polling.")
+                    logger.warning(
+                        "Meilisearch did not restart in less than 20 seconds. Stopping polling."
+                    )
                 await self.load_index(workspace_dir, False)
 
     async def select_context_item(self, id: str, query: str):

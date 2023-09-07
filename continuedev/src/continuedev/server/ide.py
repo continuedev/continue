@@ -196,7 +196,7 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
                     f"Tried to send message, but websocket is disconnected: {message_type}"
                 )
                 return
-            logger.debug(f"Sending IDE message: {message_type}")
+            # logger.debug(f"Sending IDE message: {message_type}")
             await self.websocket.send_json({"messageType": message_type, "data": data})
         except RuntimeError as e:
             logger.warning(f"Error sending IDE message, websocket probably closed: {e}")
