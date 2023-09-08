@@ -177,6 +177,7 @@ class Autopilot(ContinueBaseModel):
             session_info=self.session_info,
             config=self.continue_sdk.config,
             saved_context_groups=self._saved_context_groups,
+            context_providers=self.context_manager.get_provider_descriptions(),
         )
         self.full_state = full_state
         return full_state

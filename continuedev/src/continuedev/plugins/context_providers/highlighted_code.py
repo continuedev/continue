@@ -28,6 +28,9 @@ class HighlightedCodeContextProvider(ContextProvider):
     """
 
     title = "code"
+    display_title = "Highlighted Code"
+    description = "Highlight code"
+    dynamic = True
 
     ide: Any  # IdeProtocolServer
 

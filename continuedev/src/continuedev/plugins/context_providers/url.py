@@ -10,6 +10,9 @@ from .util import remove_meilisearch_disallowed_chars
 
 class URLContextProvider(ContextProvider):
     title = "url"
+    display_title = "URL"
+    description = "Reference the contents of a webpage"
+    dynamic = True
 
     # Allows users to provide a list of preset urls
     preset_urls: List[str] = []
@@ -78,8 +81,8 @@ class URLContextProvider(ContextProvider):
             return matching_static_item
 
         # Check if the item is the dynamic item
-        if not id.item_id == self.DYNAMIC_URL_CONTEXT_ITEM_ID:
-            raise Exception("Invalid item id")
+        if not id.provider_title == self.title:
+            raise Exception("Invalid provider title for item")
 
         # Generate the dynamic item
         url = query.lstrip("url ").strip()

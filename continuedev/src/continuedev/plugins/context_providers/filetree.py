@@ -35,6 +35,9 @@ def split_path(path: str, with_root=None) -> List[str]:
 
 class FileTreeContextProvider(ContextProvider):
     title = "tree"
+    display_title = "File Tree"
+    description = "Add a formatted file tree of this directory to the context"
+    dynamic = True
 
     workspace_dir: str = None
 
@@ -78,7 +81,7 @@ class FileTreeContextProvider(ContextProvider):
         return [await self._filetree_context_item()]
 
     async def get_item(self, id: ContextItemId, query: str) -> ContextItem:
-        if not id.item_id == self.title:
-            raise Exception("Invalid item id")
+        if not id.provider_title == self.title:
+            raise Exception("Invalid provider title for item")
 
         return await self._filetree_context_item()

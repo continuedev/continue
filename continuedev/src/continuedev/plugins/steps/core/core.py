@@ -604,7 +604,12 @@ Please output the code to be inserted at the cursor in order to fulfill the user
             rendered = render_prompt_template(
                 template,
                 messages[:-1],
-                {"code_to_edit": rif.contents, "user_input": self.user_input},
+                {
+                    "code_to_edit": rif.contents,
+                    "user_input": self.user_input,
+                    "file_prefix": file_prefix,
+                    "file_suffix": file_suffix,
+                },
             )
             if isinstance(rendered, str):
                 messages = [
@@ -617,11 +622,25 @@ Please output the code to be inserted at the cursor in order to fulfill the user
             else:
                 messages = rendered
 
-        generator = model_to_use.stream_chat(
-            messages,
-            temperature=sdk.config.temperature,
-            max_tokens=min(max_tokens, model_to_use.context_length // 2),
-        )
+            generator = model_to_use.stream_complete(
+                rendered,
+                raw=True,
+                temperature=sdk.config.temperature,
+                max_tokens=min(max_tokens, model_to_use.context_length // 2),
+            )
+
+        else:
+
+            async def gen():
+                async for chunk in model_to_use.stream_chat(
+                    messages,
+                    temperature=sdk.config.temperature,
+                    max_tokens=min(max_tokens, model_to_use.context_length // 2),
+                ):
+                    if "content" in chunk:
+                        yield chunk["content"]
+
+            generator = gen()
 
         posthog_logger.capture_event(
             "model_use",
@@ -641,9 +660,6 @@ Please output the code to be inserted at the cursor in order to fulfill the user
                     return
 
                 # Accumulate lines
-                if "content" not in chunk:
-                    continue  # ayo
-                chunk = chunk["content"]
                 chunk_lines = chunk.split("\n")
                 chunk_lines[0] = unfinished_line + chunk_lines[0]
                 if chunk.endswith("\n"):

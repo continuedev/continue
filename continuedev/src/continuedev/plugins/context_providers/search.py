@@ -11,6 +11,9 @@ from .util import remove_meilisearch_disallowed_chars
 
 class SearchContextProvider(ContextProvider):
     title = "search"
+    display_title = "Search"
+    description = "Search the workspace for all matches of an exact string (e.g. '@search console.log')"
+    dynamic = True
 
     SEARCH_CONTEXT_ITEM_ID = "search"
 
@@ -86,8 +89,8 @@ class SearchContextProvider(ContextProvider):
         return [self.BASE_CONTEXT_ITEM]
 
     async def get_item(self, id: ContextItemId, query: str) -> ContextItem:
-        if not id.item_id == self.SEARCH_CONTEXT_ITEM_ID:
-            raise Exception("Invalid item id")
+        if not id.provider_title == self.title:
+            raise Exception("Invalid provider title for item")
 
         query = query.lstrip("search ")
         results = await self._search(query)

@@ -27,6 +27,10 @@ class FileContextProvider(ContextProvider):
     title = "file"
     ignore_patterns: List[str] = DEFAULT_IGNORE_PATTERNS
 
+    display_title = "Files"
+    description = "Reference files in the current workspace"
+    dynamic = False
+
     async def start(self, *args):
         await super().start(*args)
 

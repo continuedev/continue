@@ -10,6 +10,9 @@ from .util import remove_meilisearch_disallowed_chars
 
 class GoogleContextProvider(ContextProvider):
     title = "google"
+    display_title = "Google"
+    description = "Search Google"
+    dynamic = True
 
     serper_api_key: str
 
@@ -42,8 +45,8 @@ class GoogleContextProvider(ContextProvider):
         return [self.BASE_CONTEXT_ITEM]
 
     async def get_item(self, id: ContextItemId, query: str) -> ContextItem:
-        if not id.item_id == self.GOOGLE_CONTEXT_ITEM_ID:
-            raise Exception("Invalid item id")
+        if not id.provider_title == self.title:
+            raise Exception("Invalid provider title for item")
 
         results = await self._google_search(query)
         json_results = json.loads(results)

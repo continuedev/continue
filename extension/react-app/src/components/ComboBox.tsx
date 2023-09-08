@@ -1,4 +1,5 @@
 import React, {
+  useCallback,
   useContext,
   useEffect,
   useImperativeHandle,
@@ -19,6 +20,7 @@ import {
   BookmarkIcon,
   DocumentPlusIcon,
   FolderArrowDownIcon,
+  ArrowLeftIcon,
 } from "@heroicons/react/24/outline";
 import { ContextItem } from "../../../schema/FullState";
 import { postVscMessage } from "../vscode";
@@ -164,37 +166,53 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
   const [items, setItems] = React.useState(props.items);
 
   const inputRef = React.useRef<HTMLInputElement>(null);
-  const [inputBoxHeight, setInputBoxHeight] = useState<string | undefined>(
-    undefined
-  );
 
   // Whether the current input follows an '@' and should be treated as context query
   const [currentlyInContextQuery, setCurrentlyInContextQuery] = useState(false);
+  const [nestedContextProvider, setNestedContextProvider] = useState<
+    any | undefined
+  >(undefined);
 
-  const { getInputProps, ...downshiftProps } = useCombobox({
-    onSelectedItemChange: ({ selectedItem }) => {
-      if (selectedItem?.id) {
-        // Get the query from the input value
-        const segs = downshiftProps.inputValue.split("@");
-        const query = segs[segs.length - 1];
-        const restOfInput = segs.splice(0, segs.length - 1).join("@");
+  useEffect(() => {
+    if (!currentlyInContextQuery) {
+      setNestedContextProvider(undefined);
+    }
+  }, [currentlyInContextQuery]);
 
-        // Tell server the context item was selected
-        client?.selectContextItem(selectedItem.id, query);
+  const contextProviders = useSelector(
+    (state: RootStore) => state.serverState.context_providers
+  ) as any[];
 
-        // Remove the '@' and the context query from the input
-        if (downshiftProps.inputValue.includes("@")) {
-          downshiftProps.setInputValue(restOfInput);
-        }
-      }
-    },
-    onInputValueChange({ inputValue, highlightedIndex }) {
+  const goBackToContextProviders = () => {
+    setCurrentlyInContextQuery(false);
+    setNestedContextProvider(undefined);
+    downshiftProps.setInputValue("@");
+  };
+
+  useEffect(() => {
+    if (!nestedContextProvider) {
+      console.log("setting items", nestedContextProvider);
+      setItems(
+        contextProviders?.map((provider) => ({
+          name: provider.display_title,
+          description: provider.description,
+          id: provider.title,
+        })) || []
+      );
+    }
+  }, [nestedContextProvider]);
+
+  const onInputValueChangeCallback = useCallback(
+    ({ inputValue, highlightedIndex }: any) => {
+      // Clear the input
       if (!inputValue) {
         setItems([]);
+        setNestedContextProvider(undefined);
         return;
       }
       props.onInputValueChange(inputValue);
 
+      // Handle context selection
       if (inputValue.endsWith("@") || currentlyInContextQuery) {
         const segs = inputValue?.split("@") || [];
 
@@ -202,46 +220,114 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
           // Get search results and return
           setCurrentlyInContextQuery(true);
           const providerAndQuery = segs[segs.length - 1] || "";
-          // Only return context items from the current workspace - the index is currently shared between all sessions
-          const workspaceFilter =
-            workspacePaths && workspacePaths.length > 0
-              ? `workspace_dir IN [ ${workspacePaths
-                  .map((path) => `"${path}"`)
-                  .join(", ")} ]`
-              : undefined;
-          searchClient
-            .index(SEARCH_INDEX_NAME)
-            .search(providerAndQuery, {
-              filter: workspaceFilter,
-            })
-            .then((res) => {
-              setItems(
-                res.hits.map((hit) => {
-                  return {
-                    name: hit.name,
-                    description: hit.description,
-                    id: hit.id,
-                    content: hit.content,
-                  };
-                })
-              );
-            })
-            .catch(() => {
-              // Swallow errors, because this simply is not supported on Windows at the moment
+
+          if (nestedContextProvider && !inputValue.endsWith("@")) {
+            // Search only within this specific context provider
+            getFilteredContextItemsForProvider(
+              nestedContextProvider.title,
+              providerAndQuery
+            ).then((res) => {
+              setItems(res);
             });
+          } else {
+            // Search through the list of context providers
+            const filteredItems =
+              contextProviders
+                ?.filter(
+                  (provider) =>
+                    `@${provider.title}`
+                      .toLowerCase()
+                      .startsWith(inputValue.toLowerCase()) ||
+                    `@${provider.display_title}`
+                      .toLowerCase()
+                      .startsWith(inputValue.toLowerCase())
+                )
+                .map((provider) => ({
+                  name: provider.display_title,
+                  description: provider.description,
+                  id: provider.title,
+                })) || [];
+            setItems(filteredItems);
+            setCurrentlyInContextQuery(true);
+          }
           return;
         } else {
           // Exit the '@' context menu
           setCurrentlyInContextQuery(false);
-          setItems;
+          setNestedContextProvider(undefined);
         }
       }
+
+      setNestedContextProvider(undefined);
+
+      // Handle slash commands
       setItems(
         props.items.filter((item) =>
           item.name.toLowerCase().startsWith(inputValue.toLowerCase())
         )
       );
     },
+    [props.items, currentlyInContextQuery, nestedContextProvider]
+  );
+
+  const getFilteredContextItemsForProvider = async (
+    provider: string,
+    query: string
+  ) => {
+    // Only return context items from the current workspace - the index is currently shared between all sessions
+    const workspaceFilter =
+      workspacePaths && workspacePaths.length > 0
+        ? `workspace_dir IN [ ${workspacePaths
+            .map((path) => `"${path}"`)
+            .join(", ")} ] AND provider_name = '${provider}'`
+        : undefined;
+    try {
+      const res = await searchClient.index(SEARCH_INDEX_NAME).search(query, {
+        filter: workspaceFilter,
+      });
+      return (
+        res?.hits.map((hit) => {
+          return {
+            name: hit.name,
+            description: hit.description,
+            id: hit.id,
+            content: hit.content,
+          };
+        }) || []
+      );
+    } catch (e) {
+      console.log("Error searching context items", e);
+      return [];
+    }
+  };
+
+  const { getInputProps, ...downshiftProps } = useCombobox({
+    onSelectedItemChange: ({ selectedItem }) => {
+      if (!selectedItem) return;
+      if (selectedItem.id) {
+        // Get the query from the input value
+        const segs = downshiftProps.inputValue.split("@");
+        const query = segs[segs.length - 1];
+
+        // Tell server the context item was selected
+        client?.selectContextItem(selectedItem.id, query);
+        if (downshiftProps.inputValue.includes("@")) {
+          const selectedNestedContextProvider = contextProviders.find(
+            (provider) => provider.title === selectedItem.id
+          );
+          if (
+            !nestedContextProvider &&
+            !selectedNestedContextProvider?.dynamic
+          ) {
+            downshiftProps.setInputValue(`@${selectedItem.id} `);
+            setNestedContextProvider(selectedNestedContextProvider);
+          } else {
+            downshiftProps.setInputValue("");
+          }
+        }
+      }
+    },
+    onInputValueChange: onInputValueChangeCallback,
     items,
     itemToString(item) {
       return item ? item.name : "";
@@ -467,7 +553,6 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
                 target.scrollHeight,
                 300
               ).toString()}px`;
-              setInputBoxHeight(target.style.height);
 
               // setShowContextDropdown(target.value.endsWith("@"));
             },
@@ -498,6 +583,31 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
                   props.onEnter(event);
                 }
                 setCurrentlyInContextQuery(false);
+              } else if (
+                event.key === "Enter" &&
+                currentlyInContextQuery &&
+                nestedContextProvider === undefined
+              ) {
+                const newProviderName =
+                  items[downshiftProps.highlightedIndex].name;
+                const newProvider = contextProviders.find(
+                  (provider) => provider.display_title === newProviderName
+                );
+
+                if (!newProvider) {
+                  (event.nativeEvent as any).preventDownshiftDefault = true;
+                  return;
+                } else if (newProvider.dynamic) {
+                  return;
+                }
+
+                setNestedContextProvider(newProvider);
+                downshiftProps.setInputValue(`@${newProvider.title} `);
+                (event.nativeEvent as any).preventDownshiftDefault = true;
+                event.preventDefault();
+                getFilteredContextItemsForProvider(newProvider.title, "").then(
+                  (items) => setItems(items)
+                );
               } else if (event.key === "Tab" && items.length > 0) {
                 downshiftProps.setInputValue(items[0].name);
                 event.preventDefault();
@@ -545,6 +655,12 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
                 );
                 setCurrentlyInContextQuery(false);
               } else if (event.key === "Escape") {
+                if (nestedContextProvider) {
+                  goBackToContextProviders();
+                  (event.nativeEvent as any).preventDownshiftDefault = true;
+                  return;
+                }
+
                 setCurrentlyInContextQuery(false);
                 if (downshiftProps.isOpen && items.length > 0) {
                   downshiftProps.closeMenu();
@@ -578,6 +694,30 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
           ulHeightPixels={ulRef.current?.getBoundingClientRect().height || 0}
           hidden={!downshiftProps.isOpen || items.length === 0}
         >
+          {nestedContextProvider && (
+            <div
+              style={{
+                backgroundColor: secondaryDark,
+                borderBottom: `1px solid ${lightGray}`,
+                display: "flex",
+                gap: "4px",
+                position: "sticky",
+                top: "0px",
+              }}
+              className="py-2 px-4 my-0"
+            >
+              <ArrowLeftIcon
+                width="1.4em"
+                height="1.4em"
+                className="cursor-pointer"
+                onClick={() => {
+                  goBackToContextProviders();
+                }}
+              />
+              {nestedContextProvider.display_title} -{" "}
+              {nestedContextProvider.description}
+            </div>
+          )}
           {downshiftProps.isOpen &&
             items.map((item, index) => (
               <Li
@@ -586,6 +726,12 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
                 {...downshiftProps.getItemProps({ item, index })}
                 highlighted={downshiftProps.highlightedIndex === index}
                 selected={downshiftProps.selectedItem === item}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                  (e.nativeEvent as any).preventDownshiftDefault = true;
+                  downshiftProps.selectItem(item);
+                }}
               >
                 <span>
                   {item.name}

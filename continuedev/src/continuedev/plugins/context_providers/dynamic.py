@@ -13,16 +13,12 @@ class DynamicProvider(ContextProvider, ABC):
     """
 
     title: str
-    """
-    A name representing the provider. Probably use capitalized version of title
-    """
+    """A name representing the provider. Probably use capitalized version of title"""
+
     name: str
-    """
-    A description for the provider
-    """
-    description: str
 
     workspace_dir: str = None
+    dynamic: bool = True
 
     @property
     def BASE_CONTEXT_ITEM(self):
@@ -41,8 +37,8 @@ class DynamicProvider(ContextProvider, ABC):
         return [self.BASE_CONTEXT_ITEM]
 
     async def get_item(self, id: ContextItemId, query: str) -> ContextItem:
-        if id.item_id != self.title:
-            raise Exception("Invalid item id")
+        if not id.provider_title == self.title:
+            raise Exception("Invalid provider title for item")
 
         query = query.lstrip(self.title + " ")
         results = await self.get_content(query)

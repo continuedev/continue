@@ -291,6 +291,13 @@ class ContinueConfig(ContinueBaseModel):
         return original_dict
 
 
+class ContextProviderDescription(BaseModel):
+    title: str
+    display_title: str
+    description: str
+    dynamic: bool
+
+
 class FullState(ContinueBaseModel):
     """A full state of the program, including the history"""
 
@@ -303,6 +310,7 @@ class FullState(ContinueBaseModel):
     session_info: Optional[SessionInfo] = None
     config: ContinueConfig
     saved_context_groups: Dict[str, List[ContextItem]] = {}
+    context_providers: List[ContextProviderDescription] = []
 
 
 class ContinueSDK:

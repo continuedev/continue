@@ -7,6 +7,9 @@ from ...core.main import ContextItem, ContextItemDescription, ContextItemId
 
 class DiffContextProvider(ContextProvider):
     title = "diff"
+    display_title = "Diff"
+    description = "Output of 'git diff' in current repo"
+    dynamic = True
 
     DIFF_CONTEXT_ITEM_ID = "diff"
 
@@ -30,8 +33,8 @@ class DiffContextProvider(ContextProvider):
         return [self.BASE_CONTEXT_ITEM]
 
     async def get_item(self, id: ContextItemId, query: str) -> ContextItem:
-        if not id.item_id == self.DIFF_CONTEXT_ITEM_ID:
-            raise Exception("Invalid item id")
+        if not id.provider_title == self.title:
+            raise Exception("Invalid provider title for item")
 
         diff = subprocess.check_output(["git", "diff"], cwd=self.workspace_dir).decode(
             "utf-8"

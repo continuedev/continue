@@ -6,6 +6,9 @@ from ...core.main import ChatMessage, ContextItem, ContextItemDescription, Conte
 
 class TerminalContextProvider(ContextProvider):
     title = "terminal"
+    display_title = "Terminal"
+    description = "Reference the contents of the terminal"
+    dynamic = True
 
     workspace_dir: str = None
     get_last_n_commands: int = 3
@@ -31,8 +34,8 @@ class TerminalContextProvider(ContextProvider):
         return [self._terminal_context_item()]
 
     async def get_item(self, id: ContextItemId, query: str) -> ContextItem:
-        if not id.item_id == self.title:
-            raise Exception("Invalid item id")
+        if not id.provider_title == self.title:
+            raise Exception("Invalid provider title for item")
 
         terminal_contents = await self.sdk.ide.getTerminalContents(
             self.get_last_n_commands

@@ -17,6 +17,10 @@ class EmbeddingResult(BaseModel):
 class EmbeddingsProvider(ContextProvider):
     title = "embed"
 
+    display_title = "Embeddings Search"
+    description = "Search the codebase using embeddings"
+    dynamic = True
+
     workspace_directory: str
 
     EMBEDDINGS_CONTEXT_ITEM_ID = "embeddings"
@@ -62,8 +66,8 @@ class EmbeddingsProvider(ContextProvider):
         return [self.BASE_CONTEXT_ITEM]
 
     async def add_context_item(self, id: ContextItemId, query: str):
-        if not id.item_id == self.EMBEDDINGS_CONTEXT_ITEM_ID:
-            raise Exception("Invalid item id")
+        if not id.provider_title == self.title:
+            raise Exception("Invalid provider title for item")
 
         results = await self._get_query_results(query)
 

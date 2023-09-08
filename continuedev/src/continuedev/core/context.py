@@ -11,7 +11,13 @@ from ..libs.util.devdata import dev_data_logger
 from ..libs.util.logging import logger
 from ..libs.util.telemetry import posthog_logger
 from ..server.meilisearch_server import poll_meilisearch_running, restart_meilisearch
-from .main import ChatMessage, ContextItem, ContextItemDescription, ContextItemId
+from .main import (
+    ChatMessage,
+    ContextItem,
+    ContextItemDescription,
+    ContextItemId,
+    ContextProviderDescription,
+)
 
 
 class ContinueSDK(BaseModel):
@@ -35,6 +41,10 @@ class ContextProvider(BaseModel):
     sdk: ContinueSDK = None
     delete_documents: Callable[[List[str]], Awaitable] = None
     update_documents: Callable[[List[ContextItem], str], Awaitable] = None
+
+    display_title: str
+    description: str
+    dynamic: bool
 
     selected_items: List[ContextItem] = []
 
@@ -168,6 +178,20 @@ class ContextManager:
     It is responsible for compiling all of this information into a single prompt without exceeding the token limit.
     """
 
+    def get_provider_descriptions(self) -> List[ContextProviderDescription]:
+        """
+        Returns a list of ContextProviderDescriptions for each context provider.
+        """
+        return [
+            ContextProviderDescription(
+                title=provider.title,
+                display_title=provider.display_title,
+                description=provider.description,
+                dynamic=provider.dynamic,
+            )
+            for provider in self.context_providers.values()
+        ]
+
     async def get_selected_items(self) -> List[ContextItem]:
         """
         Returns all of the selected ContextItems.
@@ -242,6 +266,7 @@ class ContextManager:
                 "description": item.description.description,
                 "content": item.content,
                 "workspace_dir": workspace_dir,
+                "provider_name": item.description.id.provider_title,
             }
             for item in context_items
         ]
@@ -282,7 +307,9 @@ class ContextManager:
                 await globalSearchIndex.update_searchable_attributes(
                     ["name", "description"]
                 )
-                await globalSearchIndex.update_filterable_attributes(["workspace_dir"])
+                await globalSearchIndex.update_filterable_attributes(
+                    ["workspace_dir", "provider_name"]
+                )
 
                 async def load_context_provider(provider: ContextProvider):
                     context_items = await provider.provide_context_items(workspace_dir)
@@ -293,6 +320,7 @@ class ContextManager:
                             "description": item.description.description,
                             "content": item.content,
                             "workspace_dir": workspace_dir,
+                            "provider_name": provider.title,
                         }
                         for item in context_items
                     ]
