@@ -13,6 +13,7 @@ class GoogleContextProvider(ContextProvider):
     display_title = "Google"
     description = "Search Google"
     dynamic = True
+    requires_query = True
 
     serper_api_key: str
 

@@ -9,6 +9,7 @@ import { useCombobox } from "downshift";
 import styled from "styled-components";
 import {
   StyledTooltip,
+  buttonColor,
   defaultBorderRadius,
   lightGray,
   secondaryDark,
@@ -23,6 +24,7 @@ import {
   FolderArrowDownIcon,
   ArrowLeftIcon,
   PlusIcon,
+  ArrowRightIcon,
 } from "@heroicons/react/24/outline";
 import { ContextItem } from "../../../schema/FullState";
 import { postVscMessage } from "../vscode";
@@ -64,7 +66,7 @@ const EmptyPillDiv = styled.div`
   }
 `;
 
-const MainTextInput = styled.textarea`
+const MainTextInput = styled.textarea<{ inQueryForDynamicProvider: boolean }>`
   resize: none;
 
   padding: 8px;
@@ -77,16 +79,35 @@ const MainTextInput = styled.textarea`
   background-color: ${secondaryDark};
   color: ${vscForeground};
   z-index: 1;
-  border: 1px solid transparent;
+  border: 1px solid
+    ${(props) =>
+      props.inQueryForDynamicProvider ? buttonColor : "transparent"};
 
   &:focus {
-    outline: 1px solid ${lightGray};
+    outline: 1px solid
+      ${(props) => (props.inQueryForDynamicProvider ? buttonColor : lightGray)};
     border: 1px solid transparent;
+    background-color: ${(props) =>
+      props.inQueryForDynamicProvider ? `${buttonColor}22` : secondaryDark};
   }
 
   &::placeholder {
     color: ${lightGray}80;
   }
+`;
+
+const DynamicQueryTitleDiv = styled.div`
+  position: absolute;
+  right: 0px;
+  top: 0px;
+  height: fit-content;
+  padding: 2px 4px;
+  border-radius: ${defaultBorderRadius};
+  z-index: 2;
+  color: white;
+  font-size: 12px;
+
+  background-color: ${buttonColor};
 `;
 
 const StyledPlusIcon = styled(PlusIcon)`
@@ -150,7 +171,8 @@ const Li = styled.li<{
   ${({ selected }) => selected && "font-weight: bold;"}
     padding: 0.5rem 0.75rem;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  align-items: center;
   ${({ isLastItem }) => isLastItem && "border-bottom: 1px solid gray;"}
   /* border-top: 1px solid gray; */
   cursor: pointer;
@@ -191,10 +213,14 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
   const [nestedContextProvider, setNestedContextProvider] = useState<
     any | undefined
   >(undefined);
+  const [inQueryForContextProvider, setInQueryForContextProvider] = useState<
+    any | undefined
+  >(undefined);
 
   useEffect(() => {
     if (!currentlyInContextQuery) {
       setNestedContextProvider(undefined);
+      setInQueryForContextProvider(undefined);
     }
   }, [currentlyInContextQuery]);
 
@@ -205,6 +231,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
   const goBackToContextProviders = () => {
     setCurrentlyInContextQuery(false);
     setNestedContextProvider(undefined);
+    setInQueryForContextProvider(undefined);
     downshiftProps.setInputValue("@");
   };
 
@@ -227,8 +254,16 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
       if (!inputValue) {
         setItems([]);
         setNestedContextProvider(undefined);
+        setCurrentlyInContextQuery(false);
         return;
       }
+      if (
+        inQueryForContextProvider &&
+        !inputValue.startsWith(`@${inQueryForContextProvider.title}`)
+      ) {
+        setInQueryForContextProvider(undefined);
+      }
+
       props.onInputValueChange(inputValue);
 
       // Handle context selection
@@ -286,7 +321,41 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
         )
       );
     },
-    [props.items, currentlyInContextQuery, nestedContextProvider]
+    [
+      props.items,
+      currentlyInContextQuery,
+      nestedContextProvider,
+      inQueryForContextProvider,
+    ]
+  );
+
+  const onSelectedItemChangeCallback = useCallback(
+    ({ selectedItem }: any) => {
+      if (!selectedItem) return;
+      if (selectedItem.id) {
+        // Get the query from the input value
+        const segs = downshiftProps.inputValue.split("@");
+        const query = segs[segs.length - 1];
+
+        // Tell server the context item was selected
+        client?.selectContextItem(selectedItem.id, query);
+        if (downshiftProps.inputValue.includes("@")) {
+          const selectedNestedContextProvider = contextProviders.find(
+            (provider) => provider.title === selectedItem.id
+          );
+          if (
+            !nestedContextProvider &&
+            !selectedNestedContextProvider?.dynamic
+          ) {
+            downshiftProps.setInputValue(`@${selectedItem.id} `);
+            setNestedContextProvider(selectedNestedContextProvider);
+          } else {
+            downshiftProps.setInputValue("");
+          }
+        }
+      }
+    },
+    [nestedContextProvider, contextProviders, client]
   );
 
   const getFilteredContextItemsForProvider = async (
@@ -321,31 +390,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
   };
 
   const { getInputProps, ...downshiftProps } = useCombobox({
-    onSelectedItemChange: ({ selectedItem }) => {
-      if (!selectedItem) return;
-      if (selectedItem.id) {
-        // Get the query from the input value
-        const segs = downshiftProps.inputValue.split("@");
-        const query = segs[segs.length - 1];
-
-        // Tell server the context item was selected
-        client?.selectContextItem(selectedItem.id, query);
-        if (downshiftProps.inputValue.includes("@")) {
-          const selectedNestedContextProvider = contextProviders.find(
-            (provider) => provider.title === selectedItem.id
-          );
-          if (
-            !nestedContextProvider &&
-            !selectedNestedContextProvider?.dynamic
-          ) {
-            downshiftProps.setInputValue(`@${selectedItem.id} `);
-            setNestedContextProvider(selectedNestedContextProvider);
-          } else {
-            downshiftProps.setInputValue("");
-          }
-        }
-      }
-    },
+    onSelectedItemChange: onSelectedItemChangeCallback,
     onInputValueChange: onInputValueChangeCallback,
     items,
     itemToString(item) {
@@ -452,6 +497,42 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
       window.removeEventListener("message", handler);
     };
   }, [inputRef.current]);
+
+  const selectContextItemFromDropdown = useCallback(
+    (event: any) => {
+      const newProviderName = items[downshiftProps.highlightedIndex].name;
+      const newProvider = contextProviders.find(
+        (provider) => provider.display_title === newProviderName
+      );
+
+      if (!newProvider) {
+        (event.nativeEvent as any).preventDownshiftDefault = true;
+        return;
+      } else if (newProvider.dynamic && newProvider.requires_query) {
+        setInQueryForContextProvider(newProvider);
+        downshiftProps.setInputValue(`@${newProvider.title} `);
+        (event.nativeEvent as any).preventDownshiftDefault = true;
+        event.preventDefault();
+        return;
+      } else if (newProvider.dynamic) {
+        return;
+      }
+
+      setNestedContextProvider(newProvider);
+      downshiftProps.setInputValue(`@${newProvider.title} `);
+      (event.nativeEvent as any).preventDownshiftDefault = true;
+      event.preventDefault();
+      getFilteredContextItemsForProvider(newProvider.title, "").then((items) =>
+        setItems(items)
+      );
+    },
+    [
+      items,
+      downshiftProps.highlightedIndex,
+      contextProviders,
+      nestedContextProvider,
+    ]
+  );
 
   const showSelectContextGroupDialog = () => {
     dispatch(setDialogMessage(<SelectContextGroupDialog />));
@@ -563,6 +644,9 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
         hidden={!downshiftProps.isOpen}
       >
         <MainTextInput
+          inQueryForDynamicProvider={
+            typeof inQueryForContextProvider !== "undefined"
+          }
           disabled={props.disabled}
           placeholder={`Ask a question, give instructions, type '/' for slash commands, or '@' to add context`}
           {...getInputProps({
@@ -595,15 +679,26 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
                 !isComposing
               ) {
                 const value = downshiftProps.inputValue;
-                if (value !== "") {
-                  setPositionInHistory(history.length + 1);
-                  setHistory([...history, value]);
-                }
-                // Prevent Downshift's default 'Enter' behavior.
-                (event.nativeEvent as any).preventDownshiftDefault = true;
+                if (inQueryForContextProvider) {
+                  const segs = value.split("@");
+                  client?.selectContextItem(
+                    inQueryForContextProvider.title,
+                    segs[segs.length - 1]
+                  );
+                  setCurrentlyInContextQuery(false);
+                  downshiftProps.setInputValue("");
+                  return;
+                } else {
+                  if (value !== "") {
+                    setPositionInHistory(history.length + 1);
+                    setHistory([...history, value]);
+                  }
+                  // Prevent Downshift's default 'Enter' behavior.
+                  (event.nativeEvent as any).preventDownshiftDefault = true;
 
-                if (props.onEnter) {
-                  props.onEnter(event);
+                  if (props.onEnter) {
+                    props.onEnter(event);
+                  }
                 }
                 setCurrentlyInContextQuery(false);
               } else if (
@@ -611,26 +706,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
                 currentlyInContextQuery &&
                 nestedContextProvider === undefined
               ) {
-                const newProviderName =
-                  items[downshiftProps.highlightedIndex].name;
-                const newProvider = contextProviders.find(
-                  (provider) => provider.display_title === newProviderName
-                );
-
-                if (!newProvider) {
-                  (event.nativeEvent as any).preventDownshiftDefault = true;
-                  return;
-                } else if (newProvider.dynamic) {
-                  return;
-                }
-
-                setNestedContextProvider(newProvider);
-                downshiftProps.setInputValue(`@${newProvider.title} `);
-                (event.nativeEvent as any).preventDownshiftDefault = true;
-                event.preventDefault();
-                getFilteredContextItemsForProvider(newProvider.title, "").then(
-                  (items) => setItems(items)
-                );
+                selectContextItemFromDropdown(event);
               } else if (event.key === "Tab" && items.length > 0) {
                 downshiftProps.setInputValue(items[0].name);
                 event.preventDefault();
@@ -682,6 +758,10 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
                   goBackToContextProviders();
                   (event.nativeEvent as any).preventDownshiftDefault = true;
                   return;
+                } else if (inQueryForContextProvider) {
+                  goBackToContextProviders();
+                  (event.nativeEvent as any).preventDownshiftDefault = true;
+                  return;
                 }
 
                 setCurrentlyInContextQuery(false);
@@ -709,18 +789,27 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
             ref: inputRef,
           })}
         />
-        <StyledPlusIcon
-          width="1.4em"
-          height="1.4em"
-          data-tooltip-id="add-context-button"
-          onClick={() => {
-            downshiftProps.setInputValue("@");
-            inputRef.current?.focus();
-          }}
-        />
-        <StyledTooltip id="add-context-button" place="bottom">
-          Add Context to Prompt
-        </StyledTooltip>
+        {inQueryForContextProvider ? (
+          <DynamicQueryTitleDiv>
+            Enter {inQueryForContextProvider.display_title} Query
+          </DynamicQueryTitleDiv>
+        ) : (
+          <>
+            <StyledPlusIcon
+              width="1.4em"
+              height="1.4em"
+              data-tooltip-id="add-context-button"
+              onClick={() => {
+                downshiftProps.setInputValue("@");
+                inputRef.current?.focus();
+              }}
+            />
+            <StyledTooltip id="add-context-button" place="bottom">
+              Add Context to Prompt
+            </StyledTooltip>
+          </>
+        )}
+
         <Ul
           {...downshiftProps.getMenuProps({
             ref: ulRef,
@@ -756,23 +845,45 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
           {downshiftProps.isOpen &&
             items.map((item, index) => (
               <Li
-                style={{ borderTop: index === 0 ? "none" : undefined }}
+                style={{
+                  borderTop: index === 0 ? "none" : undefined,
+                }}
                 key={`${item.name}${index}`}
                 {...downshiftProps.getItemProps({ item, index })}
                 highlighted={downshiftProps.highlightedIndex === index}
                 selected={downshiftProps.selectedItem === item}
                 onClick={(e) => {
-                  e.stopPropagation();
-                  e.preventDefault();
-                  (e.nativeEvent as any).preventDownshiftDefault = true;
-                  downshiftProps.selectItem(item);
+                  // e.stopPropagation();
+                  // e.preventDefault();
+                  // (e.nativeEvent as any).preventDownshiftDefault = true;
+                  // downshiftProps.selectItem(item);
+                  selectContextItemFromDropdown(e);
+                  onSelectedItemChangeCallback({ selectedItem: item });
                 }}
               >
                 <span>
                   {item.name}
                   {"  "}
-                  <span style={{ color: lightGray }}>{item.description}</span>
+                  <span
+                    style={{
+                      color: lightGray,
+                    }}
+                  >
+                    {item.description}
+                  </span>
                 </span>
+                {contextProviders
+                  .filter(
+                    (provider) => !provider.dynamic || provider.requires_query
+                  )
+                  .find((provider) => provider.title === item.id) && (
+                  <ArrowRightIcon
+                    width="1.2em"
+                    height="1.2em"
+                    color={lightGray}
+                    className="ml-2"
+                  />
+                )}
               </Li>
             ))}
         </Ul>

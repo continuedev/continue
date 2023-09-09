@@ -13,6 +13,7 @@ class URLContextProvider(ContextProvider):
     display_title = "URL"
     description = "Reference the contents of a webpage"
     dynamic = True
+    requires_query = True
 
     # Allows users to provide a list of preset urls
     preset_urls: List[str] = []

@@ -14,6 +14,7 @@ class SearchContextProvider(ContextProvider):
     display_title = "Search"
     description = "Search the workspace for all matches of an exact string (e.g. '@search console.log')"
     dynamic = True
+    requires_query = True
 
     SEARCH_CONTEXT_ITEM_ID = "search"
 

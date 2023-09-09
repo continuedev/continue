@@ -296,6 +296,7 @@ class ContextProviderDescription(BaseModel):
     display_title: str
     description: str
     dynamic: bool
+    requires_query: bool
 
 
 class FullState(ContinueBaseModel):

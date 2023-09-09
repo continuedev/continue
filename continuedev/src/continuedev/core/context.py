@@ -45,6 +45,7 @@ class ContextProvider(BaseModel):
     display_title: str
     description: str
     dynamic: bool
+    requires_query: bool = False
 
     selected_items: List[ContextItem] = []
 
@@ -188,6 +189,7 @@ class ContextManager:
                 display_title=provider.display_title,
                 description=provider.description,
                 dynamic=provider.dynamic,
+                requires_query=provider.requires_query,
             )
             for provider in self.context_providers.values()
         ]

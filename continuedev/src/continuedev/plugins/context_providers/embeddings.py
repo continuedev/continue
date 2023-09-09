@@ -20,6 +20,7 @@ class EmbeddingsProvider(ContextProvider):
     display_title = "Embeddings Search"
     description = "Search the codebase using embeddings"
     dynamic = True
+    requires_query = True
 
     workspace_directory: str
 
