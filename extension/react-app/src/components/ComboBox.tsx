@@ -8,6 +8,7 @@ import React, {
 import { useCombobox } from "downshift";
 import styled from "styled-components";
 import {
+  StyledTooltip,
   defaultBorderRadius,
   lightGray,
   secondaryDark,
@@ -21,6 +22,7 @@ import {
   DocumentPlusIcon,
   FolderArrowDownIcon,
   ArrowLeftIcon,
+  PlusIcon,
 } from "@heroicons/react/24/outline";
 import { ContextItem } from "../../../schema/FullState";
 import { postVscMessage } from "../vscode";
@@ -84,6 +86,23 @@ const MainTextInput = styled.textarea`
 
   &::placeholder {
     color: ${lightGray}80;
+  }
+`;
+
+const StyledPlusIcon = styled(PlusIcon)`
+  position: absolute;
+  right: 0px;
+  top: 0px;
+  height: fit-content;
+  padding: 0;
+  cursor: pointer;
+  border-radius: ${defaultBorderRadius};
+  z-index: 2;
+
+  background-color: ${vscBackground};
+
+  &:hover {
+    background-color: ${secondaryDark};
   }
 `;
 
@@ -495,21 +514,6 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
         </HeaderButtonWithText>
         {props.selectedContextItems.length > 0 && (
           <>
-            <HeaderButtonWithText
-              text="Bookmark context"
-              onClick={() => {
-                showDialogToSaveContextGroup();
-              }}
-              className="pill-button focus:outline-none focus:border-red-600 focus:border focus:border-solid"
-              onKeyDown={(e: KeyboardEvent) => {
-                e.preventDefault();
-                if (e.key === "Enter") {
-                  showDialogToSaveContextGroup();
-                }
-              }}
-            >
-              <BookmarkIcon width="1.4em" height="1.4em" />
-            </HeaderButtonWithText>
             {props.addingHighlightedCode ? (
               <EmptyPillDiv
                 onClick={() => {
@@ -535,10 +539,29 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
                 <DocumentPlusIcon width="1.4em" height="1.4em" />
               </HeaderButtonWithText>
             )}
+            <HeaderButtonWithText
+              text="Bookmark context"
+              onClick={() => {
+                showDialogToSaveContextGroup();
+              }}
+              className="pill-button focus:outline-none focus:border-red-600 focus:border focus:border-solid"
+              onKeyDown={(e: KeyboardEvent) => {
+                e.preventDefault();
+                if (e.key === "Enter") {
+                  showDialogToSaveContextGroup();
+                }
+              }}
+            >
+              <BookmarkIcon width="1.4em" height="1.4em" />
+            </HeaderButtonWithText>
           </>
         )}
       </div>
-      <div className="flex px-2" ref={divRef} hidden={!downshiftProps.isOpen}>
+      <div
+        className="flex px-2 relative"
+        ref={divRef}
+        hidden={!downshiftProps.isOpen}
+      >
         <MainTextInput
           disabled={props.disabled}
           placeholder={`Ask a question, give instructions, type '/' for slash commands, or '@' to add context`}
@@ -686,6 +709,18 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
             ref: inputRef,
           })}
         />
+        <StyledPlusIcon
+          width="1.4em"
+          height="1.4em"
+          data-tooltip-id="add-context-button"
+          onClick={() => {
+            downshiftProps.setInputValue("@");
+            inputRef.current?.focus();
+          }}
+        />
+        <StyledTooltip id="add-context-button" place="bottom">
+          Add Context to Prompt
+        </StyledTooltip>
         <Ul
           {...downshiftProps.getMenuProps({
             ref: ulRef,
