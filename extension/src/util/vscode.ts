@@ -1,4 +1,5 @@
 import * as vscode from "vscode";
+import { machineIdSync } from "node-machine-id";
 
 export function translate(range: vscode.Range, lines: number): vscode.Range {
   return new vscode.Range(
@@ -101,4 +102,38 @@ export function openEditorAndRevealRange(
       }
     });
   });
+}
+
+function windowsToPosix(windowsPath: string): string {
+  let posixPath = windowsPath.split("\\").join("/");
+  if (posixPath[1] === ":") {
+    posixPath = posixPath.slice(2);
+  }
+  posixPath = posixPath.replace(" ", "\\ ");
+  return posixPath;
+}
+
+export function uriFromFilePath(filepath: string): vscode.Uri {
+  if (vscode.env.remoteName) {
+    if (
+      (vscode.env.remoteName === "wsl" ||
+        vscode.env.remoteName === "ssh-remote") &&
+      process.platform === "win32"
+    ) {
+      filepath = windowsToPosix(filepath);
+    }
+    return vscode.Uri.parse(
+      `vscode-remote://${vscode.env.remoteName}${filepath}`
+    );
+  } else {
+    return vscode.Uri.file(filepath);
+  }
+}
+
+export function getUniqueId() {
+  const id = vscode.env.machineId;
+  if (id === "someValue.machineId") {
+    return machineIdSync();
+  }
+  return vscode.env.machineId;
 }

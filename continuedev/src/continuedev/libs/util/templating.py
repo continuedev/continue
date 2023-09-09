@@ -1,6 +1,9 @@
 import os
+from typing import Callable, Dict, List, Union
 
 import chevron
+
+from ...core.main import ChatMessage
 
 
 def get_vars_in_template(template):
@@ -41,3 +44,33 @@ def render_templated_string(template: str) -> str:
                 args[escaped_var] = ""
 
     return chevron.render(template, args)
+
+
+"""
+A PromptTemplate can either be a template string (mustache syntax, e.g. {{user_input}}) or
+a function which takes the history and a dictionary of additional key-value pairs and returns
+either a string or a list of ChatMessages.
+If a string is returned, it will be assumed that the chat history should be ignored
+"""
+PromptTemplate = Union[
+    str, Callable[[ChatMessage, Dict[str, str]], Union[str, List[ChatMessage]]]
+]
+
+
+def render_prompt_template(
+    template: PromptTemplate, history: List[ChatMessage], other_data: Dict[str, str]
+) -> str:
+    """
+    Render a prompt template.
+    """
+    if isinstance(template, str):
+        data = {
+            "history": history,
+            **other_data,
+        }
+        if len(history) > 0 and history[0].role == "system":
+            data["system_message"] = history.pop(0).content
+
+        return chevron.render(template, data)
+    else:
+        return template(history, other_data)

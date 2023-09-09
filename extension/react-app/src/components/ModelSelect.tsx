@@ -1,34 +1,29 @@
 import styled from "styled-components";
 import {
   defaultBorderRadius,
+  lightGray,
   secondaryDark,
   vscBackground,
   vscForeground,
 } from ".";
-import { useContext, useEffect } from "react";
+import { useContext } from "react";
 import { GUIClientContext } from "../App";
 import { RootStore } from "../redux/store";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
+import { PlusIcon } from "@heroicons/react/24/outline";
+import { setDialogMessage, setShowDialog } from "../redux/slices/uiStateSlice";
 
 const MODEL_INFO: { title: string; class: string; args: any }[] = [
   {
-    title: "gpt-4",
-    class: "MaybeProxyOpenAI",
+    title: "OpenAI",
+    class: "OpenAI",
     args: {
       model: "gpt-4",
       api_key: "",
     },
   },
   {
-    title: "gpt-3.5-turbo",
-    class: "MaybeProxyOpenAI",
-    args: {
-      model: "gpt-3.5-turbo",
-      api_key: "",
-    },
-  },
-  {
-    title: "claude-2",
+    title: "Anthropic",
     class: "AnthropicLLM",
     args: {
       model: "claude-2",
@@ -36,15 +31,18 @@ const MODEL_INFO: { title: string; class: string; args: any }[] = [
     },
   },
   {
-    title: "GGML",
-    class: "GGML",
-    args: {},
-  },
-  {
     title: "Ollama",
     class: "Ollama",
     args: {
       model: "codellama",
+    },
+  },
+  {
+    title: "TogetherAI",
+    class: "TogetherLLM",
+    args: {
+      model: "togethercomputer/CodeLlama-13b-Instruct",
+      api_key: "<TOGETHER_API_KEY>",
     },
   },
   {
@@ -57,56 +55,178 @@ const MODEL_INFO: { title: string; class: string; args: any }[] = [
     },
   },
   {
-    title: "TogetherAI",
-    class: "TogetherLLM",
+    title: "llama.cpp",
+    class: "LlamaCpp",
+    args: {},
+  },
+  {
+    title: "HuggingFace Inference API",
+    class: "HuggingFaceInferenceAPI",
+    args: {
+      endpoint_url: "<INFERENCE_API_ENDPOINT_URL>", 
+      hf_token: "<HUGGING_FACE_TOKEN>",
+    },
+  },
+  {
+    title: "Other OpenAI-compatible API",
+    class: "GGML",
+    args: {
+      server_url: "<SERVER_URL>",
+    },
+  },
+  {
+    title: "GPT-4 limited free trial",
+    class: "MaybeProxyOpenAI",
     args: {
       model: "gpt-4",
-      api_key: "<TOGETHER_API_KEY>",
     },
   },
 ];
 
+const GridDiv = styled.div`
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  border: 0.5px solid ${lightGray};
+  border-radius: ${defaultBorderRadius};
+  overflow: hidden;
+`;
+
 const Select = styled.select`
   border: none;
-  width: fit-content;
-  background-color: ${secondaryDark};
+  max-width: 25vw;
+  background-color: ${vscBackground};
   color: ${vscForeground};
-  border-radius: ${defaultBorderRadius};
   padding: 6px;
-  /* box-shadow: 0px 0px 1px 0px ${vscForeground}; */
   max-height: 35vh;
   overflow: scroll;
   cursor: pointer;
-  margin-right: auto;
 
   &:focus {
     outline: none;
   }
+  &:hover {
+    background-color: ${secondaryDark};
+  }
 `;
 
+const StyledPlusIcon = styled(PlusIcon)`
+  cursor: pointer;
+  margin: 0px;
+  padding-left: 4px;
+  padding-right: 4px;
+  height: 100%;
+
+  &:hover {
+    background-color: ${secondaryDark};
+  }
+  border-left: 0.5px solid ${lightGray};
+`;
+
+const NewProviderDiv = styled.div`
+  cursor: pointer;
+  padding: 8px;
+  padding-left: 16px;
+  padding-right: 16px;
+  border-top: 0.5px solid ${lightGray};
+
+  &:hover {
+    background-color: ${secondaryDark};
+  }
+`;
+
+function modelSelectTitle(model: any): string {
+  if (model.title) return model.title;
+  if (model.model !== undefined && model.model.trim() !== "") {
+    if (model.class_name) {
+      return `${model.class_name} - ${model.model}`;
+    }
+    return model.model;
+  }
+  return model.class_name;
+}
+
 function ModelSelect(props: {}) {
+  const dispatch = useDispatch();
   const client = useContext(GUIClientContext);
   const defaultModel = useSelector(
-    (state: RootStore) =>
-      (state.serverState.config as any)?.models?.default?.class_name
+    (state: RootStore) => (state.serverState.config as any)?.models?.default
+  );
+  const unusedModels = useSelector(
+    (state: RootStore) => (state.serverState.config as any)?.models?.unused
   );
 
   return (
-    <Select
-      defaultValue={0}
-      onChange={(e) => {
-        const model = MODEL_INFO[parseInt(e.target.value)];
-        client?.setModelForRole("*", model.class, model.args);
-      }}
-    >
-      {MODEL_INFO.map((model, idx) => {
-        return (
-          <option selected={defaultModel === model.class} value={idx}>
-            {model.title}
+    <GridDiv>
+      <Select
+        value={JSON.stringify({
+          t: "default",
+          idx: -1,
+        })}
+        defaultValue={0}
+        onChange={(e) => {
+          const value = JSON.parse(e.target.value);
+          if (value.t === "unused") {
+            client?.setModelForRoleFromIndex("*", value.idx);
+          }
+        }}
+      >
+        {defaultModel && (
+          <option
+            value={JSON.stringify({
+              t: "default",
+              idx: -1,
+            })}
+          >
+            {modelSelectTitle(defaultModel)}
           </option>
-        );
-      })}
-    </Select>
+        )}
+        {unusedModels?.map((model: any, idx: number) => {
+          return (
+            <option
+              value={JSON.stringify({
+                t: "unused",
+                idx,
+              })}
+            >
+              {modelSelectTitle(model)}
+            </option>
+          );
+        })}
+      </Select>
+
+      <StyledPlusIcon
+        width="1.3em"
+        height="1.3em"
+        onClick={() => {
+          dispatch(
+            setDialogMessage(
+              <div>
+                <div className="text-lg font-bold p-2">
+                  Setup a new model provider
+                </div>
+                <br />
+                {MODEL_INFO.map((model, idx) => {
+                  return (
+                    <NewProviderDiv
+                      onClick={() => {
+                        const model = MODEL_INFO[idx];
+                        client?.addModelForRole("*", model.class, model.args);
+                        dispatch(setShowDialog(false));
+                      }}
+                    >
+                      {model.title}
+                    </NewProviderDiv>
+                  );
+                })}
+                <br />
+              </div>
+            )
+          );
+          dispatch(setShowDialog(true));
+        }}
+      />
+    </GridDiv>
   );
 }
 

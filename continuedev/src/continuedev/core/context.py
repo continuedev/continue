@@ -7,9 +7,10 @@ from meilisearch_python_async import Client
 from pydantic import BaseModel
 
 from ..libs.util.create_async_task import create_async_task
+from ..libs.util.devdata import dev_data_logger
 from ..libs.util.logging import logger
 from ..libs.util.telemetry import posthog_logger
-from ..server.meilisearch_server import poll_meilisearch_running
+from ..server.meilisearch_server import poll_meilisearch_running, restart_meilisearch
 from .main import ChatMessage, ContextItem, ContextItemDescription, ContextItemId
 
 
@@ -225,10 +226,7 @@ class ContextManager:
                 await self.load_index(sdk.ide.workspace_directory)
                 logger.debug("Loaded Meilisearch index")
             except asyncio.TimeoutError:
-                logger.warning("MeiliSearch did not start within 20 seconds")
-                logger.warning(
-                    "MeiliSearch not running, avoiding any dependent context providers"
-                )
+                logger.warning("Meilisearch is not running.")
 
         create_async_task(start_meilisearch(context_providers))
 
@@ -254,9 +252,9 @@ class ContextManager:
                 await index.add_documents(documents or [])
 
             try:
-                await asyncio.wait_for(add_docs(), timeout=5)
+                await asyncio.wait_for(add_docs(), timeout=20)
             except asyncio.TimeoutError:
-                logger.warning("Failed to add document to meilisearch in 5 seconds")
+                logger.warning("Failed to add document to meilisearch in 20 seconds")
             except Exception as e:
                 logger.warning(f"Error adding document to meilisearch: {e}")
 
@@ -268,10 +266,10 @@ class ContextManager:
         async with Client("http://localhost:7700") as search_client:
             await asyncio.wait_for(
                 search_client.index(SEARCH_INDEX_NAME).delete_documents(ids),
-                timeout=5,
+                timeout=20,
             )
 
-    async def load_index(self, workspace_dir: str):
+    async def load_index(self, workspace_dir: str, should_retry: bool = True):
         try:
             async with Client("http://localhost:7700") as search_client:
                 # First, create the index if it doesn't exist
@@ -286,9 +284,7 @@ class ContextManager:
                 )
                 await globalSearchIndex.update_filterable_attributes(["workspace_dir"])
 
-                for _, provider in self.context_providers.items():
-                    ti = time.time()
-
+                async def load_context_provider(provider: ContextProvider):
                     context_items = await provider.provide_context_items(workspace_dir)
                     documents = [
                         {
@@ -301,16 +297,49 @@ class ContextManager:
                         for item in context_items
                     ]
                     if len(documents) > 0:
-                        await asyncio.wait_for(
-                            globalSearchIndex.add_documents(documents), timeout=5
+                        await globalSearchIndex.add_documents(documents)
+
+                    return len(documents)
+
+                async def safe_load(provider: ContextProvider):
+                    ti = time.time()
+                    try:
+                        num_documents = await asyncio.wait_for(
+                            load_context_provider(provider), timeout=20
                         )
+                    except asyncio.TimeoutError:
+                        logger.warning(
+                            f"Failed to add documents to meilisearch for context provider {provider.__class__.__name__} in 20 seconds"
+                        )
+                        return
+                    except Exception as e:
+                        logger.warning(
+                            f"Error adding documents to meilisearch for context provider {provider.__class__.__name__}: {e}"
+                        )
+                        return
 
                     tf = time.time()
                     logger.debug(
-                        f"Loaded {len(documents)} documents into meilisearch in {tf - ti} seconds for context provider {provider.title}"
+                        f"Loaded {num_documents} documents into meilisearch in {tf - ti} seconds for context provider {provider.title}"
                     )
+
+                tasks = [
+                    safe_load(provider)
+                    for _, provider in self.context_providers.items()
+                ]
+                await asyncio.wait_for(asyncio.gather(*tasks), timeout=20)
+
         except Exception as e:
             logger.debug(f"Error loading meilisearch index: {e}")
+            if should_retry:
+                await restart_meilisearch()
+                try:
+                    await asyncio.wait_for(poll_meilisearch_running(), timeout=20)
+                except asyncio.TimeoutError:
+                    logger.warning(
+                        "Meilisearch did not restart in less than 20 seconds. Stopping polling."
+                    )
+                await self.load_index(workspace_dir, False)
 
     async def select_context_item(self, id: str, query: str):
         """
@@ -323,6 +352,14 @@ class ContextManager:
             )
 
         posthog_logger.capture_event(
+            "select_context_item",
+            {
+                "provider_title": id.provider_title,
+                "item_id": id.item_id,
+                "query": query,
+            },
+        )
+        dev_data_logger.capture(
             "select_context_item",
             {
                 "provider_title": id.provider_title,

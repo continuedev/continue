@@ -13,6 +13,8 @@ const Tr = styled.tr`
   &:hover {
     background-color: ${secondaryDark};
   }
+
+  overflow-wrap: anywhere;
 `;
 
 const parseDate = (date: string): Date => {
@@ -31,6 +33,11 @@ const TdDiv = styled.div`
   padding-bottom: 0.5rem;
   border-bottom: 1px solid ${secondaryDark};
 `;
+
+function lastPartOfPath(path: string): string {
+  const sep = path.includes("/") ? "/" : "\\";
+  return path.split(sep).pop() || path;
+}
 
 function History() {
   const navigate = useNavigate();
@@ -71,13 +78,17 @@ function History() {
           onClick={() => navigate("/")}
           className="inline-block ml-4 cursor-pointer"
         />
-        <h1 className="text-2xl font-bold m-4 inline-block">History</h1>
+        <h1 className="text-xl font-bold m-4 inline-block">History</h1>
       </div>
-      <CheckDiv
-        checked={filteringByWorkspace}
-        onClick={() => setFilteringByWorkspace((prev) => !prev)}
-        title="Filter by workspace"
-      />
+      {workspacePaths && workspacePaths.length > 0 && (
+        <CheckDiv
+          checked={filteringByWorkspace}
+          onClick={() => setFilteringByWorkspace((prev) => !prev)}
+          title={`Show only sessions from ${lastPartOfPath(
+            workspacePaths[workspacePaths.length - 1]
+          )}/`}
+        />
+      )}
       <table className="w-full">
         <tbody>
           {sessions
@@ -105,7 +116,7 @@ function History() {
                       navigate("/");
                     }}
                   >
-                    <div className="text-lg">{session.title}</div>
+                    <div className="text-md">{session.title}</div>
                     <div className="text-gray-400">
                       {parseDate(session.date_created).toLocaleString("en-US", {
                         weekday: "short",
@@ -115,6 +126,8 @@ function History() {
                         hour: "numeric",
                         minute: "numeric",
                       })}
+                      {" | "}
+                      {lastPartOfPath(session.workspace_directory || "")}
                     </div>
                   </TdDiv>
                 </td>

@@ -6,10 +6,15 @@ import redbaron
 from .paths import getConfigFilePath
 
 
-def load_red():
+def get_config_source():
     config_file_path = getConfigFilePath()
     with open(config_file_path, "r") as file:
         source_code = file.read()
+    return source_code
+
+
+def load_red():
+    source_code = get_config_source()
 
     red = redbaron.RedBaron(source_code)
     return red
@@ -54,12 +59,13 @@ def edit_config_property(key_path: List[str], value: redbaron.RedBaron):
 
 
 def add_config_import(line: str):
+    # check if the import already exists
+    source = get_config_source()
+    if line in source:
+        return
+
     with edit_lock:
         red = load_red()
-        # check if the import already exists
-        for node in red:
-            if node.type == "import" and node.dumps() == line:
-                return
         # if it doesn't exist, add it
         red.insert(1, line)
 
@@ -68,38 +74,51 @@ def add_config_import(line: str):
 
 
 filtered_attrs = {
-    "requires_api_key",
-    "requires_unique_id",
-    "requires_write_log",
     "class_name",
     "name",
     "llm",
 }
 
+filtered_attrs_when_new = {"timeout", "prompt_templates"}
+
+
+def escape_string(string: str) -> str:
+    return string.replace('"', '\\"').replace("'", "\\'")
+
 
 def display_val(v: Any):
     if isinstance(v, str):
-        return f'"{v}"'
+        return f'"{escape_string(v)}"'
     return str(v)
 
 
-def display_llm_class(llm):
-    args = ", ".join(
+def display_llm_class(llm, new: bool = False):
+    sep = ",\n\t\t\t"
+    args = sep.join(
         [
             f"{k}={display_val(v)}"
             for k, v in llm.dict().items()
             if k not in filtered_attrs and v is not None
         ]
     )
-    return f"{llm.__class__.__name__}({args})"
+    return f"{llm.__class__.__name__}(\n\t\t\t{args}\n\t\t)"
 
 
-def create_obj_node(class_name: str, args: Dict[str, str]) -> redbaron.RedBaron:
+def create_obj_node(
+    class_name: str, args: Dict[str, str], tabs: int = 1
+) -> redbaron.RedBaron:
     args = [f"{key}={value}" for key, value in args.items()]
-    return redbaron.RedBaron(f"{class_name}({', '.join(args)})")[0]
+    t = "\t" * tabs
+    new_line = "\n\t" + t
+    sep = "," + new_line
+
+    return redbaron.RedBaron(f"{class_name}({new_line}{sep.join(args)}\n{t})")[0]
 
 
 def create_string_node(string: str) -> redbaron.RedBaron:
+    string = escape_string(string)
+    if "\n" in string:
+        return redbaron.RedBaron(f'"""{string}"""')[0]
     return redbaron.RedBaron(f'"{string}"')[0]
 
 

@@ -11,13 +11,17 @@ from openai import error as openai_errors
 from pydantic import root_validator
 
 from ..libs.util.create_async_task import create_async_task
+from ..libs.util.devdata import dev_data_logger
 from ..libs.util.edit_config import edit_config_property
 from ..libs.util.logging import logger
 from ..libs.util.paths import getSavedContextGroupsPath
 from ..libs.util.queue import AsyncSubscriptionQueue
 from ..libs.util.strings import remove_quotes_and_escapes
 from ..libs.util.telemetry import posthog_logger
-from ..libs.util.traceback_parsers import get_javascript_traceback, get_python_traceback
+from ..libs.util.traceback.traceback_parsers import (
+    get_javascript_traceback,
+    get_python_traceback,
+)
 from ..models.filesystem import RangeInFileWithContents
 from ..models.filesystem_edit import FileEditWithFullContents
 from ..models.main import ContinueBaseModel
@@ -32,6 +36,8 @@ from ..plugins.steps.core.core import (
 )
 from ..plugins.steps.on_traceback import DefaultOnTracebackStep
 from ..server.ide_protocol import AbstractIdeProtocolServer
+from ..server.meilisearch_server import stop_meilisearch
+from .config import ContinueConfig
 from .context import ContextManager
 from .main import (
     Context,
@@ -97,8 +103,12 @@ class Autopilot(ContinueBaseModel):
 
     started: bool = False
 
-    async def start(self, full_state: Optional[FullState] = None):
-        self.continue_sdk = await ContinueSDK.create(self)
+    async def start(
+        self,
+        full_state: Optional[FullState] = None,
+        config: Optional[ContinueConfig] = None,
+    ):
+        self.continue_sdk = await ContinueSDK.create(self, config=config)
         if override_policy := self.continue_sdk.config.policy_override:
             self.policy = override_policy
 
@@ -133,6 +143,11 @@ class Autopilot(ContinueBaseModel):
             self._saved_context_groups = {}
 
         self.started = True
+
+    async def cleanup(self):
+        if self.continue_sdk.lsp is not None:
+            await self.continue_sdk.lsp.stop()
+        stop_meilisearch()
 
     class Config:
         arbitrary_types_allowed = True
@@ -285,6 +300,7 @@ class Autopilot(ContinueBaseModel):
     async def edit_step_at_index(self, user_input: str, index: int):
         step_to_rerun = self.history.timeline[index].step.copy()
         step_to_rerun.user_input = user_input
+        step_to_rerun.description = user_input
 
         # Halt the agent's currently running jobs (delete them)
         while len(self.history.timeline) > index:
@@ -340,6 +356,9 @@ class Autopilot(ContinueBaseModel):
 
         posthog_logger.capture_event(
             "step run", {"step_name": step.name, "params": step.dict()}
+        )
+        dev_data_logger.capture(
+            "step_run", {"step_name": step.name, "params": step.dict()}
         )
 
         if not is_future_step:
@@ -445,7 +464,9 @@ class Autopilot(ContinueBaseModel):
 
         # Update its description
         async def update_description():
-            step.description = await step.describe(self.continue_sdk.models)
+            description = await step.describe(self.continue_sdk.models)
+            if description is not None:
+                step.description = description
             # Update subscribers with new description
             await self.update_subscribers()
 
@@ -506,6 +527,12 @@ class Autopilot(ContinueBaseModel):
         if self.session_info is None:
 
             async def create_title():
+                if (
+                    self.session_info is not None
+                    and self.session_info.title is not None
+                ):
+                    return
+
                 title = await self.continue_sdk.models.medium.complete(
                     f'Give a short title to describe the current chat session. Do not put quotes around the title. The first message was: "{user_input}". Do not use more than 10 words. The title is: ',
                     max_tokens=20,
@@ -517,6 +544,7 @@ class Autopilot(ContinueBaseModel):
                     date_created=str(time.time()),
                     workspace_directory=self.ide.workspace_directory,
                 )
+                dev_data_logger.capture("new_session", self.session_info.dict())
 
             create_async_task(
                 create_title(),
@@ -586,6 +614,9 @@ class Autopilot(ContinueBaseModel):
 
         posthog_logger.capture_event(
             "select_context_group", {"title": id, "length": len(context_group)}
+        )
+        dev_data_logger.capture(
+            "select_context_group", {"title": id, "items": context_group}
         )
 
     async def delete_context_group(self, id: str):

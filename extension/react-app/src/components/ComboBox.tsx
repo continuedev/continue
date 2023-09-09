@@ -109,6 +109,13 @@ const Ul = styled.ul<{
   outline: 1px solid ${lightGray};
   z-index: 2;
   -ms-overflow-style: none;
+
+  scrollbar-width: none; /* Firefox */
+
+  /* Hide scrollbar for Chrome, Safari and Opera */
+  &::-webkit-scrollbar {
+    display: none;
+  }
 `;
 
 const Li = styled.li<{
@@ -357,6 +364,8 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
     dispatch(setShowDialog(true));
   };
 
+  const [isComposing, setIsComposing] = useState(false);
+
   return (
     <>
       <div
@@ -448,6 +457,8 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
           disabled={props.disabled}
           placeholder={`Ask a question, give instructions, type '/' for slash commands, or '@' to add context`}
           {...getInputProps({
+            onCompositionStart: () => setIsComposing(true),
+            onCompositionEnd: () => setIsComposing(false),
             onChange: (e) => {
               const target = e.target as HTMLTextAreaElement;
               // Update the height of the textarea to match the content, up to a max of 200px.
@@ -472,7 +483,8 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
                 setCurrentlyInContextQuery(false);
               } else if (
                 event.key === "Enter" &&
-                (!downshiftProps.isOpen || items.length === 0)
+                (!downshiftProps.isOpen || items.length === 0) &&
+                !isComposing
               ) {
                 const value = downshiftProps.inputValue;
                 if (value !== "") {
@@ -545,6 +557,12 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
                   postVscMessage("focusEditor", {});
                 }
               }
+              // Home and end keys
+              else if (event.key === "Home") {
+                (event.nativeEvent as any).preventDownshiftDefault = true;
+              } else if (event.key === "End") {
+                (event.nativeEvent as any).preventDownshiftDefault = true;
+              }
             },
             onClick: () => {
               dispatch(setBottomMessage(undefined));
@@ -573,15 +591,6 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
                   {item.name}
                   {"  "}
                   <span style={{ color: lightGray }}>{item.description}</span>
-                  {downshiftProps.highlightedIndex === index &&
-                    item.content && (
-                      <>
-                        <br />
-                        <pre style={{ color: lightGray }}>
-                          {item.content.split("\n").slice(0, 5).join("\n")}
-                        </pre>
-                      </>
-                    )}
                 </span>
               </Li>
             ))}

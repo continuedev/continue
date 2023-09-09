@@ -6,8 +6,8 @@ export const lightGray = "#646464";
 // export const secondaryDark = "rgb(45 45 45)";
 // export const vscBackground = "rgb(30 30 30)";
 export const vscBackgroundTransparent = "#1e1e1ede";
-export const buttonColor = "rgb(113 28 59)";
-export const buttonColorHover = "rgb(113 28 59 0.67)";
+export const buttonColor = "rgb(27 190 132)";
+export const buttonColorHover = "rgb(27 190 132 0.67)";
 
 export const secondaryDark = "var(--vscode-list-hoverBackground)";
 export const vscBackground = "var(--vscode-editor-background)";

@@ -1,108 +1,51 @@
 import json
-from typing import Any, Coroutine, Dict, Generator, List, Optional, Union
+from typing import Callable, Optional
 
 import aiohttp
 
-from ...core.main import ChatMessage
+from ...core.main import ContinueCustomException
 from ..llm import LLM
-from ..util.count_tokens import DEFAULT_ARGS, compile_chat_messages, count_tokens
+from ..util.logging import logger
+from .prompts.chat import llama2_template_messages
+from .prompts.edit import simplified_edit_prompt
 
 
 class TogetherLLM(LLM):
-    # this is model-specific
     api_key: str
+    "Together API key"
+
     model: str = "togethercomputer/RedPajama-INCITE-7B-Instruct"
-    max_context_length: int = 2048
     base_url: str = "https://api.together.xyz"
     verify_ssl: Optional[bool] = None
 
     _client_session: aiohttp.ClientSession = None
 
+    template_messages: Callable = llama2_template_messages
+
+    prompt_templates = {
+        "edit": simplified_edit_prompt,
+    }
+
     async def start(self, **kwargs):
+        await super().start(**kwargs)
         self._client_session = aiohttp.ClientSession(
-            connector=aiohttp.TCPConnector(verify_ssl=self.verify_ssl)
+            connector=aiohttp.TCPConnector(verify_ssl=self.verify_ssl),
+            timeout=aiohttp.ClientTimeout(total=self.timeout),
         )
 
     async def stop(self):
         await self._client_session.close()
 
-    @property
-    def name(self):
-        return self.model
-
-    @property
-    def context_length(self):
-        return self.max_context_length
-
-    @property
-    def default_args(self):
-        return {**DEFAULT_ARGS, "model": self.model, "max_tokens": 1024}
-
-    def count_tokens(self, text: str):
-        return count_tokens(self.name, text)
-
-    def convert_to_prompt(self, chat_messages: List[ChatMessage]) -> str:
-        system_message = None
-        if chat_messages[0]["role"] == "system":
-            system_message = chat_messages.pop(0)["content"]
-
-        prompt = "\n"
-        if system_message:
-            prompt += f"<human>: Hi!\n<bot>: {system_message}\n"
-        for message in chat_messages:
-            prompt += f'<{"human" if message["role"] == "user" else "bot"}>: {message["content"]}\n'
-
-        prompt += "<bot>:"
-        return prompt
-
-    async def stream_complete(
-        self, prompt, with_history: List[ChatMessage] = None, **kwargs
-    ) -> Generator[Union[Any, List, Dict], None, None]:
-        args = self.default_args.copy()
-        args.update(kwargs)
-        args["stream_tokens"] = True
-
-        args = {**self.default_args, **kwargs}
-        messages = compile_chat_messages(
-            self.name,
-            with_history,
-            self.context_length,
-            args["max_tokens"],
-            prompt,
-            functions=args.get("functions", None),
-            system_message=self.system_message,
-        )
+    async def _stream_complete(self, prompt, options):
+        args = self.collect_args(options)
 
         async with self._client_session.post(
             f"{self.base_url}/inference",
-            json={"prompt": self.convert_to_prompt(messages), **args},
-            headers={"Authorization": f"Bearer {self.api_key}"},
-        ) as resp:
-            async for line in resp.content.iter_any():
-                if line:
-                    try:
-                        yield line.decode("utf-8")
-                    except:
-                        raise Exception(str(line))
-
-    async def stream_chat(
-        self, messages: List[ChatMessage] = None, **kwargs
-    ) -> Generator[Union[Any, List, Dict], None, None]:
-        args = {**self.default_args, **kwargs}
-        messages = compile_chat_messages(
-            self.name,
-            messages,
-            self.context_length,
-            args["max_tokens"],
-            None,
-            functions=args.get("functions", None),
-            system_message=self.system_message,
-        )
-        args["stream_tokens"] = True
-
-        async with self._client_session.post(
-            f"{self.base_url}/inference",
-            json={"prompt": self.convert_to_prompt(messages), **args},
+            json={
+                "prompt": prompt,
+                "stream_tokens": True,
+                **args,
+            },
             headers={"Authorization": f"Bearer {self.api_key}"},
         ) as resp:
             async for line in resp.content.iter_chunks():
@@ -112,43 +55,48 @@ class TogetherLLM(LLM):
                         "data: [DONE]"
                     ):
                         continue
-                    if json_chunk.startswith("data: "):
-                        json_chunk = json_chunk[6:]
+
                     chunks = json_chunk.split("\n")
                     for chunk in chunks:
                         if chunk.strip() != "":
-                            json_chunk = json.loads(chunk)
+                            if chunk.startswith("data: "):
+                                chunk = chunk[6:]
+                            if chunk == "[DONE]":
+                                break
+                            try:
+                                json_chunk = json.loads(chunk)
+                            except Exception as e:
+                                logger.warning(f"Invalid JSON chunk: {chunk}\n\n{e}")
+                                continue
                             if "choices" in json_chunk:
-                                yield {
-                                    "role": "assistant",
-                                    "content": json_chunk["choices"][0]["text"],
-                                }
+                                yield json_chunk["choices"][0]["text"]
 
-    async def complete(
-        self, prompt: str, with_history: List[ChatMessage] = None, **kwargs
-    ) -> Coroutine[Any, Any, str]:
-        args = {**self.default_args, **kwargs}
+    async def _complete(self, prompt: str, options):
+        args = self.collect_args(options)
 
-        messages = compile_chat_messages(
-            args["model"],
-            with_history,
-            self.context_length,
-            args["max_tokens"],
-            prompt,
-            functions=None,
-            system_message=self.system_message,
-        )
         async with self._client_session.post(
             f"{self.base_url}/inference",
-            json={"prompt": self.convert_to_prompt(messages), **args},
+            json={"prompt": prompt, **args},
             headers={"Authorization": f"Bearer {self.api_key}"},
         ) as resp:
+            text = await resp.text()
+            j = json.loads(text)
             try:
-                text = await resp.text()
-                j = json.loads(text)
                 if "choices" not in j["output"]:
                     raise Exception(text)
                 if "output" in j:
                     return j["output"]["choices"][0]["text"]
-            except:
-                raise Exception(await resp.text())
+            except Exception as e:
+                j = await resp.json()
+                if "error" in j:
+                    if j["error"].startswith("invalid hexlify value"):
+                        raise ContinueCustomException(
+                            message=f"Invalid Together API key:\n\n{j['error']}",
+                            title="Together API Error",
+                        )
+                    else:
+                        raise ContinueCustomException(
+                            message=j["error"], title="Together API Error"
+                        )
+
+                raise e

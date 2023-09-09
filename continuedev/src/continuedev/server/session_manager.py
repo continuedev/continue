@@ -8,9 +8,9 @@ from fastapi import APIRouter, WebSocket
 from fastapi.websockets import WebSocketState
 
 from ..core.autopilot import Autopilot
+from ..core.config import ContinueConfig
 from ..core.main import FullState
 from ..libs.util.create_async_task import create_async_task
-from ..libs.util.errors import SessionNotFound
 from ..libs.util.logging import logger
 from ..libs.util.paths import (
     getSessionFilePath,
@@ -58,7 +58,10 @@ class SessionManager:
         return self.sessions[session_id]
 
     async def new_session(
-        self, ide: AbstractIdeProtocolServer, session_id: Optional[str] = None
+        self,
+        ide: AbstractIdeProtocolServer,
+        session_id: Optional[str] = None,
+        config: Optional[ContinueConfig] = None,
     ) -> Session:
         logger.debug(f"New session: {session_id}")
 
@@ -87,7 +90,7 @@ class SessionManager:
 
         # Start the autopilot (must be after session is added to sessions) and the policy
         try:
-            await autopilot.start(full_state=full_state)
+            await autopilot.start(full_state=full_state, config=config)
         except Exception as e:
             await ide.on_error(e)
 
@@ -125,7 +128,12 @@ class SessionManager:
 
         # Read and update the sessions list
         with open(getSessionsListFilePath(), "r") as f:
-            sessions_list = json.load(f)
+            try:
+                sessions_list = json.load(f)
+            except json.JSONDecodeError:
+                raise Exception(
+                    f"It looks like there is a JSON formatting error in your sessions.json file ({getSessionsListFilePath()}). Please fix this before creating a new session."
+                )
 
         session_ids = [s["session_id"] for s in sessions_list]
         if session_id not in session_ids:
@@ -160,9 +168,9 @@ class SessionManager:
 
     async def send_ws_data(self, session_id: str, message_type: str, data: Any):
         if session_id not in self.sessions:
-            raise SessionNotFound(f"Session {session_id} not found")
+            logger.warning(f"Session {session_id} not found")
+            return
         if self.sessions[session_id].ws is None:
-            # logger.debug(f"Session {session_id} has no websocket")
             return
 
         await self.sessions[session_id].ws.send_json(

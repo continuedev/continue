@@ -31,6 +31,27 @@ def getServerFolderPath():
     return path
 
 
+def getDevDataFolderPath():
+    path = os.path.join(getGlobalFolderPath(), "dev_data")
+    os.makedirs(path, exist_ok=True)
+    return path
+
+
+def getDevDataFilePath(table_name: str):
+    filepath = os.path.join(getDevDataFolderPath(), f"{table_name}.jsonl")
+    if not os.path.exists(filepath):
+        with open(filepath, "w") as f:
+            f.write("")
+
+    return filepath
+
+
+def getMeilisearchExePath():
+    binary_name = "meilisearch.exe" if os.name == "nt" else "meilisearch"
+    path = os.path.join(getServerFolderPath(), binary_name)
+    return path
+
+
 def getSessionFilePath(session_id: str):
     path = os.path.join(getSessionsFolderPath(), f"{session_id}.json")
     os.makedirs(os.path.dirname(path), exist_ok=True)
@@ -60,13 +81,6 @@ def getConfigFilePath() -> str:
         if existing_content.strip() == "":
             with open(path, "w") as f:
                 f.write(default_config)
-        elif " continuedev.core" in existing_content:
-            with open(path, "w") as f:
-                f.write(
-                    existing_content.replace(
-                        " continuedev.", " continuedev.src.continuedev."
-                    )
-                )
 
     return path
 

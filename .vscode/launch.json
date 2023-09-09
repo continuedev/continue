@@ -17,15 +17,33 @@
   ],
   "configurations": [
     {
+      "name": "Pytest",
+      "type": "python",
+      "request": "launch",
+      "program": "continuedev/src/continuedev/tests/llm_test.py",
+      "console": "integratedTerminal",
+      "justMyCode": true,
+      "subProcess": true
+    },
+    {
       "name": "Server",
       "type": "python",
       "request": "launch",
-      "module": "continuedev.src.continuedev.server.main",
+      "module": "continuedev.src.continuedev.__main__",
       "args": ["--port", "8001"],
       "justMyCode": false,
       "subProcess": false
       // Does it need a build task?
       // What about a watch task? - type errors?
+    },
+    {
+      "name": "Headless",
+      "type": "python",
+      "request": "launch",
+      "module": "continuedev.headless",
+      "args": ["--config", "continuedev/config.py"],
+      "justMyCode": false,
+      "subProcess": false
     },
     {
       "name": "Extension (VSCode)",

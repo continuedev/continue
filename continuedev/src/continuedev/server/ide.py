@@ -13,6 +13,7 @@ from starlette.websockets import WebSocketDisconnect, WebSocketState
 from uvicorn.main import Server
 
 from ..libs.util.create_async_task import create_async_task
+from ..libs.util.devdata import dev_data_logger
 from ..libs.util.logging import logger
 from ..libs.util.queue import AsyncSubscriptionQueue
 from ..libs.util.telemetry import posthog_logger
@@ -124,6 +125,10 @@ class ListDirectoryContentsResponse(BaseModel):
     contents: List[str]
 
 
+class FileExistsResponse(BaseModel):
+    exists: bool
+
+
 T = TypeVar("T", bound=BaseModel)
 
 
@@ -183,13 +188,20 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
         return other_msgs
 
     async def _send_json(self, message_type: str, data: Any):
-        if self.websocket.application_state == WebSocketState.DISCONNECTED:
-            logger.debug(
-                f"Tried to send message, but websocket is disconnected: {message_type}"
-            )
-            return
-        logger.debug(f"Sending IDE message: {message_type}")
-        await self.websocket.send_json({"messageType": message_type, "data": data})
+        # TODO: You breakpointed here, set it to disconnected, and then saw
+        # that even after reloading, it couldn't connect the server.
+        # Is this because there is an IDE registered without a websocket?
+        # This shouldn't count as registered in that case.
+        try:
+            if self.websocket.application_state == WebSocketState.DISCONNECTED:
+                logger.debug(
+                    f"Tried to send message, but websocket is disconnected: {message_type}"
+                )
+                return
+            # logger.debug(f"Sending IDE message: {message_type}")
+            await self.websocket.send_json({"messageType": message_type, "data": data})
+        except RuntimeError as e:
+            logger.warning(f"Error sending IDE message, websocket probably closed: {e}")
 
     async def _receive_json(self, message_type: str, timeout: int = 20) -> Any:
         try:
@@ -248,6 +260,7 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
             "runCommand",
             "getTerminalContents",
             "listDirectoryContents",
+            "fileExists",
         ]:
             self.sub_queue.post(message_type, data)
         elif message_type == "workspaceDirectory":
@@ -336,9 +349,11 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
 
     def onAcceptRejectSuggestion(self, accepted: bool):
         posthog_logger.capture_event("accept_reject_suggestion", {"accepted": accepted})
+        dev_data_logger.capture("accept_reject_suggestion", {"accepted": accepted})
 
     def onAcceptRejectDiff(self, accepted: bool):
         posthog_logger.capture_event("accept_reject_diff", {"accepted": accepted})
+        dev_data_logger.capture("accept_reject_diff", {"accepted": accepted})
 
     def onFileSystemUpdate(self, update: FileSystemEdit):
         # Access to Autopilot (so SessionManager)
@@ -438,9 +453,10 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
         )
         return resp.visibleFiles
 
-    async def getTerminalContents(self) -> str:
+    async def getTerminalContents(self, commands: int = -1) -> str:
+        """Get the contents of the terminal, up to the last 'commands' commands, or all if commands is -1"""
         resp = await self._send_and_receive_json(
-            {}, TerminalContentsResponse, "getTerminalContents"
+            {"commands": commands}, TerminalContentsResponse, "getTerminalContents"
         )
         return resp.contents
 
@@ -456,6 +472,13 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
             {"filepath": filepath}, ReadFileResponse, "readFile"
         )
         return resp.contents
+
+    async def fileExists(self, filepath: str) -> str:
+        """Check whether file exists"""
+        resp = await self._send_and_receive_json(
+            {"filepath": filepath}, FileExistsResponse, "fileExists"
+        )
+        return resp.exists
 
     async def getUserSecret(self, key: str) -> str:
         """Get a user secret"""
@@ -484,10 +507,12 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
         )
         return resp.fileEdit
 
-    async def listDirectoryContents(self, directory: str) -> List[str]:
+    async def listDirectoryContents(
+        self, directory: str, recursive: bool = False
+    ) -> List[str]:
         """List the contents of a directory"""
         resp = await self._send_and_receive_json(
-            {"directory": directory},
+            {"directory": directory, "recursive": recursive},
             ListDirectoryContentsResponse,
             "listDirectoryContents",
         )
@@ -564,7 +589,11 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str = None):
 
         # Start meilisearch
         try:
-            await start_meilisearch()
+
+            async def on_err(e):
+                logger.debug(f"Failed to start MeiliSearch: {e}")
+
+            create_async_task(start_meilisearch(), on_err)
         except Exception as e:
             logger.debug("Failed to start MeiliSearch")
             logger.debug(e)
@@ -579,7 +608,7 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str = None):
             message_type = message["messageType"]
             data = message["data"]
 
-            logger.debug(f"Received IDE message: {message_type}")
+            # logger.debug(f"Received IDE message: {message_type}")
             create_async_task(
                 ideProtocolServer.handle_json(message_type, data),
                 ideProtocolServer.on_error,

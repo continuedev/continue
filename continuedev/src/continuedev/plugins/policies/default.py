@@ -1,15 +1,16 @@
+import os
 from textwrap import dedent
 from typing import Type, Union
 
 from ...core.config import ContinueConfig
 from ...core.main import History, Policy, Step
 from ...core.observation import UserInputObservation
+from ...libs.util.paths import getServerFolderPath
 from ..steps.chat import SimpleChatStep
 from ..steps.core.core import MessageStep
 from ..steps.custom_command import CustomCommandStep
 from ..steps.main import EditHighlightedCodeStep
 from ..steps.steps_on_startup import StepsOnStartupStep
-from ..steps.welcome import WelcomeStep
 
 
 def parse_slash_command(inp: str, config: ContinueConfig) -> Union[None, Step]:
@@ -58,6 +59,12 @@ class DefaultPolicy(Policy):
     def next(self, config: ContinueConfig, history: History) -> Step:
         # At the very start, run initial Steps spcecified in the config
         if history.get_current() is None:
+            shown_welcome_file = os.path.join(getServerFolderPath(), ".shown_welcome")
+            if os.path.exists(shown_welcome_file):
+                return StepsOnStartupStep()
+
+            with open(shown_welcome_file, "w") as f:
+                f.write("")
             return (
                 MessageStep(
                     name="Welcome to Continue",
@@ -69,7 +76,6 @@ class DefaultPolicy(Policy):
                     - [Customize Continue](https://continue.dev/docs/customization) (e.g. use your own API key) by typing '/config'."""
                     ),
                 )
-                >> WelcomeStep()
                 >> StepsOnStartupStep()
             )
 

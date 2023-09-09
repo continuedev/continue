@@ -31,6 +31,7 @@ config = ContinueConfig(
 1. Download Ollama [here](https://ollama.ai/) (it should walk you through the rest of these steps)
 2. Open a terminal and run `ollama pull codellama`\*
 3. Change your Continue config file to look like this:
+
 ```python
 from continuedev.src.continuedev.libs.llm.ollama import Ollama
 
@@ -59,10 +60,25 @@ config = ContinueConfig(
     ...
     models=Models(
         default=ReplicateLLM(
-            model="<CODE_LLAMA_MODEL_ID>",
+            model="replicate/codellama-13b-instruct:da5676342de1a5a335b848383af297f592b816b950a43d251a0a9edd0113604b",
             api_key="<MY_REPLICATE_API_KEY>")
     )
 )
 ```
 
 3. Reload the VS Code window for changes to take effect
+
+## FastChat API
+1. Setup the FastChat API (https://github.com/lm-sys/FastChat) to use one of the Codellama models on Hugging Face (e.g: codellama/CodeLlama-7b-Instruct-hf).
+2. Start the OpenAI compatible API (ref: https://github.com/lm-sys/FastChat/blob/main/docs/openai_api.md).
+3. Change your Continue config file to look like this:
+
+```python
+config = ContinueConfig(
+    ...
+    models=Models(default=OpenAI(
+        model="CodeLlama-7b-Instruct-hf",
+        openai_server_info={'api_base': 'http://localhost:8000/v1'})
+
+```
+4. Reload the VS Code window for changes to take effect.

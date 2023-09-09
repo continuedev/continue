@@ -1,87 +1,53 @@
-from typing import Any, Coroutine, Dict, Generator, List, Optional
+from typing import Callable, Dict, List
+from ..llm import LLM, CompletionOptions
 
-import aiohttp
-import requests
-
-from ...core.main import ChatMessage
-from ..llm import LLM
-from ..util.count_tokens import DEFAULT_ARGS, count_tokens
-
-DEFAULT_MAX_TIME = 120.0
+from huggingface_hub import InferenceClient
+from .prompts.chat import llama2_template_messages
+from .prompts.edit import simplified_edit_prompt
 
 
 class HuggingFaceInferenceAPI(LLM):
-    model: str
+    model: str = "Hugging Face Inference API"
     hf_token: str
+    endpoint_url: str = None
 
-    max_context_length: int = 2048
-    verify_ssl: Optional[bool] = None
+    template_messages: Callable[[List[Dict[str, str]]], str] | None = llama2_template_messages
 
-    _client_session: aiohttp.ClientSession = None
+    prompt_templates = {
+       "edit": simplified_edit_prompt,
+    }
 
     class Config:
         arbitrary_types_allowed = True
 
-    async def start(self, **kwargs):
-        self._client_session = aiohttp.ClientSession(
-            connector=aiohttp.TCPConnector(verify_ssl=self.verify_ssl)
-        )
+    def collect_args(self, options: CompletionOptions):
+        options.stop = None
+        args = super().collect_args(options)
 
-    async def stop(self):
-        await self._client_session.close()
+        if "max_tokens" in args:
+            args["max_new_tokens"] = args["max_tokens"]
+            del args["max_tokens"]
+        if "stop" in args:
+            args["stop_sequences"] = args["stop"]
+            del args["stop"]
+        if "model" in args:
+            del args["model"]
+        return args
 
-    @property
-    def name(self):
-        return self.model
 
-    @property
-    def context_length(self):
-        return self.max_context_length
+    async def _stream_complete(self, prompt, options):
+        args = self.collect_args(options)
 
-    @property
-    def default_args(self):
-        return {**DEFAULT_ARGS, "model": self.name, "max_tokens": 1024}
+        client = InferenceClient(self.endpoint_url, token=self.hf_token)
 
-    def count_tokens(self, text: str):
-        return count_tokens(self.name, text)
+        stream = client.text_generation(prompt, stream=True, details=True)
 
-    async def complete(
-        self, prompt: str, with_history: List[ChatMessage] = None, **kwargs
-    ):
-        """Return the completion of the text with the given temperature."""
-        API_URL = f"https://api-inference.huggingface.co/models/{self.model}"
-        headers = {"Authorization": f"Bearer {self.hf_token}"}
-
-        response = requests.post(
-            API_URL,
-            headers=headers,
-            json={
-                "inputs": prompt,
-                "parameters": {
-                    "max_new_tokens": min(
-                        250, self.max_context_length - self.count_tokens(prompt)
-                    ),
-                    "max_time": DEFAULT_MAX_TIME,
-                    "return_full_text": False,
-                },
-            },
-        )
-        data = response.json()
-
-        # Error if the response is not a list
-        if not isinstance(data, list):
-            raise Exception("Hugging Face returned an error response: \n\n", data)
-
-        return data[0]["generated_text"]
-
-    async def stream_chat(
-        self, messages: List[ChatMessage] = None, **kwargs
-    ) -> Coroutine[Any, Any, Generator[Any | List | Dict, None, None]]:
-        response = await self.complete(messages[-1].content, messages[:-1])
-        yield {"content": response, "role": "assistant"}
-
-    async def stream_complete(
-        self, prompt, with_history: List[ChatMessage] = None, **kwargs
-    ) -> Generator[Any | List | Dict, None, None]:
-        response = await self.complete(prompt, with_history)
-        yield response
+        for r in stream:
+            # skip special tokens
+            if r.token.special:
+                continue
+            # stop if we encounter a stop sequence
+            if options.stop is not None:
+                if r.token.text in options.stop:
+                    break
+            yield r.token.text

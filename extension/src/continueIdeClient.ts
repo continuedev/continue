@@ -3,7 +3,11 @@ import {
   showSuggestion as showSuggestionInEditor,
   SuggestionRanges,
 } from "./suggestions";
-import { openEditorAndRevealRange } from "./util/vscode";
+import {
+  getUniqueId,
+  openEditorAndRevealRange,
+  uriFromFilePath,
+} from "./util/vscode";
 import { FileEdit } from "../schema/FileEdit";
 import { RangeInFile } from "../schema/RangeInFile";
 import * as vscode from "vscode";
@@ -68,7 +72,8 @@ class IdeProtocolClient {
       this.handleMessage(messageType, data, messenger).catch((err) => {
         vscode.window
           .showErrorMessage(
-            "Error handling message from Continue server: " + err.message,
+            `Error handling message (${messageType}) from Continue server: ` +
+              err.message,
             "View Logs"
           )
           .then((selection) => {
@@ -142,6 +147,32 @@ class IdeProtocolClient {
       const filepath = event.uri.fsPath;
       const contents = event.getText();
       this.messenger?.send("fileSaved", { filepath, contents });
+
+      if (event.fileName.endsWith("config.py")) {
+        if (
+          this.context.globalState.get<boolean>(
+            "continue.showConfigInfoMessage"
+          ) !== false
+        ) {
+          vscode.window
+            .showInformationMessage(
+              "Reload the VS Code window for your changes to the Continue config to take effect.",
+              "Reload",
+              "Don't show again"
+            )
+            .then((selection) => {
+              if (selection === "Don't show again") {
+                // Get the global state
+                context.globalState.update(
+                  "continue.showConfigInfoMessage",
+                  false
+                );
+              } else if (selection === "Reload") {
+                vscode.commands.executeCommand("workbench.action.reloadWindow");
+              }
+            });
+        }
+      }
     });
 
     // Setup listeners for any selection changes in open editors
@@ -236,6 +267,11 @@ class IdeProtocolClient {
           uniqueId: this.getUniqueId(),
         });
         break;
+      case "fileExists":
+        messenger.send("fileExists", {
+          exists: await this.fileExists(data.filepath),
+        });
+        break;
       case "getUserSecret":
         messenger.send("getUserSecret", {
           value: await this.getUserSecret(data.key),
@@ -258,45 +294,15 @@ class IdeProtocolClient {
         break;
       case "getTerminalContents":
         messenger.send("getTerminalContents", {
-          contents: await this.getTerminalContents(),
+          contents: await this.getTerminalContents(data.commands),
         });
         break;
       case "listDirectoryContents":
         messenger.send("listDirectoryContents", {
-          contents: (
-            await vscode.workspace.fs.readDirectory(
-              vscode.Uri.file(data.directory)
-            )
-          )
-            .map(([name, type]) => name)
-            .filter((name) => {
-              const DEFAULT_IGNORE_DIRS = [
-                ".git",
-                ".vscode",
-                ".idea",
-                ".vs",
-                ".venv",
-                "env",
-                ".env",
-                "node_modules",
-                "dist",
-                "build",
-                "target",
-                "out",
-                "bin",
-                ".pytest_cache",
-                ".vscode-test",
-                ".continue",
-                "__pycache__",
-              ];
-              if (
-                !DEFAULT_IGNORE_DIRS.some((dir) =>
-                  name.split(path.sep).includes(dir)
-                )
-              ) {
-                return name;
-              }
-            }),
+          contents: await this.getDirectoryContents(
+            data.directory,
+            data.recursive || false
+          ),
         });
         break;
       case "editFile":
@@ -362,7 +368,7 @@ class IdeProtocolClient {
   }
 
   getUniqueId() {
-    return vscode.env.machineId;
+    return getUniqueId();
   }
 
   // ------------------------------------ //
@@ -430,6 +436,15 @@ class IdeProtocolClient {
   openFile(filepath: string) {
     // vscode has a builtin open/get open files
     openEditorAndRevealRange(filepath, undefined, vscode.ViewColumn.One);
+  }
+
+  async fileExists(filepath: string): Promise<boolean> {
+    try {
+      await vscode.workspace.fs.stat(uriFromFilePath(filepath));
+      return true;
+    } catch {
+      return false;
+    }
   }
 
   showVirtualFile(name: string, contents: string) {
@@ -544,12 +559,70 @@ class IdeProtocolClient {
       });
   }
 
+  async getDirectoryContents(
+    directory: string,
+    recursive: boolean
+  ): Promise<string[]> {
+    let nameAndType = (
+      await vscode.workspace.fs.readDirectory(uriFromFilePath(directory))
+    ).filter(([name, type]) => {
+      const DEFAULT_IGNORE_DIRS = [
+        ".git",
+        ".vscode",
+        ".idea",
+        ".vs",
+        ".venv",
+        "env",
+        ".env",
+        "node_modules",
+        "dist",
+        "build",
+        "target",
+        "out",
+        "bin",
+        ".pytest_cache",
+        ".vscode-test",
+        ".continue",
+        "__pycache__",
+      ];
+      if (
+        !DEFAULT_IGNORE_DIRS.some((dir) => name.split(path.sep).includes(dir))
+      ) {
+        return name;
+      }
+    });
+
+    let absolutePaths = nameAndType
+      .filter(([name, type]) => type === vscode.FileType.File)
+      .map(([name, type]) => path.join(directory, name));
+    if (recursive) {
+      for (const [name, type] of nameAndType) {
+        if (type === vscode.FileType.Directory) {
+          const subdirectory = path.join(directory, name);
+          const subdirectoryContents = await this.getDirectoryContents(
+            subdirectory,
+            recursive
+          );
+          absolutePaths = absolutePaths.concat(subdirectoryContents);
+        }
+      }
+    }
+    return absolutePaths;
+  }
+
   async readFile(filepath: string): Promise<string> {
     let contents: string | undefined;
     if (typeof contents === "undefined") {
       try {
+        const fileStats = await vscode.workspace.fs.stat(
+          uriFromFilePath(filepath)
+        );
+        if (fileStats.size > 1000000) {
+          return "";
+        }
+
         contents = await vscode.workspace.fs
-          .readFile(vscode.Uri.file(filepath))
+          .readFile(uriFromFilePath(filepath))
           .then((bytes) => new TextDecoder().decode(bytes));
       } catch {
         contents = "";
@@ -558,9 +631,19 @@ class IdeProtocolClient {
     return contents;
   }
 
-  async getTerminalContents(): Promise<string> {
+  async getTerminalContents(commands: number = -1): Promise<string> {
     const tempCopyBuffer = await vscode.env.clipboard.readText();
-    await vscode.commands.executeCommand("workbench.action.terminal.selectAll");
+    if (commands < 0) {
+      await vscode.commands.executeCommand(
+        "workbench.action.terminal.selectAll"
+      );
+    } else {
+      for (let i = 0; i < commands; i++) {
+        await vscode.commands.executeCommand(
+          "workbench.action.terminal.selectToPreviousCommand"
+        );
+      }
+    }
     await vscode.commands.executeCommand(
       "workbench.action.terminal.copySelection"
     );
@@ -627,11 +710,11 @@ class IdeProtocolClient {
 
   async runCommand(command: string) {
     if (vscode.window.terminals.length) {
-      vscode.window.terminals[0].sendText(command);
+      vscode.window.terminals[0].sendText(command, false);
     } else {
       const terminal = vscode.window.createTerminal();
       terminal.show();
-      terminal.sendText(command);
+      terminal.sendText(command, false);
     }
   }
 

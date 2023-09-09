@@ -1,8 +1,9 @@
 import os
 import traceback
-from typing import Coroutine, Union
+from typing import Coroutine, List, Optional, Union
 
 from ..libs.llm import LLM
+from ..libs.util.devdata import dev_data_logger
 from ..libs.util.logging import logger
 from ..libs.util.paths import getConfigFilePath
 from ..libs.util.telemetry import posthog_logger
@@ -16,11 +17,18 @@ from ..models.filesystem_edit import (
     FileSystemEdit,
 )
 from ..models.main import Range
-from ..plugins.steps.core.core import *
-from ..plugins.steps.core.core import DefaultModelEditCodeStep
+from ..plugins.steps.core.core import (
+    DefaultModelEditCodeStep,
+    FileSystemEditStep,
+    MessageStep,
+    RangeInFileWithContents,
+    ShellCommandsStep,
+    WaitForUserConfirmationStep,
+)
 from ..server.ide_protocol import AbstractIdeProtocolServer
 from .abstract_sdk import AbstractContinueSDK
 from .config import ContinueConfig
+from .lsp import ContinueLSPClient
 from .main import (
     ChatMessage,
     Context,
@@ -42,6 +50,7 @@ class ContinueSDK(AbstractContinueSDK):
 
     ide: AbstractIdeProtocolServer
     models: Models
+    lsp: Optional[ContinueLSPClient] = None
     context: Context
     config: ContinueConfig
     __autopilot: Autopilot
@@ -52,13 +61,14 @@ class ContinueSDK(AbstractContinueSDK):
         self.context = autopilot.context
 
     @classmethod
-    async def create(cls, autopilot: Autopilot) -> "ContinueSDK":
+    async def create(
+        cls, autopilot: Autopilot, config: Optional[ContinueConfig] = None
+    ) -> "ContinueSDK":
         sdk = ContinueSDK(autopilot)
         autopilot.continue_sdk = sdk
 
         try:
-            config = sdk._load_config_dot_py()
-            sdk.config = config
+            sdk.config = config or sdk._load_config_dot_py()
         except Exception as e:
             logger.error(f"Failed to load config.py: {traceback.format_exception(e)}")
 
@@ -72,17 +82,34 @@ class ContinueSDK(AbstractContinueSDK):
             msg_step = MessageStep(
                 name="Invalid Continue Config File", message=formatted_err
             )
-            msg_step.description = f"Falling back to default config settings due to the following error in `~/.continue/config.py`.\n```\n{formatted_err}\n```\n\nIt's possible this was caused by an update to the Continue config format. If you'd like to see the new recommended default `config.py`, check [here](https://github.com/continuedev/continue/blob/main/continuedev/src/continuedev/libs/constants/default_config.py)."
+            msg_step.description = f"Falling back to default config settings due to the following error in `~/.continue/config.py`.\n```\n{formatted_err}\n```\n\nIt's possible this was caused by an update to the Continue config format. If you'd like to see the new recommended default `config.py`, check [here](https://github.com/continuedev/continue/blob/main/continuedev/src/continuedev/libs/constants/default_config.py).\n\nIf the error is related to OpenAIServerInfo, see the updated way of using these parameters [here](https://continue.dev/docs/customization#azure-openai-service)."
             sdk.history.add_node(
                 HistoryNode(step=msg_step, observation=None, depth=0, active=False)
             )
             await sdk.ide.setFileOpen(getConfigFilePath())
 
+        # Start models
         sdk.models = sdk.config.models
         await sdk.models.start(sdk)
 
+        # Start LSP
+        async def start_lsp():
+            try:
+                sdk.lsp = ContinueLSPClient(
+                    workspace_dir=sdk.ide.workspace_directory,
+                )
+                await sdk.lsp.start()
+            except Exception as e:
+                logger.warning(f"Failed to start LSP client: {e}", exc_info=True)
+                sdk.lsp = None
+
+        # create_async_task(
+        #     start_lsp(), on_error=lambda e: logger.error("Failed to setup LSP: %s", e)
+        # )
+
         # When the config is loaded, setup posthog logger
         posthog_logger.setup(sdk.ide.unique_id, sdk.config.allow_anonymous_telemetry)
+        dev_data_logger.setup(sdk.config.user_token, sdk.config.data_server_url)
 
         return sdk
 
@@ -94,14 +121,7 @@ class ContinueSDK(AbstractContinueSDK):
         self.history.timeline[self.history.current_index].logs.append(message)
 
     async def start_model(self, llm: LLM):
-        kwargs = {}
-        if llm.requires_api_key:
-            kwargs["api_key"] = await self.get_user_secret(llm.requires_api_key)
-        if llm.requires_unique_id:
-            kwargs["unique_id"] = self.ide.unique_id
-        if llm.requires_write_log:
-            kwargs["write_log"] = self.write_log
-        await llm.start(**kwargs)
+        await llm.start(unique_id=self.ide.unique_id, write_log=self.write_log)
 
     async def _ensure_absolute_path(self, path: str) -> str:
         if os.path.isabs(path):
@@ -211,24 +231,16 @@ class ContinueSDK(AbstractContinueSDK):
         path = await self._ensure_absolute_path(path)
         return await self.run_step(FileSystemEditStep(edit=DeleteDirectory(path=path)))
 
-    async def get_user_secret(self, env_var: str) -> str:
-        # TODO support error prompt dynamically set on env_var
-        return await self.ide.getUserSecret(env_var)
-
     _last_valid_config: ContinueConfig = None
 
     def _load_config_dot_py(self) -> ContinueConfig:
-        # Use importlib to load the config file config.py at the given path
         path = getConfigFilePath()
+        config = ContinueConfig.from_filepath(path)
+        self._last_valid_config = config
 
-        import importlib.util
+        logger.debug("Loaded Continue config file from %s", path)
 
-        spec = importlib.util.spec_from_file_location("config", path)
-        config = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(config)
-        self._last_valid_config = config.config
-
-        return config.config
+        return config
 
     def get_code_context(
         self, only_editing: bool = False

@@ -3,6 +3,7 @@ import { getContinueServerUrl } from "./bridge";
 import {
   getExtensionUri,
   getNonce,
+  getUniqueId,
   openEditorAndRevealRange,
 } from "./util/vscode";
 import { RangeInFile } from "../schema/RangeInFile";
@@ -183,7 +184,7 @@ export function setupDebugPanel(
         const sessionId = await sessionIdPromise;
         panel.webview.postMessage({
           type: "onLoad",
-          vscMachineId: vscode.env.machineId,
+          vscMachineId: getUniqueId(),
           apiUrl: getContinueServerUrl(),
           workspacePaths: vscode.workspace.workspaceFolders?.map(
             (folder) => folder.uri.fsPath

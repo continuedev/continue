@@ -5,6 +5,7 @@ import * as vscode from "vscode";
 import { extensionContext, ideProtocolClient } from "./activation/activate";
 import { getMetaKeyLabel } from "./util/util";
 import { devDataPath } from "./activation/environmentSetup";
+import { uriFromFilePath } from "./util/vscode";
 
 interface DiffInfo {
   originalFilepath: string;
@@ -16,17 +17,15 @@ interface DiffInfo {
 
 async function readFile(path: string): Promise<string> {
   return await vscode.workspace.fs
-    .readFile(vscode.Uri.file(path))
+    .readFile(uriFromFilePath(path))
     .then((bytes) => new TextDecoder().decode(bytes));
 }
 
-async function writeFile(path: string, contents: string) {
-  await vscode.workspace.fs.writeFile(
-    vscode.Uri.file(path),
-    new TextEncoder().encode(contents)
-  );
+async function writeFile(uri: vscode.Uri, contents: string) {
+  await vscode.workspace.fs.writeFile(uri, new TextEncoder().encode(contents));
 }
 
+// THIS IS LOCAL
 export const DIFF_DIRECTORY = path
   .join(os.homedir(), ".continue", "diffs")
   .replace(/^C:/, "c:");
@@ -42,7 +41,11 @@ class DiffManager {
 
   private async setupDirectory() {
     // Make sure the diff directory exists
-    await vscode.workspace.fs.createDirectory(vscode.Uri.file(DIFF_DIRECTORY));
+    if (!fs.existsSync(DIFF_DIRECTORY)) {
+      fs.mkdirSync(DIFF_DIRECTORY, {
+        recursive: true,
+      });
+    }
   }
 
   constructor() {
@@ -62,7 +65,20 @@ class DiffManager {
     return filepath.replace(/\\/g, "_").replace(/\//g, "_");
   }
 
+  private remoteTmpDir: string = "/tmp/continue";
   private getNewFilepath(originalFilepath: string): string {
+    if (vscode.env.remoteName) {
+      // If we're in a remote, use the remote's temp directory
+      // Doing this because there's no easy way to find the home directory,
+      // and there aren't write permissions to the root directory
+      // and writing these to local causes separate issues
+      // because the vscode.diff command will always try to read from remote
+      vscode.workspace.fs.createDirectory(uriFromFilePath(this.remoteTmpDir));
+      return path.join(
+        this.remoteTmpDir,
+        this.escapeFilepath(originalFilepath)
+      );
+    }
     return path.join(DIFF_DIRECTORY, this.escapeFilepath(originalFilepath));
   }
 
@@ -72,16 +88,17 @@ class DiffManager {
   ): Promise<vscode.TextEditor | undefined> {
     // If the file doesn't yet exist or the basename is a single digit number (vscode terminal), don't open the diff editor
     try {
-      await vscode.workspace.fs.stat(vscode.Uri.file(newFilepath));
-    } catch {
+      await vscode.workspace.fs.stat(uriFromFilePath(newFilepath));
+    } catch (e) {
+      console.log("File doesn't exist, not opening diff editor", e);
       return undefined;
     }
     if (path.basename(originalFilepath).match(/^\d$/)) {
       return undefined;
     }
 
-    const rightUri = vscode.Uri.file(newFilepath);
-    const leftUri = vscode.Uri.file(originalFilepath);
+    const rightUri = uriFromFilePath(newFilepath);
+    const leftUri = uriFromFilePath(originalFilepath);
     const title = "Continue Diff";
     console.log(
       "Opening diff window with ",
@@ -95,7 +112,7 @@ class DiffManager {
 
     const editor = vscode.window.activeTextEditor;
     if (!editor) {
-      throw new Error("No active text editor found for Continue Diff");
+      return;
     }
 
     // Change the vscode setting to allow codeLens in diff editor
@@ -148,12 +165,12 @@ class DiffManager {
 
     // Create or update existing diff
     const newFilepath = this.getNewFilepath(originalFilepath);
-    await writeFile(newFilepath, newContent);
+    await writeFile(uriFromFilePath(newFilepath), newContent);
 
     // Open the diff editor if this is a new diff
     if (!this.diffs.has(newFilepath)) {
       // Figure out the first line that is different
-      const oldContent = await ideProtocolClient.readFile(originalFilepath);
+      const oldContent = await readFile(originalFilepath);
       const line = this._findFirstDifferentLine(oldContent, newContent);
 
       const diffInfo: DiffInfo = {
@@ -177,7 +194,7 @@ class DiffManager {
 
     vscode.commands.executeCommand(
       "workbench.action.files.revert",
-      vscode.Uri.file(newFilepath)
+      uriFromFilePath(newFilepath)
     );
 
     return newFilepath;
@@ -186,11 +203,13 @@ class DiffManager {
   cleanUpDiff(diffInfo: DiffInfo, hideEditor: boolean = true) {
     // Close the editor, remove the record, delete the file
     if (hideEditor && diffInfo.editor) {
-      vscode.window.showTextDocument(diffInfo.editor.document);
-      vscode.commands.executeCommand("workbench.action.closeActiveEditor");
+      try {
+        vscode.window.showTextDocument(diffInfo.editor.document);
+        vscode.commands.executeCommand("workbench.action.closeActiveEditor");
+      } catch {}
     }
     this.diffs.delete(diffInfo.newFilepath);
-    fs.unlinkSync(diffInfo.newFilepath);
+    vscode.workspace.fs.delete(uriFromFilePath(diffInfo.newFilepath));
   }
 
   private inferNewFilepath() {
@@ -243,7 +262,7 @@ class DiffManager {
       ?.save()
       .then(async () => {
         await writeFile(
-          diffInfo.originalFilepath,
+          uriFromFilePath(diffInfo.originalFilepath),
           await readFile(diffInfo.newFilepath)
         );
         this.cleanUpDiff(diffInfo);
@@ -310,7 +329,10 @@ async function recordAcceptReject(accepted: boolean, diffInfo: DiffInfo) {
   // ideProtocolClient.sendAcceptRejectSuggestion(accepted);
 
   // Write the updated suggestions back to the file
-  await writeFile(suggestionsPath, JSON.stringify(suggestions, null, 4));
+  await writeFile(
+    vscode.Uri.file(suggestionsPath),
+    JSON.stringify(suggestions, null, 4)
+  );
 }
 
 export async function acceptDiffCommand(newFilepath?: string) {

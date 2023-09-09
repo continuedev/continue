@@ -1,4 +1,4 @@
-import { getExtensionUri } from "../util/vscode";
+import { getExtensionUri, getUniqueId } from "../util/vscode";
 import { promisify } from "util";
 import { exec as execCb } from "child_process";
 import { spawn } from "child_process";
@@ -11,6 +11,7 @@ import * as os from "os";
 import fkill from "fkill";
 import { finished } from "stream/promises";
 import request = require("request");
+import { capture } from "../extension";
 
 const exec = promisify(execCb);
 
@@ -74,6 +75,14 @@ function serverVersionPath(): string {
   return path.join(serverPath(), "server_version.txt");
 }
 
+function serverBinaryPath(): string {
+  return path.join(
+    serverPath(),
+    "exe",
+    `run${os.platform() === "win32" ? ".exe" : ""}`
+  );
+}
+
 export function getExtensionVersion() {
   const extension = vscode.extensions.getExtension("continue.continue");
   return extension?.packageJSON.version || "";
@@ -105,14 +114,7 @@ async function checkOrKillRunningServer(serverUrl: string): Promise<boolean> {
         // Try again, on Windows. This time with taskkill
         if (os.platform() === "win32") {
           try {
-            const exePath = path.join(
-              getExtensionUri().fsPath,
-              "server",
-              "exe",
-              "run.exe"
-            );
-
-            await runCommand(`taskkill /F /IM ${exePath}`);
+            await runCommand(`taskkill /F /IM run.exe`);
           } catch (e: any) {
             console.log(
               "Failed to kill old server second time on windows with taskkill:",
@@ -126,14 +128,9 @@ async function checkOrKillRunningServer(serverUrl: string): Promise<boolean> {
       fs.unlinkSync(serverVersionPath());
     }
     // Also delete the server binary
-    const serverBinaryPath = path.join(
-      getExtensionUri().fsPath,
-      "server",
-      "exe",
-      `run${os.platform() === "win32" ? ".exe" : ""}`
-    );
-    if (fs.existsSync(serverBinaryPath)) {
-      fs.unlinkSync(serverBinaryPath);
+    const serverBinary = serverBinaryPath();
+    if (fs.existsSync(serverBinary)) {
+      fs.unlinkSync(serverBinary);
     }
   }
 
@@ -153,41 +150,55 @@ export async function downloadFromS3(
   bucket: string,
   fileName: string,
   destination: string,
-  region: string
+  region: string,
+  useBackupUrl: boolean = false
 ) {
-  try {
-    ensureDirectoryExistence(destination);
-    const file = fs.createWriteStream(destination);
-    const download = request({
-      url: `https://${bucket}.s3.${region}.amazonaws.com/${fileName}`,
-    });
+  ensureDirectoryExistence(destination);
+  const file = fs.createWriteStream(destination);
+  const download = request({
+    url: useBackupUrl
+      ? `https://s3.continue.dev/${fileName}`
+      : `https://${bucket}.s3.${region}.amazonaws.com/${fileName}`,
+  });
+
+  return new Promise(async (resolve, reject) => {
+    const handleErr = () => {
+      if (fs.existsSync(destination)) {
+        fs.unlink(destination, () => {});
+      }
+    };
 
     download.on("response", (response: any) => {
       if (response.statusCode !== 200) {
-        throw new Error("No body returned when downloading from S3 bucket");
+        handleErr();
+        reject(new Error("No body returned when downloading from S3 bucket"));
       }
     });
 
     download.on("error", (err: any) => {
-      if (fs.existsSync(destination)) {
-        fs.unlink(destination, () => {});
-      }
-      throw err;
+      handleErr();
+      reject(err);
     });
 
     download.pipe(file);
 
     await finished(download);
-  } catch (err: any) {
-    const errText = `Failed to download Continue server from S3: ${err.message}`;
-    vscode.window.showErrorMessage(errText);
-  }
+    resolve(null);
+  });
 }
 
 export async function startContinuePythonServer(redownload: boolean = true) {
   // Check vscode settings
+  const manuallyRunningServer =
+    vscode.workspace
+      .getConfiguration("continue")
+      .get<boolean>("manuallyRunningServer") || false;
   const serverUrl = getContinueServerUrl();
-  if (serverUrl !== "http://localhost:65432") {
+  if (
+    (serverUrl !== "http://localhost:65432" &&
+      serverUrl !== "http://127.0.0.1:65432") ||
+    manuallyRunningServer
+  ) {
     console.log("Continue server is being run manually, skipping start");
     return;
   }
@@ -209,12 +220,7 @@ export async function startContinuePythonServer(redownload: boolean = true) {
         : "mac/run"
       : "linux/run";
 
-  const destination = path.join(
-    getExtensionUri().fsPath,
-    "server",
-    "exe",
-    `run${os.platform() === "win32" ? ".exe" : ""}`
-  );
+  const destination = serverBinaryPath();
 
   // First, check if the server is already downloaded
   let shouldDownload = true;
@@ -241,17 +247,74 @@ export async function startContinuePythonServer(redownload: boolean = true) {
   }
 
   if (shouldDownload && redownload) {
-    await vscode.window.withProgress(
+    let timeout = setTimeout(() => {
+      vscode.window.showErrorMessage(
+        `It looks like the Continue server is taking a while to download. If this persists, you can manually download the binary or run it from source: https://continue.dev/docs/troubleshooting#run-the-server-manually.`
+      );
+    }, 35_000);
+
+    let download = vscode.window.withProgress(
       {
         location: vscode.ProgressLocation.Notification,
         title: "Installing Continue server...",
         cancellable: false,
       },
       async () => {
-        await downloadFromS3(bucket, fileName, destination, "us-west-1");
+        try {
+          await downloadFromS3(
+            bucket,
+            fileName,
+            destination,
+            "us-west-1",
+            false
+          );
+        } catch (e: any) {
+          console.log("Failed to download from primary url, trying backup url");
+
+          capture({
+            distinctId: getUniqueId(),
+            event: "first_binary_download_failed",
+            properties: {
+              extensionVersion: getExtensionVersion(),
+              os: os.platform(),
+              arch: os.arch(),
+              error_msg: e.message,
+            },
+          });
+
+          try {
+            await downloadFromS3(
+              bucket,
+              fileName,
+              destination,
+              "us-west-1",
+              true
+            );
+          } catch (e: any) {
+            capture({
+              distinctId: getUniqueId(),
+              event: "second_binary_download_failed",
+              properties: {
+                extensionVersion: getExtensionVersion(),
+                os: os.platform(),
+                arch: os.arch(),
+                error_msg: e.message,
+              },
+            });
+
+            throw e;
+          }
+        }
       }
     );
-    console.log("Downloaded server executable at ", destination);
+    try {
+      await download;
+      console.log("Downloaded server executable at ", destination);
+      clearTimeout(timeout);
+    } catch (e: any) {
+      const errText = `Failed to download Continue server from S3: ${e}`;
+      vscode.window.showErrorMessage(errText);
+    }
   }
 
   // Get name of the corresponding executable for platform
@@ -330,8 +393,11 @@ export async function startContinuePythonServer(redownload: boolean = true) {
         child.unref();
       }
     } catch (e: any) {
-      console.log("Error starting server:", e);
-      retry(e);
+      if (attempts < maxAttempts) {
+        retry(e);
+      } else {
+        throw e;
+      }
     }
   };
 

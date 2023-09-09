@@ -53,9 +53,21 @@ class ContinueConfig(BaseModel):
     on_traceback: Optional[Step] = None
     system_message: Optional[str] = None
     policy_override: Optional[Policy] = None
-
     context_providers: List[ContextProvider] = []
+    user_token: Optional[str] = None
+    data_server_url: Optional[str] = "https://us-west1-autodebug.cloudfunctions.net"
 
     @validator("temperature", pre=True)
     def temperature_validator(cls, v):
         return max(0.0, min(1.0, v))
+
+    @staticmethod
+    def from_filepath(filepath: str) -> "ContinueConfig":
+        # Use importlib to load the config file config.py at the given path
+        import importlib.util
+
+        spec = importlib.util.spec_from_file_location("config", filepath)
+        config = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(config)
+
+        return config.config

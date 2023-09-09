@@ -136,6 +136,11 @@ class FileSystem(AbstractModel):
         """Apply edit to filesystem, calculate the reverse edit, and return and EditDiff"""
         raise NotImplementedError
 
+    @abstractmethod
+    def list_directory_contents(self, path: str, recursive: bool = False) -> List[str]:
+        """List the contents of a directory"""
+        raise NotImplementedError
+
     @classmethod
     def read_range_in_str(self, s: str, r: Range) -> str:
         lines = s.split("\n")[r.start.line : r.end.line + 1]
@@ -312,6 +317,18 @@ class RealFileSystem(FileSystem):
         self.write(edit.filepath, new_content)
         return diff
 
+    def list_directory_contents(self, path: str, recursive: bool = False) -> List[str]:
+        """List the contents of a directory"""
+        if recursive:
+            # Walk
+            paths = []
+            for root, dirs, files in os.walk(path):
+                for f in files:
+                    paths.append(os.path.join(root, f))
+
+            return paths
+        return list(map(lambda x: os.path.join(path, x), os.listdir(path)))
+
 
 class VirtualFileSystem(FileSystem):
     """A simulated filesystem from a mapping of filepath to file contents."""
@@ -362,6 +379,17 @@ class VirtualFileSystem(FileSystem):
         new_content, original = FileSystem.apply_edit_to_str(old_content, edit)
         self.write(edit.filepath, new_content)
         return EditDiff(edit=edit, original=original)
+
+    def list_directory_contents(self, path: str, recursive: bool = False) -> List[str]:
+        """List the contents of a directory"""
+        if recursive:
+            for filepath in self.files:
+                if filepath.startswith(path):
+                    yield filepath
+
+        for filepath in self.files:
+            if filepath.startswith(path) and "/" not in filepath[len(path) :]:
+                yield filepath
 
 
 # TODO: Uniform errors thrown by any FileSystem subclass.

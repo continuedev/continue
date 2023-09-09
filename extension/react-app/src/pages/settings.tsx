@@ -135,7 +135,7 @@ function Settings() {
                 />
               </h3>
               <TextArea
-                placeholder="Enter system message"
+                placeholder="Enter a system message (e.g. 'Always respond in German')"
                 {...formMethods.register("system_message")}
                 defaultValue={config.system_message}
               />

@@ -1,169 +1,172 @@
 import json
-from typing import Any, Callable, Coroutine, Dict, Generator, List, Optional, Union
+import ssl
+from typing import Any, Callable, Coroutine, Dict, List, Optional
 
 import aiohttp
 
 from ...core.main import ChatMessage
 from ..llm import LLM
-from ..util.count_tokens import (
-    DEFAULT_ARGS,
-    compile_chat_messages,
-    count_tokens,
-    format_chat_messages,
-)
+from ..util.logging import logger
+from . import CompletionOptions
+from .openai import CHAT_MODELS
+from .prompts.chat import llama2_template_messages
+from .prompts.edit import simplified_edit_prompt
 
 
 class GGML(LLM):
-    # this is model-specific
-    max_context_length: int = 2048
     server_url: str = "http://localhost:8000"
     verify_ssl: Optional[bool] = None
+    ca_bundle_path: str = None
+    model: str = "ggml"
 
-    requires_write_log = True
+    template_messages: Optional[
+        Callable[[List[Dict[str, str]]], str]
+    ] = llama2_template_messages
 
-    write_log: Optional[Callable[[str], None]] = None
+    prompt_templates = {
+        "edit": simplified_edit_prompt,
+    }
 
     class Config:
         arbitrary_types_allowed = True
 
-    async def start(self, write_log: Callable[[str], None], **kwargs):
-        self.write_log = write_log
+    def create_client_session(self):
+        if self.ca_bundle_path is None:
+            ssl_context = ssl.create_default_context(cafile=self.ca_bundle_path)
+            tcp_connector = aiohttp.TCPConnector(
+                verify_ssl=self.verify_ssl, ssl=ssl_context
+            )
+        else:
+            tcp_connector = aiohttp.TCPConnector(verify_ssl=self.verify_ssl)
 
-    async def stop(self):
-        await self._client_session.close()
-
-    @property
-    def name(self):
-        return "ggml"
-
-    @property
-    def context_length(self):
-        return self.max_context_length
-
-    @property
-    def default_args(self):
-        return {**DEFAULT_ARGS, "model": self.name, "max_tokens": 1024}
-
-    def count_tokens(self, text: str):
-        return count_tokens(self.name, text)
-
-    async def stream_complete(
-        self, prompt, with_history: List[ChatMessage] = None, **kwargs
-    ) -> Generator[Union[Any, List, Dict], None, None]:
-        args = self.default_args.copy()
-        args.update(kwargs)
-        args["stream"] = True
-
-        args = {**self.default_args, **kwargs}
-        messages = compile_chat_messages(
-            self.name,
-            with_history,
-            self.context_length,
-            args["max_tokens"],
-            prompt,
-            functions=args.get("functions", None),
-            system_message=self.system_message,
+        return aiohttp.ClientSession(
+            connector=tcp_connector,
+            timeout=aiohttp.ClientTimeout(total=self.timeout),
         )
 
-        self.write_log(f"Prompt: \n\n{format_chat_messages(messages)}")
-        completion = ""
-        async with aiohttp.ClientSession(
-            connector=aiohttp.TCPConnector(verify_ssl=self.verify_ssl)
-        ) as client_session:
+    def get_headers(self):
+        headers = {
+            "Content-Type": "application/json",
+        }
+        if self.api_key is not None:
+            headers["Authorization"] = f"Bearer {self.api_key}"
+
+        return headers
+
+    async def _raw_stream_complete(self, prompt, options):
+        args = self.collect_args(options)
+
+        async with self.create_client_session() as client_session:
             async with client_session.post(
-                f"{self.server_url}/v1/completions", json={"messages": messages, **args}
+                f"{self.server_url}/v1/completions",
+                json={
+                    "prompt": prompt,
+                    "stream": True,
+                    **args,
+                },
+                headers=self.get_headers(),
             ) as resp:
                 async for line in resp.content.iter_any():
                     if line:
-                        try:
-                            chunk = line.decode("utf-8")
-                            yield chunk
-                            completion += chunk
-                        except:
-                            raise Exception(str(line))
+                        chunks = line.decode("utf-8")
+                        for chunk in chunks.split("\n"):
+                            if (
+                                chunk.startswith(": ping - ")
+                                or chunk.startswith("data: [DONE]")
+                                or chunk.strip() == ""
+                            ):
+                                continue
+                            elif chunk.startswith("data: "):
+                                chunk = chunk[6:]
+                            try:
+                                j = json.loads(chunk)
+                            except Exception:
+                                continue
+                            if (
+                                "choices" in j
+                                and len(j["choices"]) > 0
+                                and "text" in j["choices"][0]
+                            ):
+                                yield j["choices"][0]["text"]
 
-        self.write_log(f"Completion: \n\n{completion}")
-
-    async def stream_chat(
-        self, messages: List[ChatMessage] = None, **kwargs
-    ) -> Generator[Union[Any, List, Dict], None, None]:
-        args = {**self.default_args, **kwargs}
-        messages = compile_chat_messages(
-            self.name,
-            messages,
-            self.context_length,
-            args["max_tokens"],
-            None,
-            functions=args.get("functions", None),
-            system_message=self.system_message,
-        )
-        args["stream"] = True
+    async def _stream_chat(self, messages: List[ChatMessage], options):
+        args = self.collect_args(options)
 
         async def generator():
-            async with aiohttp.ClientSession(
-                connector=aiohttp.TCPConnector(verify_ssl=self.verify_ssl)
-            ) as client_session:
+            async with self.create_client_session() as client_session:
                 async with client_session.post(
                     f"{self.server_url}/v1/chat/completions",
-                    json={"messages": messages, **args},
+                    json={"messages": messages, "stream": True, **args},
+                    headers=self.get_headers(),
                 ) as resp:
-                    # This is streaming application/json instaed of text/event-stream
                     async for line, end in resp.content.iter_chunks():
                         json_chunk = line.decode("utf-8")
-                        if json_chunk.startswith(": ping - ") or json_chunk.startswith(
-                            "data: [DONE]"
-                        ):
-                            continue
                         chunks = json_chunk.split("\n")
                         for chunk in chunks:
-                            if chunk.strip() != "":
-                                yield json.loads(chunk[6:])["choices"][0][
-                                    "delta"
-                                ]  # {"role": "assistant", "content": "..."}
+                            if (
+                                chunk.strip() == ""
+                                or json_chunk.startswith(": ping - ")
+                                or json_chunk.startswith("data: [DONE]")
+                            ):
+                                continue
+                            try:
+                                yield json.loads(chunk[6:])["choices"][0]["delta"]
+                            except:
+                                pass
 
         # Because quite often the first attempt fails, and it works thereafter
-        self.write_log(f"Prompt: \n\n{format_chat_messages(messages)}")
-        completion = ""
         try:
             async for chunk in generator():
                 yield chunk
-                if "content" in chunk:
-                    completion += chunk["content"]
-        except:
+        except Exception as e:
+            logger.warning(f"Error calling /chat/completions endpoint: {e}")
             async for chunk in generator():
                 yield chunk
-                if "content" in chunk:
-                    completion += chunk["content"]
 
-        self.write_log(f"Completion: \n\n{completion}")
+    async def _raw_complete(self, prompt: str, options) -> Coroutine[Any, Any, str]:
+        args = self.collect_args(options)
 
-    async def complete(
-        self, prompt: str, with_history: List[ChatMessage] = None, **kwargs
-    ) -> Coroutine[Any, Any, str]:
-        args = {**self.default_args, **kwargs}
-
-        # messages = compile_chat_messages(
-        #     args["model"],
-        #     with_history,
-        #     self.context_length,
-        #     args["max_tokens"],
-        #     prompt,
-        #     functions=None,
-        #     system_message=self.system_message,
-        # )
-
-        self.write_log(f"Prompt: \n\n{prompt}")
-        async with aiohttp.ClientSession(
-            connector=aiohttp.TCPConnector(verify_ssl=self.verify_ssl)
-        ) as client_session:
+        async with self.create_client_session() as client_session:
             async with client_session.post(
                 f"{self.server_url}/v1/completions",
                 json={
                     "prompt": prompt,
                     **args,
                 },
+                headers=self.get_headers(),
             ) as resp:
                 text = await resp.text()
-                completion = json.loads(text)["choices"][0]["text"]
-                self.write_log(f"Completion: \n\n{completion}")
-                return completion
+                try:
+                    completion = json.loads(text)["choices"][0]["text"]
+                    return completion
+                except Exception as e:
+                    raise Exception(
+                        f"Error calling /completion endpoint: {e}\n\nResponse text: {text}"
+                    )
+
+    async def _complete(self, prompt: str, options: CompletionOptions):
+        completion = ""
+        if self.model in CHAT_MODELS:
+            async for chunk in self._stream_chat(
+                [{"role": "user", "content": prompt}], options
+            ):
+                if "content" in chunk:
+                    completion += chunk["content"]
+
+        else:
+            async for chunk in self._raw_stream_complete(prompt, options):
+                completion += chunk
+
+        return completion
+
+    async def _stream_complete(self, prompt, options: CompletionOptions):
+        if self.model in CHAT_MODELS:
+            async for chunk in self._stream_chat(
+                [{"role": "user", "content": prompt}], options
+            ):
+                if "content" in chunk:
+                    yield chunk["content"]
+
+        else:
+            async for chunk in self._raw_stream_complete(prompt, options):
+                yield chunk

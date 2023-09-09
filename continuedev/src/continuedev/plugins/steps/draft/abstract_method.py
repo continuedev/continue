@@ -8,6 +8,10 @@ class ImplementAbstractMethodStep(Step):
     class_name: str
 
     async def run(self, sdk: ContinueSDK):
+        if sdk.lsp is None:
+            self.description = "Language Server Protocol is not enabled"
+            return
+
         implementations = await sdk.lsp.go_to_implementations(self.class_name)
 
         for implementation in implementations:

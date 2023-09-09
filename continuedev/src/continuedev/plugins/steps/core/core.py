@@ -1,22 +1,24 @@
 # These steps are depended upon by ContinueSDK
 import difflib
-import os
+import subprocess
 import traceback
 from textwrap import dedent
-from typing import Any, Coroutine, List, Union
+from typing import Any, Coroutine, List, Optional, Union
 
 from pydantic import validator
 
 from ....core.main import ChatMessage, ContinueCustomException, Step
 from ....core.observation import Observation, TextObservation, UserInputObservation
-from ....libs.llm.ggml import GGML
+from ....libs.llm import LLM
 from ....libs.llm.maybe_proxy_openai import MaybeProxyOpenAI
 from ....libs.util.count_tokens import DEFAULT_MAX_TOKENS
+from ....libs.util.devdata import dev_data_logger
 from ....libs.util.strings import (
     dedent_and_get_common_whitespace,
     remove_quotes_and_escapes,
 )
 from ....libs.util.telemetry import posthog_logger
+from ....libs.util.templating import render_prompt_template
 from ....models.filesystem import FileSystem, RangeInFile, RangeInFileWithContents
 from ....models.filesystem_edit import (
     EditDiff,
@@ -112,56 +114,27 @@ class ShellCommandsStep(Step):
         )
 
     async def run(self, sdk: ContinueSDK) -> Coroutine[Observation, None, None]:
-        await sdk.ide.getWorkspaceDirectory() if self.cwd is None else self.cwd
+        process = subprocess.Popen(
+            "/bin/bash",
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            cwd=self.cwd or sdk.ide.workspace_directory,
+        )
 
-        for cmd in self.cmds:
-            output = await sdk.ide.runCommand(cmd)
-            if (
-                self.handle_error
-                and output is not None
-                and output_contains_error(output)
-            ):
-                suggestion = await sdk.models.medium.complete(
-                    dedent(
-                        f"""\
-                    While running the command `{cmd}`, the following error occurred:
+        stdin_input = "\n".join(self.cmds)
+        out, err = process.communicate(stdin_input.encode())
 
-                    ```ascii
-                    {output}
-                    ```
+        # If it fails, return the error
+        if err is not None and err != "":
+            self._err_text = err
+            return TextObservation(text=err)
 
-                    This is a brief summary of the error followed by a suggestion on how it can be fixed:"""
-                    ),
-                    with_history=await sdk.get_chat_context(),
-                )
-
-                sdk.raise_exception(
-                    title="Error while running query",
-                    message=output,
-                    with_step=MessageStep(
-                        name=f"Suggestion to solve error {AI_ASSISTED_STRING}",
-                        message=f"{suggestion}\n\nYou can click the retry button on the failed step to try again.",
-                    ),
-                )
-
-        return TextObservation(text=output)
-
-        # process = subprocess.Popen(
-        #     '/bin/bash', stdin=subprocess.PIPE, stdout=subprocess.PIPE, cwd=cwd)
-
-        # stdin_input = "\n".join(self.cmds)
-        # out, err = process.communicate(stdin_input.encode())
-
-        # # If it fails, return the error
-        # if err is not None and err != "":
-        #     self._err_text = err
-        #     return TextObservation(text=err)
-
-        # return None
+        return None
 
 
 class DefaultModelEditCodeStep(Step):
     user_input: str
+    model: Optional[LLM] = None
     range_in_files: List[RangeInFile]
     name: str = "Editing Code"
     hide = False
@@ -207,34 +180,18 @@ class DefaultModelEditCodeStep(Step):
     _new_contents: str = ""
     _prompt_and_completion: str = ""
 
+    summary_prompt: str = "Please give brief a description of the changes made above using markdown bullet points. Be concise:"
+
     async def describe(self, models: Models) -> Coroutine[str, None, None]:
-        if self._previous_contents.strip() == self._new_contents.strip():
-            description = "No edits were made"
-        else:
-            changes = "\n".join(
-                difflib.ndiff(
-                    self._previous_contents.splitlines(),
-                    self._new_contents.splitlines(),
-                )
-            )
-            description = await models.medium.complete(
-                dedent(
-                    f"""\
-                Diff summary: "{self.user_input}"
-
-                ```diff
-                {changes}
-                ```
-
-                Please give brief a description of the changes made above using markdown bullet points. Be concise:"""
-                )
-            )
         name = await models.medium.complete(
             f"Write a very short title to describe this requested change (no quotes): '{self.user_input}'. This is the title:"
         )
         self.name = remove_quotes_and_escapes(name)
 
-        return f"{remove_quotes_and_escapes(description)}"
+        if self._previous_contents.strip() == self._new_contents.strip():
+            return "No edits were made"
+        else:
+            return None
 
     async def get_prompt_parts(
         self, rif: RangeInFileWithContents, sdk: ContinueSDK, full_file_contents: str
@@ -242,7 +199,10 @@ class DefaultModelEditCodeStep(Step):
         # We don't know here all of the functions being passed in.
         # We care because if this prompt itself goes over the limit, then the entire message will have to be cut from the completion.
         # Overflow won't happen, but prune_chat_messages in count_tokens.py will cut out this whole thing, instead of us cutting out only as many lines as we need.
-        model_to_use = sdk.models.edit
+        if self.model is not None:
+            await sdk.start_model(self.model)
+
+        model_to_use = self.model or sdk.models.edit
         max_tokens = int(model_to_use.context_length / 2)
 
         TOKENS_TO_BE_CONSIDERED_LARGE_RANGE = 1200
@@ -269,7 +229,7 @@ class DefaultModelEditCodeStep(Step):
         )
 
         # If using 3.5 and overflows, upgrade to 3.5.16k
-        if model_to_use.name == "gpt-3.5-turbo":
+        if model_to_use.model == "gpt-3.5-turbo":
             if total_tokens > model_to_use.context_length:
                 model_to_use = MaybeProxyOpenAI(model="gpt-3.5-turbo-0613")
                 await sdk.start_model(model_to_use)
@@ -335,7 +295,7 @@ class DefaultModelEditCodeStep(Step):
         self, file_prefix: str, contents: str, file_suffix: str, sdk: ContinueSDK
     ) -> str:
         if contents.strip() == "":
-            # Seperate prompt for insertion at the cursor, the other tends to cause it to repeat whole file
+            # Separate prompt for insertion at the cursor, the other tends to cause it to repeat whole file
             prompt = dedent(
                 f"""\
 <file_prefix>
@@ -639,23 +599,38 @@ Please output the code to be inserted at the cursor in order to fulfill the user
         repeating_file_suffix = False
         line_below_highlighted_range = file_suffix.lstrip().split("\n")[0]
 
-        if isinstance(model_to_use, GGML):
-            messages = [
-                ChatMessage(
-                    role="user",
-                    content=f'```\n{rif.contents}\n```\n\nUser request: "{self.user_input}"\n\nThis is the code after changing to perfectly comply with the user request. It does not include any placeholder code, only real implementations:\n\n```\n',
-                    summary=self.user_input,
-                )
-            ]
-        # elif isinstance(model_to_use, ReplicateLLM):
-        #     messages = [ChatMessage(
-        #         role="user", content=f"// Previous implementation\n\n{rif.contents}\n\n// Updated implementation (after following directions: {self.user_input})\n\n", summary=self.user_input)]
+        # Use custom templates defined by the model
+        if template := model_to_use.prompt_templates.get("edit"):
+            rendered = render_prompt_template(
+                template,
+                messages[:-1],
+                {"code_to_edit": rif.contents, "user_input": self.user_input},
+            )
+            if isinstance(rendered, str):
+                messages = [
+                    ChatMessage(
+                        role="user",
+                        content=rendered,
+                        summary=self.user_input,
+                    )
+                ]
+            else:
+                messages = rendered
 
         generator = model_to_use.stream_chat(
-            messages, temperature=sdk.config.temperature, max_tokens=max_tokens
+            messages,
+            temperature=sdk.config.temperature,
+            max_tokens=min(max_tokens, model_to_use.context_length // 2),
         )
 
-        posthog_logger.capture_event("model_use", {"model": model_to_use.name})
+        posthog_logger.capture_event(
+            "model_use",
+            {"model": model_to_use.model, "provider": model_to_use.__class__.__name__},
+        )
+        dev_data_logger.capture(
+            "model_use",
+            {"model": model_to_use.model, "provider": model_to_use.__class__.__name__},
+        )
 
         try:
             async for chunk in generator:
@@ -821,23 +796,42 @@ Please output the code to be inserted at the cursor in order to fulfill the user
             rif_dict[rif.filepath] = rif.contents
 
         for rif in rif_with_contents:
-            # If the file doesn't exist, ask them to save it first
-            if not os.path.exists(rif.filepath):
-                message = (
-                    f"The file {rif.filepath} does not exist. Please save it first."
-                )
-                raise ContinueCustomException(title=message, message=message)
-
             await sdk.ide.setFileOpen(rif.filepath)
             await sdk.ide.setSuggestionsLocked(rif.filepath, True)
             await self.stream_rif(rif, sdk)
             await sdk.ide.setSuggestionsLocked(rif.filepath, False)
+
+        self.name = "Generating summary"
+
+        changes = "\n".join(
+            difflib.ndiff(
+                self._previous_contents.splitlines(),
+                self._new_contents.splitlines(),
+            )
+        )
+
+        self.description = ""
+        async for chunk in sdk.models.medium.stream_complete(
+            dedent(
+                f"""\
+        Diff summary: "{self.user_input}"
+
+        ```diff
+        {changes}
+        ```
+
+        {self.summary_prompt}"""
+            )
+        ):
+            self.description += chunk
+            await sdk.update_ui()
 
 
 class EditFileStep(Step):
     filepath: str
     prompt: str
     hide: bool = True
+    model: Optional[LLM] = None
 
     async def describe(self, models: Models) -> Coroutine[str, None, None]:
         return "Editing file: " + self.filepath
@@ -850,6 +844,7 @@ class EditFileStep(Step):
                     RangeInFile.from_entire_file(self.filepath, file_contents)
                 ],
                 user_input=self.prompt,
+                model=self.model,
             )
         )
 
