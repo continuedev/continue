@@ -28,14 +28,11 @@ const commandsMap: { [command: string]: (...args: any) => any } = {
     }
   },
   "continue.focusContinueInput": async () => {
-    if (focusedOnContinueInput) {
-      vscode.commands.executeCommand("workbench.action.focusActiveEditorGroup");
-    } else {
-      vscode.commands.executeCommand("continue.continueGUIView.focus");
-      debugPanelWebview?.postMessage({
-        type: "focusContinueInput",
-      });
-    }
+    vscode.commands.executeCommand("continue.continueGUIView.focus");
+    debugPanelWebview?.postMessage({
+      type: "focusContinueInput",
+    });
+
     focusedOnContinueInput = !focusedOnContinueInput;
   },
   "continue.focusContinueInputWithEdit": async () => {
