@@ -812,7 +812,6 @@ Please output the code to be inserted at the cursor in order to fulfill the user
             rif_dict[rif.filepath] = rif.contents
 
         for rif in rif_with_contents:
-            await sdk.ide.setFileOpen(rif.filepath)
             await sdk.ide.setSuggestionsLocked(rif.filepath, True)
             await self.stream_rif(rif, sdk)
             await sdk.ide.setSuggestionsLocked(rif.filepath, False)
@@ -841,6 +840,10 @@ Please output the code to be inserted at the cursor in order to fulfill the user
         ):
             self.description += chunk
             await sdk.update_ui()
+
+        sdk.context.set("last_edit_user_input", self.user_input)
+        sdk.context.set("last_edit_diff", changes)
+        sdk.context.set("last_edit_range", self.range_in_files[-1].range)
 
 
 class EditFileStep(Step):

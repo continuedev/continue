@@ -1,5 +1,5 @@
 import json
-from typing import Coroutine, Dict, List, Literal, Optional, Union
+from typing import Any, Coroutine, Dict, List, Literal, Optional, Union
 
 from pydantic import BaseModel, validator
 from pydantic.schema import schema
@@ -401,13 +401,13 @@ class Validator(Step):
 
 
 class Context:
-    key_value: Dict[str, str] = {}
+    key_value: Dict[str, Any] = {}
 
-    def set(self, key: str, value: str):
+    def set(self, key: str, value: Any):
         self.key_value[key] = value
 
-    def get(self, key: str) -> str:
-        return self.key_value[key]
+    def get(self, key: str) -> Any:
+        return self.key_value.get(key, None)
 
 
 class ContinueCustomException(Exception):
