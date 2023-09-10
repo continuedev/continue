@@ -175,7 +175,7 @@ async def get_function_body(frame: TracebackFrame, sdk: ContinueSDK) -> Optional
     if sdk.lsp is None:
         return None
 
-    document_symbols = sdk.lsp.get_symbols(frame.filepath)
+    document_symbols = await sdk.lsp.document_symbol(frame.filepath)
     for symbol in document_symbols:
         if symbol.name == frame.function:
             r = symbol.location.range
