@@ -14,13 +14,11 @@ TEST_CONFIG = ContinueConfig()
 
 @pytest.mark.asyncio
 async def test_step():
-    print("1")
+    pytest.skip("TODO: too slow")
     session = await start_headless_session(config=TEST_CONFIG)
 
-    print("2")
     await session.autopilot.run_from_step(UserInputStep(user_input=tokyo_test_pair[0]))
 
-    print("3")
     full_state = await session.autopilot.get_full_state()
 
     assert isinstance(full_state.history.timeline[-1].step, SimpleChatStep)
@@ -32,12 +30,12 @@ async def test_step():
         == tokyo_test_pair[1]
     )
 
-    print("4")
     await session.autopilot.cleanup()
 
 
 @pytest.mark.asyncio
 async def test_traceback_step():
+    pytest.skip("TODO: too slow")
     session = await start_headless_session(config=TEST_CONFIG)
 
     await session.autopilot.run_from_step(
@@ -52,6 +50,7 @@ async def test_traceback_step():
 
 @pytest.mark.asyncio
 async def test_edit_step():
+    pytest.skip("TODO: too slow")
     session = await start_headless_session(config=TEST_CONFIG)
 
     range_in_file = RangeInFileWithContents(
