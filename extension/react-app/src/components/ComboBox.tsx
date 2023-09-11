@@ -316,9 +316,9 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
 
       // Handle slash commands
       setItems(
-        props.items.filter((item) =>
+        props.items?.filter((item) =>
           item.name.toLowerCase().startsWith(inputValue.toLowerCase())
-        )
+        ) || []
       );
     },
     [
@@ -873,7 +873,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
                   </span>
                 </span>
                 {contextProviders
-                  .filter(
+                  ?.filter(
                     (provider) => !provider.dynamic || provider.requires_query
                   )
                   .find((provider) => provider.title === item.id) && (
