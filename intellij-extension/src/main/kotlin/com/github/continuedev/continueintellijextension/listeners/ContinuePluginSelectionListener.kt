@@ -1,38 +1,47 @@
 package com.github.continuedev.continueintellijextension.listeners
 
-import com.github.continuedev.continueintellijextension.`continue`.TextSelectionStrategy
+import com.github.continuedev.continueintellijextension.`continue`.IdeProtocolClient
+import com.github.continuedev.continueintellijextension.utils.Debouncer
 import com.intellij.openapi.editor.SelectionModel
 import com.intellij.openapi.editor.event.SelectionEvent
 import com.intellij.openapi.editor.event.SelectionListener
-import java.nio.file.Paths
+import com.intellij.openapi.fileEditor.FileDocumentManager
+import com.intellij.openapi.vfs.VirtualFile
+import kotlinx.coroutines.CoroutineScope
 
-class ContinuePluginSelectionListener(private val strategy: TextSelectionStrategy) : SelectionListener {
+class ContinuePluginSelectionListener(
+    private val ideProtocolClient: IdeProtocolClient,
+    private val coroutineScope: CoroutineScope
+) : SelectionListener {
+    private val debouncer = Debouncer(100L, coroutineScope)
     override fun selectionChanged(e: SelectionEvent) {
+        debouncer.debounce { handleSelection(e) }
+    }
+
+    private fun handleSelection(e: SelectionEvent) {
         val editor = e.editor
         val model: SelectionModel = editor.selectionModel
+        val selectedText = model.selectedText ?: return
 
-        model.let { model ->
-            val document = editor.document
-            val startOffset = model.selectionStart
-            val endOffset = model.selectionEnd
+        val document = editor.document
+        val startOffset = model.selectionStart
+        val endOffset = model.selectionEnd
+        val startLine = document.getLineNumber(startOffset)
+        val endLine = document.getLineNumber(endOffset)
+        val startCharacter = startOffset - document.getLineStartOffset(startLine)
+        val endCharacter = endOffset - document.getLineStartOffset(endLine)
 
-            val startLine = document.getLineNumber(startOffset)
-            val endLine = document.getLineNumber(endOffset)
-            val startCharacter = startOffset - document.getLineStartOffset(startLine)
-            val endCharacter = endOffset - document.getLineStartOffset(endLine)
+        val virtualFile: VirtualFile? = FileDocumentManager.getInstance().getFile(document)
+        val filepath = virtualFile?.path ?: "Unknown path"
 
-            val filepath = editor.document.toString().drop(20).dropLast(1);
-            model.selectedText?.let { text ->
-                strategy.handleTextSelection(
-                    text,
-                    filepath,
-                    startLine,
-                    startCharacter,
-                    endLine,
-                    endCharacter
-                )
-            }
-        }
+        ideProtocolClient.onTextSelected(
+            selectedText,
+            filepath,
+            startLine,
+            startCharacter,
+            endLine,
+            endCharacter
+        )
     }
 }
 
