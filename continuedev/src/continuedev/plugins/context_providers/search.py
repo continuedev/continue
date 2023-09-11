@@ -35,7 +35,14 @@ class SearchContextProvider(ContextProvider):
 
     def _get_rg_path(self):
         if os.name == "nt":
-            rg_path = f"C:\\Users\\{os.getlogin()}\\AppData\\Local\\Programs\\Microsoft VS Code\\resources\\app\\node_modules.asar.unpacked\\vscode-ripgrep\\bin\\rg.exe"
+            paths_to_try = [
+                f"C:\\Users\\{os.getlogin()}\\AppData\\Local\\Programs\\Microsoft VS Code\\resources\\app\\node_modules.asar.unpacked\\@vscode\\ripgrep\\bin\\rg.exe",
+                f"C:\\Users\\{os.getlogin()}\\AppData\\Local\\Programs\\Microsoft VS Code\\resources\\app\\node_modules.asar.unpacked\\vscode-ripgrep\\bin\\rg.exe",
+            ]
+            for path in paths_to_try:
+                if os.path.exists(path):
+                    rg_path = path
+                    break
         elif os.name == "posix":
             if "darwin" in os.sys.platform:
                 rg_path = "/Applications/Visual Studio Code.app/Contents/Resources/app/node_modules.asar.unpacked/@vscode/ripgrep/bin/rg"
