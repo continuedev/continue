@@ -6,7 +6,13 @@ import openai
 from ...core.main import ChatMessage
 from ..llm import LLM
 
-CHAT_MODELS = {"gpt-3.5-turbo", "gpt-3.5-turbo-16k", "gpt-4", "gpt-3.5-turbo-0613"}
+CHAT_MODELS = {
+    "gpt-3.5-turbo",
+    "gpt-3.5-turbo-16k",
+    "gpt-4",
+    "gpt-3.5-turbo-0613",
+    "gpt-4-32k",
+}
 MAX_TOKENS_FOR_MODEL = {
     "gpt-3.5-turbo": 4096,
     "gpt-3.5-turbo-0613": 4096,

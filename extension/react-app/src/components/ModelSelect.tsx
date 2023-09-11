@@ -63,8 +63,16 @@ const MODEL_INFO: { title: string; class: string; args: any }[] = [
     title: "HuggingFace Inference API",
     class: "HuggingFaceInferenceAPI",
     args: {
-      endpoint_url: "<INFERENCE_API_ENDPOINT_URL>", 
+      endpoint_url: "<INFERENCE_API_ENDPOINT_URL>",
       hf_token: "<HUGGING_FACE_TOKEN>",
+    },
+  },
+  {
+    title: "LM Studio",
+    class: "OpenAI",
+    args: {
+      api_base: "http://localhost:1234",
+      model: "codellama",
     },
   },
   {
