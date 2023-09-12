@@ -147,8 +147,8 @@ const config = {
       {
         redirects: [
           {
-            from: "/docs/customization",
-            to: "/docs/customization/overview",
+            from: "/customization",
+            to: "/customization/overview",
           },
         ],
       },
