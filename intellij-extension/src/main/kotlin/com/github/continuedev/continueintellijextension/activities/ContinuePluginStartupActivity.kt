@@ -17,6 +17,9 @@ import com.intellij.ui.jcef.executeJavaScriptAsync
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
 
+import java.net.NetworkInterface
+import java.util.*
+
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import java.io.File
@@ -131,13 +134,32 @@ fun startContinuePythonServer() {
     ProcessBuilder(destination).start();
 }
 
+fun getMachineUniqueID(): String {
+    val sb = StringBuilder()
+    val networkInterfaces = NetworkInterface.getNetworkInterfaces()
+
+    while (networkInterfaces.hasMoreElements()) {
+        val networkInterface = networkInterfaces.nextElement()
+        val mac = networkInterface.hardwareAddress
+
+        if (mac != null) {
+            for (i in mac.indices) {
+                sb.append(String.format("%02X%s", mac[i], if (i < mac.size - 1) "-" else ""))
+            }
+            return sb.toString()
+        }
+    }
+
+    return "No MAC Address Found"
+}
+
+
 class ContinuePluginStartupActivity : StartupActivity, Disposable {
     val coroutineScope = CoroutineScope(Dispatchers.IO)
 
     override fun runActivity(project: Project) {
         // Download and start the Continue Python Server
         startContinuePythonServer()
-
 
         coroutineScope.launch {
             // Delay to allow the server to start
@@ -160,15 +182,16 @@ class ContinuePluginStartupActivity : StartupActivity, Disposable {
                 // Assuming ContinuePluginService is your service where the ToolWindow is registered
                 val continuePluginService = ServiceManager.getService(project, ContinuePluginService::class.java)
 
+                val workspacePaths = if (project.basePath != null) arrayOf(project.basePath) else emptyList<String>()
                 // Reload the WebView
                 continuePluginService?.let {
                     val dataMap = mutableMapOf(
                             "type" to "onUILoad",
                             "sessionId" to sessionId,
                             "apiUrl" to "http://localhost:65432",
-                            "workspacePaths" to emptyList<String>(),  // or your actual workspace paths
-                            "vscMachineId" to "yourMachineId",
-                            "vscMediaUrl" to "yourMediaUrl",
+                            "workspacePaths" to workspacePaths,  // or your actual workspace paths
+                            "vscMachineId" to getMachineUniqueID(),
+                            "vscMediaUrl" to "http://continue",
                             "dataSwitchOn" to true  // or your actual condition
                         )
                     dispatchCustomEvent("onUILoad", dataMap, continuePluginService.continuePluginWindow.webView)
