@@ -2,6 +2,7 @@ import concurrent.futures
 from typing import List
 
 import replicate
+from pydantic import Field
 
 from ...core.main import ChatMessage
 from . import LLM
@@ -9,8 +10,27 @@ from .prompts.edit import simplified_edit_prompt
 
 
 class ReplicateLLM(LLM):
-    api_key: str
-    "Replicate API key"
+    """
+    Replicate is a great option for newly released language models or models that you've deployed through their platform. Sign up for an account [here](https://replicate.ai/), copy your API key, and then select any model from the [Replicate Streaming List](https://replicate.com/collections/streaming-language-models). Change `~/.continue/config.py` to look like this:
+
+    ```python
+    from continuedev.src.continuedev.core.models import Models
+    from continuedev.src.continuedev.libs.llm.replicate import ReplicateLLM
+
+    config = ContinueConfig(
+        ...
+        models=Models(
+            default=ReplicateLLM(
+                model="replicate/codellama-13b-instruct:da5676342de1a5a335b848383af297f592b816b950a43d251a0a9edd0113604b",
+                api_key="my-replicate-api-key")
+        )
+    )
+    ```
+
+    If you don't specify the `model` parameter, it will default to `replicate/llama-2-70b-chat:58d078176e02c219e11eb4da5a02a7830a283b14cf8f94537af893ccff5ee781`.
+    """
+
+    api_key: str = Field(..., description="Replicate API key")
 
     model: str = "replicate/llama-2-70b-chat:58d078176e02c219e11eb4da5a02a7830a283b14cf8f94537af893ccff5ee781"
 

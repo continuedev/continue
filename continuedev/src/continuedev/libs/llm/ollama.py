@@ -2,6 +2,7 @@ import json
 from typing import Callable
 
 import aiohttp
+from pydantic import Field
 
 from ..llm import LLM
 from .prompts.chat import llama2_template_messages
@@ -9,8 +10,25 @@ from .prompts.edit import simplified_edit_prompt
 
 
 class Ollama(LLM):
+    """
+    [Ollama](https://ollama.ai/) is a Mac application that makes it easy to locally run open-source models, including Llama-2. Download the app from the website, and it will walk you through setup in a couple of minutes. You can also read more in their [README](https://github.com/jmorganca/ollama). Continue can then be configured to use the `Ollama` LLM class:
+
+    ```python
+    from continuedev.src.continuedev.libs.llm.ollama import Ollama
+
+    config = ContinueConfig(
+        ...
+        models=Models(
+            default=Ollama(model="llama2")
+        )
+    )
+    ```
+    """
+
     model: str = "llama2"
-    server_url: str = "http://localhost:11434"
+    server_url: str = Field(
+        "http://localhost:11434", description="URL of the Ollama server"
+    )
 
     _client_session: aiohttp.ClientSession = None
 

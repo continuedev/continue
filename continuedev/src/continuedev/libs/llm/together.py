@@ -2,6 +2,7 @@ import json
 from typing import Callable, Optional
 
 import aiohttp
+from pydantic import Field
 
 from ...core.main import ContinueCustomException
 from ..llm import LLM
@@ -11,12 +12,36 @@ from .prompts.edit import simplified_edit_prompt
 
 
 class TogetherLLM(LLM):
-    api_key: str
-    "Together API key"
+    """
+    The Together API is a cloud platform for running large AI models. You can sign up [here](https://api.together.xyz/signup), copy your API key on the initial welcome screen, and then hit the play button on any model from the [Together Models list](https://docs.together.ai/docs/models-inference). Change `~/.continue/config.py` to look like this:
+
+    ```python
+    from continuedev.src.continuedev.core.models import Models
+    from continuedev.src.continuedev.libs.llm.together import TogetherLLM
+
+    config = ContinueConfig(
+        ...
+        models=Models(
+            default=TogetherLLM(
+                api_key="<API_KEY>",
+                model="togethercomputer/llama-2-13b-chat"
+            )
+        )
+    )
+    ```
+    """
+
+    api_key: str = Field(..., description="Together API key")
 
     model: str = "togethercomputer/RedPajama-INCITE-7B-Instruct"
-    base_url: str = "https://api.together.xyz"
-    verify_ssl: Optional[bool] = None
+    base_url: str = Field(
+        "https://api.together.xyz",
+        description="The base URL for your Together API instance",
+    )
+    verify_ssl: Optional[bool] = Field(
+        None,
+        description="Whether SSL certificates should be verified when making the HTTP request",
+    )
 
     _client_session: aiohttp.ClientSession = None
 

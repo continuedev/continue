@@ -1,6 +1,7 @@
+import html
 import importlib
 import json
-from textwrap import dedent  # noqa: F401
+from textwrap import dedent
 
 LLM_MODULES = [
     ("openai", "OpenAI"),
@@ -9,9 +10,23 @@ LLM_MODULES = [
     ("llamacpp", "LlamaCpp"),
     ("text_gen_interface", "TextGenUI"),
     ("ollama", "Ollama"),
-    ("queued", "QueuedLLM"),
     ("replicate", "ReplicateLLM"),
     ("together", "TogetherLLM"),
+    ("hf_inference_api", "HuggingFaceInferenceAPI"),
+    ("hf_tgi", "HuggingFaceTGI"),
+    ("maybe_proxy_openai", "MaybeProxyOpenAI"),
+    ("queued", "QueuedLLM"),
+]
+
+CONTEXT_PROVIDER_MODULES = [
+    ("diff", "DiffContextProvider"),
+    ("file", "FileContextProvider"),
+    ("filetree", "FileTreeContextProvider"),
+    ("github", "GitHubIssuesContextProvider"),
+    ("google", "GoogleContextProvider"),
+    ("search", "SearchContextProvider"),
+    ("terminal", "TerminalContextProvider"),
+    ("url", "URLContextProvider"),
 ]
 
 
@@ -22,9 +37,40 @@ def import_llm_module(module_name, module_title):
     return obj
 
 
-def llm_docs_from_schema(schema, filename):
+def import_context_provider_module(module_name, module_title):
+    module_name = f"continuedev.src.continuedev.plugins.context_providers.{module_name}"
+    module = importlib.import_module(module_name)
+    obj = getattr(module, module_title)
+    return obj
+
+
+def docs_from_schema(schema, filename, ignore_properties=[], inherited=[]):
     # Generate markdown docs
-    markdown_docs = dedent(
+    properties = ""
+    inherited_properties = ""
+
+    def add_property(prop, details, only_required):
+        required = prop in schema.get("required", [])
+        if only_required != required or prop in ignore_properties:
+            return ""
+        required = "true" if required else "false"
+        return f"""<ClassPropertyRef name='{prop}' details='{html.escape(json.dumps(details))}' required={{{required}}} default="{html.escape(str(details.get("default", "")))}"/>"""
+
+    for prop, details in schema["properties"].items():
+        property = add_property(prop, details, True)
+        if prop in inherited:
+            inherited_properties += property
+        else:
+            properties += property
+
+    for prop, details in schema["properties"].items():
+        property = add_property(prop, details, False)
+        if prop in inherited:
+            inherited_properties += property
+        else:
+            properties += property
+
+    return dedent(
         f"""\
 import ClassPropertyRef from '@site/src/components/ClassPropertyRef.tsx';
 
@@ -36,29 +82,53 @@ import ClassPropertyRef from '@site/src/components/ClassPropertyRef.tsx';
 
 ## Properties
 
-"""
+{properties}
+
+### Inherited Properties
+
+{inherited_properties}"""
     )
 
-    for prop, details in schema["properties"].items():
-        required = prop in schema.get("required", [])
-        if not required:
-            continue
-        required = "true" if required else "false"
-        markdown_docs += f"<ClassPropertyRef name='{prop}' details='{json.dumps(details)}' required={{{required}}}/>"
 
-    for prop, details in schema["properties"].items():
-        required = prop in schema.get("required", [])
-        if required:
-            continue
-        required = "true" if required else "false"
-        markdown_docs += f"<ClassPropertyRef name='{prop}' details='{json.dumps(details)}' required={{{required}}}/>"
-
-    return markdown_docs
-
+llm_module = importlib.import_module("continuedev.src.continuedev.libs.llm")
+llm_obj = getattr(llm_module, "LLM")
+schema = llm_obj.schema()
+llm_properties = schema["properties"].keys()
 
 for module_name, module_title in LLM_MODULES:
     obj = import_llm_module(module_name, module_title)
     schema = obj.schema()
-    markdown_docs = llm_docs_from_schema(schema, module_name)
+    markdown_docs = docs_from_schema(schema, module_name, inherited=llm_properties)
     with open(f"docs/docs/reference/Models/{module_name}.md", "w") as f:
         f.write(markdown_docs)
+
+config_module = importlib.import_module("continuedev.src.continuedev.core.config")
+config_obj = getattr(config_module, "ContinueConfig")
+schema = config_obj.schema()
+markdown_docs = docs_from_schema(schema, "config")
+with open("docs/docs/reference/config.md", "w") as f:
+    f.write(markdown_docs)
+
+for module_name, module_title in CONTEXT_PROVIDER_MODULES:
+    obj = import_context_provider_module(module_name, module_title)
+    schema = obj.schema()
+    markdown_docs = docs_from_schema(
+        schema,
+        module_name,
+        ignore_properties=[
+            "sdk",
+            "updated_documents",
+            "delete_documents",
+            "selected_items",
+            "ignore_patterns",
+        ],
+    )
+    with open(f"docs/docs/reference/Context Providers/{module_name}.md", "w") as f:
+        f.write(markdown_docs)
+
+# sdk_module = importlib.import_module("continuedev.src.continuedev.core.sdk")
+# sdk_obj = getattr(sdk_module, "ContinueSDK")
+# schema = sdk_obj.schema()
+# markdown_docs = docs_from_schema(schema, "sdk", ignore_properties=[])
+# with open("docs/docs/reference/ContinueSDK.md", "w") as f:
+#     f.write(markdown_docs)

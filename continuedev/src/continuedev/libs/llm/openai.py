@@ -30,34 +30,59 @@ class OpenAI(LLM):
     """
     The OpenAI class can be used to access OpenAI models like gpt-4 and gpt-3.5-turbo.
 
-    If you are running a local model with an OpenAI-compatible API, you can also use the OpenAI class by changing the `api_base` argument.
+    If you are locally serving a model that uses an OpenAI-compatible server, you can simply change the `api_base` in the `OpenAI` class like this:
+
+    ```python
+    from continuedev.src.continuedev.libs.llm.openai import OpenAI
+
+    config = ContinueConfig(
+        ...
+        models=Models(
+            default=OpenAI(
+                api_key="EMPTY",
+                model="<MODEL_NAME>",
+                api_base="http://localhost:8000", # change to your server
+            )
+        )
+    )
+    ```
+
+    Options for serving models locally with an OpenAI-compatible server include:
+
+    - [text-gen-webui](https://github.com/oobabooga/text-generation-webui/tree/main/extensions/openai#setup--installation)
+    - [FastChat](https://github.com/lm-sys/FastChat/blob/main/docs/openai_api.md)
+    - [LocalAI](https://localai.io/basics/getting_started/)
+    - [llama-cpp-python](https://github.com/abetlen/llama-cpp-python#web-server)
     """
 
     api_key: str = Field(
+        ...,
         description="OpenAI API key",
     )
-    "OpenAI API key"
 
-    verify_ssl: Optional[bool] = None
-    "Whether to verify SSL certificates for requests."
+    verify_ssl: Optional[bool] = Field(
+        None, description="Whether to verify SSL certificates for requests."
+    )
 
-    ca_bundle_path: Optional[str] = None
-    "Path to CA bundle to use for requests."
+    ca_bundle_path: Optional[str] = Field(
+        None, description="Path to CA bundle to use for requests."
+    )
 
-    proxy: Optional[str] = None
-    "Proxy URL to use for requests."
+    proxy: Optional[str] = Field(None, description="Proxy URL to use for requests.")
 
-    api_base: Optional[str] = None
-    "OpenAI API base URL."
+    api_base: Optional[str] = Field(None, description="OpenAI API base URL.")
 
-    api_type: Optional[Literal["azure", "openai"]] = None
-    "OpenAI API type."
+    api_type: Optional[Literal["azure", "openai"]] = Field(
+        None, description="OpenAI API type."
+    )
 
-    api_version: Optional[str] = None
-    "OpenAI API version. For use with Azure OpenAI Service."
+    api_version: Optional[str] = Field(
+        None, description="OpenAI API version. For use with Azure OpenAI Service."
+    )
 
-    engine: Optional[str] = None
-    "OpenAI engine. For use with Azure OpenAI Service."
+    engine: Optional[str] = Field(
+        None, description="OpenAI engine. For use with Azure OpenAI Service."
+    )
 
     async def start(
         self, unique_id: Optional[str] = None, write_log: Callable[[str], None] = None

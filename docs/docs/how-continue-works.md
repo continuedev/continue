@@ -1,4 +1,4 @@
-# How Continue works
+# ⚙️ How Continue works
 
 ![Continue Architecture Diagram](/img/continue-architecture.png)
 
@@ -9,7 +9,6 @@ The `Continue` library consists of an **SDK**, a **GUI**, and a **Server** that 
 2. The **GUI** lets you transparently review every automated step, providing the opportunity to undo and rerun any that ran incorrectly.
 
 3. The **Server** is responsible for connecting the GUI and SDK to the IDE as well as deciding which steps to take next.
-
 
 ## Running the server manually
 
@@ -25,7 +24,7 @@ If you would like to run the Continue server manually, rather than allowing the 
    (official instructions [here](https://python-poetry.org/docs/#installing-with-the-official-installer))
 4. `poetry shell` to activate the virtual environment
 5. Either:
-   
+
    a) To run without the debugger: `cd ..` and `python3 -m continuedev.src.continuedev.server.main`
 
    b) To run with the debugger: Open a VS Code window with `continue` as the root folder. Ensure that you have selected the Python interpreter from virtual environment, then use the `.vscode/launch.json` we have provided to start the debugger.

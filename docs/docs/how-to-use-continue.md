@@ -1,4 +1,4 @@
-# How to use Continue
+# 🧑‍🎓 How to use Continue
 
 :::info
 **TL;DR: Using LLMs as you code can accelerate you if you leverage them in the right situations. However, they can also cause you to get lost and confused if you trust them when you should not. This page outlines when and where we think you should and should not use Continue.**
@@ -36,6 +36,7 @@ Here are tasks that Continue excels at helping you complete:
 Continue works well in situations where find and replace does not work (i.e. “/edit change all of these to be like that”)
 
 Examples
+
 - "/edit Use 'Union' instead of a vertical bar here"
 - “/edit Make this use more descriptive variable names”
 
@@ -44,6 +45,7 @@ Examples
 Continue can help you get started building React components, Python scripts, Shell scripts, Makefiles, unit tests, etc.
 
 Examples
+
 - “/edit write a python script to get posthog events"
 - “/edit add a react component for syntax highlighted code"
 
@@ -52,6 +54,7 @@ Examples
 Continue can go even further. For example, it can help build the scaffolding for a Python package, which includes a typer cli app to sort the arguments and print them back out.
 
 Examples
+
 - “/edit use this schema to write me a SQL query that gets recently churned users”
 - “/edit create a shell script to back up my home dir to /tmp/"
 
@@ -60,6 +63,7 @@ Examples
 After selecting the code section(s), try to refactor it with Continue (e.g “/edit change the function to work like this” or “/edit do this everywhere”)
 
 Examples
+
 - “/edit migrate this digital ocean terraform file into one that works for GCP”
 - “/edit rewrite this function to be async”
 
@@ -68,6 +72,7 @@ Examples
 If you don't understand how some code works, highlight it and ask "how does this code work?"
 
 Examples
+
 - “where in the page should I be making this request to the backend?”
 - “how can I communicate between these iframes?”
 
@@ -80,6 +85,7 @@ Continue can also help explain errors / exceptions and offer possible solutions.
 Instead of switching windows and getting distracted, you can ask things like "How do I find running process on port 8000?"
 
 Examples
+
 - "what is the load_dotenv library name?"
 - "how do I find running process on port 8000?"
 
@@ -88,6 +94,7 @@ Examples
 Instead of leaving your IDE, you can ask open-ended questions that you don't expect to turn into multi-turn conversations.
 
 Examples
+
 - “how can I set up a Prisma schema that cascades deletes?”
 - "what is the difference between dense and sparse embeddings?"
 
@@ -96,6 +103,7 @@ Examples
 You can highlight an entire file and ask Continue to improve it as long as the file is not too large.
 
 Examples
+
 - “/edit here is a connector for postgres, now write one for kafka”
 - "/edit Rewrite this API call to grab all pages"
 
@@ -108,6 +116,7 @@ Similar to how you would make changes manually, focus on one file at a time. But
 There are many more tasks that Continue can help you complete. Typically, these will be tasks that don't involve too many steps to complete.
 
 Examples
+
 - “/edit make an IAM policy that creates a user with read-only access to S3”
 - “/edit change this plot into a bar chart in this dashboard component”
 

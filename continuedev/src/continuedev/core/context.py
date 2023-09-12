@@ -4,7 +4,7 @@ from abc import abstractmethod
 from typing import Awaitable, Callable, Dict, List
 
 from meilisearch_python_async import Client
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from ..libs.util.create_async_task import create_async_task
 from ..libs.util.devdata import dev_data_logger
@@ -37,17 +37,39 @@ class ContextProvider(BaseModel):
     When you hit enter on an option, the context provider will add that item to the autopilot's list of context (which is all stored in the ContextManager object).
     """
 
-    title: str
-    sdk: ContinueSDK = None
-    delete_documents: Callable[[List[str]], Awaitable] = None
-    update_documents: Callable[[List[ContextItem], str], Awaitable] = None
+    title: str = Field(
+        ...,
+        description="The title of the ContextProvider. This is what must be typed in the input to trigger the ContextProvider.",
+    )
+    sdk: ContinueSDK = Field(
+        None, description="The ContinueSDK instance accessible by the ContextProvider"
+    )
+    delete_documents: Callable[[List[str]], Awaitable] = Field(
+        None, description="Function to delete documents"
+    )
+    update_documents: Callable[[List[ContextItem], str], Awaitable] = Field(
+        None, description="Function to update documents"
+    )
 
-    display_title: str
-    description: str
-    dynamic: bool
-    requires_query: bool = False
+    display_title: str = Field(
+        ...,
+        description="The display title of the ContextProvider shown in the dropdown menu",
+    )
+    description: str = Field(
+        ...,
+        description="A description of the ContextProvider displayed in the dropdown menu",
+    )
+    dynamic: bool = Field(
+        ..., description="Indicates whether the ContextProvider is dynamic"
+    )
+    requires_query: bool = Field(
+        False,
+        description="Indicates whether the ContextProvider requires a query. For example, the SearchContextProvider requires you to type '@search <STRING_TO_SEARCH>'. This will change the behavior of the UI so that it can indicate the expectation for a query.",
+    )
 
-    selected_items: List[ContextItem] = []
+    selected_items: List[ContextItem] = Field(
+        [], description="List of selected items in the ContextProvider"
+    )
 
     def dict(self, *args, **kwargs):
         original_dict = super().dict(*args, **kwargs)

@@ -15,34 +15,35 @@
 const sidebars = {
   docsSidebar: [
     "intro",
-    "getting-started",
+    "quickstart",
     "how-to-use-continue",
     "how-continue-works",
     {
       type: "category",
-      label: "Customization",
+      label: "🎨 Customization",
       collapsible: true,
       collapsed: false,
       items: [
+        "customization/overview",
         "customization/models",
         "customization/context-providers",
         "customization/slash-commands",
         "customization/other-configuration",
       ],
     },
-    "collecting-data",
-    "telemetry",
-    "troubleshooting",
     {
       type: "category",
-      label: "Walkthroughs",
+      label: "🚶 Walkthroughs",
       collapsible: true,
       collapsed: false,
       items: ["walkthroughs/codellama"],
     },
+    "development-data",
+    "telemetry",
+    "troubleshooting",
     {
       type: "category",
-      label: "Reference",
+      label: "📖 Reference",
       collapsible: true,
       collapsed: false,
       items: [

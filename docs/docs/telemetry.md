@@ -1,4 +1,4 @@
-# Telemetry
+# 🦔 Telemetry
 
 ## Overview
 
@@ -27,4 +27,4 @@ config = ContinueConfig(
 )
 ```
 
-You can turn off anonymous telemetry by changing the value of `allow_anonymous_telemetry` to `false`.
+You can turn off anonymous telemetry by changing the value of `allow_anonymous_telemetry` to `False`.

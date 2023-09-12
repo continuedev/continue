@@ -73,6 +73,7 @@ const MODEL_INFO: { title: string; class: string; args: any }[] = [
     args: {
       api_base: "http://localhost:1234",
       model: "codellama",
+      api_key: "EMPTY",
     },
   },
   {

@@ -2,6 +2,7 @@ import json
 from typing import Any, Callable, List, Optional
 
 import aiohttp
+from pydantic import Field
 
 from ...core.main import ChatMessage
 from ..llm import LLM, CompletionOptions
@@ -11,8 +12,13 @@ from .prompts.edit import simplified_edit_prompt
 
 class HuggingFaceTGI(LLM):
     model: str = "huggingface-tgi"
-    server_url: str = "http://localhost:8080"
-    verify_ssl: Optional[bool] = None
+    server_url: str = Field(
+        "http://localhost:8080", description="URL of your TGI server"
+    )
+    verify_ssl: Optional[bool] = Field(
+        None,
+        description="Whether SSL certificates should be verified when making the HTTP request",
+    )
 
     template_messages: Callable[[List[ChatMessage]], str] = code_llama_template_messages
 

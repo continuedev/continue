@@ -1,8 +1,8 @@
-import asyncio
 import json
 from typing import Any, Callable, Dict, Optional
 
 import aiohttp
+from pydantic import Field
 
 from ..llm import LLM
 from .prompts.chat import llama2_template_messages
@@ -10,13 +10,40 @@ from .prompts.edit import simplified_edit_prompt
 
 
 class LlamaCpp(LLM):
+    """
+    Run the llama.cpp server binary to start the API server. If running on a remote server, be sure to set host to 0.0.0.0:
+
+    ```shell
+    .\server.exe -c 4096 --host 0.0.0.0 -t 16 --mlock -m models\meta\llama\codellama-7b-instruct.Q8_0.gguf
+    ```
+
+    After it's up and running, change `~/.continue/config.py` to look like this:
+
+    ```python
+    from continuedev.src.continuedev.libs.llm.llamacpp import LlamaCpp
+
+    config = ContinueConfig(
+        ...
+        models=Models(
+            default=LlamaCpp(
+                max_context_length=4096,
+                server_url="http://localhost:8080")
+        )
+    )
+    ```
+    """
+
     model: str = "llamacpp"
-    server_url: str = "http://localhost:8080"
-    verify_ssl: Optional[bool] = None
+    server_url: str = Field("http://localhost:8080", description="URL of the server")
+    verify_ssl: Optional[bool] = Field(
+        None,
+        description="Whether SSL certificates should be verified when making the HTTP request",
+    )
 
-    llama_cpp_args: Dict[str, Any] = {"stop": ["[INST]"]}
-
-    use_command: Optional[str] = None
+    llama_cpp_args: Dict[str, Any] = Field(
+        {"stop": ["[INST]"]},
+        description="A list of additional arguments to pass to llama.cpp. See [here](https://github.com/ggerganov/llama.cpp/tree/master/examples/server#api-endpoints) for the complete catalog of options.",
+    )
 
     template_messages: Callable = llama2_template_messages
     prompt_templates = {
@@ -42,23 +69,6 @@ class LlamaCpp(LLM):
 
         return args
 
-    async def stream_from_main(self, prompt: str):
-        cmd = self.use_command.split(" ") + ["-p", prompt]
-        process = await asyncio.create_subprocess_exec(
-            *cmd, stdout=asyncio.subprocess.PIPE
-        )
-
-        total = ""
-        async for line in process.stdout:
-            chunk = line.decode().strip()
-            if "llama_print_timings" in total + chunk:
-                process.terminate()
-                return
-            total += chunk
-            yield chunk
-
-        await process.wait()
-
     async def _stream_complete(self, prompt, options):
         args = self.collect_args(options)
         headers = {"Content-Type": "application/json"}
@@ -79,10 +89,5 @@ class LlamaCpp(LLM):
                             continue
                         yield json.loads(content[6:])["content"]
 
-        async def command_generator():
-            async for line in self.stream_from_main(prompt):
-                yield line
-
-        generator = command_generator if self.use_command else server_generator
-        async for chunk in generator():
+        async for chunk in server_generator():
             yield chunk

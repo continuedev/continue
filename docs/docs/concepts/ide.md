@@ -17,11 +17,11 @@ SDK provides "IDEProtocol" class so that steps can interact with VS Code, etc...
 
 ### VS Code
 
-You can install the VS Code extension [here](../getting-started.md)
+You can install the VS Code extension [here](../quickstart.md)
 
 ### GitHub Codespaces
 
-You can install the GitHub Codespaces extension [here](../getting-started.md)
+You can install the GitHub Codespaces extension [here](../quickstart.md)
 
 ## IDE Protocol methods
 

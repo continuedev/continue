@@ -1,20 +1,47 @@
 from typing import Callable, Dict, List
-from ..llm import LLM, CompletionOptions
 
 from huggingface_hub import InferenceClient
+from pydantic import Field
+
+from ..llm import LLM, CompletionOptions
 from .prompts.chat import llama2_template_messages
 from .prompts.edit import simplified_edit_prompt
 
 
 class HuggingFaceInferenceAPI(LLM):
-    model: str = "Hugging Face Inference API"
-    hf_token: str
-    endpoint_url: str = None
+    """
+    Hugging Face Inference API is a great option for newly released language models. Sign up for an account and add billing [here](https://huggingface.co/settings/billing), access the Inference Endpoints [here](https://ui.endpoints.huggingface.co), click on “New endpoint”, and fill out the form (e.g. select a model like [WizardCoder-Python-34B-V1.0](https://huggingface.co/WizardLM/WizardCoder-Python-34B-V1.0)), and then deploy your model by clicking “Create Endpoint”. Change `~/.continue/config.py` to look like this:
 
-    template_messages: Callable[[List[Dict[str, str]]], str] | None = llama2_template_messages
+    ```python
+    from continuedev.src.continuedev.core.models import Models
+    from continuedev.src.continuedev.libs.llm.hf_inference_api import HuggingFaceInferenceAPI
+
+    config = ContinueConfig(
+        ...
+        models=Models(
+            default=HuggingFaceInferenceAPI(
+                endpoint_url: "<INFERENCE_API_ENDPOINT_URL>",
+                hf_token: "<HUGGING_FACE_TOKEN>",
+        )
+    )
+    ```
+    """
+
+    model: str = Field(
+        "Hugging Face Inference API",
+        description="The name of the model to use (optional for the HuggingFaceInferenceAPI class)",
+    )
+    hf_token: str = Field(..., description="Your Hugging Face API token")
+    endpoint_url: str = Field(
+        None, description="Your Hugging Face Inference API endpoint URL"
+    )
+
+    template_messages: Callable[
+        [List[Dict[str, str]]], str
+    ] | None = llama2_template_messages
 
     prompt_templates = {
-       "edit": simplified_edit_prompt,
+        "edit": simplified_edit_prompt,
     }
 
     class Config:
@@ -34,9 +61,8 @@ class HuggingFaceInferenceAPI(LLM):
             del args["model"]
         return args
 
-
     async def _stream_complete(self, prompt, options):
-        args = self.collect_args(options)
+        self.collect_args(options)
 
         client = InferenceClient(self.endpoint_url, token=self.hf_token)
 

@@ -7,6 +7,24 @@ from .prompts.chat import anthropic_template_messages
 
 
 class AnthropicLLM(LLM):
+    """
+    Import the `AnthropicLLM` class and set it as the default model:
+
+    ```python
+    from continuedev.src.continuedev.libs.llm.anthropic import AnthropicLLM
+
+    config = ContinueConfig(
+        ...
+        models=Models(
+            default=AnthropicLLM(api_key="<API_KEY>", model="claude-2")
+        )
+    )
+    ```
+
+    Claude 2 is not yet publicly released. You can request early access [here](https://www.anthropic.com/earlyaccess).
+
+    """
+
     api_key: str
     "Anthropic API key"
 

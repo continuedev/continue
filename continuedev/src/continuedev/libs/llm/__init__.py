@@ -1,6 +1,6 @@
 from typing import Any, Callable, Coroutine, Dict, Generator, List, Optional, Union
 
-from pydantic import validator
+from pydantic import Field, validator
 
 from ...core.main import ChatMessage
 from ...libs.util.devdata import dev_data_logger
@@ -26,63 +26,101 @@ class CompletionOptions(ContinueBaseModel):
     def ignore_none_and_set_default(cls, value, field):
         return value if value is not None else field.default
 
-    model: str = None
-    "The model name"
-    temperature: Optional[float] = None
-    "The temperature of the completion."
-
-    top_p: Optional[float] = None
-    "The top_p of the completion."
-
-    top_k: Optional[int] = None
-    "The top_k of the completion."
-
-    presence_penalty: Optional[float] = None
-    "The presence penalty of the completion."
-
-    frequency_penalty: Optional[float] = None
-    "The frequency penalty of the completion."
-
-    stop: Optional[List[str]] = None
-    "The stop tokens of the completion."
-
-    max_tokens: int = DEFAULT_MAX_TOKENS
-    "The maximum number of tokens to generate."
-
-    functions: Optional[List[Any]] = None
-    "The functions/tools to make available to the model."
+    model: Optional[str] = Field(None, description="The model name")
+    temperature: Optional[float] = Field(
+        None, description="The temperature of the completion."
+    )
+    top_p: Optional[float] = Field(None, description="The top_p of the completion.")
+    top_k: Optional[int] = Field(None, description="The top_k of the completion.")
+    presence_penalty: Optional[float] = Field(
+        None, description="The presence penalty of the completion."
+    )
+    frequency_penalty: Optional[float] = Field(
+        None, description="The frequency penalty of the completion."
+    )
+    stop: Optional[List[str]] = Field(
+        None, description="The stop tokens of the completion."
+    )
+    max_tokens: int = Field(
+        DEFAULT_MAX_TOKENS, description="The maximum number of tokens to generate."
+    )
+    functions: Optional[List[Any]] = Field(
+        None, description="The functions/tools to make available to the model."
+    )
 
 
 class LLM(ContinueBaseModel):
-    title: Optional[str] = None
-    system_message: Optional[str] = None
+    title: Optional[str] = Field(
+        None,
+        description="A title that will identify this model in the model selection dropdown",
+    )
+    system_message: Optional[str] = Field(
+        None, description="A system message that will always be followed by the LLM"
+    )
 
-    context_length: int = 2048
-    "The maximum context length of the LLM in tokens, as counted by count_tokens."
+    context_length: int = Field(
+        2048,
+        description="The maximum context length of the LLM in tokens, as counted by count_tokens.",
+    )
 
-    unique_id: Optional[str] = None
-    "The unique ID of the user."
+    unique_id: Optional[str] = Field(None, description="The unique ID of the user.")
+    model: str = Field(
+        ..., description="The name of the model to be used (e.g. gpt-4, codellama)"
+    )
 
-    model: str
-    "The model name"
+    timeout: Optional[int] = Field(
+        300,
+        description="Set the timeout for each request to the LLM. If you are running a local LLM that takes a while to respond, you might want to set this to avoid timeouts.",
+    )
+    prompt_templates: dict = Field(
+        {},
+        description='A dictionary of prompt templates that can be used to customize the behavior of the LLM in certain situations. For example, set the "edit" key in order to change the prompt that is used for the /edit slash command. Each value in the dictionary is a string templated in mustache syntax, and filled in at runtime with the variables specific to the situation. See the documentation for more information.',
+    )
 
-    timeout: Optional[int] = 300
-    "The timeout for the request in seconds."
+    template_messages: Optional[Callable[[List[Dict[str, str]]], str]] = Field(
+        None,
+        description="A function that takes a list of messages and returns a prompt. This ensures that models like llama2, which are trained on specific chat formats, will always recieve input in that format.",
+    )
+    write_log: Optional[Callable[[str], None]] = Field(
+        None,
+        description="A function that is called upon every prompt and completion, by default to log to the file which can be viewed by clicking on the magnifying glass.",
+    )
 
-    prompt_templates: dict = {}
-
-    template_messages: Optional[Callable[[List[Dict[str, str]]], str]] = None
-    "A function that takes a list of messages and returns a prompt."
-
-    write_log: Optional[Callable[[str], None]] = None
-    "A function that takes a string and writes it to the log."
-
-    api_key: Optional[str] = None
-    "The API key for the LLM provider."
+    api_key: Optional[str] = Field(
+        None, description="The API key for the LLM provider."
+    )
 
     class Config:
         arbitrary_types_allowed = True
         extra = "allow"
+        fields = {
+            "title": {
+                "description": "A title that will identify this model in the model selection dropdown"
+            },
+            "system_message": {
+                "description": "A system message that will always be followed by the LLM"
+            },
+            "context_length": {
+                "description": "The maximum context length of the LLM in tokens, as counted by count_tokens."
+            },
+            "unique_id": {"description": "The unique ID of the user."},
+            "model": {
+                "description": "The name of the model to be used (e.g. gpt-4, codellama)"
+            },
+            "timeout": {
+                "description": "Set the timeout for each request to the LLM. If you are running a local LLM that takes a while to respond, you might want to set this to avoid timeouts."
+            },
+            "prompt_templates": {
+                "description": 'A dictionary of prompt templates that can be used to customize the behavior of the LLM in certain situations. For example, set the "edit" key in order to change the prompt that is used for the /edit slash command. Each value in the dictionary is a string templated in mustache syntax, and filled in at runtime with the variables specific to the situation. See the documentation for more information.'
+            },
+            "template_messages": {
+                "description": "A function that takes a list of messages and returns a prompt. This ensures that models like llama2, which are trained on specific chat formats, will always recieve input in that format."
+            },
+            "write_log": {
+                "description": "A function that is called upon every prompt and completion, by default to log to the file which can be viewed by clicking on the magnifying glass."
+            },
+            "api_key": {"description": "The API key for the LLM provider."},
+        }
 
     def dict(self, **kwargs):
         original_dict = super().dict(**kwargs)

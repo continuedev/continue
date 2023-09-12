@@ -1,4 +1,4 @@
-# Troubleshooting
+# ❓ Troubleshooting
 
 The Continue VS Code extension is currently in beta. It will attempt to start the Continue Python server locally for you, but sometimes this will fail, causing the "Starting Continue server..." not to disappear, or other hangups. While we are working on fixes to all of these problems, there are a few things you can do to temporarily troubleshoot:
 
