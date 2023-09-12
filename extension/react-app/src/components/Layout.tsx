@@ -195,6 +195,7 @@ const Layout = () => {
             <a
               href="https://continue.dev/docs/how-to-use-continue"
               className="no-underline"
+              target="_blank"
             >
               <HeaderButtonWithText text="Docs">
                 <BookOpenIcon width="1.4em" height="1.4em" />
@@ -203,6 +204,7 @@ const Layout = () => {
             <a
               href="https://github.com/continuedev/continue/issues/new/choose"
               className="no-underline"
+              target="_blank"
             >
               <HeaderButtonWithText text="Feedback">
                 <ChatBubbleOvalLeftEllipsisIcon width="1.4em" height="1.4em" />

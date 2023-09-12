@@ -136,13 +136,18 @@ class ContinuePluginStartupActivity : StartupActivity, Disposable {
 
     override fun runActivity(project: Project) {
         // Download and start the Continue Python Server
-        // startContinuePythonServer();
+        startContinuePythonServer()
 
-        val client = IdeProtocolClient("ws://localhost:65432/ide/ws", coroutineScope)
-        val defaultStrategy = DefaultTextSelectionStrategy(client, coroutineScope)
-        val listener = ContinuePluginSelectionListener(defaultStrategy)
 
         coroutineScope.launch {
+            // Delay to allow the server to start
+            delay(3000)
+
+            val client = IdeProtocolClient("ws://localhost:65432/ide/ws", coroutineScope)
+            val defaultStrategy = DefaultTextSelectionStrategy(client, coroutineScope)
+            val listener = ContinuePluginSelectionListener(defaultStrategy)
+
+
             val newSessionId = client.getSessionIdAsync().await()
             val sessionId = newSessionId ?: ""
 
