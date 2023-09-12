@@ -1,6 +1,6 @@
 from typing import List
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from ...core.context import ContextProvider
 from ...core.main import ContextItem, ContextItemDescription, ContextItemId
@@ -41,7 +41,7 @@ class FileTreeContextProvider(ContextProvider):
     description = "Add a formatted file tree of this directory to the context"
     dynamic = True
 
-    workspace_dir: str = None
+    workspace_dir: str = Field(None, description="The workspace directory to display")
 
     async def _get_file_tree(self, directory: str) -> str:
         contents = await self.sdk.ide.listDirectoryContents(directory, recursive=True)

@@ -8,7 +8,7 @@ Type '@diff' to reference all of the changes you've made to your current branch.
 
 ## Properties
 
-<ClassPropertyRef name='workspace_dir' details='{&quot;title&quot;: &quot;Workspace Dir&quot;, &quot;type&quot;: &quot;string&quot;}' required={false} default=""/><ClassPropertyRef name='DIFF_CONTEXT_ITEM_ID' details='{&quot;title&quot;: &quot;Diff Context Item Id&quot;, &quot;default&quot;: &quot;diff&quot;, &quot;type&quot;: &quot;string&quot;}' required={false} default="diff"/>
+<ClassPropertyRef name='workspace_dir' details='{&quot;title&quot;: &quot;Workspace Dir&quot;, &quot;description&quot;: &quot;The workspace directory in which to run `git diff`&quot;, &quot;type&quot;: &quot;string&quot;}' required={false} default=""/>
 
 ### Inherited Properties
 

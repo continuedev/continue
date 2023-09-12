@@ -1,5 +1,7 @@
 from typing import Any, Coroutine, List
 
+from pydantic import Field
+
 from ...core.context import ContextProvider
 from ...core.main import ChatMessage, ContextItem, ContextItemDescription, ContextItemId
 
@@ -12,8 +14,9 @@ class TerminalContextProvider(ContextProvider):
     description = "Reference the contents of the terminal"
     dynamic = True
 
-    workspace_dir: str = None
-    get_last_n_commands: int = 3
+    get_last_n_commands: int = Field(
+        3, description="The number of previous commands to reference"
+    )
 
     def _terminal_context_item(self, content: str = ""):
         return ContextItem(
@@ -32,7 +35,6 @@ class TerminalContextProvider(ContextProvider):
         return msgs
 
     async def provide_context_items(self, workspace_dir: str) -> List[ContextItem]:
-        self.workspace_dir = workspace_dir
         return [self._terminal_context_item()]
 
     async def get_item(self, id: ContextItemId, query: str) -> ContextItem:

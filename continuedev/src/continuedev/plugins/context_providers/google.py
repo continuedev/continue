@@ -2,6 +2,7 @@ import json
 from typing import List
 
 import aiohttp
+from pydantic import Field
 
 from ...core.context import ContextProvider
 from ...core.main import ContextItem, ContextItemDescription, ContextItemId
@@ -17,9 +18,12 @@ class GoogleContextProvider(ContextProvider):
     dynamic = True
     requires_query = True
 
-    serper_api_key: str
+    serper_api_key: str = Field(
+        ...,
+        description="Your SerpAPI key, used to programmatically make Google searches. You can get a key at https://serper.dev.",
+    )
 
-    GOOGLE_CONTEXT_ITEM_ID = "google_search"
+    _GOOGLE_CONTEXT_ITEM_ID = "google_search"
 
     @property
     def BASE_CONTEXT_ITEM(self):
@@ -29,7 +33,7 @@ class GoogleContextProvider(ContextProvider):
                 name="Google Search",
                 description="Enter a query to search google",
                 id=ContextItemId(
-                    provider_title=self.title, item_id=self.GOOGLE_CONTEXT_ITEM_ID
+                    provider_title=self.title, item_id=self._GOOGLE_CONTEXT_ITEM_ID
                 ),
             ),
         )

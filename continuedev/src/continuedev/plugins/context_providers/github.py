@@ -1,6 +1,7 @@
 from typing import List
 
 from github import Auth, Github
+from pydantic import Field
 
 from ...core.context import (
     ContextItem,
@@ -16,8 +17,13 @@ class GitHubIssuesContextProvider(ContextProvider):
     """
 
     title = "issues"
-    repo_name: str
-    auth_token: str
+    repo_name: str = Field(
+        ..., description="The name of the GitHub repo from which to pull issues"
+    )
+    auth_token: str = Field(
+        ...,
+        description="The GitHub auth token to use to authenticate with the GitHub API",
+    )
 
     display_title = "GitHub Issues"
     description = "Reference GitHub issues"

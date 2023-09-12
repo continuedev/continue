@@ -8,7 +8,7 @@ Type '@search' to reference the results of codebase search, just like the result
 
 ## Properties
 
-<ClassPropertyRef name='workspace_dir' details='{&quot;title&quot;: &quot;Workspace Dir&quot;, &quot;type&quot;: &quot;string&quot;}' required={false} default=""/><ClassPropertyRef name='SEARCH_CONTEXT_ITEM_ID' details='{&quot;title&quot;: &quot;Search Context Item Id&quot;, &quot;default&quot;: &quot;search&quot;, &quot;type&quot;: &quot;string&quot;}' required={false} default="search"/>
+<ClassPropertyRef name='workspace_dir' details='{&quot;title&quot;: &quot;Workspace Dir&quot;, &quot;description&quot;: &quot;The workspace directory to search&quot;, &quot;type&quot;: &quot;string&quot;}' required={false} default=""/>
 
 ### Inherited Properties
 

@@ -1,6 +1,7 @@
 import os
 from typing import List
 
+from pydantic import Field
 from ripgrepy import Ripgrepy
 
 from ...core.context import ContextProvider
@@ -18,9 +19,9 @@ class SearchContextProvider(ContextProvider):
     dynamic = True
     requires_query = True
 
-    SEARCH_CONTEXT_ITEM_ID = "search"
+    _SEARCH_CONTEXT_ITEM_ID = "search"
 
-    workspace_dir: str = None
+    workspace_dir: str = Field(None, description="The workspace directory to search")
 
     @property
     def BASE_CONTEXT_ITEM(self):
@@ -30,7 +31,7 @@ class SearchContextProvider(ContextProvider):
                 name="Search",
                 description="Search the workspace for all matches of an exact string (e.g. '@search console.log')",
                 id=ContextItemId(
-                    provider_title=self.title, item_id=self.SEARCH_CONTEXT_ITEM_ID
+                    provider_title=self.title, item_id=self._SEARCH_CONTEXT_ITEM_ID
                 ),
             ),
         )

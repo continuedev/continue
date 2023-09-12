@@ -1,6 +1,8 @@
 import subprocess
 from typing import List
 
+from pydantic import Field
+
 from ...core.context import ContextProvider
 from ...core.main import ContextItem, ContextItemDescription, ContextItemId
 
@@ -15,9 +17,11 @@ class DiffContextProvider(ContextProvider):
     description = "Output of 'git diff' in current repo"
     dynamic = True
 
-    DIFF_CONTEXT_ITEM_ID = "diff"
+    _DIFF_CONTEXT_ITEM_ID = "diff"
 
-    workspace_dir: str = None
+    workspace_dir: str = Field(
+        None, description="The workspace directory in which to run `git diff`"
+    )
 
     @property
     def BASE_CONTEXT_ITEM(self):
@@ -27,7 +31,7 @@ class DiffContextProvider(ContextProvider):
                 name="Diff",
                 description="Reference the output of 'git diff' for the current workspace",
                 id=ContextItemId(
-                    provider_title=self.title, item_id=self.DIFF_CONTEXT_ITEM_ID
+                    provider_title=self.title, item_id=self._DIFF_CONTEXT_ITEM_ID
                 ),
             ),
         )
