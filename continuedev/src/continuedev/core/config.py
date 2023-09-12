@@ -93,6 +93,10 @@ class ContinueConfig(BaseModel):
         "https://us-west1-autodebug.cloudfunctions.net",
         description="The URL of the server where development data is sent. No data is sent unless a valid user token is provided.",
     )
+    disable_summaries: Optional[bool] = Field(
+        False,
+        description="If set to `True`, Continue will not generate summaries for each Step. This can be useful if you want to save on compute.",
+    )
 
     @validator("temperature", pre=True)
     def temperature_validator(cls, v):

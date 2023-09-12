@@ -146,9 +146,14 @@ const config = {
       "@docusaurus/plugin-client-redirects",
       {
         redirects: [
+          // Redirects from old docs
           {
             from: "/customization",
             to: "/customization/overview",
+          },
+          {
+            from: "/getting-started",
+            to: "/quickstart",
           },
         ],
       },

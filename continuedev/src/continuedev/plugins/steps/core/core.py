@@ -816,8 +816,6 @@ Please output the code to be inserted at the cursor in order to fulfill the user
             await self.stream_rif(rif, sdk)
             await sdk.ide.setSuggestionsLocked(rif.filepath, False)
 
-        self.name = "Generating summary"
-
         changes = "\n".join(
             difflib.ndiff(
                 self._previous_contents.splitlines(),
@@ -825,21 +823,27 @@ Please output the code to be inserted at the cursor in order to fulfill the user
             )
         )
 
-        self.description = ""
-        async for chunk in sdk.models.medium.stream_complete(
-            dedent(
-                f"""\
-        Diff summary: "{self.user_input}"
-
-        ```diff
-        {changes}
-        ```
-
-        {self.summary_prompt}"""
-            )
-        ):
-            self.description += chunk
+        if sdk.config.disable_summaries:
+            self.name = ""
+            self.description = f"Edited {len(self.range_in_files)} files"
             await sdk.update_ui()
+        else:
+            self.name = "Generating summary"
+            self.description = ""
+            async for chunk in sdk.models.medium.stream_complete(
+                dedent(
+                    f"""\
+            Diff summary: "{self.user_input}"
+
+            ```diff
+            {changes}
+            ```
+
+            {self.summary_prompt}"""
+                )
+            ):
+                self.description += chunk
+                await sdk.update_ui()
 
         sdk.context.set("last_edit_user_input", self.user_input)
         sdk.context.set("last_edit_diff", changes)
@@ -922,6 +926,7 @@ class UserInputStep(Step):
         self.chat_context.append(
             ChatMessage(role="user", content=self.user_input, summary=self.user_input)
         )
+        self.description = self.user_input
         return UserInputObservation(user_input=self.user_input)
 
 

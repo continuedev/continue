@@ -2,12 +2,11 @@ import os
 import traceback
 from typing import Coroutine, List, Optional, Union
 
-from ..libs.util.create_async_task import create_async_task
-
 from ..libs.llm import LLM
+from ..libs.util.create_async_task import create_async_task
 from ..libs.util.devdata import dev_data_logger
 from ..libs.util.logging import logger
-from ..libs.util.paths import getConfigFilePath
+from ..libs.util.paths import getConfigFilePath, getDiffsFolderPath
 from ..libs.util.telemetry import posthog_logger
 from ..models.filesystem import RangeInFile
 from ..models.filesystem_edit import (
@@ -68,6 +67,9 @@ class ContinueSDK(AbstractContinueSDK):
     ) -> "ContinueSDK":
         sdk = ContinueSDK(autopilot)
         autopilot.continue_sdk = sdk
+
+        # Create necessary directories
+        getDiffsFolderPath()
 
         try:
             sdk.config = config or sdk._load_config_dot_py()

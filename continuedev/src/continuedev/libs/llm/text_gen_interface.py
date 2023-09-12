@@ -6,7 +6,7 @@ from pydantic import Field
 
 from ...core.main import ChatMessage
 from . import LLM
-from .prompts.edit import simplified_edit_prompt
+from .prompts.edit import simplest_edit_prompt
 
 
 class TextGenUI(LLM):
@@ -40,7 +40,7 @@ class TextGenUI(LLM):
     )
 
     prompt_templates = {
-        "edit": simplified_edit_prompt,
+        "edit": simplest_edit_prompt,
     }
 
     class Config:

@@ -86,6 +86,13 @@ class DefaultPolicy(Policy):
 
             slash_command = parse_slash_command(user_input, config)
             if slash_command is not None:
+                if (
+                    getattr(slash_command, "user_input", None) is None
+                    and history.get_current().step.user_input is not None
+                ):
+                    history.get_current().step.user_input = (
+                        history.get_current().step.user_input.split()[0]
+                    )
                 return slash_command
 
             custom_command = parse_custom_command(user_input, config)

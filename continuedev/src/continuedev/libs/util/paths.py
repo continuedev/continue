@@ -37,6 +37,12 @@ def getDevDataFolderPath():
     return path
 
 
+def getDiffsFolderPath():
+    path = os.path.join(getGlobalFolderPath(), "diffs")
+    os.makedirs(path, exist_ok=True)
+    return path
+
+
 def getDevDataFilePath(table_name: str):
     filepath = os.path.join(getDevDataFolderPath(), f"{table_name}.jsonl")
     if not os.path.exists(filepath):

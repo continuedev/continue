@@ -122,17 +122,22 @@ class SimpleChatStep(Step):
 
                 await sdk.update_ui()
 
-        self.name = "Generating title..."
+        if sdk.config.disable_summaries:
+            self.name = ""
+        else:
+            self.name = "Generating title..."
+            await sdk.update_ui()
+            self.name = add_ellipsis(
+                remove_quotes_and_escapes(
+                    await sdk.models.medium.complete(
+                        f'"{self.description}"\n\nPlease write a short title summarizing the message quoted above. Use no more than 10 words:',
+                        max_tokens=20,
+                    )
+                ),
+                200,
+            )
+
         await sdk.update_ui()
-        self.name = add_ellipsis(
-            remove_quotes_and_escapes(
-                await sdk.models.medium.complete(
-                    f'"{self.description}"\n\nPlease write a short title summarizing the message quoted above. Use no more than 10 words:',
-                    max_tokens=20,
-                )
-            ),
-            200,
-        )
 
         self.chat_context.append(
             ChatMessage(role="assistant", content=self.description, summary=self.name)

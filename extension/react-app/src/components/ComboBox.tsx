@@ -881,7 +881,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
                     width="1.2em"
                     height="1.2em"
                     color={lightGray}
-                    className="ml-2"
+                    className="ml-2 flex-shrink-0"
                   />
                 )}
               </Li>
