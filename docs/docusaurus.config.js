@@ -63,7 +63,7 @@ const config = {
         logo: {
           alt: "Continue Logo",
           src: "img/logo.png",
-          href: 'https://continue.dev'
+          href: "https://continue.dev",
         },
         items: [
           {
@@ -141,6 +141,19 @@ const config = {
         contextualSearch: true,
       },
     }),
+  plugins: [
+    [
+      "@docusaurus/plugin-client-redirects",
+      {
+        redirects: [
+          {
+            from: "/docs/customization",
+            to: "/docs/customization/overview",
+          },
+        ],
+      },
+    ],
+  ],
 };
 
 module.exports = config;
