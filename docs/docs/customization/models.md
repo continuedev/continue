@@ -4,22 +4,22 @@ Continue makes it easy to swap out different LLM providers. Once you've added an
 
 Commercial Models
 
-- [MaybeProxyOpenAI](#adding-an-openai-api-key) (default) - Use gpt-4 or gpt-3.5-turbo free with our API key, or with your API key. gpt-4 is probably the most capable model of all options.
-- [OpenAI](#azure-openai-service) - Use any OpenAI model with your own key. Can also change the base URL if you have a server that uses the OpenAI API format, including using the Azure OpenAI service, LocalAI, etc.
-- [AnthropicLLM](#claude-2) - Use claude-2 with your Anthropic API key. Claude 2 is also highly capable, and has a 100,000 token context window.
+- [MaybeProxyOpenAI](../reference/Models/maybe_proxy_openai.md) (default) - Use gpt-4 or gpt-3.5-turbo free with our API key, or with your API key. gpt-4 is probably the most capable model of all options.
+- [OpenAI](../reference/Models/openai.md) - Use any OpenAI model with your own key. Can also change the base URL if you have a server that uses the OpenAI API format, including using the Azure OpenAI service, LocalAI, etc.
+- [AnthropicLLM](../reference/Models/anthropic.md) - Use claude-2 with your Anthropic API key. Claude 2 is also highly capable, and has a 100,000 token context window.
 
 Local Models
 
-- [Ollama](#run-llama-2-locally-with-ollama) - If you have a Mac, Ollama is the simplest way to run open-source models like Code Llama.
-- [OpenAI](#local-models-with-openai-compatible-server) - If you have access to an OpenAI-compatible server (e.g. llama-cpp-python, LocalAI, FastChat, TextGenWebUI, etc.), you can use the `OpenAI` class and just change the base URL.
-- [GGML](#local-models-with-ggml) - An alternative way to connect to OpenAI-compatible servers. Will use `aiohttp` directly instead of the `openai` Python package.
-- [LlamaCpp](#llamacpp) - Build llama.cpp from source and use its built-in API server.
+- [Ollama](../reference/Models/ollama.md) - If you have a Mac, Ollama is the simplest way to run open-source models like Code Llama.
+- [OpenAI](../reference/Models/openai.md) - If you have access to an OpenAI-compatible server (e.g. llama-cpp-python, LocalAI, FastChat, TextGenWebUI, etc.), you can use the `OpenAI` class and just change the base URL.
+- [GGML](../reference/Models/ggml.md) - An alternative way to connect to OpenAI-compatible servers. Will use `aiohttp` directly instead of the `openai` Python package.
+- [LlamaCpp](../reference/Models/llamacpp.md) - Build llama.cpp from source and use its built-in API server.
 
 Open-Source Models (not local)
 
-- [TogetherLLM](#together) - Use any model from the [Together Models list](https://docs.together.ai/docs/models-inference) with your Together API key.
-- [ReplicateLLM](#replicate) - Use any open-source model from the [Replicate Streaming List](https://replicate.com/collections/streaming-language-models) with your Replicate API key.
-- [HuggingFaceInferenceAPI](#huggingface) - Use any open-source model from the [Hugging Face Inference API](https://huggingface.co/inference-api) with your Hugging Face token.
+- [TogetherLLM](../reference/Models/together.md) - Use any model from the [Together Models list](https://docs.together.ai/docs/models-inference) with your Together API key.
+- [ReplicateLLM](../reference/Models/replicate.md) - Use any open-source model from the [Replicate Streaming List](https://replicate.com/collections/streaming-language-models) with your Replicate API key.
+- [HuggingFaceInferenceAPI](../reference/Models/hf_inference_api.md) - Use any open-source model from the [Hugging Face Inference API](https://huggingface.co/inference-api) with your Hugging Face token.
 
 ## Change the default LLM
 
@@ -41,29 +41,11 @@ The `default` and `medium` properties are different _model roles_. This allows d
 
 Below, we describe the `LLM` classes available in the Continue core library, and how they can be used.
 
-## Adding an OpenAI API key
-
-## claude-2
-
-## Run Llama-2 locally with Ollama
-
-## Local models with OpenAI-compatible server
-
-## Local models with ggml
-
-## Llama.cpp
-
-## Together
-
-## Replicate
-
-## Hugging Face
-
 ## Self-hosting an open-source model
 
-If you want to self-host on Colab, RunPod, HuggingFace, Haven, or another hosting provider you will need to wire up a new LLM class. It only needs to implement 3 primary methods: `stream_complete`, `complete`, and `stream_chat`, and you can see examples in `continuedev/src/continuedev/libs/llm`.
+If you want to self-host on Colab, RunPod, HuggingFace, Haven, or another hosting provider, you will need to wire up a new LLM class. It only needs to implement 3 primary methods: `stream_complete`, `complete`, and `stream_chat`, and you can see examples in `continuedev/src/continuedev/libs/llm`.
 
-If by chance the provider has the exact same API interface as OpenAI, the `GGML` class will work for you out of the box, after changing the endpoint at the top of the file.
+If by chance the provider has the exact same API interface as OpenAI, the `OpenAI` class will work for you out of the box, after changing only the `api_base` parameter.
 
 ## Azure OpenAI Service
 

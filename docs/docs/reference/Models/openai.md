@@ -23,6 +23,7 @@ config = ContinueConfig(
 
 Options for serving models locally with an OpenAI-compatible server include:
 
+- [LM Studio](https://lmstudio.ai/)
 - [text-gen-webui](https://github.com/oobabooga/text-generation-webui/tree/main/extensions/openai#setup--installation)
 - [FastChat](https://github.com/lm-sys/FastChat/blob/main/docs/openai_api.md)
 - [LocalAI](https://localai.io/basics/getting_started/)
