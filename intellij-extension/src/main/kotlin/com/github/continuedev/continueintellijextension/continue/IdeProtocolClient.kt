@@ -4,14 +4,35 @@ import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.*
 import okhttp3.*
+import java.net.NetworkInterface
 
 data class WebSocketMessage<T>(val messageType: String, val data: T)
 data class WorkspaceDirectory(val workspaceDirectory: String);
 data class UniqueId(val uniqueId: String);
 
+fun getMachineUniqueID(): String {
+    val sb = StringBuilder()
+    val networkInterfaces = NetworkInterface.getNetworkInterfaces()
+
+    while (networkInterfaces.hasMoreElements()) {
+        val networkInterface = networkInterfaces.nextElement()
+        val mac = networkInterface.hardwareAddress
+
+        if (mac != null) {
+            for (i in mac.indices) {
+                sb.append(String.format("%02X%s", mac[i], if (i < mac.size - 1) "-" else ""))
+            }
+            return sb.toString()
+        }
+    }
+
+    return "No MAC Address Found"
+}
+
 class IdeProtocolClient(
     private val serverUrl: String = "ws://localhost:65432/ide/ws",
-    private val coroutineScope: CoroutineScope
+    private val coroutineScope: CoroutineScope,
+        private val workspacePath: String
 ) {
     private val eventListeners = mutableListOf<WebSocketEventListener>()
     private var okHttpClient: OkHttpClient = OkHttpClient()
@@ -43,14 +64,11 @@ class IdeProtocolClient(
 
     private val pendingResponses: MutableMap<String, CompletableDeferred<Any>> = mutableMapOf()
 
-    fun sendAndReceive(messageType: String, data: Any): CompletableDeferred<Any> {
+    fun sendAndReceive(messageType: String, data: Map<String, Any>): CompletableDeferred<Any> {
         val deferred = CompletableDeferred<Any>()
         pendingResponses[messageType] = deferred  // Store the deferred object for later resolution
 
-        val sendData = mapOf("messageType" to messageType, "data" to data)
-        val jsonMessage = convertToJson(sendData)
-
-        sendMessage(messageType, jsonMessage)
+        sendMessage(messageType, data)
         return deferred
     }
 
@@ -111,17 +129,20 @@ class IdeProtocolClient(
         webSocket?.close(1000, null)
     }
 
-    fun sendMessage(type: String, message: String) {
-        // TODO: Format your message here, if needed
-        webSocket?.send(message)
+    fun sendMessage(type: String, message: Map<String, Any>) {
+        val msg = mapOf(
+                "messageType" to type,
+                "data" to message
+        )
+        webSocket?.send(convertToJson(msg))
     }
 
     fun workspaceDirectory(): String {
-        return "/fake/path";
+        return this.workspacePath
     }
 
     fun uniqueId(): String {
-        return "NOT_UNIQUE";
+        return getMachineUniqueID()
     }
     fun onTextSelected(
         selectedText: String,
@@ -172,7 +193,7 @@ class DefaultTextSelectionStrategy(
         lastActionJob?.cancel()
         lastActionJob = coroutineScope.launch {
             delay(debounceWaitMs)
-            val message = mapOf(
+            val message = mapOf("highlightedCode" to arrayOf(mapOf(
                 "filepath" to filepath,
                 "contents" to selectedText,
                 "range" to mapOf(
@@ -185,10 +206,9 @@ class DefaultTextSelectionStrategy(
                         "character" to endCharacter
                     )
                 )
-            )
+            )))
 
-            val jsonMessage = convertToJson(message)
-            client.sendMessage("HighlightedCode", jsonMessage)
+            client.sendMessage("highlightedCodePush", message)
         }
     }
 

@@ -1,7 +1,7 @@
 package com.github.continuedev.continueintellijextension.activities
 
 import com.github.continuedev.continueintellijextension.`continue`.DefaultTextSelectionStrategy
-import com.github.continuedev.continueintellijextension.`continue`.IdeProtocolClient
+import com.github.continuedev.continueintellijextension.`continue`.*
 import com.github.continuedev.continueintellijextension.listeners.ContinuePluginSelectionListener
 import com.github.continuedev.continueintellijextension.services.ContinuePluginService
 import com.google.gson.Gson
@@ -134,25 +134,6 @@ fun startContinuePythonServer() {
     ProcessBuilder(destination).start();
 }
 
-fun getMachineUniqueID(): String {
-    val sb = StringBuilder()
-    val networkInterfaces = NetworkInterface.getNetworkInterfaces()
-
-    while (networkInterfaces.hasMoreElements()) {
-        val networkInterface = networkInterfaces.nextElement()
-        val mac = networkInterface.hardwareAddress
-
-        if (mac != null) {
-            for (i in mac.indices) {
-                sb.append(String.format("%02X%s", mac[i], if (i < mac.size - 1) "-" else ""))
-            }
-            return sb.toString()
-        }
-    }
-
-    return "No MAC Address Found"
-}
-
 
 class ContinuePluginStartupActivity : StartupActivity, Disposable {
     val coroutineScope = CoroutineScope(Dispatchers.IO)
@@ -165,7 +146,7 @@ class ContinuePluginStartupActivity : StartupActivity, Disposable {
             // Delay to allow the server to start
             delay(3000)
 
-            val client = IdeProtocolClient("ws://localhost:65432/ide/ws", coroutineScope)
+            val client = IdeProtocolClient("ws://localhost:65432/ide/ws", coroutineScope, project.basePath ?: "/")
             val defaultStrategy = DefaultTextSelectionStrategy(client, coroutineScope)
             val listener = ContinuePluginSelectionListener(defaultStrategy)
 
@@ -182,9 +163,9 @@ class ContinuePluginStartupActivity : StartupActivity, Disposable {
                 // Assuming ContinuePluginService is your service where the ToolWindow is registered
                 val continuePluginService = ServiceManager.getService(project, ContinuePluginService::class.java)
 
-                val workspacePaths = if (project.basePath != null) arrayOf(project.basePath) else emptyList<String>()
                 // Reload the WebView
                 continuePluginService?.let {
+                    val workspacePaths = if (project.basePath != null) arrayOf(project.basePath) else emptyList<String>()
                     val dataMap = mutableMapOf(
                             "type" to "onUILoad",
                             "sessionId" to sessionId,

@@ -6,15 +6,12 @@ import com.intellij.openapi.editor.event.SelectionEvent
 import com.intellij.openapi.editor.event.SelectionListener
 import java.nio.file.Paths
 
-private const val HIGHLIGHTED_CODE_FILE_PATH =
-    "/Users/kundb/continue-intellij-extension/src/main/resources/continue_code/copiedCode.txt"
-
 class ContinuePluginSelectionListener(private val strategy: TextSelectionStrategy) : SelectionListener {
     override fun selectionChanged(e: SelectionEvent) {
         val editor = e.editor
         val model: SelectionModel = editor.selectionModel
 
-        model.selectedText.let { selectedText ->
+        model.let { model ->
             val document = editor.document
             val startOffset = model.selectionStart
             val endOffset = model.selectionEnd
@@ -24,9 +21,8 @@ class ContinuePluginSelectionListener(private val strategy: TextSelectionStrateg
             val startCharacter = startOffset - document.getLineStartOffset(startLine)
             val endCharacter = endOffset - document.getLineStartOffset(endLine)
 
-            val filepath = editor.document.toString()  // Replace with actual filepath if available
-            selectedText?.let { text ->
-                writeToFile(text)
+            val filepath = editor.document.toString().drop(20).dropLast(1);
+            model.selectedText?.let { text ->
                 strategy.handleTextSelection(
                     text,
                     filepath,
@@ -36,14 +32,6 @@ class ContinuePluginSelectionListener(private val strategy: TextSelectionStrateg
                     endCharacter
                 )
             }
-        }
-    }
-
-    private fun writeToFile(content: String) {
-        try {
-            Paths.get(HIGHLIGHTED_CODE_FILE_PATH).toFile().writeText(content)
-        } catch (ex: Exception) {
-            ex.printStackTrace()
         }
     }
 }
