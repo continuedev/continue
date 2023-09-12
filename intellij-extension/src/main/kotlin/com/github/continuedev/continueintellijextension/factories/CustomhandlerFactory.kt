@@ -1,4 +1,4 @@
-package com.github.bishwenduk029.continueintellijextension.factories
+package com.github.continuedev.continueintellijextension.factories
 
 import org.cef.browser.CefBrowser
 import org.cef.browser.CefFrame

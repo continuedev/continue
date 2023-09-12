@@ -1,20 +1,20 @@
 <!-- Plugin Configuration File. Read more: https://plugins.jetbrains.com/docs/intellij/plugin-configuration-file.html -->
 <idea-plugin>
-    <id>com.github.bishwenduk029.continueintellijextension</id>
+    <id>com.github.continuedev.continueintellijextension</id>
     <name>Continue Extension</name>
-    <vendor>bishwenduk029</vendor>
+    <vendor>continue-dev</vendor>
 
     <depends>com.intellij.modules.platform</depends>
 
     <extensions defaultExtensionNs="com.intellij">
-        <toolWindow id="ContinuePluginViewer" anchor="right" factoryClass="com.github.bishwenduk029.continueintellijextension.toolWindow.ContinuePluginToolWindowFactory"/>
-        <projectService id="ContinuePluginService" serviceImplementation="com.github.bishwenduk029.continueintellijextension.services.ContinuePluginService"/>
+        <toolWindow id="ContinuePluginViewer" anchor="right" factoryClass="com.github.continuedev.continueintellijextension.toolWindow.ContinuePluginToolWindowFactory"/>
+        <projectService id="ContinuePluginService" serviceImplementation="com.github.continuedev.continueintellijextension.services.ContinuePluginService"/>
     </extensions>
 
     <resource-bundle>messages.MyBundle</resource-bundle>
 
     <extensions defaultExtensionNs="com.intellij">
-        <postStartupActivity implementation="com.github.bishwenduk029.continueintellijextension.activities.ContinuePluginStartupActivity"/>
+        <postStartupActivity implementation="com.github.continuedev.continueintellijextension.activities.ContinuePluginStartupActivity"/>
     </extensions>
 
 </idea-plugin>

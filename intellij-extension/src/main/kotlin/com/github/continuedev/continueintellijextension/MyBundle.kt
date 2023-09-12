@@ -1,4 +1,4 @@
-package com.github.bishwenduk029.continueintellijextension
+package com.github.continuedev.continueintellijextension
 
 import com.intellij.DynamicBundle
 import org.jetbrains.annotations.NonNls

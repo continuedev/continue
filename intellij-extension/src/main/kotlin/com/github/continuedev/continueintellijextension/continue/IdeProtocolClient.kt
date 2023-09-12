@@ -1,4 +1,4 @@
-package com.github.bishwenduk029.continueintellijextension.`continue`
+package com.github.continuedev.continueintellijextension.`continue`
 
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
@@ -154,8 +154,8 @@ interface TextSelectionStrategy {
 }
 
 class DefaultTextSelectionStrategy(
-    private val client: IdeProtocolClient,
-    private val coroutineScope: CoroutineScope
+        private val client: IdeProtocolClient,
+        private val coroutineScope: CoroutineScope
 ) : TextSelectionStrategy {
 
     private var lastActionJob: Job? = null

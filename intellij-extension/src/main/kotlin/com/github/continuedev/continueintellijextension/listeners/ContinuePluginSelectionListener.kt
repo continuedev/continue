@@ -1,6 +1,6 @@
-package com.github.bishwenduk029.continueintellijextension.listeners
+package com.github.continuedev.continueintellijextension.listeners
 
-import com.github.bishwenduk029.continueintellijextension.`continue`.TextSelectionStrategy
+import com.github.continuedev.continueintellijextension.`continue`.TextSelectionStrategy
 import com.intellij.openapi.editor.SelectionModel
 import com.intellij.openapi.editor.event.SelectionEvent
 import com.intellij.openapi.editor.event.SelectionListener

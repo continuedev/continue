@@ -1,6 +1,6 @@
-package com.github.bishwenduk029.continueintellijextension.services
+package com.github.continuedev.continueintellijextension.services
 
-import com.github.bishwenduk029.continueintellijextension.toolWindow.ContinuePluginToolWindowFactory
+import com.github.continuedev.continueintellijextension.toolWindow.ContinuePluginToolWindowFactory
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.project.Project

@@ -1,4 +1,4 @@
-package com.github.bishwenduk029.continueintellijextension.`continue`
+package com.github.continuedev.continueintellijextension.`continue`
 
 interface WebSocketEventListener {
     fun onMessageReceived(message: String)

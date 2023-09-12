@@ -1,8 +1,8 @@
-package com.github.bishwenduk029.continueintellijextension.toolWindow
+package com.github.continuedev.continueintellijextension.toolWindow
 
-import com.github.bishwenduk029.continueintellijextension.activities.SessionStore
-import com.github.bishwenduk029.continueintellijextension.factories.CustomSchemeHandlerFactory
-import com.github.bishwenduk029.continueintellijextension.services.ContinuePluginService
+import com.github.continuedev.continueintellijextension.activities.SessionStore
+import com.github.continuedev.continueintellijextension.factories.CustomSchemeHandlerFactory
+import com.github.continuedev.continueintellijextension.services.ContinuePluginService
 import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.diagnostic.thisLogger
 import com.intellij.openapi.project.Project

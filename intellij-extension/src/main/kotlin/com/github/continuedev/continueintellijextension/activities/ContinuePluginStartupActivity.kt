@@ -1,9 +1,9 @@
-package com.github.bishwenduk029.continueintellijextension.activities
+package com.github.continuedev.continueintellijextension.activities
 
-import com.github.bishwenduk029.continueintellijextension.`continue`.DefaultTextSelectionStrategy
-import com.github.bishwenduk029.continueintellijextension.`continue`.IdeProtocolClient
-import com.github.bishwenduk029.continueintellijextension.listeners.ContinuePluginSelectionListener
-import com.github.bishwenduk029.continueintellijextension.services.ContinuePluginService
+import com.github.continuedev.continueintellijextension.`continue`.DefaultTextSelectionStrategy
+import com.github.continuedev.continueintellijextension.`continue`.IdeProtocolClient
+import com.github.continuedev.continueintellijextension.listeners.ContinuePluginSelectionListener
+import com.github.continuedev.continueintellijextension.services.ContinuePluginService
 import com.google.gson.Gson
 import com.intellij.execution.target.value.constant
 import com.intellij.openapi.Disposable
