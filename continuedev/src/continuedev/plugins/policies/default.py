@@ -18,7 +18,7 @@ def parse_slash_command(inp: str, config: ContinueConfig) -> Union[None, Step]:
     Parses a slash command, returning the command name and the rest of the input.
     """
     if inp.startswith("/"):
-        command_name = inp.split(" ")[0]
+        command_name = inp.split(" ")[0].strip()
         after_command = " ".join(inp.split(" ")[1:])
 
         for slash_command in config.slash_commands:
@@ -35,7 +35,7 @@ def parse_slash_command(inp: str, config: ContinueConfig) -> Union[None, Step]:
 
 
 def parse_custom_command(inp: str, config: ContinueConfig) -> Union[None, Step]:
-    command_name = inp.split(" ")[0]
+    command_name = inp.split(" ")[0].strip()
     after_command = " ".join(inp.split(" ")[1:])
     for custom_cmd in config.custom_commands:
         if custom_cmd.name == command_name[1:]:

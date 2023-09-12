@@ -192,6 +192,7 @@ class ContextManager:
                 requires_query=provider.requires_query,
             )
             for provider in self.context_providers.values()
+            if provider.title != "code"
         ]
 
     async def get_selected_items(self) -> List[ContextItem]:

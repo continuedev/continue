@@ -2,6 +2,7 @@ from typing import Callable, List, Literal, Optional
 
 import certifi
 import openai
+from pydantic import Field
 
 from ...core.main import ChatMessage
 from ..llm import LLM
@@ -26,7 +27,15 @@ MAX_TOKENS_FOR_MODEL = {
 
 
 class OpenAI(LLM):
-    api_key: str
+    """
+    The OpenAI class can be used to access OpenAI models like gpt-4 and gpt-3.5-turbo.
+
+    If you are running a local model with an OpenAI-compatible API, you can also use the OpenAI class by changing the `api_base` argument.
+    """
+
+    api_key: str = Field(
+        description="OpenAI API key",
+    )
     "OpenAI API key"
 
     verify_ssl: Optional[bool] = None
