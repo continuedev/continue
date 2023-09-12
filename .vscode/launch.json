@@ -26,6 +26,13 @@
       "subProcess": true
     },
     {
+      "name": "Reference",
+      "type": "python",
+      "request": "launch",
+      "module": "continuedev.src.continuedev.models.reference.test",
+      "justMyCode": true
+    },
+    {
       "name": "Server",
       "type": "python",
       "request": "launch",

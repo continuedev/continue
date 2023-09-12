@@ -3,9 +3,10 @@ import traceback
 from typing import Coroutine, List, Optional, Union
 
 from ..libs.llm import LLM
+from ..libs.util.create_async_task import create_async_task
 from ..libs.util.devdata import dev_data_logger
 from ..libs.util.logging import logger
-from ..libs.util.paths import getConfigFilePath
+from ..libs.util.paths import getConfigFilePath, getDiffsFolderPath
 from ..libs.util.telemetry import posthog_logger
 from ..models.filesystem import RangeInFile
 from ..models.filesystem_edit import (
@@ -67,6 +68,9 @@ class ContinueSDK(AbstractContinueSDK):
         sdk = ContinueSDK(autopilot)
         autopilot.continue_sdk = sdk
 
+        # Create necessary directories
+        getDiffsFolderPath()
+
         try:
             sdk.config = config or sdk._load_config_dot_py()
         except Exception as e:
@@ -103,9 +107,9 @@ class ContinueSDK(AbstractContinueSDK):
                 logger.warning(f"Failed to start LSP client: {e}", exc_info=True)
                 sdk.lsp = None
 
-        # create_async_task(
-        #     start_lsp(), on_error=lambda e: logger.error("Failed to setup LSP: %s", e)
-        # )
+        create_async_task(
+            start_lsp(), on_error=lambda e: logger.error("Failed to setup LSP: %s", e)
+        )
 
         # When the config is loaded, setup posthog logger
         posthog_logger.setup(sdk.ide.unique_id, sdk.config.allow_anonymous_telemetry)

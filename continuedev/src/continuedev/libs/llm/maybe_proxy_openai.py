@@ -7,6 +7,31 @@ from .proxy_server import ProxyServer
 
 
 class MaybeProxyOpenAI(LLM):
+    """
+    With the `MaybeProxyOpenAI` `LLM`, new users can try out Continue with GPT-4 using a proxy server that securely makes calls to OpenAI using our API key. Continue should just work the first time you install the extension in VS Code.
+
+    Once you are using Continue regularly though, you will need to add an OpenAI API key that has access to GPT-4 by following these steps:
+
+    1. Copy your API key from https://platform.openai.com/account/api-keys
+    2. Open `~/.continue/config.py`. You can do this by using the '/config' command in Continue
+    3. Change the default LLMs to look like this:
+
+    ```python
+    API_KEY = "<API_KEY>"
+    config = ContinueConfig(
+        ...
+        models=Models(
+            default=MaybeProxyOpenAI(model="gpt-4", api_key=API_KEY),
+            medium=MaybeProxyOpenAI(model="gpt-3.5-turbo", api_key=API_KEY)
+        )
+    )
+    ```
+
+    The `MaybeProxyOpenAI` class will automatically switch to using your API key instead of ours. If you'd like to explicitly use one or the other, you can use the `ProxyServer` or `OpenAI` classes instead.
+
+    These classes support any models available through the OpenAI API, assuming your API key has access, including "gpt-4", "gpt-3.5-turbo", "gpt-3.5-turbo-16k", and "gpt-4-32k".
+    """
+
     api_key: Optional[str] = None
 
     llm: Optional[LLM] = None

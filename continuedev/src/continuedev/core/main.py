@@ -1,5 +1,5 @@
 import json
-from typing import Coroutine, Dict, List, Literal, Optional, Union
+from typing import Any, Coroutine, Dict, List, Literal, Optional, Union
 
 from pydantic import BaseModel, validator
 from pydantic.schema import schema
@@ -291,6 +291,14 @@ class ContinueConfig(ContinueBaseModel):
         return original_dict
 
 
+class ContextProviderDescription(BaseModel):
+    title: str
+    display_title: str
+    description: str
+    dynamic: bool
+    requires_query: bool
+
+
 class FullState(ContinueBaseModel):
     """A full state of the program, including the history"""
 
@@ -303,6 +311,7 @@ class FullState(ContinueBaseModel):
     session_info: Optional[SessionInfo] = None
     config: ContinueConfig
     saved_context_groups: Dict[str, List[ContextItem]] = {}
+    context_providers: List[ContextProviderDescription] = []
 
 
 class ContinueSDK:
@@ -392,13 +401,13 @@ class Validator(Step):
 
 
 class Context:
-    key_value: Dict[str, str] = {}
+    key_value: Dict[str, Any] = {}
 
-    def set(self, key: str, value: str):
+    def set(self, key: str, value: Any):
         self.key_value[key] = value
 
-    def get(self, key: str) -> str:
-        return self.key_value[key]
+    def get(self, key: str) -> Any:
+        return self.key_value.get(key, None)
 
 
 class ContinueCustomException(Exception):

@@ -2,11 +2,18 @@ from typing import Callable, List, Literal, Optional
 
 import certifi
 import openai
+from pydantic import Field
 
 from ...core.main import ChatMessage
 from ..llm import LLM
 
-CHAT_MODELS = {"gpt-3.5-turbo", "gpt-3.5-turbo-16k", "gpt-4", "gpt-3.5-turbo-0613"}
+CHAT_MODELS = {
+    "gpt-3.5-turbo",
+    "gpt-3.5-turbo-16k",
+    "gpt-4",
+    "gpt-3.5-turbo-0613",
+    "gpt-4-32k",
+}
 MAX_TOKENS_FOR_MODEL = {
     "gpt-3.5-turbo": 4096,
     "gpt-3.5-turbo-0613": 4096,
@@ -20,29 +27,62 @@ MAX_TOKENS_FOR_MODEL = {
 
 
 class OpenAI(LLM):
-    api_key: str
-    "OpenAI API key"
+    """
+    The OpenAI class can be used to access OpenAI models like gpt-4 and gpt-3.5-turbo.
 
-    verify_ssl: Optional[bool] = None
-    "Whether to verify SSL certificates for requests."
+    If you are locally serving a model that uses an OpenAI-compatible server, you can simply change the `api_base` in the `OpenAI` class like this:
 
-    ca_bundle_path: Optional[str] = None
-    "Path to CA bundle to use for requests."
+    ```python
+    from continuedev.src.continuedev.libs.llm.openai import OpenAI
 
-    proxy: Optional[str] = None
-    "Proxy URL to use for requests."
+    config = ContinueConfig(
+        ...
+        models=Models(
+            default=OpenAI(
+                api_key="EMPTY",
+                model="<MODEL_NAME>",
+                api_base="http://localhost:8000", # change to your server
+            )
+        )
+    )
+    ```
 
-    api_base: Optional[str] = None
-    "OpenAI API base URL."
+    Options for serving models locally with an OpenAI-compatible server include:
 
-    api_type: Optional[Literal["azure", "openai"]] = None
-    "OpenAI API type."
+    - [text-gen-webui](https://github.com/oobabooga/text-generation-webui/tree/main/extensions/openai#setup--installation)
+    - [FastChat](https://github.com/lm-sys/FastChat/blob/main/docs/openai_api.md)
+    - [LocalAI](https://localai.io/basics/getting_started/)
+    - [llama-cpp-python](https://github.com/abetlen/llama-cpp-python#web-server)
+    """
 
-    api_version: Optional[str] = None
-    "OpenAI API version. For use with Azure OpenAI Service."
+    api_key: str = Field(
+        ...,
+        description="OpenAI API key",
+    )
 
-    engine: Optional[str] = None
-    "OpenAI engine. For use with Azure OpenAI Service."
+    verify_ssl: Optional[bool] = Field(
+        None, description="Whether to verify SSL certificates for requests."
+    )
+
+    ca_bundle_path: Optional[str] = Field(
+        None, description="Path to CA bundle to use for requests."
+    )
+
+    proxy: Optional[str] = Field(None, description="Proxy URL to use for requests.")
+
+    api_base: Optional[str] = Field(None, description="OpenAI API base URL.")
+
+    api_type: Optional[Literal["azure", "openai"]] = Field(
+        None, description="OpenAI API type."
+    )
+
+    api_version: Optional[str] = Field(
+        None, description="OpenAI API version. For use with Azure OpenAI Service."
+    )
+
+    engine: Optional[str] = Field(
+        None, description="OpenAI engine. For use with Azure OpenAI Service."
+    )
 
     async def start(
         self, unique_id: Optional[str] = None, write_log: Callable[[str], None] = None

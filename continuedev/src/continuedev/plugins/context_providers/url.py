@@ -2,6 +2,7 @@ from typing import List
 
 import requests
 from bs4 import BeautifulSoup
+from pydantic import Field
 
 from ...core.context import ContextProvider
 from ...core.main import ContextItem, ContextItemDescription, ContextItemId
@@ -9,16 +10,25 @@ from .util import remove_meilisearch_disallowed_chars
 
 
 class URLContextProvider(ContextProvider):
+    """Type '@url' to reference the contents of a URL. You can either reference preset URLs, or reference one dynamically by typing '@url https://example.com'. The text contents of the page will be fetched and used as context."""
+
     title = "url"
+    display_title = "URL"
+    description = "Reference the contents of a webpage"
+    dynamic = True
+    requires_query = True
 
     # Allows users to provide a list of preset urls
-    preset_urls: List[str] = []
+    preset_urls: List[str] = Field(
+        [],
+        description="A list of preset URLs that you will be able to quickly reference by typing '@url'",
+    )
 
     # Static items loaded from preset_urls
-    static_url_context_items: List[ContextItem] = []
+    _static_url_context_items: List[ContextItem] = []
 
     # There is only a single dynamic url context item, so it has a static id
-    DYNAMIC_URL_CONTEXT_ITEM_ID = "url"
+    _DYNAMIC_URL_CONTEXT_ITEM_ID = "url"
 
     # This is a template dynamic item that will generate context item on demand
     # when get item is called
@@ -30,7 +40,7 @@ class URLContextProvider(ContextProvider):
                 name="Dynamic URL",
                 description="Reference the contents of a webpage (e.g. '@url https://www.w3schools.com/python/python_ref_functions.asp')",
                 id=ContextItemId(
-                    provider_title=self.title, item_id=self.DYNAMIC_URL_CONTEXT_ITEM_ID
+                    provider_title=self.title, item_id=self._DYNAMIC_URL_CONTEXT_ITEM_ID
                 ),
             ),
         )
@@ -58,18 +68,18 @@ class URLContextProvider(ContextProvider):
         return soup.get_text(), title
 
     async def provide_context_items(self, workspace_dir: str) -> List[ContextItem]:
-        self.static_url_context_items = [
+        self._static_url_context_items = [
             self.static_url_context_item_from_url(url) for url in self.preset_urls
         ]
 
-        return [self.DYNAMIC_CONTEXT_ITEM] + self.static_url_context_items
+        return [self.DYNAMIC_CONTEXT_ITEM] + self._static_url_context_items
 
     async def get_item(self, id: ContextItemId, query: str) -> ContextItem:
         # Check if the item is a static item
         matching_static_item = next(
             (
                 item
-                for item in self.static_url_context_items
+                for item in self._static_url_context_items
                 if item.description.id.item_id == id.item_id
             ),
             None,
@@ -78,8 +88,8 @@ class URLContextProvider(ContextProvider):
             return matching_static_item
 
         # Check if the item is the dynamic item
-        if not id.item_id == self.DYNAMIC_URL_CONTEXT_ITEM_ID:
-            raise Exception("Invalid item id")
+        if not id.provider_title == self.title:
+            raise Exception("Invalid provider title for item")
 
         # Generate the dynamic item
         url = query.lstrip("url ").strip()

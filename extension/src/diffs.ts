@@ -62,7 +62,7 @@ class DiffManager {
   }
 
   private escapeFilepath(filepath: string): string {
-    return filepath.replace(/\\/g, "_").replace(/\//g, "_");
+    return encodeURIComponent(filepath);
   }
 
   private remoteTmpDir: string = "/tmp/continue";

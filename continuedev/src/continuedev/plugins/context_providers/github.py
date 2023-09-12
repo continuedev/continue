@@ -1,6 +1,7 @@
 from typing import List
 
 from github import Auth, Github
+from pydantic import Field
 
 from ...core.context import (
     ContextItem,
@@ -12,13 +13,21 @@ from ...core.context import (
 
 class GitHubIssuesContextProvider(ContextProvider):
     """
-    The GitHubIssuesContextProvider is a ContextProvider
-    that allows you to search GitHub issues in a repo.
+    The GitHubIssuesContextProvider is a ContextProvider that allows you to search GitHub issues in a repo. Type '@issue' to reference the title and contents of an issue.
     """
 
     title = "issues"
-    repo_name: str
-    auth_token: str
+    repo_name: str = Field(
+        ..., description="The name of the GitHub repo from which to pull issues"
+    )
+    auth_token: str = Field(
+        ...,
+        description="The GitHub auth token to use to authenticate with the GitHub API",
+    )
+
+    display_title = "GitHub Issues"
+    description = "Reference GitHub issues"
+    dynamic = False
 
     async def provide_context_items(self, workspace_dir: str) -> List[ContextItem]:
         auth = Auth.Token(self.auth_token)

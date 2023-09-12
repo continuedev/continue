@@ -1,16 +1,27 @@
 import subprocess
 from typing import List
 
+from pydantic import Field
+
 from ...core.context import ContextProvider
 from ...core.main import ContextItem, ContextItemDescription, ContextItemId
 
 
 class DiffContextProvider(ContextProvider):
+    """
+    Type '@diff' to reference all of the changes you've made to your current branch. This is useful if you want to summarize what you've done or ask for a general review of your work before committing.
+    """
+
     title = "diff"
+    display_title = "Diff"
+    description = "Output of 'git diff' in current repo"
+    dynamic = True
 
-    DIFF_CONTEXT_ITEM_ID = "diff"
+    _DIFF_CONTEXT_ITEM_ID = "diff"
 
-    workspace_dir: str = None
+    workspace_dir: str = Field(
+        None, description="The workspace directory in which to run `git diff`"
+    )
 
     @property
     def BASE_CONTEXT_ITEM(self):
@@ -20,7 +31,7 @@ class DiffContextProvider(ContextProvider):
                 name="Diff",
                 description="Reference the output of 'git diff' for the current workspace",
                 id=ContextItemId(
-                    provider_title=self.title, item_id=self.DIFF_CONTEXT_ITEM_ID
+                    provider_title=self.title, item_id=self._DIFF_CONTEXT_ITEM_ID
                 ),
             ),
         )
@@ -30,8 +41,8 @@ class DiffContextProvider(ContextProvider):
         return [self.BASE_CONTEXT_ITEM]
 
     async def get_item(self, id: ContextItemId, query: str) -> ContextItem:
-        if not id.item_id == self.DIFF_CONTEXT_ITEM_ID:
-            raise Exception("Invalid item id")
+        if not id.provider_title == self.title:
+            raise Exception("Invalid provider title for item")
 
         diff = subprocess.check_output(["git", "diff"], cwd=self.workspace_dir).decode(
             "utf-8"

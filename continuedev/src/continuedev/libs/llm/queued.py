@@ -1,12 +1,31 @@
 import asyncio
 from typing import Any, List
 
+from pydantic import Field
+
 from ...core.main import ChatMessage
 from . import LLM, CompletionOptions
 
 
 class QueuedLLM(LLM):
-    llm: LLM
+    """
+    QueuedLLM exists to make up for LLM servers that cannot handle multiple requests at once. It uses a lock to ensure that only one request is being processed at a time.
+
+    If you are already using another LLM class and are experiencing this problem, you can just wrap it with the QueuedLLM class like this:
+
+    ```python
+    from continuedev.src.continuedev.libs.llm.queued import QueuedLLM
+
+    config = ContinueConfig(
+        ...
+        models=Models(
+            default=QueuedLLM(llm=<OTHER_LLM_CLASS>)
+        )
+    )
+    ```
+    """
+
+    llm: LLM = Field(..., description="The LLM to wrap with a lock")
     _lock: asyncio.Lock
 
     model: str = "queued"

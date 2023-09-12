@@ -21,8 +21,9 @@ import {
   Cog6ToothIcon,
 } from "@heroicons/react/24/outline";
 import HeaderButtonWithText from "./HeaderButtonWithText";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import ModelSelect from "./ModelSelect";
+import ProgressBar from "./ProgressBar";
 
 // #region Styled Components
 const FOOTER_HEIGHT = "1.8em";
@@ -74,6 +75,7 @@ const GridDiv = styled.div`
 
 const Layout = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const client = useContext(GUIClientContext);
   const dispatch = useDispatch();
   const dialogMessage = useSelector(
@@ -82,10 +84,11 @@ const Layout = () => {
   const showDialog = useSelector(
     (state: RootStore) => state.uiState.showDialog
   );
-  const dialogEntryOn = useSelector(
-    (state: RootStore) => state.uiState.dialogEntryOn
-  );
 
+  const defaultModel = useSelector(
+    (state: RootStore) =>
+      (state.serverState.config as any).models?.default?.class_name
+  );
   // #region Selectors
 
   const bottomMessage = useSelector(
@@ -175,6 +178,17 @@ const Layout = () => {
               )}
 
               <ModelSelect />
+              {defaultModel === "MaybeProxyOpenAI" &&
+                (location.pathname === "/settings" ||
+                  parseInt(localStorage.getItem("freeTrialCounter") || "0") >=
+                    125) && (
+                  <ProgressBar
+                    completed={parseInt(
+                      localStorage.getItem("freeTrialCounter") || "0"
+                    )}
+                    total={250}
+                  />
+                )}
             </div>
             <HeaderButtonWithText
               onClick={() => {

@@ -11,3 +11,19 @@ simplified_edit_prompt = dedent(
             Output nothing except for the code. No code block, no English explanation, no start/end tags.
             [/INST]"""
 )
+
+simplest_edit_prompt = dedent(
+    """\
+            [INST] Here is the code before editing:
+            ```
+            {{code_to_edit}}
+            ```
+
+            Here is the edit requested:
+            "{{user_input}}"
+            
+            Here is the code after editing:
+            [/INST]"""
+)
+
+codellama_infill_edit_prompt = "{{file_prefix}}<FILL>{{file_suffix}}"

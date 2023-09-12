@@ -2,6 +2,7 @@ import json
 from typing import List
 
 import aiohttp
+from pydantic import Field
 
 from ...core.context import ContextProvider
 from ...core.main import ContextItem, ContextItemDescription, ContextItemId
@@ -9,11 +10,20 @@ from .util import remove_meilisearch_disallowed_chars
 
 
 class GoogleContextProvider(ContextProvider):
+    """Type '@google' to reference the results of a Google search. For example, type "@google python tutorial" if you want to search and discuss ways of learning Python."""
+
     title = "google"
+    display_title = "Google"
+    description = "Search Google"
+    dynamic = True
+    requires_query = True
 
-    serper_api_key: str
+    serper_api_key: str = Field(
+        ...,
+        description="Your SerpAPI key, used to programmatically make Google searches. You can get a key at https://serper.dev.",
+    )
 
-    GOOGLE_CONTEXT_ITEM_ID = "google_search"
+    _GOOGLE_CONTEXT_ITEM_ID = "google_search"
 
     @property
     def BASE_CONTEXT_ITEM(self):
@@ -23,7 +33,7 @@ class GoogleContextProvider(ContextProvider):
                 name="Google Search",
                 description="Enter a query to search google",
                 id=ContextItemId(
-                    provider_title=self.title, item_id=self.GOOGLE_CONTEXT_ITEM_ID
+                    provider_title=self.title, item_id=self._GOOGLE_CONTEXT_ITEM_ID
                 ),
             ),
         )
@@ -42,8 +52,8 @@ class GoogleContextProvider(ContextProvider):
         return [self.BASE_CONTEXT_ITEM]
 
     async def get_item(self, id: ContextItemId, query: str) -> ContextItem:
-        if not id.item_id == self.GOOGLE_CONTEXT_ITEM_ID:
-            raise Exception("Invalid item id")
+        if not id.provider_title == self.title:
+            raise Exception("Invalid provider title for item")
 
         results = await self._google_search(query)
         json_results = json.loads(results)

@@ -2,7 +2,7 @@
 
 With Continue, you can use Code Llama as a drop-in replacement for GPT-4, either by running locally with Ollama or GGML or through Replicate.
 
-If you haven't already installed Continue, you can do that [here](https://marketplace.visualstudio.com/items?itemName=Continue.continue). For more general information on customizing Continue, read [our customization docs](../customization.md).
+If you haven't already installed Continue, you can do that [here](https://marketplace.visualstudio.com/items?itemName=Continue.continue). For more general information on customizing Continue, read [our customization docs](../customization/overview.md).
 
 ## TogetherAI
 
@@ -69,6 +69,7 @@ config = ContinueConfig(
 3. Reload the VS Code window for changes to take effect
 
 ## FastChat API
+
 1. Setup the FastChat API (https://github.com/lm-sys/FastChat) to use one of the Codellama models on Hugging Face (e.g: codellama/CodeLlama-7b-Instruct-hf).
 2. Start the OpenAI compatible API (ref: https://github.com/lm-sys/FastChat/blob/main/docs/openai_api.md).
 3. Change your Continue config file to look like this:
@@ -81,4 +82,5 @@ config = ContinueConfig(
         openai_server_info={'api_base': 'http://localhost:8000/v1'})
 
 ```
+
 4. Reload the VS Code window for changes to take effect.

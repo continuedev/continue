@@ -604,7 +604,12 @@ Please output the code to be inserted at the cursor in order to fulfill the user
             rendered = render_prompt_template(
                 template,
                 messages[:-1],
-                {"code_to_edit": rif.contents, "user_input": self.user_input},
+                {
+                    "code_to_edit": rif.contents,
+                    "user_input": self.user_input,
+                    "file_prefix": file_prefix,
+                    "file_suffix": file_suffix,
+                },
             )
             if isinstance(rendered, str):
                 messages = [
@@ -617,11 +622,25 @@ Please output the code to be inserted at the cursor in order to fulfill the user
             else:
                 messages = rendered
 
-        generator = model_to_use.stream_chat(
-            messages,
-            temperature=sdk.config.temperature,
-            max_tokens=min(max_tokens, model_to_use.context_length // 2),
-        )
+            generator = model_to_use.stream_complete(
+                rendered,
+                raw=True,
+                temperature=sdk.config.temperature,
+                max_tokens=min(max_tokens, model_to_use.context_length // 2),
+            )
+
+        else:
+
+            async def gen():
+                async for chunk in model_to_use.stream_chat(
+                    messages,
+                    temperature=sdk.config.temperature,
+                    max_tokens=min(max_tokens, model_to_use.context_length // 2),
+                ):
+                    if "content" in chunk:
+                        yield chunk["content"]
+
+            generator = gen()
 
         posthog_logger.capture_event(
             "model_use",
@@ -641,9 +660,6 @@ Please output the code to be inserted at the cursor in order to fulfill the user
                     return
 
                 # Accumulate lines
-                if "content" not in chunk:
-                    continue  # ayo
-                chunk = chunk["content"]
                 chunk_lines = chunk.split("\n")
                 chunk_lines[0] = unfinished_line + chunk_lines[0]
                 if chunk.endswith("\n"):
@@ -796,12 +812,9 @@ Please output the code to be inserted at the cursor in order to fulfill the user
             rif_dict[rif.filepath] = rif.contents
 
         for rif in rif_with_contents:
-            await sdk.ide.setFileOpen(rif.filepath)
             await sdk.ide.setSuggestionsLocked(rif.filepath, True)
             await self.stream_rif(rif, sdk)
             await sdk.ide.setSuggestionsLocked(rif.filepath, False)
-
-        self.name = "Generating summary"
 
         changes = "\n".join(
             difflib.ndiff(
@@ -810,21 +823,31 @@ Please output the code to be inserted at the cursor in order to fulfill the user
             )
         )
 
-        self.description = ""
-        async for chunk in sdk.models.medium.stream_complete(
-            dedent(
-                f"""\
-        Diff summary: "{self.user_input}"
-
-        ```diff
-        {changes}
-        ```
-
-        {self.summary_prompt}"""
-            )
-        ):
-            self.description += chunk
+        if sdk.config.disable_summaries:
+            self.name = ""
+            self.description = f"Edited {len(self.range_in_files)} files"
             await sdk.update_ui()
+        else:
+            self.name = "Generating summary"
+            self.description = ""
+            async for chunk in sdk.models.medium.stream_complete(
+                dedent(
+                    f"""\
+            Diff summary: "{self.user_input}"
+
+            ```diff
+            {changes}
+            ```
+
+            {self.summary_prompt}"""
+                )
+            ):
+                self.description += chunk
+                await sdk.update_ui()
+
+        sdk.context.set("last_edit_user_input", self.user_input)
+        sdk.context.set("last_edit_diff", changes)
+        sdk.context.set("last_edit_range", self.range_in_files[-1].range)
 
 
 class EditFileStep(Step):
@@ -903,6 +926,7 @@ class UserInputStep(Step):
         self.chat_context.append(
             ChatMessage(role="user", content=self.user_input, summary=self.user_input)
         )
+        self.description = self.user_input
         return UserInputObservation(user_input=self.user_input)
 
 

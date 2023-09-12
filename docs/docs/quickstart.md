@@ -1,4 +1,4 @@
-# Getting started
+# ⚡️ Quickstart
 
 1. Click `Install` on the **[Continue extension in the Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=Continue.continue)**
 
