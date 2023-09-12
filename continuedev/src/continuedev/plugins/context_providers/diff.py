@@ -6,6 +6,10 @@ from ...core.main import ContextItem, ContextItemDescription, ContextItemId
 
 
 class DiffContextProvider(ContextProvider):
+    """
+    Type '@diff' to reference all of the changes you've made to your current branch. This is useful if you want to summarize what you've done or ask for a general review of your work before committing.
+    """
+
     title = "diff"
     display_title = "Diff"
     description = "Output of 'git diff' in current repo"

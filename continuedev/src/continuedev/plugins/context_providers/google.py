@@ -9,6 +9,8 @@ from .util import remove_meilisearch_disallowed_chars
 
 
 class GoogleContextProvider(ContextProvider):
+    """Type '@google' to reference the results of a Google search. For example, type "@google python tutorial" if you want to search and discuss ways of learning Python."""
+
     title = "google"
     display_title = "Google"
     description = "Search Google"

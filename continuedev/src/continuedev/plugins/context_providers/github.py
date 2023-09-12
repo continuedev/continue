@@ -12,8 +12,7 @@ from ...core.context import (
 
 class GitHubIssuesContextProvider(ContextProvider):
     """
-    The GitHubIssuesContextProvider is a ContextProvider
-    that allows you to search GitHub issues in a repo.
+    The GitHubIssuesContextProvider is a ContextProvider that allows you to search GitHub issues in a repo. Type '@issue' to reference the title and contents of an issue.
     """
 
     title = "issues"

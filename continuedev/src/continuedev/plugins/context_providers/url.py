@@ -9,6 +9,8 @@ from .util import remove_meilisearch_disallowed_chars
 
 
 class URLContextProvider(ContextProvider):
+    """Type '@url' to reference the contents of a URL. You can either reference preset URLs, or reference one dynamically by typing '@url https://example.com'. The text contents of the page will be fetched and used as context."""
+
     title = "url"
     display_title = "URL"
     description = "Reference the contents of a webpage"

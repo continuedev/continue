@@ -34,6 +34,8 @@ def split_path(path: str, with_root=None) -> List[str]:
 
 
 class FileTreeContextProvider(ContextProvider):
+    """Type '@tree' to reference the contents of your current workspace. The LLM will be able to see the nested directory structure of your project."""
+
     title = "tree"
     display_title = "File Tree"
     description = "Add a formatted file tree of this directory to the context"

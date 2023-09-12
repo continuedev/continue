@@ -44,7 +44,7 @@ def import_context_provider_module(module_name, module_title):
     return obj
 
 
-def docs_from_schema(schema, filename, ignore_properties=[], inherited=[]):
+def docs_from_schema(schema, filepath, ignore_properties=[], inherited=[]):
     # Generate markdown docs
     properties = ""
     inherited_properties = ""
@@ -78,7 +78,7 @@ import ClassPropertyRef from '@site/src/components/ClassPropertyRef.tsx';
 
 {dedent(schema.get("description", ""))}
 
-[View the source](https://github.com/continuedev/continue/tree/main/continuedev/src/continuedev/libs/llm/{filename}.py)
+[View the source](https://github.com/continuedev/continue/tree/main/continuedev/src/continuedev/{filepath})
 
 ## Properties
 
@@ -91,30 +91,36 @@ import ClassPropertyRef from '@site/src/components/ClassPropertyRef.tsx';
 
 
 llm_module = importlib.import_module("continuedev.src.continuedev.libs.llm")
-llm_obj = getattr(llm_module, "LLM")
-schema = llm_obj.schema()
-llm_properties = schema["properties"].keys()
+ctx_obj = getattr(llm_module, "LLM")
+schema = ctx_obj.schema()
+ctx_properties = schema["properties"].keys()
 
 for module_name, module_title in LLM_MODULES:
     obj = import_llm_module(module_name, module_title)
     schema = obj.schema()
-    markdown_docs = docs_from_schema(schema, module_name, inherited=llm_properties)
+    markdown_docs = docs_from_schema(
+        schema, f"libs/llm/{module_name}.py", inherited=ctx_properties
+    )
     with open(f"docs/docs/reference/Models/{module_name}.md", "w") as f:
         f.write(markdown_docs)
 
 config_module = importlib.import_module("continuedev.src.continuedev.core.config")
 config_obj = getattr(config_module, "ContinueConfig")
 schema = config_obj.schema()
-markdown_docs = docs_from_schema(schema, "config")
+markdown_docs = docs_from_schema(schema, "core/config.py")
 with open("docs/docs/reference/config.md", "w") as f:
     f.write(markdown_docs)
 
+ctx_module = importlib.import_module("continuedev.src.continuedev.core.context")
+ctx_obj = getattr(ctx_module, "ContextProvider")
+schema = ctx_obj.schema()
+ctx_properties = schema["properties"].keys()
 for module_name, module_title in CONTEXT_PROVIDER_MODULES:
     obj = import_context_provider_module(module_name, module_title)
     schema = obj.schema()
     markdown_docs = docs_from_schema(
         schema,
-        module_name,
+        f"plugins/context_providers/{module_name}.py",
         ignore_properties=[
             "sdk",
             "updated_documents",
@@ -122,6 +128,7 @@ for module_name, module_title in CONTEXT_PROVIDER_MODULES:
             "selected_items",
             "ignore_patterns",
         ],
+        inherited=ctx_properties,
     )
     with open(f"docs/docs/reference/Context Providers/{module_name}.md", "w") as f:
         f.write(markdown_docs)

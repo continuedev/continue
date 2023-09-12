@@ -5,6 +5,8 @@ from ...core.main import ChatMessage, ContextItem, ContextItemDescription, Conte
 
 
 class TerminalContextProvider(ContextProvider):
+    """Type '@terminal' to reference the contents of your IDE's terminal."""
+
     title = "terminal"
     display_title = "Terminal"
     description = "Reference the contents of the terminal"

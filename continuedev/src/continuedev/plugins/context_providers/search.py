@@ -10,6 +10,8 @@ from .util import remove_meilisearch_disallowed_chars
 
 
 class SearchContextProvider(ContextProvider):
+    """Type '@search' to reference the results of codebase search, just like the results you would get from VS Code search."""
+
     title = "search"
     display_title = "Search"
     description = "Search the workspace for all matches of an exact string (e.g. '@search console.log')"
