@@ -36,7 +36,11 @@ const sidebars = {
       label: "🚶 Walkthroughs",
       collapsible: true,
       collapsed: true,
-      items: ["walkthroughs/codellama"],
+      items: [
+        "walkthroughs/codellama",
+        "walkthroughs/manually-run-continue",
+        "walkthroughs/running-continue-without-internet",
+      ],
     },
     "development-data",
     "telemetry",

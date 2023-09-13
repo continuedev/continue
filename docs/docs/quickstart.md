@@ -7,3 +7,5 @@
 3. Once you do this, you will see the Continue logo show up on the left side bar. If you click it, then the Continue extension will then open up:
 
 ![vscode-install](/img/continue-screenshot.png)
+
+4. If you have any problems, see the [troubleshooting guide](./troubleshooting.md) or ask for help in [our Discord](https://discord.gg/NWtdYexhMs).
