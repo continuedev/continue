@@ -1,47 +1,67 @@
-# continue-intellij-extension
-
-![Build](https://github.com/continuedev/continue/workflows/Build/badge.svg)
-[![Version](https://img.shields.io/jetbrains/plugin/v/PLUGIN_ID.svg)](https://plugins.jetbrains.com/plugin/PLUGIN_ID)
-[![Downloads](https://img.shields.io/jetbrains/plugin/d/PLUGIN_ID.svg)](https://plugins.jetbrains.com/plugin/PLUGIN_ID)
-
-## Template ToDo list
-
-- [x] Create a new [IntelliJ Platform Plugin Template][template] project.
-- [ ] Get familiar with the [template documentation][template].
-- [ ] Adjust the [pluginGroup](./gradle.properties), [plugin ID](./src/main/resources/META-INF/plugin.xml) and [sources package](./src/main/kotlin).
-- [ ] Adjust the plugin description in `README` (see [Tips][docs:plugin-description])
-- [ ] Review the [Legal Agreements](https://plugins.jetbrains.com/docs/marketplace/legal-agreements.html?from=IJPluginTemplate).
-- [ ] [Publish a plugin manually](https://plugins.jetbrains.com/docs/intellij/publishing-plugin.html?from=IJPluginTemplate) for the first time.
-- [ ] Set the `PLUGIN_ID` in the above README badges.
-- [ ] Set the [Plugin Signing](https://plugins.jetbrains.com/docs/intellij/plugin-signing.html?from=IJPluginTemplate) related [secrets](https://github.com/JetBrains/intellij-platform-plugin-template#environment-variables).
-- [ ] Set the [Deployment Token](https://plugins.jetbrains.com/docs/marketplace/plugin-upload.html?from=IJPluginTemplate).
-- [ ] Click the <kbd>Watch</kbd> button on the top of the [IntelliJ Platform Plugin Template][template] to be notified about releases containing new features and fixes.
-
 <!-- Plugin description -->
+> > 🎁 **New!: [Use Code Llama with Continue](https://continue.dev/docs/walkthroughs/codellama)**
 
-This Fancy IntelliJ Platform Plugin is going to be your implementation of the brilliant ideas that you have.
+<h1 align="center">Continue</h1>
 
-This specific section is a source for the [plugin.xml](/src/main/resources/META-INF/plugin.xml) file which will be extracted by the [Gradle](/build.gradle.kts) during the build process.
+<div align="center">
 
-To keep everything working, do not remove `<!-- ... -->` sections.
+**[Continue](https://continue.dev/docs) is the open-source autopilot for software development—an extension that brings the power of ChatGPT to your IDE**
+
+</div>
+
+<div align="center">
+
+[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+<a target="_blank" href="https://discord.gg/vapESyrFmJ" style="background:none">
+<img src="https://img.shields.io/badge/discord-join-continue.svg?labelColor=191937&color=6F6FF7&logo=discord" />
+</a>
+
+![Editing with Continue](https://github.com/continuedev/continue/blob/main/readme.gif?raw=true)
+
+</div>
+
+## Task, not tab, auto-complete
+
+### Get possible explainations
+
+Ask Continue about a part of your code to get another perspective
+
+- “how can I set up a Prisma schema that cascades deletes?”
+- “where in the page should I be making this request to the backend?”
+- “how can I communicate between these iframes?”
+
+### Edit in natural language
+
+Highlight a section of code and instruct Continue to refactor it
+
+- “/edit migrate this digital ocean terraform file into one that works for GCP”
+- “/edit change this plot into a bar chart in this dashboard component”
+- “/edit rewrite this function to be async”
+
+### Generate files from scratch
+
+Open a blank file and let Continue start new Python scripts, React components, etc.
+
+- “/edit here is a connector for postgres, now write one for kafka”
+- “/edit make an IAM policy that creates a user with read-only access to S3”
+- “/edit use this schema to write me a SQL query that gets recently churned users”
+
+## Getting Started
+
+By default, Continue uses GPT-4 and GPT-3.5-turbo via the OpenAI API.
+
+You can adjust the config to use different LLMs, including local, private models. Read more [here](https://continue.dev/docs/customization#change-the-default-llm).
+
+To see the keyboard shortcuts offered by Continue, see the "Feature Contributions" tab above.
+
+# Troubleshooting
+
+The Continue JetBrains extension is currently in alpha. It will attempt to start the Continue Python server locally for you, but sometimes this will fail, causing the "Starting Continue server..." not to disappear, or other hangups. While we are working on fixes to all of these problems, read here for common solutions:
+
+> [Troubleshooting Continue](https://continue.dev/docs/troubleshooting)
+
+## License
+
+[Apache 2.0 © 2023 Continue Dev, Inc.](./LICENSE)
 
 <!-- Plugin description end -->
-
-## Installation
-
-- Using the IDE built-in plugin system:
-
-  <kbd>Settings/Preferences</kbd> > <kbd>Plugins</kbd> > <kbd>Marketplace</kbd> > <kbd>Search for "continue-intellij-extension"</kbd> >
-  <kbd>Install</kbd>
-
-- Manually:
-
-  Download the [latest release](https://github.com/continuedev/continue/releases/latest) and install it manually using
-  <kbd>Settings/Preferences</kbd> > <kbd>Plugins</kbd> > <kbd>⚙️</kbd> > <kbd>Install plugin from disk...</kbd>
-
----
-
-Plugin based on the [IntelliJ Platform Plugin Template][template].
-
-[template]: https://github.com/JetBrains/intellij-platform-plugin-template
-[docs:plugin-description]: https://plugins.jetbrains.com/docs/intellij/plugin-user-experience.html#plugin-description-and-presentation

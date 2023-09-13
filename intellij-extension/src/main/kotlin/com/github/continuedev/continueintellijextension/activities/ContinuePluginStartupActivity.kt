@@ -3,10 +3,12 @@ package com.github.continuedev.continueintellijextension.activities
 import com.github.continuedev.continueintellijextension.`continue`.DefaultTextSelectionStrategy
 import com.github.continuedev.continueintellijextension.`continue`.*
 import com.github.continuedev.continueintellijextension.listeners.ContinuePluginSelectionListener
+import com.github.continuedev.continueintellijextension.actions.ToggleAuxiliaryBarAction
 import com.github.continuedev.continueintellijextension.services.ContinuePluginService
 import com.google.gson.Gson
 import com.intellij.execution.target.value.constant
 import com.intellij.openapi.Disposable
+import com.intellij.openapi.actionSystem.ActionManager
 import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.editor.EditorFactory
 import com.intellij.openapi.project.Project
@@ -139,6 +141,10 @@ class ContinuePluginStartupActivity : StartupActivity, Disposable {
     val coroutineScope = CoroutineScope(Dispatchers.IO)
 
     override fun runActivity(project: Project) {
+        // Register Actions
+        val actionManager = ActionManager.getInstance()
+        actionManager.registerAction("FocusContinueInput", ToggleAuxiliaryBarAction())
+
         // Download and start the Continue Python Server
         startContinuePythonServer()
 
@@ -174,34 +180,13 @@ class ContinuePluginStartupActivity : StartupActivity, Disposable {
                             "vscMachineId" to getMachineUniqueID(),
                             "vscMediaUrl" to "http://continue",
                             "dataSwitchOn" to true  // or your actual condition
-                        )
-                    dispatchCustomEvent("onUILoad", dataMap, continuePluginService.continuePluginWindow.webView)
+                    )
+                    it.dispatchCustomEvent("onLoad", dataMap)
                 }
             }
             EditorFactory.getInstance().eventMulticaster.addSelectionListener(listener, this@ContinuePluginStartupActivity)
         }
     }
-
-    private fun CoroutineScope.dispatchCustomEvent(
-        type: String,
-        data: Map<String, Any>,
-        webView: JBCefBrowser
-    ) {
-        launch(CoroutineExceptionHandler { _, exception ->
-            println("Failed to dispatch custom event: ${exception.message}")
-        }) {
-            val gson = Gson()
-            val jsonData = gson.toJson(data)
-            val jsCode = buildJavaScript(type, jsonData)
-            webView.executeJavaScriptAsync(jsCode)
-        }
-    }
-
-    private fun buildJavaScript(type: String, jsonData: String): String {
-        return """window.postMessage($jsonData, "*");"""
-    }
-
-
 
     override fun dispose() {
         // Cleanup resources here
