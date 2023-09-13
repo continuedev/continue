@@ -42,6 +42,10 @@ class GGML(LLM):
         None,
         description="Whether SSL certificates should be verified when making the HTTP request",
     )
+    proxy: Optional[str] = Field(
+        None,
+        description="Proxy URL to use when making the HTTP request",
+    )
     ca_bundle_path: str = Field(
         None,
         description="Path to a custom CA bundle to use when making the HTTP request",
@@ -96,6 +100,7 @@ class GGML(LLM):
                     **args,
                 },
                 headers=self.get_headers(),
+                proxy=self.proxy,
             ) as resp:
                 async for line in resp.content.iter_any():
                     if line:
@@ -129,6 +134,7 @@ class GGML(LLM):
                     f"{self.server_url}/v1/chat/completions",
                     json={"messages": messages, "stream": True, **args},
                     headers=self.get_headers(),
+                    proxy=self.proxy,
                 ) as resp:
                     async for line, end in resp.content.iter_chunks():
                         json_chunk = line.decode("utf-8")
@@ -165,6 +171,7 @@ class GGML(LLM):
                     **args,
                 },
                 headers=self.get_headers(),
+                proxy=self.proxy,
             ) as resp:
                 text = await resp.text()
                 try:

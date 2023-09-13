@@ -31,11 +31,10 @@ class HuggingFaceTGI(LLM):
 
     def collect_args(self, options: CompletionOptions) -> Any:
         args = super().collect_args(options)
-        args = {
-            **args,
-            "max_new_tokens": args.get("max_tokens", 1024),
-        }
-        args.pop("max_tokens", None)
+        args = {**args, "max_new_tokens": args.get("max_tokens", 1024), "best_of": 1}
+        args.pop("max_tokens")
+        args.pop("model")
+        args.pop("functions")
         return args
 
     async def _stream_complete(self, prompt, options):
@@ -46,13 +45,17 @@ class HuggingFaceTGI(LLM):
             timeout=aiohttp.ClientTimeout(total=self.timeout),
         ) as client_session:
             async with client_session.post(
-                f"{self.server_url}",
-                json={"inputs": prompt, "stream": True, **args},
+                f"{self.server_url}/generate_stream",
+                json={"inputs": prompt, "parameters": args},
             ) as resp:
                 async for line in resp.content.iter_any():
                     if line:
                         chunk = line.decode("utf-8")
-                        json_chunk = json.loads(chunk)
+                        try:
+                            json_chunk = json.loads(chunk)
+                        except Exception as e:
+                            print(f"Error parsing JSON: {e}")
+                            continue
                         text = json_chunk["details"]["best_of_sequences"][0][
                             "generated_text"
                         ]

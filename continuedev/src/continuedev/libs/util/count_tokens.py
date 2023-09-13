@@ -19,7 +19,11 @@ DEFAULT_ARGS = {
 }
 
 
+already_saw_import_err = False
+
+
 def encoding_for_model(model_name: str):
+    global already_saw_import_err
     try:
         import tiktoken
         from tiktoken_ext import openai_public  # noqa: F401
@@ -29,7 +33,9 @@ def encoding_for_model(model_name: str):
         except:
             return tiktoken.encoding_for_model("gpt-3.5-turbo")
     except Exception as e:
-        print("Error importing tiktoken", e)
+        if not already_saw_import_err:
+            print("Warning: failed to import tiktoken, using fallback.\n", e)
+            already_saw_import_err = True
         return None
 
 
