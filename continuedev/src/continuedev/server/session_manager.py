@@ -81,7 +81,6 @@ class SessionManager:
 
         # Set up the autopilot to update the GUI
         async def on_update(state: FullState):
-            logger.debug(f"Sending session: {session_id}")
             await session_manager.send_ws_data(
                 session_id, "state_update", {"state": state.dict()}
             )

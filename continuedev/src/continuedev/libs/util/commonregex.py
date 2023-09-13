@@ -45,14 +45,8 @@ po_box = re.compile(r"P\.? ?O\.? Box \d+", re.IGNORECASE)
 ssn = re.compile(
     "(?!000|666|333)0*(?:[0-6][0-9][0-9]|[0-7][0-6][0-9]|[0-7][0-7][0-2])[- ](?!00)[0-9]{2}[- ](?!0000)[0-9]{4}"
 )
-win_absolute_filepath = re.compile(
-    r"^(?:[a-zA-Z]\:|\\\\[\w\.]+\\[\w.$]+)\\(?:[\w]+\\)*\w([\w.])+", re.IGNORECASE
-)
-unix_absolute_filepath = re.compile(r"^\/(?:[\/\w]+\/)*\w([\w.])+", re.IGNORECASE)
 
 regexes = {
-    "win_absolute_filepath": win_absolute_filepath,
-    "unix_absolute_filepath": unix_absolute_filepath,
     "dates": date,
     "times": time,
     "phones": phone,
@@ -71,8 +65,6 @@ regexes = {
 }
 
 placeholders = {
-    "win_absolute_filepath": "<FILEPATH>",
-    "unix_absolute_filepath": "<FILEPATH>",
     "dates": "<DATE>",
     "times": "<TIME>",
     "phones": "<PHONE>",

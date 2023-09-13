@@ -183,7 +183,7 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
             else:
                 other_msgs.append(msg_string)
 
-            # if self.workspace_directory is not None and self.unique_id is not None:
+                # if self.workspace_directory is not None and self.unique_id is not None:
                 break
         return other_msgs
 
@@ -601,7 +601,6 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str = None):
         # Message handler
         def handle_msg(msg):
             message = json.loads(msg)
-            logger.debug(msg)
 
             if "messageType" not in message or "data" not in message:
                 return
