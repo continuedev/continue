@@ -1,14 +1,37 @@
 # ⚙️ How Continue works
 
-![Continue Architecture Diagram](/img/continue-architecture.png)
+![Continue Architecture Diagram](/img/continue-diagram.png)
 
-The `Continue` library consists of an **SDK**, a **GUI**, and a **Server** that brings everything together.
+## Overview
 
-1. The **SDK** gives you access to the tools (e.g. open a directory, edit a file, call a model, etc.) needed to define steps that integrate LLMs into your IDE and workflows.
+- Continue is typically used inside of an Integrated Development Environment (IDE) like VS Code or JetBrains
+- All units of action in Continue are called steps. Steps can be recursively composed into more complex steps
+- Steps have access to the SDK, which enables you to use LLMs in your workflows (e.g. edit a file, call a model, etc)
+- The Server facilitates communication between the IDE and the GUI and determines what steps to take next
+- The GUI enables you to review every automated step, giving you the opportunity to undo and rerun any or all
+- It is also possible to run Continue in headless, asynchronous mode. Please reach out if you are interested in this!
 
-2. The **GUI** lets you transparently review every automated step, providing the opportunity to undo and rerun any that ran incorrectly.
+## Supported IDEs
 
-3. The **Server** is responsible for connecting the GUI and SDK to the IDE as well as deciding which steps to take next.
+### VS Code (Beta)
+
+Continue can be used as a VS Code extension. 
+
+You can install it from the Visual Studio Marketplace [here](https://marketplace.visualstudio.com/items?itemName=Continue.continue).
+
+### JetBrains (Alpha)
+
+Continue can be used as a plugin inside of PyCharm, Intellij, WebStorm, etc. 
+
+You can install it from the JetBrains Marketplace [here](https://continue.dev/).
+
+### Add Continue to a new IDE
+
+Here is how you can get started with adding Continue to a new IDE:
+
+1. Let us know that you would like to add Continue to a new IDE by opening an issue [here](https://github.com/continuedev/continue/issues/new/choose)
+2. Implement a class that maps each of the actions like "read file" to the API provided by that IDE like [here](https://github.com/continuedev/continue/blob/main/extension/src/continueIdeClient.ts)
+3. Learn more about what you might also do by looking at this pull request that added initial support for JetBrains [here](https://github.com/continuedev/continue/pull/457)
 
 ## Running the server manually
 
