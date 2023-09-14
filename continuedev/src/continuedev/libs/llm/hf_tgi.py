@@ -32,9 +32,9 @@ class HuggingFaceTGI(LLM):
     def collect_args(self, options: CompletionOptions) -> Any:
         args = super().collect_args(options)
         args = {**args, "max_new_tokens": args.get("max_tokens", 1024), "best_of": 1}
-        args.pop("max_tokens")
-        args.pop("model")
-        args.pop("functions")
+        args.pop("max_tokens", None)
+        args.pop("model", None)
+        args.pop("functions", None)
         return args
 
     async def _stream_complete(self, prompt, options):
@@ -47,6 +47,7 @@ class HuggingFaceTGI(LLM):
             async with client_session.post(
                 f"{self.server_url}/generate_stream",
                 json={"inputs": prompt, "parameters": args},
+                headers={"Content-Type": "application/json"},
             ) as resp:
                 async for line in resp.content.iter_any():
                     if line:
