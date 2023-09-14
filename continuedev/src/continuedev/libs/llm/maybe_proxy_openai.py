@@ -45,9 +45,18 @@ class MaybeProxyOpenAI(LLM):
     ):
         await super().start(write_log=write_log, unique_id=unique_id)
         if self.api_key is None or self.api_key.strip() == "":
-            self.llm = ProxyServer(model=self.model, verify_ssl=self.verify_ssl)
+            self.llm = ProxyServer(
+                model=self.model,
+                verify_ssl=self.verify_ssl,
+                ca_bundle_path=self.ca_bundle_path,
+            )
         else:
-            self.llm = OpenAI(api_key=self.api_key, model=self.model, verify_ssl=self.verify_ssl)
+            self.llm = OpenAI(
+                api_key=self.api_key,
+                model=self.model,
+                verify_ssl=self.verify_ssl,
+                ca_bundle_path=self.ca_bundle_path,
+            )
 
         await self.llm.start(write_log=write_log, unique_id=unique_id)
 

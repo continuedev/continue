@@ -42,10 +42,6 @@ class GGML(LLM):
         None,
         description="Proxy URL to use when making the HTTP request",
     )
-    ca_bundle_path: str = Field(
-        None,
-        description="Path to a custom CA bundle to use when making the HTTP request",
-    )
     model: str = Field(
         "ggml", description="The name of the model to use (optional for the GGML class)"
     )
