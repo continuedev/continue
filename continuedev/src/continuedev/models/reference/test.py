@@ -54,7 +54,7 @@ def docs_from_schema(schema, filepath, ignore_properties=[], inherited=[]):
         if only_required != required or prop in ignore_properties:
             return ""
         required = "true" if required else "false"
-        return f"""<ClassPropertyRef name='{prop}' details='{html.escape(json.dumps(details))}' required={{{required}}} default="{html.escape(str(details.get("default", "")))}"/>"""
+        return f"""<ClassPropertyRef name='{prop}' details='{html.escape(json.dumps(details))}' required={{{required}}} default="{html.escape(str(details.get("default", "")))}"/>\n"""
 
     for prop, details in schema["properties"].items():
         property = add_property(prop, details, True)

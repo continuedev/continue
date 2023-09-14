@@ -10,6 +10,11 @@ Type '@url' to reference the contents of a URL. You can either reference preset 
 
 <ClassPropertyRef name='preset_urls' details='{&quot;title&quot;: &quot;Preset Urls&quot;, &quot;description&quot;: &quot;A list of preset URLs that you will be able to quickly reference by typing &#x27;@url&#x27;&quot;, &quot;default&quot;: [], &quot;type&quot;: &quot;array&quot;, &quot;items&quot;: {&quot;type&quot;: &quot;string&quot;}}' required={false} default="[]"/>
 
+
 ### Inherited Properties
 
-<ClassPropertyRef name='title' details='{&quot;title&quot;: &quot;Title&quot;, &quot;default&quot;: &quot;url&quot;, &quot;type&quot;: &quot;string&quot;}' required={false} default="url"/><ClassPropertyRef name='display_title' details='{&quot;title&quot;: &quot;Display Title&quot;, &quot;default&quot;: &quot;URL&quot;, &quot;type&quot;: &quot;string&quot;}' required={false} default="URL"/><ClassPropertyRef name='description' details='{&quot;title&quot;: &quot;Description&quot;, &quot;default&quot;: &quot;Reference the contents of a webpage&quot;, &quot;type&quot;: &quot;string&quot;}' required={false} default="Reference the contents of a webpage"/><ClassPropertyRef name='dynamic' details='{&quot;title&quot;: &quot;Dynamic&quot;, &quot;default&quot;: true, &quot;type&quot;: &quot;boolean&quot;}' required={false} default="True"/><ClassPropertyRef name='requires_query' details='{&quot;title&quot;: &quot;Requires Query&quot;, &quot;default&quot;: true, &quot;type&quot;: &quot;boolean&quot;}' required={false} default="True"/>
+<ClassPropertyRef name='title' details='{&quot;title&quot;: &quot;Title&quot;, &quot;default&quot;: &quot;url&quot;, &quot;type&quot;: &quot;string&quot;}' required={false} default="url"/>
+<ClassPropertyRef name='display_title' details='{&quot;title&quot;: &quot;Display Title&quot;, &quot;default&quot;: &quot;URL&quot;, &quot;type&quot;: &quot;string&quot;}' required={false} default="URL"/>
+<ClassPropertyRef name='description' details='{&quot;title&quot;: &quot;Description&quot;, &quot;default&quot;: &quot;Reference the contents of a webpage&quot;, &quot;type&quot;: &quot;string&quot;}' required={false} default="Reference the contents of a webpage"/>
+<ClassPropertyRef name='dynamic' details='{&quot;title&quot;: &quot;Dynamic&quot;, &quot;default&quot;: true, &quot;type&quot;: &quot;boolean&quot;}' required={false} default="True"/>
+<ClassPropertyRef name='requires_query' details='{&quot;title&quot;: &quot;Requires Query&quot;, &quot;default&quot;: true, &quot;type&quot;: &quot;boolean&quot;}' required={false} default="True"/>
