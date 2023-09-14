@@ -265,7 +265,7 @@ function GUI(props: GUIProps) {
                   Continue's OpenAI API key. To keep using Continue, you can
                   either use your own API key, or use a local LLM. To read more
                   about the options, see our{" "}
-                  <a href="https://continue.dev/docs/customization">
+                  <a href="https://continue.dev/docs/customization/models">
                     documentation
                   </a>
                   . If you're just looking for fastest way to keep going, type

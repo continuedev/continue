@@ -60,10 +60,6 @@ class OpenAI(LLM):
         description="OpenAI API key",
     )
 
-    verify_ssl: Optional[bool] = Field(
-        None, description="Whether to verify SSL certificates for requests."
-    )
-
     ca_bundle_path: Optional[str] = Field(
         None, description="Path to CA bundle to use for requests."
     )

@@ -38,10 +38,6 @@ class TogetherLLM(LLM):
         "https://api.together.xyz",
         description="The base URL for your Together API instance",
     )
-    verify_ssl: Optional[bool] = Field(
-        None,
-        description="Whether SSL certificates should be verified when making the HTTP request",
-    )
 
     _client_session: aiohttp.ClientSession = None
 
