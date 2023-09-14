@@ -1,5 +1,5 @@
 import asyncio
-from typing import Any, List
+from typing import Any, List, Union
 
 from pydantic import Field
 
@@ -52,7 +52,7 @@ class QueuedLLM(LLM):
         self,
         options: CompletionOptions,
         msgs: List[ChatMessage],
-        functions: List[Any] | None = None,
+        functions: Union[List[Any], None] = None,
     ):
         return self.llm.compile_chat_messages(options, msgs, functions)
 

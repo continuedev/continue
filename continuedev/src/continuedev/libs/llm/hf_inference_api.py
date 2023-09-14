@@ -1,4 +1,4 @@
-from typing import Callable, Dict, List
+from typing import Callable, Dict, List, Union
 
 from huggingface_hub import InferenceClient
 from pydantic import Field
@@ -36,9 +36,9 @@ class HuggingFaceInferenceAPI(LLM):
         None, description="Your Hugging Face Inference API endpoint URL"
     )
 
-    template_messages: Callable[
-        [List[Dict[str, str]]], str
-    ] | None = llama2_template_messages
+    template_messages: Union[
+        Callable[[List[Dict[str, str]]], str], None
+    ] = llama2_template_messages
 
     prompt_templates = {
         "edit": simplified_edit_prompt,
