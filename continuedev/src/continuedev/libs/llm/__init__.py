@@ -72,6 +72,9 @@ class LLM(ContinueBaseModel):
         300,
         description="Set the timeout for each request to the LLM. If you are running a local LLM that takes a while to respond, you might want to set this to avoid timeouts.",
     )
+    verify_ssl: Optional[bool] = Field(
+        None, description="Whether to verify SSL certificates for requests."
+    )
     prompt_templates: dict = Field(
         {},
         description='A dictionary of prompt templates that can be used to customize the behavior of the LLM in certain situations. For example, set the "edit" key in order to change the prompt that is used for the /edit slash command. Each value in the dictionary is a string templated in mustache syntax, and filled in at runtime with the variables specific to the situation. See the documentation for more information.',
@@ -120,6 +123,7 @@ class LLM(ContinueBaseModel):
                 "description": "A function that is called upon every prompt and completion, by default to log to the file which can be viewed by clicking on the magnifying glass."
             },
             "api_key": {"description": "The API key for the LLM provider."},
+            "verify_ssl": {"description": "Whether to verify SSL certificates for requests."}
         }
 
     def dict(self, **kwargs):

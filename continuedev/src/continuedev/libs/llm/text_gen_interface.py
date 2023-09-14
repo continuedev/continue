@@ -35,9 +35,6 @@ class TextGenUI(LLM):
         "http://localhost:5005",
         description="URL of your TextGenUI streaming server (separate from main server URL)",
     )
-    verify_ssl: Optional[bool] = Field(
-        None, description="Whether to verify SSL certificates for requests."
-    )
 
     prompt_templates = {
         "edit": simplest_edit_prompt,

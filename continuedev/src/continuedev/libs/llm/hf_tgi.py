@@ -15,10 +15,6 @@ class HuggingFaceTGI(LLM):
     server_url: str = Field(
         "http://localhost:8080", description="URL of your TGI server"
     )
-    verify_ssl: Optional[bool] = Field(
-        None,
-        description="Whether SSL certificates should be verified when making the HTTP request",
-    )
 
     template_messages: Callable[[List[ChatMessage]], str] = code_llama_template_messages
 
