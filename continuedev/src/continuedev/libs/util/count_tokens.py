@@ -29,7 +29,7 @@ def encoding_for_model(model_name: str):
 
         try:
             return tiktoken.encoding_for_model(aliases.get(model_name, model_name))
-        except:
+        except Exception as _:
             return tiktoken.encoding_for_model("gpt-3.5-turbo")
     except Exception as e:
         if not already_saw_import_err:

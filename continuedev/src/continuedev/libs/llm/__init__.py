@@ -75,6 +75,10 @@ class LLM(ContinueBaseModel):
     verify_ssl: Optional[bool] = Field(
         None, description="Whether to verify SSL certificates for requests."
     )
+    ca_bundle_path: str = Field(
+        None,
+        description="Path to a custom CA bundle to use when making the HTTP request",
+    )
     prompt_templates: dict = Field(
         {},
         description='A dictionary of prompt templates that can be used to customize the behavior of the LLM in certain situations. For example, set the "edit" key in order to change the prompt that is used for the /edit slash command. Each value in the dictionary is a string templated in mustache syntax, and filled in at runtime with the variables specific to the situation. See the documentation for more information.',
@@ -123,7 +127,9 @@ class LLM(ContinueBaseModel):
                 "description": "A function that is called upon every prompt and completion, by default to log to the file which can be viewed by clicking on the magnifying glass."
             },
             "api_key": {"description": "The API key for the LLM provider."},
-            "verify_ssl": {"description": "Whether to verify SSL certificates for requests."}
+            "verify_ssl": {
+                "description": "Whether to verify SSL certificates for requests."
+            },
         }
 
     def dict(self, **kwargs):

@@ -84,12 +84,11 @@ const TextDialog = (props: {
         }}
       >
         <Dialog>
-          {typeof props.message === "string" &&
-            (typeof props.message === "string" ? (
-              <ReactMarkdown>{props.message || ""}</ReactMarkdown>
-            ) : (
-              props.message
-            ))}
+          {typeof props.message === "string" ? (
+            <ReactMarkdown>{props.message || ""}</ReactMarkdown>
+          ) : (
+            props.message
+          )}
         </Dialog>
       </DialogContainer>
     </ScreenCover>
