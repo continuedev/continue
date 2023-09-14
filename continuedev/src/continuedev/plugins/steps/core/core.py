@@ -624,7 +624,6 @@ Please output the code to be inserted at the cursor in order to fulfill the user
 
             generator = model_to_use.stream_complete(
                 rendered,
-                raw=True,
                 temperature=sdk.config.temperature,
                 max_tokens=min(max_tokens, model_to_use.context_length // 2),
             )
