@@ -34,7 +34,7 @@ export async function activateExtension(context: vscode.ExtensionContext) {
     console.log("Error getting workspace folder: ", e);
   }
   // Before anything else, check whether this is an out-of-date version of the extension
-  // Do so by grabbing the package.json off of the GitHub respository for now.
+  // Do so by grabbing the package.json off of the GitHub repository for now.
   fetch(PACKAGE_JSON_RAW_GITHUB_URL)
     .then(async (res) => res.json())
     .then((packageJson) => {
@@ -81,7 +81,7 @@ export async function activateExtension(context: vscode.ExtensionContext) {
     return await ideProtocolClient.getSessionId();
   })();
 
-  // Register Continue GUI as sidebar webview, and beging a new session
+  // Register Continue GUI as sidebar webview, and beginning a new session
   const provider = new ContinueGUIWebviewViewProvider(sessionIdPromise);
 
   context.subscriptions.push(

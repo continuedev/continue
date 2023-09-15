@@ -66,7 +66,7 @@ VSCode is assumed for development as Continue is primarily a VSCode tool at the 
    3. Hit play button
    4. This will start both the server and the extension in debug mode and open a new VSCode window with continue extension
       1. I call the VSCode window with the extension the *Host VSCode*
-      2. The window you started debugging from is reffered to as the *Main VSCode*
+      2. The window you started debugging from is referred to as the *Main VSCode*
    5. Notice 2 debug sessions are running, one for the server and one for the extension, you can also set breakpoints in both
 
 4. Lets try using breakpoints:

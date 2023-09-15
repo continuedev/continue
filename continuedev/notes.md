@@ -25,7 +25,7 @@ There should be different levels of abstraction at which you can work with these
 ---
 
 - One big thing that happens as you're fixing errors is that you encounter a fork in the road. The language model should be able to present you with both options, and you just click to decide.
-- What I'm doing right now: I write a bunch of code without running it, then ahve to solve a bunch of errors at once, but small obvious ones. We can do this all automatically.
+- What I'm doing right now: I write a bunch of code without running it, then have to solve a bunch of errors at once, but small obvious ones. We can do this all automatically.
 
 ---
 

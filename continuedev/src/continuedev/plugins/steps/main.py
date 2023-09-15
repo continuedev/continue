@@ -47,7 +47,7 @@ class FasterEditHighlightedCodeStep(Step):
         REPLACE_WITH
         <CODE_TO_REPLACE_WITH>
 
-        where <CODE_TO_REPLACE> and <CODE_TO_REPLACE_WITH> can be multiple lines, but should be the mininum needed to make the edit. Be sure to maintain existing whitespace at the start of lines.
+        where <CODE_TO_REPLACE> and <CODE_TO_REPLACE_WITH> can be multiple lines, but should be the minimum needed to make the edit. Be sure to maintain existing whitespace at the start of lines.
 
         For example, if you want to replace the code `x = 1` with `x = 2` in main.py, you would write:
         FILEPATH

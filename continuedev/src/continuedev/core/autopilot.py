@@ -251,9 +251,9 @@ class Autopilot(ContinueBaseModel):
     def handle_manual_edits(self, edits: List[FileEditWithFullContents]):
         for edit in edits:
             self._manual_edits_buffer.append(edit)
-            # TODO: You're storing a lot of unecessary data here. Can compress into EditDiffs on the spot, and merge.
+            # TODO: You're storing a lot of unnecessary data here. Can compress into EditDiffs on the spot, and merge.
             # self._manual_edits_buffer = merge_file_edit(self._manual_edits_buffer, edit)
-            # Note that this is being overriden to do nothing in DemoAgent
+            # Note that this is being overridden to do nothing in DemoAgent
 
     async def handle_command_output(self, output: str):
         get_traceback_funcs = [get_python_traceback, get_javascript_traceback]

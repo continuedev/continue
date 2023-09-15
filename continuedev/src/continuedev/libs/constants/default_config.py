@@ -33,7 +33,7 @@ config = ContinueConfig(
     custom_commands=[
         CustomCommand(
             name="test",
-            description="Write unit tests for the higlighted code",
+            description="Write unit tests for the highlighted code",
             prompt="Write a comprehensive set of unit tests for the selected code. It should setup, run tests that check for correctness including important edge cases, and teardown. Ensure that the tests are complete and sophisticated. Give the tests just as chat output, don't edit any file.",
         )
     ],
