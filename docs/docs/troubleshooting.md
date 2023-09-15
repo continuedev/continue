@@ -27,7 +27,7 @@ This may be necessary if you have a firewall blocking the server from downloadin
 ## Check the server logs
 
 1. `cmd+shift+p` (MacOS) / `ctrl+shift+p` (Windows)
-2. Search for and then select "Developer: Toggle Developer Tools"
+2. Search for and then select "Continue: View Continue Server Logs"
 3. Read the `continue.log` file that has opened
 
 ## Check the console logs
@@ -36,8 +36,9 @@ If your Continue server is not setting up, try checking the console logs:
 
 1. `cmd+shift+p` (MacOS) / `ctrl+shift+p` (Windows)
 2. Search for and then select "Developer: Toggle Developer Tools"
-3. Select `Console`
-4. Read the console logs
+3. This will open the [Chrome DevTools window](https://developer.chrome.com/docs/devtools/)
+4. Select the `Console` tab
+5. Read the console logs
 
 ## Download an Older Version
 
