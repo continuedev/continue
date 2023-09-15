@@ -15,13 +15,13 @@
 
 ### VS Code (Beta)
 
-Continue can be used as a VS Code extension. 
+Continue can be used as a VS Code extension.
 
 You can install it from the Visual Studio Marketplace [here](https://marketplace.visualstudio.com/items?itemName=Continue.continue).
 
 ### JetBrains (Alpha)
 
-Continue can be used as a plugin inside of PyCharm, Intellij, WebStorm, etc. 
+Continue can be used as a plugin inside of PyCharm, Intellij, WebStorm, etc.
 
 You can install it from the JetBrains Marketplace [here](https://continue.dev/).
 
@@ -35,19 +35,4 @@ Here is how you can get started with adding Continue to a new IDE:
 
 ## Running the server manually
 
-If you would like to run the Continue server manually, rather than allowing the VS Code to set it up, you can follow these steps:
-
-1. `git clone https://github.com/continuedev/continue`
-2. `cd continue/continuedev`
-3. Make sure packages are installed with `poetry install`
-   - If poetry is not installed, you can install with
-   ```bash
-   curl -sSL https://install.python-poetry.org | python3 -
-   ```
-   (official instructions [here](https://python-poetry.org/docs/#installing-with-the-official-installer))
-4. `poetry shell` to activate the virtual environment
-5. Either:
-
-   a) To run without the debugger: `cd ..` and `python3 -m continuedev.src.continuedev.server.main`
-
-   b) To run with the debugger: Open a VS Code window with `continue` as the root folder. Ensure that you have selected the Python interpreter from virtual environment, then use the `.vscode/launch.json` we have provided to start the debugger.
+If you would like to run the Continue server manually, rather than allowing the IDE to automatically set it up, you can follow the short tutorial for [Manually Running Continue](./walkthroughs/manually-run-continue.md).
