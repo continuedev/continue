@@ -8,7 +8,7 @@
 
 3. Press the `Continue` button
 
-4. Review the explaination of what was edited and why on the Continue GUI
+4. Review the explanation of what was edited and why on the Continue GUI
 
 5. Check the code that was edited by the LLM in the code editor
 
@@ -22,7 +22,7 @@ Context is not carried across steps at the moment, so you will need to repeat an
 
 ## Review actions taken
 
-Whether you are using a recipe or not, you will want to review the explainations of what the LLM did and check the code that it generated. You are ultimately responsible for any code that you ship, even if it was written by a LLM.
+Whether you are using a recipe or not, you will want to review the explanations of what the LLM did and check the code that it generated. You are ultimately responsible for any code that you ship, even if it was written by a LLM.
 
 ## Reverse button
 

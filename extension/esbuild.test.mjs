@@ -10,7 +10,7 @@ import glob from "glob";
 // Bundles script to run tests on VSCode host + mocha runner that will be invoked from within VSCode host
 await esbuild.build({
     entryPoints: [
-        // Runs mocha runner on VSCode host usig runTests from @vscode/test-electron
+        // Runs mocha runner on VSCode host using runTests from @vscode/test-electron
         "src/test-runner/runTestOnVSCodeHost.ts",
 
         // Runs the bundled tests using Mocha class

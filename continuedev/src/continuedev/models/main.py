@@ -82,7 +82,7 @@ class Range(BaseModel):
         return self.start == self.end
 
     def indices_in_string(self, string: str) -> Tuple[int, int]:
-        """Get the start and end indicees of this range in the string"""
+        """Get the start and end indices of this range in the string"""
         lines = string.splitlines()
         if len(lines) == 0:
             return (0, 0)
