@@ -1,5 +1,4 @@
 import os
-import urllib.parse
 from textwrap import dedent
 from typing import Coroutine, List, Optional, Union
 
@@ -236,6 +235,20 @@ class StarCoderEditHighlightedCodeStep(Step):
             await sdk.ide.setFileOpen(rif.filepath)
 
 
+def decode_escaped_path(path: str) -> str:
+    """We use a custom escaping scheme to record the full path of a file as a
+    corresponding basename, but withut URL encoding, because then the URI just gets
+    interpreted as a full path again."""
+    return path.replace("$forwardslash$", "/").replace("$backslash$", "\\")
+
+
+def encode_escaped_path(path: str) -> str:
+    """We use a custom escaping scheme to record the full path of a file as a
+    corresponding basename, but withut URL encoding, because then the URI just gets
+    interpreted as a full path again."""
+    return path.replace("/", "$forwardslash$").replace("\\", "$backslash$")
+
+
 class EditAlreadyEditedRangeStep(Step):
     hide = True
     model: Optional[LLM] = None
@@ -263,7 +276,7 @@ class EditAlreadyEditedRangeStep(Step):
         if os.path.basename(self.range_in_file.filepath) in os.listdir(
             os.path.expanduser(os.path.join("~", ".continue", "diffs"))
         ):
-            decoded_basename = urllib.parse.unquote(
+            decoded_basename = decode_escaped_path(
                 os.path.basename(self.range_in_file.filepath)
             )
             self.range_in_file.filepath = decoded_basename
@@ -339,7 +352,7 @@ class EditHighlightedCodeStep(Step):
             if (
                 os.path.dirname(range_in_file.filepath)
                 == os.path.expanduser(os.path.join("~", ".continue", "diffs"))
-                or urllib.parse.quote_plus(range_in_file.filepath)
+                or encode_escaped_path(range_in_file.filepath)
                 in os.listdir(
                     os.path.expanduser(os.path.join("~", ".continue", "diffs"))
                 )
