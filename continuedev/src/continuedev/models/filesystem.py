@@ -371,7 +371,7 @@ class VirtualFileSystem(FileSystem):
         raise NotImplementedError
 
     def add_directory(self, path: str):
-        # For reasons as seen here and in delete_directory, a Dict[str, str] might not be the best represntation. Could just preprocess to something better upon __init__
+        # For reasons as seen here and in delete_directory, a Dict[str, str] might not be the best representation. Could just preprocess to something better upon __init__
         pass
 
     def apply_file_edit(self, edit: FileEdit) -> EditDiff:

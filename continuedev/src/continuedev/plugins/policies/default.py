@@ -57,7 +57,7 @@ class DefaultPolicy(Policy):
     default_params: dict = {}
 
     def next(self, config: ContinueConfig, history: History) -> Step:
-        # At the very start, run initial Steps spcecified in the config
+        # At the very start, run initial Steps specified in the config
         if history.get_current() is None:
             shown_welcome_file = os.path.join(getServerFolderPath(), ".shown_welcome")
             if os.path.exists(shown_welcome_file):

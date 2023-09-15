@@ -86,7 +86,7 @@ class LLM(ContinueBaseModel):
 
     template_messages: Optional[Callable[[List[Dict[str, str]]], str]] = Field(
         None,
-        description="A function that takes a list of messages and returns a prompt. This ensures that models like llama2, which are trained on specific chat formats, will always recieve input in that format.",
+        description="A function that takes a list of messages and returns a prompt. This ensures that models like llama2, which are trained on specific chat formats, will always receive input in that format.",
     )
     write_log: Optional[Callable[[str], None]] = Field(
         None,
@@ -121,7 +121,7 @@ class LLM(ContinueBaseModel):
                 "description": 'A dictionary of prompt templates that can be used to customize the behavior of the LLM in certain situations. For example, set the "edit" key in order to change the prompt that is used for the /edit slash command. Each value in the dictionary is a string templated in mustache syntax, and filled in at runtime with the variables specific to the situation. See the documentation for more information.'
             },
             "template_messages": {
-                "description": "A function that takes a list of messages and returns a prompt. This ensures that models like llama2, which are trained on specific chat formats, will always recieve input in that format."
+                "description": "A function that takes a list of messages and returns a prompt. This ensures that models like llama2, which are trained on specific chat formats, will always receive input in that format."
             },
             "write_log": {
                 "description": "A function that is called upon every prompt and completion, by default to log to the file which can be viewed by clicking on the magnifying glass."

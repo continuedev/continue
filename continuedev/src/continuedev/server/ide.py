@@ -358,7 +358,7 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
         pass
 
     def onCloseGUI(self, session_id: str):
-        # Accesss to SessionManager
+        # Access to SessionManager
         pass
 
     def onOpenGUIRequest(self):

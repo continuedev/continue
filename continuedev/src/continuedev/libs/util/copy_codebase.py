@@ -67,7 +67,7 @@ class CopyCodebaseEventHandler(PatternMatchingEventHandler):
     # It should be the autopilot that makes the update right? It's just another action, everything comes from a single stream.
 
     def _event_to_edit(self, event) -> Union[FileSystemEdit, None]:
-        # NOTE: You'll need to map paths to create both an action within the copy filesystem (the one you take) and one in the original fileystem (the one you'll record and allow the user to accept). Basically just need a converter built in to the FileSystemEdit class
+        # NOTE: You'll need to map paths to create both an action within the copy filesystem (the one you take) and one in the original filesystem (the one you'll record and allow the user to accept). Basically just need a converter built in to the FileSystemEdit class
         src = event.src_path()
         if event.is_directory:
             if event.event_type == "moved":

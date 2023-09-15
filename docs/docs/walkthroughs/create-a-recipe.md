@@ -54,7 +54,7 @@ class CreatePipelineRecipe(Step):
 
 ### Using the SDK
 
-You will want to use the SDK when you are opening directories, editing files, using models, etc. This will ensure that these actions are recorded as steps, so they are reviewable, reversable, and rerunnable.
+You will want to use the SDK when you are opening directories, editing files, using models, etc. This will ensure that these actions are recorded as steps, so they are reviewable, reversible, and rerunnable.
 
 ### Allow for configurability
 
