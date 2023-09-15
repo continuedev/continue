@@ -69,11 +69,9 @@ const MODEL_INFO: { title: string; class: string; args: any }[] = [
   },
   {
     title: "LM Studio",
-    class: "OpenAI",
+    class: "GGML",
     args: {
-      api_base: "http://localhost:1234",
-      model: "codellama",
-      api_key: "EMPTY",
+      server_url: "http://localhost:1234",
     },
   },
   {
