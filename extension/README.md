@@ -21,7 +21,7 @@
 
 ## Task, not tab, auto-complete
 
-### Get possible explainations
+### Get possible explanations
 
 Ask Continue about a part of your code to get another perspective
 

@@ -25,7 +25,7 @@ def find_all_matches_in_dir(pattern: str, dirpath: str) -> List[RangeInFile]:
             if file in IGNORE_FILES:
                 continue  # pun intended
             with open(os.path.join(root, file), "r") as f:
-                # Find the index of all occurences of the pattern in the file. Use re.
+                # Find the index of all occurrences of the pattern in the file. Use re.
                 file_content = f.read()
                 results = re.finditer(pattern, file_content)
                 range_in_files += [

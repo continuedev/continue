@@ -33,7 +33,7 @@ class ContinueStepStep(Step):
 
         Please edit the code to write your own Step that does the following:
 
-        {self.prommpt}
+        {self.prompt}
 
         It should be a subclass of Step as above, implementing the `run` method, and using pydantic attributes to define the parameters.
 

@@ -80,7 +80,7 @@ class AddTransformStep(Step):
             {dlt_transform_docs}"""
         )
 
-        # edit the pipeline to add a tranform function and attach it to a resource
+        # edit the pipeline to add a transform function and attach it to a resource
         await sdk.edit_file(
             filename=filename,
             prompt=prompt,
