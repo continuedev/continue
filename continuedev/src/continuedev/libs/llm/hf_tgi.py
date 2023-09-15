@@ -6,7 +6,7 @@ from pydantic import Field
 
 from ...core.main import ChatMessage
 from ..llm import LLM, CompletionOptions
-from .prompts.chat import code_llama_template_messages
+from .prompts.chat import llama2_template_messages
 from .prompts.edit import simplified_edit_prompt
 
 
@@ -16,7 +16,7 @@ class HuggingFaceTGI(LLM):
         "http://localhost:8080", description="URL of your TGI server"
     )
 
-    template_messages: Callable[[List[ChatMessage]], str] = code_llama_template_messages
+    template_messages: Callable[[List[ChatMessage]], str] = llama2_template_messages
 
     prompt_templates = {
         "edit": simplified_edit_prompt,
