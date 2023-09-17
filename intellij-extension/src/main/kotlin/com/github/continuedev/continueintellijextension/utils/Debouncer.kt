@@ -5,7 +5,10 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-class Debouncer(private val interval: Long, private val coroutineScope: CoroutineScope) {
+class Debouncer(
+    private val interval: Long,
+    private val coroutineScope: CoroutineScope
+) {
     private var debounceJob: Job? = null
 
     fun debounce(action: suspend () -> Unit) {

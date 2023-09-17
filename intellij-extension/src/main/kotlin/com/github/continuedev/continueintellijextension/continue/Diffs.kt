@@ -1,15 +1,13 @@
 package com.github.continuedev.continueintellijextension.`continue`
 
 import com.intellij.diff.DiffContentFactory
-import com.intellij.diff.DiffTool
-import com.intellij.openapi.editor.EditorFactory
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.ui.WindowWrapper
 import com.intellij.openapi.vfs.LocalFileSystem
 import java.io.File
 
 
 val FILENAME = "/Users/natesesti/.continue/diffs/diff"
+
 class DiffManager(private val project: Project) {
 
     private val diffContentFactory = DiffContentFactory.getInstance()
@@ -25,7 +23,12 @@ class DiffManager(private val project: Project) {
         openDiffWindow(filepath, FILENAME, "Old", "New")
     }
 
-    fun openDiffWindow(file1: String, file2: String, title1: String, title2: String) {
+    fun openDiffWindow(
+        file1: String,
+        file2: String,
+        title1: String,
+        title2: String
+    ) {
         val diffContentFactory = DiffContentFactory.getInstance()
 
         val virtualFile1 = LocalFileSystem.getInstance().findFileByPath(file1)
