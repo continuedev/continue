@@ -1,10 +1,13 @@
 import asyncio
-from typing import List
+from typing import List, Optional
+
+from ripgrepy import Ripgrepy
 
 from ...core.main import Step
 from ...core.models import Models
 from ...core.sdk import ContinueSDK
 from ...libs.llm.prompts.edit import simplified_edit_prompt
+from ...libs.util.ripgrep import get_rg_path
 from ...libs.util.strings import remove_quotes_and_escapes, strip_code_block
 from ...libs.util.templating import render_prompt_template
 from ...models.filesystem import RangeInFile
@@ -29,6 +32,33 @@ class RefactorReferencesStep(Step):
         )
         await sdk.run_step(
             ParallelEditStep(user_input=self.user_input, range_in_files=references)
+        )
+
+
+class RefactorBySearchStep(Step):
+    name: str = "Refactor by search"
+
+    pattern: str
+    user_input: str
+
+    rg_path: Optional[str] = None
+    "Optional path to ripgrep executable"
+
+    def get_range_for_result(self, result) -> RangeInFile:
+        pass
+
+    async def run(self, sdk: ContinueSDK):
+        rg = Ripgrepy(
+            self.pattern,
+            sdk.ide.workspace_directory,
+            rg_path=self.rg_path or get_rg_path(),
+        )
+
+        results = rg.I().context(2).run()
+        range_in_files = [self.get_range_for_result(result) for result in results]
+
+        await sdk.run_step(
+            ParallelEditStep(user_input=self.user_input, range_in_files=range_in_files)
         )
 
 

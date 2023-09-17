@@ -40,6 +40,7 @@ const sidebars = {
         "walkthroughs/codellama",
         "walkthroughs/manually-run-continue",
         "walkthroughs/running-continue-without-internet",
+        "walkthroughs/headless-mode",
       ],
     },
     "development-data",
