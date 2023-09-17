@@ -7,6 +7,7 @@ import com.github.continuedev.continueintellijextension.actions.ToggleAuxiliaryB
 import com.github.continuedev.continueintellijextension.services.ContinueExtensionConfigurable
 import com.github.continuedev.continueintellijextension.services.ContinueExtensionSettings
 import com.github.continuedev.continueintellijextension.services.ContinuePluginService
+import com.github.continuedev.continueintellijextension.utils.dispatchEventToWebview
 import com.google.gson.Gson
 import com.intellij.execution.target.value.constant
 import com.intellij.ide.plugins.PluginManagerCore
@@ -53,6 +54,7 @@ fun getContinueGlobalPath(): String {
     }
     return continuePath.toString()
 }
+
 fun serverPath(): String {
     val sPath = Paths.get(getContinueGlobalPath(), "server").toString()
     val directory = File(sPath)
@@ -65,16 +67,18 @@ fun serverVersionPath(): String {
     return Paths.get(serverPath(), "server_version.txt").toString()
 }
 fun serverBinaryPath(): String {
-    val exeFile = if (System.getProperty("os.name").startsWith("Win", ignoreCase = true)) "run.exe" else "run"
+    val exeFile = if (System.getProperty("os.name")
+            .startsWith("Win", ignoreCase = true)
+    ) "run.exe" else "run"
     return Paths.get(serverPath(), "exe", exeFile).toString()
 }
 
 fun downloadFromS3(
-        bucket: String,
-        filename: String,
-        destination: String,
-        region: String,
-        useBackupUrl: Boolean = false
+    bucket: String,
+    filename: String,
+    destination: String,
+    region: String,
+    useBackupUrl: Boolean = false
 
 ) {
     val client = OkHttpClient()
@@ -84,8 +88,8 @@ fun downloadFromS3(
         "https://$bucket.s3.$region.amazonaws.com/$filename";
 
     val request = Request.Builder()
-            .url(url)
-            .build()
+        .url(url)
+        .build()
 
     // Create the necessary folders
     val directory = File(destination).parentFile
@@ -112,9 +116,17 @@ fun downloadFromS3(
 fun setPermissions(destination: String) {
     val osName = System.getProperty("os.name").toLowerCase()
     if (osName.contains("mac") || osName.contains("darwin")) {
-        ProcessBuilder("xattr", "-dr", "com.apple.quarantine", destination).start()
+        ProcessBuilder(
+            "xattr",
+            "-dr",
+            "com.apple.quarantine",
+            destination
+        ).start()
         setFilePermissions(destination, "rwxr-xr-x")
-    } else if (osName.contains("nix") || osName.contains("nux") || osName.contains("mac")) {
+    } else if (osName.contains("nix") || osName.contains("nux") || osName.contains(
+            "mac"
+        )
+    ) {
         setFilePermissions(destination, "rwxr-xr-x")
     }
 }
@@ -233,7 +245,8 @@ suspend fun startContinuePythonServer(project: Project) {
 
     // Determine from OS details which file to download
     val filename = when {
-        System.getProperty("os.name").startsWith("Windows", ignoreCase = true) -> "windows/run.exe"
+        System.getProperty("os.name")
+            .startsWith("Windows", ignoreCase = true) -> "windows/run.exe"
         System.getProperty("os.name").startsWith("Mac", ignoreCase = true) ->
             if (System.getProperty("os.arch") == "arm64") "apple-silicon/run" else "mac/run"
         else -> "linux/run"
@@ -287,7 +300,7 @@ suspend fun startContinuePythonServer(project: Project) {
 
 
 class ContinuePluginStartupActivity : StartupActivity, Disposable {
-    val coroutineScope = CoroutineScope(Dispatchers.IO)
+    private val coroutineScope = CoroutineScope(Dispatchers.IO)
 
     override fun runActivity(project: Project) {
         // Get extension settings
@@ -295,46 +308,72 @@ class ContinuePluginStartupActivity : StartupActivity, Disposable {
 
         // Register Actions
         val actionManager = ActionManager.getInstance()
-        actionManager.registerAction("FocusContinueInput", ToggleAuxiliaryBarAction())
+        actionManager.registerAction(
+            "FocusContinueInput",
+            ToggleAuxiliaryBarAction()
+        )
+
+        // Initialize Plugin
+        initializePlugin(project)
+    }
+
+    private fun initializePlugin(project: Project) {
+        val continuePluginService = ServiceManager.getService(
+            project,
+            ContinuePluginService::class.java
+        )
+
+        val defaultStrategy = DefaultTextSelectionStrategy()
 
         coroutineScope.launch {
-            // Download and start the Continue Python Server
             startContinuePythonServer(project)
 
-            // Delay to allow the server to start
-            val client = IdeProtocolClient("ws://localhost:65432/ide/ws", coroutineScope, project.basePath ?: "/", project)
-            val defaultStrategy = DefaultTextSelectionStrategy(client, coroutineScope)
-            val listener = ContinuePluginSelectionListener(defaultStrategy)
+            val ideProtocolClient = IdeProtocolClient(
+                "ws://localhost:65432/ide/ws",
+                continuePluginService,
+                defaultStrategy,
+                coroutineScope,
+                project.basePath ?: "/",
+                project
+            )
 
+            val listener =
+                ContinuePluginSelectionListener(ideProtocolClient, coroutineScope)
 
-            val newSessionId = client.getSessionIdAsync().await()
+            val newSessionId = ideProtocolClient.getSessionIdAsync().await()
             val sessionId = newSessionId ?: ""
 
             // After sessionID fetched
             withContext(Dispatchers.Main) {
                 val toolWindowManager = ToolWindowManager.getInstance(project)
-                val toolWindow = toolWindowManager.getToolWindow("ContinuePluginViewer")
+                val toolWindow =
+                    toolWindowManager.getToolWindow("ContinuePluginViewer")
                 toolWindow?.show()
-
-                // Assuming ContinuePluginService is your service where the ToolWindow is registered
-                val continuePluginService = ServiceManager.getService(project, ContinuePluginService::class.java)
 
                 // Reload the WebView
                 continuePluginService?.let {
-                    val workspacePaths = if (project.basePath != null) arrayOf(project.basePath) else emptyList<String>()
+                    val workspacePaths =
+                        if (project.basePath != null) arrayOf(project.basePath) else emptyList<String>()
                     val dataMap = mutableMapOf(
-                            "type" to "onUILoad",
-                            "sessionId" to sessionId,
-                            "apiUrl" to "http://localhost:65432",
-                            "workspacePaths" to workspacePaths,  // or your actual workspace paths
-                            "vscMachineId" to getMachineUniqueID(),
-                            "vscMediaUrl" to "http://continue",
-                            "dataSwitchOn" to true  // or your actual condition
+                        "type" to "onUILoad",
+                        "sessionId" to sessionId,
+                        "apiUrl" to "http://localhost:65432",
+                        "workspacePaths" to workspacePaths,  // or your actual workspace paths
+                        "vscMachineId" to "yourMachineId",
+                        "vscMediaUrl" to "yourMediaUrl",
+                        "dataSwitchOn" to true  // or your actual condition
                     )
-                    it.dispatchCustomEvent("onLoad", dataMap)
+                    dispatchEventToWebview(
+                        "onUILoad",
+                        dataMap,
+                        continuePluginService.continuePluginWindow.webView
+                    )
                 }
             }
-            EditorFactory.getInstance().eventMulticaster.addSelectionListener(listener, this@ContinuePluginStartupActivity)
+            EditorFactory.getInstance().eventMulticaster.addSelectionListener(
+                listener,
+                this@ContinuePluginStartupActivity
+            )
         }
     }
 

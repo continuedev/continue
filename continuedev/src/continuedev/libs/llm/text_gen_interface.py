@@ -1,11 +1,12 @@
 import json
-from typing import Any, List, Optional
+from typing import Any, Callable, Dict, List, Union
 
 import websockets
 from pydantic import Field
 
 from ...core.main import ChatMessage
 from . import LLM
+from .prompts.chat import llama2_template_messages
 from .prompts.edit import simplest_edit_prompt
 
 
@@ -35,13 +36,14 @@ class TextGenUI(LLM):
         "http://localhost:5005",
         description="URL of your TextGenUI streaming server (separate from main server URL)",
     )
-    verify_ssl: Optional[bool] = Field(
-        None, description="Whether to verify SSL certificates for requests."
-    )
 
     prompt_templates = {
         "edit": simplest_edit_prompt,
     }
+
+    template_messages: Union[
+        Callable[[List[Dict[str, str]]], str], None
+    ] = llama2_template_messages
 
     class Config:
         arbitrary_types_allowed = True

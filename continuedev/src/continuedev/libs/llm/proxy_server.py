@@ -10,9 +10,6 @@ from ...core.main import ChatMessage
 from ..llm import LLM
 from ..util.telemetry import posthog_logger
 
-ca_bundle_path = certifi.where()
-ssl_context = ssl.create_default_context(cafile=ca_bundle_path)
-
 # SERVER_URL = "http://127.0.0.1:8080"
 SERVER_URL = "https://proxy-server-l6vsfbzhba-uw.a.run.app"
 
@@ -35,10 +32,21 @@ class ProxyServer(LLM):
         **kwargs,
     ):
         await super().start(**kwargs)
-        self._client_session = aiohttp.ClientSession(
-            connector=aiohttp.TCPConnector(ssl_context=ssl_context),
-            timeout=aiohttp.ClientTimeout(total=self.timeout),
-        )
+        if self.verify_ssl is False:
+            self._client_session = aiohttp.ClientSession(
+                connector=aiohttp.TCPConnector(verify_ssl=False),
+                timeout=aiohttp.ClientTimeout(total=self.timeout),
+            )
+        else:
+            ca_bundle_path = (
+                certifi.where() if self.ca_bundle_path is None else self.ca_bundle_path
+            )
+            ssl_context = ssl.create_default_context(cafile=ca_bundle_path)
+            self._client_session = aiohttp.ClientSession(
+                connector=aiohttp.TCPConnector(ssl_context=ssl_context),
+                timeout=aiohttp.ClientTimeout(total=self.timeout),
+            )
+
         self.context_length = MAX_TOKENS_FOR_MODEL[self.model]
 
     async def stop(self):

@@ -1,12 +1,12 @@
 import json
-from typing import Any, Callable, List, Optional
+from typing import Any, Callable, List
 
 import aiohttp
 from pydantic import Field
 
 from ...core.main import ChatMessage
 from ..llm import LLM, CompletionOptions
-from .prompts.chat import code_llama_template_messages
+from .prompts.chat import llama2_template_messages
 from .prompts.edit import simplified_edit_prompt
 
 
@@ -15,12 +15,8 @@ class HuggingFaceTGI(LLM):
     server_url: str = Field(
         "http://localhost:8080", description="URL of your TGI server"
     )
-    verify_ssl: Optional[bool] = Field(
-        None,
-        description="Whether SSL certificates should be verified when making the HTTP request",
-    )
 
-    template_messages: Callable[[List[ChatMessage]], str] = code_llama_template_messages
+    template_messages: Callable[[List[ChatMessage]], str] = llama2_template_messages
 
     prompt_templates = {
         "edit": simplified_edit_prompt,
@@ -32,9 +28,9 @@ class HuggingFaceTGI(LLM):
     def collect_args(self, options: CompletionOptions) -> Any:
         args = super().collect_args(options)
         args = {**args, "max_new_tokens": args.get("max_tokens", 1024), "best_of": 1}
-        args.pop("max_tokens")
-        args.pop("model")
-        args.pop("functions")
+        args.pop("max_tokens", None)
+        args.pop("model", None)
+        args.pop("functions", None)
         return args
 
     async def _stream_complete(self, prompt, options):
@@ -47,16 +43,26 @@ class HuggingFaceTGI(LLM):
             async with client_session.post(
                 f"{self.server_url}/generate_stream",
                 json={"inputs": prompt, "parameters": args},
+                headers={"Content-Type": "application/json"},
             ) as resp:
                 async for line in resp.content.iter_any():
                     if line:
-                        chunk = line.decode("utf-8")
-                        try:
-                            json_chunk = json.loads(chunk)
-                        except Exception as e:
-                            print(f"Error parsing JSON: {e}")
-                            continue
-                        text = json_chunk["details"]["best_of_sequences"][0][
-                            "generated_text"
-                        ]
-                        yield text
+                        text = line.decode("utf-8")
+                        chunks = text.split("\n")
+
+                        for chunk in chunks:
+                            if chunk.startswith("data: "):
+                                chunk = chunk[len("data: ") :]
+                            elif chunk.startswith("data:"):
+                                chunk = chunk[len("data:") :]
+
+                            if chunk.strip() == "":
+                                continue
+
+                            try:
+                                json_chunk = json.loads(chunk)
+                            except Exception as e:
+                                print(f"Error parsing JSON: {e}")
+                                continue
+
+                            yield json_chunk["token"]["text"]

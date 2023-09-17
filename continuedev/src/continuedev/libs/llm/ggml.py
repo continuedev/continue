@@ -38,17 +38,9 @@ class GGML(LLM):
         "http://localhost:8000",
         description="URL of the OpenAI-compatible server where the model is being served",
     )
-    verify_ssl: Optional[bool] = Field(
-        None,
-        description="Whether SSL certificates should be verified when making the HTTP request",
-    )
     proxy: Optional[str] = Field(
         None,
         description="Proxy URL to use when making the HTTP request",
-    )
-    ca_bundle_path: str = Field(
-        None,
-        description="Path to a custom CA bundle to use when making the HTTP request",
     )
     model: str = Field(
         "ggml", description="The name of the model to use (optional for the GGML class)"

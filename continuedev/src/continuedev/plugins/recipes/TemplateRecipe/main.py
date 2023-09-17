@@ -10,7 +10,7 @@ class TemplateRecipe(Step):
     Use this as a template to create your own!
     """
 
-    # Paremeters for the recipe
+    # Parameters for the recipe
     name: str
 
     # A title for the recipe, to be displayed in the GUI

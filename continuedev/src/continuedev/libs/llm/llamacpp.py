@@ -1,5 +1,5 @@
 import json
-from typing import Any, Callable, Dict, Optional
+from typing import Any, Callable, Dict
 
 import aiohttp
 from pydantic import Field
@@ -35,10 +35,6 @@ class LlamaCpp(LLM):
 
     model: str = "llamacpp"
     server_url: str = Field("http://localhost:8080", description="URL of the server")
-    verify_ssl: Optional[bool] = Field(
-        None,
-        description="Whether SSL certificates should be verified when making the HTTP request",
-    )
 
     llama_cpp_args: Dict[str, Any] = Field(
         {"stop": ["[INST]"]},

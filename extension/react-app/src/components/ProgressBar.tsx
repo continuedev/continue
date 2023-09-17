@@ -44,7 +44,7 @@ const ProgressBar = ({ completed, total }: ProgressBarProps) => {
   return (
     <>
       <a
-        href="https://continue.dev/docs/customization"
+        href="https://continue.dev/docs/customization/models"
         className="no-underline"
       >
         <GridDiv data-tooltip-id="usage_progress_bar">
