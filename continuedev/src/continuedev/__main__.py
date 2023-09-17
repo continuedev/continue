@@ -1,9 +1,8 @@
-import asyncio
 from typing import Optional
 
 import typer
 
-from .headless import start_headless_session
+from .headless import run
 from .server.main import run_server
 
 app = typer.Typer()
@@ -19,10 +18,7 @@ def main(
     headless: bool = typer.Option(False, help="Run in headless mode"),
 ):
     if headless:
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(start_headless_session(config=config))
-        tasks = asyncio.all_tasks(loop)
-        loop.run_until_complete(asyncio.gather(*tasks))
+        run(config)
     else:
         run_server(port=port, host=host)
 

@@ -265,7 +265,10 @@ function GUI(props: GUIProps) {
                   Continue's OpenAI API key. To keep using Continue, you can
                   either use your own API key, or use a local LLM. To read more
                   about the options, see our{" "}
-                  <a href="https://continue.dev/docs/customization/models">
+                  <a
+                    href="https://continue.dev/docs/customization/models"
+                    target="_blank"
+                  >
                     documentation
                   </a>
                   . If you're just looking for fastest way to keep going, type
@@ -433,6 +436,7 @@ function GUI(props: GUIProps) {
                 <a
                   style={{ color: "inherit" }}
                   href="https://continue.dev/docs/troubleshooting"
+                  target="_blank"
                 >
                   Troubleshooting help
                 </a>
@@ -462,13 +466,19 @@ function GUI(props: GUIProps) {
                 cursor: "pointer",
                 opacity: 0.7,
               }}
-              onClick={() => {
-                postVscMessage("reloadWindow", {});
-              }}
             >
-              <u>Reload the window</u>
+              <u>
+                <a
+                  style={{ color: "inherit" }}
+                  href="https://continue.dev/docs/walkthroughs/manually-run-continue#recommended-use-the-continuedev-pypi-package"
+                  target="_blank"
+                >
+                  Manually start server
+                </a>
+              </u>
             </p>
           </div>
+
           <div className="w-3/4 m-auto text-center text-xs">
             {/* Tip: Drag the Continue logo from the far left of the window to the
             right, then toggle Continue using option/alt+command+m. */}
