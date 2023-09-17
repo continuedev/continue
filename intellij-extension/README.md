@@ -1,22 +1,11 @@
 <!-- Plugin description -->
-> > 🎁 **New!: [Use Code Llama with Continue](https://continue.dev/docs/walkthroughs/codellama)**
+> 🎁 **New!: [Use Code Llama with Continue](https://continue.dev/docs/walkthroughs/codellama)**
 
 <h1 align="center">Continue</h1>
 
 <div align="center">
 
 **[Continue](https://continue.dev/docs) is the open-source autopilot for software development—an extension that brings the power of ChatGPT to your IDE**
-
-</div>
-
-<div align="center">
-
-[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-<a target="_blank" href="https://discord.gg/vapESyrFmJ" style="background:none">
-<img src="https://img.shields.io/badge/discord-join-continue.svg?labelColor=191937&color=6F6FF7&logo=discord" />
-</a>
-
-![Editing with Continue](https://github.com/continuedev/continue/blob/main/readme.gif?raw=true)
 
 </div>
 

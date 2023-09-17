@@ -4,13 +4,17 @@ import com.github.continuedev.continueintellijextension.`continue`.DefaultTextSe
 import com.github.continuedev.continueintellijextension.`continue`.*
 import com.github.continuedev.continueintellijextension.listeners.ContinuePluginSelectionListener
 import com.github.continuedev.continueintellijextension.actions.ToggleAuxiliaryBarAction
+import com.github.continuedev.continueintellijextension.services.ContinueExtensionConfigurable
+import com.github.continuedev.continueintellijextension.services.ContinueExtensionSettings
 import com.github.continuedev.continueintellijextension.services.ContinuePluginService
 import com.google.gson.Gson
 import com.intellij.execution.target.value.constant
+import com.intellij.ide.plugins.PluginManagerCore
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.actionSystem.ActionManager
 import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.editor.EditorFactory
+import com.intellij.openapi.extensions.PluginId
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.startup.StartupActivity
 import com.intellij.openapi.wm.ToolWindowManager
@@ -18,12 +22,17 @@ import com.intellij.ui.jcef.JBCefBrowser
 import com.intellij.ui.jcef.executeJavaScriptAsync
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
+import java.io.BufferedReader
+import java.io.InputStreamReader
 
 import java.net.NetworkInterface
 import java.util.*
 
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import org.apache.commons.cli.CommandLine
+import org.apache.tools.ant.taskdefs.PumpStreamHandler
+import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
@@ -52,6 +61,9 @@ fun serverPath(): String {
     }
     return sPath
 }
+fun serverVersionPath(): String {
+    return Paths.get(serverPath(), "server_version.txt").toString()
+}
 fun serverBinaryPath(): String {
     val exeFile = if (System.getProperty("os.name").startsWith("Win", ignoreCase = true)) "run.exe" else "run"
     return Paths.get(serverPath(), "exe", exeFile).toString()
@@ -74,6 +86,12 @@ fun downloadFromS3(
     val request = Request.Builder()
             .url(url)
             .build()
+
+    // Create the necessary folders
+    val directory = File(destination).parentFile
+    if (!directory.exists()) {
+        directory.mkdirs()
+    }
 
     client.newCall(request).execute().use { response ->
         if (!response.isSuccessful) {
@@ -109,7 +127,110 @@ fun setFilePermissions(path: String, posixPermissions: String) {
     Files.setPosixFilePermissions(Paths.get(path), perms)
 }
 
-fun startContinuePythonServer() {
+fun getProcessId(port: Int): String? {
+    val os = System.getProperty("os.name").toLowerCase()
+
+    val command = when {
+        os.contains("win") -> listOf("cmd.exe", "/c", "netstat -ano | findstr :$port")
+        os.contains("nix") || os.contains("mac") || os.contains("nux") -> listOf("/bin/sh", "-c", "lsof -t -i tcp:$port")
+        else -> throw UnsupportedOperationException("Unsupported operating system: $os")
+    }
+
+    val process = ProcessBuilder(command).start()
+    val reader = BufferedReader(InputStreamReader(process.inputStream))
+
+    return reader.readLine()?.trim()
+}
+
+
+fun killProcess(pid: String) {
+    val os = System.getProperty("os.name").toLowerCase()
+    val command = when {
+        os.contains("win") -> listOf("taskkill", "/F", "/PID", pid)
+        os.contains("nix") || os.contains("mac") || os.contains("nux") -> listOf("kill", "-9", pid)
+        else -> throw UnsupportedOperationException("Unsupported operating system: $os")
+    }
+
+    try {
+        val process = ProcessBuilder(command).start()
+        process.waitFor()
+    } catch (e: IOException) {
+        e.printStackTrace()
+    }
+}
+
+fun checkServerRunning(serverUrl: String): Boolean {
+    val processId = getProcessId(65432)
+    return processId != null
+}
+fun getExtensionVersion(): String {
+    val pluginId = PluginId.getId("com.github.continuedev.continueintellijextension")
+    val pluginDescriptor = PluginManagerCore.getPlugin(pluginId)
+    return pluginDescriptor?.version ?: ""
+}
+
+suspend fun checkOrKillRunningServer(serverUrl: String): Boolean = withContext(Dispatchers.IO) {
+    val serverRunning = checkServerRunning(serverUrl)
+    var shouldKillAndReplace = true
+
+    val serverVersionPath = serverVersionPath()
+    if (File(serverVersionPath).exists()) {
+        val serverVersion = File(serverVersionPath).readText()
+        if (serverVersion == getExtensionVersion() && serverRunning) {
+            println("Continue server of correct version already running")
+            shouldKillAndReplace = false
+        }
+    }
+
+    if (shouldKillAndReplace) {
+        println("Killing server from old version of Continue")
+        val pid = getProcessId(65432)
+        pid?.let { killProcess(it) }
+
+        if (File(serverVersionPath).exists()) {
+            File(serverVersionPath).delete()
+        }
+
+        val serverBinary = serverBinaryPath()
+        if (File(serverBinary).exists()) {
+            File(serverBinary).delete()
+        }
+    }
+
+    return@withContext serverRunning && !shouldKillAndReplace
+}
+
+suspend fun startBinaryWithRetry(path: String) {
+    var attempts = 0
+    while (attempts < 5) {
+        try {
+            // Your suspend function call here
+            ProcessBuilder(path).start();
+            break // If the function call is successful, break the loop
+        } catch (e: Exception) {
+            attempts++
+            delay(500)
+            if (attempts == 5) throw e // If this was the last attempt, rethrow the exception
+        }
+    }
+}
+
+
+suspend fun startContinuePythonServer(project: Project) {
+    val settings = ServiceManager.getService(ContinueExtensionSettings::class.java)
+    val serverUrl = settings.serverUrl ?: "http://localhost:65432"
+
+    if ((serverUrl != "http://localhost:65432" && serverUrl != "http://127.0.0.1:65432") || settings.manuallyRunningServer) {
+        println("Continue server being run manually, skipping start")
+        return
+    }
+
+    if (checkOrKillRunningServer(serverUrl)) {
+        println("Continue server already running")
+        return
+    }
+
+
     // Determine from OS details which file to download
     val filename = when {
         System.getProperty("os.name").startsWith("Windows", ignoreCase = true) -> "windows/run.exe"
@@ -120,20 +241,48 @@ fun startContinuePythonServer() {
 
     val destination = serverBinaryPath();
 
-    // Download the binary from S3
-    downloadFromS3(
-            "continue-server-binaries",
-            filename,
-            destination,
-            "us-west-1",
-            false
-    );
+    // Check whether the binary needs to be downloaded
+    var shouldDownload = true
+    if (File(destination).exists()) {
+        if (File(serverVersionPath()).exists()) {
+            val serverVersion = File(serverVersionPath()).readText()
+            if (serverVersion == getExtensionVersion()) {
+                println("Continue server already downloaded")
+                shouldDownload = false
+            } else {
+                println("Old version of the server downloaded, removing")
+                File(destination).delete()
+            }
+        } else {
+            println("Old version of the server downloaded, removing")
+            File(destination).delete()
+        }
+    }
 
-    // Set permissions on the binary
-    setPermissions(destination)
+    if (shouldDownload) {
+        // Download the binary from S3
+        downloadFromS3(
+                "continue-server-binaries",
+                filename,
+                destination,
+                "us-west-1",
+                false
+        );
+
+        // Set permissions on the binary
+        setPermissions(destination)
+    }
+
+    // Validate that the binary exists
+    if (!File(destination).exists()) {
+        throw Error("Failed to download Continue server binary")
+    }
 
     // Spawn server process
-    ProcessBuilder(destination).start();
+    startBinaryWithRetry(destination)
+
+    // Write the server version to server_version.txt
+    File(serverVersionPath()).writeText(getExtensionVersion())
 }
 
 
@@ -141,18 +290,19 @@ class ContinuePluginStartupActivity : StartupActivity, Disposable {
     val coroutineScope = CoroutineScope(Dispatchers.IO)
 
     override fun runActivity(project: Project) {
+        // Get extension settings
+        val settings = ServiceManager.getService(ContinueExtensionSettings::class.java)
+
         // Register Actions
         val actionManager = ActionManager.getInstance()
         actionManager.registerAction("FocusContinueInput", ToggleAuxiliaryBarAction())
 
-        // Download and start the Continue Python Server
-        startContinuePythonServer()
-
         coroutineScope.launch {
-            // Delay to allow the server to start
-            delay(3000)
+            // Download and start the Continue Python Server
+            startContinuePythonServer(project)
 
-            val client = IdeProtocolClient("ws://localhost:65432/ide/ws", coroutineScope, project.basePath ?: "/")
+            // Delay to allow the server to start
+            val client = IdeProtocolClient("ws://localhost:65432/ide/ws", coroutineScope, project.basePath ?: "/", project)
             val defaultStrategy = DefaultTextSelectionStrategy(client, coroutineScope)
             val listener = ContinuePluginSelectionListener(defaultStrategy)
 

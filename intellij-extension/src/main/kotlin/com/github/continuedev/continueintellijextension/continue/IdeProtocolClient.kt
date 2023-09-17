@@ -1,14 +1,40 @@
 package com.github.continuedev.continueintellijextension.`continue`
 
+import com.github.continuedev.continueintellijextension.`continue`.DiffManager
+
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
+import com.intellij.openapi.application.ApplicationManager
 import kotlinx.coroutines.*
 import okhttp3.*
 import java.net.NetworkInterface
 
+import com.intellij.openapi.editor.Document
+import com.intellij.openapi.editor.markup.HighlighterTargetArea
+import com.intellij.openapi.editor.markup.RangeHighlighter
+import com.intellij.openapi.editor.markup.TextAttributes
+import com.intellij.openapi.fileEditor.FileDocumentManager
+import com.intellij.openapi.fileEditor.FileEditorManager
+import com.intellij.openapi.project.Project
+import com.intellij.openapi.fileEditor.TextEditor
+import com.intellij.openapi.ui.MessageType
+import com.intellij.openapi.ui.popup.Balloon
+import com.intellij.openapi.ui.popup.JBPopupFactory
+import com.intellij.openapi.vfs.LocalFileSystem
+import com.intellij.openapi.wm.WindowManager
+import com.intellij.testFramework.LightVirtualFile
+import com.intellij.ui.awt.RelativePoint
+import java.awt.Color
+import java.io.File
+
 data class WebSocketMessage<T>(val messageType: String, val data: T)
 data class WorkspaceDirectory(val workspaceDirectory: String);
 data class UniqueId(val uniqueId: String);
+data class ReadFile(val contents: String);
+data class VisibleFiles(val visibleFiles: List<String>);
+data class Position(val line: Int, val character: Int);
+data class Range(val start: Position, val end: Position);
+data class RangeInFile(val filepath: String, val range: Range);
 
 fun getMachineUniqueID(): String {
     val sb = StringBuilder()
@@ -32,7 +58,8 @@ fun getMachineUniqueID(): String {
 class IdeProtocolClient(
     private val serverUrl: String = "ws://localhost:65432/ide/ws",
     private val coroutineScope: CoroutineScope,
-        private val workspacePath: String
+    private val workspacePath: String,
+    private val project: Project
 ) {
     private val eventListeners = mutableListOf<WebSocketEventListener>()
     private var okHttpClient: OkHttpClient = OkHttpClient()
@@ -40,8 +67,18 @@ class IdeProtocolClient(
 
     private val textSelectionStrategy: TextSelectionStrategy = DefaultTextSelectionStrategy(this, coroutineScope)
 
+    private val diffManager = DiffManager(project)
+
     init {
         initWebSocket()
+//        showMessage("TESTING! Hello World!")
+//        highlightCode(RangeInFile("/Users/natesesti/Desktop/intellij/continue/run.spec", Range(Position(0, 0), Position(2, 0))), "#ff00aa")
+//        diffManager.showDiff("/Users/natesesti/Desktop/intellij/continue/run.spec", "...???", 0)
+//        val file = File("/Users/natesesti/.continue/diffs/diff")
+//        for (i in 1..5) {
+//            Thread.sleep(500)
+//            file.writeText("Hello!".repeat(i))
+//        }
     }
 
     var sessionId: String? = null
@@ -87,8 +124,9 @@ class IdeProtocolClient(
                 coroutineScope.launch(Dispatchers.Main) {
                     val parsedMessage: Map<String, Any> = Gson().fromJson(text, object : TypeToken<Map<String, Any>>() {}.type)
                     val messageType = parsedMessage["messageType"] as? String
-                    if (messageType != null) {
-                        if (messageType == "workspaceDirectory") {
+                    val data = parsedMessage["data"] as Map<String, Any>
+                    when (messageType) {
+                        "workspaceDirectory" -> {
                             webSocket?.send(
                                     Gson().toJson(
                                             WebSocketMessage(
@@ -97,9 +135,37 @@ class IdeProtocolClient(
                                             )
                                     )
                             );
-                        } else if (messageType == "uniqueId") {
-                            webSocket?.send(Gson().toJson(WebSocketMessage("uniqueId", UniqueId(uniqueId()))));
                         }
+                        "uniqueId" -> webSocket?.send(Gson().toJson(WebSocketMessage("uniqueId", UniqueId(uniqueId()))))
+                        "showDiff" -> {
+                            diffManager.showDiff(data["filepath"] as String, data["replacement"] as String, data["step_index"] as Int)
+                        }
+                        "readFile" -> {
+                            val msg = ReadFile(readFile(data["filepath"] as String))
+                            webSocket?.send(Gson().toJson(WebSocketMessage("readFile", msg)))
+                        }
+                        "visibleFiles" -> {
+                            val msg = VisibleFiles(visibleFiles())
+                            webSocket?.send(Gson().toJson(WebSocketMessage("visibleFiles", msg)))
+                        }
+                        "saveFile" -> saveFile(data["filepath"] as String)
+                        "showVirtualFile" -> showVirtualFile(data["name"] as String, data["contents"] as String)
+                        "connected" -> {}
+                        "showMessage" -> showMessage(data["message"] as String)
+                        "setFileOpen" -> setFileOpen(data["filepath"] as String, data["open"] as Boolean)
+                        "highlightCode" -> {
+                            val gson = Gson()
+                            val json = gson.toJson(data["rangeInFile"])
+                            val type = object : TypeToken<RangeInFile>() {}.type
+                            val rangeInFile = gson.fromJson<RangeInFile>(json, type)
+                            highlightCode(rangeInFile, data["color"] as String)
+                        }
+                        else -> {
+                            println("Unknown messageType")
+                        }
+                    }
+
+                    if (messageType != null) {
                         pendingResponses[messageType]?.complete(parsedMessage)
                         pendingResponses.remove(messageType)
                     }
@@ -160,6 +226,82 @@ class IdeProtocolClient(
             endLine,
             endCharacter
         );
+    }
+
+    fun readFile(filepath: String): String {
+        val file = LocalFileSystem.getInstance().findFileByPath(filepath) ?: return ""
+        val documentManager = FileDocumentManager.getInstance()
+        val document: Document? = documentManager.getDocument(file)
+        return document?.text ?: ""
+    }
+
+    fun saveFile(filepath: String) {
+        val file = LocalFileSystem.getInstance().findFileByPath(filepath) ?: return
+        val fileDocumentManager = FileDocumentManager.getInstance()
+        val document = fileDocumentManager.getDocument(file)
+
+        document?.let {
+            fileDocumentManager.saveDocument(it)
+        }
+    }
+
+    fun setFileOpen(filepath: String, open: Boolean = true) {
+        val file = LocalFileSystem.getInstance().findFileByPath(filepath)
+
+        file?.let {
+            if (open) {
+                ApplicationManager.getApplication().invokeLater {
+                    FileEditorManager.getInstance(project).openFile(it, true)
+                }
+            } else {
+                ApplicationManager.getApplication().invokeLater {
+                    FileEditorManager.getInstance(project).closeFile(it)
+                }
+            }
+        }
+    }
+
+    fun showVirtualFile(name: String, contents: String) {
+        val virtualFile = LightVirtualFile(name, contents)
+        FileEditorManager.getInstance(project).openFile(virtualFile, true)
+    }
+
+    fun visibleFiles(): List<String> {
+        val fileEditorManager = FileEditorManager.getInstance(project)
+        return fileEditorManager.openFiles.toList().map{it.path}
+    }
+
+    fun showMessage(msg: String) {
+        val statusBar = WindowManager.getInstance().getStatusBar(project)
+
+        JBPopupFactory.getInstance()
+                .createHtmlTextBalloonBuilder(msg, MessageType.INFO, null)
+                .setFadeoutTime(5000)
+                .createBalloon()
+                .show(RelativePoint.getSouthEastOf(statusBar.component), Balloon.Position.atRight)
+    }
+
+    fun highlightCode(rangeInFile: RangeInFile, color: String) {
+        val file = LocalFileSystem.getInstance().findFileByPath(rangeInFile.filepath)
+
+        setFileOpen(rangeInFile.filepath, true)
+
+        ApplicationManager.getApplication().invokeLater {
+            val editor = file?.let {
+                val fileEditor = FileEditorManager.getInstance(project).getSelectedEditor(it)
+                (fileEditor as? TextEditor)?.editor
+            }
+
+            val virtualFile = LocalFileSystem.getInstance().findFileByIoFile(File(rangeInFile.filepath))
+            val document = FileDocumentManager.getInstance().getDocument(virtualFile!!)
+            val startIdx = document!!.getLineStartOffset(rangeInFile.range.start.line) + rangeInFile.range.start.character
+            val endIdx = document!!.getLineEndOffset(rangeInFile.range.end.line) + rangeInFile.range.end.character
+
+            val markupModel = editor!!.markupModel
+//            val textAttributes = TextAttributes(Color.decode(color.drop(1).toInt(color)), null, null, null, 0)
+
+//            markupModel.addRangeHighlighter(startIdx, endIdx, 0, textAttributes, HighlighterTargetArea.EXACT_RANGE)
+        }
     }
 }
 

@@ -15,6 +15,12 @@
 
     <extensions defaultExtensionNs="com.intellij">
         <postStartupActivity implementation="com.github.continuedev.continueintellijextension.activities.ContinuePluginStartupActivity"/>
+        <applicationConfigurable
+                parentId="tools"
+                instance="com.github.continuedev.continueintellijextension.services.ContinueExtensionConfigurable"
+                id="com.github.continuedev.continueintellijextension.services.ContinueExtensionConfigurable"
+                displayName="Continue Extension Settings"/>
+        <applicationService serviceImplementation="com.github.continuedev.continueintellijextension.services.ContinueExtensionSettings"/>
     </extensions>
 
     <actions>
@@ -28,7 +34,7 @@
         </action>
         <action id="continue.quickTextEntry" class="com.github.continuedev.continueintellijextension.actions.QuickTextEntryAction" text="Quick Text Entry" description="Quick Text Entry">
             <keyboard-shortcut keymap="$default" first-keystroke="ctrl shift L" />
-            <keyboard-shortcut keymap="Mac OS X" first-keystroke="meta shitf L"/>
+            <keyboard-shortcut keymap="Mac OS X" first-keystroke="meta shift L"/>
         </action>
         <action id="continue.quickFix" class="com.github.continuedev.continueintellijextension.actions.QuickFixAction" text="Quick Fix with Continue" description="Quick Fix with Continue">
             <!-- No shortcut defined -->
