@@ -1,23 +1,16 @@
 package com.github.continuedev.continueintellijextension.toolWindow
 
-import com.github.continuedev.continueintellijextension.activities.SessionStore
 import com.github.continuedev.continueintellijextension.factories.CustomSchemeHandlerFactory
 import com.github.continuedev.continueintellijextension.services.ContinuePluginService
 import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.diagnostic.thisLogger
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Disposer
-import com.intellij.openapi.util.registry.RegistryManager
 import com.intellij.openapi.wm.ToolWindow
 import com.intellij.openapi.wm.ToolWindowFactory
 import com.intellij.ui.jcef.JBCefBrowser
 import com.intellij.ui.jcef.JBCefClient
 import org.cef.CefApp
-import org.cef.browser.CefBrowser
-import org.cef.browser.CefFrame
-import org.cef.handler.CefLoadHandler
-import org.cef.handler.CefLoadHandlerAdapter
-import org.cef.network.CefRequest
 import javax.swing.JComponent
 
 

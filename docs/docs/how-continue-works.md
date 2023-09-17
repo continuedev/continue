@@ -23,7 +23,7 @@ You can install it from the Visual Studio Marketplace [here](https://marketplace
 
 Continue can be used as a plugin inside of PyCharm, Intellij, WebStorm, etc.
 
-You can install it from the JetBrains Marketplace [here](https://continue.dev/).
+You can install it from the JetBrains Marketplace [here](https://plugins.jetbrains.com/plugin/22707-continue-extension).
 
 ### Add Continue to a new IDE
 
