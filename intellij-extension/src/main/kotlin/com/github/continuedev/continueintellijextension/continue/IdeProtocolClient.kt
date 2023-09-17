@@ -32,7 +32,7 @@ fun getMachineUniqueID(): String {
 class IdeProtocolClient(
     private val serverUrl: String = "ws://localhost:65432/ide/ws",
     private val coroutineScope: CoroutineScope,
-        private val workspacePath: String
+    private val workspacePath: String
 ) {
     private val eventListeners = mutableListOf<WebSocketEventListener>()
     private var okHttpClient: OkHttpClient = OkHttpClient()
