@@ -1,7 +1,7 @@
 {
   "name": "continue",
   "icon": "media/terminal-continue.png",
-  "version": "0.0.392",
+  "version": "0.0.393",
   "repository": {
     "type": "git",
     "url": "https://github.com/continuedev/continue"
