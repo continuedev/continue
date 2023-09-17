@@ -14,8 +14,7 @@ MAX_SIZE_IN_CHARS = 50_000
 async def get_file_contents(filepath: str, sdk: ContinueSDK) -> str:
     try:
         return (await sdk.ide.readFile(filepath))[:MAX_SIZE_IN_CHARS]
-    except Exception as e:
-        print(f"Failed to read file: {e}")
+    except Exception as _:
         return None
 
 

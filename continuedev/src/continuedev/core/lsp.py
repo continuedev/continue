@@ -1,6 +1,6 @@
 import asyncio
 import threading
-from typing import List, Optional
+from typing import List, Literal, Optional
 
 import aiohttp
 from pydantic import BaseModel
@@ -18,7 +18,7 @@ def filepath_to_uri(filename: str) -> str:
 
 def uri_to_filepath(uri: str) -> str:
     if uri.startswith("file://"):
-        return uri.lstrip("file://")
+        return uri[7:]
     else:
         return uri
 
@@ -257,6 +257,13 @@ class LSPClient:
             context={"includeDeclaration": include_declaration},
         )
 
+    async def folding_range(self, filepath: str):
+        response = await self.call_method(
+            "textDocument/foldingRange",
+            textDocument={"uri": filepath_to_uri(filepath)},
+        )
+        return response["result"]
+
 
 async def start_language_server() -> threading.Thread:
     try:
@@ -281,6 +288,11 @@ class DocumentSymbol(BaseModel):
     containerName: Optional[str] = None
     kind: int
     location: RangeInFile
+
+
+class FoldingRange(BaseModel):
+    range: Range
+    kind: Optional[Literal["comment", "imports", "region"]] = None
 
 
 class ContinueLSPClient(BaseModel):
@@ -355,3 +367,51 @@ class ContinueLSPClient(BaseModel):
             )
             for x in response["result"]
         ]
+
+    async def folding_range(self, filepath: str) -> List[FoldingRange]:
+        response = await self.lsp_client.folding_range(filepath)
+
+        return [
+            FoldingRange(
+                range=Range.from_shorthand(
+                    x["startLine"],
+                    x.get("startCharacter", 0),
+                    x["endLine"] if "endCharacter" in x else x["endLine"] + 1,
+                    x.get("endCharacter", 0),
+                ),
+                kind=x.get("kind"),
+            )
+            for x in response
+        ]
+
+    async def get_enclosing_folding_range_of_position(
+        self, position: Position, filepath: str
+    ) -> Optional[FoldingRange]:
+        ranges = await self.folding_range(filepath)
+
+        max_start_position = Position(line=0, character=0)
+        max_range = None
+        for r in ranges:
+            if r.range.contains(position):
+                if r.range.start > max_start_position:
+                    max_start_position = r.range.start
+                    max_range = r
+
+        return max_range
+
+    async def get_enclosing_folding_range(
+        self, range_in_file: RangeInFile
+    ) -> Optional[FoldingRange]:
+        ranges = await self.folding_range(range_in_file.filepath)
+
+        max_start_position = Position(line=0, character=0)
+        max_range = None
+        for r in ranges:
+            if r.range.contains(range_in_file.range.start) and r.range.contains(
+                range_in_file.range.end
+            ):
+                if r.range.start > max_start_position:
+                    max_start_position = r.range.start
+                    max_range = r
+
+        return max_range

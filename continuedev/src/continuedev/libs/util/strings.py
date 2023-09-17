@@ -25,6 +25,19 @@ def dedent_and_get_common_whitespace(s: str) -> Tuple[str, str]:
     return "\n".join(map(lambda x: x.lstrip(lcp), lines)), lcp
 
 
+def strip_code_block(s: str) -> str:
+    """
+    Strips the code block from a string, if it has one.
+    """
+    if s.startswith("```\n") and s.endswith("\n```"):
+        return s[4:-4]
+    elif s.startswith("```") and s.endswith("```"):
+        return s[3:-3]
+    elif s.startswith("`") and s.endswith("`"):
+        return s[1:-1]
+    return s
+
+
 def remove_quotes_and_escapes(output: str) -> str:
     """
     Clean up the output of the completion API, removing unnecessary escapes and quotes

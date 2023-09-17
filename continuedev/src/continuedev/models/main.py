@@ -105,6 +105,17 @@ class Range(BaseModel):
             end=Position(line=self.end.line + 1, character=0),
         )
 
+    def translated(self, lines: int):
+        return Range(
+            start=Position(
+                line=self.start.line + lines, character=self.start.character
+            ),
+            end=Position(line=self.end.line + lines, character=self.end.character),
+        )
+
+    def contains(self, position: Position) -> bool:
+        return self.start <= position and position <= self.end
+
     @staticmethod
     def from_indices(string: str, start_index: int, end_index: int) -> "Range":
         return Range(

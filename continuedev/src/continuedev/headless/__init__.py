@@ -1,3 +1,4 @@
+import asyncio
 from typing import Optional, Union
 
 import typer
@@ -21,8 +22,11 @@ async def start_headless_session(
     return await session_manager.new_session(ide, config=config)
 
 
-async def run_step_headless(step: Step):
+def run_step_headless(step: Step):
     config = ContinueConfig()
     config.steps_on_startup = [step]
 
-    await start_headless_session(config=config)
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(start_headless_session(config=config))
+    tasks = asyncio.all_tasks(loop)
+    loop.run_until_complete(asyncio.gather(*tasks))

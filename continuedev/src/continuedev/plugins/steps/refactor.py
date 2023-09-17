@@ -4,10 +4,12 @@ from typing import List
 from ...core.main import Step
 from ...core.models import Models
 from ...core.sdk import ContinueSDK
-from ...libs.llm.prompts.edit import simplest_edit_prompt
+from ...libs.llm.prompts.edit import simplified_edit_prompt
+from ...libs.util.strings import remove_quotes_and_escapes, strip_code_block
+from ...libs.util.templating import render_prompt_template
 from ...models.filesystem import RangeInFile
 from ...models.filesystem_edit import FileEdit
-from ...models.main import PositionInFile
+from ...models.main import PositionInFile, Range
 
 
 class RefactorReferencesStep(Step):
@@ -38,16 +40,49 @@ class ParallelEditStep(Step):
     hide: bool = True
 
     async def single_edit(self, sdk: ContinueSDK, range_in_file: RangeInFile):
-        code_to_edit = await sdk.ide.readRangeInFile(range_in_file=range_in_file)
-        prompt = simplest_edit_prompt.format(
-            code_to_edit=code_to_edit, user_input=self.user_input
+        # TODO: Can use folding info to get a more intuitively shaped range
+        expanded_range = await sdk.lsp.get_enclosing_folding_range(range_in_file)
+        if (
+            expanded_range is None
+            or expanded_range.range.start.line != range_in_file.range.start.line
+        ):
+            expanded_range = Range.from_shorthand(
+                range_in_file.range.start.line, 0, range_in_file.range.end.line + 1, 0
+            )
+        else:
+            expanded_range = expanded_range.range
+
+        new_rif = RangeInFile(
+            filepath=range_in_file.filepath,
+            range=expanded_range,
         )
+        code_to_edit = await sdk.ide.readRangeInFile(range_in_file=new_rif)
+
+        # code_to_edit, common_whitespace = dedent_and_get_common_whitespace(code_to_edit)
+
+        prompt = render_prompt_template(
+            simplified_edit_prompt,
+            history=[],
+            other_data={
+                "code_to_edit": code_to_edit,
+                "user_input": self.user_input,
+            },
+        )
+        print(prompt + "\n\n-------------------\n\n")
+
         new_code = await sdk.models.edit.complete(prompt=prompt)
+        new_code = strip_code_block(remove_quotes_and_escapes(new_code)) + "\n"
+        # new_code = (
+        #     "\n".join([common_whitespace + line for line in new_code.split("\n")])
+        #     + "\n"
+        # )
+
+        print(new_code + "\n\n-------------------\n\n")
 
         await sdk.ide.applyFileSystemEdit(
             FileEdit(
                 filepath=range_in_file.filepath,
-                range=range_in_file.range,
+                range=expanded_range,
                 replacement=new_code,
             )
         )
@@ -58,8 +93,10 @@ class ParallelEditStep(Step):
             for range_in_file in self.range_in_files
             if range_in_file.filepath == filepath
         ]
-        for rif in ranges_in_file:
-            await self.single_edit(sdk=sdk, range_in_file=rif)
+        # Sort in reverse order so that we don't mess up the ranges
+        ranges_in_file.sort(key=lambda x: x.range.start.line, reverse=True)
+        for i in range(len(ranges_in_file)):
+            await self.single_edit(sdk=sdk, range_in_file=ranges_in_file[i])
 
     async def run(self, sdk: ContinueSDK):
         tasks = []
