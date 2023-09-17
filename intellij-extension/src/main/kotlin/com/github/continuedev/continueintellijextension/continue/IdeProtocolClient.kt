@@ -1,7 +1,7 @@
 package com.github.continuedev.continueintellijextension.`continue`
 
-import com.github.bishwenduk029.continueintellijextension.services.ContinuePluginService
-import com.github.bishwenduk029.continueintellijextension.utils.dispatchEventToWebview
+import com.github.continuedev.continueintellijextension.services.ContinuePluginService
+import com.github.continuedev.continueintellijextension.utils.dispatchEventToWebview
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.*
@@ -180,7 +180,7 @@ class IdeProtocolClient(
             endLine,
             endCharacter
         );
-        sendMessage("highlightedCode", jsonMessage)
+        sendMessage("highlightedCodePush", jsonMessage)
         dispatchEventToWebview(
             "highlightedCode",
             jsonMessage,
@@ -201,8 +201,6 @@ interface TextSelectionStrategy {
 }
 
 class DefaultTextSelectionStrategy : TextSelectionStrategy {
-    private var lastActionJob: Job? = null
-    private val debounceWaitMs = 100L
 
     override fun handleTextSelection(
         selectedText: String,
@@ -212,29 +210,23 @@ class DefaultTextSelectionStrategy : TextSelectionStrategy {
         endLine: Int,
         endCharacter: Int
     ): Map<String, Any> {
-        lastActionJob?.cancel()
-        lastActionJob = coroutineScope.launch {
-            delay(debounceWaitMs)
-            val message = mapOf("highlightedCode" to arrayOf(mapOf(
-                "filepath" to filepath,
-                "contents" to selectedText,
-                "range" to mapOf(
-                    "start" to mapOf(
-                        "line" to startLine,
-                        "character" to startCharacter
-                    ),
-                    "end" to mapOf(
-                        "line" to endLine,
-                        "character" to endCharacter
-                    )
-                )
-            )))
 
         return mapOf(
-            "type" to "highlightedCode",
-            "rangeInFile" to rangeInFile,
-            "filesystem" to mapOf(
-                filepath to selectedText
+            "highlightedCode" to arrayOf(
+                mapOf(
+                    "filepath" to filepath,
+                    "contents" to selectedText,
+                    "range" to mapOf(
+                        "start" to mapOf(
+                            "line" to startLine,
+                            "character" to startCharacter
+                        ),
+                        "end" to mapOf(
+                            "line" to endLine,
+                            "character" to endCharacter
+                        )
+                    )
+                )
             )
         )
     }

@@ -1,4 +1,4 @@
-package com.github.bishwenduk029.continueintellijextension.utils
+package com.github.continuedev.continueintellijextension.utils
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
