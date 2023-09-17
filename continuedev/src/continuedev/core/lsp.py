@@ -9,6 +9,7 @@ from pylsp.python_lsp import PythonLSPServer, start_ws_lang_server
 from ..libs.util.logging import logger
 from ..models.filesystem import RangeInFile
 from ..models.main import Position, Range
+from ..server.meilisearch_server import kill_proc
 
 
 def filepath_to_uri(filename: str) -> str:
@@ -26,6 +27,9 @@ PORT = 8099
 
 
 class LSPClient:
+    ready: bool = False
+    lock: asyncio.Lock = asyncio.Lock()
+
     def __init__(self, host: str, port: int, workspace_paths: List[str]):
         self.host = host
         self.port = port
@@ -37,12 +41,18 @@ class LSPClient:
         print("Connecting")
         self.ws = await self.session.ws_connect(f"ws://{self.host}:{self.port}/")
         print("Connected")
+        self.ready = True
 
     async def send(self, data):
         await self.ws.send_json(data)
 
     async def recv(self):
-        return await self.ws.receive_json()
+        await self.lock.acquire()
+
+        try:
+            return await self.ws.receive_json()
+        finally:
+            self.lock.release()
 
     async def close(self):
         await self.ws.close()
@@ -237,9 +247,20 @@ class LSPClient:
             textDocument={"uri": filepath_to_uri(filepath)},
         )
 
+    async def find_references(
+        self, filepath: str, position: Position, include_declaration: bool = False
+    ):
+        return await self.call_method(
+            "textDocument/references",
+            textDocument={"uri": filepath_to_uri(filepath)},
+            position=position.dict(),
+            context={"includeDeclaration": include_declaration},
+        )
+
 
 async def start_language_server() -> threading.Thread:
     try:
+        kill_proc(PORT)
         thread = threading.Thread(
             target=start_ws_lang_server,
             args=(PORT, False, PythonLSPServer),
@@ -268,6 +289,12 @@ class ContinueLSPClient(BaseModel):
     lsp_client: LSPClient = None
     lsp_thread: Optional[threading.Thread] = None
 
+    @property
+    def ready(self):
+        if self.lsp_client is None:
+            return False
+        return self.lsp_client.ready
+
     class Config:
         arbitrary_types_allowed = True
 
@@ -287,6 +314,17 @@ class ContinueLSPClient(BaseModel):
         if self.lsp_thread:
             self.lsp_thread.join()
 
+    def location_to_range_in_file(self, location):
+        return RangeInFile(
+            filepath=uri_to_filepath(location["uri"]),
+            range=Range.from_shorthand(
+                location["range"]["start"]["line"],
+                location["range"]["start"]["character"],
+                location["range"]["end"]["line"],
+                location["range"]["end"]["character"],
+            ),
+        )
+
     async def goto_definition(
         self, position: Position, filename: str
     ) -> List[RangeInFile]:
@@ -294,18 +332,17 @@ class ContinueLSPClient(BaseModel):
             filename,
             position,
         )
-        return [
-            RangeInFile(
-                filepath=uri_to_filepath(x.uri),
-                range=Range.from_shorthand(
-                    x.range.start.line,
-                    x.range.start.character,
-                    x.range.end.line,
-                    x.range.end.character,
-                ),
-            )
-            for x in response
-        ]
+        return [self.location_to_range_in_file(x) for x in response]
+
+    async def find_references(
+        self, position: Position, filename: str, include_declaration: bool = False
+    ) -> List[RangeInFile]:
+        response = await self.lsp_client.find_references(
+            filename,
+            position,
+            include_declaration=include_declaration,
+        )
+        return [self.location_to_range_in_file(x) for x in response["result"]]
 
     async def document_symbol(self, filepath: str) -> List:
         response = await self.lsp_client.document_symbol(filepath)
@@ -314,15 +351,7 @@ class ContinueLSPClient(BaseModel):
                 name=x["name"],
                 containerName=x["containerName"],
                 kind=x["kind"],
-                location=RangeInFile(
-                    filepath=uri_to_filepath(x["location"]["uri"]),
-                    range=Range.from_shorthand(
-                        x["location"]["range"]["start"]["line"],
-                        x["location"]["range"]["start"]["character"],
-                        x["location"]["range"]["end"]["line"],
-                        x["location"]["range"]["end"]["character"],
-                    ),
-                ),
+                location=self.location_to_range_in_file(x["location"]),
             )
             for x in response["result"]
         ]
