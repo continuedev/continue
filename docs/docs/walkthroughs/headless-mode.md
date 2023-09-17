@@ -1,6 +1,6 @@
-# Completing Tasks Asynchronously with Headless Mode
+# Headless Mode
 
-"Headless mode" allows Continue to run in the background, without needing to be connected to the IDE or GUI. This is useful for performing refactors or other tasks that might take time to complete. Headless mode can also be run in CI/CD for example to perform a thorough review for errors.
+"Headless mode" allows Continue to run in the background, without needing to be connected to the IDE or GUI. This is useful for performing refactors or other long-running tasks asynchronously. Headless mode can also be run in CI/CD for example to perform a thorough review for errors.
 
 To use headless mode:
 
