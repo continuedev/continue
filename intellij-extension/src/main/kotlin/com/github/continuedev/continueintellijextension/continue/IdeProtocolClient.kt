@@ -69,8 +69,6 @@ class IdeProtocolClient(
     private var okHttpClient: OkHttpClient = OkHttpClient()
     private var webSocket: WebSocket? = null
 
-    private val textSelectionStrategy: TextSelectionStrategy = DefaultTextSelectionStrategy(this, coroutineScope)
-
     private val diffManager = DiffManager(project)
 
     init {
@@ -138,7 +136,6 @@ class IdeProtocolClient(
                                                     WorkspaceDirectory(workspaceDirectory())
                                             )
                                     )
-                                )
                             );
                         }
                         "uniqueId" -> webSocket?.send(Gson().toJson(WebSocketMessage("uniqueId", UniqueId(uniqueId()))))

@@ -4,12 +4,9 @@ import com.github.continuedev.continueintellijextension.`continue`.DefaultTextSe
 import com.github.continuedev.continueintellijextension.`continue`.*
 import com.github.continuedev.continueintellijextension.listeners.ContinuePluginSelectionListener
 import com.github.continuedev.continueintellijextension.actions.ToggleAuxiliaryBarAction
-import com.github.continuedev.continueintellijextension.services.ContinueExtensionConfigurable
 import com.github.continuedev.continueintellijextension.services.ContinueExtensionSettings
 import com.github.continuedev.continueintellijextension.services.ContinuePluginService
 import com.github.continuedev.continueintellijextension.utils.dispatchEventToWebview
-import com.google.gson.Gson
-import com.intellij.execution.target.value.constant
 import com.intellij.ide.plugins.PluginManagerCore
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.actionSystem.ActionManager
@@ -19,33 +16,19 @@ import com.intellij.openapi.extensions.PluginId
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.startup.StartupActivity
 import com.intellij.openapi.wm.ToolWindowManager
-import com.intellij.ui.jcef.JBCefBrowser
-import com.intellij.ui.jcef.executeJavaScriptAsync
 import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.MutableStateFlow
 import java.io.BufferedReader
 import java.io.InputStreamReader
 
-import java.net.NetworkInterface
-import java.util.*
-
 import okhttp3.OkHttpClient
 import okhttp3.Request
-import org.apache.commons.cli.CommandLine
-import org.apache.tools.ant.taskdefs.PumpStreamHandler
-import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
 import java.nio.file.Files
 import java.nio.file.Paths
-import java.nio.file.StandardOpenOption
 import java.nio.file.attribute.PosixFilePermission
 import java.util.HashSet
-
-object SessionStore {
-    val sessionId: MutableStateFlow<String?> = MutableStateFlow(null)
-}
 
 fun getContinueGlobalPath(): String {
     val continuePath = Paths.get(System.getProperty("user.home"), ".continue")
@@ -85,7 +68,7 @@ fun downloadFromS3(
     val url = if (useBackupUrl)
         "https://s3.continue.dev/$filename"
     else
-        "https://$bucket.s3.$region.amazonaws.com/$filename";
+        "https://$bucket.s3.$region.amazonaws.com/$filename"
 
     val request = Request.Builder()
         .url(url)
@@ -171,7 +154,7 @@ fun killProcess(pid: String) {
     }
 }
 
-fun checkServerRunning(serverUrl: String): Boolean {
+fun checkServerRunning(): Boolean {
     val processId = getProcessId(65432)
     return processId != null
 }
@@ -181,8 +164,8 @@ fun getExtensionVersion(): String {
     return pluginDescriptor?.version ?: ""
 }
 
-suspend fun checkOrKillRunningServer(serverUrl: String): Boolean = withContext(Dispatchers.IO) {
-    val serverRunning = checkServerRunning(serverUrl)
+suspend fun checkOrKillRunningServer(): Boolean = withContext(Dispatchers.IO) {
+    val serverRunning = checkServerRunning()
     var shouldKillAndReplace = true
 
     val serverVersionPath = serverVersionPath()
@@ -217,7 +200,7 @@ suspend fun startBinaryWithRetry(path: String) {
     while (attempts < 5) {
         try {
             // Your suspend function call here
-            ProcessBuilder(path).start();
+            ProcessBuilder(path).start()
             break // If the function call is successful, break the loop
         } catch (e: Exception) {
             attempts++
@@ -228,7 +211,7 @@ suspend fun startBinaryWithRetry(path: String) {
 }
 
 
-suspend fun startContinuePythonServer(project: Project) {
+suspend fun startContinuePythonServer() {
     val settings = ServiceManager.getService(ContinueExtensionSettings::class.java)
     val serverUrl = settings.serverUrl ?: "http://localhost:65432"
 
@@ -237,7 +220,7 @@ suspend fun startContinuePythonServer(project: Project) {
         return
     }
 
-    if (checkOrKillRunningServer(serverUrl)) {
+    if (checkOrKillRunningServer()) {
         println("Continue server already running")
         return
     }
@@ -252,7 +235,7 @@ suspend fun startContinuePythonServer(project: Project) {
         else -> "linux/run"
     }
 
-    val destination = serverBinaryPath();
+    val destination = serverBinaryPath()
 
     // Check whether the binary needs to be downloaded
     var shouldDownload = true
@@ -280,7 +263,7 @@ suspend fun startContinuePythonServer(project: Project) {
                 destination,
                 "us-west-1",
                 false
-        );
+        )
 
         // Set permissions on the binary
         setPermissions(destination)
@@ -303,9 +286,6 @@ class ContinuePluginStartupActivity : StartupActivity, Disposable {
     private val coroutineScope = CoroutineScope(Dispatchers.IO)
 
     override fun runActivity(project: Project) {
-        // Get extension settings
-        val settings = ServiceManager.getService(ContinueExtensionSettings::class.java)
-
         // Register Actions
         val actionManager = ActionManager.getInstance()
         actionManager.registerAction(
@@ -326,7 +306,11 @@ class ContinuePluginStartupActivity : StartupActivity, Disposable {
         val defaultStrategy = DefaultTextSelectionStrategy()
 
         coroutineScope.launch {
-            startContinuePythonServer(project)
+            startContinuePythonServer()
+
+            while (getProcessId(65432) == null) {
+                delay(1000)
+            }
 
             val ideProtocolClient = IdeProtocolClient(
                 "ws://localhost:65432/ide/ws",
