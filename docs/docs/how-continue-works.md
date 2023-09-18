@@ -19,11 +19,11 @@ Continue can be used as a VS Code extension.
 
 You can install it from the Visual Studio Marketplace [here](https://marketplace.visualstudio.com/items?itemName=Continue.continue).
 
-### JetBrains (Alpha)
+<!-- ### JetBrains (Alpha)
 
 Continue can be used as a plugin inside of PyCharm, Intellij, WebStorm, etc.
 
-You can install it from the JetBrains Marketplace [here](https://continue.dev/).
+You can install it from the JetBrains Marketplace [here](https://continue.dev/). -->
 
 ### Add Continue to a new IDE
 

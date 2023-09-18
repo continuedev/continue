@@ -127,7 +127,7 @@ function History() {
                         minute: "numeric",
                       })}
                       {" | "}
-                      {lastPartOfPath(session.workspace_directory || "")}
+                      {lastPartOfPath(session.workspace_directory || "")}/
                     </div>
                   </TdDiv>
                 </td>
