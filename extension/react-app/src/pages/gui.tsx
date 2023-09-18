@@ -1,6 +1,5 @@
 import styled from "styled-components";
-import { defaultBorderRadius } from "../components";
-import Loader from "../components/Loader";
+import { defaultBorderRadius, lightGray } from "../components";
 import ContinueButton from "../components/ContinueButton";
 import { FullState } from "../../../schema/FullState";
 import {
@@ -41,6 +40,28 @@ const TopGuiDiv = styled.div`
   /* Hide scrollbar for Chrome, Safari and Opera */
   &::-webkit-scrollbar {
     display: none;
+  }
+`;
+
+const StepsDiv = styled.div`
+  position: relative;
+  background-color: transparent;
+  padding-left: 8px;
+  padding-right: 8px;
+
+  & > * {
+    z-index: 1;
+    position: relative;
+  }
+
+  &::before {
+    content: "";
+    position: absolute;
+    height: calc(100% - 24px);
+    border-left: 2px solid ${lightGray};
+    left: 28px;
+    z-index: 0;
+    bottom: 24px;
   }
 `;
 
@@ -214,7 +235,6 @@ function GUI(props: GUIProps) {
 
   useEffect(() => {
     if (client && waitingForClient) {
-      console.log("sending user input queue, ", user_input_queue);
       setWaitingForClient(false);
       for (const input of user_input_queue) {
         client.sendMainInput(input);
@@ -391,6 +411,30 @@ function GUI(props: GUIProps) {
     client.sendStepUserInput(input, index);
   };
 
+  const getStepsInUserInputGroup = (index: number): number[] => {
+    const stepsInUserInputGroup: number[] = [];
+    for (let i = index; i >= 0; i--) {
+      if (
+        history?.timeline.length > i &&
+        history.timeline[i].step.name === "User Input" &&
+        history.timeline[i].step.hide === false
+      ) {
+        stepsInUserInputGroup.push(i);
+      }
+    }
+    for (let i = index + 1; i < history?.timeline.length; i++) {
+      if (
+        history?.timeline.length > i &&
+        history.timeline[i].step.name === "User Input" &&
+        history.timeline[i].step.hide === false
+      ) {
+        break;
+      }
+      stepsInUserInputGroup.push(i);
+    }
+    return stepsInUserInputGroup;
+  };
+
   useEffect(() => {
     const timeout = setTimeout(() => {
       setShowLoading(true);
@@ -478,63 +522,123 @@ function GUI(props: GUIProps) {
               </u>
             </p>
           </div>
-
-          <div className="w-3/4 m-auto text-center text-xs">
-            {/* Tip: Drag the Continue logo from the far left of the window to the
-            right, then toggle Continue using option/alt+command+m. */}
-            {/* Tip: If there is an error in the terminal, use COMMAND+D to
-            automatically debug */}
-          </div>
         </>
       )}
-      {history?.timeline.map((node: HistoryNode, index: number) => {
-        return node.step.name === "User Input" ? (
-          node.step.hide || (
-            <UserInputContainer
-              index={index}
-              onDelete={() => {
-                client?.deleteAtIndex(index);
-              }}
-              historyNode={node}
-            >
-              {node.step.description as string}
-            </UserInputContainer>
-          )
-        ) : (
-          <StepContainer
-            index={index}
-            isLast={index === history.timeline.length - 1}
-            isFirst={index === 0}
-            open={stepsOpen[index]}
-            onToggle={() => {
-              const nextStepsOpen = [...stepsOpen];
-              nextStepsOpen[index] = !nextStepsOpen[index];
-              setStepsOpen(nextStepsOpen);
-            }}
-            onToggleAll={() => {
-              const shouldOpen = !stepsOpen[index];
-              setStepsOpen((prev) => prev.map(() => shouldOpen));
-            }}
-            key={index}
-            onUserInput={(input: string) => {
-              onStepUserInput(input, index);
-            }}
-            inFuture={index > history?.current_index}
-            historyNode={node}
-            onReverse={() => {
-              client?.reverseToIndex(index);
-            }}
-            onRetry={() => {
-              client?.retryAtIndex(index);
-              setWaitingForSteps(true);
-            }}
-            onDelete={() => {
-              client?.deleteAtIndex(index);
-            }}
-          />
-        );
-      })}
-      {waitingForSteps && <Loader />}
+      <br />
+      <StepsDiv>
+        {history?.timeline.map((node: HistoryNode, index: number) => {
+          if (node.step.hide) return null;
+          return (
+            <>
+              {node.step.name === "User Input" ? (
+                node.step.hide || (
+                  <UserInputContainer
+                    active={getStepsInUserInputGroup(index).some((i) => {
+                      return history.timeline[i].active;
+                    })}
+                    groupIndices={getStepsInUserInputGroup(index)}
+                    onToggle={(isOpen: boolean) => {
+                      // Collapse all steps in the section
+                      setStepsOpen((prev) => {
+                        const nextStepsOpen = [...prev];
+                        getStepsInUserInputGroup(index).forEach((i) => {
+                          nextStepsOpen[i] = isOpen;
+                        });
+                        return nextStepsOpen;
+                      });
+                    }}
+                    isToggleOpen={stepsOpen[index]}
+                    index={index}
+                    onDelete={() => {
+                      // Delete the input and all steps until the next user input
+                      getStepsInUserInputGroup(index).forEach((i) => {
+                        client?.deleteAtIndex(i);
+                      });
+                    }}
+                    historyNode={node}
+                  >
+                    {node.step.description as string}
+                  </UserInputContainer>
+                )
+              ) : (
+                <StepContainer
+                  index={index}
+                  isLast={index === history.timeline.length - 1}
+                  isFirst={index === 0}
+                  open={stepsOpen[index]}
+                  onToggle={() => {
+                    // Check if all steps after the User Input are closed
+                    let userInputIndex = -1;
+                    for (let i = index; i >= 0; i--) {
+                      if (
+                        history?.timeline.length > i &&
+                        history.timeline[i].step.name === "User Input"
+                      ) {
+                        userInputIndex = i;
+                        break;
+                      }
+                    }
+                    if (userInputIndex > 0) {
+                      let allStepsAfterUserInputAreClosed = true;
+                      for (
+                        let i = userInputIndex + 1;
+                        i < stepsOpen.length;
+                        i++
+                      ) {
+                        if (i === index) continue;
+                        if (
+                          history?.timeline.length > i &&
+                          history.timeline[i].step.name === "User Input"
+                        ) {
+                          break;
+                        }
+                        if (stepsOpen[i]) {
+                          allStepsAfterUserInputAreClosed = false;
+                          break;
+                        }
+                      }
+                      if (allStepsAfterUserInputAreClosed) {
+                        setStepsOpen((prev) => {
+                          const nextStepsOpen = [...prev];
+                          nextStepsOpen[userInputIndex] = false;
+                          return nextStepsOpen;
+                        });
+                      }
+                    }
+
+                    setStepsOpen((prev) => {
+                      const nextStepsOpen = [...prev];
+                      nextStepsOpen[index] = !nextStepsOpen[index];
+                      return nextStepsOpen;
+                    });
+                  }}
+                  onToggleAll={() => {
+                    const shouldOpen = !stepsOpen[index];
+                    setStepsOpen((prev) => prev.map(() => shouldOpen));
+                  }}
+                  key={index}
+                  onUserInput={(input: string) => {
+                    onStepUserInput(input, index);
+                  }}
+                  inFuture={index > history?.current_index}
+                  historyNode={node}
+                  onReverse={() => {
+                    client?.reverseToIndex(index);
+                  }}
+                  onRetry={() => {
+                    client?.retryAtIndex(index);
+                    setWaitingForSteps(true);
+                  }}
+                  onDelete={() => {
+                    client?.deleteAtIndex(index);
+                  }}
+                />
+              )}
+              {/* <div className="h-2"></div> */}
+            </>
+          );
+        })}
+      </StepsDiv>
 
       <div>
         {user_input_queue?.map?.((input) => {
