@@ -5,6 +5,7 @@
 - [Contributing to Continue](#contributing-to-continue)
   - [Table of Contents](#table-of-contents)
 - [❤️ Ways to Contribute](#️-ways-to-contribute)
+  - [👋 Continue Contribution Ideas](#-continue-contribution-ideas)
   - [🐛 Report Bugs](#-report-bugs)
   - [✨ Suggest Enhancements](#-suggest-enhancements)
   - [📖 Updating / Improving Documentation](#-updating--improving-documentation)
@@ -23,6 +24,10 @@
     - [`Policy`](#policy)
 
 # ❤️ Ways to Contribute
+
+## 👋 Continue Contribution Ideas
+
+[This GitHub project board]([https://github.com/orgs/continuedev/projects/2) is a list of ideas for how you can contribute to Continue. These aren't the only ways, but are a great starting point if you are new to the project.
 
 ## 🐛 Report Bugs
 
