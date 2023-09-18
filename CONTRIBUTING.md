@@ -27,7 +27,7 @@
 
 ## 👋 Continue Contribution Ideas
 
-[This GitHub project board]([https://github.com/orgs/continuedev/projects/2) is a list of ideas for how you can contribute to Continue. These aren't the only ways, but are a great starting point if you are new to the project.
+[This GitHub project board](https://github.com/orgs/continuedev/projects/2) is a list of ideas for how you can contribute to Continue. These aren't the only ways, but are a great starting point if you are new to the project.
 
 ## 🐛 Report Bugs
 
