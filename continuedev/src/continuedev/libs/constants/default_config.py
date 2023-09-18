@@ -12,7 +12,6 @@ from continuedev.src.continuedev.libs.llm.maybe_proxy_openai import MaybeProxyOp
 
 from continuedev.src.continuedev.plugins.steps.open_config import OpenConfigStep
 from continuedev.src.continuedev.plugins.steps.clear_history import ClearHistoryStep
-from continuedev.src.continuedev.plugins.steps.feedback import FeedbackStep
 from continuedev.src.continuedev.plugins.steps.comment_code import CommentCodeStep
 from continuedev.src.continuedev.plugins.steps.share_session import ShareSessionStep
 from continuedev.src.continuedev.plugins.steps.main import EditHighlightedCodeStep
@@ -52,11 +51,6 @@ config = ContinueConfig(
             name="comment",
             description="Write comments for the current file or highlighted code",
             step=CommentCodeStep,
-        ),
-        SlashCommand(
-            name="feedback",
-            description="Send feedback to improve Continue",
-            step=FeedbackStep,
         ),
         SlashCommand(
             name="clear",

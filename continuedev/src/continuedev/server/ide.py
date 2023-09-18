@@ -456,7 +456,7 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
         resp = await self._send_and_receive_json(
             {"commands": commands}, TerminalContentsResponse, "getTerminalContents"
         )
-        return resp.contents
+        return resp.contents.strip()
 
     async def getHighlightedCode(self) -> List[RangeInFile]:
         resp = await self._send_and_receive_json(

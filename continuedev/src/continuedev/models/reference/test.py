@@ -130,7 +130,9 @@ for module_name, module_title in CONTEXT_PROVIDER_MODULES:
         ],
         inherited=ctx_properties,
     )
-    with open(f"docs/docs/reference/Context Providers/{module_name}.md", "w") as f:
+    with open(
+        f"docs/docs/reference/Context Providers/{module_title.lower()}.md", "w"
+    ) as f:
         f.write(markdown_docs)
 
 # sdk_module = importlib.import_module("continuedev.src.continuedev.core.sdk")

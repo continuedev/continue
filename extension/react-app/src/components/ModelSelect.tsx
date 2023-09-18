@@ -10,8 +10,9 @@ import { useContext } from "react";
 import { GUIClientContext } from "../App";
 import { RootStore } from "../redux/store";
 import { useDispatch, useSelector } from "react-redux";
-import { PlusIcon } from "@heroicons/react/24/outline";
+import { ArrowLeftIcon, PlusIcon } from "@heroicons/react/24/outline";
 import { setDialogMessage, setShowDialog } from "../redux/slices/uiStateSlice";
+import { useNavigate } from "react-router-dom";
 
 const MODEL_INFO: { title: string; class: string; args: any }[] = [
   {
@@ -163,6 +164,8 @@ function ModelSelect(props: {}) {
     (state: RootStore) => (state.serverState.config as any)?.models?.unused
   );
 
+  const navigate = useNavigate();
+
   return (
     <GridDiv>
       <Select
@@ -206,31 +209,7 @@ function ModelSelect(props: {}) {
         width="1.3em"
         height="1.3em"
         onClick={() => {
-          dispatch(
-            setDialogMessage(
-              <div>
-                <div className="text-lg font-bold p-2">
-                  Setup a new model provider
-                </div>
-                <br />
-                {MODEL_INFO.map((model, idx) => {
-                  return (
-                    <NewProviderDiv
-                      onClick={() => {
-                        const model = MODEL_INFO[idx];
-                        client?.addModelForRole("*", model.class, model.args);
-                        dispatch(setShowDialog(false));
-                      }}
-                    >
-                      {model.title}
-                    </NewProviderDiv>
-                  );
-                })}
-                <br />
-              </div>
-            )
-          );
-          dispatch(setShowDialog(true));
+          navigate("/models");
         }}
       />
     </GridDiv>

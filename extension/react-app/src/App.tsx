@@ -18,6 +18,7 @@ import { postVscMessage } from "./vscode";
 import { RouterProvider, createMemoryRouter } from "react-router-dom";
 import ErrorPage from "./pages/error";
 import SettingsPage from "./pages/settings";
+import Models from "./pages/models";
 
 const router = createMemoryRouter([
   {
@@ -40,6 +41,10 @@ const router = createMemoryRouter([
       {
         path: "/settings",
         element: <SettingsPage />,
+      },
+      {
+        path: "/models",
+        element: <Models />,
       },
     ],
   },

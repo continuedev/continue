@@ -171,7 +171,7 @@ function GUI(props: GUIProps) {
 
     topGuiDivRef.current?.scrollTo({
       top: topGuiDivRef.current?.scrollHeight,
-      behavior: "smooth" as any,
+      behavior: "instant" as any,
     });
   }, [topGuiDivRef.current?.scrollHeight, history.timeline]);
 
@@ -662,7 +662,13 @@ function GUI(props: GUIProps) {
         }}
         addingHighlightedCode={adding_highlighted_code}
       />
-      <ContinueButton onClick={onMainTextInput} />
+      <ContinueButton
+        disabled={
+          (mainTextInputRef.current as any)?.inputValue?.trim() === "" ||
+          (mainTextInputRef.current as any)?.inputValue?.trim() === "/"
+        }
+        onClick={onMainTextInput}
+      />
     </TopGuiDiv>
   );
 }

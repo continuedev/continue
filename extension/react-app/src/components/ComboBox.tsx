@@ -92,7 +92,7 @@ const MainTextInput = styled.textarea<{ inQueryForDynamicProvider: boolean }>`
   }
 
   &::placeholder {
-    color: ${lightGray}80;
+    color: ${lightGray}cc;
   }
 `;
 
@@ -476,7 +476,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
       window.removeEventListener("keydown", handleKeyDown);
       window.removeEventListener("keyup", handleKeyUp);
     };
-  });
+  }, []);
 
   useEffect(() => {
     if (!inputRef.current) {
@@ -578,21 +578,6 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
             />
           );
         })}
-        <HeaderButtonWithText
-          text="Load bookmarked context"
-          onClick={() => {
-            showSelectContextGroupDialog();
-          }}
-          className="pill-button focus:outline-none focus:border-red-600 focus:border focus:border-solid"
-          onKeyDown={(e: KeyboardEvent) => {
-            e.preventDefault();
-            if (e.key === "Enter") {
-              showSelectContextGroupDialog();
-            }
-          }}
-        >
-          <FolderArrowDownIcon width="1.4em" height="1.4em" />
-        </HeaderButtonWithText>
         {props.selectedContextItems.length > 0 && (
           <>
             {props.addingHighlightedCode ? (
@@ -620,21 +605,6 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
                 <DocumentPlusIcon width="1.4em" height="1.4em" />
               </HeaderButtonWithText>
             )}
-            <HeaderButtonWithText
-              text="Bookmark context"
-              onClick={() => {
-                showDialogToSaveContextGroup();
-              }}
-              className="pill-button focus:outline-none focus:border-red-600 focus:border focus:border-solid"
-              onKeyDown={(e: KeyboardEvent) => {
-                e.preventDefault();
-                if (e.key === "Enter") {
-                  showDialogToSaveContextGroup();
-                }
-              }}
-            >
-              <BookmarkIcon width="1.4em" height="1.4em" />
-            </HeaderButtonWithText>
           </>
         )}
       </div>
@@ -648,7 +618,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
             typeof inQueryForContextProvider !== "undefined"
           }
           disabled={props.disabled}
-          placeholder={`Ask a question, give instructions, type '/' for slash commands, or '@' to add context`}
+          placeholder={`Ask a question, '/' for slash commands, '@' to add context`}
           {...getInputProps({
             onCompositionStart: () => setIsComposing(true),
             onCompositionEnd: () => setIsComposing(false),
@@ -846,7 +816,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
             items.map((item, index) => (
               <Li
                 style={{
-                  borderTop: index === 0 ? "none" : undefined,
+                  borderTop: index === 0 ? "none" : `0.5px solid ${lightGray}`,
                 }}
                 key={`${item.name}${index}`}
                 {...downshiftProps.getItemProps({ item, index })}

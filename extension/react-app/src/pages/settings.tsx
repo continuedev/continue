@@ -106,16 +106,19 @@ function Settings() {
 
   return (
     <FormProvider {...formMethods}>
-      <div className="w-full">
+      <div>
         <form onSubmit={formMethods.handleSubmit(onSubmit)}>
-          <div className="items-center flex">
+          <div
+            className="items-center flex"
+            style={{ borderBottom: `0.5px solid ${lightGray}` }}
+          >
             <ArrowLeftIcon
-              width="1.4em"
-              height="1.4em"
+              width="1.2em"
+              height="1.2em"
               onClick={submitAndLeave}
               className="inline-block ml-4 cursor-pointer"
             />
-            <h1 className="text-2xl font-bold m-4 inline-block">Settings</h1>
+            <h3 className="text-lg font-bold m-2 inline-block">Settings</h3>
           </div>
           {config ? (
             <div className="p-2">

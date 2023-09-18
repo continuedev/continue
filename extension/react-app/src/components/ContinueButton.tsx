@@ -5,7 +5,7 @@ import { useSelector } from "react-redux";
 import { RootStore } from "../redux/store";
 import { useEffect, useState } from "react";
 
-let StyledButton = styled(Button)<{ color?: string | null }>`
+let StyledButton = styled(Button)<{ color?: string | null; disabled: boolean }>`
   margin: auto;
   margin-top: 8px;
   margin-bottom: 16px;
@@ -14,13 +14,24 @@ let StyledButton = styled(Button)<{ color?: string | null }>`
   align-items: center;
   background: ${(props) => props.color || "#be1b55"};
 
-  &:hover {
-    transition-property: "background";
-    opacity: 0.7;
-  }
+  cursor: ${(props) => (props.disabled ? "auto" : "pointer")};
+
+  ${(props) =>
+    props.disabled
+      ? ""
+      : `
+    &:hover {
+      transition-property: "background";
+      opacity: 0.7;
+    }
+  `}
 `;
 
-function ContinueButton(props: { onClick?: () => void; hidden?: boolean }) {
+function ContinueButton(props: {
+  onClick?: () => void;
+  hidden?: boolean;
+  disabled: boolean;
+}) {
   const vscMediaUrl = useSelector(
     (state: RootStore) => state.config.vscMediaUrl
   );
@@ -50,6 +61,7 @@ function ContinueButton(props: { onClick?: () => void; hidden?: boolean }) {
       style={{ fontSize: "10px" }}
       className="m-auto press-start-2p"
       onClick={props.onClick}
+      disabled={props.disabled}
     >
       {vscMediaUrl ? (
         <img src={`${vscMediaUrl}/play_button.png`} width="16px" />

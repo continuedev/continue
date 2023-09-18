@@ -56,6 +56,8 @@ export const TextArea = styled.textarea`
   z-index: 1;
   border: 1px solid transparent;
 
+  resize: vertical;
+
   &:focus {
     outline: 1px solid ${lightGray};
     border: 1px solid transparent;

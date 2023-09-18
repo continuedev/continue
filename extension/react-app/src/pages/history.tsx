@@ -4,7 +4,7 @@ import { GUIClientContext } from "../App";
 import { useSelector } from "react-redux";
 import { RootStore } from "../redux/store";
 import { useNavigate } from "react-router-dom";
-import { secondaryDark, vscBackground } from "../components";
+import { lightGray, secondaryDark } from "../components";
 import styled from "styled-components";
 import { ArrowLeftIcon } from "@heroicons/react/24/outline";
 import CheckDiv from "../components/CheckDiv";
@@ -70,15 +70,18 @@ function History() {
   console.log(sessions.map((session) => session.date_created));
 
   return (
-    <div className="w-full">
-      <div className="items-center flex">
+    <div>
+      <div
+        className="items-center flex m-0 p-0"
+        style={{ borderBottom: `0.5px solid ${lightGray}` }}
+      >
         <ArrowLeftIcon
-          width="1.4em"
-          height="1.4em"
+          width="1.2em"
+          height="1.2em"
           onClick={() => navigate("/")}
           className="inline-block ml-4 cursor-pointer"
         />
-        <h1 className="text-xl font-bold m-4 inline-block">History</h1>
+        <h3 className="text-lg font-bold m-2 inline-block">History</h3>
       </div>
       {workspacePaths && workspacePaths.length > 0 && (
         <CheckDiv
@@ -119,12 +122,12 @@ function History() {
                     <div className="text-md">{session.title}</div>
                     <div className="text-gray-400">
                       {parseDate(session.date_created).toLocaleString("en-US", {
-                        weekday: "short",
-                        year: "numeric",
-                        month: "long",
-                        day: "numeric",
+                        year: "2-digit",
+                        month: "2-digit",
+                        day: "2-digit",
                         hour: "numeric",
-                        minute: "numeric",
+                        minute: "2-digit",
+                        hour12: true,
                       })}
                       {" | "}
                       {lastPartOfPath(session.workspace_directory || "")}/

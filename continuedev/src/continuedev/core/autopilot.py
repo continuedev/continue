@@ -201,7 +201,9 @@ class Autopilot(ContinueBaseModel):
             )
             or []
         )
-        return custom_commands + slash_commands
+        cmds = custom_commands + slash_commands
+        cmds.sort(key=lambda x: x["name"] == "edit", reverse=True)
+        return cmds
 
     async def clear_history(self):
         # Reset history
