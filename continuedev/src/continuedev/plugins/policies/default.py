@@ -70,10 +70,9 @@ class DefaultPolicy(Policy):
                     name="Welcome to Continue",
                     message=dedent(
                         """\
-                    - Highlight code section and ask a question or give instructions
+                    - Highlight code section and ask a question or use `/edit`
                     - Use `cmd+m` (Mac) / `ctrl+m` (Windows) to open Continue
-                    - Use `/help` to ask questions about how to use Continue
-                    - [Customize Continue](https://continue.dev/docs/customization) (e.g. use your own API key) by typing '/config'."""
+                    - [Customize Continue](https://continue.dev/docs/customization) by typing '/config' (e.g. use your own API key) """
                     ),
                 )
                 >> StepsOnStartupStep()
