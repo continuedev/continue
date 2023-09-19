@@ -337,6 +337,12 @@ class Step(ContinueBaseModel):
     hide: bool = False
     description: Union[str, None] = None
 
+    class_name: str = "Step"
+
+    @validator("class_name", pre=True, always=True)
+    def class_name_is_class_name(cls, class_name):
+        return cls.__name__
+
     system_message: Union[str, None] = None
     chat_context: List[ChatMessage] = []
     manage_own_chat_context: bool = False

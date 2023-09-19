@@ -1,27 +1,16 @@
 import React from "react";
 import { lightGray, secondaryDark, vscBackground } from ".";
 import styled from "styled-components";
-import { PlusIcon } from "@heroicons/react/24/outline";
+import { ChatBubbleOvalLeftIcon, PlusIcon } from "@heroicons/react/24/outline";
 
 const CollapseButton = styled.div`
-  border-radius: 50%;
-  padding: 2px;
-  width: 14px;
-  height: 14px;
   background-color: ${vscBackground};
-  border: 1px solid ${lightGray};
-  cursor: pointer;
   display: flex;
   justify-content: center;
   align-items: center;
   flex-shrink: 0;
   flex-grow: 0;
-
   margin-left: 3px;
-
-  &:hover {
-    background-color: ${secondaryDark};
-  }
 `;
 
 const CollapsedDiv = styled.div`
@@ -32,7 +21,6 @@ const CollapsedDiv = styled.div`
   align-items: center;
   gap: 4px;
   font-size: 13px;
-  cursor: pointer;
 `;
 
 interface TimelineItemProps {
@@ -47,14 +35,11 @@ function TimelineItem(props: TimelineItemProps) {
   return props.open ? (
     props.children
   ) : (
-    <CollapsedDiv
-      onClick={(e) => {
-        e.stopPropagation();
-        props.onToggle();
-      }}
-    >
+    <CollapsedDiv>
       <CollapseButton>
-        {props.iconElement || <PlusIcon width="12px" height="12px" />}
+        {props.iconElement || (
+          <ChatBubbleOvalLeftIcon width="16px" height="16px" />
+        )}
       </CollapseButton>
       <span style={{ color: lightGray }}>{props.historyNode.step.name}</span>
     </CollapsedDiv>

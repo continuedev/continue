@@ -1,7 +1,6 @@
 import json
 from typing import Any, Callable, List
 
-import aiohttp
 from pydantic import Field
 
 from ...core.main import ChatMessage
@@ -36,14 +35,12 @@ class HuggingFaceTGI(LLM):
     async def _stream_complete(self, prompt, options):
         args = self.collect_args(options)
 
-        async with aiohttp.ClientSession(
-            connector=aiohttp.TCPConnector(verify_ssl=self.verify_ssl),
-            timeout=aiohttp.ClientTimeout(total=self.timeout),
-        ) as client_session:
+        async with self.create_client_session() as client_session:
             async with client_session.post(
                 f"{self.server_url}/generate_stream",
                 json={"inputs": prompt, "parameters": args},
                 headers={"Content-Type": "application/json"},
+                proxy=self.proxy,
             ) as resp:
                 async for line in resp.content.iter_any():
                     if line:

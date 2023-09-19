@@ -15,10 +15,9 @@ import {
 import {
   PlusIcon,
   FolderIcon,
-  BookOpenIcon,
-  ChatBubbleOvalLeftEllipsisIcon,
   SparklesIcon,
   Cog6ToothIcon,
+  QuestionMarkCircleIcon,
 } from "@heroicons/react/24/outline";
 import HeaderButtonWithText from "./HeaderButtonWithText";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -62,6 +61,8 @@ const Footer = styled.footer`
   align-items: center;
   width: calc(100% - 16px);
   height: ${FOOTER_HEIGHT};
+
+  overflow: hidden;
 `;
 
 const GridDiv = styled.div`
@@ -176,7 +177,6 @@ const Layout = () => {
                   color="yellow"
                 />
               )}
-
               <ModelSelect />
               {defaultModel === "MaybeProxyOpenAI" &&
                 (location.pathname === "/settings" ||
@@ -206,22 +206,14 @@ const Layout = () => {
             >
               <FolderIcon width="1.4em" height="1.4em" />
             </HeaderButtonWithText>
-            <a
-              href="https://continue.dev/docs/how-to-use-continue"
-              className="no-underline"
+            <HeaderButtonWithText
+              text="Help"
+              onClick={() => {
+                navigate("/help");
+              }}
             >
-              <HeaderButtonWithText text="Docs">
-                <BookOpenIcon width="1.4em" height="1.4em" />
-              </HeaderButtonWithText>
-            </a>
-            <a
-              href="https://github.com/continuedev/continue/issues/new/choose"
-              className="no-underline"
-            >
-              <HeaderButtonWithText text="Feedback">
-                <ChatBubbleOvalLeftEllipsisIcon width="1.4em" height="1.4em" />
-              </HeaderButtonWithText>
-            </a>
+              <QuestionMarkCircleIcon width="1.4em" height="1.4em" />
+            </HeaderButtonWithText>
             <HeaderButtonWithText
               onClick={() => {
                 navigate("/settings");

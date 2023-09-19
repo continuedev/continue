@@ -10,7 +10,7 @@ try:
     if os.path.exists(logfile_path):
         tail = None
         with open(logfile_path, "rb") as f:
-            f.seek(-128 * 1024, os.SEEK_END)
+            f.seek(-32 * 1024, os.SEEK_END)
             tail = f.read().decode("utf-8")
 
         if tail is not None:

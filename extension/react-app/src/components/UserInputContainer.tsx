@@ -43,6 +43,20 @@ const gradient = keyframes`
   }
 `;
 
+const ToggleDiv = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+
+  height: 100%;
+  padding: 0 4px;
+
+  &:hover {
+    background-color: ${vscBackground};
+  }
+`;
+
 const GradientBorder = styled.div<{
   borderWidth?: number;
   borderRadius?: string;
@@ -72,9 +86,6 @@ const GradientBorder = styled.div<{
 `;
 
 const StyledDiv = styled.div<{ editing: boolean }>`
-  padding: 8px;
-  padding-top: 4px;
-  padding-bottom: 4px;
   font-size: 13px;
   font-family: inherit;
   border-radius: ${defaultBorderRadius};
@@ -84,12 +95,11 @@ const StyledDiv = styled.div<{ editing: boolean }>`
   align-items: center;
   position: relative;
   z-index: 1;
-
+  overflow: hidden;
   display: grid;
   grid-template-columns: auto 1fr;
 
-  border: ${(props) =>
-    props.editing ? `1px solid ${lightGray}` : "1px solid transparent"};
+  outline: ${(props) => (props.editing ? `1px solid ${lightGray}` : "none")};
   cursor: text;
 `;
 
@@ -98,7 +108,15 @@ const DeleteButtonDiv = styled.div`
   top: 8px;
   right: 8px;
   background-color: ${secondaryDark};
-  box-shadow: 0px 0px 10px ${secondaryDark};
+  box-shadow: 2px 2px 10px ${secondaryDark};
+  border-radius: ${defaultBorderRadius};
+`;
+
+const GridDiv = styled.div`
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-gap: 8px;
+  align-items: center;
 `;
 
 function stringWithEllipsis(str: string, maxLen: number) {
@@ -182,106 +200,117 @@ const UserInputContainer = (props: UserInputContainerProps) => {
           setIsEditing(true);
         }}
       >
-        {props.isToggleOpen ? (
-          <ChevronDownIcon
-            className="cursor-pointer"
-            onClick={(e) => {
-              e.stopPropagation();
-              if (isMetaEquivalentKeyPressed(e)) {
-                props.onToggleAll(false);
-              } else {
-                props.onToggle(false);
-              }
-            }}
-            width="1.4em"
-            height="1.4em"
-          />
-        ) : (
-          <ChevronRightIcon
-            onClick={(e) => {
-              e.stopPropagation();
-              if (isMetaEquivalentKeyPressed(e)) {
-                props.onToggleAll(true);
-              } else {
-                props.onToggle(true);
-              }
-            }}
-            width="1.4em"
-            height="1.4em"
-            className="cursor-pointer"
-          />
-        )}
-        <div
-          ref={divRef}
-          onBlur={() => {
-            setIsEditing(false);
-          }}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" && !e.shiftKey) {
-              e.preventDefault();
-              doneEditing(e);
-            }
-          }}
-          contentEditable={true}
-          suppressContentEditableWarning={true}
-          className="mr-6 ml-1 cursor-text w-full py-2 flex items-center content-center outline-none"
-        >
-          {isEditing ? props.children : stringWithEllipsis(props.children, 600)}
-        </div>
-        <DeleteButtonDiv>
-          {(isHovered || isEditing) && (
-            <div className="flex">
-              {isEditing ? (
-                <HeaderButtonWithText
-                  onClick={(e) => {
-                    doneEditing(e);
-                  }}
-                  text="Done"
-                >
-                  <CheckIcon width="1.4em" height="1.4em" />
-                </HeaderButtonWithText>
-              ) : (
-                <>
-                  {history.timeline
-                    .filter(
-                      (h, i: number) => props.groupIndices.includes(i) && h.logs
-                    )
-                    .some((h) => h.logs!.length > 0) && (
-                    <HeaderButtonWithText
-                      onClick={() => {
-                        client?.showLogsAtIndex(props.groupIndices[1]);
-                      }}
-                      text="Inspect Prompt"
-                    >
-                      <MagnifyingGlassIcon width="1.4em" height="1.4em" />
-                    </HeaderButtonWithText>
-                  )}
-                  <HeaderButtonWithText
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      if (props.active) {
-                        client?.deleteAtIndex(props.groupIndices[1]);
-                      } else {
-                        props.onDelete();
-                      }
-                    }}
-                    text={
-                      props.historyNode.active
-                        ? `Stop (${getMetaKeyLabel()}⌫)`
-                        : "Delete"
+        <GridDiv>
+          <ToggleDiv
+            onClick={
+              props.isToggleOpen
+                ? (e) => {
+                    e.stopPropagation();
+                    if (isMetaEquivalentKeyPressed(e)) {
+                      props.onToggleAll(false);
+                    } else {
+                      props.onToggle(false);
                     }
-                  >
-                    {props.active ? (
-                      <StopCircleIcon width="1.4em" height="1.4em" />
-                    ) : (
-                      <XMarkIcon width="1.4em" height="1.4em" />
-                    )}
-                  </HeaderButtonWithText>
-                </>
-              )}
+                  }
+                : (e) => {
+                    e.stopPropagation();
+                    if (isMetaEquivalentKeyPressed(e)) {
+                      props.onToggleAll(true);
+                    } else {
+                      props.onToggle(true);
+                    }
+                  }
+            }
+          >
+            {props.isToggleOpen ? (
+              <ChevronDownIcon width="1.4em" height="1.4em" />
+            ) : (
+              <ChevronRightIcon width="1.4em" height="1.4em" />
+            )}
+          </ToggleDiv>
+          <div
+            style={{
+              padding: "8px",
+              paddingTop: "4px",
+              paddingBottom: "4px",
+            }}
+          >
+            <div
+              ref={divRef}
+              onBlur={() => {
+                setIsEditing(false);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  doneEditing(e);
+                }
+              }}
+              contentEditable={true}
+              suppressContentEditableWarning={true}
+              className="mr-6 ml-1 cursor-text w-full py-2 flex items-center content-center outline-none"
+            >
+              {isEditing
+                ? props.children
+                : stringWithEllipsis(props.children, 600)}
             </div>
-          )}
-        </DeleteButtonDiv>
+            <DeleteButtonDiv>
+              {(isHovered || isEditing) && (
+                <div className="flex">
+                  {isEditing ? (
+                    <HeaderButtonWithText
+                      onClick={(e) => {
+                        doneEditing(e);
+                      }}
+                      text="Done"
+                    >
+                      <CheckIcon width="1.4em" height="1.4em" />
+                    </HeaderButtonWithText>
+                  ) : (
+                    <>
+                      {history.timeline
+                        .filter(
+                          (h, i: number) =>
+                            props.groupIndices.includes(i) && h.logs
+                        )
+                        .some((h) => h.logs!.length > 0) && (
+                        <HeaderButtonWithText
+                          onClick={() => {
+                            client?.showLogsAtIndex(props.groupIndices[1]);
+                          }}
+                          text="Context Used"
+                        >
+                          <MagnifyingGlassIcon width="1.4em" height="1.4em" />
+                        </HeaderButtonWithText>
+                      )}
+                      <HeaderButtonWithText
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (props.active) {
+                            client?.deleteAtIndex(props.groupIndices[1]);
+                          } else {
+                            props.onDelete();
+                          }
+                        }}
+                        text={
+                          props.historyNode.active
+                            ? `Stop (${getMetaKeyLabel()}⌫)`
+                            : "Delete"
+                        }
+                      >
+                        {props.active ? (
+                          <StopCircleIcon width="1.4em" height="1.4em" />
+                        ) : (
+                          <XMarkIcon width="1.4em" height="1.4em" />
+                        )}
+                      </HeaderButtonWithText>
+                    </>
+                  )}
+                </div>
+              )}
+            </DeleteButtonDiv>
+          </div>
+        </GridDiv>
       </StyledDiv>
     </GradientBorder>
   );

@@ -543,7 +543,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
             onClick={() => {
               client?.showContextVirtualFile();
             }}
-            text="View Full Context"
+            text="View Current Context"
           >
             <MagnifyingGlassIcon width="1.4em" height="1.4em" />
           </HeaderButtonWithText>

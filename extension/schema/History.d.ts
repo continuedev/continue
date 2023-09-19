@@ -9,6 +9,7 @@ export type History = History1;
 export type Name = string;
 export type Hide = boolean;
 export type Description = string;
+export type ClassName = string;
 export type SystemMessage = string;
 export type Role = "assistant" | "user" | "system" | "function";
 export type Content = string;
@@ -49,6 +50,7 @@ export interface Step {
   name?: Name;
   hide?: Hide;
   description?: Description;
+  class_name?: ClassName;
   system_message?: SystemMessage;
   chat_context?: ChatContext;
   manage_own_chat_context?: ManageOwnChatContext;

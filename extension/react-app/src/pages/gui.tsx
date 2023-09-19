@@ -33,7 +33,11 @@ import {
 } from "../redux/slices/serverStateReducer";
 import TimelineItem from "../components/TimelineItem";
 import ErrorStepContainer from "../components/ErrorStepContainer";
-import { ExclamationTriangleIcon } from "@heroicons/react/24/outline";
+import {
+  ChatBubbleOvalLeftIcon,
+  CodeBracketSquareIcon,
+  ExclamationTriangleIcon,
+} from "@heroicons/react/24/outline";
 
 const TopGuiDiv = styled.div`
   overflow-y: scroll;
@@ -486,6 +490,16 @@ function GUI(props: GUIProps) {
       clearTimeout(timeout);
     };
   }, []);
+
+  const [disabled, setDisabled] = useState<boolean>(false);
+
+  useEffect(() => {
+    setDisabled(
+      (mainTextInputRef.current as any)?.inputValue?.trim() === "" ||
+        (mainTextInputRef.current as any)?.inputValue?.trim() === "/"
+    );
+  }, [(mainTextInputRef.current as any)?.inputValue]);
+
   return (
     <TopGuiDiv
       ref={topGuiDivRef}
@@ -620,13 +634,17 @@ function GUI(props: GUIProps) {
                 <TimelineItem
                   historyNode={node}
                   iconElement={
-                    node.observation?.error ? (
+                    node.step.class_name === "DefaultModelEditCodeStep" ? (
+                      <CodeBracketSquareIcon width="16px" height="16px" />
+                    ) : node.observation?.error ? (
                       <ExclamationTriangleIcon
-                        width="12px"
-                        height="12px"
+                        width="16px"
+                        height="16px"
                         color="red"
                       />
-                    ) : undefined
+                    ) : (
+                      <ChatBubbleOvalLeftIcon width="16px" height="16px" />
+                    )
                   }
                   open={
                     typeof stepsOpen[index] === "undefined"
@@ -700,13 +718,7 @@ function GUI(props: GUIProps) {
         }}
         addingHighlightedCode={adding_highlighted_code}
       />
-      <ContinueButton
-        disabled={
-          (mainTextInputRef.current as any)?.inputValue?.trim() === "" ||
-          (mainTextInputRef.current as any)?.inputValue?.trim() === "/"
-        }
-        onClick={onMainTextInput}
-      />
+      <ContinueButton disabled={disabled} onClick={onMainTextInput} />
     </TopGuiDiv>
   );
 }
