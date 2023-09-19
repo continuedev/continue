@@ -298,11 +298,18 @@ class IdeProtocolClient {
         });
         break;
       case "listDirectoryContents":
-        messenger.send("listDirectoryContents", {
-          contents: await this.getDirectoryContents(
+        let contents: string[] = [];
+        try {
+          contents = await this.getDirectoryContents(
             data.directory,
             data.recursive || false
-          ),
+          );
+        } catch (e) {
+          console.log("Error listing directory contents: ", e);
+          contents = [];
+        }
+        messenger.send("listDirectoryContents", {
+          contents,
         });
         break;
       case "editFile":
