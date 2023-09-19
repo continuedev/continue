@@ -64,15 +64,15 @@ By default, Continue uses `GPT-4` and `GPT-3.5-turbo` via the OpenAI API. You ca
 
 ### [Run the server manually](https://continue.dev/docs/walkthroughs/manually-run-continue)
 
-You might want to run Continue manually if (a) a firewall, VPN, or other issue is stopping Continue from automatically downloading the server binary, (b) you are on an OS where the binary fails to run (e.g. RHEL8), (c) you are using an air-gapped computer, (d) you want to self-host Continue, or (e) you want to run from source while developing / modifying Continue's code. Read more [here](https://continue.dev/docs/walkthroughs/manually-run-continue#recommended-use-the-continuedev-pypi-package).
+You might want to run Continue manually if (a) a firewall, VPN, or other issue is stopping Continue from automatically downloading the server binary, (b) you are on an OS where the binary fails to run (e.g. RHEL8), (c) you are using an air-gapped computer, (d) you want to self-host Continue, or (e) you want to run from source while developing / modifying Continue's code.
 
-### [Run in "headless mode"]()
+### [Run in "headless mode"](https://continue.dev/docs/walkthroughs/headless-mode)
 
-"Headless mode" allows Continue to run in the background, without needing to be connected to the IDE or GUI. This is useful for performing refactors or other long-running tasks asynchronously. Headless mode can also be run in CI/CD, for example, to perform a thorough review for errors. Read more [here](https://continue.dev/docs/walkthroughs/headless-mode).
+"Headless mode" allows Continue to run in the background, without needing to be connected to the IDE or GUI. This is useful for performing refactors or other long-running tasks asynchronously. Headless mode can also be run in CI/CD, for example, to perform a thorough review for errors.
 
 ## Contributing
 
-Check out the [contribution ideas board](https://github.com/orgs/continuedev/projects/2), read the [contributing guide](https://github.com/continuedev/continue/blob/main/CONTRIBUTING.md), and join [#contribute on Discord](https://discord.gg/vapESyrFmJ).
+Check out the [contribution ideas board](https://github.com/orgs/continuedev/projects/2), read the [contributing guide](https://github.com/continuedev/continue/blob/main/CONTRIBUTING.md), and join [#contribute on Discord](https://discord.gg/vapESyrFmJ)
 
 ## License
 
