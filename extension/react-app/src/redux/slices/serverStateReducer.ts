@@ -53,6 +53,21 @@ fn bubble_sort<T: Ord>(values: &mut[T]) {
   },
 ];
 
+const TEST_SLASH_COMMANDS = [
+  {
+    name: "edit",
+    description: "Edit the code",
+  },
+  {
+    name: "cmd",
+    description: "Generate a command",
+  },
+  {
+    name: "help",
+    description: "Get help using Continue",
+  },
+];
+
 const initialState: FullState = {
   history: {
     timeline: [],

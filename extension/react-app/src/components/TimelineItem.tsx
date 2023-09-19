@@ -15,6 +15,7 @@ const CollapseButton = styled.div`
   justify-content: center;
   align-items: center;
   flex-shrink: 0;
+  flex-grow: 0;
 
   margin-left: 3px;
 

@@ -8,7 +8,6 @@ import React, {
 import { useCombobox } from "downshift";
 import styled from "styled-components";
 import {
-  StyledTooltip,
   buttonColor,
   defaultBorderRadius,
   lightGray,
@@ -20,7 +19,6 @@ import PillButton from "./PillButton";
 import HeaderButtonWithText from "./HeaderButtonWithText";
 import {
   ArrowLeftIcon,
-  PlusIcon,
   ArrowRightIcon,
   MagnifyingGlassIcon,
 } from "@heroicons/react/24/outline";
@@ -156,9 +154,6 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
   const dispatch = useDispatch();
   const workspacePaths = useSelector(
     (state: RootStore) => state.config.workspacePaths
-  );
-  const savedContextGroups = useSelector(
-    (state: RootStore) => state.serverState.saved_context_groups
   );
 
   const [history, setHistory] = React.useState<string[]>([]);
@@ -512,6 +507,8 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
 
   const [isComposing, setIsComposing] = useState(false);
 
+  console.log(props.items);
+
   return (
     <>
       <div
@@ -715,7 +712,11 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
           })}
           showAbove={showAbove()}
           ulHeightPixels={ulRef.current?.getBoundingClientRect().height || 0}
-          hidden={!downshiftProps.isOpen || items.length === 0}
+          hidden={
+            !downshiftProps.isOpen ||
+            items.length === 0 ||
+            inputRef.current?.value === ""
+          }
         >
           {nestedContextProvider && (
             <div
@@ -760,12 +761,14 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
                   onSelectedItemChangeCallback({ selectedItem: item });
                 }}
               >
-                <span>
+                <span className="flex justify-between w-full">
                   {item.name}
                   {"  "}
                   <span
                     style={{
                       color: lightGray,
+                      float: "right",
+                      textAlign: "right",
                     }}
                   >
                     {item.description}
