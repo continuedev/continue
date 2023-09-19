@@ -5,7 +5,10 @@ import { useSelector } from "react-redux";
 import { RootStore } from "../redux/store";
 import { useEffect, useState } from "react";
 
-let StyledButton = styled(Button)<{ color?: string | null; disabled: boolean }>`
+const StyledButton = styled(Button)<{
+  color?: string | null;
+  isDisabled: boolean;
+}>`
   margin: auto;
   margin-top: 8px;
   margin-bottom: 16px;
@@ -14,10 +17,12 @@ let StyledButton = styled(Button)<{ color?: string | null; disabled: boolean }>`
   align-items: center;
   background: ${(props) => props.color || "#be1b55"};
 
-  cursor: ${(props) => (props.disabled ? "auto" : "pointer")};
+  opacity: ${(props) => (props.isDisabled ? 0.5 : 1.0)};
+
+  cursor: ${(props) => (props.isDisabled ? "auto" : "pointer")};
 
   ${(props) =>
-    props.disabled
+    props.isDisabled
       ? ""
       : `
     &:hover {
@@ -60,8 +65,8 @@ function ContinueButton(props: {
       hidden={props.hidden}
       style={{ fontSize: "10px" }}
       className="m-auto press-start-2p"
-      onClick={props.onClick}
-      disabled={props.disabled}
+      onClick={props.disabled ? undefined : props.onClick}
+      isDisabled={props.disabled}
     >
       {vscMediaUrl ? (
         <img src={`${vscMediaUrl}/play_button.png`} width="16px" />

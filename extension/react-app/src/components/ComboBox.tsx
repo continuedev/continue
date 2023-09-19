@@ -19,12 +19,10 @@ import {
 import PillButton from "./PillButton";
 import HeaderButtonWithText from "./HeaderButtonWithText";
 import {
-  BookmarkIcon,
-  DocumentPlusIcon,
-  FolderArrowDownIcon,
   ArrowLeftIcon,
   PlusIcon,
   ArrowRightIcon,
+  MagnifyingGlassIcon,
 } from "@heroicons/react/24/outline";
 import { ContextItem } from "../../../schema/FullState";
 import { postVscMessage } from "../vscode";
@@ -44,27 +42,6 @@ const SEARCH_INDEX_NAME = "continue_context_items";
 
 // #region styled components
 const mainInputFontSize = 13;
-
-const EmptyPillDiv = styled.div`
-  padding: 4px;
-  padding-left: 8px;
-  padding-right: 8px;
-  border-radius: ${defaultBorderRadius};
-  border: 1px dashed ${lightGray};
-  color: ${lightGray};
-  background-color: ${vscBackground};
-  overflow: hidden;
-  display: flex;
-  align-items: center;
-  text-align: center;
-  cursor: pointer;
-  font-size: 13px;
-
-  &:hover {
-    background-color: ${lightGray};
-    color: ${vscBackground};
-  }
-`;
 
 const MainTextInput = styled.textarea<{ inQueryForDynamicProvider: boolean }>`
   resize: none;
@@ -108,23 +85,6 @@ const DynamicQueryTitleDiv = styled.div`
   font-size: 12px;
 
   background-color: ${buttonColor};
-`;
-
-const StyledPlusIcon = styled(PlusIcon)`
-  position: absolute;
-  right: 0px;
-  top: 0px;
-  height: fit-content;
-  padding: 0;
-  cursor: pointer;
-  border-radius: ${defaultBorderRadius};
-  z-index: 2;
-
-  background-color: ${vscBackground};
-
-  &:hover {
-    background-color: ${secondaryDark};
-  }
 `;
 
 const UlMaxHeight = 300;
@@ -579,33 +539,14 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
           );
         })}
         {props.selectedContextItems.length > 0 && (
-          <>
-            {props.addingHighlightedCode ? (
-              <EmptyPillDiv
-                onClick={() => {
-                  props.onToggleAddContext();
-                }}
-              >
-                Highlight code section
-              </EmptyPillDiv>
-            ) : (
-              <HeaderButtonWithText
-                text="Add more code to context"
-                onClick={() => {
-                  props.onToggleAddContext();
-                }}
-                className="pill-button focus:outline-none focus:border-red-600 focus:border focus:border-solid"
-                onKeyDown={(e: KeyboardEvent) => {
-                  e.preventDefault();
-                  if (e.key === "Enter") {
-                    props.onToggleAddContext();
-                  }
-                }}
-              >
-                <DocumentPlusIcon width="1.4em" height="1.4em" />
-              </HeaderButtonWithText>
-            )}
-          </>
+          <HeaderButtonWithText
+            onClick={() => {
+              client?.showContextVirtualFile();
+            }}
+            text="View Full Context"
+          >
+            <MagnifyingGlassIcon width="1.4em" height="1.4em" />
+          </HeaderButtonWithText>
         )}
       </div>
       <div
@@ -759,25 +700,10 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
             ref: inputRef,
           })}
         />
-        {inQueryForContextProvider ? (
+        {inQueryForContextProvider && (
           <DynamicQueryTitleDiv>
             Enter {inQueryForContextProvider.display_title} Query
           </DynamicQueryTitleDiv>
-        ) : (
-          <>
-            <StyledPlusIcon
-              width="1.4em"
-              height="1.4em"
-              data-tooltip-id="add-context-button"
-              onClick={() => {
-                downshiftProps.setInputValue("@");
-                inputRef.current?.focus();
-              }}
-            />
-            <StyledTooltip id="add-context-button" place="bottom">
-              Add Context to Prompt
-            </StyledTooltip>
-          </>
         )}
 
         <Ul

@@ -107,6 +107,8 @@ class GUIProtocolServer:
             self.on_set_editing_at_ids(data["ids"])
         elif message_type == "show_logs_at_index":
             self.on_show_logs_at_index(data["index"])
+        elif message_type == "show_context_virtual_file":
+            self.show_context_virtual_file()
         elif message_type == "select_context_item":
             self.select_context_item(data["id"], data["query"])
         elif message_type == "load_session":
@@ -191,6 +193,21 @@ class GUIProtocolServer:
             self.session.autopilot.ide.showVirtualFile(name, logs), self.on_error
         )
         posthog_logger.capture_event("show_logs_at_index", {})
+
+    def show_context_virtual_file(self):
+        async def async_stuff():
+            msgs = await self.session.autopilot.continue_sdk.get_chat_context()
+            ctx = "\n\n-----------------------\n\n".join(
+                list(map(lambda x: x.content, msgs))
+            )
+            await self.session.autopilot.ide.showVirtualFile(
+                "Continue - Selected Context", ctx
+            )
+
+        create_async_task(
+            async_stuff(),
+            self.on_error,
+        )
 
     def select_context_item(self, id: str, query: str):
         """Called when user selects an item from the dropdown"""

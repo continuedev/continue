@@ -100,7 +100,7 @@ function ModelCard(props: ModelCardProps) {
         style={{
           position: "absolute",
           right: "8px",
-          bottom: "8px",
+          top: "8px",
         }}
         href={`https://continue.dev/docs/reference/Models/${props.modelInfo.class.toLowerCase()}`}
         target="_blank"

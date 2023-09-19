@@ -34,6 +34,29 @@ const commandsMap: { [command: string]: (...args: any) => any } = {
     });
 
     focusedOnContinueInput = !focusedOnContinueInput;
+    const editor = vscode.window.activeTextEditor;
+    if (editor) {
+      const selection = editor.selection;
+      if (selection.isEmpty) return;
+      const range = new vscode.Range(selection.start, selection.end);
+      const contents = editor.document.getText(range);
+      ideProtocolClient.sendHighlightedCode([
+        {
+          filepath: editor.document.uri.fsPath,
+          contents,
+          range: {
+            start: {
+              line: selection.start.line,
+              character: selection.start.character,
+            },
+            end: {
+              line: selection.end.line,
+              character: selection.end.character,
+            },
+          },
+        },
+      ]);
+    }
   },
   "continue.focusContinueInputWithEdit": async () => {
     vscode.commands.executeCommand("continue.continueGUIView.focus");

@@ -78,7 +78,7 @@ async def ensure_meilisearch_installed() -> bool:
                 pass
             existing_paths.remove(meilisearchPath)
 
-            await download_meilisearch()
+        await download_meilisearch()
 
         # Clear the existing directories
         for p in existing_paths:

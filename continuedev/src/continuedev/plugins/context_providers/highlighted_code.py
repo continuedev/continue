@@ -35,7 +35,8 @@ class HighlightedCodeContextProvider(ContextProvider):
     ide: Any  # IdeProtocolServer
 
     highlighted_ranges: List[HighlightedRangeContextItem] = []
-    adding_highlighted_code: bool = False
+    adding_highlighted_code: bool = True
+    # Controls whether you can have more than one highlighted range. Now always True.
 
     should_get_fallback_context_item: bool = True
     last_added_fallback: bool = False
