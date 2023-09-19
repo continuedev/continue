@@ -648,7 +648,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
             typeof inQueryForContextProvider !== "undefined"
           }
           disabled={props.disabled}
-          placeholder={`Ask a question, give instructions, type '/' for slash commands, or '@' to add context`}
+          placeholder={`Ask a question, type '/' for slash commands, or '@' to add context`}
           {...getInputProps({
             onCompositionStart: () => setIsComposing(true),
             onCompositionEnd: () => setIsComposing(false),

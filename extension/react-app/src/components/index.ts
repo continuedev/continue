@@ -2,7 +2,7 @@ import { Tooltip } from "react-tooltip";
 import styled, { keyframes } from "styled-components";
 
 export const defaultBorderRadius = "5px";
-export const lightGray = "#646464";
+export const lightGray = "#cfcccc";
 // export const secondaryDark = "rgb(45 45 45)";
 // export const vscBackground = "rgb(30 30 30)";
 export const vscBackgroundTransparent = "#1e1e1ede";

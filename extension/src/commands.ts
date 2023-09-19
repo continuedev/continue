@@ -48,7 +48,7 @@ const commandsMap: { [command: string]: (...args: any) => any } = {
   "continue.quickTextEntry": async () => {
     const text = await vscode.window.showInputBox({
       placeHolder:
-        "Ask a question, give instructions, or enter a slash command",
+        "Ask a question or enter a slash command",
       title: "Continue Quick Input",
     });
     if (text) {
