@@ -2,7 +2,7 @@ from typing import Optional
 
 import typer
 
-from .headless import run
+from . import run
 from .server.main import run_server
 
 app = typer.Typer()
