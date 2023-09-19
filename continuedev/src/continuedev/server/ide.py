@@ -640,7 +640,7 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str = None):
 
         if session_id is not None and session_id in session_manager.sessions:
             await session_manager.sessions[session_id].autopilot.continue_sdk.run_step(
-                DisplayErrorStep(e=e)
+                DisplayErrorStep.from_exception(e)
             )
         elif ideProtocolServer is not None:
             await ideProtocolServer.showMessage(f"Error in Continue server: {err_msg}")

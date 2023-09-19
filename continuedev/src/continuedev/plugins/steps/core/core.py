@@ -1,11 +1,8 @@
 # These steps are depended upon by ContinueSDK
 import difflib
 import subprocess
-import traceback
 from textwrap import dedent
-from typing import Any, Coroutine, List, Optional, Union
-
-from pydantic import validator
+from typing import Coroutine, List, Optional, Union
 
 from ....core.main import ChatMessage, ContinueCustomException, Step
 from ....core.observation import Observation, TextObservation, UserInputObservation
@@ -57,21 +54,25 @@ class MessageStep(Step):
 
 class DisplayErrorStep(Step):
     name: str = "Error in the Continue server"
-    e: Any
+
+    title: str = "Error in the Continue server"
+    message: str = "There was an error in the Continue server."
+
+    @staticmethod
+    def from_exception(e: Exception) -> "DisplayErrorStep":
+        if isinstance(e, ContinueCustomException):
+            return DisplayErrorStep(title=e.title, message=e.message, name=e.title)
+
+        return DisplayErrorStep(message=str(e))
 
     class Config:
         arbitrary_types_allowed = True
 
-    @validator("e", pre=True, always=True)
-    def validate_e(cls, v):
-        if isinstance(v, Exception):
-            return "\n".join(traceback.format_exception(v))
-
     async def describe(self, models: Models) -> Coroutine[str, None, None]:
-        return self.e
+        return self.message
 
     async def run(self, sdk: ContinueSDK) -> Coroutine[Observation, None, None]:
-        raise ContinueCustomException(message=self.e, title=self.name)
+        raise ContinueCustomException(message=self.message, title=self.title)
 
 
 class FileSystemEditStep(ReversibleStep):

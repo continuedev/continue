@@ -1,15 +1,9 @@
-import { useContext, useEffect, useRef, useState } from "react";
-import styled, { keyframes } from "styled-components";
-import {
-  defaultBorderRadius,
-  lightGray,
-  secondaryDark,
-  vscBackground,
-} from ".";
-import { ArrowPathIcon, PlusIcon } from "@heroicons/react/24/outline";
+import { useEffect, useRef, useState } from "react";
+import styled from "styled-components";
+import { defaultBorderRadius, secondaryDark, vscBackground } from ".";
+import { ArrowPathIcon } from "@heroicons/react/24/outline";
 import { HistoryNode } from "../../../schema/HistoryNode";
 import HeaderButtonWithText from "./HeaderButtonWithText";
-import { GUIClientContext } from "../App";
 import StyledMarkdownPreview from "./StyledMarkdownPreview";
 
 interface StepContainerProps {
@@ -20,8 +14,6 @@ interface StepContainerProps {
   onRetry: () => void;
   onDelete: () => void;
   open: boolean;
-  onToggleAll: () => void;
-  onToggle: () => void;
   isFirst: boolean;
   isLast: boolean;
   index: number;
@@ -67,36 +59,6 @@ const ContentDiv = styled.div<{ isUserInput: boolean }>`
   overflow: hidden;
 `;
 
-const CollapseButton = styled.div`
-  border-radius: 50%;
-  padding: 2px;
-  width: 14px;
-  height: 14px;
-  background-color: ${vscBackground};
-  border: 1px solid ${lightGray};
-  cursor: pointer;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-
-  margin-left: 3px;
-
-  &:hover {
-    background-color: ${secondaryDark};
-  }
-`;
-
-const CollapsedDiv = styled.div`
-  margin-top: 8px;
-  margin-bottom: 8px;
-  margin-left: 8px;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 13px;
-  cursor: pointer;
-`;
-
 // #endregion
 
 function StepContainer(props: StepContainerProps) {
@@ -117,7 +79,7 @@ function StepContainer(props: StepContainerProps) {
     }
   }, [isHovered]);
 
-  return props.open ? (
+  return (
     <MainDiv
       stepDepth={(props.historyNode.depth as any) || 0}
       inFuture={props.inFuture}
@@ -160,44 +122,15 @@ function StepContainer(props: StepContainerProps) {
         </HeaderDiv>
 
         <ContentDiv hidden={!props.open} isUserInput={isUserInput}>
-          {props.open && false && (
-            <pre className="overflow-x-scroll">
-              Step Details:
-              <br />
-              {JSON.stringify(props.historyNode.step, null, 2)}
-            </pre>
-          )}
-
-          {props.historyNode.observation?.error ? (
-            <details>
-              <summary>View Traceback</summary>
-              <pre className="overflow-x-scroll">
-                {props.historyNode.observation.error as string}
-              </pre>
-            </details>
-          ) : (
-            <StyledMarkdownPreview
-              source={props.historyNode.step.description || ""}
-              wrapperElement={{
-                "data-color-mode": "dark",
-              }}
-            />
-          )}
+          <StyledMarkdownPreview
+            source={props.historyNode.step.description || ""}
+            wrapperElement={{
+              "data-color-mode": "dark",
+            }}
+          />
         </ContentDiv>
       </div>
     </MainDiv>
-  ) : (
-    <CollapsedDiv
-      onClick={(e) => {
-        e.stopPropagation();
-        props.onToggle();
-      }}
-    >
-      <CollapseButton>
-        <PlusIcon />
-      </CollapseButton>
-      <span style={{ color: lightGray }}>{props.historyNode.step.name}</span>
-    </CollapsedDiv>
   );
 }
 

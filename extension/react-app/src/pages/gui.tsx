@@ -31,6 +31,9 @@ import {
   setServerState,
   temporarilyPushToUserInputQueue,
 } from "../redux/slices/serverStateReducer";
+import TimelineItem from "../components/TimelineItem";
+import ErrorStepContainer from "../components/ErrorStepContainer";
+import { ExclamationTriangleIcon } from "@heroicons/react/24/outline";
 
 const TopGuiDiv = styled.div`
   overflow-y: scroll;
@@ -108,12 +111,7 @@ function GUI(props: GUIProps) {
   const [availableSlashCommands, setAvailableSlashCommands] = useState<
     { name: string; description: string }[]
   >([]);
-  const [stepsOpen, setStepsOpen] = useState<boolean[]>([
-    true,
-    true,
-    true,
-    true,
-  ]);
+  const [stepsOpen, setStepsOpen] = useState<(boolean | undefined)[]>([]);
   const [waitingForClient, setWaitingForClient] = useState(true);
   const [showLoading, setShowLoading] = useState(false);
 
@@ -224,7 +222,7 @@ function GUI(props: GUIProps) {
           i < state.history.timeline.length;
           i++
         ) {
-          nextStepsOpen.push(true);
+          nextStepsOpen.push(undefined);
         }
         return nextStepsOpen;
       });
@@ -411,6 +409,49 @@ function GUI(props: GUIProps) {
     client.sendStepUserInput(input, index);
   };
 
+  const onToggleAtIndex = (index: number) => {
+    // Check if all steps after the User Input are closed
+    let userInputIndex = -1;
+    for (let i = index; i >= 0; i--) {
+      if (
+        history?.timeline.length > i &&
+        history.timeline[i].step.name === "User Input"
+      ) {
+        userInputIndex = i;
+        break;
+      }
+    }
+    if (userInputIndex > 0) {
+      let allStepsAfterUserInputAreClosed = true;
+      for (let i = userInputIndex + 1; i < stepsOpen.length; i++) {
+        if (i === index) continue;
+        if (
+          history?.timeline.length > i &&
+          history.timeline[i].step.name === "User Input"
+        ) {
+          break;
+        }
+        if (stepsOpen[i]) {
+          allStepsAfterUserInputAreClosed = false;
+          break;
+        }
+      }
+      if (allStepsAfterUserInputAreClosed) {
+        setStepsOpen((prev) => {
+          const nextStepsOpen = [...prev];
+          nextStepsOpen[userInputIndex] = false;
+          return nextStepsOpen;
+        });
+      }
+    }
+
+    setStepsOpen((prev) => {
+      const nextStepsOpen = [...prev];
+      nextStepsOpen[index] = !nextStepsOpen[index];
+      return nextStepsOpen;
+    });
+  };
+
   const getStepsInUserInputGroup = (index: number): number[] => {
     const stepsInUserInputGroup: number[] = [];
     for (let i = index; i >= 0; i--) {
@@ -547,7 +588,11 @@ function GUI(props: GUIProps) {
                         return nextStepsOpen;
                       });
                     }}
-                    isToggleOpen={stepsOpen[index]}
+                    isToggleOpen={
+                      typeof stepsOpen[index] === "undefined"
+                        ? true
+                        : stepsOpen[index]!
+                    }
                     index={index}
                     onDelete={() => {
                       // Delete the input and all steps until the next user input
@@ -561,78 +606,60 @@ function GUI(props: GUIProps) {
                   </UserInputContainer>
                 )
               ) : (
-                <StepContainer
-                  index={index}
-                  isLast={index === history.timeline.length - 1}
-                  isFirst={index === 0}
-                  open={stepsOpen[index]}
-                  onToggle={() => {
-                    // Check if all steps after the User Input are closed
-                    let userInputIndex = -1;
-                    for (let i = index; i >= 0; i--) {
-                      if (
-                        history?.timeline.length > i &&
-                        history.timeline[i].step.name === "User Input"
-                      ) {
-                        userInputIndex = i;
-                        break;
-                      }
-                    }
-                    if (userInputIndex > 0) {
-                      let allStepsAfterUserInputAreClosed = true;
-                      for (
-                        let i = userInputIndex + 1;
-                        i < stepsOpen.length;
-                        i++
-                      ) {
-                        if (i === index) continue;
-                        if (
-                          history?.timeline.length > i &&
-                          history.timeline[i].step.name === "User Input"
-                        ) {
-                          break;
-                        }
-                        if (stepsOpen[i]) {
-                          allStepsAfterUserInputAreClosed = false;
-                          break;
-                        }
-                      }
-                      if (allStepsAfterUserInputAreClosed) {
-                        setStepsOpen((prev) => {
-                          const nextStepsOpen = [...prev];
-                          nextStepsOpen[userInputIndex] = false;
-                          return nextStepsOpen;
-                        });
-                      }
-                    }
-
-                    setStepsOpen((prev) => {
-                      const nextStepsOpen = [...prev];
-                      nextStepsOpen[index] = !nextStepsOpen[index];
-                      return nextStepsOpen;
-                    });
-                  }}
-                  onToggleAll={() => {
-                    const shouldOpen = !stepsOpen[index];
-                    setStepsOpen((prev) => prev.map(() => shouldOpen));
-                  }}
-                  key={index}
-                  onUserInput={(input: string) => {
-                    onStepUserInput(input, index);
-                  }}
-                  inFuture={index > history?.current_index}
+                <TimelineItem
                   historyNode={node}
-                  onReverse={() => {
-                    client?.reverseToIndex(index);
-                  }}
-                  onRetry={() => {
-                    client?.retryAtIndex(index);
-                    setWaitingForSteps(true);
-                  }}
-                  onDelete={() => {
-                    client?.deleteAtIndex(index);
-                  }}
-                />
+                  iconElement={
+                    node.observation?.error ? (
+                      <ExclamationTriangleIcon
+                        width="12px"
+                        height="12px"
+                        color="red"
+                      />
+                    ) : undefined
+                  }
+                  open={
+                    typeof stepsOpen[index] === "undefined"
+                      ? node.observation?.error
+                        ? false
+                        : true
+                      : stepsOpen[index]!
+                  }
+                  onToggle={() => onToggleAtIndex(index)}
+                >
+                  {node.observation?.error ? (
+                    <ErrorStepContainer
+                      onClose={() => onToggleAtIndex(index)}
+                      historyNode={node}
+                    />
+                  ) : (
+                    <StepContainer
+                      index={index}
+                      isLast={index === history.timeline.length - 1}
+                      isFirst={index === 0}
+                      open={
+                        typeof stepsOpen[index] === "undefined"
+                          ? true
+                          : stepsOpen[index]!
+                      }
+                      key={index}
+                      onUserInput={(input: string) => {
+                        onStepUserInput(input, index);
+                      }}
+                      inFuture={index > history?.current_index}
+                      historyNode={node}
+                      onReverse={() => {
+                        client?.reverseToIndex(index);
+                      }}
+                      onRetry={() => {
+                        client?.retryAtIndex(index);
+                        setWaitingForSteps(true);
+                      }}
+                      onDelete={() => {
+                        client?.deleteAtIndex(index);
+                      }}
+                    />
+                  )}
+                </TimelineItem>
               )}
               {/* <div className="h-2"></div> */}
             </>

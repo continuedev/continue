@@ -82,7 +82,9 @@ class GUIProtocolServer:
         return resp_model.parse_obj(resp)
 
     def on_error(self, e: Exception):
-        return self.session.autopilot.continue_sdk.run_step(DisplayErrorStep(e=e))
+        return self.session.autopilot.continue_sdk.run_step(
+            DisplayErrorStep.from_exception(e)
+        )
 
     def handle_json(self, message_type: str, data: Any):
         if message_type == "main_input":

@@ -478,7 +478,9 @@ class Autopilot(ContinueBaseModel):
 
         create_async_task(
             update_description(),
-            on_error=lambda e: self.continue_sdk.run_step(DisplayErrorStep(e=e)),
+            on_error=lambda e: self.continue_sdk.run_step(
+                DisplayErrorStep.from_exception(e)
+            ),
         )
 
         return observation
@@ -558,7 +560,9 @@ class Autopilot(ContinueBaseModel):
 
             create_async_task(
                 create_title(),
-                on_error=lambda e: self.continue_sdk.run_step(DisplayErrorStep(e=e)),
+                on_error=lambda e: self.continue_sdk.run_step(
+                    DisplayErrorStep.from_exception(e)
+                ),
             )
 
         if len(self._main_user_input_queue) > 1:
