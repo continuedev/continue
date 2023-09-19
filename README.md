@@ -1,4 +1,4 @@
-> 🎁 **New!: [Use Code Llama with Continue](https://continue.dev/docs/walkthroughs/codellama)**
+> 🎁 **New! [Use Code Llama with Continue](https://continue.dev/docs/walkthroughs/codellama)**
 
 ![Continue logo](>c_d.png)
 

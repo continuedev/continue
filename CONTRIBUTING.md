@@ -66,19 +66,20 @@ VSCode is assumed for development as Continue is primarily a VSCode tool at the 
 2. Open VSCode command pallet (`cmd+shift+p`) and select `Tasks: Run Task` and then select `install-all-dependencies`
 
 3. Start debugging:
+
    1. Switch to Run and Debug view
    2. Select `Server + Extension (VSCode)` from drop down
    3. Hit play button
    4. This will start both the server and the extension in debug mode and open a new VSCode window with continue extension
-      1. I call the VSCode window with the extension the *Host VSCode*
-      2. The window you started debugging from is referred to as the *Main VSCode*
+      1. I call the VSCode window with the extension the _Host VSCode_
+      2. The window you started debugging from is referred to as the _Main VSCode_
    5. Notice 2 debug sessions are running, one for the server and one for the extension, you can also set breakpoints in both
 
 4. Lets try using breakpoints:
-   1. *In Main VSCode*:
+   1. _In Main VSCode_:
       1. Search for `class IdeProtocolServer` and set a breakpoint in `handle_json`, this is the method invoked on every message received from the extension related to selection changes, file opens etc
       2. Search for a method `sendHighlightedCode` and set a breakpoint in it, it is invoked on every selection change on the extension side
-   2. *In Host VSCode*: Select part of the `example.ts` file, your breakpoint should be hit. If you hit play at this point (or F5) you should see the original breakpoint hit again - congratulations, you debugged an end to end interaction from the extension to the server!
+   2. _In Host VSCode_: Select part of the `example.ts` file, your breakpoint should be hit. If you hit play at this point (or F5) you should see the original breakpoint hit again - congratulations, you debugged an end to end interaction from the extension to the server!
 
 ### Writing Steps
 
@@ -161,4 +162,4 @@ An `Observation` is a simple Pydantic model that can be used as a trigger to run
 
 ### `Policy`
 
-A `Policy` implements a method `def next(self, config: ContinueConfig, history: History) -> Step`, which decides which `Step` the `Autopilot` should run next. The default policy is defined in [policy.py](./continuedev/src/continuedev/core/policy.py) and runs `SimpleChatStep` by default, or a slash command when the input begins with '/'. It also displays a welcome message at the beginning of each session. If interested in developing agents that autonomously take longer sequences of actions in the IDE, the `Policy` class is the place to start.
+A `Policy` implements the method `def next(self, config: ContinueConfig, history: History) -> Step`, which decides which `Step` the `Autopilot` should run next. The default policy is defined in [policy.py](./continuedev/src/continuedev/core/policy.py) and runs `SimpleChatStep` by default, or a slash command when the input begins with '/'. It also displays a welcome message at the beginning of each session. If interested in developing agents that autonomously take longer sequences of actions in the IDE, the `Policy` class is the place to start.
