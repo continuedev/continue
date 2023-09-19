@@ -1,15 +1,17 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useContext } from "react";
 import { GUIClientContext } from "../App";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { RootStore } from "../redux/store";
 import { useNavigate } from "react-router-dom";
 import { ContinueConfig } from "../../../schema/ContinueConfig";
 import { Button, TextArea, lightGray, secondaryDark } from "../components";
 import styled from "styled-components";
-import { ArrowLeftIcon } from "@heroicons/react/24/outline";
+import { ArrowLeftIcon, Squares2X2Icon } from "@heroicons/react/24/outline";
 import Loader from "../components/Loader";
 import InfoHover from "../components/InfoHover";
 import { FormProvider, useForm } from "react-hook-form";
+import { setDialogMessage, setShowDialog } from "../redux/slices/uiStateSlice";
+import KeyboardShortcutsDialog from "../components/dialogs/KeyboardShortcuts";
 
 const Hr = styled.hr`
   border: 0.5px solid ${lightGray};
@@ -79,6 +81,7 @@ function Settings() {
   const navigate = useNavigate();
   const client = useContext(GUIClientContext);
   const config = useSelector((state: RootStore) => state.serverState.config);
+  const dispatch = useDispatch();
 
   const submitChanges = () => {
     if (!client) return;
@@ -217,6 +220,16 @@ function Settings() {
           </CancelButton>
           <SaveButton onClick={submitAndLeave}>Save</SaveButton>
         </div>
+      </div>
+      <div
+        className="cursor-pointer ml-auto mr-4 flex items-center gap-1"
+        onClick={() => {
+          dispatch(setDialogMessage(<KeyboardShortcutsDialog />));
+          dispatch(setShowDialog(true));
+        }}
+      >
+        <Squares2X2Icon width="1.2em" height="1.2em" />
+        Keyboard Shortcuts
       </div>
     </FormProvider>
   );

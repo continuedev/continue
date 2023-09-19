@@ -243,7 +243,7 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
         elif message_type == "acceptRejectSuggestion":
             self.onAcceptRejectSuggestion(data["accepted"])
         elif message_type == "acceptRejectDiff":
-            self.onAcceptRejectDiff(data["accepted"])
+            self.onAcceptRejectDiff(data["accepted"], data["stepIndex"])
         elif message_type == "mainUserInput":
             self.onMainUserInput(data["input"])
         elif message_type == "deleteAtIndex":
@@ -349,9 +349,16 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
         posthog_logger.capture_event("accept_reject_suggestion", {"accepted": accepted})
         dev_data_logger.capture("accept_reject_suggestion", {"accepted": accepted})
 
-    def onAcceptRejectDiff(self, accepted: bool):
+    def onAcceptRejectDiff(self, accepted: bool, step_index: int):
         posthog_logger.capture_event("accept_reject_diff", {"accepted": accepted})
         dev_data_logger.capture("accept_reject_diff", {"accepted": accepted})
+
+        if not accepted:
+            if autopilot := self.__get_autopilot():
+                create_async_task(
+                    autopilot.reject_diff(step_index),
+                    self.on_error,
+                )
 
     def onFileSystemUpdate(self, update: FileSystemEdit):
         # Access to Autopilot (so SessionManager)

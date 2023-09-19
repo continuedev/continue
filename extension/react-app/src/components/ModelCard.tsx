@@ -38,6 +38,7 @@ const Div = styled.div<{ color: string }>`
   padding: 4px 8px;
   position: relative;
   width: 100%;
+  transition: all 2s;
 
   &:hover {
     border: 1px solid ${(props) => props.color};

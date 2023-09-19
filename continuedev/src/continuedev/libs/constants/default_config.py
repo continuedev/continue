@@ -16,7 +16,6 @@ from continuedev.src.continuedev.plugins.steps.comment_code import CommentCodeSt
 from continuedev.src.continuedev.plugins.steps.share_session import ShareSessionStep
 from continuedev.src.continuedev.plugins.steps.main import EditHighlightedCodeStep
 from continuedev.src.continuedev.plugins.steps.cmd import GenerateShellCommandStep
-from continuedev.src.continuedev.plugins.context_providers.search import SearchContextProvider
 from continuedev.src.continuedev.plugins.context_providers.diff import DiffContextProvider
 from continuedev.src.continuedev.plugins.context_providers.url import URLContextProvider
 from continuedev.src.continuedev.plugins.context_providers.terminal import TerminalContextProvider
@@ -73,7 +72,6 @@ config = ContinueConfig(
         #     repo_name="<your github username or organization>/<your repo name>",
         #     auth_token="<your github auth token>"
         # ),
-        SearchContextProvider(),
         DiffContextProvider(),
         URLContextProvider(
             preset_urls = [

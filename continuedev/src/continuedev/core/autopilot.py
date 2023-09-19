@@ -585,6 +585,15 @@ class Autopilot(ContinueBaseModel):
         await self.reverse_to_index(index)
         await self.run_from_step(UserInputStep(user_input=user_input))
 
+    async def reject_diff(self, step_index: int):
+        # Hide the edit step and the UserInputStep before it
+        self.history.timeline[step_index].step.hide = True
+        for i in range(step_index - 1, -1, -1):
+            if isinstance(self.history.timeline[i].step, UserInputStep):
+                self.history.timeline[i].step.hide = True
+                break
+        await self.update_subscribers()
+
     async def select_context_item(self, id: str, query: str):
         await self.context_manager.select_context_item(id, query)
         await self.update_subscribers()

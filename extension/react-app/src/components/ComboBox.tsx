@@ -525,7 +525,9 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
               key={`${item.description.id.item_id}${idx}`}
               item={item}
               warning={
-                item.content.length > 4000 && item.editing
+                item.content.length > 4000 &&
+                item.editing &&
+                (inputRef.current as any)?.value?.startsWith("/edit")
                   ? "Editing such a large range may be slow"
                   : undefined
               }
@@ -538,6 +540,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
             />
           );
         })}
+
         {props.selectedContextItems.length > 0 && (
           <HeaderButtonWithText
             onClick={() => {

@@ -18,7 +18,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { HistoryNode } from "../../../schema/HistoryNode";
 import { GUIClientContext } from "../App";
-import { getMetaKeyLabel } from "../util";
+import { getMetaKeyLabel, isMetaEquivalentKeyPressed } from "../util";
 import { RootStore } from "../redux/store";
 import { useSelector } from "react-redux";
 
@@ -28,6 +28,7 @@ interface UserInputContainerProps {
   historyNode: HistoryNode;
   index: number;
   onToggle: (arg0: boolean) => void;
+  onToggleAll: (arg0: boolean) => void;
   isToggleOpen: boolean;
   active: boolean;
   groupIndices: number[];
@@ -96,6 +97,8 @@ const DeleteButtonDiv = styled.div`
   position: absolute;
   top: 8px;
   right: 8px;
+  background-color: ${secondaryDark};
+  box-shadow: 0px 0px 10px ${secondaryDark};
 `;
 
 function stringWithEllipsis(str: string, maxLen: number) {
@@ -184,7 +187,11 @@ const UserInputContainer = (props: UserInputContainerProps) => {
             className="cursor-pointer"
             onClick={(e) => {
               e.stopPropagation();
-              props.onToggle(false);
+              if (isMetaEquivalentKeyPressed(e)) {
+                props.onToggleAll(false);
+              } else {
+                props.onToggle(false);
+              }
             }}
             width="1.4em"
             height="1.4em"
@@ -193,7 +200,11 @@ const UserInputContainer = (props: UserInputContainerProps) => {
           <ChevronRightIcon
             onClick={(e) => {
               e.stopPropagation();
-              props.onToggle(true);
+              if (isMetaEquivalentKeyPressed(e)) {
+                props.onToggleAll(true);
+              } else {
+                props.onToggle(true);
+              }
             }}
             width="1.4em"
             height="1.4em"

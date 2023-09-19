@@ -293,9 +293,6 @@ class GUIProtocolServer:
 
                 # Set and start the default model if didn't already exist from unused
                 models.default = MODEL_CLASSES[model_class](**model)
-                await self.session.autopilot.continue_sdk.run_step(
-                    SetupModelStep(model_class=model_class)
-                )
 
                 await self.session.autopilot.continue_sdk.start_model(models.default)
 
@@ -325,6 +322,10 @@ class GUIProtocolServer:
                 for role in ALL_MODEL_ROLES:
                     if role != "default":
                         models.__setattr__(role, models.default)
+
+                await self.session.autopilot.continue_sdk.run_step(
+                    SetupModelStep(model_class=model_class)
+                )
 
             create_async_task(async_stuff(), self.on_error)
         else:

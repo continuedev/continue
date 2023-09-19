@@ -730,8 +730,8 @@ class IdeProtocolClient {
     this.messenger?.send("acceptRejectSuggestion", { accepted });
   }
 
-  sendAcceptRejectDiff(accepted: boolean) {
-    this.messenger?.send("acceptRejectDiff", { accepted });
+  sendAcceptRejectDiff(accepted: boolean, stepIndex: number) {
+    this.messenger?.send("acceptRejectDiff", { accepted, stepIndex });
   }
 
   sendMainUserInput(input: string) {

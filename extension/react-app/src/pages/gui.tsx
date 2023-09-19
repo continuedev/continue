@@ -179,6 +179,7 @@ function GUI(props: GUIProps) {
       if (
         e.key === "Backspace" &&
         isMetaEquivalentKeyPressed(e) &&
+        !e.shiftKey &&
         typeof history?.current_index !== "undefined" &&
         history.timeline[history.current_index]?.active
       ) {
@@ -579,6 +580,16 @@ function GUI(props: GUIProps) {
                     })}
                     groupIndices={getStepsInUserInputGroup(index)}
                     onToggle={(isOpen: boolean) => {
+                      // Collapse all steps in the section
+                      setStepsOpen((prev) => {
+                        const nextStepsOpen = [...prev];
+                        getStepsInUserInputGroup(index).forEach((i) => {
+                          nextStepsOpen[i] = isOpen;
+                        });
+                        return nextStepsOpen;
+                      });
+                    }}
+                    onToggleAll={(isOpen: boolean) => {
                       // Collapse all steps in the section
                       setStepsOpen((prev) => {
                         const nextStepsOpen = [...prev];
