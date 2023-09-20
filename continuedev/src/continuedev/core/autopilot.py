@@ -547,6 +547,7 @@ class Autopilot(ContinueBaseModel):
                     title = await self.continue_sdk.models.medium.complete(
                         f'Give a short title to describe the current chat session. Do not put quotes around the title. The first message was: "{user_input}". Do not use more than 10 words. The title is: ',
                         max_tokens=20,
+                        log=False,
                     )
                     title = remove_quotes_and_escapes(title)
 

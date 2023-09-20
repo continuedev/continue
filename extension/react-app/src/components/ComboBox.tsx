@@ -172,6 +172,16 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
     any | undefined
   >(undefined);
 
+  const sessionId = useSelector(
+    (state: RootStore) => state.serverState.session_info?.session_id
+  );
+
+  useEffect(() => {
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [sessionId, inputRef.current]);
+
   useEffect(() => {
     if (!currentlyInContextQuery) {
       setNestedContextProvider(undefined);

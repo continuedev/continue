@@ -13,6 +13,7 @@ const MODEL_INFO: ModelInfo[] = [
     args: {
       model: "gpt-4",
       api_key: "",
+      title: "OpenAI",
     },
     icon: "openai.svg",
     tags: [ModelTag["Requires API Key"]],
@@ -24,6 +25,7 @@ const MODEL_INFO: ModelInfo[] = [
     args: {
       model: "claude-2",
       api_key: "<ANTHROPIC_API_KEY>",
+      title: "Anthropic",
     },
     icon: "anthropic.png",
     tags: [ModelTag["Requires API Key"]],
@@ -34,6 +36,7 @@ const MODEL_INFO: ModelInfo[] = [
     description: "",
     args: {
       model: "codellama",
+      title: "Ollama",
     },
     icon: "ollama.png",
     tags: [ModelTag["Local"], ModelTag["Open-Source"]],
@@ -45,6 +48,7 @@ const MODEL_INFO: ModelInfo[] = [
     args: {
       model: "togethercomputer/CodeLlama-13b-Instruct",
       api_key: "<TOGETHER_API_KEY>",
+      title: "TogetherAI",
     },
     icon: "together.png",
     tags: [ModelTag["Requires API Key"], ModelTag["Open-Source"]],
@@ -57,6 +61,7 @@ const MODEL_INFO: ModelInfo[] = [
       model:
         "replicate/llama-2-70b-chat:58d078176e02c219e11eb4da5a02a7830a283b14cf8f94537af893ccff5ee781",
       api_key: "<REPLICATE_API_KEY>",
+      title: "Replicate",
     },
     icon: "replicate.png",
     tags: [ModelTag["Requires API Key"], ModelTag["Open-Source"]],
@@ -65,7 +70,9 @@ const MODEL_INFO: ModelInfo[] = [
     title: "llama.cpp",
     class: "LlamaCpp",
     description: "",
-    args: {},
+    args: {
+      title: "llama.cpp",
+    },
     icon: "llamacpp.png",
     tags: [ModelTag["Local"], ModelTag["Open-Source"]],
   },
@@ -76,6 +83,7 @@ const MODEL_INFO: ModelInfo[] = [
     args: {
       endpoint_url: "<INFERENCE_API_ENDPOINT_URL>",
       hf_token: "<HUGGING_FACE_TOKEN>",
+      title: "HuggingFace Inference API",
     },
     icon: "hf.png",
     tags: [ModelTag["Requires API Key"], ModelTag["Open-Source"]],
@@ -86,6 +94,7 @@ const MODEL_INFO: ModelInfo[] = [
     description: "",
     args: {
       server_url: "http://localhost:1234",
+      title: "LM Studio",
     },
     icon: "lmstudio.png",
     tags: [ModelTag["Local"], ModelTag["Open-Source"]],
@@ -107,6 +116,7 @@ const MODEL_INFO: ModelInfo[] = [
       "New users can try out Continue with GPT-4 using a proxy server that securely makes calls to OpenAI using our API key.",
     args: {
       model: "gpt-4",
+      title: "GPT-4 Free Trial",
     },
     icon: "openai.svg",
     tags: [ModelTag.Free],

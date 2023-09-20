@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import styled from "styled-components";
 import { defaultBorderRadius, secondaryDark, vscBackground } from ".";
-import { ArrowPathIcon } from "@heroicons/react/24/outline";
+import { ArrowPathIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { HistoryNode } from "../../../schema/HistoryNode";
 import HeaderButtonWithText from "./HeaderButtonWithText";
 import StyledMarkdownPreview from "./StyledMarkdownPreview";
@@ -17,6 +17,7 @@ interface StepContainerProps {
   isFirst: boolean;
   isLast: boolean;
   index: number;
+  noUserInputParent: boolean;
 }
 
 // #region styled components
@@ -26,27 +27,18 @@ const MainDiv = styled.div<{
   inFuture: boolean;
 }>``;
 
-const HeaderDiv = styled.div<{ error: boolean; loading: boolean }>`
-  background-color: ${(props) => (props.error ? "#522" : vscBackground)};
-  display: grid;
-  grid-template-columns: 1fr auto auto;
-  align-items: center;
-  padding-right: 8px;
-`;
-
-const OuterButtonsDiv = styled.div`
-  position: absolute;
-  right: 0;
-  top: 0;
-  height: 0;
-`;
-
 const ButtonsDiv = styled.div`
   display: flex;
   gap: 2px;
   align-items: center;
-  background-color: ${secondaryDark};
+  background-color: ${vscBackground};
+  box-shadow: 1px 1px 10px ${vscBackground};
   border-radius: ${defaultBorderRadius};
+
+  position: absolute;
+  right: 0;
+  top: 0;
+  height: 0;
 `;
 
 const ContentDiv = styled.div<{ isUserInput: boolean }>`
@@ -92,14 +84,11 @@ function StepContainer(props: StepContainerProps) {
       hidden={props.historyNode.step.hide as any}
     >
       <div>
-        <HeaderDiv
-          loading={(props.historyNode.active as boolean) || false}
-          error={props.historyNode.observation?.error ? true : false}
-        >
-          {(isHovered || (props.historyNode.active as boolean)) && (
-            <OuterButtonsDiv>
-              <ButtonsDiv>
-                {props.historyNode.observation?.error ? (
+        {isHovered &&
+          (props.historyNode.observation?.error || props.noUserInputParent) && (
+            <ButtonsDiv>
+              {props.historyNode.observation?.error &&
+                ((
                   <HeaderButtonWithText
                     text="Retry"
                     onClick={(e) => {
@@ -113,13 +102,25 @@ function StepContainer(props: StepContainerProps) {
                       onClick={props.onRetry}
                     />
                   </HeaderButtonWithText>
-                ) : (
-                  <></>
-                )}
-              </ButtonsDiv>
-            </OuterButtonsDiv>
+                ) as any)}
+
+              {props.noUserInputParent && (
+                <HeaderButtonWithText
+                  text="Collapse"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    props.onDelete();
+                  }}
+                >
+                  <XMarkIcon
+                    width="1.4em"
+                    height="1.4em"
+                    onClick={props.onRetry}
+                  />
+                </HeaderButtonWithText>
+              )}
+            </ButtonsDiv>
           )}
-        </HeaderDiv>
 
         <ContentDiv hidden={!props.open} isUserInput={isUserInput}>
           <StyledMarkdownPreview

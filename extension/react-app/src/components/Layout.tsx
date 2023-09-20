@@ -99,11 +99,20 @@ const Layout = () => {
     (state: RootStore) => state.uiState.displayBottomMessageOnBottom
   );
 
+  const timeline = useSelector(
+    (state: RootStore) => state.serverState.history.timeline
+  );
+
   // #endregion
 
   useEffect(() => {
     const handleKeyDown = (event: any) => {
-      if (event.metaKey && event.altKey && event.code === "KeyN") {
+      if (
+        event.metaKey &&
+        event.altKey &&
+        event.code === "KeyN" &&
+        timeline.filter((n) => !n.step.hide).length > 0
+      ) {
         client?.loadSession(undefined);
       }
       if ((event.metaKey || event.ctrlKey) && event.code === "KeyC") {
@@ -122,7 +131,7 @@ const Layout = () => {
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [client]);
+  }, [client, timeline]);
 
   return (
     <LayoutTopDiv>
@@ -190,14 +199,19 @@ const Layout = () => {
                   />
                 )}
             </div>
-            <HeaderButtonWithText
-              onClick={() => {
-                client?.loadSession(undefined);
-              }}
-              text="New Session (⌥⌘N)"
-            >
-              <PlusIcon width="1.4em" height="1.4em" />
-            </HeaderButtonWithText>
+            {timeline.filter((n) => !n.step.hide).length > 0 && (
+              <HeaderButtonWithText
+                onClick={() => {
+                  if (timeline.filter((n) => !n.step.hide).length > 0) {
+                    client?.loadSession(undefined);
+                  }
+                }}
+                text="New Session (⌥⌘N)"
+              >
+                <PlusIcon width="1.4em" height="1.4em" />
+              </HeaderButtonWithText>
+            )}
+
             <HeaderButtonWithText
               onClick={() => {
                 navigate("/history");

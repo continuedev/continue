@@ -31,6 +31,9 @@ const P = styled.p`
   font-size: 11.5px;
   color: ${lightGray};
   text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 `;
 
 interface ProgressBarProps {
@@ -61,7 +64,7 @@ const ProgressBar = ({ completed, total }: ProgressBarProps) => {
             />
           </ProgressBarWrapper>
           <P>
-            Free Use: {completed} / {total}
+            Free Uses: {completed} / {total}
           </P>
         </GridDiv>
       </a>

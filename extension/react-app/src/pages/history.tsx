@@ -1,13 +1,14 @@
 import React, { useContext, useEffect, useState } from "react";
 import { SessionInfo } from "../../../schema/SessionInfo";
 import { GUIClientContext } from "../App";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { RootStore } from "../redux/store";
 import { useNavigate } from "react-router-dom";
 import { lightGray, secondaryDark } from "../components";
 import styled from "styled-components";
 import { ArrowLeftIcon } from "@heroicons/react/24/outline";
 import CheckDiv from "../components/CheckDiv";
+import { temporarilyClearSession } from "../redux/slices/serverStateReducer";
 
 const Tr = styled.tr`
   &:hover {
@@ -41,6 +42,7 @@ function lastPartOfPath(path: string): string {
 
 function History() {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const [sessions, setSessions] = useState<SessionInfo[]>([]);
   const client = useContext(GUIClientContext);
   const apiUrl = useSelector((state: RootStore) => state.config.apiUrl);
@@ -116,6 +118,7 @@ function History() {
                   <TdDiv
                     onClick={() => {
                       client?.loadSession(session.session_id);
+                      dispatch(temporarilyClearSession());
                       navigate("/");
                     }}
                   >

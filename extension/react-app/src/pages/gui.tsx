@@ -468,6 +468,8 @@ function GUI(props: GUIProps) {
         stepsInUserInputGroup.push(i);
       }
     }
+    if (stepsInUserInputGroup.length === 0) return [];
+
     for (let i = index + 1; i < history?.timeline.length; i++) {
       if (
         history?.timeline.length > i &&
@@ -686,6 +688,9 @@ function GUI(props: GUIProps) {
                       onDelete={() => {
                         client?.deleteAtIndex(index);
                       }}
+                      noUserInputParent={
+                        getStepsInUserInputGroup(index).length === 0
+                      }
                     />
                   )}
                 </TimelineItem>

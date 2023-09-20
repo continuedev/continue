@@ -132,6 +132,7 @@ class SimpleChatStep(Step):
                     await sdk.models.medium.complete(
                         f'"{self.description}"\n\nPlease write a short title summarizing the message quoted above. Use no more than 10 words:',
                         max_tokens=20,
+                        log=False,
                     )
                 ),
                 200,
