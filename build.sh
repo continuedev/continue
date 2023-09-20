@@ -16,17 +16,23 @@ pip install pyinstaller
 
 # 4. Detect M1 architecture or allow manual override
 if [ "$1" = "m1" ]; then
+    echo "Building for M1 architecture"
     SPEC_FILE="run.m1.spec"
 elif [ "$1" = "regular" ]; then
+    echo "Building for regular architecture"
     SPEC_FILE="run.spec"
 else
     ARCH=$(uname -m)
     if [ "$ARCH" = "arm64" ]; then
+        echo "$ARCH architecture detected, using M1 spec file"
         SPEC_FILE="run.m1.spec"
     else
+        echo "$ARCH architecture detected, using regular spec file"
         SPEC_FILE="run.spec"
     fi
 fi
+
+echo "Using $SPEC_FILE"
 
 # 5. Call PyInstaller from within the virtual environment
 env/bin/pyinstaller $SPEC_FILE
