@@ -106,7 +106,7 @@ function StepContainer(props: StepContainerProps) {
 
               {props.noUserInputParent && (
                 <HeaderButtonWithText
-                  text="Collapse"
+                  text="Delete"
                   onClick={(e) => {
                     e.stopPropagation();
                     props.onDelete();

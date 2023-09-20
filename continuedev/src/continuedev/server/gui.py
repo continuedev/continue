@@ -282,45 +282,55 @@ class GUIProtocolServer:
 
     def add_model_for_role(self, role: str, model_class: str, model: Any):
         models = self.session.autopilot.continue_sdk.config.models
-        unused_models = models.unused
         if role == "*":
 
             async def async_stuff():
-                for role in ALL_MODEL_ROLES:
-                    models.__setattr__(role, None)
-
-                # Set and start the default model if didn't already exist from unused
-                models.default = MODEL_CLASSES[model_class](**model)
-
-                await self.session.autopilot.continue_sdk.start_model(models.default)
-
-                models_args = {}
-
+                # Remove all previous models in roles and place in unused
+                unused_models = models.unused
+                existing_unused_models = set(
+                    [display_llm_class(llm) for llm in unused_models]
+                )
                 for role in ALL_MODEL_ROLES:
                     val = models.__getattribute__(role)
-                    if val is None:
-                        continue  # no pun intended
+                    if (
+                        val is not None
+                        and display_llm_class(val) not in existing_unused_models
+                    ):
+                        unused_models.append(val)
+                        existing_unused_models.add(display_llm_class(val))
+                    models.__setattr__(role, None)
 
-                    models_args[role] = display_llm_class(val, True)
+                # Set and start the new default model
+                new_model = MODEL_CLASSES[model_class](**model)
+                models.default = new_model
+                await self.session.autopilot.continue_sdk.start_model(models.default)
 
+                # Construct and set the new models object
                 JOINER = ",\n\t\t"
-                models_args[
-                    "unused"
-                ] = f"[{JOINER.join([display_llm_class(llm) for llm in unused_models])}]"
+                unused_model_strings = set(
+                    [display_llm_class(llm) for llm in unused_models]
+                )
+                models_args = {
+                    "default": display_llm_class(models.default, True),
+                    "unused": f"[{JOINER.join(unused_model_strings)}]",
+                }
 
                 await self.session.autopilot.set_config_attr(
                     ["models"],
                     create_obj_node("Models", models_args),
                 )
 
+                # Add the requisite import to config.py
                 add_config_import(
                     f"from continuedev.src.continuedev.libs.llm.{MODEL_MODULE_NAMES[model_class]} import {model_class}"
                 )
 
+                # Set all roles (in-memory) to the new default model
                 for role in ALL_MODEL_ROLES:
                     if role != "default":
                         models.__setattr__(role, models.default)
 
+                # Display setup help
                 await self.session.autopilot.continue_sdk.run_step(
                     SetupModelStep(model_class=model_class)
                 )

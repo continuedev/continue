@@ -10,7 +10,8 @@ const CollapseButton = styled.div`
   align-items: center;
   flex-shrink: 0;
   flex-grow: 0;
-  margin-left: 3px;
+  margin-left: 5px;
+  cursor: pointer;
 `;
 
 const CollapsedDiv = styled.div`
@@ -36,7 +37,11 @@ function TimelineItem(props: TimelineItemProps) {
     props.children
   ) : (
     <CollapsedDiv>
-      <CollapseButton>
+      <CollapseButton
+        onClick={() => {
+          props.onToggle();
+        }}
+      >
         {props.iconElement || (
           <ChatBubbleOvalLeftIcon width="16px" height="16px" />
         )}
