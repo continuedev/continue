@@ -23,6 +23,7 @@ import {
   FolderIcon,
   MagnifyingGlassIcon,
   PlusIcon,
+  TrashIcon,
 } from "@heroicons/react/24/outline";
 import { ContextItem } from "../../../schema/FullState";
 import { postVscMessage } from "../vscode";
@@ -39,6 +40,31 @@ import SelectContextGroupDialog from "./dialogs/SelectContextGroupDialog";
 import AddContextGroupDialog from "./dialogs/AddContextGroupDialog";
 import SuggestionsArea from "./Suggestions";
 import { useNavigate } from "react-router-dom";
+
+const HiddenHeaderButtonWithText = styled.button`
+  opacity: 0;
+  background-color: transparent;
+  border: none;
+  outline: none;
+  color: ${vscForeground};
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 0;
+  aspect-ratio: 1;
+  padding: 0;
+  margin: -8px;
+
+  border-radius: ${defaultBorderRadius};
+
+  &:focus {
+    height: fit-content;
+    padding: 3px;
+    opacity: 1;
+    outline: 1px solid ${lightGray};
+  }
+`;
 
 const SEARCH_INDEX_NAME = "continue_context_items";
 
@@ -539,6 +565,25 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
         className="px-2 flex gap-2 items-center flex-wrap mt-2"
         ref={contextItemsDivRef}
       >
+        <HiddenHeaderButtonWithText
+          className={props.selectedContextItems.length > 0 ? "pill-button" : ""}
+          onClick={() => {
+            client?.deleteContextWithIds(
+              props.selectedContextItems.map((item) => item.description.id)
+            );
+            inputRef.current?.focus();
+          }}
+          onKeyDown={(e: any) => {
+            if (e.key === "Backspace") {
+              client?.deleteContextWithIds(
+                props.selectedContextItems.map((item) => item.description.id)
+              );
+              inputRef.current?.focus();
+            }
+          }}
+        >
+          <TrashIcon width="1.4em" height="1.4em" />
+        </HiddenHeaderButtonWithText>
         {props.selectedContextItems.map((item, idx) => {
           return (
             <PillButton
