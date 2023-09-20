@@ -27,6 +27,7 @@ const StyledButton = styled(Button)<{
       : `
     &:hover {
       transition-property: "background";
+      background: ${props.color || "#be1b55"}
       opacity: 0.7;
     }
   `}

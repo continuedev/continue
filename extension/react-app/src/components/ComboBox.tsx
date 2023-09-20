@@ -35,6 +35,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { RootStore } from "../redux/store";
 import SelectContextGroupDialog from "./dialogs/SelectContextGroupDialog";
 import AddContextGroupDialog from "./dialogs/AddContextGroupDialog";
+import SuggestionsArea from "./Suggestions";
 
 const SEARCH_INDEX_NAME = "continue_context_items";
 
@@ -521,6 +522,12 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
 
   return (
     <>
+      <SuggestionsArea
+        onClick={(textInput) => {
+          client?.sendMainInput(textInput);
+        }}
+      />
+
       <div
         className="px-2 flex gap-2 items-center flex-wrap mt-2"
         ref={contextItemsDivRef}

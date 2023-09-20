@@ -1,6 +1,6 @@
 import React, { useContext } from "react";
 import styled from "styled-components";
-import { buttonColor, defaultBorderRadius, vscForeground } from ".";
+import { buttonColor, defaultBorderRadius, lightGray, vscForeground } from ".";
 import { setShowDialog } from "../redux/slices/uiStateSlice";
 import { GUIClientContext } from "../App";
 import { useDispatch, useSelector } from "react-redux";
@@ -32,7 +32,7 @@ export interface ModelInfo {
 }
 
 const Div = styled.div<{ color: string }>`
-  border: 1px solid ${vscForeground};
+  border: 1px solid ${lightGray};
   border-radius: ${defaultBorderRadius};
   cursor: pointer;
   padding: 4px 8px;
@@ -107,7 +107,7 @@ function ModelCard(props: ModelCardProps) {
         target="_blank"
         onClick={(e) => e.stopPropagation()}
       >
-        <HeaderButtonWithText text="Go to reference">
+        <HeaderButtonWithText onClick={() => {}} text="Go to reference">
           <BookOpenIcon width="1.6em" height="1.6em" />
         </HeaderButtonWithText>
       </a>
