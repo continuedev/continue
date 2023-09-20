@@ -38,6 +38,7 @@ import {
   CodeBracketSquareIcon,
   ExclamationTriangleIcon,
 } from "@heroicons/react/24/outline";
+import FreeTrialLimitReachedDialog from "../components/dialogs/FreeTrialLimitReachedDialog";
 
 const TopGuiDiv = styled.div`
   overflow-y: scroll;
@@ -280,26 +281,7 @@ function GUI(props: GUIProps) {
           if (usages >= 250) {
             console.log("Free trial limit reached");
             dispatch(setShowDialog(true));
-            dispatch(
-              setDialogMessage(
-                <div className="p-4">
-                  <h3>Free Trial Limit Reached</h3>
-                  You've reached the free trial limit of 250 free inputs with
-                  Continue's OpenAI API key. To keep using Continue, you can
-                  either use your own API key, or use a local LLM. To read more
-                  about the options, see our{" "}
-                  <a
-                    href="https://continue.dev/docs/customization/models"
-                    target="_blank"
-                  >
-                    documentation
-                  </a>
-                  . If you're just looking for fastest way to keep going, type
-                  '/config' to open your Continue config file and paste your API
-                  key into the MaybeProxyOpenAI object.
-                </div>
-              )
-            );
+            dispatch(setDialogMessage(<FreeTrialLimitReachedDialog />));
             return;
           }
         } else {
