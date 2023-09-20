@@ -22,6 +22,7 @@ const CollapsedDiv = styled.div`
   align-items: center;
   gap: 4px;
   font-size: 13px;
+  min-height: 16px;
 `;
 
 interface TimelineItemProps {
@@ -46,7 +47,11 @@ function TimelineItem(props: TimelineItemProps) {
           <ChatBubbleOvalLeftIcon width="16px" height="16px" />
         )}
       </CollapseButton>
-      <span style={{ color: lightGray }}>{props.historyNode.step.name}</span>
+      <span style={{ color: lightGray }}>
+        {props.historyNode.observation?.error
+          ? props.historyNode.observation?.title
+          : props.historyNode.step.name}
+      </span>
     </CollapsedDiv>
   );
 }

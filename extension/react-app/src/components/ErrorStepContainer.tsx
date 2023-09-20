@@ -11,9 +11,9 @@ import {
 
 const Div = styled.div`
   padding: 8px;
-  background-color: #ff000022;
+  background-color: #ff000011;
   border-radius: ${defaultBorderRadius};
-  border: 1px solid #ff0000;
+  border: 1px solid #cc0000;
 `;
 
 interface ErrorStepContainerProps {

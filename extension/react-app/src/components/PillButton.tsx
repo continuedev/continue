@@ -76,6 +76,7 @@ interface PillButtonProps {
   onHover?: (arg0: boolean) => void;
   item: ContextItem;
   editing: boolean;
+  editingAny: boolean;
   index: number;
   addingHighlightedCode?: boolean;
   areMultipleItems?: boolean;
@@ -95,7 +96,7 @@ const StyledButton = styled(Button)<StyledButtonProps>`
 
   &:focus {
     outline: none;
-    border-color: ${vscForeground};
+    border-color: ${lightGray};
     border-width: 1px;
     border-style: solid;
   }
@@ -150,17 +151,21 @@ const PillButton = (props: PillButtonProps) => {
               backgroundColor: vscBackground,
             }}
           >
-            {props.item.editable && props.areMultipleItems && (
-              <ButtonDiv
-                data-tooltip-id={`edit-${props.index}`}
-                backgroundColor={"#8800aa55"}
-                onClick={() => {
-                  client?.setEditingAtIds([props.item.description.id.item_id]);
-                }}
-              >
-                <PaintBrushIcon style={{ margin: "auto" }} width="1.6em" />
-              </ButtonDiv>
-            )}
+            {props.editingAny &&
+              props.item.editable &&
+              props.areMultipleItems && (
+                <ButtonDiv
+                  data-tooltip-id={`edit-${props.index}`}
+                  backgroundColor={"#8800aa55"}
+                  onClick={() => {
+                    client?.setEditingAtIds([
+                      props.item.description.id.item_id,
+                    ]);
+                  }}
+                >
+                  <PaintBrushIcon style={{ margin: "auto" }} width="1.6em" />
+                </ButtonDiv>
+              )}
 
             <StyledTooltip id={`pin-${props.index}`}>
               Edit this range

@@ -652,6 +652,11 @@ class IdeProtocolClient {
     );
     const terminalContents = await vscode.env.clipboard.readText();
     await vscode.env.clipboard.writeText(tempCopyBuffer);
+
+    if (tempCopyBuffer === terminalContents) {
+      // This means there is no terminal open to select text from
+      return "";
+    }
     return terminalContents;
   }
 

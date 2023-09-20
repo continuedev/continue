@@ -3,6 +3,7 @@ import React, {
   useContext,
   useEffect,
   useImperativeHandle,
+  useLayoutEffect,
   useState,
 } from "react";
 import { useCombobox } from "downshift";
@@ -54,11 +55,12 @@ const HiddenHeaderButtonWithText = styled.button`
   height: 0;
   aspect-ratio: 1;
   padding: 0;
-  margin: -8px;
+  margin-left: -8px;
 
   border-radius: ${defaultBorderRadius};
 
   &:focus {
+    margin-left: 1px;
     height: fit-content;
     padding: 3px;
     opacity: 1;
@@ -276,9 +278,10 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
 
           if (nestedContextProvider && !inputValue.endsWith("@")) {
             // Search only within this specific context provider
+            const spaceSegs = providerAndQuery.split(" ");
             getFilteredContextItemsForProvider(
               nestedContextProvider.title,
-              providerAndQuery
+              spaceSegs.length > 1 ? spaceSegs[1] : ""
             ).then((res) => {
               setItems(res);
             });
@@ -456,6 +459,13 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
     }
   }, []);
 
+  useLayoutEffect(() => {
+    if (!ulRef.current) {
+      return;
+    }
+    downshiftProps.setHighlightedIndex(0);
+  }, [items, downshiftProps.setHighlightedIndex, ulRef.current]);
+
   const [metaKeyPressed, setMetaKeyPressed] = useState(false);
   const [focused, setFocused] = useState(false);
   useEffect(() => {
@@ -584,6 +594,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
         >
           <TrashIcon width="1.4em" height="1.4em" />
         </HiddenHeaderButtonWithText>
+        <div className="bg-white">hi</div>
         {props.selectedContextItems.map((item, idx) => {
           return (
             <PillButton
@@ -594,6 +605,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
                 item.editing &&
                 (inputRef.current as any)?.value?.startsWith("/edit")
               }
+              editingAny={(inputRef.current as any)?.value?.startsWith("/edit")}
               addingHighlightedCode={props.addingHighlightedCode}
               index={idx}
               onDelete={() => {
