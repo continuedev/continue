@@ -4,7 +4,7 @@ Continue makes it easy to swap out different LLM providers. Once you've added an
 
 Commercial Models
 
-- [MaybeProxyOpenAI](../reference/Models/maybeproxyopenai.md) (default) - Use gpt-4 or gpt-3.5-turbo free with our API key, or with your API key. gpt-4 is probably the most capable model of all options.
+- [OpenAIFreeTrial](../reference/Models/openaifreetrial.md) (default) - Use gpt-4 or gpt-3.5-turbo free with our API key, or with your API key. gpt-4 is probably the most capable model of all options.
 - [OpenAI](../reference/Models/openai.md) - Use any OpenAI model with your own key. Can also change the base URL if you have a server that uses the OpenAI API format, including using the Azure OpenAI service, LocalAI, etc.
 - [AnthropicLLM](../reference/Models/anthropicllm.md) - Use claude-2 with your Anthropic API key. Claude 2 is also highly capable, and has a 100,000 token context window.
 
@@ -31,8 +31,8 @@ from continuedev.src.continuedev.core.models import Models
 config = ContinueConfig(
     ...
     models=Models(
-        default=MaybeProxyOpenAI(model="gpt-4"),
-        medium=MaybeProxyOpenAI(model="gpt-3.5-turbo")
+        default=OpenAIFreeTrial(model="gpt-4"),
+        medium=OpenAIFreeTrial(model="gpt-3.5-turbo")
     )
 )
 ```

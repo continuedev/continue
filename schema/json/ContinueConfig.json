@@ -15,10 +15,7 @@
           "type": "string"
         }
       },
-      "required": [
-        "name",
-        "arguments"
-      ]
+      "required": ["name", "arguments"]
     },
     "ChatMessage": {
       "title": "ChatMessage",
@@ -26,12 +23,7 @@
       "properties": {
         "role": {
           "title": "Role",
-          "enum": [
-            "assistant",
-            "user",
-            "system",
-            "function"
-          ],
+          "enum": ["assistant", "user", "system", "function"],
           "type": "string"
         },
         "content": {
@@ -50,10 +42,7 @@
           "$ref": "#/definitions/FunctionCall"
         }
       },
-      "required": [
-        "role",
-        "summary"
-      ]
+      "required": ["role", "summary"]
     },
     "Step": {
       "title": "Step",
@@ -162,9 +151,7 @@
           "type": "string"
         }
       },
-      "required": [
-        "model"
-      ]
+      "required": ["model"]
     },
     "src__continuedev__core__models__ContinueSDK": {
       "title": "ContinueSDK",
@@ -206,9 +193,7 @@
           "$ref": "#/definitions/src__continuedev__core__models__ContinueSDK"
         }
       },
-      "required": [
-        "default"
-      ]
+      "required": ["default"]
     },
     "CustomCommand": {
       "title": "CustomCommand",
@@ -227,11 +212,7 @@
           "type": "string"
         }
       },
-      "required": [
-        "name",
-        "prompt",
-        "description"
-      ]
+      "required": ["name", "prompt", "description"]
     },
     "SlashCommand": {
       "title": "SlashCommand",
@@ -254,11 +235,7 @@
           "type": "object"
         }
       },
-      "required": [
-        "name",
-        "description",
-        "step"
-      ]
+      "required": ["name", "description", "step"]
     },
     "Policy": {
       "title": "Policy",
@@ -286,10 +263,7 @@
           "type": "string"
         }
       },
-      "required": [
-        "provider_title",
-        "item_id"
-      ]
+      "required": ["provider_title", "item_id"]
     },
     "ContextItemDescription": {
       "title": "ContextItemDescription",
@@ -308,11 +282,7 @@
           "$ref": "#/definitions/ContextItemId"
         }
       },
-      "required": [
-        "name",
-        "description",
-        "id"
-      ]
+      "required": ["name", "description", "id"]
     },
     "ContextItem": {
       "title": "ContextItem",
@@ -337,10 +307,7 @@
           "type": "boolean"
         }
       },
-      "required": [
-        "description",
-        "content"
-      ]
+      "required": ["description", "content"]
     },
     "ContextProvider": {
       "title": "ContextProvider",
@@ -392,12 +359,7 @@
           }
         }
       },
-      "required": [
-        "title",
-        "display_title",
-        "description",
-        "dynamic"
-      ]
+      "required": ["title", "display_title", "description", "dynamic"]
     },
     "src__continuedev__core__config__ContinueConfig": {
       "title": "ContinueConfig",
@@ -444,7 +406,7 @@
               "prompt_templates": {},
               "api_key": null,
               "llm": null,
-              "class_name": "MaybeProxyOpenAI"
+              "class_name": "OpenAIFreeTrial"
             },
             "small": null,
             "medium": {
@@ -459,7 +421,7 @@
               "prompt_templates": {},
               "api_key": null,
               "llm": null,
-              "class_name": "MaybeProxyOpenAI"
+              "class_name": "OpenAIFreeTrial"
             },
             "large": null,
             "edit": null,

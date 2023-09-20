@@ -8,7 +8,7 @@ See https://continue.dev/docs/customization to for documentation of the availabl
 from continuedev.src.continuedev.core.models import Models
 from continuedev.src.continuedev.core.config import CustomCommand, SlashCommand, ContinueConfig
 from continuedev.src.continuedev.plugins.context_providers.github import GitHubIssuesContextProvider
-from continuedev.src.continuedev.libs.llm.maybe_proxy_openai import MaybeProxyOpenAI
+from continuedev.src.continuedev.libs.llm.openai_free_trial import OpenAIFreeTrial
 
 from continuedev.src.continuedev.plugins.steps.open_config import OpenConfigStep
 from continuedev.src.continuedev.plugins.steps.clear_history import ClearHistoryStep
@@ -23,8 +23,8 @@ from continuedev.src.continuedev.plugins.context_providers.terminal import Termi
 config = ContinueConfig(
     allow_anonymous_telemetry=True,
     models=Models(
-        default=MaybeProxyOpenAI(api_key="", model="gpt-4"),
-        medium=MaybeProxyOpenAI(api_key="", model="gpt-3.5-turbo")
+        default=OpenAIFreeTrial(api_key="", model="gpt-4"),
+        medium=OpenAIFreeTrial(api_key="", model="gpt-3.5-turbo")
     ),
     system_message=None,
     temperature=0.5,

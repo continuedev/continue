@@ -187,7 +187,7 @@ const Layout = () => {
                 />
               )}
               <ModelSelect />
-              {defaultModel === "MaybeProxyOpenAI" &&
+              {defaultModel === "OpenAIFreeTrial" &&
                 (location.pathname === "/settings" ||
                   parseInt(localStorage.getItem("freeTrialCounter") || "0") >=
                     125) && (

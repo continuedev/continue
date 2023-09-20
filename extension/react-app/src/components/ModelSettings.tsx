@@ -27,7 +27,7 @@ const DefaultModelOptions: {
     api_key: "",
     model: "gpt-4",
   },
-  MaybeProxyOpenAI: {
+  OpenAIFreeTrial: {
     api_key: "",
     model: "gpt-4",
   },

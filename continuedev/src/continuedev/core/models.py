@@ -5,13 +5,13 @@ from pydantic import BaseModel
 from ..libs.llm import LLM
 from ..libs.llm.anthropic import AnthropicLLM
 from ..libs.llm.ggml import GGML
+from ..libs.llm.hf_inference_api import HuggingFaceInferenceAPI
 from ..libs.llm.llamacpp import LlamaCpp
-from ..libs.llm.maybe_proxy_openai import MaybeProxyOpenAI
 from ..libs.llm.ollama import Ollama
 from ..libs.llm.openai import OpenAI
+from ..libs.llm.openai_free_trial import OpenAIFreeTrial
 from ..libs.llm.replicate import ReplicateLLM
 from ..libs.llm.together import TogetherLLM
-from ..libs.llm.hf_inference_api import HuggingFaceInferenceAPI
 
 
 class ContinueSDK(BaseModel):
@@ -31,7 +31,7 @@ MODEL_CLASSES = {
     cls.__name__: cls
     for cls in [
         OpenAI,
-        MaybeProxyOpenAI,
+        OpenAIFreeTrial,
         GGML,
         TogetherLLM,
         AnthropicLLM,
@@ -44,7 +44,7 @@ MODEL_CLASSES = {
 
 MODEL_MODULE_NAMES = {
     "OpenAI": "openai",
-    "MaybeProxyOpenAI": "maybe_proxy_openai",
+    "OpenAIFreeTrial": "openai_free_trial",
     "GGML": "ggml",
     "TogetherLLM": "together",
     "AnthropicLLM": "anthropic",

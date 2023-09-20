@@ -111,7 +111,7 @@ const MODEL_INFO: ModelInfo[] = [
   },
   {
     title: "GPT-4 limited free trial",
-    class: "MaybeProxyOpenAI",
+    class: "OpenAIFreeTrial",
     description:
       "New users can try out Continue with GPT-4 using a proxy server that securely makes calls to OpenAI using our API key.",
     args: {

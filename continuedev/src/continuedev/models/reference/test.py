@@ -14,7 +14,7 @@ LLM_MODULES = [
     ("together", "TogetherLLM"),
     ("hf_inference_api", "HuggingFaceInferenceAPI"),
     ("hf_tgi", "HuggingFaceTGI"),
-    ("maybe_proxy_openai", "MaybeProxyOpenAI"),
+    ("openai_free_trial", "OpenAIFreeTrial"),
     ("queued", "QueuedLLM"),
 ]
 

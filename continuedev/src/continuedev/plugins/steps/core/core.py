@@ -7,7 +7,7 @@ from typing import Coroutine, List, Optional, Union
 from ....core.main import ChatMessage, ContinueCustomException, Step
 from ....core.observation import Observation, TextObservation, UserInputObservation
 from ....libs.llm import LLM
-from ....libs.llm.maybe_proxy_openai import MaybeProxyOpenAI
+from ....libs.llm.openai_free_trial import OpenAIFreeTrial
 from ....libs.util.count_tokens import DEFAULT_MAX_TOKENS
 from ....libs.util.devdata import dev_data_logger
 from ....libs.util.strings import (
@@ -232,7 +232,7 @@ class DefaultModelEditCodeStep(Step):
         # If using 3.5 and overflows, upgrade to 3.5.16k
         if model_to_use.model == "gpt-3.5-turbo":
             if total_tokens > model_to_use.context_length:
-                model_to_use = MaybeProxyOpenAI(model="gpt-3.5-turbo-0613")
+                model_to_use = OpenAIFreeTrial(model="gpt-3.5-turbo-0613")
                 await sdk.start_model(model_to_use)
 
         # Remove tokens from the end first, and then the start to clear space

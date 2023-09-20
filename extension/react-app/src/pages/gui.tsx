@@ -270,7 +270,7 @@ function GUI(props: GUIProps) {
 
       // Increment localstorage counter for usage of free trial
       if (
-        defaultModel === "MaybeProxyOpenAI" &&
+        defaultModel === "OpenAIFreeTrial" &&
         (!input.startsWith("/") || input.startsWith("/edit"))
       ) {
         const freeTrialCounter = localStorage.getItem("freeTrialCounter");

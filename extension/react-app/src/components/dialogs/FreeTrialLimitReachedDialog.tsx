@@ -34,7 +34,7 @@ function FreeTrialLimitReachedDialog() {
         </a>
         . If you're just looking for fastest way to keep going, type '/config'
         to open your Continue config file and paste your API key into the
-        MaybeProxyOpenAI object.
+        OpenAIFreeTrial object.
       </p>
 
       <TextInput
@@ -54,7 +54,7 @@ function FreeTrialLimitReachedDialog() {
         <Button
           disabled={!apiKey}
           onClick={() => {
-            client?.addModelForRole("*", "MaybeProxyOpenAI", {
+            client?.addModelForRole("*", "OpenAIFreeTrial", {
               model: "gpt-4",
               api_key: apiKey,
               title: "GPT-4",
