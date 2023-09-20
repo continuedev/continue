@@ -1,4 +1,3 @@
-
 #!/bin/bash
 # This is used in a task in .vscode/tasks.json
 # Start developing with:
