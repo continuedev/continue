@@ -160,8 +160,8 @@ function ModelSelect(props: {}) {
   const defaultModel = useSelector(
     (state: RootStore) => (state.serverState.config as any)?.models?.default
   );
-  const unusedModels = useSelector(
-    (state: RootStore) => (state.serverState.config as any)?.models?.unused
+  const savedModels = useSelector(
+    (state: RootStore) => (state.serverState.config as any)?.models?.saved
   );
 
   const navigate = useNavigate();
@@ -176,7 +176,7 @@ function ModelSelect(props: {}) {
         defaultValue={0}
         onChange={(e) => {
           const value = JSON.parse(e.target.value);
-          if (value.t === "unused") {
+          if (value.t === "saved") {
             client?.setModelForRoleFromIndex("*", value.idx);
           }
         }}
@@ -191,11 +191,11 @@ function ModelSelect(props: {}) {
             {modelSelectTitle(defaultModel)}
           </option>
         )}
-        {unusedModels?.map((model: any, idx: number) => {
+        {savedModels?.map((model: any, idx: number) => {
           return (
             <option
               value={JSON.stringify({
-                t: "unused",
+                t: "saved",
                 idx,
               })}
             >

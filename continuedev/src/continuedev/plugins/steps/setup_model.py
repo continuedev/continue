@@ -29,7 +29,7 @@ class SetupModelStep(Step):
 
         config_contents = await sdk.ide.readFile(getConfigFilePath())
         start = config_contents.find("default=") + len("default=")
-        end = config_contents.find("unused=") - 1
+        end = config_contents.find("saved=") - 1
         range = Range.from_indices(config_contents, start, end)
         range.end.line -= 1
         await sdk.ide.highlightCode(

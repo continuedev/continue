@@ -256,14 +256,14 @@ class GUIProtocolServer:
 
             # Set models in SDK
             temp = models.default
-            models.default = models.unused[index]
-            models.unused[index] = temp
+            models.default = models.saved[index]
+            models.saved[index] = temp
             await self.session.autopilot.continue_sdk.start_model(models.default)
 
             # Set models in config.py
             JOINER = ",\n\t\t"
             models_args = {
-                "unused": f"[{JOINER.join([display_llm_class(llm) for llm in models.unused])}]",
+                "saved": f"[{JOINER.join([display_llm_class(llm) for llm in models.saved])}]",
                 ("default" if role == "*" else role): display_llm_class(models.default),
             }
 
@@ -285,19 +285,19 @@ class GUIProtocolServer:
         if role == "*":
 
             async def async_stuff():
-                # Remove all previous models in roles and place in unused
-                unused_models = models.unused
-                existing_unused_models = set(
-                    [display_llm_class(llm) for llm in unused_models]
+                # Remove all previous models in roles and place in saved
+                saved_models = models.saved
+                existing_saved_models = set(
+                    [display_llm_class(llm) for llm in saved_models]
                 )
                 for role in ALL_MODEL_ROLES:
                     val = models.__getattribute__(role)
                     if (
                         val is not None
-                        and display_llm_class(val) not in existing_unused_models
+                        and display_llm_class(val) not in existing_saved_models
                     ):
-                        unused_models.append(val)
-                        existing_unused_models.add(display_llm_class(val))
+                        saved_models.append(val)
+                        existing_saved_models.add(display_llm_class(val))
                     models.__setattr__(role, None)
 
                 # Set and start the new default model
@@ -307,12 +307,12 @@ class GUIProtocolServer:
 
                 # Construct and set the new models object
                 JOINER = ",\n\t\t"
-                unused_model_strings = set(
-                    [display_llm_class(llm) for llm in unused_models]
+                saved_model_strings = set(
+                    [display_llm_class(llm) for llm in saved_models]
                 )
                 models_args = {
                     "default": display_llm_class(models.default, True),
-                    "unused": f"[{JOINER.join(unused_model_strings)}]",
+                    "saved": f"[{JOINER.join(saved_model_strings)}]",
                 }
 
                 await self.session.autopilot.set_config_attr(

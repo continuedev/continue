@@ -15,7 +15,7 @@ const StyledButton = styled(Button)<{
   display: grid;
   grid-template-columns: 22px 1fr;
   align-items: center;
-  background: ${(props) => props.color || "#be1b55"};
+  background-color: ${(props) => props.color || "#be1b55"};
 
   opacity: ${(props) => (props.isDisabled ? 0.5 : 1.0)};
 
@@ -27,7 +27,7 @@ const StyledButton = styled(Button)<{
       : `
     &:hover {
       transition-property: "background";
-      background: ${props.color || "#be1b55"}
+      background-color: ${props.color || "#be1b55"}
       opacity: 0.7;
     }
   `}

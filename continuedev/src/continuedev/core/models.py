@@ -65,7 +65,7 @@ class Models(BaseModel):
     edit: Optional[LLM] = None
     chat: Optional[LLM] = None
 
-    unused: List[LLM] = []
+    saved: List[LLM] = []
 
     # TODO namespace these away to not confuse readers,
     # or split Models into ModelsConfig, which gets turned into Models
