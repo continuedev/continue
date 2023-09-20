@@ -1,5 +1,6 @@
 import GUI from "./pages/gui";
 import History from "./pages/history";
+import Help from "./pages/help";
 import Layout from "./components/Layout";
 import { createContext, useEffect } from "react";
 import useContinueGUIProtocol from "./hooks/useWebsocket";
@@ -36,6 +37,10 @@ const router = createMemoryRouter([
       {
         path: "/history",
         element: <History />,
+      },
+      {
+        path: "/help",
+        element: <Help />,
       },
       {
         path: "/settings",

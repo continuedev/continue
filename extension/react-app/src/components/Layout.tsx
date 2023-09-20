@@ -1,7 +1,6 @@
 import styled from "styled-components";
 import { defaultBorderRadius, secondaryDark, vscForeground } from ".";
 import { Outlet } from "react-router-dom";
-import Onboarding from "./Onboarding";
 import TextDialog from "./TextDialog";
 import { useContext, useEffect, useState } from "react";
 import { GUIClientContext } from "../App";
@@ -15,10 +14,9 @@ import {
 import {
   PlusIcon,
   FolderIcon,
-  BookOpenIcon,
-  ChatBubbleOvalLeftEllipsisIcon,
   SparklesIcon,
   Cog6ToothIcon,
+  QuestionMarkCircleIcon
 } from "@heroicons/react/24/outline";
 import HeaderButtonWithText from "./HeaderButtonWithText";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -133,7 +131,6 @@ const Layout = () => {
           gridTemplateRows: "1fr auto",
         }}
       >
-        <Onboarding />
         <TextDialog
           showDialog={showDialog}
           onEnter={() => {
@@ -206,22 +203,14 @@ const Layout = () => {
             >
               <FolderIcon width="1.4em" height="1.4em" />
             </HeaderButtonWithText>
-            <a
-              href="https://continue.dev/docs/how-to-use-continue"
-              className="no-underline"
+            <HeaderButtonWithText
+              onClick={() => {
+                navigate("/help");
+              }}
+              text="Help"
             >
-              <HeaderButtonWithText text="Docs">
-                <BookOpenIcon width="1.4em" height="1.4em" />
-              </HeaderButtonWithText>
-            </a>
-            <a
-              href="https://github.com/continuedev/continue/issues/new/choose"
-              className="no-underline"
-            >
-              <HeaderButtonWithText text="Feedback">
-                <ChatBubbleOvalLeftEllipsisIcon width="1.4em" height="1.4em" />
-              </HeaderButtonWithText>
-            </a>
+              <QuestionMarkCircleIcon width="1.4em" height="1.4em" />
+            </HeaderButtonWithText>
             <HeaderButtonWithText
               onClick={() => {
                 navigate("/settings");

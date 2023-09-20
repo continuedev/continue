@@ -33,3 +33,7 @@ body {
 .press-start-2p {
   font-family: "Press Start 2P", "Lexend", sans-serif;
 }
+
+a:focus {
+  outline: none;
+}
