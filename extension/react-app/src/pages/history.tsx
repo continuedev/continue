@@ -69,8 +69,6 @@ function History() {
     fetchSessions();
   }, [client]);
 
-  console.log(sessions.map((session) => session.date_created));
-
   return (
     <div>
       <div
@@ -94,6 +92,23 @@ function History() {
           )}/`}
         />
       )}
+
+      {sessions.filter((session) => {
+        if (
+          !filteringByWorkspace ||
+          typeof workspacePaths === "undefined" ||
+          typeof session.workspace_directory === "undefined"
+        ) {
+          return true;
+        }
+        return workspacePaths.includes(session.workspace_directory);
+      }).length === 0 && (
+        <div className="text-center my-4">
+          No past sessions found. To start a new session, either click the "+"
+          button or use the keyboard shortcut: <b>Option + Command + N</b>
+        </div>
+      )}
+
       <table className="w-full">
         <tbody>
           {sessions

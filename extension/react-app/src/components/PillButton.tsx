@@ -1,8 +1,9 @@
-import { useContext, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import styled from "styled-components";
 import {
   StyledTooltip,
   defaultBorderRadius,
+  lightGray,
   secondaryDark,
   vscBackground,
   vscForeground,
@@ -74,7 +75,7 @@ const CircleDiv = styled.div`
 interface PillButtonProps {
   onHover?: (arg0: boolean) => void;
   item: ContextItem;
-  warning?: string;
+  editing: boolean;
   index: number;
   addingHighlightedCode?: boolean;
   areMultipleItems?: boolean;
@@ -82,19 +83,13 @@ interface PillButtonProps {
 }
 
 interface StyledButtonProps {
-  warning: string;
+  borderColor?: string;
   editing?: boolean;
-  areMultipleItems?: boolean;
 }
 
 const StyledButton = styled(Button)<StyledButtonProps>`
   position: relative;
-  border-color: ${(props) =>
-    props.warning
-      ? "red"
-      : props.editing && props.areMultipleItems
-      ? vscForeground
-      : "transparent"};
+  border-color: ${(props) => props.borderColor || "transparent"};
   border-width: 1px;
   border-style: solid;
 
@@ -110,14 +105,22 @@ const PillButton = (props: PillButtonProps) => {
   const [isHovered, setIsHovered] = useState(false);
   const client = useContext(GUIClientContext);
 
+  const [warning, setWarning] = useState<string | undefined>(undefined);
+
+  useEffect(() => {
+    if (props.editing && props.item.content.length > 4000) {
+      setWarning("Editing such a large range may be slow");
+    } else {
+      setWarning(undefined);
+    }
+  }, [props.editing, props.item]);
+
   const dispatch = useDispatch();
 
   return (
     <div style={{ position: "relative" }}>
       <StyledButton
-        areMultipleItems={props.areMultipleItems}
-        warning={props.warning || ""}
-        editing={props.item.editing}
+        borderColor={props.editing ? (warning ? "red" : undefined) : undefined}
         onMouseEnter={() => {
           setIsHovered(true);
           if (props.onHover) {
@@ -182,22 +185,42 @@ const PillButton = (props: PillButtonProps) => {
           : "Edit this section"}
       </StyledTooltip>
       <StyledTooltip id={`delete-${props.index}`}>Delete</StyledTooltip>
-      {props.warning && (
-        <>
-          <CircleDiv
-            data-tooltip-id={`circle-div-${props.item.description.name}`}
-          >
-            <ExclamationTriangleIcon
-              style={{ margin: "auto" }}
-              width="1.0em"
-              strokeWidth={2}
-            />
-          </CircleDiv>
-          <StyledTooltip id={`circle-div-${props.item.description.name}`}>
-            {props.warning}
-          </StyledTooltip>
-        </>
-      )}
+      {props.editing &&
+        (warning ? (
+          <>
+            <CircleDiv
+              data-tooltip-id={`circle-div-${props.item.description.name}`}
+            >
+              <ExclamationTriangleIcon
+                style={{ margin: "auto" }}
+                width="1.0em"
+                strokeWidth={2}
+              />
+            </CircleDiv>
+            <StyledTooltip id={`circle-div-${props.item.description.name}`}>
+              {warning}
+            </StyledTooltip>
+          </>
+        ) : (
+          <>
+            <CircleDiv
+              data-tooltip-id={`circle-div-${props.item.description.name}`}
+              style={{
+                backgroundColor: secondaryDark,
+                border: `0.5px solid ${lightGray}`,
+              }}
+            >
+              <PaintBrushIcon
+                style={{ margin: "auto" }}
+                width="1.0em"
+                strokeWidth={2}
+              />
+            </CircleDiv>
+            <StyledTooltip id={`circle-div-${props.item.description.name}`}>
+              Editing this range
+            </StyledTooltip>
+          </>
+        ))}
     </div>
   );
 };
