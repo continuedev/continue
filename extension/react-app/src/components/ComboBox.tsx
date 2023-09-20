@@ -594,7 +594,6 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
         >
           <TrashIcon width="1.4em" height="1.4em" />
         </HiddenHeaderButtonWithText>
-        <div className="bg-white">hi</div>
         {props.selectedContextItems.map((item, idx) => {
           return (
             <PillButton

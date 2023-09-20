@@ -294,7 +294,9 @@ class Autopilot(ContinueBaseModel):
         self._retry_queue.post(str(index), None)
 
     async def delete_at_index(self, index: int):
-        self.history.timeline[index].step.hide = True
+        if not self.history.timeline[index].active:
+            self.history.timeline[index].step.hide = True
+
         self.history.timeline[index].deleted = True
         self.history.timeline[index].active = False
 
