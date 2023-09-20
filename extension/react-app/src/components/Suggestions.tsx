@@ -156,6 +156,7 @@ function SuggestionsArea(props: { onClick: (textInput: string) => void }) {
                 disabled={stage > 0 && !codeIsHighlighted}
                 {...suggestion}
                 onClick={() => {
+                  if (stage > 0 && !codeIsHighlighted) return;
                   props.onClick(suggestion.textInput);
                   setStage(stage + 1);
                   localStorage.setItem("stage", (stage + 1).toString());

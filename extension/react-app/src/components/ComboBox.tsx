@@ -20,7 +20,9 @@ import HeaderButtonWithText from "./HeaderButtonWithText";
 import {
   ArrowLeftIcon,
   ArrowRightIcon,
+  FolderIcon,
   MagnifyingGlassIcon,
+  PlusIcon,
 } from "@heroicons/react/24/outline";
 import { ContextItem } from "../../../schema/FullState";
 import { postVscMessage } from "../vscode";
@@ -36,6 +38,7 @@ import { RootStore } from "../redux/store";
 import SelectContextGroupDialog from "./dialogs/SelectContextGroupDialog";
 import AddContextGroupDialog from "./dialogs/AddContextGroupDialog";
 import SuggestionsArea from "./Suggestions";
+import { useNavigate } from "react-router-dom";
 
 const SEARCH_INDEX_NAME = "continue_context_items";
 
@@ -156,6 +159,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
   const workspacePaths = useSelector(
     (state: RootStore) => state.config.workspacePaths
   );
+  const navigate = useNavigate();
 
   const [history, setHistory] = React.useState<string[]>([]);
   // The position of the current command you are typing now, so the one that will be appended to history once you press enter
@@ -175,6 +179,9 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
 
   const sessionId = useSelector(
     (state: RootStore) => state.serverState.session_info?.session_id
+  );
+  const timeline = useSelector(
+    (state: RootStore) => state.serverState.history.timeline
   );
 
   useEffect(() => {
@@ -803,6 +810,37 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
               </Li>
             ))}
         </Ul>
+
+        <div
+          style={{
+            position: "absolute",
+            bottom: "-20px",
+            right: "10px",
+            display: "flex",
+          }}
+        >
+          {timeline.filter((n) => !n.step.hide).length > 0 && (
+            <HeaderButtonWithText
+              onClick={() => {
+                if (timeline.filter((n) => !n.step.hide).length > 0) {
+                  client?.loadSession(undefined);
+                }
+              }}
+              text="New Session (⌥⌘N)"
+            >
+              <PlusIcon width="1.4em" height="1.4em" />
+            </HeaderButtonWithText>
+          )}
+
+          <HeaderButtonWithText
+            onClick={() => {
+              navigate("/history");
+            }}
+            text="History"
+          >
+            <FolderIcon width="1.4em" height="1.4em" />
+          </HeaderButtonWithText>
+        </div>
       </div>
       {props.selectedContextItems.length === 0 &&
         (downshiftProps.inputValue?.startsWith("/edit") ||
