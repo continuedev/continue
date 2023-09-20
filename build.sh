@@ -12,11 +12,24 @@ python3 -m venv env
 
 # 3. Install the required packages
 pip install -r continuedev/requirements.txt
-
 pip install pyinstaller
 
-# 4. Call PyInstaller from within the virtual environment
-env/bin/pyinstaller run.spec
+# 4. Detect M1 architecture or allow manual override
+if [ "$1" = "m1" ]; then
+    SPEC_FILE="run.m1.spec"
+elif [ "$1" = "regular" ]; then
+    SPEC_FILE="run.spec"
+else
+    ARCH=$(uname -m)
+    if [ "$ARCH" = "arm64" ]; then
+        SPEC_FILE="run.m1.spec"
+    else
+        SPEC_FILE="run.spec"
+    fi
+fi
 
-# 5. Deactivate the virtual environment
+# 5. Call PyInstaller from within the virtual environment
+env/bin/pyinstaller $SPEC_FILE
+
+# 6. Deactivate the virtual environment
 deactivate
