@@ -85,7 +85,8 @@ class Models(BaseModel):
 
     def set_system_message(self, msg: str):
         for model in self.all_models:
-            model.system_message = msg
+            if model.system_message is None:
+                model.system_message = msg
 
     async def start(self, sdk: "ContinueSDK"):
         """Start each of the LLMs, or fall back to default"""
