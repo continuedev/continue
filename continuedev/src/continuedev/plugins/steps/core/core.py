@@ -110,7 +110,7 @@ class ShellCommandsStep(Step):
             return f"Error when running shell commands:\n```\n{self._err_text}\n```"
 
         cmds_str = "\n".join(self.cmds)
-        return await models.medium.complete(
+        return await models.summzarize.complete(
             f"{cmds_str}\n\nSummarize what was done in these shell commands, using markdown bullet points:"
         )
 
@@ -184,7 +184,7 @@ class DefaultModelEditCodeStep(Step):
     summary_prompt: str = "Please give brief a description of the changes made above using markdown bullet points. Be concise:"
 
     async def describe(self, models: Models) -> Coroutine[str, None, None]:
-        name = await models.medium.complete(
+        name = await models.summzarize.complete(
             f"Write a very short title to describe this requested change (no quotes): '{self.user_input}'. This is the title:"
         )
         self.name = remove_quotes_and_escapes(name)
@@ -830,7 +830,7 @@ Please output the code to be inserted at the cursor in order to fulfill the user
         else:
             self.name = "Generating summary"
             self.description = ""
-            async for chunk in sdk.models.medium.stream_complete(
+            async for chunk in sdk.models.summzarize.stream_complete(
                 dedent(
                     f"""\
             Diff summary: "{self.user_input}"

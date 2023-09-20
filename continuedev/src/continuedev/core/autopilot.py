@@ -544,7 +544,7 @@ class Autopilot(ContinueBaseModel):
                 if self.continue_sdk.config.disable_summaries:
                     title = user_input
                 else:
-                    title = await self.continue_sdk.models.medium.complete(
+                    title = await self.continue_sdk.models.summzarize.complete(
                         f'Give a short title to describe the current chat session. Do not put quotes around the title. The first message was: "{user_input}". Do not use more than 10 words. The title is: ',
                         max_tokens=20,
                         log=False,

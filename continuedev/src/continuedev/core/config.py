@@ -49,7 +49,7 @@ class ContinueConfig(BaseModel):
     models: Models = Field(
         Models(
             default=OpenAIFreeTrial(model="gpt-4"),
-            medium=OpenAIFreeTrial(model="gpt-3.5-turbo"),
+            summzarize=OpenAIFreeTrial(model="gpt-3.5-turbo"),
         ),
         description="Configuration for the models used by Continue. Read more about how to configure models in the documentation.",
     )

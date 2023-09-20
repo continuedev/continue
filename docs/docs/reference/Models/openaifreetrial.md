@@ -16,7 +16,7 @@ config = ContinueConfig(
     ...
     models=Models(
         default=OpenAIFreeTrial(model="gpt-4", api_key=API_KEY),
-        medium=OpenAIFreeTrial(model="gpt-3.5-turbo", api_key=API_KEY)
+        summzarize=OpenAIFreeTrial(model="gpt-3.5-turbo", api_key=API_KEY)
     )
 )
 ```

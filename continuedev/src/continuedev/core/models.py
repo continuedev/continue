@@ -20,9 +20,7 @@ class ContinueSDK(BaseModel):
 
 ALL_MODEL_ROLES = [
     "default",
-    "small",
-    "medium",
-    "large",
+    "summzarize",
     "edit",
     "chat",
 ]
@@ -59,9 +57,7 @@ class Models(BaseModel):
     """Main class that holds the current model configuration"""
 
     default: LLM
-    small: Optional[LLM] = None
-    medium: Optional[LLM] = None
-    large: Optional[LLM] = None
+    summzarize: Optional[LLM] = None
     edit: Optional[LLM] = None
     chat: Optional[LLM] = None
 
