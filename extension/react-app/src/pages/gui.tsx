@@ -37,8 +37,12 @@ import {
   ChatBubbleOvalLeftIcon,
   CodeBracketSquareIcon,
   ExclamationTriangleIcon,
+  FolderIcon,
+  PlusIcon,
 } from "@heroicons/react/24/outline";
 import FreeTrialLimitReachedDialog from "../components/dialogs/FreeTrialLimitReachedDialog";
+import HeaderButtonWithText from "../components/HeaderButtonWithText";
+import { useNavigate } from "react-router-dom";
 
 const TopGuiDiv = styled.div`
   overflow-y: scroll;
@@ -81,6 +85,14 @@ const UserInputQueueItem = styled.div`
   text-align: center;
 `;
 
+const GUIHeaderDiv = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px;
+  border-bottom: 0.5px solid ${lightGray};
+`;
+
 interface GUIProps {
   firstObservation?: any;
 }
@@ -90,6 +102,7 @@ function GUI(props: GUIProps) {
   const client = useContext(GUIClientContext);
   const posthog = usePostHog();
   const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   // #endregion
 
@@ -107,6 +120,9 @@ function GUI(props: GUIProps) {
   );
   const selected_context_items = useSelector(
     (state: RootStore) => state.serverState.selected_context_items
+  );
+  const sessionTitle = useSelector(
+    (state: RootStore) => state.serverState.session_info?.title
   );
 
   // #endregion
@@ -484,6 +500,34 @@ function GUI(props: GUIProps) {
         }
       }}
     >
+      <GUIHeaderDiv>
+        <h3 className="text-lg font-bold m-0">
+          {sessionTitle || "New Session"}
+        </h3>
+        <div className="flex">
+          {history.timeline.filter((n) => !n.step.hide).length > 0 && (
+            <HeaderButtonWithText
+              onClick={() => {
+                if (history.timeline.filter((n) => !n.step.hide).length > 0) {
+                  client?.loadSession(undefined);
+                }
+              }}
+              text="New Session (⌥⌘N)"
+            >
+              <PlusIcon width="1.4em" height="1.4em" />
+            </HeaderButtonWithText>
+          )}
+
+          <HeaderButtonWithText
+            onClick={() => {
+              navigate("/history");
+            }}
+            text="History"
+          >
+            <FolderIcon width="1.4em" height="1.4em" />
+          </HeaderButtonWithText>
+        </div>
+      </GUIHeaderDiv>
       {showLoading && typeof client === "undefined" && (
         <>
           <RingLoader />

@@ -867,37 +867,6 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
               </Li>
             ))}
         </Ul>
-
-        <div
-          style={{
-            position: "absolute",
-            bottom: "-20px",
-            right: "10px",
-            display: "flex",
-          }}
-        >
-          {timeline.filter((n) => !n.step.hide).length > 0 && (
-            <HeaderButtonWithText
-              onClick={() => {
-                if (timeline.filter((n) => !n.step.hide).length > 0) {
-                  client?.loadSession(undefined);
-                }
-              }}
-              text="New Session (⌥⌘N)"
-            >
-              <PlusIcon width="1.4em" height="1.4em" />
-            </HeaderButtonWithText>
-          )}
-
-          <HeaderButtonWithText
-            onClick={() => {
-              navigate("/history");
-            }}
-            text="History"
-          >
-            <FolderIcon width="1.4em" height="1.4em" />
-          </HeaderButtonWithText>
-        </div>
       </div>
       {props.selectedContextItems.length === 0 &&
         (downshiftProps.inputValue?.startsWith("/edit") ||

@@ -186,7 +186,7 @@ class GUIProtocolServer:
     def on_show_logs_at_index(self, index: int):
         name = "continue_logs.txt"
         logs = "\n\n############################################\n\n".join(
-            ["This is a log of the prompts sent to the LLM during this step"]
+            ["This is the prompt sent to the LLM during this step"]
             + self.session.autopilot.continue_sdk.history.timeline[index].logs
         )
         create_async_task(
@@ -197,8 +197,9 @@ class GUIProtocolServer:
     def show_context_virtual_file(self):
         async def async_stuff():
             msgs = await self.session.autopilot.continue_sdk.get_chat_context()
-            ctx = "\n\n-----------------------\n\n".join(
-                list(map(lambda x: x.content, msgs))
+            ctx = "\n\n-----------------------------------\n\n".join(
+                ["This is the exact context that will be passed to the LLM"]
+                + list(map(lambda x: x.content, msgs))
             )
             await self.session.autopilot.ide.showVirtualFile(
                 "Continue - Selected Context", ctx

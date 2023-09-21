@@ -27,7 +27,6 @@ export const Button = styled.button`
   }
 
   &:hover:enabled {
-    background-color: ${buttonColorHover};
     cursor: pointer;
   }
 `;
