@@ -1,9 +1,11 @@
 # -*- mode: python ; coding: utf-8 -*-
 import certifi
+import os
 from PyInstaller.utils.hooks import copy_metadata
 
 block_cipher = None
 
+chroma_toc = list(map(lambda x: (x[1], os.path.dirname(x[0])), Tree('./env/lib/python3.11/site-packages/chromadb/migrations', prefix="chromadb/migrations")))
 
 a = Analysis(
     ['run.py'],
@@ -12,12 +14,21 @@ a = Analysis(
     datas=[
         ('continuedev', 'continuedev'),
         (certifi.where(), 'ca_bundle'),
-        ] + copy_metadata('replicate'),
-    hiddenimports=['anthropic', 'github', 'ripgrepy', 'bs4', 'redbaron'],
+        ] + copy_metadata('replicate') + chroma_toc,
+    hiddenimports=[
+        'anthropic', 'github', 'ripgrepy', 'bs4', 'redbaron',
+        'chromadb', 'onnxruntime',
+        'chromadb.telemetry.posthog',
+        'chromadb.api.segment', 'chromadb.db.impl',
+        'chromadb.db.impl.sqlite', 'chromadb.migrations',
+        'chromadb.migrations.embeddings_queue', 'chromadb.migrations.sysdb',
+        'chromadb.migrations.metadb', 'chromadb.segment.impl',
+        'chromadb.segment.impl.manager', 'chromadb.segment.impl.manager.local'
+    ],
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
-    excludes=['numpy'],
+    excludes=[],
     win_no_prefer_redirects=False,
     win_private_assemblies=False,
     cipher=block_cipher,

@@ -1,26 +1,32 @@
+import asyncio
 import json
 import os
 import subprocess
 from functools import cached_property
 from typing import List, Tuple
 
-from llama_index import (
-    Document,
-    GPTVectorStoreIndex,
-    StorageContext,
-    load_index_from_storage,
-)
-from llama_index.langchain_helpers.text_splitter import TokenTextSplitter
+import chromadb
+from chromadb.config import Settings
 
+from ...core.sdk import ContinueSDK
 from ..util.logging import logger
-from .update import filter_ignored_files, load_gpt_index_documents
+from ..util.paths import getEmbeddingsPathForBranch
+from .update import filter_ignored_files
 
 
 class ChromaIndexManager:
     workspace_dir: str
+    client: chromadb.Client
 
     def __init__(self, workspace_dir: str):
         self.workspace_dir = workspace_dir
+        self.client = chromadb.PersistentClient(
+            path=os.path.join(
+                getEmbeddingsPathForBranch(self.workspace_dir, self.current_branch),
+                "chroma",
+            ),
+            settings=Settings(anonymized_telemetry=False),
+        )
 
     @cached_property
     def current_commit(self) -> str:
@@ -46,9 +52,11 @@ class ChromaIndexManager:
 
     @cached_property
     def index_dir(self) -> str:
-        return os.path.join(
-            self.workspace_dir, ".continue", "chroma", self.current_branch
-        )
+        return getEmbeddingsPathForBranch(self.workspace_dir, self.current_branch)
+
+    @property
+    def index_name(self) -> str:
+        return f"{self.workspace_dir}/{self.current_branch}"
 
     @cached_property
     def git_root_dir(self):
@@ -67,43 +75,41 @@ class ChromaIndexManager:
     def check_index_exists(self):
         return os.path.exists(os.path.join(self.index_dir, "metadata.json"))
 
-    def create_codebase_index(self):
+    @property
+    def collection(self):
+        return self.client.get_or_create_collection(name=self.current_branch)
+
+    async def create_codebase_index(self, sdk: ContinueSDK):
         """Create a new index for the current branch."""
-        if not self.check_index_exists():
-            os.makedirs(self.index_dir)
-        else:
+        if self.check_index_exists():
             return
 
-        documents = load_gpt_index_documents(self.workspace_dir)
+        files = await sdk.ide.listDirectoryContents(sdk.ide.workspace_directory, True)
 
-        chunks = {}
-        doc_chunks = []
-        for doc in documents:
-            text_splitter = TokenTextSplitter()
-            try:
-                text_chunks = text_splitter.split_text(doc.text)
-            except:
-                logger.warning(f"ERROR (probably found special token): {doc.text}")
-                continue  # lol
-            filename = doc.extra_info["filename"]
-            chunks[filename] = len(text_chunks)
-            for i, text in enumerate(text_chunks):
-                doc_chunks.append(Document(text, doc_id=f"{filename}::{i}"))
+        tasks = []
+        for file in files:
+            tasks.append(sdk.ide.readFile(file))
+
+        documents = await asyncio.gather(*tasks)
+
+        self.collection.add(
+            documents=documents,
+            metadatas=[{"filepath": file} for file in files],
+            ids=files,
+        )
 
         with open(f"{self.index_dir}/metadata.json", "w") as f:
-            json.dump({"commit": self.current_commit, "chunks": chunks}, f, indent=4)
-
-        index = GPTVectorStoreIndex([])
-
-        for chunk in doc_chunks:
-            index.insert(chunk)
-
-        # d = 1536 # Dimension of text-ada-embedding-002
-        # faiss_index = faiss.IndexFlatL2(d)
-        # index = GPTFaissIndex(documents, faiss_index=faiss_index)
-        # index.save_to_disk(f"{index_dir_for(branch)}/index.json", faiss_index_save_path=f"{index_dir_for(branch)}/index_faiss_core.index")
-
-        index.storage_context.persist(persist_dir=self.index_dir)
+            json.dump(
+                {
+                    "commit": self.current_commit,
+                    "chunks": {
+                        file: 1
+                        for file in files  # This is the number of chunks per file
+                    },
+                },
+                f,
+                indent=4,
+            )
 
         logger.debug("Codebase index created")
 
@@ -144,8 +150,6 @@ class ChromaIndexManager:
         if not self.check_index_exists():
             self.create_codebase_index()
         else:
-            # index = GPTFaissIndex.load_from_disk(f"{index_dir_for(branch)}/index.json", faiss_index_save_path=f"{index_dir_for(branch)}/index_faiss_core.index")
-            index = GPTVectorStoreIndex.load_from_disk(f"{self.index_dir}/index.json")
             modified_files, deleted_files = self.get_modified_deleted_files()
 
             with open(f"{self.index_dir}/metadata.json", "r") as f:
@@ -154,7 +158,7 @@ class ChromaIndexManager:
             for file in deleted_files:
                 num_chunks = metadata["chunks"][file]
                 for i in range(num_chunks):
-                    index.delete(f"{file}::{i}")
+                    self.collection.delete(file)
 
                 del metadata["chunks"][file]
 
@@ -165,20 +169,17 @@ class ChromaIndexManager:
                     num_chunks = metadata["chunks"][file]
 
                     for i in range(num_chunks):
-                        index.delete(f"{file}::{i}")
+                        self.collection.delete(file)
 
                     logger.debug(f"Deleted old version of {file}")
 
                 with open(file, "r") as f:
-                    text = f.read()
+                    f.read()
 
-                text_splitter = TokenTextSplitter()
-                text_chunks = text_splitter.split_text(text)
+                # for i, text in enumerate(text_chunks):
+                #     index.insert(Document(text=text, doc_id=f"{file}::{i}"))
 
-                for i, text in enumerate(text_chunks):
-                    index.insert(Document(text, doc_id=f"{file}::{i}"))
-
-                metadata["chunks"][file] = len(text_chunks)
+                # metadata["chunks"][file] = len(text_chunks)
 
                 logger.debug(f"Inserted new version of {file}")
 
@@ -189,30 +190,12 @@ class ChromaIndexManager:
 
             logger.debug("Codebase index updated")
 
-    def query_codebase_index(self, query: str) -> str:
+    def query_codebase_index(self, query: str, n: int = 4) -> str:
         """Query the codebase index."""
         if not self.check_index_exists():
             logger.debug(f"No index found for the codebase at {self.index_dir}")
             return ""
 
-        storage_context = StorageContext.from_defaults(persist_dir=self.index_dir)
-        index = load_index_from_storage(storage_context)
-        # index = GPTVectorStoreIndex.load_from_disk(path)
-        engine = index.as_query_engine()
-        return engine.query(query)
+        results = self.collection.query(query_texts=[query], n_results=n)
 
-    def query_additional_index(self, query: str) -> str:
-        """Query the additional index."""
-        index = GPTVectorStoreIndex.load_from_disk(
-            os.path.join(self.index_dir, "additional_index.json")
-        )
-        return index.query(query)
-
-    def replace_additional_index(self, info: str):
-        """Replace the additional index with the given info."""
-        with open(f"{self.index_dir}/additional_context.txt", "w") as f:
-            f.write(info)
-        documents = [Document(info)]
-        index = GPTVectorStoreIndex(documents)
-        index.save_to_disk(f"{self.index_dir}/additional_index.json")
-        logger.debug("Additional index replaced")
+        return results

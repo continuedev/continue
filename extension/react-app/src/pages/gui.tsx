@@ -234,9 +234,9 @@ function GUI(props: GUIProps) {
         return;
       }
 
-      // cmd+enter to /edit
+      // cmd+enter to /codebase
       if (isMetaEquivalentKeyPressed(event)) {
-        input = `/edit ${input}`;
+        input = `/codebase ${input}`;
       }
       (mainTextInputRef.current as any).setInputValue("");
       if (!client) {
