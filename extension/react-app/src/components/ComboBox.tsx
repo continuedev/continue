@@ -41,6 +41,7 @@ import SelectContextGroupDialog from "./dialogs/SelectContextGroupDialog";
 import AddContextGroupDialog from "./dialogs/AddContextGroupDialog";
 import SuggestionsArea from "./Suggestions";
 import { useNavigate } from "react-router-dom";
+import ContinueButton from "./ContinueButton";
 
 const HiddenHeaderButtonWithText = styled.button`
   opacity: 0;
@@ -174,7 +175,7 @@ interface ComboBoxProps {
   items: { name: string; description: string; id?: string; content?: string }[];
   onInputValueChange: (inputValue: string) => void;
   disabled?: boolean;
-  onEnter: (e: React.KeyboardEvent<HTMLInputElement>) => void;
+  onEnter: (e?: React.KeyboardEvent<HTMLInputElement>) => void;
   selectedContextItems: ContextItem[];
   onToggleAddContext: () => void;
   addingHighlightedCode: boolean;
@@ -907,6 +908,10 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
             Inserting at cursor
           </div>
         )}
+      <ContinueButton
+        disabled={!(inputRef.current as any)?.value}
+        onClick={() => props.onEnter(undefined)}
+      />
     </>
   );
 });

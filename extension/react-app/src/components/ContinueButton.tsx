@@ -19,18 +19,17 @@ const StyledButton = styled(Button)<{
 
   opacity: ${(props) => (props.isDisabled ? 0.5 : 1.0)};
 
-  cursor: ${(props) => (props.isDisabled ? "auto" : "pointer")};
+  cursor: ${(props) => (props.isDisabled ? "default" : "pointer")};
 
-  ${(props) =>
-    props.isDisabled
-      ? ""
-      : `
-    &:hover {
-      transition-property: "background";
-      background-color: ${props.color || "#be1b55"}
+  &:hover:enabled {
+    background-color: ${(props) => props.color || "#be1b55"};
+    ${(props) =>
+      props.isDisabled
+        ? "cursor: default;"
+        : `
       opacity: 0.7;
-    }
-  `}
+      `}
+  }
 `;
 
 function ContinueButton(props: {

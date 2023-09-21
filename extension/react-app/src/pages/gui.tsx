@@ -475,15 +475,6 @@ function GUI(props: GUIProps) {
     };
   }, []);
 
-  const [disabled, setDisabled] = useState<boolean>(false);
-
-  useEffect(() => {
-    setDisabled(
-      (mainTextInputRef.current as any)?.inputValue?.trim() === "" ||
-        (mainTextInputRef.current as any)?.inputValue?.trim() === "/"
-    );
-  }, [(mainTextInputRef.current as any)?.inputValue]);
-
   return (
     <TopGuiDiv
       ref={topGuiDivRef}
@@ -694,8 +685,8 @@ function GUI(props: GUIProps) {
         ref={mainTextInputRef}
         onEnter={(e) => {
           onMainTextInput(e);
-          e.stopPropagation();
-          e.preventDefault();
+          e?.stopPropagation();
+          e?.preventDefault();
         }}
         onInputValueChange={() => {}}
         items={availableSlashCommands}
@@ -705,7 +696,6 @@ function GUI(props: GUIProps) {
         }}
         addingHighlightedCode={adding_highlighted_code}
       />
-      <ContinueButton disabled={disabled} onClick={onMainTextInput} />
     </TopGuiDiv>
   );
 }
