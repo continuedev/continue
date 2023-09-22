@@ -8,6 +8,7 @@ import { useNavigate } from "react-router-dom";
 import { RootStore } from "../redux/store";
 import { BookOpenIcon } from "@heroicons/react/24/outline";
 import HeaderButtonWithText from "./HeaderButtonWithText";
+import ReactDOM from "react-dom";
 
 export enum ModelTag {
   "Requires API Key" = "Requires API Key",
@@ -61,7 +62,10 @@ function ModelCard(props: ModelCardProps) {
   return (
     <Div
       color={buttonColor}
-      onClick={() => {
+      onClick={(e) => {
+        if ((e.target as any).closest("a")) {
+          return;
+        }
         client?.addModelForRole(
           "*",
           props.modelInfo.class,
@@ -97,6 +101,7 @@ function ModelCard(props: ModelCardProps) {
         );
       })}
       <p>{props.modelInfo.description}</p>
+
       <a
         style={{
           position: "absolute",
@@ -105,9 +110,8 @@ function ModelCard(props: ModelCardProps) {
         }}
         href={`https://continue.dev/docs/reference/Models/${props.modelInfo.class.toLowerCase()}`}
         target="_blank"
-        onClick={(e) => e.stopPropagation()}
       >
-        <HeaderButtonWithText text="Go to reference">
+        <HeaderButtonWithText text="Read the docs">
           <BookOpenIcon width="1.6em" height="1.6em" />
         </HeaderButtonWithText>
       </a>

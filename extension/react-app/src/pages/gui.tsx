@@ -1,6 +1,5 @@
 import styled from "styled-components";
-import { defaultBorderRadius, lightGray } from "../components";
-import ContinueButton from "../components/ContinueButton";
+import { TextInput, defaultBorderRadius, lightGray } from "../components";
 import { FullState } from "../../../schema/FullState";
 import {
   useEffect,
@@ -41,7 +40,7 @@ import {
   FolderIcon,
   PlusIcon,
 } from "@heroicons/react/24/outline";
-import FreeTrialLimitReachedDialog from "../components/dialogs/FreeTrialLimitReachedDialog";
+import FTCDialog from "../components/dialogs/FTCDialog";
 import HeaderButtonWithText from "../components/HeaderButtonWithText";
 import { useNavigate } from "react-router-dom";
 import SuggestionsArea from "../components/Suggestions";
@@ -54,6 +53,20 @@ const TopGuiDiv = styled.div`
   /* Hide scrollbar for Chrome, Safari and Opera */
   &::-webkit-scrollbar {
     display: none;
+  }
+`;
+
+const TitleTextInput = styled(TextInput)`
+  border: none;
+  outline: none;
+
+  font-size: 16px;
+  font-weight: bold;
+  margin: 0;
+  margin-right: 8px;
+
+  &:focus {
+    outline: 1px solid ${lightGray};
   }
 `;
 
@@ -286,24 +299,22 @@ function GUI(props: GUIProps) {
         return;
       }
 
-      // Increment localstorage counter for usage of free trial
       if (
         defaultModel === "OpenAIFreeTrial" &&
         (!input.startsWith("/") || input.startsWith("/edit"))
       ) {
-        const freeTrialCounter = localStorage.getItem("freeTrialCounter");
-        if (freeTrialCounter) {
-          const usages = parseInt(freeTrialCounter);
-          localStorage.setItem("freeTrialCounter", (usages + 1).toString());
+        const ftc = localStorage.getItem("ftc");
+        if (ftc) {
+          const u = parseInt(ftc);
+          localStorage.setItem("ftc", (u + 1).toString());
 
-          if (usages >= 250) {
-            console.log("Free trial limit reached");
+          if (u >= 250) {
             dispatch(setShowDialog(true));
-            dispatch(setDialogMessage(<FreeTrialLimitReachedDialog />));
+            dispatch(setDialogMessage(<FTCDialog />));
             return;
           }
         } else {
-          localStorage.setItem("freeTrialCounter", "1");
+          localStorage.setItem("ftc", "1");
         }
       }
 
@@ -492,9 +503,25 @@ function GUI(props: GUIProps) {
       }}
     >
       <GUIHeaderDiv>
-        <h3 className="text-lg font-bold m-0">
-          {sessionTitle || "New Session"}
-        </h3>
+        <TitleTextInput
+          onClick={(e) => {
+            // Select all text
+            (e.target as any).setSelectionRange(
+              0,
+              (e.target as any).value.length
+            );
+          }}
+          defaultValue={sessionTitle || "New Session"}
+          onBlur={(e) => {
+            client?.setCurrentSessionTitle(e.target.value);
+          }}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              (e.target as any).blur();
+            }
+          }}
+        />
         <div className="flex">
           {history.timeline.filter((n) => !n.step.hide).length > 0 && (
             <HeaderButtonWithText

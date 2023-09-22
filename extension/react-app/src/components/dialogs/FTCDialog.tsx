@@ -13,7 +13,7 @@ const GridDiv = styled.div`
   align-items: center;
 `;
 
-function FreeTrialLimitReachedDialog() {
+function FTCDialog() {
   const navigate = useNavigate();
   const [apiKey, setApiKey] = React.useState("");
   const client = useContext(GUIClientContext);
@@ -69,4 +69,4 @@ function FreeTrialLimitReachedDialog() {
   );
 }
 
-export default FreeTrialLimitReachedDialog;
+export default FTCDialog;

@@ -99,6 +99,8 @@ class GUIProtocolServer:
             self.on_retry_at_index(data["index"])
         elif message_type == "clear_history":
             self.on_clear_history()
+        elif message_type == "set_current_session_title":
+            self.set_current_session_title(data["title"])
         elif message_type == "delete_at_index":
             self.on_delete_at_index(data["index"])
         elif message_type == "delete_context_with_ids":
@@ -228,6 +230,9 @@ class GUIProtocolServer:
         create_async_task(load_and_tell_to_reconnect(), self.on_error)
 
         posthog_logger.capture_event("load_session", {"session_id": session_id})
+
+    def set_current_session_title(self, title: str):
+        self.session.autopilot.set_current_session_title(title)
 
     def set_system_message(self, message: str):
         self.session.autopilot.continue_sdk.config.system_message = message

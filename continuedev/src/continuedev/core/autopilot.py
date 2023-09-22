@@ -562,6 +562,14 @@ class Autopilot(ContinueBaseModel):
         self._should_halt = False
         return None
 
+    def set_current_session_title(self, title: str):
+        self.session_info = SessionInfo(
+            title=title,
+            session_id=self.ide.session_id,
+            date_created=str(time.time()),
+            workspace_directory=self.ide.workspace_directory,
+        )
+
     async def create_title(self, backup: str = None):
         # Use the first input and first response to create title for session info, and make the session saveable
         if self.session_info is not None and self.session_info.title is not None:
@@ -584,12 +592,7 @@ class Autopilot(ContinueBaseModel):
             )
             title = remove_quotes_and_escapes(title)
 
-        self.session_info = SessionInfo(
-            title=title,
-            session_id=self.ide.session_id,
-            date_created=str(time.time()),
-            workspace_directory=self.ide.workspace_directory,
-        )
+        self.set_current_session_title(title)
         await self.update_subscribers()
         dev_data_logger.capture("new_session", self.session_info.dict())
 

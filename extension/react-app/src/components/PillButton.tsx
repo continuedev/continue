@@ -213,8 +213,10 @@ const PillButton = (props: PillButtonProps) => {
             <CircleDiv
               data-tooltip-id={`circle-div-${props.item.description.name}`}
               style={{
-                backgroundColor: secondaryDark,
+                backgroundColor: "#8800aa55",
                 border: `0.5px solid ${lightGray}`,
+                padding: "1px",
+                zIndex: 1,
               }}
             >
               <PaintBrushIcon

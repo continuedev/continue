@@ -195,12 +195,9 @@ const Layout = () => {
               <ModelSelect />
               {defaultModel === "OpenAIFreeTrial" &&
                 (location.pathname === "/settings" ||
-                  parseInt(localStorage.getItem("freeTrialCounter") || "0") >=
-                    125) && (
+                  parseInt(localStorage.getItem("ftc") || "0") >= 125) && (
                   <ProgressBar
-                    completed={parseInt(
-                      localStorage.getItem("freeTrialCounter") || "0"
-                    )}
+                    completed={parseInt(localStorage.getItem("ftc") || "0")}
                     total={250}
                   />
                 )}
