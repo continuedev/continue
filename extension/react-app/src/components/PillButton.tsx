@@ -145,7 +145,9 @@ const PillButton = (props: PillButtonProps) => {
           <GridDiv
             style={{
               gridTemplateColumns:
-                props.item.editable && props.areMultipleItems
+                props.item.editable &&
+                props.areMultipleItems &&
+                props.editingAny
                   ? "1fr 1fr"
                   : "1fr",
               backgroundColor: vscBackground,

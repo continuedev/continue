@@ -1,23 +1,31 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import styled from "styled-components";
 import {
+  StyledTooltip,
   defaultBorderRadius,
   lightGray,
   secondaryDark,
   vscForeground,
 } from ".";
-import { PaperAirplaneIcon, XMarkIcon } from "@heroicons/react/24/outline";
+import {
+  PaperAirplaneIcon,
+  SparklesIcon,
+  XMarkIcon,
+} from "@heroicons/react/24/outline";
 import { useSelector } from "react-redux";
 import { RootStore } from "../redux/store";
 import HeaderButtonWithText from "./HeaderButtonWithText";
 
 const Div = styled.div<{ isDisabled: boolean }>`
   border-radius: ${defaultBorderRadius};
-  cursor: ${(props) => (props.isDisabled ? "auto" : "pointer")};
+  cursor: ${(props) => (props.isDisabled ? "not-allowed" : "pointer")};
   padding: 8px 8px;
-  position: relative;
   background-color: ${secondaryDark};
   border: 1px solid transparent;
+
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 
   color: ${(props) => (props.isDisabled ? lightGray : vscForeground)};
 
@@ -30,7 +38,6 @@ const Div = styled.div<{ isDisabled: boolean }>`
 const P = styled.p`
   font-size: 13px;
   margin: 0;
-  cursor: default;
 `;
 
 interface SuggestionsDivProps {
@@ -45,69 +52,102 @@ function SuggestionsDiv(props: SuggestionsDivProps) {
   const [isHovered, setIsHovered] = useState(false);
 
   return (
-    <Div
-      onClick={props.onClick}
-      onMouseEnter={() => {
-        if (props.disabled) return;
-        setIsHovered(true);
-      }}
-      onMouseLeave={() => setIsHovered(false)}
-      isDisabled={props.disabled}
-    >
-      <P>{props.description}</P>
-      <PaperAirplaneIcon
-        width="1.6em"
-        height="1.6em"
-        className="absolute right-2 bottom-2"
-        style={{
-          opacity: isHovered ? 1 : 0,
-          backgroundColor: secondaryDark,
-          boxShadow: `1px 1px 10px ${secondaryDark}`,
-          borderRadius: defaultBorderRadius,
+    <>
+      <Div
+        data-tooltip-id={`suggestion-disabled-${props.textInput.replace(
+          " ",
+          ""
+        )}`}
+        onClick={props.onClick}
+        onMouseEnter={() => {
+          if (props.disabled) return;
+          setIsHovered(true);
         }}
-      />
-    </Div>
+        onMouseLeave={() => setIsHovered(false)}
+        isDisabled={props.disabled}
+      >
+        <P>{props.description}</P>
+        <PaperAirplaneIcon
+          width="1.6em"
+          height="1.6em"
+          style={{
+            opacity: isHovered ? 1 : 0,
+            backgroundColor: secondaryDark,
+            boxShadow: `1px 1px 10px ${secondaryDark}`,
+            borderRadius: defaultBorderRadius,
+          }}
+        />
+      </Div>
+      <StyledTooltip
+        id={`suggestion-disabled-${props.textInput.replace(" ", "")}`}
+        place="bottom"
+      >
+        Must highlight code first
+      </StyledTooltip>
+    </>
   );
 }
+
+const stageDescriptions = [
+  <p>Ask a question</p>,
+  <ol>
+    <li>Highlight code in the editor</li>
+    <li>Press cmd+M to select the code</li>
+    <li>Ask a question</li>
+  </ol>,
+  <ol>
+    <li>Highlight code in the editor</li>
+    <li>Press cmd+shift+M to select the code</li>
+    <li>Request and edit</li>
+  </ol>,
+];
 
 const suggestionsStages: any[][] = [
   [
     {
-      title: "Ask a question",
+      title: stageDescriptions[0],
       description: "How does merge sort work?",
       textInput: "How does merge sort work?",
     },
     {
-      title: "Ask a question",
+      title: stageDescriptions[0],
       description: "How do I sum over a column in SQL?",
       textInput: "How do I sum over a column in SQL?",
     },
   ],
   [
     {
-      title: "Highlight code, cmd+M, then ask a question",
+      title: stageDescriptions[1],
       description: "Is there any way to make this code more efficient?",
       textInput: "Is there any way to make this code more efficient?",
     },
     {
-      title: "Highlight code, cmd+M, then ask a question",
+      title: stageDescriptions[1],
       description: "What does this function do?",
       textInput: "What does this function do?",
     },
   ],
   [
     {
-      title: "Highlight code, cmd+shift+M, then request an edit",
+      title: stageDescriptions[2],
       description: "/edit write comments for this code",
       textInput: "/edit write comments for this code",
     },
     {
-      title: "Highlight code, cmd+shift+M, then request an edit",
+      title: stageDescriptions[2],
       description: "/edit make this code more efficient",
       textInput: "/edit make this code more efficient",
     },
   ],
 ];
+
+const TutorialDiv = styled.div`
+  margin: 4px;
+  position: relative;
+  background-color: #ff02;
+  border-radius: ${defaultBorderRadius};
+  padding: 8px 4px;
+`;
 
 function SuggestionsArea(props: { onClick: (textInput: string) => void }) {
   const [stage, setStage] = useState(
@@ -131,17 +171,29 @@ function SuggestionsArea(props: { onClick: (textInput: string) => void }) {
     setHide(false);
   }, [sessionId]);
 
+  const [numTutorialInputs, setNumTutorialInputs] = useState(0);
+
+  const inputsAreOnlyTutorial = useCallback(() => {
+    const inputs = timeline.filter(
+      (node) => !node.step.hide && node.step.name === "User Input"
+    );
+    return inputs.length - numTutorialInputs === 0;
+  }, [timeline, numTutorialInputs]);
+
   return (
     <>
-      {hide || timeline.some((node) => !node.step.hide) || stage >= 2 || (
-        <div className="m-2 relative">
-          <b className="ml-1">
-            Tutorial:{" "}
+      {hide || stage > 2 || !inputsAreOnlyTutorial() || (
+        <TutorialDiv>
+          <div className="flex">
+            <SparklesIcon width="1.3em" height="1.3em" color="yellow" />
+            <b className="ml-1">Tutorial</b>
+          </div>
+          <p style={{ color: lightGray }}>
             {stage < suggestionsStages.length &&
               suggestionsStages[stage][0]?.title}
-          </b>
+          </p>
           <HeaderButtonWithText
-            className="absolute right-1 top-0 cursor-pointer"
+            className="absolute right-1 top-1 cursor-pointer"
             text="Close Tutorial"
             onClick={() => {
               console.log("HIDE");
@@ -161,11 +213,12 @@ function SuggestionsArea(props: { onClick: (textInput: string) => void }) {
                   setStage(stage + 1);
                   localStorage.setItem("stage", (stage + 1).toString());
                   setHide(true);
+                  setNumTutorialInputs((prev) => prev + 1);
                 }}
               />
             ))}
           </div>
-        </div>
+        </TutorialDiv>
       )}
     </>
   );

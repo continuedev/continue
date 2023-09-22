@@ -50,6 +50,7 @@ fn bubble_sort<T: Ord>(values: &mut[T]) {
 \`\`\`\nIs there anything else I can answer?`,
       name: "Rust Bubble Sort",
     },
+    active: true,
   },
 ];
 

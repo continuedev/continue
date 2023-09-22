@@ -32,12 +32,12 @@ config = ContinueConfig(
     ...
     models=Models(
         default=OpenAIFreeTrial(model="gpt-4"),
-        summzarize=OpenAIFreeTrial(model="gpt-3.5-turbo")
+        summarize=OpenAIFreeTrial(model="gpt-3.5-turbo")
     )
 )
 ```
 
-The `default` and `summzarize` properties are different _model roles_. This allows different models to be used for different tasks. The available roles are `default`, `summzarize`, `edit`, and `chat`. `edit` is used when you use the '/edit' slash command, `chat` is used for all chat responses, and `summzarize` is used for summarizing. If not set, all roles will fall back to `default`. The values of these fields must be of the [`LLM`](https://github.com/continuedev/continue/blob/main/continuedev/src/continuedev/libs/llm/__init__.py) class, which implements methods for retrieving and streaming completions from an LLM.
+The `default` and `summarize` properties are different _model roles_. This allows different models to be used for different tasks. The available roles are `default`, `summarize`, `edit`, and `chat`. `edit` is used when you use the '/edit' slash command, `chat` is used for all chat responses, and `summarize` is used for summarizing. If not set, all roles will fall back to `default`. The values of these fields must be of the [`LLM`](https://github.com/continuedev/continue/blob/main/continuedev/src/continuedev/libs/llm/__init__.py) class, which implements methods for retrieving and streaming completions from an LLM.
 
 Below, we describe the `LLM` classes available in the Continue core library, and how they can be used.
 

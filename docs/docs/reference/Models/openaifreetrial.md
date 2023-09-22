@@ -16,7 +16,7 @@ config = ContinueConfig(
     ...
     models=Models(
         default=OpenAIFreeTrial(model="gpt-4", api_key=API_KEY),
-        summzarize=OpenAIFreeTrial(model="gpt-3.5-turbo", api_key=API_KEY)
+        summarize=OpenAIFreeTrial(model="gpt-3.5-turbo", api_key=API_KEY)
     )
 )
 ```
@@ -30,7 +30,6 @@ These classes support any models available through the OpenAI API, assuming your
 ## Properties
 
 <ClassPropertyRef name='llm' details='{&quot;$ref&quot;: &quot;#/definitions/LLM&quot;}' required={false} default=""/>
-
 
 ### Inherited Properties
 

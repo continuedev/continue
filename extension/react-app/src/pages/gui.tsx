@@ -8,6 +8,7 @@ import {
   useState,
   useContext,
   useLayoutEffect,
+  useCallback,
 } from "react";
 import { HistoryNode } from "../../../schema/HistoryNode";
 import StepContainer from "../components/StepContainer";
@@ -43,6 +44,7 @@ import {
 import FreeTrialLimitReachedDialog from "../components/dialogs/FreeTrialLimitReachedDialog";
 import HeaderButtonWithText from "../components/HeaderButtonWithText";
 import { useNavigate } from "react-router-dom";
+import SuggestionsArea from "../components/Suggestions";
 
 const TopGuiDiv = styled.div`
   overflow-y: scroll;
@@ -414,72 +416,61 @@ function GUI(props: GUIProps) {
 
   const onToggleAtIndex = (index: number) => {
     // Check if all steps after the User Input are closed
-    let userInputIndex = -1;
-    for (let i = index; i >= 0; i--) {
-      if (
-        history?.timeline.length > i &&
-        history.timeline[i].step.name === "User Input"
-      ) {
-        userInputIndex = i;
-        break;
-      }
-    }
-    if (userInputIndex > 0) {
-      let allStepsAfterUserInputAreClosed = true;
-      for (let i = userInputIndex + 1; i < stepsOpen.length; i++) {
-        if (i === index) continue;
-        if (
-          history?.timeline.length > i &&
-          history.timeline[i].step.name === "User Input"
-        ) {
-          break;
-        }
-        if (stepsOpen[i]) {
-          allStepsAfterUserInputAreClosed = false;
-          break;
-        }
-      }
-      if (allStepsAfterUserInputAreClosed) {
-        setStepsOpen((prev) => {
-          const nextStepsOpen = [...prev];
-          nextStepsOpen[userInputIndex] = false;
-          return nextStepsOpen;
-        });
-      }
-    }
-
+    const groupIndices = getStepsInUserInputGroup(index);
+    const userInputIndex = groupIndices[0];
     setStepsOpen((prev) => {
       const nextStepsOpen = [...prev];
       nextStepsOpen[index] = !nextStepsOpen[index];
+      const allStepsAfterUserInputAreClosed = !groupIndices.some((i) => {
+        nextStepsOpen[i];
+      });
+      if (allStepsAfterUserInputAreClosed) {
+        nextStepsOpen[userInputIndex] = false;
+      } else {
+        const allStepsAfterUserInputAreOpen = !groupIndices.some((i) => {
+          !nextStepsOpen[i];
+        });
+        if (allStepsAfterUserInputAreOpen) {
+          nextStepsOpen[userInputIndex] = true;
+        }
+      }
+
       return nextStepsOpen;
     });
   };
 
-  const getStepsInUserInputGroup = (index: number): number[] => {
-    const stepsInUserInputGroup: number[] = [];
-    for (let i = index; i >= 0; i--) {
-      if (
-        history?.timeline.length > i &&
-        history.timeline[i].step.name === "User Input" &&
-        history.timeline[i].step.hide === false
-      ) {
+  const getStepsInUserInputGroup = useCallback(
+    (index: number): number[] => {
+      // index is the index in the entire timeline, hidden steps included
+      const stepsInUserInputGroup: number[] = [];
+
+      // First find the closest above UserInputStep
+      for (let i = index; i >= 0; i--) {
+        if (
+          history?.timeline.length > i &&
+          history.timeline[i].step.name === "User Input" &&
+          history.timeline[i].step.hide === false
+        ) {
+          stepsInUserInputGroup.push(i);
+          break;
+        }
+      }
+      if (stepsInUserInputGroup.length === 0) return [];
+
+      for (let i = index + 1; i < history?.timeline.length; i++) {
+        if (
+          history?.timeline.length > i &&
+          history.timeline[i].step.name === "User Input" &&
+          history.timeline[i].step.hide === false
+        ) {
+          break;
+        }
         stepsInUserInputGroup.push(i);
       }
-    }
-    if (stepsInUserInputGroup.length === 0) return [];
-
-    for (let i = index + 1; i < history?.timeline.length; i++) {
-      if (
-        history?.timeline.length > i &&
-        history.timeline[i].step.name === "User Input" &&
-        history.timeline[i].step.hide === false
-      ) {
-        break;
-      }
-      stepsInUserInputGroup.push(i);
-    }
-    return stepsInUserInputGroup;
-  };
+      return stepsInUserInputGroup;
+    },
+    [history.timeline]
+  );
 
   useEffect(() => {
     const timeout = setTimeout(() => {
@@ -600,6 +591,11 @@ function GUI(props: GUIProps) {
         </>
       )}
       <br />
+      <SuggestionsArea
+        onClick={(textInput) => {
+          client?.sendMainInput(textInput);
+        }}
+      />
       <StepsDiv>
         {history?.timeline.map((node: HistoryNode, index: number) => {
           if (node.step.hide) return null;
@@ -623,13 +619,9 @@ function GUI(props: GUIProps) {
                       });
                     }}
                     onToggleAll={(isOpen: boolean) => {
-                      // Collapse all steps in the section
+                      // Collapse _all_ steps
                       setStepsOpen((prev) => {
-                        const nextStepsOpen = [...prev];
-                        getStepsInUserInputGroup(index).forEach((i) => {
-                          nextStepsOpen[i] = isOpen;
-                        });
-                        return nextStepsOpen;
+                        return prev.map((_) => isOpen);
                       });
                     }}
                     isToggleOpen={

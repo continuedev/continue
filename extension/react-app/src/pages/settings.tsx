@@ -72,7 +72,7 @@ const Slider = styled.input.attrs({ type: "range" })`
     border: none;
   }
 `;
-const ALL_MODEL_ROLES = ["default", "summzarize", "edit", "chat"];
+const ALL_MODEL_ROLES = ["default", "summarize", "edit", "chat"];
 
 function Settings() {
   const formMethods = useForm<ContinueConfig>();

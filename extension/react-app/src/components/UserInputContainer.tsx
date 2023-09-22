@@ -275,7 +275,8 @@ const UserInputContainer = (props: UserInputContainerProps) => {
                         )
                         .some((h) => h.logs!.length > 0) && (
                         <HeaderButtonWithText
-                          onClick={() => {
+                          onClick={(e) => {
+                            e.stopPropagation();
                             client?.showLogsAtIndex(props.groupIndices[1]);
                           }}
                           text="Context Used"
