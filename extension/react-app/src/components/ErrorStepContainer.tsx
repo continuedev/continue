@@ -19,6 +19,7 @@ const Div = styled.div`
 interface ErrorStepContainerProps {
   historyNode: HistoryNode;
   onClose: () => void;
+  onDelete: () => void;
 }
 
 function ErrorStepContainer(props: ErrorStepContainerProps) {
@@ -29,10 +30,14 @@ function ErrorStepContainer(props: ErrorStepContainerProps) {
           position: "absolute",
           right: "4px",
           top: "4px",
+          display: "flex",
         }}
       >
         <HeaderButtonWithText text="Collapse" onClick={() => props.onClose()}>
-          <MinusCircleIcon width="24px" height="24px" />
+          <MinusCircleIcon width="1.3em" height="1.3em" />
+        </HeaderButtonWithText>
+        <HeaderButtonWithText text="Collapse" onClick={() => props.onDelete()}>
+          <XMarkIcon width="1.3em" height="1.3em" />
         </HeaderButtonWithText>
       </div>
       <Div>

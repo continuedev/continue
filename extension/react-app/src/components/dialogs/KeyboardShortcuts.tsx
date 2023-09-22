@@ -109,8 +109,8 @@ const shortcuts: KeyboardShortcutProps[] = [
 
 function KeyboardShortcutsDialog() {
   return (
-    <>
-      <h3 className="my-3 mx-auto">Keyboard Shortcuts</h3>
+    <div className="p-2">
+      <h3 className="my-3 mx-auto text-center">Keyboard Shortcuts</h3>
       <GridDiv>
         {shortcuts.map((shortcut) => {
           return (
@@ -122,7 +122,7 @@ function KeyboardShortcutsDialog() {
           );
         })}
       </GridDiv>
-    </>
+    </div>
   );
 }
 

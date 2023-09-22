@@ -105,6 +105,7 @@ function ModelCard(props: ModelCardProps) {
         }}
         href={`https://continue.dev/docs/reference/Models/${props.modelInfo.class.toLowerCase()}`}
         target="_blank"
+        onClick={(e) => e.stopPropagation()}
       >
         <HeaderButtonWithText text="Go to reference">
           <BookOpenIcon width="1.6em" height="1.6em" />

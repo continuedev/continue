@@ -87,14 +87,14 @@ const MainTextInput = styled.textarea<{ inQueryForDynamicProvider: boolean }>`
   background-color: ${secondaryDark};
   color: ${vscForeground};
   z-index: 1;
-  border: 1px solid
+  border: 0.5px solid
     ${(props) =>
       props.inQueryForDynamicProvider ? buttonColor : "transparent"};
 
   &:focus {
-    outline: 1px solid
+    outline: 0.5px solid
       ${(props) => (props.inQueryForDynamicProvider ? buttonColor : lightGray)};
-    border: 1px solid transparent;
+    border: 0.5px solid transparent;
     background-color: ${(props) =>
       props.inQueryForDynamicProvider ? `${buttonColor}22` : secondaryDark};
   }
@@ -139,7 +139,7 @@ const Ul = styled.ul<{
   padding: 0;
   ${({ hidden }) => hidden && "display: none;"}
   border-radius: ${defaultBorderRadius};
-  outline: 1px solid ${lightGray};
+  outline: 0.5px solid ${lightGray};
   z-index: 2;
   -ms-overflow-style: none;
 
@@ -499,7 +499,9 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
       } else if (event.data.type === "focusContinueInputWithEdit") {
         inputRef.current!.focus();
 
-        downshiftProps.setInputValue("/edit ");
+        if (!inputRef.current?.value.startsWith("/edit")) {
+          downshiftProps.setInputValue("/edit ");
+        }
       }
     };
     window.addEventListener("message", handler);
@@ -794,7 +796,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
             <div
               style={{
                 backgroundColor: secondaryDark,
-                borderBottom: `1px solid ${lightGray}`,
+                borderBottom: `0.5px solid ${lightGray}`,
                 display: "flex",
                 gap: "4px",
                 position: "sticky",

@@ -109,7 +109,7 @@ function Settings() {
 
   return (
     <FormProvider {...formMethods}>
-      <div>
+      <div className="overflow-scroll">
         <form onSubmit={formMethods.handleSubmit(onSubmit)}>
           <div
             className="items-center flex"
@@ -220,16 +220,6 @@ function Settings() {
           </CancelButton>
           <SaveButton onClick={submitAndLeave}>Save</SaveButton>
         </div>
-      </div>
-      <div
-        className="cursor-pointer ml-auto mr-4 flex items-center gap-1"
-        onClick={() => {
-          dispatch(setDialogMessage(<KeyboardShortcutsDialog />));
-          dispatch(setShowDialog(true));
-        }}
-      >
-        <Squares2X2Icon width="1.2em" height="1.2em" />
-        Keyboard Shortcuts
       </div>
     </FormProvider>
   );

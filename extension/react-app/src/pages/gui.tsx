@@ -670,6 +670,7 @@ function GUI(props: GUIProps) {
                     <ErrorStepContainer
                       onClose={() => onToggleAtIndex(index)}
                       historyNode={node}
+                      onDelete={() => client?.deleteAtIndex(index)}
                     />
                   ) : (
                     <StepContainer

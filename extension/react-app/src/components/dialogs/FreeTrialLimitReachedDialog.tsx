@@ -54,7 +54,7 @@ function FreeTrialLimitReachedDialog() {
         <Button
           disabled={!apiKey}
           onClick={() => {
-            client?.addModelForRole("*", "OpenAIFreeTrial", {
+            client?.addModelForRole("*", "OpenAI", {
               model: "gpt-4",
               api_key: apiKey,
               title: "GPT-4",
