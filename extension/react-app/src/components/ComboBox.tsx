@@ -21,9 +21,7 @@ import HeaderButtonWithText from "./HeaderButtonWithText";
 import {
   ArrowLeftIcon,
   ArrowRightIcon,
-  FolderIcon,
   MagnifyingGlassIcon,
-  PlusIcon,
   TrashIcon,
 } from "@heroicons/react/24/outline";
 import { ContextItem } from "../../../schema/FullState";
@@ -39,9 +37,11 @@ import { useDispatch, useSelector } from "react-redux";
 import { RootStore } from "../redux/store";
 import SelectContextGroupDialog from "./dialogs/SelectContextGroupDialog";
 import AddContextGroupDialog from "./dialogs/AddContextGroupDialog";
-import SuggestionsArea from "./Suggestions";
-import { useNavigate } from "react-router-dom";
 import ContinueButton from "./ContinueButton";
+
+const SEARCH_INDEX_NAME = "continue_context_items";
+
+// #region styled components
 
 const HiddenHeaderButtonWithText = styled.button`
   opacity: 0;
@@ -69,9 +69,6 @@ const HiddenHeaderButtonWithText = styled.button`
   }
 `;
 
-const SEARCH_INDEX_NAME = "continue_context_items";
-
-// #region styled components
 const mainInputFontSize = 13;
 
 const MainTextInput = styled.textarea<{ inQueryForDynamicProvider: boolean }>`
@@ -171,8 +168,13 @@ const Li = styled.li<{
 
 // #endregion
 
+interface ComboBoxItem {
+  name: string;
+  description: string;
+  id?: string;
+  content?: string;
+}
 interface ComboBoxProps {
-  items: { name: string; description: string; id?: string; content?: string }[];
   onInputValueChange: (inputValue: string) => void;
   disabled?: boolean;
   onEnter: (e?: React.KeyboardEvent<HTMLInputElement>) => void;
@@ -188,12 +190,11 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
   const workspacePaths = useSelector(
     (state: RootStore) => state.config.workspacePaths
   );
-  const navigate = useNavigate();
 
   const [history, setHistory] = React.useState<string[]>([]);
   // The position of the current command you are typing now, so the one that will be appended to history once you press enter
   const [positionInHistory, setPositionInHistory] = React.useState<number>(0);
-  const [items, setItems] = React.useState(props.items);
+  const [items, setItems] = React.useState<ComboBoxItem[]>([]);
 
   const inputRef = React.useRef<HTMLInputElement>(null);
 
@@ -209,8 +210,8 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
   const sessionId = useSelector(
     (state: RootStore) => state.serverState.session_info?.session_id
   );
-  const timeline = useSelector(
-    (state: RootStore) => state.serverState.history.timeline
+  const availableSlashCommands = useSelector(
+    (state: RootStore) => state.serverState.slash_commands
   );
 
   useEffect(() => {
@@ -319,13 +320,15 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
 
       // Handle slash commands
       setItems(
-        props.items?.filter((item) =>
-          item.name.toLowerCase().startsWith(inputValue.toLowerCase())
+        availableSlashCommands?.filter((slashCommand) =>
+          `/${slashCommand.name.toLowerCase()}`.startsWith(
+            inputValue.toLowerCase()
+          )
         ) || []
       );
     },
     [
-      props.items,
+      availableSlashCommands,
       currentlyInContextQuery,
       nestedContextProvider,
       inQueryForContextProvider,
@@ -563,8 +566,6 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
   };
 
   const [isComposing, setIsComposing] = useState(false);
-
-  console.log(props.items);
 
   return (
     <>

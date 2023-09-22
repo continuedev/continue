@@ -23,12 +23,8 @@ class ContinueGUIClientProtocol extends AbstractContinueGUIClientProtocol {
       ? new VscodeMessenger(serverUrlWithSessionId)
       : new WebsocketMessenger(serverUrlWithSessionId);
 
-    this.messenger.onClose(() => {
-      console.log("GUI -> IDE websocket closed");
-    });
-    this.messenger.onError((error) => {
-      console.log("GUI -> IDE websocket error", error);
-    });
+    this.messenger.onClose(() => {});
+    this.messenger.onError((error) => {});
 
     this.messenger.onMessageType("reconnect_at_session", (data: any) => {
       if (data.session_id) {
@@ -52,6 +48,7 @@ class ContinueGUIClientProtocol extends AbstractContinueGUIClientProtocol {
   }
 
   onReconnectAtSession(session_id: string): void {
+    console.log("Reconnecting at session: ", session_id);
     this.connectMessenger(
       `${this.serverUrlWithSessionId.split("?")[0]}?session_id=${session_id}`,
       this.useVscodeMessagePassing

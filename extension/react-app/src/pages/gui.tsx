@@ -144,9 +144,6 @@ function GUI(props: GUIProps) {
 
   // #region State
   const [waitingForSteps, setWaitingForSteps] = useState(false);
-  const [availableSlashCommands, setAvailableSlashCommands] = useState<
-    { name: string; description: string }[]
-  >([]);
   const [stepsOpen, setStepsOpen] = useState<(boolean | undefined)[]>([]);
   const [waitingForClient, setWaitingForClient] = useState(true);
   const [showLoading, setShowLoading] = useState(false);
@@ -244,14 +241,6 @@ function GUI(props: GUIProps) {
       dispatch(setServerState(state));
 
       setWaitingForSteps(waitingForSteps);
-      setAvailableSlashCommands(
-        state.slash_commands.map((c: any) => {
-          return {
-            name: `/${c.name}`,
-            description: c.description,
-          };
-        })
-      );
       setStepsOpen((prev) => {
         const nextStepsOpen = [...prev];
         for (
@@ -493,6 +482,16 @@ function GUI(props: GUIProps) {
     };
   }, []);
 
+  useEffect(() => {
+    if (sessionTitle) {
+      setSessionTitleInput(sessionTitle);
+    }
+  }, [sessionTitle]);
+
+  const [sessionTitleInput, setSessionTitleInput] = useState<string>(
+    sessionTitle || "New Session"
+  );
+
   return (
     <TopGuiDiv
       ref={topGuiDivRef}
@@ -511,7 +510,8 @@ function GUI(props: GUIProps) {
               (e.target as any).value.length
             );
           }}
-          defaultValue={sessionTitle || "New Session"}
+          value={sessionTitleInput}
+          onChange={(e) => setSessionTitleInput(e.target.value)}
           onBlur={(e) => {
             client?.setCurrentSessionTitle(e.target.value);
           }}
@@ -753,7 +753,6 @@ function GUI(props: GUIProps) {
           e?.preventDefault();
         }}
         onInputValueChange={() => {}}
-        items={availableSlashCommands}
         selectedContextItems={selected_context_items}
         onToggleAddContext={() => {
           client?.toggleAddingHighlightedCode();

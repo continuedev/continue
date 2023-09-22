@@ -1,4 +1,10 @@
-import React, { useContext, useEffect, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import styled, { keyframes } from "styled-components";
 import {
   defaultBorderRadius,
@@ -153,21 +159,25 @@ const UserInputContainer = (props: UserInputContainerProps) => {
     }
   }, [isEditing, divRef.current]);
 
+  const onBlur = useCallback(() => {
+    setIsEditing(false);
+    if (divRef.current) {
+      divRef.current.innerText = prevContent;
+      divRef.current.blur();
+    }
+  }, [divRef.current]);
+
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
-        setIsEditing(false);
-        if (divRef.current) {
-          divRef.current.innerText = prevContent;
-          divRef.current.blur();
-        }
+        onBlur();
       }
     };
-    document.addEventListener("keydown", handleKeyDown);
+    divRef.current?.addEventListener("keydown", handleKeyDown);
     return () => {
-      document.removeEventListener("keydown", handleKeyDown);
+      divRef.current?.removeEventListener("keydown", handleKeyDown);
     };
-  }, [prevContent, divRef.current, isEditing]);
+  }, [prevContent, divRef.current, isEditing, onBlur]);
 
   const doneEditing = (e: any) => {
     if (!divRef.current?.innerText) {
@@ -238,7 +248,7 @@ const UserInputContainer = (props: UserInputContainerProps) => {
             <div
               ref={divRef}
               onBlur={() => {
-                setIsEditing(false);
+                onBlur();
               }}
               onKeyDown={(e) => {
                 if (e.key === "Enter" && !e.shiftKey) {

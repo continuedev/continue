@@ -101,6 +101,11 @@ export const serverStateSlice = createSlice({
     temporarilyClearSession: (state) => {
       state.history.timeline = [];
       state.selected_context_items = [];
+      state.session_info = {
+        title: "Loading session...",
+        session_id: "",
+        date_created: "",
+      };
     },
   },
 });
