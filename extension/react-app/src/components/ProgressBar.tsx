@@ -28,9 +28,12 @@ const GridDiv = styled.div`
 const P = styled.p`
   margin: 0;
   margin-top: 2px;
-  font-size: 12px;
+  font-size: 11.5px;
   color: ${lightGray};
   text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 `;
 
 interface ProgressBarProps {
@@ -45,7 +48,7 @@ const ProgressBar = ({ completed, total }: ProgressBarProps) => {
     <>
       <a
         href="https://continue.dev/docs/customization/models"
-        className="no-underline"
+        className="no-underline ml-2"
       >
         <GridDiv data-tooltip-id="usage_progress_bar">
           <ProgressBarWrapper>
@@ -61,7 +64,7 @@ const ProgressBar = ({ completed, total }: ProgressBarProps) => {
             />
           </ProgressBarWrapper>
           <P>
-            Free Usage: {completed} / {total}
+            Free Uses: {completed} / {total}
           </P>
         </GridDiv>
       </a>

@@ -243,7 +243,7 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
         elif message_type == "acceptRejectSuggestion":
             self.onAcceptRejectSuggestion(data["accepted"])
         elif message_type == "acceptRejectDiff":
-            self.onAcceptRejectDiff(data["accepted"])
+            self.onAcceptRejectDiff(data["accepted"], data["stepIndex"])
         elif message_type == "mainUserInput":
             self.onMainUserInput(data["input"])
         elif message_type == "deleteAtIndex":
@@ -349,9 +349,16 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
         posthog_logger.capture_event("accept_reject_suggestion", {"accepted": accepted})
         dev_data_logger.capture("accept_reject_suggestion", {"accepted": accepted})
 
-    def onAcceptRejectDiff(self, accepted: bool):
+    def onAcceptRejectDiff(self, accepted: bool, step_index: int):
         posthog_logger.capture_event("accept_reject_diff", {"accepted": accepted})
         dev_data_logger.capture("accept_reject_diff", {"accepted": accepted})
+
+        if not accepted:
+            if autopilot := self.__get_autopilot():
+                create_async_task(
+                    autopilot.reject_diff(step_index),
+                    self.on_error,
+                )
 
     def onFileSystemUpdate(self, update: FileSystemEdit):
         # Access to Autopilot (so SessionManager)
@@ -456,7 +463,7 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
         resp = await self._send_and_receive_json(
             {"commands": commands}, TerminalContentsResponse, "getTerminalContents"
         )
-        return resp.contents
+        return resp.contents.strip()
 
     async def getHighlightedCode(self) -> List[RangeInFile]:
         resp = await self._send_and_receive_json(
@@ -640,7 +647,7 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str = None):
 
         if session_id is not None and session_id in session_manager.sessions:
             await session_manager.sessions[session_id].autopilot.continue_sdk.run_step(
-                DisplayErrorStep(e=e)
+                DisplayErrorStep.from_exception(e)
             )
         elif ideProtocolServer is not None:
             await ideProtocolServer.showMessage(f"Error in Continue server: {err_msg}")

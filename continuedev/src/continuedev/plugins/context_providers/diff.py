@@ -4,7 +4,12 @@ from typing import List
 from pydantic import Field
 
 from ...core.context import ContextProvider
-from ...core.main import ContextItem, ContextItemDescription, ContextItemId
+from ...core.main import (
+    ContextItem,
+    ContextItemDescription,
+    ContextItemId,
+    ContinueCustomException,
+)
 
 
 class DiffContextProvider(ContextProvider):
@@ -44,9 +49,24 @@ class DiffContextProvider(ContextProvider):
         if not id.provider_title == self.title:
             raise Exception("Invalid provider title for item")
 
-        diff = subprocess.check_output(["git", "diff"], cwd=self.workspace_dir).decode(
-            "utf-8"
+        result = subprocess.run(
+            ["git", "diff"], cwd=self.workspace_dir, capture_output=True, text=True
         )
+        diff = result.stdout
+        error = result.stderr
+        if error.strip() != "":
+            if error.startswith("warning: Not a git repository"):
+                raise ContinueCustomException(
+                    title="Not a git repository",
+                    message="The @diff context provider only works in git repositories.",
+                )
+            raise ContinueCustomException(
+                title="Error running git diff",
+                message=f"Error running git diff:\n\n{error}",
+            )
+
+        if diff.strip() == "":
+            diff = "No changes"
 
         ctx_item = self.BASE_CONTEXT_ITEM.copy()
         ctx_item.content = diff

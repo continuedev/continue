@@ -2,7 +2,7 @@ from typing import Dict, List, Optional, Type
 
 from pydantic import BaseModel, Field, validator
 
-from ..libs.llm.maybe_proxy_openai import MaybeProxyOpenAI
+from ..libs.llm.openai_free_trial import OpenAIFreeTrial
 from .context import ContextProvider
 from .main import Policy, Step
 from .models import Models
@@ -48,8 +48,8 @@ class ContinueConfig(BaseModel):
     )
     models: Models = Field(
         Models(
-            default=MaybeProxyOpenAI(model="gpt-4"),
-            medium=MaybeProxyOpenAI(model="gpt-3.5-turbo"),
+            default=OpenAIFreeTrial(model="gpt-4"),
+            summarize=OpenAIFreeTrial(model="gpt-3.5-turbo"),
         ),
         description="Configuration for the models used by Continue. Read more about how to configure models in the documentation.",
     )

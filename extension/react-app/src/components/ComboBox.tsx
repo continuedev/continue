@@ -3,12 +3,12 @@ import React, {
   useContext,
   useEffect,
   useImperativeHandle,
+  useLayoutEffect,
   useState,
 } from "react";
 import { useCombobox } from "downshift";
 import styled from "styled-components";
 import {
-  StyledTooltip,
   buttonColor,
   defaultBorderRadius,
   lightGray,
@@ -19,12 +19,12 @@ import {
 import PillButton from "./PillButton";
 import HeaderButtonWithText from "./HeaderButtonWithText";
 import {
-  BookmarkIcon,
-  DocumentPlusIcon,
-  FolderArrowDownIcon,
   ArrowLeftIcon,
-  PlusIcon,
   ArrowRightIcon,
+  FolderIcon,
+  MagnifyingGlassIcon,
+  PlusIcon,
+  TrashIcon,
 } from "@heroicons/react/24/outline";
 import { ContextItem } from "../../../schema/FullState";
 import { postVscMessage } from "../vscode";
@@ -39,32 +39,40 @@ import { useDispatch, useSelector } from "react-redux";
 import { RootStore } from "../redux/store";
 import SelectContextGroupDialog from "./dialogs/SelectContextGroupDialog";
 import AddContextGroupDialog from "./dialogs/AddContextGroupDialog";
+import SuggestionsArea from "./Suggestions";
+import { useNavigate } from "react-router-dom";
+import ContinueButton from "./ContinueButton";
+
+const HiddenHeaderButtonWithText = styled.button`
+  opacity: 0;
+  background-color: transparent;
+  border: none;
+  outline: none;
+  color: ${vscForeground};
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 0;
+  aspect-ratio: 1;
+  padding: 0;
+  margin-left: -8px;
+
+  border-radius: ${defaultBorderRadius};
+
+  &:focus {
+    margin-left: 1px;
+    height: fit-content;
+    padding: 3px;
+    opacity: 1;
+    outline: 1px solid ${lightGray};
+  }
+`;
 
 const SEARCH_INDEX_NAME = "continue_context_items";
 
 // #region styled components
 const mainInputFontSize = 13;
-
-const EmptyPillDiv = styled.div`
-  padding: 4px;
-  padding-left: 8px;
-  padding-right: 8px;
-  border-radius: ${defaultBorderRadius};
-  border: 1px dashed ${lightGray};
-  color: ${lightGray};
-  background-color: ${vscBackground};
-  overflow: hidden;
-  display: flex;
-  align-items: center;
-  text-align: center;
-  cursor: pointer;
-  font-size: 13px;
-
-  &:hover {
-    background-color: ${lightGray};
-    color: ${vscBackground};
-  }
-`;
 
 const MainTextInput = styled.textarea<{ inQueryForDynamicProvider: boolean }>`
   resize: none;
@@ -92,7 +100,7 @@ const MainTextInput = styled.textarea<{ inQueryForDynamicProvider: boolean }>`
   }
 
   &::placeholder {
-    color: ${lightGray}80;
+    color: ${lightGray}cc;
   }
 `;
 
@@ -108,23 +116,6 @@ const DynamicQueryTitleDiv = styled.div`
   font-size: 12px;
 
   background-color: ${buttonColor};
-`;
-
-const StyledPlusIcon = styled(PlusIcon)`
-  position: absolute;
-  right: 0px;
-  top: 0px;
-  height: fit-content;
-  padding: 0;
-  cursor: pointer;
-  border-radius: ${defaultBorderRadius};
-  z-index: 2;
-
-  background-color: ${vscBackground};
-
-  &:hover {
-    background-color: ${secondaryDark};
-  }
 `;
 
 const UlMaxHeight = 300;
@@ -184,7 +175,7 @@ interface ComboBoxProps {
   items: { name: string; description: string; id?: string; content?: string }[];
   onInputValueChange: (inputValue: string) => void;
   disabled?: boolean;
-  onEnter: (e: React.KeyboardEvent<HTMLInputElement>) => void;
+  onEnter: (e?: React.KeyboardEvent<HTMLInputElement>) => void;
   selectedContextItems: ContextItem[];
   onToggleAddContext: () => void;
   addingHighlightedCode: boolean;
@@ -197,9 +188,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
   const workspacePaths = useSelector(
     (state: RootStore) => state.config.workspacePaths
   );
-  const savedContextGroups = useSelector(
-    (state: RootStore) => state.serverState.saved_context_groups
-  );
+  const navigate = useNavigate();
 
   const [history, setHistory] = React.useState<string[]>([]);
   // The position of the current command you are typing now, so the one that will be appended to history once you press enter
@@ -216,6 +205,19 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
   const [inQueryForContextProvider, setInQueryForContextProvider] = useState<
     any | undefined
   >(undefined);
+
+  const sessionId = useSelector(
+    (state: RootStore) => state.serverState.session_info?.session_id
+  );
+  const timeline = useSelector(
+    (state: RootStore) => state.serverState.history.timeline
+  );
+
+  useEffect(() => {
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [sessionId, inputRef.current]);
 
   useEffect(() => {
     if (!currentlyInContextQuery) {
@@ -277,9 +279,10 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
 
           if (nestedContextProvider && !inputValue.endsWith("@")) {
             // Search only within this specific context provider
+            const spaceSegs = providerAndQuery.split(" ");
             getFilteredContextItemsForProvider(
               nestedContextProvider.title,
-              providerAndQuery
+              spaceSegs.length > 1 ? spaceSegs[1] : ""
             ).then((res) => {
               setItems(res);
             });
@@ -457,6 +460,13 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
     }
   }, []);
 
+  useLayoutEffect(() => {
+    if (!ulRef.current) {
+      return;
+    }
+    downshiftProps.setHighlightedIndex(0);
+  }, [items, downshiftProps.setHighlightedIndex, ulRef.current]);
+
   const [metaKeyPressed, setMetaKeyPressed] = useState(false);
   const [focused, setFocused] = useState(false);
   useEffect(() => {
@@ -476,7 +486,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
       window.removeEventListener("keydown", handleKeyDown);
       window.removeEventListener("keyup", handleKeyUp);
     };
-  });
+  }, []);
 
   useEffect(() => {
     if (!inputRef.current) {
@@ -552,23 +562,44 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
 
   const [isComposing, setIsComposing] = useState(false);
 
+  console.log(props.items);
+
   return (
     <>
       <div
         className="px-2 flex gap-2 items-center flex-wrap mt-2"
         ref={contextItemsDivRef}
       >
+        <HiddenHeaderButtonWithText
+          className={props.selectedContextItems.length > 0 ? "pill-button" : ""}
+          onClick={() => {
+            client?.deleteContextWithIds(
+              props.selectedContextItems.map((item) => item.description.id)
+            );
+            inputRef.current?.focus();
+          }}
+          onKeyDown={(e: any) => {
+            if (e.key === "Backspace") {
+              client?.deleteContextWithIds(
+                props.selectedContextItems.map((item) => item.description.id)
+              );
+              inputRef.current?.focus();
+            }
+          }}
+        >
+          <TrashIcon width="1.4em" height="1.4em" />
+        </HiddenHeaderButtonWithText>
         {props.selectedContextItems.map((item, idx) => {
           return (
             <PillButton
               areMultipleItems={props.selectedContextItems.length > 1}
               key={`${item.description.id.item_id}${idx}`}
               item={item}
-              warning={
-                item.content.length > 4000 && item.editing
-                  ? "Editing such a large range may be slow"
-                  : undefined
+              editing={
+                item.editing &&
+                (inputRef.current as any)?.value?.startsWith("/edit")
               }
+              editingAny={(inputRef.current as any)?.value?.startsWith("/edit")}
               addingHighlightedCode={props.addingHighlightedCode}
               index={idx}
               onDelete={() => {
@@ -578,64 +609,16 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
             />
           );
         })}
-        <HeaderButtonWithText
-          text="Load bookmarked context"
-          onClick={() => {
-            showSelectContextGroupDialog();
-          }}
-          className="pill-button focus:outline-none focus:border-red-600 focus:border focus:border-solid"
-          onKeyDown={(e: KeyboardEvent) => {
-            e.preventDefault();
-            if (e.key === "Enter") {
-              showSelectContextGroupDialog();
-            }
-          }}
-        >
-          <FolderArrowDownIcon width="1.4em" height="1.4em" />
-        </HeaderButtonWithText>
+
         {props.selectedContextItems.length > 0 && (
-          <>
-            {props.addingHighlightedCode ? (
-              <EmptyPillDiv
-                onClick={() => {
-                  props.onToggleAddContext();
-                }}
-              >
-                Highlight code section
-              </EmptyPillDiv>
-            ) : (
-              <HeaderButtonWithText
-                text="Add more code to context"
-                onClick={() => {
-                  props.onToggleAddContext();
-                }}
-                className="pill-button focus:outline-none focus:border-red-600 focus:border focus:border-solid"
-                onKeyDown={(e: KeyboardEvent) => {
-                  e.preventDefault();
-                  if (e.key === "Enter") {
-                    props.onToggleAddContext();
-                  }
-                }}
-              >
-                <DocumentPlusIcon width="1.4em" height="1.4em" />
-              </HeaderButtonWithText>
-            )}
-            <HeaderButtonWithText
-              text="Bookmark context"
-              onClick={() => {
-                showDialogToSaveContextGroup();
-              }}
-              className="pill-button focus:outline-none focus:border-red-600 focus:border focus:border-solid"
-              onKeyDown={(e: KeyboardEvent) => {
-                e.preventDefault();
-                if (e.key === "Enter") {
-                  showDialogToSaveContextGroup();
-                }
-              }}
-            >
-              <BookmarkIcon width="1.4em" height="1.4em" />
-            </HeaderButtonWithText>
-          </>
+          <HeaderButtonWithText
+            onClick={() => {
+              client?.showContextVirtualFile();
+            }}
+            text="View Current Context"
+          >
+            <MagnifyingGlassIcon width="1.4em" height="1.4em" />
+          </HeaderButtonWithText>
         )}
       </div>
       <div
@@ -648,7 +631,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
             typeof inQueryForContextProvider !== "undefined"
           }
           disabled={props.disabled}
-          placeholder={`Ask a question, type '/' for slash commands, or '@' to add context`}
+          placeholder={`Ask a question, '/' for slash commands, '@' to add context`}
           {...getInputProps({
             onCompositionStart: () => setIsComposing(true),
             onCompositionEnd: () => setIsComposing(false),
@@ -789,25 +772,10 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
             ref: inputRef,
           })}
         />
-        {inQueryForContextProvider ? (
+        {inQueryForContextProvider && (
           <DynamicQueryTitleDiv>
             Enter {inQueryForContextProvider.display_title} Query
           </DynamicQueryTitleDiv>
-        ) : (
-          <>
-            <StyledPlusIcon
-              width="1.4em"
-              height="1.4em"
-              data-tooltip-id="add-context-button"
-              onClick={() => {
-                downshiftProps.setInputValue("@");
-                inputRef.current?.focus();
-              }}
-            />
-            <StyledTooltip id="add-context-button" place="bottom">
-              Add Context to Prompt
-            </StyledTooltip>
-          </>
         )}
 
         <Ul
@@ -816,7 +784,11 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
           })}
           showAbove={showAbove()}
           ulHeightPixels={ulRef.current?.getBoundingClientRect().height || 0}
-          hidden={!downshiftProps.isOpen || items.length === 0}
+          hidden={
+            !downshiftProps.isOpen ||
+            items.length === 0 ||
+            inputRef.current?.value === ""
+          }
         >
           {nestedContextProvider && (
             <div
@@ -846,7 +818,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
             items.map((item, index) => (
               <Li
                 style={{
-                  borderTop: index === 0 ? "none" : undefined,
+                  borderTop: index === 0 ? "none" : `0.5px solid ${lightGray}`,
                 }}
                 key={`${item.name}${index}`}
                 {...downshiftProps.getItemProps({ item, index })}
@@ -861,12 +833,14 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
                   onSelectedItemChangeCallback({ selectedItem: item });
                 }}
               >
-                <span>
+                <span className="flex justify-between w-full">
                   {item.name}
                   {"  "}
                   <span
                     style={{
                       color: lightGray,
+                      float: "right",
+                      textAlign: "right",
                     }}
                   >
                     {item.description}
@@ -897,6 +871,10 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
             Inserting at cursor
           </div>
         )}
+      <ContinueButton
+        disabled={!(inputRef.current as any)?.value}
+        onClick={() => props.onEnter(undefined)}
+      />
     </>
   );
 });

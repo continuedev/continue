@@ -2,7 +2,7 @@ import os
 from textwrap import dedent
 from typing import Dict, List, Optional, Tuple
 
-from ...core.main import ChatMessage, Step
+from ...core.main import ChatMessage, ContinueCustomException, Step
 from ...core.sdk import ContinueSDK
 from ...libs.util.filter_files import should_filter_path
 from ...libs.util.traceback.traceback_parsers import (
@@ -51,6 +51,12 @@ class DefaultOnTracebackStep(Step):
         # And this function is where you can get arbitrarily fancy about adding context
 
     async def run(self, sdk: ContinueSDK):
+        if self.output.strip() == "":
+            raise ContinueCustomException(
+                title="No terminal open",
+                message="You must have a terminal open in order to automatically debug with Continue.",
+            )
+
         if get_python_traceback(self.output) is not None and sdk.lsp is not None:
             await sdk.run_step(SolvePythonTracebackStep(output=self.output))
             return

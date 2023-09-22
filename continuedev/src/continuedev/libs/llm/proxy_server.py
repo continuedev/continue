@@ -1,10 +1,8 @@
 import json
-import ssl
 import traceback
 from typing import List
 
 import aiohttp
-import certifi
 
 from ...core.main import ChatMessage
 from ..llm import LLM
@@ -32,20 +30,7 @@ class ProxyServer(LLM):
         **kwargs,
     ):
         await super().start(**kwargs)
-        if self.verify_ssl is False:
-            self._client_session = aiohttp.ClientSession(
-                connector=aiohttp.TCPConnector(verify_ssl=False),
-                timeout=aiohttp.ClientTimeout(total=self.timeout),
-            )
-        else:
-            ca_bundle_path = (
-                certifi.where() if self.ca_bundle_path is None else self.ca_bundle_path
-            )
-            ssl_context = ssl.create_default_context(cafile=ca_bundle_path)
-            self._client_session = aiohttp.ClientSession(
-                connector=aiohttp.TCPConnector(ssl_context=ssl_context),
-                timeout=aiohttp.ClientTimeout(total=self.timeout),
-            )
+        self._client_session = self.create_client_session()
 
         self.context_length = MAX_TOKENS_FOR_MODEL[self.model]
 
@@ -62,6 +47,7 @@ class ProxyServer(LLM):
             f"{SERVER_URL}/complete",
             json={"messages": [{"role": "user", "content": prompt}], **args},
             headers=self.get_headers(),
+            proxy=self.proxy,
         ) as resp:
             resp_text = await resp.text()
             if resp.status != 200:
@@ -75,6 +61,7 @@ class ProxyServer(LLM):
             f"{SERVER_URL}/stream_chat",
             json={"messages": messages, **args},
             headers=self.get_headers(),
+            proxy=self.proxy,
         ) as resp:
             if resp.status != 200:
                 raise Exception(await resp.text())
@@ -110,6 +97,7 @@ class ProxyServer(LLM):
             f"{SERVER_URL}/stream_complete",
             json={"messages": [{"role": "user", "content": prompt}], **args},
             headers=self.get_headers(),
+            proxy=self.proxy,
         ) as resp:
             if resp.status != 200:
                 raise Exception(await resp.text())

@@ -29,6 +29,8 @@ abstract class AbstractContinueGUIClientProtocol {
 
   abstract showLogsAtIndex(index: number): void;
 
+  abstract showContextVirtualFile(): void;
+
   abstract selectContextItem(id: string, query: string): void;
 
   abstract loadSession(session_id?: string): void;

@@ -72,6 +72,11 @@
           "title": "Description",
           "type": "string"
         },
+        "class_name": {
+          "title": "Class Name",
+          "default": "Step",
+          "type": "string"
+        },
         "system_message": {
           "title": "System Message",
           "type": "string"
@@ -286,6 +291,39 @@
         }
       }
     },
+    "ContextProviderDescription": {
+      "title": "ContextProviderDescription",
+      "type": "object",
+      "properties": {
+        "title": {
+          "title": "Title",
+          "type": "string"
+        },
+        "display_title": {
+          "title": "Display Title",
+          "type": "string"
+        },
+        "description": {
+          "title": "Description",
+          "type": "string"
+        },
+        "dynamic": {
+          "title": "Dynamic",
+          "type": "boolean"
+        },
+        "requires_query": {
+          "title": "Requires Query",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "title",
+        "display_title",
+        "description",
+        "dynamic",
+        "requires_query"
+      ]
+    },
     "src__continuedev__core__main__FullState": {
       "title": "FullState",
       "description": "A full state of the program, including the history",
@@ -338,6 +376,14 @@
             "items": {
               "$ref": "#/definitions/ContextItem"
             }
+          }
+        },
+        "context_providers": {
+          "title": "Context Providers",
+          "default": [],
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ContextProviderDescription"
           }
         }
       },

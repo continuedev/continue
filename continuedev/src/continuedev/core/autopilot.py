@@ -201,7 +201,9 @@ class Autopilot(ContinueBaseModel):
             )
             or []
         )
-        return custom_commands + slash_commands
+        cmds = custom_commands + slash_commands
+        cmds.sort(key=lambda x: x["name"] == "edit", reverse=True)
+        return cmds
 
     async def clear_history(self):
         # Reset history
@@ -292,7 +294,9 @@ class Autopilot(ContinueBaseModel):
         self._retry_queue.post(str(index), None)
 
     async def delete_at_index(self, index: int):
-        self.history.timeline[index].step.hide = True
+        if not self.history.timeline[index].active:
+            self.history.timeline[index].step.hide = True
+
         self.history.timeline[index].deleted = True
         self.history.timeline[index].active = False
 
@@ -476,7 +480,9 @@ class Autopilot(ContinueBaseModel):
 
         create_async_task(
             update_description(),
-            on_error=lambda e: self.continue_sdk.run_step(DisplayErrorStep(e=e)),
+            on_error=lambda e: self.continue_sdk.run_step(
+                DisplayErrorStep.from_exception(e)
+            ),
         )
 
         return observation
@@ -540,9 +546,10 @@ class Autopilot(ContinueBaseModel):
                 if self.continue_sdk.config.disable_summaries:
                     title = user_input
                 else:
-                    title = await self.continue_sdk.models.medium.complete(
+                    title = await self.continue_sdk.models.summarize.complete(
                         f'Give a short title to describe the current chat session. Do not put quotes around the title. The first message was: "{user_input}". Do not use more than 10 words. The title is: ',
                         max_tokens=20,
+                        log=False,
                     )
                     title = remove_quotes_and_escapes(title)
 
@@ -556,7 +563,9 @@ class Autopilot(ContinueBaseModel):
 
             create_async_task(
                 create_title(),
-                on_error=lambda e: self.continue_sdk.run_step(DisplayErrorStep(e=e)),
+                on_error=lambda e: self.continue_sdk.run_step(
+                    DisplayErrorStep.from_exception(e)
+                ),
             )
 
         if len(self._main_user_input_queue) > 1:
@@ -578,6 +587,15 @@ class Autopilot(ContinueBaseModel):
         await self._request_halt()
         await self.reverse_to_index(index)
         await self.run_from_step(UserInputStep(user_input=user_input))
+
+    async def reject_diff(self, step_index: int):
+        # Hide the edit step and the UserInputStep before it
+        self.history.timeline[step_index].step.hide = True
+        for i in range(step_index - 1, -1, -1):
+            if isinstance(self.history.timeline[i].step, UserInputStep):
+                self.history.timeline[i].step.hide = True
+                break
+        await self.update_subscribers()
 
     async def select_context_item(self, id: str, query: str):
         await self.context_manager.select_context_item(id, query)

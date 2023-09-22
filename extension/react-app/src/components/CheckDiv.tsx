@@ -30,6 +30,9 @@ const StyledDiv = styled.div<{ checked: boolean }>`
 
   margin: 0.5rem;
   height: 1.4em;
+
+  overflow: hidden;
+  text-overflow: ellipsis;
 `;
 
 function CheckDiv(props: CheckDivProps) {

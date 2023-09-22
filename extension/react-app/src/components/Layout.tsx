@@ -16,7 +16,7 @@ import {
   FolderIcon,
   SparklesIcon,
   Cog6ToothIcon,
-  QuestionMarkCircleIcon
+  QuestionMarkCircleIcon,
 } from "@heroicons/react/24/outline";
 import HeaderButtonWithText from "./HeaderButtonWithText";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -60,6 +60,8 @@ const Footer = styled.footer`
   align-items: center;
   width: calc(100% - 16px);
   height: ${FOOTER_HEIGHT};
+
+  overflow: hidden;
 `;
 
 const GridDiv = styled.div`
@@ -96,11 +98,20 @@ const Layout = () => {
     (state: RootStore) => state.uiState.displayBottomMessageOnBottom
   );
 
+  const timeline = useSelector(
+    (state: RootStore) => state.serverState.history.timeline
+  );
+
   // #endregion
 
   useEffect(() => {
     const handleKeyDown = (event: any) => {
-      if (event.metaKey && event.altKey && event.code === "KeyN") {
+      if (
+        event.metaKey &&
+        event.altKey &&
+        event.code === "KeyN" &&
+        timeline.filter((n) => !n.step.hide).length > 0
+      ) {
         client?.loadSession(undefined);
       }
       if ((event.metaKey || event.ctrlKey) && event.code === "KeyC") {
@@ -119,7 +130,7 @@ const Layout = () => {
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [client]);
+  }, [client, timeline]);
 
   return (
     <LayoutTopDiv>
@@ -173,9 +184,8 @@ const Layout = () => {
                   color="yellow"
                 />
               )}
-
               <ModelSelect />
-              {defaultModel === "MaybeProxyOpenAI" &&
+              {defaultModel === "OpenAIFreeTrial" &&
                 (location.pathname === "/settings" ||
                   parseInt(localStorage.getItem("freeTrialCounter") || "0") >=
                     125) && (
@@ -188,26 +198,10 @@ const Layout = () => {
                 )}
             </div>
             <HeaderButtonWithText
-              onClick={() => {
-                client?.loadSession(undefined);
-              }}
-              text="New Session (⌥⌘N)"
-            >
-              <PlusIcon width="1.4em" height="1.4em" />
-            </HeaderButtonWithText>
-            <HeaderButtonWithText
-              onClick={() => {
-                navigate("/history");
-              }}
-              text="History"
-            >
-              <FolderIcon width="1.4em" height="1.4em" />
-            </HeaderButtonWithText>
-            <HeaderButtonWithText
+              text="Help"
               onClick={() => {
                 navigate("/help");
               }}
-              text="Help"
             >
               <QuestionMarkCircleIcon width="1.4em" height="1.4em" />
             </HeaderButtonWithText>
@@ -237,6 +231,7 @@ const Layout = () => {
           {bottomMessage}
         </BottomMessageDiv>
       </div>
+      <div id="tooltip-portal-div" />
     </LayoutTopDiv>
   );
 };

@@ -30,7 +30,7 @@ class SetupPipelineStep(Step):
         sdk.context.set("api_description", self.api_description)
 
         source_name = (
-            await sdk.models.medium.complete(
+            await sdk.models.summarize.complete(
                 f"Write a snake_case name for the data source described by {self.api_description}: "
             )
         ).strip()
@@ -115,7 +115,7 @@ class ValidatePipelineStep(Step):
         if "Traceback" in output or "SyntaxError" in output:
             output = "Traceback" + output.split("Traceback")[-1]
             file_content = await sdk.ide.readFile(os.path.join(workspace_dir, filename))
-            suggestion = await sdk.models.medium.complete(
+            suggestion = await sdk.models.summarize.complete(
                 dedent(
                     f"""\
                 ```python
@@ -131,7 +131,7 @@ class ValidatePipelineStep(Step):
                 )
             )
 
-            api_documentation_url = await sdk.models.medium.complete(
+            api_documentation_url = await sdk.models.summarize.complete(
                 dedent(
                     f"""\
                 The API I am trying to call is the '{sdk.context.get('api_description')}'. I tried calling it in the @resource function like this:
@@ -216,7 +216,7 @@ class RunQueryStep(Step):
         )
 
         if "Traceback" in output or "SyntaxError" in output:
-            suggestion = await sdk.models.medium.complete(
+            suggestion = await sdk.models.summarize.complete(
                 dedent(
                     f"""\
                 ```python

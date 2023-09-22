@@ -116,6 +116,12 @@ class Range(BaseModel):
     def contains(self, position: Position) -> bool:
         return self.start <= position and position <= self.end
 
+    def merge_with(self, other: "Range") -> "Range":
+        return Range(
+            start=min(self.start, other.start).copy(),
+            end=max(self.end, other.end).copy(),
+        )
+
     @staticmethod
     def from_indices(string: str, start_index: int, end_index: int) -> "Range":
         return Range(

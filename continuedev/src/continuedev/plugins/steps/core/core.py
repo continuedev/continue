@@ -1,16 +1,13 @@
 # These steps are depended upon by ContinueSDK
 import difflib
 import subprocess
-import traceback
 from textwrap import dedent
-from typing import Any, Coroutine, List, Optional, Union
-
-from pydantic import validator
+from typing import Coroutine, List, Optional, Union
 
 from ....core.main import ChatMessage, ContinueCustomException, Step
 from ....core.observation import Observation, TextObservation, UserInputObservation
 from ....libs.llm import LLM
-from ....libs.llm.maybe_proxy_openai import MaybeProxyOpenAI
+from ....libs.llm.openai_free_trial import OpenAIFreeTrial
 from ....libs.util.count_tokens import DEFAULT_MAX_TOKENS
 from ....libs.util.devdata import dev_data_logger
 from ....libs.util.strings import (
@@ -57,21 +54,25 @@ class MessageStep(Step):
 
 class DisplayErrorStep(Step):
     name: str = "Error in the Continue server"
-    e: Any
+
+    title: str = "Error in the Continue server"
+    message: str = "There was an error in the Continue server."
+
+    @staticmethod
+    def from_exception(e: Exception) -> "DisplayErrorStep":
+        if isinstance(e, ContinueCustomException):
+            return DisplayErrorStep(title=e.title, message=e.message, name=e.title)
+
+        return DisplayErrorStep(message=str(e))
 
     class Config:
         arbitrary_types_allowed = True
 
-    @validator("e", pre=True, always=True)
-    def validate_e(cls, v):
-        if isinstance(v, Exception):
-            return "\n".join(traceback.format_exception(v))
-
     async def describe(self, models: Models) -> Coroutine[str, None, None]:
-        return self.e
+        return self.message
 
     async def run(self, sdk: ContinueSDK) -> Coroutine[Observation, None, None]:
-        raise ContinueCustomException(message=self.e, title=self.name)
+        raise ContinueCustomException(message=self.message, title=self.title)
 
 
 class FileSystemEditStep(ReversibleStep):
@@ -109,7 +110,7 @@ class ShellCommandsStep(Step):
             return f"Error when running shell commands:\n```\n{self._err_text}\n```"
 
         cmds_str = "\n".join(self.cmds)
-        return await models.medium.complete(
+        return await models.summarize.complete(
             f"{cmds_str}\n\nSummarize what was done in these shell commands, using markdown bullet points:"
         )
 
@@ -180,10 +181,10 @@ class DefaultModelEditCodeStep(Step):
     _new_contents: str = ""
     _prompt_and_completion: str = ""
 
-    summary_prompt: str = "Please give brief a description of the changes made above using markdown bullet points. Be concise:"
+    summary_prompt: str = "Please briefly explain the changes made to the code above. Give no more than 2-3 sentences, and use markdown bullet points:"
 
     async def describe(self, models: Models) -> Coroutine[str, None, None]:
-        name = await models.medium.complete(
+        name = await models.summarize.complete(
             f"Write a very short title to describe this requested change (no quotes): '{self.user_input}'. This is the title:"
         )
         self.name = remove_quotes_and_escapes(name)
@@ -231,7 +232,7 @@ class DefaultModelEditCodeStep(Step):
         # If using 3.5 and overflows, upgrade to 3.5.16k
         if model_to_use.model == "gpt-3.5-turbo":
             if total_tokens > model_to_use.context_length:
-                model_to_use = MaybeProxyOpenAI(model="gpt-3.5-turbo-0613")
+                model_to_use = OpenAIFreeTrial(model="gpt-3.5-turbo-0613")
                 await sdk.start_model(model_to_use)
 
         # Remove tokens from the end first, and then the start to clear space
@@ -829,7 +830,7 @@ Please output the code to be inserted at the cursor in order to fulfill the user
         else:
             self.name = "Generating summary"
             self.description = ""
-            async for chunk in sdk.models.medium.stream_complete(
+            async for chunk in sdk.models.summarize.stream_complete(
                 dedent(
                     f"""\
             Diff summary: "{self.user_input}"

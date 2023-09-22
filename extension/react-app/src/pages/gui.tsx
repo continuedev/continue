@@ -1,6 +1,5 @@
 import styled from "styled-components";
-import { defaultBorderRadius } from "../components";
-import Loader from "../components/Loader";
+import { defaultBorderRadius, lightGray } from "../components";
 import ContinueButton from "../components/ContinueButton";
 import { FullState } from "../../../schema/FullState";
 import {
@@ -9,6 +8,7 @@ import {
   useState,
   useContext,
   useLayoutEffect,
+  useCallback,
 } from "react";
 import { HistoryNode } from "../../../schema/HistoryNode";
 import StepContainer from "../components/StepContainer";
@@ -32,6 +32,19 @@ import {
   setServerState,
   temporarilyPushToUserInputQueue,
 } from "../redux/slices/serverStateReducer";
+import TimelineItem from "../components/TimelineItem";
+import ErrorStepContainer from "../components/ErrorStepContainer";
+import {
+  ChatBubbleOvalLeftIcon,
+  CodeBracketSquareIcon,
+  ExclamationTriangleIcon,
+  FolderIcon,
+  PlusIcon,
+} from "@heroicons/react/24/outline";
+import FreeTrialLimitReachedDialog from "../components/dialogs/FreeTrialLimitReachedDialog";
+import HeaderButtonWithText from "../components/HeaderButtonWithText";
+import { useNavigate } from "react-router-dom";
+import SuggestionsArea from "../components/Suggestions";
 
 const TopGuiDiv = styled.div`
   overflow-y: scroll;
@@ -44,12 +57,42 @@ const TopGuiDiv = styled.div`
   }
 `;
 
+const StepsDiv = styled.div`
+  position: relative;
+  background-color: transparent;
+  padding-left: 8px;
+  padding-right: 8px;
+
+  & > * {
+    z-index: 1;
+    position: relative;
+  }
+
+  &::before {
+    content: "";
+    position: absolute;
+    height: calc(100% - 24px);
+    border-left: 2px solid ${lightGray};
+    left: 28px;
+    z-index: 0;
+    bottom: 24px;
+  }
+`;
+
 const UserInputQueueItem = styled.div`
   border-radius: ${defaultBorderRadius};
   color: gray;
   padding: 8px;
   margin: 8px;
   text-align: center;
+`;
+
+const GUIHeaderDiv = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px;
+  border-bottom: 0.5px solid ${lightGray};
 `;
 
 interface GUIProps {
@@ -61,6 +104,7 @@ function GUI(props: GUIProps) {
   const client = useContext(GUIClientContext);
   const posthog = usePostHog();
   const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   // #endregion
 
@@ -79,6 +123,9 @@ function GUI(props: GUIProps) {
   const selected_context_items = useSelector(
     (state: RootStore) => state.serverState.selected_context_items
   );
+  const sessionTitle = useSelector(
+    (state: RootStore) => state.serverState.session_info?.title
+  );
 
   // #endregion
 
@@ -87,12 +134,7 @@ function GUI(props: GUIProps) {
   const [availableSlashCommands, setAvailableSlashCommands] = useState<
     { name: string; description: string }[]
   >([]);
-  const [stepsOpen, setStepsOpen] = useState<boolean[]>([
-    true,
-    true,
-    true,
-    true,
-  ]);
+  const [stepsOpen, setStepsOpen] = useState<(boolean | undefined)[]>([]);
   const [waitingForClient, setWaitingForClient] = useState(true);
   const [showLoading, setShowLoading] = useState(false);
 
@@ -150,7 +192,7 @@ function GUI(props: GUIProps) {
 
     topGuiDivRef.current?.scrollTo({
       top: topGuiDivRef.current?.scrollHeight,
-      behavior: "smooth" as any,
+      behavior: "instant" as any,
     });
   }, [topGuiDivRef.current?.scrollHeight, history.timeline]);
 
@@ -160,6 +202,7 @@ function GUI(props: GUIProps) {
       if (
         e.key === "Backspace" &&
         isMetaEquivalentKeyPressed(e) &&
+        !e.shiftKey &&
         typeof history?.current_index !== "undefined" &&
         history.timeline[history.current_index]?.active
       ) {
@@ -203,7 +246,7 @@ function GUI(props: GUIProps) {
           i < state.history.timeline.length;
           i++
         ) {
-          nextStepsOpen.push(true);
+          nextStepsOpen.push(undefined);
         }
         return nextStepsOpen;
       });
@@ -214,7 +257,6 @@ function GUI(props: GUIProps) {
 
   useEffect(() => {
     if (client && waitingForClient) {
-      console.log("sending user input queue, ", user_input_queue);
       setWaitingForClient(false);
       for (const input of user_input_queue) {
         client.sendMainInput(input);
@@ -246,7 +288,7 @@ function GUI(props: GUIProps) {
 
       // Increment localstorage counter for usage of free trial
       if (
-        defaultModel === "MaybeProxyOpenAI" &&
+        defaultModel === "OpenAIFreeTrial" &&
         (!input.startsWith("/") || input.startsWith("/edit"))
       ) {
         const freeTrialCounter = localStorage.getItem("freeTrialCounter");
@@ -257,26 +299,7 @@ function GUI(props: GUIProps) {
           if (usages >= 250) {
             console.log("Free trial limit reached");
             dispatch(setShowDialog(true));
-            dispatch(
-              setDialogMessage(
-                <div className="p-4">
-                  <h3>Free Trial Limit Reached</h3>
-                  You've reached the free trial limit of 250 free inputs with
-                  Continue's OpenAI API key. To keep using Continue, you can
-                  either use your own API key, or use a local LLM. To read more
-                  about the options, see our{" "}
-                  <a
-                    href="https://continue.dev/docs/customization/models"
-                    target="_blank"
-                  >
-                    documentation
-                  </a>
-                  . If you're just looking for fastest way to keep going, type
-                  '/config' to open your Continue config file and paste your API
-                  key into the MaybeProxyOpenAI object.
-                </div>
-              )
-            );
+            dispatch(setDialogMessage(<FreeTrialLimitReachedDialog />));
             return;
           }
         } else {
@@ -391,6 +414,64 @@ function GUI(props: GUIProps) {
     client.sendStepUserInput(input, index);
   };
 
+  const onToggleAtIndex = (index: number) => {
+    // Check if all steps after the User Input are closed
+    const groupIndices = getStepsInUserInputGroup(index);
+    const userInputIndex = groupIndices[0];
+    setStepsOpen((prev) => {
+      const nextStepsOpen = [...prev];
+      nextStepsOpen[index] = !nextStepsOpen[index];
+      const allStepsAfterUserInputAreClosed = !groupIndices.some((i) => {
+        nextStepsOpen[i];
+      });
+      if (allStepsAfterUserInputAreClosed) {
+        nextStepsOpen[userInputIndex] = false;
+      } else {
+        const allStepsAfterUserInputAreOpen = !groupIndices.some((i) => {
+          !nextStepsOpen[i];
+        });
+        if (allStepsAfterUserInputAreOpen) {
+          nextStepsOpen[userInputIndex] = true;
+        }
+      }
+
+      return nextStepsOpen;
+    });
+  };
+
+  const getStepsInUserInputGroup = useCallback(
+    (index: number): number[] => {
+      // index is the index in the entire timeline, hidden steps included
+      const stepsInUserInputGroup: number[] = [];
+
+      // First find the closest above UserInputStep
+      for (let i = index; i >= 0; i--) {
+        if (
+          history?.timeline.length > i &&
+          history.timeline[i].step.name === "User Input" &&
+          history.timeline[i].step.hide === false
+        ) {
+          stepsInUserInputGroup.push(i);
+          break;
+        }
+      }
+      if (stepsInUserInputGroup.length === 0) return [];
+
+      for (let i = index + 1; i < history?.timeline.length; i++) {
+        if (
+          history?.timeline.length > i &&
+          history.timeline[i].step.name === "User Input" &&
+          history.timeline[i].step.hide === false
+        ) {
+          break;
+        }
+        stepsInUserInputGroup.push(i);
+      }
+      return stepsInUserInputGroup;
+    },
+    [history.timeline]
+  );
+
   useEffect(() => {
     const timeout = setTimeout(() => {
       setShowLoading(true);
@@ -400,6 +481,7 @@ function GUI(props: GUIProps) {
       clearTimeout(timeout);
     };
   }, []);
+
   return (
     <TopGuiDiv
       ref={topGuiDivRef}
@@ -409,6 +491,34 @@ function GUI(props: GUIProps) {
         }
       }}
     >
+      <GUIHeaderDiv>
+        <h3 className="text-lg font-bold m-0">
+          {sessionTitle || "New Session"}
+        </h3>
+        <div className="flex">
+          {history.timeline.filter((n) => !n.step.hide).length > 0 && (
+            <HeaderButtonWithText
+              onClick={() => {
+                if (history.timeline.filter((n) => !n.step.hide).length > 0) {
+                  client?.loadSession(undefined);
+                }
+              }}
+              text="New Session (⌥⌘N)"
+            >
+              <PlusIcon width="1.4em" height="1.4em" />
+            </HeaderButtonWithText>
+          )}
+
+          <HeaderButtonWithText
+            onClick={() => {
+              navigate("/history");
+            }}
+            text="History"
+          >
+            <FolderIcon width="1.4em" height="1.4em" />
+          </HeaderButtonWithText>
+        </div>
+      </GUIHeaderDiv>
       {showLoading && typeof client === "undefined" && (
         <>
           <RingLoader />
@@ -478,63 +588,127 @@ function GUI(props: GUIProps) {
               </u>
             </p>
           </div>
-
-          <div className="w-3/4 m-auto text-center text-xs">
-            {/* Tip: Drag the Continue logo from the far left of the window to the
-            right, then toggle Continue using option/alt+command+m. */}
-            {/* Tip: If there is an error in the terminal, use COMMAND+D to
-            automatically debug */}
-          </div>
         </>
       )}
-      {history?.timeline.map((node: HistoryNode, index: number) => {
-        return node.step.name === "User Input" ? (
-          node.step.hide || (
-            <UserInputContainer
-              index={index}
-              onDelete={() => {
-                client?.deleteAtIndex(index);
-              }}
-              historyNode={node}
-            >
-              {node.step.description as string}
-            </UserInputContainer>
-          )
-        ) : (
-          <StepContainer
-            index={index}
-            isLast={index === history.timeline.length - 1}
-            isFirst={index === 0}
-            open={stepsOpen[index]}
-            onToggle={() => {
-              const nextStepsOpen = [...stepsOpen];
-              nextStepsOpen[index] = !nextStepsOpen[index];
-              setStepsOpen(nextStepsOpen);
-            }}
-            onToggleAll={() => {
-              const shouldOpen = !stepsOpen[index];
-              setStepsOpen((prev) => prev.map(() => shouldOpen));
-            }}
-            key={index}
-            onUserInput={(input: string) => {
-              onStepUserInput(input, index);
-            }}
-            inFuture={index > history?.current_index}
-            historyNode={node}
-            onReverse={() => {
-              client?.reverseToIndex(index);
-            }}
-            onRetry={() => {
-              client?.retryAtIndex(index);
-              setWaitingForSteps(true);
-            }}
-            onDelete={() => {
-              client?.deleteAtIndex(index);
-            }}
-          />
-        );
-      })}
-      {waitingForSteps && <Loader />}
+      <br />
+      <SuggestionsArea
+        onClick={(textInput) => {
+          client?.sendMainInput(textInput);
+        }}
+      />
+      <StepsDiv>
+        {history?.timeline.map((node: HistoryNode, index: number) => {
+          if (node.step.hide) return null;
+          return (
+            <>
+              {node.step.name === "User Input" ? (
+                node.step.hide || (
+                  <UserInputContainer
+                    active={getStepsInUserInputGroup(index).some((i) => {
+                      return history.timeline[i].active;
+                    })}
+                    groupIndices={getStepsInUserInputGroup(index)}
+                    onToggle={(isOpen: boolean) => {
+                      // Collapse all steps in the section
+                      setStepsOpen((prev) => {
+                        const nextStepsOpen = [...prev];
+                        getStepsInUserInputGroup(index).forEach((i) => {
+                          nextStepsOpen[i] = isOpen;
+                        });
+                        return nextStepsOpen;
+                      });
+                    }}
+                    onToggleAll={(isOpen: boolean) => {
+                      // Collapse _all_ steps
+                      setStepsOpen((prev) => {
+                        return prev.map((_) => isOpen);
+                      });
+                    }}
+                    isToggleOpen={
+                      typeof stepsOpen[index] === "undefined"
+                        ? true
+                        : stepsOpen[index]!
+                    }
+                    index={index}
+                    onDelete={() => {
+                      // Delete the input and all steps until the next user input
+                      getStepsInUserInputGroup(index).forEach((i) => {
+                        client?.deleteAtIndex(i);
+                      });
+                    }}
+                    historyNode={node}
+                  >
+                    {node.step.description as string}
+                  </UserInputContainer>
+                )
+              ) : (
+                <TimelineItem
+                  historyNode={node}
+                  iconElement={
+                    node.step.class_name === "DefaultModelEditCodeStep" ? (
+                      <CodeBracketSquareIcon width="16px" height="16px" />
+                    ) : node.observation?.error ? (
+                      <ExclamationTriangleIcon
+                        width="16px"
+                        height="16px"
+                        color="red"
+                      />
+                    ) : (
+                      <ChatBubbleOvalLeftIcon width="16px" height="16px" />
+                    )
+                  }
+                  open={
+                    typeof stepsOpen[index] === "undefined"
+                      ? node.observation?.error
+                        ? false
+                        : true
+                      : stepsOpen[index]!
+                  }
+                  onToggle={() => onToggleAtIndex(index)}
+                >
+                  {node.observation?.error ? (
+                    <ErrorStepContainer
+                      onClose={() => onToggleAtIndex(index)}
+                      historyNode={node}
+                    />
+                  ) : (
+                    <StepContainer
+                      index={index}
+                      isLast={index === history.timeline.length - 1}
+                      isFirst={index === 0}
+                      open={
+                        typeof stepsOpen[index] === "undefined"
+                          ? true
+                          : stepsOpen[index]!
+                      }
+                      key={index}
+                      onUserInput={(input: string) => {
+                        onStepUserInput(input, index);
+                      }}
+                      inFuture={index > history?.current_index}
+                      historyNode={node}
+                      onReverse={() => {
+                        client?.reverseToIndex(index);
+                      }}
+                      onRetry={() => {
+                        client?.retryAtIndex(index);
+                        setWaitingForSteps(true);
+                      }}
+                      onDelete={() => {
+                        client?.deleteAtIndex(index);
+                      }}
+                      noUserInputParent={
+                        getStepsInUserInputGroup(index).length === 0
+                      }
+                    />
+                  )}
+                </TimelineItem>
+              )}
+              {/* <div className="h-2"></div> */}
+            </>
+          );
+        })}
+      </StepsDiv>
 
       <div>
         {user_input_queue?.map?.((input) => {
@@ -547,8 +721,8 @@ function GUI(props: GUIProps) {
         ref={mainTextInputRef}
         onEnter={(e) => {
           onMainTextInput(e);
-          e.stopPropagation();
-          e.preventDefault();
+          e?.stopPropagation();
+          e?.preventDefault();
         }}
         onInputValueChange={() => {}}
         items={availableSlashCommands}
@@ -558,7 +732,6 @@ function GUI(props: GUIProps) {
         }}
         addingHighlightedCode={adding_highlighted_code}
       />
-      <ContinueButton onClick={onMainTextInput} />
     </TopGuiDiv>
   );
 }

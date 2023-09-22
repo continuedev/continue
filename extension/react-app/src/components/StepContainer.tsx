@@ -1,18 +1,9 @@
-import { useContext, useEffect, useRef, useState } from "react";
-import styled, { keyframes } from "styled-components";
-import { secondaryDark, vscBackground } from ".";
-import {
-  ChevronDownIcon,
-  ChevronRightIcon,
-  ArrowPathIcon,
-  XMarkIcon,
-  MagnifyingGlassIcon,
-  StopCircleIcon,
-} from "@heroicons/react/24/outline";
+import { useEffect, useRef, useState } from "react";
+import styled from "styled-components";
+import { defaultBorderRadius, secondaryDark, vscBackground } from ".";
+import { ArrowPathIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { HistoryNode } from "../../../schema/HistoryNode";
 import HeaderButtonWithText from "./HeaderButtonWithText";
-import { getMetaKeyLabel, isMetaEquivalentKeyPressed } from "../util";
-import { GUIClientContext } from "../App";
 import StyledMarkdownPreview from "./StyledMarkdownPreview";
 
 interface StepContainerProps {
@@ -23,11 +14,10 @@ interface StepContainerProps {
   onRetry: () => void;
   onDelete: () => void;
   open: boolean;
-  onToggleAll: () => void;
-  onToggle: () => void;
   isFirst: boolean;
   isLast: boolean;
   index: number;
+  noUserInputParent: boolean;
 }
 
 // #region styled components
@@ -35,74 +25,30 @@ interface StepContainerProps {
 const MainDiv = styled.div<{
   stepDepth: number;
   inFuture: boolean;
-}>`
-  opacity: ${(props) => (props.inFuture ? 0.3 : 1)};
-  overflow: hidden;
-  margin-left: 0px;
-  margin-right: 0px;
-`;
+}>``;
 
-const HeaderDiv = styled.div<{ error: boolean; loading: boolean }>`
-  background-color: ${(props) => (props.error ? "#522" : vscBackground)};
-  display: grid;
-  grid-template-columns: 1fr auto auto;
+const ButtonsDiv = styled.div`
+  display: flex;
+  gap: 2px;
   align-items: center;
-  padding-right: 8px;
-`;
+  background-color: ${vscBackground};
+  box-shadow: 1px 1px 10px ${vscBackground};
+  border-radius: ${defaultBorderRadius};
 
-const LeftHeaderSubDiv = styled.div`
-  margin: 8px;
-  display: grid;
-  grid-template-columns: auto 1fr;
-  align-items: center;
-  grid-gap: 2px;
+  position: absolute;
+  right: 0;
+  top: 0;
+  height: 0;
 `;
 
 const ContentDiv = styled.div<{ isUserInput: boolean }>`
-  padding-left: 4px;
-  padding-right: 2px;
+  padding: 2px;
+  padding-right: 0px;
   background-color: ${(props) =>
     props.isUserInput ? secondaryDark : vscBackground};
   font-size: 13px;
-`;
-
-const gradient = keyframes`
-  0% {
-    background-position: 0px 0;
-  }
-  100% {
-    background-position: 100em 0;
-  }
-`;
-
-const GradientBorder = styled.div<{
-  borderWidth?: number;
-  borderRadius?: string;
-  borderColor?: string;
-  isFirst: boolean;
-  isLast: boolean;
-  loading: boolean;
-}>`
-  border-radius: ${(props) => props.borderRadius || "0"};
-  padding-top: ${(props) =>
-    `${(props.borderWidth || 1) / (props.isFirst ? 1 : 2)}px`};
-  padding-bottom: ${(props) =>
-    `${(props.borderWidth || 1) / (props.isLast ? 1 : 2)}px`};
-  background: ${(props) =>
-    props.borderColor
-      ? props.borderColor
-      : `repeating-linear-gradient(
-    101.79deg,
-    #1BBE84 0%,
-    #331BBE 16%,
-    #BE1B55 33%,
-    #A6BE1B 55%,
-    #BE1B55 67%,
-    #331BBE 85%,
-    #1BBE84 99%
-  )`};
-  animation: ${(props) => (props.loading ? gradient : "")} 6s linear infinite;
-  background-size: 200% 200%;
+  border-radius: ${defaultBorderRadius};
+  overflow: hidden;
 `;
 
 // #endregion
@@ -112,7 +58,6 @@ function StepContainer(props: StepContainerProps) {
   const naturalLanguageInputRef = useRef<HTMLTextAreaElement>(null);
   const userInputRef = useRef<HTMLInputElement>(null);
   const isUserInput = props.historyNode.step.name === "UserInputStep";
-  const client = useContext(GUIClientContext);
 
   useEffect(() => {
     if (userInputRef?.current) {
@@ -139,91 +84,11 @@ function StepContainer(props: StepContainerProps) {
       hidden={props.historyNode.step.hide as any}
     >
       <div>
-        <GradientBorder
-          loading={props.historyNode.active as boolean}
-          isFirst={props.isFirst}
-          isLast={props.isLast}
-          borderColor={
-            props.historyNode.observation?.error
-              ? "#f005"
-              : props.historyNode.active
-              ? undefined
-              : "transparent"
-          }
-          className="overflow-hidden cursor-pointer"
-          onClick={(e) => {
-            if (isMetaEquivalentKeyPressed(e)) {
-              props.onToggleAll();
-            } else {
-              props.onToggle();
-            }
-          }}
-        >
-          <HeaderDiv
-            loading={(props.historyNode.active as boolean) || false}
-            error={props.historyNode.observation?.error ? true : false}
-          >
-            <LeftHeaderSubDiv
-              style={
-                props.historyNode.observation?.error ? { color: "white" } : {}
-              }
-            >
-              {!isUserInput &&
-                (props.open ? (
-                  <ChevronDownIcon width="1.4em" height="1.4em" />
-                ) : (
-                  <ChevronRightIcon width="1.4em" height="1.4em" />
-                ))}
-              {props.historyNode.observation?.title ||
-                (props.historyNode.step.name as any)}
-            </LeftHeaderSubDiv>
-            {/* <HeaderButton
-              onClick={(e) => {
-                e.stopPropagation();
-                props.onReverse();
-              }}
-            >
-              <Backward size="1.6em" onClick={props.onReverse}></Backward>
-            </HeaderButton> */}
-            {(isHovered || (props.historyNode.active as boolean)) && (
-              <div className="flex gap-2 items-center">
-                {(props.historyNode.logs as any)?.length > 0 && (
-                  <HeaderButtonWithText
-                    text="Logs"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      client?.showLogsAtIndex(props.index);
-                    }}
-                  >
-                    <MagnifyingGlassIcon width="1.4em" height="1.4em" />
-                  </HeaderButtonWithText>
-                )}
-                <HeaderButtonWithText
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    props.onDelete();
-                  }}
-                  text={
-                    props.historyNode.active
-                      ? `Stop (${getMetaKeyLabel()}⌫)`
-                      : "Delete"
-                  }
-                >
-                  {props.historyNode.active ? (
-                    <StopCircleIcon
-                      width="1.4em"
-                      height="1.4em"
-                      onClick={props.onDelete}
-                    />
-                  ) : (
-                    <XMarkIcon
-                      width="1.4em"
-                      height="1.4em"
-                      onClick={props.onDelete}
-                    />
-                  )}
-                </HeaderButtonWithText>
-                {props.historyNode.observation?.error ? (
+        {isHovered &&
+          (props.historyNode.observation?.error || props.noUserInputParent) && (
+            <ButtonsDiv>
+              {props.historyNode.observation?.error &&
+                ((
                   <HeaderButtonWithText
                     text="Retry"
                     onClick={(e) => {
@@ -237,39 +102,33 @@ function StepContainer(props: StepContainerProps) {
                       onClick={props.onRetry}
                     />
                   </HeaderButtonWithText>
-                ) : (
-                  <></>
-                )}
-              </div>
-            )}
-          </HeaderDiv>
-        </GradientBorder>
-        <ContentDiv hidden={!props.open} isUserInput={isUserInput}>
-          {props.open && false && (
-            <>
-              <pre className="overflow-x-scroll">
-                Step Details:
-                <br />
-                {JSON.stringify(props.historyNode.step, null, 2)}
-              </pre>
-            </>
+                ) as any)}
+
+              {props.noUserInputParent && (
+                <HeaderButtonWithText
+                  text="Delete"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    props.onDelete();
+                  }}
+                >
+                  <XMarkIcon
+                    width="1.4em"
+                    height="1.4em"
+                    onClick={props.onRetry}
+                  />
+                </HeaderButtonWithText>
+              )}
+            </ButtonsDiv>
           )}
 
-          {props.historyNode.observation?.error ? (
-            <details>
-              <summary>View Traceback</summary>
-              <pre className="overflow-x-scroll">
-                {props.historyNode.observation.error as string}
-              </pre>
-            </details>
-          ) : (
-            <StyledMarkdownPreview
-              source={props.historyNode.step.description || ""}
-              wrapperElement={{
-                "data-color-mode": "dark",
-              }}
-            />
-          )}
+        <ContentDiv hidden={!props.open} isUserInput={isUserInput}>
+          <StyledMarkdownPreview
+            source={props.historyNode.step.description || ""}
+            wrapperElement={{
+              "data-color-mode": "dark",
+            }}
+          />
         </ContentDiv>
       </div>
     </MainDiv>

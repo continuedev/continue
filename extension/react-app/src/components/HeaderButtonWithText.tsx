@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { HeaderButton, StyledTooltip } from ".";
+import ReactDOM from "react-dom";
 
 interface HeaderButtonWithTextProps {
   text: string;
@@ -14,6 +15,9 @@ interface HeaderButtonWithTextProps {
 
 const HeaderButtonWithText = (props: HeaderButtonWithTextProps) => {
   const [hover, setHover] = useState(false);
+
+  const tooltipPortalDiv = document.getElementById("tooltip-portal-div");
+
   return (
     <>
       <HeaderButton
@@ -34,9 +38,13 @@ const HeaderButtonWithText = (props: HeaderButtonWithTextProps) => {
       >
         {props.children}
       </HeaderButton>
-      <StyledTooltip id={`header_button_${props.text}`} place="bottom">
-        {props.text}
-      </StyledTooltip>
+      {tooltipPortalDiv &&
+        ReactDOM.createPortal(
+          <StyledTooltip id={`header_button_${props.text}`} place="bottom">
+            {props.text}
+          </StyledTooltip>,
+          tooltipPortalDiv
+        )}
     </>
   );
 };

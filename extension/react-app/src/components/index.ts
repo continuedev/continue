@@ -7,7 +7,7 @@ export const lightGray = "#646464";
 // export const vscBackground = "rgb(30 30 30)";
 export const vscBackgroundTransparent = "#1e1e1ede";
 export const buttonColor = "#1bbe84";
-export const buttonColorHover = "1bbe84a8";
+export const buttonColorHover = "#1bbe84a8";
 
 export const secondaryDark = "var(--vscode-list-hoverBackground)";
 export const vscBackground = "var(--vscode-editor-background)";
@@ -17,7 +17,6 @@ export const Button = styled.button`
   padding: 10px 12px;
   margin: 8px 0;
   border-radius: ${defaultBorderRadius};
-  cursor: pointer;
 
   border: none;
   color: white;
@@ -28,7 +27,7 @@ export const Button = styled.button`
   }
 
   &:hover:enabled {
-    background-color: ${buttonColorHover};
+    cursor: pointer;
   }
 `;
 
@@ -55,6 +54,8 @@ export const TextArea = styled.textarea`
   color: ${vscForeground};
   z-index: 1;
   border: 1px solid transparent;
+
+  resize: vertical;
 
   &:focus {
     outline: 1px solid ${lightGray};

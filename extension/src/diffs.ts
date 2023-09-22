@@ -194,10 +194,10 @@ class DiffManager {
       this.diffs.set(newFilepath, diffInfo);
     }
 
-    vscode.commands.executeCommand(
-      "workbench.action.files.revert",
-      uriFromFilePath(newFilepath)
-    );
+    // vscode.commands.executeCommand(
+    //   "workbench.action.files.revert",
+    //   uriFromFilePath(newFilepath)
+    // );
 
     return newFilepath;
   }
@@ -271,6 +271,8 @@ class DiffManager {
       });
 
     await recordAcceptReject(true, diffInfo);
+
+    ideProtocolClient.sendAcceptRejectDiff(true, diffInfo.step_index);
   }
 
   async rejectDiff(newFilepath?: string) {
@@ -302,6 +304,8 @@ class DiffManager {
       });
 
     await recordAcceptReject(false, diffInfo);
+
+    ideProtocolClient.sendAcceptRejectDiff(false, diffInfo.step_index);
   }
 }
 
@@ -339,10 +343,8 @@ async function recordAcceptReject(accepted: boolean, diffInfo: DiffInfo) {
 
 export async function acceptDiffCommand(newFilepath?: string) {
   await diffManager.acceptDiff(newFilepath);
-  ideProtocolClient.sendAcceptRejectDiff(true);
 }
 
 export async function rejectDiffCommand(newFilepath?: string) {
   await diffManager.rejectDiff(newFilepath);
-  ideProtocolClient.sendAcceptRejectDiff(false);
 }
