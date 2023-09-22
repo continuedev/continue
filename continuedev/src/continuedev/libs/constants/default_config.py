@@ -24,7 +24,7 @@ config = ContinueConfig(
     allow_anonymous_telemetry=True,
     models=Models(
         default=OpenAIFreeTrial(api_key="", model="gpt-4"),
-        summzarize=OpenAIFreeTrial(api_key="", model="gpt-3.5-turbo")
+        summarize=OpenAIFreeTrial(api_key="", model="gpt-3.5-turbo")
     ),
     system_message=None,
     temperature=0.5,

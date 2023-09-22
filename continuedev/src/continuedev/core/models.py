@@ -6,6 +6,7 @@ from ..libs.llm import LLM
 from ..libs.llm.anthropic import AnthropicLLM
 from ..libs.llm.ggml import GGML
 from ..libs.llm.hf_inference_api import HuggingFaceInferenceAPI
+from ..libs.llm.hf_tgi import HuggingFaceTGI
 from ..libs.llm.llamacpp import LlamaCpp
 from ..libs.llm.ollama import Ollama
 from ..libs.llm.openai import OpenAI
@@ -20,7 +21,7 @@ class ContinueSDK(BaseModel):
 
 ALL_MODEL_ROLES = [
     "default",
-    "summzarize",
+    "summarize",
     "edit",
     "chat",
 ]
@@ -37,6 +38,7 @@ MODEL_CLASSES = {
         Ollama,
         LlamaCpp,
         HuggingFaceInferenceAPI,
+        HuggingFaceTGI,
     ]
 }
 
@@ -50,6 +52,7 @@ MODEL_MODULE_NAMES = {
     "Ollama": "ollama",
     "LlamaCpp": "llamacpp",
     "HuggingFaceInferenceAPI": "hf_inference_api",
+    "HuggingFaceTGI": "hf_tgi",
 }
 
 
@@ -57,7 +60,7 @@ class Models(BaseModel):
     """Main class that holds the current model configuration"""
 
     default: LLM
-    summzarize: Optional[LLM] = None
+    summarize: Optional[LLM] = None
     edit: Optional[LLM] = None
     chat: Optional[LLM] = None
 

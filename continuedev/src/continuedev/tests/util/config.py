@@ -6,7 +6,7 @@ config = ContinueConfig(
     allow_anonymous_telemetry=False,
     models=Models(
         default=OpenAIFreeTrial(api_key="", model="gpt-4"),
-        summzarize=OpenAIFreeTrial(
+        summarize=OpenAIFreeTrial(
             api_key="",
             model="gpt-3.5-turbo",
         ),

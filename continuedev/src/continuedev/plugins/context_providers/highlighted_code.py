@@ -215,41 +215,32 @@ class HighlightedCodeContextProvider(ContextProvider):
 
             return
 
-        # If current range overlaps with any others, delete them and only keep the new range
+        # If new range overlaps with any existing, keep the existing but merged
         new_ranges = []
-        for i, hr in enumerate(self.highlighted_ranges):
+        for i, new_hr in enumerate(range_in_files):
             found_overlap = False
-            for new_rif in range_in_files:
-                if hr.rif.filepath == new_rif.filepath and hr.rif.range.overlaps_with(
-                    new_rif.range
-                ):
-                    found_overlap = True
-                    break
-
-                # Also don't allow multiple ranges in same file with same content. This is useless to the model, and avoids
-                # the bug where cmd+f causes repeated highlights
+            for existing_rif in self.highlighted_ranges:
                 if (
-                    hr.rif.filepath == new_rif.filepath
-                    and hr.rif.contents == new_rif.contents
+                    new_hr.filepath == existing_rif.rif.filepath
+                    and new_hr.range.overlaps_with(existing_rif.rif.range)
                 ):
+                    existing_rif.rif.range = existing_rif.rif.range.merge_with(
+                        new_hr.range
+                    )
                     found_overlap = True
                     break
 
             if not found_overlap:
                 new_ranges.append(
                     HighlightedRangeContextItem(
-                        rif=hr.rif,
-                        item=self._rif_to_context_item(hr.rif, len(new_ranges), False),
+                        rif=new_hr,
+                        item=self._rif_to_context_item(
+                            new_hr, len(self.highlighted_ranges) + i, True
+                        ),
                     )
                 )
 
-        self.highlighted_ranges = new_ranges + [
-            HighlightedRangeContextItem(
-                rif=rif,
-                item=self._rif_to_context_item(rif, len(new_ranges) + idx, False),
-            )
-            for idx, rif in enumerate(range_in_files)
-        ]
+        self.highlighted_ranges = self.highlighted_ranges + new_ranges
 
         self._make_sure_is_editing_range()
         self._disambiguate_highlighted_ranges()

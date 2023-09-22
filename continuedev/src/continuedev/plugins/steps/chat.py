@@ -71,7 +71,7 @@ class SimpleChatStep(Step):
                                     ...
                                     models=Models(
                                         default=OpenAIFreeTrial(api_key="<API_KEY>", model="gpt-4"),
-                                        summzarize=OpenAIFreeTrial(api_key="<API_KEY>", model="gpt-3.5-turbo")
+                                        summarize=OpenAIFreeTrial(api_key="<API_KEY>", model="gpt-3.5-turbo")
                                     )
                                 )
                                ```
@@ -129,7 +129,7 @@ class SimpleChatStep(Step):
             await sdk.update_ui()
             self.name = add_ellipsis(
                 remove_quotes_and_escapes(
-                    await sdk.models.summzarize.complete(
+                    await sdk.models.summarize.complete(
                         f'"{self.description}"\n\nPlease write a short title summarizing the message quoted above. Use no more than 10 words:',
                         max_tokens=20,
                         log=False,
