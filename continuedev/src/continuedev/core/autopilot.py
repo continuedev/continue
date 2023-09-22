@@ -10,6 +10,7 @@ from aiohttp import ClientPayloadError
 from openai import error as openai_errors
 from pydantic import root_validator
 
+from ..libs.llm.prompts.chat import template_alpaca_messages
 from ..libs.util.create_async_task import create_async_task
 from ..libs.util.devdata import dev_data_logger
 from ..libs.util.edit_config import edit_config_property
@@ -485,6 +486,38 @@ class Autopilot(ContinueBaseModel):
             ),
         )
 
+        # Create the session title if not done yet
+        if self.session_info is None or self.session_info.title is None:
+            visible_nodes = list(
+                filter(lambda node: not node.step.hide, self.history.timeline)
+            )
+
+            user_input = None
+            should_create_title = False
+            for visible_node in visible_nodes:
+                if isinstance(visible_node.step, UserInputStep):
+                    if user_input is None:
+                        user_input = visible_node.step.user_input
+                    else:
+                        # More than one user input, so don't create title
+                        should_create_title = False
+                        break
+                elif user_input is None:
+                    continue
+                else:
+                    # Already have user input, now have the next step
+                    should_create_title = True
+                    break
+
+            # Only create the title if the step after the first input is done
+            if should_create_title:
+                create_async_task(
+                    self.create_title(backup=user_input),
+                    on_error=lambda e: self.continue_sdk.run_step(
+                        DisplayErrorStep.from_exception(e)
+                    ),
+                )
+
         return observation
 
     async def run_from_step(self, step: "Step"):
@@ -529,44 +562,40 @@ class Autopilot(ContinueBaseModel):
         self._should_halt = False
         return None
 
+    async def create_title(self, backup: str = None):
+        # Use the first input and first response to create title for session info, and make the session saveable
+        if self.session_info is not None and self.session_info.title is not None:
+            return
+
+        if self.continue_sdk.config.disable_summaries:
+            if backup is not None:
+                title = backup
+            else:
+                title = "New Session"
+        else:
+            chat_history = list(
+                map(lambda x: x.dict(), await self.continue_sdk.get_chat_context())
+            )
+            chat_history_str = template_alpaca_messages(chat_history)
+            title = await self.continue_sdk.models.summarize.complete(
+                f"{chat_history_str}\n\nGive a short title to describe the above chat session. Do not put quotes around the title. Do not use more than 6 words. The title is: ",
+                max_tokens=20,
+                log=False,
+            )
+            title = remove_quotes_and_escapes(title)
+
+        self.session_info = SessionInfo(
+            title=title,
+            session_id=self.ide.session_id,
+            date_created=str(time.time()),
+            workspace_directory=self.ide.workspace_directory,
+        )
+        await self.update_subscribers()
+        dev_data_logger.capture("new_session", self.session_info.dict())
+
     async def accept_user_input(self, user_input: str):
         self._main_user_input_queue.append(user_input)
         await self.update_subscribers()
-
-        # Use the first input to create title for session info, and make the session saveable
-        if self.session_info is None:
-
-            async def create_title():
-                if (
-                    self.session_info is not None
-                    and self.session_info.title is not None
-                ):
-                    return
-
-                if self.continue_sdk.config.disable_summaries:
-                    title = user_input
-                else:
-                    title = await self.continue_sdk.models.summarize.complete(
-                        f'Give a short title to describe the current chat session. Do not put quotes around the title. The first message was: "{user_input}". Do not use more than 10 words. The title is: ',
-                        max_tokens=20,
-                        log=False,
-                    )
-                    title = remove_quotes_and_escapes(title)
-
-                self.session_info = SessionInfo(
-                    title=title,
-                    session_id=self.ide.session_id,
-                    date_created=str(time.time()),
-                    workspace_directory=self.ide.workspace_directory,
-                )
-                dev_data_logger.capture("new_session", self.session_info.dict())
-
-            create_async_task(
-                create_title(),
-                on_error=lambda e: self.continue_sdk.run_step(
-                    DisplayErrorStep.from_exception(e)
-                ),
-            )
 
         if len(self._main_user_input_queue) > 1:
             return

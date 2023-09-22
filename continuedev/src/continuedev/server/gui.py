@@ -184,7 +184,7 @@ class GUIProtocolServer:
         create_async_task(self.session.autopilot.set_editing_at_ids(ids), self.on_error)
 
     def on_show_logs_at_index(self, index: int):
-        name = "continue_logs.txt"
+        name = "Continue Context"
         logs = "\n\n############################################\n\n".join(
             ["This is the prompt sent to the LLM during this step"]
             + self.session.autopilot.continue_sdk.history.timeline[index].logs
