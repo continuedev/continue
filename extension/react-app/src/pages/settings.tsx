@@ -4,7 +4,13 @@ import { useDispatch, useSelector } from "react-redux";
 import { RootStore } from "../redux/store";
 import { useNavigate } from "react-router-dom";
 import { ContinueConfig } from "../../../schema/ContinueConfig";
-import { Button, TextArea, lightGray, secondaryDark } from "../components";
+import {
+  Button,
+  TextArea,
+  lightGray,
+  secondaryDark,
+  vscBackground,
+} from "../components";
 import styled from "styled-components";
 import { ArrowLeftIcon, Squares2X2Icon } from "@heroicons/react/24/outline";
 import Loader from "../components/Loader";
@@ -110,19 +116,22 @@ function Settings() {
   return (
     <FormProvider {...formMethods}>
       <div className="overflow-scroll">
+        <div
+          className="items-center flex sticky top-0"
+          style={{
+            borderBottom: `0.5px solid ${lightGray}`,
+            backgroundColor: vscBackground,
+          }}
+        >
+          <ArrowLeftIcon
+            width="1.2em"
+            height="1.2em"
+            onClick={submitAndLeave}
+            className="inline-block ml-4 cursor-pointer"
+          />
+          <h3 className="text-lg font-bold m-2 inline-block">Settings</h3>
+        </div>
         <form onSubmit={formMethods.handleSubmit(onSubmit)}>
-          <div
-            className="items-center flex"
-            style={{ borderBottom: `0.5px solid ${lightGray}` }}
-          >
-            <ArrowLeftIcon
-              width="1.2em"
-              height="1.2em"
-              onClick={submitAndLeave}
-              className="inline-block ml-4 cursor-pointer"
-            />
-            <h3 className="text-lg font-bold m-2 inline-block">Settings</h3>
-          </div>
           {config ? (
             <div className="p-2">
               <h3 className="flex gap-1">

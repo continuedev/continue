@@ -2,7 +2,7 @@ import React from "react";
 import ModelCard, { ModelInfo, ModelTag } from "../components/ModelCard";
 import styled from "styled-components";
 import { ArrowLeftIcon } from "@heroicons/react/24/outline";
-import { lightGray } from "../components";
+import { lightGray, vscBackground } from "../components";
 import { useNavigate } from "react-router-dom";
 
 const MODEL_INFO: ModelInfo[] = [
@@ -141,8 +141,11 @@ function Models() {
   return (
     <div className="overflow-y-scroll">
       <div
-        className="items-center flex m-0 p-0"
-        style={{ borderBottom: `0.5px solid ${lightGray}` }}
+        className="items-center flex m-0 p-0 sticky top-0"
+        style={{
+          borderBottom: `0.5px solid ${lightGray}`,
+          backgroundColor: vscBackground,
+        }}
       >
         <ArrowLeftIcon
           width="1.2em"
