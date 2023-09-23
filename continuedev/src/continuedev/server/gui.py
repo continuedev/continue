@@ -82,7 +82,9 @@ class GUIProtocolServer:
         return resp_model.parse_obj(resp)
 
     def on_error(self, e: Exception):
-        return self.session.autopilot.continue_sdk.run_step(DisplayErrorStep(e=e))
+        return self.session.autopilot.continue_sdk.run_step(
+            DisplayErrorStep.from_exception(e)
+        )
 
     def handle_json(self, message_type: str, data: Any):
         if message_type == "main_input":
@@ -97,6 +99,8 @@ class GUIProtocolServer:
             self.on_retry_at_index(data["index"])
         elif message_type == "clear_history":
             self.on_clear_history()
+        elif message_type == "set_current_session_title":
+            self.set_current_session_title(data["title"])
         elif message_type == "delete_at_index":
             self.on_delete_at_index(data["index"])
         elif message_type == "delete_context_with_ids":
@@ -107,6 +111,8 @@ class GUIProtocolServer:
             self.on_set_editing_at_ids(data["ids"])
         elif message_type == "show_logs_at_index":
             self.on_show_logs_at_index(data["index"])
+        elif message_type == "show_context_virtual_file":
+            self.show_context_virtual_file()
         elif message_type == "select_context_item":
             self.select_context_item(data["id"], data["query"])
         elif message_type == "load_session":
@@ -180,17 +186,31 @@ class GUIProtocolServer:
         create_async_task(self.session.autopilot.set_editing_at_ids(ids), self.on_error)
 
     def on_show_logs_at_index(self, index: int):
-        name = "continue_logs.txt"
+        name = "Continue Context"
         logs = "\n\n############################################\n\n".join(
-            [
-                "This is a log of the prompt/completion pairs sent/received from the LLM during this step"
-            ]
+            ["This is the prompt sent to the LLM during this step"]
             + self.session.autopilot.continue_sdk.history.timeline[index].logs
         )
         create_async_task(
             self.session.autopilot.ide.showVirtualFile(name, logs), self.on_error
         )
         posthog_logger.capture_event("show_logs_at_index", {})
+
+    def show_context_virtual_file(self):
+        async def async_stuff():
+            msgs = await self.session.autopilot.continue_sdk.get_chat_context()
+            ctx = "\n\n-----------------------------------\n\n".join(
+                ["This is the exact context that will be passed to the LLM"]
+                + list(map(lambda x: x.content, msgs))
+            )
+            await self.session.autopilot.ide.showVirtualFile(
+                "Continue - Selected Context", ctx
+            )
+
+        create_async_task(
+            async_stuff(),
+            self.on_error,
+        )
 
     def select_context_item(self, id: str, query: str):
         """Called when user selects an item from the dropdown"""
@@ -210,6 +230,9 @@ class GUIProtocolServer:
         create_async_task(load_and_tell_to_reconnect(), self.on_error)
 
         posthog_logger.capture_event("load_session", {"session_id": session_id})
+
+    def set_current_session_title(self, title: str):
+        self.session.autopilot.set_current_session_title(title)
 
     def set_system_message(self, message: str):
         self.session.autopilot.continue_sdk.config.system_message = message
@@ -239,14 +262,14 @@ class GUIProtocolServer:
 
             # Set models in SDK
             temp = models.default
-            models.default = models.unused[index]
-            models.unused[index] = temp
+            models.default = models.saved[index]
+            models.saved[index] = temp
             await self.session.autopilot.continue_sdk.start_model(models.default)
 
             # Set models in config.py
             JOINER = ",\n\t\t"
             models_args = {
-                "unused": f"[{JOINER.join([display_llm_class(llm) for llm in models.unused])}]",
+                "saved": f"[{JOINER.join([display_llm_class(llm) for llm in models.saved])}]",
                 ("default" if role == "*" else role): display_llm_class(models.default),
             }
 
@@ -265,47 +288,58 @@ class GUIProtocolServer:
 
     def add_model_for_role(self, role: str, model_class: str, model: Any):
         models = self.session.autopilot.continue_sdk.config.models
-        unused_models = models.unused
         if role == "*":
 
             async def async_stuff():
-                for role in ALL_MODEL_ROLES:
-                    models.__setattr__(role, None)
-
-                # Set and start the default model if didn't already exist from unused
-                models.default = MODEL_CLASSES[model_class](**model)
-                await self.session.autopilot.continue_sdk.run_step(
-                    SetupModelStep(model_class=model_class)
+                # Remove all previous models in roles and place in saved
+                saved_models = models.saved
+                existing_saved_models = set(
+                    [display_llm_class(llm) for llm in saved_models]
                 )
-
-                await self.session.autopilot.continue_sdk.start_model(models.default)
-
-                models_args = {}
-
                 for role in ALL_MODEL_ROLES:
                     val = models.__getattribute__(role)
-                    if val is None:
-                        continue  # no pun intended
+                    if (
+                        val is not None
+                        and display_llm_class(val) not in existing_saved_models
+                    ):
+                        saved_models.append(val)
+                        existing_saved_models.add(display_llm_class(val))
+                    models.__setattr__(role, None)
 
-                    models_args[role] = display_llm_class(val, True)
+                # Set and start the new default model
+                new_model = MODEL_CLASSES[model_class](**model)
+                models.default = new_model
+                await self.session.autopilot.continue_sdk.start_model(models.default)
 
+                # Construct and set the new models object
                 JOINER = ",\n\t\t"
-                models_args[
-                    "unused"
-                ] = f"[{JOINER.join([display_llm_class(llm) for llm in unused_models])}]"
+                saved_model_strings = set(
+                    [display_llm_class(llm) for llm in saved_models]
+                )
+                models_args = {
+                    "default": display_llm_class(models.default, True),
+                    "saved": f"[{JOINER.join(saved_model_strings)}]",
+                }
 
                 await self.session.autopilot.set_config_attr(
                     ["models"],
                     create_obj_node("Models", models_args),
                 )
 
+                # Add the requisite import to config.py
                 add_config_import(
                     f"from continuedev.src.continuedev.libs.llm.{MODEL_MODULE_NAMES[model_class]} import {model_class}"
                 )
 
+                # Set all roles (in-memory) to the new default model
                 for role in ALL_MODEL_ROLES:
                     if role != "default":
                         models.__setattr__(role, models.default)
+
+                # Display setup help
+                await self.session.autopilot.continue_sdk.run_step(
+                    SetupModelStep(model_class=model_class)
+                )
 
             create_async_task(async_stuff(), self.on_error)
         else:

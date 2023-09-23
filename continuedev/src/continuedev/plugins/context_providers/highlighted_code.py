@@ -1,5 +1,5 @@
 import os
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel
 
@@ -35,7 +35,8 @@ class HighlightedCodeContextProvider(ContextProvider):
     ide: Any  # IdeProtocolServer
 
     highlighted_ranges: List[HighlightedRangeContextItem] = []
-    adding_highlighted_code: bool = False
+    adding_highlighted_code: bool = True
+    # Controls whether you can have more than one highlighted range. Now always True.
 
     should_get_fallback_context_item: bool = True
     last_added_fallback: bool = False
@@ -177,7 +178,9 @@ class HighlightedCodeContextProvider(ContextProvider):
         )
 
     async def handle_highlighted_code(
-        self, range_in_files: List[RangeInFileWithContents]
+        self,
+        range_in_files: List[RangeInFileWithContents],
+        edit: Optional[bool] = False,
     ):
         self.should_get_fallback_context_item = True
         self.last_added_fallback = False
@@ -208,47 +211,47 @@ class HighlightedCodeContextProvider(ContextProvider):
                 self.highlighted_ranges = [
                     HighlightedRangeContextItem(
                         rif=range_in_files[0],
-                        item=self._rif_to_context_item(range_in_files[0], 0, True),
+                        item=self._rif_to_context_item(range_in_files[0], 0, edit),
                     )
                 ]
 
             return
 
-        # If current range overlaps with any others, delete them and only keep the new range
+        # If editing, make sure none of the other ranges are editing
+        if edit:
+            for hr in self.highlighted_ranges:
+                hr.item.editing = False
+
+        # If new range overlaps with any existing, keep the existing but merged
         new_ranges = []
-        for i, hr in enumerate(self.highlighted_ranges):
-            found_overlap = False
-            for new_rif in range_in_files:
-                if hr.rif.filepath == new_rif.filepath and hr.rif.range.overlaps_with(
-                    new_rif.range
-                ):
-                    found_overlap = True
-                    break
-
-                # Also don't allow multiple ranges in same file with same content. This is useless to the model, and avoids
-                # the bug where cmd+f causes repeated highlights
+        for i, new_hr in enumerate(range_in_files):
+            found_overlap_with = None
+            for existing_rif in self.highlighted_ranges:
                 if (
-                    hr.rif.filepath == new_rif.filepath
-                    and hr.rif.contents == new_rif.contents
+                    new_hr.filepath == existing_rif.rif.filepath
+                    and new_hr.range.overlaps_with(existing_rif.rif.range)
                 ):
-                    found_overlap = True
+                    existing_rif.rif.range = existing_rif.rif.range.merge_with(
+                        new_hr.range
+                    )
+                    found_overlap_with = existing_rif
                     break
 
-            if not found_overlap:
+            if found_overlap_with is None:
                 new_ranges.append(
                     HighlightedRangeContextItem(
-                        rif=hr.rif,
-                        item=self._rif_to_context_item(hr.rif, len(new_ranges), False),
+                        rif=new_hr,
+                        item=self._rif_to_context_item(
+                            new_hr, len(self.highlighted_ranges) + i, edit
+                        ),
                     )
                 )
+            elif edit:
+                # Want to update the range so it's only the newly selected portion
+                found_overlap_with.rif.range = new_hr.range
+                found_overlap_with.item.editing = True
 
-        self.highlighted_ranges = new_ranges + [
-            HighlightedRangeContextItem(
-                rif=rif,
-                item=self._rif_to_context_item(rif, len(new_ranges) + idx, False),
-            )
-            for idx, rif in enumerate(range_in_files)
-        ]
+        self.highlighted_ranges = self.highlighted_ranges + new_ranges
 
         self._make_sure_is_editing_range()
         self._disambiguate_highlighted_ranges()

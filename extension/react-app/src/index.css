@@ -11,7 +11,7 @@
 
   --vscode-editor-background: rgb(30, 30, 30);
   --vscode-editor-foreground: rgb(197, 200, 198);
-  --vscode-textBlockQuote-background: rgba(255, 255, 255, 0.05);
+  --vscode-textBlockQuote-background: rgba(255, 255, 255, 1);
 }
 
 html,
@@ -32,4 +32,8 @@ body {
 
 .press-start-2p {
   font-family: "Press Start 2P", "Lexend", sans-serif;
+}
+
+a:focus {
+  outline: none;
 }

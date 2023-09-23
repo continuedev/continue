@@ -1,5 +1,11 @@
-import React, { useContext, useEffect, useRef, useState } from "react";
-import styled from "styled-components";
+import React, {
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
+import styled, { keyframes } from "styled-components";
 import {
   defaultBorderRadius,
   lightGray,
@@ -8,69 +14,115 @@ import {
   vscForeground,
 } from ".";
 import HeaderButtonWithText from "./HeaderButtonWithText";
-import { XMarkIcon, CheckIcon } from "@heroicons/react/24/outline";
+import {
+  XMarkIcon,
+  CheckIcon,
+  ChevronDownIcon,
+  ChevronRightIcon,
+  MagnifyingGlassIcon,
+  StopCircleIcon,
+} from "@heroicons/react/24/outline";
 import { HistoryNode } from "../../../schema/HistoryNode";
 import { GUIClientContext } from "../App";
+import { getMetaKeyLabel, isMetaEquivalentKeyPressed } from "../util";
+import { RootStore } from "../redux/store";
+import { useSelector } from "react-redux";
 
 interface UserInputContainerProps {
   onDelete: () => void;
   children: string;
   historyNode: HistoryNode;
   index: number;
+  onToggle: (arg0: boolean) => void;
+  onToggleAll: (arg0: boolean) => void;
+  isToggleOpen: boolean;
+  active: boolean;
+  groupIndices: number[];
 }
 
-const StyledDiv = styled.div`
-  position: relative;
-  background-color: ${secondaryDark};
-  font-size: 13px;
+const gradient = keyframes`
+  0% {
+    background-position: 0px 0;
+  }
+  100% {
+    background-position: 100em 0;
+  }
+`;
+
+const ToggleDiv = styled.div`
   display: flex;
   align-items: center;
-  border-bottom: 1px solid ${vscBackground};
-  padding: 8px;
-  padding-top: 0px;
-  padding-bottom: 0px;
+  justify-content: center;
+  cursor: pointer;
 
-  border-bottom: 0.5px solid ${lightGray};
-  border-top: 0.5px solid ${lightGray};
+  height: 100%;
+  padding: 0 4px;
+
+  &:hover {
+    background-color: ${vscBackground};
+  }
+`;
+
+const GradientBorder = styled.div<{
+  borderWidth?: number;
+  borderRadius?: string;
+  borderColor?: string;
+  isFirst: boolean;
+  isLast: boolean;
+  loading: boolean;
+}>`
+  border-radius: ${(props) => props.borderRadius || "0"};
+  padding: ${(props) =>
+    `${(props.borderWidth || 1) / (props.isFirst ? 1 : 2)}px`};
+  background: ${(props) =>
+    props.borderColor
+      ? props.borderColor
+      : `repeating-linear-gradient(
+    101.79deg,
+    #1BBE84 0%,
+    #331BBE 16%,
+    #BE1B55 33%,
+    #A6BE1B 55%,
+    #BE1B55 67%,
+    #331BBE 85%,
+    #1BBE84 99%
+  )`};
+  animation: ${(props) => (props.loading ? gradient : "")} 6s linear infinite;
+  background-size: 200% 200%;
+`;
+
+const StyledDiv = styled.div<{ editing: boolean }>`
+  font-size: 13px;
+  font-family: inherit;
+  border-radius: ${defaultBorderRadius};
+  height: auto;
+  background-color: ${secondaryDark};
+  color: ${vscForeground};
+  align-items: center;
+  position: relative;
+  z-index: 1;
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: auto 1fr;
+
+  outline: ${(props) => (props.editing ? `1px solid ${lightGray}` : "none")};
+  cursor: text;
 `;
 
 const DeleteButtonDiv = styled.div`
   position: absolute;
   top: 8px;
   right: 8px;
-`;
-
-const StyledPre = styled.pre`
-  margin-right: 22px;
-  margin-left: 8px;
-  white-space: pre-wrap;
-  word-wrap: break-word;
-  font-family: "Lexend", sans-serif;
-  font-size: 13px;
-`;
-
-const TextArea = styled.textarea`
-  margin: 8px;
-  margin-right: 22px;
-  padding: 8px;
-  white-space: pre-wrap;
-  word-wrap: break-word;
-  font-family: "Lexend", sans-serif;
-  font-size: 13px;
-  width: 100%;
+  background-color: ${secondaryDark};
+  box-shadow: 2px 2px 10px ${secondaryDark};
   border-radius: ${defaultBorderRadius};
-  height: 100%;
-  border: none;
-  background-color: ${vscBackground};
-  resize: none;
-  outline: none;
-  border: none;
-  color: ${vscForeground};
+`;
 
-  &:focus {
-    border: none;
-    outline: none;
-  }
+const GridDiv = styled.div`
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-gap: 8px;
+  align-items: center;
 `;
 
 function stringWithEllipsis(str: string, maxLen: number) {
@@ -84,108 +136,194 @@ const UserInputContainer = (props: UserInputContainerProps) => {
   const [isHovered, setIsHovered] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
 
-  const textAreaRef = useRef<HTMLTextAreaElement>(null);
+  const divRef = useRef<HTMLDivElement>(null);
   const client = useContext(GUIClientContext);
 
+  const [prevContent, setPrevContent] = useState("");
+
+  const history = useSelector((state: RootStore) => state.serverState.history);
+
   useEffect(() => {
-    if (isEditing && textAreaRef.current) {
-      textAreaRef.current.focus();
-      // Select all text
-      textAreaRef.current.setSelectionRange(
-        0,
-        textAreaRef.current.value.length
-      );
-      // Change the size to match the contents (up to a max)
-      textAreaRef.current.style.height = "auto";
-      textAreaRef.current.style.height =
-        (textAreaRef.current.scrollHeight > 500
-          ? 500
-          : textAreaRef.current.scrollHeight) + "px";
+    if (isEditing && divRef.current) {
+      setPrevContent(divRef.current.innerText);
+      divRef.current.focus();
+
+      if (divRef.current.innerText !== "") {
+        const range = document.createRange();
+        const sel = window.getSelection();
+        range.setStart(divRef.current, 0);
+        range.setEnd(divRef.current, 1);
+        sel?.removeAllRanges();
+        sel?.addRange(range);
+      }
     }
-  }, [isEditing]);
+  }, [isEditing, divRef.current]);
+
+  const onBlur = useCallback(() => {
+    setIsEditing(false);
+    if (divRef.current) {
+      divRef.current.innerText = prevContent;
+      divRef.current.blur();
+    }
+  }, [divRef.current]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
-        setIsEditing(false);
+        onBlur();
       }
     };
-    document.addEventListener("keydown", handleKeyDown);
+    divRef.current?.addEventListener("keydown", handleKeyDown);
     return () => {
-      document.removeEventListener("keydown", handleKeyDown);
+      divRef.current?.removeEventListener("keydown", handleKeyDown);
     };
-  }, []);
+  }, [prevContent, divRef.current, isEditing, onBlur]);
 
   const doneEditing = (e: any) => {
-    if (!textAreaRef.current?.value) {
+    if (!divRef.current?.innerText) {
       return;
     }
-    client?.editStepAtIndex(textAreaRef.current.value, props.index);
+    setPrevContent(divRef.current.innerText);
+    client?.editStepAtIndex(divRef.current.innerText, props.index);
     setIsEditing(false);
     e.stopPropagation();
+    divRef.current?.blur();
   };
 
   return (
-    <StyledDiv
-      onMouseEnter={() => {
-        setIsHovered(true);
-      }}
-      onMouseLeave={() => {
-        setIsHovered(false);
-      }}
+    <GradientBorder
+      loading={props.active}
+      isFirst={false}
+      isLast={false}
+      borderColor={props.active ? undefined : vscBackground}
+      borderRadius={defaultBorderRadius}
     >
-      {isEditing ? (
-        <TextArea
-          ref={textAreaRef}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" && !e.shiftKey) {
-              e.preventDefault();
-              doneEditing(e);
+      <StyledDiv
+        editing={isEditing}
+        onMouseEnter={() => {
+          setIsHovered(true);
+        }}
+        onMouseLeave={() => {
+          setIsHovered(false);
+        }}
+        onClick={() => {
+          setIsEditing(true);
+        }}
+      >
+        <GridDiv>
+          <ToggleDiv
+            onClick={
+              props.isToggleOpen
+                ? (e) => {
+                    e.stopPropagation();
+                    if (isMetaEquivalentKeyPressed(e)) {
+                      props.onToggleAll(false);
+                    } else {
+                      props.onToggle(false);
+                    }
+                  }
+                : (e) => {
+                    e.stopPropagation();
+                    if (isMetaEquivalentKeyPressed(e)) {
+                      props.onToggleAll(true);
+                    } else {
+                      props.onToggle(true);
+                    }
+                  }
             }
-          }}
-          defaultValue={props.children}
-          onBlur={() => {
-            setIsEditing(false);
-          }}
-        />
-      ) : (
-        <StyledPre
-          onClick={() => {
-            setIsEditing(true);
-          }}
-          className="mr-6 cursor-text w-full"
-        >
-          {stringWithEllipsis(props.children, 600)}
-        </StyledPre>
-      )}
-      {/* <ReactMarkdown children={props.children} className="w-fit mr-10" /> */}
-      <DeleteButtonDiv>
-        {(isHovered || isEditing) && (
-          <div className="flex">
-            {isEditing ? (
-              <HeaderButtonWithText
-                onClick={(e) => {
-                  doneEditing(e);
-                }}
-                text="Done"
-              >
-                <CheckIcon width="1.4em" height="1.4em" />
-              </HeaderButtonWithText>
+          >
+            {props.isToggleOpen ? (
+              <ChevronDownIcon width="1.4em" height="1.4em" />
             ) : (
-              <HeaderButtonWithText
-                onClick={(e) => {
-                  props.onDelete();
-                  e.stopPropagation();
-                }}
-                text="Delete"
-              >
-                <XMarkIcon width="1.4em" height="1.4em" />
-              </HeaderButtonWithText>
+              <ChevronRightIcon width="1.4em" height="1.4em" />
             )}
+          </ToggleDiv>
+          <div
+            style={{
+              padding: "8px",
+              paddingTop: "4px",
+              paddingBottom: "4px",
+            }}
+          >
+            <div
+              ref={divRef}
+              onBlur={() => {
+                onBlur();
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  doneEditing(e);
+                }
+              }}
+              contentEditable={true}
+              suppressContentEditableWarning={true}
+              className="mr-6 ml-1 cursor-text w-full py-2 flex items-center content-center outline-none"
+            >
+              {isEditing
+                ? props.children
+                : stringWithEllipsis(props.children, 600)}
+            </div>
+            <DeleteButtonDiv>
+              {(isHovered || isEditing) && (
+                <div className="flex">
+                  {isEditing ? (
+                    <HeaderButtonWithText
+                      onClick={(e) => {
+                        doneEditing(e);
+                      }}
+                      text="Done"
+                    >
+                      <CheckIcon width="1.4em" height="1.4em" />
+                    </HeaderButtonWithText>
+                  ) : (
+                    <>
+                      {history.timeline
+                        .filter(
+                          (h, i: number) =>
+                            props.groupIndices.includes(i) && h.logs
+                        )
+                        .some((h) => h.logs!.length > 0) && (
+                        <HeaderButtonWithText
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            client?.showLogsAtIndex(props.groupIndices[1]);
+                          }}
+                          text="Context Used"
+                        >
+                          <MagnifyingGlassIcon width="1.4em" height="1.4em" />
+                        </HeaderButtonWithText>
+                      )}
+                      <HeaderButtonWithText
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (props.active) {
+                            client?.deleteAtIndex(props.groupIndices[1]);
+                          } else {
+                            props.onDelete();
+                          }
+                        }}
+                        text={
+                          props.active
+                            ? `Stop (${getMetaKeyLabel()}⌫)`
+                            : "Delete"
+                        }
+                      >
+                        {props.active ? (
+                          <StopCircleIcon width="1.4em" height="1.4em" />
+                        ) : (
+                          <XMarkIcon width="1.4em" height="1.4em" />
+                        )}
+                      </HeaderButtonWithText>
+                    </>
+                  )}
+                </div>
+              )}
+            </DeleteButtonDiv>
           </div>
-        )}
-      </DeleteButtonDiv>
-    </StyledDiv>
+        </GridDiv>
+      </StyledDiv>
+    </GradientBorder>
   );
 };
 export default UserInputContainer;

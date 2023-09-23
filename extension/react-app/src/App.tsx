@@ -1,5 +1,6 @@
 import GUI from "./pages/gui";
 import History from "./pages/history";
+import Help from "./pages/help";
 import Layout from "./components/Layout";
 import { createContext, useEffect } from "react";
 import useContinueGUIProtocol from "./hooks/useWebsocket";
@@ -18,6 +19,8 @@ import { postVscMessage } from "./vscode";
 import { RouterProvider, createMemoryRouter } from "react-router-dom";
 import ErrorPage from "./pages/error";
 import SettingsPage from "./pages/settings";
+import Models from "./pages/models";
+import HelpPage from "./pages/help";
 
 const router = createMemoryRouter([
   {
@@ -38,8 +41,20 @@ const router = createMemoryRouter([
         element: <History />,
       },
       {
+        path: "/help",
+        element: <Help />,
+      },
+      {
         path: "/settings",
         element: <SettingsPage />,
+      },
+      {
+        path: "/models",
+        element: <Models />,
+      },
+      {
+        path: "/help",
+        element: <HelpPage />,
       },
     ],
   },

@@ -1,5 +1,5 @@
 import json
-from typing import Callable, Optional
+from typing import Callable
 
 import aiohttp
 from pydantic import Field
@@ -68,6 +68,7 @@ class TogetherLLM(LLM):
                 **args,
             },
             headers={"Authorization": f"Bearer {self.api_key}"},
+            proxy=self.proxy,
         ) as resp:
             async for line in resp.content.iter_chunks():
                 if line[1]:
@@ -99,6 +100,7 @@ class TogetherLLM(LLM):
             f"{self.base_url}/inference",
             json={"prompt": prompt, **args},
             headers={"Authorization": f"Bearer {self.api_key}"},
+            proxy=self.proxy,
         ) as resp:
             text = await resp.text()
             j = json.loads(text)

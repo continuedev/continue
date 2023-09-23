@@ -104,7 +104,7 @@ class ContinueSDK(AbstractContinueSDK):
                 )
                 await sdk.lsp.start()
             except Exception as e:
-                logger.warning(f"Failed to start LSP client: {e}", exc_info=True)
+                logger.warning(f"Failed to start LSP client: {e}", exc_info=False)
                 sdk.lsp = None
 
         create_async_task(

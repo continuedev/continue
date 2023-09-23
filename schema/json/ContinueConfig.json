@@ -15,10 +15,7 @@
           "type": "string"
         }
       },
-      "required": [
-        "name",
-        "arguments"
-      ]
+      "required": ["name", "arguments"]
     },
     "ChatMessage": {
       "title": "ChatMessage",
@@ -26,12 +23,7 @@
       "properties": {
         "role": {
           "title": "Role",
-          "enum": [
-            "assistant",
-            "user",
-            "system",
-            "function"
-          ],
+          "enum": ["assistant", "user", "system", "function"],
           "type": "string"
         },
         "content": {
@@ -50,10 +42,7 @@
           "$ref": "#/definitions/FunctionCall"
         }
       },
-      "required": [
-        "role",
-        "summary"
-      ]
+      "required": ["role", "summary"]
     },
     "Step": {
       "title": "Step",
@@ -70,6 +59,11 @@
         },
         "description": {
           "title": "Description",
+          "type": "string"
+        },
+        "class_name": {
+          "title": "Class Name",
+          "default": "Step",
           "type": "string"
         },
         "system_message": {
@@ -95,25 +89,69 @@
       "title": "LLM",
       "type": "object",
       "properties": {
-        "requires_api_key": {
-          "title": "Requires Api Key",
+        "title": {
+          "title": "Title",
+          "description": "A title that will identify this model in the model selection dropdown",
           "type": "string"
-        },
-        "requires_unique_id": {
-          "title": "Requires Unique Id",
-          "default": false,
-          "type": "boolean"
-        },
-        "requires_write_log": {
-          "title": "Requires Write Log",
-          "default": false,
-          "type": "boolean"
         },
         "system_message": {
           "title": "System Message",
+          "description": "A system message that will always be followed by the LLM",
+          "type": "string"
+        },
+        "context_length": {
+          "title": "Context Length",
+          "description": "The maximum context length of the LLM in tokens, as counted by count_tokens.",
+          "default": 2048,
+          "type": "integer"
+        },
+        "unique_id": {
+          "title": "Unique Id",
+          "description": "The unique ID of the user.",
+          "type": "string"
+        },
+        "model": {
+          "title": "Model",
+          "description": "The name of the model to be used (e.g. gpt-4, codellama)",
+          "type": "string"
+        },
+        "stop_tokens": {
+          "title": "Stop Tokens",
+          "description": "Tokens that will stop the completion.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "timeout": {
+          "title": "Timeout",
+          "description": "Set the timeout for each request to the LLM. If you are running a local LLM that takes a while to respond, you might want to set this to avoid timeouts.",
+          "default": 300,
+          "type": "integer"
+        },
+        "verify_ssl": {
+          "title": "Verify Ssl",
+          "description": "Whether to verify SSL certificates for requests.",
+          "type": "boolean"
+        },
+        "ca_bundle_path": {
+          "title": "Ca Bundle Path",
+          "description": "Path to a custom CA bundle to use when making the HTTP request",
+          "type": "string"
+        },
+        "prompt_templates": {
+          "title": "Prompt Templates",
+          "description": "A dictionary of prompt templates that can be used to customize the behavior of the LLM in certain situations. For example, set the \"edit\" key in order to change the prompt that is used for the /edit slash command. Each value in the dictionary is a string templated in mustache syntax, and filled in at runtime with the variables specific to the situation. See the documentation for more information.",
+          "default": {},
+          "type": "object"
+        },
+        "api_key": {
+          "title": "Api Key",
+          "description": "The API key for the LLM provider.",
           "type": "string"
         }
-      }
+      },
+      "required": ["model"]
     },
     "src__continuedev__core__models__ContinueSDK": {
       "title": "ContinueSDK",
@@ -143,13 +181,19 @@
         "chat": {
           "$ref": "#/definitions/LLM"
         },
+        "unused": {
+          "title": "Unused",
+          "default": [],
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/LLM"
+          }
+        },
         "sdk": {
           "$ref": "#/definitions/src__continuedev__core__models__ContinueSDK"
         }
       },
-      "required": [
-        "default"
-      ]
+      "required": ["default"]
     },
     "CustomCommand": {
       "title": "CustomCommand",
@@ -168,11 +212,7 @@
           "type": "string"
         }
       },
-      "required": [
-        "name",
-        "prompt",
-        "description"
-      ]
+      "required": ["name", "prompt", "description"]
     },
     "SlashCommand": {
       "title": "SlashCommand",
@@ -195,11 +235,7 @@
           "type": "object"
         }
       },
-      "required": [
-        "name",
-        "description",
-        "step"
-      ]
+      "required": ["name", "description", "step"]
     },
     "Policy": {
       "title": "Policy",
@@ -227,10 +263,7 @@
           "type": "string"
         }
       },
-      "required": [
-        "provider_title",
-        "item_id"
-      ]
+      "required": ["provider_title", "item_id"]
     },
     "ContextItemDescription": {
       "title": "ContextItemDescription",
@@ -249,11 +282,7 @@
           "$ref": "#/definitions/ContextItemId"
         }
       },
-      "required": [
-        "name",
-        "description",
-        "id"
-      ]
+      "required": ["name", "description", "id"]
     },
     "ContextItem": {
       "title": "ContextItem",
@@ -278,10 +307,7 @@
           "type": "boolean"
         }
       },
-      "required": [
-        "description",
-        "content"
-      ]
+      "required": ["description", "content"]
     },
     "ContextProvider": {
       "title": "ContextProvider",
@@ -290,13 +316,42 @@
       "properties": {
         "title": {
           "title": "Title",
+          "description": "The title of the ContextProvider. This is what must be typed in the input to trigger the ContextProvider.",
           "type": "string"
         },
         "sdk": {
-          "$ref": "#/definitions/src__continuedev__core__context__ContinueSDK"
+          "title": "Sdk",
+          "description": "The ContinueSDK instance accessible by the ContextProvider",
+          "allOf": [
+            {
+              "$ref": "#/definitions/src__continuedev__core__context__ContinueSDK"
+            }
+          ]
+        },
+        "display_title": {
+          "title": "Display Title",
+          "description": "The display title of the ContextProvider shown in the dropdown menu",
+          "type": "string"
+        },
+        "description": {
+          "title": "Description",
+          "description": "A description of the ContextProvider displayed in the dropdown menu",
+          "type": "string"
+        },
+        "dynamic": {
+          "title": "Dynamic",
+          "description": "Indicates whether the ContextProvider is dynamic",
+          "type": "boolean"
+        },
+        "requires_query": {
+          "title": "Requires Query",
+          "description": "Indicates whether the ContextProvider requires a query. For example, the SearchContextProvider requires you to type '@search <STRING_TO_SEARCH>'. This will change the behavior of the UI so that it can indicate the expectation for a query.",
+          "default": false,
+          "type": "boolean"
         },
         "selected_items": {
           "title": "Selected Items",
+          "description": "List of selected items in the ContextProvider",
           "default": [],
           "type": "array",
           "items": {
@@ -304,17 +359,16 @@
           }
         }
       },
-      "required": [
-        "title"
-      ]
+      "required": ["title", "display_title", "description", "dynamic"]
     },
     "src__continuedev__core__config__ContinueConfig": {
       "title": "ContinueConfig",
-      "description": "A pydantic class for the continue config file.",
+      "description": "Continue can be deeply customized by editing the `ContinueConfig` object in `~/.continue/config.py` (`%userprofile%\\.continue\\config.py` for Windows) on your machine. This class is instantiated from the config file for every new session.",
       "type": "object",
       "properties": {
         "steps_on_startup": {
           "title": "Steps On Startup",
+          "description": "Steps that will be automatically run at the beginning of a new session",
           "default": [],
           "type": "array",
           "items": {
@@ -323,6 +377,7 @@
         },
         "disallowed_steps": {
           "title": "Disallowed Steps",
+          "description": "Steps that are not allowed to be run, and will be skipped if attempted",
           "default": [],
           "type": "array",
           "items": {
@@ -331,38 +386,47 @@
         },
         "allow_anonymous_telemetry": {
           "title": "Allow Anonymous Telemetry",
+          "description": "If this field is set to True, we will collect anonymous telemetry as described in the documentation page on telemetry. If set to False, we will not collect any data.",
           "default": true,
           "type": "boolean"
         },
         "models": {
           "title": "Models",
+          "description": "Configuration for the models used by Continue. Read more about how to configure models in the documentation.",
           "default": {
             "default": {
-              "requires_api_key": null,
-              "requires_unique_id": true,
-              "requires_write_log": true,
+              "title": null,
               "system_message": null,
+              "context_length": 2048,
               "model": "gpt-4",
+              "stop_tokens": null,
+              "timeout": 300,
+              "verify_ssl": null,
+              "ca_bundle_path": null,
+              "prompt_templates": {},
               "api_key": null,
               "llm": null,
-              "name": null,
-              "class_name": "MaybeProxyOpenAI"
+              "class_name": "OpenAIFreeTrial"
             },
             "small": null,
             "medium": {
-              "requires_api_key": null,
-              "requires_unique_id": true,
-              "requires_write_log": true,
+              "title": null,
               "system_message": null,
+              "context_length": 2048,
               "model": "gpt-3.5-turbo",
+              "stop_tokens": null,
+              "timeout": 300,
+              "verify_ssl": null,
+              "ca_bundle_path": null,
+              "prompt_templates": {},
               "api_key": null,
               "llm": null,
-              "name": null,
-              "class_name": "MaybeProxyOpenAI"
+              "class_name": "OpenAIFreeTrial"
             },
             "large": null,
             "edit": null,
-            "chat": null
+            "chat": null,
+            "unused": []
           },
           "allOf": [
             {
@@ -372,11 +436,13 @@
         },
         "temperature": {
           "title": "Temperature",
+          "description": "The temperature parameter for sampling from the LLM. Higher temperatures will result in more random output, while lower temperatures will result in more predictable output. This value ranges from 0 to 1.",
           "default": 0.5,
           "type": "number"
         },
         "custom_commands": {
           "title": "Custom Commands",
+          "description": "An array of custom commands that allow you to reuse prompts. Each has name, description, and prompt properties. When you enter /<name> in the text input, it will act as a shortcut to the prompt.",
           "default": [
             {
               "name": "test",
@@ -391,6 +457,7 @@
         },
         "slash_commands": {
           "title": "Slash Commands",
+          "description": "An array of slash commands that let you map custom Steps to a shortcut.",
           "default": [],
           "type": "array",
           "items": {
@@ -398,22 +465,53 @@
           }
         },
         "on_traceback": {
-          "$ref": "#/definitions/Step"
+          "title": "On Traceback",
+          "description": "The step that will be run when a traceback is detected (when you use the shortcut cmd+shift+R)",
+          "allOf": [
+            {
+              "$ref": "#/definitions/Step"
+            }
+          ]
         },
         "system_message": {
           "title": "System Message",
+          "description": "A system message that will always be followed by the LLM",
           "type": "string"
         },
         "policy_override": {
-          "$ref": "#/definitions/Policy"
+          "title": "Policy Override",
+          "description": "A Policy object that can be used to override the default behavior of Continue, for example in order to build custom agents that take multiple steps at a time.",
+          "allOf": [
+            {
+              "$ref": "#/definitions/Policy"
+            }
+          ]
         },
         "context_providers": {
           "title": "Context Providers",
+          "description": "A list of ContextProvider objects that can be used to provide context to the LLM by typing '@'. Read more about ContextProviders in the documentation.",
           "default": [],
           "type": "array",
           "items": {
             "$ref": "#/definitions/ContextProvider"
           }
+        },
+        "user_token": {
+          "title": "User Token",
+          "description": "An optional token to identify the user.",
+          "type": "string"
+        },
+        "data_server_url": {
+          "title": "Data Server Url",
+          "description": "The URL of the server where development data is sent. No data is sent unless a valid user token is provided.",
+          "default": "https://us-west1-autodebug.cloudfunctions.net",
+          "type": "string"
+        },
+        "disable_summaries": {
+          "title": "Disable Summaries",
+          "description": "If set to `True`, Continue will not generate summaries for each Step. This can be useful if you want to save on compute.",
+          "default": false,
+          "type": "boolean"
         }
       }
     }

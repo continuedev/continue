@@ -1,4 +1,4 @@
-import { useContext, useEffect, useRef, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import styled from "styled-components";
 import {
   StyledTooltip,
@@ -15,13 +15,8 @@ import {
 } from "@heroicons/react/24/outline";
 import { GUIClientContext } from "../App";
 import { useDispatch } from "react-redux";
-import {
-  setBottomMessage,
-  setBottomMessageCloseTimeout,
-} from "../redux/slices/uiStateSlice";
+import { setBottomMessage } from "../redux/slices/uiStateSlice";
 import { ContextItem } from "../../../schema/FullState";
-import { ReactMarkdown } from "react-markdown/lib/react-markdown";
-import StyledMarkdownPreview from "./StyledMarkdownPreview";
 
 const Button = styled.button`
   border: none;
@@ -80,33 +75,27 @@ const CircleDiv = styled.div`
 interface PillButtonProps {
   onHover?: (arg0: boolean) => void;
   item: ContextItem;
-  warning?: string;
+  editing: boolean;
+  editingAny: boolean;
   index: number;
-  addingHighlightedCode?: boolean;
   areMultipleItems?: boolean;
   onDelete?: () => void;
 }
 
 interface StyledButtonProps {
-  warning: string;
+  borderColor?: string;
   editing?: boolean;
-  areMultipleItems?: boolean;
 }
 
 const StyledButton = styled(Button)<StyledButtonProps>`
   position: relative;
-  border-color: ${(props) =>
-    props.warning
-      ? "red"
-      : props.editing && props.areMultipleItems
-      ? vscForeground
-      : "transparent"};
+  border-color: ${(props) => props.borderColor || "transparent"};
   border-width: 1px;
   border-style: solid;
 
   &:focus {
     outline: none;
-    border-color: ${vscForeground};
+    border-color: ${lightGray};
     border-width: 1px;
     border-style: solid;
   }
@@ -116,82 +105,56 @@ const PillButton = (props: PillButtonProps) => {
   const [isHovered, setIsHovered] = useState(false);
   const client = useContext(GUIClientContext);
 
-  const dispatch = useDispatch();
+  const [warning, setWarning] = useState<string | undefined>(undefined);
 
   useEffect(() => {
-    if (isHovered) {
-      dispatch(setBottomMessageCloseTimeout(undefined));
-      dispatch(
-        setBottomMessage(
-          <>
-            <b>{props.item.description.name}</b>:{" "}
-            {props.item.description.description}
-            <pre>
-              <code
-                style={{
-                  fontSize: "12px",
-                  backgroundColor: "transparent",
-                  color: vscForeground,
-                  whiteSpace: "pre-wrap",
-                  wordWrap: "break-word",
-                }}
-              >
-                {props.item.content}
-              </code>
-            </pre>
-          </>
-        )
-      );
+    if (props.editing && props.item.content.length > 4000) {
+      setWarning("Editing such a large range may be slow");
     } else {
-      dispatch(
-        setBottomMessageCloseTimeout(
-          setTimeout(() => {
-            if (!isHovered) {
-              dispatch(setBottomMessage(undefined));
-            }
-          }, 2000)
-        )
-      );
+      setWarning(undefined);
     }
-  }, [isHovered]);
+  }, [props.editing, props.item]);
+
+  const dispatch = useDispatch();
 
   return (
-    <>
-      <div style={{ position: "relative" }}>
-        <StyledButton
-          areMultipleItems={props.areMultipleItems}
-          warning={props.warning || ""}
-          editing={props.item.editing}
-          onMouseEnter={() => {
-            setIsHovered(true);
-            if (props.onHover) {
-              props.onHover(true);
-            }
-          }}
-          onMouseLeave={() => {
-            setIsHovered(false);
-            if (props.onHover) {
-              props.onHover(false);
-            }
-          }}
-          className="pill-button"
-          onKeyDown={(e) => {
-            if (e.key === "Backspace") {
-              props.onDelete?.();
-            }
-          }}
-        >
-          {isHovered && (
-            <GridDiv
-              style={{
-                gridTemplateColumns:
-                  props.item.editable && props.areMultipleItems
-                    ? "1fr 1fr"
-                    : "1fr",
-                backgroundColor: vscBackground,
-              }}
-            >
-              {props.item.editable && props.areMultipleItems && (
+    <div style={{ position: "relative" }}>
+      <StyledButton
+        borderColor={props.editing ? (warning ? "red" : undefined) : undefined}
+        onMouseEnter={() => {
+          setIsHovered(true);
+          if (props.onHover) {
+            props.onHover(true);
+          }
+        }}
+        onMouseLeave={() => {
+          setIsHovered(false);
+          if (props.onHover) {
+            props.onHover(false);
+          }
+        }}
+        className="pill-button"
+        onKeyDown={(e) => {
+          if (e.key === "Backspace") {
+            props.onDelete?.();
+          }
+        }}
+      >
+        {isHovered && (
+          <GridDiv
+            style={{
+              gridTemplateColumns:
+                props.item.editable &&
+                props.areMultipleItems &&
+                props.editingAny
+                  ? "1fr 1fr"
+                  : "1fr",
+              backgroundColor: vscBackground,
+            }}
+          >
+            {props.editingAny &&
+              props.item.editable &&
+              props.areMultipleItems && (
                 <ButtonDiv
                   data-tooltip-id={`edit-${props.index}`}
                   backgroundColor={"#8800aa55"}
@@ -205,30 +168,31 @@ const PillButton = (props: PillButtonProps) => {
                 </ButtonDiv>
               )}
 
-              <StyledTooltip id={`pin-${props.index}`}>
-                Edit this range
-              </StyledTooltip>
-              <ButtonDiv
-                data-tooltip-id={`delete-${props.index}`}
-                backgroundColor={"#cc000055"}
-                onClick={() => {
-                  client?.deleteContextWithIds([props.item.description.id]);
-                  dispatch(setBottomMessage(undefined));
-                }}
-              >
-                <TrashIcon style={{ margin: "auto" }} width="1.6em" />
-              </ButtonDiv>
-            </GridDiv>
-          )}
-          {props.item.description.name}
-        </StyledButton>
-        <StyledTooltip id={`edit-${props.index}`}>
-          {props.item.editing
-            ? "Editing this section (with entire file as context)"
-            : "Edit this section"}
-        </StyledTooltip>
-        <StyledTooltip id={`delete-${props.index}`}>Delete</StyledTooltip>
-        {props.warning && (
+            <StyledTooltip id={`pin-${props.index}`}>
+              Edit this range
+            </StyledTooltip>
+            <ButtonDiv
+              data-tooltip-id={`delete-${props.index}`}
+              backgroundColor={"#cc000055"}
+              onClick={() => {
+                client?.deleteContextWithIds([props.item.description.id]);
+                dispatch(setBottomMessage(undefined));
+              }}
+            >
+              <TrashIcon style={{ margin: "auto" }} width="1.6em" />
+            </ButtonDiv>
+          </GridDiv>
+        )}
+        {props.item.description.name}
+      </StyledButton>
+      <StyledTooltip id={`edit-${props.index}`}>
+        {props.item.editing
+          ? "Editing this section (with entire file as context)"
+          : "Edit this section"}
+      </StyledTooltip>
+      <StyledTooltip id={`delete-${props.index}`}>Delete</StyledTooltip>
+      {props.editing &&
+        (warning ? (
           <>
             <CircleDiv
               data-tooltip-id={`circle-div-${props.item.description.name}`}
@@ -240,12 +204,32 @@ const PillButton = (props: PillButtonProps) => {
               />
             </CircleDiv>
             <StyledTooltip id={`circle-div-${props.item.description.name}`}>
-              {props.warning}
+              {warning}
             </StyledTooltip>
           </>
-        )}
-      </div>
-    </>
+        ) : (
+          <>
+            <CircleDiv
+              data-tooltip-id={`circle-div-${props.item.description.name}`}
+              style={{
+                backgroundColor: "#8800aa55",
+                border: `0.5px solid ${lightGray}`,
+                padding: "1px",
+                zIndex: 1,
+              }}
+            >
+              <PaintBrushIcon
+                style={{ margin: "auto" }}
+                width="1.0em"
+                strokeWidth={2}
+              />
+            </CircleDiv>
+            <StyledTooltip id={`circle-div-${props.item.description.name}`}>
+              Editing this range
+            </StyledTooltip>
+          </>
+        ))}
+    </div>
   );
 };
 

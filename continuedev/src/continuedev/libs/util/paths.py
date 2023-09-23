@@ -1,4 +1,5 @@
 import os
+from typing import Optional
 
 from ..constants.default_config import default_config
 from ..constants.main import (
@@ -73,6 +74,22 @@ def getSessionsListFilePath():
     return path
 
 
+def migrateConfigFile(existing: str) -> Optional[str]:
+    if existing.strip() == "":
+        return default_config
+
+    migrated = (
+        existing.replace("MaybeProxyOpenAI", "OpenAIFreeTrial")
+        .replace("maybe_proxy_openai", "openai_free_trial")
+        .replace("unused=", "saved=")
+        .replace("medium=", "summarize=")
+    )
+    if migrated != existing:
+        return migrated
+
+    return None
+
+
 def getConfigFilePath() -> str:
     path = os.path.join(getGlobalFolderPath(), "config.py")
     os.makedirs(os.path.dirname(path), exist_ok=True)
@@ -81,12 +98,15 @@ def getConfigFilePath() -> str:
         with open(path, "w") as f:
             f.write(default_config)
     else:
+        # Make any necessary migrations
         with open(path, "r") as f:
             existing_content = f.read()
 
-        if existing_content.strip() == "":
+        migrated = migrateConfigFile(existing_content)
+
+        if migrated is not None:
             with open(path, "w") as f:
-                f.write(default_config)
+                f.write(migrated)
 
     return path
 

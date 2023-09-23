@@ -1,8 +1,6 @@
 import json
-import ssl
 from typing import Any, Callable, Coroutine, Dict, List, Optional
 
-import aiohttp
 from pydantic import Field
 
 from ...core.main import ChatMessage
@@ -38,10 +36,6 @@ class GGML(LLM):
         "http://localhost:8000",
         description="URL of the OpenAI-compatible server where the model is being served",
     )
-    proxy: Optional[str] = Field(
-        None,
-        description="Proxy URL to use when making the HTTP request",
-    )
     model: str = Field(
         "ggml", description="The name of the model to use (optional for the GGML class)"
     )
@@ -56,20 +50,6 @@ class GGML(LLM):
 
     class Config:
         arbitrary_types_allowed = True
-
-    def create_client_session(self):
-        if self.ca_bundle_path is None:
-            ssl_context = ssl.create_default_context(cafile=self.ca_bundle_path)
-            tcp_connector = aiohttp.TCPConnector(
-                verify_ssl=self.verify_ssl, ssl=ssl_context
-            )
-        else:
-            tcp_connector = aiohttp.TCPConnector(verify_ssl=self.verify_ssl)
-
-        return aiohttp.ClientSession(
-            connector=tcp_connector,
-            timeout=aiohttp.ClientTimeout(total=self.timeout),
-        )
 
     def get_headers(self):
         headers = {

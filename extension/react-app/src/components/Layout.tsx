@@ -1,7 +1,6 @@
 import styled from "styled-components";
 import { defaultBorderRadius, secondaryDark, vscForeground } from ".";
 import { Outlet } from "react-router-dom";
-import Onboarding from "./Onboarding";
 import TextDialog from "./TextDialog";
 import { useContext, useEffect, useState } from "react";
 import { GUIClientContext } from "../App";
@@ -15,10 +14,9 @@ import {
 import {
   PlusIcon,
   FolderIcon,
-  BookOpenIcon,
-  ChatBubbleOvalLeftEllipsisIcon,
   SparklesIcon,
   Cog6ToothIcon,
+  QuestionMarkCircleIcon,
 } from "@heroicons/react/24/outline";
 import HeaderButtonWithText from "./HeaderButtonWithText";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -62,6 +60,8 @@ const Footer = styled.footer`
   align-items: center;
   width: calc(100% - 16px);
   height: ${FOOTER_HEIGHT};
+
+  overflow: hidden;
 `;
 
 const GridDiv = styled.div`
@@ -98,11 +98,20 @@ const Layout = () => {
     (state: RootStore) => state.uiState.displayBottomMessageOnBottom
   );
 
+  const timeline = useSelector(
+    (state: RootStore) => state.serverState.history.timeline
+  );
+
   // #endregion
 
   useEffect(() => {
     const handleKeyDown = (event: any) => {
-      if (event.metaKey && event.altKey && event.code === "KeyN") {
+      if (
+        event.metaKey &&
+        event.altKey &&
+        event.code === "KeyN" &&
+        timeline.filter((n) => !n.step.hide).length > 0
+      ) {
         client?.loadSession(undefined);
       }
       if ((event.metaKey || event.ctrlKey) && event.code === "KeyC") {
@@ -121,7 +130,7 @@ const Layout = () => {
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [client]);
+  }, [client, timeline]);
 
   return (
     <LayoutTopDiv>
@@ -133,7 +142,6 @@ const Layout = () => {
           gridTemplateRows: "1fr auto",
         }}
       >
-        <Onboarding />
         <TextDialog
           showDialog={showDialog}
           onEnter={() => {
@@ -176,52 +184,24 @@ const Layout = () => {
                   color="yellow"
                 />
               )}
-
               <ModelSelect />
-              {defaultModel === "MaybeProxyOpenAI" &&
+              {defaultModel === "OpenAIFreeTrial" &&
                 (location.pathname === "/settings" ||
-                  parseInt(localStorage.getItem("freeTrialCounter") || "0") >=
-                    125) && (
+                  parseInt(localStorage.getItem("ftc") || "0") >= 125) && (
                   <ProgressBar
-                    completed={parseInt(
-                      localStorage.getItem("freeTrialCounter") || "0"
-                    )}
+                    completed={parseInt(localStorage.getItem("ftc") || "0")}
                     total={250}
                   />
                 )}
             </div>
             <HeaderButtonWithText
+              text="Help"
               onClick={() => {
-                client?.loadSession(undefined);
+                navigate("/help");
               }}
-              text="New Session (⌥⌘N)"
             >
-              <PlusIcon width="1.4em" height="1.4em" />
+              <QuestionMarkCircleIcon width="1.4em" height="1.4em" />
             </HeaderButtonWithText>
-            <HeaderButtonWithText
-              onClick={() => {
-                navigate("/history");
-              }}
-              text="History"
-            >
-              <FolderIcon width="1.4em" height="1.4em" />
-            </HeaderButtonWithText>
-            <a
-              href="https://continue.dev/docs/how-to-use-continue"
-              className="no-underline"
-            >
-              <HeaderButtonWithText text="Docs">
-                <BookOpenIcon width="1.4em" height="1.4em" />
-              </HeaderButtonWithText>
-            </a>
-            <a
-              href="https://github.com/continuedev/continue/issues/new/choose"
-              className="no-underline"
-            >
-              <HeaderButtonWithText text="Feedback">
-                <ChatBubbleOvalLeftEllipsisIcon width="1.4em" height="1.4em" />
-              </HeaderButtonWithText>
-            </a>
             <HeaderButtonWithText
               onClick={() => {
                 navigate("/settings");
@@ -248,6 +228,7 @@ const Layout = () => {
           {bottomMessage}
         </BottomMessageDiv>
       </div>
+      <div id="tooltip-portal-div" />
     </LayoutTopDiv>
   );
 };

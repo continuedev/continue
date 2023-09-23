@@ -11,8 +11,8 @@ from pydantic import Field
 
 from ...core.main import ChatMessage, FunctionCall, Models, Step, step_to_json_schema
 from ...core.sdk import ContinueSDK
-from ...libs.llm.maybe_proxy_openai import MaybeProxyOpenAI
 from ...libs.llm.openai import OpenAI
+from ...libs.llm.openai_free_trial import OpenAIFreeTrial
 from ...libs.util.devdata import dev_data_logger
 from ...libs.util.strings import remove_quotes_and_escapes
 from ...libs.util.telemetry import posthog_logger
@@ -41,7 +41,7 @@ class SimpleChatStep(Step):
     async def run(self, sdk: ContinueSDK):
         # Check if proxy server API key
         if (
-            isinstance(sdk.models.default, MaybeProxyOpenAI)
+            isinstance(sdk.models.default, OpenAIFreeTrial)
             and (
                 sdk.models.default.api_key is None
                 or sdk.models.default.api_key.strip() == ""
@@ -70,8 +70,8 @@ class SimpleChatStep(Step):
                                 config=ContinueConfig(
                                     ...
                                     models=Models(
-                                        default=MaybeProxyOpenAI(api_key="<API_KEY>", model="gpt-4"),
-                                        medium=MaybeProxyOpenAI(api_key="<API_KEY>", model="gpt-3.5-turbo")
+                                        default=OpenAIFreeTrial(api_key="<API_KEY>", model="gpt-4"),
+                                        summarize=OpenAIFreeTrial(api_key="<API_KEY>", model="gpt-3.5-turbo")
                                     )
                                 )
                                ```
@@ -129,9 +129,10 @@ class SimpleChatStep(Step):
             await sdk.update_ui()
             self.name = add_ellipsis(
                 remove_quotes_and_escapes(
-                    await sdk.models.medium.complete(
+                    await sdk.models.summarize.complete(
                         f'"{self.description}"\n\nPlease write a short title summarizing the message quoted above. Use no more than 10 words:',
                         max_tokens=20,
+                        log=False,
                     )
                 ),
                 200,

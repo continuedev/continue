@@ -10,8 +10,9 @@ import { useContext } from "react";
 import { GUIClientContext } from "../App";
 import { RootStore } from "../redux/store";
 import { useDispatch, useSelector } from "react-redux";
-import { PlusIcon } from "@heroicons/react/24/outline";
+import { ArrowLeftIcon, PlusIcon } from "@heroicons/react/24/outline";
 import { setDialogMessage, setShowDialog } from "../redux/slices/uiStateSlice";
+import { useNavigate } from "react-router-dom";
 
 const MODEL_INFO: { title: string; class: string; args: any }[] = [
   {
@@ -83,7 +84,7 @@ const MODEL_INFO: { title: string; class: string; args: any }[] = [
   },
   {
     title: "GPT-4 limited free trial",
-    class: "MaybeProxyOpenAI",
+    class: "OpenAIFreeTrial",
     args: {
       model: "gpt-4",
     },
@@ -159,9 +160,11 @@ function ModelSelect(props: {}) {
   const defaultModel = useSelector(
     (state: RootStore) => (state.serverState.config as any)?.models?.default
   );
-  const unusedModels = useSelector(
-    (state: RootStore) => (state.serverState.config as any)?.models?.unused
+  const savedModels = useSelector(
+    (state: RootStore) => (state.serverState.config as any)?.models?.saved
   );
+
+  const navigate = useNavigate();
 
   return (
     <GridDiv>
@@ -173,7 +176,7 @@ function ModelSelect(props: {}) {
         defaultValue={0}
         onChange={(e) => {
           const value = JSON.parse(e.target.value);
-          if (value.t === "unused") {
+          if (value.t === "saved") {
             client?.setModelForRoleFromIndex("*", value.idx);
           }
         }}
@@ -188,11 +191,11 @@ function ModelSelect(props: {}) {
             {modelSelectTitle(defaultModel)}
           </option>
         )}
-        {unusedModels?.map((model: any, idx: number) => {
+        {savedModels?.map((model: any, idx: number) => {
           return (
             <option
               value={JSON.stringify({
-                t: "unused",
+                t: "saved",
                 idx,
               })}
             >
@@ -206,31 +209,7 @@ function ModelSelect(props: {}) {
         width="1.3em"
         height="1.3em"
         onClick={() => {
-          dispatch(
-            setDialogMessage(
-              <div>
-                <div className="text-lg font-bold p-2">
-                  Setup a new model provider
-                </div>
-                <br />
-                {MODEL_INFO.map((model, idx) => {
-                  return (
-                    <NewProviderDiv
-                      onClick={() => {
-                        const model = MODEL_INFO[idx];
-                        client?.addModelForRole("*", model.class, model.args);
-                        dispatch(setShowDialog(false));
-                      }}
-                    >
-                      {model.title}
-                    </NewProviderDiv>
-                  );
-                })}
-                <br />
-              </div>
-            )
-          );
-          dispatch(setShowDialog(true));
+          navigate("/models");
         }}
       />
     </GridDiv>
