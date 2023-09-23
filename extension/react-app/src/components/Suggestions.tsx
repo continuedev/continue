@@ -81,6 +81,7 @@ function SuggestionsDiv(props: SuggestionsDivProps) {
       <StyledTooltip
         id={`suggestion-disabled-${props.textInput.replace(" ", "")}`}
         place="bottom"
+        hidden={!props.disabled}
       >
         Must highlight code first
       </StyledTooltip>

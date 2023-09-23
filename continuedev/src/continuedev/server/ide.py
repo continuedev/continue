@@ -4,7 +4,7 @@ import json
 import os
 import traceback
 import uuid
-from typing import Any, Callable, Coroutine, List, Type, TypeVar, Union
+from typing import Any, Callable, Coroutine, List, Optional, Type, TypeVar, Union
 
 import nest_asyncio
 from fastapi import APIRouter, WebSocket
@@ -232,7 +232,8 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
             self.onFileEdits(fileEdits)
         elif message_type == "highlightedCodePush":
             self.onHighlightedCodeUpdate(
-                [RangeInFileWithContents(**rif) for rif in data["highlightedCode"]]
+                [RangeInFileWithContents(**rif) for rif in data["highlightedCode"]],
+                edit=data.get("edit", None),
             )
         elif message_type == "commandOutput":
             output = data["output"]
@@ -394,10 +395,14 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
         if autopilot := self.__get_autopilot():
             create_async_task(autopilot.handle_debug_terminal(content), self.on_error)
 
-    def onHighlightedCodeUpdate(self, range_in_files: List[RangeInFileWithContents]):
+    def onHighlightedCodeUpdate(
+        self,
+        range_in_files: List[RangeInFileWithContents],
+        edit: Optional[bool] = False,
+    ):
         if autopilot := self.__get_autopilot():
             create_async_task(
-                autopilot.handle_highlighted_code(range_in_files), self.on_error
+                autopilot.handle_highlighted_code(range_in_files, edit), self.on_error
             )
 
     ## Subscriptions ##

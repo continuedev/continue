@@ -24,19 +24,12 @@ import {
   MagnifyingGlassIcon,
   TrashIcon,
 } from "@heroicons/react/24/outline";
-import { ContextItem } from "../../../schema/FullState";
 import { postVscMessage } from "../vscode";
 import { GUIClientContext } from "../App";
 import { MeiliSearch } from "meilisearch";
-import {
-  setBottomMessage,
-  setDialogMessage,
-  setShowDialog,
-} from "../redux/slices/uiStateSlice";
+import { setBottomMessage } from "../redux/slices/uiStateSlice";
 import { useDispatch, useSelector } from "react-redux";
 import { RootStore } from "../redux/store";
-import SelectContextGroupDialog from "./dialogs/SelectContextGroupDialog";
-import AddContextGroupDialog from "./dialogs/AddContextGroupDialog";
 import ContinueButton from "./ContinueButton";
 
 const SEARCH_INDEX_NAME = "continue_context_items";
@@ -125,7 +118,7 @@ const Ul = styled.ul<{
   ${(props) =>
     props.showAbove
       ? `transform: translateY(-${props.ulHeightPixels + 8}px);`
-      : `transform: translateY(${5 * mainInputFontSize}px);`}
+      : `transform: translateY(${5 * mainInputFontSize - 2}px);`}
   position: absolute;
   background: ${vscBackground};
   color: ${vscForeground};
@@ -178,9 +171,7 @@ interface ComboBoxProps {
   onInputValueChange: (inputValue: string) => void;
   disabled?: boolean;
   onEnter: (e?: React.KeyboardEvent<HTMLInputElement>) => void;
-  selectedContextItems: ContextItem[];
   onToggleAddContext: () => void;
-  addingHighlightedCode: boolean;
 }
 
 const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
@@ -212,6 +203,14 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
   );
   const availableSlashCommands = useSelector(
     (state: RootStore) => state.serverState.slash_commands
+  ).map((cmd) => {
+    return {
+      name: `/${cmd.name}`,
+      description: cmd.description,
+    };
+  });
+  const selectedContextItems = useSelector(
+    (state: RootStore) => state.serverState.selected_context_items
   );
 
   useEffect(() => {
@@ -240,7 +239,6 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
 
   useEffect(() => {
     if (!nestedContextProvider) {
-      console.log("setting items", nestedContextProvider);
       setItems(
         contextProviders?.map((provider) => ({
           name: provider.display_title,
@@ -321,9 +319,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
       // Handle slash commands
       setItems(
         availableSlashCommands?.filter((slashCommand) =>
-          `/${slashCommand.name.toLowerCase()}`.startsWith(
-            inputValue.toLowerCase()
-          )
+          slashCommand.name.toLowerCase().startsWith(inputValue.toLowerCase())
         ) || []
       );
     },
@@ -333,35 +329,6 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
       nestedContextProvider,
       inQueryForContextProvider,
     ]
-  );
-
-  const onSelectedItemChangeCallback = useCallback(
-    ({ selectedItem }: any) => {
-      if (!selectedItem) return;
-      if (selectedItem.id) {
-        // Get the query from the input value
-        const segs = downshiftProps.inputValue.split("@");
-        const query = segs[segs.length - 1];
-
-        // Tell server the context item was selected
-        client?.selectContextItem(selectedItem.id, query);
-        if (downshiftProps.inputValue.includes("@")) {
-          const selectedNestedContextProvider = contextProviders.find(
-            (provider) => provider.title === selectedItem.id
-          );
-          if (
-            !nestedContextProvider &&
-            !selectedNestedContextProvider?.dynamic
-          ) {
-            downshiftProps.setInputValue(`@${selectedItem.id} `);
-            setNestedContextProvider(selectedNestedContextProvider);
-          } else {
-            downshiftProps.setInputValue("");
-          }
-        }
-      }
-    },
-    [nestedContextProvider, contextProviders, client]
   );
 
   const getFilteredContextItemsForProvider = async (
@@ -396,7 +363,6 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
   };
 
   const { getInputProps, ...downshiftProps } = useCombobox({
-    onSelectedItemChange: onSelectedItemChangeCallback,
     onInputValueChange: onInputValueChangeCallback,
     items,
     itemToString(item) {
@@ -433,7 +399,6 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
     const focusedItemIndex = focusableItemsArray.findIndex(
       (item) => item === document.activeElement
     );
-    console.log(focusedItemIndex, focusableItems);
     if (focusedItemIndex === focusableItemsArray.length - 1) {
       inputRef.current?.focus();
     } else if (focusedItemIndex !== -1) {
@@ -515,21 +480,69 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
 
   const selectContextItemFromDropdown = useCallback(
     (event: any) => {
-      const newProviderName = items[downshiftProps.highlightedIndex].name;
+      const newItem = items[downshiftProps.highlightedIndex];
+      const newProviderName = newItem?.name;
       const newProvider = contextProviders.find(
         (provider) => provider.display_title === newProviderName
       );
 
       if (!newProvider) {
+        if (nestedContextProvider && newItem.id) {
+          // Tell server the context item was selected
+          client?.selectContextItem(newItem.id, "");
+
+          // Clear the input
+          downshiftProps.setInputValue("");
+          setCurrentlyInContextQuery(false);
+          setNestedContextProvider(undefined);
+          setInQueryForContextProvider(undefined);
+          (event.nativeEvent as any).preventDownshiftDefault = true;
+          event.preventDefault();
+          return;
+        }
+        // This is a slash command
         (event.nativeEvent as any).preventDownshiftDefault = true;
+        event.preventDefault();
         return;
       } else if (newProvider.dynamic && newProvider.requires_query) {
+        // This is a dynamic context provider that requires a query, like URL / Search
         setInQueryForContextProvider(newProvider);
         downshiftProps.setInputValue(`@${newProvider.title} `);
         (event.nativeEvent as any).preventDownshiftDefault = true;
         event.preventDefault();
         return;
       } else if (newProvider.dynamic) {
+        // This is a normal dynamic context provider like Diff or Terminal
+        if (!newItem.id) return;
+
+        // Get the query from the input value
+        const segs = downshiftProps.inputValue.split("@");
+        const query = segs[segs.length - 1];
+
+        // Tell server the context item was selected
+        client?.selectContextItem(newItem.id, query);
+        if (downshiftProps.inputValue.includes("@")) {
+          const selectedNestedContextProvider = contextProviders.find(
+            (provider) => provider.title === newItem.id
+          );
+          if (
+            !nestedContextProvider &&
+            !selectedNestedContextProvider?.dynamic
+          ) {
+            downshiftProps.setInputValue(`@${newItem.id} `);
+            setNestedContextProvider(selectedNestedContextProvider);
+          } else {
+            downshiftProps.setInputValue("");
+          }
+        }
+
+        // Clear the input
+        downshiftProps.setInputValue("");
+        setCurrentlyInContextQuery(false);
+        setNestedContextProvider(undefined);
+        setInQueryForContextProvider(undefined);
+        (event.nativeEvent as any).preventDownshiftDefault = true;
+        event.preventDefault();
         return;
       }
 
@@ -546,24 +559,9 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
       downshiftProps.highlightedIndex,
       contextProviders,
       nestedContextProvider,
+      downshiftProps.inputValue,
     ]
   );
-
-  const showSelectContextGroupDialog = () => {
-    dispatch(setDialogMessage(<SelectContextGroupDialog />));
-    dispatch(setShowDialog(true));
-  };
-
-  const showDialogToSaveContextGroup = () => {
-    dispatch(
-      setDialogMessage(
-        <AddContextGroupDialog
-          selectedContextItems={props.selectedContextItems}
-        />
-      )
-    );
-    dispatch(setShowDialog(true));
-  };
 
   const [isComposing, setIsComposing] = useState(false);
 
@@ -574,17 +572,17 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
         ref={contextItemsDivRef}
       >
         <HiddenHeaderButtonWithText
-          className={props.selectedContextItems.length > 0 ? "pill-button" : ""}
+          className={selectedContextItems.length > 0 ? "pill-button" : ""}
           onClick={() => {
             client?.deleteContextWithIds(
-              props.selectedContextItems.map((item) => item.description.id)
+              selectedContextItems.map((item) => item.description.id)
             );
             inputRef.current?.focus();
           }}
           onKeyDown={(e: any) => {
             if (e.key === "Backspace") {
               client?.deleteContextWithIds(
-                props.selectedContextItems.map((item) => item.description.id)
+                selectedContextItems.map((item) => item.description.id)
               );
               inputRef.current?.focus();
             }
@@ -592,10 +590,10 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
         >
           <TrashIcon width="1.4em" height="1.4em" />
         </HiddenHeaderButtonWithText>
-        {props.selectedContextItems.map((item, idx) => {
+        {selectedContextItems.map((item, idx) => {
           return (
             <PillButton
-              areMultipleItems={props.selectedContextItems.length > 1}
+              areMultipleItems={selectedContextItems.length > 1}
               key={`${item.description.id.item_id}${idx}`}
               item={item}
               editing={
@@ -603,7 +601,6 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
                 (inputRef.current as any)?.value?.startsWith("/edit")
               }
               editingAny={(inputRef.current as any)?.value?.startsWith("/edit")}
-              addingHighlightedCode={props.addingHighlightedCode}
               index={idx}
               onDelete={() => {
                 client?.deleteContextWithIds([item.description.id]);
@@ -613,7 +610,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
           );
         })}
 
-        {props.selectedContextItems.length > 0 && (
+        {selectedContextItems.length > 0 && (
           <HeaderButtonWithText
             onClick={() => {
               client?.showContextVirtualFile();
@@ -687,13 +684,15 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
                   }
                 }
                 setCurrentlyInContextQuery(false);
-              } else if (
-                event.key === "Enter" &&
-                currentlyInContextQuery &&
-                nestedContextProvider === undefined
-              ) {
+              } else if (event.key === "Enter" && currentlyInContextQuery) {
+                // Handle "Enter" for Context Providers
                 selectContextItemFromDropdown(event);
-              } else if (event.key === "Tab" && items.length > 0) {
+              } else if (
+                event.key === "Tab" &&
+                downshiftProps.isOpen &&
+                items.length > 0 &&
+                items[downshiftProps.highlightedIndex]?.name.startsWith("/")
+              ) {
                 downshiftProps.setInputValue(items[0].name);
                 event.preventDefault();
               } else if (event.key === "Tab") {
@@ -833,7 +832,6 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
                   // (e.nativeEvent as any).preventDownshiftDefault = true;
                   // downshiftProps.selectItem(item);
                   selectContextItemFromDropdown(e);
-                  onSelectedItemChangeCallback({ selectedItem: item });
                 }}
               >
                 <span className="flex justify-between w-full">
@@ -865,7 +863,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
             ))}
         </Ul>
       </div>
-      {props.selectedContextItems.length === 0 &&
+      {selectedContextItems.length === 0 &&
         (downshiftProps.inputValue?.startsWith("/edit") ||
           (focused &&
             metaKeyPressed &&

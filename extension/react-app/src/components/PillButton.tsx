@@ -78,7 +78,6 @@ interface PillButtonProps {
   editing: boolean;
   editingAny: boolean;
   index: number;
-  addingHighlightedCode?: boolean;
   areMultipleItems?: boolean;
   onDelete?: () => void;
 }

@@ -276,14 +276,16 @@ class Autopilot(ContinueBaseModel):
         await self._run_singular_step(step)
 
     async def handle_highlighted_code(
-        self, range_in_files: List[RangeInFileWithContents]
+        self,
+        range_in_files: List[RangeInFileWithContents],
+        edit: Optional[bool] = False,
     ):
         if "code" not in self.context_manager.context_providers:
             return
 
         # Add to context manager
         await self.context_manager.context_providers["code"].handle_highlighted_code(
-            range_in_files
+            range_in_files, edit
         )
 
         await self.update_subscribers()

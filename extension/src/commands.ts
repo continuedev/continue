@@ -9,7 +9,7 @@ import { ideProtocolClient } from "./activation/activate";
 
 let focusedOnContinueInput = false;
 
-function addHighlightedCodeToContext() {
+function addHighlightedCodeToContext(edit: boolean) {
   focusedOnContinueInput = !focusedOnContinueInput;
   const editor = vscode.window.activeTextEditor;
   if (editor) {
@@ -17,22 +17,25 @@ function addHighlightedCodeToContext() {
     if (selection.isEmpty) return;
     const range = new vscode.Range(selection.start, selection.end);
     const contents = editor.document.getText(range);
-    ideProtocolClient.sendHighlightedCode([
-      {
-        filepath: editor.document.uri.fsPath,
-        contents,
-        range: {
-          start: {
-            line: selection.start.line,
-            character: selection.start.character,
-          },
-          end: {
-            line: selection.end.line,
-            character: selection.end.character,
+    ideProtocolClient?.sendHighlightedCode(
+      [
+        {
+          filepath: editor.document.uri.fsPath,
+          contents,
+          range: {
+            start: {
+              line: selection.start.line,
+              character: selection.start.character,
+            },
+            end: {
+              line: selection.end.line,
+              character: selection.end.character,
+            },
           },
         },
-      },
-    ]);
+      ],
+      edit
+    );
   }
 }
 
@@ -59,11 +62,11 @@ const commandsMap: { [command: string]: (...args: any) => any } = {
     debugPanelWebview?.postMessage({
       type: "focusContinueInput",
     });
-    addHighlightedCodeToContext();
+    addHighlightedCodeToContext(false);
   },
   "continue.focusContinueInputWithEdit": async () => {
     vscode.commands.executeCommand("continue.continueGUIView.focus");
-    addHighlightedCodeToContext();
+    addHighlightedCodeToContext(true);
     debugPanelWebview?.postMessage({
       type: "focusContinueInputWithEdit",
     });
@@ -74,8 +77,7 @@ const commandsMap: { [command: string]: (...args: any) => any } = {
   },
   "continue.quickTextEntry": async () => {
     const text = await vscode.window.showInputBox({
-      placeHolder:
-        "Ask a question or enter a slash command",
+      placeHolder: "Ask a question or enter a slash command",
       title: "Continue Quick Input",
     });
     if (text) {

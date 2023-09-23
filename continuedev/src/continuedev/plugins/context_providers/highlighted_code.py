@@ -1,5 +1,5 @@
 import os
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel
 
@@ -178,7 +178,9 @@ class HighlightedCodeContextProvider(ContextProvider):
         )
 
     async def handle_highlighted_code(
-        self, range_in_files: List[RangeInFileWithContents]
+        self,
+        range_in_files: List[RangeInFileWithContents],
+        edit: Optional[bool] = False,
     ):
         self.should_get_fallback_context_item = True
         self.last_added_fallback = False
@@ -209,16 +211,21 @@ class HighlightedCodeContextProvider(ContextProvider):
                 self.highlighted_ranges = [
                     HighlightedRangeContextItem(
                         rif=range_in_files[0],
-                        item=self._rif_to_context_item(range_in_files[0], 0, True),
+                        item=self._rif_to_context_item(range_in_files[0], 0, edit),
                     )
                 ]
 
             return
 
+        # If editing, make sure none of the other ranges are editing
+        if edit:
+            for hr in self.highlighted_ranges:
+                hr.item.editing = False
+
         # If new range overlaps with any existing, keep the existing but merged
         new_ranges = []
         for i, new_hr in enumerate(range_in_files):
-            found_overlap = False
+            found_overlap_with = None
             for existing_rif in self.highlighted_ranges:
                 if (
                     new_hr.filepath == existing_rif.rif.filepath
@@ -227,18 +234,22 @@ class HighlightedCodeContextProvider(ContextProvider):
                     existing_rif.rif.range = existing_rif.rif.range.merge_with(
                         new_hr.range
                     )
-                    found_overlap = True
+                    found_overlap_with = existing_rif
                     break
 
-            if not found_overlap:
+            if found_overlap_with is None:
                 new_ranges.append(
                     HighlightedRangeContextItem(
                         rif=new_hr,
                         item=self._rif_to_context_item(
-                            new_hr, len(self.highlighted_ranges) + i, True
+                            new_hr, len(self.highlighted_ranges) + i, edit
                         ),
                     )
                 )
+            elif edit:
+                # Want to update the range so it's only the newly selected portion
+                found_overlap_with.rif.range = new_hr.range
+                found_overlap_with.item.editing = True
 
         self.highlighted_ranges = self.highlighted_ranges + new_ranges
 

@@ -132,14 +132,6 @@ const Layout = () => {
     };
   }, [client, timeline]);
 
-  useEffect(() => {
-    // (Use local storage) If this is the first time, navigate to /help
-    if (!localStorage.getItem("firstTime")) {
-      localStorage.setItem("firstTime", "false");
-      navigate("/help");
-    }
-  });
-
   return (
     <LayoutTopDiv>
       <div

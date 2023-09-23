@@ -130,12 +130,7 @@ function GUI(props: GUIProps) {
   const user_input_queue = useSelector(
     (state: RootStore) => state.serverState.user_input_queue
   );
-  const adding_highlighted_code = useSelector(
-    (state: RootStore) => state.serverState.adding_highlighted_code
-  );
-  const selected_context_items = useSelector(
-    (state: RootStore) => state.serverState.selected_context_items
-  );
+
   const sessionTitle = useSelector(
     (state: RootStore) => state.serverState.session_info?.title
   );
@@ -753,11 +748,9 @@ function GUI(props: GUIProps) {
           e?.preventDefault();
         }}
         onInputValueChange={() => {}}
-        selectedContextItems={selected_context_items}
         onToggleAddContext={() => {
           client?.toggleAddingHighlightedCode();
         }}
-        addingHighlightedCode={adding_highlighted_code}
       />
     </TopGuiDiv>
   );
