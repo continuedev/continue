@@ -8,7 +8,7 @@ rm -rf continuedev/.venv
 
 # 2. Create a new virtual environment and activate it
 python3 -m venv env
-source env/bin/activate
+. env/bin/activate
 
 # 3. Install the required packages
 pip install -r continuedev/requirements.txt

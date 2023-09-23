@@ -23,7 +23,11 @@ Start it by running the following commands:
 
 Once you've validated that this works, you'll often want to use a debugger, in which case we've provided a launch configuration for VS Code in `.vscode/launch.json`. To start the debugger in VS Code, ensure that the workspace directory is the root of the `continue` repo, then press F5.
 
-> Note: To start the debugger, you'll have to select the poetry Python interpreter (`/path-to-poetry-venv/bin/python3`) in the bottom right of the VS Code window. If you don't see this, you may have to install the [Python extension](https://marketplace.visualstudio.com/items?itemName=ms-python.python).
+> [!NOTE]
+> To start the debugger, you'll have to select the poetry Python interpreter
+> (`/path-to-poetry-venv/bin/python3`) in the bottom right of the VS Code window. If you
+> don't see this, you may have to install the [Python
+> extension](https://marketplace.visualstudio.com/items?itemName=ms-python.python).
 
 ## Scripts
 
@@ -64,6 +68,15 @@ Run this command to use the install script
 ```bash
 cd continue/extension/scripts && python3 install_from_source.py
 ```
+
+> [!IMPORTANT]
+> Ensure you have a Java Runtime Environment (JRE) installed. Verify this by typing `java
+> -version` in your command prompt or terminal. If a version number appears, you're set.
+> If not, download and install a JRE from Oracle's website or through a package manager,
+> for example Homebrew.
+> ```sh
+> brew install openjdk@11
+> ```
 
 # Understanding the codebase
 
