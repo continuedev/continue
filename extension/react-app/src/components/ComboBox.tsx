@@ -249,6 +249,8 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
     }
   }, [nestedContextProvider]);
 
+  const [prevInputValue, setPrevInputValue] = useState("");
+
   const onInputValueChangeCallback = useCallback(
     ({ inputValue, highlightedIndex }: any) => {
       // Clear the input
@@ -258,6 +260,18 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
         setCurrentlyInContextQuery(false);
         return;
       }
+
+      // Hacky way of stopping bug where first context provider title is injected into input
+      if (
+        prevInputValue === "" &&
+        contextProviders.some((p) => p.display_title === inputValue)
+      ) {
+        downshiftProps.setInputValue("");
+        setPrevInputValue("");
+        return;
+      }
+      setPrevInputValue(inputValue);
+
       if (
         inQueryForContextProvider &&
         !inputValue.startsWith(`@${inQueryForContextProvider.title}`)
@@ -827,11 +841,10 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
                 highlighted={downshiftProps.highlightedIndex === index}
                 selected={downshiftProps.selectedItem === item}
                 onClick={(e) => {
-                  // e.stopPropagation();
-                  // e.preventDefault();
-                  // (e.nativeEvent as any).preventDownshiftDefault = true;
-                  // downshiftProps.selectItem(item);
                   selectContextItemFromDropdown(e);
+                  e.stopPropagation();
+                  e.preventDefault();
+                  inputRef.current?.focus();
                 }}
               >
                 <span className="flex justify-between w-full">

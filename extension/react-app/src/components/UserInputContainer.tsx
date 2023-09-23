@@ -304,7 +304,7 @@ const UserInputContainer = (props: UserInputContainerProps) => {
                           }
                         }}
                         text={
-                          props.historyNode.active
+                          props.active
                             ? `Stop (${getMetaKeyLabel()}⌫)`
                             : "Delete"
                         }
