@@ -264,7 +264,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
       // Hacky way of stopping bug where first context provider title is injected into input
       if (
         prevInputValue === "" &&
-        contextProviders.some((p) => p.display_title === inputValue)
+        contextProviders?.some((p) => p.display_title === inputValue)
       ) {
         downshiftProps.setInputValue("");
         setPrevInputValue("");
