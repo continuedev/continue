@@ -14,8 +14,72 @@ config = ContinueConfig(
     )
 )
 ```
-
 [View the source](https://github.com/continuedev/continue/tree/main/continuedev/src/continuedev/libs/llm/ollama.py)
+## Discover all available Models automtically
+
+If you want to add configs for all your local Ollama models automatically add the Following to your config file:
+
+```python
+import requests
+
+[...]
+def get_model_names(url):
+    try:
+        # Send a GET request to the URL
+        response = requests.get(url)
+
+        # Check if the request was successful (status code 200)
+        if response.status_code == 200:
+            # Parse the JSON data from the response
+            data = response.json()
+
+            # Extract the "name" field from each object in the "models" array
+            names = [model["name"] for model in data.get("models", [])]
+
+            return names
+        else:
+            # Print an error message if the request was not successful
+            print(f"Failed to fetch data. Status code: {response.status_code}")
+            return []
+    except Exception as e:
+        # Handle any exceptions that may occur during the request
+        print(f"An error occurred: {str(e)}")
+        return []
+
+# Function to process model names
+def process_model_name(name):
+    return Ollama(
+			context_length=2048,
+			model=name,
+			timeout=300,
+			prompt_templates={'edit': 'Consider the following code:\n```\n{{{code_to_edit}}}\n```\nEdit the code to perfectly satisfy the following user request:\n{{{user_input}}}\nOutput nothing except for the code. No code block, no English explanation, no start/end tags.'},
+			server_url="http://localhost:11434"
+		)  
+
+# Example usage:
+# URL to local Ollama installation and get all available tags
+url = "http://localhost:11434/api/tags"
+model_names = get_model_names(url)
+
+# Check if model_names is empty and make sure it returns empty array
+if not model_names:
+    processed_names = []
+else:
+    # Use map to apply the process_model_name function to each name in the list
+    processed_names = list(map(process_model_name, model_names))
+[...]
+
+config = ContinueConfig(
+    ...
+    models=Models(
+        default=Ollama(model="llama2")
+        unused=processed_names
+    )
+)
+```
+After you Reloaded you should see all models present in your Ollama installation in the dropdown.
+This works only once, as the config gets rewritten when you change Models.
+You would need to add the Models block again if you want to update it with your Ollama models again.
 
 ## Properties
 
