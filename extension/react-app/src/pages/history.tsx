@@ -26,6 +26,17 @@ const parseDate = (date: string): Date => {
   return dateObj;
 };
 
+const SectionHeader = styled.tr`
+  padding: 4px;
+  padding-left: 16px;
+  padding-right: 16px;
+  background-color: ${secondaryDark};
+  width: 100%;
+  font-weight: bold;
+  text-align: center;
+  margin: 0;
+`;
+
 const TdDiv = styled.div`
   cursor: pointer;
   padding-left: 1rem;
@@ -44,6 +55,9 @@ function History() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const [sessions, setSessions] = useState<SessionInfo[]>([]);
+  const [filteredAndSortedSessions, setFilteredAndSortedSessions] = useState<
+    SessionInfo[]
+  >([]);
   const client = useContext(GUIClientContext);
   const apiUrl = useSelector((state: RootStore) => state.config.apiUrl);
   const workspacePaths = useSelector(
@@ -68,6 +82,32 @@ function History() {
     };
     fetchSessions();
   }, [client]);
+
+  useEffect(() => {
+    setFilteredAndSortedSessions(
+      sessions
+        .filter((session) => {
+          if (
+            !filteringByWorkspace ||
+            typeof workspacePaths === "undefined" ||
+            typeof session.workspace_directory === "undefined"
+          ) {
+            return true;
+          }
+          return workspacePaths.includes(session.workspace_directory);
+        })
+        .sort(
+          (a, b) =>
+            parseDate(b.date_created).getTime() -
+            parseDate(a.date_created).getTime()
+        )
+    );
+  }, [filteringByWorkspace, sessions]);
+
+  const yesterday = new Date(Date.now() - 1000 * 60 * 60 * 24);
+  const lastWeek = new Date(Date.now() - 1000 * 60 * 60 * 24 * 7);
+  const lastMonth = new Date(Date.now() - 1000 * 60 * 60 * 24 * 30);
+  const earlier = new Date(0);
 
   return (
     <div className="overflow-y-scroll">
@@ -116,52 +156,56 @@ function History() {
       <div>
         <table className="w-full">
           <tbody>
-            {sessions
-              .filter((session) => {
-                if (
-                  !filteringByWorkspace ||
-                  typeof workspacePaths === "undefined" ||
-                  typeof session.workspace_directory === "undefined"
-                ) {
-                  return true;
-                }
-                return workspacePaths.includes(session.workspace_directory);
-              })
-              .sort(
-                (a, b) =>
-                  parseDate(b.date_created).getTime() -
-                  parseDate(a.date_created).getTime()
-              )
-              .map((session, index) => (
-                <Tr key={index}>
-                  <td>
-                    <TdDiv
-                      onClick={() => {
-                        client?.loadSession(session.session_id);
-                        dispatch(temporarilyClearSession());
-                        navigate("/");
-                      }}
-                    >
-                      <div className="text-md">{session.title}</div>
-                      <div className="text-gray-400">
-                        {parseDate(session.date_created).toLocaleString(
-                          "en-US",
-                          {
+            {filteredAndSortedSessions.map((session, index) => {
+              const prevDate =
+                index > 0
+                  ? parseDate(filteredAndSortedSessions[index - 1].date_created)
+                  : earlier;
+              const date = parseDate(session.date_created);
+              return (
+                <>
+                  {index === 0 && date > yesterday && (
+                    <SectionHeader>Today</SectionHeader>
+                  )}
+                  {date < yesterday &&
+                    date > lastWeek &&
+                    prevDate > yesterday && (
+                      <SectionHeader>This Week</SectionHeader>
+                    )}
+                  {date < lastWeek &&
+                    date > lastMonth &&
+                    prevDate > lastWeek && (
+                      <SectionHeader>This Month</SectionHeader>
+                    )}
+
+                  <Tr key={index}>
+                    <td>
+                      <TdDiv
+                        onClick={() => {
+                          client?.loadSession(session.session_id);
+                          dispatch(temporarilyClearSession(true));
+                          navigate("/");
+                        }}
+                      >
+                        <div className="text-md">{session.title}</div>
+                        <div className="text-gray-400">
+                          {date.toLocaleString("en-US", {
                             year: "2-digit",
                             month: "2-digit",
                             day: "2-digit",
                             hour: "numeric",
                             minute: "2-digit",
                             hour12: true,
-                          }
-                        )}
-                        {" | "}
-                        {lastPartOfPath(session.workspace_directory || "")}/
-                      </div>
-                    </TdDiv>
-                  </td>
-                </Tr>
-              ))}
+                          })}
+                          {" | "}
+                          {lastPartOfPath(session.workspace_directory || "")}/
+                        </div>
+                      </TdDiv>
+                    </td>
+                  </Tr>
+                </>
+              );
+            })}
           </tbody>
         </table>
         <br />

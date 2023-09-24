@@ -2,7 +2,7 @@ import styled from "styled-components";
 import { defaultBorderRadius, secondaryDark, vscForeground } from ".";
 import { Outlet } from "react-router-dom";
 import TextDialog from "./TextDialog";
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect } from "react";
 import { GUIClientContext } from "../App";
 import { useDispatch, useSelector } from "react-redux";
 import { RootStore } from "../redux/store";
@@ -12,8 +12,6 @@ import {
   setShowDialog,
 } from "../redux/slices/uiStateSlice";
 import {
-  PlusIcon,
-  FolderIcon,
   SparklesIcon,
   Cog6ToothIcon,
   QuestionMarkCircleIcon,
@@ -22,6 +20,7 @@ import HeaderButtonWithText from "./HeaderButtonWithText";
 import { useNavigate, useLocation } from "react-router-dom";
 import ModelSelect from "./ModelSelect";
 import ProgressBar from "./ProgressBar";
+import { temporarilyClearSession } from "../redux/slices/serverStateReducer";
 
 // #region Styled Components
 const FOOTER_HEIGHT = "1.8em";
@@ -112,6 +111,7 @@ const Layout = () => {
         event.code === "KeyN" &&
         timeline.filter((n) => !n.step.hide).length > 0
       ) {
+        dispatch(temporarilyClearSession(false));
         client?.loadSession(undefined);
       }
       if ((event.metaKey || event.ctrlKey) && event.code === "KeyC") {

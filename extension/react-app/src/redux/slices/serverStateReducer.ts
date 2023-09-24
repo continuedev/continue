@@ -98,11 +98,11 @@ export const serverStateSlice = createSlice({
     temporarilyPushToUserInputQueue: (state, action) => {
       state.user_input_queue = [...state.user_input_queue, action.payload];
     },
-    temporarilyClearSession: (state) => {
+    temporarilyClearSession: (state, action) => {
       state.history.timeline = [];
       state.selected_context_items = [];
       state.session_info = {
-        title: "Loading session...",
+        title: action.payload ? "Loading session..." : "New Session",
         session_id: "",
         date_created: "",
       };

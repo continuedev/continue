@@ -29,6 +29,7 @@ import {
 import RingLoader from "../components/RingLoader";
 import {
   setServerState,
+  temporarilyClearSession,
   temporarilyPushToUserInputQueue,
 } from "../redux/slices/serverStateReducer";
 import TimelineItem from "../components/TimelineItem";
@@ -68,7 +69,7 @@ const TitleTextInput = styled(TextInput)`
   padding-bottom: 6px;
 
   &:focus {
-    outline: 1px solid ${lightGray};
+    outline: none;
   }
 `;
 
@@ -86,11 +87,11 @@ const StepsDiv = styled.div`
   &::before {
     content: "";
     position: absolute;
-    height: calc(100% - 24px);
+    height: calc(100% - 12px);
     border-left: 2px solid ${lightGray};
     left: 28px;
     z-index: 0;
-    bottom: 24px;
+    bottom: 12px;
   }
 `;
 
@@ -517,20 +518,30 @@ function GUI(props: GUIProps) {
           value={sessionTitleInput}
           onChange={(e) => setSessionTitleInput(e.target.value)}
           onBlur={(e) => {
+            if (
+              e.target.value === sessionTitle ||
+              (typeof sessionTitle === "undefined" &&
+                e.target.value === "New Session")
+            )
+              return;
             client?.setCurrentSessionTitle(e.target.value);
           }}
           onKeyDown={(e) => {
             if (e.key === "Enter") {
               e.preventDefault();
               (e.target as any).blur();
+            } else if (e.key === "Escape") {
+              setSessionTitleInput(sessionTitle || "New Session");
+              (e.target as any).blur();
             }
           }}
         />
-        <div className="flex">
+        <div className="flex gap-2">
           {history.timeline.filter((n) => !n.step.hide).length > 0 && (
             <HeaderButtonWithText
               onClick={() => {
                 if (history.timeline.filter((n) => !n.step.hide).length > 0) {
+                  dispatch(temporarilyClearSession(false));
                   client?.loadSession(undefined);
                 }
               }}

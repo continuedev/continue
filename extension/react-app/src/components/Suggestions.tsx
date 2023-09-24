@@ -91,16 +91,20 @@ function SuggestionsDiv(props: SuggestionsDivProps) {
 
 const stageDescriptions = [
   <p>Ask a question</p>,
-  <ol>
-    <li>Highlight code in the editor</li>
-    <li>Press cmd+M to select the code</li>
-    <li>Ask a question</li>
-  </ol>,
-  <ol>
-    <li>Highlight code in the editor</li>
-    <li>Press cmd+shift+M to select the code</li>
-    <li>Request and edit</li>
-  </ol>,
+  <p>
+    1. Highlight code in the editor
+    <br />
+    2. Press cmd+M to select the code
+    <br />
+    3. Ask a question
+  </p>,
+  <p>
+    1. Highlight code in the editor
+    <br />
+    2. Press cmd+shift+M to select the code
+    <br />
+    3. Request an edit
+  </p>,
 ];
 
 const suggestionsStages: any[][] = [
@@ -178,7 +182,7 @@ function SuggestionsArea(props: { onClick: (textInput: string) => void }) {
     const inputs = timeline.filter(
       (node) => !node.step.hide && node.step.name === "User Input"
     );
-    return inputs.length - numTutorialInputs === 0;
+    return inputs.length - numTutorialInputs <= 0;
   }, [timeline, numTutorialInputs]);
 
   return (
@@ -187,9 +191,9 @@ function SuggestionsArea(props: { onClick: (textInput: string) => void }) {
         <TutorialDiv>
           <div className="flex">
             <SparklesIcon width="1.3em" height="1.3em" color="yellow" />
-            <b className="ml-1">Tutorial</b>
+            <b className="ml-1">Tutorial ({stage + 1}/3)</b>
           </div>
-          <p style={{ color: lightGray }}>
+          <p style={{ color: vscForeground, paddingLeft: "4px" }}>
             {stage < suggestionsStages.length &&
               suggestionsStages[stage][0]?.title}
           </p>

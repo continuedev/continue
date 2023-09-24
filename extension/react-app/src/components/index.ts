@@ -178,7 +178,7 @@ export const HeaderButton = styled.button<{ inverted: boolean | undefined }>`
 
   border: none;
   border-radius: ${defaultBorderRadius};
-  cursor: pointer;
+  cursor: ${({ disabled }) => (disabled ? "default" : "pointer")};
 
   &:hover {
     background-color: ${({ inverted }) =>

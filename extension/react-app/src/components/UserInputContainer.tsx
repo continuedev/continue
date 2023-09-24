@@ -103,7 +103,7 @@ const StyledDiv = styled.div<{ editing: boolean }>`
   z-index: 1;
   overflow: hidden;
   display: grid;
-  grid-template-columns: auto 1fr;
+  grid-template-columns: 1fr auto;
 
   outline: ${(props) => (props.editing ? `1px solid ${lightGray}` : "none")};
   cursor: text;
@@ -114,7 +114,7 @@ const DeleteButtonDiv = styled.div`
   top: 8px;
   right: 8px;
   background-color: ${secondaryDark};
-  box-shadow: 2px 2px 10px ${secondaryDark};
+  box-shadow: 4px 4px 10px ${secondaryDark};
   border-radius: ${defaultBorderRadius};
 `;
 
@@ -123,6 +123,7 @@ const GridDiv = styled.div`
   grid-template-columns: auto 1fr;
   grid-gap: 8px;
   align-items: center;
+  width: 100%;
 `;
 
 function stringWithEllipsis(str: string, maxLen: number) {
@@ -165,7 +166,7 @@ const UserInputContainer = (props: UserInputContainerProps) => {
       divRef.current.innerText = prevContent;
       divRef.current.blur();
     }
-  }, [divRef.current]);
+  }, [divRef.current, prevContent]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -189,6 +190,10 @@ const UserInputContainer = (props: UserInputContainerProps) => {
     e.stopPropagation();
     divRef.current?.blur();
   };
+
+  const [divTextContent, setDivTextContent] = useState("");
+
+  const checkButtonRef = useRef<HTMLButtonElement>(null);
 
   return (
     <GradientBorder
@@ -243,18 +248,22 @@ const UserInputContainer = (props: UserInputContainerProps) => {
               padding: "8px",
               paddingTop: "4px",
               paddingBottom: "4px",
+              width: "100%",
             }}
           >
             <div
               ref={divRef}
-              onBlur={() => {
-                onBlur();
+              onBlur={(e) => {
+                if (e.relatedTarget !== checkButtonRef.current) onBlur();
               }}
               onKeyDown={(e) => {
                 if (e.key === "Enter" && !e.shiftKey) {
                   e.preventDefault();
                   doneEditing(e);
                 }
+              }}
+              onInput={(e) => {
+                setDivTextContent((e.target as any).innerText);
               }}
               contentEditable={true}
               suppressContentEditableWarning={true}
@@ -271,10 +280,24 @@ const UserInputContainer = (props: UserInputContainerProps) => {
                     <HeaderButtonWithText
                       onClick={(e) => {
                         doneEditing(e);
+                        e.stopPropagation();
                       }}
                       text="Done"
+                      disabled={
+                        divTextContent === "" || divTextContent === prevContent
+                      }
+                      ref={checkButtonRef}
                     >
-                      <CheckIcon width="1.4em" height="1.4em" />
+                      <CheckIcon
+                        width="1.4em"
+                        height="1.4em"
+                        color={
+                          divTextContent === "" ||
+                          divTextContent === prevContent
+                            ? lightGray
+                            : vscForeground
+                        }
+                      />
                     </HeaderButtonWithText>
                   ) : (
                     <>

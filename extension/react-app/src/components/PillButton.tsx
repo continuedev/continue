@@ -196,6 +196,7 @@ const PillButton = (props: PillButtonProps) => {
           <>
             <CircleDiv
               data-tooltip-id={`circle-div-${props.item.description.name}`}
+              className="z-10"
             >
               <ExclamationTriangleIcon
                 style={{ margin: "auto" }}

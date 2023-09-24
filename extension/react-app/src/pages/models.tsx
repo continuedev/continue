@@ -145,6 +145,7 @@ function Models() {
         style={{
           borderBottom: `0.5px solid ${lightGray}`,
           backgroundColor: vscBackground,
+          zIndex: 2,
         }}
       >
         <ArrowLeftIcon
