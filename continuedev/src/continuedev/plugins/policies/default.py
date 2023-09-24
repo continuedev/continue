@@ -1,13 +1,9 @@
-import os
-from textwrap import dedent
 from typing import Type, Union
 
 from ...core.config import ContinueConfig
 from ...core.main import History, Policy, Step
 from ...core.observation import UserInputObservation
-from ...libs.util.paths import getServerFolderPath
 from ..steps.chat import SimpleChatStep
-from ..steps.core.core import MessageStep
 from ..steps.custom_command import CustomCommandStep
 from ..steps.main import EditHighlightedCodeStep
 from ..steps.steps_on_startup import StepsOnStartupStep
@@ -59,24 +55,7 @@ class DefaultPolicy(Policy):
     def next(self, config: ContinueConfig, history: History) -> Step:
         # At the very start, run initial Steps specified in the config
         if history.get_current() is None:
-            shown_welcome_file = os.path.join(getServerFolderPath(), ".shown_welcome")
-            if os.path.exists(shown_welcome_file):
-                return StepsOnStartupStep()
-
-            with open(shown_welcome_file, "w") as f:
-                f.write("")
-            return (
-                MessageStep(
-                    name="Welcome to Continue",
-                    message=dedent(
-                        """\
-                    - Highlight code section and ask a question or use `/edit`
-                    - Use `cmd+m` (Mac) / `ctrl+m` (Windows) to open Continue
-                    - [Customize Continue](https://continue.dev/docs/customization) by typing '/config' (e.g. use your own API key) """
-                    ),
-                )
-                >> StepsOnStartupStep()
-            )
+            return StepsOnStartupStep()
 
         observation = history.get_current().observation
         if observation is not None and isinstance(observation, UserInputObservation):

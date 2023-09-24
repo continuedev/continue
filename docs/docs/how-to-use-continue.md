@@ -21,12 +21,6 @@ If you are trying to use it for a new task and don’t have a sense of how much 
 
 Remember: You are responsible for all code that you ship, whether it was written by you or by an LLM that you directed. This means it is crucial that you review what the LLM writes. To make this easier, we provide natural language descriptions of the actions the LLM took in the Continue GUI.
 
-## Keyboard shortcuts
-
-Here you will find a list of all of the default keyboard shortcuts in VS Code:
-
-![keyboard-shortucts](/img/keyboard-shortcuts.png)
-
 ## When to use Continue
 
 Here are tasks that Continue excels at helping you complete:

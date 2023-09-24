@@ -9,6 +9,7 @@ export type FullState = FullState1;
 export type Name = string;
 export type Hide = boolean;
 export type Description = string;
+export type ClassName = string;
 export type SystemMessage = string;
 export type Role = "assistant" | "user" | "system" | "function";
 export type Content = string;
@@ -44,6 +45,12 @@ export type DateCreated = string;
 export type WorkspaceDirectory = string;
 export type SystemMessage1 = string;
 export type Temperature = number;
+export type Title1 = string;
+export type DisplayTitle = string;
+export type Description3 = string;
+export type Dynamic = boolean;
+export type RequiresQuery = boolean;
+export type ContextProviders = ContextProviderDescription[];
 
 /**
  * A full state of the program, including the history
@@ -58,6 +65,7 @@ export interface FullState1 {
   session_info?: SessionInfo;
   config: ContinueConfig;
   saved_context_groups?: SavedContextGroups;
+  context_providers?: ContextProviders;
   [k: string]: unknown;
 }
 /**
@@ -84,6 +92,7 @@ export interface Step {
   name?: Name;
   hide?: Hide;
   description?: Description;
+  class_name?: ClassName;
   system_message?: SystemMessage;
   chat_context?: ChatContext;
   manage_own_chat_context?: ManageOwnChatContext;
@@ -153,4 +162,12 @@ export interface ContinueConfig {
 }
 export interface SavedContextGroups {
   [k: string]: ContextItem[];
+}
+export interface ContextProviderDescription {
+  title: Title1;
+  display_title: DisplayTitle;
+  description: Description3;
+  dynamic: Dynamic;
+  requires_query: RequiresQuery;
+  [k: string]: unknown;
 }

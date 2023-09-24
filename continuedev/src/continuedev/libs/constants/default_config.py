@@ -8,16 +8,14 @@ See https://continue.dev/docs/customization to for documentation of the availabl
 from continuedev.src.continuedev.core.models import Models
 from continuedev.src.continuedev.core.config import CustomCommand, SlashCommand, ContinueConfig
 from continuedev.src.continuedev.plugins.context_providers.github import GitHubIssuesContextProvider
-from continuedev.src.continuedev.libs.llm.maybe_proxy_openai import MaybeProxyOpenAI
+from continuedev.src.continuedev.libs.llm.openai_free_trial import OpenAIFreeTrial
 
 from continuedev.src.continuedev.plugins.steps.open_config import OpenConfigStep
 from continuedev.src.continuedev.plugins.steps.clear_history import ClearHistoryStep
-from continuedev.src.continuedev.plugins.steps.feedback import FeedbackStep
 from continuedev.src.continuedev.plugins.steps.comment_code import CommentCodeStep
 from continuedev.src.continuedev.plugins.steps.share_session import ShareSessionStep
 from continuedev.src.continuedev.plugins.steps.main import EditHighlightedCodeStep
 from continuedev.src.continuedev.plugins.steps.cmd import GenerateShellCommandStep
-from continuedev.src.continuedev.plugins.context_providers.search import SearchContextProvider
 from continuedev.src.continuedev.plugins.context_providers.diff import DiffContextProvider
 from continuedev.src.continuedev.plugins.context_providers.url import URLContextProvider
 from continuedev.src.continuedev.plugins.context_providers.terminal import TerminalContextProvider
@@ -25,8 +23,8 @@ from continuedev.src.continuedev.plugins.context_providers.terminal import Termi
 config = ContinueConfig(
     allow_anonymous_telemetry=True,
     models=Models(
-        default=MaybeProxyOpenAI(api_key="", model="gpt-4"),
-        medium=MaybeProxyOpenAI(api_key="", model="gpt-3.5-turbo")
+        default=OpenAIFreeTrial(api_key="", model="gpt-4"),
+        summarize=OpenAIFreeTrial(api_key="", model="gpt-3.5-turbo")
     ),
     system_message=None,
     temperature=0.5,
@@ -54,11 +52,6 @@ config = ContinueConfig(
             step=CommentCodeStep,
         ),
         SlashCommand(
-            name="feedback",
-            description="Send feedback to improve Continue",
-            step=FeedbackStep,
-        ),
-        SlashCommand(
             name="clear",
             description="Clear step history",
             step=ClearHistoryStep,
@@ -79,7 +72,6 @@ config = ContinueConfig(
         #     repo_name="<your github username or organization>/<your repo name>",
         #     auth_token="<your github auth token>"
         # ),
-        SearchContextProvider(),
         DiffContextProvider(),
         URLContextProvider(
             preset_urls = [

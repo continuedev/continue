@@ -29,7 +29,7 @@ class NLDecisionStep(Step):
             Select the step which should be taken next to satisfy the user input. Say only the name of the selected step. You must choose one:"""
         )
 
-        resp = (await sdk.models.medium.complete(prompt)).lower()
+        resp = (await sdk.models.summarize.complete(prompt)).lower()
 
         step_to_run = None
         for step in self.steps:

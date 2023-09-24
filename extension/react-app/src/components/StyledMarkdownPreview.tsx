@@ -7,8 +7,12 @@ import {
   vscForeground,
 } from ".";
 import MarkdownPreview from "@uiw/react-markdown-preview";
+import { getFontSize } from "../util";
 
-const StyledMarkdownPreview = styled(MarkdownPreview)<{ light?: boolean }>`
+const StyledMarkdownPreview = styled(MarkdownPreview)<{
+  light?: boolean;
+  fontSize?: number;
+}>`
   pre {
     background-color: ${(props) =>
       props.light ? vscBackground : secondaryDark};
@@ -34,7 +38,7 @@ const StyledMarkdownPreview = styled(MarkdownPreview)<{ light?: boolean }>`
 
   background-color: ${(props) => (props.light ? "transparent" : vscBackground)};
   font-family: "Lexend", sans-serif;
-  font-size: 13px;
+  font-size: ${(props) => props.fontSize || getFontSize()}px;
   padding: 8px;
   color: ${vscForeground};
 `;

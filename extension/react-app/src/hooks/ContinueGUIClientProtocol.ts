@@ -23,12 +23,8 @@ class ContinueGUIClientProtocol extends AbstractContinueGUIClientProtocol {
       ? new VscodeMessenger(serverUrlWithSessionId)
       : new WebsocketMessenger(serverUrlWithSessionId);
 
-    this.messenger.onClose(() => {
-      console.log("GUI -> IDE websocket closed");
-    });
-    this.messenger.onError((error) => {
-      console.log("GUI -> IDE websocket error", error);
-    });
+    this.messenger.onClose(() => {});
+    this.messenger.onError((error) => {});
 
     this.messenger.onMessageType("reconnect_at_session", (data: any) => {
       if (data.session_id) {
@@ -52,6 +48,7 @@ class ContinueGUIClientProtocol extends AbstractContinueGUIClientProtocol {
   }
 
   onReconnectAtSession(session_id: string): void {
+    console.log("Reconnecting at session: ", session_id);
     this.connectMessenger(
       `${this.serverUrlWithSessionId.split("?")[0]}?session_id=${session_id}`,
       this.useVscodeMessagePassing
@@ -122,6 +119,10 @@ class ContinueGUIClientProtocol extends AbstractContinueGUIClientProtocol {
     this.messenger?.send("show_logs_at_index", { index });
   }
 
+  showContextVirtualFile(): void {
+    this.messenger?.send("show_context_virtual_file", {});
+  }
+
   selectContextItem(id: string, query: string): void {
     this.messenger?.send("select_context_item", { id, query });
   }
@@ -162,6 +163,10 @@ class ContinueGUIClientProtocol extends AbstractContinueGUIClientProtocol {
 
   deleteContextGroup(id: string): void {
     this.messenger?.send("delete_context_group", { id });
+  }
+
+  setCurrentSessionTitle(title: string): void {
+    this.messenger?.send("set_current_session_title", { title });
   }
 }
 

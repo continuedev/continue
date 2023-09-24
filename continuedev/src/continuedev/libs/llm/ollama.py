@@ -5,6 +5,7 @@ import aiohttp
 from pydantic import Field
 
 from ..llm import LLM
+from ..util.logging import logger
 from .prompts.chat import llama2_template_messages
 from .prompts.edit import simplified_edit_prompt
 
@@ -43,9 +44,19 @@ class Ollama(LLM):
 
     async def start(self, **kwargs):
         await super().start(**kwargs)
-        self._client_session = aiohttp.ClientSession(
-            timeout=aiohttp.ClientTimeout(total=self.timeout)
-        )
+        self._client_session = self.create_client_session()
+        try:
+            async with self._client_session.post(
+                f"{self.server_url}/api/generate",
+                proxy=self.proxy,
+                json={
+                    "prompt": "",
+                    "model": self.model,
+                },
+            ) as _:
+                pass
+        except Exception as e:
+            logger.warning(f"Error pre-loading Ollama model: {e}")
 
     async def stop(self):
         await self._client_session.close()
@@ -59,6 +70,7 @@ class Ollama(LLM):
                 "system": self.system_message,
                 "options": {"temperature": options.temperature},
             },
+            proxy=self.proxy,
         ) as resp:
             async for line in resp.content.iter_any():
                 if line:

@@ -72,6 +72,11 @@
           "title": "Description",
           "type": "string"
         },
+        "class_name": {
+          "title": "Class Name",
+          "default": "Step",
+          "type": "string"
+        },
         "system_message": {
           "title": "System Message",
           "type": "string"

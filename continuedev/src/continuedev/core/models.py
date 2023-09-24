@@ -5,13 +5,14 @@ from pydantic import BaseModel
 from ..libs.llm import LLM
 from ..libs.llm.anthropic import AnthropicLLM
 from ..libs.llm.ggml import GGML
+from ..libs.llm.hf_inference_api import HuggingFaceInferenceAPI
+from ..libs.llm.hf_tgi import HuggingFaceTGI
 from ..libs.llm.llamacpp import LlamaCpp
-from ..libs.llm.maybe_proxy_openai import MaybeProxyOpenAI
 from ..libs.llm.ollama import Ollama
 from ..libs.llm.openai import OpenAI
+from ..libs.llm.openai_free_trial import OpenAIFreeTrial
 from ..libs.llm.replicate import ReplicateLLM
 from ..libs.llm.together import TogetherLLM
-from ..libs.llm.hf_inference_api import HuggingFaceInferenceAPI
 
 
 class ContinueSDK(BaseModel):
@@ -20,9 +21,7 @@ class ContinueSDK(BaseModel):
 
 ALL_MODEL_ROLES = [
     "default",
-    "small",
-    "medium",
-    "large",
+    "summarize",
     "edit",
     "chat",
 ]
@@ -31,7 +30,7 @@ MODEL_CLASSES = {
     cls.__name__: cls
     for cls in [
         OpenAI,
-        MaybeProxyOpenAI,
+        OpenAIFreeTrial,
         GGML,
         TogetherLLM,
         AnthropicLLM,
@@ -39,12 +38,13 @@ MODEL_CLASSES = {
         Ollama,
         LlamaCpp,
         HuggingFaceInferenceAPI,
+        HuggingFaceTGI,
     ]
 }
 
 MODEL_MODULE_NAMES = {
     "OpenAI": "openai",
-    "MaybeProxyOpenAI": "maybe_proxy_openai",
+    "OpenAIFreeTrial": "openai_free_trial",
     "GGML": "ggml",
     "TogetherLLM": "together",
     "AnthropicLLM": "anthropic",
@@ -52,6 +52,7 @@ MODEL_MODULE_NAMES = {
     "Ollama": "ollama",
     "LlamaCpp": "llamacpp",
     "HuggingFaceInferenceAPI": "hf_inference_api",
+    "HuggingFaceTGI": "hf_tgi",
 }
 
 
@@ -59,13 +60,11 @@ class Models(BaseModel):
     """Main class that holds the current model configuration"""
 
     default: LLM
-    small: Optional[LLM] = None
-    medium: Optional[LLM] = None
-    large: Optional[LLM] = None
+    summarize: Optional[LLM] = None
     edit: Optional[LLM] = None
     chat: Optional[LLM] = None
 
-    unused: List[LLM] = []
+    saved: List[LLM] = []
 
     # TODO namespace these away to not confuse readers,
     # or split Models into ModelsConfig, which gets turned into Models
@@ -89,7 +88,8 @@ class Models(BaseModel):
 
     def set_system_message(self, msg: str):
         for model in self.all_models:
-            model.system_message = msg
+            if model.system_message is None:
+                model.system_message = msg
 
     async def start(self, sdk: "ContinueSDK"):
         """Start each of the LLMs, or fall back to default"""

@@ -176,37 +176,37 @@ class IdeProtocolClient {
     });
 
     // Setup listeners for any selection changes in open editors
-    vscode.window.onDidChangeTextEditorSelection((event) => {
-      if (!this.editorIsCode(event.textEditor)) {
-        return;
-      }
-      if (this._highlightDebounce) {
-        clearTimeout(this._highlightDebounce);
-      }
-      this._highlightDebounce = setTimeout(() => {
-        const highlightedCode = event.textEditor.selections
-          .filter((s) => !s.isEmpty)
-          .map((selection) => {
-            const range = new vscode.Range(selection.start, selection.end);
-            const contents = event.textEditor.document.getText(range);
-            return {
-              filepath: event.textEditor.document.uri.fsPath,
-              contents,
-              range: {
-                start: {
-                  line: selection.start.line,
-                  character: selection.start.character,
-                },
-                end: {
-                  line: selection.end.line,
-                  character: selection.end.character,
-                },
-              },
-            };
-          });
-        this.sendHighlightedCode(highlightedCode);
-      }, 100);
-    });
+    // vscode.window.onDidChangeTextEditorSelection((event) => {
+    //   if (!this.editorIsCode(event.textEditor)) {
+    //     return;
+    //   }
+    //   if (this._highlightDebounce) {
+    //     clearTimeout(this._highlightDebounce);
+    //   }
+    //   this._highlightDebounce = setTimeout(() => {
+    //     const highlightedCode = event.textEditor.selections
+    //       .filter((s) => !s.isEmpty)
+    //       .map((selection) => {
+    //         const range = new vscode.Range(selection.start, selection.end);
+    //         const contents = event.textEditor.document.getText(range);
+    //         return {
+    //           filepath: event.textEditor.document.uri.fsPath,
+    //           contents,
+    //           range: {
+    //             start: {
+    //               line: selection.start.line,
+    //               character: selection.start.character,
+    //             },
+    //             end: {
+    //               line: selection.end.line,
+    //               character: selection.end.character,
+    //             },
+    //           },
+    //         };
+    //       });
+    //     this.sendHighlightedCode(highlightedCode);
+    //   }, 100);
+    // });
 
     // Register a content provider for the readonly virtual documents
     const documentContentProvider = new (class
@@ -659,6 +659,11 @@ class IdeProtocolClient {
     );
     const terminalContents = await vscode.env.clipboard.readText();
     await vscode.env.clipboard.writeText(tempCopyBuffer);
+
+    if (tempCopyBuffer === terminalContents) {
+      // This means there is no terminal open to select text from
+      return "";
+    }
     return terminalContents;
   }
 
@@ -729,16 +734,19 @@ class IdeProtocolClient {
     this.messenger?.send("commandOutput", { output });
   }
 
-  sendHighlightedCode(highlightedCode: (RangeInFile & { contents: string })[]) {
-    this.messenger?.send("highlightedCodePush", { highlightedCode });
+  sendHighlightedCode(
+    highlightedCode: (RangeInFile & { contents: string })[],
+    edit?: boolean
+  ) {
+    this.messenger?.send("highlightedCodePush", { highlightedCode, edit });
   }
 
   sendAcceptRejectSuggestion(accepted: boolean) {
     this.messenger?.send("acceptRejectSuggestion", { accepted });
   }
 
-  sendAcceptRejectDiff(accepted: boolean) {
-    this.messenger?.send("acceptRejectDiff", { accepted });
+  sendAcceptRejectDiff(accepted: boolean, stepIndex: number) {
+    this.messenger?.send("acceptRejectDiff", { accepted, stepIndex });
   }
 
   sendMainUserInput(input: string) {
