@@ -68,7 +68,7 @@ def get_error_title(e: Exception) -> str:
     ):
         return e._message
     elif isinstance(e, ClientPayloadError):
-        return "The request to OpenAI failed. Please try again."
+        return "The request failed. Please try again."
     elif isinstance(e, openai_errors.APIConnectionError):
         return 'The request failed. Please check your internet connection and try again. If this issue persists, you can use our API key for free by going to VS Code settings and changing the value of continue.OPENAI_API_KEY to ""'
     elif isinstance(e, openai_errors.InvalidRequestError):

@@ -24,7 +24,11 @@ import {
 } from "@heroicons/react/24/outline";
 import { HistoryNode } from "../../../schema/HistoryNode";
 import { GUIClientContext } from "../App";
-import { getMetaKeyLabel, isMetaEquivalentKeyPressed } from "../util";
+import {
+  getFontSize,
+  getMetaKeyLabel,
+  isMetaEquivalentKeyPressed,
+} from "../util";
 import { RootStore } from "../redux/store";
 import { useSelector } from "react-redux";
 
@@ -91,8 +95,8 @@ const GradientBorder = styled.div<{
   background-size: 200% 200%;
 `;
 
-const StyledDiv = styled.div<{ editing: boolean }>`
-  font-size: 13px;
+const StyledDiv = styled.div<{ editing: boolean; fontSize?: number }>`
+  font-size: ${(props) => props.fontSize || getFontSize()}px;
   font-family: inherit;
   border-radius: ${defaultBorderRadius};
   height: auto;
@@ -204,6 +208,7 @@ const UserInputContainer = (props: UserInputContainerProps) => {
       borderRadius={defaultBorderRadius}
     >
       <StyledDiv
+        fontSize={getFontSize()}
         editing={isEditing}
         onMouseEnter={() => {
           setIsHovered(true);

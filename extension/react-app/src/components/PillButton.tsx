@@ -17,8 +17,9 @@ import { GUIClientContext } from "../App";
 import { useDispatch } from "react-redux";
 import { setBottomMessage } from "../redux/slices/uiStateSlice";
 import { ContextItem } from "../../../schema/FullState";
+import { getFontSize } from "../util";
 
-const Button = styled.button`
+const Button = styled.button<{ fontSize?: number }>`
   border: none;
   color: ${vscForeground};
   background-color: ${secondaryDark};
@@ -27,7 +28,7 @@ const Button = styled.button`
   padding-left: 8px;
   padding-right: 8px;
   overflow: hidden;
-  font-size: 13px;
+  font-size: ${(props) => props.fontSize || getFontSize()}px;
 
   cursor: pointer;
 `;
@@ -120,6 +121,7 @@ const PillButton = (props: PillButtonProps) => {
   return (
     <div style={{ position: "relative" }}>
       <StyledButton
+        fontSize={getFontSize()}
         borderColor={props.editing ? (warning ? "red" : undefined) : undefined}
         onMouseEnter={() => {
           setIsHovered(true);

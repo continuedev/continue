@@ -41,3 +41,8 @@ export function getMetaKeyLabel(): string {
       return "⌘";
   }
 }
+
+export function getFontSize(): number {
+  const fontSize = localStorage.getItem("fontSize");
+  return fontSize ? parseInt(fontSize) : 13;
+}

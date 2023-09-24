@@ -279,7 +279,7 @@ function GUI(props: GUIProps) {
       }
 
       // cmd+enter to /edit
-      if (isMetaEquivalentKeyPressed(event)) {
+      if (event && isMetaEquivalentKeyPressed(event)) {
         input = `/edit ${input}`;
       }
       (mainTextInputRef.current as any).setInputValue("");

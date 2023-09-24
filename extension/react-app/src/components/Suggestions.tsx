@@ -15,6 +15,7 @@ import {
 import { useSelector } from "react-redux";
 import { RootStore } from "../redux/store";
 import HeaderButtonWithText from "./HeaderButtonWithText";
+import { getFontSize } from "../util";
 
 const Div = styled.div<{ isDisabled: boolean }>`
   border-radius: ${defaultBorderRadius};
@@ -35,8 +36,8 @@ const Div = styled.div<{ isDisabled: boolean }>`
   }
 `;
 
-const P = styled.p`
-  font-size: 13px;
+const P = styled.p<{ fontSize: number }>`
+  font-size: ${(props) => props.fontSize}px;
   margin: 0;
 `;
 
@@ -66,7 +67,7 @@ function SuggestionsDiv(props: SuggestionsDivProps) {
         onMouseLeave={() => setIsHovered(false)}
         isDisabled={props.disabled}
       >
-        <P>{props.description}</P>
+        <P fontSize={getFontSize()}>{props.description}</P>
         <PaperAirplaneIcon
           width="1.6em"
           height="1.6em"

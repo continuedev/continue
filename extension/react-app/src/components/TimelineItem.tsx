@@ -1,7 +1,8 @@
 import React from "react";
-import { lightGray, secondaryDark, vscBackground } from ".";
+import { lightGray, vscBackground } from ".";
 import styled from "styled-components";
-import { ChatBubbleOvalLeftIcon, PlusIcon } from "@heroicons/react/24/outline";
+import { ChatBubbleOvalLeftIcon } from "@heroicons/react/24/outline";
+import { getFontSize } from "../util";
 
 const CollapseButton = styled.div`
   background-color: ${vscBackground};
@@ -14,14 +15,14 @@ const CollapseButton = styled.div`
   cursor: pointer;
 `;
 
-const CollapsedDiv = styled.div`
+const CollapsedDiv = styled.div<{ fontSize?: number }>`
   margin-top: 8px;
   margin-bottom: 8px;
   margin-left: 8px;
   display: flex;
   align-items: center;
   gap: 4px;
-  font-size: 13px;
+  font-size: ${(props) => props.fontSize || getFontSize()}px;
   min-height: 16px;
 `;
 
@@ -37,7 +38,7 @@ function TimelineItem(props: TimelineItemProps) {
   return props.open ? (
     props.children
   ) : (
-    <CollapsedDiv>
+    <CollapsedDiv fontSize={getFontSize()}>
       <CollapseButton
         onClick={() => {
           props.onToggle();

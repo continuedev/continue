@@ -5,6 +5,7 @@ import { ArrowPathIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { HistoryNode } from "../../../schema/HistoryNode";
 import HeaderButtonWithText from "./HeaderButtonWithText";
 import StyledMarkdownPreview from "./StyledMarkdownPreview";
+import { getFontSize } from "../util";
 
 interface StepContainerProps {
   historyNode: HistoryNode;
@@ -41,12 +42,12 @@ const ButtonsDiv = styled.div`
   height: 0;
 `;
 
-const ContentDiv = styled.div<{ isUserInput: boolean }>`
+const ContentDiv = styled.div<{ isUserInput: boolean; fontSize?: number }>`
   padding: 2px;
   padding-right: 0px;
   background-color: ${(props) =>
     props.isUserInput ? secondaryDark : vscBackground};
-  font-size: 13px;
+  font-size: ${(props) => props.fontSize || getFontSize()}px;
   border-radius: ${defaultBorderRadius};
   overflow: hidden;
 `;
@@ -122,8 +123,13 @@ function StepContainer(props: StepContainerProps) {
             </ButtonsDiv>
           )}
 
-        <ContentDiv hidden={!props.open} isUserInput={isUserInput}>
+        <ContentDiv
+          hidden={!props.open}
+          isUserInput={isUserInput}
+          fontSize={getFontSize()}
+        >
           <StyledMarkdownPreview
+            fontSize={getFontSize()}
             source={props.historyNode.step.description || ""}
             wrapperElement={{
               "data-color-mode": "dark",

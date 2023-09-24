@@ -333,7 +333,7 @@ class EditHighlightedCodeStep(Step):
         if len(range_in_files) == 0:
             raise ContinueCustomException(
                 message="Please highlight some code and try again.",
-                title="No Code Selected",
+                title="No Code Selected (highlight and select with cmd+shift+M)",
             )
 
         # If all of the ranges are point ranges, only edit the last one

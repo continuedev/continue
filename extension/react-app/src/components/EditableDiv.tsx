@@ -5,12 +5,13 @@ import {
   secondaryDark,
   vscForeground,
 } from ".";
+import { getFontSize } from "../util";
 
-const Div = styled.div`
+const Div = styled.div<{ fontSize?: number }>`
   resize: none;
 
   padding: 8px;
-  font-size: 13px;
+  font-size: ${(props) => props.fontSize || getFontSize()}px;
   font-family: inherit;
   border-radius: ${defaultBorderRadius};
   margin: 8px auto;
@@ -45,6 +46,7 @@ interface EditableDivProps {
 function EditableDiv(props: EditableDivProps) {
   return (
     <Div
+      fontSize={getFontSize()}
       suppressContentEditableWarning={true}
       contentEditable={true}
       onChange={(e) => {

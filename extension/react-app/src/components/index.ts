@@ -1,5 +1,6 @@
 import { Tooltip } from "react-tooltip";
 import styled, { keyframes } from "styled-components";
+import { getFontSize } from "../util";
 
 export const defaultBorderRadius = "5px";
 export const lightGray = "#646464";
@@ -107,6 +108,21 @@ export const TextInput = styled.input.attrs({ type: "text" })`
   }
 `;
 
+export const NumberInput = styled.input.attrs({ type: "number" })`
+  padding: 8px 12px;
+  margin: 8px 4px;
+  box-sizing: border-box;
+  border-radius: ${defaultBorderRadius};
+  outline: 1px solid ${lightGray};
+  border: none;
+  background-color: ${vscBackground};
+  color: ${vscForeground};
+
+  &:focus {
+    background: ${secondaryDark};
+  }
+`;
+
 export const Select = styled.select`
   padding: 8px 12px;
   margin: 8px 0;
@@ -118,8 +134,8 @@ export const Select = styled.select`
   color: ${vscForeground};
 `;
 
-export const Label = styled.label`
-  font-size: 13px;
+export const Label = styled.label<{ fontSize?: number }>`
+  font-size: ${(props) => props.fontSize || getFontSize()}px;
 `;
 
 const spin = keyframes`

@@ -6,18 +6,18 @@ import { useNavigate } from "react-router-dom";
 import { ContinueConfig } from "../../../schema/ContinueConfig";
 import {
   Button,
+  NumberInput,
   TextArea,
   lightGray,
   secondaryDark,
   vscBackground,
 } from "../components";
 import styled from "styled-components";
-import { ArrowLeftIcon, Squares2X2Icon } from "@heroicons/react/24/outline";
+import { ArrowLeftIcon } from "@heroicons/react/24/outline";
 import Loader from "../components/Loader";
 import InfoHover from "../components/InfoHover";
 import { FormProvider, useForm } from "react-hook-form";
-import { setDialogMessage, setShowDialog } from "../redux/slices/uiStateSlice";
-import KeyboardShortcutsDialog from "../components/dialogs/KeyboardShortcuts";
+import { getFontSize } from "../util";
 
 const Hr = styled.hr`
   border: 0.5px solid ${lightGray};
@@ -218,6 +218,24 @@ function Settings() {
             <Loader />
           )}
         </form>
+
+        <hr />
+
+        <div className="px-2">
+          <h3>Appearance</h3>
+
+          <p>Font Size</p>
+          <NumberInput
+            type="number"
+            min="8"
+            max="48"
+            step="1"
+            defaultValue={getFontSize()}
+            onChange={(e) => {
+              localStorage.setItem("fontSize", e.target.value);
+            }}
+          />
+        </div>
 
         <div className="flex gap-2 justify-end px-4">
           <CancelButton
