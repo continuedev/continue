@@ -38,7 +38,7 @@ config=ContinueConfig(
 ```
 
 5. Reload the VS Code window to connect to the server you are running manually and allow the config changes to take effect
-6. When you open a workspace, Continue will generate the embeddings. You can then enter '/codebase <QUESTION>' to ask a question with embeddings-based retrieval.
+6. When you open a workspace, Continue will generate the embeddings. You can then enter '/codebase \<QUESTION\>' to ask a question with embeddings-based retrieval.
 7. Please share feedback in [Discord](https://discord.gg/NWtdYexhMs)!
 
 > Note: There is a known bug that requires different imports for the PyPI package. If you encounter "No module named 'continuedev.src', you should replace all instances of 'continuedev.src.continuedev' in `config.py` with just 'continuedev'.
