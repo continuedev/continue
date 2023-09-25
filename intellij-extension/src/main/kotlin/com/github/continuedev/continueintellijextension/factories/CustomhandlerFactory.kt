@@ -61,18 +61,27 @@ sealed class ResourceHandlerState {
 }
 
 class OpenedConnection(private val connection: URLConnection?) : ResourceHandlerState() {
-    private val inputStream: InputStream by lazy { connection!!.inputStream }
+    private val inputStream: InputStream? by lazy {
+        connection?.inputStream
+    }
     override fun getResponseHeaders(cefResponse: CefResponse, responseLength: IntRef, redirectUrl: StringRef) {
         try {
-            val url = connection!!.url.toString()
-            when {
-                url.contains("css") -> cefResponse.mimeType = "text/css"
-                url.contains("js") -> cefResponse.mimeType = "text/javascript"
-                url.contains("html") -> cefResponse.mimeType = "text/html"
-                else -> cefResponse.mimeType = connection.contentType
+            if (connection != null) {
+                val url = connection.url.toString()
+                when {
+                    url.contains("css") -> cefResponse.mimeType = "text/css"
+                    url.contains("js") -> cefResponse.mimeType = "text/javascript"
+                    url.contains("html") -> cefResponse.mimeType = "text/html"
+                    else -> cefResponse.mimeType = connection.contentType
+                }
+                responseLength.set(inputStream?.available() ?: 0)
+                cefResponse.status = 200
+            } else {
+                // Handle the case where connection is null
+                cefResponse.error = CefLoadHandler.ErrorCode.ERR_FAILED
+                cefResponse.statusText = "Connection is null"
+                cefResponse.status = 500
             }
-            responseLength.set(inputStream.available())
-            cefResponse.status = 200
         } catch (e: IOException) {
             cefResponse.error = CefLoadHandler.ErrorCode.ERR_FILE_NOT_FOUND
             cefResponse.statusText = e.localizedMessage
@@ -80,21 +89,24 @@ class OpenedConnection(private val connection: URLConnection?) : ResourceHandler
         }
     }
 
+
     override fun readResponse(dataOut: ByteArray, bytesToRead: Int, bytesRead: IntRef, callback: CefCallback): Boolean {
-        val availableSize = inputStream.available()
-        return if (availableSize > 0) {
-            val maxBytesToRead = minOf(availableSize, bytesToRead)
-            val realBytesRead = inputStream.read(dataOut, 0, maxBytesToRead)
-            bytesRead.set(realBytesRead)
-            true
-        } else {
-            inputStream.close()
-            false
-        }
+        return inputStream?.let {inputStream ->
+            val availableSize = inputStream.available()
+            return if (availableSize > 0) {
+                val maxBytesToRead = minOf(availableSize, bytesToRead)
+                val realBytesRead = inputStream.read(dataOut, 0, maxBytesToRead)
+                bytesRead.set(realBytesRead)
+                true
+            } else {
+                inputStream.close()
+                false
+            }
+        } ?: false
     }
 
     override fun close() {
-        inputStream.close()
+        inputStream?.close()
     }
 }
 

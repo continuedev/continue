@@ -214,9 +214,9 @@ suspend fun startBinaryWithRetry(path: String) {
 
 suspend fun startContinuePythonServer() {
     val settings = ServiceManager.getService(ContinueExtensionSettings::class.java)
-    val serverUrl = settings.serverUrl ?: "http://localhost:65432"
+    val serverUrl = settings.continueState.serverUrl ?: "http://localhost:65432"
 
-    if ((serverUrl != "http://localhost:65432" && serverUrl != "http://127.0.0.1:65432") || settings.manuallyRunningServer) {
+    if ((serverUrl != "http://localhost:65432" && serverUrl != "http://127.0.0.1:65432") || settings.continueState.manuallyRunningServer) {
         println("Continue server being run manually, skipping start")
         return
     }

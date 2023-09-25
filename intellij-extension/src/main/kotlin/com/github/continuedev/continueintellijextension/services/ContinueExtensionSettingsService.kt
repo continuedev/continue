@@ -5,8 +5,10 @@ import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.components.State
 import com.intellij.openapi.components.Storage
 import com.intellij.openapi.options.Configurable
+import kotlinx.serialization.Serializable
 import java.awt.GridBagConstraints
 import java.awt.GridBagLayout
+import javax.annotation.Nullable
 import javax.swing.JComponent
 import javax.swing.*
 
@@ -55,21 +57,27 @@ class ContinueSettingsComponent {
 }
 
 @State(name = "com.github.continuedev.continueintellijextension.services.ContinueExtensionSettings", storages = [Storage("ContinueExtensionSettings.xml")])
-class ContinueExtensionSettings : PersistentStateComponent<ContinueExtensionSettings.State> {
+open class ContinueExtensionSettings : PersistentStateComponent<ContinueExtensionSettings.ContinueState> {
 
-    var serverUrl: String? = null
-    var manuallyRunningServer: Boolean = false
-
-    override fun getState(): State {
-        return State(serverUrl, manuallyRunningServer)
+    class ContinueState {
+        var serverUrl: String = "http://localhost:65432"
+        var manuallyRunningServer: Boolean = false
     }
 
-    override fun loadState(state: State) {
-        serverUrl = state.serverUrl
-        manuallyRunningServer = state.manuallyRunningServer
+    var continueState: ContinueState = ContinueState()
+
+    override fun getState(): ContinueState {
+        return continueState
     }
 
-    data class State(var serverUrl: String?, var manuallyRunningServer: Boolean)
+    override fun loadState(state: ContinueState) {
+        continueState = state
+    }
+
+    companion object {
+        val instance: ContinueExtensionSettings
+            get() = ServiceManager.getService(ContinueExtensionSettings::class.java)
+    }
 }
 
 class ContinueExtensionConfigurable : Configurable {
@@ -82,19 +90,19 @@ class ContinueExtensionConfigurable : Configurable {
 
     override fun isModified(): Boolean {
         val settings = ServiceManager.getService(ContinueExtensionSettings::class.java)
-        return mySettingsComponent!!.serverUrl != settings.serverUrl || mySettingsComponent!!.manuallyRunningServer != settings.manuallyRunningServer
+        return mySettingsComponent!!.serverUrl != settings.continueState.serverUrl || mySettingsComponent!!.manuallyRunningServer != settings.continueState.manuallyRunningServer
     }
 
     override fun apply() {
         val settings = ServiceManager.getService(ContinueExtensionSettings::class.java)
-        settings.serverUrl = mySettingsComponent!!.serverUrl
-        settings.manuallyRunningServer = mySettingsComponent!!.manuallyRunningServer
+        settings.continueState.serverUrl = mySettingsComponent?.serverUrl ?: "http://localhost:65432"
+        settings.continueState.manuallyRunningServer = mySettingsComponent!!.manuallyRunningServer
     }
 
     override fun reset() {
         val settings = ServiceManager.getService(ContinueExtensionSettings::class.java)
-        mySettingsComponent!!.serverUrl = settings.serverUrl
-        mySettingsComponent!!.manuallyRunningServer = settings.manuallyRunningServer
+        mySettingsComponent!!.serverUrl = settings.continueState.serverUrl
+        mySettingsComponent!!.manuallyRunningServer = settings.continueState.manuallyRunningServer
     }
 
     override fun disposeUIResources() {
