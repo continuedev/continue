@@ -5,14 +5,17 @@ import com.google.gson.Gson
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.project.Project
-import com.intellij.ui.jcef.JBCefBrowser
 import com.intellij.ui.jcef.executeJavaScriptAsync
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
 
 @Service(Service.Level.PROJECT)
 class ContinuePluginService(project: Project) : Disposable {
     val coroutineScope = CoroutineScope(Dispatchers.Main)
-    val continuePluginWindow = ContinuePluginToolWindowFactory.ContinuePluginWindow(project)
+    val continuePluginWindow =
+        ContinuePluginToolWindowFactory.ContinuePluginWindow(project)
 
     override fun dispose() {
         coroutineScope.cancel()
@@ -25,8 +28,8 @@ class ContinuePluginService(project: Project) : Disposable {
     }
 
     fun dispatchCustomEvent(
-            type: String,
-            data: Map<String, Any>
+        type: String,
+        data: Map<String, Any>
     ) {
         val gson = Gson()
         val jsonData = gson.toJson(data)

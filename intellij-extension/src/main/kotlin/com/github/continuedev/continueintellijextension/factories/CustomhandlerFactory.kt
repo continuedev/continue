@@ -27,7 +27,10 @@ class CustomSchemeHandlerFactory : CefSchemeHandlerFactory {
 
 class CustomResourceHandler : CefResourceHandler {
     private var state: ResourceHandlerState = ClosedConnection
-    override fun processRequest(cefRequest: CefRequest, cefCallback: CefCallback): Boolean {
+    override fun processRequest(
+        cefRequest: CefRequest,
+        cefCallback: CefCallback
+    ): Boolean {
         val url = cefRequest.url
         return if (url != null) {
             val pathToResource = url.replace("http://continue", "webview/")
@@ -40,11 +43,20 @@ class CustomResourceHandler : CefResourceHandler {
         }
     }
 
-    override fun getResponseHeaders(cefResponse: CefResponse, responseLength: IntRef, redirectUrl: StringRef) {
+    override fun getResponseHeaders(
+        cefResponse: CefResponse,
+        responseLength: IntRef,
+        redirectUrl: StringRef
+    ) {
         state.getResponseHeaders(cefResponse, responseLength, redirectUrl)
     }
 
-    override fun readResponse(dataOut: ByteArray, bytesToRead: Int, bytesRead: IntRef, callback: CefCallback): Boolean {
+    override fun readResponse(
+        dataOut: ByteArray,
+        bytesToRead: Int,
+        bytesRead: IntRef,
+        callback: CefCallback
+    ): Boolean {
         return state.readResponse(dataOut, bytesToRead, bytesRead, callback)
     }
 
@@ -55,16 +67,36 @@ class CustomResourceHandler : CefResourceHandler {
 }
 
 sealed class ResourceHandlerState {
-    open fun getResponseHeaders(cefResponse: CefResponse, responseLength: IntRef, redirectUrl: StringRef) {}
-    open fun readResponse(dataOut: ByteArray, bytesToRead: Int, bytesRead: IntRef, callback: CefCallback): Boolean = false
+    open fun getResponseHeaders(
+        cefResponse: CefResponse,
+        responseLength: IntRef,
+        redirectUrl: StringRef
+    ) {
+    }
+
+    open fun readResponse(
+        dataOut: ByteArray,
+        bytesToRead: Int,
+        bytesRead: IntRef,
+        callback: CefCallback
+    ): Boolean = false
+
     open fun close() {}
 }
 
-class OpenedConnection(private val connection: URLConnection?) : ResourceHandlerState() {
+
+class OpenedConnection(private val connection: URLConnection?) :
+    ResourceHandlerState() {
+        
     private val inputStream: InputStream? by lazy {
         connection?.inputStream
     }
-    override fun getResponseHeaders(cefResponse: CefResponse, responseLength: IntRef, redirectUrl: StringRef) {
+
+    override fun getResponseHeaders(
+        cefResponse: CefResponse,
+        responseLength: IntRef,
+        redirectUrl: StringRef
+    ) {
         try {
             if (connection != null) {
                 val url = connection.url.toString()
@@ -90,7 +122,12 @@ class OpenedConnection(private val connection: URLConnection?) : ResourceHandler
     }
 
 
-    override fun readResponse(dataOut: ByteArray, bytesToRead: Int, bytesRead: IntRef, callback: CefCallback): Boolean {
+    override fun readResponse(
+        dataOut: ByteArray,
+        bytesToRead: Int,
+        bytesRead: IntRef,
+        callback: CefCallback
+    ): Boolean {
         return inputStream?.let {inputStream ->
             val availableSize = inputStream.available()
             return if (availableSize > 0) {
@@ -111,7 +148,11 @@ class OpenedConnection(private val connection: URLConnection?) : ResourceHandler
 }
 
 object ClosedConnection : ResourceHandlerState() {
-    override fun getResponseHeaders(cefResponse: CefResponse, responseLength: IntRef, redirectUrl: StringRef) {
+    override fun getResponseHeaders(
+        cefResponse: CefResponse,
+        responseLength: IntRef,
+        redirectUrl: StringRef
+    ) {
         cefResponse.status = 404
     }
 }

@@ -7,52 +7,85 @@
     <depends>com.intellij.modules.platform</depends>
 
     <extensions defaultExtensionNs="com.intellij">
-        <toolWindow id="ContinuePluginViewer" anchor="right" factoryClass="com.github.continuedev.continueintellijextension.toolWindow.ContinuePluginToolWindowFactory"/>
-        <projectService id="ContinuePluginService" serviceImplementation="com.github.continuedev.continueintellijextension.services.ContinuePluginService"/>
+        <toolWindow id="ContinuePluginViewer" anchor="right"
+                    factoryClass="com.github.continuedev.continueintellijextension.toolWindow.ContinuePluginToolWindowFactory"/>
+        <projectService id="ContinuePluginService"
+                        serviceImplementation="com.github.continuedev.continueintellijextension.services.ContinuePluginService"/>
     </extensions>
 
     <resource-bundle>messages.MyBundle</resource-bundle>
 
     <extensions defaultExtensionNs="com.intellij">
-        <postStartupActivity implementation="com.github.continuedev.continueintellijextension.activities.ContinuePluginStartupActivity"/>
+        <postStartupActivity
+                implementation="com.github.continuedev.continueintellijextension.activities.ContinuePluginStartupActivity"/>
         <applicationConfigurable
                 parentId="tools"
                 instance="com.github.continuedev.continueintellijextension.services.ContinueExtensionConfigurable"
                 id="com.github.continuedev.continueintellijextension.services.ContinueExtensionConfigurable"
                 displayName="Continue Extension Settings"/>
-        <applicationService serviceImplementation="com.github.continuedev.continueintellijextension.services.ContinueExtensionSettings"/>
+        <applicationService
+                serviceImplementation="com.github.continuedev.continueintellijextension.services.ContinueExtensionSettings"/>
     </extensions>
 
     <actions>
-        <action id="continue.acceptDiff" class="com.github.continuedev.continueintellijextension.actions.AcceptDiffAction" text="Accept Diff" description="Accept Diff">
-            <keyboard-shortcut keymap="$default" first-keystroke="shift ctrl ENTER" />
-            <keyboard-shortcut keymap="Mac OS X" first-keystroke="shift meta ENTER"/>
+        <action id="continue.acceptDiff"
+                class="com.github.continuedev.continueintellijextension.actions.AcceptDiffAction"
+                text="Accept Diff" description="Accept Diff">
+            <keyboard-shortcut keymap="$default"
+                               first-keystroke="shift ctrl ENTER"/>
+            <keyboard-shortcut keymap="Mac OS X"
+                               first-keystroke="shift meta ENTER"/>
         </action>
-        <action id="continue.rejectDiff" class="com.github.continuedev.continueintellijextension.actions.RejectDiffAction" text="Reject Diff" description="Reject Diff">
-            <keyboard-shortcut keymap="$default" first-keystroke="shift ctrl BACK_SPACE" />
-            <keyboard-shortcut keymap="Mac OS X" first-keystroke="shift meta BACK_SPACE"/>
+        <action id="continue.rejectDiff"
+                class="com.github.continuedev.continueintellijextension.actions.RejectDiffAction"
+                text="Reject Diff" description="Reject Diff">
+            <keyboard-shortcut keymap="$default"
+                               first-keystroke="shift ctrl BACK_SPACE"/>
+            <keyboard-shortcut keymap="Mac OS X"
+                               first-keystroke="shift meta BACK_SPACE"/>
         </action>
-        <action id="continue.quickTextEntry" class="com.github.continuedev.continueintellijextension.actions.QuickTextEntryAction" text="Quick Text Entry" description="Quick Text Entry">
-            <keyboard-shortcut keymap="$default" first-keystroke="ctrl shift L" />
-            <keyboard-shortcut keymap="Mac OS X" first-keystroke="meta shift L"/>
+        <action id="continue.quickTextEntry"
+                class="com.github.continuedev.continueintellijextension.actions.QuickTextEntryAction"
+                text="Quick Text Entry" description="Quick Text Entry">
+            <keyboard-shortcut keymap="$default"
+                               first-keystroke="ctrl shift L"/>
+            <keyboard-shortcut keymap="Mac OS X"
+                               first-keystroke="meta shift L"/>
         </action>
-        <action id="continue.quickFix" class="com.github.continuedev.continueintellijextension.actions.QuickFixAction" text="Quick Fix with Continue" description="Quick Fix with Continue">
+        <action id="continue.quickFix"
+                class="com.github.continuedev.continueintellijextension.actions.QuickFixAction"
+                text="Quick Fix with Continue"
+                description="Quick Fix with Continue">
             <!-- No shortcut defined -->
         </action>
-        <action id="continue.viewLogs" class="com.github.continuedev.continueintellijextension.actions.ViewLogsAction" text="View Continue Server Logs" description="View Continue Server Logs">
+        <action id="continue.viewLogs"
+                class="com.github.continuedev.continueintellijextension.actions.ViewLogsAction"
+                text="View Continue Server Logs"
+                description="View Continue Server Logs">
             <!-- No shortcut defined -->
         </action>
-        <action id="continue.toggleAuxiliaryBar" class="com.github.continuedev.continueintellijextension.actions.ToggleAuxiliaryBarAction" text="Toggle Right Sidebar" description="Toggle Right Sidebar">
-            <keyboard-shortcut keymap="$default" first-keystroke="alt ctrl M" />
+        <action id="continue.toggleAuxiliaryBar"
+                class="com.github.continuedev.continueintellijextension.actions.ToggleAuxiliaryBarAction"
+                text="Toggle Right Sidebar" description="Toggle Right Sidebar">
+            <keyboard-shortcut keymap="$default" first-keystroke="alt ctrl M"/>
             <keyboard-shortcut keymap="Mac OS X" first-keystroke="alt meta M"/>
         </action>
-        <action id="continue.focusContinueInputWithEdit" class="com.github.continuedev.continueintellijextension.actions.FocusContinueInputWithEditAction" text="Focus Continue Input With Edit" description="Focus Continue Input With Edit">
-            <keyboard-shortcut keymap="$default" first-keystroke="ctrl shift M" />
-            <keyboard-shortcut keymap="Mac OS X" first-keystroke="meta shift M"/>
+        <action id="continue.focusContinueInputWithEdit"
+                class="com.github.continuedev.continueintellijextension.actions.FocusContinueInputWithEditAction"
+                text="Focus Continue Input With Edit"
+                description="Focus Continue Input With Edit">
+            <keyboard-shortcut keymap="$default"
+                               first-keystroke="ctrl shift M"/>
+            <keyboard-shortcut keymap="Mac OS X"
+                               first-keystroke="meta shift M"/>
         </action>
-        <action id="continue.debugTerminal" class="com.github.continuedev.continueintellijextension.actions.DebugTerminalAction" text="Debug Terminal" description="Debug Terminal">
-            <keyboard-shortcut keymap="$default" first-keystroke="ctrl shift R" />
-            <keyboard-shortcut keymap="Mac OS X" first-keystroke="meta shift R"/>
+        <action id="continue.debugTerminal"
+                class="com.github.continuedev.continueintellijextension.actions.DebugTerminalAction"
+                text="Debug Terminal" description="Debug Terminal">
+            <keyboard-shortcut keymap="$default"
+                               first-keystroke="ctrl shift R"/>
+            <keyboard-shortcut keymap="Mac OS X"
+                               first-keystroke="meta shift R"/>
         </action>
     </actions>
 

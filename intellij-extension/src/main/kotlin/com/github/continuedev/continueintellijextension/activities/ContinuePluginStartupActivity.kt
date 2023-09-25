@@ -1,35 +1,39 @@
 package com.github.continuedev.continueintellijextension.activities
 
-import com.github.continuedev.continueintellijextension.`continue`.DefaultTextSelectionStrategy
-import com.github.continuedev.continueintellijextension.`continue`.*
-import com.github.continuedev.continueintellijextension.listeners.ContinuePluginSelectionListener
 import com.github.continuedev.continueintellijextension.actions.ToggleAuxiliaryBarAction
+import com.github.continuedev.continueintellijextension.constants.CONTINUE_PYTHON_SERVER_URL
+import com.github.continuedev.continueintellijextension.constants.CONTINUE_SERVER_WEBSOCKET_PORT
+import com.github.continuedev.continueintellijextension.`continue`.DefaultTextSelectionStrategy
+import com.github.continuedev.continueintellijextension.`continue`.IdeProtocolClient
+import com.github.continuedev.continueintellijextension.listeners.ContinuePluginSelectionListener
 import com.github.continuedev.continueintellijextension.services.ContinueExtensionSettings
 import com.github.continuedev.continueintellijextension.services.ContinuePluginService
 import com.github.continuedev.continueintellijextension.utils.dispatchEventToWebview
 import com.intellij.ide.plugins.PluginManagerCore
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.actionSystem.ActionManager
-import com.intellij.openapi.components.ComponentManager
 import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.editor.EditorFactory
 import com.intellij.openapi.extensions.PluginId
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.startup.StartupActivity
 import com.intellij.openapi.wm.ToolWindowManager
-import kotlinx.coroutines.*
-import java.io.BufferedReader
-import java.io.InputStreamReader
-
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import java.io.BufferedReader
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
+import java.io.InputStreamReader
 import java.nio.file.Files
 import java.nio.file.Paths
 import java.nio.file.attribute.PosixFilePermission
-import java.util.HashSet
 
 fun getContinueGlobalPath(): String {
     val continuePath = Paths.get(System.getProperty("user.home"), ".continue")
@@ -47,9 +51,11 @@ fun serverPath(): String {
     }
     return sPath
 }
+
 fun serverVersionPath(): String {
     return Paths.get(serverPath(), "server_version.txt").toString()
 }
+
 fun serverBinaryPath(): String {
     val exeFile = if (System.getProperty("os.name")
             .startsWith("Win", ignoreCase = true)
@@ -127,8 +133,16 @@ fun getProcessId(port: Int): String? {
     val os = System.getProperty("os.name").toLowerCase()
 
     val command = when {
-        os.contains("win") -> listOf("cmd.exe", "/c", "netstat -ano | findstr :$port")
-        os.contains("nix") || os.contains("mac") || os.contains("nux") -> listOf("/bin/sh", "-c", "lsof -t -i tcp:$port")
+        os.contains("win") -> listOf(
+            "cmd.exe",
+            "/c",
+            "netstat -ano | findstr :$port"
+        )
+        os.contains("nix") || os.contains("mac") || os.contains("nux") -> listOf(
+            "/bin/sh",
+            "-c",
+            "lsof -t -i tcp:$port"
+        )
         else -> throw UnsupportedOperationException("Unsupported operating system: $os")
     }
 
@@ -143,7 +157,11 @@ fun killProcess(pid: String) {
     val os = System.getProperty("os.name").toLowerCase()
     val command = when {
         os.contains("win") -> listOf("taskkill", "/F", "/PID", pid)
-        os.contains("nix") || os.contains("mac") || os.contains("nux") -> listOf("kill", "-9", pid)
+        os.contains("nix") || os.contains("mac") || os.contains("nux") -> listOf(
+            "kill",
+            "-9",
+            pid
+        )
         else -> throw UnsupportedOperationException("Unsupported operating system: $os")
     }
 
@@ -156,11 +174,13 @@ fun killProcess(pid: String) {
 }
 
 fun checkServerRunning(): Boolean {
-    val processId = getProcessId(65432)
+    val processId = getProcessId(CONTINUE_SERVER_WEBSOCKET_PORT)
     return processId != null
 }
+
 fun getExtensionVersion(): String {
-    val pluginId = PluginId.getId("com.github.continuedev.continueintellijextension")
+    val pluginId =
+        PluginId.getId("com.github.continuedev.continueintellijextension")
     val pluginDescriptor = PluginManagerCore.getPlugin(pluginId)
     return pluginDescriptor?.version ?: ""
 }
@@ -180,7 +200,7 @@ suspend fun checkOrKillRunningServer(): Boolean = withContext(Dispatchers.IO) {
 
     if (shouldKillAndReplace) {
         println("Killing server from old version of Continue")
-        val pid = getProcessId(65432)
+        val pid = getProcessId(CONTINUE_SERVER_WEBSOCKET_PORT)
         pid?.let { killProcess(it) }
 
         if (File(serverVersionPath).exists()) {
@@ -211,12 +231,12 @@ suspend fun startBinaryWithRetry(path: String) {
     }
 }
 
-
 suspend fun startContinuePythonServer() {
-    val settings = ServiceManager.getService(ContinueExtensionSettings::class.java)
-    val serverUrl = settings.continueState.serverUrl ?: "http://localhost:65432"
+    val settings =
+        ServiceManager.getService(ContinueExtensionSettings::class.java)
+    val serverUrl = settings.continueState.serverUrl ?: CONTINUE_PYTHON_SERVER_URL
 
-    if ((serverUrl != "http://localhost:65432" && serverUrl != "http://127.0.0.1:65432") || settings.continueState.manuallyRunningServer) {
+    if ((serverUrl != CONTINUE_PYTHON_SERVER_URL && serverUrl != "http://127.0.0.1:65432") || settings.continueState.manuallyRunningServer) {
         println("Continue server being run manually, skipping start")
         return
     }
@@ -259,11 +279,11 @@ suspend fun startContinuePythonServer() {
     if (shouldDownload) {
         // Download the binary from S3
         downloadFromS3(
-                "continue-server-binaries",
-                filename,
-                destination,
-                "us-west-1",
-                false
+            "continue-server-binaries",
+            filename,
+            destination,
+            "us-west-1",
+            false
         )
 
         // Set permissions on the binary
@@ -309,12 +329,12 @@ class ContinuePluginStartupActivity : StartupActivity, Disposable {
         coroutineScope.launch {
             startContinuePythonServer()
 
-            while (getProcessId(65432) == null) {
+            while (getProcessId(CONTINUE_SERVER_WEBSOCKET_PORT) == null) {
                 delay(1000)
             }
 
             val ideProtocolClient = IdeProtocolClient(
-                "ws://localhost:65432/ide/ws",
+                "ws://localhost:$CONTINUE_SERVER_WEBSOCKET_PORT/ide/ws",
                 continuePluginService,
                 defaultStrategy,
                 coroutineScope,
@@ -323,7 +343,10 @@ class ContinuePluginStartupActivity : StartupActivity, Disposable {
             )
 
             val listener =
-                ContinuePluginSelectionListener(ideProtocolClient, coroutineScope)
+                ContinuePluginSelectionListener(
+                    ideProtocolClient,
+                    coroutineScope
+                )
 
             val newSessionId = ideProtocolClient.getSessionIdAsync().await()
             val sessionId = newSessionId ?: ""
@@ -342,7 +365,7 @@ class ContinuePluginStartupActivity : StartupActivity, Disposable {
                     val dataMap = mutableMapOf(
                         "type" to "onUILoad",
                         "sessionId" to sessionId,
-                        "apiUrl" to "http://localhost:65432",
+                        "apiUrl" to CONTINUE_PYTHON_SERVER_URL,
                         "workspacePaths" to workspacePaths,  // or your actual workspace paths
                         "vscMachineId" to "yourMachineId",
                         "vscMediaUrl" to "yourMediaUrl",

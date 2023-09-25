@@ -2,36 +2,56 @@ package com.github.continuedev.continueintellijextension.actions
 
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
-import com.intellij.openapi.wm.ToolWindowManager
 import com.intellij.openapi.ui.Messages
+import com.intellij.openapi.wm.ToolWindowManager
 
 class AcceptDiffAction : AnAction() {
     override fun actionPerformed(e: AnActionEvent) {
-        Messages.showMessageDialog("This action is not yet implemented", "Continue Action not Implemented", Messages.getInformationIcon())
+        Messages.showMessageDialog(
+            "This action is not yet implemented",
+            "Continue Action not Implemented",
+            Messages.getInformationIcon()
+        )
     }
 }
 
 class RejectDiffAction : AnAction() {
     override fun actionPerformed(e: AnActionEvent) {
-        Messages.showMessageDialog("This action is not yet implemented", "Continue Action not Implemented", Messages.getInformationIcon())
+        Messages.showMessageDialog(
+            "This action is not yet implemented",
+            "Continue Action not Implemented",
+            Messages.getInformationIcon()
+        )
     }
 }
 
 class QuickTextEntryAction : AnAction() {
     override fun actionPerformed(e: AnActionEvent) {
-        Messages.showMessageDialog("This action is not yet implemented", "Continue Action not Implemented", Messages.getInformationIcon())
+        Messages.showMessageDialog(
+            "This action is not yet implemented",
+            "Continue Action not Implemented",
+            Messages.getInformationIcon()
+        )
     }
 }
 
 class QuickFixAction : AnAction() {
     override fun actionPerformed(e: AnActionEvent) {
-        Messages.showMessageDialog("This action is not yet implemented", "Continue Action not Implemented", Messages.getInformationIcon())
+        Messages.showMessageDialog(
+            "This action is not yet implemented",
+            "Continue Action not Implemented",
+            Messages.getInformationIcon()
+        )
     }
 }
 
 class ViewLogsAction : AnAction() {
     override fun actionPerformed(e: AnActionEvent) {
-        Messages.showMessageDialog("This action is not yet implemented", "Continue Action not Implemented", Messages.getInformationIcon())
+        Messages.showMessageDialog(
+            "This action is not yet implemented",
+            "Continue Action not Implemented",
+            Messages.getInformationIcon()
+        )
     }
 }
 
@@ -66,6 +86,10 @@ class FocusContinueInputWithEditAction : AnAction() {
 
 class DebugTerminalAction : AnAction() {
     override fun actionPerformed(e: AnActionEvent) {
-        Messages.showMessageDialog("This action is not yet implemented", "Continue Action not Implemented", Messages.getInformationIcon())
+        Messages.showMessageDialog(
+            "This action is not yet implemented",
+            "Continue Action not Implemented",
+            Messages.getInformationIcon()
+        )
     }
 }

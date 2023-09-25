@@ -20,8 +20,14 @@ class ContinuePluginToolWindowFactory : ToolWindowFactory {
         thisLogger().warn("Don't forget to remove all non-needed sample code files with their corresponding registration entries in `plugin.xml`.")
     }
 
-    override fun createToolWindowContent(project: Project, toolWindow: ToolWindow) {
-        val continuePluginService = ServiceManager.getService(project, ContinuePluginService::class.java)
+    override fun createToolWindowContent(
+        project: Project,
+        toolWindow: ToolWindow
+    ) {
+        val continuePluginService = ServiceManager.getService(
+            project,
+            ContinuePluginService::class.java
+        )
 
         toolWindow.component.parent?.add(continuePluginService.continuePluginWindow.content)
     }
@@ -36,7 +42,10 @@ class ContinuePluginToolWindowFactory : ToolWindowFactory {
 
         val webView: JBCefBrowser by lazy {
             val browser = JBCefBrowser()
-            browser.jbCefClient.setProperty(JBCefClient.Properties.JS_QUERY_POOL_SIZE, "20")
+            browser.jbCefClient.setProperty(
+                JBCefClient.Properties.JS_QUERY_POOL_SIZE,
+                "20"
+            )
             registerAppSchemeHandler()
 
             browser.loadURL("http://continue/index.html")

@@ -9,13 +9,17 @@ import kotlinx.serialization.Serializable
 import java.awt.GridBagConstraints
 import java.awt.GridBagLayout
 import javax.annotation.Nullable
+import javax.swing.JCheckBox
 import javax.swing.JComponent
-import javax.swing.*
+import javax.swing.JLabel
+import javax.swing.JPanel
+import javax.swing.JTextField
 
 class ContinueSettingsComponent {
     val panel: JPanel = JPanel(GridBagLayout())
     private val myTextField: JTextField = JTextField()
-    private val myCheckBox: JCheckBox = JCheckBox("Manually Running Continue Server")
+    private val myCheckBox: JCheckBox =
+        JCheckBox("Manually Running Continue Server")
 
     init {
         val constraints = GridBagConstraints()
@@ -56,7 +60,10 @@ class ContinueSettingsComponent {
         }
 }
 
-@State(name = "com.github.continuedev.continueintellijextension.services.ContinueExtensionSettings", storages = [Storage("ContinueExtensionSettings.xml")])
+@State(
+    name = "com.github.continuedev.continueintellijextension.services.ContinueExtensionSettings",
+    storages = [Storage("ContinueExtensionSettings.xml")]
+)
 open class ContinueExtensionSettings : PersistentStateComponent<ContinueExtensionSettings.ContinueState> {
 
     class ContinueState {
@@ -94,15 +101,20 @@ class ContinueExtensionConfigurable : Configurable {
     }
 
     override fun apply() {
-        val settings = ServiceManager.getService(ContinueExtensionSettings::class.java)
-        settings.continueState.serverUrl = mySettingsComponent?.serverUrl ?: "http://localhost:65432"
-        settings.continueState.manuallyRunningServer = mySettingsComponent!!.manuallyRunningServer
+        val settings =
+            ServiceManager.getService(ContinueExtensionSettings::class.java)
+        settings.continueState.serverUrl =
+            mySettingsComponent?.serverUrl ?: "http://localhost:65432"
+        settings.continueState.manuallyRunningServer =
+            mySettingsComponent!!.manuallyRunningServer
     }
 
     override fun reset() {
-        val settings = ServiceManager.getService(ContinueExtensionSettings::class.java)
+        val settings =
+            ServiceManager.getService(ContinueExtensionSettings::class.java)
         mySettingsComponent!!.serverUrl = settings.continueState.serverUrl
-        mySettingsComponent!!.manuallyRunningServer = settings.continueState.manuallyRunningServer
+        mySettingsComponent!!.manuallyRunningServer =
+            settings.continueState.manuallyRunningServer
     }
 
     override fun disposeUIResources() {
