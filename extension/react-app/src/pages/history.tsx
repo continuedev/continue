@@ -9,6 +9,7 @@ import styled from "styled-components";
 import { ArrowLeftIcon } from "@heroicons/react/24/outline";
 import CheckDiv from "../components/CheckDiv";
 import { temporarilyClearSession } from "../redux/slices/serverStateReducer";
+import { getFontSize } from "../util";
 
 const Tr = styled.tr`
   &:hover {
@@ -110,7 +111,7 @@ function History() {
   const earlier = new Date(0);
 
   return (
-    <div className="overflow-y-scroll">
+    <div className="overflow-y-scroll" style={{ fontSize: getFontSize() }}>
       <div className="sticky top-0" style={{ backgroundColor: vscBackground }}>
         <div
           className="items-center flex m-0 p-0"

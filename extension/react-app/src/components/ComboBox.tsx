@@ -31,6 +31,7 @@ import { setBottomMessage } from "../redux/slices/uiStateSlice";
 import { useDispatch, useSelector } from "react-redux";
 import { RootStore } from "../redux/store";
 import ContinueButton from "./ContinueButton";
+import { getFontSize } from "../util";
 
 const SEARCH_INDEX_NAME = "continue_context_items";
 
@@ -62,13 +63,16 @@ const HiddenHeaderButtonWithText = styled.button`
   }
 `;
 
-const mainInputFontSize = 13;
+const mainInputFontSize = getFontSize();
 
-const MainTextInput = styled.textarea<{ inQueryForDynamicProvider: boolean }>`
+const MainTextInput = styled.textarea<{
+  inQueryForDynamicProvider: boolean;
+  fontSize?: number;
+}>`
   resize: none;
 
   padding: 8px;
-  font-size: ${mainInputFontSize}px;
+  font-size: ${(props) => props.fontSize || mainInputFontSize}px;
   font-family: inherit;
   border-radius: ${defaultBorderRadius};
   margin: 8px auto;
@@ -114,11 +118,14 @@ const Ul = styled.ul<{
   showAbove: boolean;
   ulHeightPixels: number;
   inputBoxHeight?: string;
+  fontSize?: number;
 }>`
   ${(props) =>
     props.showAbove
       ? `transform: translateY(-${props.ulHeightPixels + 8}px);`
-      : `transform: translateY(${5 * mainInputFontSize - 2}px);`}
+      : `transform: translateY(${
+          5 * (props.fontSize || mainInputFontSize) - 2
+        }px);`}
   position: absolute;
   background: ${vscBackground};
   color: ${vscForeground};
@@ -132,6 +139,7 @@ const Ul = styled.ul<{
   outline: 0.5px solid ${lightGray};
   z-index: 2;
   -ms-overflow-style: none;
+  font-size: ${(props) => props.fontSize || mainInputFontSize}px;
 
   scrollbar-width: none; /* Firefox */
 
@@ -644,6 +652,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
           inQueryForDynamicProvider={
             typeof inQueryForContextProvider !== "undefined"
           }
+          fontSize={getFontSize()}
           disabled={props.disabled}
           placeholder={`Ask a question, '/' for slash commands, '@' to add context`}
           {...getInputProps({
@@ -805,6 +814,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
             items.length === 0 ||
             inputRef.current?.value === ""
           }
+          fontSize={getFontSize()}
         >
           {nestedContextProvider && (
             <div

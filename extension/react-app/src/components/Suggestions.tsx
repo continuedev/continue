@@ -109,18 +109,18 @@ const stageDescriptions = [
 ];
 
 const suggestionsStages: any[][] = [
-  [
-    {
-      title: stageDescriptions[0],
-      description: "How does merge sort work?",
-      textInput: "How does merge sort work?",
-    },
-    {
-      title: stageDescriptions[0],
-      description: "How do I sum over a column in SQL?",
-      textInput: "How do I sum over a column in SQL?",
-    },
-  ],
+  // [
+  //   {
+  //     title: stageDescriptions[0],
+  //     description: "How does merge sort work?",
+  //     textInput: "How does merge sort work?",
+  //   },
+  //   {
+  //     title: stageDescriptions[0],
+  //     description: "How do I sum over a column in SQL?",
+  //     textInput: "How do I sum over a column in SQL?",
+  //   },
+  // ],
   [
     {
       title: stageDescriptions[1],
@@ -146,6 +146,7 @@ const suggestionsStages: any[][] = [
     },
   ],
 ];
+const NUM_STAGES = suggestionsStages.length;
 
 const TutorialDiv = styled.div`
   margin: 4px;
@@ -188,11 +189,13 @@ function SuggestionsArea(props: { onClick: (textInput: string) => void }) {
 
   return (
     <>
-      {hide || stage > 2 || !inputsAreOnlyTutorial() || (
+      {hide || stage > NUM_STAGES - 1 || !inputsAreOnlyTutorial() || (
         <TutorialDiv>
           <div className="flex">
             <SparklesIcon width="1.3em" height="1.3em" color="yellow" />
-            <b className="ml-1">Tutorial ({stage + 1}/3)</b>
+            <b className="ml-1">
+              Tutorial ({stage + 1}/{NUM_STAGES})
+            </b>
           </div>
           <p style={{ color: vscForeground, paddingLeft: "4px" }}>
             {stage < suggestionsStages.length &&
@@ -211,7 +214,7 @@ function SuggestionsArea(props: { onClick: (textInput: string) => void }) {
           <div className="grid grid-cols-2 gap-2 mt-2">
             {suggestionsStages[stage]?.map((suggestion) => (
               <SuggestionsDiv
-                disabled={stage > 0 && !codeIsHighlighted}
+                disabled={!codeIsHighlighted}
                 {...suggestion}
                 onClick={() => {
                   if (stage > 0 && !codeIsHighlighted) return;
