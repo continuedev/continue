@@ -1,4 +1,4 @@
 main.build
 main.dist
-run.build
-run.dist
+continue_server.build
+continue_server.dist

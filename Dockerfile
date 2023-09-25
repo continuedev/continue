@@ -15,8 +15,8 @@ RUN pip install pyinstaller
 
 RUN pip install -r /app/continuedev/requirements.txt
 
-RUN pyinstaller run.spec
+RUN pyinstaller continue_server.spec
 
-RUN chmod +x /app/dist/run
+RUN chmod +x /app/dist/continue_server
 
-CMD ["/app/dist/run"]
+CMD ["/app/dist/continue_server"]

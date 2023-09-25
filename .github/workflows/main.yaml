@@ -75,11 +75,11 @@ jobs:
           pip install -r continuedev/requirements.txt
 
       - name: Build PyInstaller Executable
-        run: pyinstaller run.spec
+        run: pyinstaller continue_server.spec
 
       - name: Set permissions
         run: |
-          chmod 777 dist/run
+          chmod 777 dist/continue_server
 
       # - name: Test Python Server
       #   env:

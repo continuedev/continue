@@ -8,7 +8,7 @@ block_cipher = None
 chroma_toc = list(map(lambda x: (x[1], os.path.dirname(x[0])), Tree('./env/lib/python3.11/site-packages/chromadb/migrations', prefix="chromadb/migrations")))
 
 a = Analysis(
-    ['run.py'],
+    ['continue_server.py'],
     pathex=[],
     binaries=[],
     datas=[
@@ -44,7 +44,7 @@ exe = EXE(
     a.zipfiles,
     a.datas,
     [],
-    name='run',
+    name='continue_server',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
