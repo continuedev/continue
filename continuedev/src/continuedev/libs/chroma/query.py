@@ -7,11 +7,15 @@ from typing import List, Tuple
 
 import chromadb
 from chromadb.config import Settings
+from chromadb.utils import embedding_functions
+from dotenv import load_dotenv
 
 from ...core.sdk import ContinueSDK
 from ..util.logging import logger
 from ..util.paths import getEmbeddingsPathForBranch
 from .update import filter_ignored_files
+
+load_dotenv()
 
 
 class ChromaIndexManager:
@@ -77,7 +81,13 @@ class ChromaIndexManager:
 
     @property
     def collection(self):
-        return self.client.get_or_create_collection(name=self.current_branch)
+        return self.client.get_or_create_collection(
+            name=self.current_branch,
+            embedding_function=embedding_functions.OpenAIEmbeddingFunction(
+                api_key=os.environ.get("OPENAI_API_KEY"),
+                model_name="text-embedding-ada-002",
+            ),
+        )
 
     async def create_codebase_index(self, sdk: ContinueSDK):
         """Create a new index for the current branch."""
@@ -91,6 +101,12 @@ class ChromaIndexManager:
             tasks.append(sdk.ide.readFile(file))
 
         documents = await asyncio.gather(*tasks)
+
+        for i in range(len(documents)):
+            if len(documents[i]) > 10000:
+                documents[i] = documents[i][:10000]
+            elif len(documents[i]) == 0:
+                documents[i] = "EMPTY"
 
         self.collection.add(
             documents=documents,

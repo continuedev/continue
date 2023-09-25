@@ -23,7 +23,8 @@ a = Analysis(
         'chromadb.db.impl.sqlite', 'chromadb.migrations',
         'chromadb.migrations.embeddings_queue', 'chromadb.migrations.sysdb',
         'chromadb.migrations.metadb', 'chromadb.segment.impl',
-        'chromadb.segment.impl.manager', 'chromadb.segment.impl.manager.local'
+        'chromadb.segment.impl.manager', 'chromadb.segment.impl.manager.local',
+        'chromadb.segment.impl.metadata', 'chromadb.segment.impl.metadata.sqlite'
     ],
     hookspath=[],
     hooksconfig={},
