@@ -1,6 +1,6 @@
 import asyncio
 import os
-from typing import Coroutine, Dict, List, Union
+from typing import Coroutine, Dict, List, Optional, Union
 
 from ...core.main import ContextItem, ContextItemDescription, ContextItemId, Step
 from ...core.observation import Observation
@@ -15,12 +15,15 @@ class CreateCodebaseIndexChroma(Step):
     name: str = "Create Codebase Index"
     hide: bool = True
     description: str = "Generating codebase embeddings..."
+    openai_api_key: Optional[str] = None
 
     async def describe(self, models) -> Coroutine[str, None, None]:
         return "Generated codebase embeddings"
 
     async def run(self, sdk: ContinueSDK) -> Coroutine[Observation, None, None]:
-        index = ChromaIndexManager(sdk.ide.workspace_directory)
+        index = ChromaIndexManager(
+            sdk.ide.workspace_directory, openai_api_key=self.openai_api_key
+        )
         if not index.check_index_exists():
             self.hide = False
 
@@ -165,6 +168,7 @@ class AnswerQuestionChroma(Step):
     user_input: str
     _answer: Union[str, None] = None
     name: str = "Answer Question"
+    openai_api_key: Optional[str] = None
 
     m: int = 20
     n: int = 10
@@ -178,7 +182,7 @@ class AnswerQuestionChroma(Step):
             return self._answer
 
     async def run(self, sdk: ContinueSDK) -> Coroutine[Observation, None, None]:
-        index = ChromaIndexManager(sdk.ide.workspace_directory)
+        index = ChromaIndexManager(sdk.ide.workspace_directory, self.openai_api_key)
         self.description = f"Reading from {self.m} files..."
         await sdk.update_ui()
         results = index.query_codebase_index(self.user_input, n=self.m)

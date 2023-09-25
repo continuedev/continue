@@ -21,8 +21,9 @@ load_dotenv()
 class ChromaIndexManager:
     workspace_dir: str
     client: chromadb.Client
+    openai_api_key: str
 
-    def __init__(self, workspace_dir: str):
+    def __init__(self, workspace_dir: str, openai_api_key: str = None):
         self.workspace_dir = workspace_dir
         self.client = chromadb.PersistentClient(
             path=os.path.join(
@@ -31,6 +32,7 @@ class ChromaIndexManager:
             ),
             settings=Settings(anonymized_telemetry=False),
         )
+        self.openai_api_key = openai_api_key
 
     @cached_property
     def current_commit(self) -> str:
@@ -81,13 +83,15 @@ class ChromaIndexManager:
 
     @property
     def collection(self):
-        return self.client.get_or_create_collection(
-            name=self.current_branch,
-            embedding_function=embedding_functions.OpenAIEmbeddingFunction(
-                api_key=os.environ.get("OPENAI_API_KEY"),
+        kwargs = {
+            "name": self.current_branch,
+        }
+        if self.openai_api_key is not None:
+            kwargs["embedding_function"] = embedding_functions.OpenAIEmbeddingFunction(
+                api_key=self.openai_api_key,
                 model_name="text-embedding-ada-002",
-            ),
-        )
+            )
+        return self.client.get_or_create_collection(**kwargs)
 
     async def create_codebase_index(self, sdk: ContinueSDK):
         """Create a new index for the current branch."""
@@ -103,8 +107,8 @@ class ChromaIndexManager:
         documents = await asyncio.gather(*tasks)
 
         for i in range(len(documents)):
-            if len(documents[i]) > 10000:
-                documents[i] = documents[i][:10000]
+            if len(documents[i]) > 6000:
+                documents[i] = documents[i][:6000]
             elif len(documents[i]) == 0:
                 documents[i] = "EMPTY"
 
