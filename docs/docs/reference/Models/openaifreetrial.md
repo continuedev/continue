@@ -31,6 +31,7 @@ These classes support any models available through the OpenAI API, assuming your
 
 <ClassPropertyRef name='llm' details='{&quot;$ref&quot;: &quot;#/definitions/LLM&quot;}' required={false} default=""/>
 
+
 ### Inherited Properties
 
 <ClassPropertyRef name='model' details='{&quot;title&quot;: &quot;Model&quot;, &quot;description&quot;: &quot;The name of the model to be used (e.g. gpt-4, codellama)&quot;, &quot;type&quot;: &quot;string&quot;}' required={true} default=""/>
