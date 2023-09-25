@@ -81,6 +81,7 @@ interface PillButtonProps {
   index: number;
   areMultipleItems?: boolean;
   onDelete?: () => void;
+  onClick?: (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => void;
 }
 
 interface StyledButtonProps {
@@ -141,51 +142,13 @@ const PillButton = (props: PillButtonProps) => {
             props.onDelete?.();
           }
         }}
+        onClick={(e) => {
+          props.onClick?.(e);
+        }}
       >
-        {isHovered && (
-          <GridDiv
-            style={{
-              gridTemplateColumns:
-                props.item.editable &&
-                props.areMultipleItems &&
-                props.editingAny
-                  ? "1fr 1fr"
-                  : "1fr",
-              backgroundColor: vscBackground,
-            }}
-          >
-            {props.editingAny &&
-              props.item.editable &&
-              props.areMultipleItems && (
-                <ButtonDiv
-                  data-tooltip-id={`edit-${props.index}`}
-                  backgroundColor={"#8800aa55"}
-                  onClick={() => {
-                    client?.setEditingAtIds([
-                      props.item.description.id.item_id,
-                    ]);
-                  }}
-                >
-                  <PaintBrushIcon style={{ margin: "auto" }} width="1.6em" />
-                </ButtonDiv>
-              )}
-
-            <StyledTooltip id={`pin-${props.index}`}>
-              Edit this range
-            </StyledTooltip>
-            <ButtonDiv
-              data-tooltip-id={`delete-${props.index}`}
-              backgroundColor={"#cc000055"}
-              onClick={() => {
-                client?.deleteContextWithIds([props.item.description.id]);
-                dispatch(setBottomMessage(undefined));
-              }}
-            >
-              <TrashIcon style={{ margin: "auto" }} width="1.6em" />
-            </ButtonDiv>
-          </GridDiv>
-        )}
-        {props.item.description.name}
+        <span className={isHovered ? "underline" : ""}>
+          {props.item.description.name}
+        </span>
       </StyledButton>
       <StyledTooltip id={`edit-${props.index}`}>
         {props.item.editing

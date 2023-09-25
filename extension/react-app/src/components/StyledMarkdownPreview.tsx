@@ -12,6 +12,7 @@ import { getFontSize } from "../util";
 const StyledMarkdownPreview = styled(MarkdownPreview)<{
   light?: boolean;
   fontSize?: number;
+  maxHeight?: number;
 }>`
   pre {
     background-color: ${(props) =>
@@ -34,6 +35,15 @@ const StyledMarkdownPreview = styled(MarkdownPreview)<{
       props.light ? vscBackground : secondaryDark};
     color: ${vscForeground};
     padding: 12px;
+
+    ${(props) => {
+      if (props.maxHeight) {
+        return `
+          max-height: ${props.maxHeight}px;
+          overflow-y: auto;
+        `;
+      }
+    }}
   }
 
   background-color: ${(props) => (props.light ? "transparent" : vscBackground)};

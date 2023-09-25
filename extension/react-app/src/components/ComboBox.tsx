@@ -34,6 +34,9 @@ import { useDispatch, useSelector } from "react-redux";
 import { RootStore } from "../redux/store";
 import ContinueButton from "./ContinueButton";
 import { getFontSize, getMetaKeyLabel } from "../util";
+import { Context } from "mocha";
+import { ContextItem } from "../../../schema/FullState";
+import StyledMarkdownPreview from "./StyledMarkdownPreview";
 
 const SEARCH_INDEX_NAME = "continue_context_items";
 
@@ -161,6 +164,10 @@ const DynamicQueryTitleDiv = styled.div`
   font-size: 12px;
 
   background-color: ${buttonColor};
+`;
+
+const PreviewPre = styled.pre`
+  margin: 0px 8px;
 `;
 
 const UlMaxHeight = 300;
@@ -667,6 +674,10 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
 
   const [isComposing, setIsComposing] = useState(false);
 
+  const [previewingContextItem, setPreviewingContextItem] = useState<
+    ContextItem | undefined
+  >(undefined);
+
   return (
     <>
       <div
@@ -687,6 +698,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
                 selectedContextItems.map((item) => item.description.id)
               );
               inputRef.current?.focus();
+              setPreviewingContextItem(undefined);
             }
           }}
         >
@@ -710,6 +722,27 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
               onDelete={() => {
                 client?.deleteContextWithIds([item.description.id]);
                 inputRef.current?.focus();
+                if (
+                  item.description.id.item_id ===
+                    previewingContextItem?.description.id.item_id &&
+                  previewingContextItem?.description.id.provider_name ===
+                    item.description.id.provider_name
+                ) {
+                  setPreviewingContextItem(undefined);
+                }
+              }}
+              onClick={(e) => {
+                if (
+                  item.description.id.item_id ===
+                    previewingContextItem?.description.id.item_id &&
+                  previewingContextItem?.description.id.provider_name ===
+                    item.description.id.provider_name
+                ) {
+                  setPreviewingContextItem(undefined);
+                  (e.target as any).blur();
+                } else {
+                  setPreviewingContextItem(item);
+                }
               }}
             />
           );
@@ -726,6 +759,18 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
           </HeaderButtonWithText>
         )}
       </div>
+      {previewingContextItem && (
+        <PreviewPre>
+          <StyledMarkdownPreview
+            fontSize={getFontSize()}
+            source={`\`\`\`\n${previewingContextItem.content}\n\`\`\``}
+            wrapperElement={{
+              "data-color-mode": "dark",
+            }}
+            maxHeight={200}
+          />
+        </PreviewPre>
+      )}
       <div
         className="flex px-2 relative"
         style={{
