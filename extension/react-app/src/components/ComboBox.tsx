@@ -142,10 +142,8 @@ const MainTextInput = styled.textarea<{
 
 const DeleteButtonDiv = styled.div`
   position: absolute;
-  top: 50%;
+  top: 14px;
   right: 12px;
-  bottom: auto;
-  transform: translateY(0.7em);
   background-color: ${secondaryDark};
   border-radius: ${defaultBorderRadius};
   z-index: 100;
@@ -570,6 +568,17 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
 
   const deleteButtonDivRef = React.useRef<HTMLDivElement>(null);
 
+  const selectContextItem = useCallback(
+    (id: string, query: string) => {
+      if (props.isMainInput) {
+        client?.selectContextItem(id, query);
+      } else if (props.index) {
+        client?.selectContextItemAtIndex(id, query, props.index);
+      }
+    },
+    [client, props.index]
+  );
+
   const selectContextItemFromDropdown = useCallback(
     (event: any) => {
       const newItem = items[downshiftProps.highlightedIndex];
@@ -581,7 +590,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
       if (!newProvider) {
         if (nestedContextProvider && newItem.id) {
           // Tell server the context item was selected
-          client?.selectContextItem(newItem.id, "");
+          selectContextItem(newItem.id, "");
 
           // Clear the input
           downshiftProps.setInputValue("");
@@ -612,7 +621,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
         const query = segs[segs.length - 1];
 
         // Tell server the context item was selected
-        client?.selectContextItem(newItem.id, query);
+        selectContextItem(newItem.id, query);
         if (downshiftProps.inputValue.includes("@")) {
           const selectedNestedContextProvider = contextProviders.find(
             (provider) => provider.title === newItem.id
@@ -652,6 +661,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
       contextProviders,
       nestedContextProvider,
       downshiftProps.inputValue,
+      selectContextItem,
     ]
   );
 
@@ -682,7 +692,10 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
         >
           <TrashIcon width="1.4em" height="1.4em" />
         </HiddenHeaderButtonWithText>
-        {selectedContextItems.map((item, idx) => {
+        {(props.isMainInput
+          ? selectedContextItems
+          : timeline[props.index!].context_used || []
+        ).map((item, idx) => {
           return (
             <PillButton
               areMultipleItems={selectedContextItems.length > 1}
@@ -715,7 +728,10 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
       </div>
       <div
         className="flex px-2 relative"
-        style={{ zIndex: props.index ? 200 - props.index : undefined }}
+        style={{
+          zIndex: props.index ? 200 - props.index : undefined,
+          backgroundColor: vscBackground,
+        }}
         ref={divRef}
         hidden={!downshiftProps.isOpen}
       >
@@ -777,7 +793,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
                   const value = downshiftProps.inputValue;
                   if (inQueryForContextProvider) {
                     const segs = value.split("@");
-                    client?.selectContextItem(
+                    selectContextItem(
                       inQueryForContextProvider.title,
                       segs[segs.length - 1]
                     );

@@ -33,6 +33,12 @@ abstract class AbstractContinueGUIClientProtocol {
 
   abstract selectContextItem(id: string, query: string): void;
 
+  abstract selectContextItemAtIndex(
+    id: string,
+    query: string,
+    index: number
+  ): void;
+
   abstract loadSession(session_id?: string): void;
 
   abstract onReconnectAtSession(session_id: string): void;

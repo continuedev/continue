@@ -422,6 +422,18 @@ class ContextManager:
         )
         await self.context_providers[id.provider_title].add_context_item(id, query)
 
+    async def get_context_item(self, id: str, query: str) -> ContextItem:
+        """
+        Returns the ContextItem with the given id.
+        """
+        id: ContextItemId = ContextItemId.from_string(id)
+        if id.provider_title not in self.provider_titles:
+            raise ValueError(
+                f"Context provider with title {id.provider_title} not found"
+            )
+
+        return await self.context_providers[id.provider_title].get_item(id, query)
+
     async def delete_context_with_ids(self, ids: List[str]):
         """
         Deletes the ContextItems with the given IDs, lets ContextProviders recalculate.

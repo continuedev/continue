@@ -23,6 +23,14 @@ export type Depth = number;
 export type Deleted = boolean;
 export type Active = boolean;
 export type Logs = string[];
+export type Name3 = string;
+export type Description1 = string;
+export type ProviderTitle = string;
+export type ItemId = string;
+export type Content1 = string;
+export type Editing = boolean;
+export type Editable = boolean;
+export type ContextUsed = ContextItem[];
 export type Timeline = HistoryNode[];
 export type CurrentIndex = number;
 
@@ -44,6 +52,7 @@ export interface HistoryNode {
   deleted?: Deleted;
   active?: Active;
   logs?: Logs;
+  context_used?: ContextUsed;
   [k: string]: unknown;
 }
 export interface Step {
@@ -70,5 +79,34 @@ export interface FunctionCall {
   [k: string]: unknown;
 }
 export interface Observation {
+  [k: string]: unknown;
+}
+/**
+ * A ContextItem is a single item that is stored in the ContextManager.
+ */
+export interface ContextItem {
+  description: ContextItemDescription;
+  content: Content1;
+  editing?: Editing;
+  editable?: Editable;
+  [k: string]: unknown;
+}
+/**
+ * A ContextItemDescription is a description of a ContextItem that is displayed to the user when they type '@'.
+ *
+ * The id can be used to retrieve the ContextItem from the ContextManager.
+ */
+export interface ContextItemDescription {
+  name: Name3;
+  description: Description1;
+  id: ContextItemId;
+  [k: string]: unknown;
+}
+/**
+ * A ContextItemId is a unique identifier for a ContextItem.
+ */
+export interface ContextItemId {
+  provider_title: ProviderTitle;
+  item_id: ItemId;
   [k: string]: unknown;
 }

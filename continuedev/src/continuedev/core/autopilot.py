@@ -306,7 +306,8 @@ class Autopilot(ContinueBaseModel):
         await self.update_subscribers()
 
     async def edit_step_at_index(self, user_input: str, index: int):
-        step_to_rerun = self.history.timeline[index].step.copy()
+        node_to_rerun = self.history.timeline[index].copy()
+        step_to_rerun = node_to_rerun.step
         step_to_rerun.user_input = user_input
         step_to_rerun.description = user_input
 
@@ -318,6 +319,12 @@ class Autopilot(ContinueBaseModel):
             node_to_delete.deleted = True
 
         self.history.current_index = index - 1
+
+        # Set the context to the context used by that step
+        await self.context_manager.clear_context()
+        for context_item in node_to_rerun.context_used:
+            await self.context_manager.manually_add_context_item(context_item)
+
         await self.update_subscribers()
 
         # Rerun from the current step
@@ -380,7 +387,12 @@ class Autopilot(ContinueBaseModel):
 
         # Update history - do this first so we get top-first tree ordering
         index_of_history_node = self.history.add_node(
-            HistoryNode(step=step, observation=None, depth=self._step_depth)
+            HistoryNode(
+                step=step,
+                observation=None,
+                depth=self._step_depth,
+                context_used=await self.context_manager.get_selected_items(),
+            )
         )
 
         # Call all subscribed callbacks
@@ -633,6 +645,16 @@ class Autopilot(ContinueBaseModel):
 
     async def select_context_item(self, id: str, query: str):
         await self.context_manager.select_context_item(id, query)
+        await self.update_subscribers()
+
+    async def select_context_item_at_index(self, id: str, query: str, index: int):
+        # TODO: This is different from how it works for the main input
+        # Ideally still tracked through the ContextProviders
+        # so they can watch for duplicates
+        context_item = await self.context_manager.get_context_item(id, query)
+        if context_item is None:
+            return
+        self.history.timeline[index].context_used.append(context_item)
         await self.update_subscribers()
 
     async def set_config_attr(self, key_path: List[str], value: redbaron.RedBaron):

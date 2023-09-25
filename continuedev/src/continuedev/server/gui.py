@@ -115,6 +115,8 @@ class GUIProtocolServer:
             self.show_context_virtual_file()
         elif message_type == "select_context_item":
             self.select_context_item(data["id"], data["query"])
+        elif message_type == "select_context_item_at_index":
+            self.select_context_item_at_index(data["id"], data["query"], data["index"])
         elif message_type == "load_session":
             self.load_session(data.get("session_id", None))
         elif message_type == "edit_step_at_index":
@@ -216,6 +218,13 @@ class GUIProtocolServer:
         """Called when user selects an item from the dropdown"""
         create_async_task(
             self.session.autopilot.select_context_item(id, query), self.on_error
+        )
+
+    def select_context_item_at_index(self, id: str, query: str, index: int):
+        """Called when user selects an item from the dropdown for prev UserInputStep"""
+        create_async_task(
+            self.session.autopilot.select_context_item_at_index(id, query, index),
+            self.on_error,
         )
 
     def load_session(self, session_id: Optional[str] = None):
