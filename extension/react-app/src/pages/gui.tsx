@@ -646,9 +646,11 @@ function GUI(props: GUIProps) {
                   <ComboBox
                     isMainInput={false}
                     value={node.step.description as string}
-                    active={getStepsInUserInputGroup(index).some((i) => {
-                      return history.timeline[i].active;
-                    })}
+                    active={
+                      getStepsInUserInputGroup(index).some((i) => {
+                        return history.timeline[i].active;
+                      }) || history.timeline[index].active
+                    }
                     onEnter={(e, value) => {
                       if (value) client?.editStepAtIndex(value, index);
                       e?.stopPropagation();

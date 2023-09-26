@@ -21,7 +21,7 @@ import HeaderButtonWithText from "./HeaderButtonWithText";
 import {
   ArrowLeftIcon,
   ArrowRightIcon,
-  MagnifyingGlassIcon,
+  ArrowUpLeftIcon,
   StopCircleIcon,
   TrashIcon,
   XMarkIcon,
@@ -166,10 +166,6 @@ const DynamicQueryTitleDiv = styled.div`
   background-color: ${buttonColor};
 `;
 
-const PreviewPre = styled.pre`
-  margin: 0px 8px;
-`;
-
 const UlMaxHeight = 300;
 const Ul = styled.ul<{
   hidden: boolean;
@@ -184,7 +180,7 @@ const Ul = styled.ul<{
       ? `transform: translateY(-${props.ulHeightPixels + 8}px);`
       : `transform: translateY(${
           (props.isMainInput ? 5 : 4) * (props.fontSize || mainInputFontSize) -
-          10
+          (props.isMainInput ? 2 : 4)
         }px);`}
   position: absolute;
   background: ${vscBackground};
@@ -283,9 +279,13 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
       description: cmd.description,
     };
   });
-  const selectedContextItems = useSelector(
-    (state: RootStore) => state.serverState.selected_context_items
-  );
+  const selectedContextItems = useSelector((state: RootStore) => {
+    if (props.index) {
+      return state.serverState.history.timeline[props.index].context_used || [];
+    } else {
+      return state.serverState.selected_context_items;
+    }
+  });
   const timeline = useSelector(
     (state: RootStore) => state.serverState.history.timeline
   );
@@ -473,13 +473,14 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
   useImperativeHandle(ref, () => downshiftProps, [downshiftProps]);
 
   const contextItemsDivRef = React.useRef<HTMLDivElement>(null);
-  const handleTabPressed = () => {
+  const handleTabPressed = useCallback(() => {
     // Set the focus to the next item in the context items div
     if (!contextItemsDivRef.current) {
       return;
     }
-    const focusableItems =
-      contextItemsDivRef.current.querySelectorAll(".pill-button");
+    const focusableItems = contextItemsDivRef.current.querySelectorAll(
+      `.pill-button-${props.index || "main"}`
+    );
     const focusableItemsArray = Array.from(focusableItems);
     const focusedItemIndex = focusableItemsArray.findIndex(
       (item) => item === document.activeElement
@@ -496,22 +497,22 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
       const firstItem = focusableItemsArray[0];
       (firstItem as any)?.focus();
     }
-  };
+  }, [props.index]);
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
+    if (inputRef.current) {
       const listener = (e: any) => {
         if (e.key === "Tab") {
           e.preventDefault();
           handleTabPressed();
         }
       };
-      window.addEventListener("keydown", listener);
+      inputRef.current.addEventListener("keydown", listener);
       return () => {
-        window.removeEventListener("keydown", listener);
+        inputRef.current?.removeEventListener("keydown", listener);
       };
     }
-  }, []);
+  }, [inputRef.current]);
 
   useEffect(() => {
     if (props.value) {
@@ -550,7 +551,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
   }, []);
 
   useEffect(() => {
-    if (!inputRef.current) {
+    if (!inputRef.current || !props.isMainInput) {
       return;
     }
     if (props.isMainInput) {
@@ -683,19 +684,26 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
       <div
         className="px-2 flex gap-2 items-center flex-wrap mt-2"
         ref={contextItemsDivRef}
+        style={{ backgroundColor: vscBackground }}
       >
         <HiddenHeaderButtonWithText
-          className={selectedContextItems.length > 0 ? "pill-button" : ""}
+          className={
+            selectedContextItems.length > 0
+              ? `pill-button-${props.index || "main"}`
+              : ""
+          }
           onClick={() => {
             client?.deleteContextWithIds(
-              selectedContextItems.map((item) => item.description.id)
+              selectedContextItems.map((item) => item.description.id),
+              props.index
             );
             inputRef.current?.focus();
           }}
           onKeyDown={(e: any) => {
             if (e.key === "Backspace") {
               client?.deleteContextWithIds(
-                selectedContextItems.map((item) => item.description.id)
+                selectedContextItems.map((item) => item.description.id),
+                props.index
               );
               inputRef.current?.focus();
               setPreviewingContextItem(undefined);
@@ -718,9 +726,13 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
                 (inputRef.current as any)?.value?.startsWith("/edit")
               }
               editingAny={(inputRef.current as any)?.value?.startsWith("/edit")}
+              stepIndex={props.index}
               index={idx}
               onDelete={() => {
-                client?.deleteContextWithIds([item.description.id]);
+                client?.deleteContextWithIds(
+                  [item.description.id],
+                  props.index
+                );
                 inputRef.current?.focus();
                 if (
                   item.description.id.item_id ===
@@ -739,28 +751,33 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
                     item.description.id.provider_name
                 ) {
                   setPreviewingContextItem(undefined);
-                  (e.target as any).blur();
                 } else {
                   setPreviewingContextItem(item);
                 }
               }}
+              previewing={
+                item.description.id.item_id ===
+                  previewingContextItem?.description.id.item_id &&
+                previewingContextItem?.description.id.provider_name ===
+                  item.description.id.provider_name
+              }
             />
           );
         })}
 
-        {selectedContextItems.length > 0 && (
+        {/* {selectedContextItems.length > 0 && (
           <HeaderButtonWithText
             onClick={() => {
-              client?.showContextVirtualFile();
+              client?.showContextVirtualFile(props.index);
             }}
             text="View Current Context"
           >
             <MagnifyingGlassIcon width="1.4em" height="1.4em" />
           </HeaderButtonWithText>
-        )}
+        )} */}
       </div>
       {previewingContextItem && (
-        <PreviewPre>
+        <pre className="m-0">
           <StyledMarkdownPreview
             fontSize={getFontSize()}
             source={`\`\`\`\n${previewingContextItem.content}\n\`\`\``}
@@ -769,7 +786,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
             }}
             maxHeight={200}
           />
-        </PreviewPre>
+        </pre>
       )}
       <div
         className="flex px-2 relative"
@@ -967,9 +984,9 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
                           if (props.groupIndices)
                             client?.showLogsAtIndex(props.groupIndices[1]);
                         }}
-                        text="Context Used"
+                        text="Inspect Prompt"
                       >
-                        <MagnifyingGlassIcon width="1.4em" height="1.4em" />
+                        <ArrowUpLeftIcon width="1.3em" height="1.3em" />
                       </HeaderButtonWithText>
                     )}
                     <HeaderButtonWithText

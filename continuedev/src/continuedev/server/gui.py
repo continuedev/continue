@@ -104,7 +104,7 @@ class GUIProtocolServer:
         elif message_type == "delete_at_index":
             self.on_delete_at_index(data["index"])
         elif message_type == "delete_context_with_ids":
-            self.on_delete_context_with_ids(data["ids"])
+            self.on_delete_context_with_ids(data["ids"], data.get("index", None))
         elif message_type == "toggle_adding_highlighted_code":
             self.on_toggle_adding_highlighted_code()
         elif message_type == "set_editing_at_ids":
@@ -112,7 +112,7 @@ class GUIProtocolServer:
         elif message_type == "show_logs_at_index":
             self.on_show_logs_at_index(data["index"])
         elif message_type == "show_context_virtual_file":
-            self.show_context_virtual_file()
+            self.show_context_virtual_file(data.get("index", None))
         elif message_type == "select_context_item":
             self.select_context_item(data["id"], data["query"])
         elif message_type == "select_context_item_at_index":
@@ -173,9 +173,9 @@ class GUIProtocolServer:
             self.on_error,
         )
 
-    def on_delete_context_with_ids(self, ids: List[str]):
+    def on_delete_context_with_ids(self, ids: List[str], index: Optional[int] = None):
         create_async_task(
-            self.session.autopilot.delete_context_with_ids(ids), self.on_error
+            self.session.autopilot.delete_context_with_ids(ids, index), self.on_error
         )
 
     def on_toggle_adding_highlighted_code(self):
@@ -198,12 +198,20 @@ class GUIProtocolServer:
         )
         posthog_logger.capture_event("show_logs_at_index", {})
 
-    def show_context_virtual_file(self):
+    def show_context_virtual_file(self, index: Optional[int] = None):
         async def async_stuff():
-            msgs = await self.session.autopilot.continue_sdk.get_chat_context()
+            if index is None:
+                context_items = (
+                    await self.session.autopilot.context_manager.get_selected_items()
+                )
+            elif index < len(self.session.autopilot.continue_sdk.history.timeline):
+                context_items = self.session.autopilot.continue_sdk.history.timeline[
+                    index
+                ].context_used
+
             ctx = "\n\n-----------------------------------\n\n".join(
-                ["This is the exact context that will be passed to the LLM"]
-                + list(map(lambda x: x.content, msgs))
+                ["These are the context items that will be passed to the LLM"]
+                + list(map(lambda x: x.content, context_items))
             )
             await self.session.autopilot.ide.showVirtualFile(
                 "Continue - Selected Context", ctx

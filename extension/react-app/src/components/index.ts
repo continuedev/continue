@@ -196,6 +196,11 @@ export const HeaderButton = styled.button<{ inverted: boolean | undefined }>`
   border-radius: ${defaultBorderRadius};
   cursor: ${({ disabled }) => (disabled ? "default" : "pointer")};
 
+  &:focus {
+    outline: none;
+    border: none;
+  }
+
   &:hover {
     background-color: ${({ inverted }) =>
       typeof inverted === "undefined" || inverted

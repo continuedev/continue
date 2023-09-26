@@ -330,8 +330,18 @@ class Autopilot(ContinueBaseModel):
         # Rerun from the current step
         await self.run_from_step(step_to_rerun)
 
-    async def delete_context_with_ids(self, ids: List[str]):
-        await self.context_manager.delete_context_with_ids(ids)
+    async def delete_context_with_ids(
+        self, ids: List[str], index: Optional[int] = None
+    ):
+        if index is None:
+            await self.context_manager.delete_context_with_ids(ids)
+        else:
+            self.history.timeline[index].context_used = list(
+                filter(
+                    lambda item: item.description.id.to_string() not in ids,
+                    self.history.timeline[index].context_used,
+                )
+            )
         await self.update_subscribers()
 
     async def toggle_adding_highlighted_code(self):

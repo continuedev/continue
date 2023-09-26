@@ -108,6 +108,7 @@ export const serverStateSlice = createSlice({
           },
           depth: 0,
           active: true,
+          context_used: state.selected_context_items,
         },
       ];
     },

@@ -5,7 +5,6 @@ import {
   defaultBorderRadius,
   lightGray,
   secondaryDark,
-  vscBackground,
   vscForeground,
 } from ".";
 import {
@@ -15,9 +14,9 @@ import {
 } from "@heroicons/react/24/outline";
 import { GUIClientContext } from "../App";
 import { useDispatch } from "react-redux";
-import { setBottomMessage } from "../redux/slices/uiStateSlice";
 import { ContextItem } from "../../../schema/FullState";
 import { getFontSize } from "../util";
+import HeaderButtonWithText from "./HeaderButtonWithText";
 
 const Button = styled.button<{ fontSize?: number }>`
   border: none;
@@ -80,14 +79,33 @@ interface PillButtonProps {
   editingAny: boolean;
   index: number;
   areMultipleItems?: boolean;
-  onDelete?: () => void;
+  onDelete?: (index?: number) => void;
   onClick?: (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => void;
+  stepIndex?: number;
+  previewing?: boolean;
 }
 
 interface StyledButtonProps {
   borderColor?: string;
   editing?: boolean;
 }
+
+const Container = styled.div<{ previewing?: boolean }>`
+  ${(props) => {
+    return (
+      props.previewing &&
+      `
+      padding-bottom: 16px;
+      margin-bottom: -16px;
+    `
+    );
+  }}
+  border-radius: ${defaultBorderRadius};
+  background-color: ${secondaryDark};
+  display: flex;
+  align-items: center;
+  justify-content: center;
+`;
 
 const StyledButton = styled(Button)<StyledButtonProps>`
   position: relative;
@@ -97,9 +115,8 @@ const StyledButton = styled(Button)<StyledButtonProps>`
 
   &:focus {
     outline: none;
-    border-color: ${lightGray};
-    border-width: 1px;
-    border-style: solid;
+    /* border-color: ${lightGray}; */
+    text-decoration: underline;
   }
 `;
 
@@ -121,35 +138,47 @@ const PillButton = (props: PillButtonProps) => {
 
   return (
     <div style={{ position: "relative" }}>
-      <StyledButton
-        fontSize={getFontSize()}
-        borderColor={props.editing ? (warning ? "red" : undefined) : undefined}
-        onMouseEnter={() => {
-          setIsHovered(true);
-          if (props.onHover) {
-            props.onHover(true);
+      <Container previewing={props.previewing}>
+        <StyledButton
+          fontSize={getFontSize()}
+          borderColor={
+            props.editing ? (warning ? "red" : undefined) : undefined
           }
-        }}
-        onMouseLeave={() => {
-          setIsHovered(false);
-          if (props.onHover) {
-            props.onHover(false);
-          }
-        }}
-        className="pill-button"
-        onKeyDown={(e) => {
-          if (e.key === "Backspace") {
-            props.onDelete?.();
-          }
-        }}
-        onClick={(e) => {
-          props.onClick?.(e);
-        }}
-      >
-        <span className={isHovered ? "underline" : ""}>
-          {props.item.description.name}
-        </span>
-      </StyledButton>
+          onMouseEnter={() => {
+            setIsHovered(true);
+            if (props.onHover) {
+              props.onHover(true);
+            }
+          }}
+          onMouseLeave={() => {
+            setIsHovered(false);
+            if (props.onHover) {
+              props.onHover(false);
+            }
+          }}
+          className={`pill-button-${props.stepIndex || "main"}`}
+          onKeyDown={(e) => {
+            if (e.key === "Backspace") {
+              props.onDelete?.(props.stepIndex);
+            }
+          }}
+          onClick={(e) => {
+            props.onClick?.(e);
+          }}
+        >
+          <span className={isHovered ? "underline" : ""}>
+            {props.item.description.name}
+          </span>
+        </StyledButton>
+        {props.previewing && (
+          <HeaderButtonWithText
+            text="Delete"
+            onClick={() => props.onDelete?.(props.stepIndex)}
+          >
+            <TrashIcon width="1.4em" height="1.4em" />
+          </HeaderButtonWithText>
+        )}
+      </Container>
       <StyledTooltip id={`edit-${props.index}`}>
         {props.item.editing
           ? "Editing this section (with entire file as context)"

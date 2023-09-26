@@ -21,7 +21,7 @@ abstract class AbstractContinueGUIClientProtocol {
 
   abstract deleteAtIndex(index: number): void;
 
-  abstract deleteContextWithIds(ids: ContextItemId[]): void;
+  abstract deleteContextWithIds(ids: ContextItemId[], index?: number): void;
 
   abstract setEditingAtIds(ids: string[]): void;
 
