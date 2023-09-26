@@ -679,6 +679,10 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
     ContextItem | undefined
   >(undefined);
 
+  const [focusedContextItem, setFocusedContextItem] = useState<
+    ContextItem | undefined
+  >(undefined);
+
   return (
     <>
       <div
@@ -707,6 +711,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
               );
               inputRef.current?.focus();
               setPreviewingContextItem(undefined);
+              setFocusedContextItem(undefined);
             }
           }}
         >
@@ -736,29 +741,56 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
                 inputRef.current?.focus();
                 if (
                   item.description.id.item_id ===
-                    previewingContextItem?.description.id.item_id &&
-                  previewingContextItem?.description.id.provider_name ===
+                    focusedContextItem?.description.id.item_id &&
+                  focusedContextItem?.description.id.provider_name ===
                     item.description.id.provider_name
                 ) {
                   setPreviewingContextItem(undefined);
+                  setFocusedContextItem(undefined);
                 }
               }}
               onClick={(e) => {
                 if (
                   item.description.id.item_id ===
-                    previewingContextItem?.description.id.item_id &&
-                  previewingContextItem?.description.id.provider_name ===
+                    focusedContextItem?.description.id.item_id &&
+                  focusedContextItem?.description.id.provider_name ===
                     item.description.id.provider_name
                 ) {
+                  setFocusedContextItem(undefined);
                   setPreviewingContextItem(undefined);
                 } else {
-                  setPreviewingContextItem(item);
+                  setFocusedContextItem(item);
                 }
+              }}
+              onBlur={() => {
+                setFocusedContextItem(undefined);
+                setPreviewingContextItem(undefined);
+              }}
+              toggleViewContent={() => {
+                setPreviewingContextItem((prev) => {
+                  if (!prev) return item;
+                  if (
+                    prev.description.id.item_id ===
+                      item.description.id.item_id &&
+                    prev.description.id.provider_name ===
+                      item.description.id.provider_name
+                  ) {
+                    return undefined;
+                  } else {
+                    return item;
+                  }
+                });
               }}
               previewing={
                 item.description.id.item_id ===
                   previewingContextItem?.description.id.item_id &&
                 previewingContextItem?.description.id.provider_name ===
+                  item.description.id.provider_name
+              }
+              focusing={
+                item.description.id.item_id ===
+                  focusedContextItem?.description.id.item_id &&
+                focusedContextItem?.description.id.provider_name ===
                   item.description.id.provider_name
               }
             />

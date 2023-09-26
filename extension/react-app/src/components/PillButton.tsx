@@ -1,4 +1,4 @@
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import styled from "styled-components";
 import {
   StyledTooltip,
@@ -11,6 +11,7 @@ import {
   TrashIcon,
   PaintBrushIcon,
   ExclamationTriangleIcon,
+  EyeIcon,
 } from "@heroicons/react/24/outline";
 import { GUIClientContext } from "../App";
 import { useDispatch } from "react-redux";
@@ -83,6 +84,9 @@ interface PillButtonProps {
   onClick?: (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => void;
   stepIndex?: number;
   previewing?: boolean;
+  toggleViewContent?: () => void;
+  onBlur?: () => void;
+  focusing?: boolean;
 }
 
 interface StyledButtonProps {
@@ -91,15 +95,6 @@ interface StyledButtonProps {
 }
 
 const Container = styled.div<{ previewing?: boolean }>`
-  ${(props) => {
-    return (
-      props.previewing &&
-      `
-      padding-bottom: 16px;
-      margin-bottom: -16px;
-    `
-    );
-  }}
   border-radius: ${defaultBorderRadius};
   background-color: ${secondaryDark};
   display: flex;
@@ -120,6 +115,29 @@ const StyledButton = styled(Button)<StyledButtonProps>`
   }
 `;
 
+const HoverableInsidePillButton = styled(HeaderButtonWithText)<{
+  color: string;
+}>`
+  &:hover {
+    background-color: ${(props) => props.color};
+  }
+`;
+
+const ClickableInsidePillButton = styled(HeaderButtonWithText)<{
+  color: string;
+  selected: boolean;
+}>`
+  ${(props) =>
+    props.selected &&
+    `
+    background-color: ${props.color};
+    
+    &:hover {
+      background-color: ${props.color};
+    }
+  `}
+`;
+
 const PillButton = (props: PillButtonProps) => {
   const [isHovered, setIsHovered] = useState(false);
   const client = useContext(GUIClientContext);
@@ -134,16 +152,18 @@ const PillButton = (props: PillButtonProps) => {
     }
   }, [props.editing, props.item]);
 
-  const dispatch = useDispatch();
+  const pillContainerRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
 
   return (
     <div style={{ position: "relative" }}>
-      <Container previewing={props.previewing}>
+      <Container previewing={props.previewing} ref={pillContainerRef}>
         <StyledButton
           fontSize={getFontSize()}
           borderColor={
             props.editing ? (warning ? "red" : undefined) : undefined
           }
+          ref={buttonRef}
           onMouseEnter={() => {
             setIsHovered(true);
             if (props.onHover) {
@@ -160,23 +180,72 @@ const PillButton = (props: PillButtonProps) => {
           onKeyDown={(e) => {
             if (e.key === "Backspace") {
               props.onDelete?.(props.stepIndex);
+            } else if (e.key === "v") {
+              props.toggleViewContent?.();
+            } else if (e.key === "e") {
+              client?.setEditingAtIds([props.item.description.id.item_id]);
             }
           }}
           onClick={(e) => {
             props.onClick?.(e);
+          }}
+          onBlur={(e) => {
+            if (!pillContainerRef.current?.contains(e.relatedTarget as any)) {
+              props.onBlur?.();
+            } else {
+              e.preventDefault();
+              buttonRef.current?.focus();
+            }
           }}
         >
           <span className={isHovered ? "underline" : ""}>
             {props.item.description.name}
           </span>
         </StyledButton>
-        {props.previewing && (
-          <HeaderButtonWithText
-            text="Delete"
-            onClick={() => props.onDelete?.(props.stepIndex)}
-          >
-            <TrashIcon width="1.4em" height="1.4em" />
-          </HeaderButtonWithText>
+        {((props.focusing && props.item.editable && props.editingAny) ||
+          props.editing) && (
+          <>
+            <ClickableInsidePillButton
+              data-tooltip-id={`circle-div-${props.item.description.name}`}
+              text={
+                props.editing ? "Editing this range" : "Edit this range (e)"
+              }
+              onClick={() => {
+                if (!props.editing) {
+                  client?.setEditingAtIds([props.item.description.id.item_id]);
+                }
+              }}
+              tabIndex={-1}
+              color="#f0f4"
+              selected={props.editing}
+            >
+              <PaintBrushIcon width="1.4em" height="1.4em" />
+            </ClickableInsidePillButton>
+            <StyledTooltip id={`circle-div-${props.item.description.name}`}>
+              Editing this range
+            </StyledTooltip>
+          </>
+        )}
+        {props.focusing && (
+          <>
+            <ClickableInsidePillButton
+              text="View (v)"
+              onClick={() => props.toggleViewContent?.()}
+              tabIndex={-1}
+              color="#ff04"
+              selected={props.previewing || false}
+            >
+              <EyeIcon width="1.4em" height="1.4em" />
+            </ClickableInsidePillButton>
+            <HoverableInsidePillButton
+              text="Delete (⌫)"
+              onClick={() => props.onDelete?.(props.stepIndex)}
+              tabIndex={-1}
+              color="#f004"
+            >
+              <TrashIcon width="1.4em" height="1.4em" />
+            </HoverableInsidePillButton>
+          </>
         )}
       </Container>
       <StyledTooltip id={`edit-${props.index}`}>
@@ -185,45 +254,23 @@ const PillButton = (props: PillButtonProps) => {
           : "Edit this section"}
       </StyledTooltip>
       <StyledTooltip id={`delete-${props.index}`}>Delete</StyledTooltip>
-      {props.editing &&
-        (warning ? (
-          <>
-            <CircleDiv
-              data-tooltip-id={`circle-div-${props.item.description.name}`}
-              className="z-10"
-            >
-              <ExclamationTriangleIcon
-                style={{ margin: "auto" }}
-                width="1.0em"
-                strokeWidth={2}
-              />
-            </CircleDiv>
-            <StyledTooltip id={`circle-div-${props.item.description.name}`}>
-              {warning}
-            </StyledTooltip>
-          </>
-        ) : (
-          <>
-            <CircleDiv
-              data-tooltip-id={`circle-div-${props.item.description.name}`}
-              style={{
-                backgroundColor: "#8800aa55",
-                border: `0.5px solid ${lightGray}`,
-                padding: "1px",
-                zIndex: 1,
-              }}
-            >
-              <PaintBrushIcon
-                style={{ margin: "auto" }}
-                width="1.0em"
-                strokeWidth={2}
-              />
-            </CircleDiv>
-            <StyledTooltip id={`circle-div-${props.item.description.name}`}>
-              Editing this range
-            </StyledTooltip>
-          </>
-        ))}
+      {props.editing && warning && (
+        <>
+          <CircleDiv
+            data-tooltip-id={`circle-div-${props.item.description.name}`}
+            className="z-10"
+          >
+            <ExclamationTriangleIcon
+              style={{ margin: "auto" }}
+              width="1.0em"
+              strokeWidth={2}
+            />
+          </CircleDiv>
+          <StyledTooltip id={`circle-div-${props.item.description.name}`}>
+            {warning}
+          </StyledTooltip>
+        </>
+      )}
     </div>
   );
 };
