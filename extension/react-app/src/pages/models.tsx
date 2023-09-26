@@ -35,7 +35,7 @@ const MODEL_INFO: ModelInfo[] = [
     title: "Ollama",
     class: "Ollama",
     description:
-      "One of the fastest ways to get started with local models on Mac",
+      "One of the fastest ways to get started with local models on Mac or Linux",
     args: {
       model: "codellama",
       title: "Ollama",
