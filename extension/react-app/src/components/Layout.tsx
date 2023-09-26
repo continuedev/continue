@@ -184,8 +184,8 @@ const Layout = () => {
                 />
               )}
               <ModelSelect />
-              {defaultModel.class_name === "OpenAIFreeTrial" &&
-                defaultModel.api_key === "" &&
+              {defaultModel?.class_name === "OpenAIFreeTrial" &&
+                defaultModel?.api_key === "" &&
                 (location.pathname === "/settings" ||
                   parseInt(localStorage.getItem("ftc") || "0") >= 125) && (
                   <ProgressBar

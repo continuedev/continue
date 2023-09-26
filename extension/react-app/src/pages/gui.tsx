@@ -288,8 +288,8 @@ function GUI(props: GUIProps) {
       }
 
       if (
-        defaultModel.class_name === "OpenAIFreeTrial" &&
-        defaultModel.api_key === "" &&
+        defaultModel?.class_name === "OpenAIFreeTrial" &&
+        defaultModel?.api_key === "" &&
         (!input.startsWith("/") || input.startsWith("/edit"))
       ) {
         const ftc = localStorage.getItem("ftc");
