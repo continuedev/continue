@@ -85,8 +85,7 @@ const Layout = () => {
   );
 
   const defaultModel = useSelector(
-    (state: RootStore) =>
-      (state.serverState.config as any).models?.default?.class_name
+    (state: RootStore) => (state.serverState.config as any).models?.default
   );
   // #region Selectors
 
@@ -185,7 +184,8 @@ const Layout = () => {
                 />
               )}
               <ModelSelect />
-              {defaultModel === "OpenAIFreeTrial" &&
+              {defaultModel.class_name === "OpenAIFreeTrial" &&
+                defaultModel.api_key === "" &&
                 (location.pathname === "/settings" ||
                   parseInt(localStorage.getItem("ftc") || "0") >= 125) && (
                   <ProgressBar
