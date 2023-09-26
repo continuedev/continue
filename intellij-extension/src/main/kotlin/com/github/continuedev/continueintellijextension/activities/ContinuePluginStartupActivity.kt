@@ -12,6 +12,7 @@ import com.github.continuedev.continueintellijextension.utils.dispatchEventToWeb
 import com.intellij.ide.plugins.PluginManagerCore
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.actionSystem.ActionManager
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.editor.EditorFactory
 import com.intellij.openapi.extensions.PluginId
@@ -310,12 +311,14 @@ class ContinuePluginStartupActivity : StartupActivity, Disposable {
         // Register Actions
         val actionManager = ActionManager.getInstance()
         actionManager.registerAction(
-            "FocusContinueInput",
-            ToggleAuxiliaryBarAction()
+                "FocusContinueInput",
+                ToggleAuxiliaryBarAction()
         )
 
         // Initialize Plugin
-        initializePlugin(project)
+        ApplicationManager.getApplication().executeOnPooledThread {
+            initializePlugin(project)
+        }
     }
 
     private fun initializePlugin(project: Project) {
