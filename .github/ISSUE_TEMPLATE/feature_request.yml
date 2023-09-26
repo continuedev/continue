@@ -7,8 +7,8 @@ body:
   - type: markdown
     attributes:
       value: |
-        Thanks for your interest in the project and taking the time to fill out this
-        feature request!
+        Thanks for your interest in the project and taking the time to fill out this feature request!
+        ---
   - type: checkboxes
     id: checkboxes
     attributes:
@@ -16,28 +16,22 @@ body:
       description: Before submitting your feature request
       options:
         - label: Check that there isn't already a similar feature request to avoid creating a duplicate.
-          required: true
+          required: false
         - label: I confirm that this is a concrete feature request. For questions and feedback, please join the [Continue Discord](https://discord.gg/NWtdYexhMs).
-          required: true
+          required: false
   - type: textarea
     attributes:
       label: Problem
-      description:
-        Please add a clear and concise description of the problem you are
-        seeking to solve with this feature request.
+      description: Please add a clear and concise description of the problem you are seeking to solve with this feature request.
       placeholder: |
-        Description
+        Short description
+    validations:
+      required: false
   - type: textarea
     attributes:
       label: Feature/ Solution
-      description:
-        A clear and concise description of what you want to happen. If applicable, add a
-        gif, screenshot or a video to better convey your idea.
+      description: A clear and concise description of what you want to happen. If applicable, add a gif, screenshot or a video to better convey your idea.
       placeholder: |
-        I would like…
-
-        A similar feature can be found in…
-
-        Screenshots
+        Short description
     validations:
-      required: true
+      required: false

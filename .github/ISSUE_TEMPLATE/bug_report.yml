@@ -6,72 +6,67 @@ body:
   - type: markdown
     attributes:
       value: |
-        Thanks for taking the time to fill out this bug report! This will help to find the
-        cause of the problem faster and require fewer follow-ups.
+        Thanks for taking the time to fill out this bug report!
+        This will help to find the cause of the problem faster and require fewer follow-ups.
+        ---
   - type: checkboxes
     attributes:
       label: Before submitting your Bug Report
       options:
         - label: I have checked that there isn't already an issue that reports the same bug to avoid creating a duplicate.
-          required: true
-        - label: I have checked the [Troubleshooting Guide](https://continue.dev/docs/troubleshooting).
-          required: true
+          required: false
         - label: I confirm/suspect that this is a concrete bug. For questions and feedback, please join the [Continue Discord](https://discord.gg/NWtdYexhMs).
-          required: true
-  - type: input
+          required: false
+        - label: I have checked the [Troubleshooting Guide](https://continue.dev/docs/troubleshooting).
+          required: false
+  - type: textarea
     attributes:
-      label: Operating System
-      placeholder: e.g. macOS 13.5.2
-    validations:
-      required: true
-  - type: input
-    attributes:
-      label: Python Version
-      placeholder: e.g. 3.11.5
-    validations:
-      required: true
-  - type: input
-    attributes:
-      label: Continue Version
-      placeholder: e.g. v0.0.397
-    validations:
-      required: true
-  - type: input
-    attributes:
-      label: IDE version
-      placeholder: e.g. VSCode 1.82.2
+      label: Relevant Environment Infos
+      description: |
+        - **OS**: e.g. macOS 13.5.2
+        - **Continue**: e.g. 0.0.398
+        - **Python**: e.g. 3.8.5
+        - **IDE**: e.g. VSCode 1.82.2
+        - **Ollama**: e.g. v0.0.21
+        - …
+      value: |
+        - OS:
+        - Continue:
+      render: Markdown
     validations:
       required: false
   - type: textarea
     attributes:
       label: Description
-      description:
-        Please provide a clear and concise description of the bug and, if possible, steps
-        to reproduce the problem consistently. If applicable, add a gif, screenshot or a video to help
-        explain the bug.
+      description: |
+        Please provide a clear and concise description of the bug.
       placeholder: |
         Short description
-
+    validations:
+      required: false
+  - type: textarea
+    attributes:
+      label: To Reproduce
+      description: Steps to reproduce the problem consistently. If possible, include a gif, screenshot, or video to better illustrate the problem.
+      placeholder: |
         1. Go to …
         2. Click on …
         3. Scroll down to …
         4. See error
-
-        Screenshots
     validations:
-      required: true
+      required: false
   - type: textarea
     id: logs
     attributes:
       label: Log Output
       description: |
         To get the Continue server logs:
-          1. <kbd>⌘ Command</kbd> + <kbd>⇧ Shift</kbd> + <kbd>P</kbd> (MacOS) / <kbd>⌃ Control</kbd> + <kbd>⇧ Shift</kbd> + <kbd>P</kbd> (Windows)
+          1. <kbd>⌘ Command</kbd> + <kbd>⇧ Shift</kbd> + <kbd>P</kbd> macOS / <kbd>⌃ Control</kbd> + <kbd>⇧ Shift</kbd> + <kbd>P</kbd> Windows
           2. Search for and then select "Continue: View Continue Server Logs"
           3. Scroll to the bottom of `continue.log` and copy the last 100 lines or so
 
         To get the VS Code console logs:
-          1. <kbd>⌘ Command</kbd> + <kbd>⇧ Shift</kbd> + <kbd>P</kbd> (MacOS) / <kbd>⌃ Control</kbd> + <kbd>⇧ Shift</kbd> + <kbd>P</kbd> (Windows)
+          1. <kbd>⌘ Command</kbd> + <kbd>⇧ Shift</kbd> + <kbd>P</kbd> macOS / <kbd>⌃ Control</kbd> + <kbd>⇧ Shift</kbd> + <kbd>P</kbd> Windows
           2. Search for and then select "Developer: Toggle Developer Tools"
           3. Select Console
           4. Read the console logs
