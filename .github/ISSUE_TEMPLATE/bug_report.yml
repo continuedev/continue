@@ -61,12 +61,12 @@ body:
       label: Log Output
       description: |
         To get the Continue server logs:
-          1. <kbd>⌘ Command</kbd> + <kbd>⇧ Shift</kbd> + <kbd>P</kbd> macOS / <kbd>⌃ Control</kbd> + <kbd>⇧ Shift</kbd> + <kbd>P</kbd> Windows
+          1. <kbd>⌘ Command</kbd> + <kbd>⇧ Shift</kbd> + <kbd>P</kbd> (macOS) / <kbd>⌃ Control</kbd> + <kbd>⇧ Shift</kbd> + <kbd>P</kbd> (Windows)
           2. Search for and then select "Continue: View Continue Server Logs"
           3. Scroll to the bottom of `continue.log` and copy the last 100 lines or so
 
         To get the VS Code console logs:
-          1. <kbd>⌘ Command</kbd> + <kbd>⇧ Shift</kbd> + <kbd>P</kbd> macOS / <kbd>⌃ Control</kbd> + <kbd>⇧ Shift</kbd> + <kbd>P</kbd> Windows
+          1. <kbd>⌘ Command</kbd> + <kbd>⇧ Shift</kbd> + <kbd>P</kbd> (macOS) / <kbd>⌃ Control</kbd> + <kbd>⇧ Shift</kbd> + <kbd>P</kbd> (Windows)
           2. Search for and then select "Developer: Toggle Developer Tools"
           3. Select Console
           4. Read the console logs
