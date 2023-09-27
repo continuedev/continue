@@ -40,6 +40,10 @@ If your Continue server is not setting up, try checking the console logs:
 4. Select the `Console` tab
 5. Read the console logs
 
+## Problems with Meilisearch
+
+If you have checked the logs and the problem seems related to Meilisearch, or if context providers aren't working, you can try to manually setup Meilisearch with their instructions [here](https://www.meilisearch.com/docs/learn/getting_started/installation). Once downloaded, you should place the Meilisearch binary at `~/.continue/server/meilisearch` and start it. Once it is running on port 7700, Continue will be able to automatically connect.
+
 ## Download an Older Version
 
 If you've tried everything, reported an error, and are waiting to hear back, you can try downloading an older version of the extension. All versions are hosted on the Open VSX Registry [here](https://open-vsx.org/extension/Continue/continue). Once you've downloaded the extension, which will be a .vsix file, you can install it manually by following the instructions [here](https://code.visualstudio.com/docs/editor/extension-gallery#_install-from-a-vsix).

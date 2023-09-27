@@ -10,7 +10,7 @@ Commercial Models
 
 Local Models
 
-- [Ollama](../reference/Models/ollama.md) - If you have a Mac, Ollama is the simplest way to run open-source models like Code Llama.
+- [Ollama](../reference/Models/ollama.md) - If you are on Mac or Linux, Ollama is the simplest way to run open-source models like Code Llama.
 - [OpenAI](../reference/Models/openai.md) - If you have access to an OpenAI-compatible server (e.g. llama-cpp-python, LocalAI, FastChat, TextGenWebUI, etc.), you can use the `OpenAI` class and just change the base URL.
 - [GGML](../reference/Models/ggml.md) - An alternative way to connect to OpenAI-compatible servers. Will use `aiohttp` directly instead of the `openai` Python package.
 - [LlamaCpp](../reference/Models/llamacpp.md) - Build llama.cpp from source and use its built-in API server.
