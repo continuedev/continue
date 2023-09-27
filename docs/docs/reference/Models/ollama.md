@@ -2,7 +2,7 @@ import ClassPropertyRef from '@site/src/components/ClassPropertyRef.tsx';
 
 # Ollama
 
-[Ollama](https://ollama.ai/) is a Mac application that makes it easy to locally run open-source models, including Llama-2. Download the app from the website, and it will walk you through setup in a couple of minutes. You can also read more in their [README](https://github.com/jmorganca/ollama). Continue can then be configured to use the `Ollama` LLM class:
+[Ollama](https://ollama.ai/) is an application for Mac and Linux that makes it easy to locally run open-source models, including Llama-2. Download the app from the website, and it will walk you through setup in a couple of minutes. You can also read more in their [README](https://github.com/jmorganca/ollama). Continue can then be configured to use the `Ollama` LLM class:
 
 ```python
 from continuedev.src.continuedev.libs.llm.ollama import Ollama
@@ -20,7 +20,6 @@ config = ContinueConfig(
 ## Properties
 
 <ClassPropertyRef name='server_url' details='{&quot;title&quot;: &quot;Server Url&quot;, &quot;description&quot;: &quot;URL of the Ollama server&quot;, &quot;default&quot;: &quot;http://localhost:11434&quot;, &quot;type&quot;: &quot;string&quot;}' required={false} default="http://localhost:11434"/>
-
 
 ### Inherited Properties
 

@@ -53,7 +53,7 @@ function ModelSettings(props: { llm: any | undefined; role: string }) {
     <Div dashed={typeof props.llm === undefined}>
       {props.llm ? (
         <>
-          <b>{props.role}</b>: <b> {props.llm.class_name || "gpt-4"}</b>
+          <b>{props.role}</b>: <b> {props.llm?.class_name || "gpt-4"}</b>
           <form>
             {typeof modelOptions.api_key !== undefined && (
               <>

@@ -144,14 +144,14 @@ const NewProviderDiv = styled.div`
 `;
 
 function modelSelectTitle(model: any): string {
-  if (model.title) return model.title;
-  if (model.model !== undefined && model.model.trim() !== "") {
-    if (model.class_name) {
-      return `${model.class_name} - ${model.model}`;
+  if (model?.title) return model?.title;
+  if (model?.model !== undefined && model?.model.trim() !== "") {
+    if (model?.class_name) {
+      return `${model?.class_name} - ${model?.model}`;
     }
-    return model.model;
+    return model?.model;
   }
-  return model.class_name;
+  return model?.class_name;
 }
 
 function ModelSelect(props: {}) {

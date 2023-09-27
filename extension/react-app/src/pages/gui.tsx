@@ -126,8 +126,7 @@ function GUI(props: GUIProps) {
   // #region Selectors
   const history = useSelector((state: RootStore) => state.serverState.history);
   const defaultModel = useSelector(
-    (state: RootStore) =>
-      (state.serverState.config as any).models?.default?.class_name
+    (state: RootStore) => (state.serverState.config as any).models?.default
   );
   const user_input_queue = useSelector(
     (state: RootStore) => state.serverState.user_input_queue
@@ -286,7 +285,8 @@ function GUI(props: GUIProps) {
       }
 
       if (
-        defaultModel === "OpenAIFreeTrial" &&
+        defaultModel?.class_name === "OpenAIFreeTrial" &&
+        defaultModel?.api_key === "" &&
         (!input.startsWith("/") || input.startsWith("/edit"))
       ) {
         const ftc = localStorage.getItem("ftc");
