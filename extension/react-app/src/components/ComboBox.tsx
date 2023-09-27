@@ -705,7 +705,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
       {props.isMainInput ||
       (selectedContextItems.length > 0 && showContextItemsIfNotMain) ? (
         <div
-          className="px-2 flex gap-2 items-center flex-wrap pt-2"
+          className="px-2 flex gap-2 items-center flex-wrap"
           ref={contextItemsDivRef}
           style={{ backgroundColor: vscBackground }}
         >
@@ -844,6 +844,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
               backgroundColor: vscBackground,
               paddingLeft: "12px",
               cursor: "default",
+              marginTop: "14px",
             }}
           >
             {props.active ? "Using" : "Used"} {selectedContextItems.length}{" "}
