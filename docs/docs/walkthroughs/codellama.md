@@ -79,8 +79,9 @@ config = ContinueConfig(
     ...
     models=Models(default=OpenAI(
         model="CodeLlama-7b-Instruct-hf",
-        openai_server_info={'api_base': 'http://localhost:8000/v1'})
-
+        api_base="http://localhost:8000/v1"
+    ))
+)
 ```
 
 4. Reload the VS Code window for changes to take effect.

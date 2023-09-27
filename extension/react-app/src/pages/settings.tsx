@@ -1,15 +1,23 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useContext } from "react";
 import { GUIClientContext } from "../App";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { RootStore } from "../redux/store";
 import { useNavigate } from "react-router-dom";
 import { ContinueConfig } from "../../../schema/ContinueConfig";
-import { Button, TextArea, lightGray, secondaryDark } from "../components";
+import {
+  Button,
+  NumberInput,
+  TextArea,
+  lightGray,
+  secondaryDark,
+  vscBackground,
+} from "../components";
 import styled from "styled-components";
 import { ArrowLeftIcon } from "@heroicons/react/24/outline";
 import Loader from "../components/Loader";
 import InfoHover from "../components/InfoHover";
 import { FormProvider, useForm } from "react-hook-form";
+import { getFontSize } from "../util";
 
 const Hr = styled.hr`
   border: 0.5px solid ${lightGray};
@@ -70,7 +78,7 @@ const Slider = styled.input.attrs({ type: "range" })`
     border: none;
   }
 `;
-const ALL_MODEL_ROLES = ["default", "small", "medium", "large", "edit", "chat"];
+const ALL_MODEL_ROLES = ["default", "summarize", "edit", "chat"];
 
 function Settings() {
   const formMethods = useForm<ContinueConfig>();
@@ -79,6 +87,7 @@ function Settings() {
   const navigate = useNavigate();
   const client = useContext(GUIClientContext);
   const config = useSelector((state: RootStore) => state.serverState.config);
+  const dispatch = useDispatch();
 
   const submitChanges = () => {
     if (!client) return;
@@ -106,17 +115,23 @@ function Settings() {
 
   return (
     <FormProvider {...formMethods}>
-      <div className="w-full">
+      <div className="overflow-scroll">
+        <div
+          className="items-center flex sticky top-0"
+          style={{
+            borderBottom: `0.5px solid ${lightGray}`,
+            backgroundColor: vscBackground,
+          }}
+        >
+          <ArrowLeftIcon
+            width="1.2em"
+            height="1.2em"
+            onClick={submitAndLeave}
+            className="inline-block ml-4 cursor-pointer"
+          />
+          <h3 className="text-lg font-bold m-2 inline-block">Settings</h3>
+        </div>
         <form onSubmit={formMethods.handleSubmit(onSubmit)}>
-          <div className="items-center flex">
-            <ArrowLeftIcon
-              width="1.4em"
-              height="1.4em"
-              onClick={submitAndLeave}
-              className="inline-block ml-4 cursor-pointer"
-            />
-            <h1 className="text-2xl font-bold m-4 inline-block">Settings</h1>
-          </div>
           {config ? (
             <div className="p-2">
               <h3 className="flex gap-1">
@@ -203,6 +218,24 @@ function Settings() {
             <Loader />
           )}
         </form>
+
+        <hr />
+
+        <div className="px-2">
+          <h3>Appearance</h3>
+
+          <p>Font Size</p>
+          <NumberInput
+            type="number"
+            min="8"
+            max="48"
+            step="1"
+            defaultValue={getFontSize()}
+            onChange={(e) => {
+              localStorage.setItem("fontSize", e.target.value);
+            }}
+          />
+        </div>
 
         <div className="flex gap-2 justify-end px-4">
           <CancelButton

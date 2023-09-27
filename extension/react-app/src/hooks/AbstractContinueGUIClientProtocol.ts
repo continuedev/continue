@@ -29,6 +29,8 @@ abstract class AbstractContinueGUIClientProtocol {
 
   abstract showLogsAtIndex(index: number): void;
 
+  abstract showContextVirtualFile(): void;
+
   abstract selectContextItem(id: string, query: string): void;
 
   abstract loadSession(session_id?: string): void;
@@ -52,6 +54,8 @@ abstract class AbstractContinueGUIClientProtocol {
   abstract selectContextGroup(id: string): void;
 
   abstract deleteContextGroup(id: string): void;
+
+  abstract setCurrentSessionTitle(title: string): void;
 }
 
 export default AbstractContinueGUIClientProtocol;

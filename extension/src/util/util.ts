@@ -65,7 +65,7 @@ export function debounced(delay: number, fn: Function) {
 
 type Platform = "mac" | "linux" | "windows" | "unknown";
 
-function getPlatform(): Platform {
+export function getPlatform(): Platform {
   const platform = os.platform();
   if (platform === "darwin") {
     return "mac";

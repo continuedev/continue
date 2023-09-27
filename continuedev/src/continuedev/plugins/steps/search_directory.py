@@ -46,7 +46,7 @@ class WriteRegexPatternStep(Step):
 
     async def run(self, sdk: ContinueSDK):
         # Ask the user for a regex pattern
-        pattern = await sdk.models.medium.complete(
+        pattern = await sdk.models.summarize.complete(
             dedent(
                 f"""\
             This is the user request:

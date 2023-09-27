@@ -1,4 +1,3 @@
-import os
 from typing import List
 
 from pydantic import Field
@@ -7,6 +6,7 @@ from ripgrepy import Ripgrepy
 from ...core.context import ContextProvider
 from ...core.main import ContextItem, ContextItemDescription, ContextItemId
 from ...libs.util.logging import logger
+from ...libs.util.ripgrep import get_rg_path
 from .util import remove_meilisearch_disallowed_chars
 
 
@@ -36,31 +36,8 @@ class SearchContextProvider(ContextProvider):
             ),
         )
 
-    def _get_rg_path(self):
-        if os.name == "nt":
-            paths_to_try = [
-                f"C:\\Users\\{os.getlogin()}\\AppData\\Local\\Programs\\Microsoft VS Code\\resources\\app\\node_modules.asar.unpacked\\@vscode\\ripgrep\\bin\\rg.exe",
-                f"C:\\Users\\{os.getlogin()}\\AppData\\Local\\Programs\\Microsoft VS Code\\resources\\app\\node_modules.asar.unpacked\\vscode-ripgrep\\bin\\rg.exe",
-            ]
-            for path in paths_to_try:
-                if os.path.exists(path):
-                    rg_path = path
-                    break
-        elif os.name == "posix":
-            if "darwin" in os.sys.platform:
-                rg_path = "/Applications/Visual Studio Code.app/Contents/Resources/app/node_modules.asar.unpacked/@vscode/ripgrep/bin/rg"
-            else:
-                rg_path = "/usr/share/code/resources/app/node_modules.asar.unpacked/vscode-ripgrep/bin/rg"
-        else:
-            rg_path = "rg"
-
-        if not os.path.exists(rg_path):
-            rg_path = "rg"
-
-        return rg_path
-
     async def _search(self, query: str) -> str:
-        rg = Ripgrepy(query, self.workspace_dir, rg_path=self._get_rg_path())
+        rg = Ripgrepy(query, self.workspace_dir, rg_path=get_rg_path())
         results = rg.I().context(2).run()
         return f"Search results in workspace for '{query}':\n\n{results}"
 
@@ -92,7 +69,7 @@ class SearchContextProvider(ContextProvider):
         self.workspace_dir = workspace_dir
 
         try:
-            Ripgrepy("", workspace_dir, rg_path=self._get_rg_path())
+            Ripgrepy("", workspace_dir, rg_path=get_rg_path())
         except Exception as e:
             logger.warning(f"Failed to initialize ripgrepy: {e}")
             return []

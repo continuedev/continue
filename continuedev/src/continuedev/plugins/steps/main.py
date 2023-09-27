@@ -105,7 +105,7 @@ class FasterEditHighlightedCodeStep(Step):
         for rif in range_in_files:
             rif_dict[rif.filepath] = rif.contents
 
-        completion = await sdk.models.medium.complete(prompt)
+        completion = await sdk.models.summarize.complete(prompt)
 
         # Temporarily doing this to generate description.
         self._prompt = prompt
@@ -180,7 +180,7 @@ class StarCoderEditHighlightedCodeStep(Step):
     _prompt_and_completion: str = ""
 
     async def describe(self, models: Models) -> Coroutine[str, None, None]:
-        return await models.medium.complete(
+        return await models.summarize.complete(
             f"{self._prompt_and_completion}\n\nPlease give brief a description of the changes made above using markdown bullet points:"
         )
 
@@ -333,7 +333,7 @@ class EditHighlightedCodeStep(Step):
         if len(range_in_files) == 0:
             raise ContinueCustomException(
                 message="Please highlight some code and try again.",
-                title="No Code Selected",
+                title="No Code Selected (highlight and select with cmd+shift+M)",
             )
 
         # If all of the ranges are point ranges, only edit the last one

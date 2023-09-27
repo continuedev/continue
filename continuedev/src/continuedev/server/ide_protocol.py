@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Any, Callable, List, Union
+from typing import Any, Callable, List, Optional, Union
 
 from fastapi import WebSocket
 
@@ -104,7 +104,11 @@ class AbstractIdeProtocolServer(ABC):
         """Run a command"""
 
     @abstractmethod
-    def onHighlightedCodeUpdate(self, range_in_files: List[RangeInFileWithContents]):
+    def onHighlightedCodeUpdate(
+        self,
+        range_in_files: List[RangeInFileWithContents],
+        edit: Optional[bool] = False,
+    ):
         """Called when highlighted code is updated"""
 
     @abstractmethod

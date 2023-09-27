@@ -1,9 +1,8 @@
 import styled from "styled-components";
 import { defaultBorderRadius, secondaryDark, vscForeground } from ".";
 import { Outlet } from "react-router-dom";
-import Onboarding from "./Onboarding";
 import TextDialog from "./TextDialog";
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect } from "react";
 import { GUIClientContext } from "../App";
 import { useDispatch, useSelector } from "react-redux";
 import { RootStore } from "../redux/store";
@@ -13,17 +12,15 @@ import {
   setShowDialog,
 } from "../redux/slices/uiStateSlice";
 import {
-  PlusIcon,
-  FolderIcon,
-  BookOpenIcon,
-  ChatBubbleOvalLeftEllipsisIcon,
   SparklesIcon,
   Cog6ToothIcon,
+  QuestionMarkCircleIcon,
 } from "@heroicons/react/24/outline";
 import HeaderButtonWithText from "./HeaderButtonWithText";
 import { useNavigate, useLocation } from "react-router-dom";
 import ModelSelect from "./ModelSelect";
 import ProgressBar from "./ProgressBar";
+import { temporarilyClearSession } from "../redux/slices/serverStateReducer";
 
 // #region Styled Components
 const FOOTER_HEIGHT = "1.8em";
@@ -62,6 +59,8 @@ const Footer = styled.footer`
   align-items: center;
   width: calc(100% - 16px);
   height: ${FOOTER_HEIGHT};
+
+  overflow: hidden;
 `;
 
 const GridDiv = styled.div`
@@ -86,8 +85,7 @@ const Layout = () => {
   );
 
   const defaultModel = useSelector(
-    (state: RootStore) =>
-      (state.serverState.config as any).models?.default?.class_name
+    (state: RootStore) => (state.serverState.config as any).models?.default
   );
   // #region Selectors
 
@@ -98,11 +96,21 @@ const Layout = () => {
     (state: RootStore) => state.uiState.displayBottomMessageOnBottom
   );
 
+  const timeline = useSelector(
+    (state: RootStore) => state.serverState.history.timeline
+  );
+
   // #endregion
 
   useEffect(() => {
     const handleKeyDown = (event: any) => {
-      if (event.metaKey && event.altKey && event.code === "KeyN") {
+      if (
+        event.metaKey &&
+        event.altKey &&
+        event.code === "KeyN" &&
+        timeline.filter((n) => !n.step.hide).length > 0
+      ) {
+        dispatch(temporarilyClearSession(false));
         client?.loadSession(undefined);
       }
       if ((event.metaKey || event.ctrlKey) && event.code === "KeyC") {
@@ -121,7 +129,7 @@ const Layout = () => {
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [client]);
+  }, [client, timeline]);
 
   return (
     <LayoutTopDiv>
@@ -133,7 +141,6 @@ const Layout = () => {
           gridTemplateRows: "1fr auto",
         }}
       >
-        <Onboarding />
         <TextDialog
           showDialog={showDialog}
           onEnter={() => {
@@ -176,54 +183,25 @@ const Layout = () => {
                   color="yellow"
                 />
               )}
-
               <ModelSelect />
-              {defaultModel === "MaybeProxyOpenAI" &&
+              {defaultModel?.class_name === "OpenAIFreeTrial" &&
+                defaultModel?.api_key === "" &&
                 (location.pathname === "/settings" ||
-                  parseInt(localStorage.getItem("freeTrialCounter") || "0") >=
-                    125) && (
+                  parseInt(localStorage.getItem("ftc") || "0") >= 125) && (
                   <ProgressBar
-                    completed={parseInt(
-                      localStorage.getItem("freeTrialCounter") || "0"
-                    )}
+                    completed={parseInt(localStorage.getItem("ftc") || "0")}
                     total={250}
                   />
                 )}
             </div>
             <HeaderButtonWithText
+              text="Help"
               onClick={() => {
-                client?.loadSession(undefined);
+                navigate("/help");
               }}
-              text="New Session (⌥⌘N)"
             >
-              <PlusIcon width="1.4em" height="1.4em" />
+              <QuestionMarkCircleIcon width="1.4em" height="1.4em" />
             </HeaderButtonWithText>
-            <HeaderButtonWithText
-              onClick={() => {
-                navigate("/history");
-              }}
-              text="History"
-            >
-              <FolderIcon width="1.4em" height="1.4em" />
-            </HeaderButtonWithText>
-            <a
-              href="https://continue.dev/docs/how-to-use-continue"
-              className="no-underline"
-              target="_blank"
-            >
-              <HeaderButtonWithText text="Docs">
-                <BookOpenIcon width="1.4em" height="1.4em" />
-              </HeaderButtonWithText>
-            </a>
-            <a
-              href="https://github.com/continuedev/continue/issues/new/choose"
-              className="no-underline"
-              target="_blank"
-            >
-              <HeaderButtonWithText text="Feedback">
-                <ChatBubbleOvalLeftEllipsisIcon width="1.4em" height="1.4em" />
-              </HeaderButtonWithText>
-            </a>
             <HeaderButtonWithText
               onClick={() => {
                 navigate("/settings");
@@ -250,6 +228,7 @@ const Layout = () => {
           {bottomMessage}
         </BottomMessageDiv>
       </div>
+      <div id="tooltip-portal-div" />
     </LayoutTopDiv>
   );
 };

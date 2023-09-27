@@ -31,6 +31,9 @@ class RangeInFile(BaseModel):
         range = Range.from_entire_file(content)
         return RangeInFile(filepath=filepath, range=range)
 
+    def translated(self, lines: int):
+        return RangeInFile(filepath=self.filepath, range=self.range.translated(lines))
+
 
 class RangeInFileWithContents(RangeInFile):
     """A range in a file with the contents of the range."""

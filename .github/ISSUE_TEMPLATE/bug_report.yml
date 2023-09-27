@@ -1,0 +1,77 @@
+---
+name: 🐛 Bug report
+description: Create a report to help us fix your bug
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report this bug! This will help us find the cause of the problem quickly with less back-and-forth required
+        ---
+  - type: checkboxes
+    attributes:
+      label: Before submitting your bug report
+      options:
+        - label: I believe this is a bug. I'll try to join the [Continue Discord](https://discord.gg/NWtdYexhMs) for questions
+          required: false
+        - label: I'm not able to find an [open issue](https://github.com/continuedev/continue/issues?q=is%3Aopen+is%3Aissue) that reports the same bug
+          required: false
+        - label: I've seen the [troubleshooting guide](https://continue.dev/docs/troubleshooting) on the Continue Docs
+          required: false
+  - type: textarea
+    attributes:
+      label: Relevant environment info
+      description: |
+        - **OS**: e.g. macOS 13.5.2
+        - **Continue**: e.g. 0.0.398
+        - **Python**: e.g. 3.8.5
+        - **IDE**: e.g. VSCode 1.82.2
+        - **Ollama**: e.g. v0.0.21
+        - …
+      value: |
+        - OS:
+        - Continue:
+      render: Markdown
+    validations:
+      required: false
+  - type: textarea
+    attributes:
+      label: Description
+      description: |
+        Please provide a clear and concise description of the bug
+      placeholder: |
+        Short description
+    validations:
+      required: false
+  - type: textarea
+    attributes:
+      label: To reproduce
+      description: Steps to reproduce the problem. If possible, include a gif, screenshot, or video to better illustrate.
+      placeholder: |
+        1. Go to …
+        2. Click on …
+        3. Scroll down to …
+        4. See error
+    validations:
+      required: false
+  - type: textarea
+    id: logs
+    attributes:
+      label: Log output
+      description: |
+        To get the Continue server logs:
+          1. <kbd>⌘ Command</kbd> + <kbd>⇧ Shift</kbd> + <kbd>P</kbd> (macOS) / <kbd>⌃ Control</kbd> + <kbd>⇧ Shift</kbd> + <kbd>P</kbd> (Windows)
+          2. Search for and then select "Continue: View Continue Server Logs"
+          3. Scroll to the bottom of `continue.log` and copy the last 100 lines or so
+
+        To get the VS Code console logs:
+          1. <kbd>⌘ Command</kbd> + <kbd>⇧ Shift</kbd> + <kbd>P</kbd> (macOS) / <kbd>⌃ Control</kbd> + <kbd>⇧ Shift</kbd> + <kbd>P</kbd> (Windows)
+          2. Search for and then select "Developer: Toggle Developer Tools"
+          3. Select Console
+          4. Read the console logs
+
+        If the problem is related to LLM prompting:
+          1. Hover the problematic response in the Continue UI
+          2. Click the "magnifying glass" icon
+          3. Copy the contents of the `continue_logs.txt` file that opens
+      render: Shell

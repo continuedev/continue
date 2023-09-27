@@ -1,7 +1,6 @@
 import json
 from typing import Any, Callable, Dict
 
-import aiohttp
 from pydantic import Field
 
 from ..llm import LLM
@@ -70,14 +69,12 @@ class LlamaCpp(LLM):
         headers = {"Content-Type": "application/json"}
 
         async def server_generator():
-            async with aiohttp.ClientSession(
-                connector=aiohttp.TCPConnector(verify_ssl=self.verify_ssl),
-                timeout=aiohttp.ClientTimeout(total=self.timeout),
-            ) as client_session:
+            async with self.create_client_session() as client_session:
                 async with client_session.post(
                     f"{self.server_url}/completion",
                     json={"prompt": prompt, "stream": True, **args},
                     headers=headers,
+                    proxy=self.proxy,
                 ) as resp:
                     async for line in resp.content:
                         content = line.decode("utf-8")

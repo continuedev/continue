@@ -1,5 +1,8 @@
+import ssl
 from typing import Any, Callable, Coroutine, Dict, Generator, List, Optional, Union
 
+import aiohttp
+import certifi
 from pydantic import Field, validator
 
 from ...core.main import ChatMessage
@@ -68,6 +71,10 @@ class LLM(ContinueBaseModel):
         ..., description="The name of the model to be used (e.g. gpt-4, codellama)"
     )
 
+    stop_tokens: Optional[List[str]] = Field(
+        None, description="Tokens that will stop the completion."
+    )
+
     timeout: Optional[int] = Field(
         300,
         description="Set the timeout for each request to the LLM. If you are running a local LLM that takes a while to respond, you might want to set this to avoid timeouts.",
@@ -78,6 +85,10 @@ class LLM(ContinueBaseModel):
     ca_bundle_path: str = Field(
         None,
         description="Path to a custom CA bundle to use when making the HTTP request",
+    )
+    proxy: Optional[str] = Field(
+        None,
+        description="Proxy URL to use when making the HTTP request",
     )
     prompt_templates: dict = Field(
         {},
@@ -130,6 +141,10 @@ class LLM(ContinueBaseModel):
             "verify_ssl": {
                 "description": "Whether to verify SSL certificates for requests."
             },
+            "ca_bundle_path": {
+                "description": "Path to a custom CA bundle to use when making the HTTP request"
+            },
+            "proxy": {"description": "Proxy URL to use when making the HTTP request"},
         }
 
     def dict(self, **kwargs):
@@ -150,6 +165,22 @@ class LLM(ContinueBaseModel):
     async def stop(self):
         """Stop the connection to the LLM."""
         pass
+
+    def create_client_session(self):
+        if self.verify_ssl is False:
+            return aiohttp.ClientSession(
+                connector=aiohttp.TCPConnector(verify_ssl=False),
+                timeout=aiohttp.ClientTimeout(total=self.timeout),
+            )
+        else:
+            ca_bundle_path = (
+                certifi.where() if self.ca_bundle_path is None else self.ca_bundle_path
+            )
+            ssl_context = ssl.create_default_context(cafile=ca_bundle_path)
+            return aiohttp.ClientSession(
+                connector=aiohttp.TCPConnector(ssl_context=ssl_context),
+                timeout=aiohttp.ClientTimeout(total=self.timeout),
+            )
 
     def collect_args(self, options: CompletionOptions) -> Dict[str, Any]:
         """Collect the arguments for the LLM."""
@@ -195,6 +226,7 @@ class LLM(ContinueBaseModel):
         stop: Optional[List[str]] = None,
         max_tokens: Optional[int] = None,
         functions: Optional[List[Any]] = None,
+        log: bool = True,
     ) -> Generator[Union[Any, List, Dict], None, None]:
         """Yield completion response, either streamed or not."""
         options = CompletionOptions(
@@ -204,7 +236,7 @@ class LLM(ContinueBaseModel):
             top_k=top_k,
             presence_penalty=presence_penalty,
             frequency_penalty=frequency_penalty,
-            stop=stop,
+            stop=stop or self.stop_tokens,
             max_tokens=max_tokens,
             functions=functions,
         )
@@ -216,14 +248,17 @@ class LLM(ContinueBaseModel):
         if not raw:
             prompt = self.template_prompt_like_messages(prompt)
 
-        self.write_log(f"Prompt: \n\n{prompt}")
+        if log:
+            self.write_log(prompt)
 
         completion = ""
         async for chunk in self._stream_complete(prompt=prompt, options=options):
             yield chunk
             completion += chunk
 
-        self.write_log(f"Completion: \n\n{completion}")
+        # if log:
+        #     self.write_log(f"Completion: \n\n{completion}")
+
         dev_data_logger.capture(
             "tokens_generated",
             {"model": self.model, "tokens": self.count_tokens(completion)},
@@ -242,6 +277,7 @@ class LLM(ContinueBaseModel):
         stop: Optional[List[str]] = None,
         max_tokens: Optional[int] = None,
         functions: Optional[List[Any]] = None,
+        log: bool = True,
     ) -> str:
         """Yield completion response, either streamed or not."""
         options = CompletionOptions(
@@ -251,7 +287,7 @@ class LLM(ContinueBaseModel):
             top_k=top_k,
             presence_penalty=presence_penalty,
             frequency_penalty=frequency_penalty,
-            stop=stop,
+            stop=stop or self.stop_tokens,
             max_tokens=max_tokens,
             functions=functions,
         )
@@ -263,11 +299,14 @@ class LLM(ContinueBaseModel):
         if not raw:
             prompt = self.template_prompt_like_messages(prompt)
 
-        self.write_log(f"Prompt: \n\n{prompt}")
+        if log:
+            self.write_log(prompt)
 
         completion = await self._complete(prompt=prompt, options=options)
 
-        self.write_log(f"Completion: \n\n{completion}")
+        # if log:
+        #     self.write_log(f"Completion: \n\n{completion}")
+
         dev_data_logger.capture(
             "tokens_generated",
             {"model": self.model, "tokens": self.count_tokens(completion)},
@@ -287,6 +326,7 @@ class LLM(ContinueBaseModel):
         stop: Optional[List[str]] = None,
         max_tokens: Optional[int] = None,
         functions: Optional[List[Any]] = None,
+        log: bool = True,
     ) -> Generator[Union[Any, List, Dict], None, None]:
         """Yield completion response, either streamed or not."""
         options = CompletionOptions(
@@ -296,7 +336,7 @@ class LLM(ContinueBaseModel):
             top_k=top_k,
             presence_penalty=presence_penalty,
             frequency_penalty=frequency_penalty,
-            stop=stop,
+            stop=stop or self.stop_tokens,
             max_tokens=max_tokens,
             functions=functions,
         )
@@ -309,7 +349,8 @@ class LLM(ContinueBaseModel):
         else:
             prompt = format_chat_messages(messages)
 
-        self.write_log(f"Prompt: \n\n{prompt}")
+        if log:
+            self.write_log(prompt)
 
         completion = ""
 
@@ -324,7 +365,9 @@ class LLM(ContinueBaseModel):
                 yield {"role": "assistant", "content": chunk}
                 completion += chunk
 
-        self.write_log(f"Completion: \n\n{completion}")
+        # if log:
+        #     self.write_log(f"Completion: \n\n{completion}")
+
         dev_data_logger.capture(
             "tokens_generated",
             {"model": self.model, "tokens": self.count_tokens(completion)},

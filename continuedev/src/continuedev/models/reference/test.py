@@ -14,7 +14,7 @@ LLM_MODULES = [
     ("together", "TogetherLLM"),
     ("hf_inference_api", "HuggingFaceInferenceAPI"),
     ("hf_tgi", "HuggingFaceTGI"),
-    ("maybe_proxy_openai", "MaybeProxyOpenAI"),
+    ("openai_free_trial", "OpenAIFreeTrial"),
     ("queued", "QueuedLLM"),
 ]
 
@@ -101,7 +101,7 @@ for module_name, module_title in LLM_MODULES:
     markdown_docs = docs_from_schema(
         schema, f"libs/llm/{module_name}.py", inherited=ctx_properties
     )
-    with open(f"docs/docs/reference/Models/{module_name}.md", "w") as f:
+    with open(f"docs/docs/reference/Models/{module_title.lower()}.md", "w") as f:
         f.write(markdown_docs)
 
 config_module = importlib.import_module("continuedev.src.continuedev.core.config")
@@ -130,7 +130,9 @@ for module_name, module_title in CONTEXT_PROVIDER_MODULES:
         ],
         inherited=ctx_properties,
     )
-    with open(f"docs/docs/reference/Context Providers/{module_name}.md", "w") as f:
+    with open(
+        f"docs/docs/reference/Context Providers/{module_title.lower()}.md", "w"
+    ) as f:
         f.write(markdown_docs)
 
 # sdk_module = importlib.import_module("continuedev.src.continuedev.core.sdk")

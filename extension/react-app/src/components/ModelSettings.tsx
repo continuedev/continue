@@ -10,6 +10,7 @@ import {
 } from ".";
 import { useState } from "react";
 import { useFormContext } from "react-hook-form";
+import { getFontSize } from "../util";
 
 const Div = styled.div<{ dashed: boolean }>`
   border: 1px ${(props) => (props.dashed ? "dashed" : "solid")} ${lightGray};
@@ -27,7 +28,7 @@ const DefaultModelOptions: {
     api_key: "",
     model: "gpt-4",
   },
-  MaybeProxyOpenAI: {
+  OpenAIFreeTrial: {
     api_key: "",
     model: "gpt-4",
   },
@@ -52,11 +53,11 @@ function ModelSettings(props: { llm: any | undefined; role: string }) {
     <Div dashed={typeof props.llm === undefined}>
       {props.llm ? (
         <>
-          <b>{props.role}</b>: <b> {props.llm.class_name || "gpt-4"}</b>
+          <b>{props.role}</b>: <b> {props.llm?.class_name || "gpt-4"}</b>
           <form>
             {typeof modelOptions.api_key !== undefined && (
               <>
-                <Label>API Key</Label>
+                <Label fontSize={getFontSize()}>API Key</Label>
                 <TextInput
                   type="text"
                   defaultValue={props.llm.api_key}
@@ -67,7 +68,7 @@ function ModelSettings(props: { llm: any | undefined; role: string }) {
             )}
             {modelOptions.model && (
               <>
-                <Label>Model</Label>
+                <Label fontSize={getFontSize()}>Model</Label>
                 <TextInput
                   type="text"
                   defaultValue={props.llm.model}

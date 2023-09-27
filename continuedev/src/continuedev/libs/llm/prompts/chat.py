@@ -28,8 +28,8 @@ def template_alpaca_messages(msgs: List[Dict[str, str]]) -> str:
         prompt += f"{msgs[0]['content']}\n"
         msgs.pop(0)
 
-    prompt += "### Instruction:\n"
     for msg in msgs:
+        prompt += "### Instruction:\n" if msg["role"] == "user" else "### Response:\n"
         prompt += f"{msg['content']}\n"
 
     prompt += "### Response:\n"
