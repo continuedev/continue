@@ -105,9 +105,10 @@ export const serverStateSlice = createSlice({
           step: {
             description: action.payload,
             name: "User Input",
+            hide: false,
           },
           depth: 0,
-          active: true,
+          active: false,
           context_used: state.selected_context_items,
         },
       ];

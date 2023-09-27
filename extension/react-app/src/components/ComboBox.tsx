@@ -33,10 +33,14 @@ import { setBottomMessage } from "../redux/slices/uiStateSlice";
 import { useDispatch, useSelector } from "react-redux";
 import { RootStore } from "../redux/store";
 import ContinueButton from "./ContinueButton";
-import { getFontSize, getMetaKeyLabel } from "../util";
-import { Context } from "mocha";
+import {
+  getFontSize,
+  getMarkdownLanguageTagForFile,
+  getMetaKeyLabel,
+} from "../util";
 import { ContextItem } from "../../../schema/FullState";
 import StyledMarkdownPreview from "./StyledMarkdownPreview";
+import ReactDOM from "react-dom";
 
 const SEARCH_INDEX_NAME = "continue_context_items";
 
@@ -197,6 +201,7 @@ const Ul = styled.ul<{
   font-size: ${(props) => props.fontSize || mainInputFontSize}px;
 
   scrollbar-width: none; /* Firefox */
+  z-index: 500;
 
   /* Hide scrollbar for Chrome, Safari and Opera */
   &::-webkit-scrollbar {
@@ -220,6 +225,7 @@ const Li = styled.li<{
   ${({ isLastItem }) => isLastItem && "border-bottom: 1px solid gray;"}
   /* border-top: 1px solid gray; */
   cursor: pointer;
+  z-index: 500;
 `;
 
 // #endregion
@@ -530,7 +536,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
   }, [items, downshiftProps.setHighlightedIndex, ulRef.current]);
 
   const [metaKeyPressed, setMetaKeyPressed] = useState(false);
-  const [focused, setFocused] = useState(false);
+  const [inputFocused, setInputFocused] = useState(false);
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Meta") {
@@ -683,121 +689,138 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
     ContextItem | undefined
   >(undefined);
 
+  const topRef = React.useRef<HTMLDivElement>(null);
+
+  const [showContextItemsIfNotMain, setShowContextItemsIfNotMain] =
+    useState(false);
+
+  useEffect(() => {
+    if (!inputFocused) {
+      setShowContextItemsIfNotMain(false);
+    }
+  }, [inputFocused]);
+
   return (
-    <>
-      <div
-        className="px-2 flex gap-2 items-center flex-wrap mt-2"
-        ref={contextItemsDivRef}
-        style={{ backgroundColor: vscBackground }}
-      >
-        <HiddenHeaderButtonWithText
-          className={
-            selectedContextItems.length > 0
-              ? `pill-button-${props.index || "main"}`
-              : ""
-          }
-          onClick={() => {
-            client?.deleteContextWithIds(
-              selectedContextItems.map((item) => item.description.id),
-              props.index
-            );
-            inputRef.current?.focus();
-          }}
-          onKeyDown={(e: any) => {
-            if (e.key === "Backspace") {
+    <div ref={topRef}>
+      {props.isMainInput ||
+      (selectedContextItems.length > 0 && showContextItemsIfNotMain) ? (
+        <div
+          className="px-2 flex gap-2 items-center flex-wrap pt-2"
+          ref={contextItemsDivRef}
+          style={{ backgroundColor: vscBackground }}
+        >
+          <HiddenHeaderButtonWithText
+            className={
+              selectedContextItems.length > 0
+                ? `pill-button-${props.index || "main"}`
+                : ""
+            }
+            onClick={() => {
               client?.deleteContextWithIds(
                 selectedContextItems.map((item) => item.description.id),
                 props.index
               );
               inputRef.current?.focus();
-              setPreviewingContextItem(undefined);
-              setFocusedContextItem(undefined);
-            }
-          }}
-        >
-          <TrashIcon width="1.4em" height="1.4em" />
-        </HiddenHeaderButtonWithText>
-        {(props.isMainInput
-          ? selectedContextItems
-          : timeline[props.index!].context_used || []
-        ).map((item, idx) => {
-          return (
-            <PillButton
-              areMultipleItems={selectedContextItems.length > 1}
-              key={`${item.description.id.item_id}${idx}`}
-              item={item}
-              editing={
-                item.editing &&
-                (inputRef.current as any)?.value?.startsWith("/edit")
-              }
-              editingAny={(inputRef.current as any)?.value?.startsWith("/edit")}
-              stepIndex={props.index}
-              index={idx}
-              onDelete={() => {
+            }}
+            onKeyDown={(e: any) => {
+              if (e.key === "Backspace") {
                 client?.deleteContextWithIds(
-                  [item.description.id],
+                  selectedContextItems.map((item) => item.description.id),
                   props.index
                 );
                 inputRef.current?.focus();
-                if (
-                  item.description.id.item_id ===
-                    focusedContextItem?.description.id.item_id &&
-                  focusedContextItem?.description.id.provider_name ===
-                    item.description.id.provider_name
-                ) {
-                  setPreviewingContextItem(undefined);
-                  setFocusedContextItem(undefined);
-                }
-              }}
-              onClick={(e) => {
-                if (
-                  item.description.id.item_id ===
-                    focusedContextItem?.description.id.item_id &&
-                  focusedContextItem?.description.id.provider_name ===
-                    item.description.id.provider_name
-                ) {
-                  setFocusedContextItem(undefined);
-                  setPreviewingContextItem(undefined);
-                } else {
-                  setFocusedContextItem(item);
-                }
-              }}
-              onBlur={() => {
-                setFocusedContextItem(undefined);
                 setPreviewingContextItem(undefined);
-              }}
-              toggleViewContent={() => {
-                setPreviewingContextItem((prev) => {
-                  if (!prev) return item;
+                setFocusedContextItem(undefined);
+              }
+            }}
+          >
+            <TrashIcon width="1.4em" height="1.4em" />
+          </HiddenHeaderButtonWithText>
+          {(props.isMainInput
+            ? selectedContextItems
+            : timeline[props.index!].context_used || []
+          ).map((item, idx) => {
+            return (
+              <PillButton
+                areMultipleItems={selectedContextItems.length > 1}
+                key={`${item.description.id.item_id}${idx}`}
+                item={item}
+                editing={
+                  item.editing &&
+                  (inputRef.current as any)?.value?.startsWith("/edit")
+                }
+                editingAny={(inputRef.current as any)?.value?.startsWith(
+                  "/edit"
+                )}
+                stepIndex={props.index}
+                index={idx}
+                onDelete={() => {
+                  client?.deleteContextWithIds(
+                    [item.description.id],
+                    props.index
+                  );
+                  inputRef.current?.focus();
                   if (
-                    prev.description.id.item_id ===
-                      item.description.id.item_id &&
-                    prev.description.id.provider_name ===
+                    (item.description.id.item_id ===
+                      focusedContextItem?.description.id.item_id &&
+                      focusedContextItem?.description.id.provider_name ===
+                        item.description.id.provider_name) ||
+                    (item.description.id.item_id ===
+                      previewingContextItem?.description.id.item_id &&
+                      previewingContextItem?.description.id.provider_name ===
+                        item.description.id.provider_name)
+                  ) {
+                    setPreviewingContextItem(undefined);
+                    setFocusedContextItem(undefined);
+                  }
+                }}
+                onClick={(e) => {
+                  if (
+                    item.description.id.item_id ===
+                      focusedContextItem?.description.id.item_id &&
+                    focusedContextItem?.description.id.provider_name ===
                       item.description.id.provider_name
                   ) {
-                    return undefined;
+                    setFocusedContextItem(undefined);
                   } else {
-                    return item;
+                    setFocusedContextItem(item);
                   }
-                });
-              }}
-              previewing={
-                item.description.id.item_id ===
-                  previewingContextItem?.description.id.item_id &&
-                previewingContextItem?.description.id.provider_name ===
-                  item.description.id.provider_name
-              }
-              focusing={
-                item.description.id.item_id ===
-                  focusedContextItem?.description.id.item_id &&
-                focusedContextItem?.description.id.provider_name ===
-                  item.description.id.provider_name
-              }
-            />
-          );
-        })}
+                }}
+                onBlur={() => {
+                  setFocusedContextItem(undefined);
+                }}
+                toggleViewContent={() => {
+                  setPreviewingContextItem((prev) => {
+                    if (!prev) return item;
+                    if (
+                      prev.description.id.item_id ===
+                        item.description.id.item_id &&
+                      prev.description.id.provider_name ===
+                        item.description.id.provider_name
+                    ) {
+                      return undefined;
+                    } else {
+                      return item;
+                    }
+                  });
+                }}
+                previewing={
+                  item.description.id.item_id ===
+                    previewingContextItem?.description.id.item_id &&
+                  previewingContextItem?.description.id.provider_name ===
+                    item.description.id.provider_name
+                }
+                focusing={
+                  item.description.id.item_id ===
+                    focusedContextItem?.description.id.item_id &&
+                  focusedContextItem?.description.id.provider_name ===
+                    item.description.id.provider_name
+                }
+              />
+            );
+          })}
 
-        {/* {selectedContextItems.length > 0 && (
+          {/* {selectedContextItems.length > 0 && (
           <HeaderButtonWithText
             onClick={() => {
               client?.showContextVirtualFile(props.index);
@@ -807,12 +830,35 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
             <MagnifyingGlassIcon width="1.4em" height="1.4em" />
           </HeaderButtonWithText>
         )} */}
-      </div>
+        </div>
+      ) : (
+        selectedContextItems.length > 0 && (
+          <div
+            onClick={() => {
+              inputRef.current?.focus();
+              setShowContextItemsIfNotMain(true);
+            }}
+            style={{
+              color: lightGray,
+              fontSize: "10px",
+              backgroundColor: vscBackground,
+              paddingLeft: "12px",
+              cursor: "default",
+            }}
+          >
+            {props.active ? "Using" : "Used"} {selectedContextItems.length}{" "}
+            context item
+            {selectedContextItems.length === 1 ? "" : "s"}
+          </div>
+        )
+      )}
       {previewingContextItem && (
         <pre className="m-0">
           <StyledMarkdownPreview
             fontSize={getFontSize()}
-            source={`\`\`\`\n${previewingContextItem.content}\n\`\`\``}
+            source={`\`\`\`${getMarkdownLanguageTagForFile(
+              previewingContextItem.description.description
+            )}\n${previewingContextItem.content}\n\`\`\``}
             wrapperElement={{
               "data-color-mode": "dark",
             }}
@@ -823,11 +869,9 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
       <div
         className="flex px-2 relative"
         style={{
-          zIndex: props.index ? 200 - props.index : undefined,
           backgroundColor: vscBackground,
         }}
         ref={divRef}
-        hidden={!downshiftProps.isOpen}
       >
         <GradientBorder
           loading={props.active || false}
@@ -870,8 +914,14 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
                 // setShowContextDropdown(target.value.endsWith("@"));
               },
               onFocus: (e) => {
-                setFocused(true);
+                setInputFocused(true);
                 dispatch(setBottomMessage(undefined));
+              },
+              onBlur: (e) => {
+                if (topRef.current?.contains(e.relatedTarget as Node)) {
+                  return;
+                }
+                setInputFocused(false);
               },
               onKeyDown: (event) => {
                 dispatch(setBottomMessage(undefined));
@@ -1082,8 +1132,9 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
                 width="1.4em"
                 height="1.4em"
                 className="cursor-pointer"
-                onClick={() => {
+                onClick={(e) => {
                   goBackToContextProviders();
+                  inputRef.current?.focus();
                 }}
               />
               {nestedContextProvider.display_title} -{" "}
@@ -1138,10 +1189,13 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
       </div>
       {selectedContextItems.length === 0 &&
         (downshiftProps.inputValue?.startsWith("/edit") ||
-          (focused &&
+          (inputFocused &&
             metaKeyPressed &&
             downshiftProps.inputValue?.length > 0)) && (
-          <div className="text-trueGray-400 pr-4 text-xs text-right">
+          <div
+            className="text-trueGray-400 pr-4 text-xs text-right"
+            style={{ backgroundColor: vscBackground }}
+          >
             Inserting at cursor
           </div>
         )}
@@ -1151,7 +1205,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
           onClick={() => props.onEnter?.(undefined)}
         />
       )}
-    </>
+    </div>
   );
 });
 

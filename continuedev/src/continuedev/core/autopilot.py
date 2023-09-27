@@ -622,7 +622,7 @@ class Autopilot(ContinueBaseModel):
 
     async def accept_user_input(self, user_input: str):
         self._main_user_input_queue.append(user_input)
-        await self.update_subscribers()
+        # await self.update_subscribers()
 
         if len(self._main_user_input_queue) > 1:
             return
@@ -631,7 +631,7 @@ class Autopilot(ContinueBaseModel):
         # Just run the step that takes user input, and
         # then up to the policy to decide how to deal with it.
         self._main_user_input_queue.pop(0)
-        await self.update_subscribers()
+        # await self.update_subscribers()
         await self.run_from_step(UserInputStep(user_input=user_input))
 
         while len(self._main_user_input_queue) > 0:

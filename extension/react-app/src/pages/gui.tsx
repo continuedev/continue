@@ -78,7 +78,6 @@ const StepsDiv = styled.div`
   background-color: transparent;
 
   & > * {
-    z-index: 1;
     position: relative;
   }
 

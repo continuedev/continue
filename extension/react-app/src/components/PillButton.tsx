@@ -226,26 +226,26 @@ const PillButton = (props: PillButtonProps) => {
             </StyledTooltip>
           </>
         )}
+        {(props.focusing || props.previewing) && (
+          <ClickableInsidePillButton
+            text="View (v)"
+            onClick={() => props.toggleViewContent?.()}
+            tabIndex={-1}
+            color="#ff04"
+            selected={props.previewing || false}
+          >
+            <EyeIcon width="1.4em" height="1.4em" />
+          </ClickableInsidePillButton>
+        )}
         {props.focusing && (
-          <>
-            <ClickableInsidePillButton
-              text="View (v)"
-              onClick={() => props.toggleViewContent?.()}
-              tabIndex={-1}
-              color="#ff04"
-              selected={props.previewing || false}
-            >
-              <EyeIcon width="1.4em" height="1.4em" />
-            </ClickableInsidePillButton>
-            <HoverableInsidePillButton
-              text="Delete (⌫)"
-              onClick={() => props.onDelete?.(props.stepIndex)}
-              tabIndex={-1}
-              color="#f004"
-            >
-              <TrashIcon width="1.4em" height="1.4em" />
-            </HoverableInsidePillButton>
-          </>
+          <HoverableInsidePillButton
+            text="Delete (⌫)"
+            onClick={() => props.onDelete?.(props.stepIndex)}
+            tabIndex={-1}
+            color="#f004"
+          >
+            <TrashIcon width="1.4em" height="1.4em" />
+          </HoverableInsidePillButton>
         )}
       </Container>
       <StyledTooltip id={`edit-${props.index}`}>

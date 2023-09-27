@@ -190,7 +190,7 @@ class GUIProtocolServer:
     def on_show_logs_at_index(self, index: int):
         name = "Continue Context"
         logs = "\n\n############################################\n\n".join(
-            ["This is the prompt sent to the LLM during this step"]
+            ["This is the prompt that was sent to the LLM during this step"]
             + self.session.autopilot.continue_sdk.history.timeline[index].logs
         )
         create_async_task(
