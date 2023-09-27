@@ -173,6 +173,8 @@ class AnswerQuestionChroma(Step):
     m: int = 20
     n: int = 10
 
+    use_reranking: bool = True
+
     hide: bool = True
 
     async def describe(self, llm) -> Coroutine[str, None, None]:
@@ -185,7 +187,9 @@ class AnswerQuestionChroma(Step):
         index = ChromaIndexManager(sdk.ide.workspace_directory, self.openai_api_key)
         self.description = f"Reading from {self.m} files..."
         await sdk.update_ui()
-        results = index.query_codebase_index(self.user_input, n=self.m)
+        results = index.query_codebase_index(
+            self.user_input, n=self.m if self.use_reranking else self.n
+        )
 
         shortened_filepaths = shorten_filepaths(results["ids"][0])
         results_dict = {
@@ -194,9 +198,10 @@ class AnswerQuestionChroma(Step):
             if document.strip() != ""
         }
 
-        results_dict = await rerank_chroma_results(
-            results_dict, self.user_input, self.n, sdk
-        )
+        if self.use_reranking:
+            results_dict = await rerank_chroma_results(
+                results_dict, self.user_input, self.n, sdk
+            )
 
         for filename, document in results_dict.items():
             filepath = results["ids"][0][shortened_filepaths.index(filename)]
