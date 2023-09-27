@@ -31,24 +31,24 @@ config = ContinueConfig(
     custom_commands=[
         CustomCommand(
             name="test",
-            description="Write unit tests for the highlighted code",
+            description="Write unit tests for highlighted code",
             prompt="Write a comprehensive set of unit tests for the selected code. It should setup, run tests that check for correctness including important edge cases, and teardown. Ensure that the tests are complete and sophisticated. Give the tests just as chat output, don't edit any file.",
         )
     ],
     slash_commands=[
         SlashCommand(
             name="edit",
-            description="Edit code in the current file or the highlighted code",
+            description="Edit highlighted code",
             step=EditHighlightedCodeStep,
         ),
         SlashCommand(
             name="config",
-            description="Customize Continue - slash commands, LLMs, system message, etc.",
+            description="Customize Continue",
             step=OpenConfigStep,
         ),
         SlashCommand(
             name="comment",
-            description="Write comments for the current file or highlighted code",
+            description="Write comments for the highlighted code",
             step=CommentCodeStep,
         ),
         SlashCommand(
@@ -58,7 +58,7 @@ config = ContinueConfig(
         ),
         SlashCommand(
             name="share",
-            description="Download and share the session transcript",
+            description="Download and share this session",
             step=ShareSessionStep,
         ),
         SlashCommand(

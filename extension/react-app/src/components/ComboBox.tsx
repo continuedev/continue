@@ -81,7 +81,7 @@ const GradientBorder = styled.div<{
   background-size: 200% 200%;
   width: 100%;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
   margin-top: 8px;
 `;
@@ -126,7 +126,7 @@ const MainTextInput = styled.textarea<{
   border-radius: ${defaultBorderRadius};
   margin: 0;
   height: auto;
-  width: calc(100% - 16px);
+  width: 100%;
   background-color: ${secondaryDark};
   color: ${vscForeground};
   z-index: 1;
@@ -844,7 +844,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
               backgroundColor: vscBackground,
               paddingLeft: "12px",
               cursor: "default",
-              marginTop: "14px",
+              paddingTop: getFontSize(),
             }}
           >
             {props.active ? "Using" : "Used"} {selectedContextItems.length}{" "}
