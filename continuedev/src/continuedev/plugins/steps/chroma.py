@@ -2,6 +2,8 @@ import asyncio
 import os
 from typing import Coroutine, Dict, List, Optional, Union
 
+from pydantic import Field
+
 from ...core.main import ContextItem, ContextItemDescription, ContextItemId, Step
 from ...core.observation import Observation
 from ...core.sdk import ContinueSDK
@@ -170,10 +172,17 @@ class AnswerQuestionChroma(Step):
     name: str = "Answer Question"
     openai_api_key: Optional[str] = None
 
-    m: int = 20
-    n: int = 10
+    n_retrieve: Optional[int] = Field(
+        20, description="Number of results to initially retrieve from vector database"
+    )
+    n_final: Optional[int] = Field(
+        10, description="Final number of results to use after re-ranking"
+    )
 
-    use_reranking: bool = True
+    use_reranking: bool = Field(
+        True,
+        description="Whether to use re-ranking, which will allow initial selection of n_retrieve results, then will use an LLM to select the top n_final results",
+    )
 
     hide: bool = True
 
@@ -185,10 +194,10 @@ class AnswerQuestionChroma(Step):
 
     async def run(self, sdk: ContinueSDK) -> Coroutine[Observation, None, None]:
         index = ChromaIndexManager(sdk.ide.workspace_directory, self.openai_api_key)
-        self.description = f"Reading from {self.m} files..."
+        self.description = f"Reading from {self.n_retrieve} files..."
         await sdk.update_ui()
         results = index.query_codebase_index(
-            self.user_input, n=self.m if self.use_reranking else self.n
+            self.user_input, n=self.n_retrieve if self.use_reranking else self.n_final
         )
 
         shortened_filepaths = shorten_filepaths(results["ids"][0])
@@ -200,7 +209,7 @@ class AnswerQuestionChroma(Step):
 
         if self.use_reranking:
             results_dict = await rerank_chroma_results(
-                results_dict, self.user_input, self.n, sdk
+                results_dict, self.user_input, self.n_final, sdk
             )
 
         for filename, document in results_dict.items():
