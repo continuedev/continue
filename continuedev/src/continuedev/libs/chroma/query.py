@@ -198,7 +198,7 @@ class ChromaIndexManager:
         # Attempt to avoid rate-limiting
         i = 0
         wait_time = 4.0
-        while i + 100 < len(flattened_chunks):
+        while i < len(flattened_chunks):
             try:
                 self.collection.add(
                     documents=flattened_chunks[i : i + 100],
@@ -206,7 +206,7 @@ class ChromaIndexManager:
                     ids=flattened_ids[i : i + 100],
                 )
                 i += 100
-                asyncio.sleep(0.5)
+                await asyncio.sleep(0.5)
             except RateLimitError as e:
                 logger.debug(f"Rate limit exceeded, waiting {wait_time} seconds")
                 await asyncio.sleep(wait_time)

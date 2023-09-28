@@ -138,6 +138,9 @@ async def rerank_chroma_results(
             group = {}
         group[keys[i]] = results[keys[i]]
 
+    if len(group) > 0:
+        groups.append(group)
+
     # Gather the include/remove results from each group
     include = set([])
     remove = set([])
@@ -161,25 +164,36 @@ async def rerank_chroma_results(
 
     repeated_files = set(filter(lambda x: counts_per_files[x] > 1, counts_per_files))
 
-    results_dict = {
+    selected = {
         key: value
         for key, value in results.items()
         if key not in remove or key.split("::")[0] in repeated_files
     }
-    selected = {key: value for key, value in results_dict.items() if key in include}
+    selected = {key: value for key, value in selected.items() if key in include}
 
     for key in selected:
-        del results_dict[key]
+        del results[key]
 
     additional = n - len(selected)
     for i in range(additional):
-        if len(results_dict) == 0:
+        if len(results) == 0:
             break
 
         # Get an item from the results
-        key = list(results_dict.keys())[0]
+        key = list(results.keys())[0]
         selected[key] = results[key]
         del results[key]
+
+    if additional < 0:
+        # We need to remove some items
+        additional = -additional
+        for i in range(additional):
+            if len(selected) == 0:
+                break
+
+            # Get an item from the results
+            key = list(selected.keys())[0]
+            del selected[key]
 
     return selected
 
@@ -189,7 +203,7 @@ def shorten_filepaths(filepaths: List[str]) -> List[str]:
     Shortens the filepaths to just the filename,
     unless directory names are needed for uniqueness
     """
-    basenames = set(map(os.path.basename, filepaths))
+    basenames = list(map(os.path.basename, filepaths))
     if len(basenames) == len(filepaths):
         return list(basenames)
 
@@ -260,7 +274,7 @@ class AnswerQuestionChroma(Step):
         filepaths = set([])
         for id, document in results_dict.items():
             filename = id.split("::")[0]
-            filepath = results["ids"][0][shortened_filepaths.index(filename)]
+            filepath = results["ids"][0][shortened_filepaths.index(id)].split("::")[0]
             if filepath in filepaths:
                 continue
 
