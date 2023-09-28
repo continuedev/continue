@@ -40,7 +40,6 @@ import {
 } from "../util";
 import { ContextItem } from "../../../schema/FullState";
 import StyledMarkdownPreview from "./StyledMarkdownPreview";
-import ReactDOM from "react-dom";
 
 const SEARCH_INDEX_NAME = "continue_context_items";
 
@@ -283,6 +282,14 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
 
   const inputRef = React.useRef<HTMLInputElement>(null);
 
+  useEffect(() => {
+    if (!inputRef.current) return;
+    if (inputRef.current.scrollHeight > inputRef.current.clientHeight) {
+      inputRef.current.style.height = "auto";
+      inputRef.current.style.height = inputRef.current.scrollHeight + "px";
+    }
+  }, [inputRef.current, props.value]);
+
   // Whether the current input follows an '@' and should be treated as context query
   const [currentlyInContextQuery, setCurrentlyInContextQuery] = useState(false);
   const [nestedContextProvider, setNestedContextProvider] = useState<
@@ -495,6 +502,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
 
   const contextItemsDivRef = React.useRef<HTMLDivElement>(null);
   const handleTabPressed = useCallback(() => {
+    setShowContextItemsIfNotMain(true);
     // Set the focus to the next item in the context items div
     if (!contextItemsDivRef.current) {
       return;
