@@ -81,7 +81,8 @@ class OpenAI(LLM):
     ):
         await super().start(write_log=write_log, unique_id=unique_id)
 
-        self.context_length = MAX_TOKENS_FOR_MODEL.get(self.model, 4096)
+        if self.context_length is None:
+            self.context_length = MAX_TOKENS_FOR_MODEL.get(self.model, 4096)
 
         openai.api_key = self.api_key
         if self.api_type is not None:
