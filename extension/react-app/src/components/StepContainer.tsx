@@ -35,10 +35,10 @@ const ButtonsDiv = styled.div`
   background-color: ${vscBackground};
   box-shadow: 1px 1px 10px ${vscBackground};
   border-radius: ${defaultBorderRadius};
-
+  z-index: 100;
   position: absolute;
-  right: 0;
-  top: 0;
+  right: 8px;
+  top: 16px;
   height: 0;
 `;
 

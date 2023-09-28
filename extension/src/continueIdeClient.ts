@@ -70,10 +70,11 @@ class IdeProtocolClient {
     });
     messenger.onMessage((messageType, data, messenger) => {
       this.handleMessage(messageType, data, messenger).catch((err) => {
+        console.log("Error handling message: ", err);
         vscode.window
           .showErrorMessage(
             `Error handling message (${messageType}) from Continue server: ` +
-              err.message,
+              err,
             "View Logs"
           )
           .then((selection) => {

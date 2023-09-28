@@ -150,6 +150,8 @@ const NUM_STAGES = suggestionsStages.length;
 
 const TutorialDiv = styled.div`
   margin: 4px;
+  margin-left: 8px;
+  margin-right: 8px;
   position: relative;
   background-color: #ff02;
   border-radius: ${defaultBorderRadius};

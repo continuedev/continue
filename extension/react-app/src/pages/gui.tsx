@@ -17,7 +17,6 @@ import { usePostHog } from "posthog-js/react";
 import { useDispatch, useSelector } from "react-redux";
 import { RootStore } from "../redux/store";
 import { postVscMessage } from "../vscode";
-import UserInputContainer from "../components/UserInputContainer";
 import { isMetaEquivalentKeyPressed } from "../util";
 import {
   setBottomMessage,
@@ -30,6 +29,7 @@ import RingLoader from "../components/RingLoader";
 import {
   setServerState,
   temporarilyClearSession,
+  temporarilyCreateNewUserInput,
   temporarilyPushToUserInputQueue,
 } from "../redux/slices/serverStateReducer";
 import TimelineItem from "../components/TimelineItem";
@@ -76,11 +76,8 @@ const TitleTextInput = styled(TextInput)`
 const StepsDiv = styled.div`
   position: relative;
   background-color: transparent;
-  padding-left: 8px;
-  padding-right: 8px;
 
   & > * {
-    z-index: 1;
     position: relative;
   }
 
@@ -331,7 +328,7 @@ function GUI(props: GUIProps) {
       }
 
       client.sendMainInput(input);
-      dispatch(temporarilyPushToUserInputQueue(input));
+      dispatch(temporarilyCreateNewUserInput(input));
 
       // Increment localstorage counter for popup
       const counter = localStorage.getItem("mainTextEntryCounter");
@@ -645,10 +642,19 @@ function GUI(props: GUIProps) {
             <>
               {node.step.name === "User Input" ? (
                 node.step.hide || (
-                  <UserInputContainer
-                    active={getStepsInUserInputGroup(index).some((i) => {
-                      return history.timeline[i].active;
-                    })}
+                  <ComboBox
+                    isMainInput={false}
+                    value={node.step.description as string}
+                    active={
+                      getStepsInUserInputGroup(index).some((i) => {
+                        return history.timeline[i].active;
+                      }) || history.timeline[index].active
+                    }
+                    onEnter={(e, value) => {
+                      if (value) client?.editStepAtIndex(value, index);
+                      e?.stopPropagation();
+                      e?.preventDefault();
+                    }}
                     groupIndices={getStepsInUserInputGroup(index)}
                     onToggle={(isOpen: boolean) => {
                       // Collapse all steps in the section
@@ -678,10 +684,7 @@ function GUI(props: GUIProps) {
                         client?.deleteAtIndex(i);
                       });
                     }}
-                    historyNode={node}
-                  >
-                    {node.step.description as string}
-                  </UserInputContainer>
+                  />
                 )
               ) : (
                 <TimelineItem
@@ -761,8 +764,9 @@ function GUI(props: GUIProps) {
 
       <div ref={aboveComboBoxDivRef} />
       <ComboBox
+        isMainInput={true}
         ref={mainTextInputRef}
-        onEnter={(e) => {
+        onEnter={(e, _) => {
           onMainTextInput(e);
           e?.stopPropagation();
           e?.preventDefault();

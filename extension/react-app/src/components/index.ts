@@ -39,7 +39,7 @@ export const StyledTooltip = styled(Tooltip)`
   padding: 6px;
   padding-left: 12px;
   padding-right: 12px;
-  z-index: 100;
+  z-index: 1000;
 
   max-width: 80vw;
 `;
@@ -195,6 +195,11 @@ export const HeaderButton = styled.button<{ inverted: boolean | undefined }>`
   border: none;
   border-radius: ${defaultBorderRadius};
   cursor: ${({ disabled }) => (disabled ? "default" : "pointer")};
+
+  &:focus {
+    outline: none;
+    border: none;
+  }
 
   &:hover {
     background-color: ${({ inverted }) =>

@@ -12,6 +12,7 @@ from pydantic import BaseModel
 from starlette.websockets import WebSocketDisconnect, WebSocketState
 from uvicorn.main import Server
 
+from ..core.main import ContinueCustomException
 from ..libs.util.create_async_task import create_async_task
 from ..libs.util.devdata import dev_data_logger
 from ..libs.util.logging import logger
@@ -39,7 +40,6 @@ from ..models.filesystem_edit import (
 from ..plugins.steps.core.core import DisplayErrorStep
 from .gui import session_manager
 from .ide_protocol import AbstractIdeProtocolServer
-from .meilisearch_server import start_meilisearch
 from .session_manager import SessionManager
 
 nest_asyncio.apply()
@@ -201,21 +201,24 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
         except RuntimeError as e:
             logger.warning(f"Error sending IDE message, websocket probably closed: {e}")
 
-    async def _receive_json(self, message_type: str, timeout: int = 20) -> Any:
+    async def _receive_json(
+        self, message_type: str, timeout: int = 20, message=None
+    ) -> Any:
         try:
             return await asyncio.wait_for(
                 self.sub_queue.get(message_type), timeout=timeout
             )
         except asyncio.TimeoutError:
-            raise Exception(
-                f"IDE Protocol _receive_json timed out after 20 seconds: {message_type}"
+            raise ContinueCustomException(
+                title=f"IDE Protocol _receive_json timed out after 20 seconds: {message_type}",
+                message=f"IDE Protocol _receive_json timed out after 20 seconds. The message sent was: {message or ''}",
             )
 
     async def _send_and_receive_json(
         self, data: Any, resp_model: Type[T], message_type: str
     ) -> T:
         await self._send_json(message_type, data)
-        resp = await self._receive_json(message_type)
+        resp = await self._receive_json(message_type, message=data)
         return resp_model.parse_obj(resp)
 
     async def handle_json(self, message_type: str, data: Any):
@@ -596,17 +599,6 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str = None):
         await websocket.accept()
         logger.debug(f"Accepted websocket connection from {websocket.client}")
         await websocket.send_json({"messageType": "connected", "data": {}})
-
-        # Start meilisearch
-        try:
-
-            async def on_err(e):
-                logger.debug(f"Failed to start MeiliSearch: {e}")
-
-            create_async_task(start_meilisearch(), on_err)
-        except Exception as e:
-            logger.debug("Failed to start MeiliSearch")
-            logger.debug(e)
 
         # Message handler
         def handle_msg(msg):
