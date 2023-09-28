@@ -90,24 +90,30 @@ class ChromaIndexManager:
     @cached_property
     def current_commit(self) -> str:
         """Get the current commit."""
-        return (
-            subprocess.check_output(
-                ["git", "rev-parse", "HEAD"], cwd=self.workspace_dir
+        try:
+            return (
+                subprocess.check_output(
+                    ["git", "rev-parse", "HEAD"], cwd=self.workspace_dir
+                )
+                .decode("utf-8")
+                .strip()
             )
-            .decode("utf-8")
-            .strip()
-        )
+        except subprocess.CalledProcessError:
+            return "NONE"
 
     @cached_property
     def current_branch(self) -> str:
         """Get the current branch."""
-        return (
-            subprocess.check_output(
-                ["git", "rev-parse", "--abbrev-ref", "HEAD"], cwd=self.workspace_dir
+        try:
+            return (
+                subprocess.check_output(
+                    ["git", "rev-parse", "--abbrev-ref", "HEAD"], cwd=self.workspace_dir
+                )
+                .decode("utf-8")
+                .strip()
             )
-            .decode("utf-8")
-            .strip()
-        )
+        except subprocess.CalledProcessError:
+            return "NONE"
 
     @cached_property
     def index_dir(self) -> str:
@@ -232,13 +238,17 @@ class ChromaIndexManager:
         with open(metadata, "r") as f:
             previous_commit = json.load(f)["commit"]
 
-        modified_deleted_files = (
-            subprocess.check_output(
-                ["git", "diff", "--name-only", previous_commit, self.current_commit]
+        try:
+            modified_deleted_files = (
+                subprocess.check_output(
+                    ["git", "diff", "--name-only", previous_commit, self.current_commit]
+                )
+                .decode("utf-8")
+                .strip()
             )
-            .decode("utf-8")
-            .strip()
-        )
+        except subprocess.CalledProcessError:
+            return [], []
+
         modified_deleted_files = modified_deleted_files.split("\n")
         modified_deleted_files = [f for f in modified_deleted_files if f]
 
