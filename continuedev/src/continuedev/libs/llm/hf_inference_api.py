@@ -57,16 +57,15 @@ class HuggingFaceInferenceAPI(LLM):
         if "stop" in args:
             args["stop_sequences"] = args["stop"]
             del args["stop"]
-        if "model" in args:
-            del args["model"]
+
         return args
 
     async def _stream_complete(self, prompt, options):
-        self.collect_args(options)
+        args = self.collect_args(options)
 
         client = InferenceClient(self.endpoint_url, token=self.hf_token)
 
-        stream = client.text_generation(prompt, stream=True, details=True)
+        stream = client.text_generation(prompt, stream=True, details=True, **args)
 
         for r in stream:
             # skip special tokens
