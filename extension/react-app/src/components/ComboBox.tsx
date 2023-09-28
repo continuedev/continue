@@ -286,9 +286,14 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
     if (!inputRef.current) return;
     if (inputRef.current.scrollHeight > inputRef.current.clientHeight) {
       inputRef.current.style.height = "auto";
-      inputRef.current.style.height = inputRef.current.scrollHeight + "px";
+      inputRef.current.style.height =
+        Math.min(inputRef.current.scrollHeight, 300) + "px";
     }
-  }, [inputRef.current, props.value]);
+  }, [
+    inputRef.current?.scrollHeight,
+    inputRef.current?.clientHeight,
+    props.value,
+  ]);
 
   // Whether the current input follows an '@' and should be treated as context query
   const [currentlyInContextQuery, setCurrentlyInContextQuery] = useState(false);
@@ -907,7 +912,6 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
           <MainTextInput
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={(e) => {
-              console.log("left");
               if (
                 e.relatedTarget === deleteButtonDivRef.current ||
                 deleteButtonDivRef.current?.contains(e.relatedTarget as Node)
