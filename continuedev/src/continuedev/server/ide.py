@@ -12,6 +12,7 @@ from pydantic import BaseModel
 from starlette.websockets import WebSocketDisconnect, WebSocketState
 from uvicorn.main import Server
 
+from ..core.main import ContinueCustomException
 from ..libs.util.create_async_task import create_async_task
 from ..libs.util.devdata import dev_data_logger
 from ..libs.util.logging import logger
@@ -201,21 +202,24 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
         except RuntimeError as e:
             logger.warning(f"Error sending IDE message, websocket probably closed: {e}")
 
-    async def _receive_json(self, message_type: str, timeout: int = 20) -> Any:
+    async def _receive_json(
+        self, message_type: str, timeout: int = 20, message=None
+    ) -> Any:
         try:
             return await asyncio.wait_for(
                 self.sub_queue.get(message_type), timeout=timeout
             )
         except asyncio.TimeoutError:
-            raise Exception(
-                f"IDE Protocol _receive_json timed out after 20 seconds: {message_type}"
+            raise ContinueCustomException(
+                title=f"IDE Protocol _receive_json timed out after 20 seconds: {message_type}",
+                message=f"IDE Protocol _receive_json timed out after 20 seconds. The message sent was: {message or ''}",
             )
 
     async def _send_and_receive_json(
         self, data: Any, resp_model: Type[T], message_type: str
     ) -> T:
         await self._send_json(message_type, data)
-        resp = await self._receive_json(message_type)
+        resp = await self._receive_json(message_type, message=data)
         return resp_model.parse_obj(resp)
 
     async def handle_json(self, message_type: str, data: Any):

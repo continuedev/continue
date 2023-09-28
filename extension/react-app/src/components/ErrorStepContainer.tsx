@@ -14,6 +14,7 @@ const Div = styled.div`
   background-color: #ff000011;
   border-radius: ${defaultBorderRadius};
   border: 1px solid #cc0000;
+  margin: 8px;
 `;
 
 interface ErrorStepContainerProps {
@@ -28,8 +29,8 @@ function ErrorStepContainer(props: ErrorStepContainerProps) {
       <div
         style={{
           position: "absolute",
-          right: "4px",
-          top: "4px",
+          right: "12px",
+          top: "12px",
           display: "flex",
         }}
       >
