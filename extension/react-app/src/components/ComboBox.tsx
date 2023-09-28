@@ -254,7 +254,22 @@ interface ComboBoxProps {
 }
 
 const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
-  const searchClient = new MeiliSearch({ host: "http://127.0.0.1:7700" });
+  const meilisearchUrl = useSelector(
+    (state: RootStore) =>
+      state.serverState.meilisearch_url || "http://127.0.0.1:7700"
+  );
+
+  const [searchClient, setSearchClient] = useState<MeiliSearch | undefined>(
+    undefined
+  );
+
+  useEffect(() => {
+    const client = new MeiliSearch({
+      host: meilisearchUrl,
+    });
+    setSearchClient(client);
+  }, [meilisearchUrl]);
+
   const client = useContext(GUIClientContext);
   const dispatch = useDispatch();
   const workspacePaths = useSelector(
@@ -434,7 +449,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
             .join(", ")} ] AND provider_name = '${provider}'`
         : undefined;
     try {
-      const res = await searchClient.index(SEARCH_INDEX_NAME).search(query, {
+      const res = await searchClient?.index(SEARCH_INDEX_NAME).search(query, {
         filter: workspaceFilter,
       });
       return (

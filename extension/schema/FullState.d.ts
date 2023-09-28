@@ -52,6 +52,7 @@ export type Description3 = string;
 export type Dynamic = boolean;
 export type RequiresQuery = boolean;
 export type ContextProviders = ContextProviderDescription[];
+export type MeilisearchUrl = string;
 
 /**
  * A full state of the program, including the history
@@ -67,6 +68,7 @@ export interface FullState1 {
   config: ContinueConfig;
   saved_context_groups?: SavedContextGroups;
   context_providers?: ContextProviders;
+  meilisearch_url?: MeilisearchUrl;
   [k: string]: unknown;
 }
 /**

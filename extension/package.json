@@ -51,7 +51,7 @@
         "continue.serverUrl": {
           "type": "string",
           "default": "http://localhost:65432",
-          "description": "The URL of the Continue server. Only change this if you are running the server manually. If you want to use an LLM hosted at a custom URL, please see https://continue.dev/docs/customization#change-the-default-llm. All other configuration is done in `~/.continue/config.py`, which you can access by using the '/config' slash command."
+          "description": "The URL of the Continue server if you are running Continue manually. NOTE: This is NOT the URL of the LLM server. If you want to use an LLM hosted at a custom URL, please see https://continue.dev/docs/customization#change-the-default-llm and complete configuration in `~/.continue/config.py`, which you can access by using the '/config' slash command."
         },
         "continue.manuallyRunningServer": {
           "type": "boolean",

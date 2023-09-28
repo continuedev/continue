@@ -40,7 +40,6 @@ from ..models.filesystem_edit import (
 from ..plugins.steps.core.core import DisplayErrorStep
 from .gui import session_manager
 from .ide_protocol import AbstractIdeProtocolServer
-from .meilisearch_server import start_meilisearch
 from .session_manager import SessionManager
 
 nest_asyncio.apply()
@@ -600,17 +599,6 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str = None):
         await websocket.accept()
         logger.debug(f"Accepted websocket connection from {websocket.client}")
         await websocket.send_json({"messageType": "connected", "data": {}})
-
-        # Start meilisearch
-        try:
-
-            async def on_err(e):
-                logger.debug(f"Failed to start MeiliSearch: {e}")
-
-            create_async_task(start_meilisearch(), on_err)
-        except Exception as e:
-            logger.debug("Failed to start MeiliSearch")
-            logger.debug(e)
 
         # Message handler
         def handle_msg(msg):

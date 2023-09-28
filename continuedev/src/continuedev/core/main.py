@@ -313,6 +313,7 @@ class FullState(ContinueBaseModel):
     config: ContinueConfig
     saved_context_groups: Dict[str, List[ContextItem]] = {}
     context_providers: List[ContextProviderDescription] = []
+    meilisearch_url: Optional[str] = None
 
 
 class ContinueSDK:

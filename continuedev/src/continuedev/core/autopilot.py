@@ -37,7 +37,7 @@ from ..plugins.steps.core.core import (
 )
 from ..plugins.steps.on_traceback import DefaultOnTracebackStep
 from ..server.ide_protocol import AbstractIdeProtocolServer
-from ..server.meilisearch_server import stop_meilisearch
+from ..server.meilisearch_server import get_meilisearch_url, stop_meilisearch
 from .config import ContinueConfig
 from .context import ContextManager
 from .main import (
@@ -179,6 +179,7 @@ class Autopilot(ContinueBaseModel):
             config=self.continue_sdk.config,
             saved_context_groups=self._saved_context_groups,
             context_providers=self.context_manager.get_provider_descriptions(),
+            meilisearch_url=get_meilisearch_url(),
         )
         self.full_state = full_state
         return full_state

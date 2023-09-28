@@ -393,6 +393,10 @@
           "items": {
             "$ref": "#/definitions/ContextProviderDescription"
           }
+        },
+        "meilisearch_url": {
+          "title": "Meilisearch Url",
+          "type": "string"
         }
       },
       "required": [
