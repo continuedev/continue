@@ -37,7 +37,11 @@
       "type": "python",
       "request": "launch",
       "module": "continuedev.src.continuedev.__main__",
-      "args": ["--port", "8001"],
+      "args": [
+        "--port",
+        "8001"
+        // "--meilisearch-url", "http://localhost:7701"
+      ],
       "justMyCode": false,
       "subProcess": false
       // Does it need a build task?

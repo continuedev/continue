@@ -257,8 +257,17 @@ class HighlightedCodeContextProvider(ContextProvider):
         self._disambiguate_highlighted_ranges()
 
     async def set_editing_at_ids(self, ids: List[str]):
+        # Don't do anything if there are no valid ids here
+        count = 0
         for hr in self.highlighted_ranges:
-            hr.item.editing = hr.item.description.id.to_string() in ids
+            if hr.item.description.id.item_id in ids:
+                count += 1
+
+        if count == 0:
+            return
+
+        for hr in self.highlighted_ranges:
+            hr.item.editing = hr.item.description.id.item_id in ids
 
     async def add_context_item(
         self, id: ContextItemId, query: str, prev: List[ContextItem] = None

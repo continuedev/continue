@@ -43,6 +43,10 @@ export type VerifySsl = boolean;
  */
 export type CaBundlePath = string;
 /**
+ * Proxy URL to use when making the HTTP request
+ */
+export type Proxy = string;
+/**
  * The API key for the LLM provider.
  */
 export type ApiKey = string;
@@ -57,6 +61,7 @@ export interface LLM1 {
   timeout?: Timeout;
   verify_ssl?: VerifySsl;
   ca_bundle_path?: CaBundlePath;
+  proxy?: Proxy;
   prompt_templates?: PromptTemplates;
   api_key?: ApiKey;
   [k: string]: unknown;

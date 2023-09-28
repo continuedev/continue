@@ -1,6 +1,8 @@
 import argparse
 import asyncio
 import atexit
+from contextlib import asynccontextmanager
+from typing import Optional
 
 import uvicorn
 from fastapi import FastAPI
@@ -9,10 +11,21 @@ from fastapi.middleware.cors import CORSMiddleware
 from ..libs.util.logging import logger
 from .gui import router as gui_router
 from .ide import router as ide_router
+from .meilisearch_server import start_meilisearch, stop_meilisearch
 from .session_manager import router as sessions_router
 from .session_manager import session_manager
 
-app = FastAPI()
+meilisearch_url_global = None
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    await start_meilisearch(url=meilisearch_url_global)
+    yield
+    stop_meilisearch()
+
+
+app = FastAPI(lifespan=lifespan)
 
 app.include_router(ide_router)
 app.include_router(gui_router)
@@ -34,7 +47,13 @@ def health():
     return {"status": "ok"}
 
 
-def run_server(port: int = 65432, host: str = "127.0.0.1"):
+def run_server(
+    port: int = 65432, host: str = "127.0.0.1", meilisearch_url: Optional[str] = None
+):
+    global meilisearch_url_global
+
+    meilisearch_url_global = meilisearch_url
+
     config = uvicorn.Config(app, host=host, port=port)
     server = uvicorn.Server(config)
     server.run()

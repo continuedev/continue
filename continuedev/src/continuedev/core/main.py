@@ -108,6 +108,7 @@ class HistoryNode(ContinueBaseModel):
     deleted: bool = False
     active: bool = True
     logs: List[str] = []
+    context_used: List["ContextItem"] = []
 
     def to_chat_messages(self) -> List[ChatMessage]:
         if self.step.description is None or self.step.manage_own_chat_context:
@@ -312,6 +313,7 @@ class FullState(ContinueBaseModel):
     config: ContinueConfig
     saved_context_groups: Dict[str, List[ContextItem]] = {}
     context_providers: List[ContextProviderDescription] = []
+    meilisearch_url: Optional[str] = None
 
 
 class ContinueSDK:

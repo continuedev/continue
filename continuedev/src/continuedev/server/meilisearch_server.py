@@ -2,9 +2,11 @@ import asyncio
 import os
 import shutil
 import subprocess
+from typing import Optional
 
 import aiofiles
 import aiohttp
+import psutil
 from meilisearch_python_async import Client
 
 from ..libs.util.logging import logger
@@ -89,13 +91,22 @@ async def ensure_meilisearch_installed() -> bool:
     return True
 
 
+meilisearch_process = None
+DEFAULT_MEILISEARCH_URL = "http://localhost:7700"
+meilisearch_url = DEFAULT_MEILISEARCH_URL
+
+
+def get_meilisearch_url():
+    return meilisearch_url
+
+
 async def check_meilisearch_running() -> bool:
     """
     Checks if MeiliSearch is running.
     """
 
     try:
-        async with Client("http://localhost:7700") as client:
+        async with Client(meilisearch_url) as client:
             try:
                 resp = await client.health()
                 if resp.status != "available":
@@ -117,14 +128,16 @@ async def poll_meilisearch_running(frequency: int = 0.1) -> bool:
         await asyncio.sleep(frequency)
 
 
-meilisearch_process = None
-
-
-async def start_meilisearch():
+async def start_meilisearch(url: Optional[str] = None):
     """
     Starts the MeiliSearch server, wait for it.
     """
-    global meilisearch_process
+    global meilisearch_process, meilisearch_url
+
+    if url is not None:
+        logger.debug("Using MeiliSearch at URL: " + url)
+        meilisearch_url = url
+        return
 
     serverPath = getServerFolderPath()
 
@@ -157,9 +170,6 @@ def stop_meilisearch():
         meilisearch_process = None
 
 
-import psutil
-
-
 def kill_proc(port):
     for proc in psutil.process_iter():
         try:
@@ -180,4 +190,4 @@ def kill_proc(port):
 async def restart_meilisearch():
     stop_meilisearch()
     kill_proc(7700)
-    await start_meilisearch()
+    await start_meilisearch(url=meilisearch_url)

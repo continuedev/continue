@@ -101,85 +101,6 @@
       "type": "object",
       "properties": {}
     },
-    "HistoryNode": {
-      "title": "HistoryNode",
-      "description": "A point in history, a list of which make up History",
-      "type": "object",
-      "properties": {
-        "step": {
-          "$ref": "#/definitions/Step"
-        },
-        "observation": {
-          "$ref": "#/definitions/Observation"
-        },
-        "depth": {
-          "title": "Depth",
-          "type": "integer"
-        },
-        "deleted": {
-          "title": "Deleted",
-          "default": false,
-          "type": "boolean"
-        },
-        "active": {
-          "title": "Active",
-          "default": true,
-          "type": "boolean"
-        },
-        "logs": {
-          "title": "Logs",
-          "default": [],
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        }
-      },
-      "required": [
-        "step",
-        "depth"
-      ]
-    },
-    "History": {
-      "title": "History",
-      "description": "A history of steps taken and their results",
-      "type": "object",
-      "properties": {
-        "timeline": {
-          "title": "Timeline",
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/HistoryNode"
-          }
-        },
-        "current_index": {
-          "title": "Current Index",
-          "type": "integer"
-        }
-      },
-      "required": [
-        "timeline",
-        "current_index"
-      ]
-    },
-    "SlashCommandDescription": {
-      "title": "SlashCommandDescription",
-      "type": "object",
-      "properties": {
-        "name": {
-          "title": "Name",
-          "type": "string"
-        },
-        "description": {
-          "title": "Description",
-          "type": "string"
-        }
-      },
-      "required": [
-        "name",
-        "description"
-      ]
-    },
     "ContextItemId": {
       "title": "ContextItemId",
       "description": "A ContextItemId is a unique identifier for a ContextItem.",
@@ -248,6 +169,93 @@
       "required": [
         "description",
         "content"
+      ]
+    },
+    "HistoryNode": {
+      "title": "HistoryNode",
+      "description": "A point in history, a list of which make up History",
+      "type": "object",
+      "properties": {
+        "step": {
+          "$ref": "#/definitions/Step"
+        },
+        "observation": {
+          "$ref": "#/definitions/Observation"
+        },
+        "depth": {
+          "title": "Depth",
+          "type": "integer"
+        },
+        "deleted": {
+          "title": "Deleted",
+          "default": false,
+          "type": "boolean"
+        },
+        "active": {
+          "title": "Active",
+          "default": true,
+          "type": "boolean"
+        },
+        "logs": {
+          "title": "Logs",
+          "default": [],
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "context_used": {
+          "title": "Context Used",
+          "default": [],
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ContextItem"
+          }
+        }
+      },
+      "required": [
+        "step",
+        "depth"
+      ]
+    },
+    "History": {
+      "title": "History",
+      "description": "A history of steps taken and their results",
+      "type": "object",
+      "properties": {
+        "timeline": {
+          "title": "Timeline",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/HistoryNode"
+          }
+        },
+        "current_index": {
+          "title": "Current Index",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "timeline",
+        "current_index"
+      ]
+    },
+    "SlashCommandDescription": {
+      "title": "SlashCommandDescription",
+      "type": "object",
+      "properties": {
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "description": {
+          "title": "Description",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "description"
       ]
     },
     "SessionInfo": {
@@ -385,6 +393,10 @@
           "items": {
             "$ref": "#/definitions/ContextProviderDescription"
           }
+        },
+        "meilisearch_url": {
+          "title": "Meilisearch Url",
+          "type": "string"
         }
       },
       "required": [

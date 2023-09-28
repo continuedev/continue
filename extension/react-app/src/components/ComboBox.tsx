@@ -7,7 +7,7 @@ import React, {
   useState,
 } from "react";
 import { useCombobox } from "downshift";
-import styled from "styled-components";
+import styled, { keyframes } from "styled-components";
 import {
   buttonColor,
   defaultBorderRadius,
@@ -21,8 +21,10 @@ import HeaderButtonWithText from "./HeaderButtonWithText";
 import {
   ArrowLeftIcon,
   ArrowRightIcon,
-  MagnifyingGlassIcon,
+  ArrowUpLeftIcon,
+  StopCircleIcon,
   TrashIcon,
+  XMarkIcon,
 } from "@heroicons/react/24/outline";
 import { postVscMessage } from "../vscode";
 import { GUIClientContext } from "../App";
@@ -31,11 +33,57 @@ import { setBottomMessage } from "../redux/slices/uiStateSlice";
 import { useDispatch, useSelector } from "react-redux";
 import { RootStore } from "../redux/store";
 import ContinueButton from "./ContinueButton";
-import { getFontSize } from "../util";
+import {
+  getFontSize,
+  getMarkdownLanguageTagForFile,
+  getMetaKeyLabel,
+} from "../util";
+import { ContextItem } from "../../../schema/FullState";
+import StyledMarkdownPreview from "./StyledMarkdownPreview";
 
 const SEARCH_INDEX_NAME = "continue_context_items";
 
 // #region styled components
+
+const gradient = keyframes`
+  0% {
+    background-position: 0px 0;
+  }
+  100% {
+    background-position: 100em 0;
+  }
+`;
+
+const GradientBorder = styled.div<{
+  borderRadius?: string;
+  borderColor?: string;
+  isFirst: boolean;
+  isLast: boolean;
+  loading: boolean;
+}>`
+  border-radius: ${(props) => props.borderRadius || "0"};
+  padding: 1px;
+  background: ${(props) =>
+    props.borderColor
+      ? props.borderColor
+      : `repeating-linear-gradient(
+    101.79deg,
+    #1BBE84 0%,
+    #331BBE 16%,
+    #BE1B55 33%,
+    #A6BE1B 55%,
+    #BE1B55 67%,
+    #331BBE 85%,
+    #1BBE84 99%
+  )`};
+  animation: ${(props) => (props.loading ? gradient : "")} 6s linear infinite;
+  background-size: 200% 200%;
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  margin-top: 8px;
+`;
 
 const HiddenHeaderButtonWithText = styled.button`
   opacity: 0;
@@ -75,7 +123,7 @@ const MainTextInput = styled.textarea<{
   font-size: ${(props) => props.fontSize || mainInputFontSize}px;
   font-family: inherit;
   border-radius: ${defaultBorderRadius};
-  margin: 8px auto;
+  margin: 0;
   height: auto;
   width: 100%;
   background-color: ${secondaryDark};
@@ -96,6 +144,15 @@ const MainTextInput = styled.textarea<{
   &::placeholder {
     color: ${lightGray}cc;
   }
+`;
+
+const DeleteButtonDiv = styled.div`
+  position: absolute;
+  top: 14px;
+  right: 12px;
+  background-color: ${secondaryDark};
+  border-radius: ${defaultBorderRadius};
+  z-index: 100;
 `;
 
 const DynamicQueryTitleDiv = styled.div`
@@ -119,12 +176,14 @@ const Ul = styled.ul<{
   ulHeightPixels: number;
   inputBoxHeight?: string;
   fontSize?: number;
+  isMainInput: boolean;
 }>`
   ${(props) =>
     props.showAbove
       ? `transform: translateY(-${props.ulHeightPixels + 8}px);`
       : `transform: translateY(${
-          5 * (props.fontSize || mainInputFontSize) - 2
+          (props.isMainInput ? 5 : 4) * (props.fontSize || mainInputFontSize) -
+          (props.isMainInput ? 2 : 4)
         }px);`}
   position: absolute;
   background: ${vscBackground};
@@ -137,11 +196,11 @@ const Ul = styled.ul<{
   ${({ hidden }) => hidden && "display: none;"}
   border-radius: ${defaultBorderRadius};
   outline: 0.5px solid ${lightGray};
-  z-index: 2;
   -ms-overflow-style: none;
   font-size: ${(props) => props.fontSize || mainInputFontSize}px;
 
   scrollbar-width: none; /* Firefox */
+  z-index: 500;
 
   /* Hide scrollbar for Chrome, Safari and Opera */
   &::-webkit-scrollbar {
@@ -165,6 +224,7 @@ const Li = styled.li<{
   ${({ isLastItem }) => isLastItem && "border-bottom: 1px solid gray;"}
   /* border-top: 1px solid gray; */
   cursor: pointer;
+  z-index: 500;
 `;
 
 // #endregion
@@ -176,14 +236,39 @@ interface ComboBoxItem {
   content?: string;
 }
 interface ComboBoxProps {
-  onInputValueChange: (inputValue: string) => void;
+  onInputValueChange?: (inputValue: string) => void;
   disabled?: boolean;
-  onEnter: (e?: React.KeyboardEvent<HTMLInputElement>) => void;
-  onToggleAddContext: () => void;
+  onEnter?: (e?: React.KeyboardEvent<HTMLInputElement>, value?: string) => void;
+  onToggleAddContext?: () => void;
+
+  isMainInput: boolean;
+  value?: string;
+  active?: boolean;
+  groupIndices?: number[];
+  onToggle?: (arg0: boolean) => void;
+  onToggleAll?: (arg0: boolean) => void;
+  isToggleOpen?: boolean;
+  index?: number;
+  onDelete?: () => void;
 }
 
 const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
-  const searchClient = new MeiliSearch({ host: "http://127.0.0.1:7700" });
+  const meilisearchUrl = useSelector(
+    (state: RootStore) =>
+      state.serverState.meilisearch_url || "http://127.0.0.1:7700"
+  );
+
+  const [searchClient, setSearchClient] = useState<MeiliSearch | undefined>(
+    undefined
+  );
+
+  useEffect(() => {
+    const client = new MeiliSearch({
+      host: meilisearchUrl,
+    });
+    setSearchClient(client);
+  }, [meilisearchUrl]);
+
   const client = useContext(GUIClientContext);
   const dispatch = useDispatch();
   const workspacePaths = useSelector(
@@ -197,6 +282,14 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
 
   const inputRef = React.useRef<HTMLInputElement>(null);
 
+  useEffect(() => {
+    if (!inputRef.current) return;
+    if (inputRef.current.scrollHeight > inputRef.current.clientHeight) {
+      inputRef.current.style.height = "auto";
+      inputRef.current.style.height = inputRef.current.scrollHeight + "px";
+    }
+  }, [inputRef.current, props.value]);
+
   // Whether the current input follows an '@' and should be treated as context query
   const [currentlyInContextQuery, setCurrentlyInContextQuery] = useState(false);
   const [nestedContextProvider, setNestedContextProvider] = useState<
@@ -206,9 +299,6 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
     any | undefined
   >(undefined);
 
-  const sessionId = useSelector(
-    (state: RootStore) => state.serverState.session_info?.session_id
-  );
   const availableSlashCommands = useSelector(
     (state: RootStore) => state.serverState.slash_commands
   ).map((cmd) => {
@@ -217,15 +307,16 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
       description: cmd.description,
     };
   });
-  const selectedContextItems = useSelector(
-    (state: RootStore) => state.serverState.selected_context_items
-  );
-
-  useEffect(() => {
-    if (inputRef.current) {
-      inputRef.current.focus();
+  const selectedContextItems = useSelector((state: RootStore) => {
+    if (props.index) {
+      return state.serverState.history.timeline[props.index].context_used || [];
+    } else {
+      return state.serverState.selected_context_items;
     }
-  }, [sessionId, inputRef.current]);
+  });
+  const timeline = useSelector(
+    (state: RootStore) => state.serverState.history.timeline
+  );
 
   useEffect(() => {
     if (!currentlyInContextQuery) {
@@ -287,7 +378,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
         setInQueryForContextProvider(undefined);
       }
 
-      props.onInputValueChange(inputValue);
+      props.onInputValueChange?.(inputValue);
 
       // Handle context selection
       if (inputValue.endsWith("@") || currentlyInContextQuery) {
@@ -365,7 +456,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
             .join(", ")} ] AND provider_name = '${provider}'`
         : undefined;
     try {
-      const res = await searchClient.index(SEARCH_INDEX_NAME).search(query, {
+      const res = await searchClient?.index(SEARCH_INDEX_NAME).search(query, {
         filter: workspaceFilter,
       });
       return (
@@ -410,13 +501,15 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
   useImperativeHandle(ref, () => downshiftProps, [downshiftProps]);
 
   const contextItemsDivRef = React.useRef<HTMLDivElement>(null);
-  const handleTabPressed = () => {
+  const handleTabPressed = useCallback(() => {
+    setShowContextItemsIfNotMain(true);
     // Set the focus to the next item in the context items div
     if (!contextItemsDivRef.current) {
       return;
     }
-    const focusableItems =
-      contextItemsDivRef.current.querySelectorAll(".pill-button");
+    const focusableItems = contextItemsDivRef.current.querySelectorAll(
+      `.pill-button-${props.index || "main"}`
+    );
     const focusableItemsArray = Array.from(focusableItems);
     const focusedItemIndex = focusableItemsArray.findIndex(
       (item) => item === document.activeElement
@@ -433,22 +526,30 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
       const firstItem = focusableItemsArray[0];
       (firstItem as any)?.focus();
     }
-  };
+  }, [props.index]);
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
+    if (inputRef.current) {
       const listener = (e: any) => {
         if (e.key === "Tab") {
           e.preventDefault();
           handleTabPressed();
         }
       };
-      window.addEventListener("keydown", listener);
+      inputRef.current.addEventListener("keydown", listener);
       return () => {
-        window.removeEventListener("keydown", listener);
+        inputRef.current?.removeEventListener("keydown", listener);
       };
     }
-  }, []);
+  }, [inputRef.current]);
+
+  useEffect(() => {
+    if (props.value) {
+      downshiftProps.setInputValue(props.value);
+    }
+  }, [props.value, downshiftProps.setInputValue]);
+
+  const [isHovered, setIsHovered] = useState(false);
 
   useLayoutEffect(() => {
     if (!ulRef.current) {
@@ -458,7 +559,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
   }, [items, downshiftProps.setHighlightedIndex, ulRef.current]);
 
   const [metaKeyPressed, setMetaKeyPressed] = useState(false);
-  const [focused, setFocused] = useState(false);
+  const [inputFocused, setInputFocused] = useState(false);
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Meta") {
@@ -479,10 +580,12 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
   }, []);
 
   useEffect(() => {
-    if (!inputRef.current) {
+    if (!inputRef.current || !props.isMainInput) {
       return;
     }
-    inputRef.current.focus();
+    if (props.isMainInput) {
+      inputRef.current.focus();
+    }
     const handler = (event: any) => {
       if (event.data.type === "focusContinueInput") {
         inputRef.current!.focus();
@@ -498,7 +601,20 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
     return () => {
       window.removeEventListener("message", handler);
     };
-  }, [inputRef.current]);
+  }, [inputRef.current, props.isMainInput]);
+
+  const deleteButtonDivRef = React.useRef<HTMLDivElement>(null);
+
+  const selectContextItem = useCallback(
+    (id: string, query: string) => {
+      if (props.isMainInput) {
+        client?.selectContextItem(id, query);
+      } else if (props.index) {
+        client?.selectContextItemAtIndex(id, query, props.index);
+      }
+    },
+    [client, props.index]
+  );
 
   const selectContextItemFromDropdown = useCallback(
     (event: any) => {
@@ -511,7 +627,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
       if (!newProvider) {
         if (nestedContextProvider && newItem.id) {
           // Tell server the context item was selected
-          client?.selectContextItem(newItem.id, "");
+          selectContextItem(newItem.id, "");
 
           // Clear the input
           downshiftProps.setInputValue("");
@@ -542,7 +658,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
         const query = segs[segs.length - 1];
 
         // Tell server the context item was selected
-        client?.selectContextItem(newItem.id, query);
+        selectContextItem(newItem.id, query);
         if (downshiftProps.inputValue.includes("@")) {
           const selectedNestedContextProvider = contextProviders.find(
             (provider) => provider.title === newItem.id
@@ -582,221 +698,428 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
       contextProviders,
       nestedContextProvider,
       downshiftProps.inputValue,
+      selectContextItem,
     ]
   );
 
   const [isComposing, setIsComposing] = useState(false);
 
+  const [previewingContextItem, setPreviewingContextItem] = useState<
+    ContextItem | undefined
+  >(undefined);
+
+  const [focusedContextItem, setFocusedContextItem] = useState<
+    ContextItem | undefined
+  >(undefined);
+
+  const topRef = React.useRef<HTMLDivElement>(null);
+
+  const [showContextItemsIfNotMain, setShowContextItemsIfNotMain] =
+    useState(false);
+
+  useEffect(() => {
+    if (!inputFocused) {
+      setShowContextItemsIfNotMain(false);
+    }
+  }, [inputFocused]);
+
   return (
-    <>
-      <div
-        className="px-2 flex gap-2 items-center flex-wrap mt-2"
-        ref={contextItemsDivRef}
-      >
-        <HiddenHeaderButtonWithText
-          className={selectedContextItems.length > 0 ? "pill-button" : ""}
-          onClick={() => {
-            client?.deleteContextWithIds(
-              selectedContextItems.map((item) => item.description.id)
-            );
-            inputRef.current?.focus();
-          }}
-          onKeyDown={(e: any) => {
-            if (e.key === "Backspace") {
+    <div ref={topRef}>
+      {props.isMainInput ||
+      (selectedContextItems.length > 0 && showContextItemsIfNotMain) ? (
+        <div
+          className="px-2 flex gap-2 items-center flex-wrap"
+          ref={contextItemsDivRef}
+          style={{ backgroundColor: vscBackground }}
+        >
+          <HiddenHeaderButtonWithText
+            className={
+              selectedContextItems.length > 0
+                ? `pill-button-${props.index || "main"}`
+                : ""
+            }
+            onClick={() => {
               client?.deleteContextWithIds(
-                selectedContextItems.map((item) => item.description.id)
+                selectedContextItems.map((item) => item.description.id),
+                props.index
               );
               inputRef.current?.focus();
-            }
-          }}
-        >
-          <TrashIcon width="1.4em" height="1.4em" />
-        </HiddenHeaderButtonWithText>
-        {selectedContextItems.map((item, idx) => {
-          return (
-            <PillButton
-              areMultipleItems={selectedContextItems.length > 1}
-              key={`${item.description.id.item_id}${idx}`}
-              item={item}
-              editing={
-                item.editing &&
-                (inputRef.current as any)?.value?.startsWith("/edit")
-              }
-              editingAny={(inputRef.current as any)?.value?.startsWith("/edit")}
-              index={idx}
-              onDelete={() => {
-                client?.deleteContextWithIds([item.description.id]);
+            }}
+            onKeyDown={(e: any) => {
+              if (e.key === "Backspace") {
+                client?.deleteContextWithIds(
+                  selectedContextItems.map((item) => item.description.id),
+                  props.index
+                );
                 inputRef.current?.focus();
-              }}
-            />
-          );
-        })}
+                setPreviewingContextItem(undefined);
+                setFocusedContextItem(undefined);
+              }
+            }}
+          >
+            <TrashIcon width="1.4em" height="1.4em" />
+          </HiddenHeaderButtonWithText>
+          {(props.isMainInput
+            ? selectedContextItems
+            : timeline[props.index!].context_used || []
+          ).map((item, idx) => {
+            return (
+              <PillButton
+                areMultipleItems={selectedContextItems.length > 1}
+                key={`${item.description.id.item_id}${idx}`}
+                item={item}
+                editing={
+                  item.editing &&
+                  (inputRef.current as any)?.value?.startsWith("/edit")
+                }
+                editingAny={(inputRef.current as any)?.value?.startsWith(
+                  "/edit"
+                )}
+                stepIndex={props.index}
+                index={idx}
+                onDelete={() => {
+                  client?.deleteContextWithIds(
+                    [item.description.id],
+                    props.index
+                  );
+                  inputRef.current?.focus();
+                  if (
+                    (item.description.id.item_id ===
+                      focusedContextItem?.description.id.item_id &&
+                      focusedContextItem?.description.id.provider_name ===
+                        item.description.id.provider_name) ||
+                    (item.description.id.item_id ===
+                      previewingContextItem?.description.id.item_id &&
+                      previewingContextItem?.description.id.provider_name ===
+                        item.description.id.provider_name)
+                  ) {
+                    setPreviewingContextItem(undefined);
+                    setFocusedContextItem(undefined);
+                  }
+                }}
+                onClick={(e) => {
+                  if (
+                    item.description.id.item_id ===
+                      focusedContextItem?.description.id.item_id &&
+                    focusedContextItem?.description.id.provider_name ===
+                      item.description.id.provider_name
+                  ) {
+                    setFocusedContextItem(undefined);
+                  } else {
+                    setFocusedContextItem(item);
+                  }
+                }}
+                onBlur={() => {
+                  setFocusedContextItem(undefined);
+                }}
+                toggleViewContent={() => {
+                  setPreviewingContextItem((prev) => {
+                    if (!prev) return item;
+                    if (
+                      prev.description.id.item_id ===
+                        item.description.id.item_id &&
+                      prev.description.id.provider_name ===
+                        item.description.id.provider_name
+                    ) {
+                      return undefined;
+                    } else {
+                      return item;
+                    }
+                  });
+                }}
+                previewing={
+                  item.description.id.item_id ===
+                    previewingContextItem?.description.id.item_id &&
+                  previewingContextItem?.description.id.provider_name ===
+                    item.description.id.provider_name
+                }
+                focusing={
+                  item.description.id.item_id ===
+                    focusedContextItem?.description.id.item_id &&
+                  focusedContextItem?.description.id.provider_name ===
+                    item.description.id.provider_name
+                }
+              />
+            );
+          })}
 
-        {selectedContextItems.length > 0 && (
+          {/* {selectedContextItems.length > 0 && (
           <HeaderButtonWithText
             onClick={() => {
-              client?.showContextVirtualFile();
+              client?.showContextVirtualFile(props.index);
             }}
             text="View Current Context"
           >
             <MagnifyingGlassIcon width="1.4em" height="1.4em" />
           </HeaderButtonWithText>
-        )}
-      </div>
+        )} */}
+        </div>
+      ) : (
+        selectedContextItems.length > 0 && (
+          <div
+            onClick={() => {
+              inputRef.current?.focus();
+              setShowContextItemsIfNotMain(true);
+            }}
+            style={{
+              color: lightGray,
+              fontSize: "10px",
+              backgroundColor: vscBackground,
+              paddingLeft: "12px",
+              cursor: "default",
+              paddingTop: getFontSize(),
+            }}
+          >
+            {props.active ? "Using" : "Used"} {selectedContextItems.length}{" "}
+            context item
+            {selectedContextItems.length === 1 ? "" : "s"}
+          </div>
+        )
+      )}
+      {previewingContextItem && (
+        <pre className="m-0">
+          <StyledMarkdownPreview
+            fontSize={getFontSize()}
+            source={`\`\`\`${getMarkdownLanguageTagForFile(
+              previewingContextItem.description.description
+            )}\n${previewingContextItem.content}\n\`\`\``}
+            wrapperElement={{
+              "data-color-mode": "dark",
+            }}
+            maxHeight={200}
+          />
+        </pre>
+      )}
       <div
         className="flex px-2 relative"
+        style={{
+          backgroundColor: vscBackground,
+        }}
         ref={divRef}
-        hidden={!downshiftProps.isOpen}
       >
-        <MainTextInput
-          inQueryForDynamicProvider={
-            typeof inQueryForContextProvider !== "undefined"
-          }
-          fontSize={getFontSize()}
-          disabled={props.disabled}
-          placeholder={`Ask a question, '/' for slash commands, '@' to add context`}
-          {...getInputProps({
-            onCompositionStart: () => setIsComposing(true),
-            onCompositionEnd: () => setIsComposing(false),
-            onChange: (e) => {
-              const target = e.target as HTMLTextAreaElement;
-              // Update the height of the textarea to match the content, up to a max of 200px.
-              target.style.height = "auto";
-              target.style.height = `${Math.min(
-                target.scrollHeight,
-                300
-              ).toString()}px`;
-
-              // setShowContextDropdown(target.value.endsWith("@"));
-            },
-            onFocus: (e) => {
-              setFocused(true);
-              dispatch(setBottomMessage(undefined));
-            },
-            onKeyDown: (event) => {
-              dispatch(setBottomMessage(undefined));
-              if (event.key === "Enter" && event.shiftKey) {
-                // Prevent Downshift's default 'Enter' behavior.
-                (event.nativeEvent as any).preventDownshiftDefault = true;
-                setCurrentlyInContextQuery(false);
-              } else if (
-                event.key === "Enter" &&
-                (!downshiftProps.isOpen || items.length === 0) &&
-                !isComposing
-              ) {
-                const value = downshiftProps.inputValue;
-                if (inQueryForContextProvider) {
-                  const segs = value.split("@");
-                  client?.selectContextItem(
-                    inQueryForContextProvider.title,
-                    segs[segs.length - 1]
-                  );
-                  setCurrentlyInContextQuery(false);
-                  downshiftProps.setInputValue("");
-                  return;
-                } else {
-                  if (value !== "") {
-                    setPositionInHistory(history.length + 1);
-                    setHistory([...history, value]);
-                  }
-                  // Prevent Downshift's default 'Enter' behavior.
-                  (event.nativeEvent as any).preventDownshiftDefault = true;
-
-                  if (props.onEnter) {
-                    props.onEnter(event);
-                  }
-                }
-                setCurrentlyInContextQuery(false);
-              } else if (event.key === "Enter" && currentlyInContextQuery) {
-                // Handle "Enter" for Context Providers
-                selectContextItemFromDropdown(event);
-              } else if (
-                event.key === "Tab" &&
-                downshiftProps.isOpen &&
-                items.length > 0 &&
-                items[downshiftProps.highlightedIndex]?.name.startsWith("/")
-              ) {
-                downshiftProps.setInputValue(items[0].name);
-                event.preventDefault();
-              } else if (event.key === "Tab") {
-                (event.nativeEvent as any).preventDownshiftDefault = true;
-              } else if (
-                (event.key === "ArrowUp" || event.key === "ArrowDown") &&
-                items.length > 0
+        <GradientBorder
+          loading={props.active || false}
+          isFirst={false}
+          isLast={false}
+          borderColor={props.active ? undefined : vscBackground}
+          borderRadius={defaultBorderRadius}
+        >
+          <MainTextInput
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={(e) => {
+              console.log("left");
+              if (
+                e.relatedTarget === deleteButtonDivRef.current ||
+                deleteButtonDivRef.current?.contains(e.relatedTarget as Node)
               ) {
                 return;
-              } else if (event.key === "ArrowUp") {
-                // Only go back in history if selectionStart is 0
-                // (i.e. the cursor is at the beginning of the input)
-                if (
-                  positionInHistory == 0 ||
-                  event.currentTarget.selectionStart !== 0
-                ) {
-                  (event.nativeEvent as any).preventDownshiftDefault = true;
+              }
+              setIsHovered(false);
+            }}
+            rows={props.isMainInput ? undefined : 1}
+            inQueryForDynamicProvider={
+              typeof inQueryForContextProvider !== "undefined"
+            }
+            fontSize={getFontSize()}
+            disabled={props.disabled}
+            placeholder={`Ask a question, '/' for slash commands, '@' to add context`}
+            {...getInputProps({
+              onCompositionStart: () => setIsComposing(true),
+              onCompositionEnd: () => setIsComposing(false),
+              onChange: (e) => {
+                const target = e.target as HTMLTextAreaElement;
+                // Update the height of the textarea to match the content, up to a max of 200px.
+                target.style.height = "auto";
+                target.style.height = `${Math.min(
+                  target.scrollHeight,
+                  300
+                ).toString()}px`;
+
+                // setShowContextDropdown(target.value.endsWith("@"));
+              },
+              onFocus: (e) => {
+                setInputFocused(true);
+                dispatch(setBottomMessage(undefined));
+              },
+              onBlur: (e) => {
+                if (topRef.current?.contains(e.relatedTarget as Node)) {
                   return;
+                }
+                setInputFocused(false);
+              },
+              onKeyDown: (event) => {
+                dispatch(setBottomMessage(undefined));
+                if (event.key === "Enter" && event.shiftKey) {
+                  // Prevent Downshift's default 'Enter' behavior.
+                  (event.nativeEvent as any).preventDownshiftDefault = true;
+                  setCurrentlyInContextQuery(false);
                 } else if (
-                  positionInHistory == history.length &&
-                  (history.length === 0 ||
-                    history[history.length - 1] !== event.currentTarget.value)
+                  event.key === "Enter" &&
+                  (!downshiftProps.isOpen || items.length === 0) &&
+                  !isComposing
                 ) {
-                  setHistory([...history, event.currentTarget.value]);
-                }
-                downshiftProps.setInputValue(history[positionInHistory - 1]);
-                setPositionInHistory((prev) => prev - 1);
-                setCurrentlyInContextQuery(false);
-              } else if (event.key === "ArrowDown") {
-                if (
-                  positionInHistory === history.length ||
-                  event.currentTarget.selectionStart !==
-                    event.currentTarget.value.length
+                  const value = downshiftProps.inputValue;
+                  if (inQueryForContextProvider) {
+                    const segs = value.split("@");
+                    selectContextItem(
+                      inQueryForContextProvider.title,
+                      segs[segs.length - 1]
+                    );
+                    setCurrentlyInContextQuery(false);
+                    downshiftProps.setInputValue("");
+                    return;
+                  } else {
+                    if (value !== "") {
+                      setPositionInHistory(history.length + 1);
+                      setHistory([...history, value]);
+                    }
+                    // Prevent Downshift's default 'Enter' behavior.
+                    (event.nativeEvent as any).preventDownshiftDefault = true;
+
+                    if (props.onEnter) {
+                      props.onEnter(event, value);
+                    }
+                  }
+                  setCurrentlyInContextQuery(false);
+                } else if (event.key === "Enter" && currentlyInContextQuery) {
+                  // Handle "Enter" for Context Providers
+                  selectContextItemFromDropdown(event);
+                } else if (
+                  event.key === "Tab" &&
+                  downshiftProps.isOpen &&
+                  items.length > 0 &&
+                  items[downshiftProps.highlightedIndex]?.name.startsWith("/")
                 ) {
+                  downshiftProps.setInputValue(items[0].name);
+                  event.preventDefault();
+                } else if (event.key === "Tab") {
                   (event.nativeEvent as any).preventDownshiftDefault = true;
+                } else if (
+                  (event.key === "ArrowUp" || event.key === "ArrowDown") &&
+                  items.length > 0
+                ) {
                   return;
-                }
+                } else if (event.key === "ArrowUp") {
+                  // Only go back in history if selectionStart is 0
+                  // (i.e. the cursor is at the beginning of the input)
+                  if (
+                    positionInHistory == 0 ||
+                    event.currentTarget.selectionStart !== 0
+                  ) {
+                    (event.nativeEvent as any).preventDownshiftDefault = true;
+                    return;
+                  } else if (
+                    positionInHistory == history.length &&
+                    (history.length === 0 ||
+                      history[history.length - 1] !== event.currentTarget.value)
+                  ) {
+                    setHistory([...history, event.currentTarget.value]);
+                  }
+                  downshiftProps.setInputValue(history[positionInHistory - 1]);
+                  setPositionInHistory((prev) => prev - 1);
+                  setCurrentlyInContextQuery(false);
+                } else if (event.key === "ArrowDown") {
+                  if (
+                    positionInHistory === history.length ||
+                    event.currentTarget.selectionStart !==
+                      event.currentTarget.value.length
+                  ) {
+                    (event.nativeEvent as any).preventDownshiftDefault = true;
+                    return;
+                  }
 
-                if (positionInHistory < history.length) {
-                  downshiftProps.setInputValue(history[positionInHistory + 1]);
-                }
-                setPositionInHistory((prev) =>
-                  Math.min(prev + 1, history.length)
-                );
-                setCurrentlyInContextQuery(false);
-              } else if (event.key === "Escape") {
-                if (nestedContextProvider) {
-                  goBackToContextProviders();
-                  (event.nativeEvent as any).preventDownshiftDefault = true;
-                  return;
-                } else if (inQueryForContextProvider) {
-                  goBackToContextProviders();
-                  (event.nativeEvent as any).preventDownshiftDefault = true;
-                  return;
-                }
+                  if (positionInHistory < history.length) {
+                    downshiftProps.setInputValue(
+                      history[positionInHistory + 1]
+                    );
+                  }
+                  setPositionInHistory((prev) =>
+                    Math.min(prev + 1, history.length)
+                  );
+                  setCurrentlyInContextQuery(false);
+                } else if (event.key === "Escape") {
+                  if (nestedContextProvider) {
+                    goBackToContextProviders();
+                    (event.nativeEvent as any).preventDownshiftDefault = true;
+                    return;
+                  } else if (inQueryForContextProvider) {
+                    goBackToContextProviders();
+                    (event.nativeEvent as any).preventDownshiftDefault = true;
+                    return;
+                  }
 
-                setCurrentlyInContextQuery(false);
-                if (downshiftProps.isOpen && items.length > 0) {
-                  downshiftProps.closeMenu();
-                  (event.nativeEvent as any).preventDownshiftDefault = true;
-                } else {
-                  (event.nativeEvent as any).preventDownshiftDefault = true;
-                  // Remove focus from the input
-                  inputRef.current?.blur();
-                  // Move cursor back over to the editor
-                  postVscMessage("focusEditor", {});
+                  setCurrentlyInContextQuery(false);
+                  if (downshiftProps.isOpen && items.length > 0) {
+                    downshiftProps.closeMenu();
+                    (event.nativeEvent as any).preventDownshiftDefault = true;
+                  } else {
+                    (event.nativeEvent as any).preventDownshiftDefault = true;
+                    // Remove focus from the input
+                    inputRef.current?.blur();
+                    // Move cursor back over to the editor
+                    postVscMessage("focusEditor", {});
+                  }
                 }
-              }
-              // Home and end keys
-              else if (event.key === "Home") {
-                (event.nativeEvent as any).preventDownshiftDefault = true;
-              } else if (event.key === "End") {
-                (event.nativeEvent as any).preventDownshiftDefault = true;
-              }
-            },
-            onClick: () => {
-              dispatch(setBottomMessage(undefined));
-            },
-            ref: inputRef,
-          })}
-        />
+                // Home and end keys
+                else if (event.key === "Home") {
+                  (event.nativeEvent as any).preventDownshiftDefault = true;
+                } else if (event.key === "End") {
+                  (event.nativeEvent as any).preventDownshiftDefault = true;
+                }
+              },
+              onClick: () => {
+                dispatch(setBottomMessage(undefined));
+              },
+              ref: inputRef,
+            })}
+          />
+          {props.isMainInput || (
+            <DeleteButtonDiv ref={deleteButtonDivRef}>
+              {isHovered && (
+                <div className="flex">
+                  <>
+                    {timeline
+                      .filter(
+                        (h, i: number) =>
+                          props.groupIndices?.includes(i) && h.logs
+                      )
+                      .some((h) => h.logs!.length > 0) && (
+                      <HeaderButtonWithText
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (props.groupIndices)
+                            client?.showLogsAtIndex(props.groupIndices[1]);
+                        }}
+                        text="Inspect Prompt"
+                      >
+                        <ArrowUpLeftIcon width="1.3em" height="1.3em" />
+                      </HeaderButtonWithText>
+                    )}
+                    <HeaderButtonWithText
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (props.active && props.groupIndices) {
+                          client?.deleteAtIndex(props.groupIndices[1]);
+                        } else {
+                          props.onDelete?.();
+                        }
+                      }}
+                      text={
+                        props.active ? `Stop (${getMetaKeyLabel()}⌫)` : "Delete"
+                      }
+                    >
+                      {props.active ? (
+                        <StopCircleIcon width="1.4em" height="1.4em" />
+                      ) : (
+                        <XMarkIcon width="1.4em" height="1.4em" />
+                      )}
+                    </HeaderButtonWithText>
+                  </>
+                </div>
+              )}
+            </DeleteButtonDiv>
+          )}
+        </GradientBorder>
         {inQueryForContextProvider && (
           <DynamicQueryTitleDiv>
             Enter {inQueryForContextProvider.display_title} Query
@@ -807,6 +1130,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
           {...downshiftProps.getMenuProps({
             ref: ulRef,
           })}
+          isMainInput={props.isMainInput}
           showAbove={showAbove()}
           ulHeightPixels={ulRef.current?.getBoundingClientRect().height || 0}
           hidden={
@@ -832,8 +1156,9 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
                 width="1.4em"
                 height="1.4em"
                 className="cursor-pointer"
-                onClick={() => {
+                onClick={(e) => {
                   goBackToContextProviders();
+                  inputRef.current?.focus();
                 }}
               />
               {nestedContextProvider.display_title} -{" "}
@@ -888,18 +1213,23 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
       </div>
       {selectedContextItems.length === 0 &&
         (downshiftProps.inputValue?.startsWith("/edit") ||
-          (focused &&
+          (inputFocused &&
             metaKeyPressed &&
             downshiftProps.inputValue?.length > 0)) && (
-          <div className="text-trueGray-400 pr-4 text-xs text-right">
+          <div
+            className="text-trueGray-400 pr-4 text-xs text-right"
+            style={{ backgroundColor: vscBackground }}
+          >
             Inserting at cursor
           </div>
         )}
-      <ContinueButton
-        disabled={!(inputRef.current as any)?.value}
-        onClick={() => props.onEnter(undefined)}
-      />
-    </>
+      {props.isMainInput && (
+        <ContinueButton
+          disabled={!(inputRef.current as any)?.value}
+          onClick={() => props.onEnter?.(undefined)}
+        />
+      )}
+    </div>
   );
 });
 

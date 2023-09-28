@@ -12,12 +12,13 @@ import { getFontSize } from "../util";
 const StyledMarkdownPreview = styled(MarkdownPreview)<{
   light?: boolean;
   fontSize?: number;
+  maxHeight?: number;
 }>`
   pre {
     background-color: ${(props) =>
       props.light ? vscBackground : secondaryDark};
     border-radius: ${defaultBorderRadius};
-    border: 0.5px solid ${lightGray};
+    /* border: 0.5px solid ${lightGray}; */
 
     max-width: calc(100vw - 24px);
   }
@@ -34,6 +35,15 @@ const StyledMarkdownPreview = styled(MarkdownPreview)<{
       props.light ? vscBackground : secondaryDark};
     color: ${vscForeground};
     padding: 12px;
+
+    ${(props) => {
+      if (props.maxHeight) {
+        return `
+          max-height: ${props.maxHeight}px;
+          overflow-y: auto;
+        `;
+      }
+    }}
   }
 
   background-color: ${(props) => (props.light ? "transparent" : vscBackground)};

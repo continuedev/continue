@@ -35,7 +35,6 @@ import { useSelector } from "react-redux";
 interface UserInputContainerProps {
   onDelete: () => void;
   children: string;
-  historyNode: HistoryNode;
   index: number;
   onToggle: (arg0: boolean) => void;
   onToggleAll: (arg0: boolean) => void;

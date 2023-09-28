@@ -101,9 +101,10 @@ class ContinueGUIClientProtocol extends AbstractContinueGUIClientProtocol {
     this.messenger?.send("delete_at_index", { index });
   }
 
-  deleteContextWithIds(ids: ContextItemId[]) {
+  deleteContextWithIds(ids: ContextItemId[], index?: number) {
     this.messenger?.send("delete_context_with_ids", {
       ids: ids.map((id) => `${id.provider_title}-${id.item_id}`),
+      index,
     });
   }
 
@@ -119,12 +120,20 @@ class ContinueGUIClientProtocol extends AbstractContinueGUIClientProtocol {
     this.messenger?.send("show_logs_at_index", { index });
   }
 
-  showContextVirtualFile(): void {
-    this.messenger?.send("show_context_virtual_file", {});
+  showContextVirtualFile(index?: number): void {
+    this.messenger?.send("show_context_virtual_file", { index });
   }
 
   selectContextItem(id: string, query: string): void {
     this.messenger?.send("select_context_item", { id, query });
+  }
+
+  selectContextItemAtIndex(id: string, query: string, index: number): void {
+    this.messenger?.send("select_context_item_at_index", {
+      id,
+      query,
+      index,
+    });
   }
 
   editStepAtIndex(userInput: string, index: number): void {

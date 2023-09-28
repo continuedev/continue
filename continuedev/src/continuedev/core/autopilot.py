@@ -37,7 +37,7 @@ from ..plugins.steps.core.core import (
 )
 from ..plugins.steps.on_traceback import DefaultOnTracebackStep
 from ..server.ide_protocol import AbstractIdeProtocolServer
-from ..server.meilisearch_server import stop_meilisearch
+from ..server.meilisearch_server import get_meilisearch_url, stop_meilisearch
 from .config import ContinueConfig
 from .context import ContextManager
 from .main import (
@@ -179,6 +179,7 @@ class Autopilot(ContinueBaseModel):
             config=self.continue_sdk.config,
             saved_context_groups=self._saved_context_groups,
             context_providers=self.context_manager.get_provider_descriptions(),
+            meilisearch_url=get_meilisearch_url(),
         )
         self.full_state = full_state
         return full_state
@@ -306,7 +307,8 @@ class Autopilot(ContinueBaseModel):
         await self.update_subscribers()
 
     async def edit_step_at_index(self, user_input: str, index: int):
-        step_to_rerun = self.history.timeline[index].step.copy()
+        node_to_rerun = self.history.timeline[index].copy()
+        step_to_rerun = node_to_rerun.step
         step_to_rerun.user_input = user_input
         step_to_rerun.description = user_input
 
@@ -318,13 +320,29 @@ class Autopilot(ContinueBaseModel):
             node_to_delete.deleted = True
 
         self.history.current_index = index - 1
+
+        # Set the context to the context used by that step
+        await self.context_manager.clear_context()
+        for context_item in node_to_rerun.context_used:
+            await self.context_manager.manually_add_context_item(context_item)
+
         await self.update_subscribers()
 
         # Rerun from the current step
         await self.run_from_step(step_to_rerun)
 
-    async def delete_context_with_ids(self, ids: List[str]):
-        await self.context_manager.delete_context_with_ids(ids)
+    async def delete_context_with_ids(
+        self, ids: List[str], index: Optional[int] = None
+    ):
+        if index is None:
+            await self.context_manager.delete_context_with_ids(ids)
+        else:
+            self.history.timeline[index].context_used = list(
+                filter(
+                    lambda item: item.description.id.to_string() not in ids,
+                    self.history.timeline[index].context_used,
+                )
+            )
         await self.update_subscribers()
 
     async def toggle_adding_highlighted_code(self):
@@ -380,7 +398,12 @@ class Autopilot(ContinueBaseModel):
 
         # Update history - do this first so we get top-first tree ordering
         index_of_history_node = self.history.add_node(
-            HistoryNode(step=step, observation=None, depth=self._step_depth)
+            HistoryNode(
+                step=step,
+                observation=None,
+                depth=self._step_depth,
+                context_used=await self.context_manager.get_selected_items(),
+            )
         )
 
         # Call all subscribed callbacks
@@ -600,7 +623,7 @@ class Autopilot(ContinueBaseModel):
 
     async def accept_user_input(self, user_input: str):
         self._main_user_input_queue.append(user_input)
-        await self.update_subscribers()
+        # await self.update_subscribers()
 
         if len(self._main_user_input_queue) > 1:
             return
@@ -609,7 +632,7 @@ class Autopilot(ContinueBaseModel):
         # Just run the step that takes user input, and
         # then up to the policy to decide how to deal with it.
         self._main_user_input_queue.pop(0)
-        await self.update_subscribers()
+        # await self.update_subscribers()
         await self.run_from_step(UserInputStep(user_input=user_input))
 
         while len(self._main_user_input_queue) > 0:
@@ -633,6 +656,16 @@ class Autopilot(ContinueBaseModel):
 
     async def select_context_item(self, id: str, query: str):
         await self.context_manager.select_context_item(id, query)
+        await self.update_subscribers()
+
+    async def select_context_item_at_index(self, id: str, query: str, index: int):
+        # TODO: This is different from how it works for the main input
+        # Ideally still tracked through the ContextProviders
+        # so they can watch for duplicates
+        context_item = await self.context_manager.get_context_item(id, query)
+        if context_item is None:
+            return
+        self.history.timeline[index].context_used.append(context_item)
         await self.update_subscribers()
 
     async def set_config_attr(self, key_path: List[str], value: redbaron.RedBaron):

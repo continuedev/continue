@@ -10,7 +10,11 @@ from ..libs.util.create_async_task import create_async_task
 from ..libs.util.devdata import dev_data_logger
 from ..libs.util.logging import logger
 from ..libs.util.telemetry import posthog_logger
-from ..server.meilisearch_server import poll_meilisearch_running, restart_meilisearch
+from ..server.meilisearch_server import (
+    get_meilisearch_url,
+    poll_meilisearch_running,
+    restart_meilisearch,
+)
 from .main import (
     ChatMessage,
     ContextItem,
@@ -127,7 +131,7 @@ class ContextProvider(BaseModel):
 
         Default implementation uses the search index to get the item.
         """
-        async with Client("http://localhost:7700") as search_client:
+        async with Client(get_meilisearch_url()) as search_client:
             try:
                 result = await search_client.index(SEARCH_INDEX_NAME).get_document(
                     id.to_string()
@@ -295,7 +299,7 @@ class ContextManager:
             }
             for item in context_items
         ]
-        async with Client("http://localhost:7700") as search_client:
+        async with Client(get_meilisearch_url()) as search_client:
 
             async def add_docs():
                 index = await search_client.get_index(SEARCH_INDEX_NAME)
@@ -313,7 +317,7 @@ class ContextManager:
         """
         Deletes the documents in the search index.
         """
-        async with Client("http://localhost:7700") as search_client:
+        async with Client(get_meilisearch_url()) as search_client:
             await asyncio.wait_for(
                 search_client.index(SEARCH_INDEX_NAME).delete_documents(ids),
                 timeout=20,
@@ -321,7 +325,7 @@ class ContextManager:
 
     async def load_index(self, workspace_dir: str, should_retry: bool = True):
         try:
-            async with Client("http://localhost:7700") as search_client:
+            async with Client(get_meilisearch_url()) as search_client:
                 # First, create the index if it doesn't exist
                 # The index is currently shared by all workspaces
                 await search_client.create_index(SEARCH_INDEX_NAME)
@@ -421,6 +425,18 @@ class ContextManager:
             },
         )
         await self.context_providers[id.provider_title].add_context_item(id, query)
+
+    async def get_context_item(self, id: str, query: str) -> ContextItem:
+        """
+        Returns the ContextItem with the given id.
+        """
+        id: ContextItemId = ContextItemId.from_string(id)
+        if id.provider_title not in self.provider_titles:
+            raise ValueError(
+                f"Context provider with title {id.provider_title} not found"
+            )
+
+        return await self.context_providers[id.provider_title].get_item(id, query)
 
     async def delete_context_with_ids(self, ids: List[str]):
         """

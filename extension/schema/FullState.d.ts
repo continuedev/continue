@@ -23,21 +23,22 @@ export type Depth = number;
 export type Deleted = boolean;
 export type Active = boolean;
 export type Logs = string[];
-export type Timeline = HistoryNode[];
-export type CurrentIndex = number;
-export type Active1 = boolean;
-export type UserInputQueue = string[];
 export type Name3 = string;
 export type Description1 = string;
-export type SlashCommands = SlashCommandDescription[];
-export type AddingHighlightedCode = boolean;
-export type Name4 = string;
-export type Description2 = string;
 export type ProviderTitle = string;
 export type ItemId = string;
 export type Content1 = string;
 export type Editing = boolean;
 export type Editable = boolean;
+export type ContextUsed = ContextItem[];
+export type Timeline = HistoryNode[];
+export type CurrentIndex = number;
+export type Active1 = boolean;
+export type UserInputQueue = string[];
+export type Name4 = string;
+export type Description2 = string;
+export type SlashCommands = SlashCommandDescription[];
+export type AddingHighlightedCode = boolean;
 export type SelectedContextItems = ContextItem[];
 export type SessionId = string;
 export type Title = string;
@@ -51,6 +52,7 @@ export type Description3 = string;
 export type Dynamic = boolean;
 export type RequiresQuery = boolean;
 export type ContextProviders = ContextProviderDescription[];
+export type MeilisearchUrl = string;
 
 /**
  * A full state of the program, including the history
@@ -66,6 +68,7 @@ export interface FullState1 {
   config: ContinueConfig;
   saved_context_groups?: SavedContextGroups;
   context_providers?: ContextProviders;
+  meilisearch_url?: MeilisearchUrl;
   [k: string]: unknown;
 }
 /**
@@ -86,6 +89,7 @@ export interface HistoryNode {
   deleted?: Deleted;
   active?: Active;
   logs?: Logs;
+  context_used?: ContextUsed;
   [k: string]: unknown;
 }
 export interface Step {
@@ -114,11 +118,6 @@ export interface FunctionCall {
 export interface Observation {
   [k: string]: unknown;
 }
-export interface SlashCommandDescription {
-  name: Name3;
-  description: Description1;
-  [k: string]: unknown;
-}
 /**
  * A ContextItem is a single item that is stored in the ContextManager.
  */
@@ -135,8 +134,8 @@ export interface ContextItem {
  * The id can be used to retrieve the ContextItem from the ContextManager.
  */
 export interface ContextItemDescription {
-  name: Name4;
-  description: Description2;
+  name: Name3;
+  description: Description1;
   id: ContextItemId;
   [k: string]: unknown;
 }
@@ -146,6 +145,11 @@ export interface ContextItemDescription {
 export interface ContextItemId {
   provider_title: ProviderTitle;
   item_id: ItemId;
+  [k: string]: unknown;
+}
+export interface SlashCommandDescription {
+  name: Name4;
+  description: Description2;
   [k: string]: unknown;
 }
 export interface SessionInfo {
