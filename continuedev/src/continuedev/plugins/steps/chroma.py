@@ -19,6 +19,11 @@ class CreateCodebaseIndexChroma(Step):
     description: str = "Generating codebase embeddings..."
     openai_api_key: Optional[str] = None
 
+    ignore_files: List[str] = Field(
+        [],
+        description="Files to ignore when indexing the codebase. You can use glob patterns, such as **/*.py. This is useful for directories that contain generated code, or other directories that are not relevant to the codebase.",
+    )
+
     async def describe(self, models) -> Coroutine[str, None, None]:
         return "Generated codebase embeddings"
 
@@ -29,38 +34,37 @@ class CreateCodebaseIndexChroma(Step):
         if not index.check_index_exists():
             self.hide = False
 
-        await index.create_codebase_index(sdk)
+        await index.create_codebase_index(sdk, ignore_files=self.ignore_files)
 
 
-async def rerank_chroma_results(
+async def rerank_chroma_results_group(
     results: Dict[str, str], user_input: str, n: int, sdk: ContinueSDK
 ):
     """
     Reranks the results from the codebase index based on the user input
     """
-
     results_prompt = "\n\n".join(
         map(
-            lambda kv: f"{kv[0]}\n```\n{kv[1][:500 if len(kv[1]) > 2000 else -1]}\n```",
+            lambda kv: f"{kv[0]}\n```\n{kv[1][:500]}\n```",
             results.items(),
         )
     )
     include_prompt = f"""\
 You will be asked to select the most relevant results from a list. You should choose the results that will be most useful in answering the user's request. For each result that you think is important, you should simply say its title on a new line. Here is an example input:
 \"\"\"
-add.py
+add.py::0
 ```
 def add(a, b):
     return a + b
 ```
             
-multiply.py
+multiply.py::0
 ```
 def multiply(a, b):
     return a * b
 ```
 
-subtract.py
+subtract.py::0
 ```
 def subtract(a, b):
     return a - b
@@ -68,8 +72,8 @@ def subtract(a, b):
 \"\"\"
 And here is the output you would give if you thought that add.py and subtract.py were the most relevant results:
 \"\"\"
-add.py
-subtract.py
+add.py::0
+subtract.py::0
 \"\"\"
             
 Now for the real task, here are the top {len(results)} results from the codebase for the user request, "{user_input}":
@@ -81,19 +85,19 @@ Here are the {n} most relevant results listed in the same format from the exampl
     remove_prompt = f"""\
 You will be asked to select items from a list that are irrelevant to the given request. For each result that is unrelated, you should simply say its title on a new line. Here is an example input:
 \"\"\"
-add.py
+add.py::0
 ```
 def add(a, b):
     return a + b
 ```
             
-multiply.py
+multiply.py::0
 ```
 def multiply(a, b):
     return a * b
 ```
 
-subtract.py
+subtract.py::0
 ```
 def subtract(a, b):
     return a - b
@@ -101,8 +105,8 @@ def subtract(a, b):
 \"\"\"
 And here is the output you would give if you thought that add.py and subtract.py were not useful to answer the given request:
 \"\"\"
-add.py
-subtract.py
+add.py::0
+subtract.py::0
 \"\"\"
             
 Now for the real task, here are the top {len(results)} results from the codebase for the user request, "{user_input}":
@@ -115,23 +119,65 @@ List the results that are not useful in answering the request, using in the same
     remove = sdk.models.summarize.complete(remove_prompt)
     include_completion, remove_completion = await asyncio.gather(include, remove)
 
-    results = {
-        key: value for key, value in results.items() if key not in remove_completion
+    return include_completion.split("\n"), remove_completion.split("\n")
+
+
+async def rerank_chroma_results(
+    results: Dict[str, str], user_input: str, n: int, sdk: ContinueSDK
+):
+    """
+    Reranks the results from the codebase index based on the user input
+    """
+    # Split the results into groups
+    groups = []
+    group = {}
+    keys = list(results.keys())
+    for i in range(len(keys)):
+        if len(group) == 10:
+            groups.append(group)
+            group = {}
+        group[keys[i]] = results[keys[i]]
+
+    # Gather the include/remove results from each group
+    include = set([])
+    remove = set([])
+
+    tasks = []
+    for group in groups:
+        tasks.append(rerank_chroma_results_group(group, user_input, n, sdk))
+
+    reranking_results = await asyncio.gather(*tasks)
+    for rr in reranking_results:
+        include.update(rr[0])
+        remove.update(rr[1])
+
+    # Use these results to whittle down the results
+    counts_per_files = {}
+    for id in results:
+        filename = id.split("::")[0]
+        if filename not in counts_per_files:
+            counts_per_files[filename] = 0
+        counts_per_files[filename] += 1
+
+    repeated_files = set(filter(lambda x: counts_per_files[x] > 1, counts_per_files))
+
+    results_dict = {
+        key: value
+        for key, value in results.items()
+        if key not in remove or key.split("::")[0] in repeated_files
     }
-    selected = {
-        key: value for key, value in results.items() if key in include_completion
-    }
+    selected = {key: value for key, value in results_dict.items() if key in include}
 
     for key in selected:
-        del results[key]
+        del results_dict[key]
 
     additional = n - len(selected)
     for i in range(additional):
-        if len(results) == 0:
+        if len(results_dict) == 0:
             break
 
         # Get an item from the results
-        key = list(results.keys())[0]
+        key = list(results_dict.keys())[0]
         selected[key] = results[key]
         del results[key]
 
@@ -170,7 +216,6 @@ class AnswerQuestionChroma(Step):
     user_input: str
     _answer: Union[str, None] = None
     name: str = "Answer Question"
-    openai_api_key: Optional[str] = None
 
     n_retrieve: Optional[int] = Field(
         20, description="Number of results to initially retrieve from vector database"
@@ -193,7 +238,7 @@ class AnswerQuestionChroma(Step):
             return self._answer
 
     async def run(self, sdk: ContinueSDK) -> Coroutine[Observation, None, None]:
-        index = ChromaIndexManager(sdk.ide.workspace_directory, self.openai_api_key)
+        index = ChromaIndexManager(sdk.ide.workspace_directory)
         self.description = f"Reading from {self.n_retrieve} files..."
         await sdk.update_ui()
         results = index.query_codebase_index(
@@ -212,8 +257,13 @@ class AnswerQuestionChroma(Step):
                 results_dict, self.user_input, self.n_final, sdk
             )
 
-        for filename, document in results_dict.items():
+        filepaths = set([])
+        for id, document in results_dict.items():
+            filename = id.split("::")[0]
             filepath = results["ids"][0][shortened_filepaths.index(filename)]
+            if filepath in filepaths:
+                continue
+
             await sdk.add_context_item(
                 ContextItem(
                     content=document,
@@ -227,6 +277,7 @@ class AnswerQuestionChroma(Step):
                     ),
                 )
             )
+            filepaths.add(filepath)
 
         await sdk.update_ui()
         await sdk.run_step(SimpleChatStep(name="Answer Question"))

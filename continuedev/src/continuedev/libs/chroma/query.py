@@ -9,13 +9,66 @@ import chromadb
 from chromadb.config import Settings
 from chromadb.utils import embedding_functions
 from dotenv import load_dotenv
+from openai.error import RateLimitError
 
 from ...core.sdk import ContinueSDK
+from ..util.filter_files import DEFAULT_IGNORE_PATTERNS, should_filter_path
 from ..util.logging import logger
 from ..util.paths import getEmbeddingsPathForBranch
 from .update import filter_ignored_files
 
 load_dotenv()
+
+IGNORE_PATTERNS_FOR_CHROMA = [
+    # File Names
+    "**/.DS_Store",
+    "**/package-lock.json",
+    "**/yarn.lock",
+    # File Types
+    "*.log",
+    "*.ttf",
+    "*.png",
+    "*.jpg",
+    "*.jpeg",
+    "*.gif",
+    "*.mp4",
+    "*.svg",
+    "*.ico",
+    "*.pdf",
+    "*.zip",
+    "*.gz",
+    "*.tar",
+    "*.tgz",
+    "*.rar",
+    "*.7z",
+    "*.exe",
+    "*.dll",
+    "*.obj",
+    "*.o",
+    "*.a",
+    "*.lib",
+    "*.so",
+    "*.dylib",
+    "*.ncb",
+    "*.sdf",
+]
+
+
+def chunk_document(document: str, max_length: int = 1000) -> List[str]:
+    """Chunk a document into smaller pieces."""
+    chunks = []
+    chunk = ""
+    for line in document.split("\n"):
+        if len(chunk) + len(line) > max_length:
+            chunks.append(chunk)
+            chunk = ""
+        chunk += line + "\n"
+    chunks.append(chunk)
+    return chunks
+
+
+# Mapping of workspace_dir to chromadb collection
+collections = {}
 
 
 class ChromaIndexManager:
@@ -83,6 +136,9 @@ class ChromaIndexManager:
 
     @property
     def collection(self):
+        if self.workspace_dir in collections:
+            return collections[self.workspace_dir]
+
         kwargs = {
             "name": self.current_branch,
         }
@@ -91,14 +147,30 @@ class ChromaIndexManager:
                 api_key=self.openai_api_key,
                 model_name="text-embedding-ada-002",
             )
+
         return self.client.get_or_create_collection(**kwargs)
 
-    async def create_codebase_index(self, sdk: ContinueSDK):
+    async def create_codebase_index(
+        self, sdk: ContinueSDK, ignore_files: List[str] = []
+    ):
         """Create a new index for the current branch."""
+        collections[self.workspace_dir] = self.collection
+
         if self.check_index_exists():
             return
 
         files = await sdk.ide.listDirectoryContents(sdk.ide.workspace_directory, True)
+
+        # Filter from ignore_directories
+        files = list(
+            filter(
+                lambda file: not should_filter_path(
+                    file,
+                    ignore_files + DEFAULT_IGNORE_PATTERNS + IGNORE_PATTERNS_FOR_CHROMA,
+                ),
+                files,
+            )
+        )
 
         tasks = []
         for file in files:
@@ -106,26 +178,47 @@ class ChromaIndexManager:
 
         documents = await asyncio.gather(*tasks)
 
-        for i in range(len(documents)):
-            if len(documents[i]) > 6000:
-                documents[i] = documents[i][:6000]
-            elif len(documents[i]) == 0:
-                documents[i] = "EMPTY"
+        chunks = [chunk_document(document) for document in documents]
 
-        self.collection.add(
-            documents=documents,
-            metadatas=[{"filepath": file} for file in files],
-            ids=files,
-        )
+        flattened_chunks = []
+        flattened_metadata = []
+        flattened_ids = []
+        for i in range(len(chunks)):
+            for j in range(len(chunks[i])):
+                flattened_chunks.append(chunks[i][j])
+                flattened_metadata.append({"filepath": files[i]})
+                flattened_ids.append(f"{files[i]}::{j}")
+
+        for i in range(len(flattened_chunks)):
+            if len(flattened_chunks[i]) == 0:
+                flattened_chunks[i] = "EMPTY"
+            elif len(flattened_chunks[i]) > 6000:
+                flattened_chunks[i] = flattened_chunks[i][:6000]
+
+        # Attempt to avoid rate-limiting
+        i = 0
+        wait_time = 4.0
+        while i + 100 < len(flattened_chunks):
+            try:
+                self.collection.add(
+                    documents=flattened_chunks[i : i + 100],
+                    metadatas=flattened_metadata[i : i + 100],
+                    ids=flattened_ids[i : i + 100],
+                )
+                i += 100
+                asyncio.sleep(0.5)
+            except RateLimitError as e:
+                logger.debug(f"Rate limit exceeded, waiting {wait_time} seconds")
+                await asyncio.sleep(wait_time)
+                wait_time *= 2
+                if wait_time > 2**10:
+                    raise e
 
         with open(f"{self.index_dir}/metadata.json", "w") as f:
             json.dump(
                 {
                     "commit": self.current_commit,
-                    "chunks": {
-                        file: 1
-                        for file in files  # This is the number of chunks per file
-                    },
+                    "chunks": {files[i]: len(chunks[i]) for i in range(len(files))},
                 },
                 f,
                 indent=4,
@@ -214,7 +307,7 @@ class ChromaIndexManager:
         """Query the codebase index."""
         if not self.check_index_exists():
             logger.debug(f"No index found for the codebase at {self.index_dir}")
-            return ""
+            return []
 
         results = self.collection.query(query_texts=[query], n_results=n)
 

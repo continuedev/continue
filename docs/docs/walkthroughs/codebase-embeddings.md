@@ -32,7 +32,6 @@ config=ContinueConfig(
             description="Answer question after embeddings-based retrieval",
             step=AnswerQuestionChroma,
             params={
-                "openai_api_key": "<OPENAI_API_KEY>",
                 "n_retrieve": 20,
                 "n_final": 10,
                 "use_reranking": True
