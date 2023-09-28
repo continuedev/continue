@@ -118,11 +118,12 @@ class OpenAI(LLM):
                 messages=[{"role": "user", "content": prompt}],
                 **args,
             ):
-                if "content" in chunk.choices[0].delta:
+                if len(chunk.choices) > 0 and "content" in chunk.choices[0].delta:
                     yield chunk.choices[0].delta.content
         else:
             async for chunk in await openai.Completion.acreate(prompt=prompt, **args):
-                yield chunk.choices[0].text
+                if len(chunk.choices) > 0:
+                    yield chunk.choices[0].text
 
     async def _stream_chat(self, messages: List[ChatMessage], options):
         args = self.collect_args(options)
