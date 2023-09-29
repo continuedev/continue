@@ -98,6 +98,21 @@ export const serverStateSlice = createSlice({
     temporarilyPushToUserInputQueue: (state, action) => {
       state.user_input_queue = [...state.user_input_queue, action.payload];
     },
+    temporarilyCreateNewUserInput: (state, action) => {
+      state.history.timeline = [
+        ...state.history.timeline,
+        {
+          step: {
+            description: action.payload,
+            name: "User Input",
+            hide: false,
+          },
+          depth: 0,
+          active: false,
+          context_used: state.selected_context_items,
+        },
+      ];
+    },
     temporarilyClearSession: (state, action) => {
       state.history.timeline = [];
       state.selected_context_items = [];
@@ -114,5 +129,6 @@ export const {
   setServerState,
   temporarilyPushToUserInputQueue,
   temporarilyClearSession,
+  temporarilyCreateNewUserInput,
 } = serverStateSlice.actions;
 export default serverStateSlice.reducer;

@@ -81,7 +81,8 @@ class OpenAI(LLM):
     ):
         await super().start(write_log=write_log, unique_id=unique_id)
 
-        self.context_length = MAX_TOKENS_FOR_MODEL.get(self.model, 4096)
+        if self.context_length is None:
+            self.context_length = MAX_TOKENS_FOR_MODEL.get(self.model, 4096)
 
         openai.api_key = self.api_key
         if self.api_type is not None:
@@ -118,11 +119,12 @@ class OpenAI(LLM):
                 messages=[{"role": "user", "content": prompt}],
                 **args,
             ):
-                if "content" in chunk.choices[0].delta:
+                if len(chunk.choices) > 0 and "content" in chunk.choices[0].delta:
                     yield chunk.choices[0].delta.content
         else:
             async for chunk in await openai.Completion.acreate(prompt=prompt, **args):
-                yield chunk.choices[0].text
+                if len(chunk.choices) > 0:
+                    yield chunk.choices[0].text
 
     async def _stream_chat(self, messages: List[ChatMessage], options):
         args = self.collect_args(options)

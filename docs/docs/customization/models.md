@@ -62,7 +62,7 @@ config = ContinueConfig(
             model="gpt-3.5-turbo",
             api_base="https://my-azure-openai-instance.openai.azure.com/",
             engine="my-azure-openai-deployment",
-            api_version="2023-03-15-preview",
+            api_version="2023-07-01-preview",
             api_type="azure"
         )
     )

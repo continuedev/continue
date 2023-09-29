@@ -21,7 +21,7 @@ abstract class AbstractContinueGUIClientProtocol {
 
   abstract deleteAtIndex(index: number): void;
 
-  abstract deleteContextWithIds(ids: ContextItemId[]): void;
+  abstract deleteContextWithIds(ids: ContextItemId[], index?: number): void;
 
   abstract setEditingAtIds(ids: string[]): void;
 
@@ -32,6 +32,12 @@ abstract class AbstractContinueGUIClientProtocol {
   abstract showContextVirtualFile(): void;
 
   abstract selectContextItem(id: string, query: string): void;
+
+  abstract selectContextItemAtIndex(
+    id: string,
+    query: string,
+    index: number
+  ): void;
 
   abstract loadSession(session_id?: string): void;
 

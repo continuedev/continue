@@ -72,10 +72,14 @@ export type VerifySsl = boolean;
  */
 export type CaBundlePath = string;
 /**
+ * Proxy URL to use when making the HTTP request
+ */
+export type Proxy = string;
+/**
  * The API key for the LLM provider.
  */
 export type ApiKey = string;
-export type Unused = LLM[];
+export type Saved = LLM[];
 /**
  * The temperature parameter for sampling from the LLM. Higher temperatures will result in more random output, while lower temperatures will result in more predictable output. This value ranges from 0 to 1.
  */
@@ -205,12 +209,10 @@ export interface FunctionCall {
  */
 export interface Models1 {
   default: LLM;
-  small?: LLM;
-  medium?: LLM;
-  large?: LLM;
+  summarize?: LLM;
   edit?: LLM;
   chat?: LLM;
-  unused?: Unused;
+  saved?: Saved;
   sdk?: ContinueSDK;
   [k: string]: unknown;
 }
@@ -224,6 +226,7 @@ export interface LLM {
   timeout?: Timeout;
   verify_ssl?: VerifySsl;
   ca_bundle_path?: CaBundlePath;
+  proxy?: Proxy;
   prompt_templates?: PromptTemplates;
   api_key?: ApiKey;
   [k: string]: unknown;
