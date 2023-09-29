@@ -236,7 +236,7 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
         elif message_type == "highlightedCodePush":
             self.onHighlightedCodeUpdate(
                 [RangeInFileWithContents(**rif) for rif in data["highlightedCode"]],
-                edit=data.get("edit", None),
+                edit=data.get("edit", False),
             )
         elif message_type == "commandOutput":
             output = data["output"]
