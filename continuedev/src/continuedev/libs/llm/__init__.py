@@ -71,6 +71,10 @@ class LLM(ContinueBaseModel):
         ..., description="The name of the model to be used (e.g. gpt-4, codellama)"
     )
 
+    max_tokens: int = Field(
+        DEFAULT_MAX_TOKENS, description="The maximum number of tokens to generate."
+    )
+
     stop_tokens: Optional[List[str]] = Field(
         None, description="Tokens that will stop the completion."
     )
@@ -237,7 +241,7 @@ class LLM(ContinueBaseModel):
             presence_penalty=presence_penalty,
             frequency_penalty=frequency_penalty,
             stop=stop or self.stop_tokens,
-            max_tokens=max_tokens,
+            max_tokens=max_tokens or self.max_tokens,
             functions=functions,
         )
 
@@ -288,7 +292,7 @@ class LLM(ContinueBaseModel):
             presence_penalty=presence_penalty,
             frequency_penalty=frequency_penalty,
             stop=stop or self.stop_tokens,
-            max_tokens=max_tokens,
+            max_tokens=max_tokens or self.max_tokens,
             functions=functions,
         )
 
@@ -337,7 +341,7 @@ class LLM(ContinueBaseModel):
             presence_penalty=presence_penalty,
             frequency_penalty=frequency_penalty,
             stop=stop or self.stop_tokens,
-            max_tokens=max_tokens,
+            max_tokens=max_tokens or self.max_tokens,
             functions=functions,
         )
 
