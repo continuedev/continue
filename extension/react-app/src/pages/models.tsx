@@ -1,131 +1,13 @@
-import React from "react";
-import ModelCard, { ModelInfo, ModelTag } from "../components/ModelCard";
+import React, { useContext } from "react";
+import ModelCard from "../components/ModelCard";
 import styled from "styled-components";
 import { ArrowLeftIcon } from "@heroicons/react/24/outline";
 import { lightGray, vscBackground } from "../components";
 import { useNavigate } from "react-router-dom";
-
-const MODEL_INFO: ModelInfo[] = [
-  {
-    title: "OpenAI",
-    class: "OpenAI",
-    description: "Use gpt-4, gpt-3.5-turbo, or any other OpenAI model",
-    args: {
-      model: "gpt-4",
-      api_key: "",
-      title: "OpenAI",
-    },
-    icon: "openai.svg",
-    tags: [ModelTag["Requires API Key"]],
-  },
-  {
-    title: "Anthropic",
-    class: "AnthropicLLM",
-    description:
-      "Claude-2 is a highly capable model with a 100k context length",
-    args: {
-      model: "claude-2",
-      api_key: "<ANTHROPIC_API_KEY>",
-      title: "Anthropic",
-    },
-    icon: "anthropic.png",
-    tags: [ModelTag["Requires API Key"]],
-  },
-  {
-    title: "Ollama",
-    class: "Ollama",
-    description:
-      "One of the fastest ways to get started with local models on Mac or Linux",
-    args: {
-      model: "codellama",
-      title: "Ollama",
-    },
-    icon: "ollama.png",
-    tags: [ModelTag["Local"], ModelTag["Open-Source"]],
-  },
-  {
-    title: "TogetherAI",
-    class: "TogetherLLM",
-    description:
-      "Use the TogetherAI API for extremely fast streaming of open-source models",
-    args: {
-      model: "togethercomputer/CodeLlama-13b-Instruct",
-      api_key: "<TOGETHER_API_KEY>",
-      title: "TogetherAI",
-    },
-    icon: "together.png",
-    tags: [ModelTag["Requires API Key"], ModelTag["Open-Source"]],
-  },
-  {
-    title: "LM Studio",
-    class: "GGML",
-    description:
-      "One of the fastest ways to get started with local models on Mac or Windows",
-    args: {
-      server_url: "http://localhost:1234",
-      title: "LM Studio",
-    },
-    icon: "lmstudio.png",
-    tags: [ModelTag["Local"], ModelTag["Open-Source"]],
-  },
-  {
-    title: "Replicate",
-    class: "ReplicateLLM",
-    description: "Use the Replicate API to run open-source models",
-    args: {
-      model:
-        "replicate/llama-2-70b-chat:58d078176e02c219e11eb4da5a02a7830a283b14cf8f94537af893ccff5ee781",
-      api_key: "<REPLICATE_API_KEY>",
-      title: "Replicate",
-    },
-    icon: "replicate.png",
-    tags: [ModelTag["Requires API Key"], ModelTag["Open-Source"]],
-  },
-  {
-    title: "llama.cpp",
-    class: "LlamaCpp",
-    description: "If you are running the llama.cpp server from source",
-    args: {
-      title: "llama.cpp",
-    },
-    icon: "llamacpp.png",
-    tags: [ModelTag.Local, ModelTag["Open-Source"]],
-  },
-  {
-    title: "HuggingFace TGI",
-    class: "HuggingFaceTGI",
-    description:
-      "HuggingFace Text Generation Inference is an advanced, highly performant option for serving open-source models to multiple people",
-    args: {
-      title: "HuggingFace TGI",
-    },
-    icon: "hf.png",
-    tags: [ModelTag.Local, ModelTag["Open-Source"]],
-  },
-  {
-    title: "Other OpenAI-compatible API",
-    class: "GGML",
-    description:
-      "If you are using any other OpenAI-compatible API, for example text-gen-webui, FastChat, LocalAI, or llama-cpp-python, you can simply enter your server URL",
-    args: {
-      server_url: "<SERVER_URL>",
-    },
-    icon: "openai.svg",
-    tags: [ModelTag.Local, ModelTag["Open-Source"]],
-  },
-  {
-    title: "GPT-4 limited free trial",
-    class: "OpenAIFreeTrial",
-    description:
-      "New users can try out Continue with GPT-4 using a proxy server that securely makes calls to OpenAI using our API key",
-    args: {
-      model: "gpt-4",
-      title: "GPT-4 Free Trial",
-    },
-    icon: "openai.svg",
-    tags: [ModelTag.Free],
-  },
-];
+import { useDispatch } from "react-redux";
+import { GUIClientContext } from "../App";
+import { setShowDialog } from "../redux/slices/uiStateSlice";
+import { MODEL_INFO } from "../util/modelData";
 
 const GridDiv = styled.div`
   display: grid;
@@ -138,6 +20,8 @@ const GridDiv = styled.div`
 
 function Models() {
   const navigate = useNavigate();
+  const client = useContext(GUIClientContext);
+  const dispatch = useDispatch();
   return (
     <div className="overflow-y-scroll">
       <div
@@ -154,11 +38,25 @@ function Models() {
           onClick={() => navigate("/")}
           className="inline-block ml-4 cursor-pointer"
         />
-        <h3 className="text-lg font-bold m-2 inline-block">Add a new model</h3>
+        <h3 className="text-lg font-bold m-2 inline-block">
+          Select LLM Provider
+        </h3>
       </div>
       <GridDiv>
-        {MODEL_INFO.map((model) => (
-          <ModelCard modelInfo={model} />
+        {Object.entries(MODEL_INFO).map(([name, modelInfo]) => (
+          <ModelCard
+            title={modelInfo.title}
+            description={modelInfo.description}
+            tags={modelInfo.tags}
+            icon={modelInfo.icon}
+            refUrl={`https://continue.dev/docs/reference/Models/${modelInfo.class.toLowerCase()}`}
+            onClick={(e) => {
+              if ((e.target as any).closest("a")) {
+                return;
+              }
+              navigate(`/modelconfig/${name}`);
+            }}
+          />
         ))}
       </GridDiv>
     </div>
