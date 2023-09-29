@@ -115,8 +115,8 @@ Now for the real task, here are the top {len(results)} results from the codebase
 
 List the results that are not useful in answering the request, using in the same format from the example. Only choose those that are completely unrelated, and no more than {n // 2}:"""
 
-    include = sdk.models.summarize.complete(include_prompt)
-    remove = sdk.models.summarize.complete(remove_prompt)
+    include = sdk.models.summarize.complete(include_prompt, log=False)
+    remove = sdk.models.summarize.complete(remove_prompt, log=False)
     include_completion, remove_completion = await asyncio.gather(include, remove)
 
     return include_completion.split("\n"), remove_completion.split("\n")
