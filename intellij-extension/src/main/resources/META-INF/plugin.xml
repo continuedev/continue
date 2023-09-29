@@ -79,6 +79,15 @@
             <keyboard-shortcut keymap="Mac OS X"
                                first-keystroke="meta shift M"/>
         </action>
+        <action id="continue.focusContinueInput"
+                class="com.github.continuedev.continueintellijextension.actions.FocusContinueInputAction"
+                text="Focus Continue Input"
+                description="Focus Continue Input">
+            <keyboard-shortcut keymap="$default"
+                               first-keystroke="ctrl M"/>
+            <keyboard-shortcut keymap="Mac OS X"
+                               first-keystroke="meta M"/>
+        </action>
         <action id="continue.debugTerminal"
                 class="com.github.continuedev.continueintellijextension.actions.DebugTerminalAction"
                 text="Debug Terminal" description="Debug Terminal">

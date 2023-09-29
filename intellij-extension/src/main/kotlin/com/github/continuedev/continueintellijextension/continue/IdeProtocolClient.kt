@@ -41,6 +41,7 @@ data class VisibleFiles(val visibleFiles: List<String>)
 data class Position(val line: Int, val character: Int)
 data class Range(val start: Position, val end: Position)
 data class RangeInFile(val filepath: String, val range: Range)
+data class GetTerminalContents(val contents: String)
 
 fun getMachineUniqueID(): String {
     val sb = StringBuilder()
@@ -173,6 +174,16 @@ class IdeProtocolClient(
                                         msg
                                     )
                                 )
+                            )
+                        }
+                        "getTerminalContents" -> {
+                            webSocket.send(
+                                    Gson().toJson(
+                                            WebSocketMessage(
+                                                    "readFile",
+                                                    GetTerminalContents("Terminal cannot be accessed in JetBrains IDE")
+                                            )
+                                    )
                             )
                         }
                         "visibleFiles" -> {
