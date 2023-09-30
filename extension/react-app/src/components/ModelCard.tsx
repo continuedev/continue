@@ -1,95 +1,70 @@
 import React, { useContext } from "react";
 import styled from "styled-components";
-import { buttonColor, defaultBorderRadius, lightGray, vscForeground } from ".";
-import { setShowDialog } from "../redux/slices/uiStateSlice";
-import { GUIClientContext } from "../App";
-import { useDispatch, useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
+import { buttonColor, defaultBorderRadius, lightGray } from ".";
+import { useSelector } from "react-redux";
 import { RootStore } from "../redux/store";
 import { BookOpenIcon } from "@heroicons/react/24/outline";
 import HeaderButtonWithText from "./HeaderButtonWithText";
-import ReactDOM from "react-dom";
+import { MODEL_PROVIDER_TAG_COLORS } from "../util/modelData";
 
-export enum ModelTag {
-  "Requires API Key" = "Requires API Key",
-  "Local" = "Local",
-  "Free" = "Free",
-  "Open-Source" = "Open-Source",
-}
-
-const MODEL_TAG_COLORS: any = {};
-MODEL_TAG_COLORS[ModelTag["Requires API Key"]] = "#FF0000";
-MODEL_TAG_COLORS[ModelTag["Local"]] = "#00bb00";
-MODEL_TAG_COLORS[ModelTag["Open-Source"]] = "#0033FF";
-MODEL_TAG_COLORS[ModelTag["Free"]] = "#ffff00";
-
-export interface ModelInfo {
-  title: string;
-  class: string;
-  args: any;
-  description: string;
-  icon?: string;
-  tags?: ModelTag[];
-}
-
-const Div = styled.div<{ color: string }>`
+const Div = styled.div<{ color: string; disabled: boolean }>`
   border: 1px solid ${lightGray};
   border-radius: ${defaultBorderRadius};
-  cursor: pointer;
   padding: 4px 8px;
   position: relative;
   width: 100%;
   transition: all 0.5s;
 
+  ${(props) =>
+    props.disabled
+      ? `
+    opacity: 0.5;
+    `
+      : `
   &:hover {
-    border: 1px solid ${(props) => props.color};
-    background-color: ${(props) => props.color}22;
+    border: 1px solid ${props.color};
+    background-color: ${props.color}22;
+    cursor: pointer;
   }
+  `}
 `;
 
 interface ModelCardProps {
-  modelInfo: ModelInfo;
+  title: string;
+  description: string;
+  tags?: string[];
+  refUrl?: string;
+  icon?: string;
+  onClick: (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => void;
+  disabled?: boolean;
 }
 
 function ModelCard(props: ModelCardProps) {
-  const client = useContext(GUIClientContext);
-  const dispatch = useDispatch();
-  const navigate = useNavigate();
   const vscMediaUrl = useSelector(
     (state: RootStore) => state.config.vscMediaUrl
   );
 
   return (
     <Div
+      disabled={props.disabled || false}
       color={buttonColor}
-      onClick={(e) => {
-        if ((e.target as any).closest("a")) {
-          return;
-        }
-        client?.addModelForRole(
-          "*",
-          props.modelInfo.class,
-          props.modelInfo.args
-        );
-        dispatch(setShowDialog(false));
-        navigate("/");
-      }}
+      onClick={props.disabled ? undefined : (e) => props.onClick(e)}
     >
       <div style={{ display: "flex", alignItems: "center" }}>
-        {vscMediaUrl && (
+        {vscMediaUrl && props.icon && (
           <img
-            src={`${vscMediaUrl}/logos/${props.modelInfo.icon}`}
+            src={`${vscMediaUrl}/logos/${props.icon}`}
             height="24px"
             style={{ marginRight: "10px" }}
           />
         )}
-        <h3>{props.modelInfo.title}</h3>
+        <h3>{props.title}</h3>
       </div>
-      {props.modelInfo.tags?.map((tag) => {
+      {props.tags?.map((tag) => {
         return (
           <span
             style={{
-              backgroundColor: `${MODEL_TAG_COLORS[tag]}55`,
+              backgroundColor: `${MODEL_PROVIDER_TAG_COLORS[tag]}55`,
               color: "white",
               padding: "2px 4px",
               borderRadius: defaultBorderRadius,
@@ -100,21 +75,23 @@ function ModelCard(props: ModelCardProps) {
           </span>
         );
       })}
-      <p>{props.modelInfo.description}</p>
+      <p>{props.description}</p>
 
-      <a
-        style={{
-          position: "absolute",
-          right: "8px",
-          top: "8px",
-        }}
-        href={`https://continue.dev/docs/reference/Models/${props.modelInfo.class.toLowerCase()}`}
-        target="_blank"
-      >
-        <HeaderButtonWithText text="Read the docs">
-          <BookOpenIcon width="1.6em" height="1.6em" />
-        </HeaderButtonWithText>
-      </a>
+      {props.refUrl && (
+        <a
+          style={{
+            position: "absolute",
+            right: "8px",
+            top: "8px",
+          }}
+          href={props.refUrl}
+          target="_blank"
+        >
+          <HeaderButtonWithText text="Read the docs">
+            <BookOpenIcon width="1.6em" height="1.6em" />
+          </HeaderButtonWithText>
+        </a>
+      )}
     </Div>
   );
 }
