@@ -103,6 +103,19 @@ const MODEL_INFO: ModelInfo[] = [
     tags: [ModelTag.Local, ModelTag["Open-Source"]],
   },
   {
+    title: "Google PaLM API",
+    class: "GooglePaLMAPI",
+    description:
+      "Try out the Google PaLM API, which is currently in public preview, using an API key from Google Makersuite",
+    args: {
+      model: "chat-bison-001",
+      title: "Google PaLM",
+      api_key: "<MAKERSUITE_API_KEY>"
+    },
+    icon: "google-palm.png",
+    tags: [ModelTag["Requires API Key"]],
+  },
+  {
     title: "Other OpenAI-compatible API",
     class: "GGML",
     description:
