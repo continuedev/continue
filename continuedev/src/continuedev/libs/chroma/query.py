@@ -74,9 +74,15 @@ collections = {}
 class ChromaIndexManager:
     workspace_dir: str
     client: chromadb.Client
-    openai_api_key: str
+    openai_api_key: str = None
+    sentence_transformers_model: str
 
-    def __init__(self, workspace_dir: str, openai_api_key: str = None):
+    def __init__(
+        self,
+        workspace_dir: str,
+        openai_api_key: str = None,
+        sentence_transformers_model: str = "openai",
+    ):
         self.workspace_dir = workspace_dir
         self.client = chromadb.PersistentClient(
             path=os.path.join(
@@ -86,6 +92,7 @@ class ChromaIndexManager:
             settings=Settings(anonymized_telemetry=False),
         )
         self.openai_api_key = openai_api_key
+        self.sentence_transformers_model = sentence_transformers_model
 
     @cached_property
     def current_commit(self) -> str:
@@ -148,10 +155,19 @@ class ChromaIndexManager:
         kwargs = {
             "name": self.current_branch,
         }
-        if self.openai_api_key is not None:
+        if (
+            self.openai_api_key is not None
+            and self.sentence_transformers_model == "openai"
+        ):
             kwargs["embedding_function"] = embedding_functions.OpenAIEmbeddingFunction(
                 api_key=self.openai_api_key,
                 model_name="text-embedding-ada-002",
+            )
+        elif self.sentence_transformers_model is not None:
+            kwargs[
+                "embedding_function"
+            ] = embedding_functions.SentenceTransformerEmbeddingFunction(
+                model_name=self.sentence_transformers_model,
             )
 
         return self.client.get_or_create_collection(**kwargs)

@@ -19,6 +19,11 @@ class CreateCodebaseIndexChroma(Step):
     description: str = "Generating codebase embeddings..."
     openai_api_key: Optional[str] = None
 
+    sentence_transformers_model: str = Field(
+        "openai",
+        description="Sentence Transformers model to use for generating embeddings. See https://www.sbert.net/docs/pretrained_models.html for a list of available models.",
+    )
+
     ignore_files: List[str] = Field(
         [],
         description="Files to ignore when indexing the codebase. You can use glob patterns, such as **/*.py. This is useful for directories that contain generated code, or other directories that are not relevant to the codebase.",
@@ -29,7 +34,9 @@ class CreateCodebaseIndexChroma(Step):
 
     async def run(self, sdk: ContinueSDK) -> Coroutine[Observation, None, None]:
         index = ChromaIndexManager(
-            sdk.ide.workspace_directory, openai_api_key=self.openai_api_key
+            sdk.ide.workspace_directory,
+            openai_api_key=self.openai_api_key,
+            sentence_transformers_model=self.sentence_transformers_model,
         )
         if not index.check_index_exists():
             self.hide = False
