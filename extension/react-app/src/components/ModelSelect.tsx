@@ -69,6 +69,14 @@ const MODEL_INFO: { title: string; class: string; args: any }[] = [
     },
   },
   {
+    title: "Google PaLM API",
+    class: "GooglePaLMAPI",
+    args: {
+      model: "chat-bison-001",
+      api_key: "<MAKERSUITE_API_KEY>",
+    },
+  },
+  {
     title: "LM Studio",
     class: "GGML",
     args: {
