@@ -1,7 +1,9 @@
 package com.github.continuedev.continueintellijextension.actions
 
+import com.github.continuedev.continueintellijextension.services.ContinuePluginService
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
+import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.editor.SelectionModel
 import com.intellij.openapi.ui.Messages
 import com.intellij.openapi.wm.ToolWindowManager
@@ -76,16 +78,25 @@ class ToggleAuxiliaryBarAction : AnAction() {
 class FocusContinueInputWithEditAction : AnAction() {
     override fun actionPerformed(e: AnActionEvent) {
         val project = e.project ?: return
-        val toolWindowManager = ToolWindowManager.getInstance(project)
-        toolWindowManager.getToolWindow("ContinuePluginViewer")?.activate(null)
+        val continuePluginService = ServiceManager.getService(
+                project,
+                ContinuePluginService::class.java
+        )
+        continuePluginService.continuePluginWindow.content.components[0].requestFocus()
+        continuePluginService.dispatchCustomEvent("message", mutableMapOf("type" to "focusContinueInputWithEdit"))
     }
 }
 
 class FocusContinueInputAction : AnAction() {
     override fun actionPerformed(e: AnActionEvent) {
         val project = e.project ?: return
-        val toolWindowManager = ToolWindowManager.getInstance(project)
-        toolWindowManager.getToolWindow("ContinuePluginViewer")?.activate(null)
+        val continuePluginService = ServiceManager.getService(
+                project,
+                ContinuePluginService::class.java
+        )
+
+        continuePluginService.continuePluginWindow.content.components[0].requestFocus()
+        continuePluginService.dispatchCustomEvent("message", mutableMapOf("type" to "focusContinueInput"))
 
 //        val project: Project = event.getProject()
 //        val editor: Editor = event.getDataContext().getData(EditorDataKeys.EDITOR)

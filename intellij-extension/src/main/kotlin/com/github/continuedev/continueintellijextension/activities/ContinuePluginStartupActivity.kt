@@ -5,6 +5,7 @@ import com.github.continuedev.continueintellijextension.constants.CONTINUE_PYTHO
 import com.github.continuedev.continueintellijextension.constants.CONTINUE_SERVER_WEBSOCKET_PORT
 import com.github.continuedev.continueintellijextension.`continue`.DefaultTextSelectionStrategy
 import com.github.continuedev.continueintellijextension.`continue`.IdeProtocolClient
+import com.github.continuedev.continueintellijextension.`continue`.getMachineUniqueID
 import com.github.continuedev.continueintellijextension.listeners.ContinuePluginSelectionListener
 import com.github.continuedev.continueintellijextension.services.ContinueExtensionSettings
 import com.github.continuedev.continueintellijextension.services.ContinuePluginService
@@ -369,10 +370,10 @@ class ContinuePluginStartupActivity : StartupActivity, Disposable {
                         "type" to "onUILoad",
                         "sessionId" to sessionId,
                         "apiUrl" to CONTINUE_PYTHON_SERVER_URL,
-                        "workspacePaths" to workspacePaths,  // or your actual workspace paths
-                        "vscMachineId" to "yourMachineId",
-                        "vscMediaUrl" to "yourMediaUrl",
-                        "dataSwitchOn" to true  // or your actual condition
+                        "workspacePaths" to workspacePaths,
+                        "vscMachineId" to getMachineUniqueID(),
+                        "vscMediaUrl" to "http://continue",
+                        "dataSwitchOn" to true
                     )
                     dispatchEventToWebview(
                         "onUILoad",

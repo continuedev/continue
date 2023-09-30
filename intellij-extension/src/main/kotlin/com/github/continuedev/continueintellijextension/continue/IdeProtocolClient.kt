@@ -404,6 +404,7 @@ class DefaultTextSelectionStrategy : TextSelectionStrategy {
     ): Map<String, Any> {
 
         return mapOf(
+            "edit" to false,
             "highlightedCode" to arrayOf(
                 mapOf(
                     "filepath" to filepath,

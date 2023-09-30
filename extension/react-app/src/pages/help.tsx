@@ -41,7 +41,10 @@ function HelpPage() {
 
       <div className="grid grid-cols-2 grid-rows-2">
         <IconDiv backgroundColor="rgb(234, 51, 35)">
-          <a href="https://youtu.be/3Ocrc-WX4iQ?si=eDLYtkc6CXQoHsEc">
+          <a
+            href="https://youtu.be/3Ocrc-WX4iQ?si=eDLYtkc6CXQoHsEc"
+            target="_blank"
+          >
             <svg
               xmlns="http://www.w3.org/2000/svg"
               viewBox="-5.2 -4.5 60 60"
@@ -53,7 +56,10 @@ function HelpPage() {
           </a>
         </IconDiv>
         <IconDiv backgroundColor={buttonColor}>
-          <a href="https://continue.dev/docs/how-to-use-continue">
+          <a
+            href="https://continue.dev/docs/how-to-use-continue"
+            target="_blank"
+          >
             <svg
               xmlns="http://www.w3.org/2000/svg"
               viewBox="-2.2 -2 28 28"
@@ -65,7 +71,7 @@ function HelpPage() {
           </a>
         </IconDiv>
         <IconDiv backgroundColor="rgb(88, 98, 227)">
-          <a href="https://discord.gg/vapESyrFmJ">
+          <a href="https://discord.gg/vapESyrFmJ" target="_blank">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               viewBox="-5 -5.5 60 60"
@@ -77,7 +83,10 @@ function HelpPage() {
           </a>
         </IconDiv>
         <IconDiv>
-          <a href="https://github.com/continuedev/continue/issues/new/choose">
+          <a
+            href="https://github.com/continuedev/continue/issues/new/choose"
+            target="_blank"
+          >
             <svg
               xmlns="http://www.w3.org/2000/svg"
               viewBox="-1.2 -1.2 32 32"
