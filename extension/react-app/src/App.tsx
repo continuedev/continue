@@ -21,6 +21,7 @@ import ErrorPage from "./pages/error";
 import SettingsPage from "./pages/settings";
 import Models from "./pages/models";
 import HelpPage from "./pages/help";
+import ModelConfig from "./pages/modelconfig";
 
 const router = createMemoryRouter([
   {
@@ -55,6 +56,10 @@ const router = createMemoryRouter([
       {
         path: "/help",
         element: <HelpPage />,
+      },
+      {
+        path: "/modelconfig/:modelName",
+        element: <ModelConfig />,
       },
     ],
   },
