@@ -98,7 +98,9 @@ def display_llm_class(llm, new: bool = False):
         [
             f"{k}={display_val(v)}"
             for k, v in llm.dict().items()
-            if k not in filtered_attrs and v is not None
+            if k not in filtered_attrs
+            and v is not None
+            and not v == llm.__fields__[k].default
         ]
     )
     return f"{llm.__class__.__name__}(\n\t\t\t{args}\n\t\t)"

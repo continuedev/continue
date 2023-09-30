@@ -10,6 +10,7 @@ from uvicorn.main import Server
 
 from ..core.main import ContextItem
 from ..core.models import ALL_MODEL_ROLES, MODEL_CLASSES, MODEL_MODULE_NAMES
+from ..libs.llm.prompts.chat import llama2_template_messages, template_alpaca_messages
 from ..libs.util.create_async_task import create_async_task
 from ..libs.util.edit_config import (
     add_config_import,
@@ -323,7 +324,22 @@ class GUIProtocolServer:
                         existing_saved_models.add(display_llm_class(val))
                     models.__setattr__(role, None)
 
+                # Add the requisite import to config.py
+                add_config_import(
+                    f"from continuedev.src.continuedev.libs.llm.{MODEL_MODULE_NAMES[model_class]} import {model_class}"
+                )
+                if "template_messages" in model:
+                    add_config_import(
+                        f"from continuedev.src.continuedev.libs.llm.prompts.chat import {model['template_messages']}"
+                    )
+
                 # Set and start the new default model
+
+                if "template_messages" in model:
+                    model["template_messages"] = {
+                        "llama2_template_messages": llama2_template_messages,
+                        "template_alpaca_messages": template_alpaca_messages,
+                    }[model["template_messages"]]
                 new_model = MODEL_CLASSES[model_class](**model)
                 models.default = new_model
                 await self.session.autopilot.continue_sdk.start_model(models.default)
@@ -341,11 +357,6 @@ class GUIProtocolServer:
                 await self.session.autopilot.set_config_attr(
                     ["models"],
                     create_obj_node("Models", models_args),
-                )
-
-                # Add the requisite import to config.py
-                add_config_import(
-                    f"from continuedev.src.continuedev.libs.llm.{MODEL_MODULE_NAMES[model_class]} import {model_class}"
                 )
 
                 # Set all roles (in-memory) to the new default model
