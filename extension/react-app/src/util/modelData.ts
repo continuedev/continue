@@ -387,6 +387,36 @@ After it's up and running, you can start using Continue.`,
     packages: [llama2FamilyPackage],
     collectInputFor: [contextLengthInput],
   },
+  palm: {
+    title: "Google PaLM API",
+    class: "GooglePaLMAPI",
+    description:
+      "Try out the Google PaLM API, which is currently in public preview, using an API key from Google Makersuite",
+    longDescription: `To get started with Google Makersuite, obtain your API key from [here](https://developers.generativeai.google/products/makersuite) and paste it below.
+> Note: Google's PaLM language models do not support streaming, so the response will appear all at once after a few seconds.`,
+    icon: "google-palm.png",
+    tags: [ModelProviderTag["Requires API Key"]],
+    collectInputFor: [
+      {
+        inputType: CollectInputType.text,
+        key: "api_key",
+        label: "API Key",
+        placeholder: "Enter your MakerSpace API key",
+        required: true,
+      },
+    ],
+    packages: [
+      {
+        title: "chat-bison-001",
+        description:
+          "Google PaLM's chat-bison-001 model, fine-tuned for chatting about code",
+        params: {
+          model: "chat-bison-001",
+          context_length: 8000,
+        },
+      },
+    ],
+  },
   hftgi: {
     title: "HuggingFace TGI",
     class: "HuggingFaceTGI",
