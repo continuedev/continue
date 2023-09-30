@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useCallback, useContext, useEffect, useState } from "react";
 import ModelCard from "../components/ModelCard";
 import styled from "styled-components";
 import { ArrowLeftIcon } from "@heroicons/react/24/outline";
@@ -32,6 +32,30 @@ const GridDiv = styled.div`
   align-items: center;
 `;
 
+const CustomModelButton = styled.div<{ disabled: boolean }>`
+  border: 1px solid ${lightGray};
+  border-radius: ${defaultBorderRadius};
+  padding: 4px 8px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  transition: all 0.5s;
+
+  ${(props) =>
+    props.disabled
+      ? `
+    opacity: 0.5;
+    `
+      : `
+  &:hover {
+    border: 1px solid #be1b55;
+    background-color: #be1b5522;
+    cursor: pointer;
+  }
+  `}
+`;
+
 function ModelConfig() {
   const formMethods = useForm();
   const { modelName } = useParams();
@@ -50,6 +74,18 @@ function ModelConfig() {
   const vscMediaUrl = useSelector(
     (state: RootStore) => state.config.vscMediaUrl
   );
+
+  const disableModelCards = useCallback(() => {
+    return (
+      modelInfo?.collectInputFor?.some((d) => {
+        if (!d.required) return false;
+        const val = formMethods.watch(d.key);
+        return (
+          typeof val === "undefined" || (typeof val === "string" && val === "")
+        );
+      }) || false
+    );
+  }, [modelInfo, formMethods]);
 
   return (
     <FormProvider {...formMethods}>
@@ -100,6 +136,7 @@ function ModelConfig() {
             );
           })}
           <StyledMarkdownPreview
+            className="mt-2"
             fontSize={getFontSize()}
             source={modelInfo?.longDescription || modelInfo?.description || ""}
             wrapperElement={{
@@ -166,20 +203,14 @@ function ModelConfig() {
           {modelInfo?.packages.map((pkg) => {
             return (
               <ModelCard
-                disabled={modelInfo.collectInputFor?.some((d) => {
-                  if (!d.required) return false;
-                  const val = formMethods.watch(d.key);
-                  return (
-                    typeof val === "undefined" ||
-                    (typeof val === "string" && val === "")
-                  );
-                })}
+                disabled={disableModelCards()}
                 title={pkg.title}
                 description={pkg.description}
                 tags={pkg.tags}
                 refUrl={pkg.refUrl}
                 icon={pkg.icon || modelInfo.icon}
                 onClick={(e) => {
+                  if (disableModelCards()) return;
                   const formParams: any = {};
                   for (const d of modelInfo.collectInputFor || []) {
                     formParams[d.key] =
@@ -193,12 +224,34 @@ function ModelConfig() {
                     ...modelInfo.params,
                     ...formParams,
                   });
-                  dispatch(setShowDialog(false));
                   navigate("/");
                 }}
               />
             );
           })}
+
+          <CustomModelButton
+            disabled={disableModelCards()}
+            onClick={(e) => {
+              if (!modelInfo || disableModelCards()) return;
+              const formParams: any = {};
+              for (const d of modelInfo.collectInputFor || []) {
+                formParams[d.key] =
+                  d.inputType === "text"
+                    ? formMethods.watch(d.key)
+                    : parseInt(formMethods.watch(d.key));
+              }
+
+              client?.addModelForRole("*", modelInfo.class, {
+                ...modelInfo.packages[0]?.params,
+                ...modelInfo.params,
+                ...formParams,
+              });
+              navigate("/");
+            }}
+          >
+            <h3 className="text-center my-2">Configure Model in config.py</h3>
+          </CustomModelButton>
         </GridDiv>
       </div>
     </FormProvider>
