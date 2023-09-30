@@ -20,7 +20,11 @@ meilisearch_url_global = None
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    await start_meilisearch(url=meilisearch_url_global)
+    try:
+        await start_meilisearch(url=meilisearch_url_global)
+    except Exception as e:
+        logger.warning(f"Error starting MeiliSearch: {e}")
+
     yield
     stop_meilisearch()
 

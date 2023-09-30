@@ -173,7 +173,7 @@ class HighlightedCodeContextProvider(ContextProvider):
                 id=ContextItemId(provider_title=self.title, item_id=str(idx)),
             ),
             content=rif.contents,
-            editing=editing,
+            editing=editing if editing is not None else False,
             editable=True,
         )
 
