@@ -233,10 +233,16 @@ suspend fun startBinaryWithRetry(path: String) {
     }
 }
 
+fun getContinueServerUrl(): String {
+    val settings =
+            ServiceManager.getService(ContinueExtensionSettings::class.java)
+    return settings.continueState.serverUrl
+}
+
 suspend fun startContinuePythonServer() {
     val settings =
-        ServiceManager.getService(ContinueExtensionSettings::class.java)
-    val serverUrl = settings.continueState.serverUrl ?: CONTINUE_PYTHON_SERVER_URL
+            ServiceManager.getService(ContinueExtensionSettings::class.java)
+    val serverUrl = getContinueServerUrl()
 
     if ((serverUrl != CONTINUE_PYTHON_SERVER_URL && serverUrl != "http://127.0.0.1:65432") || settings.continueState.manuallyRunningServer) {
         println("Continue server being run manually, skipping start")
@@ -302,6 +308,11 @@ suspend fun startContinuePythonServer() {
 
     // Write the server version to server_version.txt
     File(serverVersionPath()).writeText(getExtensionVersion())
+
+    // Wait for the server process to start
+    while (getProcessId(CONTINUE_SERVER_WEBSOCKET_PORT) == null) {
+        delay(1000)
+    }
 }
 
 
@@ -333,18 +344,18 @@ class ContinuePluginStartupActivity : StartupActivity, Disposable {
         coroutineScope.launch {
             startContinuePythonServer()
 
-            while (getProcessId(CONTINUE_SERVER_WEBSOCKET_PORT) == null) {
-                delay(1000)
-            }
+            val wsUrl = getContinueServerUrl().replace("http://", "ws://").replace("https://", "wss://")
 
             val ideProtocolClient = IdeProtocolClient(
-                "ws://localhost:$CONTINUE_SERVER_WEBSOCKET_PORT/ide/ws",
+                "$wsUrl/ide/ws",
                 continuePluginService,
                 defaultStrategy,
                 coroutineScope,
                 project.basePath ?: "/",
                 project
             )
+
+            continuePluginService.ideProtocolClient = ideProtocolClient
 
             val listener =
                 ContinuePluginSelectionListener(
@@ -369,7 +380,7 @@ class ContinuePluginStartupActivity : StartupActivity, Disposable {
                     val dataMap = mutableMapOf(
                         "type" to "onUILoad",
                         "sessionId" to sessionId,
-                        "apiUrl" to CONTINUE_PYTHON_SERVER_URL,
+                        "apiUrl" to getContinueServerUrl(),
                         "workspacePaths" to workspacePaths,
                         "vscMachineId" to getMachineUniqueID(),
                         "vscMediaUrl" to "http://continue",

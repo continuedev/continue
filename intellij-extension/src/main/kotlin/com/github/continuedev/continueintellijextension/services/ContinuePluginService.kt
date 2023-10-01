@@ -1,5 +1,6 @@
 package com.github.continuedev.continueintellijextension.services
 
+import com.github.continuedev.continueintellijextension.`continue`.IdeProtocolClient
 import com.github.continuedev.continueintellijextension.toolWindow.ContinuePluginToolWindowFactory
 import com.google.gson.Gson
 import com.intellij.openapi.Disposable
@@ -16,6 +17,8 @@ class ContinuePluginService(project: Project) : Disposable {
     val coroutineScope = CoroutineScope(Dispatchers.Main)
     val continuePluginWindow =
         ContinuePluginToolWindowFactory.ContinuePluginWindow(project)
+
+    var ideProtocolClient: IdeProtocolClient? = null
 
     override fun dispose() {
         coroutineScope.cancel()

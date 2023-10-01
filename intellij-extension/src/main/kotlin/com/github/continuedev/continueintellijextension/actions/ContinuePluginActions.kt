@@ -3,7 +3,9 @@ package com.github.continuedev.continueintellijextension.actions
 import com.github.continuedev.continueintellijextension.services.ContinuePluginService
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
+import com.intellij.openapi.actionSystem.CommonDataKeys
 import com.intellij.openapi.components.ServiceManager
+import com.intellij.openapi.editor.EditorFactory
 import com.intellij.openapi.editor.SelectionModel
 import com.intellij.openapi.ui.Messages
 import com.intellij.openapi.wm.ToolWindowManager
@@ -84,6 +86,8 @@ class FocusContinueInputWithEditAction : AnAction() {
         )
         continuePluginService.continuePluginWindow.content.components[0].requestFocus()
         continuePluginService.dispatchCustomEvent("message", mutableMapOf("type" to "focusContinueInputWithEdit"))
+
+        continuePluginService.ideProtocolClient?.sendHighlightedCode()
     }
 }
 
@@ -97,6 +101,8 @@ class FocusContinueInputAction : AnAction() {
 
         continuePluginService.continuePluginWindow.content.components[0].requestFocus()
         continuePluginService.dispatchCustomEvent("message", mutableMapOf("type" to "focusContinueInput"))
+
+        continuePluginService.ideProtocolClient?.sendHighlightedCode()
 
 //        val project: Project = event.getProject()
 //        val editor: Editor = event.getDataContext().getData(EditorDataKeys.EDITOR)

@@ -15,7 +15,7 @@ const MODEL_INFO: ModelInfo[] = [
       api_key: "",
       title: "OpenAI",
     },
-    icon: "openai.svg",
+    icon: "openai.png",
     tags: [ModelTag["Requires API Key"]],
   },
   {
@@ -110,7 +110,7 @@ const MODEL_INFO: ModelInfo[] = [
     args: {
       server_url: "<SERVER_URL>",
     },
-    icon: "openai.svg",
+    icon: "openai.png",
     tags: [ModelTag.Local, ModelTag["Open-Source"]],
   },
   {
@@ -122,7 +122,7 @@ const MODEL_INFO: ModelInfo[] = [
       model: "gpt-4",
       title: "GPT-4 Free Trial",
     },
-    icon: "openai.svg",
+    icon: "openai.png",
     tags: [ModelTag.Free],
   },
 ];

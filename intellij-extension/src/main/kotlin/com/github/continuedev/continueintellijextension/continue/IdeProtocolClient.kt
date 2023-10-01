@@ -6,7 +6,11 @@ import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.editor.Document
+import com.intellij.openapi.editor.Editor
+import com.intellij.openapi.editor.EditorFactory
+import com.intellij.openapi.editor.SelectionModel
 import com.intellij.openapi.fileEditor.FileDocumentManager
+import com.intellij.openapi.fileEditor.FileEditor
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.fileEditor.TextEditor
 import com.intellij.openapi.project.Project
@@ -14,6 +18,9 @@ import com.intellij.openapi.ui.MessageType
 import com.intellij.openapi.ui.popup.Balloon
 import com.intellij.openapi.ui.popup.JBPopupFactory
 import com.intellij.openapi.vfs.LocalFileSystem
+import com.intellij.openapi.vfs.VfsUtil
+import com.intellij.openapi.vfs.VirtualFile
+import com.intellij.openapi.vfs.VirtualFileManager
 import com.intellij.openapi.wm.WindowManager
 import com.intellij.testFramework.LightVirtualFile
 import com.intellij.ui.awt.RelativePoint
@@ -29,6 +36,7 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Response
 import okhttp3.WebSocket
+import kotlinx.serialization.json.Json
 import okhttp3.WebSocketListener
 import java.io.File
 import java.net.NetworkInterface
@@ -42,6 +50,9 @@ data class Position(val line: Int, val character: Int)
 data class Range(val start: Position, val end: Position)
 data class RangeInFile(val filepath: String, val range: Range)
 data class GetTerminalContents(val contents: String)
+data class ListDirectoryContents(val contents: List<String>)
+data class RangeInFileWithContents(val filepath: String, val range: Range, val contents: String)
+data class HighlightedCodeUpdate(val highlightedCode: List<RangeInFileWithContents>, val edit: Boolean)
 
 fun getMachineUniqueID(): String {
     val sb = StringBuilder()
@@ -176,11 +187,21 @@ class IdeProtocolClient(
                                 )
                             )
                         }
+                        "listDirectoryContents" -> {
+                            webSocket.send(
+                                    Gson().toJson(
+                                            WebSocketMessage(
+                                                    "listDirectoryContents",
+                                                    ListDirectoryContents(listDirectoryContents())
+                                            )
+                                    )
+                            )
+                        }
                         "getTerminalContents" -> {
                             webSocket.send(
                                     Gson().toJson(
                                             WebSocketMessage(
-                                                    "readFile",
+                                                    "getTerminalContents",
                                                     GetTerminalContents("Terminal cannot be accessed in JetBrains IDE")
                                             )
                                     )
@@ -277,20 +298,20 @@ class IdeProtocolClient(
         endLine: Int,
         endCharacter: Int
     ) = coroutineScope.launch {
-        val jsonMessage = textSelectionStrategy.handleTextSelection(
-            selectedText,
-            filepath,
-            startLine,
-            startCharacter,
-            endLine,
-            endCharacter
-        )
-        sendMessage("highlightedCodePush", jsonMessage)
-        dispatchEventToWebview(
-            "highlightedCode",
-            jsonMessage,
-            continuePluginService.continuePluginWindow.webView
-        )
+//        val jsonMessage = textSelectionStrategy.handleTextSelection(
+//            selectedText,
+//            filepath,
+//            startLine,
+//            startCharacter,
+//            endLine,
+//            endCharacter
+//        )
+//        sendMessage("highlightedCodePush", jsonMessage)
+//        dispatchEventToWebview(
+//            "highlightedCode",
+//            jsonMessage,
+//            continuePluginService.continuePluginWindow.webView
+//        )
     }
 
     fun readFile(filepath: String): String {
@@ -299,6 +320,92 @@ class IdeProtocolClient(
         val documentManager = FileDocumentManager.getInstance()
         val document: Document? = documentManager.getDocument(file)
         return document?.text ?: ""
+    }
+
+    fun sendHighlightedCode(edit: Boolean = false) {
+        // Get the editor instance for the currently active editor window
+        val editor = FileEditorManager.getInstance(project).selectedTextEditor ?: return
+        val virtualFile = editor.let { FileDocumentManager.getInstance().getFile(it.document) } ?: return
+
+        // Get the selection range and content
+        val selectionModel: SelectionModel = editor.selectionModel
+        val selectedText = selectionModel.selectedText ?: ""
+
+        val document = editor.document
+        val startOffset = selectionModel.selectionStart
+        val endOffset = selectionModel.selectionEnd
+
+        val startLine = document.getLineNumber(startOffset)
+        val endLine = document.getLineNumber(endOffset)
+
+        val startChar = startOffset - document.getLineStartOffset(startLine)
+        val endChar = endOffset - document.getLineStartOffset(endLine)
+
+        val payload = Gson().toJson(
+                WebSocketMessage("highlightedCodePush",
+                    HighlightedCodeUpdate(
+                        listOf(RangeInFileWithContents(
+                            virtualFile.path,
+                            Range(
+                                Position(startLine, startChar),
+                                Position(endLine, endChar)
+                            ),
+                            selectedText
+                        )),
+                        edit
+                    )
+                )
+        )
+
+        webSocket?.send(payload)
+    }
+
+    private val DEFAULT_IGNORE_DIRS = listOf(
+            ".git",
+            ".vscode",
+            ".idea",
+            ".vs",
+            ".venv",
+            "env",
+            ".env",
+            "node_modules",
+            "dist",
+            "build",
+            "target",
+            "out",
+            "bin",
+            ".pytest_cache",
+            ".vscode-test",
+            ".continue",
+            "__pycache__"
+    )
+    private fun shouldIgnoreDirectory(name: String): Boolean {
+        val components = File(name).path.split(File.separator)
+        return DEFAULT_IGNORE_DIRS.any { dir ->
+            components.contains(dir)
+        }
+    }
+
+
+    fun listDirectoryContents(): List<String> {
+        val workspacePath = File(workspaceDirectory())
+        val workspaceDir = VirtualFileManager.getInstance().findFileByUrl("file://$workspacePath")
+
+        val contents = ArrayList<String>()
+
+        if (workspaceDir != null) {
+            VfsUtil.iterateChildrenRecursively(workspaceDir, null) { virtualFile: VirtualFile ->
+                if (!virtualFile.isDirectory) {
+                    val filePath = virtualFile.path
+                    if (!shouldIgnoreDirectory(filePath)) {
+                        contents.add(filePath)
+                    }
+                }
+                true
+            }
+        }
+
+        return contents
     }
 
     fun saveFile(filepath: String) {
