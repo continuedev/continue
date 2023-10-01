@@ -2,6 +2,7 @@ import json
 import os
 import time
 import traceback
+import uuid
 from functools import cached_property
 from typing import Callable, Coroutine, Dict, List, Optional
 
@@ -380,11 +381,27 @@ class Autopilot(ContinueBaseModel):
         #     last_depth = self.history.timeline[i].depth
         #     i -= 1
 
+        # Log the context and step to dev data
+        context_used = await self.context_manager.get_selected_items()
         posthog_logger.capture_event(
             "step run", {"step_name": step.name, "params": step.dict()}
         )
+        step_id = uuid.uuid4().hex
         dev_data_logger.capture(
-            "step_run", {"step_name": step.name, "params": step.dict()}
+            "step_run",
+            {"step_name": step.name, "params": step.dict(), "step_id": step_id},
+        )
+        dev_data_logger.capture(
+            "context_used",
+            {
+                "context": list(
+                    map(
+                        lambda item: item.dict(),
+                        context_used,
+                    )
+                ),
+                "step_id": step_id,
+            },
         )
 
         if not is_future_step:
@@ -402,7 +419,7 @@ class Autopilot(ContinueBaseModel):
                 step=step,
                 observation=None,
                 depth=self._step_depth,
-                context_used=await self.context_manager.get_selected_items(),
+                context_used=context_used,
             )
         )
 

@@ -5,6 +5,7 @@ from pydantic import BaseModel
 from ..libs.llm import LLM
 from ..libs.llm.anthropic import AnthropicLLM
 from ..libs.llm.ggml import GGML
+from ..libs.llm.google_palm_api import GooglePaLMAPI
 from ..libs.llm.hf_inference_api import HuggingFaceInferenceAPI
 from ..libs.llm.hf_tgi import HuggingFaceTGI
 from ..libs.llm.llamacpp import LlamaCpp
@@ -39,6 +40,7 @@ MODEL_CLASSES = {
         LlamaCpp,
         HuggingFaceInferenceAPI,
         HuggingFaceTGI,
+        GooglePaLMAPI,
     ]
 }
 
@@ -53,6 +55,7 @@ MODEL_MODULE_NAMES = {
     "LlamaCpp": "llamacpp",
     "HuggingFaceInferenceAPI": "hf_inference_api",
     "HuggingFaceTGI": "hf_tgi",
+    "GooglePaLMAPI": "google_palm_api",
 }
 
 
