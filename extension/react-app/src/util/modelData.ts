@@ -87,7 +87,7 @@ const codeLlama7bInstruct: ModelPackage = {
     context_length: 2048,
     template_messages: "llama2_template_messages",
   },
-  icon: "meta.svg",
+  icon: "meta.png",
 };
 const codeLlama13bInstruct: ModelPackage = {
   title: "CodeLlama-13b-Instruct",
@@ -99,7 +99,7 @@ const codeLlama13bInstruct: ModelPackage = {
     context_length: 2048,
     template_messages: "llama2_template_messages",
   },
-  icon: "meta.svg",
+  icon: "meta.png",
 };
 const codeLlama34bInstruct: ModelPackage = {
   title: "CodeLlama-34b-Instruct",
@@ -111,7 +111,7 @@ const codeLlama34bInstruct: ModelPackage = {
     context_length: 2048,
     template_messages: "llama2_template_messages",
   },
-  icon: "meta.svg",
+  icon: "meta.png",
 };
 
 const llama2Chat7b: ModelPackage = {
@@ -124,7 +124,7 @@ const llama2Chat7b: ModelPackage = {
     context_length: 2048,
     template_messages: "llama2_template_messages",
   },
-  icon: "meta.svg",
+  icon: "meta.png",
 };
 const llama2Chat13b: ModelPackage = {
   title: "Llama2-13b-Chat",
@@ -136,7 +136,7 @@ const llama2Chat13b: ModelPackage = {
     context_length: 2048,
     template_messages: "llama2_template_messages",
   },
-  icon: "meta.svg",
+  icon: "meta.png",
 };
 const llama2Chat34b: ModelPackage = {
   title: "Llama2-34b-Chat",
@@ -148,7 +148,7 @@ const llama2Chat34b: ModelPackage = {
     context_length: 2048,
     template_messages: "llama2_template_messages",
   },
-  icon: "meta.svg",
+  icon: "meta.png",
 };
 
 const codeLlamaPackages = [
@@ -166,7 +166,7 @@ const llama2FamilyPackage = {
     context_length: 2048,
     template_messages: "llama2_template_messages",
   },
-  icon: "meta.svg",
+  icon: "meta.png",
 };
 
 const gpt4: ModelPackage = {
@@ -199,7 +199,7 @@ export const MODEL_INFO: { [key: string]: ModelInfo } = {
     description: "Use gpt-4, gpt-3.5-turbo, or any other OpenAI model",
     longDescription:
       "Use gpt-4, gpt-3.5-turbo, or any other OpenAI model. See [here](https://openai.com/product#made-for-developers) to obtain an API key.",
-    icon: "openai.svg",
+    icon: "openai.png",
     tags: [ModelProviderTag["Requires API Key"]],
     packages: [gpt4, gpt35turbo],
     collectInputFor: [
@@ -453,7 +453,7 @@ After it's up and running, you can start using Continue.`,
       },
       contextLengthInput,
     ],
-    icon: "openai.svg",
+    icon: "openai.png",
     tags: [ModelProviderTag.Local, ModelProviderTag["Open-Source"]],
     packages: [llama2FamilyPackage],
   },
@@ -464,7 +464,7 @@ After it's up and running, you can start using Continue.`,
       "New users can try out Continue for free using a proxy server that securely makes calls to OpenAI using our API key",
     longDescription:
       'New users can try out Continue for free using a proxy server that securely makes calls to OpenAI using our API key. If you are ready to use your own API key or have used all 250 free uses, you can enter your API key in config.py where it says `api_key=""` or select another model provider.',
-    icon: "openai.svg",
+    icon: "openai.png",
     tags: [ModelProviderTag.Free],
     packages: [gpt4, gpt35turbo],
   },
