@@ -12,7 +12,7 @@ function useContinueGUIProtocol(useVscodeMessagePassing: boolean = true) {
   );
 
   useEffect(() => {
-    console.log(client, sessionId, serverHttpUrl)
+    console.log(client, sessionId, serverHttpUrl);
     if (!sessionId || !serverHttpUrl) {
       if (useVscodeMessagePassing) {
         postVscMessage("onLoad", {});
@@ -35,7 +35,7 @@ function useContinueGUIProtocol(useVscodeMessagePassing: boolean = true) {
       serverUrlWithSessionId,
       useVscodeMessagePassing
     );
-    console.log(newClient)
+    console.log(newClient);
     setClient(newClient);
   }, [sessionId, serverHttpUrl]);
 

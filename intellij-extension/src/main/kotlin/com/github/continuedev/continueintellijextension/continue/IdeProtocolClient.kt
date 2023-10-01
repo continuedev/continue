@@ -24,14 +24,7 @@ import com.intellij.openapi.vfs.VirtualFileManager
 import com.intellij.openapi.wm.WindowManager
 import com.intellij.testFramework.LightVirtualFile
 import com.intellij.ui.awt.RelativePoint
-import kotlinx.coroutines.CompletableDeferred
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Deferred
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withTimeoutOrNull
+import kotlinx.coroutines.*
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Response
@@ -40,6 +33,7 @@ import kotlinx.serialization.json.Json
 import okhttp3.WebSocketListener
 import java.io.File
 import java.net.NetworkInterface
+import java.util.concurrent.TimeUnit
 
 data class WebSocketMessage<T>(val messageType: String, val data: T)
 data class WorkspaceDirectory(val workspaceDirectory: String)
@@ -88,8 +82,8 @@ class IdeProtocolClient(
     private val project: Project
 ) {
     private val eventListeners = mutableListOf<WebSocketEventListener>()
-    private var okHttpClient: OkHttpClient = OkHttpClient()
     private var webSocket: WebSocket? = null
+    private val okHttpClient = OkHttpClient()
 
     private val diffManager = DiffManager(project)
 

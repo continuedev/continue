@@ -20,12 +20,11 @@ import com.intellij.openapi.extensions.PluginId
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.startup.StartupActivity
 import com.intellij.openapi.wm.ToolWindowManager
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.cancel
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import io.ktor.client.*
+import io.ktor.client.plugins.websocket.*
+import io.ktor.http.*
+import io.ktor.websocket.*
+import kotlinx.coroutines.*
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import java.io.BufferedReader
@@ -346,53 +345,57 @@ class ContinuePluginStartupActivity : StartupActivity, Disposable {
 
             val wsUrl = getContinueServerUrl().replace("http://", "ws://").replace("https://", "wss://")
 
-            val ideProtocolClient = IdeProtocolClient(
-                "$wsUrl/ide/ws",
-                continuePluginService,
-                defaultStrategy,
-                coroutineScope,
-                project.basePath ?: "/",
-                project
-            )
-
-            continuePluginService.ideProtocolClient = ideProtocolClient
-
-            val listener =
-                ContinuePluginSelectionListener(
-                    ideProtocolClient,
-                    coroutineScope
-                )
-
-            val newSessionId = ideProtocolClient.getSessionIdAsync().await()
-            val sessionId = newSessionId ?: ""
-
             // After sessionID fetched
             withContext(Dispatchers.Main) {
                 val toolWindowManager = ToolWindowManager.getInstance(project)
                 val toolWindow =
-                    toolWindowManager.getToolWindow("ContinuePluginViewer")
+                        toolWindowManager.getToolWindow("ContinuePluginViewer")
                 toolWindow?.show()
+            }
 
-                // Reload the WebView
-                continuePluginService?.let {
-                    val workspacePaths =
+            val ideProtocolClientDeferred = GlobalScope.async(Dispatchers.IO) {
+                IdeProtocolClient(
+                    "$wsUrl/ide/ws",
+                    continuePluginService,
+                    defaultStrategy,
+                    coroutineScope,
+                    project.basePath ?: "/",
+                    project
+                )
+            }
+
+            val ideProtocolClient = ideProtocolClientDeferred.await()
+            continuePluginService.ideProtocolClient = ideProtocolClient
+
+            val listener =
+                    ContinuePluginSelectionListener(
+                            ideProtocolClient,
+                            coroutineScope
+                    )
+
+            val newSessionId = ideProtocolClient.getSessionIdAsync().await()
+            val sessionId = newSessionId ?: ""
+
+            // Reload the WebView
+            continuePluginService?.let {
+                val workspacePaths =
                         if (project.basePath != null) arrayOf(project.basePath) else emptyList<String>()
-                    val dataMap = mutableMapOf(
-                        "type" to "onUILoad",
+                val dataMap = mutableMapOf(
+                        "type" to "onLoad",
                         "sessionId" to sessionId,
                         "apiUrl" to getContinueServerUrl(),
                         "workspacePaths" to workspacePaths,
                         "vscMachineId" to getMachineUniqueID(),
                         "vscMediaUrl" to "http://continue",
                         "dataSwitchOn" to true
-                    )
-                    dispatchEventToWebview(
-                        "onUILoad",
+                )
+                dispatchEventToWebview(
+                        "onLoad",
                         dataMap,
                         continuePluginService.continuePluginWindow.webView
-                    )
-                }
+                )
             }
+
             EditorFactory.getInstance().eventMulticaster.addSelectionListener(
                 listener,
                 this@ContinuePluginStartupActivity

@@ -76,7 +76,7 @@ function App() {
   useEffect(() => {
     const eventListener = (event: any) => {
       switch (event.data.type) {
-        case "onUILoad":
+        case "onLoad":
           dispatch(setApiUrl(event.data.apiUrl));
           dispatch(setVscMachineId(event.data.vscMachineId));
           dispatch(setSessionId(event.data.sessionId));
