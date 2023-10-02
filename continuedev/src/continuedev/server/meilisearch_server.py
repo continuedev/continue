@@ -158,6 +158,8 @@ async def start_meilisearch(url: Optional[str] = None):
             shell=True,
         )
 
+    logger.debug("Meilisearch started")
+
 
 def stop_meilisearch():
     """

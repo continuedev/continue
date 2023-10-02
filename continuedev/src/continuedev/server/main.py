@@ -8,6 +8,7 @@ import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from ..libs.util.create_async_task import create_async_task
 from ..libs.util.logging import logger
 from .gui import router as gui_router
 from .ide import router as ide_router
@@ -20,8 +21,12 @@ meilisearch_url_global = None
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    def on_err(e):
+        logger.warning(f"Error starting MeiliSearch: {e}")
+
     try:
-        await start_meilisearch(url=meilisearch_url_global)
+        # start meilisearch without blocking server startup
+        create_async_task(start_meilisearch(url=meilisearch_url_global), on_err)
     except Exception as e:
         logger.warning(f"Error starting MeiliSearch: {e}")
 
@@ -54,17 +59,30 @@ def health():
 def run_server(
     port: int = 65432, host: str = "127.0.0.1", meilisearch_url: Optional[str] = None
 ):
-    global meilisearch_url_global
+    try:
+        global meilisearch_url_global
 
-    meilisearch_url_global = meilisearch_url
+        meilisearch_url_global = meilisearch_url
 
-    config = uvicorn.Config(app, host=host, port=port)
-    server = uvicorn.Server(config)
-    server.run()
+        config = uvicorn.Config(app, host=host, port=port)
+        server = uvicorn.Server(config)
+        server.run()
+    except PermissionError as e:
+        logger.critical(
+            f"Error starting Continue server: {e}. "
+            f"This means that port {port} is already in use, and is usually caused by another instance of the Continue server already running."
+        )
+        cleanup()
+        raise e
+
+    except Exception as e:
+        logger.critical(f"Error starting Continue server: {e}")
+        cleanup()
+        raise e
 
 
 async def cleanup_coroutine():
-    logger.debug("Cleaning up sessions")
+    logger.debug("------ Cleaning Up ------")
     for session_id in session_manager.sessions:
         await session_manager.persist_session(session_id)
 
@@ -79,22 +97,13 @@ atexit.register(cleanup)
 
 if __name__ == "__main__":
     try:
-        try:
-            # add cli arg for server port
-            parser = argparse.ArgumentParser()
-            parser.add_argument(
-                "-p", "--port", help="server port", type=int, default=65432
-            )
-            parser.add_argument(
-                "--host", help="server host", type=str, default="127.0.0.1"
-            )
-            args = parser.parse_args()
-        except Exception as e:
-            logger.debug(f"Error parsing command line arguments: {e}")
-            raise e
-
-        run_server(args.port, args.host)
+        # add cli arg for server port
+        parser = argparse.ArgumentParser()
+        parser.add_argument("-p", "--port", help="server port", type=int, default=65432)
+        parser.add_argument("--host", help="server host", type=str, default="127.0.0.1")
+        args = parser.parse_args()
     except Exception as e:
-        logger.debug(f"Error starting Continue server: {e}")
-        cleanup()
+        logger.critical(f"Error parsing command line arguments: {e}")
         raise e
+
+    run_server(args.port, args.host)
