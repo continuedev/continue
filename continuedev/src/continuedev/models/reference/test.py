@@ -15,6 +15,7 @@ LLM_MODULES = [
     ("hf_inference_api", "HuggingFaceInferenceAPI"),
     ("hf_tgi", "HuggingFaceTGI"),
     ("openai_free_trial", "OpenAIFreeTrial"),
+    ("google_palm_api", "GooglePaLMAPI"),
     ("queued", "QueuedLLM"),
 ]
 

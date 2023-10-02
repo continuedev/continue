@@ -7,6 +7,7 @@ Commercial Models
 - [OpenAIFreeTrial](../reference/Models/openaifreetrial.md) (default) - Use gpt-4 or gpt-3.5-turbo free with our API key, or with your API key. gpt-4 is probably the most capable model of all options.
 - [OpenAI](../reference/Models/openai.md) - Use any OpenAI model with your own key. Can also change the base URL if you have a server that uses the OpenAI API format, including using the Azure OpenAI service, LocalAI, etc.
 - [AnthropicLLM](../reference/Models/anthropicllm.md) - Use claude-2 with your Anthropic API key. Claude 2 is also highly capable, and has a 100,000 token context window.
+- [GooglePaLMAP](../reference/Models/googlepalmapi.md) - Try out the `chat-bison-001` model, which is currently in public preview, after creating an API key in [Google MakerSuite](https://makersuite.google.com/u/2/app/apikey)
 
 Local Models
 
