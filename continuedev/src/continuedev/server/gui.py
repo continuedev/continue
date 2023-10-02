@@ -306,6 +306,17 @@ class GUIProtocolServer:
 
     def add_model_for_role(self, role: str, model_class: str, model: Any):
         models = self.session.autopilot.continue_sdk.config.models
+
+        model_copy = model.copy()
+        if "api_key" in model_copy:
+            del model_copy["api_key"]
+        if "hf_token" in model_copy:
+            del model_copy["hf_token"]
+        posthog_logger.capture_event(
+            "select_model_for_role",
+            {"role": role, "model_class": model_class, "model": model_copy},
+        )
+
         if role == "*":
 
             async def async_stuff():

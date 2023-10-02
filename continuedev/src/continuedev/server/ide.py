@@ -602,7 +602,11 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str = None):
 
         # Message handler
         def handle_msg(msg):
-            message = json.loads(msg)
+            try:
+                message = json.loads(msg)
+            except json.JSONDecodeError:
+                logger.critical(f"Error decoding json: {msg}")
+                return
 
             if "messageType" not in message or "data" not in message:
                 return

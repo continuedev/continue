@@ -148,7 +148,7 @@ function History() {
         }
         return workspacePaths.includes(session.workspace_directory);
       }).length === 0 && (
-        <div className="text-center my-4">
+        <div className="text-center m-4">
           No past sessions found. To start a new session, either click the "+"
           button or use the keyboard shortcut: <b>Option + Command + N</b>
         </div>

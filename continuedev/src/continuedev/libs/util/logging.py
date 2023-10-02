@@ -7,7 +7,7 @@ logfile_path = getLogFilePath()
 
 try:
     # Truncate the logs that are more than a day old
-    if os.path.exists(logfile_path):
+    if os.path.exists(logfile_path) and os.path.getsize(logfile_path) > 32 * 1024:
         tail = None
         with open(logfile_path, "rb") as f:
             f.seek(-32 * 1024, os.SEEK_END)
@@ -44,4 +44,4 @@ logger.addHandler(file_handler)
 logger.addHandler(console_handler)
 
 # Log a test message
-logger.debug("Testing logs")
+logger.debug("------ Begin Logs ------")

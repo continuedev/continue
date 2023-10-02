@@ -147,8 +147,6 @@ class Autopilot(ContinueBaseModel):
         self.started = True
 
     async def cleanup(self):
-        if self.continue_sdk.lsp is not None:
-            await self.continue_sdk.lsp.stop()
         stop_meilisearch()
 
     class Config:
