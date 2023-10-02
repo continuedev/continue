@@ -1,4 +1,5 @@
 import os
+import re
 from typing import Optional
 
 from ..constants.default_config import default_config
@@ -109,6 +110,27 @@ def getConfigFilePath() -> str:
                 f.write(migrated)
 
     return path
+
+
+def convertConfigImports(shorten: bool) -> str:
+    path = getConfigFilePath()
+    # Make any necessary migrations
+    with open(path, "r") as f:
+        existing_content = f.read()
+
+    if shorten:
+        migrated = existing_content.replace(
+            "from continuedev.src.continuedev.", "from continuedev."
+        )
+    else:
+        migrated = re.sub(
+            r"(?<!src\.)continuedev\.(?!src)",
+            "continuedev.src.continuedev.",
+            existing_content,
+        )
+
+    with open(path, "w") as f:
+        f.write(migrated)
 
 
 def getLogFilePath():
