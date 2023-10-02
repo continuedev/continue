@@ -21,7 +21,7 @@ meilisearch_url_global = None
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    def on_err(e):
+    async def on_err(e):
         logger.warning(f"Error starting MeiliSearch: {e}")
 
     try:

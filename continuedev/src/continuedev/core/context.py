@@ -11,9 +11,11 @@ from ..libs.util.devdata import dev_data_logger
 from ..libs.util.logging import logger
 from ..libs.util.telemetry import posthog_logger
 from ..server.meilisearch_server import (
+    check_meilisearch_running,
     get_meilisearch_url,
     poll_meilisearch_running,
     restart_meilisearch,
+    start_meilisearch,
 )
 from .main import (
     ChatMessage,
@@ -255,33 +257,38 @@ class ContextManager:
         """
         # Use only non-meilisearch-dependent providers until it is loaded
         self.context_providers = {
-            provider.title: provider
-            for provider in context_providers
-            if provider.title == "code"
+            provider.title: provider for provider in context_providers
         }
         self.provider_titles = {provider.title for provider in context_providers}
 
+        for provider in context_providers:
+            await provider.start(
+                sdk,
+                ContextManager.delete_documents,
+                ContextManager.update_documents,
+            )
+
+        async def on_err(e):
+            logger.warning(f"Error loading meilisearch index: {e}")
+
         # Start MeiliSearch in the background without blocking
-        async def start_meilisearch(context_providers):
-            try:
-                await asyncio.wait_for(poll_meilisearch_running(), timeout=20)
-                self.context_providers = {
-                    prov.title: prov for prov in context_providers
-                }
-                for provider in context_providers:
-                    await provider.start(
-                        sdk,
-                        ContextManager.delete_documents,
-                        ContextManager.update_documents,
+        async def load_index(context_providers):
+            running = await check_meilisearch_running()
+            if not running:
+                await start_meilisearch()
+                try:
+                    await asyncio.wait_for(poll_meilisearch_running(), timeout=20)
+                except asyncio.TimeoutError:
+                    logger.warning(
+                        "Meilisearch did not start in less than 20 seconds. Stopping polling."
                     )
+                    return
 
-                logger.debug("Loading Meilisearch index...")
-                await self.load_index(sdk.ide.workspace_directory)
-                logger.debug("Loaded Meilisearch index")
-            except asyncio.TimeoutError:
-                logger.warning("Meilisearch is not running.")
+            logger.debug("Loading Meilisearch index...")
+            await self.load_index(sdk.ide.workspace_directory)
+            logger.debug("Loaded Meilisearch index")
 
-        create_async_task(start_meilisearch(context_providers))
+        create_async_task(load_index(context_providers), on_err)
 
     @staticmethod
     async def update_documents(context_items: List[ContextItem], workspace_dir: str):
