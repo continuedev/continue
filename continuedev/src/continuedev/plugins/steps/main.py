@@ -239,14 +239,14 @@ def decode_escaped_path(path: str) -> str:
     """We use a custom escaping scheme to record the full path of a file as a
     corresponding basename, but withut URL encoding, because then the URI just gets
     interpreted as a full path again."""
-    return path.replace("$forwardslash$", "/").replace("$backslash$", "\\")
+    return path.replace("$f$", "/").replace("$b$", "\\")
 
 
 def encode_escaped_path(path: str) -> str:
     """We use a custom escaping scheme to record the full path of a file as a
     corresponding basename, but withut URL encoding, because then the URI just gets
     interpreted as a full path again."""
-    return path.replace("/", "$forwardslash$").replace("\\", "$backslash$")
+    return path.replace("/", "$f$").replace("\\", "$b$")
 
 
 class EditAlreadyEditedRangeStep(Step):
