@@ -28,6 +28,7 @@ class ContinuePluginToolWindowFactory : ToolWindowFactory {
             project,
             ContinuePluginService::class.java
         )
+        toolWindow.title = "Continue"
 
         toolWindow.component.parent?.add(continuePluginService.continuePluginWindow.content)
     }

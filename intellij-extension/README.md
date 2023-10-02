@@ -1,15 +1,6 @@
 <!-- Plugin description -->
-> 🎁 **New!: [Use Code Llama with Continue](https://continue.dev/docs/walkthroughs/codellama)**
-
-<h1 align="center">Continue</h1>
-
-<div align="center">
 
 **[Continue](https://continue.dev/docs) is the open-source autopilot for software development—an extension that brings the power of ChatGPT to your IDE**
-
-</div>
-
-## Task, not tab, auto-complete
 
 ### Get possible explainations
 
@@ -48,9 +39,5 @@ To see the keyboard shortcuts offered by Continue, see the "Feature Contribution
 The Continue JetBrains extension is currently in alpha. It will attempt to start the Continue Python server locally for you, but sometimes this will fail, causing the "Starting Continue server..." not to disappear, or other hangups. While we are working on fixes to all of these problems, read here for common solutions:
 
 > [Troubleshooting Continue](https://continue.dev/docs/troubleshooting)
-
-## License
-
-[Apache 2.0 © 2023 Continue Dev, Inc.](./LICENSE)
 
 <!-- Plugin description end -->

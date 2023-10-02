@@ -1,7 +1,7 @@
 <!-- Plugin Configuration File. Read more: https://plugins.jetbrains.com/docs/intellij/plugin-configuration-file.html -->
 <idea-plugin>
     <id>com.github.continuedev.continueintellijextension</id>
-    <name>Continue Extension</name>
+    <name>Continue</name>
     <vendor>continue-dev</vendor>
 
     <depends>com.intellij.modules.platform</depends>
@@ -22,7 +22,7 @@
                 parentId="tools"
                 instance="com.github.continuedev.continueintellijextension.services.ContinueExtensionConfigurable"
                 id="com.github.continuedev.continueintellijextension.services.ContinueExtensionConfigurable"
-                displayName="Continue Extension Settings"/>
+                displayName="Continue"/>
         <applicationService
                 serviceImplementation="com.github.continuedev.continueintellijextension.services.ContinueExtensionSettings"/>
     </extensions>

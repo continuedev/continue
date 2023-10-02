@@ -31,6 +31,7 @@ import okhttp3.Response
 import okhttp3.WebSocket
 import kotlinx.serialization.json.Json
 import okhttp3.WebSocketListener
+import org.apache.commons.lang.math.NumberUtils.toInt
 import java.io.File
 import java.net.NetworkInterface
 import java.util.concurrent.TimeUnit
@@ -47,6 +48,9 @@ data class GetTerminalContents(val contents: String)
 data class ListDirectoryContents(val contents: List<String>)
 data class RangeInFileWithContents(val filepath: String, val range: Range, val contents: String)
 data class HighlightedCodeUpdate(val highlightedCode: List<RangeInFileWithContents>, val edit: Boolean)
+data class HighlightedCode(val highlightedCode: List<RangeInFile>)
+data class AcceptRejectDiff(val accepted: Boolean, val stepIndex: Int)
+data class DeleteAtIndex(val index: Int)
 
 fun getMachineUniqueID(): String {
     val sb = StringBuilder()
@@ -85,7 +89,7 @@ class IdeProtocolClient(
     private var webSocket: WebSocket? = null
     private val okHttpClient = OkHttpClient()
 
-    private val diffManager = DiffManager(project)
+    val diffManager = DiffManager(project)
 
     init {
         initWebSocket()
@@ -166,7 +170,7 @@ class IdeProtocolClient(
                             diffManager.showDiff(
                                 data["filepath"] as String,
                                 data["replacement"] as String,
-                                data["step_index"] as Int
+                                (data["step_index"] as Double).toInt()
                             )
                         }
                         "readFile" -> {
@@ -231,8 +235,26 @@ class IdeProtocolClient(
                                 gson.fromJson<RangeInFile>(json, type)
                             highlightCode(rangeInFile, data["color"] as String)
                         }
+                        "setSuggestionsLocked" -> {}
+                        "getSessionId" -> {}
+                        "highlightedCode" -> {
+                            val rifWithContents = getHighlightedCode()
+                            val rifs: MutableList<RangeInFile> = mutableListOf()
+                            if (rifWithContents != null) {
+                                val rif = RangeInFile(rifWithContents.filepath, rifWithContents.range)
+                                rifs += rif
+                            }
+                            webSocket.send(
+                                Gson().toJson(
+                                    WebSocketMessage(
+                                        "highlightedCode",
+                                        HighlightedCode(rifs)
+                                    )
+                                )
+                            )
+                        }
                         else -> {
-                            println("Unknown messageType")
+                            println("Unknown messageType: $messageType")
                         }
                     }
 
@@ -316,10 +338,10 @@ class IdeProtocolClient(
         return document?.text ?: ""
     }
 
-    fun sendHighlightedCode(edit: Boolean = false) {
+    fun getHighlightedCode(): RangeInFileWithContents? {
         // Get the editor instance for the currently active editor window
-        val editor = FileEditorManager.getInstance(project).selectedTextEditor ?: return
-        val virtualFile = editor.let { FileDocumentManager.getInstance().getFile(it.document) } ?: return
+        val editor = FileEditorManager.getInstance(project).selectedTextEditor ?: return null
+        val virtualFile = editor.let { FileDocumentManager.getInstance().getFile(it.document) } ?: return null
 
         // Get the selection range and content
         val selectionModel: SelectionModel = editor.selectionModel
@@ -335,23 +357,33 @@ class IdeProtocolClient(
         val startChar = startOffset - document.getLineStartOffset(startLine)
         val endChar = endOffset - document.getLineStartOffset(endLine)
 
-        val payload = Gson().toJson(
-                WebSocketMessage("highlightedCodePush",
-                    HighlightedCodeUpdate(
-                        listOf(RangeInFileWithContents(
-                            virtualFile.path,
-                            Range(
-                                Position(startLine, startChar),
-                                Position(endLine, endChar)
-                            ),
-                            selectedText
-                        )),
-                        edit
-                    )
-                )
-        )
+        return RangeInFileWithContents(virtualFile.path, Range(
+                Position(startLine, startChar),
+                Position(endLine, endChar)
+        ), selectedText)
+    }
 
-        webSocket?.send(payload)
+    private fun<T> sendWebSocketMessage(messageType: String, data: T) {
+        webSocket?.send(Gson().toJson(
+                WebSocketMessage(messageType, data)
+        ))
+    }
+
+    fun sendHighlightedCode(edit: Boolean = false) {
+        val rif = getHighlightedCode() ?: return
+
+        sendWebSocketMessage("highlightedCodePush", HighlightedCodeUpdate(
+                listOf(rif),
+                edit
+        ))
+    }
+
+    fun sendAcceptRejectDiff(accepted: Boolean, stepIndex: Int) {
+        sendWebSocketMessage("acceptRejectDiff", AcceptRejectDiff(accepted, stepIndex))
+    }
+
+    fun deleteAtIndex(index: Int) {
+        sendWebSocketMessage("deleteAtIndex", DeleteAtIndex(index))
     }
 
     private val DEFAULT_IGNORE_DIRS = listOf(
