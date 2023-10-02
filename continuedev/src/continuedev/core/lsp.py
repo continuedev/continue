@@ -4,12 +4,9 @@ from typing import List, Literal, Optional
 
 import aiohttp
 from pydantic import BaseModel
-from pylsp.python_lsp import PythonLSPServer, start_ws_lang_server
 
-from ..libs.util.logging import logger
 from ..models.filesystem import RangeInFile
 from ..models.main import Position, Range
-from ..server.meilisearch_server import kill_proc
 
 
 def filepath_to_uri(filename: str) -> str:
@@ -266,21 +263,23 @@ class LSPClient:
 
 
 async def start_language_server() -> threading.Thread:
-    try:
-        kill_proc(PORT)
-        thread = threading.Thread(
-            target=start_ws_lang_server,
-            args=(PORT, False, PythonLSPServer),
-        )
-        thread.daemon = True
-        thread.start()
+    """Manually start the python language server. Not used currently."""
+    raise NotImplementedError()
+    # try:
+    #     kill_proc(PORT)
+    #     thread = threading.Thread(
+    #         target=start_ws_lang_server,
+    #         args=(PORT, False, PythonLSPServer),
+    #     )
+    #     thread.daemon = True
+    #     thread.start()
 
-    except Exception as e:
-        logger.warning("Could not start TCP server: %s", e)
+    # except Exception as e:
+    #     logger.warning("Could not start TCP server: %s", e)
 
-    await asyncio.sleep(2)
+    # await asyncio.sleep(2)
 
-    return thread
+    # return thread
 
 
 class DocumentSymbol(BaseModel):

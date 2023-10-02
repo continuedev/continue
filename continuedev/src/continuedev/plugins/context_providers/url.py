@@ -25,7 +25,7 @@ class URLContextProvider(ContextProvider):
     )
 
     # Static items loaded from preset_urls
-    _static_url_context_items: List[ContextItem] = []
+    static_url_context_items: List[ContextItem] = []
 
     # There is only a single dynamic url context item, so it has a static id
     _DYNAMIC_URL_CONTEXT_ITEM_ID = "url"
@@ -68,18 +68,18 @@ class URLContextProvider(ContextProvider):
         return soup.get_text(), title
 
     async def provide_context_items(self, workspace_dir: str) -> List[ContextItem]:
-        self._static_url_context_items = [
+        self.static_url_context_items = [
             self.static_url_context_item_from_url(url) for url in self.preset_urls
         ]
 
-        return [self.DYNAMIC_CONTEXT_ITEM] + self._static_url_context_items
+        return [self.DYNAMIC_CONTEXT_ITEM] + self.static_url_context_items
 
     async def get_item(self, id: ContextItemId, query: str) -> ContextItem:
         # Check if the item is a static item
         matching_static_item = next(
             (
                 item
-                for item in self._static_url_context_items
+                for item in self.static_url_context_items
                 if item.description.id.item_id == id.item_id
             ),
             None,

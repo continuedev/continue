@@ -3,7 +3,6 @@ import traceback
 from typing import Coroutine, List, Optional, Union
 
 from ..libs.llm import LLM
-from ..libs.util.create_async_task import create_async_task
 from ..libs.util.devdata import dev_data_logger
 from ..libs.util.logging import logger
 from ..libs.util.paths import getConfigFilePath, getDiffsFolderPath
@@ -97,19 +96,19 @@ class ContinueSDK(AbstractContinueSDK):
         await sdk.models.start(sdk)
 
         # Start LSP
-        async def start_lsp():
-            try:
-                sdk.lsp = ContinueLSPClient(
-                    workspace_dir=sdk.ide.workspace_directory,
-                )
-                await sdk.lsp.start()
-            except Exception as e:
-                logger.warning(f"Failed to start LSP client: {e}", exc_info=False)
-                sdk.lsp = None
+        # async def start_lsp():
+        #     try:
+        #         sdk.lsp = ContinueLSPClient(
+        #             workspace_dir=sdk.ide.workspace_directory,
+        #         )
+        #         await sdk.lsp.start()
+        #     except Exception as e:
+        #         logger.warning(f"Failed to start LSP client: {e}", exc_info=False)
+        #         sdk.lsp = None
 
-        create_async_task(
-            start_lsp(), on_error=lambda e: logger.error("Failed to setup LSP: %s", e)
-        )
+        # create_async_task(
+        #     start_lsp(), on_error=lambda e: logger.error("Failed to setup LSP: %s", e)
+        # )
 
         # When the config is loaded, setup posthog logger
         posthog_logger.setup(sdk.ide.unique_id, sdk.config.allow_anonymous_telemetry)
