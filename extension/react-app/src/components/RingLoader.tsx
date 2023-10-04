@@ -29,7 +29,7 @@ const LoaderSvg = styled.svg`
 `;
 
 const RingLoader = () => (
-  <div className="m-auto w-full text-center">
+  <div className="m-auto w-full text-center mt-2">
     <LoaderSvg viewBox="0 0 32 32">
       <circle cx="16" cy="16" r="14" />
     </LoaderSvg>

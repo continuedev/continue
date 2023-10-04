@@ -41,6 +41,7 @@ import {
 import { ContextItem } from "../../../schema/FullState";
 import StyledMarkdownPreview from "./StyledMarkdownPreview";
 import { temporarilyClearSession } from "../redux/slices/serverStateReducer";
+import { setTakenActionTrue } from "../redux/slices/miscSlice";
 
 const SEARCH_INDEX_NAME = "continue_context_items";
 
@@ -344,6 +345,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
 
   useEffect(() => {
     if (!nestedContextProvider) {
+      dispatch(setTakenActionTrue(null));
       setItems(
         contextProviders?.map((provider) => ({
           name: provider.display_title,
@@ -436,6 +438,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
       setNestedContextProvider(undefined);
 
       // Handle slash commands
+      dispatch(setTakenActionTrue(null));
       setItems(
         availableSlashCommands?.filter((slashCommand) =>
           slashCommand.name.toLowerCase().startsWith(inputValue.toLowerCase())
@@ -595,15 +598,18 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
     const handler = (event: any) => {
       if (event.data.type === "focusContinueInput") {
         inputRef.current!.focus();
+        dispatch(setTakenActionTrue(null));
       } else if (event.data.type === "focusContinueInputWithEdit") {
         inputRef.current!.focus();
 
         if (!inputRef.current?.value.startsWith("/edit")) {
           downshiftProps.setInputValue("/edit ");
         }
+        dispatch(setTakenActionTrue(null));
       } else if (event.data.type === "focusContinueInputWithNewSession") {
         dispatch(temporarilyClearSession(false));
         client?.loadSession(undefined);
+        dispatch(setTakenActionTrue(null));
       }
     };
     window.addEventListener("message", handler);
