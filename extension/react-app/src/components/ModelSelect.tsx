@@ -189,6 +189,16 @@ function ModelSelect(props: {}) {
           }
         }}
       >
+        {!defaultModel && !savedModels && (
+          <option
+            value={JSON.stringify({
+              t: "default",
+              idx: -1,
+            })}
+          >
+            OpenAIFreeTrial - gpt-4
+          </option>
+        )}
         {defaultModel && (
           <option
             value={JSON.stringify({

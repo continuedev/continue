@@ -45,6 +45,7 @@ import FTCDialog from "../components/dialogs/FTCDialog";
 import HeaderButtonWithText from "../components/HeaderButtonWithText";
 import { useNavigate } from "react-router-dom";
 import SuggestionsArea from "../components/Suggestions";
+import { setTakenActionTrue } from "../redux/slices/miscSlice";
 
 const TopGuiDiv = styled.div`
   overflow-y: scroll;
@@ -158,6 +159,7 @@ function GUI(props: GUIProps) {
   const bottomMessage = useSelector(
     (state: RootStore) => state.uiState.bottomMessage
   );
+  const takenAction = useSelector((state: RootStore) => state.misc.takenAction);
   useEffect(() => {
     if (!aboveComboBoxDivRef.current) return;
     dispatch(
@@ -263,6 +265,7 @@ function GUI(props: GUIProps) {
   }, [client, user_input_queue, waitingForClient]);
 
   const onMainTextInput = (event?: any) => {
+    dispatch(setTakenActionTrue(null));
     if (mainTextInputRef.current) {
       let input = (mainTextInputRef.current as any).inputValue;
 
@@ -477,7 +480,7 @@ function GUI(props: GUIProps) {
   useEffect(() => {
     const timeout = setTimeout(() => {
       setShowLoading(true);
-    }, 3000);
+    }, 10000);
 
     return () => {
       clearTimeout(timeout);
@@ -558,7 +561,7 @@ function GUI(props: GUIProps) {
           </HeaderButtonWithText>
         </div>
       </GUIHeaderDiv>
-      {showLoading && typeof client === "undefined" && (
+      {(takenAction || showLoading) && typeof client === "undefined" && (
         <>
           <RingLoader />
           <p
