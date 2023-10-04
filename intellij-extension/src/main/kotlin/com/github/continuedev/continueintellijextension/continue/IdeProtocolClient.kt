@@ -17,6 +17,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.MessageType
 import com.intellij.openapi.ui.popup.Balloon
 import com.intellij.openapi.ui.popup.JBPopupFactory
+import com.intellij.openapi.util.Computable
 import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.openapi.vfs.VfsUtil
 import com.intellij.openapi.vfs.VirtualFile
@@ -141,7 +142,7 @@ class IdeProtocolClient(
             }
 
             override fun onMessage(webSocket: WebSocket, text: String) {
-                coroutineScope.launch(Dispatchers.Main) {
+                coroutineScope.launch(Dispatchers.IO) {
                     val parsedMessage: Map<String, Any> = Gson().fromJson(
                         text,
                         object : TypeToken<Map<String, Any>>() {}.type
@@ -335,7 +336,9 @@ class IdeProtocolClient(
         val file =
             LocalFileSystem.getInstance().findFileByPath(filepath) ?: return ""
         val documentManager = FileDocumentManager.getInstance()
-        val document: Document? = documentManager.getDocument(file)
+        val document = ApplicationManager.getApplication().runReadAction(Computable {
+            documentManager.getDocument(file)
+        })
         return document?.text ?: ""
     }
 
@@ -444,13 +447,14 @@ class IdeProtocolClient(
     }
 
     fun saveFile(filepath: String) {
-        val file =
-            LocalFileSystem.getInstance().findFileByPath(filepath) ?: return
-        val fileDocumentManager = FileDocumentManager.getInstance()
-        val document = fileDocumentManager.getDocument(file)
+        ApplicationManager.getApplication().runWriteAction {
+            val file = LocalFileSystem.getInstance().findFileByPath(filepath) ?: return@runWriteAction
+            val fileDocumentManager = FileDocumentManager.getInstance()
+            val document = fileDocumentManager.getDocument(file)
 
-        document?.let {
-            fileDocumentManager.saveDocument(it)
+            document?.let {
+                fileDocumentManager.saveDocument(it)
+            }
         }
     }
 

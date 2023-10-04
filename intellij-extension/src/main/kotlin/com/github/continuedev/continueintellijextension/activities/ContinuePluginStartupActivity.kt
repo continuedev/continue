@@ -19,14 +19,20 @@ import com.intellij.openapi.editor.EditorFactory
 import com.intellij.openapi.extensions.PluginId
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.startup.StartupActivity
+import com.intellij.openapi.ui.DialogWrapper
 import com.intellij.openapi.wm.ToolWindowManager
 import kotlinx.coroutines.*
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import java.awt.BorderLayout
+import java.awt.Dimension
+import java.awt.FlowLayout
+import java.awt.GridLayout
 import java.io.*
 import java.nio.file.Files
 import java.nio.file.Paths
 import java.nio.file.attribute.PosixFilePermission
+import javax.swing.*
 
 
 fun getContinueGlobalPath(): String {
@@ -307,6 +313,42 @@ suspend fun startContinuePythonServer() {
     }
 }
 
+class WelcomeDialogWrapper(val project: Project) : DialogWrapper(true) {
+    private var panel: JPanel? = null
+    private var paragraph: JTextArea? = null
+
+    init {
+        init()
+        title = "Welcome to Continue"
+    }
+
+    override fun doOKAction() {
+        super.doOKAction()
+        val toolWindowManager = ToolWindowManager.getInstance(project)
+        val toolWindow =
+                toolWindowManager.getToolWindow("ContinuePluginViewer")
+        toolWindow?.show()
+    }
+
+    override fun createCenterPanel(): JComponent? {
+        panel = JPanel(GridLayout(0, 1))
+        panel!!.preferredSize = Dimension(500, panel!!.preferredSize.height)
+        paragraph = JTextArea("Welcome to Continue! Click the button below to open the side panel.")
+        panel!!.add(paragraph)
+
+        return panel
+    }
+
+    override fun createActions(): Array<Action> {
+        val okAction = getOKAction()
+        okAction.putValue(Action.NAME, "Open Continue")
+
+        val cancelAction = getCancelAction()
+        cancelAction.putValue(Action.NAME, "Cancel")
+
+        return arrayOf(okAction, cancelAction)
+    }
+}
 
 class ContinuePluginStartupActivity : StartupActivity, Disposable {
     private val coroutineScope = CoroutineScope(Dispatchers.IO)
@@ -338,10 +380,8 @@ class ContinuePluginStartupActivity : StartupActivity, Disposable {
 
             // After sessionID fetched
             withContext(Dispatchers.Main) {
-                val toolWindowManager = ToolWindowManager.getInstance(project)
-                val toolWindow =
-                        toolWindowManager.getToolWindow("ContinuePluginViewer")
-                toolWindow?.show()
+                val dialog = WelcomeDialogWrapper(project)
+                dialog.show()
             }
 
             val ideProtocolClientDeferred = GlobalScope.async(Dispatchers.IO) {
