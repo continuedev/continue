@@ -115,7 +115,9 @@ class ContinueSDK(AbstractContinueSDK):
         # )
 
         # When the config is loaded, setup posthog logger
-        posthog_logger.setup(sdk.ide.unique_id, sdk.config.allow_anonymous_telemetry)
+        posthog_logger.setup(
+            sdk.ide.unique_id, sdk.config.allow_anonymous_telemetry, sdk.ide.ide_info
+        )
         dev_data_logger.setup(sdk.config.user_token, sdk.config.data_server_url)
 
         return sdk

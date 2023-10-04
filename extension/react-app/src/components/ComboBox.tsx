@@ -439,9 +439,11 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
       // Handle slash commands
       dispatch(setTakenActionTrue(null));
       setItems(
-        availableSlashCommands?.filter((slashCommand) =>
-          slashCommand.name.toLowerCase().startsWith(inputValue.toLowerCase())
-        ) || []
+        availableSlashCommands?.filter((slashCommand) => {
+          const sc = slashCommand.name.toLowerCase();
+          const iv = inputValue.toLowerCase();
+          return sc.startsWith(iv) && sc !== iv;
+        }) || []
       );
     },
     [

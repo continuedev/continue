@@ -268,6 +268,13 @@ class IdeProtocolClient {
           uniqueId: this.getUniqueId(),
         });
         break;
+      case "ide":
+        messenger.send("ide", {
+          name: "vscode",
+          version: vscode.version,
+          remoteName: vscode.env.remoteName,
+        });
+        break;
       case "fileExists":
         messenger.send("fileExists", {
           exists: await this.fileExists(data.filepath),

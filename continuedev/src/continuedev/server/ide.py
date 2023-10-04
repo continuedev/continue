@@ -4,7 +4,7 @@ import json
 import os
 import traceback
 import uuid
-from typing import Any, Callable, Coroutine, List, Optional, Type, TypeVar, Union
+from typing import Any, Callable, Coroutine, Dict, List, Optional, Type, TypeVar, Union
 
 import nest_asyncio
 from fastapi import APIRouter, WebSocket
@@ -154,6 +154,8 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
     sub_queue: AsyncSubscriptionQueue = AsyncSubscriptionQueue()
     session_id: Union[str, None] = None
 
+    ide_info: Optional[Dict] = None
+
     def __init__(self, session_manager: SessionManager, websocket: WebSocket):
         self.websocket = websocket
         self.session_manager = session_manager
@@ -165,6 +167,7 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
         self.session_id = session_id
         await self._send_json("workspaceDirectory", {})
         await self._send_json("uniqueId", {})
+        await self._send_json("ide", {})
         other_msgs = []
         while True:
             msg_string = await self.websocket.receive_text()
@@ -178,6 +181,8 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
                 self.workspace_directory = data["workspaceDirectory"]
             elif message_type == "uniqueId":
                 self.unique_id = data["uniqueId"]
+            elif message_type == "ide":
+                self.ide_info = data
             else:
                 other_msgs.append(msg_string)
 
@@ -269,6 +274,8 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
             self.workspace_directory = data["workspaceDirectory"]
         elif message_type == "uniqueId":
             self.unique_id = data["uniqueId"]
+        elif message_type == "ide":
+            self.ide_info = data
         elif message_type == "filesCreated":
             self.onFilesCreated(data["filepaths"])
         elif message_type == "filesDeleted":

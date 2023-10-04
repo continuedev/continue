@@ -1,6 +1,6 @@
 import os
 import socket
-from typing import Any
+from typing import Any, Dict, Optional
 
 from dotenv import load_dotenv
 
@@ -26,14 +26,18 @@ def is_connected():
 class PostHogLogger:
     unique_id: str = "NO_UNIQUE_ID"
     allow_anonymous_telemetry: bool = False
+    ide_info: Optional[Dict] = None
     posthog = None
 
     def __init__(self, api_key: str):
         self.api_key = api_key
 
-    def setup(self, unique_id: str, allow_anonymous_telemetry: bool):
+    def setup(
+        self, unique_id: str, allow_anonymous_telemetry: bool, ide_info: Optional[Dict]
+    ):
         self.unique_id = unique_id or "NO_UNIQUE_ID"
         self.allow_anonymous_telemetry = allow_anonymous_telemetry or False
+        self.ide_info = ide_info
 
         # Capture initial event
         self.capture_event("session_start", {"os": os.name})
@@ -81,6 +85,10 @@ class PostHogLogger:
 
         # Add operating system
         event_properties["os"] = os.name
+        if self.ide_info:
+            event_properties["ide_name"] = self.ide_info.get("name", None)
+            event_properties["ide_version"] = self.ide_info.get("version", None)
+            event_properties["ide_remote_name"] = self.ide_info.get("remoteName", None)
 
         # Send event to PostHog
         if self.posthog is None:
