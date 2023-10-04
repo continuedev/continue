@@ -374,17 +374,15 @@ class ContinuePluginStartupActivity : StartupActivity, Disposable {
         val defaultStrategy = DefaultTextSelectionStrategy()
 
         coroutineScope.launch {
-            startContinuePythonServer()
-
-            val wsUrl = getContinueServerUrl().replace("http://", "ws://").replace("https://", "wss://")
-
-            // After sessionID fetched
-            withContext(Dispatchers.Main) {
-                val dialog = WelcomeDialogWrapper(project)
-                dialog.show()
-            }
+//            withContext(Dispatchers.Main) {
+//                val dialog = WelcomeDialogWrapper(project)
+//                dialog.show()
+//            }
 
             val ideProtocolClientDeferred = GlobalScope.async(Dispatchers.IO) {
+                startContinuePythonServer()
+
+                val wsUrl = getContinueServerUrl().replace("http://", "ws://").replace("https://", "wss://")
                 IdeProtocolClient(
                     "$wsUrl/ide/ws",
                     continuePluginService,
