@@ -571,7 +571,7 @@ class IdeProtocolClient {
     directory: string,
     recursive: boolean
   ): Promise<string[]> {
-    let nameAndType = (
+    const nameAndType = (
       await vscode.workspace.fs.readDirectory(uriFromFilePath(directory))
     ).filter(([name, type]) => {
       const DEFAULT_IGNORE_DIRS = [

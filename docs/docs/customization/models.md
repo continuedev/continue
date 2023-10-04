@@ -1,6 +1,6 @@
 # Models
 
-Continue makes it easy to swap out different LLM providers. Once you've added any of these to your `config.py`, you will be able to switch between them with the model selection dropdown.
+Continue makes it easy to swap out different LLM providers. You can either click the "+" button next to the model dropdown to configure in the UI or manually add them to your `config.py`. Once you've done this, you will be able to switch between them with the model selection dropdown.
 
 Commercial Models
 

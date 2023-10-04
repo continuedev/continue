@@ -1,11 +1,12 @@
 import asyncio
 import os
-from typing import List
+from typing import List, Optional
 
 from ...core.context import ContextProvider
 from ...core.main import ContextItem, ContextItemDescription, ContextItemId
 from ...core.sdk import ContinueSDK
 from ...libs.util.filter_files import DEFAULT_IGNORE_PATTERNS
+from ...libs.util.logging import logger
 from .util import remove_meilisearch_disallowed_chars
 
 MAX_SIZE_IN_CHARS = 50_000
@@ -80,14 +81,26 @@ class FileContextProvider(ContextProvider):
 
     async def get_context_item_for_filepath(
         self, absolute_filepath: str
-    ) -> ContextItem:
+    ) -> Optional[ContextItem]:
         content = await get_file_contents(absolute_filepath, self.sdk)
         if content is None:
             return None
 
-        relative_to_workspace = os.path.relpath(
-            absolute_filepath, self.sdk.ide.workspace_directory
-        )
+        workspace_dir = self.sdk.ide.workspace_directory
+        if (
+            os.path.splitdrive(workspace_dir)[0]
+            != os.path.splitdrive(absolute_filepath)[0]
+        ):
+            workspace_dir = (
+                os.path.splitdrive(absolute_filepath)[0]
+                + os.path.splitdrive(workspace_dir)[1]
+            )
+
+        try:
+            relative_to_workspace = os.path.relpath(absolute_filepath, workspace_dir)
+        except Exception as e:
+            logger.warning(f"Error getting relative path: {e}")
+            return None
 
         return ContextItem(
             content=content[: min(2000, len(content))],
