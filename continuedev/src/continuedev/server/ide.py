@@ -183,8 +183,9 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
             else:
                 other_msgs.append(msg_string)
 
-                # if self.workspace_directory is not None and self.unique_id is not None:
+            if self.workspace_directory is not None and self.unique_id is not None:
                 break
+
         return other_msgs
 
     async def _send_json(self, message_type: str, data: Any):

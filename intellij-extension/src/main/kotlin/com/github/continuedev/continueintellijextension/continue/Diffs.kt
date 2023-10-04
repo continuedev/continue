@@ -18,6 +18,7 @@ import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.ui.content.ContentFactory
 import java.io.File
 import java.nio.file.Paths
+import javax.swing.Action
 import javax.swing.JComponent
 
 
@@ -52,8 +53,8 @@ class DiffManager(private val project: Project) {
 
     fun showDiff(filepath: String, replacement: String, stepIndex: Int) {
         val diffDir = getDiffDirectory()
-
-        val file = File(escapeFilepath(filepath))
+        val escapedPath = escapeFilepath(filepath)
+        val file = diffDir.resolve(escapedPath)
 
         if (!file.exists()) {
             file.createNewFile()
@@ -151,6 +152,16 @@ class DiffManager(private val project: Project) {
             override fun doCancelAction() {
                 super.doCancelAction()
                 rejectDiff(file2)
+            }
+
+            override fun createActions(): Array<Action> {
+                val okAction = getOKAction()
+                okAction.putValue(Action.NAME, "Accept (⌘ ⇧ ↵)")
+
+                val cancelAction = getCancelAction()
+                cancelAction.putValue(Action.NAME, "Reject (⌘ ⇧ ⌫)")
+
+                return arrayOf(okAction, cancelAction)
             }
         }
 

@@ -109,13 +109,13 @@ const vscodeShortcuts: KeyboardShortcutProps[] = [
 
 const jetbrainsShortcuts: KeyboardShortcutProps[] = [
   {
-    mac: "⌘ M",
-    windows: "⌃ M",
+    mac: "⌘ J",
+    windows: "⌃ J",
     description: "Ask about Highlighted Code",
   },
   {
-    mac: "⌘ ⇧ M",
-    windows: "⌃ ⇧ M",
+    mac: "⌘ ⇧ J",
+    windows: "⌃ ⇧ J",
     description: "Edit Highlighted Code",
   },
   {
@@ -129,17 +129,17 @@ const jetbrainsShortcuts: KeyboardShortcutProps[] = [
     description: "Reject Diff",
   },
   {
-    mac: "⌘ ⇧ L",
-    windows: "⌃ ⇧ L",
+    mac: "⌘ ⌃ J",
+    windows: "⌥ ⌃ J",
     description: "Quick Text Entry",
   },
   {
-    mac: "⌥ ⌘ M",
-    windows: "⌥ ⌃ M",
+    mac: "⌥ ⌘ J",
+    windows: "⌥ ⌃ J",
     description: "Toggle Auxiliary Bar",
   },
   {
-    mac: "⌥ ⌘ N",
+    mac: "⌘ ⌃ N",
     windows: "⌥ ⌃ N",
     description: "New Session",
   },

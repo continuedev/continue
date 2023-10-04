@@ -95,14 +95,21 @@ const stageDescriptions = [
   <p>
     1. Highlight code in the editor
     <br />
-    2. Press cmd+M to select the code
+    2. Press {localStorage.getItem("ide") === "jetbrains"
+      ? "cmd+J"
+      : "cmd+M"}{" "}
+    to select the code
     <br />
     3. Ask a question
   </p>,
   <p>
     1. Highlight code in the editor
     <br />
-    2. Press cmd+shift+M to select the code
+    2. Press{" "}
+    {localStorage.getItem("ide") === "jetbrains"
+      ? "cmd+shift+J"
+      : "cmd+shift+M"}{" "}
+    to select the code
     <br />
     3. Request an edit
   </p>,

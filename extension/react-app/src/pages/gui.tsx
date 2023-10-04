@@ -186,10 +186,10 @@ function GUI(props: GUIProps) {
       }
     };
 
-    topGuiDivRef.current?.addEventListener("wheel", handleScroll);
+    topGuiDivRef.current?.addEventListener("scroll", handleScroll);
 
     return () => {
-      window.removeEventListener("wheel", handleScroll);
+      window.removeEventListener("scroll", handleScroll);
     };
   }, [topGuiDivRef.current]);
 
