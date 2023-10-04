@@ -1,6 +1,5 @@
 package com.github.continuedev.continueintellijextension.activities
 
-import com.github.continuedev.continueintellijextension.actions.ToggleAuxiliaryBarAction
 import com.github.continuedev.continueintellijextension.constants.CONTINUE_PYTHON_SERVER_URL
 import com.github.continuedev.continueintellijextension.constants.CONTINUE_SERVER_WEBSOCKET_PORT
 import com.github.continuedev.continueintellijextension.`continue`.DefaultTextSelectionStrategy
@@ -13,6 +12,7 @@ import com.github.continuedev.continueintellijextension.utils.dispatchEventToWeb
 import com.intellij.ide.plugins.PluginManagerCore
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.actionSystem.ActionManager
+import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.editor.EditorFactory
@@ -20,21 +20,14 @@ import com.intellij.openapi.extensions.PluginId
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.startup.StartupActivity
 import com.intellij.openapi.wm.ToolWindowManager
-import io.ktor.client.*
-import io.ktor.client.plugins.websocket.*
-import io.ktor.http.*
-import io.ktor.websocket.*
 import kotlinx.coroutines.*
 import okhttp3.OkHttpClient
 import okhttp3.Request
-import java.io.BufferedReader
-import java.io.File
-import java.io.FileOutputStream
-import java.io.IOException
-import java.io.InputStreamReader
+import java.io.*
 import java.nio.file.Files
 import java.nio.file.Paths
 import java.nio.file.attribute.PosixFilePermission
+
 
 fun getContinueGlobalPath(): String {
     val continuePath = Paths.get(System.getProperty("user.home"), ".continue")
@@ -321,10 +314,8 @@ class ContinuePluginStartupActivity : StartupActivity, Disposable {
     override fun runActivity(project: Project) {
         // Register Actions
         val actionManager = ActionManager.getInstance()
-        actionManager.registerAction(
-                "FocusContinueInput",
-                ToggleAuxiliaryBarAction()
-        )
+        actionManager.unregisterAction("InsertLiveTemplate")
+        actionManager.unregisterAction("SurroundWithLiveTemplate")
 
         // Initialize Plugin
         ApplicationManager.getApplication().executeOnPooledThread {

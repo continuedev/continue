@@ -99,7 +99,7 @@ function HelpPage() {
         </IconDiv>
       </div>
 
-      <KeyboardShortcutsDialog></KeyboardShortcutsDialog>
+      <KeyboardShortcutsDialog />
     </div>
   );
 }

@@ -314,6 +314,8 @@ export function setupDebugPanel(
       <body>
         <div id="root"></div>
         <script type="module" nonce="${nonce}" src="${scriptUri}"></script>
+
+        <script>localStorage.setItem("ide", "vscode")</script>
       </body>
     </html>`;
 }

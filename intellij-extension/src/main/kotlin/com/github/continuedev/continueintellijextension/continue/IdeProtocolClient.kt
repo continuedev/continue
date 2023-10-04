@@ -51,6 +51,7 @@ data class HighlightedCodeUpdate(val highlightedCode: List<RangeInFileWithConten
 data class HighlightedCode(val highlightedCode: List<RangeInFile>)
 data class AcceptRejectDiff(val accepted: Boolean, val stepIndex: Int)
 data class DeleteAtIndex(val index: Int)
+data class MainUserInput(val input: String)
 
 fun getMachineUniqueID(): String {
     val sb = StringBuilder()
@@ -351,6 +352,10 @@ class IdeProtocolClient(
         val startOffset = selectionModel.selectionStart
         val endOffset = selectionModel.selectionEnd
 
+        if (startOffset == endOffset) {
+            return null
+        }
+
         val startLine = document.getLineNumber(startOffset)
         val endLine = document.getLineNumber(endOffset)
 
@@ -376,6 +381,10 @@ class IdeProtocolClient(
                 listOf(rif),
                 edit
         ))
+    }
+
+    fun sendMainUserInput(input: String) {
+        sendWebSocketMessage("mainUserInput", MainUserInput(input))
     }
 
     fun sendAcceptRejectDiff(accepted: Boolean, stepIndex: Int) {

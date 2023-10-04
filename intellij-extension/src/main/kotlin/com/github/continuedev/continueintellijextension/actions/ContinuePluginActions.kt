@@ -3,12 +3,17 @@ package com.github.continuedev.continueintellijextension.actions
 import com.github.continuedev.continueintellijextension.services.ContinuePluginService
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
-import com.intellij.openapi.actionSystem.CommonDataKeys
+import com.intellij.openapi.actionSystem.impl.SimpleDataContext
 import com.intellij.openapi.components.ServiceManager
-import com.intellij.openapi.editor.EditorFactory
-import com.intellij.openapi.editor.SelectionModel
+ import com.intellij.openapi.ui.DialogWrapper
 import com.intellij.openapi.ui.Messages
 import com.intellij.openapi.wm.ToolWindowManager
+import java.awt.Dimension
+import java.awt.GridLayout
+ import javax.swing.JComponent
+ import javax.swing.JPanel
+ import javax.swing.JTextField
+import javax.swing.SwingUtilities
 
 fun pluginServiceFromActionEvent(e: AnActionEvent): ContinuePluginService? {
     val project = e.project ?: return null
@@ -32,23 +37,59 @@ class RejectDiffAction : AnAction() {
     }
 }
 
+
+ class QuickInputDialogWrapper : DialogWrapper(true) {
+     private var panel: JPanel? = null
+     private var textField: JTextField? = null
+
+     init {
+         init()
+         title = "Continue Quick Input"
+     }
+
+     override fun getPreferredFocusedComponent(): JComponent? {
+         return textField
+     }
+
+     override fun createCenterPanel(): JComponent? {
+         panel = JPanel(GridLayout(0, 1))
+         panel!!.preferredSize = Dimension(500, panel!!.preferredSize.height)
+         textField = JTextField()
+         panel!!.add(textField)
+
+         return panel
+     }
+
+     fun showDialogAndGetText(): String? {
+         show()
+         return if (this.exitCode == OK_EXIT_CODE) {
+             textField!!.text
+         } else {
+             null
+         }
+     }
+ }
+
+
 class QuickTextEntryAction : AnAction() {
     override fun actionPerformed(e: AnActionEvent) {
-        Messages.showMessageDialog(
-            "This action is not yet implemented",
-            "Continue Action not Implemented",
-            Messages.getInformationIcon()
-        )
-    }
-}
+         // Create and show the dialog
+         val dialog = QuickInputDialogWrapper()
+         val text: String? = dialog.showDialogAndGetText()
 
-class QuickFixAction : AnAction() {
-    override fun actionPerformed(e: AnActionEvent) {
-        Messages.showMessageDialog(
-            "This action is not yet implemented",
-            "Continue Action not Implemented",
-            Messages.getInformationIcon()
-        )
+         // Show the text entered by the user
+         if (text != null) {
+             val service = pluginServiceFromActionEvent(e)
+             service?.ideProtocolClient?.sendMainUserInput(text)
+
+             val project = e.project ?: return
+             val dataContext = SimpleDataContext.getProjectContext(project)
+             val actionEvent = AnActionEvent.createFromDataContext("place", null, dataContext)
+
+             val action = FocusContinueInputAction()
+             action.actionPerformed(actionEvent)
+
+         }
     }
 }
 
@@ -70,6 +111,7 @@ class ToggleAuxiliaryBarAction : AnAction() {
 
         if (toolWindow != null) {
             if (toolWindow.isVisible) {
+                toolWindow.component.transferFocus()
                 toolWindow.hide(null)
             } else {
                 toolWindow.activate(null)
@@ -123,12 +165,23 @@ class FocusContinueInputAction : AnAction() {
     }
 }
 
-class DebugTerminalAction : AnAction() {
+class NewContinueSessionAction : AnAction() {
     override fun actionPerformed(e: AnActionEvent) {
-        Messages.showMessageDialog(
-            "This action is not yet implemented",
-            "Continue Action not Implemented",
-            Messages.getInformationIcon()
-        )
+        val project = e.project
+        if (project != null) {
+            val toolWindowManager = ToolWindowManager.getInstance(project)
+            val toolWindow = toolWindowManager.getToolWindow("ContinuePluginViewer")
+
+            if (toolWindow != null) {
+                if (!toolWindow.isVisible) {
+                    toolWindow.activate(null)
+                }
+            }
+        }
+
+        val continuePluginService = pluginServiceFromActionEvent(e) ?: return
+
+        continuePluginService.continuePluginWindow.content.components[0].requestFocus()
+        continuePluginService.dispatchCustomEvent("message", mutableMapOf("type" to "focusContinueInputWithNewSession"))
     }
 }

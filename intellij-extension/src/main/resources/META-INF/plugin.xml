@@ -48,15 +48,9 @@
                 class="com.github.continuedev.continueintellijextension.actions.QuickTextEntryAction"
                 text="Quick Text Entry" description="Quick Text Entry">
             <keyboard-shortcut keymap="$default"
-                               first-keystroke="ctrl shift L"/>
+                               first-keystroke="alt shift J"/>
             <keyboard-shortcut keymap="Mac OS X"
-                               first-keystroke="meta shift L"/>
-        </action>
-        <action id="continue.quickFix"
-                class="com.github.continuedev.continueintellijextension.actions.QuickFixAction"
-                text="Quick Fix with Continue"
-                description="Quick Fix with Continue">
-            <!-- No shortcut defined -->
+                               first-keystroke="alt shift J"/>
         </action>
         <action id="continue.viewLogs"
                 class="com.github.continuedev.continueintellijextension.actions.ViewLogsAction"
@@ -67,34 +61,40 @@
         <action id="continue.toggleAuxiliaryBar"
                 class="com.github.continuedev.continueintellijextension.actions.ToggleAuxiliaryBarAction"
                 text="Toggle Right Sidebar" description="Toggle Right Sidebar">
-            <keyboard-shortcut keymap="$default" first-keystroke="alt ctrl M"/>
-            <keyboard-shortcut keymap="Mac OS X" first-keystroke="alt meta M"/>
+            <keyboard-shortcut keymap="$default" first-keystroke="alt ctrl J"/>
+            <keyboard-shortcut keymap="Mac OS X" first-keystroke="alt meta J"/>
         </action>
         <action id="continue.focusContinueInputWithEdit"
                 class="com.github.continuedev.continueintellijextension.actions.FocusContinueInputWithEditAction"
                 text="Focus Continue Input With Edit"
                 description="Focus Continue Input With Edit">
             <keyboard-shortcut keymap="$default"
-                               first-keystroke="ctrl shift M"/>
+                               first-keystroke="ctrl shift J"/>
             <keyboard-shortcut keymap="Mac OS X"
-                               first-keystroke="meta shift M"/>
+                               first-keystroke="meta shift J"/>
         </action>
+
+<!--        <action id="InsertLiveTemplate" class="com.intellij.openapi.actionSystem.EmptyAction" />-->
+<!--        <action id="SurroundWithLiveTemplate" class="com.intellij.openapi.actionSystem.EmptyAction"/>-->
+
+        <action id="continue.newContinueSession"
+                class="com.github.continuedev.continueintellijextension.actions.NewContinueSessionAction"
+                text="Start New Continue Session"
+                description="Start New Continue Session">
+            <keyboard-shortcut keymap="$default"
+                               first-keystroke="alt ctrl N"/>
+            <keyboard-shortcut keymap="Mac OS X"
+                               first-keystroke="meta ctrl N"/>
+        </action>
+
         <action id="continue.focusContinueInput"
                 class="com.github.continuedev.continueintellijextension.actions.FocusContinueInputAction"
                 text="Focus Continue Input"
                 description="Focus Continue Input">
             <keyboard-shortcut keymap="$default"
-                               first-keystroke="ctrl M"/>
+                               first-keystroke="ctrl J"/>
             <keyboard-shortcut keymap="Mac OS X"
-                               first-keystroke="meta M"/>
-        </action>
-        <action id="continue.debugTerminal"
-                class="com.github.continuedev.continueintellijextension.actions.DebugTerminalAction"
-                text="Debug Terminal" description="Debug Terminal">
-            <keyboard-shortcut keymap="$default"
-                               first-keystroke="ctrl shift R"/>
-            <keyboard-shortcut keymap="Mac OS X"
-                               first-keystroke="meta shift R"/>
+                               first-keystroke="meta J"/>
         </action>
     </actions>
 

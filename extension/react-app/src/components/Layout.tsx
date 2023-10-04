@@ -106,7 +106,7 @@ const Layout = () => {
     const handleKeyDown = (event: any) => {
       if (
         event.metaKey &&
-        event.altKey &&
+        event.ctrlKey &&
         event.code === "KeyN" &&
         timeline.filter((n) => !n.step.hide).length > 0
       ) {
@@ -156,33 +156,34 @@ const Layout = () => {
           <Outlet />
           <Footer>
             <div className="mr-auto flex gap-2 items-center">
-              {localStorage.getItem("hideFeature") === "true" || (
-                <SparklesIcon
-                  className="cursor-pointer"
-                  onClick={() => {
-                    localStorage.setItem("hideFeature", "true");
-                  }}
-                  onMouseEnter={() => {
-                    dispatch(
-                      setBottomMessage(
-                        "🎁 New Feature: Use ⌘⇧R automatically debug errors in the terminal (you can click the sparkle icon to make it go away)"
-                      )
-                    );
-                  }}
-                  onMouseLeave={() => {
-                    dispatch(
-                      setBottomMessageCloseTimeout(
-                        setTimeout(() => {
-                          dispatch(setBottomMessage(undefined));
-                        }, 2000)
-                      )
-                    );
-                  }}
-                  width="1.3em"
-                  height="1.3em"
-                  color="yellow"
-                />
-              )}
+              {localStorage.getItem("ide") === "jetbrains" ||
+                localStorage.getItem("hideFeature") === "true" || (
+                  <SparklesIcon
+                    className="cursor-pointer"
+                    onClick={() => {
+                      localStorage.setItem("hideFeature", "true");
+                    }}
+                    onMouseEnter={() => {
+                      dispatch(
+                        setBottomMessage(
+                          "🎁 New Feature: Use ⌘⇧R automatically debug errors in the terminal (you can click the sparkle icon to make it go away)"
+                        )
+                      );
+                    }}
+                    onMouseLeave={() => {
+                      dispatch(
+                        setBottomMessageCloseTimeout(
+                          setTimeout(() => {
+                            dispatch(setBottomMessage(undefined));
+                          }, 2000)
+                        )
+                      );
+                    }}
+                    width="1.3em"
+                    height="1.3em"
+                    color="yellow"
+                  />
+                )}
               <ModelSelect />
               {defaultModel?.class_name === "OpenAIFreeTrial" &&
                 defaultModel?.api_key === "" &&

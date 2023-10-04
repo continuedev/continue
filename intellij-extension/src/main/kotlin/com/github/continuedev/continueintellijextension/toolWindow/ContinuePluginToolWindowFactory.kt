@@ -13,6 +13,7 @@ import com.intellij.ui.jcef.JBCefClient
 import org.cef.CefApp
 import javax.swing.JComponent
 
+const val JS_QUERY_POOL_SIZE = "200"
 
 class ContinuePluginToolWindowFactory : ToolWindowFactory {
 
@@ -38,14 +39,14 @@ class ContinuePluginToolWindowFactory : ToolWindowFactory {
     class ContinuePluginWindow(project: Project) {
 
         init {
-            System.setProperty("ide.browser.jcef.jsQueryPoolSize", "20")
+            System.setProperty("ide.browser.jcef.jsQueryPoolSize", JS_QUERY_POOL_SIZE)
         }
 
         val webView: JBCefBrowser by lazy {
             val browser = JBCefBrowser()
             browser.jbCefClient.setProperty(
                 JBCefClient.Properties.JS_QUERY_POOL_SIZE,
-                "20"
+                JS_QUERY_POOL_SIZE
             )
             registerAppSchemeHandler()
 

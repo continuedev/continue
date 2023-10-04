@@ -40,6 +40,7 @@ import {
 } from "../util";
 import { ContextItem } from "../../../schema/FullState";
 import StyledMarkdownPreview from "./StyledMarkdownPreview";
+import { temporarilyClearSession } from "../redux/slices/serverStateReducer";
 
 const SEARCH_INDEX_NAME = "continue_context_items";
 
@@ -600,6 +601,9 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
         if (!inputRef.current?.value.startsWith("/edit")) {
           downshiftProps.setInputValue("/edit ");
         }
+      } else if (event.data.type === "focusContinueInputWithNewSession") {
+        dispatch(temporarilyClearSession(false));
+        client?.loadSession(undefined);
       }
     };
     window.addEventListener("message", handler);
