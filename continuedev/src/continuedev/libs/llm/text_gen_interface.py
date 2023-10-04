@@ -14,7 +14,7 @@ class TextGenUI(LLM):
     """
     TextGenUI is a comprehensive, open-source language model UI and local server. You can set it up with an OpenAI-compatible server plugin, but if for some reason that doesn't work, you can use this class like so:
 
-    ```python
+    ```python title="~/.continue/config.py"
     from continuedev.src.continuedev.libs.llm.text_gen_interface import TextGenUI
 
     config = ContinueConfig(

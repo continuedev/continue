@@ -14,7 +14,7 @@ class Ollama(LLM):
     """
     [Ollama](https://ollama.ai/) is an application for Mac and Linux that makes it easy to locally run open-source models, including Llama-2. Download the app from the website, and it will walk you through setup in a couple of minutes. You can also read more in their [README](https://github.com/jmorganca/ollama). Continue can then be configured to use the `Ollama` LLM class:
 
-    ```python
+    ```python title="~/.continue/config.py"
     from continuedev.src.continuedev.libs.llm.ollama import Ollama
 
     config = ContinueConfig(

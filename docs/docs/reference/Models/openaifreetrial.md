@@ -10,7 +10,7 @@ Once you are using Continue regularly though, you will need to add an OpenAI API
 2. Open `~/.continue/config.py`. You can do this by using the '/config' command in Continue
 3. Change the default LLMs to look like this:
 
-```python
+```python title="~/.continue/config.py"
 API_KEY = "<API_KEY>"
 config = ContinueConfig(
     ...

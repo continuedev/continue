@@ -29,7 +29,7 @@
       "name": "Reference",
       "type": "python",
       "request": "launch",
-      "module": "continuedev.src.continuedev.models.reference.test",
+      "module": "continuedev.src.continuedev.models.reference.generate",
       "justMyCode": true
     },
     {

@@ -9,6 +9,7 @@ Type '@url' to reference the contents of a URL. You can either reference preset 
 ## Properties
 
 <ClassPropertyRef name='preset_urls' details='{&quot;title&quot;: &quot;Preset Urls&quot;, &quot;description&quot;: &quot;A list of preset URLs that you will be able to quickly reference by typing &#x27;@url&#x27;&quot;, &quot;default&quot;: [], &quot;type&quot;: &quot;array&quot;, &quot;items&quot;: {&quot;type&quot;: &quot;string&quot;}}' required={false} default="[]"/>
+<ClassPropertyRef name='static_url_context_items' details='{&quot;title&quot;: &quot;Static Url Context Items&quot;, &quot;default&quot;: [], &quot;type&quot;: &quot;array&quot;, &quot;items&quot;: {&quot;$ref&quot;: &quot;#/definitions/ContextItem&quot;}}' required={false} default="[]"/>
 
 
 ### Inherited Properties

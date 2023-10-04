@@ -32,7 +32,7 @@ class OpenAI(LLM):
 
     If you are locally serving a model that uses an OpenAI-compatible server, you can simply change the `api_base` in the `OpenAI` class like this:
 
-    ```python
+    ```python title="~/.continue/config.py"
     from continuedev.src.continuedev.libs.llm.openai import OpenAI
 
     config = ContinueConfig(

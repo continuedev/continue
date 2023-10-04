@@ -12,7 +12,7 @@ class HuggingFaceInferenceAPI(LLM):
     """
     Hugging Face Inference API is a great option for newly released language models. Sign up for an account and add billing [here](https://huggingface.co/settings/billing), access the Inference Endpoints [here](https://ui.endpoints.huggingface.co), click on “New endpoint”, and fill out the form (e.g. select a model like [WizardCoder-Python-34B-V1.0](https://huggingface.co/WizardLM/WizardCoder-Python-34B-V1.0)), and then deploy your model by clicking “Create Endpoint”. Change `~/.continue/config.py` to look like this:
 
-    ```python
+    ```python title="~/.continue/config.py"
     from continuedev.src.continuedev.core.models import Models
     from continuedev.src.continuedev.libs.llm.hf_inference_api import HuggingFaceInferenceAPI
 

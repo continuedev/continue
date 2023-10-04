@@ -6,7 +6,7 @@ See our [5 minute quickstart](https://github.com/continuedev/ggml-server-example
 
 Once the model is running on localhost:8000, change `~/.continue/config.py` to look like this:
 
-```python
+```python title="~/.continue/config.py"
 from continuedev.src.continuedev.libs.llm.ggml import GGML
 
 config = ContinueConfig(

@@ -15,7 +15,7 @@ class TogetherLLM(LLM):
     """
     The Together API is a cloud platform for running large AI models. You can sign up [here](https://api.together.xyz/signup), copy your API key on the initial welcome screen, and then hit the play button on any model from the [Together Models list](https://docs.together.ai/docs/models-inference). Change `~/.continue/config.py` to look like this:
 
-    ```python
+    ```python title="~/.continue/config.py"
     from continuedev.src.continuedev.core.models import Models
     from continuedev.src.continuedev.libs.llm.together import TogetherLLM
 

@@ -13,7 +13,7 @@ class QueuedLLM(LLM):
 
     If you are already using another LLM class and are experiencing this problem, you can just wrap it with the QueuedLLM class like this:
 
-    ```python
+    ```python title="~/.continue/config.py"
     from continuedev.src.continuedev.libs.llm.queued import QueuedLLM
 
     config = ContinueConfig(
