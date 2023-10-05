@@ -1,6 +1,6 @@
 {
   "name": "continue",
-  "icon": "media/terminal-continue.png",
+  "icon": "media/icon.png",
   "version": "0.0.410",
   "repository": {
     "type": "git",
@@ -17,9 +17,9 @@
   "homepage": "https://continue.dev",
   "qna": "https://github.com/continuedev/continue/issues/new/choose",
   "license": "Apache-2.0",
-  "displayName": "Continue - Use Code Llama in VS Code",
+  "displayName": "Continue - CodeLlama, GPT-4, and more",
   "pricing": "Free",
-  "description": "Open-source copilot for software development - bring the power of ChatGPT to your IDE",
+  "description": "Open-source autopilot for software development - bring the power of ChatGPT to your IDE",
   "publisher": "Continue",
   "engines": {
     "vscode": "^1.67.0"
