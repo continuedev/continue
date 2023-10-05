@@ -72,6 +72,15 @@ jobs:
         run: |
           chmod 777 dist/run
 
+      # 1.5 Place the binary in extension/exe directory
+      - name: Make sure extension/exe directory exists
+        run: |
+          mkdir -p extension/exe
+
+      - name: Copy binary to extension
+        run: |
+          cp dist/run extension/exe/run
+
       # 2. Install npm dependencies
       - name: Use Node.js 19.0.0
         uses: actions/setup-node@v3
