@@ -1,21 +1,30 @@
-> 🎁 **New!: [Use Code Llama with Continue](https://continue.dev/docs/walkthroughs/codellama)**
+> 🎁 **New! [Try out the new JetBrains extension (Alpha)](https://plugins.jetbrains.com/plugin/22707-continue-extension)**
+
+![Continue logo](c_d.png)
 
 <h1 align="center">Continue</h1>
 
 <div align="center">
 
-**[Continue](https://continue.dev/docs) is the open-source autopilot for software development—a [VS Code extension](https://marketplace.visualstudio.com/items?itemName=Continue.continue) that brings the power of ChatGPT to your IDE**
+**[Continue](https://continue.dev/docs) is the open-source autopilot for software development—an IDE extension that brings the power of ChatGPT to [VS Code](https://marketplace.visualstudio.com/items?itemName=Continue.continue) and [JetBrains](https://plugins.jetbrains.com/plugin/22707-continue-extension)**
 
 </div>
 
 <div align="center">
 
-[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+<a target="_blank" href="https://opensource.org/licenses/Apache-2.0" style="background:none">
+    <img src="https://img.shields.io/badge/License-Apache_2.0-blue.svg" style="height: 36px;" />
+</a>
+<a target="_blank" href="https://continue.dev/docs" style="background:none">
+    <img src="https://img.shields.io/badge/continue_docs-%23BE1B55" style="height: 36px;" />
+</a>
 <a target="_blank" href="https://discord.gg/vapESyrFmJ" style="background:none">
-<img src="https://img.shields.io/badge/discord-join-continue.svg?labelColor=191937&color=6F6FF7&logo=discord" />
+    <img src="https://img.shields.io/badge/discord-join-continue.svg?labelColor=191937&color=6F6FF7&logo=discord" style="height: 36px;" />
 </a>
 
-![Editing with Continue](https://github.com/continuedev/continue/blob/main/readme.gif?raw=true)
+<p></p>
+
+![Editing With Continue](readme.gif)
 
 </div>
 

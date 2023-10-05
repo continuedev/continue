@@ -2,7 +2,7 @@
 
 ![continue-cover-logo](/img/continue-cover-logo.png)
 
-**Continue is the open-source autopilot for software development—a [VS Code extension](https://marketplace.visualstudio.com/items?itemName=Continue.continue) that brings the power of ChatGPT to your IDE**
+**Continue is the open-source autopilot for software development—an IDE extension that brings the power of ChatGPT to [VS Code](https://marketplace.visualstudio.com/items?itemName=Continue.continue) and [JetBrains](https://plugins.jetbrains.com/plugin/22707-continue-extension)**
 
 You determine when Large Language Models (LLMs) like [GPT-4](https://openai.com/research/gpt-4) and [Code Llama](https://about.fb.com/news/2023/08/code-llama-ai-for-coding/) should act as an autopilot, helping you complete software development tasks. You highlight some code and then use natural language instructions (and optional slash commands like `/edit`) to tell the LLM what to do.
 
