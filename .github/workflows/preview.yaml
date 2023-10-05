@@ -77,9 +77,15 @@ jobs:
         run: |
           mkdir -p extension/exe
 
-      - name: Copy binary to extension
+      - name: Copy binary to extension (non-Windows)
         run: |
           cp dist/run extension/exe/run
+        if: matrix.os != 'windows-latest'
+
+      - name: Copy binary to extension (Windows)
+        run: |
+          cp dist/run.exe extension/exe/run.exe
+        if: matrix.os == 'windows-latest'
 
       # 2. Install npm dependencies
       - name: Use Node.js 19.0.0
