@@ -144,7 +144,7 @@ jobs:
       # 4. Package the extension
       - shell: pwsh
         run: echo "target=${{ matrix.platform }}-${{ matrix.arch }}" >> $env:GITHUB_ENV
-      - run: cd extension && npx vsce package --target ${{ env.target }} --pre-release
+      - run: cd extension && npx vsce package --pre-release --target ${{ env.target }}
 
       # 5. Upload the .vsix as an artifact
       - uses: actions/upload-artifact@v2
@@ -180,7 +180,7 @@ jobs:
       - uses: actions/download-artifact@v3
 
       # 2. Publish the extension to VS Code Marketplace
-      - run: npx vsce publish --packagePath $(find . -iname *.vsix) --pre-release
+      - run: npx vsce publish --pre-release --packagePath $(find . -iname *.vsix)
         env:
           VSCE_PAT: ${{ secrets.VSCE_TOKEN }}
 
@@ -188,7 +188,7 @@ jobs:
       - name: Publish (Open VSX Registry)
         run: |
           cd extension
-          npx ovsx publish -p ${{ secrets.VSX_REGISTRY_TOKEN }} --packagePath $(find . -iname *.vsix) --pre-release
+          npx ovsx publish --pre-release -p ${{ secrets.VSX_REGISTRY_TOKEN }} --packagePath $(find . -iname *.vsix)
 
       # 4. Update the package.json version and push changes
       - name: Update version in package.json
