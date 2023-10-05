@@ -163,6 +163,8 @@ jobs:
   publish:
     runs-on: ubuntu-20.04
     needs: build
+    permissions:
+      contents: write
     steps:
       # 0. Setup git
       - name: Checkout
