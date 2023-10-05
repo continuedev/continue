@@ -146,6 +146,17 @@ function ensureDirectoryExistence(filePath: string) {
   fs.mkdirSync(dirname);
 }
 
+function isPreviewExtension() {
+  // If the extension minor version is odd, it is a preview version
+  const extensionVersion = getExtensionVersion();
+  if (!extensionVersion || extensionVersion === "") {
+    return false;
+  }
+  const extensionVersionSplit = extensionVersion.split(".");
+  const extensionMinorVersion = extensionVersionSplit[1];
+  return parseInt(extensionMinorVersion) % 2 === 1;
+}
+
 export async function downloadFromS3(
   bucket: string,
   fileName: string,
@@ -263,7 +274,7 @@ export async function startContinuePythonServer(redownload: boolean = true) {
         try {
           await downloadFromS3(
             bucket,
-            fileName,
+            `${isPreviewExtension() ? "preview/" : ""}${fileName}`,
             destination,
             "us-west-1",
             false
@@ -285,7 +296,7 @@ export async function startContinuePythonServer(redownload: boolean = true) {
           try {
             await downloadFromS3(
               bucket,
-              fileName,
+              `${isPreviewExtension() ? "preview/" : ""}${fileName}`,
               destination,
               "us-west-1",
               true

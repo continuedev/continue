@@ -193,7 +193,7 @@ jobs:
           git config --local user.name "GitHub Action"
 
       - name: Pull latest changes
-        run: git pull origin main
+        run: git pull origin preview
 
       - name: Download .vsix artifact
         uses: actions/download-artifact@v2
@@ -222,7 +222,7 @@ jobs:
       - name: Publish (Open VSX Registry)
         run: |
           cd extension
-          npx ovsx publish -p ${{ secrets.VSX_REGISTRY_TOKEN }} --packagePath ./build/*.vsix
+          npx ovsx publish -p ${{ secrets.VSX_REGISTRY_TOKEN }} --packagePath ./build/*.vsix --pre-release
 
       - name: Publish
         run: |
@@ -282,7 +282,8 @@ jobs:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_REGION: "us-west-1"
-          SOURCE_DIR: "exe-preview"
+          SOURCE_DIR: "exe"
+          DEST_DIR: "preview"
 
       - name: Upload binaries to S3 (s3.continue.dev)
         uses: jakejarvis/s3-sync-action@master
@@ -293,4 +294,5 @@ jobs:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_REGION: "us-west-1"
-          SOURCE_DIR: "exe-preview"
+          SOURCE_DIR: "exe"
+          DEST_DIR: "preview"
