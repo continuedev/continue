@@ -325,10 +325,17 @@ class ContextManager:
         Deletes the documents in the search index.
         """
         async with Client(get_meilisearch_url()) as search_client:
-            await asyncio.wait_for(
-                search_client.index(SEARCH_INDEX_NAME).delete_documents(ids),
-                timeout=20,
-            )
+            try:
+                await asyncio.wait_for(
+                    search_client.index(SEARCH_INDEX_NAME).delete_documents(ids),
+                    timeout=20,
+                )
+            except asyncio.TimeoutError:
+                logger.warning(
+                    "Failed to delete document from meilisearch in 20 seconds"
+                )
+            except Exception as e:
+                logger.warning(f"Error deleting document from meilisearch: {e}")
 
     async def load_index(self, workspace_dir: str, should_retry: bool = True):
         try:

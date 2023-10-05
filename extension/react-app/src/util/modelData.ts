@@ -349,7 +349,7 @@ export const MODEL_INFO: { [key: string]: ModelInfo } = {
       ...completionParamsInputs,
     ],
     packages: [
-      ...codeLlamaPackages.map((p) => {
+      ...llama2Packages.map((p) => {
         return {
           ...p,
           params: {
@@ -360,7 +360,7 @@ export const MODEL_INFO: { [key: string]: ModelInfo } = {
           },
         };
       }),
-      ...llama2Packages.map((p) => {
+      ...codeLlamaPackages.map((p) => {
         return {
           ...p,
           params: {

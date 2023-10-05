@@ -24,6 +24,16 @@ function getExtensionVersionInt(versionString: string): number {
 
 function addPythonPathForConfig() {
   // Add to python.analysis.extraPaths global setting so config.py gets LSP
+
+  if (
+    vscode.workspace.workspaceFolders?.some((folder) =>
+      folder.uri.fsPath.endsWith("continue")
+    )
+  ) {
+    // Not for the Continue repo
+    return;
+  }
+
   const pythonConfig = vscode.workspace.getConfiguration("python");
   const analysisPaths = pythonConfig.get<string[]>("analysis.extraPaths");
   const autoCompletePaths = pythonConfig.get<string[]>(
