@@ -12,8 +12,8 @@ If you haven't already installed Continue, you can do that [here](https://market
 4. Update your Continue config file to look like this:
 
 ```python
-from continuedev.src.continuedev.core.models import Models
-from continuedev.src.continuedev.libs.llm.together import TogetherLLM
+from continuedev.core.models import Models
+from continuedev.libs.llm.together import TogetherLLM
 
 config = ContinueConfig(
     ...
@@ -33,7 +33,7 @@ config = ContinueConfig(
 3. Change your Continue config file to look like this:
 
 ```python
-from continuedev.src.continuedev.libs.llm.ollama import Ollama
+from continuedev.libs.llm.ollama import Ollama
 
 config = ContinueConfig(
     ...
@@ -53,8 +53,8 @@ config = ContinueConfig(
 2. Change your Continue config file to look like this:
 
 ```python
-from continuedev.src.continuedev.core.models import Models
-from continuedev.src.continuedev.libs.llm.replicate import ReplicateLLM
+from continuedev.core.models import Models
+from continuedev.libs.llm.replicate import ReplicateLLM
 
 config = ContinueConfig(
     ...

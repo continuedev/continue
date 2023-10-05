@@ -165,6 +165,11 @@ jobs:
           cd extension
           npm ci
 
+      - name: Add a copy of continuedev to the extension
+        run: |
+          cd extension
+          cp -r ../server/continuedev continuedev
+
       - name: Install react-app Dependencies
         run: |
           cd extension/react-app

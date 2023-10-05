@@ -3,7 +3,7 @@ import { LLM } from "../../../schema/LLM";
 import {
   Label,
   Select,
-  TextInput,
+  Input,
   defaultBorderRadius,
   lightGray,
   vscForeground,
@@ -58,7 +58,7 @@ function ModelSettings(props: { llm: any | undefined; role: string }) {
             {typeof modelOptions.api_key !== undefined && (
               <>
                 <Label fontSize={getFontSize()}>API Key</Label>
-                <TextInput
+                <Input
                   type="text"
                   defaultValue={props.llm.api_key}
                   placeholder="API Key"
@@ -69,7 +69,7 @@ function ModelSettings(props: { llm: any | undefined; role: string }) {
             {modelOptions.model && (
               <>
                 <Label fontSize={getFontSize()}>Model</Label>
-                <TextInput
+                <Input
                   type="text"
                   defaultValue={props.llm.model}
                   placeholder="Model"

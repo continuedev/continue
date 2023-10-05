@@ -22,7 +22,7 @@ Setup instructions are below for each (showing the import and config object). Yo
 Type '@issue' to reference the title and contents of a GitHub issue.
 
 ```python
-from continuedev.src.continuedev.plugins.context_providers.github import GitHubIssuesContextProvider
+from continuedev.plugins.context_providers.github import GitHubIssuesContextProvider
 ```
 
 ```python
@@ -37,7 +37,7 @@ GitHubIssuesContextProvider(
 Type '@search' to reference the results of codebase search, just like the results you would get from VS Code search.
 
 ```python
-from continuedev.src.continuedev.plugins.context_providers.search import SearchContextProvider
+from continuedev.plugins.context_providers.search import SearchContextProvider
 ```
 
 ```python
@@ -49,7 +49,7 @@ SearchContextProvider() # No arguments necessary
 Type '@url' to reference the contents of a URL. You can either reference preset URLs, or reference one dynamically by typing '@url https://example.com'. The text contents of the page will be fetched and used as context.
 
 ```python
-from continuedev.src.continuedev.plugins.context_providers.url import URLContextProvider
+from continuedev.plugins.context_providers.url import URLContextProvider
 ```
 
 ```python
@@ -61,7 +61,7 @@ URLContextProvider(preset_urls=["https://continue.dev/docs/customization"])
 Type '@diff' to reference all of the changes you've made to your current branch. This is useful if you want to summarize what you've done or ask for a general review of your work before committing.
 
 ```python
-from continuedev.src.continuedev.plugins.context_providers.diff import DiffContextProvider
+from continuedev.plugins.context_providers.diff import DiffContextProvider
 ```
 
 ```python
@@ -73,7 +73,7 @@ DiffContextProvider()
 Type '@tree' to reference the contents of your current workspace. The LLM will be able to see the nested directory structure of your project.
 
 ```python
-from continuedev.src.continuedev.plugins.context_providers.filetree import FileTreeContextProvider
+from continuedev.plugins.context_providers.filetree import FileTreeContextProvider
 ```
 
 ```python
@@ -85,7 +85,7 @@ FileTreeContextProvider()
 Type '@google' to reference the results of a Google search. For example, type "@google python tutorial" if you want to search and discuss ways of learning Python.
 
 ```python
-from continuedev.src.continuedev.plugins.context_providers.google import GoogleContextProvider
+from continuedev.plugins.context_providers.google import GoogleContextProvider
 ```
 
 ```python
@@ -101,7 +101,7 @@ Note: You can get an API key for free at [serper.dev](https://serper.dev).
 Type '@terminal' to reference the contents of your IDE's terminal.
 
 ```python
-from continuedev.src.continuedev.plugins.context_providers.terminal import TerminalContextProvider
+from continuedev.plugins.context_providers.terminal import TerminalContextProvider
 ```
 
 ```python
@@ -169,7 +169,7 @@ This example is a situation where you request all of the data (issues in this ca
 There are other scenarios where you might want to just get information on demand, for example by typing '@url https://continue.dev/docs/context-providers' and having the ContextProvider fetch the contents of that URL dynamically. For this case, you can implement the `DynamicContextProvider` class like this:
 
 ```python
-from continuedev.src.continuedev.plugins.context_providers.dynamic import DynamicContextProvider
+from continuedev.plugins.context_providers.dynamic import DynamicContextProvider
 
 class ExampleDynamicProvider(DynamicProvider):
     title = "example"

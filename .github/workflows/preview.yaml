@@ -1,0 +1,298 @@
+name: Publish Preview Extension
+
+on:
+  push:
+    branches:
+      - preview
+
+jobs:
+  pyinstaller:
+    strategy:
+      matrix:
+        os: [windows-latest, ubuntu-20.04, macos-latest]
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      # Install Python requirements and build+upload binaries for each platform
+
+      - name: Check-out repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10.8"
+
+      - name: Install Pyinstaller
+        run: |
+          pip install pyinstaller
+
+      - name: Install Dependencies
+        run: |
+          pip install -r continuedev/requirements.txt
+
+      - name: Build PyInstaller Executable
+        run: pyinstaller run.spec
+
+      - name: Set permissions
+        run: |
+          chmod 777 dist/run
+
+      # - name: Test Python Server
+      #   env:
+      #     OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      #     ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      #     TOGETHER_API_KEY: ${{ secrets.TOGETHER_API_KEY }}
+      #   run: |
+      #     cd continuedev
+      #     pip install -r dev_requirements.txt
+      #     cd src
+      #     python -m pytest
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ runner.os }}Build
+          path: dist/*
+
+  test-and-package:
+    needs: pyinstaller
+    strategy:
+      matrix:
+        os: [macos-latest, ubuntu-20.04, windows-latest]
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      # Download corresponding binary artifact for the platform
+
+      - name: Create server directory
+        run: mkdir -p ~/.continue/server/exe
+
+      - name: Download Linux build
+        uses: actions/download-artifact@v2
+        with:
+          name: LinuxBuild
+          path: ~/.continue/server/exe
+        if: matrix.os == 'ubuntu-20.04'
+
+      - name: Download macOS build
+        uses: actions/download-artifact@v2
+        with:
+          name: macOSBuild
+          path: ~/.continue/server/exe
+        if: matrix.os == 'macos-latest'
+
+      - name: Download Windows build
+        uses: actions/download-artifact@v2
+        with:
+          name: WindowsBuild
+          path: ~/.continue/server/exe
+        if: matrix.os == 'windows-latest'
+
+      - name: Set permissions
+        shell: bash
+        run: |
+          chmod -R 777 ~/.continue/server/exe
+
+      # Setup Node.js and install dependencies
+
+      - name: Use Node.js 19.0.0
+        uses: actions/setup-node@v3
+        with:
+          node-version: 19.0.0
+
+      - name: Cache extension node_modules
+        uses: actions/cache@v2
+        with:
+          path: extension/node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('extension/package-lock.json') }}
+
+      - name: Cache react-app node_modules
+        uses: actions/cache@v2
+        with:
+          path: extension/react-app/node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('extension/react-app/package-lock.json') }}
+
+      - name: Install extension Dependencies
+        run: |
+          cd extension
+          npm ci
+
+      - name: Add a copy of continuedev to the extension
+        run: |
+          cd extension
+          cp -r ../server/continuedev continuedev
+
+      - name: Install react-app Dependencies
+        run: |
+          cd extension/react-app
+          npm ci --legacy-peer-deps
+
+      # Run tests
+
+      - name: Prepare the extension
+        run: |
+          cd extension
+          npm run prepackage
+
+      - name: Install Xvfb for Linux and run tests
+        run: |
+          sudo apt-get install -y xvfb # Install Xvfb
+          Xvfb :99 & # Start Xvfb
+          export DISPLAY=:99 # Export the display number to the environment
+          cd extension
+          npm run test
+        if: matrix.os == 'ubuntu-20.04'
+
+      - name: Run extension tests
+        run: |
+          cd extension
+          npm run test
+        if: matrix.os != 'ubuntu-20.04'
+
+      # Create and upload .vsix artifact
+      - name: Package the extension
+        run: |
+          cd extension
+          npm run package
+
+      - name: Upload .vsix as an artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: vsix-artifact
+          path: extension/build/*
+        if: matrix.os == 'ubuntu-20.04'
+
+      - name: Upload continue.log
+        uses: actions/upload-artifact@v2
+        with:
+          name: continue-log
+          path: /home/runner/.continue/continue.log
+        if: always()
+
+  publish:
+    needs: test-and-package
+    runs-on: ubuntu-20.04
+    permissions:
+      contents: write
+
+    steps:
+      # Checkout and download .vsix artifact
+
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Set up Git
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+
+      - name: Pull latest changes
+        run: git pull origin preview
+
+      - name: Download .vsix artifact
+        uses: actions/download-artifact@v2
+        with:
+          name: vsix-artifact
+          path: extension/build
+
+      # Publish the extension and commit/push the version change
+
+      - name: Use Node.js 19.0.0
+        uses: actions/setup-node@v3
+        with:
+          node-version: 19.0.0
+
+      - name: Cache extension node_modules
+        uses: actions/cache@v2
+        with:
+          path: extension/node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('extension/package-lock.json') }}
+
+      - name: Install extension Dependencies
+        run: |
+          cd extension
+          npm ci
+
+      - name: Publish (Open VSX Registry)
+        run: |
+          cd extension
+          npx ovsx publish -p ${{ secrets.VSX_REGISTRY_TOKEN }} --packagePath ./build/*.vsix --pre-release
+
+      - name: Publish
+        run: |
+          cd extension
+          npx vsce publish -p ${{ secrets.VSCE_TOKEN }} --packagePath ./build/*.vsix --pre-release
+
+      - name: Update version in package.json
+        run: |
+          cd extension
+          npm version patch
+
+      - name: Commit changes
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git commit -am "ci: 💚 Update package.json version [skip ci]"
+
+      - name: Push changes
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: ${{ github.ref }}
+
+      # Download binaries and upload to S3
+
+      - name: Download Linux build
+        uses: actions/download-artifact@v2
+        with:
+          name: LinuxBuild
+          path: exe/linux
+
+      - name: Download macOS build
+        uses: actions/download-artifact@v2
+        with:
+          name: macOSBuild
+          path: exe/mac
+
+      - name: Download Windows build
+        uses: actions/download-artifact@v2
+        with:
+          name: WindowsBuild
+          path: exe/windows
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-west-1
+
+      - name: Upload binaries to S3 (continue-server-binaries)
+        uses: jakejarvis/s3-sync-action@master
+        with:
+          args: --acl public-read --follow-symlinks
+        env:
+          AWS_S3_BUCKET: continue-server-binaries
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: "us-west-1"
+          SOURCE_DIR: "exe"
+          DEST_DIR: "preview"
+
+      - name: Upload binaries to S3 (s3.continue.dev)
+        uses: jakejarvis/s3-sync-action@master
+        with:
+          args: --acl public-read --follow-symlinks
+        env:
+          AWS_S3_BUCKET: s3.continue.dev
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: "us-west-1"
+          SOURCE_DIR: "exe"
+          DEST_DIR: "preview"

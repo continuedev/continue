@@ -1,7 +1,7 @@
 {
   "name": "continue",
   "icon": "media/terminal-continue.png",
-  "version": "0.0.410",
+  "version": "0.1.0",
   "repository": {
     "type": "git",
     "url": "https://github.com/continuedev/continue"
@@ -209,7 +209,8 @@
     "build-test": "tsc && node esbuild.test.mjs",
     "test": "npm run build-test && node ./out/test-runner/runTestOnVSCodeHost.js",
     "prepackage": "node scripts/prepackage.js",
-    "package": "node scripts/package.js"
+    "package": "node scripts/package.js",
+    "package:pre-release": "node scripts/package.js --pre-release"
   },
   "devDependencies": {
     "@nestjs/common": "^8.4.7",

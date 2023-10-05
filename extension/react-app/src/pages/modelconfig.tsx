@@ -3,7 +3,7 @@ import ModelCard from "../components/ModelCard";
 import styled from "styled-components";
 import { ArrowLeftIcon } from "@heroicons/react/24/outline";
 import {
-  TextInput,
+  Input,
   defaultBorderRadius,
   lightGray,
   vscBackground,
@@ -151,22 +151,28 @@ function ModelConfig() {
             <>
               <h3 className="mb-2">Enter required parameters</h3>
 
-              {modelInfo?.collectInputFor?.map((d) => {
-                return (
-                  <div>
-                    <label htmlFor={d.key}>{d.key}</label>
-                    <TextInput
-                      id={d.key}
-                      className="border-2 border-gray-200 rounded-md p-2 m-2"
-                      placeholder={d.key}
-                      defaultValue={d.defaultValue}
-                      {...formMethods.register(d.key, {
-                        required: true,
-                      })}
-                    />
-                  </div>
-                );
-              })}
+              {modelInfo?.collectInputFor
+                ?.filter((d) => d.required)
+                .map((d) => {
+                  return (
+                    <div>
+                      <label htmlFor={d.key}>{d.key}</label>
+                      <Input
+                        type={d.inputType}
+                        id={d.key}
+                        className="border-2 border-gray-200 rounded-md p-2 m-2"
+                        placeholder={d.key}
+                        defaultValue={d.defaultValue}
+                        min={d.min}
+                        max={d.max}
+                        step={d.step}
+                        {...formMethods.register(d.key, {
+                          required: true,
+                        })}
+                      />
+                    </div>
+                  );
+                })}
             </>
           )}
 
@@ -182,11 +188,15 @@ function ModelConfig() {
                 return (
                   <div>
                     <label htmlFor={d.key}>{d.key}</label>
-                    <TextInput
+                    <Input
+                      type={d.inputType}
                       id={d.key}
                       className="border-2 border-gray-200 rounded-md p-2 m-2"
                       placeholder={d.key}
                       defaultValue={d.defaultValue}
+                      min={d.min}
+                      max={d.max}
+                      step={d.step}
                       {...formMethods.register(d.key, {
                         required: false,
                       })}
@@ -216,7 +226,7 @@ function ModelConfig() {
                     formParams[d.key] =
                       d.inputType === "text"
                         ? formMethods.watch(d.key)
-                        : parseInt(formMethods.watch(d.key));
+                        : parseFloat(formMethods.watch(d.key));
                   }
 
                   client?.addModelForRole("*", modelInfo.class, {
@@ -239,7 +249,7 @@ function ModelConfig() {
                 formParams[d.key] =
                   d.inputType === "text"
                     ? formMethods.watch(d.key)
-                    : parseInt(formMethods.watch(d.key));
+                    : parseFloat(formMethods.watch(d.key));
               }
 
               client?.addModelForRole("*", modelInfo.class, {

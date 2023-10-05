@@ -1,6 +1,6 @@
 {
   "title": "Models",
-  "$ref": "#/definitions/src__continuedev__core__models__Models",
+  "$ref": "#/definitions/continuedev__core__models__Models",
   "definitions": {
     "LLM": {
       "title": "LLM",
@@ -31,6 +31,12 @@
           "title": "Model",
           "description": "The name of the model to be used (e.g. gpt-4, codellama)",
           "type": "string"
+        },
+        "max_tokens": {
+          "title": "Max Tokens",
+          "description": "The maximum number of tokens to generate.",
+          "default": 1024,
+          "type": "integer"
         },
         "stop_tokens": {
           "title": "Stop Tokens",
@@ -82,7 +88,7 @@
       "type": "object",
       "properties": {}
     },
-    "src__continuedev__core__models__Models": {
+    "continuedev__core__models__Models": {
       "title": "Models",
       "description": "Main class that holds the current model configuration",
       "type": "object",

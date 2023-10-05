@@ -14,6 +14,7 @@ MODEL_PROVIDER_TAG_COLORS[ModelProviderTag["Free"]] = "#ffff00";
 export enum CollectInputType {
   "text" = "text",
   "number" = "number",
+  "range" = "range",
 }
 
 export interface InputDescriptor {
@@ -38,6 +39,64 @@ const contextLengthInput: InputDescriptor = {
   defaultValue: 2048,
   required: false,
 };
+const temperatureInput: InputDescriptor = {
+  inputType: CollectInputType.number,
+  key: "temperature",
+  label: "Temperature",
+  defaultValue: undefined,
+  required: false,
+  min: 0.0,
+  max: 1.0,
+  step: 0.01,
+};
+const topPInput: InputDescriptor = {
+  inputType: CollectInputType.number,
+  key: "top_p",
+  label: "Top-P",
+  defaultValue: undefined,
+  required: false,
+  min: 0,
+  max: 1,
+  step: 0.01,
+};
+const topKInput: InputDescriptor = {
+  inputType: CollectInputType.number,
+  key: "top_k",
+  label: "Top-K",
+  defaultValue: undefined,
+  required: false,
+  min: 0,
+  max: 1,
+  step: 0.01,
+};
+const presencePenaltyInput: InputDescriptor = {
+  inputType: CollectInputType.number,
+  key: "presence_penalty",
+  label: "Presence Penalty",
+  defaultValue: undefined,
+  required: false,
+  min: 0,
+  max: 1,
+  step: 0.01,
+};
+const FrequencyPenaltyInput: InputDescriptor = {
+  inputType: CollectInputType.number,
+  key: "frequency_penalty",
+  label: "Frequency Penalty",
+  defaultValue: undefined,
+  required: false,
+  min: 0,
+  max: 1,
+  step: 0.01,
+};
+const completionParamsInputs = [
+  contextLengthInput,
+  temperatureInput,
+  topKInput,
+  topPInput,
+  presencePenaltyInput,
+  FrequencyPenaltyInput,
+];
 
 const serverUrlInput = {
   inputType: CollectInputType.text,
@@ -210,6 +269,7 @@ export const MODEL_INFO: { [key: string]: ModelInfo } = {
         placeholder: "Enter your OpenAI API key",
         required: true,
       },
+      ...completionParamsInputs,
     ],
   },
   anthropic: {
@@ -229,6 +289,7 @@ export const MODEL_INFO: { [key: string]: ModelInfo } = {
         placeholder: "Enter your Anthropic API key",
         required: true,
       },
+      ...completionParamsInputs,
     ],
     packages: [
       {
@@ -261,7 +322,7 @@ export const MODEL_INFO: { [key: string]: ModelInfo } = {
         refUrl: "https://ollama.ai/library/llama2",
       })),
     ],
-    collectInputFor: [contextLengthInput],
+    collectInputFor: [...completionParamsInputs],
   },
   together: {
     title: "TogetherAI",
@@ -285,6 +346,7 @@ export const MODEL_INFO: { [key: string]: ModelInfo } = {
         placeholder: "Enter your TogetherAI API key",
         required: true,
       },
+      ...completionParamsInputs,
     ],
     packages: [
       ...codeLlamaPackages.map((p) => {
@@ -330,7 +392,7 @@ export const MODEL_INFO: { [key: string]: ModelInfo } = {
       server_url: "http://localhost:1234",
     },
     packages: [llama2FamilyPackage],
-    collectInputFor: [contextLengthInput],
+    collectInputFor: [...completionParamsInputs],
   },
   replicate: {
     title: "Replicate",
@@ -348,6 +410,7 @@ export const MODEL_INFO: { [key: string]: ModelInfo } = {
         placeholder: "Enter your Replicate API key",
         required: true,
       },
+      ...completionParamsInputs,
     ],
     icon: "replicate.png",
     tags: [
@@ -385,7 +448,7 @@ After it's up and running, you can start using Continue.`,
     icon: "llamacpp.png",
     tags: [ModelProviderTag.Local, ModelProviderTag["Open-Source"]],
     packages: [llama2FamilyPackage],
-    collectInputFor: [contextLengthInput],
+    collectInputFor: [...completionParamsInputs],
   },
   palm: {
     title: "Google PaLM API",
@@ -428,7 +491,7 @@ After it's up and running, you can start using Continue.`,
     tags: [ModelProviderTag.Local, ModelProviderTag["Open-Source"]],
     packages: [llama2FamilyPackage],
     collectInputFor: [
-      contextLengthInput,
+      ...completionParamsInputs,
       { ...serverUrlInput, defaultValue: "http://localhost:8080" },
     ],
   },
@@ -451,7 +514,7 @@ After it's up and running, you can start using Continue.`,
         ...serverUrlInput,
         defaultValue: "http://localhost:8000",
       },
-      contextLengthInput,
+      ...completionParamsInputs,
     ],
     icon: "openai.svg",
     tags: [ModelProviderTag.Local, ModelProviderTag["Open-Source"]],
@@ -467,5 +530,6 @@ After it's up and running, you can start using Continue.`,
     icon: "openai.svg",
     tags: [ModelProviderTag.Free],
     packages: [gpt4, gpt35turbo],
+    collectInputFor: [...completionParamsInputs],
   },
 };
