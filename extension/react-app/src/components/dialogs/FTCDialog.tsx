@@ -46,6 +46,7 @@ function FTCDialog() {
       <GridDiv>
         <Button
           onClick={() => {
+            dispatch(setShowDialog(false));
             navigate("/models");
           }}
         >

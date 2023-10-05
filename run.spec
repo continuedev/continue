@@ -10,7 +10,7 @@ a = Analysis(
     pathex=[],
     binaries=[],
     datas=[
-        ('server/continuedev', 'server/continuedev'),
+        ('server/continuedev', 'continuedev'),
         (certifi.where(), 'ca_bundle')
         ] + copy_metadata('replicate'),
     hiddenimports=['anthropic', 'github', 'ripgrepy', 'bs4', 'redbaron'],
