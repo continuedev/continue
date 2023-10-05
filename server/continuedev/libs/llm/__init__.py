@@ -16,6 +16,21 @@ from ..util.count_tokens import (
     format_chat_messages,
     prune_raw_prompt_from_top,
 )
+from .anthropic import AnthropicLLM  # noqa: F401
+from .ggml import GGML  # noqa: F401
+from .google_palm_api import GooglePalmAPI  # noqa: F401
+from .hf_inference_api import HuggingFaceInferenceAPI  # noqa: F401
+from .hf_tgi import HuggingFaceTGI  # noqa: F401
+from .hugging_face import HuggingFaceLLM  # noqa: F401
+from .llamacpp import LlamaCpp  # noqa: F401
+from .ollama import Ollama  # noqa: F401
+from .openai import OpenAI  # noqa: F401
+from .openai_free_trial import OpenAIFreeTrial  # noqa: F401
+from .proxy_server import ProxyServer  # noqa: F401
+from .queued import QueuedLLM  # noqa: F401
+from .replicate import ReplicateLLM  # noqa: F401
+from .text_gen_interface import TextGenUI  # noqa: F401
+from .together import TogetherLLM  # noqa: F401
 
 
 class CompletionOptions(ContinueBaseModel):
