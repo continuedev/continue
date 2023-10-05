@@ -227,7 +227,7 @@ jobs:
       - name: Publish
         run: |
           cd extension
-          npx vsce publish -p ${{ secrets.VSCE_TOKEN }} --packagePath ./build/*.vsix
+          npx vsce publish -p ${{ secrets.VSCE_TOKEN }} --packagePath ./build/*.vsix --pre-release
 
       - name: Update version in package.json
         run: |
