@@ -159,7 +159,7 @@ jobs:
       - name: Package the extension
         run: |
           cd extension
-          npm run package
+          npm run package:pre-release
 
       - name: Upload .vsix as an artifact
         uses: actions/upload-artifact@v2
