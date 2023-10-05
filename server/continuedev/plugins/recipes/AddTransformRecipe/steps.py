@@ -3,8 +3,8 @@ from textwrap import dedent
 
 from ....core.main import Step
 from ....core.sdk import ContinueSDK, Models
+from ....core.steps import MessageStep
 from ....libs.util.paths import find_data_file
-from ....plugins.steps.core.core import MessageStep
 
 AI_ASSISTED_STRING = "(✨ AI-Assisted ✨)"
 

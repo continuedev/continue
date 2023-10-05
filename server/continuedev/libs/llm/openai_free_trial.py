@@ -1,7 +1,7 @@
 from typing import Callable, List, Optional
 
 from ...core.main import ChatMessage
-from . import LLM
+from .base import LLM
 from .openai import OpenAI
 from .proxy_server import ProxyServer
 

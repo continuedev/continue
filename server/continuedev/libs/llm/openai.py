@@ -5,7 +5,7 @@ import openai
 from pydantic import Field
 
 from ...core.main import ChatMessage
-from ..llm import LLM
+from .base import LLM
 
 CHAT_MODELS = {
     "gpt-3.5-turbo",

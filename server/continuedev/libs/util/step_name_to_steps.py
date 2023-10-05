@@ -1,6 +1,7 @@
 from typing import Dict
 
 from ...core.main import Step
+from ...core.steps import UserInputStep
 from ...libs.util.logging import logger
 from ...plugins.recipes.AddTransformRecipe.main import AddTransformRecipe
 from ...plugins.recipes.CreatePipelineRecipe.main import CreatePipelineRecipe
@@ -11,7 +12,6 @@ from ...plugins.recipes.DeployPipelineAirflowRecipe.main import (
 from ...plugins.steps.chat import SimpleChatStep
 from ...plugins.steps.clear_history import ClearHistoryStep
 from ...plugins.steps.comment_code import CommentCodeStep
-from ...plugins.steps.core.core import UserInputStep
 from ...plugins.steps.feedback import FeedbackStep
 from ...plugins.steps.help import HelpStep
 from ...plugins.steps.main import EditHighlightedCodeStep

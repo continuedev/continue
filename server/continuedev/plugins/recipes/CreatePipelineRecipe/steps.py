@@ -4,10 +4,10 @@ from textwrap import dedent
 
 from ....core.main import Step
 from ....core.sdk import ContinueSDK, Models
+from ....core.steps import MessageStep
 from ....models.filesystem import RangeInFile
 from ....models.filesystem_edit import AddFile, FileEdit
 from ....models.main import Range
-from ....plugins.steps.core.core import MessageStep
 
 AI_ASSISTED_STRING = "(✨ AI-Assisted ✨)"
 

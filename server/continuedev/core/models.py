@@ -2,8 +2,8 @@ from typing import List, Optional
 
 from pydantic import BaseModel
 
-from ..libs.llm import LLM
 from ..libs.llm.anthropic import AnthropicLLM
+from ..libs.llm.base import LLM
 from ..libs.llm.ggml import GGML
 from ..libs.llm.google_palm_api import GooglePaLMAPI
 from ..libs.llm.hf_inference_api import HuggingFaceInferenceAPI

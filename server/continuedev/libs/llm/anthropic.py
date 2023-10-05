@@ -2,7 +2,7 @@ from typing import Any, Callable, Coroutine
 
 from anthropic import AI_PROMPT, HUMAN_PROMPT, AsyncAnthropic
 
-from ..llm import LLM, CompletionOptions
+from .base import LLM, CompletionOptions
 from .prompts.chat import anthropic_template_messages
 
 

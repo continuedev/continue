@@ -1,6 +1,4 @@
 from .diff import DiffContextProvider  # noqa: F401
-from .embeddings import EmbeddingsContextProvider  # noqa: F401
-from .file import FileContextProvider  # noqa: F401
 from .filetree import FileTreeContextProvider  # noqa: F401
 from .github import GitHubIssuesContextProvider  # noqa: F401
 from .google import GoogleContextProvider  # noqa: F401

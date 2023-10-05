@@ -2,7 +2,7 @@ from textwrap import dedent
 
 from ....core.main import Step
 from ....core.sdk import ContinueSDK
-from ....plugins.steps.core.core import MessageStep
+from ....core.steps import MessageStep
 from ....plugins.steps.input.nl_multiselect import NLMultiselectStep
 from .steps import DeployAirflowStep, RunPipelineStep, SetupPipelineStep
 

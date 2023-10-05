@@ -6,7 +6,7 @@ from ..core.config import ContinueConfig
 from ..core.context import ContextItem
 from ..core.main import FullState, History, HistoryNode, SessionInfo
 from ..core.models import Models
-from ..libs.llm import LLM
+from ..libs.llm.base import LLM
 from .filesystem import FileEdit, RangeInFile
 from .filesystem_edit import FileEditWithFullContents
 from .main import Position, Range, Traceback, TracebackFrame

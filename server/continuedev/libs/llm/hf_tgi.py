@@ -4,7 +4,7 @@ from typing import Any, Callable, List
 from pydantic import Field
 
 from ...core.main import ChatMessage
-from ..llm import LLM, CompletionOptions
+from .base import LLM, CompletionOptions
 from .prompts.chat import llama2_template_messages
 from .prompts.edit import simplified_edit_prompt
 

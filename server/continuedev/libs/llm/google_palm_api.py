@@ -4,7 +4,7 @@ import requests
 from pydantic import Field
 
 from ...core.main import ChatMessage
-from ..llm import LLM
+from .base import LLM
 
 
 class GooglePaLMAPI(LLM):

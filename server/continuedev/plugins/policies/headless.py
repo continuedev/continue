@@ -1,7 +1,7 @@
 from ...core.config import ContinueConfig
 from ...core.main import History, Policy, Step
 from ...core.observation import TextObservation
-from ...plugins.steps.core.core import ShellCommandsStep
+from ...core.steps import ShellCommandsStep
 from ...plugins.steps.on_traceback import DefaultOnTracebackStep
 
 

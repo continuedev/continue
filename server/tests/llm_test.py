@@ -4,8 +4,8 @@ from functools import wraps
 
 import pytest
 from continuedev.core.main import ChatMessage
-from continuedev.libs.llm import LLM, CompletionOptions
 from continuedev.libs.llm.anthropic import AnthropicLLM
+from continuedev.libs.llm.base import LLM, CompletionOptions
 from continuedev.libs.llm.ggml import GGML
 from continuedev.libs.llm.openai import OpenAI
 from continuedev.libs.llm.together import TogetherLLM

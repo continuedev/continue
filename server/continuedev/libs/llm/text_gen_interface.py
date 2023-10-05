@@ -5,7 +5,7 @@ import websockets
 from pydantic import Field
 
 from ...core.main import ChatMessage
-from . import LLM
+from .base import LLM
 from .prompts.chat import llama2_template_messages
 from .prompts.edit import simplest_edit_prompt
 

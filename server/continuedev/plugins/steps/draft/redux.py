@@ -1,6 +1,6 @@
 from ....core.main import Step
 from ....core.sdk import ContinueSDK
-from ..core.core import EditFileStep
+from ....core.steps import EditFileStep
 
 
 class EditReduxStateStep(Step):

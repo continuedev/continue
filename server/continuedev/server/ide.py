@@ -13,6 +13,7 @@ from starlette.websockets import WebSocketDisconnect, WebSocketState
 from uvicorn.main import Server
 
 from ..core.main import ContinueCustomException
+from ..core.steps import DisplayErrorStep
 from ..libs.util.create_async_task import create_async_task
 from ..libs.util.devdata import dev_data_logger
 from ..libs.util.logging import logger
@@ -37,7 +38,6 @@ from ..models.filesystem_edit import (
     RenameFile,
     SequentialFileSystemEdit,
 )
-from ..plugins.steps.core.core import DisplayErrorStep
 from .gui import session_manager
 from .ide_protocol import AbstractIdeProtocolServer
 from .session_manager import SessionManager

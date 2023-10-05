@@ -4,7 +4,7 @@ from typing import Any, List, Union
 from pydantic import Field
 
 from ...core.main import ChatMessage
-from . import LLM, CompletionOptions
+from .base import LLM, CompletionOptions
 
 
 class QueuedLLM(LLM):

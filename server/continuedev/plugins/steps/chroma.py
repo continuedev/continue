@@ -4,8 +4,8 @@ from typing import Coroutine, Union
 from ...core.main import Step
 from ...core.observation import Observation
 from ...core.sdk import ContinueSDK
+from ...core.steps import EditFileStep
 from ...libs.chroma.query import ChromaIndexManager
-from .core.core import EditFileStep
 
 
 class CreateCodebaseIndexChroma(Step):

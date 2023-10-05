@@ -4,20 +4,18 @@ import subprocess
 from textwrap import dedent
 from typing import Coroutine, List, Optional, Union
 
-from ....core.main import ChatMessage, ContinueCustomException, Step
-from ....core.observation import Observation, TextObservation, UserInputObservation
-from ....libs.llm import LLM
-from ....libs.llm.openai_free_trial import OpenAIFreeTrial
-from ....libs.util.count_tokens import DEFAULT_MAX_TOKENS
-from ....libs.util.devdata import dev_data_logger
-from ....libs.util.strings import (
+from ..libs.llm.base import LLM
+from ..libs.llm.openai_free_trial import OpenAIFreeTrial
+from ..libs.util.count_tokens import DEFAULT_MAX_TOKENS
+from ..libs.util.devdata import dev_data_logger
+from ..libs.util.strings import (
     dedent_and_get_common_whitespace,
     remove_quotes_and_escapes,
 )
-from ....libs.util.telemetry import posthog_logger
-from ....libs.util.templating import render_prompt_template
-from ....models.filesystem import FileSystem, RangeInFile, RangeInFileWithContents
-from ....models.filesystem_edit import (
+from ..libs.util.telemetry import posthog_logger
+from ..libs.util.templating import render_prompt_template
+from ..models.filesystem import FileSystem, RangeInFile, RangeInFileWithContents
+from ..models.filesystem_edit import (
     EditDiff,
     FileEdit,
     FileEditWithFullContents,
@@ -25,7 +23,9 @@ from ....models.filesystem_edit import (
 )
 
 # from ....libs.llm.replicate import ReplicateLLM
-from ....models.main import Range
+from ..models.main import Range
+from .main import ChatMessage, ContinueCustomException, Step
+from .observation import Observation, TextObservation, UserInputObservation
 
 
 class ContinueSDK:

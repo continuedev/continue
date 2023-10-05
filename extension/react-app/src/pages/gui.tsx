@@ -1,5 +1,5 @@
 import styled from "styled-components";
-import { TextInput, defaultBorderRadius, lightGray } from "../components";
+import { Input, defaultBorderRadius, lightGray } from "../components";
 import { FullState } from "../../../schema/FullState";
 import {
   useEffect,
@@ -58,7 +58,7 @@ const TopGuiDiv = styled.div`
   }
 `;
 
-const TitleTextInput = styled(TextInput)`
+const TitleTextInput = styled(Input)`
   border: none;
   outline: none;
 

@@ -2,7 +2,7 @@ from typing import List, Union
 
 from ....core.main import Step
 from ....core.sdk import ContinueSDK
-from ..core.core import WaitForUserInputStep
+from ....core.steps import WaitForUserInputStep
 
 
 class NLMultiselectStep(Step):

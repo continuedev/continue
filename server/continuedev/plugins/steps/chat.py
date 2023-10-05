@@ -11,12 +11,12 @@ from pydantic import Field
 
 from ...core.main import ChatMessage, FunctionCall, Models, Step, step_to_json_schema
 from ...core.sdk import ContinueSDK
+from ...core.steps import MessageStep
 from ...libs.llm.openai import OpenAI
 from ...libs.llm.openai_free_trial import OpenAIFreeTrial
 from ...libs.util.devdata import dev_data_logger
 from ...libs.util.strings import remove_quotes_and_escapes
 from ...libs.util.telemetry import posthog_logger
-from .core.core import MessageStep
 from .main import EditHighlightedCodeStep
 
 load_dotenv()

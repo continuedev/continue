@@ -2,7 +2,7 @@ import os
 import traceback
 from typing import Coroutine, List, Optional, Union
 
-from ..libs.llm import LLM
+from ..libs.llm.base import LLM
 from ..libs.util.devdata import dev_data_logger
 from ..libs.util.logging import logger
 from ..libs.util.paths import (
@@ -21,14 +21,6 @@ from ..models.filesystem_edit import (
     FileSystemEdit,
 )
 from ..models.main import Range
-from ..plugins.steps.core.core import (
-    DefaultModelEditCodeStep,
-    FileSystemEditStep,
-    MessageStep,
-    RangeInFileWithContents,
-    ShellCommandsStep,
-    WaitForUserConfirmationStep,
-)
 from ..server.ide_protocol import AbstractIdeProtocolServer
 from .abstract_sdk import AbstractContinueSDK
 from .config import ContinueConfig
@@ -43,6 +35,14 @@ from .main import (
 )
 from .models import Models
 from .observation import Observation
+from .steps import (
+    DefaultModelEditCodeStep,
+    FileSystemEditStep,
+    MessageStep,
+    RangeInFileWithContents,
+    ShellCommandsStep,
+    WaitForUserConfirmationStep,
+)
 
 
 class Autopilot:

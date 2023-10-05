@@ -7,14 +7,14 @@ from pydantic import BaseModel, Field
 from ...core.main import ContinueCustomException, Step
 from ...core.observation import Observation
 from ...core.sdk import ContinueSDK, Models
-from ...libs.llm import LLM
+from ...core.steps import DefaultModelEditCodeStep
+from ...libs.llm.base import LLM
 from ...libs.llm.prompt_utils import MarkdownStyleEncoderDecoder
 from ...libs.util.calculate_diff import calculate_diff2
 from ...libs.util.logging import logger
 from ...models.filesystem import RangeInFile, RangeInFileWithContents
 from ...models.filesystem_edit import EditDiff, FileEdit
 from ...models.main import Range, Traceback
-from .core.core import DefaultModelEditCodeStep
 
 
 class Policy(BaseModel):

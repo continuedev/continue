@@ -30,12 +30,6 @@ from ..models.main import ContinueBaseModel
 from ..plugins.context_providers.file import FileContextProvider
 from ..plugins.context_providers.highlighted_code import HighlightedCodeContextProvider
 from ..plugins.policies.default import DefaultPolicy
-from ..plugins.steps.core.core import (
-    DisplayErrorStep,
-    ManualEditStep,
-    ReversibleStep,
-    UserInputStep,
-)
 from ..plugins.steps.on_traceback import DefaultOnTracebackStep
 from ..server.ide_protocol import AbstractIdeProtocolServer
 from ..server.meilisearch_server import get_meilisearch_url, stop_meilisearch
@@ -54,6 +48,7 @@ from .main import (
 )
 from .observation import InternalErrorObservation, Observation
 from .sdk import ContinueSDK
+from .steps import DisplayErrorStep, ManualEditStep, ReversibleStep, UserInputStep
 
 
 def get_error_title(e: Exception) -> str:

@@ -3,7 +3,7 @@ from typing import Callable, Dict, List, Union
 from huggingface_hub import InferenceClient
 from pydantic import Field
 
-from ..llm import LLM, CompletionOptions
+from .base import LLM, CompletionOptions
 from .prompts.chat import llama2_template_messages
 from .prompts.edit import simplified_edit_prompt
 

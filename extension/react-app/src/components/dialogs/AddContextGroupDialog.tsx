@@ -1,5 +1,5 @@
 import { useContext } from "react";
-import { Button, TextInput } from "..";
+import { Button, Input } from "..";
 import { GUIClientContext } from "../../App";
 import { useDispatch } from "react-redux";
 import {
@@ -27,7 +27,7 @@ function AddContextGroupDialog({
 
   return (
     <div className="p-4">
-      <TextInput
+      <Input
         defaultValue="My Context Group"
         type="text"
         ref={(input) => {

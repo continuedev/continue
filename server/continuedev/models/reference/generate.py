@@ -91,7 +91,7 @@ import ClassPropertyRef from '@site/src/components/ClassPropertyRef.tsx';
     )
 
 
-llm_module = importlib.import_module("continuedev.libs.llm")
+llm_module = importlib.import_module("continuedev.libs.llm.base")
 ctx_obj = getattr(llm_module, "LLM")
 schema = ctx_obj.schema()
 ctx_properties = schema["properties"].keys()

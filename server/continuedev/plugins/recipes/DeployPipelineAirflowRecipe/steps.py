@@ -3,7 +3,7 @@ from textwrap import dedent
 
 from ....core.main import Step
 from ....core.sdk import ContinueSDK, Models
-from ....plugins.steps.core.core import MessageStep
+from ....core.steps import MessageStep
 from ....plugins.steps.find_and_replace import FindAndReplaceStep
 
 AI_ASSISTED_STRING = "(✨ AI-Assisted ✨)"

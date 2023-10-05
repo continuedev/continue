@@ -10,6 +10,7 @@ from uvicorn.main import Server
 
 from ..core.main import ContextItem
 from ..core.models import ALL_MODEL_ROLES, MODEL_CLASSES, MODEL_MODULE_NAMES
+from ..core.steps import DisplayErrorStep
 from ..libs.llm.prompts.chat import llama2_template_messages, template_alpaca_messages
 from ..libs.util.create_async_task import create_async_task
 from ..libs.util.edit_config import (
@@ -22,7 +23,6 @@ from ..libs.util.edit_config import (
 from ..libs.util.logging import logger
 from ..libs.util.queue import AsyncSubscriptionQueue
 from ..libs.util.telemetry import posthog_logger
-from ..plugins.steps.core.core import DisplayErrorStep
 from ..plugins.steps.setup_model import SetupModelStep
 from .session_manager import Session, session_manager
 

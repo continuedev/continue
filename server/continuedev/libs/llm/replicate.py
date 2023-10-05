@@ -5,7 +5,7 @@ import replicate
 from pydantic import Field
 
 from ...core.main import ChatMessage
-from . import LLM
+from .base import LLM
 from .prompts.edit import simplified_edit_prompt
 
 

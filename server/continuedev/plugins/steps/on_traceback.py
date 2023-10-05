@@ -4,6 +4,7 @@ from typing import Dict, List, Optional, Tuple
 
 from ...core.main import ChatMessage, ContinueCustomException, Step
 from ...core.sdk import ContinueSDK
+from ...core.steps import UserInputStep
 from ...libs.util.filter_files import should_filter_path
 from ...libs.util.traceback.traceback_parsers import (
     get_javascript_traceback,
@@ -13,7 +14,6 @@ from ...libs.util.traceback.traceback_parsers import (
 from ...models.filesystem import RangeInFile
 from ...models.main import Range, Traceback, TracebackFrame
 from .chat import SimpleChatStep
-from .core.core import UserInputStep
 
 
 def extract_traceback_str(output: str) -> str:
