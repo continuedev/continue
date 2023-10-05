@@ -3,8 +3,6 @@ import os
 from functools import wraps
 
 import pytest
-from dotenv import load_dotenv
-
 from continuedev.core.main import ChatMessage
 from continuedev.libs.llm import LLM, CompletionOptions
 from continuedev.libs.llm.anthropic import AnthropicLLM
@@ -12,7 +10,8 @@ from continuedev.libs.llm.ggml import GGML
 from continuedev.libs.llm.openai import OpenAI
 from continuedev.libs.llm.together import TogetherLLM
 from continuedev.libs.util.count_tokens import DEFAULT_ARGS
-from continuedev.tests.util.prompts import tokyo_test_pair
+from dotenv import load_dotenv
+from util.prompts import tokyo_test_pair
 
 load_dotenv()
 

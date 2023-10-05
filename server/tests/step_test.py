@@ -1,5 +1,4 @@
 import pytest
-
 from continuedev.core.config import ContinueConfig
 from continuedev.headless import start_headless_session
 from continuedev.models.filesystem import Range, RangeInFileWithContents
@@ -7,7 +6,7 @@ from continuedev.plugins.steps.chat import SimpleChatStep
 from continuedev.plugins.steps.core.core import UserInputStep
 from continuedev.plugins.steps.main import EditHighlightedCodeStep
 from continuedev.plugins.steps.on_traceback import DefaultOnTracebackStep
-from continuedev.tests.util.prompts import dotenv_test_pair, tokyo_test_pair
+from util.prompts import dotenv_test_pair, tokyo_test_pair
 
 TEST_CONFIG = ContinueConfig()
 
