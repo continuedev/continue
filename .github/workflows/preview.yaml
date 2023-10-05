@@ -148,13 +148,13 @@ jobs:
       # 4. Package the extension
       - shell: pwsh
         run: echo "target=${{ matrix.platform }}-${{ matrix.arch }}" >> $env:GITHUB_ENV
-      - run: npx vsce package --target ${{ env.target }} --pre-release
+      - run: cd extension && npx vsce package --target ${{ env.target }} --pre-release
 
       # 5. Upload the .vsix as an artifact
       - uses: actions/upload-artifact@v2
         with:
           name: ${{ env.target }}
-          path: "*.vsix"
+          path: "extension/*.vsix"
 
       # 6. Upload continue.log as an artifact for debugging of the workflow
       - name: Upload continue.log

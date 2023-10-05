@@ -43,7 +43,8 @@
         // "--meilisearch-url", "http://localhost:7701"
       ],
       "justMyCode": false,
-      "subProcess": false
+      "subProcess": false,
+      "timeout": 10000
       // Does it need a build task?
       // What about a watch task? - type errors?
     },
