@@ -179,8 +179,14 @@ jobs:
       # 1. Download the artifacts
       - uses: actions/download-artifact@v3
 
+      - run: pwd
+      - run: ls
+      - run: ls alpine-x64
+
       # 2. Publish the extension to VS Code Marketplace
-      - run: npx vsce publish --pre-release --packagePath $(find . -iname *.vsix)
+      - run: 
+        cd extension
+        npx vsce publish --pre-release --packagePath ../alpine-x64/*.vsix ../darwin-arm64/*.vsix ../darwin-x64/*.vsix ../linux-arm64/*.vsix ../linux-armhf/*.vsix ../linux-x64/*.vsix ../win32-ia32/*.vsix ../win32-x64/*.vsix ../win32-arm64/*.vsix
         env:
           VSCE_PAT: ${{ secrets.VSCE_TOKEN }}
 
@@ -188,7 +194,7 @@ jobs:
       - name: Publish (Open VSX Registry)
         run: |
           cd extension
-          npx ovsx publish --pre-release -p ${{ secrets.VSX_REGISTRY_TOKEN }} --packagePath $(find . -iname *.vsix)
+          npx ovsx publish --pre-release -p ${{ secrets.VSX_REGISTRY_TOKEN }} --packagePath ../alpine-x64/*.vsix ../darwin-arm64/*.vsix ../darwin-x64/*.vsix ../linux-arm64/*.vsix ../linux-armhf/*.vsix ../linux-x64/*.vsix ../win32-ia32/*.vsix ../win32-x64/*.vsix ../win32-arm64/*.vsix
 
       # 4. Update the package.json version and push changes
       - name: Update version in package.json
