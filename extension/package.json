@@ -24,6 +24,10 @@
   "engines": {
     "vscode": "^1.67.0"
   },
+  "galleryBanner": {
+    "color": "#1E1E1E",
+    "theme": "dark"
+  },
   "categories": [
     "Programming Languages",
     "Education",
