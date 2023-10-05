@@ -5,20 +5,20 @@ This is the Continue configuration file.
 See https://continue.dev/docs/customization to for documentation of the available options.
 \"\"\"
 
-from continuedev.src.continuedev.core.models import Models
-from continuedev.src.continuedev.core.config import CustomCommand, SlashCommand, ContinueConfig
-from continuedev.src.continuedev.plugins.context_providers.github import GitHubIssuesContextProvider
-from continuedev.src.continuedev.libs.llm.openai_free_trial import OpenAIFreeTrial
+from continuedev.core.models import Models
+from continuedev.core.config import CustomCommand, SlashCommand, ContinueConfig
+from continuedev.plugins.context_providers.github import GitHubIssuesContextProvider
+from continuedev.libs.llm.openai_free_trial import OpenAIFreeTrial
 
-from continuedev.src.continuedev.plugins.steps.open_config import OpenConfigStep
-from continuedev.src.continuedev.plugins.steps.clear_history import ClearHistoryStep
-from continuedev.src.continuedev.plugins.steps.comment_code import CommentCodeStep
-from continuedev.src.continuedev.plugins.steps.share_session import ShareSessionStep
-from continuedev.src.continuedev.plugins.steps.main import EditHighlightedCodeStep
-from continuedev.src.continuedev.plugins.steps.cmd import GenerateShellCommandStep
-from continuedev.src.continuedev.plugins.context_providers.diff import DiffContextProvider
-from continuedev.src.continuedev.plugins.context_providers.url import URLContextProvider
-from continuedev.src.continuedev.plugins.context_providers.terminal import TerminalContextProvider
+from continuedev.plugins.steps.open_config import OpenConfigStep
+from continuedev.plugins.steps.clear_history import ClearHistoryStep
+from continuedev.plugins.steps.comment_code import CommentCodeStep
+from continuedev.plugins.steps.share_session import ShareSessionStep
+from continuedev.plugins.steps.main import EditHighlightedCodeStep
+from continuedev.plugins.steps.cmd import GenerateShellCommandStep
+from continuedev.plugins.context_providers.diff import DiffContextProvider
+from continuedev.plugins.context_providers.url import URLContextProvider
+from continuedev.plugins.context_providers.terminal import TerminalContextProvider
 
 config = ContinueConfig(
     allow_anonymous_telemetry=True,

@@ -46,8 +46,6 @@ config=ContinueConfig(
 6. When you open a workspace, Continue will generate the embeddings. You can then enter '/codebase \<QUESTION\>' to ask a question with embeddings-based retrieval.
 7. Please share feedback in [Discord](https://discord.gg/NWtdYexhMs)!
 
-> Note: There is a known bug that requires different imports for the PyPI package. If you encounter "No module named 'continuedev.src', you should replace all instances of 'continuedev.src.continuedev' in `config.py` with just 'continuedev'.
-
 ## Parameters
 
 After retrieving the top `n_retrieve` results from the vector database, an additional re-reranking step uses 2 LLM calls to select the top `n_final` results to use to answer the question. If you want to increase the speed of the query at the cost of relevancy, you can skip the re-ranking step by setting `use_reranking` to `False`. Then the top `n_final` results will just be directly calculated from the vector database.

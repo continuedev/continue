@@ -10,7 +10,7 @@ The Continue server acts as a bridge between the Continue React app and your IDE
 
 Start it by running the following commands:
 
-1. `cd continuedev`
+1. `cd server`
 2. Make sure packages are installed with `poetry install`
    - If poetry is not installed, you can install with
    ```bash
@@ -18,8 +18,7 @@ Start it by running the following commands:
    ```
    (official instructions [here](https://python-poetry.org/docs/#installing-with-the-official-installer))
 3. `poetry shell` to activate the virtual environment
-4. `cd ..`
-5. `python3 -m continuedev.src.continuedev.server.main` to start the server
+4. `python3 -m continuedev.server.main` to start the server
 
 Once you've validated that this works, you'll often want to use a debugger, in which case we've provided a launch configuration for VS Code in `.vscode/launch.json`. To start the debugger in VS Code, ensure that the workspace directory is the root of the `continue` repo, then press F5.
 
@@ -37,7 +36,7 @@ Once you've validated that this works, you'll often want to use a debugger, in w
 
 ## Writing Steps
 
-See the `src/continuedev/libs/steps` folder for examples of writing a Continue step. See our documentation for tutorials.
+See the `continuedev/libs/steps` folder for examples of writing a Continue step. See our documentation for tutorials.
 
 ## How to contribute
 
@@ -71,9 +70,10 @@ cd continue/extension/scripts && python3 install_from_source.py
 
 > [!IMPORTANT]
 > Ensure you have a Java Runtime Environment (JRE) installed. Verify this by typing `java
-> -version` in your command prompt or terminal. If a version number appears, you're set.
+-version` in your command prompt or terminal. If a version number appears, you're set.
 > If not, download and install a JRE from Oracle's website or through a package manager,
 > for example Homebrew.
+>
 > ```sh
 > brew install openjdk@11
 > ```
@@ -83,6 +83,6 @@ cd continue/extension/scripts && python3 install_from_source.py
 - [Continue Server README](./README.md): learn about the core of Continue, which can be downloaded as a [PyPI package](https://pypi.org/project/continuedev/)
 - [VS Code Extension README](../extension/README.md): learn about the capabilities of our extension—the first implementation of Continue's IDE Protocol—which makes it possible to use use Continue in VS Code and GitHub Codespaces
 - [Continue GUI README](../extension/react-app/): learn about the React app that lets users interact with the server and is placed adjacent to the text editor in any supported IDE
-- [Schema README](../schema/README.md): learn about the JSON Schema types generated from Pydantic models, which we use across the `continuedev/` and `extension/` directories
+- [Schema README](../schema/README.md): learn about the JSON Schema types generated from Pydantic models, which we use across the `server/` and `extension/` directories
 - [Continue Docs README](../docs/README.md): learn how our [docs](https://continue.dev/docs) are written and built
 - [How to debug the VS Code Extension README](../extension/src/README.md): learn how to set up the VS Code extension, so you can debug it

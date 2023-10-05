@@ -19,7 +19,7 @@ class LlamaCpp(LLM):
     After it's up and running, change `~/.continue/config.py` to look like this:
 
     ```python title="~/.continue/config.py"
-    from continuedev.src.continuedev.libs.llm.llamacpp import LlamaCpp
+    from continuedev.libs.llm.llamacpp import LlamaCpp
 
     config = ContinueConfig(
         ...

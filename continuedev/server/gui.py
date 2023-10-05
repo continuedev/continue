@@ -337,11 +337,11 @@ class GUIProtocolServer:
 
                 # Add the requisite import to config.py
                 add_config_import(
-                    f"from continuedev.src.continuedev.libs.llm.{MODEL_MODULE_NAMES[model_class]} import {model_class}"
+                    f"from continuedev.libs.llm.{MODEL_MODULE_NAMES[model_class]} import {model_class}"
                 )
                 if "template_messages" in model:
                     add_config_import(
-                        f"from continuedev.src.continuedev.libs.llm.prompts.chat import {model['template_messages']}"
+                        f"from continuedev.libs.llm.prompts.chat import {model['template_messages']}"
                     )
 
                 # Set and start the new default model

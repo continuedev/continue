@@ -36,7 +36,7 @@ python-lsp-server = "^1.7.4"
 huggingface-hub = "^0.16.4"
 
 [tool.poetry.scripts]
-typegen = "src.continuedev.models.generate_json_schema:main"
+typegen = "continuedev.models.generate_json_schema:main"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.4.1"

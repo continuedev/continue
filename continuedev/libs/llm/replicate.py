@@ -14,8 +14,8 @@ class ReplicateLLM(LLM):
     Replicate is a great option for newly released language models or models that you've deployed through their platform. Sign up for an account [here](https://replicate.ai/), copy your API key, and then select any model from the [Replicate Streaming List](https://replicate.com/collections/streaming-language-models). Change `~/.continue/config.py` to look like this:
 
     ```python title="~/.continue/config.py"
-    from continuedev.src.continuedev.core.models import Models
-    from continuedev.src.continuedev.libs.llm.replicate import ReplicateLLM
+    from continuedev.core.models import Models
+    from continuedev.libs.llm.replicate import ReplicateLLM
 
     config = ContinueConfig(
         ...

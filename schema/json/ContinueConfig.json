@@ -1,6 +1,6 @@
 {
   "title": "ContinueConfig",
-  "$ref": "#/definitions/src__continuedev__core__config__ContinueConfig",
+  "$ref": "#/definitions/continuedev__core__config__ContinueConfig",
   "definitions": {
     "FunctionCall": {
       "title": "FunctionCall",
@@ -126,6 +126,12 @@
           "description": "The name of the model to be used (e.g. gpt-4, codellama)",
           "type": "string"
         },
+        "max_tokens": {
+          "title": "Max Tokens",
+          "description": "The maximum number of tokens to generate.",
+          "default": 1024,
+          "type": "integer"
+        },
         "stop_tokens": {
           "title": "Stop Tokens",
           "description": "Tokens that will stop the completion.",
@@ -171,7 +177,7 @@
         "model"
       ]
     },
-    "src__continuedev__core__models__ContinueSDK": {
+    "continuedev__core__models__ContinueSDK": {
       "title": "ContinueSDK",
       "type": "object",
       "properties": {}
@@ -202,7 +208,7 @@
           }
         },
         "sdk": {
-          "$ref": "#/definitions/src__continuedev__core__models__ContinueSDK"
+          "$ref": "#/definitions/continuedev__core__models__ContinueSDK"
         }
       },
       "required": [
@@ -265,7 +271,7 @@
       "type": "object",
       "properties": {}
     },
-    "src__continuedev__core__context__ContinueSDK": {
+    "continuedev__core__context__ContinueSDK": {
       "title": "ContinueSDK",
       "description": "To avoid circular imports",
       "type": "object",
@@ -356,7 +362,7 @@
           "description": "The ContinueSDK instance accessible by the ContextProvider",
           "allOf": [
             {
-              "$ref": "#/definitions/src__continuedev__core__context__ContinueSDK"
+              "$ref": "#/definitions/continuedev__core__context__ContinueSDK"
             }
           ]
         },
@@ -398,7 +404,7 @@
         "dynamic"
       ]
     },
-    "src__continuedev__core__config__ContinueConfig": {
+    "continuedev__core__config__ContinueConfig": {
       "title": "ContinueConfig",
       "description": "Continue can be deeply customized by editing the `ContinueConfig` object in `~/.continue/config.py` (`%userprofile%\\.continue\\config.py` for Windows) on your machine. This class is instantiated from the config file for every new session.",
       "type": "object",
@@ -436,6 +442,7 @@
               "system_message": null,
               "context_length": 2048,
               "model": "gpt-4",
+              "max_tokens": 1024,
               "stop_tokens": null,
               "timeout": 300,
               "verify_ssl": null,
@@ -451,6 +458,7 @@
               "system_message": null,
               "context_length": 2048,
               "model": "gpt-3.5-turbo",
+              "max_tokens": 1024,
               "stop_tokens": null,
               "timeout": 300,
               "verify_ssl": null,

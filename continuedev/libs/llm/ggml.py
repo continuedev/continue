@@ -19,7 +19,7 @@ class GGML(LLM):
     Once the model is running on localhost:8000, change `~/.continue/config.py` to look like this:
 
     ```python title="~/.continue/config.py"
-    from continuedev.src.continuedev.libs.llm.ggml import GGML
+    from continuedev.libs.llm.ggml import GGML
 
     config = ContinueConfig(
         ...

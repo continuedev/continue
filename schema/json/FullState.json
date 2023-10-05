@@ -1,6 +1,6 @@
 {
   "title": "FullState",
-  "$ref": "#/definitions/src__continuedev__core__main__FullState",
+  "$ref": "#/definitions/continuedev__core__main__FullState",
   "definitions": {
     "FunctionCall": {
       "title": "FunctionCall",
@@ -332,7 +332,7 @@
         "requires_query"
       ]
     },
-    "src__continuedev__core__main__FullState": {
+    "continuedev__core__main__FullState": {
       "title": "FullState",
       "description": "A full state of the program, including the history",
       "type": "object",

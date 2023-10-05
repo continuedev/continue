@@ -1,6 +1,6 @@
-from continuedev.src.continuedev.core.config import ContinueConfig
-from continuedev.src.continuedev.core.models import Models
-from continuedev.src.continuedev.libs.llm.openai_free_trial import OpenAIFreeTrial
+from continuedev.core.config import ContinueConfig
+from continuedev.core.models import Models
+from continuedev.libs.llm.openai_free_trial import OpenAIFreeTrial
 
 config = ContinueConfig(
     allow_anonymous_telemetry=False,

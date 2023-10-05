@@ -12,8 +12,8 @@ class GooglePaLMAPI(LLM):
     The Google PaLM API is currently in public preview, so production applications are not supported yet. However, you can [create an API key in Google MakerSuite](https://makersuite.google.com/u/2/app/apikey) and begin trying out the `chat-bison-001` model. Change `~/.continue/config.py` to look like this:
 
     ```python title="~/.continue/config.py"
-    from continuedev.src.continuedev.core.models import Models
-    from continuedev.src.continuedev.libs.llm.hf_inference_api import GooglePaLMAPI
+    from continuedev.core.models import Models
+    from continuedev.libs.llm.hf_inference_api import GooglePaLMAPI
 
     config = ContinueConfig(
         ...

@@ -11,7 +11,7 @@ class AnthropicLLM(LLM):
     Import the `AnthropicLLM` class and set it as the default model:
 
     ```python title="~/.continue/config.py"
-    from continuedev.src.continuedev.libs.llm.anthropic import AnthropicLLM
+    from continuedev.libs.llm.anthropic import AnthropicLLM
 
     config = ContinueConfig(
         ...

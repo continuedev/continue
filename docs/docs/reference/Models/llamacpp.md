@@ -11,7 +11,7 @@ Run the llama.cpp server binary to start the API server. If running on a remote 
 After it's up and running, change `~/.continue/config.py` to look like this:
 
 ```python title="~/.continue/config.py"
-from continuedev.src.continuedev.libs.llm.llamacpp import LlamaCpp
+from continuedev.libs.llm.llamacpp import LlamaCpp
 
 config = ContinueConfig(
     ...

@@ -1,4 +1,4 @@
-from .src.continuedev.server.main import run_server
+from .server.main import run_server
 
 
 def main():

@@ -32,14 +32,14 @@ CONTEXT_PROVIDER_MODULES = [
 
 
 def import_llm_module(module_name, module_title):
-    module_name = f"continuedev.src.continuedev.libs.llm.{module_name}"
+    module_name = f"continuedev.libs.llm.{module_name}"
     module = importlib.import_module(module_name)
     obj = getattr(module, module_title)
     return obj
 
 
 def import_context_provider_module(module_name, module_title):
-    module_name = f"continuedev.src.continuedev.plugins.context_providers.{module_name}"
+    module_name = f"continuedev.plugins.context_providers.{module_name}"
     module = importlib.import_module(module_name)
     obj = getattr(module, module_title)
     return obj
@@ -91,7 +91,7 @@ import ClassPropertyRef from '@site/src/components/ClassPropertyRef.tsx';
     )
 
 
-llm_module = importlib.import_module("continuedev.src.continuedev.libs.llm")
+llm_module = importlib.import_module("continuedev.libs.llm")
 ctx_obj = getattr(llm_module, "LLM")
 schema = ctx_obj.schema()
 ctx_properties = schema["properties"].keys()
@@ -105,14 +105,14 @@ for module_name, module_title in LLM_MODULES:
     with open(f"docs/docs/reference/Models/{module_title.lower()}.md", "w") as f:
         f.write(markdown_docs)
 
-config_module = importlib.import_module("continuedev.src.continuedev.core.config")
+config_module = importlib.import_module("continuedev.core.config")
 config_obj = getattr(config_module, "ContinueConfig")
 schema = config_obj.schema()
 markdown_docs = docs_from_schema(schema, "core/config.py")
 with open("docs/docs/reference/config.md", "w") as f:
     f.write(markdown_docs)
 
-ctx_module = importlib.import_module("continuedev.src.continuedev.core.context")
+ctx_module = importlib.import_module("continuedev.core.context")
 ctx_obj = getattr(ctx_module, "ContextProvider")
 schema = ctx_obj.schema()
 ctx_properties = schema["properties"].keys()
@@ -136,7 +136,7 @@ for module_name, module_title in CONTEXT_PROVIDER_MODULES:
     ) as f:
         f.write(markdown_docs)
 
-# sdk_module = importlib.import_module("continuedev.src.continuedev.core.sdk")
+# sdk_module = importlib.import_module("continuedev.core.sdk")
 # sdk_obj = getattr(sdk_module, "ContinueSDK")
 # schema = sdk_obj.schema()
 # markdown_docs = docs_from_schema(schema, "sdk", ignore_properties=[])

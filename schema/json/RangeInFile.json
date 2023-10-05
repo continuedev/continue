@@ -1,6 +1,6 @@
 {
   "title": "RangeInFile",
-  "$ref": "#/definitions/src__continuedev__models__filesystem__RangeInFile",
+  "$ref": "#/definitions/continuedev__models__filesystem__RangeInFile",
   "definitions": {
     "Position": {
       "title": "Position",
@@ -37,7 +37,7 @@
         "end"
       ]
     },
-    "src__continuedev__models__filesystem__RangeInFile": {
+    "continuedev__models__filesystem__RangeInFile": {
       "title": "RangeInFile",
       "type": "object",
       "properties": {
