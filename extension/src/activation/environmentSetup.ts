@@ -89,7 +89,10 @@ export function getExtensionVersion() {
 }
 
 // Returns whether a server of the current version is already running
-async function checkOrKillRunningServer(serverUrl: string): Promise<boolean> {
+async function checkOrKillRunningServer(
+  serverUrl: string,
+  deleteBinary: boolean
+): Promise<boolean> {
   const serverRunning = await checkServerRunning(serverUrl);
   let shouldKillAndReplace = true;
 
@@ -127,10 +130,13 @@ async function checkOrKillRunningServer(serverUrl: string): Promise<boolean> {
     if (fs.existsSync(serverVersionPath())) {
       fs.unlinkSync(serverVersionPath());
     }
-    // Also delete the server binary
-    const serverBinary = serverBinaryPath();
-    if (fs.existsSync(serverBinary)) {
-      fs.unlinkSync(serverBinary);
+
+    if (deleteBinary) {
+      // Optionally, delete the server binary
+      const serverBinary = serverBinaryPath();
+      if (fs.existsSync(serverBinary)) {
+        fs.unlinkSync(serverBinary);
+      }
     }
   }
 
@@ -268,11 +274,14 @@ function runExecutable(path: string) {
   };
 
   spawnChild();
+
+  // Write the current version of vscode extension to a file called server_version.txt
+  fs.writeFileSync(serverVersionPath(), getExtensionVersion());
 }
 
 async function setupWithS3Download(redownload: boolean, serverUrl: string) {
   // Check if server is already running
-  if (redownload && (await checkOrKillRunningServer(serverUrl))) {
+  if (redownload && (await checkOrKillRunningServer(serverUrl, true))) {
     console.log("Continue server already running");
     return;
   }
@@ -411,9 +420,6 @@ async function setupWithS3Download(redownload: boolean, serverUrl: string) {
 
   // Run the executable
   runExecutable(destination);
-
-  // Write the current version of vscode extension to a file called server_version.txt
-  fs.writeFileSync(serverVersionPath(), getExtensionVersion());
 }
 
 export async function startContinuePythonServer(redownload: boolean = true) {
@@ -433,17 +439,24 @@ export async function startContinuePythonServer(redownload: boolean = true) {
   }
 
   // Check if on Apple Silicon, or if the exe folder is empty - have to download binary from S3
-  const isAppleSilicon = os.platform() === "darwin" && os.arch() === "arm64";
+  // const isAppleSilicon = os.platform() === "darwin" && os.arch() === "arm64";
   // if (isAppleSilicon) {
   //   await setupWithS3Download(redownload, serverUrl);
+  //   return;
   // }
 
+  // Check if current server version is already running
+  if (redownload && (await checkOrKillRunningServer(serverUrl, false))) {
+    console.log("Continue server already running");
+    return;
+  }
+
+  // Otherwise, use the binary installed with the extension
   if (!fs.existsSync(includedBinaryPath())) {
     throw new Error(
       `Continue server binary not found at ${includedBinaryPath()}`
     );
   }
 
-  // Otherwise, use the binary installed with the extension
   runExecutable(includedBinaryPath());
 }
