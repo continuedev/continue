@@ -16,6 +16,7 @@ from ..util.count_tokens import (
     prune_raw_prompt_from_top,
 )
 from ..util.devdata import dev_data_logger
+from ..util.telemetry import posthog_logger
 
 
 class CompletionOptions(ContinueBaseModel):
@@ -291,6 +292,10 @@ class LLM(ContinueBaseModel):
             "tokens_generated",
             {"model": self.model, "tokens": self.count_tokens(completion)},
         )
+        posthog_logger.capture_event(
+            "tokens_generated",
+            {"model": self.model, "tokens": self.count_tokens(completion)},
+        )
 
     async def complete(
         self,
@@ -336,6 +341,10 @@ class LLM(ContinueBaseModel):
         #     self.write_log(f"Completion: \n\n{completion}")
 
         dev_data_logger.capture(
+            "tokens_generated",
+            {"model": self.model, "tokens": self.count_tokens(completion)},
+        )
+        posthog_logger.capture_event(
             "tokens_generated",
             {"model": self.model, "tokens": self.count_tokens(completion)},
         )
@@ -397,6 +406,10 @@ class LLM(ContinueBaseModel):
         #     self.write_log(f"Completion: \n\n{completion}")
 
         dev_data_logger.capture(
+            "tokens_generated",
+            {"model": self.model, "tokens": self.count_tokens(completion)},
+        )
+        posthog_logger.capture_event(
             "tokens_generated",
             {"model": self.model, "tokens": self.count_tokens(completion)},
         )
