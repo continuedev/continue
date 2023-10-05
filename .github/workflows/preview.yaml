@@ -109,8 +109,6 @@ jobs:
         run: |
           cd extension
           npm ci
-        env:
-          npm_config_arch: ${{ matrix.npm_config_arch }}
 
       - name: Add a copy of continuedev to the extension
         run: |
@@ -121,8 +119,6 @@ jobs:
         run: |
           cd extension/react-app
           npm ci --legacy-peer-deps
-        env:
-          npm_config_arch: ${{ matrix.npm_config_arch }}
 
       # 3. Run tests for the extension
       - name: Prepare the extension
