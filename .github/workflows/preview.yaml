@@ -6,16 +6,49 @@ on:
       - preview
 
 jobs:
-  pyinstaller:
+  build:
     strategy:
       matrix:
-        os: [windows-latest, ubuntu-20.04, macos-latest]
-
+        include:
+          - os: windows-latest
+            platform: win32
+            arch: x64
+            npm_config_arch: x64
+          - os: windows-latest
+            platform: win32
+            arch: ia32
+            npm_config_arch: ia32
+          - os: windows-latest
+            platform: win32
+            arch: arm64
+            npm_config_arch: arm
+          - os: ubuntu-20.04
+            platform: linux
+            arch: x64
+            npm_config_arch: x64
+          - os: ubuntu-20.04
+            platform: linux
+            arch: arm64
+            npm_config_arch: arm64
+          - os: ubuntu-20.04
+            platform: linux
+            arch: armhf
+            npm_config_arch: arm
+          - os: ubuntu-20.04
+            platform: alpine
+            arch: x64
+            npm_config_arch: x64
+          - os: macos-latest
+            platform: darwin
+            arch: x64
+            npm_config_arch: x64
+          - os: macos-latest
+            platform: darwin
+            arch: arm64
+            npm_config_arch: arm64
     runs-on: ${{ matrix.os }}
-
     steps:
-      # Install Python requirements and build+upload binaries for each platform
-
+      # 1. Build the Pyinstaller binary
       - name: Check-out repository
         uses: actions/checkout@v3
 
@@ -39,68 +72,7 @@ jobs:
         run: |
           chmod 777 dist/run
 
-      # - name: Test Python Server
-      #   env:
-      #     OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-      #     ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-      #     TOGETHER_API_KEY: ${{ secrets.TOGETHER_API_KEY }}
-      #   run: |
-      #     cd server
-      #     pip install -r dev_requirements.txt
-      #     cd src
-      #     python -m pytest
-
-      - name: Upload Artifacts
-        uses: actions/upload-artifact@v3
-        with:
-          name: ${{ runner.os }}Build
-          path: dist/*
-
-  test-and-package:
-    needs: pyinstaller
-    strategy:
-      matrix:
-        os: [macos-latest, ubuntu-20.04, windows-latest]
-
-    runs-on: ${{ matrix.os }}
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-
-      # Download corresponding binary artifact for the platform
-
-      - name: Create server directory
-        run: mkdir -p ~/.continue/server/exe
-
-      - name: Download Linux build
-        uses: actions/download-artifact@v2
-        with:
-          name: LinuxBuild
-          path: ~/.continue/server/exe
-        if: matrix.os == 'ubuntu-20.04'
-
-      - name: Download macOS build
-        uses: actions/download-artifact@v2
-        with:
-          name: macOSBuild
-          path: ~/.continue/server/exe
-        if: matrix.os == 'macos-latest'
-
-      - name: Download Windows build
-        uses: actions/download-artifact@v2
-        with:
-          name: WindowsBuild
-          path: ~/.continue/server/exe
-        if: matrix.os == 'windows-latest'
-
-      - name: Set permissions
-        shell: bash
-        run: |
-          chmod -R 777 ~/.continue/server/exe
-
-      # Setup Node.js and install dependencies
-
+      # 2. Install npm dependencies
       - name: Use Node.js 19.0.0
         uses: actions/setup-node@v3
         with:
@@ -122,6 +94,8 @@ jobs:
         run: |
           cd extension
           npm ci
+        env:
+          npm_config_arch: ${{ matrix.npm_config_arch }}
 
       - name: Add a copy of continuedev to the extension
         run: |
@@ -132,9 +106,10 @@ jobs:
         run: |
           cd extension/react-app
           npm ci --legacy-peer-deps
+        env:
+          npm_config_arch: ${{ matrix.npm_config_arch }}
 
-      # Run tests
-
+      # 3. Run tests for the extension
       - name: Prepare the extension
         run: |
           cd extension
@@ -155,19 +130,18 @@ jobs:
           npm run test
         if: matrix.os != 'ubuntu-20.04'
 
-      # Create and upload .vsix artifact
-      - name: Package the extension
-        run: |
-          cd extension
-          npm run package:pre-release
+      # 4. Package the extension
+      - shell: pwsh
+        run: echo "target=${{ matrix.platform }}-${{ matrix.arch }}" >> $env:GITHUB_ENV
+      - run: npx vsce package --target ${{ env.target }} --pre-release
 
-      - name: Upload .vsix as an artifact
-        uses: actions/upload-artifact@v2
+      # 5. Upload the .vsix as an artifact
+      - uses: actions/upload-artifact@v2
         with:
-          name: vsix-artifact
-          path: extension/build/*
-        if: matrix.os == 'ubuntu-20.04'
+          name: ${{ env.target }}
+          path: "*.vsix"
 
+      # 6. Upload continue.log as an artifact for debugging of the workflow
       - name: Upload continue.log
         uses: actions/upload-artifact@v2
         with:
@@ -176,14 +150,10 @@ jobs:
         if: always()
 
   publish:
-    needs: test-and-package
     runs-on: ubuntu-20.04
-    permissions:
-      contents: write
-
+    needs: build
     steps:
-      # Checkout and download .vsix artifact
-
+      # 0. Setup git
       - name: Checkout
         uses: actions/checkout@v2
 
@@ -195,40 +165,21 @@ jobs:
       - name: Pull latest changes
         run: git pull origin preview
 
-      - name: Download .vsix artifact
-        uses: actions/download-artifact@v2
-        with:
-          name: vsix-artifact
-          path: extension/build
+      # 1. Download the artifacts
+      - uses: actions/download-artifact@v3
 
-      # Publish the extension and commit/push the version change
+      # 2. Publish the extension to VS Code Marketplace
+      - run: npx vsce publish --packagePath $(find . -iname *.vsix) --pre-release
+        env:
+          VSCE_PAT: ${{ secrets.VSCE_TOKEN }}
 
-      - name: Use Node.js 19.0.0
-        uses: actions/setup-node@v3
-        with:
-          node-version: 19.0.0
-
-      - name: Cache extension node_modules
-        uses: actions/cache@v2
-        with:
-          path: extension/node_modules
-          key: ${{ runner.os }}-node-${{ hashFiles('extension/package-lock.json') }}
-
-      - name: Install extension Dependencies
-        run: |
-          cd extension
-          npm ci
-
+      # 3. Publish the extension to Open VSX Registry
       - name: Publish (Open VSX Registry)
         run: |
           cd extension
-          npx ovsx publish -p ${{ secrets.VSX_REGISTRY_TOKEN }} --packagePath ./build/*.vsix --pre-release
+          npx ovsx publish -p ${{ secrets.VSX_REGISTRY_TOKEN }} --packagePath $(find . -iname *.vsix) --pre-release
 
-      - name: Publish
-        run: |
-          cd extension
-          npx vsce publish -p ${{ secrets.VSCE_TOKEN }} --packagePath ./build/*.vsix --pre-release
-
+      # 4. Update the package.json version and push changes
       - name: Update version in package.json
         run: |
           cd extension
@@ -245,54 +196,3 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           branch: ${{ github.ref }}
-
-      # Download binaries and upload to S3
-
-      - name: Download Linux build
-        uses: actions/download-artifact@v2
-        with:
-          name: LinuxBuild
-          path: exe/linux
-
-      - name: Download macOS build
-        uses: actions/download-artifact@v2
-        with:
-          name: macOSBuild
-          path: exe/mac
-
-      - name: Download Windows build
-        uses: actions/download-artifact@v2
-        with:
-          name: WindowsBuild
-          path: exe/windows
-
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-west-1
-
-      - name: Upload binaries to S3 (continue-server-binaries)
-        uses: jakejarvis/s3-sync-action@master
-        with:
-          args: --acl public-read --follow-symlinks
-        env:
-          AWS_S3_BUCKET: continue-server-binaries
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_REGION: "us-west-1"
-          SOURCE_DIR: "exe"
-          DEST_DIR: "preview"
-
-      - name: Upload binaries to S3 (s3.continue.dev)
-        uses: jakejarvis/s3-sync-action@master
-        with:
-          args: --acl public-read --follow-symlinks
-        env:
-          AWS_S3_BUCKET: s3.continue.dev
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_REGION: "us-west-1"
-          SOURCE_DIR: "exe"
-          DEST_DIR: "preview"
