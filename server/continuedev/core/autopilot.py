@@ -100,10 +100,8 @@ class Autopilot(ContinueBaseModel):
 
     started: bool = False
 
-    async def start(
-        self,
-        full_state: Optional[FullState] = None,
-        config: Optional[ContinueConfig] = None,
+    async def load(
+        self, config: Optional[ContinueConfig] = None, only_reloading: bool = False
     ):
         self.continue_sdk = await ContinueSDK.create(self, config=config)
         if override_policy := self.continue_sdk.config.policy_override:
@@ -118,7 +116,15 @@ class Autopilot(ContinueBaseModel):
                 FileContextProvider(workspace_dir=self.ide.workspace_directory),
             ],
             self.continue_sdk,
+            only_reloading=only_reloading,
         )
+
+    async def start(
+        self,
+        full_state: Optional[FullState] = None,
+        config: Optional[ContinueConfig] = None,
+    ):
+        await self.load(config=config, only_reloading=False)
 
         if full_state is not None:
             self.history = full_state.history
@@ -140,6 +146,10 @@ class Autopilot(ContinueBaseModel):
             self._saved_context_groups = {}
 
         self.started = True
+
+    async def reload_config(self):
+        await self.load(config=None, only_reloading=True)
+        await self.update_subscribers()
 
     async def cleanup(self):
         stop_meilisearch()

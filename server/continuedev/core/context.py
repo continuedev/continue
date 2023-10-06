@@ -1,7 +1,7 @@
 import asyncio
 import time
 from abc import abstractmethod
-from typing import Awaitable, Callable, Dict, List
+from typing import Awaitable, Callable, Dict, List, Optional
 
 from meilisearch_python_async import Client
 from pydantic import BaseModel, Field
@@ -251,11 +251,21 @@ class ContextManager:
         self.context_providers = {}
         self.provider_titles = set()
 
-    async def start(self, context_providers: List[ContextProvider], sdk: ContinueSDK):
+    async def start(
+        self,
+        context_providers: List[ContextProvider],
+        sdk: ContinueSDK,
+        only_reloading: bool = False,
+    ):
         """
         Starts the context manager.
         """
-        # Use only non-meilisearch-dependent providers until it is loaded
+        new_context_providers = {
+            provider.title: provider
+            for provider in context_providers
+            if provider.title not in self.provider_titles
+        }
+
         self.context_providers = {
             provider.title: provider for provider in context_providers
         }
@@ -272,7 +282,7 @@ class ContextManager:
             logger.warning(f"Error loading meilisearch index: {e}")
 
         # Start MeiliSearch in the background without blocking
-        async def load_index(context_providers):
+        async def load_index(providers_to_load: List[ContextProvider]):
             running = await check_meilisearch_running()
             if not running:
                 await start_meilisearch()
@@ -285,10 +295,15 @@ class ContextManager:
                     return
 
             logger.debug("Loading Meilisearch index...")
-            await self.load_index(sdk.ide.workspace_directory)
+            await self.load_index(
+                sdk.ide.workspace_directory, providers_to_load=providers_to_load
+            )
             logger.debug("Loaded Meilisearch index")
 
-        create_async_task(load_index(context_providers), on_err)
+        providers_to_load = (
+            new_context_providers if only_reloading else context_providers
+        )
+        create_async_task(load_index(providers_to_load), on_err)
 
     @staticmethod
     async def update_documents(context_items: List[ContextItem], workspace_dir: str):
@@ -337,7 +352,12 @@ class ContextManager:
             except Exception as e:
                 logger.warning(f"Error deleting document from meilisearch: {e}")
 
-    async def load_index(self, workspace_dir: str, should_retry: bool = True):
+    async def load_index(
+        self,
+        workspace_dir: str,
+        should_retry: bool = True,
+        providers_to_load: Optional[List[ContextProvider]] = None,
+    ):
         try:
             async with Client(get_meilisearch_url()) as search_client:
                 # First, create the index if it doesn't exist
@@ -396,7 +416,9 @@ class ContextManager:
 
                 tasks = [
                     safe_load(provider)
-                    for _, provider in self.context_providers.items()
+                    for _, provider in (
+                        providers_to_load or self.context_providers
+                    ).items()
                 ]
                 await asyncio.wait_for(asyncio.gather(*tasks), timeout=20)
 

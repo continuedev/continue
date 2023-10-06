@@ -456,6 +456,13 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
         for callback in self._file_saved_callbacks:
             self.call_callback(callback, filepath, contents)
 
+        # If ~/.continue/config.py was saved, auto-update the SDK
+        if filepath.endswith(".continue/config.py") or filepath.endswith(
+            ".continue\\config.py"
+        ):
+            if autopilot := self.__get_autopilot():
+                create_async_task(autopilot.reload_config(), self.on_error)
+
     ## END Subscriptions ##
 
     def onMainUserInput(self, input: str):

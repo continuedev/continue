@@ -64,25 +64,19 @@ class ContinueSDK(AbstractContinueSDK):
         self.__autopilot = autopilot
         self.context = autopilot.context
 
-    @classmethod
-    async def create(
-        cls, autopilot: Autopilot, config: Optional[ContinueConfig] = None
-    ) -> "ContinueSDK":
-        sdk = ContinueSDK(autopilot)
-        autopilot.continue_sdk = sdk
-
+    async def load(self, config: Optional[ContinueConfig] = None):
         # Create necessary directories
         getDiffsFolderPath()
 
         try:
-            sdk.config = config or sdk._load_config_dot_py()
+            self.config = config or self._load_config_dot_py()
         except Exception as e:
             logger.error(f"Failed to load config.py: {traceback.format_exception(e)}")
 
-            sdk.config = (
+            self.config = (
                 ContinueConfig()
-                if sdk._last_valid_config is None
-                else sdk._last_valid_config
+                if self._last_valid_config is None
+                else self._last_valid_config
             )
 
             formatted_err = "\n".join(traceback.format_exception(e))
@@ -90,14 +84,14 @@ class ContinueSDK(AbstractContinueSDK):
                 name="Invalid Continue Config File", message=formatted_err
             )
             msg_step.description = f"Falling back to default config settings due to the following error in `~/.continue/config.py`.\n```\n{formatted_err}\n```\n\nIt's possible this was caused by an update to the Continue config format. If you'd like to see the new recommended default `config.py`, check [here](https://github.com/continuedev/continue/blob/main/continuedev/src/continuedev/libs/constants/default_config.py).\n\nIf the error is related to OpenAIServerInfo, see the updated way of using these parameters [here](https://continue.dev/docs/customization#azure-openai-service)."
-            sdk.history.add_node(
+            self.history.add_node(
                 HistoryNode(step=msg_step, observation=None, depth=0, active=False)
             )
-            await sdk.ide.setFileOpen(getConfigFilePath())
+            await self.ide.setFileOpen(getConfigFilePath())
 
         # Start models
-        sdk.models = sdk.config.models
-        await sdk.models.start(sdk)
+        self.models = self.config.models
+        await self.models.start(self)
 
         # Start LSP
         # async def start_lsp():
@@ -116,9 +110,18 @@ class ContinueSDK(AbstractContinueSDK):
 
         # When the config is loaded, setup posthog logger
         posthog_logger.setup(
-            sdk.ide.unique_id, sdk.config.allow_anonymous_telemetry, sdk.ide.ide_info
+            self.ide.unique_id, self.config.allow_anonymous_telemetry, self.ide.ide_info
         )
-        dev_data_logger.setup(sdk.config.user_token, sdk.config.data_server_url)
+        dev_data_logger.setup(self.config.user_token, self.config.data_server_url)
+
+    @classmethod
+    async def create(
+        cls, autopilot: Autopilot, config: Optional[ContinueConfig] = None
+    ) -> "ContinueSDK":
+        sdk = ContinueSDK(autopilot)
+        autopilot.continue_sdk = sdk
+
+        await sdk.load(config=config)
 
         return sdk
 
