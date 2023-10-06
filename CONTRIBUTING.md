@@ -113,6 +113,10 @@ The starting point for the VS Code extension is [activate.ts](./extension/src/ac
 
 3. Load the Continue GUI in the sidebar of the IDE and begin a new session
 
+### Continue JetBrains Client
+
+The JetBrains extension is currently in alpha testing. Please reach out on [Discord](https://discord.gg/vapESyrFmJ) if you are interested in contributing to its development.
+
 ### Continue IDE Websockets Protocol
 
 On the IDE side, this is implemented in [continueIdeClient.ts](./extension/src/continueIdeClient.ts). On the server side, this is implemented in [ide.py](./continuedev/src/continuedev/server/ide.py). You can see [ide_protocol.py](./continuedev/src/continuedev/server/ide_protocol.py) for the protocol definition.

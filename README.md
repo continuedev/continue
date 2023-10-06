@@ -1,4 +1,4 @@
-> 🎁 **New! [Use Code Llama with Continue](https://continue.dev/docs/walkthroughs/codellama)**
+> 🎁 **New! [Try out the new JetBrains extension (Alpha)](https://plugins.jetbrains.com/plugin/22707-continue-extension)**
 
 ![Continue logo](c_d.png)
 
@@ -6,7 +6,7 @@
 
 <div align="center">
 
-**[Continue](https://continue.dev/docs) is the open-source autopilot for software development—an IDE extension that brings the power of ChatGPT to [VS Code](https://marketplace.visualstudio.com/items?itemName=Continue.continue) and more**
+**[Continue](https://continue.dev/docs) is the open-source autopilot for software development—an IDE extension that brings the power of ChatGPT to [VS Code](https://marketplace.visualstudio.com/items?itemName=Continue.continue) and [JetBrains](https://plugins.jetbrains.com/plugin/22707-continue-extension)**
 
 </div>
 
@@ -21,6 +21,8 @@
 <a target="_blank" href="https://discord.gg/vapESyrFmJ" style="background:none">
     <img src="https://img.shields.io/badge/discord-join-continue.svg?labelColor=191937&color=6F6FF7&logo=discord" style="height: 36px;" />
 </a>
+
+<p></p>
 
 ![Editing With Continue](readme.gif)
 
@@ -58,7 +60,7 @@ Press `cmd+shift+r` (MacOS) / `ctrl+shift+r` (Windows) when you come across an e
 
 ## Getting Started
 
-### [Download for VS Code](https://marketplace.visualstudio.com/items?itemName=Continue.continue)
+### Download for [VS Code](https://marketplace.visualstudio.com/items?itemName=Continue.continue) and [JetBrains](https://plugins.jetbrains.com/plugin/22707-continue-extension)
 
 By default, Continue uses `GPT-4` and `GPT-3.5-turbo` via the OpenAI API. You can adjust the config to use different Large Language Models (LLMs), including local, private models. Read more [here](https://continue.dev/docs/customization/models).
 

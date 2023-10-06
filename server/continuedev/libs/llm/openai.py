@@ -134,7 +134,7 @@ class OpenAI(LLM):
             stream=True,
             **args,
         ):
-            if len(chunk.choices) == 0:
+            if not hasattr(chunk, "choices") or len(chunk.choices) == 0:
                 continue
             yield chunk.choices[0].delta
 
