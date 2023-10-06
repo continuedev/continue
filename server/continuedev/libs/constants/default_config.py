@@ -7,18 +7,22 @@ See https://continue.dev/docs/customization to for documentation of the availabl
 
 from continuedev.core.models import Models
 from continuedev.core.config import CustomCommand, SlashCommand, ContinueConfig
-from continuedev.plugins.context_providers.github import GitHubIssuesContextProvider
-from continuedev.libs.llm.openai_free_trial import OpenAIFreeTrial
+from continuedev.libs.llm import OpenAIFreeTrial
 
-from continuedev.plugins.steps.open_config import OpenConfigStep
-from continuedev.plugins.steps.clear_history import ClearHistoryStep
-from continuedev.plugins.steps.comment_code import CommentCodeStep
+from continuedev.plugins.context_providers import (
+    DiffContextProvider,
+    TerminalContextProvider,
+    URLContextProvider,
+    GitHubIssuesContextProvider
+)
+from continuedev.plugins.steps import (
+    ClearHistoryStep,
+    CommentCodeStep,
+    EditHighlightedCodeStep,
+    GenerateShellCommandStep,
+    OpenConfigStep,
+)
 from continuedev.plugins.steps.share_session import ShareSessionStep
-from continuedev.plugins.steps.main import EditHighlightedCodeStep
-from continuedev.plugins.steps.cmd import GenerateShellCommandStep
-from continuedev.plugins.context_providers.diff import DiffContextProvider
-from continuedev.plugins.context_providers.url import URLContextProvider
-from continuedev.plugins.context_providers.terminal import TerminalContextProvider
 
 config = ContinueConfig(
     allow_anonymous_telemetry=True,
