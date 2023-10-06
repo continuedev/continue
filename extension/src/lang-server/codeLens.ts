@@ -4,6 +4,7 @@ import * as path from "path";
 import * as os from "os";
 import { DIFF_DIRECTORY, diffManager } from "../diffs";
 import { getMetaKeyLabel } from "../util/util";
+import { debugPanelWebview } from "../debugPanel";
 class SuggestionsCodeLensProvider implements vscode.CodeLensProvider {
   public provideCodeLenses(
     document: vscode.TextDocument,
@@ -82,8 +83,61 @@ class DiffViewerCodeLensProvider implements vscode.CodeLensProvider {
   }
 }
 
+class ConfigPyCodeLensProvider implements vscode.CodeLensProvider {
+  public provideCodeLenses(
+    document: vscode.TextDocument,
+    _: vscode.CancellationToken
+  ): vscode.CodeLens[] | Thenable<vscode.CodeLens[]> {
+    const codeLenses: vscode.CodeLens[] = [];
+
+    if (
+      !document.uri.fsPath.endsWith(".continue/config.py") &&
+      !document.uri.fsPath.endsWith(".continue\\config.py")
+    ) {
+      return codeLenses;
+    }
+
+    const lines = document.getText().split(os.EOL);
+    const lineOfModels = lines.findIndex((line) =>
+      line.includes("models=Models(")
+    );
+
+    if (lineOfModels >= 0) {
+      const range = new vscode.Range(lineOfModels, 0, lineOfModels + 1, 0);
+      codeLenses.push(
+        new vscode.CodeLens(range, {
+          title: `+ Add a Model`,
+          command: "continue.addModel",
+        })
+      );
+    }
+
+    const lineOfSystemMessage = lines.findIndex((line) =>
+      line.includes("system_message=")
+    );
+
+    if (lineOfSystemMessage >= 0) {
+      const range = new vscode.Range(
+        lineOfSystemMessage,
+        0,
+        lineOfSystemMessage + 1,
+        0
+      );
+      codeLenses.push(
+        new vscode.CodeLens(range, {
+          title: `✏️ Edit in UI`,
+          command: "continue.openSettingsUI",
+        })
+      );
+    }
+
+    return codeLenses;
+  }
+}
+
 let diffsCodeLensDisposable: vscode.Disposable | undefined = undefined;
 let suggestionsCodeLensDisposable: vscode.Disposable | undefined = undefined;
+let configPyCodeLensDisposable: vscode.Disposable | undefined = undefined;
 
 export function registerAllCodeLensProviders(context: vscode.ExtensionContext) {
   if (suggestionsCodeLensDisposable) {
@@ -91,6 +145,9 @@ export function registerAllCodeLensProviders(context: vscode.ExtensionContext) {
   }
   if (diffsCodeLensDisposable) {
     diffsCodeLensDisposable.dispose();
+  }
+  if (configPyCodeLensDisposable) {
+    configPyCodeLensDisposable.dispose();
   }
   suggestionsCodeLensDisposable = vscode.languages.registerCodeLensProvider(
     "*",
@@ -100,6 +157,11 @@ export function registerAllCodeLensProviders(context: vscode.ExtensionContext) {
     "*",
     new DiffViewerCodeLensProvider()
   );
+  configPyCodeLensDisposable = vscode.languages.registerCodeLensProvider(
+    "*",
+    new ConfigPyCodeLensProvider()
+  );
   context.subscriptions.push(suggestionsCodeLensDisposable);
   context.subscriptions.push(diffsCodeLensDisposable);
+  context.subscriptions.push(configPyCodeLensDisposable);
 }

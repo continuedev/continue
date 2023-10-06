@@ -100,6 +100,20 @@ const commandsMap: { [command: string]: (...args: any) => any } = {
     vscode.commands.executeCommand("continue.continueGUIView.focus");
     await ideProtocolClient.debugTerminal();
   },
+
+  // Commands without keyboard shortcuts
+  "continue.addModel": () => {
+    vscode.commands.executeCommand("continue.continueGUIView.focus");
+    debugPanelWebview?.postMessage({
+      type: "addModel",
+    });
+  },
+  "continue.openSettingsUI": () => {
+    vscode.commands.executeCommand("continue.continueGUIView.focus");
+    debugPanelWebview?.postMessage({
+      type: "openSettings",
+    });
+  },
 };
 
 export function registerAllCommands(context: vscode.ExtensionContext) {

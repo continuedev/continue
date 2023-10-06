@@ -131,6 +131,20 @@ const Layout = () => {
     };
   }, [client, timeline]);
 
+  useEffect(() => {
+    const handler = (event: any) => {
+      if (event.data.type === "addModel") {
+        navigate("/models");
+      } else if (event.data.type === "openSettings") {
+        navigate("/settings");
+      }
+    };
+    window.addEventListener("message", handler);
+    return () => {
+      window.removeEventListener("message", handler);
+    };
+  }, []);
+
   return (
     <LayoutTopDiv>
       <div

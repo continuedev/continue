@@ -28,9 +28,9 @@ async def download_meilisearch():
     """
 
     serverPath = getServerFolderPath()
-    logger.debug("Downloading MeiliSearch...")
 
     if os.name == "nt":
+        logger.debug("Downloading MeiliSearch for Windows...")
         download_url = "https://github.com/meilisearch/meilisearch/releases/download/v1.3.2/meilisearch-windows-amd64.exe"
         download_path = getMeilisearchExePath()
         if not os.path.exists(download_path):
@@ -42,6 +42,7 @@ async def download_meilisearch():
             #     cwd=serverPath,
             # )
     else:
+        logger.debug("Downloading MeiliSearch with curl...")
         subprocess.run(
             "curl -L https://install.meilisearch.com | sh",
             shell=True,
