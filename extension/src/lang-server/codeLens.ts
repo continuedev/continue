@@ -113,7 +113,7 @@ class ConfigPyCodeLensProvider implements vscode.CodeLensProvider {
     }
 
     const lineOfSystemMessage = lines.findIndex((line) =>
-      line.includes("system_message=")
+      line.replace(" ", "").includes("config=ContinueConfig(")
     );
 
     if (lineOfSystemMessage >= 0) {

@@ -22,6 +22,7 @@ import { RootStore } from "../redux/store";
 import StyledMarkdownPreview from "../components/StyledMarkdownPreview";
 import { getFontSize } from "../util";
 import { FormProvider, useForm } from "react-hook-form";
+import _ from "lodash";
 
 const GridDiv = styled.div`
   display: grid;
@@ -219,7 +220,8 @@ function ModelConfig() {
                 tags={pkg.tags}
                 refUrl={pkg.refUrl}
                 icon={pkg.icon || modelInfo.icon}
-                onClick={(e) => {
+                dimensions={pkg.dimensions}
+                onClick={(e, dimensionChoices) => {
                   if (disableModelCards()) return;
                   const formParams: any = {};
                   for (const d of modelInfo.collectInputFor || []) {
@@ -232,6 +234,15 @@ function ModelConfig() {
                   client?.addModelForRole("*", modelInfo.class, {
                     ...pkg.params,
                     ...modelInfo.params,
+                    ..._.merge(
+                      {},
+                      ...(pkg.dimensions?.map((dimension, i) => {
+                        if (!dimensionChoices?.[i]) return {};
+                        return {
+                          ...dimension.options[dimensionChoices[i]],
+                        };
+                      }) || [])
+                    ),
                     ...formParams,
                   });
                   navigate("/");

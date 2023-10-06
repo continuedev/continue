@@ -1,3 +1,17 @@
+import _ from "lodash";
+
+function updatedObj(old: any, pathToValue: { [key: string]: any }) {
+  const newObject = _.cloneDeep(old);
+  for (const key in pathToValue) {
+    if (typeof pathToValue[key] === "function") {
+      _.updateWith(newObject, key, pathToValue[key]);
+    } else {
+      _.updateWith(newObject, key, (__) => pathToValue[key]);
+    }
+  }
+  return newObject;
+}
+
 export enum ModelProviderTag {
   "Requires API Key" = "Requires API Key",
   "Local" = "Local",
@@ -118,6 +132,14 @@ export interface ModelInfo {
   collectInputFor?: InputDescriptor[];
 }
 
+// A dimension is like parameter count - 7b, 13b, 34b, etc.
+// You would set options to the field that should be changed for that option in the params field of ModelPackage
+export interface PackageDimension {
+  name: string;
+  description: string;
+  options: { [key: string]: { [key: string]: any } };
+}
+
 export interface ModelPackage {
   collectInputFor?: InputDescriptor[];
   description: string;
@@ -134,11 +156,13 @@ export interface ModelPackage {
     replace?: [string, string][];
     [key: string]: any;
   };
+  dimensions?: PackageDimension[];
 }
 
-const codeLlama7bInstruct: ModelPackage = {
-  title: "CodeLlama-7b-Instruct",
-  description: "A 7b parameter model tuned for code generation",
+const codeLlamaInstruct: ModelPackage = {
+  title: "CodeLlama Instruct",
+  description:
+    "A model from Meta, fine-tuned for code generation and conversation",
   refUrl: "",
   params: {
     title: "CodeLlama-7b-Instruct",
@@ -147,35 +171,31 @@ const codeLlama7bInstruct: ModelPackage = {
     template_messages: "llama2_template_messages",
   },
   icon: "meta.svg",
-};
-const codeLlama13bInstruct: ModelPackage = {
-  title: "CodeLlama-13b-Instruct",
-  description: "A 13b parameter model tuned for code generation",
-  refUrl: "",
-  params: {
-    title: "CodeLlama13b-Instruct",
-    model: "codellama13b-instruct",
-    context_length: 2048,
-    template_messages: "llama2_template_messages",
-  },
-  icon: "meta.svg",
-};
-const codeLlama34bInstruct: ModelPackage = {
-  title: "CodeLlama-34b-Instruct",
-  description: "A 34b parameter model tuned for code generation",
-  refUrl: "",
-  params: {
-    title: "CodeLlama-34b-Instruct",
-    model: "codellama:34b-instruct",
-    context_length: 2048,
-    template_messages: "llama2_template_messages",
-  },
-  icon: "meta.svg",
+  dimensions: [
+    {
+      name: "Parameter Count",
+      description: "The number of parameters in the model",
+      options: {
+        "7b": {
+          model: "codellama:7b-instruct",
+          title: "CodeLlama-7b-Instruct",
+        },
+        "13b": {
+          model: "codellama:13b-instruct",
+          title: "CodeLlama-13b-Instruct",
+        },
+        "34b": {
+          model: "codellama:34b-instruct",
+          title: "CodeLlama-34b-Instruct",
+        },
+      },
+    },
+  ],
 };
 
-const llama2Chat7b: ModelPackage = {
-  title: "Llama2-7b-Chat",
-  description: "A 7b parameter model fine-tuned for chat",
+const llama2Chat: ModelPackage = {
+  title: "Llama2 Chat",
+  description: "The latest Llama model from Meta, fine-tuned for chat",
   refUrl: "",
   params: {
     title: "Llama2-7b-Chat",
@@ -184,48 +204,26 @@ const llama2Chat7b: ModelPackage = {
     template_messages: "llama2_template_messages",
   },
   icon: "meta.svg",
-};
-const llama2Chat13b: ModelPackage = {
-  title: "Llama2-13b-Chat",
-  description: "A 13b parameter model fine-tuned for chat",
-  refUrl: "",
-  params: {
-    title: "Llama2-13b-Chat",
-    model: "llama2:13b-chat",
-    context_length: 2048,
-    template_messages: "llama2_template_messages",
-  },
-  icon: "meta.svg",
-};
-const llama2Chat34b: ModelPackage = {
-  title: "Llama2-34b-Chat",
-  description: "A 34b parameter model fine-tuned for chat",
-  refUrl: "",
-  params: {
-    title: "Llama2-34b-Chat",
-    model: "llama2:34b-chat",
-    context_length: 2048,
-    template_messages: "llama2_template_messages",
-  },
-  icon: "meta.svg",
-};
-
-const codeLlamaPackages = [
-  codeLlama7bInstruct,
-  codeLlama13bInstruct,
-  codeLlama34bInstruct,
-];
-
-const llama2Packages = [llama2Chat7b, llama2Chat13b, llama2Chat34b];
-const llama2FamilyPackage = {
-  title: "Llama2 or CodeLlama",
-  description: "Any model using the Llama2 or CodeLlama chat template",
-  params: {
-    model: "llama2",
-    context_length: 2048,
-    template_messages: "llama2_template_messages",
-  },
-  icon: "meta.svg",
+  dimensions: [
+    {
+      name: "Parameter Count",
+      description: "The number of parameters in the model",
+      options: {
+        "7b": {
+          model: "llama2:7b-chat",
+          title: "Llama2-7b-Chat",
+        },
+        "13b": {
+          model: "llama2:13b-chat",
+          title: "Llama2-13b-Chat",
+        },
+        "34b": {
+          model: "llama2:34b-chat",
+          title: "Llama2-34b-Chat",
+        },
+      },
+    },
+  ],
 };
 
 const gpt4: ModelPackage = {
@@ -313,14 +311,14 @@ export const MODEL_INFO: { [key: string]: ModelInfo } = {
     icon: "ollama.png",
     tags: [ModelProviderTag["Local"], ModelProviderTag["Open-Source"]],
     packages: [
-      ...codeLlamaPackages.map((p) => ({
-        ...p,
+      {
+        ...codeLlamaInstruct,
         refUrl: "https://ollama.ai/library/codellama",
-      })),
-      ...llama2Packages.map((p) => ({
-        ...p,
+      },
+      {
+        ...llama2Chat,
         refUrl: "https://ollama.ai/library/llama2",
-      })),
+      },
     ],
     collectInputFor: [...completionParamsInputs],
   },
@@ -349,30 +347,26 @@ export const MODEL_INFO: { [key: string]: ModelInfo } = {
       ...completionParamsInputs,
     ],
     packages: [
-      ...llama2Packages.map((p) => {
-        return {
-          ...p,
-          params: {
-            ...p.params,
-            model:
-              "togethercomputer/" +
-              p.params.model.replace("llama2", "llama-2").replace(":", "-"),
-          },
-        };
+      updatedObj(llama2Chat, {
+        "dimensions[0].options": (options: any) =>
+          _.mapValues(options, (option) => {
+            return _.assign({}, option, {
+              model: option.model
+                .replace("llama2", "llama-2")
+                .replace(":", "-"),
+            });
+          }),
       }),
-      ...codeLlamaPackages.map((p) => {
-        return {
-          ...p,
-          params: {
-            ...p.params,
-            model:
-              "togethercomputer/" +
-              p.params.model
+      updatedObj(codeLlamaInstruct, {
+        "dimensions[0].options": (options: any) =>
+          _.mapValues(options, (option) => {
+            return _.assign({}, option, {
+              model: option.model
                 .replace("codellama", "CodeLlama")
                 .replace(":", "-")
                 .replace("instruct", "Instruct"),
-          },
-        };
+            });
+          }),
       }),
     ].map((p) => {
       p.params.context_length = 4096;
@@ -391,7 +385,7 @@ export const MODEL_INFO: { [key: string]: ModelInfo } = {
     params: {
       server_url: "http://localhost:1234",
     },
-    packages: [llama2FamilyPackage],
+    packages: [codeLlamaInstruct, llama2Chat],
     collectInputFor: [...completionParamsInputs],
   },
   replicate: {
@@ -417,7 +411,7 @@ export const MODEL_INFO: { [key: string]: ModelInfo } = {
       ModelProviderTag["Requires API Key"],
       ModelProviderTag["Open-Source"],
     ],
-    packages: [...codeLlamaPackages, ...llama2Packages].map((p) => {
+    packages: [codeLlamaInstruct, llama2Chat].map((p) => {
       return {
         ...p,
         params: {
@@ -447,7 +441,7 @@ export const MODEL_INFO: { [key: string]: ModelInfo } = {
 After it's up and running, you can start using Continue.`,
     icon: "llamacpp.png",
     tags: [ModelProviderTag.Local, ModelProviderTag["Open-Source"]],
-    packages: [llama2FamilyPackage],
+    packages: [codeLlamaInstruct, llama2Chat],
     collectInputFor: [...completionParamsInputs],
   },
   palm: {
@@ -489,7 +483,7 @@ After it's up and running, you can start using Continue.`,
       "HuggingFace Text Generation Inference is an advanced, highly-performant option for serving open-source models to multiple people. To get started, follow the [Quick Tour](https://huggingface.co/docs/text-generation-inference/quicktour) on their website to set up the Docker container. Make sure to enter the server URL below that corresponds to the host and port you set up for the Docker container.",
     icon: "hf.png",
     tags: [ModelProviderTag.Local, ModelProviderTag["Open-Source"]],
-    packages: [llama2FamilyPackage],
+    packages: [codeLlamaInstruct, llama2Chat],
     collectInputFor: [
       ...completionParamsInputs,
       { ...serverUrlInput, defaultValue: "http://localhost:8080" },
@@ -518,7 +512,7 @@ After it's up and running, you can start using Continue.`,
     ],
     icon: "openai.svg",
     tags: [ModelProviderTag.Local, ModelProviderTag["Open-Source"]],
-    packages: [llama2FamilyPackage],
+    packages: [codeLlamaInstruct, llama2Chat],
   },
   freetrial: {
     title: "GPT-4 limited free trial",
