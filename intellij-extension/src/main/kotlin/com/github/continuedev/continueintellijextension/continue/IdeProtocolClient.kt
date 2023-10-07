@@ -1,16 +1,12 @@
 package com.github.continuedev.continueintellijextension.`continue`
 
 import com.github.continuedev.continueintellijextension.services.ContinuePluginService
-import com.github.continuedev.continueintellijextension.utils.dispatchEventToWebview
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
+import com.intellij.openapi.application.ApplicationInfo
 import com.intellij.openapi.application.ApplicationManager
-import com.intellij.openapi.editor.Document
-import com.intellij.openapi.editor.Editor
-import com.intellij.openapi.editor.EditorFactory
 import com.intellij.openapi.editor.SelectionModel
 import com.intellij.openapi.fileEditor.FileDocumentManager
-import com.intellij.openapi.fileEditor.FileEditor
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.fileEditor.TextEditor
 import com.intellij.openapi.project.Project
@@ -26,16 +22,10 @@ import com.intellij.openapi.wm.WindowManager
 import com.intellij.testFramework.LightVirtualFile
 import com.intellij.ui.awt.RelativePoint
 import kotlinx.coroutines.*
-import okhttp3.OkHttpClient
-import okhttp3.Request
-import okhttp3.Response
-import okhttp3.WebSocket
-import kotlinx.serialization.json.Json
-import okhttp3.WebSocketListener
-import org.apache.commons.lang.math.NumberUtils.toInt
+import okhttp3.*
 import java.io.File
 import java.net.NetworkInterface
-import java.util.concurrent.TimeUnit
+
 
 data class WebSocketMessage<T>(val messageType: String, val data: T)
 data class WorkspaceDirectory(val workspaceDirectory: String)
@@ -53,6 +43,7 @@ data class HighlightedCode(val highlightedCode: List<RangeInFile>)
 data class AcceptRejectDiff(val accepted: Boolean, val stepIndex: Int)
 data class DeleteAtIndex(val index: Int)
 data class MainUserInput(val input: String)
+data class IdeInfo(val name: String, val version: String?, val remoteName: String?)
 
 fun getMachineUniqueID(): String {
     val sb = StringBuilder()
@@ -168,6 +159,28 @@ class IdeProtocolClient(
                                 )
                             )
                         )
+                        "ide" -> {
+                            val applicationInfo = ApplicationInfo.getInstance()
+                            val ideName: String = applicationInfo.fullApplicationName
+                            val ideVersion = applicationInfo.fullVersion
+                            val sshClient = System.getenv("SSH_CLIENT")
+                            val sshTty = System.getenv("SSH_TTY")
+
+                            var remoteName: String? = null
+                            if (sshClient != null || sshTty != null) {
+                                remoteName = "ssh"
+                            }
+                            webSocket.send(
+                                    Gson().toJson(
+                                            WebSocketMessage(
+                                                    "ide",
+                                                    IdeInfo(
+                                                            ideName, ideVersion, remoteName
+                                                    )
+                                            )
+                                    )
+                            )
+                        }
                         "showDiff" -> {
                             diffManager.showDiff(
                                 data["filepath"] as String,
