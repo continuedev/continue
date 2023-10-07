@@ -374,10 +374,10 @@ class ContinuePluginStartupActivity : StartupActivity, Disposable {
         val defaultStrategy = DefaultTextSelectionStrategy()
 
         coroutineScope.launch {
-//            withContext(Dispatchers.Main) {
-//                val dialog = WelcomeDialogWrapper(project)
-//                dialog.show()
-//            }
+            withContext(Dispatchers.Main) {
+                val dialog = WelcomeDialogWrapper(project)
+                dialog.show()
+            }
 
             val ideProtocolClientDeferred = GlobalScope.async(Dispatchers.IO) {
                 startContinuePythonServer()
@@ -418,11 +418,13 @@ class ContinuePluginStartupActivity : StartupActivity, Disposable {
                         "vscMediaUrl" to "http://continue",
                         "dataSwitchOn" to true
                 )
-                dispatchEventToWebview(
-                        "onLoad",
-                        dataMap,
-                        continuePluginService.continuePluginWindow.webView
-                )
+                GlobalScope.async(Dispatchers.IO) {
+                    dispatchEventToWebview(
+                            "onLoad",
+                            dataMap,
+                            continuePluginService.continuePluginWindow.webView
+                    )
+                }
             }
 
             EditorFactory.getInstance().eventMulticaster.addSelectionListener(
