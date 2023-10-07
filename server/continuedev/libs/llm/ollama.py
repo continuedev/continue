@@ -4,6 +4,7 @@ from typing import Callable
 import aiohttp
 from pydantic import Field
 
+from ...core.main import ContinueCustomException
 from ..util.logging import logger
 from .base import LLM
 from .prompts.chat import llama2_template_messages
@@ -61,6 +62,14 @@ class Ollama(LLM):
     async def stop(self):
         await self._client_session.close()
 
+    async def get_downloaded_models(self):
+        async with self._client_session.get(
+            f"{self.server_url}/api/tags",
+            proxy=self.proxy,
+        ) as resp:
+            js_data = await resp.json()
+            return list(map(lambda x: x["name"], js_data["models"]))
+
     async def _stream_complete(self, prompt, options):
         async with self._client_session.post(
             f"{self.server_url}/api/generate",
@@ -72,6 +81,20 @@ class Ollama(LLM):
             },
             proxy=self.proxy,
         ) as resp:
+            if resp.status == 400:
+                txt = await resp.text()
+                extra_msg = ""
+                if "no such file" in txt:
+                    extra_msg = f"\n\nThis means that the model '{self.model}' is not downloaded.\n\nYou have the following models downloaded: {', '.join(await self.get_downloaded_models())}.\n\nTo download this model, run `ollama run {self.model}` in your terminal."
+                raise ContinueCustomException(
+                    f"Ollama returned an error: {txt}{extra_msg}",
+                    "Invalid request to Ollama",
+                )
+            elif resp.status != 200:
+                raise ContinueCustomException(
+                    f"Ollama returned an error: {await resp.text()}",
+                    "Invalid request to Ollama",
+                )
             async for line in resp.content.iter_any():
                 if line:
                     json_chunk = line.decode("utf-8")

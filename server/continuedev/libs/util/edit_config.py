@@ -86,21 +86,28 @@ def escape_string(string: str) -> str:
     return string.replace('"', '\\"').replace("'", "\\'")
 
 
-def display_val(v: Any):
+def display_val(v: Any, k: str = None):
+    if k == "template_messages":
+        return v
+
     if isinstance(v, str):
         return f'"{escape_string(v)}"'
     return str(v)
+
+
+def is_default(llm, k, v):
+    if k == "template_messages" and llm.__fields__[k].default is not None:
+        return llm.__fields__[k].default.__name__ == v
+    return v == llm.__fields__[k].default
 
 
 def display_llm_class(llm, new: bool = False):
     sep = ",\n\t\t\t"
     args = sep.join(
         [
-            f"{k}={display_val(v)}"
+            f"{k}={display_val(v, k)}"
             for k, v in llm.dict().items()
-            if k not in filtered_attrs
-            and v is not None
-            and not v == llm.__fields__[k].default
+            if k not in filtered_attrs and v is not None and not is_default(llm, k, v)
         ]
     )
     return f"{llm.__class__.__name__}(\n\t\t\t{args}\n\t\t)"
@@ -122,6 +129,10 @@ def create_string_node(string: str) -> redbaron.RedBaron:
     if "\n" in string:
         return redbaron.RedBaron(f'"""{string}"""')[0]
     return redbaron.RedBaron(f'"{string}"')[0]
+
+
+def create_literal_node(literal: str) -> redbaron.RedBaron:
+    return redbaron.RedBaron(literal)[0]
 
 
 def create_float_node(float: float) -> redbaron.RedBaron:

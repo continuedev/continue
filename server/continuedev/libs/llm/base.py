@@ -179,7 +179,8 @@ class LLM(ContinueBaseModel):
     def dict(self, **kwargs):
         original_dict = super().dict(**kwargs)
         original_dict.pop("write_log")
-        original_dict.pop("template_messages")
+        if self.template_messages is not None:
+            original_dict["template_messages"] = self.template_messages.__name__
         original_dict.pop("unique_id")
         original_dict["class_name"] = self.__class__.__name__
         return original_dict

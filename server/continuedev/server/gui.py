@@ -11,7 +11,11 @@ from uvicorn.main import Server
 from ..core.main import ContextItem
 from ..core.models import ALL_MODEL_ROLES, MODEL_CLASSES, MODEL_MODULE_NAMES
 from ..core.steps import DisplayErrorStep
-from ..libs.llm.prompts.chat import llama2_template_messages, template_alpaca_messages
+from ..libs.llm.prompts.chat import (
+    llama2_template_messages,
+    sqlcoder_template_messages,
+    template_alpaca_messages,
+)
 from ..libs.util.create_async_task import create_async_task
 from ..libs.util.edit_config import (
     add_config_import,
@@ -347,9 +351,12 @@ class GUIProtocolServer:
                 # Set and start the new default model
 
                 if "template_messages" in model:
+                    sqtm = sqlcoder_template_messages("<MY_DATABASE_SCHEMA>")
+                    sqtm.__name__ = 'sqlcoder_template_messages("<MY_DATABASE_SCHEMA>")'
                     model["template_messages"] = {
                         "llama2_template_messages": llama2_template_messages,
                         "template_alpaca_messages": template_alpaca_messages,
+                        "sqlcoder_template_messages": sqtm,
                     }[model["template_messages"]]
                 new_model = MODEL_CLASSES[model_class](**model)
                 models.default = new_model

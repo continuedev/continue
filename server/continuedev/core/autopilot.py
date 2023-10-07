@@ -445,8 +445,9 @@ class Autopilot(ContinueBaseModel):
 
             caught_error = True
 
-            is_continue_custom_exception = issubclass(
-                e.__class__, ContinueCustomException
+            is_continue_custom_exception = (
+                issubclass(e.__class__, ContinueCustomException)
+                or e.__class__.__name__ == ContinueCustomException.__name__
             )
 
             error_string = (
