@@ -344,7 +344,6 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
 
   useEffect(() => {
     if (!nestedContextProvider) {
-      dispatch(setTakenActionTrue(null));
       setItems(
         contextProviders?.map((provider) => ({
           name: provider.display_title,
@@ -437,7 +436,6 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
       setNestedContextProvider(undefined);
 
       // Handle slash commands
-      dispatch(setTakenActionTrue(null));
       setItems(
         availableSlashCommands?.filter((slashCommand) => {
           const sc = slashCommand.name.toLowerCase();
@@ -445,6 +443,10 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
           return sc.startsWith(iv) && sc !== iv;
         }) || []
       );
+
+      if (inputValue.startsWith("/") || inputValue.startsWith("@")) {
+        dispatch(setTakenActionTrue(null));
+      }
     },
     [
       availableSlashCommands,

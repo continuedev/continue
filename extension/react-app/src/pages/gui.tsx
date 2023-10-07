@@ -480,7 +480,7 @@ function GUI(props: GUIProps) {
   useEffect(() => {
     const timeout = setTimeout(() => {
       setShowLoading(true);
-    }, 10000);
+    }, 15_000);
 
     return () => {
       clearTimeout(timeout);
