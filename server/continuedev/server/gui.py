@@ -27,7 +27,6 @@ from ..libs.util.edit_config import (
 from ..libs.util.logging import logger
 from ..libs.util.queue import AsyncSubscriptionQueue
 from ..libs.util.telemetry import posthog_logger
-from ..plugins.steps.setup_model import SetupModelStep
 from .session_manager import Session, session_manager
 
 router = APIRouter(prefix="/gui", tags=["gui"])
@@ -383,9 +382,9 @@ class GUIProtocolServer:
                         models.__setattr__(role, models.default)
 
                 # Display setup help
-                await self.session.autopilot.continue_sdk.run_step(
-                    SetupModelStep(model_class=model_class)
-                )
+                # await self.session.autopilot.continue_sdk.run_step(
+                #     SetupModelStep(model_class=model_class)
+                # )
 
             create_async_task(async_stuff(), self.on_error)
         else:

@@ -97,7 +97,14 @@ function ModelCard(props: ModelCardProps) {
         onMouseLeave={() => setHovered(false)}
         className="px-2 py-1"
         onClick={
-          props.disabled ? undefined : (e) => props.onClick(e, dimensionChoices)
+          props.disabled
+            ? undefined
+            : (e) => {
+                if ((e.target as any).closest("a")) {
+                  return;
+                }
+                props.onClick(e, dimensionChoices);
+              }
         }
       >
         <div style={{ display: "flex", alignItems: "center" }}>

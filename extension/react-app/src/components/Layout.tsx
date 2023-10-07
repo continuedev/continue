@@ -30,6 +30,16 @@ const LayoutTopDiv = styled.div`
   border-radius: ${defaultBorderRadius};
   scrollbar-base-color: transparent;
   scrollbar-width: thin;
+
+  & * {
+    ::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      border-radius: 2px;
+    }
+  }
 `;
 
 const BottomMessageDiv = styled.div<{ displayOnBottom: boolean }>`

@@ -16,6 +16,7 @@ import { useSelector } from "react-redux";
 import { RootStore } from "../redux/store";
 import HeaderButtonWithText from "./HeaderButtonWithText";
 import { getFontSize } from "../util";
+import { usePostHog } from "posthog-js/react";
 
 const Div = styled.div<{ isDisabled: boolean }>`
   border-radius: ${defaultBorderRadius};
@@ -159,6 +160,7 @@ const TutorialDiv = styled.div`
 `;
 
 function SuggestionsArea(props: { onClick: (textInput: string) => void }) {
+  const posthog = usePostHog();
   const [stage, setStage] = useState(
     parseInt(localStorage.getItem("stage") || "0")
   );
@@ -207,8 +209,18 @@ function SuggestionsArea(props: { onClick: (textInput: string) => void }) {
             className="absolute right-1 top-1 cursor-pointer"
             text="Close Tutorial"
             onClick={() => {
-              console.log("HIDE");
               setHide(true);
+              const tutorialClosedCount = parseInt(
+                localStorage.getItem("tutorialClosedCount") || "0"
+              );
+              localStorage.setItem(
+                "tutorialClosedCount",
+                (tutorialClosedCount + 1).toString()
+              );
+              posthog?.capture("tutorial_closed", {
+                stage,
+                tutorialClosedCount,
+              });
             }}
           >
             <XMarkIcon width="1.2em" height="1.2em" />
@@ -219,8 +231,9 @@ function SuggestionsArea(props: { onClick: (textInput: string) => void }) {
                 disabled={!codeIsHighlighted}
                 {...suggestion}
                 onClick={() => {
-                  if (stage > 0 && !codeIsHighlighted) return;
+                  if (!codeIsHighlighted) return;
                   props.onClick(suggestion.textInput);
+                  posthog?.capture("tutorial_stage_complete", { stage });
                   setStage(stage + 1);
                   localStorage.setItem("stage", (stage + 1).toString());
                   setHide(true);
