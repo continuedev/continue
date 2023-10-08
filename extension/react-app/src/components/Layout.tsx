@@ -36,6 +36,10 @@ const LayoutTopDiv = styled.div`
       width: 4px;
     }
 
+    ::-webkit-scrollbar:horizontal {
+      height: 4px;
+    }
+
     ::-webkit-scrollbar-thumb {
       border-radius: 2px;
     }
