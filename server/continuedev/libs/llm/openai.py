@@ -98,9 +98,6 @@ class OpenAI(LLM):
         if self.proxy is not None:
             openai.proxy = self.proxy
 
-        if self.headers is not None:
-            openai.aiosession.set(self.create_client_session())
-
         openai.ca_bundle_path = self.ca_bundle_path or certifi.where()
 
     def collect_args(self, options):
@@ -121,11 +118,12 @@ class OpenAI(LLM):
             async for chunk in await openai.ChatCompletion.acreate(
                 messages=[{"role": "user", "content": prompt}],
                 **args,
+                headers=self.headers,
             ):
                 if len(chunk.choices) > 0 and "content" in chunk.choices[0].delta:
                     yield chunk.choices[0].delta.content
         else:
-            async for chunk in await openai.Completion.acreate(prompt=prompt, **args):
+            async for chunk in await openai.Completion.acreate(prompt=prompt, **args, headers=self.headers):
                 if len(chunk.choices) > 0:
                     yield chunk.choices[0].text
 
@@ -136,6 +134,7 @@ class OpenAI(LLM):
             messages=messages,
             stream=True,
             **args,
+            headers=self.headers,
         ):
             if not hasattr(chunk, "choices") or len(chunk.choices) == 0:
                 continue
@@ -148,9 +147,10 @@ class OpenAI(LLM):
             resp = await openai.ChatCompletion.acreate(
                 messages=[{"role": "user", "content": prompt}],
                 **args,
+                headers=self.headers,
             )
             return resp.choices[0].message.content
         else:
             return (
-                (await openai.Completion.acreate(prompt=prompt, **args)).choices[0].text
+                (await openai.Completion.acreate(prompt=prompt, **args, headers=self.headers)).choices[0].text
             )
