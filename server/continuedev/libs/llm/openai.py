@@ -98,6 +98,9 @@ class OpenAI(LLM):
         if self.proxy is not None:
             openai.proxy = self.proxy
 
+        if self.headers is not None:
+            openai.aiosession.set(self.create_client_session())
+
         openai.ca_bundle_path = self.ca_bundle_path or certifi.where()
 
     def collect_args(self, options):
