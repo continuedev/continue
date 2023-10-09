@@ -1,6 +1,6 @@
 {
   "title": "History",
-  "$ref": "#/definitions/src__continuedev__core__main__History",
+  "$ref": "#/definitions/continuedev__core__main__History",
   "definitions": {
     "FunctionCall": {
       "title": "FunctionCall",
@@ -218,7 +218,7 @@
         "depth"
       ]
     },
-    "src__continuedev__core__main__History": {
+    "continuedev__core__main__History": {
       "title": "History",
       "description": "A history of steps taken and their results",
       "type": "object",

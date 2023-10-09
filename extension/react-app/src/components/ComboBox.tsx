@@ -40,6 +40,7 @@ import {
 } from "../util";
 import { ContextItem } from "../../../schema/FullState";
 import StyledMarkdownPreview from "./StyledMarkdownPreview";
+import { setTakenActionTrue } from "../redux/slices/miscSlice";
 
 const SEARCH_INDEX_NAME = "continue_context_items";
 
@@ -284,15 +285,13 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
 
   useEffect(() => {
     if (!inputRef.current) return;
-    if (inputRef.current.scrollHeight > inputRef.current.clientHeight) {
-      inputRef.current.style.height = "auto";
-      inputRef.current.style.height =
-        Math.min(inputRef.current.scrollHeight, 300) + "px";
-    }
+    inputRef.current.style.height = "auto";
+    inputRef.current.style.height =
+      Math.min(inputRef.current.scrollHeight, 300) + "px";
   }, [
     inputRef.current?.scrollHeight,
     inputRef.current?.clientHeight,
-    props.value,
+    inputRef.current?.value,
   ]);
 
   // Whether the current input follows an '@' and should be treated as context query
@@ -436,10 +435,16 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
 
       // Handle slash commands
       setItems(
-        availableSlashCommands?.filter((slashCommand) =>
-          slashCommand.name.toLowerCase().startsWith(inputValue.toLowerCase())
-        ) || []
+        availableSlashCommands?.filter((slashCommand) => {
+          const sc = slashCommand.name.toLowerCase();
+          const iv = inputValue.toLowerCase();
+          return sc.startsWith(iv) && sc !== iv;
+        }) || []
       );
+
+      if (inputValue.startsWith("/") || inputValue.startsWith("@")) {
+        dispatch(setTakenActionTrue(null));
+      }
     },
     [
       availableSlashCommands,
@@ -594,12 +599,14 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
     const handler = (event: any) => {
       if (event.data.type === "focusContinueInput") {
         inputRef.current!.focus();
+        dispatch(setTakenActionTrue(null));
       } else if (event.data.type === "focusContinueInputWithEdit") {
         inputRef.current!.focus();
 
         if (!inputRef.current?.value.startsWith("/edit")) {
           downshiftProps.setInputValue("/edit ");
         }
+        dispatch(setTakenActionTrue(null));
       }
     };
     window.addEventListener("message", handler);
@@ -749,6 +756,8 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
                 props.index
               );
               inputRef.current?.focus();
+              setPreviewingContextItem(undefined);
+              setFocusedContextItem(undefined);
             }}
             onKeyDown={(e: any) => {
               if (e.key === "Backspace") {
@@ -873,6 +882,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
               paddingLeft: "12px",
               cursor: "default",
               paddingTop: getFontSize(),
+              width: "fit-content",
             }}
           >
             {props.active ? "Using" : "Used"} {selectedContextItems.length}{" "}
@@ -930,17 +940,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
             {...getInputProps({
               onCompositionStart: () => setIsComposing(true),
               onCompositionEnd: () => setIsComposing(false),
-              onChange: (e) => {
-                const target = e.target as HTMLTextAreaElement;
-                // Update the height of the textarea to match the content, up to a max of 200px.
-                target.style.height = "auto";
-                target.style.height = `${Math.min(
-                  target.scrollHeight,
-                  300
-                ).toString()}px`;
-
-                // setShowContextDropdown(target.value.endsWith("@"));
-              },
+              onChange: (e) => {},
               onFocus: (e) => {
                 setInputFocused(true);
                 dispatch(setBottomMessage(undefined));

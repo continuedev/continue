@@ -12,7 +12,7 @@ a = Analysis(
     pathex=[],
     binaries=[],
     datas=[
-        ('continuedev', 'continuedev'),
+        ('server/continuedev', 'continuedev'),
         (certifi.where(), 'ca_bundle'),
         ] + copy_metadata('replicate') + chroma_toc,
     hiddenimports=[

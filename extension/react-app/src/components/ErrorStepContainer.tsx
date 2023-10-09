@@ -42,7 +42,7 @@ function ErrorStepContainer(props: ErrorStepContainerProps) {
         </HeaderButtonWithText>
       </div>
       <Div>
-        <pre className="overflow-x-scroll">
+        <pre style={{ whiteSpace: "pre-wrap", wordWrap: "break-word" }}>
           {props.historyNode.observation?.error as string}
         </pre>
       </Div>

@@ -1,6 +1,6 @@
 {
   "title": "FileEditWithFullContents",
-  "$ref": "#/definitions/src__continuedev__models__filesystem_edit__FileEditWithFullContents",
+  "$ref": "#/definitions/continuedev__models__filesystem_edit__FileEditWithFullContents",
   "definitions": {
     "Position": {
       "title": "Position",
@@ -59,7 +59,7 @@
         "replacement"
       ]
     },
-    "src__continuedev__models__filesystem_edit__FileEditWithFullContents": {
+    "continuedev__models__filesystem_edit__FileEditWithFullContents": {
       "title": "FileEditWithFullContents",
       "type": "object",
       "properties": {

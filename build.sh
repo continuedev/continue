@@ -4,14 +4,14 @@
 rm -rf build
 rm -rf env
 rm -rf dist
-rm -rf continuedev/.venv
+rm -rf server/.venv
 
 # 2. Create a new virtual environment and activate it
 python3 -m venv env
 . env/bin/activate
 
 # 3. Install the required packages
-pip install -r continuedev/requirements.txt
+pip install -r server/requirements.txt
 pip install pyinstaller
 
 # 4. Detect M1 architecture or allow manual override

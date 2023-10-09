@@ -27,6 +27,10 @@ export type UniqueId = string;
  */
 export type Model = string;
 /**
+ * The maximum number of tokens to generate.
+ */
+export type MaxTokens = number;
+/**
  * Tokens that will stop the completion.
  */
 export type StopTokens = string[];
@@ -57,6 +61,7 @@ export interface LLM1 {
   context_length?: ContextLength;
   unique_id?: UniqueId;
   model: Model;
+  max_tokens?: MaxTokens;
   stop_tokens?: StopTokens;
   timeout?: Timeout;
   verify_ssl?: VerifySsl;

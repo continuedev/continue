@@ -17,6 +17,9 @@ const Tr = styled.tr`
   }
 
   overflow-wrap: anywhere;
+
+  border-bottom: 1px solid ${secondaryDark};
+  border-top: 1px solid ${secondaryDark};
 `;
 
 const parseDate = (date: string): Date => {
@@ -44,7 +47,6 @@ const TdDiv = styled.div`
   padding-right: 1rem;
   padding-top: 0.5rem;
   padding-bottom: 0.5rem;
-  border-bottom: 1px solid ${secondaryDark};
 `;
 
 function lastPartOfPath(path: string): string {
@@ -155,7 +157,7 @@ function History() {
       )}
 
       <div>
-        <table className="w-full">
+        <table className="w-full border-spacing-0 border-collapse">
           <tbody>
             {filteredAndSortedSessions.map((session, index) => {
               const prevDate =

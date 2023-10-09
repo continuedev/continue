@@ -1,5 +1,5 @@
 import styled from "styled-components";
-import { TextInput, defaultBorderRadius, lightGray } from "../components";
+import { Input, defaultBorderRadius, lightGray, vscBackground } from "../components";
 import { FullState } from "../../../schema/FullState";
 import {
   useEffect,
@@ -45,6 +45,7 @@ import FTCDialog from "../components/dialogs/FTCDialog";
 import HeaderButtonWithText from "../components/HeaderButtonWithText";
 import { useNavigate } from "react-router-dom";
 import SuggestionsArea from "../components/Suggestions";
+import { setTakenActionTrue } from "../redux/slices/miscSlice";
 
 const TopGuiDiv = styled.div`
   overflow-y: scroll;
@@ -57,7 +58,7 @@ const TopGuiDiv = styled.div`
   }
 `;
 
-const TitleTextInput = styled(TextInput)`
+const TitleTextInput = styled(Input)`
   border: none;
   outline: none;
 
@@ -108,6 +109,10 @@ const GUIHeaderDiv = styled.div`
   padding-left: 8px;
   padding-right: 8px;
   border-bottom: 0.5px solid ${lightGray};
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background-color: ${vscBackground};
 `;
 
 interface GUIProps {
@@ -158,6 +163,7 @@ function GUI(props: GUIProps) {
   const bottomMessage = useSelector(
     (state: RootStore) => state.uiState.bottomMessage
   );
+  const takenAction = useSelector((state: RootStore) => state.misc.takenAction);
   useEffect(() => {
     if (!aboveComboBoxDivRef.current) return;
     dispatch(
@@ -263,6 +269,7 @@ function GUI(props: GUIProps) {
   }, [client, user_input_queue, waitingForClient]);
 
   const onMainTextInput = (event?: any) => {
+    dispatch(setTakenActionTrue(null));
     if (mainTextInputRef.current) {
       let input = (mainTextInputRef.current as any).inputValue;
 
@@ -477,7 +484,7 @@ function GUI(props: GUIProps) {
   useEffect(() => {
     const timeout = setTimeout(() => {
       setShowLoading(true);
-    }, 3000);
+    }, 15_000);
 
     return () => {
       clearTimeout(timeout);
@@ -558,7 +565,7 @@ function GUI(props: GUIProps) {
           </HeaderButtonWithText>
         </div>
       </GUIHeaderDiv>
-      {showLoading && typeof client === "undefined" && (
+      {(takenAction || showLoading) && typeof client === "undefined" && (
         <>
           <RingLoader />
           <p

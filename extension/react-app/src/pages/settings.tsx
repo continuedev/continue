@@ -1,4 +1,4 @@
-import React, { useContext } from "react";
+import React, { useContext, useEffect } from "react";
 import { GUIClientContext } from "../App";
 import { useDispatch, useSelector } from "react-redux";
 import { RootStore } from "../redux/store";
@@ -113,6 +113,13 @@ function Settings() {
     navigate("/");
   };
 
+  useEffect(() => {
+    if (!config) return;
+
+    formMethods.setValue("system_message", config.system_message);
+    formMethods.setValue("temperature", config.temperature);
+  }, [config]);
+
   return (
     <FormProvider {...formMethods}>
       <div className="overflow-scroll">
@@ -145,7 +152,6 @@ function Settings() {
               <TextArea
                 placeholder="Enter a system message (e.g. 'Always respond in German')"
                 {...formMethods.register("system_message")}
-                defaultValue={config.system_message}
               />
 
               <Hr />
@@ -164,7 +170,6 @@ function Settings() {
                   min="0"
                   max="1"
                   step="0.01"
-                  defaultValue={config.temperature}
                   {...formMethods.register("temperature")}
                 />
                 <p>1</p>

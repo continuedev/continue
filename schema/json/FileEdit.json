@@ -1,6 +1,6 @@
 {
   "title": "FileEdit",
-  "$ref": "#/definitions/src__continuedev__models__filesystem_edit__FileEdit",
+  "$ref": "#/definitions/continuedev__models__filesystem_edit__FileEdit",
   "definitions": {
     "Position": {
       "title": "Position",
@@ -37,7 +37,7 @@
         "end"
       ]
     },
-    "src__continuedev__models__filesystem_edit__FileEdit": {
+    "continuedev__models__filesystem_edit__FileEdit": {
       "title": "FileEdit",
       "type": "object",
       "properties": {

@@ -30,6 +30,20 @@ const LayoutTopDiv = styled.div`
   border-radius: ${defaultBorderRadius};
   scrollbar-base-color: transparent;
   scrollbar-width: thin;
+
+  & * {
+    ::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    ::-webkit-scrollbar:horizontal {
+      height: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      border-radius: 2px;
+    }
+  }
 `;
 
 const BottomMessageDiv = styled.div<{ displayOnBottom: boolean }>`
@@ -130,6 +144,20 @@ const Layout = () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
   }, [client, timeline]);
+
+  useEffect(() => {
+    const handler = (event: any) => {
+      if (event.data.type === "addModel") {
+        navigate("/models");
+      } else if (event.data.type === "openSettings") {
+        navigate("/settings");
+      }
+    };
+    window.addEventListener("message", handler);
+    return () => {
+      window.removeEventListener("message", handler);
+    };
+  }, []);
 
   return (
     <LayoutTopDiv>

@@ -148,32 +148,6 @@ class IdeProtocolClient {
       const filepath = event.uri.fsPath;
       const contents = event.getText();
       this.messenger?.send("fileSaved", { filepath, contents });
-
-      if (event.fileName.endsWith("config.py")) {
-        if (
-          this.context.globalState.get<boolean>(
-            "continue.showConfigInfoMessage"
-          ) !== false
-        ) {
-          vscode.window
-            .showInformationMessage(
-              "Reload the VS Code window for your changes to the Continue config to take effect.",
-              "Reload",
-              "Don't show again"
-            )
-            .then((selection) => {
-              if (selection === "Don't show again") {
-                // Get the global state
-                context.globalState.update(
-                  "continue.showConfigInfoMessage",
-                  false
-                );
-              } else if (selection === "Reload") {
-                vscode.commands.executeCommand("workbench.action.reloadWindow");
-              }
-            });
-        }
-      }
     });
 
     // Setup listeners for any selection changes in open editors
@@ -266,6 +240,13 @@ class IdeProtocolClient {
       case "uniqueId":
         messenger.send("uniqueId", {
           uniqueId: this.getUniqueId(),
+        });
+        break;
+      case "ide":
+        messenger.send("ide", {
+          name: "vscode",
+          version: vscode.version,
+          remoteName: vscode.env.remoteName,
         });
         break;
       case "fileExists":
@@ -571,7 +552,7 @@ class IdeProtocolClient {
     directory: string,
     recursive: boolean
   ): Promise<string[]> {
-    let nameAndType = (
+    const nameAndType = (
       await vscode.workspace.fs.readDirectory(uriFromFilePath(directory))
     ).filter(([name, type]) => {
       const DEFAULT_IGNORE_DIRS = [
