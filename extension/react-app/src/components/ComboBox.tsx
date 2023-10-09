@@ -42,6 +42,7 @@ import { ContextItem } from "../../../schema/FullState";
 import StyledMarkdownPreview from "./StyledMarkdownPreview";
 import { temporarilyClearSession } from "../redux/slices/serverStateReducer";
 import { setTakenActionTrue } from "../redux/slices/miscSlice";
+import { handleKeyDownJetBrains } from "../util/jetbrains";
 
 const SEARCH_INDEX_NAME = "continue_context_items";
 
@@ -1079,6 +1080,8 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
                   (event.nativeEvent as any).preventDownshiftDefault = true;
                 } else if (event.key === "End") {
                   (event.nativeEvent as any).preventDownshiftDefault = true;
+                } else if (localStorage.getItem("ide") === "jetbrains") {
+                  handleKeyDownJetBrains(event, downshiftProps.inputValue, downshiftProps.setInputValue);
                 }
               },
               onClick: () => {

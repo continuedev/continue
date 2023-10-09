@@ -116,7 +116,7 @@ class DiffManager(private val project: Project) {
         file2: String,
         stepIndex: Int
     ) {
-       lastFile2 = file2
+        lastFile2 = file2
 
         // Create a DiffContent for each of the texts you want to compare
         val content1: DiffContent = DiffContentFactory.getInstance().create(File(file1).readText())

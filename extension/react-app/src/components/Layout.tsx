@@ -229,7 +229,7 @@ const Layout = () => {
           {bottomMessage}
         </BottomMessageDiv>
       </div>
-      <div id="tooltip-portal-div" />
+      <div className="text-sm" id="tooltip-portal-div" />
     </LayoutTopDiv>
   );
 };
