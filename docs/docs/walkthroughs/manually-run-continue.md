@@ -27,10 +27,10 @@ The easiest way to run Continue is to
 
 If you'd like to use a pre-built binary, you can download manually from our S3 bucket. These are the download links for each OS:
 
-- [MacOS (Intel)](https://s3.continue.dev/mac/run)
-- [MacOS (Apple Silicon)](https://s3.continue.dev/apple-silicon/run)
-- [Windows](https://s3.continue.dev/windows/run.exe)
-- [Linux](https://s3.continue.dev/linux/run)
+- [MacOS (Intel)](https://continue-server-binaries.s3.us-west-1.amazonaws.com/mac/run)
+- [MacOS (Apple Silicon)](https://continue-server-binaries.s3.us-west-1.amazonaws.com/apple-silicon/run)
+- [Windows](https://continue-server-binaries.s3.us-west-1.amazonaws.com/windows/run.exe)
+- [Linux](https://continue-server-binaries.s3.us-west-1.amazonaws.com/linux/run)
 
 Once downloaded, start the binary by running `./run` (MacOS/Linux) or `./run.exe` (Windows) in the directory where you downloaded it. You should see that it begins listening on port 65432.
 

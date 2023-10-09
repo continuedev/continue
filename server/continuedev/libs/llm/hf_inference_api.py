@@ -20,8 +20,8 @@ class HuggingFaceInferenceAPI(LLM):
         ...
         models=Models(
             default=HuggingFaceInferenceAPI(
-                endpoint_url: "<INFERENCE_API_ENDPOINT_URL>",
-                hf_token: "<HUGGING_FACE_TOKEN>",
+                endpoint_url="<INFERENCE_API_ENDPOINT_URL>",
+                hf_token="<HUGGING_FACE_TOKEN>",
         )
     )
     ```
