@@ -14,6 +14,7 @@ import javax.swing.*
 import javax.swing.event.DocumentEvent
 import javax.swing.event.DocumentListener
 import com.intellij.ui.components.JBScrollPane
+import java.awt.BorderLayout
 
 fun pluginServiceFromActionEvent(e: AnActionEvent): ContinuePluginService? {
     val project = e.project ?: return null
@@ -51,7 +52,8 @@ class RejectDiffAction : AnAction() {
      }
 
      override fun createCenterPanel(): JComponent? {
-         textArea = JTextArea(10, 20)
+         panel = JPanel(BorderLayout())
+         textArea = JTextArea(3, 60)
          textArea?.lineWrap = true
          textArea?.wrapStyleWord = true
 
@@ -70,8 +72,11 @@ class RejectDiffAction : AnAction() {
              }
 
              private fun updateSize() {
-                 // Adjust the preferred size of the JTextArea
-                 textArea?.preferredSize = textArea?.preferredSize
+                 val text = textArea?.text ?: ""
+                 val lines = text.count { it == '\n' } + 1
+                 val metrics = textArea?.getFontMetrics(textArea?.font)
+                 val lineHeight = metrics?.height ?: 0
+                 textArea?.preferredSize = Dimension(textArea?.width ?: 0, lines * lineHeight)
 
                  // Revalidate the JPanel to reflect the changes
                  panel?.revalidate()
@@ -79,10 +84,10 @@ class RejectDiffAction : AnAction() {
          })
 
          val scrollPane = JBScrollPane(textArea)
-         panel?.add(scrollPane)
+         scrollPane.verticalScrollBarPolicy = JScrollPane.VERTICAL_SCROLLBAR_ALWAYS
+         panel?.add(scrollPane, BorderLayout.CENTER)
 
          return panel
-
      }
 
 
