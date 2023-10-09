@@ -75,6 +75,7 @@ const DropdownPortalDiv = styled.div`
   position: relative;
   margin-left: 8px;
   z-index: 200;
+  font-size: 12px;
 `;
 
 // #endregion
