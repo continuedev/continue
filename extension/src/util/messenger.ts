@@ -60,8 +60,8 @@ export class WebsocketMessenger extends Messenger {
     newWebsocket.addEventListener("error", (error: any) => {
       console.error("Websocket error occurred: ", error);
     });
-    newWebsocket.addEventListener("close", () => {
-      console.log("Websocket connection closed");
+    newWebsocket.addEventListener("close", (error: any) => {
+      console.log("Websocket connection closed: ", error);
     });
     
     return newWebsocket;

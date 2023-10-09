@@ -120,7 +120,7 @@ def convertConfigImports(shorten: bool) -> str:
 
     if shorten:
         migrated = existing_content.replace(
-            "from continuedev.", "from continuedev."
+            "from continuedev.src.continuedev.", "from continuedev."
         )
     else:
         migrated = re.sub(
