@@ -460,8 +460,8 @@ class IdeProtocolClient(
     }
 
     fun saveFile(filepath: String) {
-        ApplicationManager.getApplication().runWriteAction {
-            val file = LocalFileSystem.getInstance().findFileByPath(filepath) ?: return@runWriteAction
+        ApplicationManager.getApplication().invokeLater {
+            val file = LocalFileSystem.getInstance().findFileByPath(filepath) ?: return@invokeLater
             val fileDocumentManager = FileDocumentManager.getInstance()
             val document = fileDocumentManager.getDocument(file)
 
@@ -489,7 +489,9 @@ class IdeProtocolClient(
 
     fun showVirtualFile(name: String, contents: String) {
         val virtualFile = LightVirtualFile(name, contents)
-        FileEditorManager.getInstance(project).openFile(virtualFile, true)
+        ApplicationManager.getApplication().invokeLater {
+            FileEditorManager.getInstance(project).openFile(virtualFile, true)
+        }
     }
 
     fun visibleFiles(): List<String> {

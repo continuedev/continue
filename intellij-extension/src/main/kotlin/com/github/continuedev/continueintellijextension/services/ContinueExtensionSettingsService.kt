@@ -69,6 +69,7 @@ open class ContinueExtensionSettings : PersistentStateComponent<ContinueExtensio
     class ContinueState {
         var serverUrl: String = "http://localhost:65432"
         var manuallyRunningServer: Boolean = false
+        var shownWelcomeDialog: Boolean = false
     }
 
     var continueState: ContinueState = ContinueState()
@@ -122,6 +123,6 @@ class ContinueExtensionConfigurable : Configurable {
     }
 
     override fun getDisplayName(): String {
-        return "My Extension"
+        return "Continue Extension Settings"
     }
 }

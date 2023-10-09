@@ -10,10 +10,10 @@ import com.intellij.openapi.ui.Messages
 import com.intellij.openapi.wm.ToolWindowManager
 import java.awt.Dimension
 import java.awt.GridLayout
- import javax.swing.JComponent
- import javax.swing.JPanel
- import javax.swing.JTextField
-import javax.swing.SwingUtilities
+import javax.swing.*
+import javax.swing.event.DocumentEvent
+import javax.swing.event.DocumentListener
+import com.intellij.ui.components.JBScrollPane
 
 fun pluginServiceFromActionEvent(e: AnActionEvent): ContinuePluginService? {
     val project = e.project ?: return null
@@ -40,30 +40,56 @@ class RejectDiffAction : AnAction() {
 
  class QuickInputDialogWrapper : DialogWrapper(true) {
      private var panel: JPanel? = null
-     private var textField: JTextField? = null
-
+    private var textArea: JTextArea? = null
      init {
          init()
          title = "Continue Quick Input"
      }
 
      override fun getPreferredFocusedComponent(): JComponent? {
-         return textField
+         return textArea
      }
 
      override fun createCenterPanel(): JComponent? {
-         panel = JPanel(GridLayout(0, 1))
-         panel!!.preferredSize = Dimension(500, panel!!.preferredSize.height)
-         textField = JTextField()
-         panel!!.add(textField)
+         textArea = JTextArea(10, 20)
+         textArea?.lineWrap = true
+         textArea?.wrapStyleWord = true
+
+        // Add a DocumentListener to the JTextArea
+         textArea?.document?.addDocumentListener(object : DocumentListener {
+             override fun insertUpdate(e: DocumentEvent?) {
+                 updateSize()
+             }
+
+             override fun removeUpdate(e: DocumentEvent?) {
+                 updateSize()
+             }
+
+             override fun changedUpdate(e: DocumentEvent?) {
+                 updateSize()
+             }
+
+             private fun updateSize() {
+                 // Adjust the preferred size of the JTextArea
+                 textArea?.preferredSize = textArea?.preferredSize
+
+                 // Revalidate the JPanel to reflect the changes
+                 panel?.revalidate()
+             }
+         })
+
+         val scrollPane = JBScrollPane(textArea)
+         panel?.add(scrollPane)
 
          return panel
+
      }
+
 
      fun showDialogAndGetText(): String? {
          show()
          return if (this.exitCode == OK_EXIT_CODE) {
-             textField!!.text
+             textArea!!.text
          } else {
              null
          }

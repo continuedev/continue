@@ -31,6 +31,24 @@ fun CoroutineScope.dispatchEventToWebview(
     }
 }
 
+fun CoroutineScope.runJsInWebview(
+        jsCode: String,
+        webView: JBCefBrowser
+) {
+    launch(CoroutineExceptionHandler { _, exception ->
+        println("Failed to dispatch custom event: ${exception.message}")
+    }) {
+        while (true) {
+            try {
+                webView.executeJavaScriptAsync(jsCode)
+                break  // If the JS execution is successful, break the loop
+            } catch (e: IllegalStateException) {
+                delay(1000)  // If an error occurs, wait for 1 second and then retry
+            }
+        }
+    }
+}
+
 private fun buildJavaScript(type: String, jsonData: String): String {
     return """window.postMessage($jsonData, "*");"""
 }
