@@ -42,9 +42,9 @@ export const handleKeyDownJetBrains = (e, text: string, setText) => {
 
         } else if (e.key === 'ArrowRight') {
             const nextNewLineIndex = text.indexOf('\n', startPos);
-
-            newStartPos = isShiftPressed ? newStartPos : nextNewLineIndex === -1 ? text.length : nextNewLineIndex;
-            newEndPos = isShiftPressed ? endPos : newStartPos;
+            
+            newEndPos = nextNewLineIndex === -1 ? text.length : nextNewLineIndex;
+            newStartPos = isShiftPressed ? newStartPos : newEndPos;
         }
 
         e.target.selectionStart = newStartPos;

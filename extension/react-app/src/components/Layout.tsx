@@ -70,6 +70,13 @@ const GridDiv = styled.div`
   overflow-x: visible;
 `;
 
+const DropdownPortalDiv = styled.div`
+  background-color: ${secondaryDark};
+  position: relative;
+  margin-left: 8px;
+  z-index: 200;
+`;
+
 // #endregion
 
 const Layout = () => {
@@ -154,6 +161,7 @@ const Layout = () => {
 
         <GridDiv>
           <Outlet />
+          <DropdownPortalDiv id="model-select-top-div"></DropdownPortalDiv>
           <Footer>
             <div className="mr-auto flex gap-2 items-center">
               {localStorage.getItem("ide") === "jetbrains" ||

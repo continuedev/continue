@@ -126,6 +126,12 @@
           "description": "The name of the model to be used (e.g. gpt-4, codellama)",
           "type": "string"
         },
+        "max_tokens": {
+          "title": "Max Tokens",
+          "description": "The maximum number of tokens to generate.",
+          "default": 1024,
+          "type": "integer"
+        },
         "stop_tokens": {
           "title": "Stop Tokens",
           "description": "Tokens that will stop the completion.",
@@ -436,6 +442,7 @@
               "system_message": null,
               "context_length": 2048,
               "model": "gpt-4",
+              "max_tokens": 1024,
               "stop_tokens": null,
               "timeout": 300,
               "verify_ssl": null,
@@ -451,6 +458,7 @@
               "system_message": null,
               "context_length": 2048,
               "model": "gpt-3.5-turbo",
+              "max_tokens": 1024,
               "stop_tokens": null,
               "timeout": 300,
               "verify_ssl": null,

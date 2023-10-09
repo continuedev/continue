@@ -90,7 +90,7 @@ function App() {
       }
     };
     window.addEventListener("message", eventListener);
-    // postVscMessage("onLoad", {});
+    postVscMessage("onLoad", {});
     return () => window.removeEventListener("message", eventListener);
   }, []);
 

@@ -37,7 +37,12 @@ class ContinuePluginService(project: Project) : Disposable {
         val gson = Gson()
         val jsonData = gson.toJson(data)
         val jsCode = buildJavaScript(type, jsonData)
-        continuePluginWindow.webView.executeJavaScriptAsync(jsCode)
+
+        try {
+            continuePluginWindow.webView.executeJavaScriptAsync(jsCode)
+        } catch (error: IllegalStateException) {
+            println("Webview not initialized yet $error")
+        }
     }
 
     private fun buildJavaScript(type: String, jsonData: String): String {

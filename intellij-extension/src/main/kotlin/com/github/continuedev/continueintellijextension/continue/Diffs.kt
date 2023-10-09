@@ -40,7 +40,7 @@ fun escapeFilepath(filepath: String): String {
 interface DiffInfo {
     val originalFilepath: String
     val newFilepath: String
-    val diffRequestPanel: DiffRequestPanel
+    var diffRequestPanel: DiffRequestPanel?
     val stepIndex: Int
     var dialog: DialogWrapper?
 }
@@ -128,63 +128,63 @@ class DiffManager(private val project: Project) {
         // Get a DiffRequestPanel from the DiffManager and set the DiffRequest to it
         val diffInfo = diffInfoMap[file2]
 
-        val diffPanel: DiffRequestPanel = diffInfo?.diffRequestPanel ?: DiffManager.getInstance().createRequestPanel(project, Disposer.newDisposable(), null)
-
         var shouldShowDialog = false
         if (diffInfo == null) {
             diffInfoMap[file2] = object : DiffInfo {
                 override var dialog: DialogWrapper? = null
-                override val diffRequestPanel: DiffRequestPanel = diffPanel
+                override var diffRequestPanel: DiffRequestPanel? = null
                 override val stepIndex: Int = stepIndex
-                override val newFilepath: String = file1
-                override val originalFilepath: String = file2
+                override val newFilepath: String = file2
+                override val originalFilepath: String = file1
             }
             shouldShowDialog = true
         }
 
         ApplicationManager.getApplication().invokeLater {
+            val diffPanel: DiffRequestPanel = diffInfo?.diffRequestPanel ?: DiffManager.getInstance().createRequestPanel(project, Disposer.newDisposable(), null)
             diffPanel.setRequest(diffRequest)
 
             diffPanel.component.revalidate()
             diffPanel.component.repaint()
 
-            if (!shouldShowDialog) return@invokeLater
+            if (!shouldShowDialog) {
+                // Create a dialog and add the DiffRequestPanel to it
+                val dialog: DialogWrapper = diffInfo?.dialog
+                        ?: object : DialogWrapper(project, true, IdeModalityType.MODELESS) {
+                            init {
+                                init()
+                                title = "Continue Diff"
+                            }
 
-            // Create a dialog and add the DiffRequestPanel to it
-            val dialog: DialogWrapper = diffInfo?.dialog
-                    ?: object : DialogWrapper(project, true, IdeModalityType.MODELESS) {
-                        init {
-                            init()
-                            title = "Continue Diff"
+                            override fun createCenterPanel(): JComponent? {
+                                return diffPanel.component
+                            }
+
+                            override fun doOKAction() {
+                                super.doOKAction()
+                                acceptDiff(file2)
+                            }
+
+                            override fun doCancelAction() {
+                                super.doCancelAction()
+                                rejectDiff(file2)
+                            }
+
+                            override fun createActions(): Array<Action> {
+                                val okAction = getOKAction()
+                                okAction.putValue(Action.NAME, "Accept (⌘ ⇧ ↵)")
+
+                                val cancelAction = getCancelAction()
+                                cancelAction.putValue(Action.NAME, "Reject (⌘ ⇧ ⌫)")
+
+                                return arrayOf(okAction, cancelAction)
+                            }
                         }
 
-                        override fun createCenterPanel(): JComponent? {
-                            return diffPanel.component
-                        }
-
-                        override fun doOKAction() {
-                            super.doOKAction()
-                            acceptDiff(file2)
-                        }
-
-                        override fun doCancelAction() {
-                            super.doCancelAction()
-                            rejectDiff(file2)
-                        }
-
-                        override fun createActions(): Array<Action> {
-                            val okAction = getOKAction()
-                            okAction.putValue(Action.NAME, "Accept (⌘ ⇧ ↵)")
-
-                            val cancelAction = getCancelAction()
-                            cancelAction.putValue(Action.NAME, "Reject (⌘ ⇧ ⌫)")
-
-                            return arrayOf(okAction, cancelAction)
-                        }
-                    }
-
-            dialog.show()
-            diffInfoMap[file2]?.dialog = dialog
+                dialog.show()
+                diffInfoMap[file2]?.dialog = dialog
+                diffInfoMap[file2]?.diffRequestPanel = diffPanel
+            }
         }
     }
 }

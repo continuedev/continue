@@ -41,6 +41,7 @@ class SimpleChatStep(Step):
     async def run(self, sdk: ContinueSDK):
         # Check if proxy server API key
         if (
+            False and
             isinstance(sdk.models.default, OpenAIFreeTrial)
             and (
                 sdk.models.default.api_key is None
