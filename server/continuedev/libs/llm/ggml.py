@@ -1,5 +1,5 @@
 import json
-from typing import Any, Callable, Coroutine, Dict, List, Optional
+from typing import Any, Callable, Coroutine, Dict, List, Literal, Optional
 
 from pydantic import Field
 
@@ -38,6 +38,20 @@ class GGML(LLM):
     model: str = Field(
         "ggml", description="The name of the model to use (optional for the GGML class)"
     )
+    
+    api_base: Optional[str] = Field(None, description="OpenAI API base URL.")
+
+    api_type: Optional[Literal["azure", "openai"]] = Field(
+        None, description="OpenAI API type."
+    )
+
+    api_version: Optional[str] = Field(
+        None, description="OpenAI API version. For use with Azure OpenAI Service."
+    )
+
+    engine: Optional[str] = Field(
+        None, description="OpenAI engine. For use with Azure OpenAI Service."
+    )
 
     template_messages: Optional[
         Callable[[List[Dict[str, str]]], str]
@@ -55,16 +69,32 @@ class GGML(LLM):
             "Content-Type": "application/json",
         }
         if self.api_key is not None:
-            headers["Authorization"] = f"Bearer {self.api_key}"
+            if self.api_type == "azure":
+                headers["api-key"] = self.api_key
+            else:
+                headers["Authorization"] = f"Bearer {self.api_key}"
 
         return headers
+    
+    def get_full_server_url(self, endpoint: str):
+        endpoint = endpoint.lstrip("/").rstrip("/")
+
+        if self.api_type == "azure":
+            if self.engine is None or self.api_version is None or self.api_base is None:
+                raise Exception(
+                    "For Azure OpenAI Service, you must specify engine, api_version, and api_base."
+                )
+            
+            return f"{self.api_base}/openai/deployments/{self.engine}/{endpoint}?api-version={self.api_version}"
+        else:
+            return f"{self.server_url}/v1/{endpoint}"
 
     async def _raw_stream_complete(self, prompt, options):
         args = self.collect_args(options)
 
         async with self.create_client_session() as client_session:
             async with client_session.post(
-                f"{self.server_url}/v1/completions",
+                self.get_full_server_url(endpoint="completions"),
                 json={
                     "prompt": prompt,
                     "stream": True,
@@ -73,6 +103,11 @@ class GGML(LLM):
                 headers=self.get_headers(),
                 proxy=self.proxy,
             ) as resp:
+                if resp.status != 200:
+                    raise Exception(
+                        f"Error calling /chat/completions endpoint: {resp.status}"
+                    )
+
                 async for line in resp.content.iter_any():
                     if line:
                         chunks = line.decode("utf-8")
@@ -102,11 +137,16 @@ class GGML(LLM):
         async def generator():
             async with self.create_client_session() as client_session:
                 async with client_session.post(
-                    f"{self.server_url}/v1/chat/completions",
+                    self.get_full_server_url(endpoint="chat/completions"),
                     json={"messages": messages, "stream": True, **args},
                     headers=self.get_headers(),
                     proxy=self.proxy,
                 ) as resp:
+                    if resp.status != 200:
+                        raise Exception(
+                            f"Error calling /chat/completions endpoint: {resp.status}"
+                        )
+                    
                     async for line, end in resp.content.iter_chunks():
                         json_chunk = line.decode("utf-8")
                         chunks = json_chunk.split("\n")
@@ -136,7 +176,7 @@ class GGML(LLM):
 
         async with self.create_client_session() as client_session:
             async with client_session.post(
-                f"{self.server_url}/v1/completions",
+                self.get_full_server_url(endpoint="completions"),
                 json={
                     "prompt": prompt,
                     **args,
@@ -144,6 +184,11 @@ class GGML(LLM):
                 headers=self.get_headers(),
                 proxy=self.proxy,
             ) as resp:
+                if resp.status != 200:
+                    raise Exception(
+                        f"Error calling /chat/completions endpoint: {resp.status}"
+                    )
+
                 text = await resp.text()
                 try:
                     completion = json.loads(text)["choices"][0]["text"]

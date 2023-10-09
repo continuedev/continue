@@ -24,6 +24,10 @@ config = ContinueConfig(
 ## Properties
 
 <ClassPropertyRef name='server_url' details='{&quot;title&quot;: &quot;Server Url&quot;, &quot;description&quot;: &quot;URL of the OpenAI-compatible server where the model is being served&quot;, &quot;default&quot;: &quot;http://localhost:8000&quot;, &quot;type&quot;: &quot;string&quot;}' required={false} default="http://localhost:8000"/>
+<ClassPropertyRef name='api_base' details='{&quot;title&quot;: &quot;Api Base&quot;, &quot;description&quot;: &quot;OpenAI API base URL.&quot;, &quot;type&quot;: &quot;string&quot;}' required={false} default=""/>
+<ClassPropertyRef name='api_type' details='{&quot;title&quot;: &quot;Api Type&quot;, &quot;description&quot;: &quot;OpenAI API type.&quot;, &quot;enum&quot;: [&quot;azure&quot;, &quot;openai&quot;], &quot;type&quot;: &quot;string&quot;}' required={false} default=""/>
+<ClassPropertyRef name='api_version' details='{&quot;title&quot;: &quot;Api Version&quot;, &quot;description&quot;: &quot;OpenAI API version. For use with Azure OpenAI Service.&quot;, &quot;type&quot;: &quot;string&quot;}' required={false} default=""/>
+<ClassPropertyRef name='engine' details='{&quot;title&quot;: &quot;Engine&quot;, &quot;description&quot;: &quot;OpenAI engine. For use with Azure OpenAI Service.&quot;, &quot;type&quot;: &quot;string&quot;}' required={false} default=""/>
 
 
 ### Inherited Properties
