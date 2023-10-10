@@ -103,6 +103,11 @@ jobs:
         if: matrix.os == 'macos-latest' && matrix.arch == 'arm64'
         run: curl -o extension/exe/run https://s3.continue.dev/apple-silicon/run
 
+      - name: Set permissions
+        if: matrix.os == 'macos-latest' && matrix.arch == 'arm64'
+        run: |
+          chmod 777 extension/exe/run
+
       # 2. Install npm dependencies
       - name: Use Node.js 19.0.0
         uses: actions/setup-node@v3
