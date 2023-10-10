@@ -101,15 +101,7 @@ jobs:
       
       - name: Download Apple Silicon Binary
         if: matrix.os == 'macos-latest' && matrix.arch == 'arm64'
-        uses: keithweaver/aws-s3-github-action@v1.0.0
-        with:
-          command: cp
-          source: s3://s3.continue.dev/apple-silicon/run
-          destination: extension/exe/run
-          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws_region: us-west-1
-          flags: --recursive
+        run: curl -o extension/exe/run https://s3.continue.dev/apple-silicon/run
 
       # 2. Install npm dependencies
       - name: Use Node.js 19.0.0
