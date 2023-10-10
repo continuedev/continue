@@ -1,0 +1,245 @@
+name: Publish Preview Extension
+
+on:
+  push:
+    branches:
+      - preview
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        include:
+          - os: windows-latest
+            platform: win32
+            arch: x64
+            npm_config_arch: x64
+          - os: windows-latest
+            platform: win32
+            arch: ia32
+            npm_config_arch: ia32
+          - os: windows-latest
+            platform: win32
+            arch: arm64
+            npm_config_arch: arm
+          - os: ubuntu-20.04
+            platform: linux
+            arch: x64
+            npm_config_arch: x64
+          - os: ubuntu-20.04
+            platform: linux
+            arch: arm64
+            npm_config_arch: arm64
+          - os: ubuntu-20.04
+            platform: linux
+            arch: armhf
+            npm_config_arch: arm
+          - os: ubuntu-20.04
+            platform: alpine
+            arch: x64
+            npm_config_arch: x64
+          - os: macos-latest
+            platform: darwin
+            arch: x64
+            npm_config_arch: x64
+          - os: macos-latest
+            platform: darwin
+            arch: arm64
+            npm_config_arch: arm64
+    runs-on: ${{ matrix.os }}
+    steps:
+      # 1. Build the Pyinstaller binary
+      - name: Check-out repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10.8"
+
+      - name: Install Pyinstaller
+        run: |
+          pip install pyinstaller
+
+      - name: Install Dependencies
+        run: |
+          pip install -r server/requirements.txt
+
+      - name: Build PyInstaller Executable
+        run: pyinstaller run.spec
+
+      # 1.5 Place the binary in extension/exe directory
+      - name: Make sure extension/exe directory exists
+        run: |
+          mkdir -p extension/exe
+
+      - name: Copy binary to extension (non-Windows)
+        run: |
+          cp dist/run extension/exe/run
+        if: matrix.os != 'windows-latest'
+
+      - name: Copy binary to extension (Windows)
+        run: |
+          cp dist/run.exe extension/exe/run.exe
+        if: matrix.os == 'windows-latest'
+
+      # 1.8 Set permissions and upload binary
+      - name: Set permissions
+        run: |
+          chmod 777 extension/exe/run
+
+      - uses: actions/upload-artifact@v2
+        if: matrix.os == 'macos-latest' && matrix.arch == 'x64'
+        with:
+          name: macOSBinary
+          path: extension/exe/run
+      
+      - uses: actions/upload-artifact@v2
+        if: matrix.os == 'ubuntu-20.04' && matrix.arch == 'x64'
+        with:
+          name: LinuxBinary
+          path: extension/exe/run
+      
+      - uses: actions/upload-artifact@v2
+        if: matrix.os == 'windows-latest' && matrix.arch == 'x64'
+        with:
+          name: WindowsBinary
+          path: extension/exe/run.exe
+
+      # 2. Install npm dependencies
+      - name: Use Node.js 19.0.0
+        uses: actions/setup-node@v3
+        with:
+          node-version: 19.0.0
+
+      - name: Cache extension node_modules
+        uses: actions/cache@v2
+        with:
+          path: extension/node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('extension/package-lock.json') }}
+
+      - name: Cache react-app node_modules
+        uses: actions/cache@v2
+        with:
+          path: extension/react-app/node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('extension/react-app/package-lock.json') }}
+
+      - name: Install extension Dependencies
+        run: |
+          cd extension
+          npm ci
+
+      - name: Add a copy of continuedev to the extension
+        run: |
+          cd extension
+          cp -r ../server/continuedev continuedev
+
+      - name: Install react-app Dependencies
+        run: |
+          cd extension/react-app
+          npm ci --legacy-peer-deps
+
+      # 3. Run tests for the extension
+      - name: Prepare the extension
+        run: |
+          cd extension
+          npm run prepackage
+
+      - name: Install Xvfb for Linux and run tests
+        run: |
+          sudo apt-get install -y xvfb # Install Xvfb
+          Xvfb :99 & # Start Xvfb
+          export DISPLAY=:99 # Export the display number to the environment
+          cd extension
+          npm run test
+        if: matrix.os == 'ubuntu-20.04'
+
+      - name: Run extension tests
+        run: |
+          cd extension
+          npm run test
+        if: matrix.os != 'ubuntu-20.04'
+
+      # 3.5 If on Apple Silicon, download the binary from S3 bucket
+      - name: Remove existing binary
+        if: matrix.os == 'macos-latest' && matrix.arch == 'arm64'
+        run: rm extension/exe/run
+
+      - name: Download Apple Silicon Binary
+        if: matrix.os == 'macos-latest' && matrix.arch == 'arm64'
+        run: curl -o extension/exe/run https://continue-server-binaries.s3.us-west-1.amazonaws.com/apple-silicon/run
+
+      - name: Set permissions
+        run: |
+          chmod -R 777 extension/exe/run
+
+      # 4. Package the extension
+      - shell: pwsh
+        run: echo "target=${{ matrix.platform }}-${{ matrix.arch }}" >> $env:GITHUB_ENV
+      - run: cd extension && npx vsce package --pre-release --target ${{ env.target }}
+
+      # 5. Upload the .vsix as an artifact
+      - uses: actions/upload-artifact@v2
+        with:
+          name: ${{ env.target }}
+          path: "extension/*.vsix"
+
+      # 6. Upload continue.log as an artifact for debugging of the workflow
+      - name: Upload continue.log
+        uses: actions/upload-artifact@v2
+        with:
+          name: continue-log
+          path: /home/runner/.continue/continue.log
+        if: always()
+
+  publish:
+    runs-on: ubuntu-20.04
+    needs: build
+    permissions:
+      contents: write
+    steps:
+      # 0. Setup git
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Set up Git
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+
+      - name: Pull latest changes
+        run: git pull origin preview
+
+      # 1. Download the artifacts
+      - uses: actions/download-artifact@v3
+
+      # 2. Publish the extension to VS Code Marketplace
+      - run: |
+          cd extension
+          npx vsce publish --pre-release --packagePath ../alpine-x64/*.vsix ../darwin-arm64/*.vsix ../darwin-x64/*.vsix ../linux-arm64/*.vsix ../linux-armhf/*.vsix ../linux-x64/*.vsix ../win32-ia32/*.vsix ../win32-x64/*.vsix ../win32-arm64/*.vsix
+        env:
+          VSCE_PAT: ${{ secrets.VSCE_TOKEN }}
+
+      # 3. Publish the extension to Open VSX Registry
+      - name: Publish (Open VSX Registry)
+        run: |
+          cd extension
+          npx ovsx publish --pre-release -p ${{ secrets.VSX_REGISTRY_TOKEN }} --packagePath ../alpine-x64/*.vsix ../darwin-arm64/*.vsix ../darwin-x64/*.vsix ../linux-arm64/*.vsix ../linux-armhf/*.vsix ../linux-x64/*.vsix ../win32-ia32/*.vsix ../win32-x64/*.vsix ../win32-arm64/*.vsix
+
+      # 4. Update the package.json version and push changes
+      - name: Update version in package.json
+        run: |
+          cd extension
+          npm version patch
+
+      - name: Commit changes
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git commit -am "ci: 💚 Update package.json version [skip ci]"
+
+      - name: Push changes
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: ${{ github.ref }}

@@ -91,7 +91,7 @@ export const H3 = styled.h3`
   width: fit-content;
 `;
 
-export const TextInput = styled.input.attrs({ type: "text" })`
+export const Input = styled.input`
   width: 100%;
   padding: 8px 12px;
   margin: 8px 0;
@@ -104,6 +104,10 @@ export const TextInput = styled.input.attrs({ type: "text" })`
 
   &:focus {
     background: ${secondaryDark};
+  }
+
+  &:invalid {
+    outline: 1px solid red;
   }
 `;
 

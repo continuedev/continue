@@ -22,6 +22,39 @@ function getExtensionVersionInt(versionString: string): number {
   return parseInt(versionString.replace(/\./g, ""));
 }
 
+function addPythonPathForConfig() {
+  // Add to python.analysis.extraPaths global setting so config.py gets LSP
+
+  if (
+    vscode.workspace.workspaceFolders?.some((folder) =>
+      folder.uri.fsPath.endsWith("continue")
+    )
+  ) {
+    // Not for the Continue repo
+    return;
+  }
+
+  const pythonConfig = vscode.workspace.getConfiguration("python");
+  const analysisPaths = pythonConfig.get<string[]>("analysis.extraPaths");
+  const autoCompletePaths = pythonConfig.get<string[]>(
+    "autoComplete.extraPaths"
+  );
+  const pathToAdd = extensionContext?.extensionPath;
+  if (analysisPaths && pathToAdd && !analysisPaths.includes(pathToAdd)) {
+    analysisPaths.push(pathToAdd);
+    pythonConfig.update("analysis.extraPaths", analysisPaths);
+  }
+
+  if (
+    autoCompletePaths &&
+    pathToAdd &&
+    !autoCompletePaths.includes(pathToAdd)
+  ) {
+    autoCompletePaths.push(pathToAdd);
+    pythonConfig.update("autoComplete.extraPaths", autoCompletePaths);
+  }
+}
+
 export async function activateExtension(context: vscode.ExtensionContext) {
   extensionContext = context;
   console.log("Using Continue version: ", getExtensionVersion());
@@ -38,6 +71,7 @@ export async function activateExtension(context: vscode.ExtensionContext) {
   registerAllCodeLensProviders(context);
   registerAllCommands(context);
   registerQuickFixProvider();
+  addPythonPathForConfig();
 
   // Start the server
   const sessionIdPromise = (async () => {

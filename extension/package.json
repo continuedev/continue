@@ -1,7 +1,7 @@
 {
   "name": "continue",
-  "icon": "media/terminal-continue.png",
-  "version": "0.0.409",
+  "icon": "media/icon.png",
+  "version": "0.1.14",
   "repository": {
     "type": "git",
     "url": "https://github.com/continuedev/continue"
@@ -17,12 +17,16 @@
   "homepage": "https://continue.dev",
   "qna": "https://github.com/continuedev/continue/issues/new/choose",
   "license": "Apache-2.0",
-  "displayName": "Continue - Use Code Llama in VS Code",
+  "displayName": "Continue - CodeLlama, GPT-4, and more",
   "pricing": "Free",
-  "description": "Open-source copilot for software development - bring the power of ChatGPT to your IDE",
+  "description": "Open-source autopilot for software development - bring the power of ChatGPT to your IDE",
   "publisher": "Continue",
   "engines": {
     "vscode": "^1.67.0"
+  },
+  "galleryBanner": {
+    "color": "#1E1E1E",
+    "theme": "dark"
   },
   "categories": [
     "Programming Languages",
@@ -209,7 +213,8 @@
     "build-test": "tsc && node esbuild.test.mjs",
     "test": "npm run build-test && node ./out/test-runner/runTestOnVSCodeHost.js",
     "prepackage": "node scripts/prepackage.js",
-    "package": "node scripts/package.js"
+    "package": "node scripts/package.js",
+    "package:pre-release": "node scripts/package.js --pre-release"
   },
   "devDependencies": {
     "@nestjs/common": "^8.4.7",

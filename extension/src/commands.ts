@@ -76,6 +76,7 @@ const commandsMap: { [command: string]: (...args: any) => any } = {
     vscode.commands.executeCommand("workbench.action.toggleAuxiliaryBar");
   },
   "continue.quickTextEntry": async () => {
+    addHighlightedCodeToContext(true);
     const text = await vscode.window.showInputBox({
       placeHolder: "Ask a question or enter a slash command",
       title: "Continue Quick Input",
@@ -99,6 +100,20 @@ const commandsMap: { [command: string]: (...args: any) => any } = {
   "continue.debugTerminal": async () => {
     vscode.commands.executeCommand("continue.continueGUIView.focus");
     await ideProtocolClient.debugTerminal();
+  },
+
+  // Commands without keyboard shortcuts
+  "continue.addModel": () => {
+    vscode.commands.executeCommand("continue.continueGUIView.focus");
+    debugPanelWebview?.postMessage({
+      type: "addModel",
+    });
+  },
+  "continue.openSettingsUI": () => {
+    vscode.commands.executeCommand("continue.continueGUIView.focus");
+    debugPanelWebview?.postMessage({
+      type: "openSettings",
+    });
   },
 };
 

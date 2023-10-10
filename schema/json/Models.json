@@ -1,6 +1,6 @@
 {
   "title": "Models",
-  "$ref": "#/definitions/src__continuedev__core__models__Models",
+  "$ref": "#/definitions/continuedev__core__models__Models",
   "definitions": {
     "LLM": {
       "title": "LLM",
@@ -88,7 +88,7 @@
       "type": "object",
       "properties": {}
     },
-    "src__continuedev__core__models__Models": {
+    "continuedev__core__models__Models": {
       "title": "Models",
       "description": "Main class that holds the current model configuration",
       "type": "object",

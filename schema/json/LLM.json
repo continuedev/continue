@@ -1,8 +1,8 @@
 {
   "title": "LLM",
-  "$ref": "#/definitions/src__continuedev__libs__llm__LLM",
+  "$ref": "#/definitions/continuedev__libs__llm__LLM",
   "definitions": {
-    "src__continuedev__libs__llm__LLM": {
+    "continuedev__libs__llm__LLM": {
       "title": "LLM",
       "type": "object",
       "properties": {

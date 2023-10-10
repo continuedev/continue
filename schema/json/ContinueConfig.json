@@ -1,6 +1,6 @@
 {
   "title": "ContinueConfig",
-  "$ref": "#/definitions/src__continuedev__core__config__ContinueConfig",
+  "$ref": "#/definitions/continuedev__core__config__ContinueConfig",
   "definitions": {
     "FunctionCall": {
       "title": "FunctionCall",
@@ -177,7 +177,7 @@
         "model"
       ]
     },
-    "src__continuedev__core__models__ContinueSDK": {
+    "continuedev__core__models__ContinueSDK": {
       "title": "ContinueSDK",
       "type": "object",
       "properties": {}
@@ -208,7 +208,7 @@
           }
         },
         "sdk": {
-          "$ref": "#/definitions/src__continuedev__core__models__ContinueSDK"
+          "$ref": "#/definitions/continuedev__core__models__ContinueSDK"
         }
       },
       "required": [
@@ -271,7 +271,7 @@
       "type": "object",
       "properties": {}
     },
-    "src__continuedev__core__context__ContinueSDK": {
+    "continuedev__core__context__ContinueSDK": {
       "title": "ContinueSDK",
       "description": "To avoid circular imports",
       "type": "object",
@@ -362,7 +362,7 @@
           "description": "The ContinueSDK instance accessible by the ContextProvider",
           "allOf": [
             {
-              "$ref": "#/definitions/src__continuedev__core__context__ContinueSDK"
+              "$ref": "#/definitions/continuedev__core__context__ContinueSDK"
             }
           ]
         },
@@ -404,7 +404,7 @@
         "dynamic"
       ]
     },
-    "src__continuedev__core__config__ContinueConfig": {
+    "continuedev__core__config__ContinueConfig": {
       "title": "ContinueConfig",
       "description": "Continue can be deeply customized by editing the `ContinueConfig` object in `~/.continue/config.py` (`%userprofile%\\.continue\\config.py` for Windows) on your machine. This class is instantiated from the config file for every new session.",
       "type": "object",

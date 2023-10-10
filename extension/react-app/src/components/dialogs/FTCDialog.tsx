@@ -1,6 +1,6 @@
 import React, { useContext } from "react";
 import styled from "styled-components";
-import { Button, TextInput } from "..";
+import { Button, Input } from "..";
 import { useNavigate } from "react-router-dom";
 import { GUIClientContext } from "../../App";
 import { useDispatch } from "react-redux";
@@ -37,7 +37,7 @@ function FTCDialog() {
         OpenAIFreeTrial object.
       </p>
 
-      <TextInput
+      <Input
         type="text"
         placeholder="Enter your OpenAI API key"
         value={apiKey}
@@ -46,6 +46,7 @@ function FTCDialog() {
       <GridDiv>
         <Button
           onClick={() => {
+            dispatch(setShowDialog(false));
             navigate("/models");
           }}
         >
