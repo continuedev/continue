@@ -101,12 +101,17 @@ jobs:
       
       - name: Download Apple Silicon Binary
         if: matrix.os == 'macos-latest' && matrix.arch == 'arm64'
-        run: curl -o extension/exe/run https://s3.continue.dev/apple-silicon/run
+        run: curl -o extension/exe/run https://continue-server-binaries.s3.us-west-1.amazonaws.com/apple-silicon/run
 
       - name: Set permissions
         if: matrix.os == 'macos-latest' && matrix.arch == 'arm64'
         run: |
           chmod 777 extension/exe/run
+
+      - name: Check binary
+        if: matrix.os == 'macos-latest' && matrix.arch == 'arm64'
+        run: |
+          file extension/exe/run
 
       # 2. Install npm dependencies
       - name: Use Node.js 19.0.0
