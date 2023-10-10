@@ -17,9 +17,3 @@ When merging to `main`:
 - the version is bumped and this change is commited to main
 - at the end, all of the PyInstaller binaries are uploaded to the S3 bucket because they are needed for JetBrains still.
 - in the future, the Intellij extension will be built and uploaded to the marketplace here
-
-
-TODO:
-- Don't download the Apple Silicon binary from VS Code extension
-- Download the Apple Silicon binary from S3 bucket
-- Upload all of the PyInstaller binaries to S3 bucket (but only on main. Just make the change on preview so that they are artifacts and add the step but don't run it on preview)
