@@ -52,6 +52,9 @@ class CompletionOptions(ContinueBaseModel):
         None, description="The functions/tools to make available to the model."
     )
 
+class PromptTemplate(CompletionOptions):
+    prompt: str = Field(description="The prompt to be used for the completion.")
+    raw: bool = Field(False, description="Whether to use the raw prompt or not.")
 
 class LLM(ContinueBaseModel):
     title: Optional[str] = Field(
@@ -146,7 +149,7 @@ class LLM(ContinueBaseModel):
                 "description": "Set the timeout for each request to the LLM. If you are running a local LLM that takes a while to respond, you might want to set this to avoid timeouts."
             },
             "prompt_templates": {
-                "description": 'A dictionary of prompt templates that can be used to customize the behavior of the LLM in certain situations. For example, set the "edit" key in order to change the prompt that is used for the /edit slash command. Each value in the dictionary is a string templated in mustache syntax, and filled in at runtime with the variables specific to the situation. See the documentation for more information.'
+                "description": 'A dictionary of prompt templates that can be used to customize the behavior of the LLM in certain situations. For example, set the "edit" key in order to change the prompt that is used for the /edit slash command. Each value in the dictionary is a string templated in mustache syntax, and filled in at runtime with the variables specific to the situation OR an instance of the PromptTemplate class if you want to control other parameters. See the documentation for more information.'
             },
             "template_messages": {
                 "description": "A function that takes a list of messages and returns a prompt. This ensures that models like llama2, which are trained on specific chat formats, will always receive input in that format."
@@ -295,8 +298,8 @@ class LLM(ContinueBaseModel):
             yield chunk
             completion += chunk
 
-        # if log:
-        #     self.write_log(f"Completion: \n\n{completion}")
+        if log:
+            self.write_log(f"Completion: \n\n{completion}")
 
         dev_data_logger.capture(
             "tokens_generated",
@@ -347,8 +350,8 @@ class LLM(ContinueBaseModel):
 
         completion = await self._complete(prompt=prompt, options=options)
 
-        # if log:
-        #     self.write_log(f"Completion: \n\n{completion}")
+        if log:
+            self.write_log(f"Completion: \n\n{completion}")
 
         dev_data_logger.capture(
             "tokens_generated",
@@ -412,8 +415,8 @@ class LLM(ContinueBaseModel):
                 yield {"role": "assistant", "content": chunk}
                 completion += chunk
 
-        # if log:
-        #     self.write_log(f"Completion: \n\n{completion}")
+        if log:
+            self.write_log(f"Completion: \n\n{completion}")
 
         dev_data_logger.capture(
             "tokens_generated",

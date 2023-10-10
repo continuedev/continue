@@ -1,14 +1,14 @@
 import json
-from typing import Callable
+from typing import Any, Callable, Dict
 
 import aiohttp
 from pydantic import Field
 
 from ...core.main import ContinueCustomException
 from ..util.logging import logger
-from .base import LLM
+from .base import LLM, CompletionOptions
 from .prompts.chat import llama2_template_messages
-from .prompts.edit import simplified_edit_prompt
+from .prompts.edit import codellama_edit_prompt
 
 
 class Ollama(LLM):
@@ -37,11 +37,20 @@ class Ollama(LLM):
     template_messages: Callable = llama2_template_messages
 
     prompt_templates = {
-        "edit": simplified_edit_prompt,
+        "edit": codellama_edit_prompt,
     }
 
     class Config:
         arbitrary_types_allowed = True
+
+    def collect_args(self, options: CompletionOptions) -> Dict[str, Any]:
+        return {
+            "temperature": options.temperature,
+            "top_p": options.top_p,
+            "top_k": options.top_k,
+            "num_predict": options.max_tokens,
+            "stop": options.stop
+        }
 
     async def start(self, **kwargs):
         await super().start(**kwargs)
@@ -77,7 +86,7 @@ class Ollama(LLM):
                 "template": prompt,
                 "model": self.model,
                 "system": self.system_message,
-                "options": {"temperature": options.temperature},
+                "options": self.collect_args(options),
             },
             proxy=self.proxy,
         ) as resp:
