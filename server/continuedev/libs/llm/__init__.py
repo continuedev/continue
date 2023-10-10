@@ -10,5 +10,5 @@ from .openai_free_trial import OpenAIFreeTrial  # noqa: F401
 from .proxy_server import ProxyServer  # noqa: F401
 from .queued import QueuedLLM  # noqa: F401
 from .replicate import ReplicateLLM  # noqa: F401
-from .text_gen_interface import TextGenUI  # noqa: F401
+from .text_gen_webui import TextGenWebUI  # noqa: F401
 from .together import TogetherLLM  # noqa: F401

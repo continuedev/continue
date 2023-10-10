@@ -8,7 +8,7 @@ LLM_MODULES = [
     ("anthropic", "AnthropicLLM"),
     ("ggml", "GGML"),
     ("llamacpp", "LlamaCpp"),
-    ("text_gen_interface", "TextGenUI"),
+    ("text_gen_webui", "TextGenWebUI"),
     ("ollama", "Ollama"),
     ("replicate", "ReplicateLLM"),
     ("together", "TogetherLLM"),

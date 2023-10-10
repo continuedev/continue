@@ -56,6 +56,7 @@ MODEL_MODULE_NAMES = {
     "HuggingFaceInferenceAPI": "hf_inference_api",
     "HuggingFaceTGI": "hf_tgi",
     "GooglePaLMAPI": "google_palm_api",
+    "TextGenWebUI": "text_gen_webui"
 }
 
 

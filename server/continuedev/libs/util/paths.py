@@ -84,6 +84,8 @@ def migrateConfigFile(existing: str) -> Optional[str]:
         .replace("maybe_proxy_openai", "openai_free_trial")
         .replace("unused=", "saved=")
         .replace("medium=", "summarize=")
+        .replace("TextGenUI", "TextGenWebUI")
+        .replace("text_gen_interface", "text_gen_webui")
     )
     if migrated != existing:
         return migrated
