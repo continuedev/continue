@@ -53,23 +53,19 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Set up Python
-        if: matrix.os != 'macos-latest' || matrix.arch != 'arm64'
         uses: actions/setup-python@v4
         with:
           python-version: "3.10.8"
 
       - name: Install Pyinstaller
-        if: matrix.os != 'macos-latest' || matrix.arch != 'arm64'
         run: |
           pip install pyinstaller
 
       - name: Install Dependencies
-        if: matrix.os != 'macos-latest' || matrix.arch != 'arm64'
         run: |
           pip install -r server/requirements.txt
 
       - name: Build PyInstaller Executable
-        if: matrix.os != 'macos-latest' || matrix.arch != 'arm64'
         run: pyinstaller run.spec
 
       # 1.5 Place the binary in extension/exe directory
@@ -80,34 +76,18 @@ jobs:
       - name: Copy binary to extension (non-Windows)
         run: |
           cp dist/run extension/exe/run
-        if: matrix.os != 'windows-latest' && (matrix.os != 'macos-latest' || matrix.arch != 'arm64')
+        if: matrix.os != 'windows-latest'
 
       - name: Copy binary to extension (Windows)
         run: |
           cp dist/run.exe extension/exe/run.exe
         if: matrix.os == 'windows-latest'
 
-      # 1.75 If on Apple Silicon, download the binary from S3 bucket, using official S3 download action
-      
-      - name: Download Apple Silicon Binary
-        if: matrix.os == 'macos-latest' && matrix.arch == 'arm64'
-        run: curl -o extension/exe/run https://continue-server-binaries.s3.us-west-1.amazonaws.com/apple-silicon/run
-
-      - name: Install Rosetta
-        if: matrix.os == 'macos-latest' && matrix.arch == 'arm64'
-        run: softwareupdate --install-rosetta
-
-      # 1.8 Set permissions and check binary
+      # 1.8 Set permissions and upload binary
       - name: Set permissions
         run: |
           chmod 777 extension/exe/run
 
-      - name: Check binary
-        if: matrix.os == 'macos-latest' && matrix.arch == 'arm64'
-        run: |
-          file extension/exe/run
-
-      # 1.9 Upload the binary as an artifact
       - uses: actions/upload-artifact@v2
         if: matrix.os == 'macos-latest' && matrix.arch == 'x64'
         with:
@@ -179,6 +159,19 @@ jobs:
           cd extension
           npm run test
         if: matrix.os != 'ubuntu-20.04'
+
+      # 3.5 If on Apple Silicon, download the binary from S3 bucket
+      - name: Remove existing binary
+        if: matrix.os == 'macos-latest' && matrix.arch == 'arm64'
+        run: rm extension/exe/run
+
+      - name: Download Apple Silicon Binary
+        if: matrix.os == 'macos-latest' && matrix.arch == 'arm64'
+        run: curl -o extension/exe/run https://continue-server-binaries.s3.us-west-1.amazonaws.com/apple-silicon/run
+
+      - name: Set permissions
+        run: |
+          chmod -R 777 extension/exe/run
 
       # 4. Package the extension
       - shell: pwsh
