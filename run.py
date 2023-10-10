@@ -1,7 +1,7 @@
 import os
 import sys
 
-from continuedev.main import main
+from server.main import main
 
 if getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"):
     ca_bundle_path = os.path.join(sys._MEIPASS, "ca_bundle", "cacert.pem")

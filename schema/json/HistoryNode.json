@@ -1,6 +1,6 @@
 {
   "title": "HistoryNode",
-  "$ref": "#/definitions/src__continuedev__core__main__HistoryNode",
+  "$ref": "#/definitions/continuedev__core__main__HistoryNode",
   "definitions": {
     "FunctionCall": {
       "title": "FunctionCall",
@@ -171,7 +171,7 @@
         "content"
       ]
     },
-    "src__continuedev__core__main__HistoryNode": {
+    "continuedev__core__main__HistoryNode": {
       "title": "HistoryNode",
       "description": "A point in history, a list of which make up History",
       "type": "object",

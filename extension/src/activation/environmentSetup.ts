@@ -89,7 +89,10 @@ export function getExtensionVersion() {
 }
 
 // Returns whether a server of the current version is already running
-async function checkOrKillRunningServer(serverUrl: string): Promise<boolean> {
+async function checkOrKillRunningServer(
+  serverUrl: string,
+  deleteBinary: boolean
+): Promise<boolean> {
   const serverRunning = await checkServerRunning(serverUrl);
   let shouldKillAndReplace = true;
 
@@ -127,10 +130,13 @@ async function checkOrKillRunningServer(serverUrl: string): Promise<boolean> {
     if (fs.existsSync(serverVersionPath())) {
       fs.unlinkSync(serverVersionPath());
     }
-    // Also delete the server binary
-    const serverBinary = serverBinaryPath();
-    if (fs.existsSync(serverBinary)) {
-      fs.unlinkSync(serverBinary);
+
+    if (deleteBinary) {
+      // Optionally, delete the server binary
+      const serverBinary = serverBinaryPath();
+      if (fs.existsSync(serverBinary)) {
+        fs.unlinkSync(serverBinary);
+      }
     }
   }
 
@@ -144,6 +150,17 @@ function ensureDirectoryExistence(filePath: string) {
   }
   ensureDirectoryExistence(dirname);
   fs.mkdirSync(dirname);
+}
+
+function isPreviewExtension() {
+  // If the extension minor version is odd, it is a preview version
+  const extensionVersion = getExtensionVersion();
+  if (!extensionVersion || extensionVersion === "") {
+    return false;
+  }
+  const extensionVersionSplit = extensionVersion.split(".");
+  const extensionMinorVersion = extensionVersionSplit[1];
+  return parseInt(extensionMinorVersion) % 2 === 1;
 }
 
 export async function downloadFromS3(
@@ -187,24 +204,84 @@ export async function downloadFromS3(
   });
 }
 
-export async function startContinuePythonServer(redownload: boolean = true) {
-  // Check vscode settings
-  const manuallyRunningServer =
-    vscode.workspace
-      .getConfiguration("continue")
-      .get<boolean>("manuallyRunningServer") || false;
-  const serverUrl = getContinueServerUrl();
-  if (
-    (serverUrl !== "http://localhost:65432" &&
-      serverUrl !== "http://127.0.0.1:65432") ||
-    manuallyRunningServer
-  ) {
-    console.log("Continue server is being run manually, skipping start");
-    return;
-  }
+function includedBinaryPath(): string {
+  const extensionPath = getExtensionUri().fsPath;
+  return path.join(
+    extensionPath,
+    "exe",
+    `run${os.platform() === "win32" ? ".exe" : ""}`
+  );
+}
 
+function runExecutable(path: string) {
+  console.log("---- Starting Continue server ----");
+  let attempts = 0;
+  let maxAttempts = 5;
+  let delay = 1000; // Delay between each attempt in milliseconds
+
+  const spawnChild = () => {
+    const retry = (e: any) => {
+      attempts++;
+      console.log(`Error caught: ${e}.\n\nRetrying attempt ${attempts}...`);
+      setTimeout(spawnChild, delay);
+    };
+    try {
+      // NodeJS bug requires not using detached on Windows, otherwise windowsHide is ineffective
+      // Otherwise, detach is preferable
+      const windowsSettings = {
+        windowsHide: true,
+      };
+      const macLinuxSettings = {
+        detached: true,
+        stdio: "ignore",
+      };
+      const settings: any =
+        os.platform() === "win32" ? windowsSettings : macLinuxSettings;
+      // Spawn the server
+      const child = spawn(path, settings);
+
+      // Either unref to avoid zombie process, or listen to events because you can
+      if (os.platform() === "win32") {
+        child.stdout.on("data", (data: any) => {
+          console.log(`stdout: ${data}`);
+        });
+        child.stderr.on("data", (data: any) => {
+          console.log(`stderr: ${data}`);
+        });
+        child.on("error", (err: any) => {
+          if (attempts < maxAttempts) {
+            retry(err);
+          } else {
+            console.error("Failed to start subprocess.", err);
+          }
+        });
+        child.on("exit", (code: any, signal: any) => {
+          console.log("Subprocess exited with code", code, signal);
+        });
+        child.on("close", (code: any, signal: any) => {
+          console.log("Subprocess closed with code", code, signal);
+        });
+      } else {
+        child.unref();
+      }
+    } catch (e: any) {
+      if (attempts < maxAttempts) {
+        retry(e);
+      } else {
+        throw e;
+      }
+    }
+  };
+
+  spawnChild();
+
+  // Write the current version of vscode extension to a file called server_version.txt
+  fs.writeFileSync(serverVersionPath(), getExtensionVersion());
+}
+
+async function setupWithS3Download(redownload: boolean, serverUrl: string) {
   // Check if server is already running
-  if (redownload && (await checkOrKillRunningServer(serverUrl))) {
+  if (redownload && (await checkOrKillRunningServer(serverUrl, true))) {
     console.log("Continue server already running");
     return;
   }
@@ -263,7 +340,7 @@ export async function startContinuePythonServer(redownload: boolean = true) {
         try {
           await downloadFromS3(
             bucket,
-            fileName,
+            `${isPreviewExtension() ? "preview/" : ""}${fileName}`,
             destination,
             "us-west-1",
             false
@@ -285,7 +362,7 @@ export async function startContinuePythonServer(redownload: boolean = true) {
           try {
             await downloadFromS3(
               bucket,
-              fileName,
+              `${isPreviewExtension() ? "preview/" : ""}${fileName}`,
               destination,
               "us-west-1",
               true
@@ -342,67 +419,44 @@ export async function startContinuePythonServer(redownload: boolean = true) {
   }
 
   // Run the executable
-  console.log("---- Starting Continue server ----");
-  let attempts = 0;
-  let maxAttempts = 5;
-  let delay = 1000; // Delay between each attempt in milliseconds
+  runExecutable(destination);
+}
 
-  const spawnChild = () => {
-    const retry = (e: any) => {
-      attempts++;
-      console.log(`Error caught: ${e}.\n\nRetrying attempt ${attempts}...`);
-      setTimeout(spawnChild, delay);
-    };
-    try {
-      // NodeJS bug requires not using detached on Windows, otherwise windowsHide is ineffective
-      // Otherwise, detach is preferable
-      const windowsSettings = {
-        windowsHide: true,
-      };
-      const macLinuxSettings = {
-        detached: true,
-        stdio: "ignore",
-      };
-      const settings: any =
-        os.platform() === "win32" ? windowsSettings : macLinuxSettings;
-      // Spawn the server
-      const child = spawn(destination, settings);
+export async function startContinuePythonServer(redownload: boolean = true) {
+  // Check vscode settings for whether server is being run manually
+  const manuallyRunningServer =
+    vscode.workspace
+      .getConfiguration("continue")
+      .get<boolean>("manuallyRunningServer") || false;
+  const serverUrl = getContinueServerUrl();
+  if (
+    (serverUrl !== "http://localhost:65432" &&
+      serverUrl !== "http://127.0.0.1:65432") ||
+    manuallyRunningServer
+  ) {
+    console.log("Continue server is being run manually, skipping start");
+    return;
+  }
 
-      // Either unref to avoid zombie process, or listen to events because you can
-      if (os.platform() === "win32") {
-        child.stdout.on("data", (data: any) => {
-          console.log(`stdout: ${data}`);
-        });
-        child.stderr.on("data", (data: any) => {
-          console.log(`stderr: ${data}`);
-        });
-        child.on("error", (err: any) => {
-          if (attempts < maxAttempts) {
-            retry(err);
-          } else {
-            console.error("Failed to start subprocess.", err);
-          }
-        });
-        child.on("exit", (code: any, signal: any) => {
-          console.log("Subprocess exited with code", code, signal);
-        });
-        child.on("close", (code: any, signal: any) => {
-          console.log("Subprocess closed with code", code, signal);
-        });
-      } else {
-        child.unref();
-      }
-    } catch (e: any) {
-      if (attempts < maxAttempts) {
-        retry(e);
-      } else {
-        throw e;
-      }
-    }
-  };
+  // If on Apple Silicon, download binary from S3
+  // const isAppleSilicon = os.platform() === "darwin" && os.arch() === "arm64";
+  // if (isAppleSilicon) {
+  //   await setupWithS3Download(redownload, serverUrl);
+  //   return;
+  // }
 
-  spawnChild();
+  // Check if current server version is already running
+  if (redownload && (await checkOrKillRunningServer(serverUrl, false))) {
+    console.log("Continue server already running");
+    return;
+  }
 
-  // Write the current version of vscode extension to a file called server_version.txt
-  fs.writeFileSync(serverVersionPath(), getExtensionVersion());
+  // Otherwise, use the binary installed with the extension
+  if (!fs.existsSync(includedBinaryPath())) {
+    throw new Error(
+      `Continue server binary not found at ${includedBinaryPath()}`
+    );
+  }
+
+  runExecutable(includedBinaryPath());
 }

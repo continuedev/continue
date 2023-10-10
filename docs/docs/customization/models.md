@@ -27,7 +27,7 @@ Open-Source Models (not local)
 In `config.py`, you'll find the `models` property:
 
 ```python
-from continuedev.src.continuedev.core.models import Models
+from continuedev.core.models import Models
 
 config = ContinueConfig(
     ...
@@ -53,7 +53,7 @@ If by chance the provider has the exact same API interface as OpenAI, the `OpenA
 If you'd like to use OpenAI models but are concerned about privacy, you can use the Azure OpenAI service, which is GDPR and HIPAA compliant. After applying for access [here](https://azure.microsoft.com/en-us/products/ai-services/openai-service), you will typically hear back within only a few days. Once you have access, instantiate the model like so:
 
 ```python
-from continuedev.src.continuedev.libs.llm.openai import OpenAI
+from continuedev.libs.llm.openai import OpenAI
 
 config = ContinueConfig(
     ...
@@ -100,8 +100,8 @@ def template_alpaca_messages(msgs: List[Dict[str, str]]) -> str:
 It can then be used like this:
 
 ```python
-from continuedev.src.continuedev.libs.llm.chat import template_alpaca_messages
-from continuedev.src.continuedev.libs.llm.ollama import Ollama
+from continuedev.libs.llm.chat import template_alpaca_messages
+from continuedev.libs.llm.ollama import Ollama
 ...
 config=ContinueConfig(
     ...
@@ -114,7 +114,7 @@ config=ContinueConfig(
 )
 ```
 
-This exact function and a few other default implementations are available in [`continuedev.src.continuedev.libs.llm.prompts.chat`](https://github.com/continuedev/continue/blob/main/continuedev/src/continuedev/libs/llm/prompts/chat.py).
+This exact function and a few other default implementations are available in [`continuedev.libs.llm.prompts.chat`](https://github.com/continuedev/continue/blob/main/continuedev/src/continuedev/libs/llm/prompts/chat.py).
 
 ## Customizing the /edit Prompt
 
@@ -139,7 +139,7 @@ Output nothing except for the code. No code block, no English explanation, no st
 It can then be used like this:
 
 ```python
-from continuedev.src.continuedev.libs.llm.ollama import Ollama
+from continuedev.libs.llm.ollama import Ollama
 ...
 config=ContinueConfig(
     ...
@@ -154,4 +154,4 @@ config=ContinueConfig(
 )
 ```
 
-A few pre-made templates are available in [`continuedev.src.continuedev.libs.llm.prompts.edit`](https://github.com/continuedev/continue/blob/main/continuedev/src/continuedev/libs/llm/prompts/edit.py).
+A few pre-made templates are available in [`continuedev.libs.llm.prompts.edit`](https://github.com/continuedev/continue/blob/main/continuedev/src/continuedev/libs/llm/prompts/edit.py).

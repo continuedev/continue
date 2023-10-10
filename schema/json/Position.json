@@ -1,8 +1,8 @@
 {
   "title": "Position",
-  "$ref": "#/definitions/src__continuedev__models__main__Position",
+  "$ref": "#/definitions/continuedev__models__main__Position",
   "definitions": {
-    "src__continuedev__models__main__Position": {
+    "continuedev__models__main__Position": {
       "title": "Position",
       "type": "object",
       "properties": {

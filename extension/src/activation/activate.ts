@@ -22,6 +22,39 @@ function getExtensionVersionInt(versionString: string): number {
   return parseInt(versionString.replace(/\./g, ""));
 }
 
+function addPythonPathForConfig() {
+  // Add to python.analysis.extraPaths global setting so config.py gets LSP
+
+  if (
+    vscode.workspace.workspaceFolders?.some((folder) =>
+      folder.uri.fsPath.endsWith("continue")
+    )
+  ) {
+    // Not for the Continue repo
+    return;
+  }
+
+  const pythonConfig = vscode.workspace.getConfiguration("python");
+  const analysisPaths = pythonConfig.get<string[]>("analysis.extraPaths");
+  const autoCompletePaths = pythonConfig.get<string[]>(
+    "autoComplete.extraPaths"
+  );
+  const pathToAdd = extensionContext?.extensionPath;
+  if (analysisPaths && pathToAdd && !analysisPaths.includes(pathToAdd)) {
+    analysisPaths.push(pathToAdd);
+    pythonConfig.update("analysis.extraPaths", analysisPaths);
+  }
+
+  if (
+    autoCompletePaths &&
+    pathToAdd &&
+    !autoCompletePaths.includes(pathToAdd)
+  ) {
+    autoCompletePaths.push(pathToAdd);
+    pythonConfig.update("autoComplete.extraPaths", autoCompletePaths);
+  }
+}
+
 export async function activateExtension(context: vscode.ExtensionContext) {
   extensionContext = context;
   console.log("Using Continue version: ", getExtensionVersion());
@@ -33,39 +66,12 @@ export async function activateExtension(context: vscode.ExtensionContext) {
   } catch (e) {
     console.log("Error getting workspace folder: ", e);
   }
-  // Before anything else, check whether this is an out-of-date version of the extension
-  // Do so by grabbing the package.json off of the GitHub repository for now.
-  fetch(PACKAGE_JSON_RAW_GITHUB_URL)
-    .then(async (res) => res.json())
-    .then((packageJson) => {
-      const n1 = getExtensionVersionInt(packageJson.version);
-      const n2 = getExtensionVersionInt(getExtensionVersion());
-      if (Math.abs(n1 - n2) > 1) {
-        // Accept up to 1 version difference
-        vscode.window.showInformationMessage(
-          `You are using an out-of-date version of the Continue extension. Please update to the latest version.`
-        );
-      }
-    })
-    .catch((e) => console.log("Error checking for extension updates: ", e));
-
-  // Add to python.analysis.extraPaths global setting
-  // const pythonConfig = vscode.workspace.getConfiguration("python");
-  // const extraPaths = pythonConfig.get<string[]>("analysis.extraPaths");
-  // const pathToAdd = path.join(os.homedir(), ".continue", "server");
-  // if (extraPaths) {
-  //   if (!extraPaths.includes(pathToAdd)) {
-  //     extraPaths.push(pathToAdd);
-  //     pythonConfig.update("analysis.extraPaths", extraPaths);
-  //   }
-  // } else {
-  //   pythonConfig.update("analysis.extraPaths", [pathToAdd]);
-  // }
 
   // Register commands and providers
   registerAllCodeLensProviders(context);
   registerAllCommands(context);
   registerQuickFixProvider();
+  addPythonPathForConfig();
 
   // Start the server
   const sessionIdPromise = (async () => {

@@ -20,7 +20,7 @@
       "name": "Pytest",
       "type": "python",
       "request": "launch",
-      "program": "continuedev/src/continuedev/tests/llm_test.py",
+      "program": "server/tests/llm_test.py",
       "console": "integratedTerminal",
       "justMyCode": true,
       "subProcess": true
@@ -29,21 +29,22 @@
       "name": "Reference",
       "type": "python",
       "request": "launch",
-      "module": "continuedev.src.continuedev.models.reference.generate",
+      "module": "server.continuedev.models.reference.generate",
       "justMyCode": true
     },
     {
       "name": "Server",
       "type": "python",
       "request": "launch",
-      "module": "continuedev.src.continuedev.__main__",
+      "module": "server.continuedev.__main__",
       "args": [
         "--port",
         "8001"
         // "--meilisearch-url", "http://localhost:7701"
       ],
       "justMyCode": false,
-      "subProcess": false
+      "subProcess": false,
+      "timeout": 10000
       // Does it need a build task?
       // What about a watch task? - type errors?
     },
@@ -51,8 +52,8 @@
       "name": "Headless",
       "type": "python",
       "request": "launch",
-      "module": "continuedev.headless",
-      "args": ["--config", "continuedev/config.py"],
+      "module": "server.continuedev.headless",
+      "args": ["--config", "server/continuedev/config.py"],
       "justMyCode": false,
       "subProcess": false
     },

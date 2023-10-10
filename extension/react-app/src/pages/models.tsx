@@ -51,9 +51,6 @@ function Models() {
             icon={modelInfo.icon}
             refUrl={`https://continue.dev/docs/reference/Models/${modelInfo.class.toLowerCase()}`}
             onClick={(e) => {
-              if ((e.target as any).closest("a")) {
-                return;
-              }
               navigate(`/modelconfig/${name}`);
             }}
           />

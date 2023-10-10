@@ -10,9 +10,10 @@ export const vscBackgroundTransparent = "#1e1e1ede";
 export const buttonColor = "#1bbe84";
 export const buttonColorHover = "#1bbe84a8";
 
-export const secondaryDark = "var(--vscode-list-hoverBackground)";
-export const vscBackground = "var(--vscode-editor-background)";
-export const vscForeground = "var(--vscode-editor-foreground)";
+export const secondaryDark =
+  "var(--vscode-list-hoverBackground, rgb(45 45 45))";
+export const vscBackground = "var(--vscode-editor-background, rgb(30 30 30))";
+export const vscForeground = "var(--vscode-editor-foreground, white)";
 
 export const Button = styled.button`
   padding: 10px 12px;
@@ -92,7 +93,7 @@ export const H3 = styled.h3`
   width: fit-content;
 `;
 
-export const TextInput = styled.input.attrs({ type: "text" })`
+export const Input = styled.input`
   width: 100%;
   padding: 8px 12px;
   margin: 8px 0;
@@ -105,6 +106,10 @@ export const TextInput = styled.input.attrs({ type: "text" })`
 
   &:focus {
     background: ${secondaryDark};
+  }
+
+  &:invalid {
+    outline: 1px solid red;
   }
 `;
 

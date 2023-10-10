@@ -148,32 +148,6 @@ class IdeProtocolClient {
       const filepath = event.uri.fsPath;
       const contents = event.getText();
       this.messenger?.send("fileSaved", { filepath, contents });
-
-      if (event.fileName.endsWith("config.py")) {
-        if (
-          this.context.globalState.get<boolean>(
-            "continue.showConfigInfoMessage"
-          ) !== false
-        ) {
-          vscode.window
-            .showInformationMessage(
-              "Reload the VS Code window for your changes to the Continue config to take effect.",
-              "Reload",
-              "Don't show again"
-            )
-            .then((selection) => {
-              if (selection === "Don't show again") {
-                // Get the global state
-                context.globalState.update(
-                  "continue.showConfigInfoMessage",
-                  false
-                );
-              } else if (selection === "Reload") {
-                vscode.commands.executeCommand("workbench.action.reloadWindow");
-              }
-            });
-        }
-      }
     });
 
     // Setup listeners for any selection changes in open editors
