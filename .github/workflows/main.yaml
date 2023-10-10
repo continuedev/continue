@@ -96,7 +96,7 @@ jobs:
           path: extension/exe/run
       
       - uses: actions/upload-artifact@v2
-        if: matrix.os == 'ubuntu-20.04' && matrix.arch == 'x64'
+        if: matrix.os == 'ubuntu-20.04' && matrix.arch == 'x64' && matrix.platform == 'linux'
         with:
           name: LinuxBinary
           path: extension/exe/run
