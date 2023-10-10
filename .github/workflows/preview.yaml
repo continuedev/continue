@@ -106,10 +106,22 @@ jobs:
 
       # 1.9 Upload the binary as an artifact
       - uses: actions/upload-artifact@v2
-        if: matrix.os != 'macos-latest' || matrix.arch != 'arm64'
+        if: matrix.os == 'macos-latest' && matrix.arch == 'x64'
         with:
-          name: ${{ matrix.os }}Binary
+          name: macOSBinary
           path: extension/exe/run
+      
+      - uses: actions/upload-artifact@v2
+        if: matrix.os == 'ubuntu-20.04' && matrix.arch == 'x64'
+        with:
+          name: LinuxBinary
+          path: extension/exe/run
+      
+      - uses: actions/upload-artifact@v2
+        if: matrix.os == 'windows-latest' && matrix.arch == 'x64'
+        with:
+          name: WindowsBinary
+          path: extension/exe/run.exe
 
       # 2. Install npm dependencies
       - name: Use Node.js 19.0.0
