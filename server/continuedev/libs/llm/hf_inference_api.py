@@ -5,7 +5,7 @@ from pydantic import Field
 
 from .base import LLM, CompletionOptions
 from .prompts.chat import llama2_template_messages
-from .prompts.edit import simplified_edit_prompt
+from .prompts.edit import codellama_edit_prompt
 
 
 class HuggingFaceInferenceAPI(LLM):
@@ -41,7 +41,7 @@ class HuggingFaceInferenceAPI(LLM):
     ] = llama2_template_messages
 
     prompt_templates = {
-        "edit": simplified_edit_prompt,
+        "edit": codellama_edit_prompt,
     }
 
     class Config:

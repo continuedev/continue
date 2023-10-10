@@ -159,6 +159,11 @@ export interface ModelPackage {
   dimensions?: PackageDimension[];
 }
 
+enum EditPromptTemplates {
+  "codellama" = "codellama_edit_prompt",
+  "alpaca" = "alpaca_edit_prompt",
+}
+
 enum ChatTemplates {
   "alpaca" = "template_alpaca_messages",
   "llama2" = "llama2_template_messages",
@@ -175,6 +180,9 @@ const codeLlamaInstruct: ModelPackage = {
     model: "codellama:7b-instruct",
     context_length: 2048,
     template_messages: ChatTemplates.llama2,
+    prompt_templates: {
+      "edit": EditPromptTemplates.codellama
+    }
   },
   icon: "meta.svg",
   dimensions: [
@@ -208,6 +216,9 @@ const llama2Chat: ModelPackage = {
     model: "llama2:7b-chat",
     context_length: 2048,
     template_messages: ChatTemplates.llama2,
+    prompt_templates: {
+      "edit": EditPromptTemplates.codellama
+    }
   },
   icon: "meta.svg",
   dimensions: [
@@ -242,6 +253,9 @@ const wizardCoder: ModelPackage = {
     model: "wizardcoder:7b-python",
     context_length: 2048,
     template_messages: ChatTemplates.alpaca,
+    prompt_templates: {
+      "edit": EditPromptTemplates.alpaca
+    }
   },
   icon: "wizardlm.png",
   dimensions: [
@@ -274,6 +288,9 @@ const phindCodeLlama: ModelPackage = {
     model: "phind-codellama",
     context_length: 2048,
     template_messages: ChatTemplates.llama2,
+    prompt_templates: {
+      "edit": EditPromptTemplates.codellama
+    }
   },
 };
 
@@ -286,6 +303,9 @@ const mistral: ModelPackage = {
     model: "mistral",
     context_length: 2048,
     template_messages: ChatTemplates.llama2,
+    prompt_templates: {
+      "edit": EditPromptTemplates.codellama
+    }
   },
   icon: "mistral.png",
 };
@@ -299,6 +319,9 @@ const sqlCoder: ModelPackage = {
     model: "sqlcoder",
     context_length: 2048,
     template_messages: ChatTemplates.sqlcoder,
+    prompt_templates: {
+      "edit": EditPromptTemplates.codellama
+    }
   },
   dimensions: [
     {
@@ -326,6 +349,9 @@ const codeup: ModelPackage = {
     model: "codeup",
     context_length: 2048,
     template_messages: ChatTemplates.llama2,
+    prompt_templates: {
+      "edit": EditPromptTemplates.alpaca
+    }
   },
 };
 
