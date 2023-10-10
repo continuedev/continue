@@ -61,7 +61,6 @@ const BottomMessageDiv = styled.div<{ displayOnBottom: boolean }>`
   z-index: 100;
   box-shadow: 0px 0px 2px 0px ${vscForeground};
   max-height: 35vh;
-  overflow: scroll;
 `;
 
 const Footer = styled.footer`

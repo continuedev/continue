@@ -438,7 +438,7 @@ export async function startContinuePythonServer(redownload: boolean = true) {
     return;
   }
 
-  // Check if on Apple Silicon, or if the exe folder is empty - have to download binary from S3
+  // If on Apple Silicon, download binary from S3
   // const isAppleSilicon = os.platform() === "darwin" && os.arch() === "arm64";
   // if (isAppleSilicon) {
   //   await setupWithS3Download(redownload, serverUrl);
