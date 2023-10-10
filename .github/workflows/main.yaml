@@ -6,58 +6,50 @@ on:
       - main
 
 jobs:
-  # pypi-deployment:
-  #   runs-on: ubuntu-20.04
-  #   permissions:
-  #     contents: write
-  #   steps:
-  #     - name: Check out code
-  #       uses: actions/checkout@v2
-
-  #     - name: Set up Python
-  #       uses: actions/setup-python@v4
-  #       with:
-  #         python-version: "3.10.8"
-
-  #     - name: Install dependencies
-  #       run: |
-  #         python -m pip install --upgrade pip
-  #         pip install poetry
-
-  #     - name: Install project dependencies
-  #       run: cd server && poetry install
-
-  #     - name: Configure Poetry Token
-  #       run: cd server && poetry config pypi-token.pypi ${{ secrets.PYPI_API_TOKEN }}
-
-  #     - name: Bump the version
-  #       run: cd server && poetry version patch
-
-  #     - name: Build and publish the package
-  #       run: cd server && poetry publish --build
-
-  #     - name: Commit changes
-  #       run: |
-  #         git config --local user.email "action@github.com"
-  #         git config --local user.name "GitHub Action"
-  #         git commit -am "ci: 🏷 Update PyPI version [skip ci]"
-
-  #     - name: Push changes
-  #       uses: ad-m/github-push-action@master
-  #       with:
-  #         github_token: ${{ secrets.GITHUB_TOKEN }}
-  #         branch: ${{ github.ref }}
-
-  pyinstaller:
+  build:
     strategy:
       matrix:
-        os: [windows-latest, ubuntu-20.04, macos-latest]
-
+        include:
+          - os: windows-latest
+            platform: win32
+            arch: x64
+            npm_config_arch: x64
+          - os: windows-latest
+            platform: win32
+            arch: ia32
+            npm_config_arch: ia32
+          - os: windows-latest
+            platform: win32
+            arch: arm64
+            npm_config_arch: arm
+          - os: ubuntu-20.04
+            platform: linux
+            arch: x64
+            npm_config_arch: x64
+          - os: ubuntu-20.04
+            platform: linux
+            arch: arm64
+            npm_config_arch: arm64
+          - os: ubuntu-20.04
+            platform: linux
+            arch: armhf
+            npm_config_arch: arm
+          - os: ubuntu-20.04
+            platform: alpine
+            arch: x64
+            npm_config_arch: x64
+          - os: macos-latest
+            platform: darwin
+            arch: x64
+            npm_config_arch: x64
+          - os: macos-latest
+            platform: darwin
+            arch: arm64
+            npm_config_arch: arm64
     runs-on: ${{ matrix.os }}
-
     steps:
-      # Install Python requirements and build+upload binaries for each platform
 
+      # 1. Build the Pyinstaller binary
       - name: Check-out repository
         uses: actions/checkout@v3
 
@@ -77,72 +69,45 @@ jobs:
       - name: Build PyInstaller Executable
         run: pyinstaller run.spec
 
-      - name: Set permissions
+      # 1.5 Place the binary in extension/exe directory
+      - name: Make sure extension/exe directory exists
         run: |
-          chmod 777 dist/run
+          mkdir -p extension/exe
 
-      # - name: Test Python Server
-      #   env:
-      #     OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-      #     ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-      #     TOGETHER_API_KEY: ${{ secrets.TOGETHER_API_KEY }}
-      #   run: |
-      #     cd server
-      #     pip install -r dev_requirements.txt
-      #     cd src
-      #     python -m pytest
+      - name: Copy binary to extension (non-Windows)
+        run: |
+          cp dist/run extension/exe/run
+        if: matrix.os != 'windows-latest'
 
-      - name: Upload Artifacts
-        uses: actions/upload-artifact@v3
-        with:
-          name: ${{ runner.os }}Build
-          path: dist/*
-
-  test-and-package:
-    needs: pyinstaller
-    strategy:
-      matrix:
-        os: [macos-latest, ubuntu-20.04, windows-latest]
-
-    runs-on: ${{ matrix.os }}
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-
-      # Download corresponding binary artifact for the platform
-
-      - name: Create server directory
-        run: mkdir -p ~/.continue/server/exe
-
-      - name: Download Linux build
-        uses: actions/download-artifact@v2
-        with:
-          name: LinuxBuild
-          path: ~/.continue/server/exe
-        if: matrix.os == 'ubuntu-20.04'
-
-      - name: Download macOS build
-        uses: actions/download-artifact@v2
-        with:
-          name: macOSBuild
-          path: ~/.continue/server/exe
-        if: matrix.os == 'macos-latest'
-
-      - name: Download Windows build
-        uses: actions/download-artifact@v2
-        with:
-          name: WindowsBuild
-          path: ~/.continue/server/exe
+      - name: Copy binary to extension (Windows)
+        run: |
+          cp dist/run.exe extension/exe/run.exe
         if: matrix.os == 'windows-latest'
 
+      # 1.8 Set permissions and upload binary
       - name: Set permissions
-        shell: bash
         run: |
-          chmod -R 777 ~/.continue/server/exe
+          chmod 777 extension/exe/run
 
-      # Setup Node.js and install dependencies
+      - uses: actions/upload-artifact@v2
+        if: matrix.os == 'macos-latest' && matrix.arch == 'x64'
+        with:
+          name: macOSBinary
+          path: extension/exe/run
+      
+      - uses: actions/upload-artifact@v2
+        if: matrix.os == 'ubuntu-20.04' && matrix.arch == 'x64'
+        with:
+          name: LinuxBinary
+          path: extension/exe/run
+      
+      - uses: actions/upload-artifact@v2
+        if: matrix.os == 'windows-latest' && matrix.arch == 'x64'
+        with:
+          name: WindowsBinary
+          path: extension/exe/run.exe
 
+      # 2. Install npm dependencies
       - name: Use Node.js 19.0.0
         uses: actions/setup-node@v3
         with:
@@ -175,8 +140,7 @@ jobs:
           cd extension/react-app
           npm ci --legacy-peer-deps
 
-      # Run tests
-
+      # 3. Run tests for the extension
       - name: Prepare the extension
         run: |
           cd extension
@@ -197,19 +161,31 @@ jobs:
           npm run test
         if: matrix.os != 'ubuntu-20.04'
 
-      # Create and upload .vsix artifact
-      - name: Package the extension
+      # 3.5 If on Apple Silicon, download the binary from S3 bucket
+      - name: Remove existing binary
+        if: matrix.os == 'macos-latest' && matrix.arch == 'arm64'
+        run: rm extension/exe/run
+
+      - name: Download Apple Silicon Binary
+        if: matrix.os == 'macos-latest' && matrix.arch == 'arm64'
+        run: curl -o extension/exe/run https://continue-server-binaries.s3.us-west-1.amazonaws.com/apple-silicon/run
+
+      - name: Set permissions
         run: |
-          cd extension
-          npm run package
+          chmod -R 777 extension/exe/run
 
-      - name: Upload .vsix as an artifact
-        uses: actions/upload-artifact@v2
+      # 4. Package the extension
+      - shell: pwsh
+        run: echo "target=${{ matrix.platform }}-${{ matrix.arch }}" >> $env:GITHUB_ENV
+      - run: cd extension && npx vsce package --target ${{ env.target }}
+
+      # 5. Upload the .vsix as an artifact
+      - uses: actions/upload-artifact@v2
         with:
-          name: vsix-artifact
-          path: extension/build/*
-        if: matrix.os == 'ubuntu-20.04'
+          name: ${{ env.target }}
+          path: "extension/*.vsix"
 
+      # 6. Upload continue.log as an artifact for debugging of the workflow
       - name: Upload continue.log
         uses: actions/upload-artifact@v2
         with:
@@ -218,14 +194,13 @@ jobs:
         if: always()
 
   publish:
-    needs: test-and-package
     runs-on: ubuntu-20.04
+    needs: build
     permissions:
       contents: write
-
     steps:
-      # Checkout and download .vsix artifact
 
+      # 0. Setup git
       - name: Checkout
         uses: actions/checkout@v2
 
@@ -237,40 +212,23 @@ jobs:
       - name: Pull latest changes
         run: git pull origin main
 
-      - name: Download .vsix artifact
-        uses: actions/download-artifact@v2
-        with:
-          name: vsix-artifact
-          path: extension/build
+      # 1. Download the artifacts
+      - uses: actions/download-artifact@v3
 
-      # Publish the extension and commit/push the version change
-
-      - name: Use Node.js 19.0.0
-        uses: actions/setup-node@v3
-        with:
-          node-version: 19.0.0
-
-      - name: Cache extension node_modules
-        uses: actions/cache@v2
-        with:
-          path: extension/node_modules
-          key: ${{ runner.os }}-node-${{ hashFiles('extension/package-lock.json') }}
-
-      - name: Install extension Dependencies
-        run: |
+      # 2. Publish the extension to VS Code Marketplace
+      - run: |
           cd extension
-          npm ci
+          npx vsce publish --packagePath ../alpine-x64/*.vsix ../darwin-arm64/*.vsix ../darwin-x64/*.vsix ../linux-arm64/*.vsix ../linux-armhf/*.vsix ../linux-x64/*.vsix ../win32-ia32/*.vsix ../win32-x64/*.vsix ../win32-arm64/*.vsix
+        env:
+          VSCE_PAT: ${{ secrets.VSCE_TOKEN }}
 
+      # 3. Publish the extension to Open VSX Registry
       - name: Publish (Open VSX Registry)
         run: |
           cd extension
-          npx ovsx publish -p ${{ secrets.VSX_REGISTRY_TOKEN }} --packagePath ./build/*.vsix
+          npx ovsx publish -p ${{ secrets.VSX_REGISTRY_TOKEN }} --packagePath ../alpine-x64/*.vsix ../darwin-arm64/*.vsix ../darwin-x64/*.vsix ../linux-arm64/*.vsix ../linux-armhf/*.vsix ../linux-x64/*.vsix ../win32-ia32/*.vsix ../win32-x64/*.vsix ../win32-arm64/*.vsix
 
-      - name: Publish
-        run: |
-          cd extension
-          npx vsce publish -p ${{ secrets.VSCE_TOKEN }} --packagePath ./build/*.vsix
-
+      # 4. Update the package.json version and push changes
       - name: Update version in package.json
         run: |
           cd extension
@@ -288,24 +246,23 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           branch: ${{ github.ref }}
 
-      # Download binaries and upload to S3
-
+      # 5. Download binaries and upload to S3
       - name: Download Linux build
         uses: actions/download-artifact@v2
         with:
-          name: LinuxBuild
+          name: LinuxBinary
           path: exe/linux
 
       - name: Download macOS build
         uses: actions/download-artifact@v2
         with:
-          name: macOSBuild
+          name: macOSBinary
           path: exe/mac
 
       - name: Download Windows build
         uses: actions/download-artifact@v2
         with:
-          name: WindowsBuild
+          name: WindowsBinary
           path: exe/windows
 
       - name: Configure AWS Credentials
@@ -336,3 +293,4 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_REGION: "us-west-1"
           SOURCE_DIR: "exe"
+

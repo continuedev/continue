@@ -213,10 +213,6 @@ jobs:
       # 1. Download the artifacts
       - uses: actions/download-artifact@v3
 
-      - run: pwd
-      - run: ls
-      - run: ls alpine-x64
-
       # 2. Publish the extension to VS Code Marketplace
       - run: |
           cd extension
@@ -247,52 +243,3 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           branch: ${{ github.ref }}
-
-      # 5. Download binaries and upload to S3
-      - name: Download Linux build
-        uses: actions/download-artifact@v2
-        with:
-          name: LinuxBinary
-          path: exe/linux
-
-      - name: Download macOS build
-        uses: actions/download-artifact@v2
-        with:
-          name: macOSBinary
-          path: exe/mac
-
-      - name: Download Windows build
-        uses: actions/download-artifact@v2
-        with:
-          name: WindowsBinary
-          path: exe/windows
-
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-west-1
-
-      - name: Upload binaries to S3 (continue-server-binaries)
-        uses: jakejarvis/s3-sync-action@master
-        with:
-          args: --acl public-read --follow-symlinks
-        env:
-          AWS_S3_BUCKET: continue-server-binaries
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_REGION: "us-west-1"
-          SOURCE_DIR: "exe"
-
-      - name: Upload binaries to S3 (s3.continue.dev)
-        uses: jakejarvis/s3-sync-action@master
-        with:
-          args: --acl public-read --follow-symlinks
-        env:
-          AWS_S3_BUCKET: s3.continue.dev
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_REGION: "us-west-1"
-          SOURCE_DIR: "exe"
-
