@@ -135,30 +135,32 @@ class IdeProtocolClient(
             override fun onMessage(webSocket: WebSocket, text: String) {
                 coroutineScope.launch(Dispatchers.IO) {
                     val parsedMessage: Map<String, Any> = Gson().fromJson(
-                        text,
-                        object : TypeToken<Map<String, Any>>() {}.type
+                            text,
+                            object : TypeToken<Map<String, Any>>() {}.type
                     )
                     val messageType = parsedMessage["messageType"] as? String
                     val data = parsedMessage["data"] as Map<String, Any>
                     when (messageType) {
                         "workspaceDirectory" -> {
                             webSocket.send(
-                                Gson().toJson(
-                                    WebSocketMessage(
-                                        "workspaceDirectory",
-                                        WorkspaceDirectory(workspaceDirectory())
+                                    Gson().toJson(
+                                            WebSocketMessage(
+                                                    "workspaceDirectory",
+                                                    WorkspaceDirectory(workspaceDirectory())
+                                            )
                                     )
-                                )
                             )
                         }
+
                         "uniqueId" -> webSocket.send(
-                            Gson().toJson(
-                                WebSocketMessage(
-                                    "uniqueId",
-                                    UniqueId(uniqueId())
+                                Gson().toJson(
+                                        WebSocketMessage(
+                                                "uniqueId",
+                                                UniqueId(uniqueId())
+                                        )
                                 )
-                            )
                         )
+
                         "ide" -> {
                             val applicationInfo = ApplicationInfo.getInstance()
                             val ideName: String = applicationInfo.fullApplicationName
@@ -181,25 +183,28 @@ class IdeProtocolClient(
                                     )
                             )
                         }
+
                         "showDiff" -> {
                             diffManager.showDiff(
-                                data["filepath"] as String,
-                                data["replacement"] as String,
-                                (data["step_index"] as Double).toInt()
+                                    data["filepath"] as String,
+                                    data["replacement"] as String,
+                                    (data["step_index"] as Double).toInt()
                             )
                         }
+
                         "readFile" -> {
                             val msg =
-                                ReadFile(readFile(data["filepath"] as String))
+                                    ReadFile(readFile(data["filepath"] as String))
                             webSocket.send(
-                                Gson().toJson(
-                                    WebSocketMessage(
-                                        "readFile",
-                                        msg
+                                    Gson().toJson(
+                                            WebSocketMessage(
+                                                    "readFile",
+                                                    msg
+                                            )
                                     )
-                                )
                             )
                         }
+
                         "listDirectoryContents" -> {
                             webSocket.send(
                                     Gson().toJson(
@@ -210,6 +215,7 @@ class IdeProtocolClient(
                                     )
                             )
                         }
+
                         "getTerminalContents" -> {
                             webSocket.send(
                                     Gson().toJson(
@@ -220,36 +226,41 @@ class IdeProtocolClient(
                                     )
                             )
                         }
+
                         "visibleFiles" -> {
                             val msg = VisibleFiles(visibleFiles())
                             webSocket.send(
-                                Gson().toJson(
-                                    WebSocketMessage(
-                                        "visibleFiles",
-                                        msg
+                                    Gson().toJson(
+                                            WebSocketMessage(
+                                                    "visibleFiles",
+                                                    msg
+                                            )
                                     )
-                                )
                             )
                         }
+
                         "saveFile" -> saveFile(data["filepath"] as String)
                         "showVirtualFile" -> showVirtualFile(
-                            data["name"] as String,
-                            data["contents"] as String
+                                data["name"] as String,
+                                data["contents"] as String
                         )
+
                         "connected" -> {}
                         "showMessage" -> showMessage(data["message"] as String)
                         "setFileOpen" -> setFileOpen(
-                            data["filepath"] as String,
-                            data["open"] as Boolean
+                                data["filepath"] as String,
+                                data["open"] as Boolean
                         )
+
                         "highlightCode" -> {
                             val gson = Gson()
                             val json = gson.toJson(data["rangeInFile"])
                             val type = object : TypeToken<RangeInFile>() {}.type
                             val rangeInFile =
-                                gson.fromJson<RangeInFile>(json, type)
+                                    gson.fromJson<RangeInFile>(json, type)
                             highlightCode(rangeInFile, data["color"] as String)
                         }
+
                         "setSuggestionsLocked" -> {}
                         "getSessionId" -> {}
                         "highlightedCode" -> {
@@ -260,14 +271,15 @@ class IdeProtocolClient(
                                 rifs += rif
                             }
                             webSocket.send(
-                                Gson().toJson(
-                                    WebSocketMessage(
-                                        "highlightedCode",
-                                        HighlightedCode(rifs)
+                                    Gson().toJson(
+                                            WebSocketMessage(
+                                                    "highlightedCode",
+                                                    HighlightedCode(rifs)
+                                            )
                                     )
-                                )
                             )
                         }
+
                         else -> {
                             println("Unknown messageType: $messageType")
                         }
@@ -281,12 +293,18 @@ class IdeProtocolClient(
             }
 
             override fun onFailure(
-                webSocket: WebSocket,
-                t: Throwable,
-                response: Response?
+                    webSocket: WebSocket,
+                    t: Throwable,
+                    response: Response?
             ) {
                 eventListeners.forEach { it.onErrorOccurred(t) }
             }
+
+            override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {
+                super.onClosed(webSocket, code, reason)
+                println("Closing Continue IDE websocket")
+            }
+
         }
         val request = Request.Builder()
             .url(serverUrl)
@@ -356,32 +374,36 @@ class IdeProtocolClient(
     }
 
     fun getHighlightedCode(): RangeInFileWithContents? {
-        // Get the editor instance for the currently active editor window
-        val editor = FileEditorManager.getInstance(project).selectedTextEditor ?: return null
-        val virtualFile = editor.let { FileDocumentManager.getInstance().getFile(it.document) } ?: return null
+        val result = ApplicationManager.getApplication().runReadAction<RangeInFileWithContents?> {
+            // Get the editor instance for the currently active editor window
+            val editor = FileEditorManager.getInstance(project).selectedTextEditor ?: return@runReadAction null
+            val virtualFile = editor.let { FileDocumentManager.getInstance().getFile(it.document) } ?: return@runReadAction null
 
-        // Get the selection range and content
-        val selectionModel: SelectionModel = editor.selectionModel
-        val selectedText = selectionModel.selectedText ?: ""
+            // Get the selection range and content
+            val selectionModel: SelectionModel = editor.selectionModel
+            val selectedText = selectionModel.selectedText ?: ""
 
-        val document = editor.document
-        val startOffset = selectionModel.selectionStart
-        val endOffset = selectionModel.selectionEnd
+            val document = editor.document
+            val startOffset = selectionModel.selectionStart
+            val endOffset = selectionModel.selectionEnd
 
-        if (startOffset == endOffset) {
-            return null
+            if (startOffset == endOffset) {
+                return@runReadAction null
+            }
+
+            val startLine = document.getLineNumber(startOffset)
+            val endLine = document.getLineNumber(endOffset)
+
+            val startChar = startOffset - document.getLineStartOffset(startLine)
+            val endChar = endOffset - document.getLineStartOffset(endLine)
+
+            return@runReadAction RangeInFileWithContents(virtualFile.path, Range(
+                    Position(startLine, startChar),
+                    Position(endLine, endChar)
+            ), selectedText)
         }
 
-        val startLine = document.getLineNumber(startOffset)
-        val endLine = document.getLineNumber(endOffset)
-
-        val startChar = startOffset - document.getLineStartOffset(startLine)
-        val endChar = endOffset - document.getLineStartOffset(endLine)
-
-        return RangeInFileWithContents(virtualFile.path, Range(
-                Position(startLine, startChar),
-                Position(endLine, endChar)
-        ), selectedText)
+        return result
     }
 
     private fun<T> sendWebSocketMessage(messageType: String, data: T) {

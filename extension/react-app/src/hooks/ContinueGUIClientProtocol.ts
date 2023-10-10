@@ -73,6 +73,10 @@ class ContinueGUIClientProtocol extends AbstractContinueGUIClientProtocol {
 
   onStateUpdate(callback: (state: any) => void) {
     this.messenger?.onMessageType("state_update", (data: any) => {
+      // Set the color of the body to a random color
+      // document.body.style.border =
+        // "1px solid " + "#" + Math.floor(Math.random() * 16777215).toString(16);
+      
       if (data.state) {
         callback(data.state);
       }

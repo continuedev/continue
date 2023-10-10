@@ -5,6 +5,10 @@ import ContinueGUIClientProtocol from "./ContinueGUIClientProtocol";
 import { postVscMessage } from "../vscode";
 
 function useContinueGUIProtocol(useVscodeMessagePassing: boolean = true) {
+  // if (localStorage.getItem("ide") === "jetbrains") {
+  //   useVscodeMessagePassing = false;
+  // }
+
   const sessionId = useSelector((state: RootStore) => state.config.sessionId);
   const serverHttpUrl = useSelector((state: RootStore) => state.config.apiUrl);
   const [client, setClient] = useState<ContinueGUIClientProtocol | undefined>(

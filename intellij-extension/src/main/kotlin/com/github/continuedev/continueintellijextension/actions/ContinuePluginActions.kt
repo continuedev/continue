@@ -83,11 +83,11 @@ class RejectDiffAction : AnAction() {
              }
          })
 
-         val scrollPane = JBScrollPane(textArea)
-         scrollPane.verticalScrollBarPolicy = JScrollPane.VERTICAL_SCROLLBAR_ALWAYS
-         panel?.add(scrollPane, BorderLayout.CENTER)
-
-         return panel
+          val scrollPane = JBScrollPane(textArea)
+          scrollPane.verticalScrollBarPolicy = JScrollPane.VERTICAL_SCROLLBAR_ALWAYS
+          panel?.add(scrollPane, BorderLayout.CENTER)
+         
+          return panel
      }
 
 
