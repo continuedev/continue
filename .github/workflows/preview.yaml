@@ -93,6 +93,9 @@ jobs:
         if: matrix.os == 'macos-latest' && matrix.arch == 'arm64'
         run: curl -o extension/exe/run https://continue-server-binaries.s3.us-west-1.amazonaws.com/apple-silicon/run
 
+      - name: Install Rosetta
+        if: matrix.os == 'macos-latest' && matrix.arch == 'arm64'
+        run: softwareupdate --install-rosetta
 
       # 1.8 Set permissions and check binary
       - name: Set permissions
