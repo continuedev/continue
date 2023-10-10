@@ -88,10 +88,6 @@ jobs:
         if: matrix.os == 'windows-latest'
 
       # 1.75 If on Apple Silicon, download the binary from S3 bucket, using official S3 download action
-      - name: Remove other binary
-        if: matrix.os == 'macos-latest' && matrix.arch == 'arm64'
-        run: |
-          rm extension/exe/run
       
       - name: Download Apple Silicon Binary
         if: matrix.os == 'macos-latest' && matrix.arch == 'arm64'
