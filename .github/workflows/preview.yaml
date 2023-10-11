@@ -68,10 +68,6 @@ jobs:
       - name: Build PyInstaller Executable
         run: pyinstaller run.spec
 
-      - name: Set permissions
-        run: |
-          chmod 777 dist/run
-
       # 1.5 Place the binary in extension/exe directory
       - name: Make sure extension/exe directory exists
         run: |
@@ -86,6 +82,29 @@ jobs:
         run: |
           cp dist/run.exe extension/exe/run.exe
         if: matrix.os == 'windows-latest'
+
+      # 1.8 Set permissions and upload binary
+      - name: Set permissions
+        run: |
+          chmod 777 extension/exe/run
+
+      - uses: actions/upload-artifact@v2
+        if: matrix.os == 'macos-latest' && matrix.arch == 'x64'
+        with:
+          name: macOSBinary
+          path: extension/exe/run
+      
+      - uses: actions/upload-artifact@v2
+        if: matrix.os == 'ubuntu-20.04' && matrix.arch == 'x64' && matrix.platform == 'linux'
+        with:
+          name: LinuxBinary
+          path: extension/exe/run
+      
+      - uses: actions/upload-artifact@v2
+        if: matrix.os == 'windows-latest' && matrix.arch == 'x64'
+        with:
+          name: WindowsBinary
+          path: extension/exe/run.exe
 
       # 2. Install npm dependencies
       - name: Use Node.js 19.0.0
@@ -141,6 +160,19 @@ jobs:
           npm run test
         if: matrix.os != 'ubuntu-20.04'
 
+      # 3.5 If on Apple Silicon, download the binary from S3 bucket
+      - name: Remove existing binary
+        if: matrix.os == 'macos-latest' && matrix.arch == 'arm64'
+        run: rm extension/exe/run
+
+      - name: Download Apple Silicon Binary
+        if: matrix.os == 'macos-latest' && matrix.arch == 'arm64'
+        run: curl -o extension/exe/run https://continue-server-binaries.s3.us-west-1.amazonaws.com/apple-silicon/run
+
+      - name: Set permissions
+        run: |
+          chmod -R 777 extension/exe/run
+
       # 4. Package the extension
       - shell: pwsh
         run: echo "target=${{ matrix.platform }}-${{ matrix.arch }}" >> $env:GITHUB_ENV
@@ -180,10 +212,6 @@ jobs:
 
       # 1. Download the artifacts
       - uses: actions/download-artifact@v3
-
-      - run: pwd
-      - run: ls
-      - run: ls alpine-x64
 
       # 2. Publish the extension to VS Code Marketplace
       - run: |
