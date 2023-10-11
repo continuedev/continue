@@ -65,6 +65,11 @@ jobs:
         run: |
           pip install -r server/requirements.txt
 
+      - name: Install tiktoken vocab file
+        run: |
+          mkdir .tiktoken_cache
+          curl -o .tiktoken_cache/9b5ad71b2ce5302211f9c61530b329a4922fc6a4 https://s3.us-west-1.amazonaws.com/s3.continue.dev/tiktoken/9b5ad71b2ce5302211f9c61530b329a4922fc6a4
+
       - name: Build PyInstaller Executable
         run: pyinstaller continue_server.spec
 

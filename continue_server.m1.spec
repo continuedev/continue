@@ -34,6 +34,7 @@ a = Analysis(
     datas=[
         ('server/continuedev', 'continuedev'),
         (certifi.where(), 'ca_bundle'),
+        ('.tiktoken_cache', 'tiktoken_cache')
         ] + copy_metadata('replicate') + chroma_toc,
     hiddenimports=[
         'anthropic', 'github', 'ripgrepy', 'bs4', 'redbaron',
