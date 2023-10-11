@@ -209,7 +209,7 @@ function includedBinaryPath(): string {
   return path.join(
     extensionPath,
     "exe",
-    `run${os.platform() === "win32" ? ".exe" : ""}`
+    `continue_server${os.platform() === "win32" ? ".exe" : ""}`
   );
 }
 
