@@ -1,4 +1,5 @@
 import ssl
+from textwrap import dedent
 from typing import Any, Callable, Coroutine, Dict, Generator, List, Optional, Union
 
 import aiohttp
@@ -229,6 +230,17 @@ class LLM(ContinueBaseModel):
         args = {**DEFAULT_ARGS.copy(), "model": self.model}
         args.update(options.dict(exclude_unset=True, exclude_none=True))
         return args
+    
+    def compile_log_message(self, prompt: str, completion_options: CompletionOptions) -> str:
+        dict = completion_options.dict(exclude_unset=True, exclude_none=True)
+        settings = "\n".join([f"{key}: {value}" for key, value in dict.items()])
+        return f"""\
+Settings:
+{settings}
+
+############################################
+
+{prompt}"""
 
     def compile_chat_messages(
         self,
@@ -291,15 +303,15 @@ class LLM(ContinueBaseModel):
             prompt = self.template_prompt_like_messages(prompt)
 
         if log:
-            self.write_log(prompt)
+            self.write_log(self.compile_log_message(prompt, options))
 
         completion = ""
         async for chunk in self._stream_complete(prompt=prompt, options=options):
             yield chunk
             completion += chunk
 
-        if log:
-            self.write_log(f"Completion: \n\n{completion}")
+        # if log:
+        #     self.write_log(f"Completion: \n\n{completion}")
 
         dev_data_logger.capture(
             "tokens_generated",
@@ -346,12 +358,12 @@ class LLM(ContinueBaseModel):
             prompt = self.template_prompt_like_messages(prompt)
 
         if log:
-            self.write_log(prompt)
+            self.write_log(self.compile_log_message(prompt, options))
 
         completion = await self._complete(prompt=prompt, options=options)
 
-        if log:
-            self.write_log(f"Completion: \n\n{completion}")
+        # if log:
+        #     self.write_log(f"Completion: \n\n{completion}")
 
         dev_data_logger.capture(
             "tokens_generated",
@@ -400,7 +412,7 @@ class LLM(ContinueBaseModel):
             prompt = format_chat_messages(messages)
 
         if log:
-            self.write_log(prompt)
+            self.write_log(self.compile_log_message(prompt, options))
 
         completion = ""
 
@@ -415,8 +427,8 @@ class LLM(ContinueBaseModel):
                 yield {"role": "assistant", "content": chunk}
                 completion += chunk
 
-        if log:
-            self.write_log(f"Completion: \n\n{completion}")
+        # if log:
+        #     self.write_log(f"Completion: \n\n{completion}")
 
         dev_data_logger.capture(
             "tokens_generated",
