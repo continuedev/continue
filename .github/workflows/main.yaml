@@ -3,7 +3,7 @@ name: Publish Extension
 on:
   push:
     branches:
-      - embeddings
+      - main
 
 jobs:
   build:

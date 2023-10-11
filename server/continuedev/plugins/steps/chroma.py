@@ -11,7 +11,7 @@ from ...core.steps import EditFileStep
 from ...libs.chroma.query import ChromaIndexManager
 from ..context_providers.util import remove_meilisearch_disallowed_chars
 from .chat import SimpleChatStep
-from .core.core import EditFileStep
+from ...core.steps import EditFileStep
 
 
 class CreateCodebaseIndexChroma(Step):
