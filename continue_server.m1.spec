@@ -5,7 +5,7 @@ from PyInstaller.utils.hooks import copy_metadata
 
 block_cipher = None
 
-chroma_toc = list(map(lambda x: (x[1], os.path.dirname(x[0])), Tree('./env/lib/python3.11/site-packages/chromadb/migrations', prefix="chromadb/migrations")))
+chroma_toc = list(map(lambda x: (x[1], os.path.dirname(x[0])), Tree('./env/lib/python3.10/site-packages/chromadb/migrations', prefix="chromadb/migrations")))
 
 a = Analysis(
     ['continue_server.py'],
