@@ -89,11 +89,9 @@ class ContinueSDK(AbstractContinueSDK):
             )
             await self.ide.setFileOpen(getConfigFilePath())
 
-        # As soon as possible, update the UI with the config
-        self.update_ui()
-
         # Start models
         self.models = self.config.models
+        await self.update_ui()
         await self.models.start(self)
 
         # Start LSP

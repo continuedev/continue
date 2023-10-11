@@ -2,7 +2,7 @@ import asyncio
 import json
 import traceback
 from typing import Any, List, Optional, Type, TypeVar
-from continuedev.plugins.steps.setup_model import SetupModelStep
+from ..plugins.steps.setup_model import SetupModelStep
 
 from fastapi import APIRouter, Depends, WebSocket
 from pydantic import BaseModel

@@ -131,19 +131,20 @@ class Autopilot(ContinueBaseModel):
             self.session_info = full_state.session_info
 
         # Load saved context groups
-        context_groups_file = getSavedContextGroupsPath()
-        try:
-            with open(context_groups_file, "r") as f:
-                json_ob = json.load(f)
-                for title, context_group in json_ob.items():
-                    self._saved_context_groups[title] = [
-                        ContextItem(**item) for item in context_group
-                    ]
-        except Exception as e:
-            logger.warning(
-                f"Failed to load saved_context_groups.json: {e}. Reverting to empty list."
-            )
-            self._saved_context_groups = {}
+        # context_groups_file = getSavedContextGroupsPath()
+        # try:
+        #     with open(context_groups_file, "r") as f:
+        #         json_ob = json.load(f)
+        #         for title, context_group in json_ob.items():
+        #             self._saved_context_groups[title] = [
+        #                 ContextItem(**item) for item in context_group
+        #             ]
+        # except Exception as e:
+        #     logger.warning(
+        #         f"Failed to load saved_context_groups.json: {e}. Reverting to empty list."
+        #     )
+        #     self._saved_context_groups = {}
+        self._saved_context_groups = {}
 
         self.started = True
 
