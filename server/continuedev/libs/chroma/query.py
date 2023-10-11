@@ -90,6 +90,7 @@ class ChromaIndexManager:
             settings=Settings(anonymized_telemetry=False),
         )
         self.openai_api_key = openai_api_key
+        os.environ.setdefault("TOKENIZERS_PARALLELISM", "true")
 
     @cached_property
     def current_commit(self) -> str:
