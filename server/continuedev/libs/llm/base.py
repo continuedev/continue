@@ -1,4 +1,5 @@
 import ssl
+from textwrap import dedent
 from typing import Any, Callable, Coroutine, Dict, Generator, List, Optional, Union
 
 import aiohttp
@@ -52,6 +53,9 @@ class CompletionOptions(ContinueBaseModel):
         None, description="The functions/tools to make available to the model."
     )
 
+class PromptTemplate(CompletionOptions):
+    prompt: str = Field(description="The prompt to be used for the completion.")
+    raw: bool = Field(False, description="Whether to use the raw prompt or not.")
 
 class LLM(ContinueBaseModel):
     title: Optional[str] = Field(
@@ -146,7 +150,7 @@ class LLM(ContinueBaseModel):
                 "description": "Set the timeout for each request to the LLM. If you are running a local LLM that takes a while to respond, you might want to set this to avoid timeouts."
             },
             "prompt_templates": {
-                "description": 'A dictionary of prompt templates that can be used to customize the behavior of the LLM in certain situations. For example, set the "edit" key in order to change the prompt that is used for the /edit slash command. Each value in the dictionary is a string templated in mustache syntax, and filled in at runtime with the variables specific to the situation. See the documentation for more information.'
+                "description": 'A dictionary of prompt templates that can be used to customize the behavior of the LLM in certain situations. For example, set the "edit" key in order to change the prompt that is used for the /edit slash command. Each value in the dictionary is a string templated in mustache syntax, and filled in at runtime with the variables specific to the situation OR an instance of the PromptTemplate class if you want to control other parameters. See the documentation for more information.'
             },
             "template_messages": {
                 "description": "A function that takes a list of messages and returns a prompt. This ensures that models like llama2, which are trained on specific chat formats, will always receive input in that format."
@@ -203,6 +207,13 @@ class LLM(ContinueBaseModel):
         """Stop the connection to the LLM."""
         pass
 
+    _config_system_message: Optional[str] = None
+    _config_temperature: Optional[float] = None
+
+    def set_main_config_params(self, system_msg: str, temperature: float):
+        self._config_system_message = system_msg
+        self._config_temperature = temperature
+
     def create_client_session(self):
         if self.verify_ssl is False:
             return aiohttp.ClientSession(
@@ -226,6 +237,20 @@ class LLM(ContinueBaseModel):
         args = {**DEFAULT_ARGS.copy(), "model": self.model}
         args.update(options.dict(exclude_unset=True, exclude_none=True))
         return args
+    
+    def compile_log_message(self, prompt: str, completion_options: CompletionOptions) -> str:
+        dict = completion_options.dict(exclude_unset=True, exclude_none=True)
+        settings = "\n".join([f"{key}: {value}" for key, value in dict.items()])
+        return f"""\
+Settings:
+{settings}
+
+############################################
+
+{prompt}"""
+    
+    def get_system_message(self) -> Optional[str]:
+        return self.system_message if self.system_message is not None else self._config_system_message
 
     def compile_chat_messages(
         self,
@@ -239,7 +264,7 @@ class LLM(ContinueBaseModel):
             context_length=self.context_length,
             max_tokens=options.max_tokens,
             functions=functions,
-            system_message=self.system_message,
+            system_message=self.get_system_message(),
         )
 
     def template_prompt_like_messages(self, prompt: str) -> str:
@@ -247,8 +272,9 @@ class LLM(ContinueBaseModel):
             return prompt
 
         msgs = [{"role": "user", "content": prompt}]
-        if self.system_message is not None:
-            msgs.insert(0, {"role": "system", "content": self.system_message})
+
+        if self.get_system_message() is not None:
+            msgs.insert(0, {"role": "system", "content": self.get_system_message()})
 
         return self.template_messages(msgs)
 
@@ -288,7 +314,7 @@ class LLM(ContinueBaseModel):
             prompt = self.template_prompt_like_messages(prompt)
 
         if log:
-            self.write_log(prompt)
+            self.write_log(self.compile_log_message(prompt, options))
 
         completion = ""
         async for chunk in self._stream_complete(prompt=prompt, options=options):
@@ -343,7 +369,7 @@ class LLM(ContinueBaseModel):
             prompt = self.template_prompt_like_messages(prompt)
 
         if log:
-            self.write_log(prompt)
+            self.write_log(self.compile_log_message(prompt, options))
 
         completion = await self._complete(prompt=prompt, options=options)
 
@@ -397,7 +423,7 @@ class LLM(ContinueBaseModel):
             prompt = format_chat_messages(messages)
 
         if log:
-            self.write_log(prompt)
+            self.write_log(self.compile_log_message(prompt, options))
 
         completion = ""
 

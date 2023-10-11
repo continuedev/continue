@@ -1,5 +1,7 @@
 from textwrap import dedent
 
+from continuedev.libs.llm.base import PromptTemplate
+
 simplified_edit_prompt = dedent(
     """\
             Consider the following code:
@@ -25,3 +27,46 @@ simplest_edit_prompt = dedent(
 )
 
 codellama_infill_edit_prompt = "{{file_prefix}}<FILL>{{file_suffix}}"
+
+_codellama_edit_prompt = dedent(
+    """\
+            [CODE]
+            {{{code_to_edit}}}
+            [/CODE]
+            [INST]
+            You are an expert programmer and personal assistant, here is your task: "Rewrite the above code in order to {{{user_input}}}"
+
+            Your answer should start with a [CODE] tag and end with a [/CODE] tag.
+            [/INST]
+            [CODE]"""
+)
+
+codellama_edit_prompt = PromptTemplate(
+    prompt=_codellama_edit_prompt,
+    raw=True,
+    stop=["[/CODE]"]
+)
+
+_alpaca_edit_prompt = dedent(
+    """\
+            Below is an instruction that describes a task, paired with an input that provides further context. Write a response that appropriately completes the request.
+
+            ### Instruction: Rewrite the code to satisfy this request: "{{{user_input}}}"
+
+            ### Input:
+
+            ```
+            {{{code_to_edit}}}
+            ```
+
+            ### Response:
+            
+            ```
+            """
+)
+
+alpaca_edit_prompt = PromptTemplate(
+    prompt=_alpaca_edit_prompt,
+    raw=True,
+    stop=["```"]
+)

@@ -92,6 +92,7 @@ class ContinueSDK(AbstractContinueSDK):
 
         # Start models
         self.models = self.config.models
+        await self.update_ui()
         await self.models.start(self)
 
         # Start LSP

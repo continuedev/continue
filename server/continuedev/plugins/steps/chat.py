@@ -84,9 +84,7 @@ class SimpleChatStep(Step):
 
         messages = self.messages or await sdk.get_chat_context()
 
-        generator = sdk.models.chat.stream_chat(
-            messages, temperature=sdk.config.temperature
-        )
+        generator = sdk.models.chat.stream_chat(messages)
 
         posthog_logger.capture_event(
             "model_use",

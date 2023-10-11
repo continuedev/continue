@@ -6,6 +6,7 @@ from typing import Optional
 
 import aiofiles
 import aiohttp
+from continuedev.server.global_config import global_config
 import psutil
 from meilisearch_python_async import Client
 
@@ -193,4 +194,4 @@ def kill_proc(port):
 async def restart_meilisearch():
     stop_meilisearch()
     kill_proc(7700)
-    await start_meilisearch(url=meilisearch_url)
+    await start_meilisearch(url=global_config.meilisearch_url)

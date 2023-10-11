@@ -6,7 +6,7 @@ from ripgrepy import Ripgrepy
 from ...core.main import Step
 from ...core.models import Models
 from ...core.sdk import ContinueSDK
-from ...libs.llm.prompts.edit import simplified_edit_prompt
+from ...libs.llm.prompts.edit import codellama_edit_prompt
 from ...libs.util.ripgrep import get_rg_path
 from ...libs.util.strings import remove_quotes_and_escapes, strip_code_block
 from ...libs.util.templating import render_prompt_template
@@ -91,7 +91,7 @@ class ParallelEditStep(Step):
         # code_to_edit, common_whitespace = dedent_and_get_common_whitespace(code_to_edit)
 
         prompt = render_prompt_template(
-            simplified_edit_prompt,
+            codellama_edit_prompt,
             history=[],
             other_data={
                 "code_to_edit": code_to_edit,

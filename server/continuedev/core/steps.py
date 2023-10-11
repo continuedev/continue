@@ -4,7 +4,7 @@ import subprocess
 from textwrap import dedent
 from typing import Coroutine, List, Optional, Union
 
-from ..libs.llm.base import LLM
+from ..libs.llm.base import LLM, PromptTemplate
 from ..libs.llm.openai_free_trial import OpenAIFreeTrial
 from ..libs.util.count_tokens import DEFAULT_MAX_TOKENS
 from ..libs.util.devdata import dev_data_logger
@@ -603,7 +603,7 @@ Please output the code to be inserted at the cursor in order to fulfill the user
         # Use custom templates defined by the model
         if template := model_to_use.prompt_templates.get("edit"):
             rendered = render_prompt_template(
-                template,
+                template if isinstance(template, str) else template.prompt,
                 messages[:-1],
                 {
                     "code_to_edit": rif.contents,
@@ -623,11 +623,12 @@ Please output the code to be inserted at the cursor in order to fulfill the user
             else:
                 messages = rendered
 
-            generator = model_to_use.stream_complete(
-                rendered,
-                temperature=sdk.config.temperature,
-                max_tokens=min(max_tokens, model_to_use.context_length // 2),
-            )
+            params = {"prompt": rendered}
+            if isinstance(template, PromptTemplate):
+                params.update(template.dict(exclude={"prompt"}))
+
+            params.update({"max_tokens": min(max_tokens, model_to_use.context_length // 2)})
+            generator = model_to_use.stream_complete(**params)
 
         else:
 

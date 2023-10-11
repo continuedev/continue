@@ -112,7 +112,7 @@ function ModelConfig() {
 
         <div className="px-2">
           <div style={{ display: "flex", alignItems: "center" }}>
-            {vscMediaUrl && (
+            {(vscMediaUrl && modelInfo?.icon) && (
               <img
                 src={`${vscMediaUrl}/logos/${modelInfo?.icon}`}
                 height="24px"

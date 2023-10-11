@@ -10,17 +10,17 @@ from .prompts.chat import llama2_template_messages
 from .prompts.edit import simplest_edit_prompt
 
 
-class TextGenUI(LLM):
+class TextGenWebUI(LLM):
     """
-    TextGenUI is a comprehensive, open-source language model UI and local server. You can set it up with an OpenAI-compatible server plugin, but if for some reason that doesn't work, you can use this class like so:
+    TextGenWebUI is a comprehensive, open-source language model UI and local server. You can set it up with an OpenAI-compatible server plugin, but if for some reason that doesn't work, you can use this class like so:
 
     ```python title="~/.continue/config.py"
-    from continuedev.libs.llm.text_gen_interface import TextGenUI
+    from continuedev.libs.llm.text_gen_webui import TextGenWebUI
 
     config = ContinueConfig(
         ...
         models=Models(
-            default=TextGenUI(
+            default=TextGenWebUI(
                 model="<MODEL_NAME>",
             )
         )
@@ -28,13 +28,13 @@ class TextGenUI(LLM):
     ```
     """
 
-    model: str = "text-gen-ui"
+    model: str = "text-gen-webui"
     server_url: str = Field(
-        "http://localhost:5000", description="URL of your TextGenUI server"
+        "http://localhost:5000", description="URL of your TextGenWebUI server"
     )
     streaming_url: str = Field(
         "http://localhost:5005",
-        description="URL of your TextGenUI streaming server (separate from main server URL)",
+        description="URL of your TextGenWebUI streaming server (separate from main server URL)",
     )
 
     prompt_templates = {
