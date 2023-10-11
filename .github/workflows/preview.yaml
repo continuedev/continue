@@ -65,15 +65,6 @@ jobs:
         run: |
           pip install -r server/requirements.txt
 
-      - name: Check the folder's existence
-        run: |
-          ls ./env
-          ls ./env/lib
-          ls ./env/lib/python3.10
-          ls ./env/lib/python3.10/site-packages
-          ls ./env/lib/python3.10/site-packages/chromadb
-          ls ./env/lib/python3.10/site-packages/chromadb/migrations
-
       - name: Build PyInstaller Executable
         run: pyinstaller continue_server.spec
 
