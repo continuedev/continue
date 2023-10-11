@@ -79,7 +79,7 @@ import ClassPropertyRef from '@site/src/components/ClassPropertyRef.tsx';
 
 {dedent(schema.get("description", ""))}
 
-[View the source](https://github.com/continuedev/continue/tree/main/continuedev/src/continuedev/{filepath})
+[View the source](https://github.com/continuedev/continue/blob/main/server/continuedev/libs/llm/{filepath})
 
 ## Properties
 

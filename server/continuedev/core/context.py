@@ -10,6 +10,7 @@ from ..libs.util.create_async_task import create_async_task
 from ..libs.util.devdata import dev_data_logger
 from ..libs.util.logging import logger
 from ..libs.util.telemetry import posthog_logger
+from ..server.main import meilisearch_url_global
 from ..server.meilisearch_server import (
     check_meilisearch_running,
     get_meilisearch_url,
@@ -285,7 +286,7 @@ class ContextManager:
         async def load_index(providers_to_load: List[ContextProvider]):
             running = await check_meilisearch_running()
             if not running:
-                await start_meilisearch()
+                await start_meilisearch(meilisearch_url_global)
                 try:
                     await asyncio.wait_for(poll_meilisearch_running(), timeout=20)
                 except asyncio.TimeoutError:
