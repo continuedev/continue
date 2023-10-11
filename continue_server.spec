@@ -5,7 +5,28 @@ from PyInstaller.utils.hooks import copy_metadata
 
 block_cipher = None
 
-chroma_toc = list(map(lambda x: (x[1], os.path.dirname(x[0])), Tree('./env/lib/python3.10/site-packages/chromadb/migrations', prefix="chromadb/migrations")))
+
+import subprocess
+def find_package_location(package_name):
+    try:
+        # Run the 'pip show' command and capture its output
+        result = subprocess.run(['pip', 'show', package_name], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, check=True)
+        output = result.stdout
+
+        # Split the output into lines and find the 'Location' field
+        for line in output.splitlines():
+            if line.startswith('Location:'):
+                # Extract the path after the 'Location:' prefix
+                location = line.split(':', 1)[1].strip()
+                return location
+
+    except subprocess.CalledProcessError as e:
+        print(f"Error: {e.stderr}")
+
+    return None
+
+chroma_path = find_package_location('chromadb')
+chroma_toc = list(map(lambda x: (x[1], os.path.dirname(x[0])), Tree(f'{chroma_path}/chromadb/migrations', prefix="chromadb/migrations")))
 
 a = Analysis(
     ['continue_server.py'],
