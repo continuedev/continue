@@ -35,7 +35,7 @@ config=ContinueConfig(
                 "n_retrieve": 20,
                 "n_final": 10,
                 "use_reranking": True,
-                "sentence_transformers_model": "openai"
+                "openai_api_key": "<API_KEY>"
             },
         ),
     ]
@@ -50,4 +50,4 @@ config=ContinueConfig(
 
 After retrieving the top `n_retrieve` results from the vector database, an additional re-reranking step uses 2 LLM calls to select the top `n_final` results to use to answer the question. If you want to increase the speed of the query at the cost of relevancy, you can skip the re-ranking step by setting `use_reranking` to `False`. Then the top `n_final` results will just be directly calculated from the vector database.
 
-The `sentence_transformers_model` parameter allows you to select a custom embeddings model from the list [here](https://www.sbert.net/docs/pretrained_models.html). The default value is "openai", but if you don't include your OpenAI API key, it will fall back to using the `all-MiniLM-L6-v2` sentence transformers model.
+It is optional to set your `openai_api_key` parameter. If you do, we will use their Ada embeddings. Otherwise, a sentence transformers model will be run locally to calculate the embeddings.

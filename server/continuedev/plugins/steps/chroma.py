@@ -7,7 +7,7 @@ from pydantic import Field
 from ...core.main import ContextItem, ContextItemDescription, ContextItemId, Step
 from ...core.observation import Observation
 from ...core.sdk import ContinueSDK
-from ...core.steps import EditFileStep
+from ...core.steps import EditFileStep, UserInputStep
 from ...libs.chroma.query import ChromaIndexManager
 from ..context_providers.util import remove_meilisearch_disallowed_chars
 from .chat import SimpleChatStep
@@ -19,11 +19,6 @@ class CreateCodebaseIndexChroma(Step):
     hide: bool = True
     description: str = "Generating codebase embeddings..."
     openai_api_key: Optional[str] = None
-
-    sentence_transformers_model: str = Field(
-        "openai",
-        description="Sentence Transformers model to use for generating embeddings. See https://www.sbert.net/docs/pretrained_models.html for a list of available models.",
-    )
 
     ignore_files: List[str] = Field(
         [],
@@ -37,7 +32,6 @@ class CreateCodebaseIndexChroma(Step):
         index = ChromaIndexManager(
             sdk.ide.workspace_directory,
             openai_api_key=self.openai_api_key,
-            sentence_transformers_model=self.sentence_transformers_model,
         )
         if not index.check_index_exists():
             self.hide = False
