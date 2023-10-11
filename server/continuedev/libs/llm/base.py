@@ -207,6 +207,13 @@ class LLM(ContinueBaseModel):
         """Stop the connection to the LLM."""
         pass
 
+    _config_system_message: Optional[str] = None
+    _config_temperature: Optional[float] = None
+
+    def set_main_config_params(self, system_msg: str, temperature: float):
+        self._config_system_message = system_msg
+        self._config_temperature = temperature
+
     def create_client_session(self):
         if self.verify_ssl is False:
             return aiohttp.ClientSession(
@@ -241,6 +248,9 @@ Settings:
 ############################################
 
 {prompt}"""
+    
+    def get_system_message(self) -> Optional[str]:
+        return self.system_message if self.system_message is not None else self._config_system_message
 
     def compile_chat_messages(
         self,
@@ -254,7 +264,7 @@ Settings:
             context_length=self.context_length,
             max_tokens=options.max_tokens,
             functions=functions,
-            system_message=self.system_message,
+            system_message=self.get_system_message(),
         )
 
     def template_prompt_like_messages(self, prompt: str) -> str:
@@ -262,8 +272,9 @@ Settings:
             return prompt
 
         msgs = [{"role": "user", "content": prompt}]
-        if self.system_message is not None:
-            msgs.insert(0, {"role": "system", "content": self.system_message})
+
+        if self.get_system_message() is not None:
+            msgs.insert(0, {"role": "system", "content": self.get_system_message()})
 
         return self.template_messages(msgs)
 
