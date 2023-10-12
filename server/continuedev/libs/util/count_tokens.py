@@ -85,6 +85,32 @@ def prune_chat_history(
         count_chat_message_tokens(model_name, message) for message in chat_history
     )
 
+    # 0. Prune any messages that take up more than 1/3 of the context length
+    longest_messages = sorted(
+        chat_history, key=lambda message: len(message.content), reverse=True
+    )
+    longer_than_one_third = [
+        message
+        for message in longest_messages
+        if count_tokens(model_name, message.content) > context_length / 3
+    ]
+    distance_from_third = [
+        count_tokens(model_name, message.content) - context_length / 3
+        for message in longer_than_one_third
+    ]
+    total_tokens_removed = 0
+    for i in range(len(longer_than_one_third)):
+        # Prune line-by-line
+        message = longer_than_one_third[i]
+        lines = message.content.split("\n")
+        tokens_removed = 0
+        while tokens_removed < distance_from_third[i] and total_tokens - total_tokens_removed > context_length:
+            delta += count_tokens(model_name, lines.pop(-1))
+            tokens_removed += delta
+            total_tokens_removed += delta
+        
+        message.content = "\n".join(lines)
+
     # 1. Replace beyond last 5 messages with summary
     i = 0
     while total_tokens > context_length and i < len(chat_history) - 5:
