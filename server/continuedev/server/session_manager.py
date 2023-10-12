@@ -173,9 +173,11 @@ class SessionManager:
         if self.sessions[session_id].ws is None:
             return
 
-        await self.sessions[session_id].ws.send_json(
-            {"messageType": message_type, "data": data}
-        )
+        ws = self.sessions[session_id].ws
+        if ws.client_state != WebSocketState.DISCONNECTED and ws.application_state != WebSocketState.DISCONNECTED:
+            await ws.send_json(
+                {"messageType": message_type, "data": data}
+            )
 
 
 session_manager = SessionManager()
