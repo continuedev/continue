@@ -259,7 +259,7 @@ class GUIProtocolServer:
 
     def set_system_message(self, message: str):
         self.session.autopilot.continue_sdk.config.system_message = message
-        self.session.autopilot.continue_sdk.models.set_system_message(message)
+        self.session.autopilot.continue_sdk.models.set_main_config_params(message, self.session.autopilot.continue_sdk.config.temperature)
 
         create_async_task(
             self.session.autopilot.set_config_attr(
