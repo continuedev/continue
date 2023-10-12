@@ -2,7 +2,7 @@ fastapi==0.95.2
 typer==0.9.0
 openai==0.27.5
 boltons==23.0.0
-pydantic==1.10.7
+pydantic==1.10.8
 uvicorn==0.21.1
 python-dotenv==1.0.0
 nest-asyncio==1.5.6

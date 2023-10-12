@@ -68,11 +68,12 @@ class TextGenWebUI(LLM):
                 incoming_data = await websocket.recv()
                 incoming_data = json.loads(incoming_data)
 
-                match incoming_data["event"]:
-                    case "text_stream":
-                        yield incoming_data["text"]
-                    case "stream_end":
-                        break
+                incoming_data_event = incoming_data["event"]
+
+                if incoming_data_event == "text_stream":
+                    yield incoming_data["text"]
+                elif incoming_data_event == "stream_end":
+                    break
 
     async def _stream_chat(self, messages: List[ChatMessage], options):
         args = self.collect_args(options)
@@ -98,17 +99,18 @@ class TextGenWebUI(LLM):
                     incoming_data = await websocket.recv()
                     incoming_data = json.loads(incoming_data)
 
-                    match incoming_data["event"]:
-                        case "text_stream":
-                            visible = incoming_data["history"]["visible"][-1]
-                            if len(visible) > 0:
-                                yield {
-                                    "role": "assistant",
-                                    "content": visible[-1].replace(prev, ""),
-                                }
-                                prev = visible[-1]
-                        case "stream_end":
-                            break
+                    incoming_data_event = incoming_data["event"]
+
+                    if incoming_data_event == "text_stream":
+                        visible = incoming_data["history"]["visible"][-1]
+                        if len(visible) > 0:
+                            yield {
+                                "role": "assistant",
+                                "content": visible[-1].replace(prev, ""),
+                            }
+                            prev = visible[-1]
+                    elif incoming_data_event == "stream_end":
+                        break
 
         async for chunk in generator():
             yield chunk
