@@ -140,13 +140,13 @@ jobs:
         with:
           name: macOSBinary
           path: extension/exe/continue_server
-      
+
       - uses: actions/upload-artifact@v2
         if: matrix.os == 'ubuntu-20.04' && matrix.arch == 'x64' && matrix.platform == 'linux'
         with:
           name: LinuxBinary
           path: extension/exe/continue_server
-      
+
       - uses: actions/upload-artifact@v2
         if: matrix.os == 'windows-latest' && matrix.arch == 'x64'
         with:

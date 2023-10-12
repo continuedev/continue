@@ -22,7 +22,6 @@ import {
   ArrowLeftIcon,
   ArrowRightIcon,
   ArrowUpLeftIcon,
-  StopCircleIcon,
   TrashIcon,
   XMarkIcon,
 } from "@heroicons/react/24/outline";
@@ -274,6 +273,9 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
   const dispatch = useDispatch();
   const workspacePaths = useSelector(
     (state: RootStore) => state.config.workspacePaths
+  );
+  const sessionHistory = useSelector(
+    (state: RootStore) => state.serverState.history
   );
 
   const [history, setHistory] = React.useState<string[]>([]);
@@ -1112,9 +1114,8 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
                         props.active ? `Stop (${getMetaKeyLabel()}⌫)` : "Delete"
                       }
                     >
-                      {props.active ? (
-                        <StopCircleIcon width="1.4em" height="1.4em" />
-                      ) : (
+                      {props.active ? null : (
+                        // <StopCircleIcon width="1.4em" height="1.4em" />
                         <XMarkIcon width="1.4em" height="1.4em" />
                       )}
                     </HeaderButtonWithText>
@@ -1229,8 +1230,30 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
         )}
       {props.isMainInput && (
         <ContinueButton
-          disabled={!(inputRef.current as any)?.value}
-          onClick={() => props.onEnter?.(undefined)}
+          disabled={
+            !(inputRef.current as any)?.value &&
+            !(
+              (typeof sessionHistory?.current_index !== "undefined" &&
+                sessionHistory.timeline[sessionHistory.current_index]
+                  ?.active) ||
+              false
+            )
+          }
+          onClick={() => {
+            if (
+              typeof sessionHistory?.current_index !== "undefined" &&
+              sessionHistory.timeline[sessionHistory.current_index]?.active
+            ) {
+              client?.deleteAtIndex(sessionHistory.current_index);
+            } else {
+              props.onEnter?.(undefined);
+            }
+          }}
+          showStop={
+            (typeof sessionHistory?.current_index !== "undefined" &&
+              sessionHistory.timeline[sessionHistory.current_index]?.active) ||
+            false
+          }
         />
       )}
     </div>

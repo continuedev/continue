@@ -443,7 +443,7 @@ Settings:
                             "model": self.model,
                             "model_class": self.__class__.__name__,
                             "time": ttft,
-                            "tokens": self.count_tokens(sum(m["content"] for m in messages))
+                            "tokens": sum(self.count_tokens(m["content"]) for m in messages)
                         })
 
         else:
