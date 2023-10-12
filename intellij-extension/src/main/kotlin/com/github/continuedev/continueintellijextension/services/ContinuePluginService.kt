@@ -19,6 +19,8 @@ class ContinuePluginService(project: Project) : Disposable {
         ContinuePluginToolWindowFactory.ContinuePluginWindow(project)
 
     var ideProtocolClient: IdeProtocolClient? = null
+    var sessionId: String? = null
+    var worksapcePaths: Array<String>? = null
 
     override fun dispose() {
         coroutineScope.cancel()

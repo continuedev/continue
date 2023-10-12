@@ -197,13 +197,6 @@ export function setupDebugPanel(
         });
         break;
       }
-      case "toggleDataSwitch": {
-        // Set the setting in vscode
-        await vscode.workspace
-          .getConfiguration("continue")
-          .update("dataSwitch", data.on, vscode.ConfigurationTarget.Global);
-        break;
-      }
       case "websocketForwardingOpen": {
         let url = data.url;
         if (typeof websocketConnections[url] === "undefined") {

@@ -208,10 +208,10 @@ function SuggestionsArea(props: { onClick: (textInput: string) => void }) {
               Tutorial ({stage + 1}/{NUM_STAGES})
             </b>
           </div>
-          <p style={{ color: vscForeground, paddingLeft: "4px" }}>
+          <div style={{ color: vscForeground, paddingLeft: "4px" }}>
             {stage < suggestionsStages.length &&
               suggestionsStages[stage][0]?.title}
-          </p>
+          </div>
           <HeaderButtonWithText
             className="absolute right-1 top-1 cursor-pointer"
             text="Close Tutorial"
@@ -233,8 +233,9 @@ function SuggestionsArea(props: { onClick: (textInput: string) => void }) {
             <XMarkIcon width="1.2em" height="1.2em" />
           </HeaderButtonWithText>
           <div className="grid grid-cols-2 gap-2 mt-2">
-            {suggestionsStages[stage]?.map((suggestion) => (
+            {suggestionsStages[stage]?.map((suggestion, idx) => (
               <SuggestionsDiv
+                key={idx}
                 disabled={!codeIsHighlighted}
                 {...suggestion}
                 onClick={() => {

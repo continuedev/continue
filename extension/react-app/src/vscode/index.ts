@@ -4,9 +4,23 @@ import "vscode-webview";
 declare const vscode: any;
 
 export function postVscMessage(type: string, data: any) {
+  console.log("Sending message", type);
   if (typeof vscode === "undefined") {
-    console.log("Unable to send message: vscode is undefined");
-    return;
+    if (localStorage.getItem("ide") === "jetbrains" || true) {
+      if ((window as any).postIntellijMessage === undefined) {
+        console.log(
+          "Unable to send message: postIntellijMessage is undefined. ",
+          type,
+          data
+        );
+        return;
+      }
+      (window as any).postIntellijMessage?.(type, data);
+      return;
+    } else {
+      console.log("Unable to send message: vscode is undefined. ", type, data);
+      return;
+    }
   }
   vscode.postMessage({
     type,

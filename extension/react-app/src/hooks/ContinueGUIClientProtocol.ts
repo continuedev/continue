@@ -48,11 +48,9 @@ class ContinueGUIClientProtocol extends AbstractContinueGUIClientProtocol {
   }
 
   onReconnectAtSession(session_id: string): void {
-    console.log("Reconnecting at session: ", session_id);
-    this.connectMessenger(
-      `${this.serverUrlWithSessionId.split("?")[0]}?session_id=${session_id}`,
-      this.useVscodeMessagePassing
-    );
+    const urlToReconnect = `${this.serverUrlWithSessionId.split("?")[0]}?session_id=${session_id}`
+    console.log("Reconnecting at session: ",urlToReconnect);
+    this.connectMessenger(urlToReconnect, this.useVscodeMessagePassing);
   }
 
   sendMainInput(input: string) {

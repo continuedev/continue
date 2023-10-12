@@ -926,6 +926,9 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
           borderRadius={defaultBorderRadius}
         >
           <MainTextInput
+            onClick={() => {
+              inputRef.current?.focus();
+            }}
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={(e) => {
               if (

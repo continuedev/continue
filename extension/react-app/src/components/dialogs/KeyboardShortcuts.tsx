@@ -129,8 +129,8 @@ const jetbrainsShortcuts: KeyboardShortcutProps[] = [
     description: "Reject Diff",
   },
   {
-    mac: "⌘ ⌃ J",
-    windows: "⌥ ⌃ J",
+    mac: "⌥ ⇧ J",
+    windows: "⌥ ⇧ J",
     description: "Quick Text Entry",
   },
   {

@@ -437,6 +437,8 @@ class ContinuePluginStartupActivity : StartupActivity, Disposable {
                             "vscMediaUrl" to "http://continue",
                             "dataSwitchOn" to true
                     )
+                    continuePluginService.sessionId = sessionId
+                    continuePluginService.worksapcePaths = workspacePaths as Array<String>
                     GlobalScope.async(Dispatchers.IO) {
                         dispatchEventToWebview(
                                 "onLoad",

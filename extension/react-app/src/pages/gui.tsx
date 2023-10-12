@@ -8,6 +8,7 @@ import {
   useContext,
   useLayoutEffect,
   useCallback,
+  Fragment,
 } from "react";
 import { HistoryNode } from "../../../schema/HistoryNode";
 import StepContainer from "../components/StepContainer";
@@ -646,7 +647,7 @@ function GUI(props: GUIProps) {
         {history?.timeline.map((node: HistoryNode, index: number) => {
           if (node.step.hide) return null;
           return (
-            <>
+            <Fragment key={index}>
               {node.step.name === "User Input" ? (
                 node.step.hide || (
                   <ComboBox
@@ -758,14 +759,14 @@ function GUI(props: GUIProps) {
                 </TimelineItem>
               )}
               {/* <div className="h-2"></div> */}
-            </>
+            </Fragment>
           );
         })}
       </StepsDiv>
 
       <div>
-        {user_input_queue?.map?.((input) => {
-          return <UserInputQueueItem>{input}</UserInputQueueItem>;
+        {user_input_queue?.map?.((input, idx) => {
+          return <UserInputQueueItem key={idx}>{input}</UserInputQueueItem>;
         })}
       </div>
 

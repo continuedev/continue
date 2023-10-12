@@ -17,11 +17,11 @@ class FunctionCall(ContinueBaseModel):
 
 class ChatMessage(ContinueBaseModel):
     role: ChatMessageRole
-    content: Union[str, None] = None
-    name: Union[str, None] = None
+    content: Optional[str] = None
+    name: Optional[str] = None
     # A summary for pruning chat context to fit context window. Often the Step name.
     summary: str
-    function_call: Union[FunctionCall, None] = None
+    function_call: Optional[FunctionCall] = None
 
     def to_dict(self, with_functions: bool) -> Dict:
         d = self.dict()

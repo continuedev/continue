@@ -560,6 +560,7 @@ class IdeProtocolClient {
         ".vscode",
         ".idea",
         ".vs",
+        "venv",
         ".venv",
         "env",
         ".env",
