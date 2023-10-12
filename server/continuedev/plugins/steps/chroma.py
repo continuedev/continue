@@ -26,7 +26,7 @@ class CreateCodebaseIndexChroma(Step):
     )
 
     async def describe(self, models) -> Coroutine[str, None, None]:
-        return "Generated codebase embeddings"
+        return "Generated codebase embeddings."
 
     async def run(self, sdk: ContinueSDK) -> Coroutine[Observation, None, None]:
         index = ChromaIndexManager(
@@ -274,14 +274,14 @@ class AnswerQuestionChroma(Step):
             )
 
         filepaths = set([])
+        context_items: List[ContextItem] = []
         for id, document in results_dict.items():
             filename = id.split("::")[0]
             filepath = results["ids"][0][shortened_filepaths.index(id)].split("::")[0]
             if filepath in filepaths:
                 continue
-
-            await sdk.add_context_item(
-                ContextItem(
+            
+            ctx_item = ContextItem(
                     content=document,
                     description=ContextItemDescription(
                         name=filename,
@@ -292,11 +292,15 @@ class AnswerQuestionChroma(Step):
                         ),
                     ),
                 )
-            )
+            context_items.append(ctx_item)
+            await sdk.add_context_item(ctx_item)
             filepaths.add(filepath)
 
         await sdk.update_ui()
-        await sdk.run_step(SimpleChatStep(name="Answer Question"))
+        await sdk.run_step(SimpleChatStep(name="Answer Question", description=f"Reading from {self.n_final} files..."))
+
+        # for ctx_item in context_items:
+        #     await sdk.delete_context_item(ctx_item.description.id)
 
 
 class EditFileChroma(Step):

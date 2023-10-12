@@ -29,6 +29,7 @@ from .main import (
     ChatMessage,
     Context,
     ContextItem,
+    ContextItemId,
     ContinueCustomException,
     History,
     HistoryNode,
@@ -281,6 +282,11 @@ class ContinueSDK(AbstractContinueSDK):
 
     async def add_context_item(self, item: ContextItem):
         await self.__autopilot.context_manager.manually_add_context_item(item)
+    
+    async def delete_context_item(self, id: ContextItemId):
+        await self.__autopilot.delete_context_with_ids([
+            f"{id.provider_title}-{id.item_id}"
+        ])
 
     def set_loading_message(self, message: str):
         # self.__autopilot.set_loading_message(message)

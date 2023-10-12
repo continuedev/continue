@@ -101,6 +101,7 @@ class SimpleChatStep(Step):
             },
         )
 
+        self.description = ""
         async for chunk in generator:
             if sdk.current_step_was_deleted():
                 # So that the message doesn't disappear
