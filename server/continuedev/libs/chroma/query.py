@@ -1,54 +1,132 @@
+import asyncio
 import json
 import os
 import subprocess
 from functools import cached_property
 from typing import List, Tuple
 
-from llama_index import (
-    Document,
-    GPTVectorStoreIndex,
-    StorageContext,
-    load_index_from_storage,
-)
-from llama_index.langchain_helpers.text_splitter import TokenTextSplitter
+import chromadb
+from chromadb.config import Settings
+from chromadb.utils import embedding_functions
+from dotenv import load_dotenv
+from openai.error import RateLimitError
 
+from ...core.sdk import ContinueSDK
+from ..util.filter_files import DEFAULT_IGNORE_PATTERNS, should_filter_path
 from ..util.logging import logger
-from .update import filter_ignored_files, load_gpt_index_documents
+from ..util.paths import getEmbeddingsPathForBranch
+from .update import filter_ignored_files
+
+load_dotenv()
+
+IGNORE_PATTERNS_FOR_CHROMA = [
+    # File Names
+    "**/.DS_Store",
+    "**/package-lock.json",
+    "**/yarn.lock",
+    # File Types
+    "*.log",
+    "*.ttf",
+    "*.png",
+    "*.jpg",
+    "*.jpeg",
+    "*.gif",
+    "*.mp4",
+    "*.svg",
+    "*.ico",
+    "*.pdf",
+    "*.zip",
+    "*.gz",
+    "*.tar",
+    "*.tgz",
+    "*.rar",
+    "*.7z",
+    "*.exe",
+    "*.dll",
+    "*.obj",
+    "*.o",
+    "*.a",
+    "*.lib",
+    "*.so",
+    "*.dylib",
+    "*.ncb",
+    "*.sdf",
+]
+
+
+def chunk_document(document: str, max_length: int = 1000) -> List[str]:
+    """Chunk a document into smaller pieces."""
+    chunks = []
+    chunk = ""
+    for line in document.split("\n"):
+        if len(chunk) + len(line) > max_length:
+            chunks.append(chunk)
+            chunk = ""
+        chunk += line + "\n"
+    chunks.append(chunk)
+    return chunks
+
+
+# Mapping of workspace_dir to chromadb collection
+collections = {}
 
 
 class ChromaIndexManager:
     workspace_dir: str
+    client: chromadb.Client
+    openai_api_key: str = None
 
-    def __init__(self, workspace_dir: str):
+    def __init__(
+        self,
+        workspace_dir: str,
+        openai_api_key: str = None,
+    ):
         self.workspace_dir = workspace_dir
+        self.client = chromadb.PersistentClient(
+            path=os.path.join(
+                getEmbeddingsPathForBranch(self.workspace_dir, self.current_branch),
+                "chroma",
+            ),
+            settings=Settings(anonymized_telemetry=False),
+        )
+        self.openai_api_key = openai_api_key
+        os.environ.setdefault("TOKENIZERS_PARALLELISM", "true")
 
     @cached_property
     def current_commit(self) -> str:
         """Get the current commit."""
-        return (
-            subprocess.check_output(
-                ["git", "rev-parse", "HEAD"], cwd=self.workspace_dir
+        try:
+            return (
+                subprocess.check_output(
+                    ["git", "rev-parse", "HEAD"], cwd=self.workspace_dir
+                )
+                .decode("utf-8")
+                .strip()
             )
-            .decode("utf-8")
-            .strip()
-        )
+        except subprocess.CalledProcessError:
+            return "NONE"
 
     @cached_property
     def current_branch(self) -> str:
         """Get the current branch."""
-        return (
-            subprocess.check_output(
-                ["git", "rev-parse", "--abbrev-ref", "HEAD"], cwd=self.workspace_dir
+        try:
+            return (
+                subprocess.check_output(
+                    ["git", "rev-parse", "--abbrev-ref", "HEAD"], cwd=self.workspace_dir
+                )
+                .decode("utf-8")
+                .strip()
             )
-            .decode("utf-8")
-            .strip()
-        )
+        except subprocess.CalledProcessError:
+            return "NONE"
 
     @cached_property
     def index_dir(self) -> str:
-        return os.path.join(
-            self.workspace_dir, ".continue", "chroma", self.current_branch
-        )
+        return getEmbeddingsPathForBranch(self.workspace_dir, self.current_branch)
+
+    @property
+    def index_name(self) -> str:
+        return f"{self.workspace_dir}/{self.current_branch}"
 
     @cached_property
     def git_root_dir(self):
@@ -67,43 +145,97 @@ class ChromaIndexManager:
     def check_index_exists(self):
         return os.path.exists(os.path.join(self.index_dir, "metadata.json"))
 
-    def create_codebase_index(self):
+    @property
+    def collection(self):
+        if self.workspace_dir in collections:
+            return collections[self.workspace_dir]
+
+        kwargs = {
+            "name": self.current_branch,
+        }
+        if (
+            self.openai_api_key is not None
+        ):
+            kwargs["embedding_function"] = embedding_functions.OpenAIEmbeddingFunction(
+                api_key=self.openai_api_key,
+                model_name="text-embedding-ada-002",
+            )
+
+        return self.client.get_or_create_collection(**kwargs)
+
+    async def create_codebase_index(
+        self, sdk: ContinueSDK, ignore_files: List[str] = []
+    ):
         """Create a new index for the current branch."""
-        if not self.check_index_exists():
-            os.makedirs(self.index_dir)
-        else:
+        collections[self.workspace_dir] = self.collection
+
+        if self.check_index_exists():
             return
 
-        documents = load_gpt_index_documents(self.workspace_dir)
+        files = await sdk.ide.listDirectoryContents(sdk.ide.workspace_directory, True)
 
-        chunks = {}
-        doc_chunks = []
-        for doc in documents:
-            text_splitter = TokenTextSplitter()
+        # Filter from ignore_directories
+        files = list(
+            filter(
+                lambda file: not should_filter_path(
+                    file,
+                    ignore_files + DEFAULT_IGNORE_PATTERNS + IGNORE_PATTERNS_FOR_CHROMA,
+                ),
+                files,
+            )
+        )
+
+        tasks = []
+        for file in files:
+            tasks.append(sdk.ide.readFile(file))
+
+        documents = await asyncio.gather(*tasks)
+
+        chunks = [chunk_document(document) for document in documents]
+
+        flattened_chunks = []
+        flattened_metadata = []
+        flattened_ids = []
+        for i in range(len(chunks)):
+            for j in range(len(chunks[i])):
+                flattened_chunks.append(chunks[i][j])
+                flattened_metadata.append({"filepath": files[i]})
+                flattened_ids.append(f"{files[i]}::{j}")
+
+        for i in range(len(flattened_chunks)):
+            if len(flattened_chunks[i]) == 0:
+                flattened_chunks[i] = "EMPTY"
+            elif len(flattened_chunks[i]) > 6000:
+                flattened_chunks[i] = flattened_chunks[i][:6000]
+
+        # Attempt to avoid rate-limiting
+        i = 0
+        wait_time = 4.0
+        while i < len(flattened_chunks):
             try:
-                text_chunks = text_splitter.split_text(doc.text)
-            except:
-                logger.warning(f"ERROR (probably found special token): {doc.text}")
-                continue  # lol
-            filename = doc.extra_info["filename"]
-            chunks[filename] = len(text_chunks)
-            for i, text in enumerate(text_chunks):
-                doc_chunks.append(Document(text, doc_id=f"{filename}::{i}"))
+                self.collection.add(
+                    documents=flattened_chunks[i : i + 100],
+                    metadatas=flattened_metadata[i : i + 100],
+                    ids=flattened_ids[i : i + 100],
+                )
+                i += 100
+                await asyncio.sleep(0.5)
+            except RateLimitError as e:
+                logger.debug(f"Rate limit exceeded, waiting {wait_time} seconds")
+                await asyncio.sleep(wait_time)
+                wait_time *= 2
+                if wait_time > 2**10:
+                    raise e
 
         with open(f"{self.index_dir}/metadata.json", "w") as f:
-            json.dump({"commit": self.current_commit, "chunks": chunks}, f, indent=4)
-
-        index = GPTVectorStoreIndex([])
-
-        for chunk in doc_chunks:
-            index.insert(chunk)
-
-        # d = 1536 # Dimension of text-ada-embedding-002
-        # faiss_index = faiss.IndexFlatL2(d)
-        # index = GPTFaissIndex(documents, faiss_index=faiss_index)
-        # index.save_to_disk(f"{index_dir_for(branch)}/index.json", faiss_index_save_path=f"{index_dir_for(branch)}/index_faiss_core.index")
-
-        index.storage_context.persist(persist_dir=self.index_dir)
+            json.dump(
+                {
+                    "commit": self.current_commit,
+                    "chunks": {files[i]: len(chunks[i]) for i in range(len(files))},
+                },
+                f,
+                indent=4,
+            )
 
         logger.debug("Codebase index created")
 
@@ -113,13 +245,17 @@ class ChromaIndexManager:
         with open(metadata, "r") as f:
             previous_commit = json.load(f)["commit"]
 
-        modified_deleted_files = (
-            subprocess.check_output(
-                ["git", "diff", "--name-only", previous_commit, self.current_commit]
+        try:
+            modified_deleted_files = (
+                subprocess.check_output(
+                    ["git", "diff", "--name-only", previous_commit, self.current_commit]
+                )
+                .decode("utf-8")
+                .strip()
             )
-            .decode("utf-8")
-            .strip()
-        )
+        except subprocess.CalledProcessError:
+            return [], []
+
         modified_deleted_files = modified_deleted_files.split("\n")
         modified_deleted_files = [f for f in modified_deleted_files if f]
 
@@ -144,8 +280,6 @@ class ChromaIndexManager:
         if not self.check_index_exists():
             self.create_codebase_index()
         else:
-            # index = GPTFaissIndex.load_from_disk(f"{index_dir_for(branch)}/index.json", faiss_index_save_path=f"{index_dir_for(branch)}/index_faiss_core.index")
-            index = GPTVectorStoreIndex.load_from_disk(f"{self.index_dir}/index.json")
             modified_files, deleted_files = self.get_modified_deleted_files()
 
             with open(f"{self.index_dir}/metadata.json", "r") as f:
@@ -154,7 +288,7 @@ class ChromaIndexManager:
             for file in deleted_files:
                 num_chunks = metadata["chunks"][file]
                 for i in range(num_chunks):
-                    index.delete(f"{file}::{i}")
+                    self.collection.delete(file)
 
                 del metadata["chunks"][file]
 
@@ -165,20 +299,17 @@ class ChromaIndexManager:
                     num_chunks = metadata["chunks"][file]
 
                     for i in range(num_chunks):
-                        index.delete(f"{file}::{i}")
+                        self.collection.delete(file)
 
                     logger.debug(f"Deleted old version of {file}")
 
                 with open(file, "r") as f:
-                    text = f.read()
+                    f.read()
 
-                text_splitter = TokenTextSplitter()
-                text_chunks = text_splitter.split_text(text)
+                # for i, text in enumerate(text_chunks):
+                #     index.insert(Document(text=text, doc_id=f"{file}::{i}"))
 
-                for i, text in enumerate(text_chunks):
-                    index.insert(Document(text, doc_id=f"{file}::{i}"))
-
-                metadata["chunks"][file] = len(text_chunks)
+                # metadata["chunks"][file] = len(text_chunks)
 
                 logger.debug(f"Inserted new version of {file}")
 
@@ -189,30 +320,12 @@ class ChromaIndexManager:
 
             logger.debug("Codebase index updated")
 
-    def query_codebase_index(self, query: str) -> str:
+    def query_codebase_index(self, query: str, n: int = 4) -> str:
         """Query the codebase index."""
         if not self.check_index_exists():
             logger.debug(f"No index found for the codebase at {self.index_dir}")
-            return ""
+            return []
 
-        storage_context = StorageContext.from_defaults(persist_dir=self.index_dir)
-        index = load_index_from_storage(storage_context)
-        # index = GPTVectorStoreIndex.load_from_disk(path)
-        engine = index.as_query_engine()
-        return engine.query(query)
+        results = self.collection.query(query_texts=[query], n_results=n)
 
-    def query_additional_index(self, query: str) -> str:
-        """Query the additional index."""
-        index = GPTVectorStoreIndex.load_from_disk(
-            os.path.join(self.index_dir, "additional_index.json")
-        )
-        return index.query(query)
-
-    def replace_additional_index(self, info: str):
-        """Replace the additional index with the given info."""
-        with open(f"{self.index_dir}/additional_context.txt", "w") as f:
-            f.write(info)
-        documents = [Document(info)]
-        index = GPTVectorStoreIndex(documents)
-        index.save_to_disk(f"{self.index_dir}/additional_index.json")
-        logger.debug("Additional index replaced")
+        return results

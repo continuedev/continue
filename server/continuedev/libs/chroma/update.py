@@ -4,7 +4,6 @@ import subprocess
 from typing import List
 
 from dotenv import load_dotenv
-from llama_index import Document, SimpleDirectoryReader
 
 load_dotenv()
 
@@ -52,15 +51,3 @@ def get_input_files(root_dir: str):
     all_files = set(get_all_files(root_dir))
     nonignored_files = all_files - ignored_files
     return filter_ignored_files(nonignored_files, root_dir)
-
-
-def load_gpt_index_documents(root: str) -> List[Document]:
-    """Loads a list of GPTIndex Documents, respecting .gitignore files."""
-    # Get input files
-    input_files = get_input_files(root)
-    # Use SimpleDirectoryReader to load the files into Documents
-    return SimpleDirectoryReader(
-        root,
-        input_files=input_files,
-        file_metadata=lambda filename: {"filename": filename},
-    ).load_data()

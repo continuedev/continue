@@ -45,6 +45,34 @@ def getDiffsFolderPath():
     return path
 
 
+def getEmbeddingsFolderPath():
+    path = os.path.join(getGlobalFolderPath(), "embeddings")
+    os.makedirs(path, exist_ok=True)
+    return path
+
+
+def decode_escaped_path(path: str) -> str:
+    """We use a custom escaping scheme to record the full path of a file as a
+    corresponding basename, but withut URL encoding, because then the URI just gets
+    interpreted as a full path again."""
+    return path.replace("$f$", "/").replace("$b$", "\\")
+
+
+def encode_escaped_path(path: str) -> str:
+    """We use a custom escaping scheme to record the full path of a file as a
+    corresponding basename, but withut URL encoding, because then the URI just gets
+    interpreted as a full path again."""
+    return path.replace("/", "$f$").replace("\\", "$b$")
+
+
+def getEmbeddingsPathForBranch(workspace_dir: str, branch_name: str):
+    path = os.path.join(
+        getEmbeddingsFolderPath(), encode_escaped_path(workspace_dir), branch_name
+    )
+    os.makedirs(path, exist_ok=True)
+    return path
+
+
 def getDevDataFilePath(table_name: str):
     filepath = os.path.join(getDevDataFolderPath(), f"{table_name}.jsonl")
     if not os.path.exists(filepath):

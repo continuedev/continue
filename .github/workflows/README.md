@@ -6,7 +6,7 @@ When merging to `preview`:
 - all of the artifacts are downloaded (and the Apple Silicon downloaded from S3 bucket) and pushed to the store/registry all at once, as pre-releases.
 - the version is bumped and this change is commited to preview
 
-# main
+## main
 When merging to `main`:
 
 > Make sure to sh build.sh m1 and push to the S3 bucket before merging to main, so that the newest Apple Silicon binary is available to package with the extension.

@@ -1,4 +1,6 @@
 import json
+import os
+import sys
 from typing import Dict, List, Union
 
 from ...core.main import ChatMessage
@@ -25,8 +27,13 @@ def encoding_for_model(model_name: str):
     global already_saw_import_err
     if already_saw_import_err:
         return None
-    
+
     try:
+        if getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"):
+            tiktoken_cache = os.path.join(sys._MEIPASS, "tiktoken_cache")
+            if os.path.exists(tiktoken_cache):
+                os.environ["TIKTOKEN_CACHE_DIR"] = tiktoken_cache
+
         import tiktoken
         from tiktoken_ext import openai_public  # noqa: F401
 
@@ -61,7 +68,7 @@ def count_chat_message_tokens(model_name: str, chat_message: ChatMessage) -> int
 def prune_raw_prompt_from_top(
     model_name: str, context_length: int, prompt: str, tokens_for_completion: int
 ):
-    max_tokens = context_length - tokens_for_completion
+    max_tokens = context_length - tokens_for_completion - TOKEN_BUFFER_FOR_SAFETY
     encoding = encoding_for_model(model_name)
 
     if encoding is None:
