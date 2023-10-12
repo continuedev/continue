@@ -73,6 +73,17 @@ jobs:
       - name: Build PyInstaller Executable
         run: pyinstaller continue_server.spec
 
+      # 1.25 Publish to PyPI
+
+      - name: Configure Poetry Token
+        run: cd server && poetry config pypi-token.pypi ${{ secrets.PYPI_API_TOKEN }}
+
+      - name: Bump the version
+        run: cd server && poetry version patch
+
+      - name: Build and publish the package
+        run: cd server && poetry publish --build
+
       # 1.5 Place the binary in extension/exe directory
       - name: Make sure extension/exe directory exists
         run: |
