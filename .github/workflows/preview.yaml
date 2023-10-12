@@ -172,7 +172,7 @@ jobs:
 
       - name: Download Apple Silicon Binary
         if: matrix.os == 'macos-latest' && matrix.arch == 'arm64'
-        run: curl -o extension/exe/continue_server https://continue-server-binaries.s3.us-west-1.amazonaws.com/apple-silicon/run
+        run: curl -o extension/exe/continue_server https://continue-server-binaries.s3.us-west-1.amazonaws.com/apple-silicon/continue_server
 
       - name: Set permissions
         run: |
