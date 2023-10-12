@@ -126,190 +126,208 @@ class IdeProtocolClient(
         return gson.toJson(data)
     }
 
-    private fun initWebSocket() {
-        val webSocketListener = object : WebSocketListener() {
-            override fun onOpen(webSocket: WebSocket, response: Response) {
-                // handle onOpen
-            }
-
-            override fun onMessage(webSocket: WebSocket, text: String) {
-                coroutineScope.launch(Dispatchers.IO) {
-                    val parsedMessage: Map<String, Any> = Gson().fromJson(
-                            text,
-                            object : TypeToken<Map<String, Any>>() {}.type
-                    )
-                    val messageType = parsedMessage["messageType"] as? String
-                    val data = parsedMessage["data"] as Map<String, Any>
-                    when (messageType) {
-                        "workspaceDirectory" -> {
-                            webSocket.send(
-                                    Gson().toJson(
-                                            WebSocketMessage(
-                                                    "workspaceDirectory",
-                                                    WorkspaceDirectory(workspaceDirectory())
-                                            )
+    private fun handleWebsocketMessage(webSocket: WebSocket, text: String) {
+        coroutineScope.launch(Dispatchers.IO) {
+            val parsedMessage: Map<String, Any> = Gson().fromJson(
+                    text,
+                    object : TypeToken<Map<String, Any>>() {}.type
+            )
+            val messageType = parsedMessage["messageType"] as? String
+            val data = parsedMessage["data"] as Map<String, Any>
+            when (messageType) {
+                "workspaceDirectory" -> {
+                    webSocket.send(
+                            Gson().toJson(
+                                    WebSocketMessage(
+                                            "workspaceDirectory",
+                                            WorkspaceDirectory(workspaceDirectory())
                                     )
                             )
-                        }
+                    )
+                }
 
-                        "uniqueId" -> webSocket.send(
-                                Gson().toJson(
-                                        WebSocketMessage(
-                                                "uniqueId",
-                                                UniqueId(uniqueId())
-                                        )
+                "uniqueId" -> webSocket.send(
+                        Gson().toJson(
+                                WebSocketMessage(
+                                        "uniqueId",
+                                        UniqueId(uniqueId())
                                 )
                         )
+                )
 
-                        "ide" -> {
-                            val applicationInfo = ApplicationInfo.getInstance()
-                            val ideName: String = applicationInfo.fullApplicationName
-                            val ideVersion = applicationInfo.fullVersion
-                            val sshClient = System.getenv("SSH_CLIENT")
-                            val sshTty = System.getenv("SSH_TTY")
+                "ide" -> {
+                    val applicationInfo = ApplicationInfo.getInstance()
+                    val ideName: String = applicationInfo.fullApplicationName
+                    val ideVersion = applicationInfo.fullVersion
+                    val sshClient = System.getenv("SSH_CLIENT")
+                    val sshTty = System.getenv("SSH_TTY")
 
-                            var remoteName: String? = null
-                            if (sshClient != null || sshTty != null) {
-                                remoteName = "ssh"
-                            }
-                            webSocket.send(
-                                    Gson().toJson(
-                                            WebSocketMessage(
-                                                    "ide",
-                                                    IdeInfo(
-                                                            ideName, ideVersion, remoteName
-                                                    )
-                                            )
-                                    )
-                            )
-                        }
-
-                        "showDiff" -> {
-                            diffManager.showDiff(
-                                    data["filepath"] as String,
-                                    data["replacement"] as String,
-                                    (data["step_index"] as Double).toInt()
-                            )
-                        }
-
-                        "readFile" -> {
-                            val msg =
-                                    ReadFile(readFile(data["filepath"] as String))
-                            webSocket.send(
-                                    Gson().toJson(
-                                            WebSocketMessage(
-                                                    "readFile",
-                                                    msg
-                                            )
-                                    )
-                            )
-                        }
-
-                        "listDirectoryContents" -> {
-                            webSocket.send(
-                                    Gson().toJson(
-                                            WebSocketMessage(
-                                                    "listDirectoryContents",
-                                                    ListDirectoryContents(listDirectoryContents())
-                                            )
-                                    )
-                            )
-                        }
-
-                        "getTerminalContents" -> {
-                            webSocket.send(
-                                    Gson().toJson(
-                                            WebSocketMessage(
-                                                    "getTerminalContents",
-                                                    GetTerminalContents("Terminal cannot be accessed in JetBrains IDE")
-                                            )
-                                    )
-                            )
-                        }
-
-                        "visibleFiles" -> {
-                            val msg = VisibleFiles(visibleFiles())
-                            webSocket.send(
-                                    Gson().toJson(
-                                            WebSocketMessage(
-                                                    "visibleFiles",
-                                                    msg
-                                            )
-                                    )
-                            )
-                        }
-
-                        "saveFile" -> saveFile(data["filepath"] as String)
-                        "showVirtualFile" -> showVirtualFile(
-                                data["name"] as String,
-                                data["contents"] as String
-                        )
-
-                        "connected" -> {}
-                        "showMessage" -> showMessage(data["message"] as String)
-                        "setFileOpen" -> setFileOpen(
-                                data["filepath"] as String,
-                                data["open"] as Boolean
-                        )
-
-                        "highlightCode" -> {
-                            val gson = Gson()
-                            val json = gson.toJson(data["rangeInFile"])
-                            val type = object : TypeToken<RangeInFile>() {}.type
-                            val rangeInFile =
-                                    gson.fromJson<RangeInFile>(json, type)
-                            highlightCode(rangeInFile, data["color"] as String)
-                        }
-
-                        "setSuggestionsLocked" -> {}
-                        "getSessionId" -> {}
-                        "highlightedCode" -> {
-                            val rifWithContents = getHighlightedCode()
-                            val rifs: MutableList<RangeInFile> = mutableListOf()
-                            if (rifWithContents != null) {
-                                val rif = RangeInFile(rifWithContents.filepath, rifWithContents.range)
-                                rifs += rif
-                            }
-                            webSocket.send(
-                                    Gson().toJson(
-                                            WebSocketMessage(
-                                                    "highlightedCode",
-                                                    HighlightedCode(rifs)
-                                            )
-                                    )
-                            )
-                        }
-
-                        else -> {
-                            println("Unknown messageType: $messageType")
-                        }
+                    var remoteName: String? = null
+                    if (sshClient != null || sshTty != null) {
+                        remoteName = "ssh"
                     }
+                    webSocket.send(
+                            Gson().toJson(
+                                    WebSocketMessage(
+                                            "ide",
+                                            IdeInfo(
+                                                    ideName, ideVersion, remoteName
+                                            )
+                                    )
+                            )
+                    )
+                }
 
-                    if (messageType != null) {
-                        pendingResponses[messageType]?.complete(parsedMessage)
-                        pendingResponses.remove(messageType)
+                "showDiff" -> {
+                    diffManager.showDiff(
+                            data["filepath"] as String,
+                            data["replacement"] as String,
+                            (data["step_index"] as Double).toInt()
+                    )
+                }
+
+                "readFile" -> {
+                    val msg =
+                            ReadFile(readFile(data["filepath"] as String))
+                    webSocket.send(
+                            Gson().toJson(
+                                    WebSocketMessage(
+                                            "readFile",
+                                            msg
+                                    )
+                            )
+                    )
+                }
+
+                "listDirectoryContents" -> {
+                    webSocket.send(
+                            Gson().toJson(
+                                    WebSocketMessage(
+                                            "listDirectoryContents",
+                                            ListDirectoryContents(listDirectoryContents())
+                                    )
+                            )
+                    )
+                }
+
+                "getTerminalContents" -> {
+                    webSocket.send(
+                            Gson().toJson(
+                                    WebSocketMessage(
+                                            "getTerminalContents",
+                                            GetTerminalContents("Terminal cannot be accessed in JetBrains IDE")
+                                    )
+                            )
+                    )
+                }
+
+                "visibleFiles" -> {
+                    val msg = VisibleFiles(visibleFiles())
+                    webSocket.send(
+                            Gson().toJson(
+                                    WebSocketMessage(
+                                            "visibleFiles",
+                                            msg
+                                    )
+                            )
+                    )
+                }
+
+                "saveFile" -> saveFile(data["filepath"] as String)
+                "showVirtualFile" -> showVirtualFile(
+                        data["name"] as String,
+                        data["contents"] as String
+                )
+
+                "connected" -> {}
+                "showMessage" -> showMessage(data["message"] as String)
+                "setFileOpen" -> setFileOpen(
+                        data["filepath"] as String,
+                        data["open"] as Boolean
+                )
+
+                "highlightCode" -> {
+                    val gson = Gson()
+                    val json = gson.toJson(data["rangeInFile"])
+                    val type = object : TypeToken<RangeInFile>() {}.type
+                    val rangeInFile =
+                            gson.fromJson<RangeInFile>(json, type)
+                    highlightCode(rangeInFile, data["color"] as String)
+                }
+
+                "setSuggestionsLocked" -> {}
+                "getSessionId" -> {}
+                "highlightedCode" -> {
+                    val rifWithContents = getHighlightedCode()
+                    val rifs: MutableList<RangeInFile> = mutableListOf()
+                    if (rifWithContents != null) {
+                        val rif = RangeInFile(rifWithContents.filepath, rifWithContents.range)
+                        rifs += rif
                     }
+                    webSocket.send(
+                            Gson().toJson(
+                                    WebSocketMessage(
+                                            "highlightedCode",
+                                            HighlightedCode(rifs)
+                                    )
+                            )
+                    )
+                }
+
+                else -> {
+                    println("Unknown messageType: $messageType")
                 }
             }
 
+            if (messageType != null) {
+                pendingResponses[messageType]?.complete(parsedMessage)
+                pendingResponses.remove(messageType)
+            }
+        }
+    }
+
+    private var backoff: Int = 100  // ms
+    
+    private fun initWebSocket() {
+        val webSocketListener = object : WebSocketListener() {
+    
+            override fun onOpen(webSocket: WebSocket, response: Response) {
+                // handle onOpen
+                backoff = 100  // reset backoff
+            }
+    
+            override fun onMessage(webSocket: WebSocket, text: String) {
+                handleWebsocketMessage(webSocket, text)
+            }
+    
             override fun onFailure(
                     webSocket: WebSocket,
                     t: Throwable,
                     response: Response?
             ) {
                 eventListeners.forEach { it.onErrorOccurred(t) }
+                // handle failure
+                backoff *= 2
+                if (backoff > 10000000) return
+                Thread.sleep(backoff.toLong())
+                initWebSocket()
             }
-
+    
             override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {
                 super.onClosed(webSocket, code, reason)
                 println("Closing Continue IDE websocket")
+                // handle closure
+                backoff *= 2
+                if (backoff > 10000000) return
+                Thread.sleep(backoff.toLong())
+                initWebSocket()
             }
-
+    
         }
         val request = Request.Builder()
-            .url(serverUrl)
-            .build()
-
+                .url(serverUrl)
+                .build()
+    
         webSocket = okHttpClient.newWebSocket(request, webSocketListener)
     }
 
