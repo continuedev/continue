@@ -42,7 +42,7 @@ function addPythonPathForConfig() {
   const pathToAdd = extensionContext?.extensionPath;
   if (analysisPaths && pathToAdd && !analysisPaths.includes(pathToAdd)) {
     analysisPaths.push(pathToAdd);
-    pythonConfig.update("analysis.extraPaths", analysisPaths);
+    pythonConfig.update("analysis.extraPaths", analysisPaths, vscode.ConfigurationTarget.Global);
   }
 
   if (
@@ -51,7 +51,7 @@ function addPythonPathForConfig() {
     !autoCompletePaths.includes(pathToAdd)
   ) {
     autoCompletePaths.push(pathToAdd);
-    pythonConfig.update("autoComplete.extraPaths", autoCompletePaths);
+    pythonConfig.update("autoComplete.extraPaths", autoCompletePaths, vscode.ConfigurationTarget.Global);
   }
 }
 

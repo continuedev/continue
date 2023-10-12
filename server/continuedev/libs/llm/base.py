@@ -1,5 +1,6 @@
 import ssl
 from textwrap import dedent
+from time import time
 from typing import Any, Callable, Coroutine, Dict, Generator, List, Optional, Union
 
 import aiohttp
@@ -428,15 +429,36 @@ Settings:
         completion = ""
 
         # Use the template_messages function if it exists and do a raw completion
+        ti = time()
+        tf = None
         if self.template_messages is None:
             async for chunk in self._stream_chat(messages=messages, options=options):
                 yield chunk
                 if "content" in chunk:
                     completion += chunk["content"]
+                    if tf is None:
+                        tf = time()
+                        ttft = tf - ti
+                        posthog_logger.capture_event("time_to_first_token", {
+                            "model": self.model,
+                            "model_class": self.__class__.__name__,
+                            "time": ttft,
+                            "tokens": self.count_tokens(sum(m["content"] for m in messages))
+                        })
+
         else:
             async for chunk in self._stream_complete(prompt=prompt, options=options):
                 yield {"role": "assistant", "content": chunk}
                 completion += chunk
+                if tf is None:
+                    tf = time()
+                    ttft = tf - ti
+                    posthog_logger.capture_event("time_to_first_token", {
+                        "model": self.model,
+                        "model_class": self.__class__.__name__,
+                        "time": ttft,
+                        "tokens": self.count_tokens(prompt)
+                    })
 
         # if log:
         #     self.write_log(f"Completion: \n\n{completion}")
