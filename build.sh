@@ -17,18 +17,18 @@ pip install pyinstaller
 # 4. Detect M1 architecture or allow manual override
 if [ "$1" = "m1" ]; then
     echo "Building for M1 architecture"
-    SPEC_FILE="run.m1.spec"
+    SPEC_FILE="continue_server.m1.spec"
 elif [ "$1" = "regular" ]; then
     echo "Building for regular architecture"
-    SPEC_FILE="run.spec"
+    SPEC_FILE="continue_server.spec"
 else
     ARCH=$(uname -m)
     if [ "$ARCH" = "arm64" ]; then
         echo "$ARCH architecture detected, using M1 spec file"
-        SPEC_FILE="run.m1.spec"
+        SPEC_FILE="continue_server.m1.spec"
     else
         echo "$ARCH architecture detected, using regular spec file"
-        SPEC_FILE="run.spec"
+        SPEC_FILE="continue_server.spec"
     fi
 fi
 

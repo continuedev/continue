@@ -8,7 +8,7 @@ from ...core.main import ContinueCustomException
 from ..util.logging import logger
 from .base import LLM
 from .prompts.chat import llama2_template_messages
-from .prompts.edit import simplified_edit_prompt
+from .prompts.edit import codellama_edit_prompt
 
 
 class TogetherLLM(LLM):
@@ -44,7 +44,7 @@ class TogetherLLM(LLM):
     template_messages: Callable = llama2_template_messages
 
     prompt_templates = {
-        "edit": simplified_edit_prompt,
+        "edit": codellama_edit_prompt,
     }
 
     async def start(self, **kwargs):

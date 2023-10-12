@@ -145,3 +145,6 @@ codeql
 **/**/.idea
 **/**/.qodana
 **/**/build
+
+.tiktoken_cache
+.test

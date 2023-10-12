@@ -2,6 +2,7 @@ import asyncio
 import json
 import traceback
 from typing import Any, List, Optional, Type, TypeVar
+from ..plugins.steps.setup_model import SetupModelStep
 
 from fastapi import APIRouter, Depends, WebSocket
 from pydantic import BaseModel
@@ -16,6 +17,7 @@ from ..libs.llm.prompts.chat import (
     sqlcoder_template_messages,
     template_alpaca_messages,
 )
+from ..libs.llm.prompts.edit import codellama_edit_prompt, alpaca_edit_prompt
 from ..libs.util.create_async_task import create_async_task
 from ..libs.util.edit_config import (
     add_config_import,
@@ -257,7 +259,9 @@ class GUIProtocolServer:
 
     def set_system_message(self, message: str):
         self.session.autopilot.continue_sdk.config.system_message = message
-        self.session.autopilot.continue_sdk.models.set_system_message(message)
+        self.session.autopilot.continue_sdk.models.set_main_config_params(
+            message, self.session.autopilot.continue_sdk.config.temperature
+        )
 
         create_async_task(
             self.session.autopilot.set_config_attr(
@@ -339,6 +343,7 @@ class GUIProtocolServer:
                     models.__setattr__(role, None)
 
                 # Add the requisite import to config.py
+                default_model_display_overrides = {}
                 add_config_import(
                     f"from continuedev.libs.llm.{MODEL_MODULE_NAMES[model_class]} import {model_class}"
                 )
@@ -346,10 +351,6 @@ class GUIProtocolServer:
                     add_config_import(
                         f"from continuedev.libs.llm.prompts.chat import {model['template_messages']}"
                     )
-
-                # Set and start the new default model
-
-                if "template_messages" in model:
                     sqtm = sqlcoder_template_messages("<MY_DATABASE_SCHEMA>")
                     sqtm.__name__ = 'sqlcoder_template_messages("<MY_DATABASE_SCHEMA>")'
                     model["template_messages"] = {
@@ -357,6 +358,20 @@ class GUIProtocolServer:
                         "template_alpaca_messages": template_alpaca_messages,
                         "sqlcoder_template_messages": sqtm,
                     }[model["template_messages"]]
+
+                if "prompt_templates" in model and "edit" in model["prompt_templates"]:
+                    default_model_display_overrides[
+                        "prompt_templates"
+                    ] = f"""{{"edit": {model["prompt_templates"]["edit"]}}}"""
+                    add_config_import(
+                        f"from continuedev.libs.llm.prompts.edit import {model['prompt_templates']['edit']}"
+                    )
+                    model["prompt_templates"]["edit"] = {
+                        "codellama_edit_prompt": codellama_edit_prompt,
+                        "alpaca_edit_prompt": alpaca_edit_prompt,
+                    }[model["prompt_templates"]["edit"]]
+
+                # Set and start the new default model
                 new_model = MODEL_CLASSES[model_class](**model)
                 models.default = new_model
                 await self.session.autopilot.continue_sdk.start_model(models.default)
@@ -367,7 +382,9 @@ class GUIProtocolServer:
                     [display_llm_class(llm) for llm in saved_models]
                 )
                 models_args = {
-                    "default": display_llm_class(models.default, True),
+                    "default": display_llm_class(
+                        models.default, True, default_model_display_overrides
+                    ),
                     "saved": f"[{JOINER.join(saved_model_strings)}]",
                 }
 
@@ -462,7 +479,10 @@ async def websocket_endpoint(
         raise e
     finally:
         logger.debug("Closing gui websocket")
-        if websocket.client_state != WebSocketState.DISCONNECTED:
+        if (
+            websocket.client_state != WebSocketState.DISCONNECTED
+            and websocket.application_state != WebSocketState.DISCONNECTED
+        ):
             await websocket.close()
 
         await session_manager.persist_session(session.session_id)

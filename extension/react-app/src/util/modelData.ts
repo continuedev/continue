@@ -159,6 +159,11 @@ export interface ModelPackage {
   dimensions?: PackageDimension[];
 }
 
+enum EditPromptTemplates {
+  "codellama" = "codellama_edit_prompt",
+  "alpaca" = "alpaca_edit_prompt",
+}
+
 enum ChatTemplates {
   "alpaca" = "template_alpaca_messages",
   "llama2" = "llama2_template_messages",
@@ -242,6 +247,9 @@ const wizardCoder: ModelPackage = {
     model: "wizardcoder:7b-python",
     context_length: 2048,
     template_messages: ChatTemplates.alpaca,
+    prompt_templates: {
+      edit: EditPromptTemplates.alpaca,
+    },
   },
   icon: "wizardlm.png",
   dimensions: [
@@ -274,6 +282,9 @@ const phindCodeLlama: ModelPackage = {
     model: "phind-codellama",
     context_length: 2048,
     template_messages: ChatTemplates.llama2,
+    prompt_templates: {
+      edit: EditPromptTemplates.codellama,
+    },
   },
 };
 
@@ -286,6 +297,9 @@ const mistral: ModelPackage = {
     model: "mistral",
     context_length: 2048,
     template_messages: ChatTemplates.llama2,
+    prompt_templates: {
+      edit: EditPromptTemplates.codellama,
+    },
   },
   icon: "mistral.png",
 };
@@ -299,6 +313,9 @@ const sqlCoder: ModelPackage = {
     model: "sqlcoder",
     context_length: 2048,
     template_messages: ChatTemplates.sqlcoder,
+    prompt_templates: {
+      edit: EditPromptTemplates.codellama,
+    },
   },
   dimensions: [
     {
@@ -326,6 +343,9 @@ const codeup: ModelPackage = {
     model: "codeup",
     context_length: 2048,
     template_messages: ChatTemplates.llama2,
+    prompt_templates: {
+      edit: EditPromptTemplates.alpaca,
+    },
   },
 };
 
@@ -621,6 +641,27 @@ export const MODEL_INFO: { [key: string]: ModelInfo } = {
 
 After it's up and running, you can start using Continue.`,
     icon: "llamacpp.png",
+    tags: [ModelProviderTag.Local, ModelProviderTag["Open-Source"]],
+    packages: osModels,
+    collectInputFor: [...completionParamsInputs],
+  },
+  textgenwebui: {
+    title: "text-generation-webui",
+    class: "TextGenWebUI",
+    description: "A popular open-source front-end for serving LLMs locally",
+    longDescription: `text-generation-webui is a comprehensive, open-source language model UI and local server. You can also set it up with an [OpenAI-compatible server extension](https://github.com/oobabooga/text-generation-webui/tree/main/extensions/openai#an-openedai-api-openai-like), but this model provider is made to interface with the built-in server, which has a different format. To setup the text-generation-webui server, take the following steps:
+
+1. Clone the repository: \`git clone https://github.com/oobabooga/text-generation-webui/tree/main\`
+2. Change into the directory: \`cd text-generation-webui\`
+3. Run the one-click installer script for your operating system, using the --api flag:
+    - Mac: \`sh start_macos.sh --api\`
+    - Linux: \`sh start_linux.sh --api\`
+    - Windows: \`. start_windows.bat --api\`
+    - WSL: \`. start_wsl.bat --api\`
+4. Find a model to run and download its weights into the folder \`text-generation-webui/models\`. The best place to find models is [The Bloke on HuggingFace](https://huggingface.co/TheBloke)
+5. Navigate to [the UI](http://127.0.0.1:7860), click the "Model" tab, and load the model you've downloaded
+6. Once the model is loaded, you can start using Continue`,
+    icon: undefined,
     tags: [ModelProviderTag.Local, ModelProviderTag["Open-Source"]],
     packages: osModels,
     collectInputFor: [...completionParamsInputs],

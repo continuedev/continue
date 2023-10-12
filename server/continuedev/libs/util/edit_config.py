@@ -1,5 +1,6 @@
 import threading
 from typing import Any, Dict, List
+from pydantic import BaseModel
 
 import redbaron
 
@@ -89,9 +90,9 @@ def escape_string(string: str) -> str:
 def display_val(v: Any, k: str = None):
     if k == "template_messages":
         return v
-
-    if isinstance(v, str):
+    elif isinstance(v, str):
         return f'"{escape_string(v)}"'
+
     return str(v)
 
 
@@ -101,11 +102,11 @@ def is_default(llm, k, v):
     return v == llm.__fields__[k].default
 
 
-def display_llm_class(llm, new: bool = False):
+def display_llm_class(llm, new: bool = False, overrides: Dict[str, str] = {}):
     sep = ",\n\t\t\t"
     args = sep.join(
         [
-            f"{k}={display_val(v, k)}"
+            f"{k}={display_val(v, k) if k not in overrides else overrides[k]}"
             for k, v in llm.dict().items()
             if k not in filtered_attrs and v is not None and not is_default(llm, k, v)
         ]

@@ -28,6 +28,8 @@ from .lsp import ContinueLSPClient
 from .main import (
     ChatMessage,
     Context,
+    ContextItem,
+    ContextItemId,
     ContinueCustomException,
     History,
     HistoryNode,
@@ -91,6 +93,7 @@ class ContinueSDK(AbstractContinueSDK):
 
         # Start models
         self.models = self.config.models
+        await self.update_ui()
         await self.models.start(self)
 
         # Start LSP
@@ -276,6 +279,14 @@ class ContinueSDK(AbstractContinueSDK):
             else highlighted_ranges
         )
         return [c.rif for c in context]
+
+    async def add_context_item(self, item: ContextItem):
+        await self.__autopilot.context_manager.manually_add_context_item(item)
+
+    async def delete_context_item(self, id: ContextItemId):
+        await self.__autopilot.delete_context_with_ids(
+            [f"{id.provider_title}-{id.item_id}"]
+        )
 
     def set_loading_message(self, message: str):
         # self.__autopilot.set_loading_message(message)
