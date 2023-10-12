@@ -140,3 +140,4 @@ codeql
 .continue
 
 .tiktoken_cache
+.test
