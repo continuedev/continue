@@ -463,7 +463,7 @@ async def websocket_endpoint(
         raise e
     finally:
         logger.debug("Closing gui websocket")
-        if websocket.client_state != WebSocketState.DISCONNECTED:
+        if websocket.client_state != WebSocketState.DISCONNECTED and websocket.application_state != WebSocketState.DISCONNECTED:
             await websocket.close()
 
         await session_manager.persist_session(session.session_id)

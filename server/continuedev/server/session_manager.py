@@ -111,6 +111,7 @@ class SessionManager:
                 if (
                     ws_to_close is not None
                     and ws_to_close.client_state != WebSocketState.DISCONNECTED
+                        and ws_to_close.application_state != WebSocketState.DISCONNECTED
                 ):
                     await self.sessions[session_id].autopilot.ide.websocket.close()
 

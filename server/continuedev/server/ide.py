@@ -670,7 +670,7 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str = None):
         raise e
     finally:
         logger.debug("Closing ide websocket")
-        if websocket.client_state != WebSocketState.DISCONNECTED:
+        if websocket.client_state != WebSocketState.DISCONNECTED and websocket.application_state != WebSocketState.DISCONNECTED:
             await websocket.close()
 
         posthog_logger.capture_event(
