@@ -138,3 +138,6 @@ codeql
 **/.continue
 .DS_Store
 .continue
+
+.tiktoken_cache
+.test

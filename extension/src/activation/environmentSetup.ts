@@ -79,7 +79,7 @@ function serverBinaryPath(): string {
   return path.join(
     serverPath(),
     "exe",
-    `run${os.platform() === "win32" ? ".exe" : ""}`
+    `continue_server${os.platform() === "win32" ? ".exe" : ""}`
   );
 }
 
@@ -117,7 +117,7 @@ async function checkOrKillRunningServer(
         // Try again, on Windows. This time with taskkill
         if (os.platform() === "win32") {
           try {
-            await runCommand(`taskkill /F /IM run.exe`);
+            await runCommand(`taskkill /F /IM continue_server.exe`);
           } catch (e: any) {
             console.log(
               "Failed to kill old server second time on windows with taskkill:",
@@ -209,7 +209,7 @@ function includedBinaryPath(): string {
   return path.join(
     extensionPath,
     "exe",
-    `run${os.platform() === "win32" ? ".exe" : ""}`
+    `continue_server${os.platform() === "win32" ? ".exe" : ""}`
   );
 }
 
@@ -290,12 +290,12 @@ async function setupWithS3Download(redownload: boolean, serverUrl: string) {
   const bucket = "continue-server-binaries";
   const fileName =
     os.platform() === "win32"
-      ? "windows/run.exe"
+      ? "windows/continue_server.exe"
       : os.platform() === "darwin"
       ? os.arch() === "arm64"
-        ? "apple-silicon/run"
-        : "mac/run"
-      : "linux/run";
+        ? "apple-silicon/continue_server"
+        : "mac/continue_server"
+      : "linux/continue_server";
 
   const destination = serverBinaryPath();
 

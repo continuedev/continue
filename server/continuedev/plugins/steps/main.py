@@ -12,6 +12,7 @@ from ...libs.llm.base import LLM
 from ...libs.llm.prompt_utils import MarkdownStyleEncoderDecoder
 from ...libs.util.calculate_diff import calculate_diff2
 from ...libs.util.logging import logger
+from ...libs.util.paths import decode_escaped_path, encode_escaped_path
 from ...models.filesystem import RangeInFile, RangeInFileWithContents
 from ...models.filesystem_edit import EditDiff, FileEdit
 from ...models.main import Range, Traceback
@@ -233,20 +234,6 @@ class StarCoderEditHighlightedCodeStep(Step):
             #     FileEdit(filepath=rif.filepath, range=rif.range, replacement=completion))
             await sdk.ide.saveFile(rif.filepath)
             await sdk.ide.setFileOpen(rif.filepath)
-
-
-def decode_escaped_path(path: str) -> str:
-    """We use a custom escaping scheme to record the full path of a file as a
-    corresponding basename, but withut URL encoding, because then the URI just gets
-    interpreted as a full path again."""
-    return path.replace("$f$", "/").replace("$b$", "\\")
-
-
-def encode_escaped_path(path: str) -> str:
-    """We use a custom escaping scheme to record the full path of a file as a
-    corresponding basename, but withut URL encoding, because then the URI just gets
-    interpreted as a full path again."""
-    return path.replace("/", "$f$").replace("\\", "$b$")
 
 
 class EditAlreadyEditedRangeStep(Step):

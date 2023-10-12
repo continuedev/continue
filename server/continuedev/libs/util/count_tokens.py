@@ -1,4 +1,6 @@
 import json
+import os
+import sys
 from typing import Dict, List, Union
 
 from ...core.main import ChatMessage
@@ -12,7 +14,7 @@ aliases = {
     "ggml": "gpt-3.5-turbo",
     "claude-2": "gpt-3.5-turbo",
 }
-DEFAULT_MAX_TOKENS = 1024
+DEFAULT_MAX_TOKENS = 600
 DEFAULT_ARGS = {
     "max_tokens": DEFAULT_MAX_TOKENS,
     "temperature": 0.5,
@@ -25,8 +27,13 @@ def encoding_for_model(model_name: str):
     global already_saw_import_err
     if already_saw_import_err:
         return None
-    
+
     try:
+        if getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"):
+            tiktoken_cache = os.path.join(sys._MEIPASS, "tiktoken_cache")
+            if os.path.exists(tiktoken_cache):
+                os.environ["TIKTOKEN_CACHE_DIR"] = tiktoken_cache
+
         import tiktoken
         from tiktoken_ext import openai_public  # noqa: F401
 
@@ -61,7 +68,7 @@ def count_chat_message_tokens(model_name: str, chat_message: ChatMessage) -> int
 def prune_raw_prompt_from_top(
     model_name: str, context_length: int, prompt: str, tokens_for_completion: int
 ):
-    max_tokens = context_length - tokens_for_completion
+    max_tokens = context_length - tokens_for_completion - TOKEN_BUFFER_FOR_SAFETY
     encoding = encoding_for_model(model_name)
 
     if encoding is None:
@@ -84,6 +91,32 @@ def prune_chat_history(
     total_tokens = tokens_for_completion + sum(
         count_chat_message_tokens(model_name, message) for message in chat_history
     )
+
+    # 0. Prune any messages that take up more than 1/3 of the context length
+    longest_messages = sorted(
+        chat_history, key=lambda message: len(message.content), reverse=True
+    )
+    longer_than_one_third = [
+        message
+        for message in longest_messages
+        if count_tokens(model_name, message.content) > context_length / 3
+    ]
+    distance_from_third = [
+        count_tokens(model_name, message.content) - context_length / 3
+        for message in longer_than_one_third
+    ]
+    total_tokens_removed = 0
+    for i in range(len(longer_than_one_third)):
+        # Prune line-by-line
+        message = longer_than_one_third[i]
+        lines = message.content.split("\n")
+        tokens_removed = 0
+        while tokens_removed < distance_from_third[i] and total_tokens - total_tokens_removed > context_length:
+            delta += count_tokens(model_name, lines.pop(-1))
+            tokens_removed += delta
+            total_tokens_removed += delta
+        
+        message.content = "\n".join(lines)
 
     # 1. Replace beyond last 5 messages with summary
     i = 0

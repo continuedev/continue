@@ -28,6 +28,7 @@ from .lsp import ContinueLSPClient
 from .main import (
     ChatMessage,
     Context,
+    ContextItem,
     ContinueCustomException,
     History,
     HistoryNode,
@@ -277,6 +278,9 @@ class ContinueSDK(AbstractContinueSDK):
             else highlighted_ranges
         )
         return [c.rif for c in context]
+
+    async def add_context_item(self, item: ContextItem):
+        await self.__autopilot.context_manager.manually_add_context_item(item)
 
     def set_loading_message(self, message: str):
         # self.__autopilot.set_loading_message(message)

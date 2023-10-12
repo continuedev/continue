@@ -65,8 +65,24 @@ jobs:
         run: |
           pip install -r server/requirements.txt
 
+      - name: Install tiktoken vocab file
+        run: |
+          mkdir .tiktoken_cache
+          curl -o .tiktoken_cache/9b5ad71b2ce5302211f9c61530b329a4922fc6a4 https://s3.us-west-1.amazonaws.com/s3.continue.dev/tiktoken/9b5ad71b2ce5302211f9c61530b329a4922fc6a4
+
       - name: Build PyInstaller Executable
-        run: pyinstaller run.spec
+        run: pyinstaller continue_server.spec
+
+      # 1.25 Publish to PyPI
+
+      - name: Configure Poetry Token
+        run: cd server && poetry config pypi-token.pypi ${{ secrets.PYPI_API_TOKEN }}
+
+      - name: Bump the version
+        run: cd server && poetry version patch
+
+      - name: Build and publish the package
+        run: cd server && poetry publish --build
 
       # 1.5 Place the binary in extension/exe directory
       - name: Make sure extension/exe directory exists
@@ -75,36 +91,36 @@ jobs:
 
       - name: Copy binary to extension (non-Windows)
         run: |
-          cp dist/run extension/exe/run
+          cp dist/continue_server extension/exe/continue_server
         if: matrix.os != 'windows-latest'
 
       - name: Copy binary to extension (Windows)
         run: |
-          cp dist/run.exe extension/exe/run.exe
+          cp dist/continue_server.exe extension/exe/continue_server.exe
         if: matrix.os == 'windows-latest'
 
       # 1.8 Set permissions and upload binary
       - name: Set permissions
         run: |
-          chmod 777 extension/exe/run
+          chmod 777 extension/exe/continue_server
 
       - uses: actions/upload-artifact@v2
         if: matrix.os == 'macos-latest' && matrix.arch == 'x64'
         with:
           name: macOSBinary
-          path: extension/exe/run
+          path: extension/exe/continue_server
       
       - uses: actions/upload-artifact@v2
-        if: matrix.os == 'ubuntu-20.04' && matrix.arch == 'x64'
+        if: matrix.os == 'ubuntu-20.04' && matrix.arch == 'x64' && matrix.platform == 'linux'
         with:
           name: LinuxBinary
-          path: extension/exe/run
+          path: extension/exe/continue_server
       
       - uses: actions/upload-artifact@v2
         if: matrix.os == 'windows-latest' && matrix.arch == 'x64'
         with:
           name: WindowsBinary
-          path: extension/exe/run.exe
+          path: extension/exe/continue_server.exe
 
       # 2. Install npm dependencies
       - name: Use Node.js 19.0.0
@@ -163,15 +179,15 @@ jobs:
       # 3.5 If on Apple Silicon, download the binary from S3 bucket
       - name: Remove existing binary
         if: matrix.os == 'macos-latest' && matrix.arch == 'arm64'
-        run: rm extension/exe/run
+        run: rm extension/exe/continue_server
 
       - name: Download Apple Silicon Binary
         if: matrix.os == 'macos-latest' && matrix.arch == 'arm64'
-        run: curl -o extension/exe/run https://continue-server-binaries.s3.us-west-1.amazonaws.com/apple-silicon/run
+        run: curl -o extension/exe/continue_server https://continue-server-binaries.s3.us-west-1.amazonaws.com/apple-silicon/continue_server
 
       - name: Set permissions
         run: |
-          chmod -R 777 extension/exe/run
+          chmod -R 777 extension/exe/continue_server
 
       # 4. Package the extension
       - shell: pwsh
