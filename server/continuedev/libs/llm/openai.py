@@ -101,9 +101,8 @@ class OpenAI(LLM):
 
         openai.ca_bundle_path = self.ca_bundle_path or certifi.where()
 
-        if self.headers is not None or self.ca_bundle_path is not None or self.timeout != 300:
-            session = self.create_client_session()
-            openai.aiosession.set(session)
+        session = self.create_client_session()
+        openai.aiosession.set(session)
 
     def collect_args(self, options):
         args = super().collect_args(options)
@@ -128,7 +127,9 @@ class OpenAI(LLM):
                 if len(chunk.choices) > 0 and "content" in chunk.choices[0].delta:
                     yield chunk.choices[0].delta.content
         else:
-            async for chunk in await openai.Completion.acreate(prompt=prompt, **args, headers=self.headers):
+            async for chunk in await openai.Completion.acreate(
+                prompt=prompt, **args, headers=self.headers
+            ):
                 if len(chunk.choices) > 0:
                     yield chunk.choices[0].text
 
@@ -157,5 +158,11 @@ class OpenAI(LLM):
             return resp.choices[0].message.content
         else:
             return (
-                (await openai.Completion.acreate(prompt=prompt, **args, headers=self.headers)).choices[0].text
+                (
+                    await openai.Completion.acreate(
+                        prompt=prompt, **args, headers=self.headers
+                    )
+                )
+                .choices[0]
+                .text
             )
