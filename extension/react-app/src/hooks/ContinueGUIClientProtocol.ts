@@ -9,6 +9,8 @@ class ContinueGUIClientProtocol extends AbstractContinueGUIClientProtocol {
   serverUrlWithSessionId: string;
   useVscodeMessagePassing: boolean;
 
+  onStateUpdateCallbacks: ((state: any) => void)[] = [];
+
   private connectMessenger(
     serverUrlWithSessionId: string,
     useVscodeMessagePassing: boolean
@@ -23,12 +25,27 @@ class ContinueGUIClientProtocol extends AbstractContinueGUIClientProtocol {
       ? new VscodeMessenger(serverUrlWithSessionId)
       : new WebsocketMessenger(serverUrlWithSessionId);
 
-    this.messenger.onClose(() => {});
-    this.messenger.onError((error) => {});
+    this.messenger.onClose(() => {
+      console.log("GUI Connection closed: ", serverUrlWithSessionId);
+    });
+    this.messenger.onError((error) => {
+      console.log("GUI Connection error: ", error);
+    });
+    this.messenger.onOpen(() => {
+      console.log("GUI Connection opened: ", serverUrlWithSessionId);
+    });
 
     this.messenger.onMessageType("reconnect_at_session", (data: any) => {
       if (data.session_id) {
         this.onReconnectAtSession(data.session_id);
+      }
+    });
+
+    this.messenger.onMessageType("state_update", (data: any) => {
+      if (data.state) {
+        for (const callback of this.onStateUpdateCallbacks) {
+          callback(data.state);
+        }
       }
     });
   }
@@ -48,8 +65,10 @@ class ContinueGUIClientProtocol extends AbstractContinueGUIClientProtocol {
   }
 
   onReconnectAtSession(session_id: string): void {
-    const urlToReconnect = `${this.serverUrlWithSessionId.split("?")[0]}?session_id=${session_id}`
-    console.log("Reconnecting at session: ",urlToReconnect);
+    const urlToReconnect = `${
+      this.serverUrlWithSessionId.split("?")[0]
+    }?session_id=${session_id}`;
+    console.log("Reconnecting at session: ", urlToReconnect);
     this.connectMessenger(urlToReconnect, this.useVscodeMessagePassing);
   }
 
@@ -71,14 +90,11 @@ class ContinueGUIClientProtocol extends AbstractContinueGUIClientProtocol {
 
   onStateUpdate(callback: (state: any) => void) {
     this.messenger?.onMessageType("state_update", (data: any) => {
-      // Set the color of the body to a random color
-      // document.body.style.border =
-        // "1px solid " + "#" + Math.floor(Math.random() * 16777215).toString(16);
-      
       if (data.state) {
         callback(data.state);
       }
     });
+    this.onStateUpdateCallbacks.push(callback);
   }
 
   onAvailableSlashCommands(

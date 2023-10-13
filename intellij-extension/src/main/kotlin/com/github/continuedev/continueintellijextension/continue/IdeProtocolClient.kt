@@ -324,8 +324,9 @@ class IdeProtocolClient(
             }
     
         }
+
         val request = Request.Builder()
-                .url(serverUrl)
+                .url("${serverUrl}${if (sessionId != null) "?session_id=$sessionId" else ""}")
                 .build()
     
         webSocket = okHttpClient.newWebSocket(request, webSocketListener)
