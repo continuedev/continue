@@ -6,7 +6,7 @@
 
 # Server
 echo "Installing server dependencies..."
-pushd continuedev || exit
+pushd server || exit
 ./install-dependencies.sh
 popd || exit
 
