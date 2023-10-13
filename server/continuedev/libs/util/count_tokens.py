@@ -111,11 +111,14 @@ def prune_chat_history(
         message = longer_than_one_third[i]
         lines = message.content.split("\n")
         tokens_removed = 0
-        while tokens_removed < distance_from_third[i] and total_tokens - total_tokens_removed > context_length:
+        while (
+            tokens_removed < distance_from_third[i]
+            and total_tokens - total_tokens_removed > context_length
+        ):
             delta += count_tokens(model_name, lines.pop(-1))
             tokens_removed += delta
             total_tokens_removed += delta
-        
+
         message.content = "\n".join(lines)
 
     # 1. Replace beyond last 5 messages with summary
@@ -167,6 +170,18 @@ def prune_chat_history(
 
 # In case we've missed weird edge cases
 TOKEN_BUFFER_FOR_SAFETY = 100
+
+
+def flatten_messages(msgs: List[Dict]) -> List[Dict]:
+    # If there are multiple adjacent messages with same "role", combine them
+    flattened = []
+    for msg in msgs:
+        if len(flattened) > 0 and flattened[-1]["role"] == msg["role"]:
+            flattened[-1]["content"] += "\n\n" + msg["content"]
+        else:
+            flattened.append(msg)
+
+    return flattened
 
 
 def compile_chat_messages(
@@ -228,6 +243,8 @@ def compile_chat_messages(
     ):
         system_message_dict = history.pop(-2)
         history.insert(0, system_message_dict)
+
+    history = flatten_messages(history)
 
     return history
 
