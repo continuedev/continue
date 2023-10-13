@@ -1,6 +1,6 @@
 {
   "title": "Traceback",
-  "$ref": "#/definitions/src__continuedev__models__main__Traceback",
+  "$ref": "#/definitions/continuedev__models__main__Traceback",
   "definitions": {
     "TracebackFrame": {
       "title": "TracebackFrame",
@@ -29,7 +29,7 @@
         "function"
       ]
     },
-    "src__continuedev__models__main__Traceback": {
+    "continuedev__models__main__Traceback": {
       "title": "Traceback",
       "type": "object",
       "properties": {

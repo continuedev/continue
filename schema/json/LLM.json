@@ -1,8 +1,8 @@
 {
   "title": "LLM",
-  "$ref": "#/definitions/src__continuedev__libs__llm__LLM",
+  "$ref": "#/definitions/continuedev__libs__llm__LLM",
   "definitions": {
-    "src__continuedev__libs__llm__LLM": {
+    "continuedev__libs__llm__LLM": {
       "title": "LLM",
       "type": "object",
       "properties": {
@@ -31,6 +31,12 @@
           "title": "Model",
           "description": "The name of the model to be used (e.g. gpt-4, codellama)",
           "type": "string"
+        },
+        "max_tokens": {
+          "title": "Max Tokens",
+          "description": "The maximum number of tokens to generate.",
+          "default": 1024,
+          "type": "integer"
         },
         "stop_tokens": {
           "title": "Stop Tokens",

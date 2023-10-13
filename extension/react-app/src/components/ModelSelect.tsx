@@ -110,7 +110,7 @@ const GridDiv = styled.div`
 
 const Select = styled.select`
   border: none;
-  max-width: 25vw;
+  max-width: 50vw; //changed the width
   background-color: ${vscBackground};
   color: ${vscForeground};
   padding: 6px;

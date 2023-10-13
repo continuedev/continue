@@ -1,8 +1,8 @@
 {
   "title": "SessionInfo",
-  "$ref": "#/definitions/src__continuedev__core__main__SessionInfo",
+  "$ref": "#/definitions/continuedev__core__main__SessionInfo",
   "definitions": {
-    "src__continuedev__core__main__SessionInfo": {
+    "continuedev__core__main__SessionInfo": {
       "title": "SessionInfo",
       "type": "object",
       "properties": {
