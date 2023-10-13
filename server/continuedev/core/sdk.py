@@ -85,7 +85,7 @@ class ContinueSDK(AbstractContinueSDK):
             msg_step = MessageStep(
                 name="Invalid Continue Config File", message=formatted_err
             )
-            msg_step.description = f"Falling back to default config settings due to the following error in `~/.continue/config.py`.\n```\n{formatted_err}\n```\n\nIt's possible this was caused by an update to the Continue config format. If you'd like to see the new recommended default `config.py`, check [here](https://github.com/continuedev/continue/blob/main/continuedev/src/continuedev/libs/constants/default_config.py).\n\nIf the error is related to OpenAIServerInfo, see the updated way of using these parameters [here](https://continue.dev/docs/customization#azure-openai-service)."
+            msg_step.description = f"Falling back to default config settings due to the following error in `~/.continue/config.py`.\n```\n{formatted_err}\n```\n\nIt's possible this was caused by an update to the Continue config format. If you'd like to see the new recommended default `config.py`, check [here](https://github.com/continuedev/continue/blob/main/server/continuedev/libs/constants/default_config.py)."
             self.history.add_node(
                 HistoryNode(step=msg_step, observation=None, depth=0, active=False)
             )
@@ -282,11 +282,11 @@ class ContinueSDK(AbstractContinueSDK):
 
     async def add_context_item(self, item: ContextItem):
         await self.__autopilot.context_manager.manually_add_context_item(item)
-    
+
     async def delete_context_item(self, id: ContextItemId):
-        await self.__autopilot.delete_context_with_ids([
-            f"{id.provider_title}-{id.item_id}"
-        ])
+        await self.__autopilot.delete_context_with_ids(
+            [f"{id.provider_title}-{id.item_id}"]
+        )
 
     def set_loading_message(self, message: str):
         # self.__autopilot.set_loading_message(message)

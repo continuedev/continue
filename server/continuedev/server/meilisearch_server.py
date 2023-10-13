@@ -15,7 +15,7 @@ from ..libs.util.paths import getMeilisearchExePath, getServerFolderPath
 
 
 async def download_file(url: str, filename: str):
-    async with aiohttp.ClientSession() as session:
+    async with aiohttp.ClientSession(trust_env=True) as session:
         async with session.get(url) as resp:
             if resp.status == 200:
                 f = await aiofiles.open(filename, mode="wb")

@@ -44,7 +44,7 @@ class GoogleContextProvider(ContextProvider):
         payload = json.dumps({"q": query})
         headers = {"X-API-KEY": self.serper_api_key, "Content-Type": "application/json"}
 
-        async with aiohttp.ClientSession() as session:
+        async with aiohttp.ClientSession(trust_env=True) as session:
             async with session.post(url, headers=headers, data=payload) as response:
                 return await response.text()
 

@@ -27,7 +27,7 @@ class DevDataLogger:
             if self.user_token is None or self.data_server_url is None:
                 return
 
-            async with aiohttp.ClientSession() as session:
+            async with aiohttp.ClientSession(trust_env=True) as session:
                 await session.post(
                     f"{self.data_server_url}/event",
                     headers={"Authorization": f"Bearer {self.user_token}"},
