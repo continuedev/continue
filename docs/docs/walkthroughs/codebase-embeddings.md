@@ -1,3 +1,9 @@
+---
+title: Codebase Embeddings (Experimental)
+description: Talk to your codebase
+keywords: [talk, embeddings, codebase, experimental]
+---
+
 # Codebase Embeddings (Experimental)
 
 We're sharing an early look at an experimental plugin: codebase embeddings. By using the /codebase slash command, you will be able to ask a question and Continue will use similarity search to find the most relevant files to answer the question.

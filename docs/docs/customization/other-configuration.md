@@ -1,3 +1,9 @@
+---
+title: Other Configuration
+description: Swap out different LLM providers
+keywords: [tempature, custom policies, custom system messsage]
+---
+
 # Other Configuration
 
 See the [ContinueConfig Reference](../reference/config) for the full list of configuration options.

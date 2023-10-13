@@ -1,3 +1,9 @@
+---
+title: Overview
+description: Continue can be deeply customized
+keywords: [custom, slash commands, models, context providers]
+---
+
 # Overview
 
 Continue can be deeply customized by editing the `ContinueConfig` object in `~/.continue/config.py` (`%userprofile%\.continue\config.py` for Windows) on your machine. This file is created the first time you run Continue.

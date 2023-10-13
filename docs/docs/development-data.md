@@ -1,3 +1,9 @@
+---
+title: Development data
+description: Collecting data on how you build software
+keywords: [development data, dev data, LLM-aided development]
+---
+
 # 🧑‍💻 Development Data
 
 When you use Continue, you automatically collect data on how you build software. By default, this development data is saved to `.continue/dev_data` on your local machine. When combined with the code that you ultimately commit, it can be used to improve the LLM that you or your team use (if you allow).
