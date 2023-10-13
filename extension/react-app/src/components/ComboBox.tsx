@@ -902,13 +902,9 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
       {previewingContextItem && (
         <pre className="m-0">
           <StyledMarkdownPreview
-            fontSize={getFontSize()}
             source={`\`\`\`${getMarkdownLanguageTagForFile(
               previewingContextItem.description.description
             )}\n${previewingContextItem.content}\n\`\`\``}
-            wrapperElement={{
-              "data-color-mode": "dark",
-            }}
             maxHeight={200}
           />
         </pre>
@@ -1081,7 +1077,11 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
                 } else if (event.key === "End") {
                   (event.nativeEvent as any).preventDownshiftDefault = true;
                 } else if (localStorage.getItem("ide") === "jetbrains") {
-                  handleKeyDownJetBrains(event, downshiftProps.inputValue, downshiftProps.setInputValue);
+                  handleKeyDownJetBrains(
+                    event,
+                    downshiftProps.inputValue,
+                    downshiftProps.setInputValue
+                  );
                 }
               },
               onClick: () => {

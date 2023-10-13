@@ -104,6 +104,9 @@ class RejectDiffAction : AnAction() {
 
 class QuickTextEntryAction : AnAction() {
     override fun actionPerformed(e: AnActionEvent) {
+        val continuePluginService = pluginServiceFromActionEvent(e) ?: return
+        continuePluginService.ideProtocolClient?.sendHighlightedCode()
+
          // Create and show the dialog
          val dialog = QuickInputDialogWrapper()
          val text: String? = dialog.showDialogAndGetText()
@@ -113,12 +116,20 @@ class QuickTextEntryAction : AnAction() {
              val service = pluginServiceFromActionEvent(e)
              service?.ideProtocolClient?.sendMainUserInput(text)
 
-             val project = e.project ?: return
-             val dataContext = SimpleDataContext.getProjectContext(project)
-             val actionEvent = AnActionEvent.createFromDataContext("place", null, dataContext)
+             val project = e.project
+             if (project != null) {
+                 val toolWindowManager = ToolWindowManager.getInstance(project)
+                 val toolWindow = toolWindowManager.getToolWindow("ContinuePluginViewer")
 
-             val action = FocusContinueInputAction()
-             action.actionPerformed(actionEvent)
+                 if (toolWindow != null) {
+                     if (!toolWindow.isVisible) {
+                         toolWindow.activate(null)
+                     }
+                 }
+             }
+
+             continuePluginService.continuePluginWindow.content.components[0].requestFocus()
+             continuePluginService.dispatchCustomEvent("message", mutableMapOf("type" to "focusContinueInput"))
 
          }
     }

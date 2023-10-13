@@ -13,6 +13,51 @@ export const secondaryDark =
 export const vscBackground = "var(--vscode-editor-background, rgb(30 30 30))";
 export const vscForeground = "var(--vscode-editor-foreground, #fff)";
 
+if (document.body.style.getPropertyValue("--vscode-editor-foreground")) {
+  localStorage.setItem(
+    "--vscode-editor-foreground",
+    document.body.style.getPropertyValue("--vscode-editor-foreground")
+  );
+}
+if (document.body.style.getPropertyValue("--vscode-editor-background")) {
+  localStorage.setItem(
+    "--vscode-editor-background",
+    document.body.style.getPropertyValue("--vscode-editor-background")
+  );
+}
+if (document.body.style.getPropertyValue("--vscode-list-hoverBackground")) {
+  localStorage.setItem(
+    "--vscode-list-hoverBackground",
+    document.body.style.getPropertyValue("--vscode-list-hoverBackground")
+  );
+}
+
+if (typeof document !== "undefined") {
+  const cachedForeground = localStorage.getItem("--vscode-editor-foreground");
+  const cachedBackground = localStorage.getItem("--vscode-editor-background");
+  const cachedSecondaryDark = localStorage.getItem(
+    "--vscode-list-hoverBackground"
+  );
+  if (cachedForeground) {
+    document.body.style.setProperty(
+      "--vscode-editor-foreground",
+      cachedForeground
+    );
+  }
+  if (cachedBackground) {
+    document.body.style.setProperty(
+      "--vscode-editor-background",
+      cachedBackground
+    );
+  }
+  if (cachedSecondaryDark) {
+    document.body.style.setProperty(
+      "--vscode-list-hoverBackground",
+      cachedSecondaryDark
+    );
+  }
+}
+
 export const Button = styled.button`
   padding: 10px 12px;
   margin: 8px 0;

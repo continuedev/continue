@@ -128,13 +128,7 @@ function StepContainer(props: StepContainerProps) {
           isUserInput={isUserInput}
           fontSize={getFontSize()}
         >
-          <StyledMarkdownPreview
-            fontSize={getFontSize()}
-            source={props.historyNode.step.description || ""}
-            wrapperElement={{
-              "data-color-mode": "dark",
-            }}
-          />
+          <StyledMarkdownPreview source={props.historyNode.step.description} />
         </ContentDiv>
       </div>
     </MainDiv>

@@ -175,10 +175,11 @@ const StyledListboxButton = styled(Listbox.Button)`
 
   display: grid;
   grid-template-columns: 1fr auto;
+  align-items: center;
 
   color: ${vscForeground};
 
-  padding: 6px 8px;
+  padding: 4px 8px;
 
   &:focus {
     outline: none;
@@ -201,15 +202,16 @@ const StyledListboxOptions = styled(Listbox.Options)`
   overflow: hidden;
 `;
 
-const StyledListboxOption = styled(Listbox.Option)<{selected: boolean}>`
-    background-color: ${({selected}) => selected ? `${buttonColor}88` : secondaryDark};
-    cursor: pointer;
-    padding: 6px 8px;
+const StyledListboxOption = styled(Listbox.Option)<{ selected: boolean }>`
+  background-color: ${({ selected }) =>
+    selected ? `${buttonColor}88` : secondaryDark};
+  cursor: pointer;
+  padding: 6px 8px;
 
-    &:hover {
-      background-color: ${buttonColor}44;
-    }
-  `;
+  &:hover {
+    background-color: ${buttonColor}44;
+  }
+`;
 
 function modelSelectTitle(model: any): string {
   if (model?.title) return model?.title;
@@ -238,98 +240,112 @@ function ModelSelect(props: {}) {
 
   const navigate = useNavigate();
 
-  const DEFAULT_OPTION = {value: JSON.stringify({
-    t: "default",
-    idx: -1,
-  }), title: "OpenAIFreeTrial - gpt-4"}
-  const [options, setOptions] = useState<Option[]>([DEFAULT_OPTION])
-
+  const DEFAULT_OPTION = {
+    value: JSON.stringify({
+      t: "default",
+      idx: -1,
+    }),
+    title: "OpenAIFreeTrial - gpt-4",
+  };
+  const [options, setOptions] = useState<Option[]>([DEFAULT_OPTION]);
 
   useEffect(() => {
     if (!defaultModel && !savedModels) {
-      setOptions([DEFAULT_OPTION])
+      setOptions([DEFAULT_OPTION]);
       return;
     }
-    const newOptions: Option[] = []
+    const newOptions: Option[] = [];
     if (defaultModel) {
-      newOptions.push({value: JSON.stringify({
-        t: "default",
-        idx: -1,
-      }), title: modelSelectTitle(defaultModel)})
+      newOptions.push({
+        value: JSON.stringify({
+          t: "default",
+          idx: -1,
+        }),
+        title: modelSelectTitle(defaultModel),
+      });
     }
 
-
     savedModels?.forEach((model: any, idx: number) => {
-      newOptions.push({value: JSON.stringify({
-        t: "saved",
-        idx,
-      }), title: modelSelectTitle(model)})
-    })
-    setOptions(newOptions)
+      newOptions.push({
+        value: JSON.stringify({
+          t: "saved",
+          idx,
+        }),
+        title: modelSelectTitle(model),
+      });
+    });
+    setOptions(newOptions);
   }, [defaultModel, savedModels]);
 
   const topDiv = document.getElementById("model-select-top-div");
 
   return (
     <>
-    <GridDiv>
-    <StyledListbox value={JSON.stringify({
-          t: "default",
-          idx: -1,
-        })} onChange={(val: string) => {
-          const value = JSON.parse(val);
-          if (value.t === "saved") {
-            client?.setModelForRoleFromIndex("*", value.idx);
-          }
-        }} defaultValue={"0"}>
-        <div className="relative">
-          <StyledListboxButton>
-            <div>{modelSelectTitle(defaultModel) || "OpenAIFreeTrial - gpt-4"}</div>
-            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center">
-              <ChevronUpDownIcon
-                className="h-5 w-5 text-gray-400"
-                aria-hidden="true"
-              />
-            </div>
-          </StyledListboxButton>
-          {topDiv && ReactDOM.createPortal(
-            <Transition
-            as={Fragment}
-            leave="transition ease-in duration-100"
-            leaveFrom="opacity-100"
-            leaveTo="opacity-0"
-          >
-            <StyledListboxOptions>
-              {options.map((option, idx) => (
-                
-                <StyledListboxOption
-                  key={idx}
-                  selected={option.value === JSON.stringify({
-                    t: "default",
-                    idx: -1,
-                  })}
-                  value={option.value}
-                >
-                    <span>
-                      {option.title}
-                    </span>
-                </StyledListboxOption>
-              ))}
-            </StyledListboxOptions>
-          </Transition>, topDiv)
+      <GridDiv>
+        <StyledListbox
+          value={JSON.stringify({
+            t: "default",
+            idx: -1,
+          })}
+          onChange={(val: string) => {
+            const value = JSON.parse(val);
+            if (value.t === "saved") {
+              client?.setModelForRoleFromIndex("*", value.idx);
             }
-          
-        </div>
-      </StyledListbox>
+          }}
+          defaultValue={"0"}
+        >
+          <div className="relative">
+            <StyledListboxButton>
+              <div>
+                {modelSelectTitle(defaultModel) || "OpenAIFreeTrial - gpt-4"}
+              </div>
+              <div className="pointer-events-none flex items-center">
+                <ChevronUpDownIcon
+                  className="h-5 w-5 text-gray-400"
+                  aria-hidden="true"
+                />
+              </div>
+            </StyledListboxButton>
+            {topDiv &&
+              ReactDOM.createPortal(
+                <Transition
+                  as={Fragment}
+                  leave="transition ease-in duration-100"
+                  leaveFrom="opacity-100"
+                  leaveTo="opacity-0"
+                >
+                  <StyledListboxOptions>
+                    {options.map((option, idx) => (
+                      <StyledListboxOption
+                        key={idx}
+                        selected={
+                          option.value ===
+                          JSON.stringify({
+                            t: "default",
+                            idx: -1,
+                          })
+                        }
+                        value={option.value}
+                      >
+                        <span>{option.title}</span>
+                      </StyledListboxOption>
+                    ))}
+                  </StyledListboxOptions>
+                </Transition>,
+                topDiv
+              )}
+          </div>
+        </StyledListbox>
 
-      <StyledPlusIcon
-        width="1.3em"
-        height="1.3em"
-        onClick={() => {
-          navigate("/models");
-        }}
-      />
-    </GridDiv>
+        <StyledPlusIcon
+          width="1.3em"
+          height="1.3em"
+          onClick={() => {
+            navigate("/models");
+          }}
+        />
+      </GridDiv>
     </>
   );
 }
