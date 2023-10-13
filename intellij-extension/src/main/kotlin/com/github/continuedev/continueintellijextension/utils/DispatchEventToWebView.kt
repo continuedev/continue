@@ -11,8 +11,9 @@ import kotlinx.coroutines.launch
 fun CoroutineScope.dispatchEventToWebview(
     type: String,
     data: Map<String, Any>,
-    webView: JBCefBrowser
+    webView: JBCefBrowser?
 ) {
+    if (webView == null) return
     val gson = Gson()
     val jsonData = gson.toJson(data)
     val jsCode = buildJavaScript(type, jsonData)
@@ -33,8 +34,9 @@ fun CoroutineScope.dispatchEventToWebview(
 
 fun CoroutineScope.runJsInWebview(
         jsCode: String,
-        webView: JBCefBrowser
+        webView: JBCefBrowser?
 ) {
+    if (webView == null) return
     launch(CoroutineExceptionHandler { _, exception ->
         println("Failed to dispatch custom event: ${exception.message}")
     }) {

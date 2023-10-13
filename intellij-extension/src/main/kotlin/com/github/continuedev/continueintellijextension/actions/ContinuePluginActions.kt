@@ -128,7 +128,7 @@ class QuickTextEntryAction : AnAction() {
                  }
              }
 
-             continuePluginService.continuePluginWindow.content.components[0].requestFocus()
+             continuePluginService.continuePluginWindow?.content?.components?.get(0)?.requestFocus()
              continuePluginService.dispatchCustomEvent("message", mutableMapOf("type" to "focusContinueInput"))
 
          }
@@ -177,7 +177,7 @@ class FocusContinueInputWithEditAction : AnAction() {
         }
 
         val continuePluginService = pluginServiceFromActionEvent(e) ?: return
-        continuePluginService.continuePluginWindow.content.components[0].requestFocus()
+        continuePluginService.continuePluginWindow?.content?.components?.get(0)?.requestFocus()
         continuePluginService.dispatchCustomEvent("message", mutableMapOf("type" to "focusContinueInputWithEdit"))
 
         continuePluginService.ideProtocolClient?.sendHighlightedCode()
@@ -200,7 +200,7 @@ class FocusContinueInputAction : AnAction() {
 
         val continuePluginService = pluginServiceFromActionEvent(e) ?: return
 
-        continuePluginService.continuePluginWindow.content.components[0].requestFocus()
+        continuePluginService.continuePluginWindow?.content?.components?.get(0)?.requestFocus()
         continuePluginService.dispatchCustomEvent("message", mutableMapOf("type" to "focusContinueInput"))
 
         continuePluginService.ideProtocolClient?.sendHighlightedCode()
@@ -223,7 +223,7 @@ class NewContinueSessionAction : AnAction() {
 
         val continuePluginService = pluginServiceFromActionEvent(e) ?: return
 
-        continuePluginService.continuePluginWindow.content.components[0].requestFocus()
+        continuePluginService.continuePluginWindow?.content?.components?.get(0)?.requestFocus()
         continuePluginService.dispatchCustomEvent("message", mutableMapOf("type" to "focusContinueInputWithNewSession"))
     }
 }

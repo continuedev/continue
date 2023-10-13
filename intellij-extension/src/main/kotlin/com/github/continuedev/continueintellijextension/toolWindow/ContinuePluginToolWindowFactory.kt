@@ -1,5 +1,10 @@
 package com.github.continuedev.continueintellijextension.toolWindow
 
+import com.intellij.openapi.diagnostic.thisLogger
+import com.intellij.ui.components.JBPanel
+import com.intellij.ui.content.ContentFactory
+import com.intellij.ui.jcef.JBCefJSQuery
+import javax.swing.*
 import com.github.continuedev.continueintellijextension.activities.getContinueServerUrl
 import com.github.continuedev.continueintellijextension.`continue`.getMachineUniqueID
 import com.github.continuedev.continueintellijextension.factories.CustomSchemeHandlerFactory
@@ -7,43 +12,34 @@ import com.github.continuedev.continueintellijextension.services.ContinuePluginS
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
 import com.intellij.openapi.components.ServiceManager
-import com.intellij.openapi.diagnostic.thisLogger
+import com.intellij.openapi.project.DumbAware
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Disposer
 import com.intellij.openapi.wm.ToolWindow
 import com.intellij.openapi.wm.ToolWindowFactory
 import com.intellij.ui.jcef.*
-import kotlinx.coroutines.delay
 import org.cef.CefApp
 import org.cef.browser.CefBrowser
 import org.cef.handler.CefLoadHandlerAdapter
 import javax.swing.JComponent
 
-
 const val JS_QUERY_POOL_SIZE = "200"
 
-class ContinuePluginToolWindowFactory : ToolWindowFactory {
-
+class ContinuePluginToolWindowFactory : ToolWindowFactory, DumbAware {
     init {
         thisLogger().warn("Don't forget to remove all non-needed sample code files with their corresponding registration entries in `plugin.xml`.")
     }
 
-    override fun createToolWindowContent(
-        project: Project,
-        toolWindow: ToolWindow
-    ) {
-        val continuePluginService = ServiceManager.getService(
-            project,
-            ContinuePluginService::class.java
-        )
-        toolWindow.title = "Continue"
-
-        toolWindow.component.parent?.add(continuePluginService.continuePluginWindow.content)
+    override fun createToolWindowContent(project: Project, toolWindow: ToolWindow) {
+        val continueToolWindow = ContinuePluginWindow(toolWindow, project)
+        val content = ContentFactory.getInstance().createContent(continueToolWindow.content, null, false)
+        toolWindow.contentManager.addContent(content)
     }
 
     override fun shouldBeAvailable(project: Project) = true
 
-    class ContinuePluginWindow(project: Project) {
+
+    class ContinuePluginWindow(toolWindow: ToolWindow, project: Project) {
 
         init {
             System.setProperty("ide.browser.jcef.jsQueryPoolSize", JS_QUERY_POOL_SIZE)
@@ -52,13 +48,12 @@ class ContinuePluginToolWindowFactory : ToolWindowFactory {
         val webView: JBCefBrowser by lazy {
             val browser = JBCefBrowser()
             browser.jbCefClient.setProperty(
-                JBCefClient.Properties.JS_QUERY_POOL_SIZE,
-                JS_QUERY_POOL_SIZE
+                    JBCefClient.Properties.JS_QUERY_POOL_SIZE,
+                    JS_QUERY_POOL_SIZE
             )
             registerAppSchemeHandler()
 
-//            browser.loadURL("http://continue/index.html")
-            browser.loadURL("http://localhost:5173/index.html")
+            browser.loadURL("http://continue/index.html")
             Disposer.register(project, browser)
 
             val continuePluginService = ServiceManager.getService(
@@ -122,15 +117,14 @@ class ContinuePluginToolWindowFactory : ToolWindowFactory {
             browser?.executeJavaScript(script, browser.url, 0)
         }
 
-
         val content: JComponent
             get() = webView.component
 
         private fun registerAppSchemeHandler() {
             CefApp.getInstance().registerSchemeHandlerFactory(
-                "http",
-                "continue",
-                CustomSchemeHandlerFactory()
+                    "http",
+                    "continue",
+                    CustomSchemeHandlerFactory()
             )
         }
     }

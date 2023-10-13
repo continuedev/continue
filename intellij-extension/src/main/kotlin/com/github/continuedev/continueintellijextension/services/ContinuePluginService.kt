@@ -15,8 +15,7 @@ import kotlinx.coroutines.launch
 @Service(Service.Level.PROJECT)
 class ContinuePluginService(project: Project) : Disposable {
     val coroutineScope = CoroutineScope(Dispatchers.Main)
-    val continuePluginWindow =
-        ContinuePluginToolWindowFactory.ContinuePluginWindow(project)
+    val continuePluginWindow: ContinuePluginToolWindowFactory.ContinuePluginWindow? = null
 
     var ideProtocolClient: IdeProtocolClient? = null
     var sessionId: String? = null
@@ -41,7 +40,7 @@ class ContinuePluginService(project: Project) : Disposable {
         val jsCode = buildJavaScript(type, jsonData)
 
         try {
-            continuePluginWindow.webView.executeJavaScriptAsync(jsCode)
+            continuePluginWindow?.webView?.executeJavaScriptAsync(jsCode)
         } catch (error: IllegalStateException) {
             println("Webview not initialized yet $error")
         }

@@ -443,7 +443,7 @@ class ContinuePluginStartupActivity : StartupActivity, Disposable {
                         dispatchEventToWebview(
                                 "onLoad",
                                 dataMap,
-                                continuePluginService.continuePluginWindow.webView
+                                continuePluginService.continuePluginWindow?.webView
                         )
                         val globalScheme = EditorColorsManager.getInstance().globalScheme
                         val defaultBackground = globalScheme.defaultBackground
@@ -473,15 +473,15 @@ class ContinuePluginStartupActivity : StartupActivity, Disposable {
 
                         runJsInWebview(
                                 "document.body.style.setProperty(\"--vscode-editor-foreground\", \"$defaultForegroundHex\");",
-                                continuePluginService.continuePluginWindow.webView
+                                continuePluginService.continuePluginWindow?.webView
                         )
                         runJsInWebview(
                                 "document.body.style.setProperty(\"--vscode-editor-background\", \"$defaultBackgroundHex\");",
-                                continuePluginService.continuePluginWindow.webView
+                                continuePluginService.continuePluginWindow?.webView
                         )
                         runJsInWebview(
                                 "document.body.style.setProperty(\"--vscode-list-hoverBackground\", \"$secondaryDarkHex\");",
-                                continuePluginService.continuePluginWindow.webView
+                                continuePluginService.continuePluginWindow?.webView
                         )
                     }
                 }

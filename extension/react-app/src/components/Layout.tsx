@@ -21,6 +21,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import ModelSelect from "./ModelSelect";
 import ProgressBar from "./ProgressBar";
 import { temporarilyClearSession } from "../redux/slices/serverStateReducer";
+import { getFontSize } from "../util";
 
 // #region Styled Components
 const FOOTER_HEIGHT = "1.8em";
@@ -88,7 +89,7 @@ const DropdownPortalDiv = styled.div`
   position: relative;
   margin-left: 8px;
   z-index: 200;
-  font-size: 12px;
+  font-size: ${getFontSize()};
 `;
 
 // #endregion
