@@ -1,3 +1,4 @@
+import os
 import ssl
 from textwrap import dedent
 from time import time
@@ -19,6 +20,7 @@ from ..util.count_tokens import (
 )
 from ..util.devdata import dev_data_logger
 from ..util.telemetry import posthog_logger
+from ..util.logging import logger
 
 
 class CompletionOptions(ContinueBaseModel):
@@ -54,9 +56,11 @@ class CompletionOptions(ContinueBaseModel):
         None, description="The functions/tools to make available to the model."
     )
 
+
 class PromptTemplate(CompletionOptions):
     prompt: str = Field(description="The prompt to be used for the completion.")
     raw: bool = Field(False, description="Whether to use the raw prompt or not.")
+
 
 class LLM(ContinueBaseModel):
     title: Optional[str] = Field(
@@ -166,9 +170,7 @@ class LLM(ContinueBaseModel):
             "ca_bundle_path": {
                 "description": "Path to a custom CA bundle to use when making the HTTP request"
             },
-            "headers": {
-                "description": "Headers to use when making the HTTP request"
-            },
+            "headers": {"description": "Headers to use when making the HTTP request"},
             "proxy": {"description": "Proxy URL to use when making the HTTP request"},
             "stop_tokens": {"description": "Tokens that will stop the completion."},
             "temperature": {
@@ -220,26 +222,38 @@ class LLM(ContinueBaseModel):
             return aiohttp.ClientSession(
                 connector=aiohttp.TCPConnector(verify_ssl=False),
                 timeout=aiohttp.ClientTimeout(total=self.timeout),
-                headers=self.headers
+                headers=self.headers,
             )
         else:
             ca_bundle_path = (
                 certifi.where() if self.ca_bundle_path is None else self.ca_bundle_path
             )
-            ssl_context = ssl.create_default_context(cafile=ca_bundle_path)
-            return aiohttp.ClientSession(
-                connector=aiohttp.TCPConnector(ssl_context=ssl_context),
-                timeout=aiohttp.ClientTimeout(total=self.timeout),
-                headers=self.headers,
-            )
+            if os.path.exists(ca_bundle_path):
+                ssl_context = ssl.create_default_context(cafile=ca_bundle_path)
+                return aiohttp.ClientSession(
+                    connector=aiohttp.TCPConnector(ssl_context=ssl_context),
+                    timeout=aiohttp.ClientTimeout(total=self.timeout),
+                    headers=self.headers,
+                )
+            else:
+                logger.warning(
+                    "Could not find CA bundle at %s, using default SSL context",
+                    ca_bundle_path,
+                )
+                return aiohttp.ClientSession(
+                    timeout=aiohttp.ClientTimeout(total=self.timeout),
+                    headers=self.headers,
+                )
 
     def collect_args(self, options: CompletionOptions) -> Dict[str, Any]:
         """Collect the arguments for the LLM."""
         args = {**DEFAULT_ARGS.copy(), "model": self.model}
         args.update(options.dict(exclude_unset=True, exclude_none=True))
         return args
-    
-    def compile_log_message(self, prompt: str, completion_options: CompletionOptions) -> str:
+
+    def compile_log_message(
+        self, prompt: str, completion_options: CompletionOptions
+    ) -> str:
         dict = completion_options.dict(exclude_unset=True, exclude_none=True)
         settings = "\n".join([f"{key}: {value}" for key, value in dict.items()])
         return f"""\
@@ -249,9 +263,13 @@ Settings:
 ############################################
 
 {prompt}"""
-    
+
     def get_system_message(self) -> Optional[str]:
-        return self.system_message if self.system_message is not None else self._config_system_message
+        return (
+            self.system_message
+            if self.system_message is not None
+            else self._config_system_message
+        )
 
     def compile_chat_messages(
         self,
@@ -439,12 +457,17 @@ Settings:
                     if tf is None:
                         tf = time()
                         ttft = tf - ti
-                        posthog_logger.capture_event("time_to_first_token", {
-                            "model": self.model,
-                            "model_class": self.__class__.__name__,
-                            "time": ttft,
-                            "tokens": sum(self.count_tokens(m["content"]) for m in messages)
-                        })
+                        posthog_logger.capture_event(
+                            "time_to_first_token",
+                            {
+                                "model": self.model,
+                                "model_class": self.__class__.__name__,
+                                "time": ttft,
+                                "tokens": sum(
+                                    self.count_tokens(m["content"]) for m in messages
+                                ),
+                            },
+                        )
 
         else:
             async for chunk in self._stream_complete(prompt=prompt, options=options):
@@ -453,12 +476,15 @@ Settings:
                 if tf is None:
                     tf = time()
                     ttft = tf - ti
-                    posthog_logger.capture_event("time_to_first_token", {
-                        "model": self.model,
-                        "model_class": self.__class__.__name__,
-                        "time": ttft,
-                        "tokens": self.count_tokens(prompt)
-                    })
+                    posthog_logger.capture_event(
+                        "time_to_first_token",
+                        {
+                            "model": self.model,
+                            "model_class": self.__class__.__name__,
+                            "time": ttft,
+                            "tokens": self.count_tokens(prompt),
+                        },
+                    )
 
         # if log:
         #     self.write_log(f"Completion: \n\n{completion}")
