@@ -1,3 +1,9 @@
+---
+title: Context Providers
+description: Type '@' to select content to the LLM as context
+keywords: [context, "@", provider, LLM]
+---
+
 # Context Providers
 
 Context Providers allow you to type '@' and see a dropdown of content that can all be fed to the LLM as context. Every context provider is a plugin, which means if you want to reference some source of information that you don't see here, you can request (or build!) a new context provider.

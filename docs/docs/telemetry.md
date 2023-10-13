@@ -1,3 +1,10 @@
+---
+title: Telemetry
+description: Continue collects anonymous usage information
+keywords: [telemetry, anonymous, usage info, opt out]
+---
+
+
 # 🦔 Telemetry
 
 ## Overview

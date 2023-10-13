@@ -1,3 +1,9 @@
+---
+title: How to use Continue
+description: Using LLMs as you code with Continue
+keywords: [how to, edit, refactor, boilerplate, context]
+---
+
 # 🧑‍🎓 How to use Continue
 
 :::info
