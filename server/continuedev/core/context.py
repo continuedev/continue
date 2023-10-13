@@ -416,9 +416,9 @@ class ContextManager:
 
                 tasks = [
                     safe_load(provider)
-                    for _, provider in (
-                        providers_to_load or self.context_providers
-                    ).items()
+                    for provider in (
+                        providers_to_load or self.context_providers.values()
+                    )
                 ]
                 await asyncio.wait_for(asyncio.gather(*tasks), timeout=20)
 
