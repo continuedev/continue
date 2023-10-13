@@ -1,7 +1,7 @@
 ---
 title: Context Providers
 description: Type '@' to select content to the LLM as context
-keywords: [context, @, provider, LLM]
+keywords: [context, "@", provider, LLM]
 ---
 
 # Context Providers
