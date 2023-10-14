@@ -2,6 +2,7 @@ from typing import Callable, List, Literal, Optional
 import aiohttp
 
 import certifi
+from continuedev.libs.llm.prompts.chat import template_alpaca_messages
 import openai
 from pydantic import Field
 
@@ -14,6 +15,21 @@ CHAT_MODELS = {
     "gpt-4",
     "gpt-3.5-turbo-0613",
     "gpt-4-32k",
+}
+NON_CHAT_MODELS = {
+    "gpt-3.5-turbo-instruct",
+    "text-davinci-003",
+    "text-davinci-002",
+    "code-davinci-002",
+    "babbage-002",
+    "davinci-002",
+    "text-curie-001",
+    "text-babbage-001",
+    "text-ada-001",
+    "davinci",
+    "curie",
+    "babbage",
+    "ada",
 }
 MAX_TOKENS_FOR_MODEL = {
     "gpt-3.5-turbo": 4096,
@@ -73,6 +89,11 @@ class OpenAI(LLM):
         None, description="OpenAI API version. For use with Azure OpenAI Service."
     )
 
+    use_legacy_completions_endpoint: bool = Field(
+        False,
+        description="Manually specify to use the legacy completions endpoint instead of chat completions.",
+    )
+
     engine: Optional[str] = Field(
         None, description="OpenAI engine. For use with Azure OpenAI Service."
     )
@@ -118,7 +139,10 @@ class OpenAI(LLM):
         args = self.collect_args(options)
         args["stream"] = True
 
-        if args["model"] in CHAT_MODELS:
+        if (
+            args["model"] not in NON_CHAT_MODELS
+            and not self.use_legacy_completions_endpoint
+        ):
             async for chunk in await openai.ChatCompletion.acreate(
                 messages=[{"role": "user", "content": prompt}],
                 **args,
@@ -136,20 +160,39 @@ class OpenAI(LLM):
     async def _stream_chat(self, messages: List[ChatMessage], options):
         args = self.collect_args(options)
 
-        async for chunk in await openai.ChatCompletion.acreate(
-            messages=messages,
-            stream=True,
-            **args,
-            headers=self.headers,
+        if (
+            args["model"] not in NON_CHAT_MODELS
+            and not self.use_legacy_completions_endpoint
         ):
-            if not hasattr(chunk, "choices") or len(chunk.choices) == 0:
-                continue
-            yield chunk.choices[0].delta
+            async for chunk in await openai.ChatCompletion.acreate(
+                messages=messages,
+                stream=True,
+                **args,
+                headers=self.headers,
+            ):
+                if not hasattr(chunk, "choices") or len(chunk.choices) == 0:
+                    continue
+                yield chunk.choices[0].delta
+        else:
+            async for chunk in await openai.Completion.acreate(
+                prompt=template_alpaca_messages(messages),
+                stream=True,
+                **args,
+                headers=self.headers,
+            ):
+                if len(chunk.choices) > 0:
+                    yield {
+                        "role": "assistant",
+                        "content": chunk.choices[0].text,
+                    }
 
     async def _complete(self, prompt: str, options):
         args = self.collect_args(options)
 
-        if args["model"] in CHAT_MODELS:
+        if (
+            args["model"] not in NON_CHAT_MODELS
+            and not self.use_legacy_completions_endpoint
+        ):
             resp = await openai.ChatCompletion.acreate(
                 messages=[{"role": "user", "content": prompt}],
                 **args,
