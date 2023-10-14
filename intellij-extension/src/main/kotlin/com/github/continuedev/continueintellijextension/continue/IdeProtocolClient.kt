@@ -134,150 +134,156 @@ class IdeProtocolClient(
             )
             val messageType = parsedMessage["messageType"] as? String
             val data = parsedMessage["data"] as Map<String, Any>
-            when (messageType) {
-                "workspaceDirectory" -> {
-                    webSocket.send(
-                            Gson().toJson(
-                                    WebSocketMessage(
-                                            "workspaceDirectory",
-                                            WorkspaceDirectory(workspaceDirectory())
-                                    )
-                            )
-                    )
-                }
 
-                "uniqueId" -> webSocket.send(
-                        Gson().toJson(
-                                WebSocketMessage(
-                                        "uniqueId",
-                                        UniqueId(uniqueId())
+            try {
+                when (messageType) {
+                    "workspaceDirectory" -> {
+                        webSocket.send(
+                                Gson().toJson(
+                                        WebSocketMessage(
+                                                "workspaceDirectory",
+                                                WorkspaceDirectory(workspaceDirectory())
+                                        )
                                 )
                         )
-                )
-
-                "ide" -> {
-                    val applicationInfo = ApplicationInfo.getInstance()
-                    val ideName: String = applicationInfo.fullApplicationName
-                    val ideVersion = applicationInfo.fullVersion
-                    val sshClient = System.getenv("SSH_CLIENT")
-                    val sshTty = System.getenv("SSH_TTY")
-
-                    var remoteName: String? = null
-                    if (sshClient != null || sshTty != null) {
-                        remoteName = "ssh"
                     }
-                    webSocket.send(
+
+                    "uniqueId" -> webSocket.send(
                             Gson().toJson(
                                     WebSocketMessage(
-                                            "ide",
-                                            IdeInfo(
-                                                    ideName, ideVersion, remoteName
-                                            )
+                                            "uniqueId",
+                                            UniqueId(uniqueId())
                                     )
                             )
                     )
-                }
 
-                "showDiff" -> {
-                    diffManager.showDiff(
+                    "ide" -> {
+                        val applicationInfo = ApplicationInfo.getInstance()
+                        val ideName: String = applicationInfo.fullApplicationName
+                        val ideVersion = applicationInfo.fullVersion
+                        val sshClient = System.getenv("SSH_CLIENT")
+                        val sshTty = System.getenv("SSH_TTY")
+
+                        var remoteName: String? = null
+                        if (sshClient != null || sshTty != null) {
+                            remoteName = "ssh"
+                        }
+                        webSocket.send(
+                                Gson().toJson(
+                                        WebSocketMessage(
+                                                "ide",
+                                                IdeInfo(
+                                                        ideName, ideVersion, remoteName
+                                                )
+                                        )
+                                )
+                        )
+                    }
+
+                    "showDiff" -> {
+                        diffManager.showDiff(
+                                data["filepath"] as String,
+                                data["replacement"] as String,
+                                (data["step_index"] as Double).toInt()
+                        )
+                    }
+
+                    "readFile" -> {
+                        val msg =
+                                ReadFile(readFile(data["filepath"] as String))
+                        webSocket.send(
+                                Gson().toJson(
+                                        WebSocketMessage(
+                                                "readFile",
+                                                msg
+                                        )
+                                )
+                        )
+                    }
+
+                    "listDirectoryContents" -> {
+                        webSocket.send(
+                                Gson().toJson(
+                                        WebSocketMessage(
+                                                "listDirectoryContents",
+                                                ListDirectoryContents(listDirectoryContents())
+                                        )
+                                )
+                        )
+                    }
+
+                    "getTerminalContents" -> {
+                        webSocket.send(
+                                Gson().toJson(
+                                        WebSocketMessage(
+                                                "getTerminalContents",
+                                                GetTerminalContents("Terminal cannot be accessed in JetBrains IDE")
+                                        )
+                                )
+                        )
+                    }
+
+                    "visibleFiles" -> {
+                        val msg = VisibleFiles(visibleFiles())
+                        webSocket.send(
+                                Gson().toJson(
+                                        WebSocketMessage(
+                                                "visibleFiles",
+                                                msg
+                                        )
+                                )
+                        )
+                    }
+
+                    "saveFile" -> saveFile(data["filepath"] as String)
+                    "showVirtualFile" -> showVirtualFile(
+                            data["name"] as String,
+                            data["contents"] as String
+                    )
+
+                    "connected" -> {}
+                    "showMessage" -> showMessage(data["message"] as String)
+                    "setFileOpen" -> setFileOpen(
                             data["filepath"] as String,
-                            data["replacement"] as String,
-                            (data["step_index"] as Double).toInt()
+                            data["open"] as Boolean
                     )
-                }
 
-                "readFile" -> {
-                    val msg =
-                            ReadFile(readFile(data["filepath"] as String))
-                    webSocket.send(
-                            Gson().toJson(
-                                    WebSocketMessage(
-                                            "readFile",
-                                            msg
-                                    )
-                            )
-                    )
-                }
-
-                "listDirectoryContents" -> {
-                    webSocket.send(
-                            Gson().toJson(
-                                    WebSocketMessage(
-                                            "listDirectoryContents",
-                                            ListDirectoryContents(listDirectoryContents())
-                                    )
-                            )
-                    )
-                }
-
-                "getTerminalContents" -> {
-                    webSocket.send(
-                            Gson().toJson(
-                                    WebSocketMessage(
-                                            "getTerminalContents",
-                                            GetTerminalContents("Terminal cannot be accessed in JetBrains IDE")
-                                    )
-                            )
-                    )
-                }
-
-                "visibleFiles" -> {
-                    val msg = VisibleFiles(visibleFiles())
-                    webSocket.send(
-                            Gson().toJson(
-                                    WebSocketMessage(
-                                            "visibleFiles",
-                                            msg
-                                    )
-                            )
-                    )
-                }
-
-                "saveFile" -> saveFile(data["filepath"] as String)
-                "showVirtualFile" -> showVirtualFile(
-                        data["name"] as String,
-                        data["contents"] as String
-                )
-
-                "connected" -> {}
-                "showMessage" -> showMessage(data["message"] as String)
-                "setFileOpen" -> setFileOpen(
-                        data["filepath"] as String,
-                        data["open"] as Boolean
-                )
-
-                "highlightCode" -> {
-                    val gson = Gson()
-                    val json = gson.toJson(data["rangeInFile"])
-                    val type = object : TypeToken<RangeInFile>() {}.type
-                    val rangeInFile =
-                            gson.fromJson<RangeInFile>(json, type)
-                    highlightCode(rangeInFile, data["color"] as String)
-                }
-
-                "setSuggestionsLocked" -> {}
-                "getSessionId" -> {}
-                "highlightedCode" -> {
-                    val rifWithContents = getHighlightedCode()
-                    val rifs: MutableList<RangeInFile> = mutableListOf()
-                    if (rifWithContents != null) {
-                        val rif = RangeInFile(rifWithContents.filepath, rifWithContents.range)
-                        rifs += rif
+                    "highlightCode" -> {
+                        val gson = Gson()
+                        val json = gson.toJson(data["rangeInFile"])
+                        val type = object : TypeToken<RangeInFile>() {}.type
+                        val rangeInFile =
+                                gson.fromJson<RangeInFile>(json, type)
+                        highlightCode(rangeInFile, data["color"] as String)
                     }
-                    webSocket.send(
-                            Gson().toJson(
-                                    WebSocketMessage(
-                                            "highlightedCode",
-                                            HighlightedCode(rifs)
-                                    )
-                            )
-                    )
-                }
 
-                else -> {
-                    println("Unknown messageType: $messageType")
+                    "setSuggestionsLocked" -> {}
+                    "getSessionId" -> {}
+                    "highlightedCode" -> {
+                        val rifWithContents = getHighlightedCode()
+                        val rifs: MutableList<RangeInFile> = mutableListOf()
+                        if (rifWithContents != null) {
+                            val rif = RangeInFile(rifWithContents.filepath, rifWithContents.range)
+                            rifs += rif
+                        }
+                        webSocket.send(
+                                Gson().toJson(
+                                        WebSocketMessage(
+                                                "highlightedCode",
+                                                HighlightedCode(rifs)
+                                        )
+                                )
+                        )
+                    }
+
+                    else -> {
+                        println("Unknown messageType: $messageType")
+                    }
                 }
+            } catch (error: Exception) {
+                showMessage("Error handling message of type $messageType: $error")
             }
+
 
             if (messageType != null) {
                 pendingResponses[messageType]?.complete(parsedMessage)

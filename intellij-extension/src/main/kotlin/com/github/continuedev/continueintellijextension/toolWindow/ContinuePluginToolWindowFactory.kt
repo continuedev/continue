@@ -34,6 +34,7 @@ class ContinuePluginToolWindowFactory : ToolWindowFactory, DumbAware {
         val continueToolWindow = ContinuePluginWindow(toolWindow, project)
         val content = ContentFactory.getInstance().createContent(continueToolWindow.content, null, false)
         toolWindow.contentManager.addContent(content)
+        toolWindow.title = "Continue"
     }
 
     override fun shouldBeAvailable(project: Project) = true

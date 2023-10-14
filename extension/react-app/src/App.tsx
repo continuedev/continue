@@ -94,6 +94,27 @@ function App() {
     return () => window.removeEventListener("message", eventListener);
   }, []);
 
+  useEffect(() => {
+    if (document.body.style.getPropertyValue("--vscode-editor-foreground")) {
+      localStorage.setItem(
+        "--vscode-editor-foreground",
+        document.body.style.getPropertyValue("--vscode-editor-foreground")
+      );
+    }
+    if (document.body.style.getPropertyValue("--vscode-editor-background")) {
+      localStorage.setItem(
+        "--vscode-editor-background",
+        document.body.style.getPropertyValue("--vscode-editor-background")
+      );
+    }
+    if (document.body.style.getPropertyValue("--vscode-list-hoverBackground")) {
+      localStorage.setItem(
+        "--vscode-list-hoverBackground",
+        document.body.style.getPropertyValue("--vscode-list-hoverBackground")
+      );
+    }
+  }, []);
+
   return (
     <GUIClientContext.Provider value={client}>
       <RouterProvider router={router} />

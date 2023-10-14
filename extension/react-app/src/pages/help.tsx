@@ -27,7 +27,7 @@ function HelpPage() {
   const navigate = useNavigate();
 
   return (
-    <div className="overflow-scroll">
+    <div className="overflow-y-scroll">
       <div
         className="items-center flex m-0 p-0 sticky top-0"
         style={{

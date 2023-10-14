@@ -220,6 +220,33 @@ fun checkOrKillRunningServer(): Boolean {
     return serverRunning && !shouldKillAndReplace
 }
 
+fun runBinary(path: String) {
+    try {
+        if (System.getProperty("os.name").startsWith("Windows")) {
+            // Windows approach
+            val script = """
+                Set WshShell = CreateObject("WScript.Shell")
+                WshShell.Run "$path", 0
+                Set WshShell = Nothing
+            """.trimIndent()
+            val scriptPath = Paths.get("startProcess.vbs")
+            Files.writeString(scriptPath, script)
+            val processBuilder = ProcessBuilder("cmd", "/c", "start", "cscript", scriptPath.toString())
+            processBuilder.start()
+        } else {
+            // Unix-like approach
+            val processBuilder = ProcessBuilder("sh", "-c", "nohup $path > /dev/null 2>&1 &")
+            processBuilder.start()
+        }
+    } catch (e: IOException) {
+        e.printStackTrace()
+    }
+}
+
+fun main() {
+    runBinary("path/to/your/binary") // replace with actual path to your binary
+    println("Binary started!")
+}
 
 
 suspend fun startBinaryWithRetry(path: String) {
@@ -227,7 +254,7 @@ suspend fun startBinaryWithRetry(path: String) {
     while (attempts < 5) {
         try {
             // Your suspend function call here
-            ProcessBuilder(path).start()
+            runBinary(path)
             break // If the function call is successful, break the loop
         } catch (e: Exception) {
             attempts++
