@@ -1,21 +1,22 @@
 import asyncio
 import json
 import os
-import subprocess
+from urllib.parse import quote_plus
 from functools import cached_property
-from typing import List, Tuple
+from typing import AsyncGenerator, Dict, List, Literal, Optional, Tuple
 
 import chromadb
 from chromadb.config import Settings
 from chromadb.utils import embedding_functions
+from ...libs.index.git import GitProject
 from dotenv import load_dotenv
 from openai.error import RateLimitError
+from pydantic import BaseModel
 
 from ...core.sdk import ContinueSDK
 from ..util.filter_files import DEFAULT_IGNORE_PATTERNS, should_filter_path
 from ..util.logging import logger
 from ..util.paths import getEmbeddingsPathForBranch
-from .update import filter_ignored_files
 
 load_dotenv()
 
@@ -73,88 +74,72 @@ def chunk_document(document: Optional[str], max_length: int = 1000) -> List[str]
 # Mapping of workspace_dir to chromadb collection
 collections = {}
 
+EmbeddingsType = Literal["default", "openai"]
 
-class ChromaIndexManager:
-    workspace_dir: str
+
+class CodebaseIndexMetadata(BaseModel):
+    commit: str
+    chunks: Dict[str, int]
+
+
+class ChromaCodebaseIndex:
+    directory: str
     client: chromadb.Client
     openai_api_key: str = None
+    git_project: GitProject
 
     def __init__(
         self,
-        workspace_dir: str,
+        directory: str,
         openai_api_key: str = None,
     ):
-        self.workspace_dir = workspace_dir
+        self.directory = directory
+        self.git_project = GitProject(directory)
+        self.openai_api_key = openai_api_key
         self.client = chromadb.PersistentClient(
-            path=os.path.join(
-                getEmbeddingsPathForBranch(self.workspace_dir, self.current_branch),
-                "chroma",
-            ),
+            path=os.path.join(self.index_dir, "chroma"),
             settings=Settings(anonymized_telemetry=False),
         )
-        self.openai_api_key = openai_api_key
+        collections[self.directory] = self.collection
         os.environ.setdefault("TOKENIZERS_PARALLELISM", "true")
 
-    @cached_property
-    def current_commit(self) -> str:
-        """Get the current commit."""
-        try:
-            return (
-                subprocess.check_output(
-                    ["git", "rev-parse", "HEAD"], cwd=self.workspace_dir
-                )
-                .decode("utf-8")
-                .strip()
-            )
-        except subprocess.CalledProcessError:
-            return "NONE"
-
-    @cached_property
-    def current_branch(self) -> str:
-        """Get the current branch."""
-        try:
-            return (
-                subprocess.check_output(
-                    ["git", "rev-parse", "--abbrev-ref", "HEAD"], cwd=self.workspace_dir
-                )
-                .decode("utf-8")
-                .strip()
-            )
-        except subprocess.CalledProcessError:
-            return "NONE"
+    @property
+    def embeddings_type(self) -> EmbeddingsType:
+        return "default" if self.openai_api_key is None else "openai"
 
     @cached_property
     def index_dir(self) -> str:
-        return getEmbeddingsPathForBranch(self.workspace_dir, self.current_branch)
+        directory = os.path.join(
+            getEmbeddingsPathForBranch(self.directory, self.git_project.current_branch),
+            self.embeddings_type,
+        )
+        os.makedirs(directory, exist_ok=True)
+        return directory
 
     @property
     def index_name(self) -> str:
-        return f"{self.workspace_dir}/{self.current_branch}"
+        return (
+            f"{self.directory}/{self.git_project.current_branch}/{self.embeddings_type}"
+        )
 
     @cached_property
-    def git_root_dir(self):
-        """Get the root directory of a Git repository."""
-        try:
-            return (
-                subprocess.check_output(
-                    ["git", "rev-parse", "--show-toplevel"], cwd=self.workspace_dir
-                )
-                .strip()
-                .decode()
-            )
-        except subprocess.CalledProcessError:
-            return None
+    def metadata_path(self) -> str:
+        return os.path.join(self.index_dir, "metadata.json")
 
-    def check_index_exists(self):
-        return os.path.exists(os.path.join(self.index_dir, "metadata.json"))
+    def exists(self):
+        """Check whether the codebase index has already been built and saved on disk"""
+        return os.path.exists(self.metadata_path)
+
+    def get_metadata(self) -> CodebaseIndexMetadata:
+        return CodebaseIndexMetadata.parse_file(self.metadata_path)
 
     @property
     def collection(self):
-        if self.workspace_dir in collections:
-            return collections[self.workspace_dir]
+        if self.directory in collections:
+            return collections[self.directory]
 
         kwargs = {
-            "name": self.current_branch,
+            "name": quote_plus(self.git_project.current_branch).replace("%", ""),
         }
         if self.openai_api_key is not None:
             kwargs["embedding_function"] = embedding_functions.OpenAIEmbeddingFunction(
@@ -164,13 +149,12 @@ class ChromaIndexManager:
 
         return self.client.get_or_create_collection(**kwargs)
 
-    async def create_codebase_index(
+    async def build(
         self, sdk: ContinueSDK, ignore_files: List[str] = []
-    ):
+    ) -> AsyncGenerator[float, None]:
         """Create a new index for the current branch."""
-        collections[self.workspace_dir] = self.collection
 
-        if self.check_index_exists():
+        if self.exists():
             return
 
         files = await sdk.ide.listDirectoryContents(sdk.ide.workspace_directory, True)
@@ -233,6 +217,9 @@ class ChromaIndexManager:
                 )
                 i += 100
                 await asyncio.sleep(0.5)
+
+                # Give a progress update (1.0 is completed)
+                yield i / len(flattened_chunks)
             except RateLimitError as e:
                 logger.debug(f"Rate limit exceeded, waiting {wait_time} seconds")
                 await asyncio.sleep(wait_time)
@@ -243,7 +230,7 @@ class ChromaIndexManager:
         with open(f"{self.index_dir}/metadata.json", "w") as f:
             json.dump(
                 {
-                    "commit": self.current_commit,
+                    "commit": self.git_project.current_commit,
                     "chunks": {files[i]: len(chunks[i]) for i in range(len(files))},
                 },
                 f,
@@ -252,64 +239,30 @@ class ChromaIndexManager:
 
         logger.debug("Codebase index created")
 
-    def get_modified_deleted_files(self) -> Tuple[List[str], List[str]]:
-        """Get a list of all files that have been modified since the last commit."""
-        metadata = f"{self.index_dir}/metadata.json"
-        with open(metadata, "r") as f:
-            previous_commit = json.load(f)["commit"]
-
-        try:
-            modified_deleted_files = (
-                subprocess.check_output(
-                    ["git", "diff", "--name-only", previous_commit, self.current_commit]
-                )
-                .decode("utf-8")
-                .strip()
-            )
-        except subprocess.CalledProcessError:
-            return [], []
-
-        modified_deleted_files = modified_deleted_files.split("\n")
-        modified_deleted_files = [f for f in modified_deleted_files if f]
-
-        deleted_files = [
-            f
-            for f in modified_deleted_files
-            if not os.path.exists(os.path.join(self.workspace_dir, f))
-        ]
-        modified_files = [
-            f
-            for f in modified_deleted_files
-            if os.path.exists(os.path.join(self.workspace_dir, f))
-        ]
-
-        return filter_ignored_files(
-            modified_files, self.index_dir
-        ), filter_ignored_files(deleted_files, self.index_dir)
-
-    def update_codebase_index(self):
+    async def update(self):
         """Update the index with a list of files."""
 
-        if not self.check_index_exists():
-            self.create_codebase_index()
+        if not self.exists():
+            self.build()
         else:
-            modified_files, deleted_files = self.get_modified_deleted_files()
-
-            with open(f"{self.index_dir}/metadata.json", "r") as f:
-                metadata = json.load(f)
+            metadata = self.get_metadata()
+            (
+                modified_files,
+                deleted_files,
+            ) = self.git_project.get_modified_deleted_files(metadata.commit)
 
             for file in deleted_files:
-                num_chunks = metadata["chunks"][file]
+                num_chunks = metadata.chunks[file]
                 for i in range(num_chunks):
                     self.collection.delete(file)
 
-                del metadata["chunks"][file]
+                del metadata.chunks[file]
 
                 logger.debug(f"Deleted {file}")
 
             for file in modified_files:
-                if file in metadata["chunks"]:
-                    num_chunks = metadata["chunks"][file]
+                if file in metadata.chunks:
+                    num_chunks = metadata.chunks[file]
 
                     for i in range(num_chunks):
                         self.collection.delete(file)
@@ -322,23 +275,21 @@ class ChromaIndexManager:
                 # for i, text in enumerate(text_chunks):
                 #     index.insert(Document(text=text, doc_id=f"{file}::{i}"))
 
-                # metadata["chunks"][file] = len(text_chunks)
+                # metadata.chunks[file] = len(text_chunks)
 
                 logger.debug(f"Inserted new version of {file}")
 
-            metadata["commit"] = self.current_commit
+            metadata.commit = self.git_project.current_commit
 
-            with open(f"{self.index_dir}/metadata.json", "w") as f:
-                json.dump(metadata, f, indent=4)
+            with open(self.metadata_path, "w") as f:
+                f.write(metadata.json())
 
             logger.debug("Codebase index updated")
 
-    def query_codebase_index(self, query: str, n: int = 4) -> str:
-        """Query the codebase index."""
-        if not self.check_index_exists():
-            logger.debug(f"No index found for the codebase at {self.index_dir}")
+    def query(self, query: str, n: int = 4) -> str:
+        """Query the codebase index for top n results"""
+        if not self.exists():
+            logger.warning(f"No index found for the codebase at {self.index_dir}")
             return []
 
-        results = self.collection.query(query_texts=[query], n_results=n)
-
-        return results
+        return self.collection.query(query_texts=[query], n_results=n)
