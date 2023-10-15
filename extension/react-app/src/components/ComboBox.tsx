@@ -1244,6 +1244,27 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
                 )}
               </Li>
             ))}
+          {downshiftProps.isOpen && items.length === 0 && (
+            <Li
+              key="empty-items-li"
+              highlighted={false}
+              selected={false}
+              isLastItem={false}
+            >
+              <span
+                style={{
+                  color: lightGray,
+                  float: "right",
+                  textAlign: "right",
+                  display: "flex",
+                  width: "100%",
+                  cursor: "default",
+                }}
+              >
+                No items found
+              </span>
+            </Li>
+          )}
         </Ul>
       </div>
       {selectedContextItems.length === 0 &&
