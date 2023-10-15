@@ -1,5 +1,4 @@
 from functools import cached_property
-import json
 import os
 import subprocess
 from typing import List, Tuple
