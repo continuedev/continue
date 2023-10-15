@@ -223,6 +223,7 @@ class LLM(ContinueBaseModel):
                 connector=aiohttp.TCPConnector(verify_ssl=False),
                 timeout=aiohttp.ClientTimeout(total=self.timeout),
                 headers=self.headers,
+                trust_env=True,
             )
         else:
             ca_bundle_path = (
@@ -234,6 +235,7 @@ class LLM(ContinueBaseModel):
                     connector=aiohttp.TCPConnector(ssl_context=ssl_context),
                     timeout=aiohttp.ClientTimeout(total=self.timeout),
                     headers=self.headers,
+                    trust_env=True,
                 )
             else:
                 logger.warning(
@@ -243,6 +245,7 @@ class LLM(ContinueBaseModel):
                 return aiohttp.ClientSession(
                     timeout=aiohttp.ClientTimeout(total=self.timeout),
                     headers=self.headers,
+                    trust_env=True,
                 )
 
     def collect_args(self, options: CompletionOptions) -> Dict[str, Any]:

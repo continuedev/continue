@@ -52,6 +52,7 @@ class TogetherLLM(LLM):
         self._client_session = aiohttp.ClientSession(
             connector=aiohttp.TCPConnector(verify_ssl=self.verify_ssl),
             timeout=aiohttp.ClientTimeout(total=self.timeout),
+            trust_env=True,
         )
 
     async def stop(self):
