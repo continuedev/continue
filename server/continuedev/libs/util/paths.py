@@ -144,5 +144,5 @@ def getSavedContextGroupsPath():
     os.makedirs(os.path.dirname(path), exist_ok=True)
     if not os.path.exists(path):
         with open(path, "w") as f:
-            f.write("\{\}")
+            f.write("{}")
     return path
