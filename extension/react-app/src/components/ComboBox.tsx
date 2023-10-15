@@ -745,6 +745,26 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
 
   return (
     <div ref={topRef}>
+      {selectedContextItems.length === 0 && props.isMainInput && (
+        <div
+          onClick={() => {
+            downshiftProps.setInputValue("@");
+            inputRef.current?.focus();
+          }}
+          style={{
+            color: lightGray,
+            fontSize: "10px",
+            backgroundColor: vscBackground,
+            paddingLeft: "12px",
+            paddingTop: getFontSize(),
+            width: "fit-content",
+          }}
+          className="hover:underline cursor-pointer"
+        >
+          + Add Context
+        </div>
+      )}
+
       {props.isMainInput ||
       (selectedContextItems.length > 0 && showContextItemsIfNotMain) ? (
         <div
@@ -864,7 +884,6 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
               />
             );
           })}
-
           {/* {selectedContextItems.length > 0 && (
           <HeaderButtonWithText
             onClick={() => {

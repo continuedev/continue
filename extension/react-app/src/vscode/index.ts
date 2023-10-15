@@ -3,8 +3,7 @@ import "vscode-webview";
 
 declare const vscode: any;
 
-export function postVscMessage(type: string, data: any) {
-  console.log("Sending message", type);
+function _postVscMessage(type: string, data: any) {
   if (typeof vscode === "undefined") {
     if (localStorage.getItem("ide") === "jetbrains" || true) {
       if ((window as any).postIntellijMessage === undefined) {
@@ -13,7 +12,7 @@ export function postVscMessage(type: string, data: any) {
           type,
           data
         );
-        return;
+        throw new Error("postIntellijMessage is undefined");
       }
       (window as any).postIntellijMessage?.(type, data);
       return;
@@ -26,6 +25,22 @@ export function postVscMessage(type: string, data: any) {
     type,
     ...data,
   });
+}
+
+export function postVscMessage(type: string, data: any, attempt: number = 0) {
+  try {
+    _postVscMessage(type, data);
+  } catch (error) {
+    if (attempt < 5) {
+      console.log(`Attempt ${attempt} failed. Retrying...`);
+      setTimeout(
+        () => postVscMessage(type, data, attempt + 1),
+        Math.pow(2, attempt) * 1000
+      );
+    } else {
+      console.error("Max attempts reached. Message could not be sent.", error);
+    }
+  }
 }
 
 export async function vscRequest(type: string, data: any): Promise<any> {

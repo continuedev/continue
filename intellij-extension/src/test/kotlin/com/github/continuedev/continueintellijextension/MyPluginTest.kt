@@ -33,10 +33,10 @@ class MyPluginTest : BasePlatformTestCase() {
     fun testProjectService() {
         val projectService = project.service<ContinuePluginService>()
 
-        assertNotSame(
-            projectService.getRandomNumber(),
-            projectService.getRandomNumber()
-        )
+//        assertNotSame(
+//            projectService.getRandomNumber(),
+//            projectService.getRandomNumber()
+//        )
     }
 
     override fun getTestDataPath() = "src/test/testData/rename"

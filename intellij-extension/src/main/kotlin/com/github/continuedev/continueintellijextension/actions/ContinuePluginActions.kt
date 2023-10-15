@@ -119,7 +119,7 @@ class QuickTextEntryAction : AnAction() {
              val project = e.project
              if (project != null) {
                  val toolWindowManager = ToolWindowManager.getInstance(project)
-                 val toolWindow = toolWindowManager.getToolWindow("ContinuePluginViewer")
+                 val toolWindow = toolWindowManager.getToolWindow("Continue")
 
                  if (toolWindow != null) {
                      if (!toolWindow.isVisible) {
@@ -149,7 +149,7 @@ class ToggleAuxiliaryBarAction : AnAction() {
     override fun actionPerformed(e: AnActionEvent) {
         val project = e.project ?: return
         val toolWindowManager = ToolWindowManager.getInstance(project)
-        val toolWindow = toolWindowManager.getToolWindow("ContinuePluginViewer")
+        val toolWindow = toolWindowManager.getToolWindow("Continue")
 
         if (toolWindow != null) {
             if (toolWindow.isVisible) {
@@ -167,7 +167,7 @@ class FocusContinueInputWithEditAction : AnAction() {
         val project = e.project
         if (project != null) {
             val toolWindowManager = ToolWindowManager.getInstance(project)
-            val toolWindow = toolWindowManager.getToolWindow("ContinuePluginViewer")
+            val toolWindow = toolWindowManager.getToolWindow("Continue")
 
             if (toolWindow != null) {
                 if (!toolWindow.isVisible) {
@@ -189,7 +189,7 @@ class FocusContinueInputAction : AnAction() {
         val project = e.project
         if (project != null) {
             val toolWindowManager = ToolWindowManager.getInstance(project)
-            val toolWindow = toolWindowManager.getToolWindow("ContinuePluginViewer")
+            val toolWindow = toolWindowManager.getToolWindow("Continue")
 
             if (toolWindow != null) {
                 if (!toolWindow.isVisible) {
@@ -212,7 +212,7 @@ class NewContinueSessionAction : AnAction() {
         val project = e.project
         if (project != null) {
             val toolWindowManager = ToolWindowManager.getInstance(project)
-            val toolWindow = toolWindowManager.getToolWindow("ContinuePluginViewer")
+            val toolWindow = toolWindowManager.getToolWindow("Continue")
 
             if (toolWindow != null) {
                 if (!toolWindow.isVisible) {

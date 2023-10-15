@@ -245,7 +245,7 @@ function ModelSelect(props: {}) {
       t: "default",
       idx: -1,
     }),
-    title: "OpenAIFreeTrial - gpt-4",
+    title: "GPT-4",
   };
   const [options, setOptions] = useState<Option[]>([DEFAULT_OPTION]);
 
@@ -297,9 +297,7 @@ function ModelSelect(props: {}) {
         >
           <div className="relative">
             <StyledListboxButton>
-              <div>
-                {modelSelectTitle(defaultModel) || "OpenAIFreeTrial - gpt-4"}
-              </div>
+              <div>{modelSelectTitle(defaultModel) || "GPT-4"}</div>
               <div className="pointer-events-none flex items-center">
                 <ChevronUpDownIcon
                   className="h-5 w-5 text-gray-400"

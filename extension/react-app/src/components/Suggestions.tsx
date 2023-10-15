@@ -200,58 +200,61 @@ function SuggestionsArea(props: { onClick: (textInput: string) => void }) {
 
   return (
     <>
-      {hide || stage > NUM_STAGES - 1 || !inputsAreOnlyTutorial() || (
-        <TutorialDiv>
-          <div className="flex">
-            <SparklesIcon width="1.3em" height="1.3em" color="yellow" />
-            <b className="ml-1">
-              Tutorial ({stage + 1}/{NUM_STAGES})
-            </b>
-          </div>
-          <div style={{ color: vscForeground, paddingLeft: "4px" }}>
-            {stage < suggestionsStages.length &&
-              suggestionsStages[stage][0]?.title}
-          </div>
-          <HeaderButtonWithText
-            className="absolute right-1 top-1 cursor-pointer"
-            text="Close Tutorial"
-            onClick={() => {
-              setHide(true);
-              const tutorialClosedCount = parseInt(
-                localStorage.getItem("tutorialClosedCount") || "0"
-              );
-              localStorage.setItem(
-                "tutorialClosedCount",
-                (tutorialClosedCount + 1).toString()
-              );
-              posthog?.capture("tutorial_closed", {
-                stage,
-                tutorialClosedCount,
-              });
-            }}
-          >
-            <XMarkIcon width="1.2em" height="1.2em" />
-          </HeaderButtonWithText>
-          <div className="grid grid-cols-2 gap-2 mt-2">
-            {suggestionsStages[stage]?.map((suggestion, idx) => (
-              <SuggestionsDiv
-                key={idx}
-                disabled={!codeIsHighlighted}
-                {...suggestion}
-                onClick={() => {
-                  if (!codeIsHighlighted) return;
-                  props.onClick(suggestion.textInput);
-                  posthog?.capture("tutorial_stage_complete", { stage });
-                  setStage(stage + 1);
-                  localStorage.setItem("stage", (stage + 1).toString());
-                  setHide(true);
-                  setNumTutorialInputs((prev) => prev + 1);
-                }}
-              />
-            ))}
-          </div>
-        </TutorialDiv>
-      )}
+      {hide ||
+        stage > NUM_STAGES - 1 ||
+        !inputsAreOnlyTutorial() ||
+        parseInt(localStorage.getItem("tutorialClosedCount") || "0") > 0 || (
+          <TutorialDiv>
+            <div className="flex">
+              <SparklesIcon width="1.3em" height="1.3em" color="yellow" />
+              <b className="ml-1">
+                Tutorial ({stage + 1}/{NUM_STAGES})
+              </b>
+            </div>
+            <div style={{ color: vscForeground, paddingLeft: "4px" }}>
+              {stage < suggestionsStages.length &&
+                suggestionsStages[stage][0]?.title}
+            </div>
+            <HeaderButtonWithText
+              className="absolute right-1 top-1 cursor-pointer"
+              text="Close Tutorial"
+              onClick={() => {
+                setHide(true);
+                const tutorialClosedCount = parseInt(
+                  localStorage.getItem("tutorialClosedCount") || "0"
+                );
+                localStorage.setItem(
+                  "tutorialClosedCount",
+                  (tutorialClosedCount + 1).toString()
+                );
+                posthog?.capture("tutorial_closed", {
+                  stage,
+                  tutorialClosedCount,
+                });
+              }}
+            >
+              <XMarkIcon width="1.2em" height="1.2em" />
+            </HeaderButtonWithText>
+            <div className="grid grid-cols-2 gap-2 mt-2">
+              {suggestionsStages[stage]?.map((suggestion, idx) => (
+                <SuggestionsDiv
+                  key={idx}
+                  disabled={!codeIsHighlighted}
+                  {...suggestion}
+                  onClick={() => {
+                    if (!codeIsHighlighted) return;
+                    props.onClick(suggestion.textInput);
+                    posthog?.capture("tutorial_stage_complete", { stage });
+                    setStage(stage + 1);
+                    localStorage.setItem("stage", (stage + 1).toString());
+                    setHide(true);
+                    setNumTutorialInputs((prev) => prev + 1);
+                  }}
+                />
+              ))}
+            </div>
+          </TutorialDiv>
+        )}
     </>
   );
 }

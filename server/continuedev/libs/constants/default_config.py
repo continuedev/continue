@@ -29,7 +29,7 @@ config = ContinueConfig(
     allow_anonymous_telemetry=True,
     steps_on_startup=[CreateCodebaseIndexChroma()],
     models=Models(
-        default=OpenAIFreeTrial(api_key="", model="gpt-4"),
+        default=OpenAIFreeTrial(api_key="", model="gpt-4", title="GPT-4"),
         summarize=OpenAIFreeTrial(api_key="", model="gpt-3.5-turbo")
     ),
     system_message=None,

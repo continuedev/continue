@@ -7,7 +7,7 @@
     <depends>com.intellij.modules.platform</depends>
 
     <extensions defaultExtensionNs="com.intellij">
-        <toolWindow id="ContinuePluginViewer" anchor="right" icon="/tool-window-icon.png"
+        <toolWindow id="Continue" anchor="right" icon="/tool-window-icon.png"
                     factoryClass="com.github.continuedev.continueintellijextension.toolWindow.ContinuePluginToolWindowFactory"/>
         <projectService id="ContinuePluginService"
                         serviceImplementation="com.github.continuedev.continueintellijextension.services.ContinuePluginService"/>

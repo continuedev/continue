@@ -4,20 +4,15 @@ import com.github.continuedev.continueintellijextension.constants.CONTINUE_PYTHO
 import com.github.continuedev.continueintellijextension.constants.CONTINUE_SERVER_WEBSOCKET_PORT
 import com.github.continuedev.continueintellijextension.`continue`.DefaultTextSelectionStrategy
 import com.github.continuedev.continueintellijextension.`continue`.IdeProtocolClient
-import com.github.continuedev.continueintellijextension.`continue`.getMachineUniqueID
 import com.github.continuedev.continueintellijextension.listeners.ContinuePluginSelectionListener
 import com.github.continuedev.continueintellijextension.services.ContinueExtensionSettings
 import com.github.continuedev.continueintellijextension.services.ContinuePluginService
-import com.github.continuedev.continueintellijextension.utils.dispatchEventToWebview
-import com.github.continuedev.continueintellijextension.utils.runJsInWebview
 import com.intellij.ide.plugins.PluginManagerCore
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.actionSystem.ActionManager
-import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.editor.EditorFactory
-import com.intellij.openapi.editor.colors.EditorColorsManager
 import com.intellij.openapi.extensions.PluginId
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.startup.StartupActivity
@@ -26,17 +21,15 @@ import com.intellij.openapi.wm.ToolWindowManager
 import kotlinx.coroutines.*
 import okhttp3.OkHttpClient
 import okhttp3.Request
-import java.awt.BorderLayout
+import java.awt.Color
 import java.awt.Dimension
-import java.awt.FlowLayout
+import java.awt.Font
 import java.awt.GridLayout
 import java.io.*
 import java.nio.file.Files
 import java.nio.file.Paths
 import java.nio.file.attribute.PosixFilePermission
 import javax.swing.*
-import kotlin.math.max
-import kotlin.math.min
 
 
 fun getContinueGlobalPath(): String {
@@ -243,11 +236,6 @@ fun runBinary(path: String) {
     }
 }
 
-fun main() {
-    runBinary("path/to/your/binary") // replace with actual path to your binary
-    println("Binary started!")
-}
-
 
 suspend fun startBinaryWithRetry(path: String) {
     var attempts = 0
@@ -364,18 +352,23 @@ class WelcomeDialogWrapper(val project: Project) : DialogWrapper(true) {
         super.doOKAction()
         val toolWindowManager = ToolWindowManager.getInstance(project)
         val toolWindow =
-                toolWindowManager.getToolWindow("ContinuePluginViewer")
+                toolWindowManager.getToolWindow("Continue")
         toolWindow?.show()
     }
 
     override fun createCenterPanel(): JComponent? {
         panel = JPanel(GridLayout(0, 1))
         panel!!.preferredSize = Dimension(500, panel!!.preferredSize.height)
-        paragraph = JTextArea("""
-            Welcome! You can access Continue from the right side panel by clicking on the logo.
+        val paragraph = JLabel()
+        val shortcutKey = if (System.getProperty("os.name").toLowerCase().contains("win")) "⌃" else "⌘"
+        paragraph.text = """
+            <html>Welcome! You can access Continue from the right side panel by clicking on the logo.<br><br>
             
-            To ask a question about a piece of code, highlight it, use cmd/ctrl+J to select the code and focus the input box, then ask your question.
-            To generate an inline edit, highlight the code you want to edit, use cmd/ctrl+shift+J, then type your requested edit.""".trimIndent())
+            To <b>ask a question</b> about a piece of code: highlight it, use <b>$shortcutKey J</b> to select the code and focus the input box, then ask your question.<br><br>
+            To generate an <b>inline edit</b>: highlight the code you want to edit, use <b>$shortcutKey ⇧ J</b>, then type your requested edit.</html>""".trimIndent()
+
+        paragraph.font = Font("Arial", Font.PLAIN, 16)
+
         panel!!.add(paragraph)
 
         return panel
@@ -400,6 +393,7 @@ class ContinuePluginStartupActivity : StartupActivity, Disposable {
         val actionManager = ActionManager.getInstance()
         actionManager.unregisterAction("InsertLiveTemplate")
         actionManager.unregisterAction("SurroundWithLiveTemplate")
+        actionManager.unregisterAction("EditorJoinLines")
 
         // Initialize Plugin
        ApplicationManager.getApplication().executeOnPooledThread {
@@ -455,62 +449,9 @@ class ContinuePluginStartupActivity : StartupActivity, Disposable {
                 continuePluginService?.let {
                     val workspacePaths =
                             if (project.basePath != null) arrayOf(project.basePath) else emptyList<String>()
-                    val dataMap = mutableMapOf(
-                            "type" to "onLoad",
-                            "sessionId" to sessionId,
-                            "apiUrl" to getContinueServerUrl(),
-                            "workspacePaths" to workspacePaths,
-                            "vscMachineId" to getMachineUniqueID(),
-                            "vscMediaUrl" to "http://continue",
-                            "dataSwitchOn" to true
-                    )
-                    continuePluginService.sessionId = sessionId
+
                     continuePluginService.worksapcePaths = workspacePaths as Array<String>
-                    GlobalScope.async(Dispatchers.IO) {
-                        dispatchEventToWebview(
-                                "onLoad",
-                                dataMap,
-                                continuePluginService.continuePluginWindow?.webView
-                        )
-                        val globalScheme = EditorColorsManager.getInstance().globalScheme
-                        val defaultBackground = globalScheme.defaultBackground
-                        val defaultForeground = globalScheme.defaultForeground
-                        val defaultBackgroundHex = String.format("#%02x%02x%02x", defaultBackground.red, defaultBackground.green, defaultBackground.blue)
-                        val defaultForegroundHex = String.format("#%02x%02x%02x", defaultForeground.red, defaultForeground.green, defaultForeground.blue)
-
-                        val grayscale = (defaultBackground.red * 0.3 + defaultBackground.green * 0.59 + defaultBackground.blue * 0.11).toInt()
-
-                        val adjustedRed: Int
-                        val adjustedGreen: Int
-                        val adjustedBlue: Int
-
-                        val tint: Int = 20
-                        if (grayscale > 128) { // if closer to white
-                            adjustedRed = max(0, defaultBackground.red - tint)
-                            adjustedGreen = max(0, defaultBackground.green - tint)
-                            adjustedBlue = max(0, defaultBackground.blue - tint)
-                        } else { // if closer to black
-                            adjustedRed = min(255, defaultBackground.red + tint)
-                            adjustedGreen = min(255, defaultBackground.green + tint)
-                            adjustedBlue = min(255, defaultBackground.blue + tint)
-                        }
-
-                        val secondaryDarkHex = String.format("#%02x%02x%02x", adjustedRed, adjustedGreen, adjustedBlue)
-
-
-                        runJsInWebview(
-                                "document.body.style.setProperty(\"--vscode-editor-foreground\", \"$defaultForegroundHex\");",
-                                continuePluginService.continuePluginWindow?.webView
-                        )
-                        runJsInWebview(
-                                "document.body.style.setProperty(\"--vscode-editor-background\", \"$defaultBackgroundHex\");",
-                                continuePluginService.continuePluginWindow?.webView
-                        )
-                        runJsInWebview(
-                                "document.body.style.setProperty(\"--vscode-list-hoverBackground\", \"$secondaryDarkHex\");",
-                                continuePluginService.continuePluginWindow?.webView
-                        )
-                    }
+                    continuePluginService.sessionId = sessionId
                 }
 
                 EditorFactory.getInstance().eventMulticaster.addSelectionListener(

@@ -15,7 +15,7 @@ import kotlinx.coroutines.launch
 @Service(Service.Level.PROJECT)
 class ContinuePluginService(project: Project) : Disposable {
     val coroutineScope = CoroutineScope(Dispatchers.Main)
-    val continuePluginWindow: ContinuePluginToolWindowFactory.ContinuePluginWindow? = null
+    var continuePluginWindow: ContinuePluginToolWindowFactory.ContinuePluginWindow? = null
 
     var ideProtocolClient: IdeProtocolClient? = null
     var sessionId: String? = null

@@ -81,7 +81,7 @@ function ContinueButton(props: {
       {props.showStop ? (
         <>
           <StopIcon width="18px" height="18px" />
-          STOP {getPlatform() === "windows" ? "⌃ ⌫" : "⌘ ⌫"}
+          STOP
         </>
       ) : (
         <>
