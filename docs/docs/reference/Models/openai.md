@@ -28,7 +28,7 @@ Options for serving models locally with an OpenAI-compatible server include:
 - [LocalAI](https://localai.io/basics/getting_started/)
 - [llama-cpp-python](https://github.com/abetlen/llama-cpp-python#web-server)
 
-[View the source](https://github.com/continuedev/continue/tree/main/continuedev/src/continuedev/libs/llm/openai.py)
+[View the source](https://github.com/continuedev/continue/tree/main/server/continuedev/libs/llm/openai.py)
 
 ## Properties
 

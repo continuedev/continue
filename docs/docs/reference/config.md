@@ -4,7 +4,7 @@ import ClassPropertyRef from '@site/src/components/ClassPropertyRef.tsx';
 
 Continue can be deeply customized by editing the `ContinueConfig` object in `~/.continue/config.py` (`%userprofile%\.continue\config.py` for Windows) on your machine. This class is instantiated from the config file for every new session.
 
-[View the source](https://github.com/continuedev/continue/tree/main/continuedev/src/continuedev/core/config.py)
+[View the source](https://github.com/continuedev/continue/tree/main/server/continuedev/core/config.py)
 
 ## Properties
 

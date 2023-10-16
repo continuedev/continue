@@ -83,11 +83,11 @@ VSCode is assumed for development as Continue is primarily a VSCode tool at the 
 
 ### Writing Steps
 
-A Step can be used as a custom slash command, or called otherwise in a `Policy`. See the [steps README](./continuedev/src/continuedev/plugins/steps/README.md) to learn how to write a Step.
+A Step can be used as a custom slash command, or called otherwise in a `Policy`. See the [steps README](./server/continuedev/plugins/steps/README.md) to learn how to write a Step.
 
 ### Writing Context Providers
 
-A `ContextProvider` is a Continue plugin that lets type '@' to quickly select documents as context for the language model. The simplest way to create a `ContextProvider` is to implement the `provide_context_items` method. You can find a great example of this in [GitHubIssuesContextProvider](./continuedev/src/continuedev/plugins/context_providers/github.py), which allows you to search GitHub Issues in a repo.
+A `ContextProvider` is a Continue plugin that lets type '@' to quickly select documents as context for the language model. The simplest way to create a `ContextProvider` is to implement the `provide_context_items` method. You can find a great example of this in [GitHubIssuesContextProvider](./server/continuedev/plugins/context_providers/github.py), which allows you to search GitHub Issues in a repo.
 
 ## 📐 Continue Architecture
 
@@ -119,13 +119,13 @@ The JetBrains extension is currently in alpha testing. Please reach out on [Disc
 
 ### Continue IDE Websockets Protocol
 
-On the IDE side, this is implemented in [continueIdeClient.ts](./extension/src/continueIdeClient.ts). On the server side, this is implemented in [ide.py](./continuedev/src/continuedev/server/ide.py). You can see [ide_protocol.py](./continuedev/src/continuedev/server/ide_protocol.py) for the protocol definition.
+On the IDE side, this is implemented in [continueIdeClient.ts](./extension/src/continueIdeClient.ts). On the server side, this is implemented in [ide.py](./server/continuedev/server/ide.py). You can see [ide_protocol.py](./server/continuedev/server/ide_protocol.py) for the protocol definition.
 
 ### Continue GUI Websockets Protocol
 
-On the GUI side, this is implemented in [ContinueGUIClientProtocol.ts](./extension/react-app/src/hooks/ContinueGUIClientProtocol.ts). On the server side, this is implemented in [gui.py](./continuedev/src/continuedev/server/gui.py). You can see [gui_protocol.py](./continuedev/src/continuedev/server/gui_protocol.py) or [AbstractContinueGUIClientProtocol.ts](./extension/react-app/src/hooks/AbstractContinueGUIClientProtocol.ts) for the protocol definition.
+On the GUI side, this is implemented in [ContinueGUIClientProtocol.ts](./extension/react-app/src/hooks/ContinueGUIClientProtocol.ts). On the server side, this is implemented in [gui.py](./server/continuedev/server/gui.py). You can see [gui_protocol.py](./server/continuedev/server/gui_protocol.py) or [AbstractContinueGUIClientProtocol.ts](./extension/react-app/src/hooks/AbstractContinueGUIClientProtocol.ts) for the protocol definition.
 
-When state is updated on the server, we currently send the entirety of the object over websockets to the GUI. This will of course have to be improved soon. The state object, `FullState`, is defined in [core/main.py](./continuedev/src/continuedev/core/main.py) and includes:
+When state is updated on the server, we currently send the entirety of the object over websockets to the GUI. This will of course have to be improved soon. The state object, `FullState`, is defined in [core/main.py](./server/continuedev/core/main.py) and includes:
 
 - `history`, a record of previously run Steps. Displayed in order in the sidebar.
 - `active`, whether the autopilot is currently running a step. Displayed as a loader while step is running.
@@ -138,7 +138,7 @@ Updates are sent with `await sdk.update_ui()` when needed explicitly or `await a
 
 ## ❇️ Core Concepts
 
-All of Continue's logic happens inside of the server, and it is built around a few core concepts. Most of these are Pydantic Models defined in [core/main.py](./continuedev/src/continuedev/core/main.py).
+All of Continue's logic happens inside of the server, and it is built around a few core concepts. Most of these are Pydantic Models defined in [core/main.py](./server/continuedev/core/main.py).
 
 ### `Step`
 
@@ -148,17 +148,17 @@ Everything in Continue is a "Step". The `Step` class defines 2 methods:
 
 2. `async def describe(self, models: Models) -> Coroutine[str, None, None]` - After each Step is run, this method is called to asynchronously generate a summary title for the step. A `Models` object is passed so that you have access to LLMs to summarize for you.
 
-Steps are designed to be composable, so that you can easily build new Steps by combining existing ones. And because they are Pydantic models, they can instantly be used as tools useable by an LLM, for example with OpenAI's function-calling functionality (see [ChatWithFunctions](./continuedev/src/continuedev/plugins/steps/chat.py) for an example of this).
+Steps are designed to be composable, so that you can easily build new Steps by combining existing ones. And because they are Pydantic models, they can instantly be used as tools useable by an LLM, for example with OpenAI's function-calling functionality (see [ChatWithFunctions](./server/continuedev/plugins/steps/chat.py) for an example of this).
 
 Some of the most commonly used Steps are:
 
-- [`SimpleChatStep`](./continuedev/src/continuedev/plugins/steps/chat.py) - This is the default Step that is run when the user enters natural language input. It takes the user's input and runs it through the default LLM, then displays the result in the GUI.
+- [`SimpleChatStep`](./server/continuedev/plugins/steps/chat.py) - This is the default Step that is run when the user enters natural language input. It takes the user's input and runs it through the default LLM, then displays the result in the GUI.
 
-- [`EditHighlightedCodeStep`](./continuedev/src/continuedev/steps/core/core.py) - This is the Step run when a user highlights code, enters natural language, and presses CMD/CTRL+ENTER, or uses the slash command '/edit'. It opens a side-by-side diff editor, where updated code is streamed to fulfil the user's request.
+- [`EditHighlightedCodeStep`](./server/continuedev/steps/core/core.py) - This is the Step run when a user highlights code, enters natural language, and presses CMD/CTRL+ENTER, or uses the slash command '/edit'. It opens a side-by-side diff editor, where updated code is streamed to fulfil the user's request.
 
 ### `Autopilot`
 
-In [autopilot.py](./continuedev/src/continuedev/core/autopilot.py), we define the `Autopilot` class, which is the central entity responsible for keeping track of state and running the input/action loop.
+In [autopilot.py](./server/continuedev/core/autopilot.py), we define the `Autopilot` class, which is the central entity responsible for keeping track of state and running the input/action loop.
 
 ### `Observation`
 
@@ -166,4 +166,4 @@ An `Observation` is a simple Pydantic model that can be used as a trigger to run
 
 ### `Policy`
 
-A `Policy` implements the method `def next(self, config: ContinueConfig, history: History) -> Step`, which decides which `Step` the `Autopilot` should run next. The default policy is defined in [policy.py](./continuedev/src/continuedev/core/policy.py) and runs `SimpleChatStep` by default, or a slash command when the input begins with '/'. It also displays a welcome message at the beginning of each session. If interested in developing agents that autonomously take longer sequences of actions in the IDE, the `Policy` class is the place to start.
+A `Policy` implements the method `def next(self, config: ContinueConfig, history: History) -> Step`, which decides which `Step` the `Autopilot` should run next. The default policy is defined in [policy.py](./server/continuedev/core/policy.py) and runs `SimpleChatStep` by default, or a slash command when the input begins with '/'. It also displays a welcome message at the beginning of each session. If interested in developing agents that autonomously take longer sequences of actions in the IDE, the `Policy` class is the place to start.

@@ -4,7 +4,7 @@ import ClassPropertyRef from '@site/src/components/ClassPropertyRef.tsx';
 
 Type '@tree' to reference the contents of your current workspace. The LLM will be able to see the nested directory structure of your project.
 
-[View the source](https://github.com/continuedev/continue/tree/main/continuedev/src/continuedev/plugins/context_providers/filetree.py)
+[View the source](https://github.com/continuedev/continue/tree/main/server/continuedev/plugins/context_providers/filetree.py)
 
 ## Properties
 

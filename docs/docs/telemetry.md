@@ -9,7 +9,7 @@ keywords: [telemetry, anonymous, usage info, opt out]
 
 ## Overview
 
-Continue collects and reports **anonymous** usage information. This data is essential to understanding how we should improve the library. You can opt out of it at any time. We use [Posthog](https://posthog.com/), an open source platform for product analytics, to collect and store the data. You can review the code [here](https://github.com/continuedev/continue/tree/main/continuedev/src/continuedev/libs/util/telemetry.py).
+Continue collects and reports **anonymous** usage information. This data is essential to understanding how we should improve the library. You can opt out of it at any time. We use [Posthog](https://posthog.com/), an open source platform for product analytics, to collect and store the data. You can review the code [here](https://github.com/continuedev/continue/tree/main/server/continuedev/libs/util/telemetry.py).
 
 ## What we track
 

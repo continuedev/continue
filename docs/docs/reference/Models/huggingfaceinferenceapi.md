@@ -18,7 +18,7 @@ config = ContinueConfig(
 )
 ```
 
-[View the source](https://github.com/continuedev/continue/tree/main/continuedev/src/continuedev/libs/llm/hf_inference_api.py)
+[View the source](https://github.com/continuedev/continue/tree/main/server/continuedev/libs/llm/hf_inference_api.py)
 
 ## Properties
 
