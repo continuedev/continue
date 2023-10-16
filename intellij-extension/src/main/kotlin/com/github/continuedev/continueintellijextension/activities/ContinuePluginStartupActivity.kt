@@ -14,18 +14,21 @@ import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.editor.EditorFactory
 import com.intellij.openapi.extensions.PluginId
+import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.startup.StartupActivity
 import com.intellij.openapi.ui.DialogWrapper
+import com.intellij.openapi.util.io.StreamUtil
+import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.openapi.wm.ToolWindowManager
 import kotlinx.coroutines.*
 import okhttp3.OkHttpClient
 import okhttp3.Request
-import java.awt.Color
 import java.awt.Dimension
 import java.awt.Font
 import java.awt.GridLayout
 import java.io.*
+import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.nio.file.Paths
 import java.nio.file.attribute.PosixFilePermission
@@ -414,6 +417,27 @@ class ContinuePluginStartupActivity : StartupActivity, Disposable {
             val settings =
                     ServiceManager.getService(ContinueExtensionSettings::class.java)
             if (!settings.continueState.shownWelcomeDialog) {
+                // Open continue_tutorial.py
+                ContinuePluginStartupActivity::class.java.getClassLoader().getResourceAsStream("continue_tutorial.py").use { `is` ->
+                    if (`is` == null) {
+                        throw IOException("Resource not found: continue_tutorial.py")
+                    }
+                    var content = StreamUtil.readText(`is`, StandardCharsets.UTF_8)
+                    if (System.getProperty("os.name").toLowerCase().contains("win")) {
+                        content = content.replace("⌘", "⌃")
+                    }
+                    val filepath = Paths.get(getContinueGlobalPath(), "continue_tutorial.py").toString()
+                    File(filepath).writeText(content)
+                    val virtualFile = LocalFileSystem.getInstance().findFileByPath(filepath)
+
+                    if (virtualFile != null) {
+                        ApplicationManager.getApplication().invokeLater {
+                            FileEditorManager.getInstance(project).openFile(virtualFile, true)
+                        }
+                    }
+                }
+
+                // Show the welcome dialog
                 withContext(Dispatchers.Main) {
                     val dialog = WelcomeDialogWrapper(project)
                     dialog.show()

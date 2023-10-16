@@ -1,13 +1,20 @@
 """
 Welcome to Continue!
 
-Click the button in order to try Continue.
+This is a 2 minute tutorial.
+
+It will walk you through the basic features:
+1. Ask a question
+2. Edit code
+3. Debug
 """
 
-# region Part 1: Ask a question about code
+# region —————————————————————————— Part 1: Ask a question about code [⌘ M] ——————————————————————————
 
 
-# Step 1: Highlight the function below
+"""Step 1: Highlight the function below"""
+
+
 def mysterious_function(x):
     for i in range(len(x)):
         for j in range(len(x) - 1):
@@ -17,14 +24,14 @@ def mysterious_function(x):
     return x
 
 
-# Step 2: Use the keyboard shortcut cmd/ctrl + M to select the code and toggle the Continue input box
+"""Step 2: Use the keyboard shortcut [⌘ M] to
+select the code and toggle the Continue input box"""
 
-# Step 3: Ask a question and press Enter
+"""Step 3: Ask a question and press Enter"""
 
 # endregion
 
-
-# region Part 2: Edit code
+# region ————————————————————————————————— Part 2: Edit code [⌘ ⇧ M] —————————————————————————————————
 
 
 # Step 1: Highlight this code
@@ -41,23 +48,28 @@ def mysterious_function(x):
     return x
 
 
-# Step 2: Use the keyboard shortcut cmd/ctrl + shift + M to select the code and toggle the Continue input box with the /edit slash command
+"""Step 2: Use the keyboard shortcut [⌘ ⇧ M] to
+select the code and toggle the /edit slash command"""
 
-# Step 3: Request an edit and press Enter
+"""Step 3: Request an edit and press Enter"""
 
-# Step 4: Use the keyboard shortcuts to accept (cmd/ctrl + shift + Enter) or reject (cmd/ctrl + shift + Backspace) the edit
+"""Step 4: Use keyboard shortcuts to
+accept [⌘ ⇧ ↵] or reject [⌘ ⇧ ⌫] the edit"""
 
 # endregion
 
-# region Part 3: Debug automatically
+# region ———————————————————————————— Part 3: Debug automatically [⌘ ⇧ R] ————————————————————————————
 
 
-# Step 1: Run this Python file
+"""Step 1: Run this Python file"""
+
+
 def print_sum(list_to_print):
     print(sum(list_to_print))
 
 
-# Step 2: Use the keyboard shortcut cmd/ctrl + shift + R to automatically debug the error
+"""Step 2: Use the keyboard shortcut [⌘ ⇧ R]
+to automatically debug the error"""
 print_sum(["a", "b", "c"])
 
 # endregion
