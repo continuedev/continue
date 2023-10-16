@@ -4,7 +4,7 @@ import ClassPropertyRef from '@site/src/components/ClassPropertyRef.tsx';
 
 
 
-[View the source](https://github.com/continuedev/continue/tree/main/continuedev/src/continuedev/libs/llm/hf_tgi.py)
+[View the source](https://github.com/continuedev/continue/tree/main/server/continuedev/libs/llm/hf_tgi.py)
 
 ## Properties
 

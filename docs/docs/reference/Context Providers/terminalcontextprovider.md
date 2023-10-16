@@ -4,7 +4,7 @@ import ClassPropertyRef from '@site/src/components/ClassPropertyRef.tsx';
 
 Type '@terminal' to reference the contents of your IDE's terminal.
 
-[View the source](https://github.com/continuedev/continue/tree/main/continuedev/src/continuedev/plugins/context_providers/terminal.py)
+[View the source](https://github.com/continuedev/continue/tree/main/server/continuedev/plugins/context_providers/terminal.py)
 
 ## Properties
 

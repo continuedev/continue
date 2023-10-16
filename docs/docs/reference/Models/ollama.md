@@ -15,7 +15,7 @@ config = ContinueConfig(
 )
 ```
 
-[View the source](https://github.com/continuedev/continue/tree/main/continuedev/src/continuedev/libs/llm/ollama.py)
+[View the source](https://github.com/continuedev/continue/tree/main/server/continuedev/libs/llm/ollama.py)
 
 ## Properties
 

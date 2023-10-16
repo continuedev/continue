@@ -4,7 +4,7 @@ import ClassPropertyRef from '@site/src/components/ClassPropertyRef.tsx';
 
 Type '@search' to reference the results of codebase search, just like the results you would get from VS Code search.
 
-[View the source](https://github.com/continuedev/continue/tree/main/continuedev/src/continuedev/plugins/context_providers/search.py)
+[View the source](https://github.com/continuedev/continue/tree/main/server/continuedev/plugins/context_providers/search.py)
 
 ## Properties
 
