@@ -747,21 +747,30 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
     <div ref={topRef}>
       {selectedContextItems.length === 0 && props.isMainInput && (
         <div
-          onClick={() => {
-            downshiftProps.setInputValue("@");
-            inputRef.current?.focus();
-          }}
           style={{
             color: lightGray,
             fontSize: "10px",
             backgroundColor: vscBackground,
             paddingLeft: "12px",
             paddingTop: getFontSize(),
-            width: "fit-content",
+            width: "calc(100% - 24px)",
           }}
-          className="hover:underline cursor-pointer"
         >
-          + Add Context
+          <span
+            onClick={() => {
+              downshiftProps.setInputValue("@");
+              inputRef.current?.focus();
+            }}
+            className="hover:underline cursor-pointer"
+          >
+            + Add Context
+          </span>
+          {(downshiftProps.inputValue?.startsWith("/edit") ||
+            (inputFocused &&
+              metaKeyPressed &&
+              downshiftProps.inputValue?.length > 0)) && (
+            <span className="float-right">Inserting at cursor</span>
+          )}
         </div>
       )}
 
@@ -1267,18 +1276,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
           )}
         </Ul>
       </div>
-      {selectedContextItems.length === 0 &&
-        (downshiftProps.inputValue?.startsWith("/edit") ||
-          (inputFocused &&
-            metaKeyPressed &&
-            downshiftProps.inputValue?.length > 0)) && (
-          <div
-            className="text-trueGray-400 pr-4 text-xs text-right"
-            style={{ backgroundColor: vscBackground }}
-          >
-            Inserting at cursor
-          </div>
-        )}
+
       {props.isMainInput && (
         <ContinueButton
           disabled={

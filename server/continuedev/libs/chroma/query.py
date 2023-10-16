@@ -54,8 +54,11 @@ IGNORE_PATTERNS_FOR_CHROMA = [
 ]
 
 
-def chunk_document(document: str, max_length: int = 1000) -> List[str]:
+def chunk_document(document: Optional[str], max_length: int = 1000) -> List[str]:
     """Chunk a document into smaller pieces."""
+    if document is None:
+        return []
+
     chunks = []
     chunk = ""
     for line in document.split("\n"):
@@ -184,8 +187,20 @@ class ChromaIndexManager:
         )
 
         tasks = []
+
+        async def readFile(filepath: str) -> Optional[str]:
+            to = 0.1
+            while True:
+                try:
+                    return await sdk.ide.readFile(filepath)
+                except Exception as e:
+                    if to > 4:
+                        return None
+                    await asyncio.sleep(to)
+                    to *= 2
+
         for file in files:
-            tasks.append(sdk.ide.readFile(file))
+            tasks.append(readFile(file))
 
         documents = await asyncio.gather(*tasks)
 
