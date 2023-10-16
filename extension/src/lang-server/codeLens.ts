@@ -4,7 +4,7 @@ import * as path from "path";
 import * as os from "os";
 import { DIFF_DIRECTORY, diffManager } from "../diffs";
 import { getMetaKeyLabel } from "../util/util";
-import { debugPanelWebview } from "../debugPanel";
+import { getExtensionUri } from "../util/vscode";
 class SuggestionsCodeLensProvider implements vscode.CodeLensProvider {
   public provideCodeLenses(
     document: vscode.TextDocument,
@@ -135,9 +135,167 @@ class ConfigPyCodeLensProvider implements vscode.CodeLensProvider {
   }
 }
 
+interface TutorialCodeLensItems {
+  lineIncludes: string;
+  commands: vscode.Command[];
+}
+const actions: TutorialCodeLensItems[] = [
+  {
+    lineIncludes: "Step 2: Use the keyboard shortcut cmd/ctrl + M",
+    commands: [
+      {
+        title: `Do it for me`,
+        command: "continue.focusContinueInput",
+      },
+    ],
+  },
+  {
+    lineIncludes: "Step 3: Ask a question",
+    commands: [
+      {
+        title: `"what does this code do?"`,
+        command: "continue.sendMainUserInput",
+        arguments: ["what does this code do?"],
+      },
+      {
+        title: `"what is an alternative to this?"`,
+        command: "continue.sendMainUserInput",
+        arguments: ["what is an alternative to this?"],
+      },
+    ],
+  },
+  {
+    lineIncludes: "Step 2: Use the keyboard shortcut cmd/ctrl + shift + M",
+    commands: [
+      {
+        title: `Do it for me`,
+        command: "continue.focusContinueInputWithEdit",
+      },
+    ],
+  },
+  {
+    lineIncludes: "Step 3: Request an edit",
+    commands: [
+      {
+        title: `"/edit make this more efficient"`,
+        command: "continue.sendMainUserInput",
+        arguments: ["/edit make this more efficient"],
+      },
+      {
+        title: `"/edit write comments for this function"`,
+        command: "continue.sendMainUserInput",
+        arguments: ["/edit write comments for this function"],
+      },
+    ],
+  },
+  {
+    lineIncludes: "Step 1: Run this Python file",
+    commands: [
+      {
+        title: "Run the file",
+        command: "continue.sendToTerminal",
+        arguments: [
+          "python " +
+            path.join(getExtensionUri().fsPath, "continue_tutorial.py") +
+            "\n",
+        ],
+      },
+    ],
+  },
+  {
+    lineIncludes: "Step 2: Use the keyboard shortcut cmd/ctrl + shift + R",
+    commands: [
+      {
+        title: "Debug the error",
+        command: "continue.debugTerminal",
+      },
+    ],
+  },
+];
+
+class TutorialCodeLensProvider implements vscode.CodeLensProvider {
+  public provideCodeLenses(
+    document: vscode.TextDocument,
+    _: vscode.CancellationToken
+  ): vscode.CodeLens[] | Thenable<vscode.CodeLens[]> {
+    const codeLenses: vscode.CodeLens[] = [];
+
+    if (!document.uri.fsPath.endsWith("continue_tutorial.py")) {
+      return codeLenses;
+    }
+
+    const lines = document.getText().split(os.EOL);
+
+    for (const action of actions) {
+      const lineOfAction = lines.findIndex((line) =>
+        line.includes(action.lineIncludes)
+      );
+
+      if (lineOfAction >= 0) {
+        const range = new vscode.Range(lineOfAction, 0, lineOfAction + 1, 0);
+        for (const command of action.commands) {
+          codeLenses.push(new vscode.CodeLens(range, command));
+        }
+      }
+    }
+
+    const lineOf11 = lines.findIndex((line) =>
+      line.includes("Step 1: Highlight the function below")
+    );
+    if (lineOf11 >= 0) {
+      const range = new vscode.Range(lineOf11, 0, lineOf11 + 1, 0);
+      codeLenses.push(
+        new vscode.CodeLens(range, {
+          title: "Highlight the function",
+          command: "continue.selectRange",
+          arguments: [lineOf11 + 1, lineOf11 + 8],
+        })
+      );
+    }
+    const lineOf21 = lines.findIndex((line) =>
+      line.includes("Step 1: Highlight this code")
+    );
+    if (lineOf21 >= 0) {
+      const range = new vscode.Range(lineOf21, 0, lineOf21 + 1, 0);
+      codeLenses.push(
+        new vscode.CodeLens(range, {
+          title: "Highlight the function",
+          command: "continue.selectRange",
+          arguments: [lineOf21 + 1, lineOf21 + 8],
+        })
+      );
+    }
+
+    // Folding of the tutorial
+    const regionLines = lines
+      .map((line, i) => [line, i])
+      .filter(([line, i]) => (line as string).startsWith("# region "))
+      .map(([line, i]) => i);
+    for (const lineOfRegion of regionLines as number[]) {
+      const range = new vscode.Range(lineOfRegion, 0, lineOfRegion + 1, 0);
+
+      const linesToFold = regionLines
+        .filter((i) => lineOfRegion !== i)
+        .flatMap((i) => {
+          return [i, (i as number) + 1];
+        });
+      codeLenses.push(
+        new vscode.CodeLens(range, {
+          title: `Begin Section`,
+          command: "continue.foldAndUnfold",
+          arguments: [linesToFold, [lineOfRegion, lineOfRegion + 1]],
+        })
+      );
+    }
+
+    return codeLenses;
+  }
+}
+
 let diffsCodeLensDisposable: vscode.Disposable | undefined = undefined;
 let suggestionsCodeLensDisposable: vscode.Disposable | undefined = undefined;
 let configPyCodeLensDisposable: vscode.Disposable | undefined = undefined;
+let tutorialCodeLensDisposable: vscode.Disposable | undefined = undefined;
 
 export function registerAllCodeLensProviders(context: vscode.ExtensionContext) {
   if (suggestionsCodeLensDisposable) {
@@ -148,6 +306,9 @@ export function registerAllCodeLensProviders(context: vscode.ExtensionContext) {
   }
   if (configPyCodeLensDisposable) {
     configPyCodeLensDisposable.dispose();
+  }
+  if (tutorialCodeLensDisposable) {
+    tutorialCodeLensDisposable.dispose();
   }
   suggestionsCodeLensDisposable = vscode.languages.registerCodeLensProvider(
     "*",
@@ -161,7 +322,12 @@ export function registerAllCodeLensProviders(context: vscode.ExtensionContext) {
     "*",
     new ConfigPyCodeLensProvider()
   );
+  tutorialCodeLensDisposable = vscode.languages.registerCodeLensProvider(
+    "*",
+    new TutorialCodeLensProvider()
+  );
   context.subscriptions.push(suggestionsCodeLensDisposable);
   context.subscriptions.push(diffsCodeLensDisposable);
   context.subscriptions.push(configPyCodeLensDisposable);
+  context.subscriptions.push(tutorialCodeLensDisposable);
 }

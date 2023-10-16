@@ -705,6 +705,7 @@ class IdeProtocolClient {
 
   async runCommand(command: string) {
     if (vscode.window.terminals.length) {
+      vscode.window.terminals[0].show();
       vscode.window.terminals[0].sendText(command, false);
     } else {
       const terminal = vscode.window.createTerminal();
