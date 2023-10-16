@@ -188,7 +188,11 @@ fun getExtensionVersion(): String {
     return pluginDescriptor?.version ?: ""
 }
 
-fun checkOrKillRunningServer(): Boolean {
+fun checkOrKillRunningServer(project: Project): Boolean {
+    val continuePluginService = ServiceManager.getService(
+            project,
+            ContinuePluginService::class.java
+    )
     val serverRunning: Boolean = checkServerRunning()
     var shouldKillAndReplace = true
 
@@ -202,6 +206,10 @@ fun checkOrKillRunningServer(): Boolean {
     }
 
     if (shouldKillAndReplace) {
+        continuePluginService.dispatchCustomEvent("serverStatus", mutableMapOf(
+                "type" to "serverStatus",
+                "message" to "Stopping Outdated Server"
+        ))
         println("Killing server from old version of Continue")
         val pid = getProcessId(CONTINUE_SERVER_WEBSOCKET_PORT)
         pid?.let { killProcess(it) }
@@ -285,7 +293,7 @@ suspend fun startContinuePythonServer(project: Project) {
         return
     }
 
-    if (checkOrKillRunningServer()) {
+    if (checkOrKillRunningServer(project)) {
         continuePluginService.dispatchCustomEvent("serverStatus", mutableMapOf(
                 "type" to "serverStatus",
                 "message" to "Connecting to Continue Server"
