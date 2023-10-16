@@ -123,7 +123,7 @@ On the IDE side, this is implemented in [continueIdeClient.ts](./extension/src/c
 
 ### Continue GUI Websockets Protocol
 
-On the GUI side, this is implemented in [ContinueGUIClientProtocol.ts](./extension/react-app/src/hooks/ContinueGUIClientProtocol.ts). On the server side, this is implemented in [gui.py](./continuedev/src/continuedev/server/gui.py). You can see [gui_protocol.py](./continuedev/src/continuedev/server/gui_protocol.py) or [AbstractContinueGUIClientProtocol.ts](./extension/react-app/src/hooks/AbstractContinueGUIClientProtocol.ts) for the protocol definition.
+On the GUI side, this is implemented in [ContinueGUIClientProtocol.ts](./extension/react-app/src/hooks/ContinueGUIClientProtocol.ts). On the server side, this is implemented in [gui.py](./continuedev/src/continuedev/server/gui.py). You can see [AbstractContinueGUIClientProtocol.ts](./extension/react-app/src/hooks/AbstractContinueGUIClientProtocol.ts) for the protocol definition.
 
 When state is updated on the server, we currently send the entirety of the object over websockets to the GUI. This will of course have to be improved soon. The state object, `FullState`, is defined in [core/main.py](./continuedev/src/continuedev/core/main.py) and includes:
 
@@ -154,7 +154,7 @@ Some of the most commonly used Steps are:
 
 - [`SimpleChatStep`](./continuedev/src/continuedev/plugins/steps/chat.py) - This is the default Step that is run when the user enters natural language input. It takes the user's input and runs it through the default LLM, then displays the result in the GUI.
 
-- [`EditHighlightedCodeStep`](./continuedev/src/continuedev/steps/core/core.py) - This is the Step run when a user highlights code, enters natural language, and presses CMD/CTRL+ENTER, or uses the slash command '/edit'. It opens a side-by-side diff editor, where updated code is streamed to fulfil the user's request.
+- [`EditHighlightedCodeStep`](./server/continuedev/plugins/steps/main.py) - This is the Step run when a user highlights code, enters natural language, and presses CMD/CTRL+ENTER, or uses the slash command '/edit'. It opens a side-by-side diff editor, where updated code is streamed to fulfil the user's request.
 
 ### `Autopilot`
 
@@ -166,4 +166,4 @@ An `Observation` is a simple Pydantic model that can be used as a trigger to run
 
 ### `Policy`
 
-A `Policy` implements the method `def next(self, config: ContinueConfig, history: History) -> Step`, which decides which `Step` the `Autopilot` should run next. The default policy is defined in [policy.py](./continuedev/src/continuedev/core/policy.py) and runs `SimpleChatStep` by default, or a slash command when the input begins with '/'. It also displays a welcome message at the beginning of each session. If interested in developing agents that autonomously take longer sequences of actions in the IDE, the `Policy` class is the place to start.
+A `Policy` implements the method `def next(self, config: ContinueConfig, history: History) -> Step`, which decides which `Step` the `Autopilot` should run next. The default policy is defined [here](./server/continuedev/core/policies/default.py) and runs `SimpleChatStep` by default, or a slash command when the input begins with '/'. It also displays a welcome message at the beginning of each session. If interested in developing agents that autonomously take longer sequences of actions in the IDE, the `Policy` class is the place to start.
