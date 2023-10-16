@@ -172,10 +172,11 @@ class DiffManager(private val project: Project) {
 
                             override fun createActions(): Array<Action> {
                                 val okAction = getOKAction()
-                                okAction.putValue(Action.NAME, "Accept (⌘ ⇧ ↵)")
+                                val cmdCtrl = if (System.getProperty("os.name").toLowerCase().contains("win")) "⌃" else "⌘"
+                                okAction.putValue(Action.NAME, "Accept ($cmdCtrl ⇧ ↵)")
 
                                 val cancelAction = getCancelAction()
-                                cancelAction.putValue(Action.NAME, "Reject (⌘ ⇧ ⌫)")
+                                cancelAction.putValue(Action.NAME, "Reject ($cmdCtrl ⇧ ⌫)")
 
                                 return arrayOf(okAction, cancelAction)
                             }

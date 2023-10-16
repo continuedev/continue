@@ -209,25 +209,30 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
         except RuntimeError as e:
             logger.warning(f"Error sending IDE message, websocket probably closed: {e}")
 
-    async def _receive_json(
-        self, message_type: str, timeout: int = 20, message=None
-    ) -> Any:
-        try:
-            return await asyncio.wait_for(
-                self.sub_queue.get(message_type), timeout=timeout
-            )
-        except asyncio.TimeoutError:
-            raise ContinueCustomException(
-                title=f"IDE Protocol _receive_json timed out after 20 seconds: {message_type}",
-                message=f"IDE Protocol _receive_json timed out after 20 seconds. The message sent was: {message or ''}",
-            )
+    async def _receive_json(self, message_type: str, message=None) -> Any:
+        return await self.sub_queue.get(message_type)
 
     async def _send_and_receive_json(
         self, data: Any, resp_model: Type[T], message_type: str
     ) -> T:
-        await self._send_json(message_type, data)
-        resp = await self._receive_json(message_type, message=data)
-        return resp_model.parse_obj(resp)
+        async def try_with_timeout(timeout: int):
+            await self._send_json(message_type, data)
+            resp = await asyncio.wait_for(
+                self._receive_json(message_type, message=data), timeout=timeout
+            )
+            return resp_model.parse_obj(resp)
+
+        timeout = 1.0
+        while True:
+            try:
+                return await try_with_timeout(timeout)
+            except asyncio.TimeoutError:
+                timeout *= 1.5
+                if timeout > 10:
+                    raise ContinueCustomException(
+                        title=f"IDE Protocol _receive_json timed out: {message_type}",
+                        message=f"IDE Protocol _receive_json timed out. The message sent was: {message or ''}",
+                    )
 
     async def handle_json(self, message_type: str, data: Any):
         if message_type == "getSessionId":
