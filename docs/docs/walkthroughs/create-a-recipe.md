@@ -1,6 +1,6 @@
 # Create a recipe
 
-Check out the [recipes folder](https://github.com/continuedev/continue/tree/main/server/src/continuedev/recipes) to learn how to write your own.
+Check out the [recipes folder](https://github.com/continuedev/continue/tree/main/server/continuedev/recipes) to learn how to write your own.
 
 **TODO: Describe step-by-step how to create a recipe**
 
@@ -13,7 +13,7 @@ Points to include
 
 1. Create a recipe here
 
-continue/server/src/continuedev/recipes
+continue/server/continuedev/recipes
 
 ## 1. Create a step
 
