@@ -2,6 +2,7 @@
 import difflib
 import subprocess
 from textwrap import dedent
+import time
 from typing import Coroutine, List, Optional, Union
 
 from ..libs.llm.base import LLM, PromptTemplate
@@ -392,6 +393,7 @@ Please output the code to be inserted at the cursor in order to fulfill the user
             # Don't do this at the very end, just show the inserted code
             if final:
                 lines_to_display = []
+
             # Only recalculate at every new-line, because this is sort of expensive
             elif completion.endswith("\n"):
                 contents_lines = rif.contents.split("\n")
@@ -448,19 +450,6 @@ Please output the code to be inserted at the cursor in order to fulfill the user
 
         async def handle_generated_line(line: str):
             nonlocal current_block_start, current_line_in_file, original_lines, original_lines_below_previous_blocks, current_block_lines, indices_of_last_matched_lines, LINES_TO_MATCH_BEFORE_ENDING_BLOCK, offset_from_blocks
-
-            # Highlight the line to show progress
-            line_to_highlight = current_line_in_file - len(current_block_lines)
-            if False:
-                await sdk.ide.highlightCode(
-                    RangeInFile(
-                        filepath=rif.filepath,
-                        range=Range.from_shorthand(
-                            line_to_highlight, 0, line_to_highlight, 0
-                        ),
-                    ),
-                    "#FFFFFF22" if len(current_block_lines) == 0 else "#00FF0022",
-                )
 
             if len(current_block_lines) == 0:
                 # Set this as the start of the next block
@@ -525,29 +514,6 @@ Please output the code to be inserted at the cursor in order to fulfill the user
                 ):
                     lines_stripped.append(current_block_lines.pop())
                     index_of_last_line_in_block -= 1
-
-                # It's also possible that some lines match at the beginning of the block
-                # lines_stripped_at_beginning = []
-                # j = 0
-                # while len(current_block_lines) > 0 and current_block_lines[0] == original_lines_below_previous_blocks[first_valid_match[0] - first_valid_match[1] + j]:
-                #     lines_stripped_at_beginning.append(
-                #         current_block_lines.pop(0))
-                #     j += 1
-                #     # current_block_start += 1
-
-                # Insert the suggestion
-                replacement = "\n".join(current_block_lines)
-                start_line = current_block_start
-                end_line = current_block_start + index_of_last_line_in_block
-
-                if False:
-                    await sdk.ide.showSuggestion(
-                        FileEdit(
-                            filepath=rif.filepath,
-                            range=Range.from_shorthand(start_line, 0, end_line, 0),
-                            replacement=replacement,
-                        )
-                    )
 
                 # Reset current block / update variables
                 current_line_in_file += 1
@@ -627,7 +593,9 @@ Please output the code to be inserted at the cursor in order to fulfill the user
             if isinstance(template, PromptTemplate):
                 params.update(template.dict(exclude={"prompt"}))
 
-            params.update({"max_tokens": min(max_tokens, model_to_use.context_length // 2)})
+            params.update(
+                {"max_tokens": min(max_tokens, model_to_use.context_length // 2)}
+            )
             generator = model_to_use.stream_complete(**params)
 
         else:
@@ -653,6 +621,7 @@ Please output the code to be inserted at the cursor in order to fulfill the user
         )
 
         try:
+            last_task_time = time.time()
             async for chunk in generator:
                 # Stop early if it is repeating the file_suffix or the step was deleted
                 if repeating_file_suffix:
@@ -707,15 +676,12 @@ Please output the code to be inserted at the cursor in order to fulfill the user
                         repeating_file_suffix = True
                         break
 
-                    # If none of the above, insert the line!
-                    if False:
-                        await handle_generated_line(chunk_lines[i])
-
                     lines.append(chunk_lines[i])
                     completion_lines_covered += 1
                     current_line_in_file += 1
 
-                await sendDiffUpdate(
+                # Debounce the diff updates, last in only out for each period
+                coro = sendDiffUpdate(
                     lines
                     + [
                         common_whitespace
@@ -724,8 +690,16 @@ Please output the code to be inserted at the cursor in order to fulfill the user
                     ],
                     sdk,
                 )
+                if last_task_time is None:
+                    last_task_time = time.time()
+                    await coro
+                elif time.time() - last_task_time > 0.15:
+                    last_task_time = time.time()
+                    await coro
+
         finally:
             await generator.aclose()
+
         # Add the unfinished line
         if (
             unfinished_line != ""
@@ -741,49 +715,6 @@ Please output the code to be inserted at the cursor in order to fulfill the user
             current_line_in_file += 1
 
         await sendDiffUpdate(lines, sdk, final=True)
-
-        if False:
-            # If the current block isn't empty, add that suggestion
-            if len(current_block_lines) > 0:
-                # We have a chance to back-track here for blank lines that are repeats of the end of the original
-                # Don't want to have the same ending in both the original and the generated, can just leave it there
-                num_to_remove = 0
-                for i in range(-1, -len(current_block_lines) - 1, -1):
-                    if len(original_lines_below_previous_blocks) == 0:
-                        break
-                    if (
-                        current_block_lines[i]
-                        == original_lines_below_previous_blocks[-1]
-                    ):
-                        num_to_remove += 1
-                        original_lines_below_previous_blocks.pop()
-                    else:
-                        break
-                current_block_lines = (
-                    current_block_lines[:-num_to_remove]
-                    if num_to_remove > 0
-                    else current_block_lines
-                )
-
-                # It's also possible that some lines match at the beginning of the block
-                # while len(current_block_lines) > 0 and len(original_lines_below_previous_blocks) > 0 and current_block_lines[0] == original_lines_below_previous_blocks[0]:
-                #     current_block_lines.pop(0)
-                #     original_lines_below_previous_blocks.pop(0)
-                #     current_block_start += 1
-
-                await sdk.ide.showSuggestion(
-                    FileEdit(
-                        filepath=rif.filepath,
-                        range=Range.from_shorthand(
-                            current_block_start,
-                            0,
-                            current_block_start
-                            + len(original_lines_below_previous_blocks),
-                            0,
-                        ),
-                        replacement="\n".join(current_block_lines),
-                    )
-                )
 
         # Record the completion
         completion = "\n".join(lines)
