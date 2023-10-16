@@ -14,7 +14,10 @@ import {
   setDataSwitchOn,
   setWorkspacePaths,
 } from "./redux/slices/configSlice";
-import { setHighlightedCode } from "./redux/slices/miscSlice";
+import {
+  setHighlightedCode,
+  setServerStatusMessage,
+} from "./redux/slices/miscSlice";
 import { postVscMessage } from "./vscode";
 import { RouterProvider, createMemoryRouter } from "react-router-dom";
 import ErrorPage from "./pages/error";
@@ -86,6 +89,9 @@ function App() {
           break;
         case "highlightedCode":
           dispatch(setHighlightedCode(event.data.rangeInFile));
+          break;
+        case "serverStatus":
+          dispatch(setServerStatusMessage(event.data.message));
           break;
       }
     };

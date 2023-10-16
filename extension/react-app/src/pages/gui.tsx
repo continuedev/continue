@@ -139,6 +139,9 @@ function GUI(props: GUIProps) {
   const defaultModel = useSelector(
     (state: RootStore) => (state.serverState.config as any).models?.default
   );
+  const serverStatusMessage = useSelector(
+    (state: RootStore) => state.misc.serverStatusMessage
+  );
   const user_input_queue = useSelector(
     (state: RootStore) => state.serverState.user_input_queue
   );
@@ -153,7 +156,7 @@ function GUI(props: GUIProps) {
   const [waitingForSteps, setWaitingForSteps] = useState(false);
   const [stepsOpen, setStepsOpen] = useState<(boolean | undefined)[]>([]);
   const [waitingForClient, setWaitingForClient] = useState(true);
-  const [showLoading, setShowLoading] = useState(false);
+  const [showLoading, setShowLoading] = useState(true);
 
   // #endregion
 
@@ -488,16 +491,6 @@ function GUI(props: GUIProps) {
   );
 
   useEffect(() => {
-    const timeout = setTimeout(() => {
-      setShowLoading(true);
-    }, 15_000);
-
-    return () => {
-      clearTimeout(timeout);
-    };
-  }, []);
-
-  useEffect(() => {
     if (sessionTitle) {
       setSessionTitleInput(sessionTitle);
     }
@@ -581,7 +574,7 @@ function GUI(props: GUIProps) {
               fontSize: "14px",
             }}
           >
-            Continue Server Starting
+            {serverStatusMessage}
           </p>
           <div className="flex mx-8 my-2">
             <p

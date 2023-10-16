@@ -4,9 +4,11 @@ import com.github.continuedev.continueintellijextension.constants.CONTINUE_PYTHO
 import com.github.continuedev.continueintellijextension.constants.CONTINUE_SERVER_WEBSOCKET_PORT
 import com.github.continuedev.continueintellijextension.`continue`.DefaultTextSelectionStrategy
 import com.github.continuedev.continueintellijextension.`continue`.IdeProtocolClient
+import com.github.continuedev.continueintellijextension.`continue`.getMachineUniqueID
 import com.github.continuedev.continueintellijextension.listeners.ContinuePluginSelectionListener
 import com.github.continuedev.continueintellijextension.services.ContinueExtensionSettings
 import com.github.continuedev.continueintellijextension.services.ContinuePluginService
+import com.google.gson.Gson
 import com.intellij.ide.plugins.PluginManagerCore
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.actionSystem.ActionManager
@@ -21,6 +23,7 @@ import com.intellij.openapi.ui.DialogWrapper
 import com.intellij.openapi.util.io.StreamUtil
 import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.openapi.wm.ToolWindowManager
+import com.intellij.ui.jcef.executeJavaScriptAsync
 import kotlinx.coroutines.*
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -261,18 +264,32 @@ fun getContinueServerUrl(): String {
     return settings.continueState.serverUrl
 }
 
-suspend fun startContinuePythonServer() {
+suspend fun startContinuePythonServer(project: Project) {
     println("server starting")
+    val continuePluginService = ServiceManager.getService(
+            project,
+            ContinuePluginService::class.java
+    )
+
     val settings =
             ServiceManager.getService(ContinueExtensionSettings::class.java)
     val serverUrl = getContinueServerUrl()
 
     if ((serverUrl != CONTINUE_PYTHON_SERVER_URL && serverUrl != "http://127.0.0.1:65432") || settings.continueState.manuallyRunningServer) {
+        continuePluginService.dispatchCustomEvent("serverStatus", mutableMapOf(
+                "type" to "serverStatus",
+                "message" to "Connecting to Continue Server"
+        ))
+
         println("Continue server being run manually, skipping start")
         return
     }
 
     if (checkOrKillRunningServer()) {
+        continuePluginService.dispatchCustomEvent("serverStatus", mutableMapOf(
+                "type" to "serverStatus",
+                "message" to "Connecting to Continue Server"
+        ))
         println("Continue server already running")
         return
     }
@@ -308,7 +325,12 @@ suspend fun startContinuePythonServer() {
     }
 
     if (shouldDownload) {
-        println("Downloading Continue server binary...")
+        continuePluginService.dispatchCustomEvent("serverStatus", mutableMapOf(
+                "type" to "serverStatus",
+                "message" to "Downloading Continue server binary"
+        ))
+
+        println("Downloading Continue Server Binary")
         // Download the binary from S3
         downloadFromS3(
                 "continue-server-binaries",
@@ -324,10 +346,19 @@ suspend fun startContinuePythonServer() {
 
     // Validate that the binary exists
     if (!File(destination).exists()) {
+        continuePluginService.dispatchCustomEvent("serverStatus", mutableMapOf(
+                "type" to "serverStatus",
+                "message" to "Launching Continue Server"
+        ))
+
         throw Error("Failed to download Continue server binary")
     }
 
     // Spawn server process
+    continuePluginService.dispatchCustomEvent("serverStatus", mutableMapOf(
+            "type" to "serverStatus",
+            "message" to "Launching Continue Server"
+    ))
     println("Starting Continue server binary")
     startBinaryWithRetry(destination)
 
@@ -336,8 +367,14 @@ suspend fun startContinuePythonServer() {
 
     // Wait for the server process to start
     println("Waiting for Continue server to start...")
+    var i = 1
     while (getProcessId(CONTINUE_SERVER_WEBSOCKET_PORT) == null) {
         delay(1000)
+        continuePluginService.dispatchCustomEvent("serverStatus", mutableMapOf(
+                "type" to "serverStatus",
+                "message" to "Launching Continue Server" + ".".repeat(i % 4)
+        ))
+        i++
     }
     println("Continue server started")
 }
@@ -446,7 +483,7 @@ class ContinuePluginStartupActivity : StartupActivity, Disposable {
             }
 
             GlobalScope.async(Dispatchers.IO) {
-                startContinuePythonServer()
+                startContinuePythonServer(project)
 
                 val wsUrl = getContinueServerUrl().replace("http://", "ws://").replace("https://", "wss://")
                 val ideProtocolClient = IdeProtocolClient(
