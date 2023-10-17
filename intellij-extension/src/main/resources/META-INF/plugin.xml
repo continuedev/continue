@@ -1,0 +1,102 @@
+<!-- Plugin Configuration File. Read more: https://plugins.jetbrains.com/docs/intellij/plugin-configuration-file.html -->
+<idea-plugin>
+    <id>com.github.continuedev.continueintellijextension</id>
+    <name>Continue</name>
+    <vendor>continue-dev</vendor>
+
+    <depends>com.intellij.modules.platform</depends>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <toolWindow id="Continue" anchor="right" icon="/tool-window-icon.png"
+                    factoryClass="com.github.continuedev.continueintellijextension.toolWindow.ContinuePluginToolWindowFactory"/>
+        <projectService id="ContinuePluginService"
+                        serviceImplementation="com.github.continuedev.continueintellijextension.services.ContinuePluginService"/>
+    </extensions>
+
+    <resource-bundle>messages.MyBundle</resource-bundle>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <postStartupActivity
+                implementation="com.github.continuedev.continueintellijextension.activities.ContinuePluginStartupActivity"/>
+        <applicationConfigurable
+                parentId="tools"
+                instance="com.github.continuedev.continueintellijextension.services.ContinueExtensionConfigurable"
+                id="com.github.continuedev.continueintellijextension.services.ContinueExtensionConfigurable"
+                displayName="Continue"/>
+        <applicationService
+                serviceImplementation="com.github.continuedev.continueintellijextension.services.ContinueExtensionSettings"/>
+    </extensions>
+
+    <actions>
+        <action id="continue.acceptDiff"
+                class="com.github.continuedev.continueintellijextension.actions.AcceptDiffAction"
+                text="Accept Diff" description="Accept Diff">
+            <keyboard-shortcut keymap="$default"
+                               first-keystroke="shift ctrl ENTER"/>
+            <keyboard-shortcut keymap="Mac OS X"
+                               first-keystroke="shift meta ENTER"/>
+        </action>
+        <action id="continue.rejectDiff"
+                class="com.github.continuedev.continueintellijextension.actions.RejectDiffAction"
+                text="Reject Diff" description="Reject Diff">
+            <keyboard-shortcut keymap="$default"
+                               first-keystroke="shift ctrl BACK_SPACE"/>
+            <keyboard-shortcut keymap="Mac OS X"
+                               first-keystroke="shift meta BACK_SPACE"/>
+        </action>
+        <action id="continue.quickTextEntry"
+                class="com.github.continuedev.continueintellijextension.actions.QuickTextEntryAction"
+                text="Quick Text Entry" description="Quick Text Entry">
+            <keyboard-shortcut keymap="$default"
+                               first-keystroke="alt shift J"/>
+            <keyboard-shortcut keymap="Mac OS X"
+                               first-keystroke="alt shift J"/>
+        </action>
+        <action id="continue.viewLogs"
+                class="com.github.continuedev.continueintellijextension.actions.ViewLogsAction"
+                text="View Continue Server Logs"
+                description="View Continue Server Logs">
+            <!-- No shortcut defined -->
+        </action>
+        <action id="continue.toggleAuxiliaryBar"
+                class="com.github.continuedev.continueintellijextension.actions.ToggleAuxiliaryBarAction"
+                text="Toggle Right Sidebar" description="Toggle Right Sidebar">
+            <keyboard-shortcut keymap="$default" first-keystroke="alt ctrl J"/>
+            <keyboard-shortcut keymap="Mac OS X" first-keystroke="alt meta J"/>
+        </action>
+        <action id="continue.focusContinueInputWithEdit"
+                class="com.github.continuedev.continueintellijextension.actions.FocusContinueInputWithEditAction"
+                text="Focus Continue Input With Edit"
+                description="Focus Continue Input With Edit">
+            <keyboard-shortcut keymap="$default"
+                               first-keystroke="ctrl shift J"/>
+            <keyboard-shortcut keymap="Mac OS X"
+                               first-keystroke="meta shift J"/>
+        </action>
+
+<!--        <action id="InsertLiveTemplate" class="com.intellij.openapi.actionSystem.EmptyAction" />-->
+<!--        <action id="SurroundWithLiveTemplate" class="com.intellij.openapi.actionSystem.EmptyAction"/>-->
+
+        <action id="continue.newContinueSession"
+                class="com.github.continuedev.continueintellijextension.actions.NewContinueSessionAction"
+                text="Start New Continue Session"
+                description="Start New Continue Session">
+            <keyboard-shortcut keymap="$default"
+                               first-keystroke="alt ctrl N"/>
+            <keyboard-shortcut keymap="Mac OS X"
+                               first-keystroke="meta ctrl N"/>
+        </action>
+
+        <action id="continue.focusContinueInput"
+                class="com.github.continuedev.continueintellijextension.actions.FocusContinueInputAction"
+                text="Focus Continue Input"
+                description="Focus Continue Input">
+            <keyboard-shortcut keymap="$default"
+                               first-keystroke="ctrl J"/>
+            <keyboard-shortcut keymap="Mac OS X"
+                               first-keystroke="meta J"/>
+        </action>
+    </actions>
+
+
+</idea-plugin>

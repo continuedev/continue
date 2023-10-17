@@ -139,5 +139,12 @@ codeql
 .DS_Store
 .continue
 
+
+# IntelliJ Plugin 
+**/**/.gradle
+**/**/.idea
+**/**/.qodana
+**/**/build
+
 .tiktoken_cache
 .test

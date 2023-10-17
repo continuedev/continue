@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { Fragment, useContext, useEffect, useState } from "react";
 import { SessionInfo } from "../../../schema/SessionInfo";
 import { GUIClientContext } from "../App";
 import { useDispatch, useSelector } from "react-redux";
@@ -71,7 +71,6 @@ function History() {
 
   useEffect(() => {
     const fetchSessions = async () => {
-      console.log("fetching sessions from: ", apiUrl);
       if (!apiUrl) {
         return;
       }
@@ -80,7 +79,6 @@ function History() {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       const json = await response.json();
-      console.log(json);
       setSessions(json);
     };
     fetchSessions();
@@ -166,7 +164,7 @@ function History() {
                   : earlier;
               const date = parseDate(session.date_created);
               return (
-                <>
+                <Fragment key={index}>
                   {index === 0 && date > yesterday && (
                     <SectionHeader>Today</SectionHeader>
                   )}
@@ -206,7 +204,7 @@ function History() {
                       </TdDiv>
                     </td>
                   </Tr>
-                </>
+                </Fragment>
               );
             })}
           </tbody>

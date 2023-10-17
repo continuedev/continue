@@ -29,6 +29,7 @@ export interface RootStore {
   misc: {
     highlightedCode: RangeInFile | undefined;
     takenAction: boolean;
+    serverStatusMessage: string;
   };
   uiState: {
     bottomMessage: JSX.Element | undefined;

@@ -75,7 +75,12 @@ export class WebsocketMessenger extends Messenger {
         resolve(data);
         this.websocket.removeEventListener("message", eventListener);
       };
-      this.onMessageType(messageType, eventListener);
+      this.websocket.addEventListener("message", (event: any) => {
+        const msg = JSON.parse(event.data);
+        if (msg.messageType === messageType) {
+          eventListener(msg.data);
+        }
+      });
       this.send(messageType, data);
     });
   }
@@ -87,6 +92,10 @@ export class WebsocketMessenger extends Messenger {
         callback(msg.data);
       }
     });
+    this.onMessageListeners[messageType] = [
+      ...(this.onMessageListeners[messageType] || []),
+      callback,
+    ];
   }
 
   onMessage(callback: (messageType: string, data: any) => void): void {
@@ -98,14 +107,17 @@ export class WebsocketMessenger extends Messenger {
 
   onOpen(callback: () => void): void {
     this.websocket.addEventListener("open", callback);
+    this.onOpenListeners.push(callback);
   }
 
   onClose(callback: () => void): void {
     this.websocket.addEventListener("close", callback);
+    this.onCloseListeners.push(callback);
   }
 
   onError(callback: (error: any) => void): void {
     this.websocket.addEventListener("error", callback);
+    this.onErrorListeners.push(callback);
   }
 
   close(): void {

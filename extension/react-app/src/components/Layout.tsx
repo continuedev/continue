@@ -21,6 +21,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import ModelSelect from "./ModelSelect";
 import ProgressBar from "./ProgressBar";
 import { temporarilyClearSession } from "../redux/slices/serverStateReducer";
+import { getFontSize } from "../util";
 
 // #region Styled Components
 const FOOTER_HEIGHT = "1.8em";
@@ -83,6 +84,14 @@ const GridDiv = styled.div`
   overflow-x: visible;
 `;
 
+const DropdownPortalDiv = styled.div`
+  background-color: ${secondaryDark};
+  position: relative;
+  margin-left: 8px;
+  z-index: 200;
+  font-size: ${getFontSize()};
+`;
+
 // #endregion
 
 const Layout = () => {
@@ -119,7 +128,7 @@ const Layout = () => {
     const handleKeyDown = (event: any) => {
       if (
         event.metaKey &&
-        event.altKey &&
+        event.ctrlKey &&
         event.code === "KeyN" &&
         timeline.filter((n) => !n.step.hide).length > 0
       ) {
@@ -181,35 +190,37 @@ const Layout = () => {
 
         <GridDiv>
           <Outlet />
+          <DropdownPortalDiv id="model-select-top-div"></DropdownPortalDiv>
           <Footer>
             <div className="mr-auto flex gap-2 items-center">
-              {localStorage.getItem("hideFeature") === "true" || (
-                <SparklesIcon
-                  className="cursor-pointer"
-                  onClick={() => {
-                    localStorage.setItem("hideFeature", "true");
-                  }}
-                  onMouseEnter={() => {
-                    dispatch(
-                      setBottomMessage(
-                        "🎁 New Feature: Use ⌘⇧R automatically debug errors in the terminal (you can click the sparkle icon to make it go away)"
-                      )
-                    );
-                  }}
-                  onMouseLeave={() => {
-                    dispatch(
-                      setBottomMessageCloseTimeout(
-                        setTimeout(() => {
-                          dispatch(setBottomMessage(undefined));
-                        }, 2000)
-                      )
-                    );
-                  }}
-                  width="1.3em"
-                  height="1.3em"
-                  color="yellow"
-                />
-              )}
+              {localStorage.getItem("ide") === "jetbrains" ||
+                localStorage.getItem("hideFeature") === "true" || (
+                  <SparklesIcon
+                    className="cursor-pointer"
+                    onClick={() => {
+                      localStorage.setItem("hideFeature", "true");
+                    }}
+                    onMouseEnter={() => {
+                      dispatch(
+                        setBottomMessage(
+                          "🎁 New Feature: Use ⌘⇧R automatically debug errors in the terminal (you can click the sparkle icon to make it go away)"
+                        )
+                      );
+                    }}
+                    onMouseLeave={() => {
+                      dispatch(
+                        setBottomMessageCloseTimeout(
+                          setTimeout(() => {
+                            dispatch(setBottomMessage(undefined));
+                          }, 2000)
+                        )
+                      );
+                    }}
+                    width="1.3em"
+                    height="1.3em"
+                    color="yellow"
+                  />
+                )}
               <ModelSelect />
               {defaultModel?.class_name === "OpenAIFreeTrial" &&
                 defaultModel?.api_key === "" &&
@@ -255,7 +266,7 @@ const Layout = () => {
           {bottomMessage}
         </BottomMessageDiv>
       </div>
-      <div id="tooltip-portal-div" />
+      <div className="text-sm" id="tooltip-portal-div" />
     </LayoutTopDiv>
   );
 };

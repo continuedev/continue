@@ -1,6 +1,6 @@
 import json
 from typing import Any, Callable, List
-from continuedev.libs.util.count_tokens import DEFAULT_MAX_TOKENS
+from ..util.count_tokens import DEFAULT_MAX_TOKENS
 
 from pydantic import Field
 
@@ -27,7 +27,11 @@ class HuggingFaceTGI(LLM):
 
     def collect_args(self, options: CompletionOptions) -> Any:
         args = super().collect_args(options)
-        args = {**args, "max_new_tokens": args.get("max_tokens", DEFAULT_MAX_TOKENS), "best_of": 1}
+        args = {
+            **args,
+            "max_new_tokens": args.get("max_tokens", DEFAULT_MAX_TOKENS),
+            "best_of": 1,
+        }
         args.pop("max_tokens", None)
         args.pop("model", None)
         args.pop("functions", None)

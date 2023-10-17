@@ -4,8 +4,6 @@ import { getFontSize } from "../util";
 
 export const defaultBorderRadius = "5px";
 export const lightGray = "#646464";
-// export const secondaryDark = "rgb(45 45 45)";
-// export const vscBackground = "rgb(30 30 30)";
 export const vscBackgroundTransparent = "#1e1e1ede";
 export const buttonColor = "#1bbe84";
 export const buttonColorHover = "#1bbe84a8";
@@ -13,7 +11,33 @@ export const buttonColorHover = "#1bbe84a8";
 export const secondaryDark =
   "var(--vscode-list-hoverBackground, rgb(45 45 45))";
 export const vscBackground = "var(--vscode-editor-background, rgb(30 30 30))";
-export const vscForeground = "var(--vscode-editor-foreground, white)";
+export const vscForeground = "var(--vscode-editor-foreground, #fff)";
+
+if (typeof document !== "undefined") {
+  const cachedForeground = localStorage.getItem("--vscode-editor-foreground");
+  const cachedBackground = localStorage.getItem("--vscode-editor-background");
+  const cachedSecondaryDark = localStorage.getItem(
+    "--vscode-list-hoverBackground"
+  );
+  if (cachedForeground) {
+    document.body.style.setProperty(
+      "--vscode-editor-foreground",
+      cachedForeground
+    );
+  }
+  if (cachedBackground) {
+    document.body.style.setProperty(
+      "--vscode-editor-background",
+      cachedBackground
+    );
+  }
+  if (cachedSecondaryDark) {
+    document.body.style.setProperty(
+      "--vscode-list-hoverBackground",
+      cachedSecondaryDark
+    );
+  }
+}
 
 export const Button = styled.button`
   padding: 10px 12px;
