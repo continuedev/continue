@@ -192,142 +192,142 @@ jobs:
           cd extension
           npm run prepackage
 
-      - name: Install Xvfb for Linux and run tests
-        run: |
-          sudo apt-get install -y xvfb # Install Xvfb
-          Xvfb :99 & # Start Xvfb
-          export DISPLAY=:99 # Export the display number to the environment
-          cd extension
-          npm run test
-        if: matrix.os == 'ubuntu-20.04'
+  #     - name: Install Xvfb for Linux and run tests
+  #       run: |
+  #         sudo apt-get install -y xvfb # Install Xvfb
+  #         Xvfb :99 & # Start Xvfb
+  #         export DISPLAY=:99 # Export the display number to the environment
+  #         cd extension
+  #         npm run test
+  #       if: matrix.os == 'ubuntu-20.04'
 
-      - name: Run extension tests
-        run: |
-          cd extension
-          npm run test
-        if: matrix.os != 'ubuntu-20.04'
+  #     - name: Run extension tests
+  #       run: |
+  #         cd extension
+  #         npm run test
+  #       if: matrix.os != 'ubuntu-20.04'
 
-      # 3.5 If on Apple Silicon, download the binary from S3 bucket
-      - name: Remove existing binary
-        if: matrix.os == 'macos-latest' && matrix.arch == 'arm64'
-        run: rm extension/exe/continue_server
+  #     # 3.5 If on Apple Silicon, download the binary from S3 bucket
+  #     - name: Remove existing binary
+  #       if: matrix.os == 'macos-latest' && matrix.arch == 'arm64'
+  #       run: rm extension/exe/continue_server
 
-      - name: Download Apple Silicon Binary
-        if: matrix.os == 'macos-latest' && matrix.arch == 'arm64'
-        run: curl -o extension/exe/continue_server https://continue-server-binaries.s3.us-west-1.amazonaws.com/apple-silicon/continue_server
+  #     - name: Download Apple Silicon Binary
+  #       if: matrix.os == 'macos-latest' && matrix.arch == 'arm64'
+  #       run: curl -o extension/exe/continue_server https://continue-server-binaries.s3.us-west-1.amazonaws.com/apple-silicon/continue_server
 
-      - name: Set permissions
-        run: |
-          chmod -R 777 extension/exe/continue_server
+  #     - name: Set permissions
+  #       run: |
+  #         chmod -R 777 extension/exe/continue_server
 
-      # 4. Package the extension
-      - shell: pwsh
-        run: echo "target=${{ matrix.platform }}-${{ matrix.arch }}" >> $env:GITHUB_ENV
-      - run: cd extension && npx vsce package --pre-release --target ${{ env.target }}
+  #     # 4. Package the extension
+  #     - shell: pwsh
+  #       run: echo "target=${{ matrix.platform }}-${{ matrix.arch }}" >> $env:GITHUB_ENV
+  #     - run: cd extension && npx vsce package --pre-release --target ${{ env.target }}
 
-      # 5. Upload the .vsix as an artifact
-      - uses: actions/upload-artifact@v2
-        with:
-          name: ${{ env.target }}
-          path: "extension/*.vsix"
+  #     # 5. Upload the .vsix as an artifact
+  #     - uses: actions/upload-artifact@v2
+  #       with:
+  #         name: ${{ env.target }}
+  #         path: "extension/*.vsix"
 
-      # 6. Upload continue.log as an artifact for debugging of the workflow
-      - name: Upload continue.log
-        uses: actions/upload-artifact@v2
-        with:
-          name: continue-log
-          path: /home/runner/.continue/continue.log
-        if: always()
+  #     # 6. Upload continue.log as an artifact for debugging of the workflow
+  #     - name: Upload continue.log
+  #       uses: actions/upload-artifact@v2
+  #       with:
+  #         name: continue-log
+  #         path: /home/runner/.continue/continue.log
+  #       if: always()
 
-  publish:
-    runs-on: ubuntu-20.04
-    needs: build
-    permissions:
-      contents: write
-    steps:
-      # 0. Setup git
-      - name: Checkout
-        uses: actions/checkout@v2
+  # publish:
+  #   runs-on: ubuntu-20.04
+  #   needs: build
+  #   permissions:
+  #     contents: write
+  #   steps:
+  #     # 0. Setup git
+  #     - name: Checkout
+  #       uses: actions/checkout@v2
 
-      - name: Set up Git
-        run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
+  #     - name: Set up Git
+  #       run: |
+  #         git config --local user.email "action@github.com"
+  #         git config --local user.name "GitHub Action"
 
-      - name: Pull latest changes
-        run: git pull origin preview
+  #     - name: Pull latest changes
+  #       run: git pull origin preview
 
-      # 1. Download the artifacts
-      - uses: actions/download-artifact@v3
+  #     # 1. Download the artifacts
+  #     - uses: actions/download-artifact@v3
 
-      # 2. Publish the extension to VS Code Marketplace
-      - run: |
-          cd extension
-          npx vsce publish --pre-release --packagePath ../alpine-x64/*.vsix ../darwin-arm64/*.vsix ../darwin-x64/*.vsix ../linux-arm64/*.vsix ../linux-armhf/*.vsix ../linux-x64/*.vsix ../win32-ia32/*.vsix ../win32-x64/*.vsix ../win32-arm64/*.vsix
-        env:
-          VSCE_PAT: ${{ secrets.VSCE_TOKEN }}
+  #     # 2. Publish the extension to VS Code Marketplace
+  #     - run: |
+  #         cd extension
+  #         npx vsce publish --pre-release --packagePath ../alpine-x64/*.vsix ../darwin-arm64/*.vsix ../darwin-x64/*.vsix ../linux-arm64/*.vsix ../linux-armhf/*.vsix ../linux-x64/*.vsix ../win32-ia32/*.vsix ../win32-x64/*.vsix ../win32-arm64/*.vsix
+  #       env:
+  #         VSCE_PAT: ${{ secrets.VSCE_TOKEN }}
 
-      # 3. Publish the extension to Open VSX Registry
-      - name: Publish (Open VSX Registry)
-        run: |
-          cd extension
-          npx ovsx publish --pre-release -p ${{ secrets.VSX_REGISTRY_TOKEN }} --packagePath ../alpine-x64/*.vsix ../darwin-arm64/*.vsix ../darwin-x64/*.vsix ../linux-arm64/*.vsix ../linux-armhf/*.vsix ../linux-x64/*.vsix ../win32-ia32/*.vsix ../win32-x64/*.vsix ../win32-arm64/*.vsix
+  #     # 3. Publish the extension to Open VSX Registry
+  #     - name: Publish (Open VSX Registry)
+  #       run: |
+  #         cd extension
+  #         npx ovsx publish --pre-release -p ${{ secrets.VSX_REGISTRY_TOKEN }} --packagePath ../alpine-x64/*.vsix ../darwin-arm64/*.vsix ../darwin-x64/*.vsix ../linux-arm64/*.vsix ../linux-armhf/*.vsix ../linux-x64/*.vsix ../win32-ia32/*.vsix ../win32-x64/*.vsix ../win32-arm64/*.vsix
 
-      # 4. Update the package.json version and push changes
-      - name: Update version in package.json
-        run: |
-          cd extension
-          npm version patch
+  #     # 4. Update the package.json version and push changes
+  #     - name: Update version in package.json
+  #       run: |
+  #         cd extension
+  #         npm version patch
 
-      - name: Commit changes
-        run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-          git commit -am "ci: 💚 Update package.json version [skip ci]"
+  #     - name: Commit changes
+  #       run: |
+  #         git config --local user.email "action@github.com"
+  #         git config --local user.name "GitHub Action"
+  #         git commit -am "ci: 💚 Update package.json version [skip ci]"
 
-      - name: Push changes
-        uses: ad-m/github-push-action@master
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          branch: ${{ github.ref }}
+  #     - name: Push changes
+  #       uses: ad-m/github-push-action@master
+  #       with:
+  #         github_token: ${{ secrets.GITHUB_TOKEN }}
+  #         branch: ${{ github.ref }}
 
-      # 5. Download binaries and upload to S3
-      - name: Download Linux build
-        uses: actions/download-artifact@v2
-        with:
-          name: LinuxBinary
-          path: exe/linux
+  #     # 5. Download binaries and upload to S3
+  #     - name: Download Linux build
+  #       uses: actions/download-artifact@v2
+  #       with:
+  #         name: LinuxBinary
+  #         path: exe/linux
 
-      - name: Download macOS build
-        uses: actions/download-artifact@v2
-        with:
-          name: macOSBinary
-          path: exe/mac
+  #     - name: Download macOS build
+  #       uses: actions/download-artifact@v2
+  #       with:
+  #         name: macOSBinary
+  #         path: exe/mac
 
-      - name: Download Windows build
-        uses: actions/download-artifact@v2
-        with:
-          name: WindowsBinary
-          path: exe/windows
+  #     - name: Download Windows build
+  #       uses: actions/download-artifact@v2
+  #       with:
+  #         name: WindowsBinary
+  #         path: exe/windows
 
-      - name: Upload binaries to S3 (s3.continue.dev)
-        uses: jakejarvis/s3-sync-action@master
-        with:
-          args: --acl public-read --follow-symlinks
-        env:
-          AWS_S3_BUCKET: s3.continue.dev
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_REGION: "us-west-1"
-          SOURCE_DIR: "exe"
+  #     - name: Upload binaries to S3 (s3.continue.dev)
+  #       uses: jakejarvis/s3-sync-action@master
+  #       with:
+  #         args: --acl public-read --follow-symlinks
+  #       env:
+  #         AWS_S3_BUCKET: s3.continue.dev
+  #         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  #         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  #         AWS_REGION: "us-west-1"
+  #         SOURCE_DIR: "exe"
 
-      - name: Upload binaries to S3 (continue-server-binaries)
-        uses: jakejarvis/s3-sync-action@master
-        with:
-          args: --acl public-read --follow-symlinks
-        env:
-          AWS_S3_BUCKET: continue-server-binaries.s3.us-west-1.amazonaws.com
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_REGION: "us-west-1"
-          SOURCE_DIR: "exe"
+  #     - name: Upload binaries to S3 (continue-server-binaries)
+  #       uses: jakejarvis/s3-sync-action@master
+  #       with:
+  #         args: --acl public-read --follow-symlinks
+  #       env:
+  #         AWS_S3_BUCKET: continue-server-binaries.s3.us-west-1.amazonaws.com
+  #         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  #         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  #         AWS_REGION: "us-west-1"
+  #         SOURCE_DIR: "exe"
