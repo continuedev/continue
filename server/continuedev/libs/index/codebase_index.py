@@ -1,10 +1,10 @@
 import asyncio
 import json
 import os
-from urllib.parse import quote_plus
+import re
 from functools import cached_property
 from typing import AsyncGenerator, Dict, List, Literal, Optional, Tuple
-
+from tenacity import retry, stop_after_delay, stop_after_attempt, wait_fixed
 import chromadb
 from chromadb.config import Settings
 from chromadb.utils import embedding_functions
@@ -86,22 +86,38 @@ class ChromaCodebaseIndex:
     directory: str
     client: chromadb.Client
     openai_api_key: str = None
+    api_base: str = None
+    api_version: str = None
+    api_type: str = None
+    organization_id: str = None
     git_project: GitProject
 
     def __init__(
         self,
         directory: str,
         openai_api_key: str = None,
+        api_base: str = None,
+        api_version: str = None,
+        api_type: str = None,
+        organization_id: str = None,
     ):
         self.directory = directory
         self.git_project = GitProject(directory)
         self.openai_api_key = openai_api_key
+        self.api_base = api_base
+        self.api_version = api_version
+        self.api_type = api_type
+        self.organization_id = organization_id
         self.client = chromadb.PersistentClient(
-            path=os.path.join(self.index_dir, "chroma"),
+            path=self.chroma_dir,
             settings=Settings(anonymized_telemetry=False),
         )
-        collections[self.directory] = self.collection
+
         os.environ.setdefault("TOKENIZERS_PARALLELISM", "true")
+
+    @property
+    def chroma_dir(self):
+        return os.path.join(self.index_dir, "chroma")
 
     @property
     def embeddings_type(self) -> EmbeddingsType:
@@ -133,21 +149,52 @@ class ChromaCodebaseIndex:
     def get_metadata(self) -> CodebaseIndexMetadata:
         return CodebaseIndexMetadata.parse_file(self.metadata_path)
 
+    def convert_to_valid_chroma_collection(self, name: str) -> str:
+        # https://docs.trychroma.com/usage-guide#creating-inspecting-and-deleting-collections
+
+        # Truncate or pad name to correct length
+        if len(name) < 3:
+            name = name.ljust(3, "a")
+        elif len(name) > 63:
+            name = name[:63]
+
+        # Ensure name starts and ends with a lowercase letter or digit
+        if not re.match("^[a-z0-9]", name[0]):
+            name = "a" + name[1:]
+        if not re.match("[a-z0-9]$", name[-1]):
+            name = name[:-1] + "a"
+
+        # Replace invalid characters with 'a'
+        name = re.sub("[^a-z0-9._-]", "a", name)
+
+        # Replace consecutive dots with a single dot
+        name = re.sub("\.\.+", ".", name)
+
+        return name
+
     @property
     def collection(self):
-        if self.directory in collections:
+        if self.directory in collections and os.path.exists(self.chroma_dir):
             return collections[self.directory]
 
         kwargs = {
-            "name": quote_plus(self.git_project.current_branch).replace("%", ""),
+            "name": self.convert_to_valid_chroma_collection(
+                self.git_project.current_branch
+            ),
         }
         if self.openai_api_key is not None:
             kwargs["embedding_function"] = embedding_functions.OpenAIEmbeddingFunction(
                 api_key=self.openai_api_key,
                 model_name="text-embedding-ada-002",
+                api_base=self.api_base,
+                api_version=self.api_version,
+                api_type=self.api_type,
+                organization_id=self.organization_id,
             )
 
-        return self.client.get_or_create_collection(**kwargs)
+        collection = self.client.get_or_create_collection(**kwargs)
+        collections[self.directory] = collection
+        return collection
 
     async def build(
         self, sdk: ContinueSDK, ignore_files: List[str] = []
@@ -216,16 +263,20 @@ class ChromaCodebaseIndex:
                     ids=flattened_ids[i : i + 100],
                 )
                 i += 100
-                await asyncio.sleep(0.5)
 
                 # Give a progress update (1.0 is completed)
                 yield i / len(flattened_chunks)
+                await asyncio.sleep(0.05)
             except RateLimitError as e:
                 logger.debug(f"Rate limit exceeded, waiting {wait_time} seconds")
                 await asyncio.sleep(wait_time)
                 wait_time *= 2
                 if wait_time > 2**10:
                     raise e
+            # except sqlite3.OperationalError as e:
+            #     logger.debug(f"SQL error: {e}")
+            #     os.chmod(self.chroma_dir, 0o777)
+            #     os.chmod(os.path.join(self.chroma_dir, "chroma.sqlite3"), 0o777)
 
         with open(f"{self.index_dir}/metadata.json", "w") as f:
             json.dump(

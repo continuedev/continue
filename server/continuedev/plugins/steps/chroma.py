@@ -18,8 +18,12 @@ from ...core.steps import EditFileStep
 class CreateCodebaseIndexChroma(Step):
     name: str = "Create Codebase Index"
     hide: bool = True
-    description: str = "Generating codebase embeddings..."
-    openai_api_key: Optional[str] = None
+    description: str = "Generating codebase embeddings... 1%"
+    openai_api_key: Optional[str] = Field(None, description="OpenAI API key")
+    api_base: Optional[str] = Field(None, description="OpenAI API base URL")
+    api_type: Optional[str] = Field(None, description="OpenAI API type")
+    api_version: Optional[str] = Field(None, description="OpenAI API version")
+    organization_id: Optional[str] = Field(None, description="OpenAI organization ID")
 
     ignore_files: List[str] = Field(
         [],
@@ -33,6 +37,10 @@ class CreateCodebaseIndexChroma(Step):
         index = ChromaCodebaseIndex(
             sdk.ide.workspace_directory,
             openai_api_key=self.openai_api_key,
+            api_base=self.api_base,
+            api_type=self.api_type,
+            api_version=self.api_version,
+            organization_id=self.organization_id,
         )
         if index.exists():
             return
@@ -70,9 +78,9 @@ class AnswerQuestionChroma(Step):
 
     async def run(self, sdk: ContinueSDK) -> Coroutine[Observation, None, None]:
         index = ChromaCodebaseIndex(sdk.ide.workspace_directory)
-        self.description = f"Reading from {self.n_retrieve} files..."
+        self.description = f"Scanning {self.n_retrieve} files..."
         await sdk.update_ui()
-        results = index.query_codebase_index(
+        results = index.query(
             self.user_input, n=self.n_retrieve if self.use_reranking else self.n_final
         )
 
@@ -111,6 +119,7 @@ class AnswerQuestionChroma(Step):
             await sdk.add_context_item(ctx_item)
             filepaths.add(filepath)
 
+        self.description = f"Reading from {len(results_dict)} files..."
         await sdk.update_ui()
         await sdk.run_step(
             SimpleChatStep(

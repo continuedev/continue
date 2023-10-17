@@ -23,7 +23,7 @@ class GitProject:
                 .decode("utf-8")
                 .strip()
             )
-        except subprocess.CalledProcessError:
+        except Exception:
             return "NONE"
 
     @cached_property
@@ -37,7 +37,7 @@ class GitProject:
                 .decode("utf-8")
                 .strip()
             )
-        except subprocess.CalledProcessError:
+        except Exception:
             return "NONE"
 
     @cached_property
@@ -51,7 +51,7 @@ class GitProject:
                 .strip()
                 .decode()
             )
-        except subprocess.CalledProcessError:
+        except Exception:
             return None
 
     def get_modified_deleted_files(
@@ -67,7 +67,7 @@ class GitProject:
                 .decode("utf-8")
                 .strip()
             )
-        except subprocess.CalledProcessError:
+        except Exception:
             return [], []
 
         modified_deleted_files = modified_deleted_files.split("\n")
