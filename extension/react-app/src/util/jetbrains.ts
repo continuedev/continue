@@ -28,6 +28,28 @@ export const handleKeyDownJetBrainsMac = (e, text: string, setText) => {
       e.target.selectionStart = prevNewLineIndex + 1;
       e.target.selectionEnd = prevNewLineIndex + 1;
     }
+  } else if (isCmdOrCtrlPressed) {
+    const startPos = e.target.selectionStart;
+    const endPos = e.target.selectionEnd;
+    let newStartPos = startPos;
+    let newEndPos = endPos;
+    const isShiftPressed = e.shiftKey;
+
+    if (e.key === "ArrowLeft") {
+      const prevNewLineIndex = text.lastIndexOf("\n", startPos - 1);
+
+      newStartPos = prevNewLineIndex === -1 ? 0 : prevNewLineIndex + 1;
+      newEndPos = isShiftPressed ? endPos : newStartPos;
+    } else if (e.key === "ArrowRight") {
+      const nextNewLineIndex = text.indexOf("\n", startPos);
+
+      newEndPos = nextNewLineIndex === -1 ? text.length : nextNewLineIndex;
+      newStartPos = isShiftPressed ? newStartPos : newEndPos;
+    }
+
+    e.target.selectionStart = newStartPos;
+    e.target.selectionEnd = newEndPos;
+    e.preventDefault();
   }
 };
 
@@ -64,5 +86,28 @@ export const handleKeyDownJetBrains = (e, text: string, setText) => {
         e.target.selectionEnd = prevSpaceIndex + 1;
       }, 10);
     }
+  } else if (isCtrlPressed && e.key === "c") {
+    // If Ctrl+C is pressed, copy the selected text
+    e.preventDefault();
+    e.stopPropagation();
+    if (startPos !== endPos) {
+      const selectedText = text.slice(startPos, endPos);
+      navigator.clipboard.writeText(selectedText);
+    }
+  } else if (isCtrlPressed && e.key === "v") {
+    // If Ctrl+V is pressed, paste the copied text at the cursor position
+    e.preventDefault();
+    e.stopPropagation();
+    navigator.clipboard.readText().then((clipText) => {
+      const newValue = text.slice(0, startPos) + clipText + text.slice(endPos);
+      setText(newValue);
+
+      // Set the cursor to the end of the pasted text
+      const newCursorPos = startPos + clipText.length;
+      setTimeout(() => {
+        e.target.selectionStart = newCursorPos;
+        e.target.selectionEnd = newCursorPos;
+      }, 10);
+    });
   }
 };
