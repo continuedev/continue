@@ -60,8 +60,8 @@ fun serverVersionPath(): String {
 }
 
 fun serverBinaryPath(): String {
-    val exeFile = if (System.getProperty("os.name")
-            .startsWith("Win", ignoreCase = true)
+    val exeFile = if (System.getProperty("os.name").toLowerCase()
+            .contains("win")
     ) "run.exe" else "run"
     return Paths.get(serverPath(), "exe", exeFile).toString()
 }
@@ -160,12 +160,11 @@ fun killProcess(pid: String) {
     val os = System.getProperty("os.name").toLowerCase()
     val command = when {
         os.contains("win") -> listOf("taskkill", "/F", "/PID", pid)
-        os.contains("nix") || os.contains("mac") || os.contains("nux") -> listOf(
+        else -> listOf(
             "kill",
             "-9",
             pid
         )
-        else -> throw UnsupportedOperationException("Unsupported operating system: $os")
     }
 
     try {
@@ -229,7 +228,7 @@ fun checkOrKillRunningServer(project: Project): Boolean {
 
 fun runBinary(path: String) {
     try {
-        if (System.getProperty("os.name").startsWith("Windows")) {
+        if (System.getProperty("os.name").toLowerCase().contains("win")) {
             // Windows approach
             val script = """
                 Set WshShell = CreateObject("WScript.Shell")
@@ -306,7 +305,7 @@ suspend fun startContinuePythonServer(project: Project) {
     // Determine from OS details which file to download
     val filename = when {
         System.getProperty("os.name")
-            .startsWith("Windows", ignoreCase = true) -> "windows/run.exe"
+            .toLowerCase().contains("win") -> "windows/run.exe"
         System.getProperty("os.name").startsWith("Mac", ignoreCase = true) ->
             if (System.getProperty("os.arch") == "arm64") "apple-silicon/run" else "mac/run"
         else -> "linux/run"
@@ -340,13 +339,36 @@ suspend fun startContinuePythonServer(project: Project) {
 
         println("Downloading Continue Server Binary")
         // Download the binary from S3
-        downloadFromS3(
-                "continue-server-binaries",
-                filename,
-                destination,
-                "us-west-1",
-                false
-        )
+        try {
+            downloadFromS3(
+                    "continue-server-binaries",
+                    filename,
+                    destination,
+                    "us-west-1",
+                    false
+            )
+        } catch (e: Exception) {
+            continuePluginService.dispatchCustomEvent("serverStatus", mutableMapOf(
+                    "type" to "serverStatus",
+                    "message" to "First download failed, attempting backup"
+            ))
+            try {
+                downloadFromS3(
+                        "continue-server-binaries",
+                        filename,
+                        destination,
+                        "us-west-1",
+                        true
+                )
+            } catch (e: Exception) {
+                continuePluginService.dispatchCustomEvent("serverStatus", mutableMapOf(
+                        "type" to "serverStatus",
+                        "message" to "Failed to download Continue server binary: ${e.message}"
+                ))
+                throw e
+            }
+        }
+
 
         // Set permissions on the binary
         setPermissions(destination)
@@ -356,7 +378,7 @@ suspend fun startContinuePythonServer(project: Project) {
     if (!File(destination).exists()) {
         continuePluginService.dispatchCustomEvent("serverStatus", mutableMapOf(
                 "type" to "serverStatus",
-                "message" to "Launching Continue Server"
+                "message" to "Failed to download Continue server binary"
         ))
 
         throw Error("Failed to download Continue server binary")
@@ -408,7 +430,7 @@ class WelcomeDialogWrapper(val project: Project) : DialogWrapper(true) {
         panel = JPanel(GridLayout(0, 1))
         panel!!.preferredSize = Dimension(500, panel!!.preferredSize.height)
         val paragraph = JLabel()
-        val shortcutKey = if (System.getProperty("os.name").toLowerCase().contains("win")) "⌃" else "⌘"
+        val shortcutKey = if (System.getProperty("os.name").toLowerCase().contains("mac")) "⌘" else "⌃"
         paragraph.text = """
             <html>Welcome! You can access Continue from the right side panel by clicking on the logo.<br><br>
             
@@ -468,7 +490,7 @@ class ContinuePluginStartupActivity : StartupActivity, Disposable {
                         throw IOException("Resource not found: continue_tutorial.py")
                     }
                     var content = StreamUtil.readText(`is`, StandardCharsets.UTF_8)
-                    if (System.getProperty("os.name").toLowerCase().contains("win")) {
+                    if (!System.getProperty("os.name").toLowerCase().contains("mac")) {
                         content = content.replace("⌘", "⌃")
                     }
                     val filepath = Paths.get(getContinueGlobalPath(), "continue_tutorial.py").toString()

@@ -34,10 +34,6 @@ import kotlin.math.min
 const val JS_QUERY_POOL_SIZE = "200"
 
 class ContinuePluginToolWindowFactory : ToolWindowFactory, DumbAware {
-    init {
-        thisLogger().warn("Don't forget to remove all non-needed sample code files with their corresponding registration entries in `plugin.xml`.")
-    }
-
     override fun createToolWindowContent(project: Project, toolWindow: ToolWindow) {
         val continueToolWindow = ContinuePluginWindow(toolWindow, project)
         val content = ContentFactory.getInstance().createContent(continueToolWindow.content, null, false)

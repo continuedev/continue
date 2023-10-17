@@ -17,6 +17,7 @@ import com.intellij.openapi.ui.DialogWrapper
 import com.intellij.openapi.util.Disposer
 import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.ui.content.ContentFactory
+import java.awt.Toolkit
 import java.io.File
 import java.nio.file.Paths
 import javax.swing.Action
@@ -147,7 +148,7 @@ class DiffManager(private val project: Project) {
             diffPanel.component.revalidate()
             diffPanel.component.repaint()
 
-            if (!shouldShowDialog) {
+            if (shouldShowDialog) {
                 // Create a dialog and add the DiffRequestPanel to it
                 val dialog: DialogWrapper = diffInfo?.dialog
                         ?: object : DialogWrapper(project, true, IdeModalityType.MODELESS) {
@@ -172,7 +173,7 @@ class DiffManager(private val project: Project) {
 
                             override fun createActions(): Array<Action> {
                                 val okAction = getOKAction()
-                                val cmdCtrl = if (System.getProperty("os.name").toLowerCase().contains("win")) "⌃" else "⌘"
+                                val cmdCtrl = if (System.getProperty("os.name").toLowerCase().contains("mac")) "⌘" else "⌃"
                                 okAction.putValue(Action.NAME, "Accept ($cmdCtrl ⇧ ↵)")
 
                                 val cancelAction = getCancelAction()
@@ -182,6 +183,9 @@ class DiffManager(private val project: Project) {
                             }
                         }
 
+                dialog.rootPane.isDoubleBuffered = true
+                val screenSize = Toolkit.getDefaultToolkit().screenSize
+                dialog.setSize(screenSize.width, screenSize.height)
                 dialog.show()
                 diffInfoMap[file2]?.dialog = dialog
                 diffInfoMap[file2]?.diffRequestPanel = diffPanel
