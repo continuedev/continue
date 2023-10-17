@@ -23,11 +23,9 @@ from continuedev.plugins.steps import (
     OpenConfigStep,
 )
 from continuedev.plugins.steps.share_session import ShareSessionStep
-from continuedev.plugins.steps.chroma import CreateCodebaseIndexChroma, AnswerQuestionChroma
 
 config = ContinueConfig(
     allow_anonymous_telemetry=True,
-    steps_on_startup=[CreateCodebaseIndexChroma()],
     models=Models(
         default=OpenAIFreeTrial(api_key="", model="gpt-4", title="GPT-4"),
         summarize=OpenAIFreeTrial(api_key="", model="gpt-3.5-turbo")
@@ -71,12 +69,7 @@ config = ContinueConfig(
             name="cmd",
             description="Generate a shell command",
             step=GenerateShellCommandStep,
-        ),
-        SlashCommand(
-			name="codebase",
-			description="Answer a question about the codebase",
-			step=AnswerQuestionChroma,
-		),
+        )
     ],
     context_providers=[
         # GitHubIssuesContextProvider(
