@@ -4,7 +4,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build && cp ../../intellij-extension/src/main/resources/webview/index.html tmp_index.html && rm -rf ../../intellij-extension/src/main/resources/webview && mkdir ../../intellij-extension/src/main/resources/webview && cp -R dist/* ../../intellij-extension/src/main/resources/webview && cp tmp_index.html ../../intellij-extension/src/main/resources/webview/index.html && rm tmp_index.html",
+    "build": "tsc && vite build",
     "preview": "vite preview"
   },
   "dependencies": {
