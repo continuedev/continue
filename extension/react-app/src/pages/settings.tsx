@@ -122,7 +122,7 @@ function Settings() {
 
   return (
     <FormProvider {...formMethods}>
-      <div className="overflow-scroll">
+      <div className="overflow-y-scroll">
         <div
           className="items-center flex sticky top-0"
           style={{

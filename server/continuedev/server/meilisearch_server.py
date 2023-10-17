@@ -6,7 +6,7 @@ from typing import Optional
 
 import aiofiles
 import aiohttp
-from continuedev.server.global_config import global_config
+from .global_config import global_config
 import psutil
 from meilisearch_python_async import Client
 

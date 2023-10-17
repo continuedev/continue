@@ -5,6 +5,7 @@ export const miscSlice = createSlice({
   initialState: {
     highlightedCode: "",
     takenAction: false,
+    serverStatusMessage: "Continue Server Starting",
   },
   reducers: {
     setHighlightedCode: (state: any, action) => {
@@ -13,8 +14,15 @@ export const miscSlice = createSlice({
     setTakenActionTrue: (state: any, action) => {
       state.takenAction = true;
     },
+    setServerStatusMessage: (state: any, action) => {
+      state.serverStatusMessage = action.payload;
+    },
   },
 });
 
-export const { setHighlightedCode, setTakenActionTrue } = miscSlice.actions;
+export const {
+  setHighlightedCode,
+  setTakenActionTrue,
+  setServerStatusMessage,
+} = miscSlice.actions;
 export default miscSlice.reducer;

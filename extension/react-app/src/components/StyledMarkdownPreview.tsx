@@ -9,7 +9,7 @@ import {
 import MarkdownPreview from "@uiw/react-markdown-preview";
 import { getFontSize } from "../util";
 
-const StyledMarkdownPreview = styled(MarkdownPreview)<{
+const StyledMarkdownPreviewComponent = styled(MarkdownPreview)<{
   light?: boolean;
   fontSize?: number;
   maxHeight?: number;
@@ -52,5 +52,34 @@ const StyledMarkdownPreview = styled(MarkdownPreview)<{
   padding: 8px;
   color: ${vscForeground};
 `;
+
+interface StyledMarkdownPreviewProps {
+  source?: string;
+  maxHeight?: number;
+  className?: string;
+}
+
+function StyledMarkdownPreview(props: StyledMarkdownPreviewProps) {
+  return (
+    <StyledMarkdownPreviewComponent
+      components={{
+        a: ({ node, ...props }) => {
+          return (
+            <a {...props} target="_blank">
+              {props.children}
+            </a>
+          );
+        },
+      }}
+      className={props.className}
+      maxHeight={props.maxHeight}
+      fontSize={getFontSize()}
+      source={props.source || ""}
+      wrapperElement={{
+        "data-color-mode": "dark",
+      }}
+    />
+  );
+}
 
 export default StyledMarkdownPreview;

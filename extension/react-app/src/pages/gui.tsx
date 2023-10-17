@@ -1,5 +1,10 @@
 import styled from "styled-components";
-import { Input, defaultBorderRadius, lightGray, vscBackground } from "../components";
+import {
+  Input,
+  defaultBorderRadius,
+  lightGray,
+  vscBackground,
+} from "../components";
 import { FullState } from "../../../schema/FullState";
 import {
   useEffect,
@@ -8,6 +13,7 @@ import {
   useContext,
   useLayoutEffect,
   useCallback,
+  Fragment,
 } from "react";
 import { HistoryNode } from "../../../schema/HistoryNode";
 import StepContainer from "../components/StepContainer";
@@ -133,6 +139,9 @@ function GUI(props: GUIProps) {
   const defaultModel = useSelector(
     (state: RootStore) => (state.serverState.config as any).models?.default
   );
+  const serverStatusMessage = useSelector(
+    (state: RootStore) => state.misc.serverStatusMessage
+  );
   const user_input_queue = useSelector(
     (state: RootStore) => state.serverState.user_input_queue
   );
@@ -147,7 +156,7 @@ function GUI(props: GUIProps) {
   const [waitingForSteps, setWaitingForSteps] = useState(false);
   const [stepsOpen, setStepsOpen] = useState<(boolean | undefined)[]>([]);
   const [waitingForClient, setWaitingForClient] = useState(true);
-  const [showLoading, setShowLoading] = useState(false);
+  const [showLoading, setShowLoading] = useState(true);
 
   // #endregion
 
@@ -192,10 +201,10 @@ function GUI(props: GUIProps) {
       }
     };
 
-    topGuiDivRef.current?.addEventListener("wheel", handleScroll);
+    topGuiDivRef.current?.addEventListener("scroll", handleScroll);
 
     return () => {
-      window.removeEventListener("wheel", handleScroll);
+      window.removeEventListener("scroll", handleScroll);
     };
   }, [topGuiDivRef.current]);
 
@@ -482,16 +491,6 @@ function GUI(props: GUIProps) {
   );
 
   useEffect(() => {
-    const timeout = setTimeout(() => {
-      setShowLoading(true);
-    }, 15_000);
-
-    return () => {
-      clearTimeout(timeout);
-    };
-  }, []);
-
-  useEffect(() => {
     if (sessionTitle) {
       setSessionTitleInput(sessionTitle);
     }
@@ -575,7 +574,7 @@ function GUI(props: GUIProps) {
               fontSize: "14px",
             }}
           >
-            Continue Server Starting
+            {serverStatusMessage}
           </p>
           <div className="flex mx-8 my-2">
             <p
@@ -646,7 +645,7 @@ function GUI(props: GUIProps) {
         {history?.timeline.map((node: HistoryNode, index: number) => {
           if (node.step.hide) return null;
           return (
-            <>
+            <Fragment key={index}>
               {node.step.name === "User Input" ? (
                 node.step.hide || (
                   <ComboBox
@@ -758,14 +757,14 @@ function GUI(props: GUIProps) {
                 </TimelineItem>
               )}
               {/* <div className="h-2"></div> */}
-            </>
+            </Fragment>
           );
         })}
       </StepsDiv>
 
       <div>
-        {user_input_queue?.map?.((input) => {
-          return <UserInputQueueItem>{input}</UserInputQueueItem>;
+        {user_input_queue?.map?.((input, idx) => {
+          return <UserInputQueueItem key={idx}>{input}</UserInputQueueItem>;
         })}
       </div>
 

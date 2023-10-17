@@ -180,11 +180,8 @@ const codeLlamaInstruct: ModelPackage = {
     model: "codellama:7b-instruct",
     context_length: 2048,
     template_messages: ChatTemplates.llama2,
-    prompt_templates: {
-      "edit": EditPromptTemplates.codellama
-    }
   },
-  icon: "meta.svg",
+  icon: "meta.png",
   dimensions: [
     {
       name: "Parameter Count",
@@ -216,11 +213,8 @@ const llama2Chat: ModelPackage = {
     model: "llama2:7b-chat",
     context_length: 2048,
     template_messages: ChatTemplates.llama2,
-    prompt_templates: {
-      "edit": EditPromptTemplates.codellama
-    }
   },
-  icon: "meta.svg",
+  icon: "meta.png",
   dimensions: [
     {
       name: "Parameter Count",
@@ -254,8 +248,8 @@ const wizardCoder: ModelPackage = {
     context_length: 2048,
     template_messages: ChatTemplates.alpaca,
     prompt_templates: {
-      "edit": EditPromptTemplates.alpaca
-    }
+      edit: EditPromptTemplates.alpaca,
+    },
   },
   icon: "wizardlm.png",
   dimensions: [
@@ -289,8 +283,8 @@ const phindCodeLlama: ModelPackage = {
     context_length: 2048,
     template_messages: ChatTemplates.llama2,
     prompt_templates: {
-      "edit": EditPromptTemplates.codellama
-    }
+      edit: EditPromptTemplates.codellama,
+    },
   },
 };
 
@@ -304,8 +298,8 @@ const mistral: ModelPackage = {
     context_length: 2048,
     template_messages: ChatTemplates.llama2,
     prompt_templates: {
-      "edit": EditPromptTemplates.codellama
-    }
+      edit: EditPromptTemplates.codellama,
+    },
   },
   icon: "mistral.png",
 };
@@ -320,8 +314,8 @@ const sqlCoder: ModelPackage = {
     context_length: 2048,
     template_messages: ChatTemplates.sqlcoder,
     prompt_templates: {
-      "edit": EditPromptTemplates.codellama
-    }
+      edit: EditPromptTemplates.codellama,
+    },
   },
   dimensions: [
     {
@@ -350,8 +344,8 @@ const codeup: ModelPackage = {
     context_length: 2048,
     template_messages: ChatTemplates.llama2,
     prompt_templates: {
-      "edit": EditPromptTemplates.alpaca
-    }
+      edit: EditPromptTemplates.alpaca,
+    },
   },
 };
 
@@ -412,7 +406,7 @@ export const MODEL_INFO: { [key: string]: ModelInfo } = {
     description: "Use gpt-4, gpt-3.5-turbo, or any other OpenAI model",
     longDescription:
       "Use gpt-4, gpt-3.5-turbo, or any other OpenAI model. See [here](https://openai.com/product#made-for-developers) to obtain an API key.",
-    icon: "openai.svg",
+    icon: "openai.png",
     tags: [ModelProviderTag["Requires API Key"]],
     packages: [gpt4, gpt35turbo],
     collectInputFor: [
@@ -738,7 +732,7 @@ After it's up and running, you can start using Continue.`,
       },
       ...completionParamsInputs,
     ],
-    icon: "openai.svg",
+    icon: "openai.png",
     tags: [ModelProviderTag.Local, ModelProviderTag["Open-Source"]],
     packages: osModels,
   },
@@ -749,7 +743,7 @@ After it's up and running, you can start using Continue.`,
       "New users can try out Continue for free using a proxy server that securely makes calls to OpenAI using our API key",
     longDescription:
       'New users can try out Continue for free using a proxy server that securely makes calls to OpenAI using our API key. If you are ready to use your own API key or have used all 250 free uses, you can enter your API key in config.py where it says `api_key=""` or select another model provider.',
-    icon: "openai.svg",
+    icon: "openai.png",
     tags: [ModelProviderTag.Free],
     packages: [gpt4, gpt35turbo],
     collectInputFor: [...completionParamsInputs],

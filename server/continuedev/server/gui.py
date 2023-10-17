@@ -259,7 +259,9 @@ class GUIProtocolServer:
 
     def set_system_message(self, message: str):
         self.session.autopilot.continue_sdk.config.system_message = message
-        self.session.autopilot.continue_sdk.models.set_main_config_params(message, self.session.autopilot.continue_sdk.config.temperature)
+        self.session.autopilot.continue_sdk.models.set_main_config_params(
+            message, self.session.autopilot.continue_sdk.config.temperature
+        )
 
         create_async_task(
             self.session.autopilot.set_config_attr(
@@ -356,9 +358,11 @@ class GUIProtocolServer:
                         "template_alpaca_messages": template_alpaca_messages,
                         "sqlcoder_template_messages": sqtm,
                     }[model["template_messages"]]
-                
+
                 if "prompt_templates" in model and "edit" in model["prompt_templates"]:
-                    default_model_display_overrides["prompt_templates"] = f'''{{"edit": {model["prompt_templates"]["edit"]}}}'''
+                    default_model_display_overrides[
+                        "prompt_templates"
+                    ] = f"""{{"edit": {model["prompt_templates"]["edit"]}}}"""
                     add_config_import(
                         f"from continuedev.libs.llm.prompts.edit import {model['prompt_templates']['edit']}"
                     )
@@ -378,7 +382,9 @@ class GUIProtocolServer:
                     [display_llm_class(llm) for llm in saved_models]
                 )
                 models_args = {
-                    "default": display_llm_class(models.default, True, default_model_display_overrides),
+                    "default": display_llm_class(
+                        models.default, True, default_model_display_overrides
+                    ),
                     "saved": f"[{JOINER.join(saved_model_strings)}]",
                 }
 
@@ -393,9 +399,9 @@ class GUIProtocolServer:
                         models.__setattr__(role, models.default)
 
                 # Display setup help
-                await self.session.autopilot.continue_sdk.run_step(
-                    SetupModelStep(model_class=model_class)
-                )
+                # await self.session.autopilot.continue_sdk.run_step(
+                #     SetupModelStep(model_class=model_class)
+                # )
 
             create_async_task(async_stuff(), self.on_error)
         else:
@@ -417,6 +423,16 @@ class GUIProtocolServer:
         create_async_task(
             self.session.autopilot.delete_context_group(id), self.on_error
         )
+
+
+@router.get("/sessions")
+async def get_session(session_id: Optional[str] = None):
+    try:
+        # Assuming load_session is a method of a class, and you have an instance `instance_of_that_class`
+        await protocol.load_session(session_id)
+        return {"message": "Session loaded successfully", "session_id": session_id}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.websocket("/ws")
@@ -463,7 +479,10 @@ async def websocket_endpoint(
         raise e
     finally:
         logger.debug("Closing gui websocket")
-        if websocket.client_state != WebSocketState.DISCONNECTED and websocket.application_state != WebSocketState.DISCONNECTED:
+        if (
+            websocket.client_state != WebSocketState.DISCONNECTED
+            and websocket.application_state != WebSocketState.DISCONNECTED
+        ):
             await websocket.close()
 
         await session_manager.persist_session(session.session_id)

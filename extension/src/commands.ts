@@ -115,6 +115,34 @@ const commandsMap: { [command: string]: (...args: any) => any } = {
       type: "openSettings",
     });
   },
+  "continue.sendMainUserInput": (text: string) => {
+    ideProtocolClient.sendMainUserInput(text);
+  },
+  "continue.selectRange": (startLine: number, endLine: number) => {
+    if (!vscode.window.activeTextEditor) {
+      return;
+    }
+    vscode.window.activeTextEditor.selection = new vscode.Selection(
+      startLine,
+      0,
+      endLine,
+      0
+    );
+  },
+  "continue.foldAndUnfold": (
+    foldSelectionLines: number[],
+    unfoldSelectionLines: number[]
+  ) => {
+    vscode.commands.executeCommand("editor.unfold", {
+      selectionLines: unfoldSelectionLines,
+    });
+    vscode.commands.executeCommand("editor.fold", {
+      selectionLines: foldSelectionLines,
+    });
+  },
+  "continue.sendToTerminal": (text: string) => {
+    ideProtocolClient.runCommand(text);
+  },
 };
 
 export function registerAllCommands(context: vscode.ExtensionContext) {

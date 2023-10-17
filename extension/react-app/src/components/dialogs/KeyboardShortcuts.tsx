@@ -59,7 +59,7 @@ function KeyboardShortcut(props: KeyboardShortcutProps) {
   );
 }
 
-const shortcuts: KeyboardShortcutProps[] = [
+const vscodeShortcuts: KeyboardShortcutProps[] = [
   {
     mac: "⌘ M",
     windows: "⌃ M",
@@ -107,12 +107,58 @@ const shortcuts: KeyboardShortcutProps[] = [
   },
 ];
 
+const jetbrainsShortcuts: KeyboardShortcutProps[] = [
+  {
+    mac: "⌘ J",
+    windows: "⌃ J",
+    description: "Ask about Highlighted Code",
+  },
+  {
+    mac: "⌘ ⇧ J",
+    windows: "⌃ ⇧ J",
+    description: "Edit Highlighted Code",
+  },
+  {
+    mac: "⌘ ⇧ ↵",
+    windows: "⌃ ⇧ ↵",
+    description: "Accept Diff",
+  },
+  {
+    mac: "⌘ ⇧ ⌫",
+    windows: "⌃ ⇧ ⌫",
+    description: "Reject Diff",
+  },
+  {
+    mac: "⌥ ⇧ J",
+    windows: "⌥ ⇧ J",
+    description: "Quick Text Entry",
+  },
+  {
+    mac: "⌥ ⌘ J",
+    windows: "⌥ ⌃ J",
+    description: "Toggle Auxiliary Bar",
+  },
+  {
+    mac: "⌘ ⌃ N",
+    windows: "⌥ ⌃ N",
+    description: "New Session",
+  },
+  {
+    mac: "⌘ ⌫",
+    windows: "⌃ ⌫",
+    description: "Stop Active Step",
+  },
+];
+
 function KeyboardShortcutsDialog() {
   return (
     <div className="p-2">
       <h3 className="my-3 mx-auto text-center">Keyboard Shortcuts</h3>
       <GridDiv>
-        {shortcuts.map((shortcut) => {
+        {(localStorage.getItem("ide") === "jetbrains"
+          ? jetbrainsShortcuts
+          : vscodeShortcuts
+        ).map((shortcut) => {
           return (
             <KeyboardShortcut
               mac={shortcut.mac}

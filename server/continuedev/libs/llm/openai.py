@@ -1,8 +1,7 @@
 from typing import Callable, List, Literal, Optional
-import aiohttp
 
 import certifi
-from continuedev.libs.llm.prompts.chat import template_alpaca_messages
+from .prompts.chat import template_alpaca_messages
 import openai
 from pydantic import Field
 

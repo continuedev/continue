@@ -1,6 +1,6 @@
 from textwrap import dedent
 
-from continuedev.libs.llm.base import PromptTemplate
+from ...llm.base import PromptTemplate
 
 simplified_edit_prompt = dedent(
     """\
@@ -42,9 +42,7 @@ _codellama_edit_prompt = dedent(
 )
 
 codellama_edit_prompt = PromptTemplate(
-    prompt=_codellama_edit_prompt,
-    raw=True,
-    stop=["[/CODE]"]
+    prompt=_codellama_edit_prompt, raw=True, stop=["[/CODE]"]
 )
 
 _alpaca_edit_prompt = dedent(
@@ -65,8 +63,4 @@ _alpaca_edit_prompt = dedent(
             """
 )
 
-alpaca_edit_prompt = PromptTemplate(
-    prompt=_alpaca_edit_prompt,
-    raw=True,
-    stop=["```"]
-)
+alpaca_edit_prompt = PromptTemplate(prompt=_alpaca_edit_prompt, raw=True, stop=["```"])

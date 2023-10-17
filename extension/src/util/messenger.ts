@@ -1,5 +1,4 @@
 const WebSocket = require("ws");
-import fetch from "node-fetch";
 
 export abstract class Messenger {
   abstract send(messageType: string, data: object): void;

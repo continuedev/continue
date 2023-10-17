@@ -48,7 +48,6 @@ jobs:
             npm_config_arch: arm64
     runs-on: ${{ matrix.os }}
     steps:
-
       # 1. Build the Pyinstaller binary
       - name: Check-out repository
         uses: actions/checkout@v3
@@ -103,13 +102,13 @@ jobs:
         with:
           name: macOSBinary
           path: extension/exe/run
-      
+
       - uses: actions/upload-artifact@v2
         if: matrix.os == 'ubuntu-20.04' && matrix.arch == 'x64' && matrix.platform == 'linux'
         with:
           name: LinuxBinary
           path: extension/exe/run
-      
+
       - uses: actions/upload-artifact@v2
         if: matrix.os == 'windows-latest' && matrix.arch == 'x64'
         with:
@@ -208,7 +207,6 @@ jobs:
     permissions:
       contents: write
     steps:
-
       # 0. Setup git
       - name: Checkout
         uses: actions/checkout@v2
@@ -274,14 +272,14 @@ jobs:
           name: WindowsBinary
           path: exe/windows
 
-  #     - name: Set up Python
-  #       uses: actions/setup-python@v4
-  #       with:
-  #         python-version: "3.10.8"
+      #     - name: Set up Python
+      #       uses: actions/setup-python@v4
+      #       with:
+      #         python-version: "3.10.8"
 
-  #     - name: Install Pyinstaller
-  #       run: |
-  #         pip install pyinstaller
+      #     - name: Install Pyinstaller
+      #       run: |
+      #         pip install pyinstaller
 
       - name: Upload binaries to S3 (s3.continue.dev)
         uses: jakejarvis/s3-sync-action@master
@@ -293,4 +291,3 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_REGION: "us-west-1"
           SOURCE_DIR: "exe"
-

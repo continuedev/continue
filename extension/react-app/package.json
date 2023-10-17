@@ -4,16 +4,19 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build --sourcemap 'inline'",
+    "build": "tsc && vite build && cp ../../intellij-extension/src/main/resources/webview/index.html tmp_index.html && rm -rf ../../intellij-extension/src/main/resources/webview && mkdir ../../intellij-extension/src/main/resources/webview && cp -R dist/* ../../intellij-extension/src/main/resources/webview && cp tmp_index.html ../../intellij-extension/src/main/resources/webview/index.html && rm tmp_index.html",
     "preview": "vite preview"
   },
   "dependencies": {
+    "@headlessui/react": "^1.7.17",
     "@heroicons/react": "^2.0.18",
+    "@reduxjs/toolkit": "^1.9.3",
     "@types/vscode-webview": "^1.57.1",
     "@uiw/react-markdown-preview": "^4.1.13",
     "downshift": "^7.6.0",
     "lodash": "^4.17.21",
     "meilisearch": "^0.33.0",
+    "node-fetch": "^3.3.2",
     "posthog-js": "^1.58.0",
     "prismjs": "^1.29.0",
     "react": "^18.2.0",
@@ -28,6 +31,8 @@
     "vscode-webview": "^1.0.1-beta.1"
   },
   "devDependencies": {
+    "@types/node": "^20.5.6",
+    "@types/node-fetch": "^2.6.4",
     "@types/react": "^18.0.27",
     "@types/react-dom": "^18.0.10",
     "@types/react-router-dom": "^5.3.3",

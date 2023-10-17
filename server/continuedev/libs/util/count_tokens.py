@@ -23,6 +23,9 @@ DEFAULT_ARGS = {
 already_saw_import_err = False
 
 
+already_saw_import_err = False
+
+
 def encoding_for_model(model_name: str):
     global already_saw_import_err
     if already_saw_import_err:

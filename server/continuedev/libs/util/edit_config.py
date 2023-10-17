@@ -92,7 +92,7 @@ def display_val(v: Any, k: str = None):
         return v
     elif isinstance(v, str):
         return f'"{escape_string(v)}"'
-    
+
     return str(v)
 
 

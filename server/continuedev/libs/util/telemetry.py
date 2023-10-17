@@ -10,6 +10,7 @@ from .paths import getServerFolderPath
 
 load_dotenv()
 in_codespaces = os.getenv("CODESPACES") == "true"
+# This key is public
 POSTHOG_API_KEY = "phc_JS6XFROuNbhJtVCEdTSYk6gl5ArRrTNMpCcguAXlSPs"
 
 

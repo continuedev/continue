@@ -37,7 +37,6 @@ Options for serving models locally with an OpenAI-compatible server include:
 <ClassPropertyRef name='api_version' details='{&quot;title&quot;: &quot;Api Version&quot;, &quot;description&quot;: &quot;OpenAI API version. For use with Azure OpenAI Service.&quot;, &quot;type&quot;: &quot;string&quot;}' required={false} default=""/>
 <ClassPropertyRef name='engine' details='{&quot;title&quot;: &quot;Engine&quot;, &quot;description&quot;: &quot;OpenAI engine. For use with Azure OpenAI Service.&quot;, &quot;type&quot;: &quot;string&quot;}' required={false} default=""/>
 
-
 ### Inherited Properties
 
 <ClassPropertyRef name='model' details='{&quot;title&quot;: &quot;Model&quot;, &quot;description&quot;: &quot;The name of the model to be used (e.g. gpt-4, codellama)&quot;, &quot;type&quot;: &quot;string&quot;}' required={true} default=""/>

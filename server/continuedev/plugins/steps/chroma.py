@@ -280,24 +280,29 @@ class AnswerQuestionChroma(Step):
             filepath = results["ids"][0][shortened_filepaths.index(id)].split("::")[0]
             if filepath in filepaths:
                 continue
-            
+
             ctx_item = ContextItem(
-                    content=document,
-                    description=ContextItemDescription(
-                        name=filename,
-                        description=filepath,
-                        id=ContextItemId(
-                            provider_title="file",
-                            item_id=remove_meilisearch_disallowed_chars(filepath),
-                        ),
+                content=document,
+                description=ContextItemDescription(
+                    name=filename,
+                    description=filepath,
+                    id=ContextItemId(
+                        provider_title="file",
+                        item_id=remove_meilisearch_disallowed_chars(filepath),
                     ),
-                )
+                ),
+            )
             context_items.append(ctx_item)
             await sdk.add_context_item(ctx_item)
             filepaths.add(filepath)
 
         await sdk.update_ui()
-        await sdk.run_step(SimpleChatStep(name="Answer Question", description=f"Reading from {self.n_final} files..."))
+        await sdk.run_step(
+            SimpleChatStep(
+                name="Answer Question",
+                description=f"Reading from {self.n_final} files...",
+            )
+        )
 
         # for ctx_item in context_items:
         #     await sdk.delete_context_item(ctx_item.description.id)

@@ -13,9 +13,28 @@
       "name": "Server + Tests (VSCode)",
       "stopAll": true,
       "configurations": ["Server", "Tests (VSCode)"]
+    },
+    {
+      "name": "Server + React App",
+      "stopAll": true,
+      "configurations": ["Server", "Vite"]
     }
   ],
   "configurations": [
+    {
+      "type": "chrome",
+      "request": "attach",
+      "name": "Vite",
+      "url": "http://localhost:5173",
+      "webRoot": "${workspaceFolder}/extension/react-app/src",
+      "sourceMapPathOverrides": {
+        "webpack:///./src/*": "${webRoot}/*"
+      },
+      "port": 9222,
+      // "runtimeArgs": ["--remote-debugging-port=9222"],
+      "sourceMaps": true,
+      "preLaunchTask": "react-app:dev",
+    },
     {
       "name": "Pytest",
       "type": "python",

@@ -36,10 +36,16 @@ import {
   getFontSize,
   getMarkdownLanguageTagForFile,
   getMetaKeyLabel,
+  getPlatform,
 } from "../util";
 import { ContextItem } from "../../../schema/FullState";
 import StyledMarkdownPreview from "./StyledMarkdownPreview";
+import { temporarilyClearSession } from "../redux/slices/serverStateReducer";
 import { setTakenActionTrue } from "../redux/slices/miscSlice";
+import {
+  handleKeyDownJetBrains,
+  handleKeyDownJetBrainsMac,
+} from "../util/jetbrains";
 
 const SEARCH_INDEX_NAME = "continue_context_items";
 
@@ -609,6 +615,10 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
           downshiftProps.setInputValue("/edit ");
         }
         dispatch(setTakenActionTrue(null));
+      } else if (event.data.type === "focusContinueInputWithNewSession") {
+        dispatch(temporarilyClearSession(false));
+        client?.loadSession(undefined);
+        dispatch(setTakenActionTrue(null));
       }
     };
     window.addEventListener("message", handler);
@@ -887,7 +897,6 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
               />
             );
           })}
-
           {/* {selectedContextItems.length > 0 && (
           <HeaderButtonWithText
             onClick={() => {
@@ -925,13 +934,9 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
       {previewingContextItem && (
         <pre className="m-0">
           <StyledMarkdownPreview
-            fontSize={getFontSize()}
             source={`\`\`\`${getMarkdownLanguageTagForFile(
               previewingContextItem.description.description
             )}\n${previewingContextItem.content}\n\`\`\``}
-            wrapperElement={{
-              "data-color-mode": "dark",
-            }}
             maxHeight={200}
           />
         </pre>
@@ -951,6 +956,9 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
           borderRadius={defaultBorderRadius}
         >
           <MainTextInput
+            onClick={() => {
+              inputRef.current?.focus();
+            }}
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={(e) => {
               if (
@@ -1100,6 +1108,20 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
                   (event.nativeEvent as any).preventDownshiftDefault = true;
                 } else if (event.key === "End") {
                   (event.nativeEvent as any).preventDownshiftDefault = true;
+                } else if (localStorage.getItem("ide") === "jetbrains") {
+                  if (getPlatform() === "mac") {
+                    handleKeyDownJetBrainsMac(
+                      event,
+                      downshiftProps.inputValue,
+                      downshiftProps.setInputValue
+                    );
+                  } else {
+                    handleKeyDownJetBrains(
+                      event,
+                      downshiftProps.inputValue,
+                      downshiftProps.setInputValue
+                    );
+                  }
                 }
               },
               onClick: () => {
@@ -1243,6 +1265,27 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
                 )}
               </Li>
             ))}
+          {downshiftProps.isOpen && items.length === 0 && (
+            <Li
+              key="empty-items-li"
+              highlighted={false}
+              selected={false}
+              isLastItem={false}
+            >
+              <span
+                style={{
+                  color: lightGray,
+                  float: "right",
+                  textAlign: "right",
+                  display: "flex",
+                  width: "100%",
+                  cursor: "default",
+                }}
+              >
+                No items found
+              </span>
+            </Li>
+          )}
         </Ul>
       </div>
 

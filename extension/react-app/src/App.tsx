@@ -14,7 +14,10 @@ import {
   setDataSwitchOn,
   setWorkspacePaths,
 } from "./redux/slices/configSlice";
-import { setHighlightedCode } from "./redux/slices/miscSlice";
+import {
+  setHighlightedCode,
+  setServerStatusMessage,
+} from "./redux/slices/miscSlice";
 import { postVscMessage } from "./vscode";
 import { RouterProvider, createMemoryRouter } from "react-router-dom";
 import ErrorPage from "./pages/error";
@@ -70,7 +73,7 @@ export const GUIClientContext = createContext<
 >(undefined);
 
 function App() {
-  const client = useContinueGUIProtocol();
+  const client = useContinueGUIProtocol(false);
 
   const dispatch = useDispatch();
   useEffect(() => {
@@ -87,11 +90,35 @@ function App() {
         case "highlightedCode":
           dispatch(setHighlightedCode(event.data.rangeInFile));
           break;
+        case "serverStatus":
+          dispatch(setServerStatusMessage(event.data.message));
+          break;
       }
     };
     window.addEventListener("message", eventListener);
     postVscMessage("onLoad", {});
     return () => window.removeEventListener("message", eventListener);
+  }, []);
+
+  useEffect(() => {
+    if (document.body.style.getPropertyValue("--vscode-editor-foreground")) {
+      localStorage.setItem(
+        "--vscode-editor-foreground",
+        document.body.style.getPropertyValue("--vscode-editor-foreground")
+      );
+    }
+    if (document.body.style.getPropertyValue("--vscode-editor-background")) {
+      localStorage.setItem(
+        "--vscode-editor-background",
+        document.body.style.getPropertyValue("--vscode-editor-background")
+      );
+    }
+    if (document.body.style.getPropertyValue("--vscode-list-hoverBackground")) {
+      localStorage.setItem(
+        "--vscode-list-hoverBackground",
+        document.body.style.getPropertyValue("--vscode-list-hoverBackground")
+      );
+    }
   }, []);
 
   return (

@@ -112,7 +112,7 @@ function ModelConfig() {
 
         <div className="px-2">
           <div style={{ display: "flex", alignItems: "center" }}>
-            {(vscMediaUrl && modelInfo?.icon) && (
+            {vscMediaUrl && modelInfo?.icon && (
               <img
                 src={`${vscMediaUrl}/logos/${modelInfo?.icon}`}
                 height="24px"
@@ -138,11 +138,7 @@ function ModelConfig() {
           })}
           <StyledMarkdownPreview
             className="mt-2"
-            fontSize={getFontSize()}
-            source={modelInfo?.longDescription || modelInfo?.description || ""}
-            wrapperElement={{
-              "data-color-mode": "dark",
-            }}
+            source={modelInfo?.longDescription || modelInfo?.description}
             maxHeight={200}
           />
           <br />

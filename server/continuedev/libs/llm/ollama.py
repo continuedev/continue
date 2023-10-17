@@ -49,7 +49,7 @@ class Ollama(LLM):
             "top_p": options.top_p,
             "top_k": options.top_k,
             "num_predict": options.max_tokens,
-            "stop": options.stop
+            "stop": options.stop,
         }
 
     async def start(self, **kwargs):

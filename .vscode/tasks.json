@@ -106,5 +106,20 @@
             "command": "./install-dependencies.sh",
             "problemMatcher": [], // Empty so users are not promted to select progress reporting
         },
+        //
+        // Start the React App for debugging with Vite
+        {
+            "label": "react-app:dev",
+            "type": "shell",
+            "command": "npm",
+            "options": {
+                "cwd": "extension/react-app",
+            },
+            "args": [
+                "run",
+                "dev"
+            ],
+            "isBackground": true,
+        }
     ]
 }
