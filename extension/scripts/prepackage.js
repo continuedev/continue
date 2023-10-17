@@ -17,7 +17,10 @@ exec("npm install", (error) => {
       console.log("npm install in react-app completed");
 
       exec("npm run build", (error) => {
-        if (error) throw error;
+        if (error) {
+          console.log("Error running npm run build in react-app: ", error);
+          throw error;
+        }
         if (!fs.existsSync(path.join("dist", "assets", "index.js"))) {
           throw new Error("react-app build did not produce index.js");
         }
