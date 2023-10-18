@@ -326,7 +326,7 @@ jobs:
         with:
           args: --acl public-read --follow-symlinks
         env:
-          AWS_S3_BUCKET: continue-server-binaries.s3.us-west-1.amazonaws.com
+          AWS_S3_BUCKET: continue-server-binaries
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_REGION: "us-west-1"
