@@ -1,5 +1,7 @@
 > 🎁 **New! [Try out the new JetBrains extension (Alpha)](https://plugins.jetbrains.com/plugin/22707-continue-extension)**
 
+Interested in a 1-on-1, 15-minute introduction to Continue? Fill out [this form](https://forms.gle/rfpDfqcUtUPDQkiu9) and we'll help you get set up.
+
 ![Continue logo](c_d.png)
 
 <h1 align="center">Continue</h1>
