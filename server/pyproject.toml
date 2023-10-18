@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "continuedev"
-version = "0.1.60"
+version = "0.1.61"
 description = ""
 authors = ["Nate Sesti <sestinj@gmail.com>"]
 readme = "README.md"
