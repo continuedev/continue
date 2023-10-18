@@ -25,6 +25,7 @@ import SettingsPage from "./pages/settings";
 import Models from "./pages/models";
 import HelpPage from "./pages/help";
 import ModelConfig from "./pages/modelconfig";
+import { usePostHog } from "posthog-js/react";
 
 const router = createMemoryRouter([
   {
@@ -74,6 +75,7 @@ export const GUIClientContext = createContext<
 
 function App() {
   const client = useContinueGUIProtocol(false);
+  const posthog = usePostHog();
 
   const dispatch = useDispatch();
   useEffect(() => {
@@ -85,6 +87,9 @@ function App() {
           dispatch(setSessionId(event.data.sessionId));
           dispatch(setVscMediaUrl(event.data.vscMediaUrl));
           dispatch(setDataSwitchOn(event.data.dataSwitchOn));
+          if (event.data.uniqueId) {
+            posthog?.identify(event.data.vscMachineId);
+          }
           dispatch(setWorkspacePaths(event.data.workspacePaths));
           break;
         case "highlightedCode":
