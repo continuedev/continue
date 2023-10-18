@@ -3,8 +3,7 @@ import json
 import os
 import re
 from functools import cached_property
-from typing import AsyncGenerator, Dict, List, Literal, Optional, Tuple
-from tenacity import retry, stop_after_delay, stop_after_attempt, wait_fixed
+from typing import AsyncGenerator, Dict, List, Literal, Optional
 import chromadb
 from chromadb.config import Settings
 from chromadb.utils import embedding_functions
@@ -17,6 +16,7 @@ from ...core.sdk import ContinueSDK
 from ..util.filter_files import DEFAULT_IGNORE_PATTERNS, should_filter_path
 from ..util.logging import logger
 from ..util.paths import getEmbeddingsPathForBranch
+from .chunkers import chunk_document
 
 load_dotenv()
 
@@ -53,22 +53,6 @@ IGNORE_PATTERNS_FOR_CHROMA = [
     "*.ncb",
     "*.sdf",
 ]
-
-
-def chunk_document(document: Optional[str], max_length: int = 1000) -> List[str]:
-    """Chunk a document into smaller pieces."""
-    if document is None:
-        return []
-
-    chunks = []
-    chunk = ""
-    for line in document.split("\n"):
-        if len(chunk) + len(line) > max_length:
-            chunks.append(chunk)
-            chunk = ""
-        chunk += line + "\n"
-    chunks.append(chunk)
-    return chunks
 
 
 # Mapping of workspace_dir to chromadb collection
@@ -235,7 +219,9 @@ class ChromaCodebaseIndex:
 
         documents = await asyncio.gather(*tasks)
 
-        chunks = [chunk_document(document) for document in documents]
+        chunks = []
+        for i in range(len(files)):
+            chunks.append(chunk_document(files[i], documents[i], 1024))
 
         flattened_chunks = []
         flattened_metadata = []
@@ -265,7 +251,7 @@ class ChromaCodebaseIndex:
                 i += 100
 
                 # Give a progress update (1.0 is completed)
-                yield i / len(flattened_chunks)
+                yield min(1.0, i / len(flattened_chunks))
                 await asyncio.sleep(0.05)
             except RateLimitError as e:
                 logger.debug(f"Rate limit exceeded, waiting {wait_time} seconds")

@@ -532,4 +532,4 @@ Settings:
 
     def count_tokens(self, text: str):
         """Return the number of tokens in the given text."""
-        return count_tokens(self.model, text)
+        return count_tokens(text, self.model)
