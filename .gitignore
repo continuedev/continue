@@ -140,3 +140,6 @@ codeql
 .continue
 .test
 .tiktoken_cache
+
+.idea
+intellij-extension/.gradle
