@@ -6,21 +6,15 @@ import {
   getExtensionVersion,
   startContinuePythonServer,
 } from "./environmentSetup";
-import fetch from "node-fetch";
 import { registerAllCodeLensProviders } from "../lang-server/codeLens";
 import { registerAllCommands } from "../commands";
 import registerQuickFixProvider from "../lang-server/codeActions";
-
-const PACKAGE_JSON_RAW_GITHUB_URL =
-  "https://raw.githubusercontent.com/continuedev/continue/HEAD/extension/package.json";
+import { getExtensionUri } from "../util/vscode";
+import path from "path";
 
 export let extensionContext: vscode.ExtensionContext | undefined = undefined;
 
 export let ideProtocolClient: IdeProtocolClient;
-
-function getExtensionVersionInt(versionString: string): number {
-  return parseInt(versionString.replace(/\./g, ""));
-}
 
 function addPythonPathForConfig() {
   // Add to python.analysis.extraPaths global setting so config.py gets LSP
@@ -63,6 +57,18 @@ function addPythonPathForConfig() {
   }
 }
 
+async function openTutorial(context: vscode.ExtensionContext) {
+  if (context.globalState.get<boolean>("continue.tutorialShown") !== true) {
+    const doc = await vscode.workspace.openTextDocument(
+      vscode.Uri.file(
+        path.join(getExtensionUri().fsPath, "continue_tutorial.py")
+      )
+    );
+    await vscode.window.showTextDocument(doc);
+    context.globalState.update("continue.tutorialShown", true);
+  }
+}
+
 export async function activateExtension(context: vscode.ExtensionContext) {
   extensionContext = context;
   console.log("Using Continue version: ", getExtensionVersion());
@@ -80,6 +86,7 @@ export async function activateExtension(context: vscode.ExtensionContext) {
   registerAllCommands(context);
   registerQuickFixProvider();
   addPythonPathForConfig();
+  await openTutorial(context);
 
   // Start the server
   const sessionIdPromise = (async () => {

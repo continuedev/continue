@@ -7,6 +7,10 @@ It will walk you through the basic features:
 1. Ask a question
 2. Edit code
 3. Debug
+
+You can either
+- follow the instructions on your own, or
+- follow along by clicking the gray CodeLens buttons above the lines, in order, starting with "Begin Section"
 """
 
 # region —————————————————————————— Part 1: Ask a question about code [⌘ M] ——————————————————————————
