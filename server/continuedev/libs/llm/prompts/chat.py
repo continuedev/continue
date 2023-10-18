@@ -21,6 +21,16 @@ def anthropic_template_messages(messages: List[Dict[str, str]]) -> str:
     return prompt
 
 
+def chatml_template_messages(messages: List[Dict[str, str]]) -> str:
+    prompt = ""
+
+    for msg in messages:
+        prompt += f"<|im_start|>{msg['role']}\n{msg['content']}<|im_end|>\n"
+
+    prompt += "<|im_start|>assistant\n"
+    return prompt
+
+
 def template_alpaca_messages(msgs: List[Dict[str, str]]) -> str:
     prompt = ""
 
