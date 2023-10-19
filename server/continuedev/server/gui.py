@@ -195,12 +195,23 @@ class GUIProtocolServer:
 
     def on_show_logs_at_index(self, index: int):
         name = "Continue Prompt"
-        logs = "\n\n############################################\n\n".join(
+        
+        logs = None
+        timeline = self.session.autopilot.continue_sdk.history.timeline
+        while logs is None and index < len(timeline):
+            if len(timeline[index].logs) > 0:
+                logs = timeline[index].logs
+                break
+            elif timeline[index].step.name == "User Input":
+                break
+            index += 1
+            
+        content = "Logs not found" if logs is None else "\n\n############################################\n\n".join(
             ["This is the prompt that was sent to the LLM during this step"]
-            + self.session.autopilot.continue_sdk.history.timeline[index].logs
+            + logs
         )
         create_async_task(
-            self.session.autopilot.ide.showVirtualFile(name, logs), self.on_error
+            self.session.autopilot.ide.showVirtualFile(name, content), self.on_error
         )
         posthog_logger.capture_event("show_logs_at_index", {})
 

@@ -3,6 +3,7 @@ import traceback
 from typing import List
 
 import aiohttp
+from ..util.count_tokens import MAX_TOKENS_FOR_MODEL
 
 from ...core.main import ChatMessage
 from ..util.telemetry import posthog_logger
@@ -10,13 +11,6 @@ from .base import LLM
 
 # SERVER_URL = "http://127.0.0.1:8080"
 SERVER_URL = "https://proxy-server-l6vsfbzhba-uw.a.run.app"
-
-MAX_TOKENS_FOR_MODEL = {
-    "gpt-3.5-turbo": 4096,
-    "gpt-3.5-turbo-0613": 4096,
-    "gpt-3.5-turbo-16k": 16384,
-    "gpt-4": 8192,
-}
 
 
 class ProxyServer(LLM):

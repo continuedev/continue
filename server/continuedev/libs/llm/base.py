@@ -13,6 +13,7 @@ from ...models.main import ContinueBaseModel
 from ..util.count_tokens import (
     DEFAULT_ARGS,
     DEFAULT_MAX_TOKENS,
+    MAX_TOKENS_FOR_MODEL,
     compile_chat_messages,
     count_tokens,
     format_chat_messages,
@@ -280,10 +281,15 @@ Settings:
         msgs: List[ChatMessage],
         functions: Optional[List[Any]] = None,
     ) -> List[Dict]:
+        # In case gpt-3.5-turbo-16k or something else is specified that has longer context_length
+        context_length = self.context_length
+        if options.model != self.model and options.model in MAX_TOKENS_FOR_MODEL:
+            context_length = MAX_TOKENS_FOR_MODEL[options.model]
+
         return compile_chat_messages(
             model_name=options.model,
             msgs=msgs,
-            context_length=self.context_length,
+            context_length=context_length,
             max_tokens=options.max_tokens,
             functions=functions,
             system_message=self.get_system_message(),
@@ -532,4 +538,4 @@ Settings:
 
     def count_tokens(self, text: str):
         """Return the number of tokens in the given text."""
-        return count_tokens(self.model, text)
+        return count_tokens(text, self.model)

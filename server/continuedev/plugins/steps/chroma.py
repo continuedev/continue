@@ -1,14 +1,17 @@
-import asyncio
 import os
 from typing import Coroutine, Dict, List, Optional, Union
+
+from ...libs.llm.base import CompletionOptions
+from ...libs.index.rerankers.default import default_reranker_parallel
+from ...libs.util.strings import shorten_filepaths
 
 from pydantic import Field
 
 from ...core.main import ContextItem, ContextItemDescription, ContextItemId, Step
 from ...core.observation import Observation
 from ...core.sdk import ContinueSDK
-from ...core.steps import EditFileStep, UserInputStep
-from ...libs.chroma.query import ChromaIndexManager
+from ...core.steps import EditFileStep
+from ...libs.index.codebase_index import ChromaCodebaseIndex
 from ..context_providers.util import remove_meilisearch_disallowed_chars
 from .chat import SimpleChatStep
 from ...core.steps import EditFileStep
@@ -17,8 +20,12 @@ from ...core.steps import EditFileStep
 class CreateCodebaseIndexChroma(Step):
     name: str = "Create Codebase Index"
     hide: bool = True
-    description: str = "Generating codebase embeddings..."
-    openai_api_key: Optional[str] = None
+    description: str = "Generating codebase embeddings... 1%"
+    openai_api_key: Optional[str] = Field(None, description="OpenAI API key")
+    api_base: Optional[str] = Field(None, description="OpenAI API base URL")
+    api_type: Optional[str] = Field(None, description="OpenAI API type")
+    api_version: Optional[str] = Field(None, description="OpenAI API version")
+    organization_id: Optional[str] = Field(None, description="OpenAI organization ID")
 
     ignore_files: List[str] = Field(
         [],
@@ -29,203 +36,21 @@ class CreateCodebaseIndexChroma(Step):
         return "Generated codebase embeddings."
 
     async def run(self, sdk: ContinueSDK) -> Coroutine[Observation, None, None]:
-        index = ChromaIndexManager(
+        index = ChromaCodebaseIndex(
             sdk.ide.workspace_directory,
             openai_api_key=self.openai_api_key,
+            api_base=self.api_base,
+            api_type=self.api_type,
+            api_version=self.api_version,
+            organization_id=self.organization_id,
         )
-        if not index.check_index_exists():
-            self.hide = False
+        if index.exists():
+            return
 
-        await index.create_codebase_index(sdk, ignore_files=self.ignore_files)
-
-
-async def rerank_chroma_results_group(
-    results: Dict[str, str], user_input: str, n: int, sdk: ContinueSDK
-):
-    """
-    Reranks the results from the codebase index based on the user input
-    """
-    results_prompt = "\n\n".join(
-        map(
-            lambda kv: f"{kv[0]}\n```\n{kv[1][:500]}\n```",
-            results.items(),
-        )
-    )
-    include_prompt = f"""\
-You will be asked to select the most relevant results from a list. You should choose the results that will be most useful in answering the user's request. For each result that you think is important, you should simply say its title on a new line. Here is an example input:
-\"\"\"
-add.py::0
-```
-def add(a, b):
-    return a + b
-```
-            
-multiply.py::0
-```
-def multiply(a, b):
-    return a * b
-```
-
-subtract.py::0
-```
-def subtract(a, b):
-    return a - b
-```
-\"\"\"
-And here is the output you would give if you thought that add.py and subtract.py were the most relevant results:
-\"\"\"
-add.py::0
-subtract.py::0
-\"\"\"
-            
-Now for the real task, here are the top {len(results)} results from the codebase for the user request, "{user_input}":
-
-{results_prompt}
-
-Here are the {n} most relevant results listed in the same format from the example:"""
-
-    remove_prompt = f"""\
-You will be asked to select items from a list that are irrelevant to the given request. For each result that is unrelated, you should simply say its title on a new line. Here is an example input:
-\"\"\"
-add.py::0
-```
-def add(a, b):
-    return a + b
-```
-            
-multiply.py::0
-```
-def multiply(a, b):
-    return a * b
-```
-
-subtract.py::0
-```
-def subtract(a, b):
-    return a - b
-```
-\"\"\"
-And here is the output you would give if you thought that add.py and subtract.py were not useful to answer the given request:
-\"\"\"
-add.py::0
-subtract.py::0
-\"\"\"
-            
-Now for the real task, here are the top {len(results)} results from the codebase for the user request, "{user_input}":
-
-{results_prompt}
-
-List the results that are not useful in answering the request, using in the same format from the example. Only choose those that are completely unrelated, and no more than {n // 2}:"""
-
-    include = sdk.models.summarize.complete(include_prompt, log=False)
-    remove = sdk.models.summarize.complete(remove_prompt, log=False)
-    include_completion, remove_completion = await asyncio.gather(include, remove)
-
-    return include_completion.split("\n"), remove_completion.split("\n")
-
-
-async def rerank_chroma_results(
-    results: Dict[str, str], user_input: str, n: int, sdk: ContinueSDK
-):
-    """
-    Reranks the results from the codebase index based on the user input
-    """
-    # Split the results into groups
-    groups = []
-    group = {}
-    keys = list(results.keys())
-    for i in range(len(keys)):
-        if len(group) == 10:
-            groups.append(group)
-            group = {}
-        group[keys[i]] = results[keys[i]]
-
-    if len(group) > 0:
-        groups.append(group)
-
-    # Gather the include/remove results from each group
-    include = set([])
-    remove = set([])
-
-    tasks = []
-    for group in groups:
-        tasks.append(rerank_chroma_results_group(group, user_input, n, sdk))
-
-    reranking_results = await asyncio.gather(*tasks)
-    for rr in reranking_results:
-        include.update(rr[0])
-        remove.update(rr[1])
-
-    # Use these results to whittle down the results
-    counts_per_files = {}
-    for id in results:
-        filename = id.split("::")[0]
-        if filename not in counts_per_files:
-            counts_per_files[filename] = 0
-        counts_per_files[filename] += 1
-
-    repeated_files = set(filter(lambda x: counts_per_files[x] > 1, counts_per_files))
-
-    selected = {
-        key: value
-        for key, value in results.items()
-        if key not in remove or key.split("::")[0] in repeated_files
-    }
-    selected = {key: value for key, value in selected.items() if key in include}
-
-    for key in selected:
-        del results[key]
-
-    additional = n - len(selected)
-    for i in range(additional):
-        if len(results) == 0:
-            break
-
-        # Get an item from the results
-        key = list(results.keys())[0]
-        selected[key] = results[key]
-        del results[key]
-
-    if additional < 0:
-        # We need to remove some items
-        additional = -additional
-        for i in range(additional):
-            if len(selected) == 0:
-                break
-
-            # Get an item from the results
-            key = list(selected.keys())[0]
-            del selected[key]
-
-    return selected
-
-
-def shorten_filepaths(filepaths: List[str]) -> List[str]:
-    """
-    Shortens the filepaths to just the filename,
-    unless directory names are needed for uniqueness
-    """
-    basenames = list(map(os.path.basename, filepaths))
-    if len(basenames) == len(filepaths):
-        return list(basenames)
-
-    basename_counts = {}
-    for filepath in filepaths:
-        basename = os.path.basename(filepath)
-        if basename not in basename_counts:
-            basename_counts[basename] = 0
-        basename_counts[basename] += 1
-
-    for i in range(0, len(filepaths)):
-        basename = os.path.basename(filepaths[i])
-        if basename_counts[basename] <= 1:
-            filepaths[i] = basename
-        else:
-            filepaths[i] = os.path.join(
-                os.path.basename(os.path.dirname(filepaths[i])), basename
-            )
-
-    return filepaths
+        self.hide = False
+        async for progress in index.build(sdk, ignore_files=self.ignore_files):
+            self.description = f"Generating codebase embeddings... {int(progress*100)}%"
+            await sdk.update_ui()
 
 
 class AnswerQuestionChroma(Step):
@@ -254,53 +79,58 @@ class AnswerQuestionChroma(Step):
             return self._answer
 
     async def run(self, sdk: ContinueSDK) -> Coroutine[Observation, None, None]:
-        index = ChromaIndexManager(sdk.ide.workspace_directory)
-        self.description = f"Reading from {self.n_retrieve} files..."
+        index = ChromaCodebaseIndex(sdk.ide.workspace_directory)
+        self.hide = False
+        self.description = f"Scanning {self.n_retrieve} files..."
         await sdk.update_ui()
-        results = index.query_codebase_index(
+
+        # Get top chunks from index
+        chunks = index.query(
             self.user_input, n=self.n_retrieve if self.use_reranking else self.n_final
         )
 
-        shortened_filepaths = shorten_filepaths(results["ids"][0])
-        results_dict = {
-            filename: document
-            for filename, document in zip(shortened_filepaths, results["documents"][0])
-            if document.strip() != ""
-        }
+        # Rerank to select top results
+        self.description = f"Selecting most important files..."
+        await sdk.update_ui()
 
         if self.use_reranking:
-            results_dict = await rerank_chroma_results(
-                results_dict, self.user_input, self.n_final, sdk
+            chunks = await default_reranker_parallel(
+                chunks, self.user_input, self.n_final, sdk
             )
 
-        filepaths = set([])
+        # Add context items
         context_items: List[ContextItem] = []
-        for id, document in results_dict.items():
-            filename = id.split("::")[0]
-            filepath = results["ids"][0][shortened_filepaths.index(id)].split("::")[0]
-            if filepath in filepaths:
-                continue
-
+        for chunk in chunks:
+            # Can we select the context item through the normal means so that the name is disambiguated?
+            # Also so you don't have to understand the internals of the context provider
+            # OR have a chunk context provider??? Nice short-term, but I don't like it for long-term
             ctx_item = ContextItem(
-                content=document,
+                content=chunk.content,
                 description=ContextItemDescription(
-                    name=filename,
-                    description=filepath,
+                    name=f"{os.path.basename(chunk.document_id)} ({chunk.start_line}-{chunk.end_line})",
+                    description=chunk.document_id,
                     id=ContextItemId(
                         provider_title="file",
-                        item_id=remove_meilisearch_disallowed_chars(filepath),
+                        item_id=remove_meilisearch_disallowed_chars(chunk.document_id),
                     ),
                 ),
-            )
+            )  # Should be 'code' not file! And eventually should be able to embed all context providers automatically!
+
             context_items.append(ctx_item)
             await sdk.add_context_item(ctx_item)
-            filepaths.add(filepath)
 
-        await sdk.update_ui()
+        self.hide = True
+        model = sdk.models.chat.model
+        # if model == "gpt-4":
+        #     model = "gpt-4-32k"  # Not publicly available yet?
+        if model == "gpt-3.5-turbo":
+            model = "gpt-3.5-turbo-16k"
+
         await sdk.run_step(
             SimpleChatStep(
                 name="Answer Question",
-                description=f"Reading from {self.n_final} files...",
+                description=f"Reading from {len(context_items)} files...",
+                completion_options=CompletionOptions(model=model),
             )
         )
 
@@ -313,7 +143,7 @@ class EditFileChroma(Step):
     hide: bool = True
 
     async def run(self, sdk: ContinueSDK) -> Coroutine[Observation, None, None]:
-        index = ChromaIndexManager(sdk.ide.workspace_directory)
+        index = ChromaCodebaseIndex(sdk.ide.workspace_directory)
         results = index.query_codebase_index(self.user_input)
 
         resource_name = list(results.source_nodes[0].node.relationships.values())[0]

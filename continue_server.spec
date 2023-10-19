@@ -28,17 +28,19 @@ def find_package_location(package_name):
 chroma_path = find_package_location('chromadb')
 chroma_toc = list(map(lambda x: (x[1], os.path.dirname(x[0])), Tree(f'{chroma_path}/chromadb/migrations', prefix="chromadb/migrations")))
 
+tsl_path = find_package_location('tree_sitter_languages')
+
 a = Analysis(
     ['continue_server.py'],
     pathex=[],
-    binaries=[],
+    binaries=[(os.path.join(tsl_path, 'tree_sitter_languages', 'languages.so'), "tree_sitter_languages")],
     datas=[
         ('server/continuedev', 'continuedev'),
         (certifi.where(), 'ca_bundle'),
-        ('.tiktoken_cache', 'tiktoken_cache')
+        ('.tiktoken_cache', 'tiktoken_cache'),
         ] + copy_metadata('replicate') + chroma_toc,
     hiddenimports=[
-        'anthropic', 'github', 'ripgrepy', 'bs4', 'redbaron',
+        'anthropic', 'github', 'ripgrepy', 'bs4', 'redbaron', 'tree_sitter', 'tree_sitter_languages',
         'chromadb', 'onnxruntime',
         'chromadb.telemetry.posthog',
         'chromadb.api.segment', 'chromadb.db.impl',
