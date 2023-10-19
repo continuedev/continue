@@ -85,52 +85,41 @@ class AnswerQuestionChroma(Step):
         await sdk.update_ui()
 
         # Get top chunks from index
-        results = index.query(
+        chunks = index.query(
             self.user_input, n=self.n_retrieve if self.use_reranking else self.n_final
         )
-
-        # Shorten the filepaths to basename for reranking
-        full_ids = results["ids"][0]
-        shortened_ids = list(map(lambda x: os.path.basename(x), full_ids))
-        results_dict = {
-            id: document for id, document in zip(shortened_ids, results["documents"][0])
-        }
 
         # Rerank to select top results
         self.description = f"Selecting most important files..."
         await sdk.update_ui()
+
         if self.use_reranking:
-            results_dict = await default_reranker_parallel(
-                results_dict, self.user_input, self.n_final, sdk
+            chunks = await default_reranker_parallel(
+                chunks, self.user_input, self.n_final, sdk
             )
 
         # Add context items
-        filepaths = set([])
         context_items: List[ContextItem] = []
-        for id, document in results_dict.items():
-            filename = id.split("::")[0]
-            filepath = full_ids[shortened_ids.index(id)].split("::")[0]
-            if filepath in filepaths:
-                continue
-
+        for chunk in chunks:
+            # Can we select the context item through the normal means so that the name is disambiguated?
+            # Also so you don't have to understand the internals of the context provider
+            # OR have a chunk context provider??? Nice short-term, but I don't like it for long-term
             ctx_item = ContextItem(
-                content=document,
+                content=chunk.content,
                 description=ContextItemDescription(
-                    name=filename,  # Make this have line numbers
-                    description=filepath,
+                    name=f"{os.path.basename(chunk.document_id)} ({chunk.start_line}-{chunk.end_line})",
+                    description=chunk.document_id,
                     id=ContextItemId(
-                        provider_title="code",
-                        item_id=remove_meilisearch_disallowed_chars(filepath),
+                        provider_title="file",
+                        item_id=remove_meilisearch_disallowed_chars(chunk.document_id),
                     ),
                 ),
             )  # Should be 'code' not file! And eventually should be able to embed all context providers automatically!
 
             context_items.append(ctx_item)
             await sdk.add_context_item(ctx_item)
-            filepaths.add(filepath)
 
         self.hide = True
-
         model = sdk.models.chat.model
         # if model == "gpt-4":
         #     model = "gpt-4-32k"  # Not publicly available yet?

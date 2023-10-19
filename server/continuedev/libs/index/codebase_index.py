@@ -62,6 +62,8 @@ collections = {}
 
 EmbeddingsType = Literal["default", "openai"]
 
+MAX_CHUNK_SIZE = 512
+
 
 class CodebaseIndexMetadata(BaseModel):
     commit: str
@@ -229,7 +231,7 @@ class ChromaCodebaseIndex:
         for i in range(len(files)):
             document_chunks = [
                 c
-                for c in chunk_document(files[i], file_contents[i], 1024)
+                for c in chunk_document(files[i], file_contents[i], MAX_CHUNK_SIZE)
                 if len(c.content.strip()) > 0
             ]
             num_chunks_per_file[files[i]] = len(document_chunks)

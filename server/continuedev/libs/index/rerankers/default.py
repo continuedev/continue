@@ -1,19 +1,25 @@
 import asyncio
-from typing import Dict
+import os
+from typing import Dict, List
+
+from ..chunkers.chunk import Chunk
 
 from continuedev.core.sdk import ContinueSDK
 
 
 async def decide_include_remove(
-    results: Dict[str, str], user_input: str, n: int, sdk: ContinueSDK
+    chunks: List[Chunk], user_input: str, n: int, sdk: ContinueSDK
 ) -> Dict[str, str]:
     """
-    Reranks the results from the codebase index based on the user input
+    Reranks the results from the codebase index based on the user input.
+
+    Returns a tuple of (include, remove) where both are lists of chunk ids
     """
+    # TODO: Go back to using disambiguated names instead of just basename
     results_prompt = "\n\n".join(
         map(
-            lambda kv: f"{kv[0]}\n```\n{kv[1][:500]}\n```",
-            results.items(),
+            lambda chunk: f"{os.path.basename(chunk.id)}\n```\n{chunk.content[:500]}\n```",
+            chunks,
         )
     )
     include_prompt = f"""\
@@ -43,7 +49,7 @@ add.py::0
 subtract.py::0
 \"\"\"
             
-Now for the real task, here are the top {len(results)} results from the codebase for the user request, "{user_input}":
+Now for the real task, here are the top {len(chunks)} results from the codebase for the user request, "{user_input}":
 
 {results_prompt}
 
@@ -76,7 +82,7 @@ add.py::0
 subtract.py::0
 \"\"\"
             
-Now for the real task, here are the top {len(results)} results from the codebase for the user request, "{user_input}":
+Now for the real task, here are the top {len(chunks)} results from the codebase for the user request, "{user_input}":
 
 {results_prompt}
 
@@ -90,25 +96,24 @@ List the results that are not useful in answering the request, using in the same
 
 
 async def default_reranker_parallel(
-    results: Dict[str, str], user_input: str, n: int, sdk: ContinueSDK
-) -> Dict[str, str]:
+    chunks: List[Chunk], user_input: str, n: int, sdk: ContinueSDK
+) -> List[Chunk]:
     """
     A reranker, given a mapping from id to contents, returns the subset of the mapping that is most relevant to the user_input
     """
-    # Split the results into groups
+    # Split the results into groups of max size 10
     groups = []
-    group = {}
-    keys = list(results.keys())
-    for i in range(len(keys)):
+    group = []
+    for chunk in chunks:
+        group.append(chunk)
         if len(group) == 10:
             groups.append(group)
-            group = {}
-        group[keys[i]] = results[keys[i]]
+            group = []
 
     if len(group) > 0:
         groups.append(group)
 
-    # Gather the include/remove results from each group
+    # Gather the ids of chunks that should be removed and included
     include = set([])
     remove = set([])
 
@@ -121,45 +126,43 @@ async def default_reranker_parallel(
         include.update(rr[0])
         remove.update(rr[1])
 
-    # Use these results to whittle down the results
-    counts_per_files = {}
-    for id in results:
-        filename = id.split("::")[0]
-        if filename not in counts_per_files:
-            counts_per_files[filename] = 0
-        counts_per_files[filename] += 1
+    # Determine which documents were repeated, these are probably important
+    counts_per_document = {}
+    for chunk in chunks:
+        if chunk.document_id not in counts_per_document:
+            counts_per_document[chunk.document_id] = 0
+        counts_per_document[chunk.document_id] += 1
 
-    repeated_files = set(filter(lambda x: counts_per_files[x] > 1, counts_per_files))
+    repeated_documents = set(
+        filter(lambda x: counts_per_document[x] > 1, counts_per_document)
+    )
 
-    selected = {
-        key: value
-        for key, value in results.items()
-        if key not in remove or key.split("::")[0] in repeated_files
-    }
-    selected = {key: value for key, value in selected.items() if key in include}
+    not_disqualified = set(
+        [
+            chunk.id
+            for chunk in chunks
+            if chunk.id not in remove or chunk.document_id in repeated_documents
+        ]
+    )
 
-    for key in selected:
-        del results[key]
+    included = set([id for id in not_disqualified if chunk.id in include])
 
-    additional = n - len(selected)
+    additional = n - len(included)
     for i in range(additional):
-        if len(results) == 0:
+        if len(not_disqualified) == 0:
             break
 
-        # Get an item from the results
-        key = list(results.keys())[0]
-        selected[key] = results[key]
-        del results[key]
+        # Get an item from not_disqualified
+        included.add(not_disqualified.pop())
 
     if additional < 0:
         # We need to remove some items
         additional = -additional
         for i in range(additional):
-            if len(selected) == 0:
+            if len(included) == 0:
                 break
 
-            # Get an item from the results
-            key = list(selected.keys())[0]
-            del selected[key]
+            # Remove one
+            included.pop()
 
-    return selected
+    return [chunk for chunk in chunks if chunk.id in included]
