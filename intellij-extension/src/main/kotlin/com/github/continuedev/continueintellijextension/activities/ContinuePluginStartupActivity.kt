@@ -459,17 +459,32 @@ class ContinuePluginStartupActivity : StartupActivity, Disposable {
     private val coroutineScope = CoroutineScope(Dispatchers.IO)
 
     override fun runActivity(project: Project) {
-        // Register Actions
-        val actionManager = ActionManager.getInstance()
-        actionManager.unregisterAction("InsertLiveTemplate")
-        actionManager.unregisterAction("SurroundWithLiveTemplate")
-        actionManager.unregisterAction("EditorJoinLines")
 
-        // Initialize Plugin
+        removeShortcutFromAction(getPlatformSpecificKeyStroke("J"))
+        removeShortcutFromAction(getPlatformSpecificKeyStroke("shift J"))
+
        ApplicationManager.getApplication().executeOnPooledThread {
-//       GlobalScope.async(Dispatchers.IO) {
            initializePlugin(project)
        }
+    }
+
+    private fun getPlatformSpecificKeyStroke(key: String): String {
+        val osName = System.getProperty("os.name").lowercase()
+        val modifier = if (osName.contains("mac")) "meta" else "control"
+        return "$modifier $key"
+    }
+
+    private fun removeShortcutFromAction(shortcut: String) {
+        val actionManager = ActionManager.getInstance()
+        val keyStroke = KeyStroke.getKeyStroke(shortcut)
+        val actionIds = actionManager.getActionIds(keyStroke)
+
+        for (actionId in actionIds) {
+            val action = actionManager.getAction(actionId)
+            val shortcuts = action.shortcutSet.shortcuts.filterNot { it is KeyboardShortcut && it.firstKeyStroke == keyStroke }.toTypedArray()
+
+            action.registerCustomShortcutSet(Shortcut { shortcuts }, null)
+        }
     }
 
     private fun initializePlugin(project: Project) {
