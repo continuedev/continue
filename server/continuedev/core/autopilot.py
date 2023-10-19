@@ -454,7 +454,7 @@ class Autopilot(ContinueBaseModel):
             error_string = (
                 e.message
                 if is_continue_custom_exception
-                else "\n".join(traceback.format_exception(e))
+                else "\n".join(traceback.format_exception(e, e, e.__traceback__))
             )
             error_title = (
                 e.title if is_continue_custom_exception else get_error_title(e)
