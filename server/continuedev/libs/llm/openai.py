@@ -1,6 +1,7 @@
 from typing import Callable, List, Literal, Optional
 
 import certifi
+from ..util.count_tokens import MAX_TOKENS_FOR_MODEL
 from .prompts.chat import template_alpaca_messages
 import openai
 from pydantic import Field
@@ -29,16 +30,6 @@ NON_CHAT_MODELS = {
     "curie",
     "babbage",
     "ada",
-}
-MAX_TOKENS_FOR_MODEL = {
-    "gpt-3.5-turbo": 4096,
-    "gpt-3.5-turbo-0613": 4096,
-    "gpt-3.5-turbo-16k": 16_384,
-    "gpt-4": 8192,
-    "gpt-35-turbo-16k": 16_384,
-    "gpt-35-turbo-0613": 4096,
-    "gpt-35-turbo": 4096,
-    "gpt-4-32k": 32_768,
 }
 
 

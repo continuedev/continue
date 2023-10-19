@@ -1,5 +1,7 @@
 import os
 from typing import Coroutine, Dict, List, Optional, Union
+
+from ...libs.llm.base import CompletionOptions
 from ...libs.index.rerankers.default import default_reranker_parallel
 from ...libs.util.strings import shorten_filepaths
 
@@ -78,53 +80,68 @@ class AnswerQuestionChroma(Step):
 
     async def run(self, sdk: ContinueSDK) -> Coroutine[Observation, None, None]:
         index = ChromaCodebaseIndex(sdk.ide.workspace_directory)
+        self.hide = False
         self.description = f"Scanning {self.n_retrieve} files..."
         await sdk.update_ui()
+
+        # Get top chunks from index
         results = index.query(
             self.user_input, n=self.n_retrieve if self.use_reranking else self.n_final
         )
 
-        shortened_filepaths = shorten_filepaths(results["ids"][0])
+        # Shorten the filepaths to basename for reranking
+        full_ids = results["ids"][0]
+        shortened_ids = list(map(lambda x: os.path.basename(x), full_ids))
         results_dict = {
-            filename: document
-            for filename, document in zip(shortened_filepaths, results["documents"][0])
-            if document.strip() != ""
+            id: document for id, document in zip(shortened_ids, results["documents"][0])
         }
 
+        # Rerank to select top results
+        self.description = f"Selecting most important files..."
+        await sdk.update_ui()
         if self.use_reranking:
             results_dict = await default_reranker_parallel(
                 results_dict, self.user_input, self.n_final, sdk
             )
 
+        # Add context items
         filepaths = set([])
         context_items: List[ContextItem] = []
         for id, document in results_dict.items():
             filename = id.split("::")[0]
-            filepath = results["ids"][0][shortened_filepaths.index(id)].split("::")[0]
+            filepath = full_ids[shortened_ids.index(id)].split("::")[0]
             if filepath in filepaths:
                 continue
 
             ctx_item = ContextItem(
                 content=document,
                 description=ContextItemDescription(
-                    name=filename,
+                    name=filename,  # Make this have line numbers
                     description=filepath,
                     id=ContextItemId(
-                        provider_title="file",
+                        provider_title="code",
                         item_id=remove_meilisearch_disallowed_chars(filepath),
                     ),
                 ),
-            )
+            )  # Should be 'code' not file! And eventually should be able to embed all context providers automatically!
+
             context_items.append(ctx_item)
             await sdk.add_context_item(ctx_item)
             filepaths.add(filepath)
 
-        self.description = f"Reading from {len(results_dict)} files..."
-        await sdk.update_ui()
+        self.hide = True
+
+        model = sdk.models.chat.model
+        # if model == "gpt-4":
+        #     model = "gpt-4-32k"  # Not publicly available yet?
+        if model == "gpt-3.5-turbo":
+            model = "gpt-3.5-turbo-16k"
+
         await sdk.run_step(
             SimpleChatStep(
                 name="Answer Question",
-                description=f"Reading from {self.n_final} files...",
+                description=f"Reading from {len(context_items)} files...",
+                completion_options=CompletionOptions(model=model),
             )
         )
 

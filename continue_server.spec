@@ -40,7 +40,7 @@ a = Analysis(
         ('.tiktoken_cache', 'tiktoken_cache'),
         ] + copy_metadata('replicate') + chroma_toc,
     hiddenimports=[
-        'anthropic', 'github', 'ripgrepy', 'bs4', 'redbaron', 'tree_sitter',
+        'anthropic', 'github', 'ripgrepy', 'bs4', 'redbaron', 'tree_sitter', 'tree_sitter_languages',
         'chromadb', 'onnxruntime',
         'chromadb.telemetry.posthog',
         'chromadb.api.segment', 'chromadb.db.impl',

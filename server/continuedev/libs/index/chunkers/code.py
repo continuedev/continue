@@ -1,4 +1,5 @@
-from typing import List, Optional, Union
+from typing import List, Union
+from .chunk import ChunkWithoutID
 from tree_sitter_languages import get_parser
 from tree_sitter import Node
 from ...util.count_tokens import count_tokens
@@ -120,15 +121,27 @@ collapsed_node_constructors = {
 }
 
 
-def get_smart_collapsed_chunks(node: Node, code: str, max_chunk_size: int) -> List[str]:
+def get_smart_collapsed_chunks(
+    node: Node, code: str, max_chunk_size: int, root: bool = True
+) -> List[ChunkWithoutID]:
     # Keep entire text if not over size
-    if count_tokens(node.text.decode("utf8")) < max_chunk_size:
-        yield node.text.decode("utf8")
+    if (root or node.grammar_name in collapsed_node_constructors) and count_tokens(
+        node.text.decode("utf8")
+    ) < max_chunk_size:
+        yield ChunkWithoutID(
+            content=node.text.decode("utf8"),
+            start_line=node.start_point[0],
+            end_line=node.end_point[0],
+        )
         return
 
     # If a collapsed form is defined, use that
     if node.grammar_name in collapsed_node_constructors:
-        yield collapsed_node_constructors[node.grammar_name](node, code)
+        yield ChunkWithoutID(
+            content=collapsed_node_constructors[node.grammar_name](node, code),
+            start_line=node.start_point[0],
+            end_line=node.end_point[0],
+        )
         # TODO - if this is still too large, what can you do?
 
     # TODO: Should try to group elements together from the top. If you can fit together multiple functions, that is prob ideal
@@ -137,10 +150,12 @@ def get_smart_collapsed_chunks(node: Node, code: str, max_chunk_size: int) -> Li
 
     # Recurse (because even if collapsed version was shown, want to show the children in full somewhere)
     for child in node.children:
-        yield from get_smart_collapsed_chunks(child, code, max_chunk_size)
+        yield from get_smart_collapsed_chunks(child, code, max_chunk_size, root=False)
 
 
-def code_chunker(filepath: str, contents: str, max_chunk_size: int) -> List[str]:
+def code_chunker(
+    filepath: str, contents: str, max_chunk_size: int
+) -> List[ChunkWithoutID]:
     parser = get_parser_for_file(filepath)
     code = contents or open(filepath).read()
     tree = parser.parse(bytes(code, "utf8"))

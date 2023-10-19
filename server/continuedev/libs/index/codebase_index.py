@@ -1,4 +1,5 @@
 import asyncio
+
 import json
 import os
 import re
@@ -7,11 +8,12 @@ from typing import AsyncGenerator, Dict, List, Literal, Optional
 import chromadb
 from chromadb.config import Settings
 from chromadb.utils import embedding_functions
-from ...libs.index.git import GitProject
 from dotenv import load_dotenv
 from openai.error import RateLimitError
 from pydantic import BaseModel
 
+from .chunkers.chunk import Chunk
+from ...libs.index.git import GitProject
 from ...core.sdk import ContinueSDK
 from ..util.filter_files import DEFAULT_IGNORE_PATTERNS, should_filter_path
 from ..util.logging import logger
@@ -188,6 +190,7 @@ class ChromaCodebaseIndex:
         if self.exists():
             return
 
+        # Get list of filenames to index
         files = await sdk.ide.listDirectoryContents(sdk.ide.workspace_directory, True)
 
         # Filter from ignore_directories
@@ -201,6 +204,7 @@ class ChromaCodebaseIndex:
             )
         )
 
+        # Get file contents for all at once
         tasks = []
 
         async def readFile(filepath: str) -> Optional[str]:
@@ -217,41 +221,45 @@ class ChromaCodebaseIndex:
         for file in files:
             tasks.append(readFile(file))
 
-        documents = await asyncio.gather(*tasks)
+        file_contents = await asyncio.gather(*tasks)
 
-        chunks = []
+        # Construct list of chunks for each file
+        chunks: List[Chunk] = []
+        num_chunks_per_file = {}
         for i in range(len(files)):
-            chunks.append(chunk_document(files[i], documents[i], 1024))
+            document_chunks = [
+                c
+                for c in chunk_document(files[i], file_contents[i], 1024)
+                if len(c.content.strip()) > 0
+            ]
+            num_chunks_per_file[files[i]] = len(document_chunks)
+            chunks.extend(document_chunks)
 
-        flattened_chunks = []
-        flattened_metadata = []
-        flattened_ids = []
-        for i in range(len(chunks)):
-            for j in range(len(chunks[i])):
-                flattened_chunks.append(chunks[i][j])
-                flattened_metadata.append({"filepath": files[i]})
-                flattened_ids.append(f"{files[i]}::{j}")
+        # Flatten chunks, metadata, and ids for insertion to Chroma
+        documents = []
+        metadatas = []
+        ids = []
 
-        for i in range(len(flattened_chunks)):
-            if len(flattened_chunks[i]) == 0:
-                flattened_chunks[i] = "EMPTY"
-            elif len(flattened_chunks[i]) > 6000:
-                flattened_chunks[i] = flattened_chunks[i][:6000]
+        for chunk in chunks:
+            documents.append(chunk.content)
+            metadatas.append(chunk.metadata)
+            ids.append(chunk.id)
 
+        # Embed the chunks and place into vector database
         # Attempt to avoid rate-limiting
         i = 0
         wait_time = 4.0
-        while i < len(flattened_chunks):
+        while i < len(ids):
             try:
                 self.collection.add(
-                    documents=flattened_chunks[i : i + 100],
-                    metadatas=flattened_metadata[i : i + 100],
-                    ids=flattened_ids[i : i + 100],
+                    documents=documents[i : i + 100],
+                    metadatas=metadatas[i : i + 100],
+                    ids=ids[i : i + 100],
                 )
                 i += 100
 
                 # Give a progress update (1.0 is completed)
-                yield min(1.0, i / len(flattened_chunks))
+                yield min(1.0, i / len(ids))
                 await asyncio.sleep(0.05)
             except RateLimitError as e:
                 logger.debug(f"Rate limit exceeded, waiting {wait_time} seconds")
@@ -264,11 +272,12 @@ class ChromaCodebaseIndex:
             #     os.chmod(self.chroma_dir, 0o777)
             #     os.chmod(os.path.join(self.chroma_dir, "chroma.sqlite3"), 0o777)
 
+        # Metadata keeps track of number of chunks per file, used in update()
         with open(f"{self.index_dir}/metadata.json", "w") as f:
             json.dump(
                 {
                     "commit": self.git_project.current_commit,
-                    "chunks": {files[i]: len(chunks[i]) for i in range(len(files))},
+                    "chunks": num_chunks_per_file,
                 },
                 f,
                 indent=4,
@@ -323,10 +332,33 @@ class ChromaCodebaseIndex:
 
             logger.debug("Codebase index updated")
 
-    def query(self, query: str, n: int = 4) -> str:
+    def query(self, query: str, n: int = 4) -> List[Chunk]:
         """Query the codebase index for top n results"""
         if not self.exists():
             logger.warning(f"No index found for the codebase at {self.index_dir}")
             return []
 
-        return self.collection.query(query_texts=[query], n_results=n)
+        results = self.collection.query(query_texts=[query], n_results=n)
+
+        chunks = []
+        ids = results["ids"][0]
+        metadatas = results["metadatas"][0]
+        documents = results["documents"][0]
+        for i in range(len(ids)):
+            # Probably better to define some wrapper on Chroma or other VectorDB in general that is "Chunk in, Chunk out"
+            other_metadata = metadatas[i]
+            start_line = other_metadata.pop("start_line")
+            end_line = other_metadata.pop("end_line")
+            index = other_metadata.pop("index")
+            document_id = other_metadata.pop("document_id")
+            chunks.append(
+                Chunk(
+                    content=documents[i],
+                    start_line=start_line,
+                    end_line=end_line,
+                    other_metadata=other_metadata,
+                    document_id=document_id,
+                    index=index,
+                )
+            )
+        return chunks
