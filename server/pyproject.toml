@@ -35,6 +35,8 @@ huggingface-hub = "^0.16.4"
 typer = "^0.9.0"
 chromadb = "^0.4.12"
 fastapi = "0.95.2"
+tree-sitter = "^0.20.2"
+tree-sitter-languages = "^1.7.0"
 
 [tool.poetry.scripts]
 typegen = "continuedev.models.generate_json_schema:main"

@@ -37,7 +37,7 @@ function ErrorStepContainer(props: ErrorStepContainerProps) {
         <HeaderButtonWithText text="Collapse" onClick={() => props.onClose()}>
           <MinusCircleIcon width="1.3em" height="1.3em" />
         </HeaderButtonWithText>
-        <HeaderButtonWithText text="Collapse" onClick={() => props.onDelete()}>
+        <HeaderButtonWithText text="Delete" onClick={() => props.onDelete()}>
           <XMarkIcon width="1.3em" height="1.3em" />
         </HeaderButtonWithText>
       </div>

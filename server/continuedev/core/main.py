@@ -102,7 +102,7 @@ def step_to_fn_call_arguments(step: "Step") -> str:
 class HistoryNode(ContinueBaseModel):
     """A point in history, a list of which make up History"""
 
-    step: "Step"
+    step: Any
     observation: Union[Observation, None]
     depth: int
     deleted: bool = False

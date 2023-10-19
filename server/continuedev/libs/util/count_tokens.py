@@ -1,7 +1,7 @@
 import json
 import os
 import sys
-from typing import Dict, List, Union
+from typing import Dict, List, Optional, Union
 
 from ...core.main import ChatMessage
 from .templating import render_templated_string
@@ -18,6 +18,17 @@ DEFAULT_MAX_TOKENS = 600
 DEFAULT_ARGS = {
     "max_tokens": DEFAULT_MAX_TOKENS,
     "temperature": 0.5,
+}
+
+MAX_TOKENS_FOR_MODEL = {
+    "gpt-3.5-turbo": 4096,
+    "gpt-3.5-turbo-0613": 4096,
+    "gpt-3.5-turbo-16k": 16_384,
+    "gpt-4": 8192,
+    "gpt-35-turbo-16k": 16_384,
+    "gpt-35-turbo-0613": 4096,
+    "gpt-35-turbo": 4096,
+    "gpt-4-32k": 32_768,
 }
 
 already_saw_import_err = False
@@ -50,10 +61,10 @@ def encoding_for_model(model_name: str):
         return None
 
 
-def count_tokens(model_name: str, text: Union[str, None]):
+def count_tokens(text: Optional[str], model_name: Optional[str] = "gpt-4"):
     if text is None:
         return 0
-    encoding = encoding_for_model(model_name)
+    encoding = encoding_for_model(model_name or "gpt-4")
     if encoding is None:
         # Make a safe estimate given that tokens are usually typically ~4 characters on average
         return len(text) // 2
@@ -65,7 +76,7 @@ def count_chat_message_tokens(model_name: str, chat_message: ChatMessage) -> int
     # https://github.com/openai/openai-cookbook/blob/main/examples/How_to_count_tokens_with_tiktoken.ipynb
     # every message follows <|start|>{role/name}\n{content}<|end|>\n
     TOKENS_PER_MESSAGE = 4
-    return count_tokens(model_name, chat_message.content) + TOKENS_PER_MESSAGE
+    return count_tokens(chat_message.content, model_name) + TOKENS_PER_MESSAGE
 
 
 def prune_raw_prompt_from_top(
@@ -102,10 +113,10 @@ def prune_chat_history(
     longer_than_one_third = [
         message
         for message in longest_messages
-        if count_tokens(model_name, message.content) > context_length / 3
+        if count_tokens(message.content, model_name) > context_length / 3
     ]
     distance_from_third = [
-        count_tokens(model_name, message.content) - context_length / 3
+        count_tokens(message.content, model_name) - context_length / 3
         for message in longer_than_one_third
     ]
     total_tokens_removed = 0
@@ -118,7 +129,7 @@ def prune_chat_history(
             tokens_removed < distance_from_third[i]
             and total_tokens - total_tokens_removed > context_length
         ):
-            delta = count_tokens(model_name, lines.pop(-1))
+            delta = count_tokens(lines.pop(-1), model_name)
             tokens_removed += delta
             total_tokens_removed += delta
 
@@ -128,8 +139,8 @@ def prune_chat_history(
     i = 0
     while total_tokens > context_length and i < len(chat_history) - 5:
         message = chat_history[0]
-        total_tokens -= count_tokens(model_name, message.content)
-        total_tokens += count_tokens(model_name, message.summary)
+        total_tokens -= count_tokens(message.content, model_name)
+        total_tokens += count_tokens(message.summary, model_name)
         message.content = message.summary
         i += 1
 
@@ -140,7 +151,7 @@ def prune_chat_history(
         and len(chat_history) > 0
     ):
         message = chat_history.pop(0)
-        total_tokens -= count_tokens(model_name, message.content)
+        total_tokens -= count_tokens(message.content, model_name)
 
     # 3. Truncate message in the last 5, except last 1
     i = 0
@@ -150,15 +161,15 @@ def prune_chat_history(
         and i < len(chat_history) - 1
     ):
         message = chat_history[i]
-        total_tokens -= count_tokens(model_name, message.content)
-        total_tokens += count_tokens(model_name, message.summary)
+        total_tokens -= count_tokens(message.content, model_name)
+        total_tokens += count_tokens(message.summary, model_name)
         message.content = message.summary
         i += 1
 
     # 4. Remove entire messages in the last 5, except last 1
     while total_tokens > context_length and len(chat_history) > 1:
         message = chat_history.pop(0)
-        total_tokens -= count_tokens(model_name, message.content)
+        total_tokens -= count_tokens(message.content, model_name)
 
     # 5. Truncate last message
     if total_tokens > context_length and len(chat_history) > 0:
@@ -222,7 +233,7 @@ def compile_chat_messages(
     function_tokens = 0
     if functions is not None:
         for function in functions:
-            function_tokens += count_tokens(model_name, json.dumps(function))
+            function_tokens += count_tokens(json.dumps(function), model_name)
 
     if max_tokens + function_tokens + TOKEN_BUFFER_FOR_SAFETY >= context_length:
         raise ValueError(
