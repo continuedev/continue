@@ -83,6 +83,9 @@ const commandsMap: { [command: string]: (...args: any) => any } = {
     });
     if (text) {
       ideProtocolClient.sendMainUserInput(text);
+      if (!text.startsWith("/edit")) {
+        vscode.commands.executeCommand("continue.continueGUIView.focus");
+      }
     }
   },
   "continue.viewLogs": async () => {

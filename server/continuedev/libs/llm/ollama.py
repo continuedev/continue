@@ -110,6 +110,12 @@ class Ollama(LLM):
                     chunks = json_chunk.split("\n")
                     for chunk in chunks:
                         if chunk.strip() != "":
-                            j = json.loads(chunk)
+                            try:
+                                j = json.loads(chunk)
+                            except Exception as e:
+                                logger.warning(
+                                    f"Error parsing Ollama response: {e} {chunk}"
+                                )
+                                continue
                             if "response" in j:
                                 yield j["response"]
