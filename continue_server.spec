@@ -1,6 +1,7 @@
 # -*- mode: python ; coding: utf-8 -*-
 import certifi
 import os
+import sys
 from PyInstaller.utils.hooks import copy_metadata
 
 block_cipher = None
@@ -29,11 +30,12 @@ chroma_path = find_package_location('chromadb')
 chroma_toc = list(map(lambda x: (x[1], os.path.dirname(x[0])), Tree(f'{chroma_path}/chromadb/migrations', prefix="chromadb/migrations")))
 
 tsl_path = find_package_location('tree_sitter_languages')
+tsl_filename = "languages.dll" if sys.platform == "win32" else "languages.so"
 
 a = Analysis(
     ['continue_server.py'],
     pathex=[],
-    binaries=[(os.path.join(tsl_path, 'tree_sitter_languages', 'languages.so'), "tree_sitter_languages")],
+    binaries=[(os.path.join(tsl_path, 'tree_sitter_languages', tsl_filename), "tree_sitter_languages")],
     datas=[
         ('server/continuedev', 'continuedev'),
         (certifi.where(), 'ca_bundle'),
