@@ -292,6 +292,8 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
             self.onFilesRenamed(data["old_filepaths"], data["new_filepaths"])
         elif message_type == "fileSaved":
             self.onFileSaved(data["filepath"], data["contents"])
+        elif message_type == "setTelemetryEnabled":
+            self.onTelemetryEnabledChanged(data["enabled"])
         else:
             raise ValueError("Unknown message type", message_type)
 
@@ -323,6 +325,17 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
         await self._send_json(
             "setSuggestionsLocked", {"filepath": filepath, "locked": locked}
         )
+
+    def onTelemetryEnabledChanged(self, enabled: bool):
+        if autopilot := self.__get_autopilot():
+
+            async def change_telemetry():
+                await autopilot.set_config_attr(
+                    ["allow_anonymous_telemetry"], "True" if enabled else "False"
+                )
+                await autopilot.continue_sdk.load()
+
+            create_async_task(change_telemetry(), self.on_error)
 
     async def getSessionId(self):
         new_session = await asyncio.wait_for(

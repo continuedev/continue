@@ -47,6 +47,22 @@ def template_alpaca_messages(msgs: List[Dict[str, str]]) -> str:
     return prompt
 
 
+def phind_template_messages(msgs: List[Dict[str, str]]) -> str:
+    prompt = ""
+
+    if msgs[0]["role"] == "system":
+        prompt += f"### System Prompt\n{msgs[0]['content']}\n\n"
+        msgs.pop(0)
+
+    for msg in msgs:
+        prompt += "### User Message\n" if msg["role"] == "user" else "### Assistant\n"
+        prompt += f"{msg['content']}\n"
+
+    prompt += "### Assistant\n"
+
+    return prompt
+
+
 def raw_input_template(msgs: List[Dict[str, str]]) -> str:
     return msgs[-1]["content"]
 

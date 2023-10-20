@@ -61,6 +61,11 @@
           "type": "boolean",
           "default": false,
           "description": "If you are manually running the Continue server, you should update the Server URL and check this box. This will stop Continue from attempting to remove your server and download a new version."
+        },
+        "continue.telemetryEnabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Continue collects anonymous usage data, cleaned of PII, to help us improve the product for our users. Read more  at https://continue.dev/docs/telemetry."
         }
       }
     },

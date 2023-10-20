@@ -215,6 +215,16 @@ class IdeProtocolClient {
               vscode.commands.executeCommand("workbench.action.reloadWindow");
             }
           });
+
+        const telemetryEnabled = vscode.workspace
+          .getConfiguration("continue")
+          .get<boolean>("telemetryEnabled");
+        if (
+          typeof telemetryEnabled !== "undefined" &&
+          telemetryEnabled !== null
+        ) {
+          this.setTelemetryEnabled(telemetryEnabled);
+        }
       }
     });
   }
@@ -416,6 +426,10 @@ class IdeProtocolClient {
       ),
       edit.replacement
     );
+  }
+
+  async setTelemetryEnabled(enabled: boolean) {
+    this.messenger?.send("setTelemetryEnabled", { enabled });
   }
 
   async showDiff(filepath: string, replacement: string, step_index: number) {
