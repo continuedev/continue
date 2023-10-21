@@ -4,7 +4,7 @@ import ClassPropertyRef from '@site/src/components/ClassPropertyRef.tsx';
 
 Continue can be deeply customized by editing the `ContinueConfig` object in `~/.continue/config.py` (`%userprofile%\.continue\config.py` for Windows) on your machine. This class is instantiated from the config file for every new session.
 
-[View the source](https://github.com/continuedev/continue/tree/main/continuedev/src/continuedev/core/config.py)
+[View the source](https://github.com/continuedev/continue/blob/main/server/continuedev/libs/llm/core/config.py)
 
 ## Properties
 
@@ -23,4 +23,6 @@ Continue can be deeply customized by editing the `ContinueConfig` object in `~/.
 <ClassPropertyRef name='data_server_url' details='{&quot;title&quot;: &quot;Data Server Url&quot;, &quot;description&quot;: &quot;The URL of the server where development data is sent. No data is sent unless a valid user token is provided.&quot;, &quot;default&quot;: &quot;https://us-west1-autodebug.cloudfunctions.net&quot;, &quot;type&quot;: &quot;string&quot;}' required={false} default="https://us-west1-autodebug.cloudfunctions.net"/>
 <ClassPropertyRef name='disable_summaries' details='{&quot;title&quot;: &quot;Disable Summaries&quot;, &quot;description&quot;: &quot;If set to `True`, Continue will not generate summaries for each Step. This can be useful if you want to save on compute.&quot;, &quot;default&quot;: false, &quot;type&quot;: &quot;boolean&quot;}' required={false} default="False"/>
 
+
 ### Inherited Properties
+

@@ -17,7 +17,7 @@ config = ContinueConfig(
 )
 ```
 
-[View the source](https://github.com/continuedev/continue/tree/main/continuedev/src/continuedev/libs/llm/queued.py)
+[View the source](https://github.com/continuedev/continue/blob/main/server/continuedev/libs/llm/libs/llm/queued.py)
 
 ## Properties
 

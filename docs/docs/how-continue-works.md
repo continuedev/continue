@@ -30,7 +30,7 @@ You can install it from the JetBrains Marketplace [here](https://plugins.jetbrai
 Here is how you can get started with adding Continue to a new IDE:
 
 1. Let us know that you would like to add Continue to a new IDE by opening an issue [here](https://github.com/continuedev/continue/issues/new/choose)
-2. Implement a class that maps each of the actions like "read file" to the API provided by that IDE like [here](https://github.com/continuedev/continue/blob/main/extension/src/continueIdeClient.ts)
+2. Implement a class that maps each of the actions like "read file" to the API provided by that IDE like [here](https://github.com/continuedev/continue/blob/main/extensions/vscode/src/continueIdeClient.ts)
 3. Learn more about what you might also do by looking at this pull request that added initial support for JetBrains [here](https://github.com/continuedev/continue/pull/457)
 
 ## Running the server manually

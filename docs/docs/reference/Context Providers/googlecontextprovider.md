@@ -4,7 +4,7 @@ import ClassPropertyRef from '@site/src/components/ClassPropertyRef.tsx';
 
 Type '@google' to reference the results of a Google search. For example, type "@google python tutorial" if you want to search and discuss ways of learning Python.
 
-[View the source](https://github.com/continuedev/continue/tree/main/continuedev/src/continuedev/plugins/context_providers/google.py)
+[View the source](https://github.com/continuedev/continue/blob/main/server/continuedev/libs/llm/plugins/context_providers/google.py)
 
 ## Properties
 

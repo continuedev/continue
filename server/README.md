@@ -65,7 +65,7 @@ git clone https://github.com/continuedev/continue
 Run this command to use the install script
 
 ```bash
-cd continue/extension/scripts && python3 install_from_source.py
+cd continue/extensions/vscode/scripts && python3 install_from_source.py
 ```
 
 > [!IMPORTANT]
@@ -81,8 +81,8 @@ cd continue/extension/scripts && python3 install_from_source.py
 # Understanding the codebase
 
 - [Continue Server README](./README.md): learn about the core of Continue, which can be downloaded as a [PyPI package](https://pypi.org/project/continuedev/)
-- [VS Code Extension README](../extension/README.md): learn about the capabilities of our extension—the first implementation of Continue's IDE Protocol—which makes it possible to use use Continue in VS Code and GitHub Codespaces
-- [Continue GUI README](../extension/react-app/): learn about the React app that lets users interact with the server and is placed adjacent to the text editor in any supported IDE
-- [Schema README](../schema/README.md): learn about the JSON Schema types generated from Pydantic models, which we use across the `server/` and `extension/` directories
+- [VS Code Extension README](../extensions/vscode/README.md): learn about the capabilities of our extension—the first implementation of Continue's IDE Protocol—which makes it possible to use use Continue in VS Code and GitHub Codespaces
+- [Continue GUI README](../gui/): learn about the React app that lets users interact with the server and is placed adjacent to the text editor in any supported IDE
+- [Schema README](../schema/README.md): learn about the JSON Schema types generated from Pydantic models, which we use across the `server/` and `extensions/vscode/` directories
 - [Continue Docs README](../docs/README.md): learn how our [docs](https://continue.dev/docs) are written and built
-- [How to debug the VS Code Extension README](../extension/src/README.md): learn how to set up the VS Code extension, so you can debug it
+- [How to debug the VS Code Extension README](../extensions/vscode/src/README.md): learn how to set up the VS Code extension, so you can debug it

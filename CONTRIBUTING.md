@@ -95,7 +95,7 @@ Continue consists of 3 components, designed so that Continue can easily be exten
 
 1. **Continue Server** - The Continue Server is responsible for keeping state, running the autopilot loop which takes actions, and communicating between the IDE and GUI.
 
-2. **Continue IDE Client** - The Continue IDE Client is a plugin for the IDE which implements the Continue IDE Protocol. This allows the server to request actions to be taken within the IDE, for example if `sdk.ide.setFileOpen("main.py")` is called on the server, it will communicate over websocketes with the IDE, which will open the file `main.py`. The first IDE Client we have built is for VS Code, but we plan to build clients for other IDEs in the future. The IDE Client must 1. implement the websockets protocol, as is done [here](./extension/src/continueIdeClient.ts) for VS Code and 2. launch the Continue Server, like [here](./extension/src/activation/environmentSetup.ts), and 3. display the Continue GUI in a sidebar, like [here](./extension/src/debugPanel.ts).
+2. **Continue IDE Client** - The Continue IDE Client is a plugin for the IDE which implements the Continue IDE Protocol. This allows the server to request actions to be taken within the IDE, for example if `sdk.ide.setFileOpen("main.py")` is called on the server, it will communicate over websocketes with the IDE, which will open the file `main.py`. The first IDE Client we have built is for VS Code, but we plan to build clients for other IDEs in the future. The IDE Client must 1. implement the websockets protocol, as is done [here](./extensions/vscode/src/continueIdeClient.ts) for VS Code and 2. launch the Continue Server, like [here](./extensions/vscode/src/activation/environmentSetup.ts), and 3. display the Continue GUI in a sidebar, like [here](./extensions/vscode/src/debugPanel.ts).
 
 3. **Continue GUI** - The Continue GUI is a React application that gives the user control over Continue. It displays the history of Steps, shows what context is included in the current Step, and lets the users enter natural language or slash commands to initiate new Steps. The GUI communicates with the Continue Server over its own websocket connection
 
@@ -105,7 +105,7 @@ It is important that the IDE Client and GUI never communicate except when the ID
 
 ### Continue VS Code Client
 
-The starting point for the VS Code extension is [activate.ts](./extension/src/activation/activate.ts). The `activateExtension` function here will:
+The starting point for the VS Code extension is [activate.ts](./extensions/vscode/src/activation/activate.ts). The `activateExtension` function here will:
 
 1. Check whether the current version of the extension is up-to-date and, if not, display a notification
 
@@ -119,11 +119,11 @@ The JetBrains extension is currently in alpha testing. Please reach out on [Disc
 
 ### Continue IDE Websockets Protocol
 
-On the IDE side, this is implemented in [continueIdeClient.ts](./extension/src/continueIdeClient.ts). On the server side, this is implemented in [ide.py](./continuedev/src/continuedev/server/ide.py). You can see [ide_protocol.py](./continuedev/src/continuedev/server/ide_protocol.py) for the protocol definition.
+On the IDE side, this is implemented in [continueIdeClient.ts](./extensions/vscode/src/continueIdeClient.ts). On the server side, this is implemented in [ide.py](./continuedev/src/continuedev/server/ide.py). You can see [ide_protocol.py](./continuedev/src/continuedev/server/ide_protocol.py) for the protocol definition.
 
 ### Continue GUI Websockets Protocol
 
-On the GUI side, this is implemented in [ContinueGUIClientProtocol.ts](./extension/react-app/src/hooks/ContinueGUIClientProtocol.ts). On the server side, this is implemented in [gui.py](./continuedev/src/continuedev/server/gui.py). You can see [gui_protocol.py](./continuedev/src/continuedev/server/gui_protocol.py) or [AbstractContinueGUIClientProtocol.ts](./extension/react-app/src/hooks/AbstractContinueGUIClientProtocol.ts) for the protocol definition.
+On the GUI side, this is implemented in [ContinueGUIClientProtocol.ts](./gui/src/hooks/ContinueGUIClientProtocol.ts). On the server side, this is implemented in [gui.py](./continuedev/src/continuedev/server/gui.py). You can see [gui_protocol.py](./continuedev/src/continuedev/server/gui_protocol.py) or [AbstractContinueGUIClientProtocol.ts](./gui/src/hooks/AbstractContinueGUIClientProtocol.ts) for the protocol definition.
 
 When state is updated on the server, we currently send the entirety of the object over websockets to the GUI. This will of course have to be improved soon. The state object, `FullState`, is defined in [core/main.py](./continuedev/src/continuedev/core/main.py) and includes:
 

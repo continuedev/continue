@@ -26,14 +26,14 @@
       "request": "attach",
       "name": "Vite",
       "url": "http://localhost:5173",
-      "webRoot": "${workspaceFolder}/extension/react-app/src",
+      "webRoot": "${workspaceFolder}/gui/src",
       "sourceMapPathOverrides": {
         "webpack:///./src/*": "${webRoot}/*"
       },
       "port": 9222,
       // "runtimeArgs": ["--remote-debugging-port=9222"],
       "sourceMaps": true,
-      "preLaunchTask": "react-app:dev",
+      "preLaunchTask": "gui:dev"
     },
     {
       "name": "Pytest",
@@ -80,14 +80,14 @@
       "name": "Extension (VSCode)",
       "type": "extensionHost",
       "request": "launch",
-      "cwd": "${workspaceFolder}/extension",
+      "cwd": "${workspaceFolder}/extensions/vscode",
       "args": [
         // Pass a directory to manually test in
-        "${workspaceFolder}/extension/manual-testing-sandbox",
-        "${workspaceFolder}/extension/manual-testing-sandbox/example.ts",
-        "--extensionDevelopmentPath=${workspaceFolder}/extension"
+        "${workspaceFolder}/extensions/vscode/manual-testing-sandbox",
+        "${workspaceFolder}/extensions/vscode/manual-testing-sandbox/example.ts",
+        "--extensionDevelopmentPath=${workspaceFolder}/extensions/vscode"
       ],
-      "outFiles": ["${workspaceFolder}/extension/out/**/*.js"],
+      "outFiles": ["${workspaceFolder}/extensions/vscode/out/**/*.js"],
       "preLaunchTask": "vscode-extension:build",
       "env": {
         "CONTINUE_SERVER_URL": "http://localhost:8001"
@@ -98,19 +98,19 @@
       "name": "Tests (VSCode)",
       "type": "extensionHost",
       "request": "launch",
-      "cwd": "${workspaceFolder}/extension",
+      "cwd": "${workspaceFolder}/extensions/vscode",
       "runtimeExecutable": "${execPath}",
       "args": [
         // Pass a directory to run tests in
-        "${workspaceFolder}/extension/manual-testing-sandbox",
-        "--extensionDevelopmentPath=${workspaceFolder}/extension",
-        "--extensionTestsPath=${workspaceFolder}/extension/out/test-runner/mochaRunner"
+        "${workspaceFolder}/extensions/vscode/manual-testing-sandbox",
+        "--extensionDevelopmentPath=${workspaceFolder}/extensions/vscode",
+        "--extensionTestsPath=${workspaceFolder}/extensions/vscode/out/test-runner/mochaRunner"
       ],
       "outFiles": [
         // Allows setting breakpoints in test suites across the /src folder
-        "${workspaceFolder}/extension/out/test-suites/**/*.js",
+        "${workspaceFolder}/extensions/vscode/out/test-suites/**/*.js",
         // Allows setting breakpoints in mocha test runner file
-        "${workspaceFolder}/extension/out/test-runner/**/*.js"
+        "${workspaceFolder}/extensions/vscode/out/test-runner/**/*.js"
       ],
       "internalConsoleOptions": "openOnSessionStart",
       "preLaunchTask": "vscode-extension:tests:build",

@@ -115,43 +115,43 @@ jobs:
       - name: Build PyInstaller Executable
         run: pyinstaller continue_server.spec
 
-      # 1.5 Place the binary in extension/exe directory
-      - name: Make sure extension/exe directory exists
+      # 1.5 Place the binary in extensions/vscode/exe directory
+      - name: Make sure extensions/vscode/exe directory exists
         run: |
-          mkdir -p extension/exe
+          mkdir -p extensions/vscode/exe
 
       - name: Copy binary to extension (non-Windows)
         run: |
-          cp dist/continue_server extension/exe/continue_server
+          cp dist/continue_server extensions/vscode/exe/continue_server
         if: matrix.os != 'windows-latest'
 
       - name: Copy binary to extension (Windows)
         run: |
-          cp dist/continue_server.exe extension/exe/continue_server.exe
+          cp dist/continue_server.exe extensions/vscode/exe/continue_server.exe
         if: matrix.os == 'windows-latest'
 
       # 1.8 Set permissions and upload binary
       - name: Set permissions
         run: |
-          chmod 777 extension/exe/continue_server
+          chmod 777 extensions/vscode/exe/continue_server
 
       - uses: actions/upload-artifact@v2
         if: matrix.os == 'macos-latest' && matrix.arch == 'x64'
         with:
           name: macOSBinary
-          path: extension/exe/continue_server
+          path: extensions/vscode/exe/continue_server
 
       - uses: actions/upload-artifact@v2
         if: matrix.os == 'ubuntu-20.04' && matrix.arch == 'x64' && matrix.platform == 'linux'
         with:
           name: LinuxBinary
-          path: extension/exe/continue_server
+          path: extensions/vscode/exe/continue_server
 
       - uses: actions/upload-artifact@v2
         if: matrix.os == 'windows-latest' && matrix.arch == 'x64'
         with:
           name: WindowsBinary
-          path: extension/exe/continue_server.exe
+          path: extensions/vscode/exe/continue_server.exe
 
       # 2. Install npm dependencies
       - name: Use Node.js 19.0.0
@@ -162,34 +162,34 @@ jobs:
       - name: Cache extension node_modules
         uses: actions/cache@v2
         with:
-          path: extension/node_modules
-          key: ${{ runner.os }}-node-${{ hashFiles('extension/package-lock.json') }}
+          path: extensions/vscode/node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('extensions/vscode/package-lock.json') }}
 
-      - name: Cache react-app node_modules
+      - name: Cache gui node_modules
         uses: actions/cache@v2
         with:
-          path: extension/react-app/node_modules
-          key: ${{ runner.os }}-node-${{ hashFiles('extension/react-app/package-lock.json') }}
+          path: gui/node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('gui/package-lock.json') }}
 
       - name: Install extension Dependencies
         run: |
-          cd extension
+          cd extensions/vscode
           npm ci
 
       - name: Add a copy of continuedev to the extension
         run: |
-          cd extension
+          cd extensions/vscode
           cp -r ../server/continuedev continuedev
 
-      - name: Install react-app Dependencies
+      - name: Install gui Dependencies
         run: |
-          cd extension/react-app
+          cd gui
           npm ci --legacy-peer-deps
 
       # 3. Run tests for the extension
       - name: Prepare the extension
         run: |
-          cd extension
+          cd extensions/vscode
           npm run prepackage
 
       - name: Install Xvfb for Linux and run tests
@@ -197,39 +197,39 @@ jobs:
           sudo apt-get install -y xvfb # Install Xvfb
           Xvfb :99 & # Start Xvfb
           export DISPLAY=:99 # Export the display number to the environment
-          cd extension
+          cd extensions/vscode
           npm run test
         if: matrix.os == 'ubuntu-20.04'
 
       - name: Run extension tests
         run: |
-          cd extension
+          cd extensions/vscode
           npm run test
         if: matrix.os != 'ubuntu-20.04'
 
       # 3.5 If on Apple Silicon, download the binary from S3 bucket
       - name: Remove existing binary
         if: matrix.os == 'macos-latest' && matrix.arch == 'arm64'
-        run: rm extension/exe/continue_server
+        run: rm extensions/vscode/exe/continue_server
 
       - name: Download Apple Silicon Binary
         if: matrix.os == 'macos-latest' && matrix.arch == 'arm64'
-        run: curl -o extension/exe/continue_server https://continue-server-binaries.s3.us-west-1.amazonaws.com/apple-silicon/continue_server
+        run: curl -o extensions/vscode/exe/continue_server https://continue-server-binaries.s3.us-west-1.amazonaws.com/apple-silicon/continue_server
 
       - name: Set permissions
         run: |
-          chmod -R 777 extension/exe/continue_server
+          chmod -R 777 extensions/vscode/exe/continue_server
 
       # 4. Package the extension
       - shell: pwsh
         run: echo "target=${{ matrix.platform }}-${{ matrix.arch }}" >> $env:GITHUB_ENV
-      - run: cd extension && npx vsce package --pre-release --target ${{ env.target }}
+      - run: cd extensions/vscode && npx vsce package --pre-release --target ${{ env.target }}
 
       # 5. Upload the .vsix as an artifact
       - uses: actions/upload-artifact@v2
         with:
           name: ${{ env.target }}
-          path: "extension/*.vsix"
+          path: "extensions/vscode/*.vsix"
 
       # 6. Upload continue.log as an artifact for debugging of the workflow
       - name: Upload continue.log
@@ -262,7 +262,7 @@ jobs:
 
       # 2. Publish the extension to VS Code Marketplace
       - run: |
-          cd extension
+          cd extensions/vscode
           npx vsce publish --pre-release --packagePath ../alpine-x64/*.vsix ../darwin-arm64/*.vsix ../darwin-x64/*.vsix ../linux-arm64/*.vsix ../linux-armhf/*.vsix ../linux-x64/*.vsix ../win32-ia32/*.vsix ../win32-x64/*.vsix ../win32-arm64/*.vsix
         env:
           VSCE_PAT: ${{ secrets.VSCE_TOKEN }}
@@ -270,13 +270,13 @@ jobs:
       # 3. Publish the extension to Open VSX Registry
       - name: Publish (Open VSX Registry)
         run: |
-          cd extension
+          cd extensions/vscode
           npx ovsx publish --pre-release -p ${{ secrets.VSX_REGISTRY_TOKEN }} --packagePath ../alpine-x64/*.vsix ../darwin-arm64/*.vsix ../darwin-x64/*.vsix ../linux-arm64/*.vsix ../linux-armhf/*.vsix ../linux-x64/*.vsix ../win32-ia32/*.vsix ../win32-x64/*.vsix ../win32-arm64/*.vsix
 
       # 4. Update the package.json version and push changes
       - name: Update version in package.json
         run: |
-          cd extension
+          cd extensions/vscode
           npm version patch
 
       - name: Commit changes

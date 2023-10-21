@@ -28,14 +28,16 @@ Options for serving models locally with an OpenAI-compatible server include:
 - [LocalAI](https://localai.io/basics/getting_started/)
 - [llama-cpp-python](https://github.com/abetlen/llama-cpp-python#web-server)
 
-[View the source](https://github.com/continuedev/continue/tree/main/continuedev/src/continuedev/libs/llm/openai.py)
+[View the source](https://github.com/continuedev/continue/blob/main/server/continuedev/libs/llm/libs/llm/openai.py)
 
 ## Properties
 
 <ClassPropertyRef name='api_base' details='{&quot;title&quot;: &quot;Api Base&quot;, &quot;description&quot;: &quot;OpenAI API base URL.&quot;, &quot;type&quot;: &quot;string&quot;}' required={false} default=""/>
 <ClassPropertyRef name='api_type' details='{&quot;title&quot;: &quot;Api Type&quot;, &quot;description&quot;: &quot;OpenAI API type.&quot;, &quot;enum&quot;: [&quot;azure&quot;, &quot;openai&quot;], &quot;type&quot;: &quot;string&quot;}' required={false} default=""/>
 <ClassPropertyRef name='api_version' details='{&quot;title&quot;: &quot;Api Version&quot;, &quot;description&quot;: &quot;OpenAI API version. For use with Azure OpenAI Service.&quot;, &quot;type&quot;: &quot;string&quot;}' required={false} default=""/>
+<ClassPropertyRef name='use_legacy_completions_endpoint' details='{&quot;title&quot;: &quot;Use Legacy Completions Endpoint&quot;, &quot;description&quot;: &quot;Manually specify to use the legacy completions endpoint instead of chat completions.&quot;, &quot;default&quot;: false, &quot;type&quot;: &quot;boolean&quot;}' required={false} default="False"/>
 <ClassPropertyRef name='engine' details='{&quot;title&quot;: &quot;Engine&quot;, &quot;description&quot;: &quot;OpenAI engine. For use with Azure OpenAI Service.&quot;, &quot;type&quot;: &quot;string&quot;}' required={false} default=""/>
+
 
 ### Inherited Properties
 
