@@ -128,7 +128,7 @@ const Layout = () => {
     const handleKeyDown = (event: any) => {
       if (
         event.metaKey &&
-        event.ctrlKey &&
+        event.altKey &&
         event.code === "KeyN" &&
         timeline.filter((n) => !n.step.hide).length > 0
       ) {
