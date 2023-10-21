@@ -84,7 +84,7 @@
             <keyboard-shortcut keymap="$default"
                                first-keystroke="alt ctrl N"/>
             <keyboard-shortcut keymap="Mac OS X"
-                               first-keystroke="meta ctrl N"/>
+                               first-keystroke="alt meta N"/>
         </action>
 
         <action id="continue.focusContinueInput"
