@@ -122,6 +122,28 @@ const HiddenHeaderButtonWithText = styled.button`
 
 const mainInputFontSize = getFontSize();
 
+const PreviewMarkdownDiv = styled.div`
+  padding: 0px;
+  background-color: ${secondaryDark};
+  border-radius: ${defaultBorderRadius};
+  margin: 8px;
+  overflow: hidden;
+
+  & div {
+    background-color: ${secondaryDark};
+  }
+`;
+
+const PreviewMarkdownHeader = styled.p`
+  margin: 0;
+  padding: 4px 8px;
+  border-bottom: 1px solid ${lightGray};
+  word-break: break-all;
+  font-size: ${getFontSize()}px;
+  display: flex;
+  align-items: center;
+`;
+
 const MainTextInput = styled.textarea<{
   inQueryForDynamicProvider: boolean;
   fontSize?: number;
@@ -921,6 +943,18 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
                   focusedContextItem?.description.id.provider_name ===
                     item.description.id.provider_name
                 }
+                prefixInputWithEdit={(should) => {
+                  if (!should && inputRef.current?.value.startsWith("/edit")) {
+                    downshiftProps.setInputValue(
+                      inputRef.current?.value.replace("/edit ", "")
+                    );
+                  }
+                  if (downshiftProps.inputValue.startsWith("/edit")) return;
+                  downshiftProps.setInputValue(
+                    `/edit ${downshiftProps.inputValue}`
+                  );
+                  inputRef.current?.focus();
+                }}
               />
             );
           })}
@@ -971,10 +1005,15 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
       {showContextToggleOn && (
         <div>
           {selectedContextItems.map((item) => (
-            <>
-              <p className="break-words mx-2 my-1">
+            <PreviewMarkdownDiv>
+              <PreviewMarkdownHeader>
+                <FileIcon
+                  height="20px"
+                  width="20px"
+                  filename={item.description.name}
+                ></FileIcon>
                 {item.description.description}
-              </p>
+              </PreviewMarkdownHeader>
               <pre className="m-0">
                 <StyledMarkdownPreview
                   source={`\`\`\`${getMarkdownLanguageTagForFile(
@@ -983,7 +1022,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
                   maxHeight={200}
                 />
               </pre>
-            </>
+            </PreviewMarkdownDiv>
           ))}
         </div>
       )}

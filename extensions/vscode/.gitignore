@@ -5,3 +5,5 @@ out/
 data/
 src/client
 .continue
+
+gui

@@ -1,5 +1,6 @@
 import { createSlice } from "@reduxjs/toolkit";
 import { FullState } from "../../schema/FullState";
+import { ContextItem } from "../../schema/ContextItem";
 
 const TEST_TIMELINE = [
   {
@@ -66,6 +67,31 @@ const TEST_SLASH_COMMANDS = [
   {
     name: "help",
     description: "Get help using Continue",
+  },
+];
+
+const TEST_CONTEXT_ITEMS: ContextItem[] = [
+  {
+    content: "def add(a, b):\n  return a + b",
+    description: {
+      description: "test.py",
+      name: "test.py",
+      id: {
+        item_id: "test.py",
+        provider_title: "file",
+      },
+    },
+  },
+  {
+    content: "function add(a, b) {\n  return a + b\n}",
+    description: {
+      description: "test.js",
+      name: "test.js",
+      id: {
+        item_id: "test.js",
+        provider_title: "file",
+      },
+    },
   },
 ];
 

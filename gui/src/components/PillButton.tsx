@@ -13,7 +13,6 @@ import {
   ExclamationTriangleIcon,
 } from "@heroicons/react/24/outline";
 import { GUIClientContext } from "../App";
-import { useDispatch } from "react-redux";
 import { ContextItem } from "../schema/FullState";
 import { getFontSize } from "../util";
 import HeaderButtonWithText from "./HeaderButtonWithText";
@@ -87,6 +86,7 @@ interface PillButtonProps {
   toggleViewContent?: () => void;
   onBlur?: () => void;
   focusing?: boolean;
+  prefixInputWithEdit?: (should: boolean) => void;
 }
 
 interface StyledButtonProps {
@@ -214,8 +214,9 @@ const PillButton = (props: PillButtonProps) => {
             {props.item.description.name}
           </span>
         </StyledButton>
-        {((props.focusing && props.item.editable && props.editingAny) ||
-          props.editing) && (
+        {(props.editingAny ||
+          (props.focusing && props.item.editable) ||
+          (props.editing && props.editingAny)) && (
           <>
             <ClickableInsidePillButton
               data-tooltip-id={`circle-div-${props.item.description.name}`}
@@ -225,6 +226,12 @@ const PillButton = (props: PillButtonProps) => {
               onClick={() => {
                 if (!props.editing) {
                   client?.setEditingAtIds([props.item.description.id.item_id]);
+                }
+                if (!props.editingAny) {
+                  props.prefixInputWithEdit?.(true);
+                }
+                if (props.editingAny && props.editing) {
+                  props.prefixInputWithEdit?.(false);
                 }
               }}
               tabIndex={-1}
