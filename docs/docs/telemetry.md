@@ -25,7 +25,7 @@ All data is anonymous and cleaned of PII before being sent to PostHog.
 
 ## How to opt out
 
-There is a `.continue` directory, which contains a `config.py` file that looks like this:
+The `~/.continue` directory contains a `config.py` file that looks like this:
 
 ```python
 config = ContinueConfig(
