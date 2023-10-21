@@ -179,7 +179,7 @@ jobs:
       - name: Add a copy of continuedev to the extension
         run: |
           cd extensions/vscode
-          cp -r ../server/continuedev continuedev
+          cp -r ../../server/continuedev continuedev
 
       - name: Install gui Dependencies
         run: |
