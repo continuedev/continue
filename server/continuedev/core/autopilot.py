@@ -388,7 +388,17 @@ class Autopilot(ContinueBaseModel):
         # Log the context and step to dev data
         context_used = await self.context_manager.get_selected_items()
         posthog_logger.capture_event(
-            "step run", {"step_name": step.name, "params": step.dict()}
+            "step run",
+            {
+                "step_name": step.name,
+                "params": step.dict(),
+                "context": list(
+                    map(
+                        lambda item: item.dict(),
+                        context_used,
+                    )
+                ),
+            },
         )
         step_id = uuid.uuid4().hex
         dev_data_logger.capture(

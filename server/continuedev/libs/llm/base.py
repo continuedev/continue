@@ -306,6 +306,17 @@ Settings:
 
         return self.template_messages(msgs)
 
+    def log_tokens_generated(self, model: str, completion: int):
+        tokens = self.count_tokens(completion)
+        dev_data_logger.capture(
+            "tokens_generated",
+            {"model": model, "tokens": tokens},
+        )
+        posthog_logger.capture_event(
+            "tokens_generated",
+            {"model": model, "tokens": tokens},
+        )
+
     async def stream_complete(
         self,
         prompt: str,
@@ -352,14 +363,7 @@ Settings:
         # if log:
         #     self.write_log(f"Completion: \n\n{completion}")
 
-        dev_data_logger.capture(
-            "tokens_generated",
-            {"model": self.model, "tokens": self.count_tokens(completion)},
-        )
-        posthog_logger.capture_event(
-            "tokens_generated",
-            {"model": self.model, "tokens": self.count_tokens(completion)},
-        )
+        self.log_tokens_generated(options.model, completion)
 
     async def complete(
         self,
@@ -404,14 +408,7 @@ Settings:
         # if log:
         #     self.write_log(f"Completion: \n\n{completion}")
 
-        dev_data_logger.capture(
-            "tokens_generated",
-            {"model": self.model, "tokens": self.count_tokens(completion)},
-        )
-        posthog_logger.capture_event(
-            "tokens_generated",
-            {"model": self.model, "tokens": self.count_tokens(completion)},
-        )
+        self.log_tokens_generated(options.model, completion)
 
         return completion
 
@@ -498,14 +495,7 @@ Settings:
         # if log:
         #     self.write_log(f"Completion: \n\n{completion}")
 
-        dev_data_logger.capture(
-            "tokens_generated",
-            {"model": self.model, "tokens": self.count_tokens(completion)},
-        )
-        posthog_logger.capture_event(
-            "tokens_generated",
-            {"model": self.model, "tokens": self.count_tokens(completion)},
-        )
+        self.log_tokens_generated(options.model, completion)
 
     def _stream_complete(
         self, prompt, options: CompletionOptions

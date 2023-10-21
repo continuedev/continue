@@ -313,6 +313,7 @@ function GUI(props: GUIProps) {
           if (u >= 250) {
             dispatch(setShowDialog(true));
             dispatch(setDialogMessage(<FTCDialog />));
+            posthog?.capture("ftc_reached");
             return;
           }
         } else {
