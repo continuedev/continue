@@ -22,6 +22,8 @@ import {
   ArrowLeftIcon,
   ArrowRightIcon,
   ArrowUpLeftIcon,
+  ChevronDownIcon,
+  ChevronRightIcon,
   TrashIcon,
   XMarkIcon,
 } from "@heroicons/react/24/outline";
@@ -731,6 +733,8 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
 
   const [isComposing, setIsComposing] = useState(false);
 
+  const [showContextToggleOn, setShowContextToggleOn] = useState(false);
+
   const [previewingContextItem, setPreviewingContextItem] = useState<
     ContextItem | undefined
   >(undefined);
@@ -788,6 +792,26 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
           ref={contextItemsDivRef}
           style={{ backgroundColor: vscBackground }}
         >
+          {selectedContextItems.length > 0 && (
+            <div
+              className="cursor-pointer"
+              onClick={(e) => {
+                setShowContextToggleOn((prev) => !prev);
+              }}
+              id="toggle-context-div"
+            >
+              {showContextToggleOn ? (
+                <ChevronDownIcon width="14px" height="14px" color={lightGray} />
+              ) : (
+                <ChevronRightIcon
+                  width="14px"
+                  height="14px"
+                  color={lightGray}
+                />
+              )}
+            </div>
+          )}
+
           <HiddenHeaderButtonWithText
             className={
               selectedContextItems.length > 0
@@ -944,6 +968,25 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
           />
         </pre>
       )}
+      {showContextToggleOn && (
+        <div>
+          {selectedContextItems.map((item) => (
+            <>
+              <p className="break-words mx-2 my-1">
+                {item.description.description}
+              </p>
+              <pre className="m-0">
+                <StyledMarkdownPreview
+                  source={`\`\`\`${getMarkdownLanguageTagForFile(
+                    item.description.description
+                  )}\n${item.content}\n\`\`\``}
+                  maxHeight={200}
+                />
+              </pre>
+            </>
+          ))}
+        </div>
+      )}
       <div
         className="flex px-2 relative"
         style={{
@@ -988,7 +1031,12 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
                 dispatch(setBottomMessage(undefined));
               },
               onBlur: (e) => {
-                if (topRef.current?.contains(e.relatedTarget as Node)) {
+                if (
+                  topRef.current?.contains(e.relatedTarget as Node) ||
+                  document
+                    .getElementById("toggle-context-div")
+                    ?.contains(e.relatedTarget as Node)
+                ) {
                   return;
                 }
                 setInputFocused(false);

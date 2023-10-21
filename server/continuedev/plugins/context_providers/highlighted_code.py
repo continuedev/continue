@@ -308,6 +308,8 @@ class HighlightedCodeContextProvider(ContextProvider):
             await self.sdk.ide.highlightCode(
                 RangeInFile(
                     filepath=filepath,
-                    range=Range.from_shorthand(line_nums[0] - 1, 0, line_nums[1], 0),
+                    range=Range.from_shorthand(
+                        int(line_nums[0]) - 1, 0, int(line_nums[1]), 0
+                    ),
                 )
             )
