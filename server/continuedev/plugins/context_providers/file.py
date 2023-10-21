@@ -134,3 +134,14 @@ class FileContextProvider(ContextProvider):
         items = list(filter(lambda item: item is not None, items))
 
         return items
+
+    async def preview_contents(self, id: ContextItemId):
+        if item := next(
+            filter(lambda x: x.description.id == id, self.selected_items), None
+        ):
+            await self.sdk.ide.setFileOpen(
+                os.path.join(
+                    self.sdk.ide.workspace_directory, item.description.description
+                ),
+                True,
+            )

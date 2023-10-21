@@ -13,6 +13,7 @@
     "@reduxjs/toolkit": "^1.9.3",
     "@types/vscode-webview": "^1.57.1",
     "@uiw/react-markdown-preview": "^4.1.13",
+    "dompurify": "^3.0.6",
     "downshift": "^7.6.0",
     "lodash": "^4.17.21",
     "meilisearch": "^0.33.0",
@@ -27,6 +28,7 @@
     "react-switch": "^7.0.0",
     "react-syntax-highlighter": "^15.5.0",
     "react-tooltip": "^5.18.0",
+    "seti-file-icons": "^0.0.8",
     "styled-components": "^5.3.6",
     "vscode-webview": "^1.0.1-beta.1"
   },

@@ -44,7 +44,7 @@ export function getMetaKeyLabel(): string {
 
 export function getFontSize(): number {
   const fontSize = localStorage.getItem("fontSize");
-  return fontSize ? parseInt(fontSize) : 13;
+  return fontSize ? parseInt(fontSize) : 14;
 }
 
 export function getMarkdownLanguageTagForFile(filepath: string): string {

@@ -62,6 +62,8 @@ abstract class AbstractContinueGUIClientProtocol {
   abstract deleteContextGroup(id: string): void;
 
   abstract setCurrentSessionTitle(title: string): void;
+
+  abstract previewContextItem(id: string): void;
 }
 
 export default AbstractContinueGUIClientProtocol;

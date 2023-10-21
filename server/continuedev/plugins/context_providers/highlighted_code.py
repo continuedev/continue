@@ -10,7 +10,7 @@ from ...core.context import (
     ContextProvider,
 )
 from ...core.main import ChatMessage
-from ...models.filesystem import RangeInFileWithContents
+from ...models.filesystem import RangeInFile, RangeInFileWithContents
 from ...models.main import Range
 
 
@@ -291,3 +291,23 @@ class HighlightedCodeContextProvider(ContextProvider):
                 item=context_item,
             )
         )
+
+    async def preview_contents(self, id: ContextItemId):
+        if item := next(
+            filter(lambda x: x.item.description.id == id, self.highlighted_ranges), None
+        ):
+            filepath = os.path.join(
+                self.sdk.ide.workspace_directory, item.item.description.description
+            )
+            await self.sdk.ide.setFileOpen(
+                filepath,
+                True,
+            )
+            line_nums_string = item.item.description.name.split(" ")[-1]
+            line_nums = line_nums_string[1:-1].split("-")
+            await self.sdk.ide.highlightCode(
+                RangeInFile(
+                    filepath=filepath,
+                    range=Range.from_shorthand(line_nums[0] - 1, 0, line_nums[1], 0),
+                )
+            )

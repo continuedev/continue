@@ -46,6 +46,7 @@ import {
   handleKeyDownJetBrains,
   handleKeyDownJetBrainsMac,
 } from "../util/jetbrains";
+import FileIcon from "./FileIcon";
 
 const SEARCH_INDEX_NAME = "continue_context_items";
 
@@ -195,7 +196,8 @@ const Ul = styled.ul<{
   background: ${vscBackground};
   color: ${vscForeground};
   max-height: ${UlMaxHeight}px;
-  width: calc(100% - 16px);
+  margin-left: 1px;
+  width: calc(100% - 18px);
   overflow-y: scroll;
   overflow-x: hidden;
   padding: 0;
@@ -220,15 +222,13 @@ const Li = styled.li<{
   isLastItem: boolean;
 }>`
   background-color: ${({ highlighted }) =>
-    highlighted ? lightGray : secondaryDark};
-  ${({ highlighted }) => highlighted && `background: ${vscBackground};`}
+    highlighted ? buttonColor + "66" : secondaryDark};
   ${({ selected }) => selected && "font-weight: bold;"}
-    padding: 0.5rem 0.75rem;
+  padding: 0.5rem 0.5rem;
   display: flex;
   flex-direction: row;
   align-items: center;
   ${({ isLastItem }) => isLastItem && "border-bottom: 1px solid gray;"}
-  /* border-top: 1px solid gray; */
   cursor: pointer;
   z-index: 500;
 `;
@@ -351,11 +351,13 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
   useEffect(() => {
     if (!nestedContextProvider) {
       setItems(
-        contextProviders?.map((provider) => ({
-          name: provider.display_title,
-          description: provider.description,
-          id: provider.title,
-        })) || []
+        contextProviders
+          ?.map((provider) => ({
+            name: provider.display_title,
+            description: provider.description,
+            id: provider.title,
+          }))
+          .sort((c, _) => (c.id === "file" ? -1 : 1)) || []
       );
     }
   }, [nestedContextProvider]);
@@ -427,7 +429,8 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
                   name: provider.display_title,
                   description: provider.description,
                   id: provider.title,
-                })) || [];
+                }))
+                .sort((c, _) => (c.id === "file" ? -1 : 1)) || [];
             setItems(filteredItems);
             setCurrentlyInContextQuery(true);
           }
@@ -1238,9 +1241,18 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
                   inputRef.current?.focus();
                 }}
               >
-                <span className="flex justify-between w-full">
-                  {item.name}
-                  {"  "}
+                <span className="flex justify-between w-full items-center">
+                  <div className="flex items-center justify-center">
+                    {nestedContextProvider && (
+                      <FileIcon
+                        height="20px"
+                        width="20px"
+                        filename={item.name}
+                      ></FileIcon>
+                    )}
+                    {item.name}
+                    {"  "}
+                  </div>
                   <span
                     style={{
                       color: lightGray,

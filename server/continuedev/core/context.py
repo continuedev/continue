@@ -2,6 +2,7 @@ import asyncio
 import time
 from abc import abstractmethod
 from typing import Awaitable, Callable, Dict, List, Optional
+from ..server.ide_protocol import AbstractIdeProtocolServer
 
 from meilisearch_python_async import Client
 from pydantic import BaseModel, Field
@@ -195,6 +196,15 @@ class ContextProvider(BaseModel):
                 return
 
         self.selected_items.append(context_item)
+
+    async def preview_contents(self, id: ContextItemId):
+        """
+        Open a virtual file or otherwise preview the contents of the context provider in the IDE
+        """
+        if item := next(
+            filter(lambda x: x.description.id == id, self.selected_items), None
+        ):
+            await self.sdk.ide.showVirtualFile(item.description.name, item.content)
 
 
 class ContextManager:
@@ -511,6 +521,18 @@ class ContextManager:
         await self.context_providers[
             item.description.id.provider_title
         ].manually_add_context_item(item)
+
+    async def preview_context_item(self, id: str):
+        """
+        Opens a virtual file or otherwise previews the contents of the context provider in the IDE.
+        """
+        id: ContextItemId = ContextItemId.from_string(id)
+        if id.provider_title not in self.provider_titles:
+            raise ValueError(
+                f"Context provider with title {id.provider_title} not found"
+            )
+
+        await self.context_providers[id.provider_title].preview_contents(id)
 
 
 """

@@ -235,6 +235,12 @@ class ContextItemId(BaseModel):
     def to_string(self) -> str:
         return f"{self.provider_title}-{self.item_id}"
 
+    def __eq__(self, other):
+        return (
+            self.provider_title == other.provider_title
+            and self.item_id == other.item_id
+        )
+
     @staticmethod
     def from_string(string: str) -> "ContextItemId":
         provider_title, *rest = string.split("-")

@@ -11,13 +11,13 @@ import {
   TrashIcon,
   PaintBrushIcon,
   ExclamationTriangleIcon,
-  EyeIcon,
 } from "@heroicons/react/24/outline";
 import { GUIClientContext } from "../App";
 import { useDispatch } from "react-redux";
 import { ContextItem } from "../schema/FullState";
 import { getFontSize } from "../util";
 import HeaderButtonWithText from "./HeaderButtonWithText";
+import FileIcon from "./FileIcon";
 
 const Button = styled.button<{ fontSize?: number }>`
   border: none;
@@ -188,17 +188,29 @@ const PillButton = (props: PillButtonProps) => {
           }}
           onClick={(e) => {
             props.onClick?.(e);
+            client?.previewContextItem(
+              `${props.item.description.id.provider_title}-${props.item.description.id.item_id}`
+            );
           }}
           onBlur={(e) => {
             if (!pillContainerRef.current?.contains(e.relatedTarget as any)) {
-              props.onBlur?.();
+              // props.onBlur?.();
             } else {
               e.preventDefault();
               buttonRef.current?.focus();
             }
           }}
         >
-          <span className={isHovered ? "underline" : ""}>
+          <span className={(isHovered ? "underline" : "") + " flex"}>
+            {["file", "code"].includes(
+              props.item.description.id.provider_title
+            ) && (
+              <FileIcon
+                height="16px"
+                width="16px"
+                filename={props.item.description.name.split(" ").at(0)}
+              ></FileIcon>
+            )}
             {props.item.description.name}
           </span>
         </StyledButton>
@@ -226,7 +238,7 @@ const PillButton = (props: PillButtonProps) => {
             </StyledTooltip>
           </>
         )}
-        {(props.focusing || props.previewing) && (
+        {/* {(props.focusing || props.previewing) && (
           <ClickableInsidePillButton
             text="View (v)"
             onClick={() => props.toggleViewContent?.()}
@@ -236,7 +248,7 @@ const PillButton = (props: PillButtonProps) => {
           >
             <EyeIcon width="1.4em" height="1.4em" />
           </ClickableInsidePillButton>
-        )}
+        )} */}
         {props.focusing && (
           <HoverableInsidePillButton
             text="Delete (⌫)"

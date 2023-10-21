@@ -143,6 +143,8 @@ class GUIProtocolServer:
             self.select_context_group(data["id"])
         elif message_type == "delete_context_group":
             self.delete_context_group(data["id"])
+        elif message_type == "preview_context_item":
+            self.preview_context_item(data["id"])
 
     def on_main_input(self, input: str):
         # Do something with user input
@@ -195,7 +197,7 @@ class GUIProtocolServer:
 
     def on_show_logs_at_index(self, index: int):
         name = "Continue Prompt"
-        
+
         logs = None
         timeline = self.session.autopilot.continue_sdk.history.timeline
         while logs is None and index < len(timeline):
@@ -205,10 +207,13 @@ class GUIProtocolServer:
             elif timeline[index].step.name == "User Input":
                 break
             index += 1
-            
-        content = "Logs not found" if logs is None else "\n\n############################################\n\n".join(
-            ["This is the prompt that was sent to the LLM during this step"]
-            + logs
+
+        content = (
+            "Logs not found"
+            if logs is None
+            else "\n\n############################################\n\n".join(
+                ["This is the prompt that was sent to the LLM during this step"] + logs
+            )
         )
         create_async_task(
             self.session.autopilot.ide.showVirtualFile(name, content), self.on_error
@@ -249,6 +254,13 @@ class GUIProtocolServer:
         """Called when user selects an item from the dropdown for prev UserInputStep"""
         create_async_task(
             self.session.autopilot.select_context_item_at_index(id, query, index),
+            self.on_error,
+        )
+
+    def preview_context_item(self, id: str):
+        """Called when user clicks on an item from the dropdown"""
+        create_async_task(
+            self.session.autopilot.context_manager.preview_context_item(id),
             self.on_error,
         )
 
