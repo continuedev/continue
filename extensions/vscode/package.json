@@ -66,6 +66,11 @@
           "type": "boolean",
           "default": true,
           "description": "Continue collects anonymous usage data, cleaned of PII, to help us improve the product for our users. Read more  at https://continue.dev/docs/telemetry."
+        },
+        "continue.showInlineTip": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show inline suggestion to use the Continue keyboard shortcuts."
         }
       }
     },

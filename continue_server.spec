@@ -3,9 +3,14 @@ import certifi
 import os
 import sys
 from PyInstaller.utils.hooks import copy_metadata
+import argparse
+
+parser = argparse.ArgumentParser()
+parser.add_argument("--arch", type=str)
+parser.add_argument("--dir", type=bool, default=False)
+options = parser.parse_args()
 
 block_cipher = None
-
 
 import subprocess
 def find_package_location(package_name):
@@ -63,24 +68,58 @@ a = Analysis(
 )
 pyz = PYZ(a.pure, a.zipped_data, cipher=block_cipher)
 
-exe = EXE(
-    pyz,
-    a.scripts,
-    a.binaries,
-    a.zipfiles,
-    a.datas,
-    [],
-    name='continue_server',
-    debug=False,
-    bootloader_ignore_signals=False,
-    strip=False,
-    upx=True,
-    upx_exclude=[],
-    runtime_tmpdir=None,
-    console=True,
-    disable_windowed_traceback=False,
-    argv_emulation=False,
-    target_arch=None,
-    codesign_identity=None,
-    entitlements_file=None,
-)
+
+target_arch = "arm64" if options.arch == "m1" else None
+print("Using target arch", target_arch)
+
+if options.dir:
+    print("Using directory")
+    exe = EXE(
+        pyz,
+        a.scripts,
+        exclude_binaries=True,
+        name='continue_server',
+        debug=False,
+        bootloader_ignore_signals=False,
+        strip=False,
+        upx=True,
+        upx_exclude=[],
+        runtime_tmpdir=None,
+        console=True,
+        disable_windowed_traceback=False,
+        argv_emulation=False,
+        target_arch=target_arch,
+        codesign_identity=None,
+        entitlements_file=None,
+    )
+
+    coll = COLLECT(
+        exe,
+        a.binaries,
+        a.datas,
+        name='continue_server',
+    )
+
+else:
+    print("Using one file")
+    exe = EXE(
+        pyz,
+        a.scripts,
+        a.binaries,
+        a.zipfiles,
+        a.datas,
+        [],
+        name='continue_server',
+        debug=False,
+        bootloader_ignore_signals=False,
+        strip=False,
+        upx=True,
+        upx_exclude=[],
+        runtime_tmpdir=None,
+        console=True,
+        disable_windowed_traceback=False,
+        argv_emulation=False,
+        target_arch=None,
+        codesign_identity=None,
+        entitlements_file=None,
+    )

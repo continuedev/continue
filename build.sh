@@ -15,27 +15,26 @@ pip install -r server/requirements.txt
 pip install pyinstaller
 
 # 4. Detect M1 architecture or allow manual override
+USE_ARCH="intel"
 if [ "$1" = "m1" ]; then
     echo "Building for M1 architecture"
-    SPEC_FILE="continue_server.m1.spec"
+    USE_ARCH="m1"
 elif [ "$1" = "regular" ]; then
     echo "Building for regular architecture"
-    SPEC_FILE="continue_server.spec"
+    USE_ARCH="intel"
 else
     ARCH=$(uname -m)
     if [ "$ARCH" = "arm64" ]; then
         echo "$ARCH architecture detected, using M1 spec file"
-        SPEC_FILE="continue_server.m1.spec"
+        USE_ARCH="m1"
     else
         echo "$ARCH architecture detected, using regular spec file"
-        SPEC_FILE="continue_server.spec"
+        USE_ARCH="intel"
     fi
 fi
 
-echo "Using $SPEC_FILE"
-
 # 5. Call PyInstaller from within the virtual environment
-env/bin/pyinstaller $SPEC_FILE
+env/bin/pyinstaller continue_server.spec -- --arch $USE_ARCH
 
 # 6. Deactivate the virtual environment
 deactivate
