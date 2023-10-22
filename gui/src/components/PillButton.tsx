@@ -159,7 +159,7 @@ const PillButton = (props: PillButtonProps) => {
     <div style={{ position: "relative" }}>
       <Container previewing={props.previewing} ref={pillContainerRef}>
         <StyledButton
-          fontSize={getFontSize()}
+          fontSize={getFontSize() - 1}
           borderColor={
             props.editing ? (warning ? "red" : undefined) : undefined
           }

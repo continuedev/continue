@@ -174,7 +174,7 @@ class DiffManager(private val project: Project) {
                             override fun createActions(): Array<Action> {
                                 val okAction = getOKAction()
                                 val cmdCtrl = if (System.getProperty("os.name").toLowerCase().contains("mac")) "⌘" else "⌃"
-                                okAction.putValue(Action.NAME, "Accept ($cmdCtrl ⇧ ↵)")
+                                okAction.putValue(Action.NAME, "Accept ($cmdCtrl ⇧ ⏎)")
 
                                 val cancelAction = getCancelAction()
                                 cancelAction.putValue(Action.NAME, "Reject ($cmdCtrl ⇧ ⌫)")

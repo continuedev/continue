@@ -96,7 +96,7 @@ List the results that are not useful in answering the request, using in the same
 
 
 async def default_reranker_parallel(
-    chunks: List[Chunk], user_input: str, n: int, sdk: ContinueSDK
+    chunks: List[Chunk], user_input: str, n: int, sdk: ContinueSDK, group_size: int = 10
 ) -> List[Chunk]:
     """
     A reranker, given a mapping from id to contents, returns the subset of the mapping that is most relevant to the user_input
@@ -106,7 +106,7 @@ async def default_reranker_parallel(
     group = []
     for chunk in chunks:
         group.append(chunk)
-        if len(group) == 10:
+        if len(group) == group_size:
             groups.append(group)
             group = []
 

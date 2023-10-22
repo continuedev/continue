@@ -292,7 +292,7 @@ function GUI(props: GUIProps) {
 
       // cmd+enter to /codebase
       if (event && isMetaEquivalentKeyPressed(event)) {
-        input = `/edit ${input}`;
+        input = `/codebase ${input}`;
       }
       (mainTextInputRef.current as any).setInputValue("");
       if (!client) {

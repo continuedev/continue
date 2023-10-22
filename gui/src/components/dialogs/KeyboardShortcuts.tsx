@@ -71,8 +71,8 @@ const vscodeShortcuts: KeyboardShortcutProps[] = [
     description: "Edit Highlighted Code",
   },
   {
-    mac: "⌘ ⇧ ↵",
-    windows: "⌃ ⇧ ↵",
+    mac: "⌘ ⇧ ⏎",
+    windows: "⌃ ⇧ ⏎",
     description: "Accept Diff",
   },
   {
@@ -119,8 +119,8 @@ const jetbrainsShortcuts: KeyboardShortcutProps[] = [
     description: "Edit Highlighted Code",
   },
   {
-    mac: "⌘ ⇧ ↵",
-    windows: "⌃ ⇧ ↵",
+    mac: "⌘ ⇧ ⏎",
+    windows: "⌃ ⇧ ⏎",
     description: "Accept Diff",
   },
   {

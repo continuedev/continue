@@ -59,7 +59,7 @@ class AnswerQuestionChroma(Step):
     name: str = "Answer Question"
 
     n_retrieve: Optional[int] = Field(
-        20, description="Number of results to initially retrieve from vector database"
+        50, description="Number of results to initially retrieve from vector database"
     )
     n_final: Optional[int] = Field(
         10, description="Final number of results to use after re-ranking"
@@ -68,6 +68,10 @@ class AnswerQuestionChroma(Step):
     use_reranking: bool = Field(
         True,
         description="Whether to use re-ranking, which will allow initial selection of n_retrieve results, then will use an LLM to select the top n_final results",
+    )
+    rerank_group_size: int = Field(
+        5,
+        description="Number of results to group together when re-ranking. Each group will be processed in parallel.",
     )
 
     hide: bool = True
@@ -95,7 +99,11 @@ class AnswerQuestionChroma(Step):
 
         if self.use_reranking:
             chunks = await default_reranker_parallel(
-                chunks, self.user_input, self.n_final, sdk
+                chunks,
+                self.user_input,
+                self.n_final,
+                sdk,
+                group_size=self.rerank_group_size,
             )
 
         # Add context items

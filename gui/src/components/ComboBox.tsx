@@ -798,10 +798,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
           >
             + Add Context
           </span>
-          {(downshiftProps.inputValue?.startsWith("/edit") ||
-            (inputFocused &&
-              metaKeyPressed &&
-              downshiftProps.inputValue?.length > 0)) && (
+          {downshiftProps.inputValue?.startsWith("/edit") && (
             <span className="float-right">Inserting at cursor</span>
           )}
         </div>
@@ -1012,7 +1009,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
                   width="20px"
                   filename={item.description.name}
                 ></FileIcon>
-                {item.description.description}
+                {item.description.name}
               </PreviewMarkdownHeader>
               <pre className="m-0">
                 <StyledMarkdownPreview
@@ -1387,6 +1384,41 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
           )}
         </Ul>
       </div>
+
+      {props.isMainInput && (
+        <>
+          <div
+            style={{
+              color: lightGray,
+              fontSize: "10px",
+              backgroundColor: vscBackground,
+              width: "calc(100% - 16px)",
+              height: "0",
+              marginTop: "4px",
+            }}
+          >
+            <span
+              onClick={() => {
+                const inputValue = downshiftProps.inputValue;
+                if (inputValue.startsWith("/codebase")) {
+                  downshiftProps.setInputValue(
+                    inputValue.replace("/codebase ", "")
+                  );
+                } else {
+                  downshiftProps.setInputValue("/codebase " + inputValue);
+                }
+                inputRef.current?.focus();
+              }}
+              className="hover:underline cursor-pointer float-right"
+            >
+              {downshiftProps.inputValue.startsWith("/codebase")
+                ? "Using codebase"
+                : "⌘ ⏎ Use codebase"}
+            </span>
+          </div>
+          <br />
+        </>
+      )}
 
       {props.isMainInput && (
         <ContinueButton
