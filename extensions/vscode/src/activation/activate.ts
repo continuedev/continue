@@ -11,6 +11,7 @@ import { registerAllCommands } from "../commands";
 import registerQuickFixProvider from "../lang-server/codeActions";
 import { getExtensionUri } from "../util/vscode";
 import path from "path";
+import { setupInlineTips } from "./inlineTips";
 
 export let extensionContext: vscode.ExtensionContext | undefined = undefined;
 
@@ -87,6 +88,7 @@ export async function activateExtension(context: vscode.ExtensionContext) {
   registerQuickFixProvider();
   addPythonPathForConfig();
   await openTutorial(context);
+  setupInlineTips(context);
 
   // Start the server
   const sessionIdPromise = (async () => {

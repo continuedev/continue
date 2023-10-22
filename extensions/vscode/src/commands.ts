@@ -104,6 +104,11 @@ const commandsMap: { [command: string]: (...args: any) => any } = {
     vscode.commands.executeCommand("continue.continueGUIView.focus");
     await ideProtocolClient.debugTerminal();
   },
+  "continue.hideInlineTip": () => {
+    vscode.workspace
+      .getConfiguration("continue")
+      .update("showInlineTip", false);
+  },
 
   // Commands without keyboard shortcuts
   "continue.addModel": () => {
