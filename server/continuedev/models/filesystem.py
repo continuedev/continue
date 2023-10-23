@@ -43,6 +43,9 @@ class RangeInFileWithContents(RangeInFile):
     def __hash__(self):
         return hash((self.filepath, self.range, self.contents))
 
+    def to_range_in_file(self) -> RangeInFile:
+        return RangeInFile(filepath=self.filepath, range=self.range)
+
     def union(self, other: "RangeInFileWithContents") -> "RangeInFileWithContents":
         assert self.filepath == other.filepath
         # Use a placeholder variable for self and swap it with other if other comes before self

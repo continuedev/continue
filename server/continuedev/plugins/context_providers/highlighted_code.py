@@ -1,3 +1,4 @@
+import asyncio
 import os
 from typing import Any, Dict, List, Optional
 
@@ -77,6 +78,13 @@ class HighlightedCodeContextProvider(ContextProvider):
             fallback_item := await self._get_fallback_context_item()
         ):
             ranges = [fallback_item]
+
+        fresh_contents_tasks = [
+            self.sdk.ide.readRangeInFile(r.rif.to_range_in_file()) for r in ranges
+        ]
+        fresh_contents = await asyncio.gather(*fresh_contents_tasks)
+        for i in range(len(ranges)):
+            ranges[i].rif.contents = fresh_contents[i]
 
         return [
             ChatMessage(
