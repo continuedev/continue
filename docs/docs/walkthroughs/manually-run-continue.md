@@ -38,7 +38,7 @@ If you'd like to use a pre-built binary, you can download manually from our S3 b
 - [Windows](https://continue-server-binaries.s3.us-west-1.amazonaws.com/windows/run.exe)
 - [Linux](https://continue-server-binaries.s3.us-west-1.amazonaws.com/linux/run)
 
-Once downloaded, start the binary by running `./run` (MacOS/Linux) or `./run.exe` (Windows) in the directory where you downloaded it. You should see that it begins listening on port 65432.
+Once downloaded, start the binary by running `./continue_server` (MacOS/Linux) or `./continue_server.exe` (Windows) in the directory where you downloaded it. You should see that it begins listening on port 65432.
 
 ## Build the server binary from source
 
@@ -47,7 +47,7 @@ If you don't want to use the PyPI package, but need a version of Continue that w
 1. Clone the [Continue repo](https://github.com/continuedev/continue)
 2. Change directories into the repo: `cd continue`
 3. Run the build script: `sh build.sh` (or `sh build.sh m1` if building for an M1 Mac, or `build.cmd` if on Windows without WSL)
-4. Now that the binary is outputted in the `./dist` folder, start the server by running `./dist/run`. You should see that it begins listening on port 65432.
+4. Now that the binary is outputted in the `./dist` folder, start the server by running `./dist/continue_server`. You should see that it begins listening on port 65432.
 
 ## Run the server from source
 

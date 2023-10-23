@@ -141,5 +141,9 @@ codeql
 .test
 .tiktoken_cache
 
-.idea
-intellij-extension/.gradle
+
+# IntelliJ Plugin 
+**/**/.gradle
+**/**/.idea
+**/**/.qodana
+**/**/build

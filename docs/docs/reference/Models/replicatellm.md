@@ -24,8 +24,6 @@ If you don't specify the `model` parameter, it will default to `replicate/llama-
 
 ## Properties
 
-
-
 ### Inherited Properties
 
 <ClassPropertyRef name='api_key' details='{&quot;title&quot;: &quot;Api Key&quot;, &quot;description&quot;: &quot;Replicate API key&quot;, &quot;type&quot;: &quot;string&quot;}' required={true} default=""/>

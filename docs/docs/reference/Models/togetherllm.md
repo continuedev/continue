@@ -25,7 +25,6 @@ config = ContinueConfig(
 
 <ClassPropertyRef name='base_url' details='{&quot;title&quot;: &quot;Base Url&quot;, &quot;description&quot;: &quot;The base URL for your Together API instance&quot;, &quot;default&quot;: &quot;https://api.together.xyz&quot;, &quot;type&quot;: &quot;string&quot;}' required={false} default="https://api.together.xyz"/>
 
-
 ### Inherited Properties
 
 <ClassPropertyRef name='api_key' details='{&quot;title&quot;: &quot;Api Key&quot;, &quot;description&quot;: &quot;Together API key&quot;, &quot;type&quot;: &quot;string&quot;}' required={true} default=""/>

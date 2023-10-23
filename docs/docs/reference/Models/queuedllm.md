@@ -23,7 +23,6 @@ config = ContinueConfig(
 
 <ClassPropertyRef name='llm' details='{&quot;title&quot;: &quot;Llm&quot;, &quot;description&quot;: &quot;The LLM to wrap with a lock&quot;, &quot;allOf&quot;: [{&quot;$ref&quot;: &quot;#/definitions/LLM&quot;}]}' required={true} default=""/>
 
-
 ### Inherited Properties
 
 <ClassPropertyRef name='title' details='{&quot;title&quot;: &quot;Title&quot;, &quot;description&quot;: &quot;A title that will identify this model in the model selection dropdown&quot;, &quot;type&quot;: &quot;string&quot;}' required={false} default=""/>

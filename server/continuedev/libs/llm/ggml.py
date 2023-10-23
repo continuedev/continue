@@ -8,7 +8,7 @@ from ..util.logging import logger
 from .base import LLM, CompletionOptions
 from .openai import CHAT_MODELS
 from .prompts.chat import llama2_template_messages
-from .prompts.edit import simplified_edit_prompt
+from .prompts.edit import codellama_edit_prompt
 
 
 class GGML(LLM):
@@ -58,7 +58,7 @@ class GGML(LLM):
     ] = llama2_template_messages
 
     prompt_templates = {
-        "edit": simplified_edit_prompt,
+        "edit": codellama_edit_prompt,
     }
 
     class Config:

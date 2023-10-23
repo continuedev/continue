@@ -12,8 +12,8 @@ config = ContinueConfig(
     ...
     models=Models(
         default=HuggingFaceInferenceAPI(
-            endpoint_url: "<INFERENCE_API_ENDPOINT_URL>",
-            hf_token: "<HUGGING_FACE_TOKEN>",
+            endpoint_url="<INFERENCE_API_ENDPOINT_URL>",
+            hf_token="<HUGGING_FACE_TOKEN>",
     )
 )
 ```
@@ -24,7 +24,6 @@ config = ContinueConfig(
 
 <ClassPropertyRef name='hf_token' details='{&quot;title&quot;: &quot;Hf Token&quot;, &quot;description&quot;: &quot;Your Hugging Face API token&quot;, &quot;type&quot;: &quot;string&quot;}' required={true} default=""/>
 <ClassPropertyRef name='endpoint_url' details='{&quot;title&quot;: &quot;Endpoint Url&quot;, &quot;description&quot;: &quot;Your Hugging Face Inference API endpoint URL&quot;, &quot;type&quot;: &quot;string&quot;}' required={false} default=""/>
-
 
 ### Inherited Properties
 

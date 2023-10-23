@@ -177,6 +177,8 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
             message_type = message["messageType"]
             data = message["data"]
             logger.debug(f"Received message while initializing {message_type}")
+            logger.debug(data)
+            logger.debug(message)
             if message_type == "workspaceDirectory":
                 self.workspace_directory = data["workspaceDirectory"]
             elif message_type == "uniqueId":
@@ -188,6 +190,7 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
 
             if self.workspace_directory is not None and self.unique_id is not None:
                 break
+
         return other_msgs
 
     async def _send_json(self, message_type: str, data: Any):
@@ -206,25 +209,30 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
         except RuntimeError as e:
             logger.warning(f"Error sending IDE message, websocket probably closed: {e}")
 
-    async def _receive_json(
-        self, message_type: str, timeout: int = 20, message=None
-    ) -> Any:
-        try:
-            return await asyncio.wait_for(
-                self.sub_queue.get(message_type), timeout=timeout
-            )
-        except asyncio.TimeoutError:
-            raise ContinueCustomException(
-                title=f"IDE Protocol _receive_json timed out after 20 seconds: {message_type}",
-                message=f"IDE Protocol _receive_json timed out after 20 seconds. The message sent was: {message or ''}",
-            )
+    async def _receive_json(self, message_type: str, message=None) -> Any:
+        return await self.sub_queue.get(message_type)
 
     async def _send_and_receive_json(
         self, data: Any, resp_model: Type[T], message_type: str
     ) -> T:
-        await self._send_json(message_type, data)
-        resp = await self._receive_json(message_type, message=data)
-        return resp_model.parse_obj(resp)
+        async def try_with_timeout(timeout: int):
+            await self._send_json(message_type, data)
+            resp = await asyncio.wait_for(
+                self._receive_json(message_type, message=data), timeout=timeout
+            )
+            return resp_model.parse_obj(resp)
+
+        timeout = 1.0
+        while True:
+            try:
+                return await try_with_timeout(timeout)
+            except asyncio.TimeoutError:
+                timeout *= 1.5
+                if timeout > 10:
+                    raise ContinueCustomException(
+                        title=f"IDE Protocol _receive_json timed out: {message_type}",
+                        message=f"IDE Protocol _receive_json timed out. The message sent was: {message or ''}",
+                    )
 
     async def handle_json(self, message_type: str, data: Any):
         if message_type == "getSessionId":
@@ -284,6 +292,8 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
             self.onFilesRenamed(data["old_filepaths"], data["new_filepaths"])
         elif message_type == "fileSaved":
             self.onFileSaved(data["filepath"], data["contents"])
+        elif message_type == "setTelemetryEnabled":
+            self.onTelemetryEnabledChanged(data["enabled"])
         else:
             raise ValueError("Unknown message type", message_type)
 
@@ -315,6 +325,17 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
         await self._send_json(
             "setSuggestionsLocked", {"filepath": filepath, "locked": locked}
         )
+
+    def onTelemetryEnabledChanged(self, enabled: bool):
+        if autopilot := self.__get_autopilot():
+
+            async def change_telemetry():
+                await autopilot.set_config_attr(
+                    ["allow_anonymous_telemetry"], "True" if enabled else "False"
+                )
+                await autopilot.continue_sdk.load()
+
+            create_async_task(change_telemetry(), self.on_error)
 
     async def getSessionId(self):
         new_session = await asyncio.wait_for(
@@ -638,11 +659,13 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str = None):
         if session_id is not None:
             session_manager.registered_ides[session_id] = ideProtocolServer
         other_msgs = await ideProtocolServer.initialize(session_id)
-        posthog_logger.capture_event(
-            "session_started", {"session_id": ideProtocolServer.session_id}
-        )
+        logger.debug(other_msgs)
+        # posthog_logger.capture_event(
+        #     "session_started", {"session_id": ideProtocolServer.session_id}
+        # )
 
         for other_msg in other_msgs:
+            logger.debug("processing....:")
             handle_msg(other_msg)
 
         # Handle messages
@@ -670,7 +693,10 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str = None):
         raise e
     finally:
         logger.debug("Closing ide websocket")
-        if websocket.client_state != WebSocketState.DISCONNECTED:
+        if (
+            websocket.client_state != WebSocketState.DISCONNECTED
+            and websocket.application_state != WebSocketState.DISCONNECTED
+        ):
             await websocket.close()
 
         posthog_logger.capture_event(

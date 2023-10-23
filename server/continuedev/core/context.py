@@ -10,6 +10,7 @@ from ..libs.util.create_async_task import create_async_task
 from ..libs.util.devdata import dev_data_logger
 from ..libs.util.logging import logger
 from ..libs.util.telemetry import posthog_logger
+from ..server.global_config import global_config
 from ..server.meilisearch_server import (
     check_meilisearch_running,
     get_meilisearch_url,
@@ -195,6 +196,15 @@ class ContextProvider(BaseModel):
 
         self.selected_items.append(context_item)
 
+    async def preview_contents(self, id: ContextItemId):
+        """
+        Open a virtual file or otherwise preview the contents of the context provider in the IDE
+        """
+        if item := next(
+            filter(lambda x: x.description.id == id, self.selected_items), None
+        ):
+            await self.sdk.ide.showVirtualFile(item.description.name, item.content)
+
 
 class ContextManager:
     """
@@ -285,7 +295,7 @@ class ContextManager:
         async def load_index(providers_to_load: List[ContextProvider]):
             running = await check_meilisearch_running()
             if not running:
-                await start_meilisearch()
+                await start_meilisearch(global_config.meilisearch_url)
                 try:
                     await asyncio.wait_for(poll_meilisearch_running(), timeout=20)
                 except asyncio.TimeoutError:
@@ -416,9 +426,11 @@ class ContextManager:
 
                 tasks = [
                     safe_load(provider)
-                    for provider in (
-                        providers_to_load or self.context_providers.values()
-                    )
+                    for _, provider in (
+                        {provider.title: provider for provider in providers_to_load}
+                        if providers_to_load
+                        else self.context_providers
+                    ).items()
                 ]
                 await asyncio.wait_for(asyncio.gather(*tasks), timeout=20)
 
@@ -508,6 +520,18 @@ class ContextManager:
         await self.context_providers[
             item.description.id.provider_title
         ].manually_add_context_item(item)
+
+    async def preview_context_item(self, id: str):
+        """
+        Opens a virtual file or otherwise previews the contents of the context provider in the IDE.
+        """
+        id: ContextItemId = ContextItemId.from_string(id)
+        if id.provider_title not in self.provider_titles:
+            raise ValueError(
+                f"Context provider with title {id.provider_title} not found"
+            )
+
+        await self.context_providers[id.provider_title].preview_contents(id)
 
 
 """

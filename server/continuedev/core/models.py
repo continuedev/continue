@@ -56,6 +56,7 @@ MODEL_MODULE_NAMES = {
     "HuggingFaceInferenceAPI": "hf_inference_api",
     "HuggingFaceTGI": "hf_tgi",
     "GooglePaLMAPI": "google_palm_api",
+    "TextGenWebUI": "text_gen_webui"
 }
 
 
@@ -79,7 +80,7 @@ class Models(BaseModel):
         return original_dict
 
     @property
-    def all_models(self):
+    def all_models(self) -> List[LLM]:
         models = [getattr(self, role) for role in ALL_MODEL_ROLES]
         return [model for model in models if model is not None]
 
@@ -88,11 +89,16 @@ class Models(BaseModel):
         if self.sdk:
             return self.sdk.config.system_message
         return None
+    
+    @property
+    def temperature(self) -> Optional[float]:
+        if self.sdk:
+            return self.sdk.config.temperature
+        return None
 
-    def set_system_message(self, msg: str):
+    def set_main_config_params(self, system_msg: Optional[str], temperature: Optional[float]):
         for model in self.all_models:
-            if model.system_message is None:
-                model.system_message = msg
+            model.set_main_config_params(system_msg, temperature)
 
     async def start(self, sdk: "ContinueSDK"):
         """Start each of the LLMs, or fall back to default"""
@@ -105,7 +111,7 @@ class Models(BaseModel):
             else:
                 await sdk.start_model(model)
 
-        self.set_system_message(self.system_message)
+        self.set_main_config_params(self.system_message, self.temperature)
 
     async def stop(self, sdk: "ContinueSDK"):
         """Stop each LLM (if it's not the default, which is shared)"""

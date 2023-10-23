@@ -16,7 +16,7 @@ pip install -r server\requirements.txt
 pip install pyinstaller
 
 REM 4. Call PyInstaller from within the virtual environment
-env\Scripts\pyinstaller run.spec
+env\Scripts\pyinstaller continue_server.spec
 
 REM 5. Deactivate the virtual environment
 call env\Scripts\deactivate.bat

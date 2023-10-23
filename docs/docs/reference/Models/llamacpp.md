@@ -30,7 +30,6 @@ config = ContinueConfig(
 <ClassPropertyRef name='server_url' details='{&quot;title&quot;: &quot;Server Url&quot;, &quot;description&quot;: &quot;URL of the server&quot;, &quot;default&quot;: &quot;http://localhost:8080&quot;, &quot;type&quot;: &quot;string&quot;}' required={false} default="http://localhost:8080"/>
 <ClassPropertyRef name='llama_cpp_args' details='{&quot;title&quot;: &quot;Llama Cpp Args&quot;, &quot;description&quot;: &quot;A list of additional arguments to pass to llama.cpp. See [here](https://github.com/ggerganov/llama.cpp/tree/master/examples/server#api-endpoints) for the complete catalog of options.&quot;, &quot;default&quot;: {&quot;stop&quot;: [&quot;[INST]&quot;]}, &quot;type&quot;: &quot;object&quot;}' required={false} default="{&#x27;stop&#x27;: [&#x27;[INST]&#x27;]}"/>
 
-
 ### Inherited Properties
 
 <ClassPropertyRef name='title' details='{&quot;title&quot;: &quot;Title&quot;, &quot;description&quot;: &quot;A title that will identify this model in the model selection dropdown&quot;, &quot;type&quot;: &quot;string&quot;}' required={false} default=""/>

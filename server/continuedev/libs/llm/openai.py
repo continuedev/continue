@@ -1,6 +1,8 @@
 from typing import Callable, List, Literal, Optional
 
 import certifi
+from ..util.count_tokens import MAX_TOKENS_FOR_MODEL
+from .prompts.chat import template_alpaca_messages
 import openai
 from pydantic import Field
 
@@ -14,15 +16,20 @@ CHAT_MODELS = {
     "gpt-3.5-turbo-0613",
     "gpt-4-32k",
 }
-MAX_TOKENS_FOR_MODEL = {
-    "gpt-3.5-turbo": 4096,
-    "gpt-3.5-turbo-0613": 4096,
-    "gpt-3.5-turbo-16k": 16_384,
-    "gpt-4": 8192,
-    "gpt-35-turbo-16k": 16_384,
-    "gpt-35-turbo-0613": 4096,
-    "gpt-35-turbo": 4096,
-    "gpt-4-32k": 32_768,
+NON_CHAT_MODELS = {
+    "gpt-3.5-turbo-instruct",
+    "text-davinci-003",
+    "text-davinci-002",
+    "code-davinci-002",
+    "babbage-002",
+    "davinci-002",
+    "text-curie-001",
+    "text-babbage-001",
+    "text-ada-001",
+    "davinci",
+    "curie",
+    "babbage",
+    "ada",
 }
 
 
@@ -72,6 +79,11 @@ class OpenAI(LLM):
         None, description="OpenAI API version. For use with Azure OpenAI Service."
     )
 
+    use_legacy_completions_endpoint: bool = Field(
+        False,
+        description="Manually specify to use the legacy completions endpoint instead of chat completions.",
+    )
+
     engine: Optional[str] = Field(
         None, description="OpenAI engine. For use with Azure OpenAI Service."
     )
@@ -100,6 +112,9 @@ class OpenAI(LLM):
 
         openai.ca_bundle_path = self.ca_bundle_path or certifi.where()
 
+        session = self.create_client_session()
+        openai.aiosession.set(session)
+
     def collect_args(self, options):
         args = super().collect_args(options)
         if self.engine is not None:
@@ -114,7 +129,10 @@ class OpenAI(LLM):
         args = self.collect_args(options)
         args["stream"] = True
 
-        if args["model"] in CHAT_MODELS:
+        if (
+            args["model"] not in NON_CHAT_MODELS
+            and not self.use_legacy_completions_endpoint
+        ):
             async for chunk in await openai.ChatCompletion.acreate(
                 messages=[{"role": "user", "content": prompt}],
                 **args,
@@ -123,27 +141,48 @@ class OpenAI(LLM):
                 if len(chunk.choices) > 0 and "content" in chunk.choices[0].delta:
                     yield chunk.choices[0].delta.content
         else:
-            async for chunk in await openai.Completion.acreate(prompt=prompt, **args, headers=self.headers):
+            async for chunk in await openai.Completion.acreate(
+                prompt=prompt, **args, headers=self.headers
+            ):
                 if len(chunk.choices) > 0:
                     yield chunk.choices[0].text
 
     async def _stream_chat(self, messages: List[ChatMessage], options):
         args = self.collect_args(options)
 
-        async for chunk in await openai.ChatCompletion.acreate(
-            messages=messages,
-            stream=True,
-            **args,
-            headers=self.headers,
+        if (
+            args["model"] not in NON_CHAT_MODELS
+            and not self.use_legacy_completions_endpoint
         ):
-            if not hasattr(chunk, "choices") or len(chunk.choices) == 0:
-                continue
-            yield chunk.choices[0].delta
+            async for chunk in await openai.ChatCompletion.acreate(
+                messages=messages,
+                stream=True,
+                **args,
+                headers=self.headers,
+            ):
+                if not hasattr(chunk, "choices") or len(chunk.choices) == 0:
+                    continue
+                yield chunk.choices[0].delta
+        else:
+            async for chunk in await openai.Completion.acreate(
+                prompt=template_alpaca_messages(messages),
+                stream=True,
+                **args,
+                headers=self.headers,
+            ):
+                if len(chunk.choices) > 0:
+                    yield {
+                        "role": "assistant",
+                        "content": chunk.choices[0].text,
+                    }
 
     async def _complete(self, prompt: str, options):
         args = self.collect_args(options)
 
-        if args["model"] in CHAT_MODELS:
+        if (
+            args["model"] not in NON_CHAT_MODELS
+            and not self.use_legacy_completions_endpoint
+        ):
             resp = await openai.ChatCompletion.acreate(
                 messages=[{"role": "user", "content": prompt}],
                 **args,
@@ -152,5 +191,11 @@ class OpenAI(LLM):
             return resp.choices[0].message.content
         else:
             return (
-                (await openai.Completion.acreate(prompt=prompt, **args, headers=self.headers)).choices[0].text
+                (
+                    await openai.Completion.acreate(
+                        prompt=prompt, **args, headers=self.headers
+                    )
+                )
+                .choices[0]
+                .text
             )

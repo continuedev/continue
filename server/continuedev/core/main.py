@@ -17,11 +17,11 @@ class FunctionCall(ContinueBaseModel):
 
 class ChatMessage(ContinueBaseModel):
     role: ChatMessageRole
-    content: Union[str, None] = None
-    name: Union[str, None] = None
+    content: Optional[str] = None
+    name: Optional[str] = None
     # A summary for pruning chat context to fit context window. Often the Step name.
     summary: str
-    function_call: Union[FunctionCall, None] = None
+    function_call: Optional[FunctionCall] = None
 
     def to_dict(self, with_functions: bool) -> Dict:
         d = self.dict()
@@ -102,7 +102,7 @@ def step_to_fn_call_arguments(step: "Step") -> str:
 class HistoryNode(ContinueBaseModel):
     """A point in history, a list of which make up History"""
 
-    step: "Step"
+    step: Any
     observation: Union[Observation, None]
     depth: int
     deleted: bool = False
@@ -234,6 +234,12 @@ class ContextItemId(BaseModel):
 
     def to_string(self) -> str:
         return f"{self.provider_title}-{self.item_id}"
+
+    def __eq__(self, other):
+        return (
+            self.provider_title == other.provider_title
+            and self.item_id == other.item_id
+        )
 
     @staticmethod
     def from_string(string: str) -> "ContextItemId":

@@ -10,7 +10,6 @@ Type '@google' to reference the results of a Google search. For example, type "@
 
 <ClassPropertyRef name='serper_api_key' details='{&quot;title&quot;: &quot;Serper Api Key&quot;, &quot;description&quot;: &quot;Your SerpAPI key, used to programmatically make Google searches. You can get a key at https://serper.dev.&quot;, &quot;type&quot;: &quot;string&quot;}' required={true} default=""/>
 
-
 ### Inherited Properties
 
 <ClassPropertyRef name='title' details='{&quot;title&quot;: &quot;Title&quot;, &quot;default&quot;: &quot;google&quot;, &quot;type&quot;: &quot;string&quot;}' required={false} default="google"/>

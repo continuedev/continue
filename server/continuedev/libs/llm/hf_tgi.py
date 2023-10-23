@@ -1,12 +1,13 @@
 import json
 from typing import Any, Callable, List
+from ..util.count_tokens import DEFAULT_MAX_TOKENS
 
 from pydantic import Field
 
 from ...core.main import ChatMessage
 from .base import LLM, CompletionOptions
 from .prompts.chat import llama2_template_messages
-from .prompts.edit import simplified_edit_prompt
+from .prompts.edit import codellama_edit_prompt
 
 
 class HuggingFaceTGI(LLM):
@@ -18,7 +19,7 @@ class HuggingFaceTGI(LLM):
     template_messages: Callable[[List[ChatMessage]], str] = llama2_template_messages
 
     prompt_templates = {
-        "edit": simplified_edit_prompt,
+        "edit": codellama_edit_prompt,
     }
 
     class Config:
@@ -26,7 +27,11 @@ class HuggingFaceTGI(LLM):
 
     def collect_args(self, options: CompletionOptions) -> Any:
         args = super().collect_args(options)
-        args = {**args, "max_new_tokens": args.get("max_tokens", 1024), "best_of": 1}
+        args = {
+            **args,
+            "max_new_tokens": args.get("max_tokens", DEFAULT_MAX_TOKENS),
+            "best_of": 1,
+        }
         args.pop("max_tokens", None)
         args.pop("model", None)
         args.pop("functions", None)

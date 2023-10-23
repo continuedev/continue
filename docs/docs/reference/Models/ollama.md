@@ -21,7 +21,6 @@ config = ContinueConfig(
 
 <ClassPropertyRef name='server_url' details='{&quot;title&quot;: &quot;Server Url&quot;, &quot;description&quot;: &quot;URL of the Ollama server&quot;, &quot;default&quot;: &quot;http://localhost:11434&quot;, &quot;type&quot;: &quot;string&quot;}' required={false} default="http://localhost:11434"/>
 
-
 ### Inherited Properties
 
 <ClassPropertyRef name='title' details='{&quot;title&quot;: &quot;Title&quot;, &quot;description&quot;: &quot;A title that will identify this model in the model selection dropdown&quot;, &quot;type&quot;: &quot;string&quot;}' required={false} default=""/>

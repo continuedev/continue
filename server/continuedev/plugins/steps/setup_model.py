@@ -21,6 +21,7 @@ MODEL_CLASS_TO_MESSAGE = {
 class SetupModelStep(Step):
     model_class: str
     name: str = "Setup model in config.py"
+    hide: bool = True
 
     async def run(self, sdk: ContinueSDK):
         await sdk.ide.setFileOpen(getConfigFilePath())
