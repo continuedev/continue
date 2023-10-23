@@ -6,6 +6,48 @@ on:
       - main
 
 jobs:
+  pypi-deployment:
+    runs-on: ubuntu-20.04
+    permissions:
+      contents: write
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10.8"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install poetry
+
+      - name: Install project dependencies
+        run: cd server && poetry install
+
+      - name: Configure Poetry Token
+        run: cd server && poetry config pypi-token.pypi ${{ secrets.PYPI_API_TOKEN }}
+
+      - name: Bump the version
+        run: cd server && poetry version patch
+
+      - name: Build and publish the package
+        run: cd server && poetry publish --build
+
+      - name: Commit changes
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git commit -am "ci: 🏷 Update PyPI version [skip ci]"
+
+      - name: Push changes
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: ${{ github.ref }}
+
   build:
     strategy:
       matrix:
@@ -57,25 +99,21 @@ jobs:
         with:
           python-version: "3.10.8"
 
-      - name: Install dependencies
+      - name: Install Pyinstaller
         run: |
-          python -m pip install --upgrade pip
-          pip install poetry
+          pip install pyinstaller
 
       - name: Install Dependencies
         run: |
           pip install -r server/requirements.txt
 
-      # 1.25 Publish to PyPI
+      - name: Install tiktoken vocab file
+        run: |
+          mkdir .tiktoken_cache
+          curl -o .tiktoken_cache/9b5ad71b2ce5302211f9c61530b329a4922fc6a4 https://s3.us-west-1.amazonaws.com/s3.continue.dev/tiktoken/9b5ad71b2ce5302211f9c61530b329a4922fc6a4
 
-      - name: Configure Poetry Token
-        run: cd server && poetry config pypi-token.pypi ${{ secrets.PYPI_API_TOKEN }}
-
-      - name: Bump the version
-        run: cd server && poetry version patch
-
-      - name: Build and publish the package
-        run: cd server && poetry publish --build
+      - name: Build PyInstaller Executable
+        run: pyinstaller continue_server.spec
 
       # 1.5 Place the binary in extensions/vscode/exe directory
       - name: Make sure extensions/vscode/exe directory exists
@@ -84,36 +122,36 @@ jobs:
 
       - name: Copy binary to extension (non-Windows)
         run: |
-          cp dist/run extensions/vscode/exe/run
+          cp dist/continue_server extensions/vscode/exe/continue_server
         if: matrix.os != 'windows-latest'
 
       - name: Copy binary to extension (Windows)
         run: |
-          cp dist/run.exe extensions/vscode/exe/run.exe
+          cp dist/continue_server.exe extensions/vscode/exe/continue_server.exe
         if: matrix.os == 'windows-latest'
 
       # 1.8 Set permissions and upload binary
       - name: Set permissions
         run: |
-          chmod 777 extensions/vscode/exe/run
+          chmod 777 extensions/vscode/exe/continue_server
 
       - uses: actions/upload-artifact@v2
         if: matrix.os == 'macos-latest' && matrix.arch == 'x64'
         with:
           name: macOSBinary
-          path: extensions/vscode/exe/run
+          path: extensions/vscode/exe/continue_server
 
       - uses: actions/upload-artifact@v2
         if: matrix.os == 'ubuntu-20.04' && matrix.arch == 'x64' && matrix.platform == 'linux'
         with:
           name: LinuxBinary
-          path: extensions/vscode/exe/run
+          path: extensions/vscode/exe/continue_server
 
       - uses: actions/upload-artifact@v2
         if: matrix.os == 'windows-latest' && matrix.arch == 'x64'
         with:
           name: WindowsBinary
-          path: extensions/vscode/exe/run.exe
+          path: extensions/vscode/exe/continue_server.exe
 
       # 2. Install npm dependencies
       - name: Use Node.js 19.0.0
@@ -172,15 +210,15 @@ jobs:
       # 3.5 If on Apple Silicon, download the binary from S3 bucket
       - name: Remove existing binary
         if: matrix.os == 'macos-latest' && matrix.arch == 'arm64'
-        run: rm extensions/vscode/exe/run
+        run: rm extensions/vscode/exe/continue_server
 
       - name: Download Apple Silicon Binary
         if: matrix.os == 'macos-latest' && matrix.arch == 'arm64'
-        run: curl -o extensions/vscode/exe/run https://continue-server-binaries.s3.us-west-1.amazonaws.com/apple-silicon/run
+        run: curl -o extensions/vscode/exe/continue_server https://continue-server-binaries.s3.us-west-1.amazonaws.com/apple-silicon/continue_server
 
       - name: Set permissions
         run: |
-          chmod -R 777 extensions/vscode/exe/run
+          chmod -R 777 extensions/vscode/exe/continue_server
 
       # 4. Package the extension
       - shell: pwsh
@@ -223,7 +261,8 @@ jobs:
       - uses: actions/download-artifact@v3
 
       # 2. Publish the extension to VS Code Marketplace
-      - run: |
+      - name: Publish (VS Code Marketplace)
+        run: |
           cd extensions/vscode
           npx vsce publish --packagePath ../../alpine-x64/*.vsix ../../darwin-arm64/*.vsix ../../darwin-x64/*.vsix ../../linux-arm64/*.vsix ../../linux-armhf/*.vsix ../../linux-x64/*.vsix ../../win32-ia32/*.vsix ../../win32-x64/*.vsix ../../win32-arm64/*.vsix
         env:
@@ -245,7 +284,7 @@ jobs:
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          git commit -am "ci: 🏷 Update PyPI version [skip ci]"
+          git commit -am "ci: 💚 Update package.json version [skip ci]"
 
       - name: Push changes
         uses: ad-m/github-push-action@master

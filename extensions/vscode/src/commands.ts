@@ -107,7 +107,7 @@ const commandsMap: { [command: string]: (...args: any) => any } = {
   "continue.hideInlineTip": () => {
     vscode.workspace
       .getConfiguration("continue")
-      .update("showInlineTip", false);
+      .update("showInlineTip", false, vscode.ConfigurationTarget.Global);
   },
 
   // Commands without keyboard shortcuts
