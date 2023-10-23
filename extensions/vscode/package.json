@@ -155,7 +155,7 @@
       "activitybar": [
         {
           "id": "continue",
-          "title": "Continue  ",
+          "title": "Continue",
           "icon": "media/continue-dev-square.png"
         }
       ]
@@ -165,7 +165,7 @@
         {
           "type": "webview",
           "id": "continue.continueGUIView",
-          "name": "  )",
+          "name": "",
           "visibility": "visible"
         }
       ]
