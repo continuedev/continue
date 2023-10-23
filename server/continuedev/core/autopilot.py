@@ -527,7 +527,10 @@ class Autopilot(ContinueBaseModel):
 
         # Update its description
         async def update_description():
-            if self.continue_sdk.config.disable_summaries:
+            if (
+                self.continue_sdk.config.disable_summaries
+                or self.history.timeline[index_of_history_node].deleted
+            ):
                 return
 
             description = await step.describe(self.continue_sdk.models)
@@ -544,7 +547,9 @@ class Autopilot(ContinueBaseModel):
         )
 
         # Create the session title if not done yet
-        if self.session_info is None or self.session_info.title is None:
+        if (
+            self.session_info is None or self.session_info.title is None
+        ) and not self.history.timeline[index_of_history_node].deleted:
             visible_nodes = list(
                 filter(lambda node: not node.step.hide, self.history.timeline)
             )
