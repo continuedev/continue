@@ -131,19 +131,20 @@ class Autopilot(ContinueBaseModel):
             self.session_info = full_state.session_info
 
         # Load saved context groups
-        context_groups_file = getSavedContextGroupsPath()
-        try:
-            with open(context_groups_file, "r") as f:
-                json_ob = json.load(f)
-                for title, context_group in json_ob.items():
-                    self._saved_context_groups[title] = [
-                        ContextItem(**item) for item in context_group
-                    ]
-        except Exception as e:
-            logger.warning(
-                f"Failed to load saved_context_groups.json: {e}. Reverting to empty list."
-            )
-            self._saved_context_groups = {}
+        # context_groups_file = getSavedContextGroupsPath()
+        # try:
+        #     with open(context_groups_file, "r") as f:
+        #         json_ob = json.load(f)
+        #         for title, context_group in json_ob.items():
+        #             self._saved_context_groups[title] = [
+        #                 ContextItem(**item) for item in context_group
+        #             ]
+        # except Exception as e:
+        #     logger.warning(
+        #         f"Failed to load saved_context_groups.json: {e}. Reverting to empty list."
+        #     )
+        #     self._saved_context_groups = {}
+        self._saved_context_groups = {}
 
         self.started = True
 
@@ -387,7 +388,17 @@ class Autopilot(ContinueBaseModel):
         # Log the context and step to dev data
         context_used = await self.context_manager.get_selected_items()
         posthog_logger.capture_event(
-            "step run", {"step_name": step.name, "params": step.dict()}
+            "step run",
+            {
+                "step_name": step.name,
+                "params": step.dict(),
+                "context": list(
+                    map(
+                        lambda item: item.dict(),
+                        context_used,
+                    )
+                ),
+            },
         )
         step_id = uuid.uuid4().hex
         dev_data_logger.capture(
@@ -453,7 +464,7 @@ class Autopilot(ContinueBaseModel):
             error_string = (
                 e.message
                 if is_continue_custom_exception
-                else "\n".join(traceback.format_exception(e))
+                else "\n".join(traceback.format_exception(e, e, e.__traceback__))
             )
             error_title = (
                 e.title if is_continue_custom_exception else get_error_title(e)

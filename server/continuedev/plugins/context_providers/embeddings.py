@@ -6,7 +6,7 @@ from pydantic import BaseModel
 
 from ...core.context import ContextProvider
 from ...core.main import ContextItem, ContextItemDescription, ContextItemId
-from ...libs.chroma.query import ChromaIndexManager
+from ...libs.index.codebase_index import ChromaIndexManager
 
 
 class EmbeddingResult(BaseModel):

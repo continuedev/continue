@@ -27,7 +27,7 @@ from continuedev.plugins.steps.share_session import ShareSessionStep
 config = ContinueConfig(
     allow_anonymous_telemetry=True,
     models=Models(
-        default=OpenAIFreeTrial(api_key="", model="gpt-4"),
+        default=OpenAIFreeTrial(api_key="", model="gpt-4", title="GPT-4"),
         summarize=OpenAIFreeTrial(api_key="", model="gpt-3.5-turbo")
     ),
     system_message=None,
@@ -69,7 +69,7 @@ config = ContinueConfig(
             name="cmd",
             description="Generate a shell command",
             step=GenerateShellCommandStep,
-        ),
+        )
     ],
     context_providers=[
         # GitHubIssuesContextProvider(

@@ -2,7 +2,8 @@ import html
 import json
 import os
 from textwrap import dedent
-from typing import Any, Coroutine, List
+from typing import Any, Coroutine, List, Optional
+from ...libs.llm.base import CompletionOptions
 
 import openai
 from directory_tree import display_tree
@@ -38,10 +39,13 @@ class SimpleChatStep(Step):
     description: str = ""
     messages: List[ChatMessage] = None
 
+    completion_options: Optional[CompletionOptions] = None
+
     async def run(self, sdk: ContinueSDK):
         # Check if proxy server API key
         if (
-            isinstance(sdk.models.default, OpenAIFreeTrial)
+            False
+            and isinstance(sdk.models.default, OpenAIFreeTrial)
             and (
                 sdk.models.default.api_key is None
                 or sdk.models.default.api_key.strip() == ""
@@ -84,9 +88,8 @@ class SimpleChatStep(Step):
 
         messages = self.messages or await sdk.get_chat_context()
 
-        generator = sdk.models.chat.stream_chat(
-            messages, temperature=sdk.config.temperature
-        )
+        kwargs = self.completion_options.dict() if self.completion_options else {}
+        generator = sdk.models.chat.stream_chat(messages, **kwargs)
 
         posthog_logger.capture_event(
             "model_use",
@@ -103,6 +106,7 @@ class SimpleChatStep(Step):
             },
         )
 
+        self.description = ""
         async for chunk in generator:
             if sdk.current_step_was_deleted():
                 # So that the message doesn't disappear

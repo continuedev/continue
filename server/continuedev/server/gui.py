@@ -2,6 +2,7 @@ import asyncio
 import json
 import traceback
 from typing import Any, List, Optional, Type, TypeVar
+from ..plugins.steps.setup_model import SetupModelStep
 
 from fastapi import APIRouter, Depends, WebSocket
 from pydantic import BaseModel
@@ -16,6 +17,7 @@ from ..libs.llm.prompts.chat import (
     sqlcoder_template_messages,
     template_alpaca_messages,
 )
+from ..libs.llm.prompts.edit import codellama_edit_prompt, alpaca_edit_prompt
 from ..libs.util.create_async_task import create_async_task
 from ..libs.util.edit_config import (
     add_config_import,
@@ -141,6 +143,8 @@ class GUIProtocolServer:
             self.select_context_group(data["id"])
         elif message_type == "delete_context_group":
             self.delete_context_group(data["id"])
+        elif message_type == "preview_context_item":
+            self.preview_context_item(data["id"])
 
     def on_main_input(self, input: str):
         # Do something with user input
@@ -193,12 +197,26 @@ class GUIProtocolServer:
 
     def on_show_logs_at_index(self, index: int):
         name = "Continue Prompt"
-        logs = "\n\n############################################\n\n".join(
-            ["This is the prompt that was sent to the LLM during this step"]
-            + self.session.autopilot.continue_sdk.history.timeline[index].logs
+
+        logs = None
+        timeline = self.session.autopilot.continue_sdk.history.timeline
+        while logs is None and index < len(timeline):
+            if len(timeline[index].logs) > 0:
+                logs = timeline[index].logs
+                break
+            elif timeline[index].step.name == "User Input":
+                break
+            index += 1
+
+        content = (
+            "Logs not found"
+            if logs is None
+            else "\n\n############################################\n\n".join(
+                ["This is the prompt that was sent to the LLM during this step"] + logs
+            )
         )
         create_async_task(
-            self.session.autopilot.ide.showVirtualFile(name, logs), self.on_error
+            self.session.autopilot.ide.showVirtualFile(name, content), self.on_error
         )
         posthog_logger.capture_event("show_logs_at_index", {})
 
@@ -239,6 +257,13 @@ class GUIProtocolServer:
             self.on_error,
         )
 
+    def preview_context_item(self, id: str):
+        """Called when user clicks on an item from the dropdown"""
+        create_async_task(
+            self.session.autopilot.context_manager.preview_context_item(id),
+            self.on_error,
+        )
+
     def load_session(self, session_id: Optional[str] = None):
         async def load_and_tell_to_reconnect():
             new_session_id = await session_manager.load_session(
@@ -257,7 +282,9 @@ class GUIProtocolServer:
 
     def set_system_message(self, message: str):
         self.session.autopilot.continue_sdk.config.system_message = message
-        self.session.autopilot.continue_sdk.models.set_system_message(message)
+        self.session.autopilot.continue_sdk.models.set_main_config_params(
+            message, self.session.autopilot.continue_sdk.config.temperature
+        )
 
         create_async_task(
             self.session.autopilot.set_config_attr(
@@ -339,6 +366,7 @@ class GUIProtocolServer:
                     models.__setattr__(role, None)
 
                 # Add the requisite import to config.py
+                default_model_display_overrides = {}
                 add_config_import(
                     f"from continuedev.libs.llm.{MODEL_MODULE_NAMES[model_class]} import {model_class}"
                 )
@@ -346,10 +374,6 @@ class GUIProtocolServer:
                     add_config_import(
                         f"from continuedev.libs.llm.prompts.chat import {model['template_messages']}"
                     )
-
-                # Set and start the new default model
-
-                if "template_messages" in model:
                     sqtm = sqlcoder_template_messages("<MY_DATABASE_SCHEMA>")
                     sqtm.__name__ = 'sqlcoder_template_messages("<MY_DATABASE_SCHEMA>")'
                     model["template_messages"] = {
@@ -357,6 +381,20 @@ class GUIProtocolServer:
                         "template_alpaca_messages": template_alpaca_messages,
                         "sqlcoder_template_messages": sqtm,
                     }[model["template_messages"]]
+
+                if "prompt_templates" in model and "edit" in model["prompt_templates"]:
+                    default_model_display_overrides[
+                        "prompt_templates"
+                    ] = f"""{{"edit": {model["prompt_templates"]["edit"]}}}"""
+                    add_config_import(
+                        f"from continuedev.libs.llm.prompts.edit import {model['prompt_templates']['edit']}"
+                    )
+                    model["prompt_templates"]["edit"] = {
+                        "codellama_edit_prompt": codellama_edit_prompt,
+                        "alpaca_edit_prompt": alpaca_edit_prompt,
+                    }[model["prompt_templates"]["edit"]]
+
+                # Set and start the new default model
                 new_model = MODEL_CLASSES[model_class](**model)
                 models.default = new_model
                 await self.session.autopilot.continue_sdk.start_model(models.default)
@@ -367,7 +405,9 @@ class GUIProtocolServer:
                     [display_llm_class(llm) for llm in saved_models]
                 )
                 models_args = {
-                    "default": display_llm_class(models.default, True),
+                    "default": display_llm_class(
+                        models.default, True, default_model_display_overrides
+                    ),
                     "saved": f"[{JOINER.join(saved_model_strings)}]",
                 }
 
@@ -406,6 +446,16 @@ class GUIProtocolServer:
         create_async_task(
             self.session.autopilot.delete_context_group(id), self.on_error
         )
+
+
+@router.get("/sessions")
+async def get_session(session_id: Optional[str] = None):
+    try:
+        # Assuming load_session is a method of a class, and you have an instance `instance_of_that_class`
+        await protocol.load_session(session_id)
+        return {"message": "Session loaded successfully", "session_id": session_id}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.websocket("/ws")
@@ -452,7 +502,10 @@ async def websocket_endpoint(
         raise e
     finally:
         logger.debug("Closing gui websocket")
-        if websocket.client_state != WebSocketState.DISCONNECTED:
+        if (
+            websocket.client_state != WebSocketState.DISCONNECTED
+            and websocket.application_state != WebSocketState.DISCONNECTED
+        ):
             await websocket.close()
 
         await session_manager.persist_session(session.session_id)

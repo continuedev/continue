@@ -15,8 +15,7 @@ from .ide import router as ide_router
 from .meilisearch_server import start_meilisearch, stop_meilisearch
 from .session_manager import router as sessions_router
 from .session_manager import session_manager
-
-meilisearch_url_global = None
+from .global_config import global_config
 
 
 @asynccontextmanager
@@ -26,7 +25,7 @@ async def lifespan(app: FastAPI):
 
     try:
         # start meilisearch without blocking server startup
-        create_async_task(start_meilisearch(url=meilisearch_url_global), on_err)
+        create_async_task(start_meilisearch(url=global_config.meilisearch_url), on_err)
     except Exception as e:
         logger.warning(f"Error starting MeiliSearch: {e}")
 
@@ -60,9 +59,8 @@ def run_server(
     port: int = 65432, host: str = "127.0.0.1", meilisearch_url: Optional[str] = None
 ):
     try:
-        global meilisearch_url_global
-
-        meilisearch_url_global = meilisearch_url
+        global global_config
+        global_config.meilisearch_url = meilisearch_url
 
         config = uvicorn.Config(app, host=host, port=port)
         server = uvicorn.Server(config)

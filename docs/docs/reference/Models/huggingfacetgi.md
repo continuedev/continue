@@ -2,14 +2,11 @@ import ClassPropertyRef from '@site/src/components/ClassPropertyRef.tsx';
 
 # HuggingFaceTGI
 
-
-
 [View the source](https://github.com/continuedev/continue/tree/main/server/continuedev/libs/llm/hf_tgi.py)
 
 ## Properties
 
 <ClassPropertyRef name='server_url' details='{&quot;title&quot;: &quot;Server Url&quot;, &quot;description&quot;: &quot;URL of your TGI server&quot;, &quot;default&quot;: &quot;http://localhost:8080&quot;, &quot;type&quot;: &quot;string&quot;}' required={false} default="http://localhost:8080"/>
-
 
 ### Inherited Properties
 

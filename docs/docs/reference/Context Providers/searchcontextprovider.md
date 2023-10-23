@@ -10,7 +10,6 @@ Type '@search' to reference the results of codebase search, just like the result
 
 <ClassPropertyRef name='workspace_dir' details='{&quot;title&quot;: &quot;Workspace Dir&quot;, &quot;description&quot;: &quot;The workspace directory to search&quot;, &quot;type&quot;: &quot;string&quot;}' required={false} default=""/>
 
-
 ### Inherited Properties
 
 <ClassPropertyRef name='title' details='{&quot;title&quot;: &quot;Title&quot;, &quot;default&quot;: &quot;search&quot;, &quot;type&quot;: &quot;string&quot;}' required={false} default="search"/>

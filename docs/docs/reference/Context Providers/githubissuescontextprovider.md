@@ -11,7 +11,6 @@ The GitHubIssuesContextProvider is a ContextProvider that allows you to search G
 <ClassPropertyRef name='repo_name' details='{&quot;title&quot;: &quot;Repo Name&quot;, &quot;description&quot;: &quot;The name of the GitHub repo from which to pull issues&quot;, &quot;type&quot;: &quot;string&quot;}' required={true} default=""/>
 <ClassPropertyRef name='auth_token' details='{&quot;title&quot;: &quot;Auth Token&quot;, &quot;description&quot;: &quot;The GitHub auth token to use to authenticate with the GitHub API&quot;, &quot;type&quot;: &quot;string&quot;}' required={true} default=""/>
 
-
 ### Inherited Properties
 
 <ClassPropertyRef name='title' details='{&quot;title&quot;: &quot;Title&quot;, &quot;default&quot;: &quot;issues&quot;, &quot;type&quot;: &quot;string&quot;}' required={false} default="issues"/>

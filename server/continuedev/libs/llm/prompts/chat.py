@@ -21,6 +21,16 @@ def anthropic_template_messages(messages: List[Dict[str, str]]) -> str:
     return prompt
 
 
+def chatml_template_messages(messages: List[Dict[str, str]]) -> str:
+    prompt = ""
+
+    for msg in messages:
+        prompt += f"<|im_start|>{msg['role']}\n{msg['content']}<|im_end|>\n"
+
+    prompt += "<|im_start|>assistant\n"
+    return prompt
+
+
 def template_alpaca_messages(msgs: List[Dict[str, str]]) -> str:
     prompt = ""
 
@@ -33,6 +43,22 @@ def template_alpaca_messages(msgs: List[Dict[str, str]]) -> str:
         prompt += f"{msg['content']}\n"
 
     prompt += "### Response:\n"
+
+    return prompt
+
+
+def phind_template_messages(msgs: List[Dict[str, str]]) -> str:
+    prompt = ""
+
+    if msgs[0]["role"] == "system":
+        prompt += f"### System Prompt\n{msgs[0]['content']}\n\n"
+        msgs.pop(0)
+
+    for msg in msgs:
+        prompt += "### User Message\n" if msg["role"] == "user" else "### Assistant\n"
+        prompt += f"{msg['content']}\n"
+
+    prompt += "### Assistant\n"
 
     return prompt
 

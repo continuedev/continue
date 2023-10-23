@@ -21,8 +21,6 @@ Claude 2 is not yet publicly released. You can request early access [here](https
 
 ## Properties
 
-
-
 ### Inherited Properties
 
 <ClassPropertyRef name='api_key' details='{&quot;title&quot;: &quot;Api Key&quot;, &quot;description&quot;: &quot;The API key for the LLM provider.&quot;, &quot;type&quot;: &quot;string&quot;}' required={true} default=""/>

@@ -8,8 +8,6 @@ The FileContextProvider is a ContextProvider that allows you to search files in 
 
 ## Properties
 
-
-
 ### Inherited Properties
 
 <ClassPropertyRef name='title' details='{&quot;title&quot;: &quot;Title&quot;, &quot;default&quot;: &quot;file&quot;, &quot;type&quot;: &quot;string&quot;}' required={false} default="file"/>

@@ -10,7 +10,6 @@ Type '@diff' to reference all of the changes you've made to your current branch.
 
 <ClassPropertyRef name='workspace_dir' details='{&quot;title&quot;: &quot;Workspace Dir&quot;, &quot;description&quot;: &quot;The workspace directory in which to run `git diff`&quot;, &quot;type&quot;: &quot;string&quot;}' required={false} default=""/>
 
-
 ### Inherited Properties
 
 <ClassPropertyRef name='title' details='{&quot;title&quot;: &quot;Title&quot;, &quot;default&quot;: &quot;diff&quot;, &quot;type&quot;: &quot;string&quot;}' required={false} default="diff"/>

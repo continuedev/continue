@@ -6,7 +6,7 @@ from pydantic import Field
 
 from ...core.main import ChatMessage
 from .base import LLM
-from .prompts.edit import simplified_edit_prompt
+from .prompts.edit import codellama_edit_prompt
 
 
 class ReplicateLLM(LLM):
@@ -37,7 +37,7 @@ class ReplicateLLM(LLM):
     _client: replicate.Client = None
 
     prompt_templates = {
-        "edit": simplified_edit_prompt,
+        "edit": codellama_edit_prompt,
     }
 
     async def start(self, **kwargs):

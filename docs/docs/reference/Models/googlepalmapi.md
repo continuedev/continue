@@ -22,8 +22,6 @@ config = ContinueConfig(
 
 ## Properties
 
-
-
 ### Inherited Properties
 
 <ClassPropertyRef name='api_key' details='{&quot;title&quot;: &quot;Api Key&quot;, &quot;description&quot;: &quot;Google PaLM API key&quot;, &quot;type&quot;: &quot;string&quot;}' required={true} default=""/>

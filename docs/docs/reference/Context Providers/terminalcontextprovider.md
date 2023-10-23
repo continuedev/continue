@@ -10,7 +10,6 @@ Type '@terminal' to reference the contents of your IDE's terminal.
 
 <ClassPropertyRef name='get_last_n_commands' details='{&quot;title&quot;: &quot;Get Last N Commands&quot;, &quot;description&quot;: &quot;The number of previous commands to reference&quot;, &quot;default&quot;: 3, &quot;type&quot;: &quot;integer&quot;}' required={false} default="3"/>
 
-
 ### Inherited Properties
 
 <ClassPropertyRef name='title' details='{&quot;title&quot;: &quot;Title&quot;, &quot;default&quot;: &quot;terminal&quot;, &quot;type&quot;: &quot;string&quot;}' required={false} default="terminal"/>

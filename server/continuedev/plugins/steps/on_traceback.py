@@ -2,6 +2,8 @@ import os
 from textwrap import dedent
 from typing import Dict, List, Optional, Tuple
 
+from ...libs.util.telemetry import posthog_logger
+
 from ...core.main import ChatMessage, ContinueCustomException, Step
 from ...core.sdk import ContinueSDK
 from ...core.steps import UserInputStep
@@ -58,8 +60,11 @@ class DefaultOnTracebackStep(Step):
             )
 
         if get_python_traceback(self.output) is not None and sdk.lsp is not None:
+            posthog_logger.capture_event("debug_terminal", {"language": "python"})
             await sdk.run_step(SolvePythonTracebackStep(output=self.output))
             return
+
+        posthog_logger.capture_event("debug_terminal", {})
 
         tb = extract_traceback_str(self.output) or self.output[-8000:]
 

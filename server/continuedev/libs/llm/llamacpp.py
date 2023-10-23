@@ -5,7 +5,7 @@ from pydantic import Field
 
 from .base import LLM
 from .prompts.chat import llama2_template_messages
-from .prompts.edit import simplified_edit_prompt
+from .prompts.edit import codellama_edit_prompt
 
 
 class LlamaCpp(LLM):
@@ -42,7 +42,7 @@ class LlamaCpp(LLM):
 
     template_messages: Callable = llama2_template_messages
     prompt_templates = {
-        "edit": simplified_edit_prompt,
+        "edit": codellama_edit_prompt,
     }
 
     class Config:

@@ -1,4 +1,5 @@
-from typing import Tuple
+import os
+from typing import List, Tuple
 
 
 def dedent_and_get_common_whitespace(s: str) -> Tuple[str, str]:
@@ -62,3 +63,31 @@ def remove_quotes_and_escapes(output: str) -> str:
         output = output[1:-1]
 
     return output
+
+
+def shorten_filepaths(filepaths: List[str]) -> List[str]:
+    """
+    Shortens the filepaths to just the filename,
+    unless directory names are needed for uniqueness
+    """
+    basenames = list(map(os.path.basename, filepaths))
+    if len(basenames) == len(filepaths):
+        return list(basenames)
+
+    basename_counts = {}
+    for filepath in filepaths:
+        basename = os.path.basename(filepath)
+        if basename not in basename_counts:
+            basename_counts[basename] = 0
+        basename_counts[basename] += 1
+
+    for i in range(0, len(filepaths)):
+        basename = os.path.basename(filepaths[i])
+        if basename_counts[basename] <= 1:
+            filepaths[i] = basename
+        else:
+            filepaths[i] = os.path.join(
+                os.path.basename(os.path.dirname(filepaths[i])), basename
+            )
+
+    return filepaths

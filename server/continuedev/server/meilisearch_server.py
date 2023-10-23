@@ -6,6 +6,7 @@ from typing import Optional
 
 import aiofiles
 import aiohttp
+from .global_config import global_config
 import psutil
 from meilisearch_python_async import Client
 
@@ -14,7 +15,7 @@ from ..libs.util.paths import getMeilisearchExePath, getServerFolderPath
 
 
 async def download_file(url: str, filename: str):
-    async with aiohttp.ClientSession() as session:
+    async with aiohttp.ClientSession(trust_env=True) as session:
         async with session.get(url) as resp:
             if resp.status == 200:
                 f = await aiofiles.open(filename, mode="wb")
@@ -193,4 +194,4 @@ def kill_proc(port):
 async def restart_meilisearch():
     stop_meilisearch()
     kill_proc(7700)
-    await start_meilisearch(url=meilisearch_url)
+    await start_meilisearch(url=global_config.meilisearch_url)
