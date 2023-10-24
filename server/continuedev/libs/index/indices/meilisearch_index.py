@@ -1,3 +1,4 @@
+import asyncio
 from functools import cached_property
 from meilisearch_python_async import Client
 from ....server.meilisearch_server import get_meilisearch_url
@@ -10,7 +11,7 @@ from ....server.meilisearch_server import remove_meilisearch_disallowed_chars
 from ...util.logging import logger
 
 
-class MeilisearchIndex(CodebaseIndex):
+class MeilisearchCodebaseIndex(CodebaseIndex):
     directory: str
 
     def __init__(self, directory: str):
@@ -20,12 +21,19 @@ class MeilisearchIndex(CodebaseIndex):
     def index_name(self) -> str:
         return remove_meilisearch_disallowed_chars(self.directory)
 
-    def exists(self) -> bool:
+    async def exists(self) -> bool:
         """Returns whether the index exists (has been built)"""
-        raise NotImplementedError()
+        async with Client(get_meilisearch_url()) as search_client:
+            try:
+                index = await search_client.get_index(self.index_name)
+                return index is not None
+            except Exception as e:
+                logger.warning(f"Error while checking if meilisearch index exists: {e}")
+                return False
 
-    def chunk_to_meilisearch_document(self, chunk: Chunk) -> Dict[str, Any]:
+    def chunk_to_meilisearch_document(self, chunk: Chunk, index: int) -> Dict[str, Any]:
         return {
+            "id": index,
             "content": chunk.content,
             "document_id": chunk.document_id,
             **chunk.other_metadata,
@@ -41,6 +49,7 @@ class MeilisearchIndex(CodebaseIndex):
         del other_metadata["content"]
         del other_metadata["metadata"]
         del other_metadata["document_id"]
+        del other_metadata["id"]
 
         return Chunk(
             content=document["content"],
@@ -60,19 +69,31 @@ class MeilisearchIndex(CodebaseIndex):
         """Builds the index, yielding progress as a float between 0 and 1"""
         if chunks is None:
             logger.warning("Meilisearch index requires chunks to be passed in")
-            return
+            yield 1
 
         async with Client(get_meilisearch_url()) as search_client:
             try:
                 await search_client.create_index(self.index_name)
                 index = await search_client.get_index(self.index_name)
 
-                await index.add_documents(
-                    [self.chunk_to_meilisearch_document(chunk) for chunk in chunks]
-                )
+                i = 0
+                GROUP_SIZE = 100
+                while i < len(chunks):
+                    await index.add_documents(
+                        [
+                            self.chunk_to_meilisearch_document(chunk, i)
+                            for i, chunk in enumerate(chunks[i : i + GROUP_SIZE])
+                        ]
+                    )
+
+                    i += GROUP_SIZE
+                    yield i / len(chunks)
+                    await asyncio.sleep(0.1)
 
             except Exception as e:
                 logger.warning(f"Error while building meilisearch index: {e}")
+
+        yield 1
 
     async def update(self) -> AsyncGenerator[float, None]:
         """Updates the index, yielding progress as a float between 0 and 1"""
@@ -88,10 +109,10 @@ class MeilisearchIndex(CodebaseIndex):
 
                 return [
                     self.meilisearch_document_to_chunk(result)
-                    for result in results["hits"]
+                    for result in results.hits
                 ]
 
             except Exception as e:
                 logger.warning(f"Error while retrieving document from meilisearch: {e}")
 
-            return None
+            return []

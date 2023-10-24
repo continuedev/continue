@@ -8,6 +8,7 @@ from typing import AsyncGenerator, Dict, List, Literal, Optional
 import chromadb
 from chromadb.config import Settings
 from chromadb.utils import embedding_functions
+from ..chunkers.chunk_directory import chunk_directory
 from .base import CodebaseIndex
 from dotenv import load_dotenv
 from openai.error import RateLimitError
@@ -22,40 +23,6 @@ from ...util.paths import getEmbeddingsPathForBranch
 from ..chunkers import chunk_document
 
 load_dotenv()
-
-IGNORE_PATTERNS_FOR_CHROMA = [
-    # File Names
-    "**/.DS_Store",
-    "**/package-lock.json",
-    "**/yarn.lock",
-    # File Types
-    "*.log",
-    "*.ttf",
-    "*.png",
-    "*.jpg",
-    "*.jpeg",
-    "*.gif",
-    "*.mp4",
-    "*.svg",
-    "*.ico",
-    "*.pdf",
-    "*.zip",
-    "*.gz",
-    "*.tar",
-    "*.tgz",
-    "*.rar",
-    "*.7z",
-    "*.exe",
-    "*.dll",
-    "*.obj",
-    "*.o",
-    "*.a",
-    "*.lib",
-    "*.so",
-    "*.dylib",
-    "*.ncb",
-    "*.sdf",
-]
 
 
 # Mapping of workspace_dir to chromadb collection
@@ -131,7 +98,7 @@ class ChromaCodebaseIndex(CodebaseIndex):
     def metadata_path(self) -> str:
         return os.path.join(self.index_dir, "metadata.json")
 
-    def exists(self):
+    async def exists(self):
         """Check whether the codebase index has already been built and saved on disk"""
         return os.path.exists(self.metadata_path)
 
@@ -193,53 +160,25 @@ class ChromaCodebaseIndex(CodebaseIndex):
     ) -> AsyncGenerator[float, None]:
         """Create a new index for the current branch."""
 
-        if self.exists():
+        if await self.exists():
             return
 
-        # Get list of filenames to index
-        files = await sdk.ide.listDirectoryContents(sdk.ide.workspace_directory, True)
+        if chunks is None:
+            raise Exception("Chunks must be passed in to build Chroma index")
 
-        # Filter from ignore_directories
-        files = list(
+        # Construct list of chunks for each file
+        chunks = list(
             filter(
-                lambda file: not should_filter_path(
-                    file,
-                    ignore_files + DEFAULT_IGNORE_PATTERNS + IGNORE_PATTERNS_FOR_CHROMA,
-                ),
-                files,
+                lambda c: len(c.content.strip()) > 0,
+                chunks,
             )
         )
 
-        # Get file contents for all at once
-        tasks = []
-
-        async def readFile(filepath: str) -> Optional[str]:
-            to = 0.1
-            while True:
-                try:
-                    return await sdk.ide.readFile(filepath)
-                except Exception as e:
-                    if to > 4:
-                        return None
-                    await asyncio.sleep(to)
-                    to *= 2
-
-        for file in files:
-            tasks.append(readFile(file))
-
-        file_contents = await asyncio.gather(*tasks)
-
-        # Construct list of chunks for each file
-        chunks: List[Chunk] = []
         num_chunks_per_file = {}
-        for i in range(len(files)):
-            document_chunks = [
-                c
-                for c in chunk_document(files[i], file_contents[i], MAX_CHUNK_SIZE)
-                if len(c.content.strip()) > 0
-            ]
-            num_chunks_per_file[files[i]] = len(document_chunks)
-            chunks.extend(document_chunks)
+        for chunk in chunks:
+            num_chunks_per_file[chunk.document_id] = (
+                num_chunks_per_file.get(chunk.document_id, 0) + 1
+            )
 
         # Flatten chunks, metadata, and ids for insertion to Chroma
         documents = []
@@ -294,7 +233,7 @@ class ChromaCodebaseIndex(CodebaseIndex):
     async def update(self):
         """Update the index with a list of files."""
 
-        if not self.exists():
+        if not await self.exists():
             self.build()
         else:
             metadata = self.get_metadata()
@@ -338,9 +277,9 @@ class ChromaCodebaseIndex(CodebaseIndex):
 
             logger.debug("Codebase index updated")
 
-    def query(self, query: str, n: int = 4) -> List[Chunk]:
+    async def query(self, query: str, n: int = 4) -> List[Chunk]:
         """Query the codebase index for top n results"""
-        if not self.exists():
+        if not await self.exists():
             logger.warning(f"No index found for the codebase at {self.index_dir}")
             return []
 

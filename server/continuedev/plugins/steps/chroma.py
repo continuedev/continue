@@ -1,5 +1,10 @@
+import asyncio
 import os
 from typing import Coroutine, Dict, List, Optional, Union
+
+from ...libs.index.chunkers.chunk_directory import chunk_directory
+
+from ...libs.index.indices.meilisearch_index import MeilisearchCodebaseIndex
 
 from ...libs.llm.base import CompletionOptions
 from ...libs.index.rerankers.default import default_reranker_parallel
@@ -11,7 +16,7 @@ from ...core.main import ContextItem, ContextItemDescription, ContextItemId, Ste
 from ...core.observation import Observation
 from ...core.sdk import ContinueSDK
 from ...core.steps import EditFileStep
-from ...libs.index.indices.chroma_index import ChromaCodebaseIndex
+from ...libs.index.indices.chroma_index import MAX_CHUNK_SIZE, ChromaCodebaseIndex
 from ...server.meilisearch_server import remove_meilisearch_disallowed_chars
 from .chat import SimpleChatStep
 from ...core.steps import EditFileStep
@@ -36,7 +41,7 @@ class CreateCodebaseIndexChroma(Step):
         return "Generated codebase embeddings."
 
     async def run(self, sdk: ContinueSDK) -> Coroutine[Observation, None, None]:
-        index = ChromaCodebaseIndex(
+        chroma_index = ChromaCodebaseIndex(
             sdk.ide.workspace_directory,
             openai_api_key=self.openai_api_key,
             api_base=self.api_base,
@@ -44,13 +49,42 @@ class CreateCodebaseIndexChroma(Step):
             api_version=self.api_version,
             organization_id=self.organization_id,
         )
-        if index.exists():
+        meilisearch_index = MeilisearchCodebaseIndex(sdk.ide.workspace_directory)
+
+        indices_to_build = 0
+        chroma_exists = await chroma_index.exists()
+        meilisearch_exists = await meilisearch_index.exists()
+        if not chroma_exists:
+            indices_to_build += 1
+        if not meilisearch_exists:
+            indices_to_build += 1
+
+        if indices_to_build == 0:
             return
 
         self.hide = False
-        async for progress in index.build(sdk, ignore_files=self.ignore_files):
-            self.description = f"Generating codebase embeddings... {int(progress*100)}%"
-            await sdk.update_ui()
+
+        chunks = await chunk_directory(sdk, MAX_CHUNK_SIZE)
+
+        total_progress = 0
+        if not chroma_exists:
+            async for progress in chroma_index.build(
+                sdk, ignore_files=self.ignore_files, chunks=chunks
+            ):
+                self.description = f"Generating codebase embeddings... {int(progress*100 / indices_to_build)}%"
+                await sdk.update_ui()
+
+            total_progress += 50
+
+        if not meilisearch_exists:
+            async for progress in meilisearch_index.build(
+                sdk, ignore_files=self.ignore_files, chunks=chunks
+            ):
+                self.description = f"Generating codebase embeddings... {int(progress*100 / indices_to_build + total_progress)}%"
+                await sdk.update_ui()
+
+        await asyncio.sleep(1)
+        self.hide = True
 
 
 class AnswerQuestionChroma(Step):
@@ -73,6 +107,9 @@ class AnswerQuestionChroma(Step):
         5,
         description="Number of results to group together when re-ranking. Each group will be processed in parallel.",
     )
+    openai_api_key: str = Field(
+        None, description="OpenAI API key. Required if use_reranking is True"
+    )
 
     hide: bool = True
 
@@ -83,15 +120,31 @@ class AnswerQuestionChroma(Step):
             return self._answer
 
     async def run(self, sdk: ContinueSDK) -> Coroutine[Observation, None, None]:
-        index = ChromaCodebaseIndex(sdk.ide.workspace_directory)
+        chroma_index = ChromaCodebaseIndex(
+            sdk.ide.workspace_directory, openai_api_key=self.openai_api_key
+        )
+        meilisearch_index = MeilisearchCodebaseIndex(sdk.ide.workspace_directory)
+
         self.hide = False
         self.description = f"Scanning {self.n_retrieve} files..."
         await sdk.update_ui()
 
         # Get top chunks from index
-        chunks = index.query(
-            self.user_input, n=self.n_retrieve if self.use_reranking else self.n_final
+        to_retrieve_from_each = (
+            self.n_retrieve if self.use_reranking else self.n_final
+        ) // 2
+        chroma_chunks = await chroma_index.query(
+            self.user_input, n=to_retrieve_from_each
         )
+        meilisearch_chunks = await meilisearch_index.query(
+            self.user_input, n=to_retrieve_from_each
+        )
+        chunk_ids = set()
+        chunks = []
+        for chunk in chroma_chunks + meilisearch_chunks:
+            if chunk.id not in chunk_ids:
+                chunk_ids.add(chunk.id)
+                chunks.append(chunk)
 
         # Rerank to select top results
         self.description = f"Selecting most important files..."

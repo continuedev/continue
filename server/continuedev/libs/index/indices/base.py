@@ -12,7 +12,7 @@ class CodebaseIndex(ABC):
         self.directory = directory
 
     @abstractmethod
-    def exists(self) -> bool:
+    async def exists(self) -> bool:
         """Returns whether the index exists (has been built)"""
         raise NotImplementedError()
 

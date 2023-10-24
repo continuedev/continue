@@ -7,7 +7,7 @@ from ...core.context import ContextProvider
 from ...core.main import ContextItem, ContextItemDescription, ContextItemId
 from ...libs.util.logging import logger
 from ...libs.util.ripgrep import get_rg_path
-from .util import remove_meilisearch_disallowed_chars
+from ...server.meilisearch_server import remove_meilisearch_disallowed_chars
 
 
 class SearchContextProvider(ContextProvider):
