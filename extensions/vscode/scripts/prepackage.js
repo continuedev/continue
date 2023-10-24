@@ -21,7 +21,13 @@ exec("npm install", (error) => {
       if (error) throw error;
       console.log("npm install in gui completed");
 
-      exec("npm run build", (error) => {
+      exec("npm run build", (error, stdout, stderr) => {
+        if (error) {
+          console.log("Error running npm run build in gui");
+          console.log("stdout: ", stdout);
+          console.log("stderr: ", stderr);
+          throw error;
+        }
         // Then copy over the dist folder to the Intellij extension
         const intellijExtensionWebviewPath = path.join(
           "..",
