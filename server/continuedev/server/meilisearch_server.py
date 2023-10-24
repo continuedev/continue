@@ -1,6 +1,7 @@
 import asyncio
 import os
 import shutil
+import re
 import subprocess
 from typing import Optional
 
@@ -195,3 +196,7 @@ async def restart_meilisearch():
     stop_meilisearch()
     kill_proc(7700)
     await start_meilisearch(url=global_config.meilisearch_url)
+
+
+def remove_meilisearch_disallowed_chars(id: str) -> str:
+    return re.sub(r"[^0-9a-zA-Z_-]", "", id)

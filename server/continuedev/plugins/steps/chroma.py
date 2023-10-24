@@ -11,8 +11,8 @@ from ...core.main import ContextItem, ContextItemDescription, ContextItemId, Ste
 from ...core.observation import Observation
 from ...core.sdk import ContinueSDK
 from ...core.steps import EditFileStep
-from ...libs.index.codebase_index import ChromaCodebaseIndex
-from ..context_providers.util import remove_meilisearch_disallowed_chars
+from ...libs.index.indices.chroma_index import ChromaCodebaseIndex
+from ...server.meilisearch_server import remove_meilisearch_disallowed_chars
 from .chat import SimpleChatStep
 from ...core.steps import EditFileStep
 

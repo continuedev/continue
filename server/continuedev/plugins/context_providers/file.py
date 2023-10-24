@@ -7,7 +7,7 @@ from ...core.main import ContextItem, ContextItemDescription, ContextItemId
 from ...core.sdk import ContinueSDK
 from ...libs.util.filter_files import DEFAULT_IGNORE_PATTERNS
 from ...libs.util.logging import logger
-from .util import remove_meilisearch_disallowed_chars
+from ...server.meilisearch_server import remove_meilisearch_disallowed_chars
 
 MAX_SIZE_IN_CHARS = 50_000
 

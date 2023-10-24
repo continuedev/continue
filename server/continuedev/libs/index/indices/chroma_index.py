@@ -8,17 +8,18 @@ from typing import AsyncGenerator, Dict, List, Literal, Optional
 import chromadb
 from chromadb.config import Settings
 from chromadb.utils import embedding_functions
+from .base import CodebaseIndex
 from dotenv import load_dotenv
 from openai.error import RateLimitError
 from pydantic import BaseModel
 
-from .chunkers.chunk import Chunk
-from ...libs.index.git import GitProject
-from ...core.sdk import ContinueSDK
-from ..util.filter_files import DEFAULT_IGNORE_PATTERNS, should_filter_path
-from ..util.logging import logger
-from ..util.paths import getEmbeddingsPathForBranch
-from .chunkers import chunk_document
+from ..chunkers.chunk import Chunk
+from ..git import GitProject
+from ....core.sdk import ContinueSDK
+from ...util.filter_files import DEFAULT_IGNORE_PATTERNS, should_filter_path
+from ...util.logging import logger
+from ...util.paths import getEmbeddingsPathForBranch
+from ..chunkers import chunk_document
 
 load_dotenv()
 
@@ -70,7 +71,7 @@ class CodebaseIndexMetadata(BaseModel):
     chunks: Dict[str, int]
 
 
-class ChromaCodebaseIndex:
+class ChromaCodebaseIndex(CodebaseIndex):
     directory: str
     client: chromadb.Client
     openai_api_key: str = None
@@ -185,7 +186,10 @@ class ChromaCodebaseIndex:
         return collection
 
     async def build(
-        self, sdk: ContinueSDK, ignore_files: List[str] = []
+        self,
+        sdk: ContinueSDK,
+        ignore_files: List[str] = [],
+        chunks: Optional[List[Chunk]] = None,
     ) -> AsyncGenerator[float, None]:
         """Create a new index for the current branch."""
 
