@@ -77,10 +77,6 @@ exec("npm install", (error) => {
           console.log("Copied gui build to VSCode extension");
         });
 
-        if (error) {
-          console.log("Error running npm run build in gui: ", error);
-          throw error;
-        }
         if (!fs.existsSync(path.join("dist", "assets", "index.js"))) {
           throw new Error("gui build did not produce index.js");
         }
