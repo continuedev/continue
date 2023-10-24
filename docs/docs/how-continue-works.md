@@ -1,6 +1,6 @@
 ---
 title: How Continue works
-description: Overview of the Continue archictecture
+description: Overview of the Continue architecture
 keywords: [architecture, vs code, jetbrains, ide, manually]
 ---
 

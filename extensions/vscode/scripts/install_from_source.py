@@ -79,7 +79,7 @@ def main():
         )
         return
 
-    resp = run("cd ../../continuedev; poetry install; poetry run typegen")
+    resp = run("cd ../../server; poetry install; poetry run typegen")
 
     resp = run(
         "cd ../../..; npm i; cd gui; npm i; cd ../extensions/vscode; npm run package"
