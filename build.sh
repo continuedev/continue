@@ -14,7 +14,6 @@ python3 -m venv env
 # 3. Install the required packages
 pip install -r server/requirements.txt || exit 1
 pip install pyinstaller || exit 1
-pip install certifi || exit 1
 
 # 4. Detect M1 architecture or allow manual override
 USE_ARCH="intel"

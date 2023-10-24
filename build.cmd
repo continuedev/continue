@@ -15,7 +15,6 @@ REM 3. Install the required packages
 pip install -r server\requirements.txt
 
 pip install pyinstaller || exit /b 1
-pip install certifi || exit /b 1
 
 REM 4.5. Make .tiktoken_cache directory, used to package with tiktoken vocab file
 mkdir .tiktoken_cache
