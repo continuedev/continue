@@ -681,21 +681,17 @@ Please output the code to be inserted at the cursor in order to fulfill the user
                     current_line_in_file += 1
 
                 # Debounce the diff updates, last in only out for each period
-                coro = sendDiffUpdate(
-                    lines
-                    + [
-                        common_whitespace
-                        if unfinished_line.startswith("<")
-                        else (common_whitespace + unfinished_line)
-                    ],
-                    sdk,
-                )
-                if last_task_time is None:
+                if last_task_time is None or time.time() - last_task_time > 0.15:
                     last_task_time = time.time()
-                    await coro
-                elif time.time() - last_task_time > 0.15:
-                    last_task_time = time.time()
-                    await coro
+                    await sendDiffUpdate(
+                        lines
+                        + [
+                            common_whitespace
+                            if unfinished_line.startswith("<")
+                            else (common_whitespace + unfinished_line)
+                        ],
+                        sdk,
+                    )
 
         finally:
             await generator.aclose()
