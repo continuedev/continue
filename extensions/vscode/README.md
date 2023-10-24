@@ -1,6 +1,6 @@
 > 🎁 **New! [Try out the new JetBrains extension (Alpha)](https://plugins.jetbrains.com/plugin/22707-continue-extension)**
 
-![Continue logo](c_d.png)
+![Continue logo](media/c_d.png)
 
 <h1 align="center">Continue</h1>
 
@@ -24,7 +24,7 @@
 
 <p></p>
 
-![Editing With Continue](readme.gif)
+![Editing With Continue](media/readme.gif)
 
 </div>
 
