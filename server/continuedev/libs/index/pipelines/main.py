@@ -1,6 +1,7 @@
 from typing import List, Optional
 
 from ..rerankers.default import default_reranker_parallel
+from ..rerankers.single_token import single_token_reranker_parallel
 from ..indices.meilisearch_index import MeilisearchCodebaseIndex
 from ....core.sdk import ContinueSDK
 from ..indices.chroma_index import ChromaCodebaseIndex
@@ -39,12 +40,11 @@ async def main_retrieval_pipeline(
     # Rerank to select top results
     if use_reranking:
         print(f"Selecting most important files...")
-        chunks = await default_reranker_parallel(
+        chunks = await single_token_reranker_parallel(
             chunks,
             query,
             n_final,
             sdk,
-            group_size=rerank_group_size,
         )
 
     return chunks

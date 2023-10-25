@@ -45,6 +45,7 @@ typegen = "continuedev.models.generate_json_schema:main"
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.4.1"
 pytest-asyncio = "^0.21.1"
+ipykernel = "^6.26.0"
 
 [build-system]
 requires = ["poetry-core"]
