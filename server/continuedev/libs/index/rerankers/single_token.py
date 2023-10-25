@@ -78,7 +78,7 @@ async def single_token_reranker(
         completion = await sdk.models.summarize.complete(
             compiled_prompt, log=False, max_tokens=1, temperature=0.0
         )
-        l = completion.strip().lower()
+        l = completion.strip().lower().replace('"', "").replace("'", "")
         if l == "yes":
             return 1.0
         elif l == "no":
