@@ -105,6 +105,16 @@
           "description": "A title that will identify this model in the model selection dropdown",
           "type": "string"
         },
+        "unique_id": {
+          "title": "Unique Id",
+          "description": "The unique ID of the user.",
+          "type": "string"
+        },
+        "model": {
+          "title": "Model",
+          "description": "The name of the model to be used (e.g. gpt-4, codellama)",
+          "type": "string"
+        },
         "system_message": {
           "title": "System Message",
           "description": "A system message that will always be followed by the LLM",
@@ -116,22 +126,6 @@
           "default": 2048,
           "type": "integer"
         },
-        "unique_id": {
-          "title": "Unique Id",
-          "description": "The unique ID of the user.",
-          "type": "string"
-        },
-        "model": {
-          "title": "Model",
-          "description": "The name of the model to be used (e.g. gpt-4, codellama)",
-          "type": "string"
-        },
-        "max_tokens": {
-          "title": "Max Tokens",
-          "description": "The maximum number of tokens to generate.",
-          "default": 1024,
-          "type": "integer"
-        },
         "stop_tokens": {
           "title": "Stop Tokens",
           "description": "Tokens that will stop the completion.",
@@ -139,6 +133,31 @@
           "items": {
             "type": "string"
           }
+        },
+        "temperature": {
+          "title": "Temperature",
+          "description": "The temperature of the completion.",
+          "type": "number"
+        },
+        "top_p": {
+          "title": "Top P",
+          "description": "The top_p of the completion.",
+          "type": "number"
+        },
+        "top_k": {
+          "title": "Top K",
+          "description": "The top_k of the completion.",
+          "type": "integer"
+        },
+        "presence_penalty": {
+          "title": "Presence Penalty",
+          "description": "The presence penalty Aof the completion.",
+          "type": "number"
+        },
+        "frequency_penalty": {
+          "title": "Frequency Penalty",
+          "description": "The frequency penalty of the completion.",
+          "type": "number"
         },
         "timeout": {
           "title": "Timeout",
@@ -160,6 +179,14 @@
           "title": "Proxy",
           "description": "Proxy URL to use when making the HTTP request",
           "type": "string"
+        },
+        "headers": {
+          "title": "Headers",
+          "description": "Headers to use when making the HTTP request",
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
         },
         "prompt_templates": {
           "title": "Prompt Templates",
@@ -439,32 +466,44 @@
           "default": {
             "default": {
               "title": null,
+              "model": "gpt-4",
               "system_message": null,
               "context_length": 2048,
-              "model": "gpt-4",
-              "max_tokens": 1024,
               "stop_tokens": null,
+              "temperature": null,
+              "top_p": null,
+              "top_k": null,
+              "presence_penalty": null,
+              "frequency_penalty": null,
               "timeout": 300,
               "verify_ssl": null,
               "ca_bundle_path": null,
               "proxy": null,
+              "headers": null,
               "prompt_templates": {},
+              "template_messages": null,
               "api_key": null,
               "llm": null,
               "class_name": "OpenAIFreeTrial"
             },
             "summarize": {
               "title": null,
+              "model": "gpt-3.5-turbo",
               "system_message": null,
               "context_length": 2048,
-              "model": "gpt-3.5-turbo",
-              "max_tokens": 1024,
               "stop_tokens": null,
+              "temperature": null,
+              "top_p": null,
+              "top_k": null,
+              "presence_penalty": null,
+              "frequency_penalty": null,
               "timeout": 300,
               "verify_ssl": null,
               "ca_bundle_path": null,
               "proxy": null,
+              "headers": null,
               "prompt_templates": {},
+              "template_messages": null,
               "api_key": null,
               "llm": null,
               "class_name": "OpenAIFreeTrial"
