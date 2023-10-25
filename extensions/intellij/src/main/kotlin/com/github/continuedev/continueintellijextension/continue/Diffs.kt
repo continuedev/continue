@@ -35,7 +35,7 @@ fun getDiffDirectory(): File {
     return diffDir
 }
 fun escapeFilepath(filepath: String): String {
-    return filepath.replace("/", "\$f\$").replace("\\", "\$b\$")
+    return filepath.replace("/", "_f_").replace("\\", "_b_")
 }
 
 interface DiffInfo {

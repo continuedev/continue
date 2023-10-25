@@ -10,11 +10,11 @@ app = typer.Typer()
 
 
 async def start_headless_session(
-    config: Optional[Union[str, ContinueConfig]] = None
+    config: Optional[Union[str, ContinueConfig]] = None, directory: str = None
 ) -> Session:
     if config is not None:
         if isinstance(config, str):
             config: ContinueConfig = ContinueConfig.from_filepath(config)
 
-    ide = LocalIdeProtocol()
+    ide = LocalIdeProtocol(workspace_directory=directory)
     return await session_manager.new_session(ide, config=config)

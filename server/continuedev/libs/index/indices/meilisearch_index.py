@@ -1,6 +1,7 @@
 import asyncio
 from functools import cached_property
 from meilisearch_python_async import Client
+from meilisearch_python_async.errors import MeilisearchApiError
 from ....server.meilisearch_server import get_meilisearch_url
 from .base import CodebaseIndex
 from ..chunkers import Chunk
@@ -27,6 +28,8 @@ class MeilisearchCodebaseIndex(CodebaseIndex):
             try:
                 index = await search_client.get_index(self.index_name)
                 return index is not None
+            except MeilisearchApiError as e:
+                return False
             except Exception as e:
                 logger.warning(f"Error while checking if meilisearch index exists: {e}")
                 return False

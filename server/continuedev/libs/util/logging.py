@@ -42,6 +42,3 @@ console_handler.setFormatter(formatter)
 # Add the handlers to the logger
 logger.addHandler(file_handler)
 logger.addHandler(console_handler)
-
-# Log a test message
-logger.debug("------ Begin Logs ------")

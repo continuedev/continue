@@ -32,6 +32,10 @@ class LocalIdeProtocol(AbstractIdeProtocolServer):
 
     filesystem: FileSystem = RealFileSystem()
 
+    def __init__(self, workspace_directory: str = None):
+        if workspace_directory:
+            self.workspace_directory = workspace_directory
+
     async def handle_json(self, data: Any):
         """Handle a json message"""
         pass

@@ -77,6 +77,24 @@
       "subProcess": false
     },
     {
+      "name": "Index",
+      "type": "python",
+      "request": "launch",
+      "module": "server.continuedev",
+      "args": ["index", "server/continuedev"],
+      "justMyCode": false,
+      "subProcess": false
+    },
+    {
+      "name": "Query",
+      "type": "python",
+      "request": "launch",
+      "module": "server.continuedev",
+      "args": ["search", "--directory", "server/continuedev", "Ollama"],
+      "justMyCode": false,
+      "subProcess": false
+    },
+    {
       "name": "Extension (VSCode)",
       "type": "extensionHost",
       "request": "launch",

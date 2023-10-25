@@ -72,6 +72,7 @@ class CreateCodebaseIndexChroma(Step):
                 sdk, ignore_files=self.ignore_files, chunks=chunks
             ):
                 self.description = f"Generating codebase embeddings... {int(progress*100 / indices_to_build)}%"
+                print(self.description, flush=True)
                 await sdk.update_ui()
 
             total_progress += 50
@@ -81,6 +82,7 @@ class CreateCodebaseIndexChroma(Step):
                 sdk, ignore_files=self.ignore_files, chunks=chunks
             ):
                 self.description = f"Generating codebase embeddings... {int(progress*100 / indices_to_build + total_progress)}%"
+                print(self.description, flush=True)
                 await sdk.update_ui()
 
         await asyncio.sleep(1)

@@ -55,14 +55,14 @@ def decode_escaped_path(path: str) -> str:
     """We use a custom escaping scheme to record the full path of a file as a
     corresponding basename, but withut URL encoding, because then the URI just gets
     interpreted as a full path again."""
-    return path.replace("$f$", "/").replace("$b$", "\\")
+    return path.replace("_f_", "/").replace("_b_", "\\")
 
 
 def encode_escaped_path(path: str) -> str:
     """We use a custom escaping scheme to record the full path of a file as a
     corresponding basename, but withut URL encoding, because then the URI just gets
     interpreted as a full path again."""
-    return path.replace("/", "$f$").replace("\\", "$b$")
+    return path.replace("/", "_f_").replace("\\", "_b_")
 
 
 def getEmbeddingsPathForBranch(workspace_dir: str, branch_name: str):

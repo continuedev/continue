@@ -62,6 +62,8 @@ def run_server(
         global global_config
         global_config.meilisearch_url = meilisearch_url
 
+        logger.debug("------ Begin Logs ------")
+
         config = uvicorn.Config(app, host=host, port=port)
         server = uvicorn.Server(config)
         server.run()
