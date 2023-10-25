@@ -28,6 +28,19 @@
         "core/context.py",
         "server/meilisearch_server.py"
       ]
+    },
+    {
+      "q": "I want to update Ollama integration",
+      "files": ["libs/llm/ollama.py"]
+    },
+    {
+      "q": "How does Continue chunk code?",
+      "files": [
+        "libs/index/chunkers/basic.py",
+        "libs/index/chunkers/chunk_directory.py",
+        "libs/index/chunkers/chunk.py",
+        "libs/index/chunkers/code.py"
+      ]
     }
   ]
 }

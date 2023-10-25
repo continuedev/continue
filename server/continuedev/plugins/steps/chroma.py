@@ -2,12 +2,15 @@ import asyncio
 import os
 from typing import Coroutine, Dict, List, Optional, Union
 
+from ...libs.index.hyde import code_hyde
+
 from ...libs.index.chunkers.chunk_directory import chunk_directory
 
 from ...libs.index.indices.meilisearch_index import MeilisearchCodebaseIndex
 
 from ...libs.llm.base import CompletionOptions
 from ...libs.index.rerankers.default import default_reranker_parallel
+from ...libs.index.rerankers.single_token import single_token_reranker_parallel
 from ...libs.util.strings import shorten_filepaths
 
 from pydantic import Field
@@ -135,9 +138,8 @@ class AnswerQuestionChroma(Step):
         to_retrieve_from_each = (
             self.n_retrieve if self.use_reranking else self.n_final
         ) // 2
-        chroma_chunks = await chroma_index.query(
-            self.user_input, n=to_retrieve_from_each
-        )
+        hyde = await code_hyde(self.user_input, "", sdk)
+        chroma_chunks = await chroma_index.query(hyde, n=to_retrieve_from_each)
         meilisearch_chunks = await meilisearch_index.query(
             self.user_input, n=to_retrieve_from_each
         )
@@ -153,12 +155,12 @@ class AnswerQuestionChroma(Step):
         await sdk.update_ui()
 
         if self.use_reranking:
-            chunks = await default_reranker_parallel(
+            chunks = await single_token_reranker_parallel(
                 chunks,
                 self.user_input,
                 self.n_final,
                 sdk,
-                group_size=self.rerank_group_size,
+                # group_size=self.rerank_group_size,
             )
 
         # Add context items
