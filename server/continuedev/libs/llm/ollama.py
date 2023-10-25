@@ -99,6 +99,11 @@ class Ollama(LLM):
                     f"Ollama returned an error: {txt}{extra_msg}",
                     "Invalid request to Ollama",
                 )
+            elif resp.status == 404:
+                raise ContinueCustomException(
+                    f"Ollama not found. Please make sure the server is running.\n\n{await resp.text()}",
+                    "Ollama not found. Please make sure the server is running.",
+                )
             elif resp.status != 200:
                 raise ContinueCustomException(
                     f"Ollama returned an error: {await resp.text()}",

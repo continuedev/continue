@@ -4,7 +4,12 @@ from pydantic import schema_json_of
 
 from ..core.config import ContinueConfig
 from ..core.context import ContextItem
-from ..core.main import FullState, History, HistoryNode, SessionInfo
+from ..core.main import (
+    FullState,
+    History,
+    HistoryNode,
+    SessionInfo,
+)
 from ..core.models import Models
 from ..libs.llm.base import LLM
 from .filesystem import FileEdit, RangeInFile

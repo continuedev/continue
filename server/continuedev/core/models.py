@@ -14,6 +14,7 @@ from ..libs.llm.openai import OpenAI
 from ..libs.llm.openai_free_trial import OpenAIFreeTrial
 from ..libs.llm.replicate import ReplicateLLM
 from ..libs.llm.together import TogetherLLM
+from ..libs.llm.text_gen_webui import TextGenWebUI
 
 
 class ContinueSDK(BaseModel):
@@ -41,6 +42,7 @@ MODEL_CLASSES = {
         HuggingFaceInferenceAPI,
         HuggingFaceTGI,
         GooglePaLMAPI,
+        TextGenWebUI,
     ]
 }
 
@@ -56,7 +58,7 @@ MODEL_MODULE_NAMES = {
     "HuggingFaceInferenceAPI": "hf_inference_api",
     "HuggingFaceTGI": "hf_tgi",
     "GooglePaLMAPI": "google_palm_api",
-    "TextGenWebUI": "text_gen_webui"
+    "TextGenWebUI": "text_gen_webui",
 }
 
 
@@ -89,14 +91,16 @@ class Models(BaseModel):
         if self.sdk:
             return self.sdk.config.system_message
         return None
-    
+
     @property
     def temperature(self) -> Optional[float]:
         if self.sdk:
             return self.sdk.config.temperature
         return None
 
-    def set_main_config_params(self, system_msg: Optional[str], temperature: Optional[float]):
+    def set_main_config_params(
+        self, system_msg: Optional[str], temperature: Optional[float]
+    ):
         for model in self.all_models:
             model.set_main_config_params(system_msg, temperature)
 
