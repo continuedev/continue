@@ -1,7 +1,7 @@
 ---
 title: Other Configuration
 description: Swap out different LLM providers
-keywords: [tempature, custom policies, custom system messsage]
+keywords: [temperature, custom policies, custom system message]
 ---
 
 # Other Configuration

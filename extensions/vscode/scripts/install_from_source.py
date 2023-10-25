@@ -31,33 +31,33 @@ def main():
     # Clear out old stuff
     build_directory = "../build"
     remove_existing_vsix_files(build_directory)
-    run("rm ../server/continuedev-0.1.2-py3-none-any.whl", True)
+    run("rm ../../../server/continuedev-0.1.2-py3-none-any.whl", True)
 
     # Check for Python and Node - we won't install them, but will warn
     resp1 = run("python --version")
     resp2 = run("python3 --version")
-    if resp1.stderr and resp2.stderr:
+    if resp1.returncode != 0 and resp2.returncode != 0:
         print(
             "Python is required for Continue but is not installed on your machine. See https://www.python.org/downloads/ to download the latest version, then try again."
         )
         return
 
     resp = run("node --version")
-    if resp.stderr:
+    if resp.returncode != 0:
         print(
             "Node is required for Continue but is not installed on your machine. See https://nodejs.org/en/download/ to download the latest version, then try again."
         )
         return
 
     resp = run("npm --version")
-    if resp.stderr:
+    if resp.returncode != 0:
         print(
             "NPM is required for Continue but is not installed on your machine. See https://nodejs.org/en/download/ to download the latest version, then try again."
         )
         return
 
     resp = run("poetry --version")
-    if resp.stderr:
+    if resp.returncode != 0:
         print(
             "Poetry is required for Continue but is not installed on your machine. See https://python-poetry.org/docs/#installation to download the latest version, then try again."
         )
@@ -74,20 +74,19 @@ def main():
             break
 
     if not editor_cmd:
-        print(
-            "No code editor command is available. Please install a code editor and try again."
-        )
+        print("No code editor command is available. Please install a code editor and try again.")
         return
 
-    resp = run("cd ../../continuedev; poetry install; poetry run typegen")
+    resp = run("cd ../../../server; poetry install; poetry run typegen")
+    if resp.returncode != 0:
+        print("Error running the poetry commands. Please try again.")
+        return
 
-    resp = run(
-        "cd ../../..; npm i; cd gui; npm i; cd ../extensions/vscode; npm run package"
-    )
-
-    if resp.stderr:
+    resp = run("cd ..; npm i; cd gui; npm i; cd ..; npm run package", True)
+    if resp.returncode != 0:
         print("Error packaging the extension. Please try again.")
-        print("This was the error: ", resp.stderr)
+        print("stdout: ", resp.stdout.decode())
+        print("stderr: ", resp.stderr.decode())
         return
 
     run(
