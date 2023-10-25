@@ -85,7 +85,8 @@ def main():
     resp = run("cd ..; npm i; cd gui; npm i; cd ..; npm run package", True)
     if resp.returncode != 0:
         print("Error packaging the extension. Please try again.")
-        print("This was the error: ", resp.stderr)
+        print("stdout: ", resp.stdout.decode())
+        print("stderr: ", resp.stderr.decode())
         return
 
     run(
