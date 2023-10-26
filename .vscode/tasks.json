@@ -60,6 +60,9 @@
       "presentation": {
         "revealProblems": "onProblem",
         "clear": true
+      },
+      "options": {
+        "cwd": "${workspaceFolder}/extensions/vscode"
       }
     },
     //
