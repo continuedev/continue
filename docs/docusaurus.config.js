@@ -56,6 +56,7 @@ const config = {
   themeConfig:
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
     ({
+      metadata: [{name: 'keywords', content: 'open source, ai, vscode, intellij, jetbrains, developer tools, chatgpt, copilot, llm'}],
       // Replace with your project's social card
       image: "img/continue-social-card.png",
       navbar: {

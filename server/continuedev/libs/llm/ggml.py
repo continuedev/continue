@@ -3,7 +3,7 @@ from typing import Any, Callable, Coroutine, Dict, List, Literal, Optional
 
 from pydantic import Field
 
-from ...core.main import ChatMessage
+from ...core.main import ChatMessage, ContinueCustomException
 from ..util.logging import logger
 from .base import LLM, CompletionOptions
 from .openai import CHAT_MODELS
@@ -38,7 +38,21 @@ class GGML(LLM):
     model: str = Field(
         "ggml", description="The name of the model to use (optional for the GGML class)"
     )
-    
+
+    api_base: Optional[str] = Field(None, description="OpenAI API base URL.")
+
+    api_type: Optional[Literal["azure", "openai"]] = Field(
+        None, description="OpenAI API type."
+    )
+
+    api_version: Optional[str] = Field(
+        None, description="OpenAI API version. For use with Azure OpenAI Service."
+    )
+
+    engine: Optional[str] = Field(
+        None, description="OpenAI engine. For use with Azure OpenAI Service."
+    )
+
     api_base: Optional[str] = Field(None, description="OpenAI API base URL.")
 
     api_type: Optional[Literal["azure", "openai"]] = Field(
@@ -75,7 +89,7 @@ class GGML(LLM):
                 headers["Authorization"] = f"Bearer {self.api_key}"
 
         return headers
-    
+
     def get_full_server_url(self, endpoint: str):
         endpoint = endpoint.lstrip("/").rstrip("/")
 
@@ -84,7 +98,20 @@ class GGML(LLM):
                 raise Exception(
                     "For Azure OpenAI Service, you must specify engine, api_version, and api_base."
                 )
-            
+
+            return f"{self.api_base}/openai/deployments/{self.engine}/{endpoint}?api-version={self.api_version}"
+        else:
+            return f"{self.server_url}/v1/{endpoint}"
+
+    def get_full_server_url(self, endpoint: str):
+        endpoint = endpoint.lstrip("/").rstrip("/")
+
+        if self.api_type == "azure":
+            if self.engine is None or self.api_version is None or self.api_base is None:
+                raise Exception(
+                    "For Azure OpenAI Service, you must specify engine, api_version, and api_base."
+                )
+
             return f"{self.api_base}/openai/deployments/{self.engine}/{endpoint}?api-version={self.api_version}"
         else:
             return f"{self.server_url}/v1/{endpoint}"
@@ -143,10 +170,29 @@ class GGML(LLM):
                     proxy=self.proxy,
                 ) as resp:
                     if resp.status != 200:
-                        raise Exception(
+                        detail = (
                             f"Error calling /chat/completions endpoint: {resp.status}"
                         )
-                    
+                        try:
+                            json_detail = await resp.json()
+                            if (
+                                "detail" in json_detail
+                                and "error" in json_detail["detail"]
+                                and "message" in json_detail["detail"]["error"]
+                            ):
+                                detail = json_detail["detail"]["error"]["message"]
+                            elif "message" in json_detail:
+                                detail = json_detail["message"]
+                            elif "detail" in json_detail:
+                                detail = json_detail["detail"]
+                        except:
+                            pass
+
+                        raise ContinueCustomException(
+                            title=f"Error calling /chat/completions endpoint: {resp.status}",
+                            message=detail,
+                        )
+
                     async for line, end in resp.content.iter_chunks():
                         json_chunk = line.decode("utf-8")
                         chunks = json_chunk.split("\n")

@@ -2,7 +2,7 @@
 
 **[Continue](https://continue.dev/docs) is the open-source autopilot for software development—an extension that brings the power of ChatGPT to your IDE**
 
-### Get possible explainations
+### Get possible explanations
 
 Ask Continue about a part of your code to get another perspective
 

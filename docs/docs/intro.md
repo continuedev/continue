@@ -1,3 +1,9 @@
+---
+title: Introduction
+description: Continue is the open-source autopilot for software development
+keywords: [introduction, intro, continue, autopilot, chatgpt]
+---
+
 # Introduction
 
 ![continue-cover-logo](/img/continue-cover-logo.png)

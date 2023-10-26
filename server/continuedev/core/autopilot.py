@@ -232,7 +232,7 @@ class Autopilot(ContinueBaseModel):
         for callback in self._on_update_callbacks:
             await callback(full_state)
 
-    def give_user_input(self, input: str, index: int):
+    async def give_user_input(self, input: str, index: int):
         self._user_input_queue.post(str(index), input)
 
     async def wait_for_user_input(self) -> str:

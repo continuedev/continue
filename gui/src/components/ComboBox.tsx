@@ -655,7 +655,6 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
   }, [inputRef.current, props.isMainInput]);
 
   const deleteButtonDivRef = React.useRef<HTMLDivElement>(null);
-  const stickyDropdownHeaderDiv = React.useRef<HTMLDivElement>(null);
 
   const selectContextItem = useCallback(
     (id: string, query: string) => {
@@ -1289,7 +1288,6 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
         >
           {nestedContextProvider && (
             <div
-              ref={stickyDropdownHeaderDiv}
               style={{
                 backgroundColor: secondaryDark,
                 borderBottom: `0.5px solid ${lightGray}`,
@@ -1313,70 +1311,59 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
               {nestedContextProvider.description}
             </div>
           )}
-          <div
-            style={{
-              maxHeight: `${
-                UlMaxHeight -
-                (stickyDropdownHeaderDiv.current?.clientHeight || 50)
-              }px`,
-              overflow: "auto",
-            }}
-          >
-            {downshiftProps.isOpen &&
-              items.map((item, index) => (
-                <Li
-                  style={{
-                    borderTop:
-                      index === 0 ? "none" : `0.5px solid ${lightGray}`,
-                  }}
-                  key={`${item.name}${index}`}
-                  {...downshiftProps.getItemProps({ item, index })}
-                  highlighted={downshiftProps.highlightedIndex === index}
-                  selected={downshiftProps.selectedItem === item}
-                  onClick={(e) => {
-                    selectContextItemFromDropdown(e);
-                    e.stopPropagation();
-                    e.preventDefault();
-                    inputRef.current?.focus();
-                  }}
-                >
-                  <span className="flex justify-between w-full items-center">
-                    <div className="flex items-center justify-center">
-                      {nestedContextProvider && (
-                        <FileIcon
-                          height="20px"
-                          width="20px"
-                          filename={item.name}
-                        ></FileIcon>
-                      )}
-                      {item.name}
-                      {"  "}
-                    </div>
-                    <span
-                      style={{
-                        color: lightGray,
-                        float: "right",
-                        textAlign: "right",
-                      }}
-                    >
-                      {item.description}
-                    </span>
+          {downshiftProps.isOpen &&
+            items.map((item, index) => (
+              <Li
+                style={{
+                  borderTop: index === 0 ? "none" : `0.5px solid ${lightGray}`,
+                }}
+                key={`${item.name}${index}`}
+                {...downshiftProps.getItemProps({ item, index })}
+                highlighted={downshiftProps.highlightedIndex === index}
+                selected={downshiftProps.selectedItem === item}
+                onClick={(e) => {
+                  selectContextItemFromDropdown(e);
+                  e.stopPropagation();
+                  e.preventDefault();
+                  inputRef.current?.focus();
+                }}
+              >
+                <span className="flex justify-between w-full items-center">
+                  <div className="flex items-center justify-center">
+                    {nestedContextProvider && (
+                      <FileIcon
+                        height="20px"
+                        width="20px"
+                        filename={item.name}
+                      ></FileIcon>
+                    )}
+                    {item.name}
+                    {"  "}
+                  </div>
+                  <span
+                    style={{
+                      color: lightGray,
+                      float: "right",
+                      textAlign: "right",
+                    }}
+                  >
+                    {item.description}
                   </span>
-                  {contextProviders
-                    ?.filter(
-                      (provider) => !provider.dynamic || provider.requires_query
-                    )
-                    .find((provider) => provider.title === item.id) && (
-                    <ArrowRightIcon
-                      width="1.2em"
-                      height="1.2em"
-                      color={lightGray}
-                      className="ml-2 flex-shrink-0"
-                    />
-                  )}
-                </Li>
-              ))}
-          </div>
+                </span>
+                {contextProviders
+                  ?.filter(
+                    (provider) => !provider.dynamic || provider.requires_query
+                  )
+                  .find((provider) => provider.title === item.id) && (
+                  <ArrowRightIcon
+                    width="1.2em"
+                    height="1.2em"
+                    color={lightGray}
+                    className="ml-2 flex-shrink-0"
+                  />
+                )}
+              </Li>
+            ))}
           {downshiftProps.isOpen && items.length === 0 && (
             <Li
               key="empty-items-li"

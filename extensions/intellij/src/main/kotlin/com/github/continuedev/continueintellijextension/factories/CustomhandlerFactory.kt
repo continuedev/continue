@@ -27,6 +27,7 @@ class CustomSchemeHandlerFactory : CefSchemeHandlerFactory {
 
 class CustomResourceHandler : CefResourceHandler {
     private var state: ResourceHandlerState = ClosedConnection
+    private var currentUrl: String? = null
     override fun processRequest(
         cefRequest: CefRequest,
         cefCallback: CefCallback
@@ -36,6 +37,7 @@ class CustomResourceHandler : CefResourceHandler {
             val pathToResource = url.replace("http://continue", "webview/")
             val newUrl = javaClass.classLoader.getResource(pathToResource)
             state = OpenedConnection(newUrl?.openConnection())
+            currentUrl = url
             cefCallback.Continue()
             true
         } else {
@@ -48,6 +50,15 @@ class CustomResourceHandler : CefResourceHandler {
         responseLength: IntRef,
         redirectUrl: StringRef
     ) {
+        if (currentUrl !== null){
+            when {
+                currentUrl!!.contains("css") -> cefResponse.mimeType = "text/css"
+                currentUrl!!.contains("js") -> cefResponse.mimeType = "text/javascript"
+                currentUrl!!.contains("html") -> cefResponse.mimeType = "text/html"
+                else -> {}
+            }
+        }
+
         state.getResponseHeaders(cefResponse, responseLength, redirectUrl)
     }
 

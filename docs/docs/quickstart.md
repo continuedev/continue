@@ -1,3 +1,9 @@
+---
+title: Quickstart
+description: Getting started with Continue
+keywords: [quickstart, start, install, vscode, jetbrains]
+---
+
 # ⚡️ Quickstart
 
 1. Click `Install` on the **[Continue extension in the Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=Continue.continue)**

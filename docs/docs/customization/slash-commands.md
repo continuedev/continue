@@ -1,3 +1,10 @@
+---
+title: Slash Commands
+description: Shortcuts that can be activated by prefacing your input with '/'
+keywords: [slash command, custom commands, step]
+---
+
+
 # Slash Commands
 
 Slash commands are shortcuts that can be activated by prefacing your input with '/'. For example, the built-in '/edit' slash command let you stream edits directly into your editor.

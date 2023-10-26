@@ -133,7 +133,7 @@ class IdeProtocolClient(
                     object : TypeToken<Map<String, Any>>() {}.type
             )
             val messageType = parsedMessage["messageType"] as? String
-            val data = parsedMessage["data"] as Map<String, Any>
+            val data = parsedMessage["data"] as Map<*, *>
 
             try {
                 when (messageType) {

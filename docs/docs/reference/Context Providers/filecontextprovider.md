@@ -4,11 +4,9 @@ import ClassPropertyRef from '@site/src/components/ClassPropertyRef.tsx';
 
 The FileContextProvider is a ContextProvider that allows you to search files in the open workspace.
 
-[View the source](https://github.com/continuedev/continue/blob/main/server/continuedev/libs/llm/plugins/context_providers/file.py)
+[View the source](https://github.com/continuedev/continue/tree/main/server/continuedev/plugins/context_providers/file.py)
 
 ## Properties
-
-
 
 ### Inherited Properties
 

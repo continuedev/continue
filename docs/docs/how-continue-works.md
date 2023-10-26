@@ -1,3 +1,10 @@
+---
+title: How Continue works
+description: Overview of the Continue architecture
+keywords: [architecture, vs code, jetbrains, ide, manually]
+---
+
+
 # ⚙️ How Continue works
 
 ![Continue Architecture Diagram](/img/continue-diagram.png)

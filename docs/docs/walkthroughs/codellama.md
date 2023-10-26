@@ -1,3 +1,9 @@
+---
+title: Using Code Llama with Continue
+description: How to use Code Llama with Continue
+keywords: [code llama, meta, togetherai, ollama, replciate, fastchat]
+---
+
 # Using Code Llama with Continue
 
 With Continue, you can use Code Llama as a drop-in replacement for GPT-4, either by running locally with Ollama or GGML or through Replicate.

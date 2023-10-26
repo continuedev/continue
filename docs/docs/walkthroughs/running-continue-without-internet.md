@@ -1,3 +1,10 @@
+---
+title: Running Continue without Internet
+description: How to run Continue without Internet
+keywords: [no internet, air-gapped, local model]
+---
+
+
 # Running Continue without Internet
 
 Continue can be run even on an air-gapped computer if you use a local model. You'll have to make a few adjustments for this to work.

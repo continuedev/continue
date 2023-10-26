@@ -1,3 +1,9 @@
+---
+title: Models
+description: Swap out different LLM providers
+keywords: [openai, anthropic, PaLM, ollama, ggml]
+---
+
 # Models
 
 Continue makes it easy to swap out different LLM providers. You can either click the "+" button next to the model dropdown to configure in the UI or manually add them to your `config.py`. Once you've done this, you will be able to switch between them with the model selection dropdown.
@@ -38,13 +44,13 @@ config = ContinueConfig(
 )
 ```
 
-The `default` and `summarize` properties are different _model roles_. This allows different models to be used for different tasks. The available roles are `default`, `summarize`, `edit`, and `chat`. `edit` is used when you use the '/edit' slash command, `chat` is used for all chat responses, and `summarize` is used for summarizing. If not set, all roles will fall back to `default`. The values of these fields must be of the [`LLM`](https://github.com/continuedev/continue/blob/main/continuedev/src/continuedev/libs/llm/__init__.py) class, which implements methods for retrieving and streaming completions from an LLM.
+The `default` and `summarize` properties are different _model roles_. This allows different models to be used for different tasks. The available roles are `default`, `summarize`, `edit`, and `chat`. `edit` is used when you use the '/edit' slash command, `chat` is used for all chat responses, and `summarize` is used for summarizing. If not set, all roles will fall back to `default`. The values of these fields must be of the [`LLM`](https://github.com/continuedev/continue/blob/main/server/continuedev/libs/llm/__init__.py) class, which implements methods for retrieving and streaming completions from an LLM.
 
 Below, we describe the `LLM` classes available in the Continue core library, and how they can be used.
 
 ## Self-hosting an open-source model
 
-If you want to self-host on Colab, RunPod, HuggingFace, Haven, or another hosting provider, you will need to wire up a new LLM class. It only needs to implement 3 primary methods: `stream_complete`, `complete`, and `stream_chat`, and you can see examples in `continuedev/src/continuedev/libs/llm`.
+If you want to self-host on Colab, RunPod, HuggingFace, Haven, or another hosting provider, you will need to wire up a new LLM class. It only needs to implement 3 primary methods: `stream_complete`, `complete`, and `stream_chat`, and you can see examples in `server/continuedev/libs/llm`.
 
 If by chance the provider has the exact same API interface as OpenAI, the `OpenAI` class will work for you out of the box, after changing only the `api_base` parameter.
 
@@ -114,7 +120,7 @@ config=ContinueConfig(
 )
 ```
 
-This exact function and a few other default implementations are available in [`continuedev.libs.llm.prompts.chat`](https://github.com/continuedev/continue/blob/main/continuedev/src/continuedev/libs/llm/prompts/chat.py).
+This exact function and a few other default implementations are available in [`continuedev.libs.llm.prompts.chat`](https://github.com/continuedev/continue/blob/main/server/continuedev/libs/llm/prompts/chat.py).
 
 ## Customizing the /edit Prompt
 
@@ -154,4 +160,4 @@ config=ContinueConfig(
 )
 ```
 
-A few pre-made templates are available in [`continuedev.libs.llm.prompts.edit`](https://github.com/continuedev/continue/blob/main/continuedev/src/continuedev/libs/llm/prompts/edit.py).
+A few pre-made templates are available in [`continuedev.libs.llm.prompts.edit`](https://github.com/continuedev/continue/blob/main/server/continuedev/libs/llm/prompts/edit.py).

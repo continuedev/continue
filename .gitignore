@@ -138,6 +138,8 @@ codeql
 **/.continue
 .DS_Store
 .continue
+.test
+.tiktoken_cache
 
 
 # IntelliJ Plugin 
@@ -145,6 +147,3 @@ codeql
 **/**/.idea
 **/**/.qodana
 **/**/build
-
-.tiktoken_cache
-.test

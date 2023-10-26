@@ -1,5 +1,7 @@
 from typing import Type, Union
 
+from ..steps.chroma import AnswerQuestionChroma
+
 from ...core.config import ContinueConfig
 from ...core.main import History, Policy, Step
 from ...core.observation import UserInputObservation
@@ -7,6 +9,12 @@ from ..steps.chat import SimpleChatStep
 from ..steps.custom_command import CustomCommandStep
 from ..steps.main import EditHighlightedCodeStep
 from ..steps.steps_on_startup import StepsOnStartupStep
+
+
+# When importing with importlib from config.py, the classes do not pass isinstance checks.
+# Mapping them here is a workaround.
+# Original description of the problem: https://github.com/continuedev/continue/pull/581#issuecomment-1778138841
+REPLACEMENT_SLASH_COMMAND_STEPS = [AnswerQuestionChroma]
 
 
 def parse_slash_command(inp: str, config: ContinueConfig) -> Union[None, Step]:
@@ -22,6 +30,10 @@ def parse_slash_command(inp: str, config: ContinueConfig) -> Union[None, Step]:
                 params = slash_command.params
                 params["user_input"] = after_command
                 try:
+                    for replacement_step in REPLACEMENT_SLASH_COMMAND_STEPS:
+                        if slash_command.step.__name__ == replacement_step.__name__:
+                            return replacement_step(**params)
+
                     return slash_command.step(**params)
                 except TypeError as e:
                     raise Exception(

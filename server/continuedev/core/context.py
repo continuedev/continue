@@ -2,7 +2,6 @@ import asyncio
 import time
 from abc import abstractmethod
 from typing import Awaitable, Callable, Dict, List, Optional
-from ..server.ide_protocol import AbstractIdeProtocolServer
 
 from meilisearch_python_async import Client
 from pydantic import BaseModel, Field
