@@ -254,8 +254,6 @@ class ContinueSDK(AbstractContinueSDK):
             config = ContinueConfig.from_filepath(path)
             self._last_valid_config = config
 
-            logger.debug("Loaded Continue config file from %s", path)
-
             return config
         except ModuleNotFoundError as e:
             if not retry:

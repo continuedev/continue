@@ -176,9 +176,7 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
                 continue  # <-- hey that's the name of this repo!
             message_type = message["messageType"]
             data = message["data"]
-            logger.debug(f"Received message while initializing {message_type}")
-            logger.debug(data)
-            logger.debug(message)
+
             if message_type == "workspaceDirectory":
                 self.workspace_directory = data["workspaceDirectory"]
             elif message_type == "uniqueId":
@@ -193,7 +191,9 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
 
         return other_msgs
 
-    async def _send_json(self, message_type: str, data: Any):
+    async def _send_json(
+        self, message_type: str, data: Any, message_id: Optional[str] = None
+    ) -> Optional[str]:
         # TODO: You breakpointed here, set it to disconnected, and then saw
         # that even after reloading, it couldn't connect the server.
         # Is this because there is an IDE registered without a websocket?
@@ -205,20 +205,28 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
                 )
                 return
             # logger.debug(f"Sending IDE message: {message_type}")
-            await self.websocket.send_json({"messageType": message_type, "data": data})
+            message_id = message_id or uuid.uuid4().hex
+            await self.websocket.send_json(
+                {"messageType": message_type, "data": data, "messageId": message_id}
+            )
+            return message_id
         except RuntimeError as e:
             logger.warning(f"Error sending IDE message, websocket probably closed: {e}")
+            return message_id
 
-    async def _receive_json(self, message_type: str, message=None) -> Any:
-        return await self.sub_queue.get(message_type)
+    async def _receive_json(self, message_id: str, message=None) -> Any:
+        resp = await self.sub_queue.get(message_id)
+        await self.sub_queue.delete(message_id)
+        return resp
 
     async def _send_and_receive_json(
         self, data: Any, resp_model: Type[T], message_type: str
     ) -> T:
         async def try_with_timeout(timeout: int):
-            await self._send_json(message_type, data)
+            message_id = uuid.uuid4().hex
+            await self._send_json(message_type, data, message_id=message_id)
             resp = await asyncio.wait_for(
-                self._receive_json(message_type, message=data), timeout=timeout
+                self._receive_json(message_id, message=data), timeout=timeout
             )
             return resp_model.parse_obj(resp)
 
@@ -234,7 +242,7 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
                         message=f"IDE Protocol _receive_json timed out. The message sent was: {message or ''}",
                     )
 
-    async def handle_json(self, message_type: str, data: Any):
+    async def handle_json(self, message_type: str, data: Any, message_id: str):
         if message_type == "getSessionId":
             await self.getSessionId()
         elif message_type == "setFileOpen":
@@ -277,7 +285,7 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
             "listDirectoryContents",
             "fileExists",
         ]:
-            self.sub_queue.post(message_type, data)
+            self.sub_queue.post(message_id, data)
         elif message_type == "workspaceDirectory":
             self.workspace_directory = data["workspaceDirectory"]
         elif message_type == "uniqueId":
@@ -342,7 +350,6 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
             self.session_manager.new_session(self, self.session_id), timeout=5
         )
         session_id = new_session.session_id
-        logger.debug(f"Sending session id: {session_id}")
         await self._send_json("getSessionId", {"sessionId": session_id})
 
     async def highlightCode(self, range_in_file: RangeInFile, color: str = "#00ff0022"):
@@ -356,21 +363,6 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
                 {"command": command}, RunCommandResponse, "runCommand"
             )
         ).output
-
-    async def showSuggestionsAndWait(self, suggestions: List[FileEdit]) -> bool:
-        ids = [str(uuid.uuid4()) for _ in suggestions]
-        for i in range(len(suggestions)):
-            self._send_json(
-                "showSuggestion", {"suggestion": suggestions[i], "suggestionId": ids[i]}
-            )
-        responses = await asyncio.gather(
-            *[
-                self._receive_json(ShowSuggestionResponse)
-                for i in range(len(suggestions))
-            ]
-        )  # WORKING ON THIS FLOW HERE. Fine now to just await for response, instead of doing something fancy with a "waiting" state on the autopilot.
-        # Just need connect the suggestionId to the IDE (and the gui)
-        return any([r.accepted for r in responses])
 
     def on_error(self, e: Exception) -> Coroutine:
         err_msg = "\n".join(traceback.format_exception(e))
@@ -632,8 +624,9 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str = None):
     try:
         # Accept the websocket connection
         await websocket.accept()
-        logger.debug(f"Accepted websocket connection from {websocket.client}")
-        await websocket.send_json({"messageType": "connected", "data": {}})
+        await websocket.send_json(
+            {"messageType": "connected", "data": {}, "messageId": uuid.uuid4().hex}
+        )
 
         # Message handler
         def handle_msg(msg):
@@ -643,14 +636,19 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str = None):
                 logger.critical(f"Error decoding json: {msg}")
                 return
 
-            if "messageType" not in message or "data" not in message:
+            if (
+                "messageType" not in message
+                or "data" not in message
+                or "messageId" not in message
+            ):
                 return
             message_type = message["messageType"]
+            message_id = message["messageId"]
             data = message["data"]
 
             # logger.debug(f"Received IDE message: {message_type}")
             create_async_task(
-                ideProtocolServer.handle_json(message_type, data),
+                ideProtocolServer.handle_json(message_type, data, message_id),
                 ideProtocolServer.on_error,
             )
 
@@ -659,13 +657,8 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str = None):
         if session_id is not None:
             session_manager.registered_ides[session_id] = ideProtocolServer
         other_msgs = await ideProtocolServer.initialize(session_id)
-        logger.debug(other_msgs)
-        # posthog_logger.capture_event(
-        #     "session_started", {"session_id": ideProtocolServer.session_id}
-        # )
 
         for other_msg in other_msgs:
-            logger.debug("processing....:")
             handle_msg(other_msg)
 
         # Handle messages

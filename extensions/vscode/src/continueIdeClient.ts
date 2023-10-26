@@ -20,6 +20,7 @@ import { WebsocketMessenger } from "./util/messenger";
 import { diffManager } from "./diffs";
 const os = require("os");
 const path = require("path");
+import { uuid } from "uuidv4";
 
 const continueVirtualDocumentScheme = "continue";
 
@@ -68,21 +69,23 @@ class IdeProtocolClient {
     messenger.onError(() => {
       reconnect();
     });
-    messenger.onMessage((messageType, data, messenger) => {
-      this.handleMessage(messageType, data, messenger).catch((err) => {
-        console.log("Error handling message: ", err);
-        vscode.window
-          .showErrorMessage(
-            `Error handling message (${messageType}) from Continue server: ` +
-              err,
-            "View Logs"
-          )
-          .then((selection) => {
-            if (selection === "View Logs") {
-              vscode.commands.executeCommand("continue.viewLogs");
-            }
-          });
-      });
+    messenger.onMessage((messageType, data, messageId, messenger) => {
+      this.handleMessage(messageType, data, messageId, messenger).catch(
+        (err) => {
+          console.log("Error handling message: ", err);
+          vscode.window
+            .showErrorMessage(
+              `Error handling message (${messageType}) from Continue server: ` +
+                err,
+              "View Logs"
+            )
+            .then((selection) => {
+              if (selection === "View Logs") {
+                vscode.commands.executeCommand("continue.viewLogs");
+              }
+            });
+        }
+      );
     });
   }
 
@@ -124,20 +127,20 @@ class IdeProtocolClient {
     // Listen for new file creation
     vscode.workspace.onDidCreateFiles((event) => {
       const filepaths = event.files.map((file) => file.fsPath);
-      this.messenger?.send("filesCreated", { filepaths });
+      this.messenger?.send("filesCreated", uuid(), { filepaths });
     });
 
     // Listen for file deletion
     vscode.workspace.onDidDeleteFiles((event) => {
       const filepaths = event.files.map((file) => file.fsPath);
-      this.messenger?.send("filesDeleted", { filepaths });
+      this.messenger?.send("filesDeleted", uuid(), { filepaths });
     });
 
     // Listen for file renaming
     vscode.workspace.onDidRenameFiles((event) => {
       const oldFilepaths = event.files.map((file) => file.oldUri.fsPath);
       const newFilepaths = event.files.map((file) => file.newUri.fsPath);
-      this.messenger?.send("filesRenamed", {
+      this.messenger?.send("filesRenamed", uuid(), {
         old_filepaths: oldFilepaths,
         new_filepaths: newFilepaths,
       });
@@ -147,7 +150,7 @@ class IdeProtocolClient {
     vscode.workspace.onDidSaveTextDocument((event) => {
       const filepath = event.uri.fsPath;
       const contents = event.getText();
-      this.messenger?.send("fileSaved", { filepath, contents });
+      this.messenger?.send("fileSaved", uuid(), { filepath, contents });
     });
 
     // Setup listeners for any selection changes in open editors
@@ -234,58 +237,59 @@ class IdeProtocolClient {
   async handleMessage(
     messageType: string,
     data: any,
+    messageId: string,
     messenger: WebsocketMessenger
   ) {
     switch (messageType) {
       case "highlightedCode":
-        messenger.send("highlightedCode", {
+        messenger.send("highlightedCode", messageId, {
           highlightedCode: this.getHighlightedCode(),
         });
         break;
       case "workspaceDirectory":
-        messenger.send("workspaceDirectory", {
+        messenger.send("workspaceDirectory", messageId, {
           workspaceDirectory: this.getWorkspaceDirectory(),
         });
         break;
       case "uniqueId":
-        messenger.send("uniqueId", {
+        messenger.send("uniqueId", messageId, {
           uniqueId: this.getUniqueId(),
         });
         break;
       case "ide":
-        messenger.send("ide", {
+        messenger.send("ide", messageId, {
           name: "vscode",
           version: vscode.version,
           remoteName: vscode.env.remoteName,
         });
         break;
       case "fileExists":
-        messenger.send("fileExists", {
+        messenger.send("fileExists", messageId, {
           exists: await this.fileExists(data.filepath),
         });
         break;
       case "getUserSecret":
-        messenger.send("getUserSecret", {
+        messenger.send("getUserSecret", messageId, {
           value: await this.getUserSecret(data.key),
         });
         break;
       case "openFiles":
-        messenger.send("openFiles", {
+        messenger.send("openFiles", messageId, {
           openFiles: this.getOpenFiles(),
         });
         break;
       case "visibleFiles":
-        messenger.send("visibleFiles", {
+        messenger.send("visibleFiles", messageId, {
           visibleFiles: this.getVisibleFiles(),
         });
         break;
       case "readFile":
-        messenger.send("readFile", {
+        messenger.send("readFile", messageId, {
           contents: await this.readFile(data.filepath),
         });
         break;
       case "getTerminalContents":
-        messenger.send("getTerminalContents", {
+        messenger.send("getTerminalContents", messageId, {
           contents: await this.getTerminalContents(data.commands),
         });
         break;
@@ -300,13 +304,13 @@ class IdeProtocolClient {
           console.log("Error listing directory contents: ", e);
           contents = [];
         }
-        messenger.send("listDirectoryContents", {
+        messenger.send("listDirectoryContents", messageId, {
           contents,
         });
         break;
       case "editFile":
         const fileEdit = await this.editFile(data.edit);
-        messenger.send("editFile", {
+        messenger.send("editFile", messageId, {
           fileEdit,
         });
         break;
@@ -314,7 +318,7 @@ class IdeProtocolClient {
         this.highlightCode(data.rangeInFile, data.color);
         break;
       case "runCommand":
-        messenger.send("runCommand", {
+        messenger.send("runCommand", messageId, {
           output: await this.runCommand(data.command),
         });
         break;
@@ -429,7 +433,7 @@ class IdeProtocolClient {
   }
 
   async setTelemetryEnabled(enabled: boolean) {
-    this.messenger?.send("setTelemetryEnabled", { enabled });
+    this.messenger?.send("setTelemetryEnabled", uuid(), { enabled });
   }
 
   async showDiff(filepath: string, replacement: string, step_index: number) {
@@ -509,7 +513,11 @@ class IdeProtocolClient {
       }, 1000);
     });
     console.log("Getting session ID");
-    const resp = await this.messenger?.sendAndReceive("getSessionId", {});
+    const resp = await this.messenger?.sendAndReceive(
+      "getSessionId",
+      uuid(),
+      {}
+    );
     console.log("New Continue session with ID: ", resp.sessionId);
     this.sessionId = resp.sessionId;
     return resp.sessionId;
@@ -729,35 +737,38 @@ class IdeProtocolClient {
   }
 
   sendCommandOutput(output: string) {
-    this.messenger?.send("commandOutput", { output });
+    this.messenger?.send("commandOutput", uuid(), { output });
   }
 
   sendHighlightedCode(
     highlightedCode: (RangeInFile & { contents: string })[],
     edit?: boolean
   ) {
-    this.messenger?.send("highlightedCodePush", { highlightedCode, edit });
+    this.messenger?.send("highlightedCodePush", uuid(), {
+      highlightedCode,
+      edit,
+    });
   }
 
   sendAcceptRejectSuggestion(accepted: boolean) {
-    this.messenger?.send("acceptRejectSuggestion", { accepted });
+    this.messenger?.send("acceptRejectSuggestion", uuid(), { accepted });
   }
 
   sendAcceptRejectDiff(accepted: boolean, stepIndex: number) {
-    this.messenger?.send("acceptRejectDiff", { accepted, stepIndex });
+    this.messenger?.send("acceptRejectDiff", uuid(), { accepted, stepIndex });
   }
 
   sendMainUserInput(input: string) {
-    this.messenger?.send("mainUserInput", { input });
+    this.messenger?.send("mainUserInput", uuid(), { input });
   }
 
   async debugTerminal() {
     const contents = await this.getTerminalContents();
-    this.messenger?.send("debugTerminal", { contents });
+    this.messenger?.send("debugTerminal", uuid(), { contents });
   }
 
   deleteAtIndex(index: number) {
-    this.messenger?.send("deleteAtIndex", { index });
+    this.messenger?.send("deleteAtIndex", uuid(), { index });
   }
 }
 

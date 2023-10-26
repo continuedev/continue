@@ -3,7 +3,6 @@ from typing import Dict
 
 
 class AsyncSubscriptionQueue:
-    # The correct way to do this is probably to keep request IDs
     queues: Dict[str, asyncio.Queue] = {}
 
     def post(self, messageType: str, data: any):
@@ -15,3 +14,7 @@ class AsyncSubscriptionQueue:
         if message_type not in self.queues:
             self.queues.update({message_type: asyncio.Queue()})
         return await self.queues[message_type].get()
+
+    async def delete(self, message_type: str):
+        if message_type in self.queues:
+            del self.queues[message_type]

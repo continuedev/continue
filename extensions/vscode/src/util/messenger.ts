@@ -1,14 +1,16 @@
 const WebSocket = require("ws");
 
 export abstract class Messenger {
-  abstract send(messageType: string, data: object): void;
+  abstract send(messageType: string, messageId: string, data: object): void;
 
   abstract onMessageType(
     messageType: string,
     callback: (data: object) => void
   ): void;
 
-  abstract onMessage(callback: (messageType: string, data: any) => void): void;
+  abstract onMessage(
+    callback: (messageType: string, messageId: string, data: any) => void
+  ): void;
 
   abstract onOpen(callback: () => void): void;
 
@@ -16,7 +18,11 @@ export abstract class Messenger {
 
   abstract onError(callback: () => void): void;
 
-  abstract sendAndReceive(messageType: string, data: any): Promise<any>;
+  abstract sendAndReceive(
+    messageType: string,
+    messageId: string,
+    data: any
+  ): Promise<any>;
 
   abstract close(): void;
 }
@@ -55,14 +61,16 @@ export class WebsocketMessenger extends Messenger {
       }
     }
 
-    newWebsocket.addEventListener("open", () => console.log("Websocket connection opened"));
+    newWebsocket.addEventListener("open", () =>
+      console.log("Websocket connection opened")
+    );
     newWebsocket.addEventListener("error", (error: any) => {
       console.error("Websocket error occurred: ", error);
     });
     newWebsocket.addEventListener("close", (error: any) => {
       console.log("Websocket connection closed: ", error);
     });
-    
+
     return newWebsocket;
   }
 
@@ -111,8 +119,8 @@ export class WebsocketMessenger extends Messenger {
     // }, 1000);
   }
 
-  send(messageType: string, data: object) {
-    const payload = JSON.stringify({ messageType, data });
+  send(messageType: string, messageId: string, data: object) {
+    const payload = JSON.stringify({ messageType, data, messageId });
     if (this.websocket.readyState === this.websocket.OPEN) {
       this.websocket.send(payload);
     } else {
@@ -125,7 +133,11 @@ export class WebsocketMessenger extends Messenger {
     }
   }
 
-  sendAndReceive(messageType: string, data: any): Promise<any> {
+  sendAndReceive(
+    messageType: string,
+    messageId: string,
+    data: any
+  ): Promise<any> {
     return new Promise((resolve, reject) => {
       const eventListener = (data: any) => {
         // THIS ISN"T GETTING CALLED
@@ -133,7 +145,7 @@ export class WebsocketMessenger extends Messenger {
         this.websocket.removeEventListener("message", eventListener);
       };
       this.onMessageType(messageType, eventListener);
-      this.send(messageType, data);
+      this.send(messageType, messageId, data);
     });
   }
 
@@ -150,12 +162,13 @@ export class WebsocketMessenger extends Messenger {
     callback: (
       messageType: string,
       data: any,
+      messageId: string,
       messenger: WebsocketMessenger
     ) => void
   ): void {
     this.websocket.addEventListener("message", (event) => {
       const msg = JSON.parse(event.data);
-      callback(msg.messageType, msg.data, this);
+      callback(msg.messageType, msg.data, msg.messageId, this);
     });
   }
 

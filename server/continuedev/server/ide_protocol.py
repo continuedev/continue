@@ -41,10 +41,6 @@ class AbstractIdeProtocolServer(ABC):
         """Get a new session ID"""
 
     @abstractmethod
-    async def showSuggestionsAndWait(self, suggestions: List[FileEdit]) -> bool:
-        """Show suggestions to the user and wait for a response"""
-
-    @abstractmethod
     def onAcceptRejectSuggestion(self, accepted: bool):
         """Called when the user accepts or rejects a suggestion"""
 

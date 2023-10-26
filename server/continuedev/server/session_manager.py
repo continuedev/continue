@@ -63,8 +63,6 @@ class SessionManager:
         session_id: Optional[str] = None,
         config: Optional[ContinueConfig] = None,
     ) -> Session:
-        logger.debug(f"New session: {session_id}")
-
         # Load the persisted state (not being used right now)
         full_state = None
         if session_id is not None and os.path.exists(getSessionFilePath(session_id)):
@@ -98,10 +96,17 @@ class SessionManager:
             return ide.showMessage(f"Error in Continue server: {err_msg}")
 
         create_async_task(autopilot.run_policy(), on_error)
+
+        session_info = {
+            "session_id": session_id,
+            "workspace_directory": ide.workspace_directory,
+        }
+        logger.info(f"New session: {json.dumps(session_info, indent=2)}")
+
         return session
 
     async def remove_session(self, session_id: str):
-        logger.debug(f"Removing session: {session_id}")
+        logger.info(f"Removing session: {session_id}")
         if session_id in self.sessions:
             if (
                 session_id in self.registered_ides
@@ -111,7 +116,7 @@ class SessionManager:
                 if (
                     ws_to_close is not None
                     and ws_to_close.client_state != WebSocketState.DISCONNECTED
-                        and ws_to_close.application_state != WebSocketState.DISCONNECTED
+                    and ws_to_close.application_state != WebSocketState.DISCONNECTED
                 ):
                     await self.sessions[session_id].autopilot.ide.websocket.close()
 
@@ -164,7 +169,6 @@ class SessionManager:
 
     def register_websocket(self, session_id: str, ws: WebSocket):
         self.sessions[session_id].ws = ws
-        logger.debug(f"Registered websocket for session {session_id}")
 
     async def send_ws_data(self, session_id: str, message_type: str, data: Any):
         if session_id not in self.sessions:
@@ -174,9 +178,12 @@ class SessionManager:
             return
 
         ws = self.sessions[session_id].ws
-        if ws.client_state != WebSocketState.DISCONNECTED and ws.application_state != WebSocketState.DISCONNECTED:
+        if (
+            ws.client_state != WebSocketState.DISCONNECTED
+            and ws.application_state != WebSocketState.DISCONNECTED
+        ):
             await ws.send_json(
-                {"messageType": message_type, "data": data}
+                {"messageType": message_type, "data": data, "messageId": uuid4().hex}
             )
 
 

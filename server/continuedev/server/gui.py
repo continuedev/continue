@@ -2,6 +2,7 @@ import asyncio
 import json
 import traceback
 from typing import Any, List, Optional, Type, TypeVar
+import uuid
 from ..plugins.steps.setup_model import SetupModelStep
 
 from fastapi import APIRouter, Depends, WebSocket
@@ -67,24 +68,36 @@ class GUIProtocolServer:
     def __init__(self, session: Session):
         self.session = session
 
-    async def _send_json(self, message_type: str, data: Any):
+    async def _send_json(
+        self, message_type: str, data: Any, message_id: Optional[str] = None
+    ):
         if self.websocket.application_state == WebSocketState.DISCONNECTED:
-            return
-        await self.websocket.send_json({"messageType": message_type, "data": data})
+            return message_id
 
-    async def _receive_json(self, message_type: str, timeout: int = 20) -> Any:
+        message_id = message_id or uuid.uuid4().hex
+        await self.websocket.send_json(
+            {"messageType": message_type, "data": data, "messageId": message_id}
+        )
+        return message_id
+
+    async def _receive_json(self, message_id: str, timeout: int = 20) -> Any:
         try:
-            return await asyncio.wait_for(
-                self.sub_queue.get(message_type), timeout=timeout
+            resp = await asyncio.wait_for(
+                self.sub_queue.get(message_id), timeout=timeout
             )
         except asyncio.TimeoutError:
             raise Exception("GUI Protocol _receive_json timed out after 20 seconds")
+        finally:
+            await self.sub_queue.delete(message_id)
+
+        return resp
 
     async def _send_and_receive_json(
         self, data: Any, resp_model: Type[T], message_type: str
     ) -> T:
-        await self._send_json(message_type, data)
-        resp = await self._receive_json(message_type)
+        message_id = uuid.uuid4().hex
+        await self._send_json(message_type, data, message_id=message_id)
+        resp = await self._receive_json(message_id)
         return resp_model.parse_obj(resp)
 
     def on_error(self, e: Exception):
@@ -463,10 +476,8 @@ async def websocket_endpoint(
     websocket: WebSocket, session: Session = Depends(websocket_session)
 ):
     try:
-        logger.debug(f"Received websocket connection at url: {websocket.url}")
         await websocket.accept()
 
-        logger.debug("Session started")
         session_manager.register_websocket(session.session_id, websocket)
         protocol = GUIProtocolServer(session)
         protocol.websocket = websocket
@@ -476,16 +487,18 @@ async def websocket_endpoint(
 
         while AppStatus.should_exit is False:
             message = await websocket.receive_text()
-            logger.debug(f"Received GUI message {message}")
             if isinstance(message, str):
                 message = json.loads(message)
 
             if "messageType" not in message or "data" not in message:
+                logger.warning(f"Invalid message received: {message}")
                 continue  # :o
             message_type = message["messageType"]
             data = message["data"]
 
+            logger.debug(f"Received '{message_type}': {data}")
             protocol.handle_json(message_type, data)
+
     except WebSocketDisconnect:
         logger.debug("GUI websocket disconnected")
     except Exception as e:

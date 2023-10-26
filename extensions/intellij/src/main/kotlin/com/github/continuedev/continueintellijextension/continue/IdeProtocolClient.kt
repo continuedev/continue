@@ -25,9 +25,14 @@ import kotlinx.coroutines.*
 import okhttp3.*
 import java.io.File
 import java.net.NetworkInterface
+import java.util.UUID
+
+fun uuid(): String {
+    return UUID.randomUUID().toString()
+}
 
 
-data class WebSocketMessage<T>(val messageType: String, val data: T)
+data class WebSocketMessage<T>(val messageType: String, val messageId: String, val data: T)
 data class WorkspaceDirectory(val workspaceDirectory: String)
 data class UniqueId(val uniqueId: String)
 data class ReadFile(val contents: String)
@@ -133,6 +138,12 @@ class IdeProtocolClient(
                     object : TypeToken<Map<String, Any>>() {}.type
             )
             val messageType = parsedMessage["messageType"] as? String
+            val messageId = parsedMessage["messageId"] as? String
+            if (messageId == null) {
+
+                println("Received message without messageId: $text")
+                return@launch
+            }
             val data = parsedMessage["data"] as Map<*, *>
 
             try {
@@ -142,6 +153,7 @@ class IdeProtocolClient(
                                 Gson().toJson(
                                         WebSocketMessage(
                                                 "workspaceDirectory",
+                                                messageId,
                                                 WorkspaceDirectory(workspaceDirectory())
                                         )
                                 )
@@ -152,6 +164,7 @@ class IdeProtocolClient(
                             Gson().toJson(
                                     WebSocketMessage(
                                             "uniqueId",
+                                            messageId,
                                             UniqueId(uniqueId())
                                     )
                             )
@@ -172,6 +185,7 @@ class IdeProtocolClient(
                                 Gson().toJson(
                                         WebSocketMessage(
                                                 "ide",
+                                                messageId,
                                                 IdeInfo(
                                                         ideName, ideVersion, remoteName
                                                 )
@@ -195,6 +209,7 @@ class IdeProtocolClient(
                                 Gson().toJson(
                                         WebSocketMessage(
                                                 "readFile",
+                                                messageId,
                                                 msg
                                         )
                                 )
@@ -206,6 +221,7 @@ class IdeProtocolClient(
                                 Gson().toJson(
                                         WebSocketMessage(
                                                 "listDirectoryContents",
+                                                messageId,
                                                 ListDirectoryContents(listDirectoryContents())
                                         )
                                 )
@@ -217,6 +233,7 @@ class IdeProtocolClient(
                                 Gson().toJson(
                                         WebSocketMessage(
                                                 "getTerminalContents",
+                                                messageId,
                                                 GetTerminalContents("Terminal cannot be accessed in JetBrains IDE")
                                         )
                                 )
@@ -229,6 +246,7 @@ class IdeProtocolClient(
                                 Gson().toJson(
                                         WebSocketMessage(
                                                 "visibleFiles",
+                                                messageId,
                                                 msg
                                         )
                                 )
@@ -270,6 +288,7 @@ class IdeProtocolClient(
                                 Gson().toJson(
                                         WebSocketMessage(
                                                 "highlightedCode",
+                                                messageId,
                                                 HighlightedCode(rifs)
                                         )
                                 )
@@ -431,31 +450,31 @@ class IdeProtocolClient(
         return result
     }
 
-    private fun<T> sendWebSocketMessage(messageType: String, data: T) {
+    private fun<T> sendWebSocketMessage(messageType: String, messageId: String, data: T) {
         webSocket?.send(Gson().toJson(
-                WebSocketMessage(messageType, data)
+                WebSocketMessage(messageType, messageId, data)
         ))
     }
 
     fun sendHighlightedCode(edit: Boolean = false) {
         val rif = getHighlightedCode() ?: return
 
-        sendWebSocketMessage("highlightedCodePush", HighlightedCodeUpdate(
+        sendWebSocketMessage("highlightedCodePush", uuid(), HighlightedCodeUpdate(
                 listOf(rif),
                 edit
         ))
     }
 
     fun sendMainUserInput(input: String) {
-        sendWebSocketMessage("mainUserInput", MainUserInput(input))
+        sendWebSocketMessage("mainUserInput", uuid(), MainUserInput(input))
     }
 
     fun sendAcceptRejectDiff(accepted: Boolean, stepIndex: Int) {
-        sendWebSocketMessage("acceptRejectDiff", AcceptRejectDiff(accepted, stepIndex))
+        sendWebSocketMessage("acceptRejectDiff", uuid(), AcceptRejectDiff(accepted, stepIndex))
     }
 
     fun deleteAtIndex(index: Int) {
-        sendWebSocketMessage("deleteAtIndex", DeleteAtIndex(index))
+        sendWebSocketMessage("deleteAtIndex", uuid(), DeleteAtIndex(index))
     }
 
     private val DEFAULT_IGNORE_DIRS = listOf(

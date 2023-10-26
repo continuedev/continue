@@ -108,7 +108,6 @@ class Autopilot(ContinueBaseModel):
             self.policy = override_policy
 
         # Load documents into the search index
-        logger.debug("Starting context manager")
         await self.context_manager.start(
             self.continue_sdk.config.context_providers
             + [

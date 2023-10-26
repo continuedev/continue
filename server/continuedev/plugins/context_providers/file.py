@@ -137,7 +137,7 @@ class FileContextProvider(ContextProvider):
             )
 
             i += 100
-            asyncio.sleep(0.1)
+            await asyncio.sleep(0.1)
 
         items = list(filter(lambda item: item is not None, items))
 

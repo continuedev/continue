@@ -304,11 +304,11 @@ class ContextManager:
                     )
                     return
 
-            logger.debug("Loading Meilisearch index...")
+            ti = time.time()
             await self.load_index(
                 sdk.ide.workspace_directory, providers_to_load=providers_to_load
             )
-            logger.debug("Loaded Meilisearch index")
+            logger.info(f"Loaded Meilisearch index in {time.time() - ti:.3f} seconds")
 
         providers_to_load = (
             new_context_providers if only_reloading else context_providers
@@ -420,9 +420,9 @@ class ContextManager:
                         return
 
                     tf = time.time()
-                    logger.debug(
-                        f"Loaded {num_documents} documents into meilisearch in {tf - ti} seconds for context provider {provider.title}"
-                    )
+                    # logger.info(
+                    #     f"Loaded {num_documents} documents into meilisearch in {tf - ti} seconds for context provider {provider.title}"
+                    # )
 
                 tasks = [
                     safe_load(provider)
