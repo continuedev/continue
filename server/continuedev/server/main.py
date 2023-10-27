@@ -13,8 +13,6 @@ from ..libs.util.logging import logger
 from .gui import router as gui_router
 from .ide import router as ide_router
 from .meilisearch_server import start_meilisearch, stop_meilisearch
-from .session_manager import router as sessions_router
-from .session_manager import session_manager
 from .global_config import global_config
 
 
@@ -37,7 +35,6 @@ app = FastAPI(lifespan=lifespan)
 
 app.include_router(ide_router)
 app.include_router(gui_router)
-app.include_router(sessions_router)
 
 # Add CORS support
 app.add_middleware(
@@ -80,9 +77,7 @@ def run_server(
 
 
 async def cleanup_coroutine():
-    logger.debug("------ Cleaning Up ------")
-    for session_id in session_manager.sessions:
-        await session_manager.persist_session(session_id)
+    logger.debug("------ End logs ------")
 
 
 def cleanup():

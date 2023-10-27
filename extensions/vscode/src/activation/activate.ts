@@ -12,10 +12,11 @@ import registerQuickFixProvider from "../lang-server/codeActions";
 import { getExtensionUri } from "../util/vscode";
 import path from "path";
 import { setupInlineTips } from "./inlineTips";
+import { uuid } from "uuidv4";
 
 export let extensionContext: vscode.ExtensionContext | undefined = undefined;
-
 export let ideProtocolClient: IdeProtocolClient;
+export let windowId: string = uuid();
 
 function addPythonPathForConfig() {
   // Add to python.analysis.extraPaths global setting so config.py gets LSP
@@ -72,6 +73,7 @@ async function openTutorial(context: vscode.ExtensionContext) {
 
 export async function activateExtension(context: vscode.ExtensionContext) {
   extensionContext = context;
+
   console.log("Using Continue version: ", getExtensionVersion());
   try {
     console.log(
@@ -81,6 +83,7 @@ export async function activateExtension(context: vscode.ExtensionContext) {
   } catch (e) {
     console.log("Error getting workspace folder: ", e);
   }
+  console.log("Window ID: ", windowId);
 
   // Register commands and providers
   registerAllCodeLensProviders(context);
@@ -90,22 +93,21 @@ export async function activateExtension(context: vscode.ExtensionContext) {
   await openTutorial(context);
   setupInlineTips(context);
 
-  // Start the server
-  const sessionIdPromise = (async () => {
+  (async () => {
+    // Start the server
     await startContinuePythonServer();
-
     console.log("Continue server started");
+
     // Initialize IDE Protocol Client
     const serverUrl = getContinueServerUrl();
     ideProtocolClient = new IdeProtocolClient(
       `${serverUrl.replace("http", "ws")}/ide/ws`,
       context
     );
-    return await ideProtocolClient.getSessionId();
   })();
 
   // Register Continue GUI as sidebar webview, and beginning a new session
-  const provider = new ContinueGUIWebviewViewProvider(sessionIdPromise);
+  const provider = new ContinueGUIWebviewViewProvider();
 
   context.subscriptions.push(
     vscode.window.registerWebviewViewProvider(
@@ -116,6 +118,4 @@ export async function activateExtension(context: vscode.ExtensionContext) {
       }
     )
   );
-
-  // vscode.commands.executeCommand("continue.focusContinueInput");
 }

@@ -232,7 +232,7 @@ class GGML(LLM):
             ) as resp:
                 if resp.status != 200:
                     raise Exception(
-                        f"Error calling /chat/completions endpoint: {resp.status}"
+                        f"Error calling /completions endpoint: {resp.status}"
                     )
 
                 text = await resp.text()
@@ -241,7 +241,7 @@ class GGML(LLM):
                     return completion
                 except Exception as e:
                     raise Exception(
-                        f"Error calling /completion endpoint: {e}\n\nResponse text: {text}"
+                        f"Error calling /completions endpoint: {e}\n\nResponse text: {text}"
                     )
 
     async def _complete(self, prompt: str, options: CompletionOptions):

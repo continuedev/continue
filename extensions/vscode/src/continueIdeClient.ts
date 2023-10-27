@@ -21,6 +21,7 @@ import { diffManager } from "./diffs";
 const os = require("os");
 const path = require("path");
 import { uuid } from "uuidv4";
+import { windowId } from "./activation/activate";
 
 const continueVirtualDocumentScheme = "continue";
 
@@ -35,12 +36,10 @@ class IdeProtocolClient {
   private _lastReloadTime: number = 16;
   private _reconnectionTimeouts: NodeJS.Timeout[] = [];
 
-  sessionId: string | null = null;
   private _serverUrl: string;
 
   private _newWebsocketMessenger() {
-    const requestUrl =
-      this._serverUrl + (this.sessionId ? `?session_id=${this.sessionId}` : "");
+    const requestUrl = `${this._serverUrl}?window_id=${windowId}`;
     const messenger = new WebsocketMessenger(requestUrl);
     this.messenger = messenger;
 
@@ -362,6 +361,7 @@ class IdeProtocolClient {
         throw Error("Unknown message type:" + messageType);
     }
   }
+
   getWorkspaceDirectory() {
     if (!vscode.workspace.workspaceFolders) {
       // Return the home directory
@@ -496,32 +496,6 @@ class IdeProtocolClient {
 
   // ------------------------------------ //
   // Initiate Request
-
-  async getSessionId(): Promise<string> {
-    await new Promise((resolve, reject) => {
-      // Repeatedly try to connect to the server
-      const interval = setInterval(() => {
-        if (
-          this.messenger &&
-          this.messenger.websocket.readyState === 1 // 1 => OPEN
-        ) {
-          clearInterval(interval);
-          resolve(null);
-        } else {
-          // console.log("Websocket not yet open, trying again...");
-        }
-      }, 1000);
-    });
-    console.log("Getting session ID");
-    const resp = await this.messenger?.sendAndReceive(
-      "getSessionId",
-      uuid(),
-      {}
-    );
-    console.log("New Continue session with ID: ", resp.sessionId);
-    this.sessionId = resp.sessionId;
-    return resp.sessionId;
-  }
 
   acceptRejectSuggestion(accept: boolean, key: SuggestionRanges) {
     if (accept) {

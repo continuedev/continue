@@ -1,5 +1,5 @@
 import json
-from typing import Any, Coroutine, Dict, List, Literal, Optional, Union
+from typing import Any, AsyncGenerator, Coroutine, Dict, List, Literal, Optional, Union
 
 from pydantic import BaseModel, validator
 from pydantic.schema import schema
@@ -99,16 +99,52 @@ def step_to_fn_call_arguments(step: "Step") -> str:
     return json.dumps(args)
 
 
-class HistoryNode(ContinueBaseModel):
-    """A point in history, a list of which make up History"""
+class ContinueError(BaseModel):
+    title: str
+    message: str
 
-    step: Any
-    observation: Union[Observation, None]
+
+class SetStep(BaseModel):
+    step_type: Optional[str] = None
+    name: Optional[str] = None
+    description: Optional[str] = None
+
+    params: Optional[Dict[str, Any]] = None
+
+    hide: Optional[bool] = None
+    depth: Optional[int] = None
+
+    error: Optional[ContinueError] = None
+    observations: Optional[List[Observation]] = None
+    logs: Optional[List[str]] = None
+
+
+class DeltaStep(BaseModel):
+    name: Optional[str] = None
+    description: Optional[str] = None
+
+    observations: Optional[List[Observation]] = None
+    logs: Optional[List[str]] = None
+
+
+UpdateStep = Union[SetStep, DeltaStep]
+
+
+class StepDescription(BaseModel):
+    # Can this just be a Step? If the step is already included...
+    # Totally! It should be right??
+    step_type: str
+    name: str
+    description: str
+
+    params: Dict[str, Any]
+
+    hide: bool
     depth: int
-    deleted: bool = False
-    active: bool = True
+
+    error: Optional[ContinueError] = None
+    observations: List[Observation] = []
     logs: List[str] = []
-    context_used: List["ContextItem"] = []
 
     def to_chat_messages(self) -> List[ChatMessage]:
         if self.step.description is None or self.step.manage_own_chat_context:
@@ -122,91 +158,30 @@ class HistoryNode(ContinueBaseModel):
             )
         ]
 
+    def update(self, update: UpdateStep):
+        if isinstance(update, DeltaStep):
+            for key, value in update.dict(exclude_none=True).items():
+                setattr(self, key, getattr(self, key) + value)
+        elif isinstance(update, SetStep):
+            for key, value in update.dict(exclude_none=True).items():
+                setattr(self, key, value)
 
-class History(ContinueBaseModel):
-    """A history of steps taken and their results"""
 
-    timeline: List[HistoryNode]
-    current_index: int
+class SessionUpdate(BaseModel):
+    index: int
+    update: UpdateStep
+    stop: Optional[bool] = None
 
-    def to_chat_history(self) -> List[ChatMessage]:
-        msgs = []
-        for node in self.timeline:
-            if not node.step.hide:
-                msgs += node.to_chat_messages()
-        return msgs
+    def dict(self, *args, **kwargs):
+        d = super().dict(*args, **kwargs)
+        # Because the front-end doesn't see the Model type
+        d["delta"] = isinstance(self.update, DeltaStep)
+        return d
 
-    def add_node(self, node: HistoryNode) -> int:
-        """Add node and return the index where it was added"""
-        self.timeline.insert(self.current_index + 1, node)
-        self.current_index += 1
-        return self.current_index
 
-    def get_current(self) -> Union[HistoryNode, None]:
-        if self.current_index < 0:
-            return None
-        return self.timeline[self.current_index]
-
-    def get_last_at_depth(
-        self, depth: int, include_current: bool = False
-    ) -> Union[HistoryNode, None]:
-        i = self.current_index if include_current else self.current_index - 1
-        while i >= 0:
-            if (
-                self.timeline[i].depth == depth
-                and type(self.timeline[i].step).__name__ != "ManualEditStep"
-            ):
-                return self.timeline[i]
-            i -= 1
-        return None
-
-    def get_last_at_same_depth(self) -> Union[HistoryNode, None]:
-        return self.get_last_at_depth(self.get_current().depth)
-
-    def remove_current_and_substeps(self):
-        self.timeline.pop(self.current_index)
-        while self.get_current() is not None and self.get_current().depth > 0:
-            self.timeline.pop(self.current_index)
-
-    def take_next_step(self) -> Union["Step", None]:
-        if self.has_future():
-            self.current_index += 1
-            current_state = self.get_current()
-            if current_state is None:
-                return None
-            return current_state.step
-        return None
-
-    def get_current_index(self) -> int:
-        return self.current_index
-
-    def has_future(self) -> bool:
-        return self.current_index < len(self.timeline) - 1
-
-    def step_back(self):
-        self.current_index -= 1
-
-    def last_observation(self) -> Union[Observation, None]:
-        state = self.get_last_at_same_depth()
-        if state is None:
-            return None
-        return state.observation
-
-    def pop_step(self, index: int = None) -> Union[HistoryNode, None]:
-        index = index if index is not None else self.current_index
-        if index < 0 or self.current_index < 0:
-            return None
-
-        node = self.timeline.pop(index)
-
-        if index <= self.current_index:
-            self.current_index -= 1
-
-        return node.step
-
-    @classmethod
-    def from_empty(cls):
-        return cls(timeline=[], current_index=-1)
+StepGenerator = AsyncGenerator[Union[str, UpdateStep, Observation], None]
+AutopilotGeneratorOutput = Union[SessionUpdate, StepDescription]
+AutopilotGenerator = AsyncGenerator[AutopilotGeneratorOutput, None]
 
 
 class SlashCommandDescription(ContinueBaseModel):
@@ -306,20 +281,12 @@ class ContextProviderDescription(BaseModel):
     requires_query: bool
 
 
-class FullState(ContinueBaseModel):
-    """A full state of the program, including the history"""
+class SessionState(ContinueBaseModel):
+    """Full session history and important state needed for autopilot to Continue"""
 
-    history: History
-    active: bool
-    user_input_queue: List[str]
-    slash_commands: List[SlashCommandDescription]
-    adding_highlighted_code: bool
-    selected_context_items: List[ContextItem]
-    session_info: Optional[SessionInfo] = None
-    config: ContinueConfig
-    saved_context_groups: Dict[str, List[ContextItem]] = {}
-    context_providers: List[ContextProviderDescription] = []
-    meilisearch_url: Optional[str] = None
+    history: List[StepDescription]
+    context_items: List[ContextItem]
+    # future: List = []
 
 
 class ContinueSDK:
@@ -334,9 +301,7 @@ class Policy(ContinueBaseModel):
     """A rule that determines which step to take next"""
 
     # Note that history is mutable, kinda sus
-    def next(
-        self, config: ContinueConfig, history: History = History.from_empty()
-    ) -> "Step":
+    def next(self, config: ContinueConfig, session_state: SessionState) -> "Step":
         raise NotImplementedError
 
 
@@ -375,10 +340,10 @@ class Step(ContinueBaseModel):
             return cls.__name__
         return name
 
-    async def run(self, sdk: ContinueSDK) -> Coroutine[Observation, None, None]:
+    async def run(self, sdk: ContinueSDK) -> StepGenerator:
         raise NotImplementedError
 
-    async def __call__(self, sdk: ContinueSDK) -> Coroutine[Observation, None, None]:
+    async def __call__(self, sdk: ContinueSDK) -> StepGenerator:
         return await self.run(sdk)
 
     def __rshift__(self, other: "Step"):
@@ -398,10 +363,10 @@ class SequentialStep(Step):
     steps: List[Step]
     hide: bool = True
 
-    async def run(self, sdk: ContinueSDK) -> Coroutine[Observation, None, None]:
+    async def run(self, sdk: ContinueSDK) -> StepGenerator:
         for step in self.steps:
-            observation = await sdk.run_step(step)
-        return observation
+            async for update in sdk.run_step(step):
+                yield update
 
 
 class ValidatorObservation(Observation):
@@ -438,6 +403,3 @@ class ContinueCustomException(Exception):
         self.message = message
         self.title = title
         self.with_step = with_step
-
-
-HistoryNode.update_forward_refs()

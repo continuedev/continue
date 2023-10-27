@@ -1,10 +1,9 @@
 from abc import ABC, abstractmethod
-from typing import Coroutine, List, Union
+from typing import List, Union
 
 from ..models.filesystem_edit import FileSystemEdit
 from .config import ContinueConfig
-from .main import ChatMessage, History, Step
-from .observation import Observation
+from .main import ChatMessage, Step, StepDescription, StepGenerator
 
 """
 [[Generate]]
@@ -20,7 +19,7 @@ class AbstractContinueSDK(ABC):
     """The SDK provided as parameters to a step"""
 
     @property
-    def history(self) -> History:
+    def history(self) -> List[StepDescription]:
         return self.__autopilot.history
 
     @abstractmethod
@@ -28,7 +27,7 @@ class AbstractContinueSDK(ABC):
         pass
 
     @abstractmethod
-    async def run_step(self, step: Step) -> Coroutine[Observation, None, None]:
+    async def run_step(self, step: Step) -> StepGenerator:
         pass
 
     @abstractmethod

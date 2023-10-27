@@ -18,15 +18,12 @@ from ..libs.util.templating import render_prompt_template
 from ..models.filesystem import FileSystem, RangeInFile, RangeInFileWithContents
 from ..models.filesystem_edit import (
     EditDiff,
-    FileEdit,
     FileEditWithFullContents,
     FileSystemEdit,
 )
 
-# from ....libs.llm.replicate import ReplicateLLM
-from ..models.main import Range
-from .main import ChatMessage, ContinueCustomException, Step
-from .observation import Observation, TextObservation, UserInputObservation
+from .main import ChatMessage, ContinueCustomException, SetStep, Step
+from .observation import TextObservation, UserInputObservation
 
 
 class ContinueSDK:
@@ -49,8 +46,8 @@ class MessageStep(Step):
     async def describe(self, models: Models) -> Coroutine[str, None, None]:
         return self.message
 
-    async def run(self, sdk: ContinueSDK) -> Coroutine[Observation, None, None]:
-        return TextObservation(text=self.message)
+    async def run(self, sdk: ContinueSDK):
+        yield TextObservation(text=self.message)
 
 
 class DisplayErrorStep(Step):
@@ -72,7 +69,7 @@ class DisplayErrorStep(Step):
     async def describe(self, models: Models) -> Coroutine[str, None, None]:
         return self.message
 
-    async def run(self, sdk: ContinueSDK) -> Coroutine[Observation, None, None]:
+    async def run(self, sdk: ContinueSDK):
         raise ContinueCustomException(message=self.message, title=self.title)
 
 
@@ -82,9 +79,8 @@ class FileSystemEditStep(ReversibleStep):
 
     hide: bool = True
 
-    async def run(self, sdk: "ContinueSDK") -> Coroutine[Observation, None, None]:
+    async def run(self, sdk: "ContinueSDK"):
         self._diff = await sdk.ide.applyFileSystemEdit(self.edit)
-        return None
 
     async def reverse(self, sdk: "ContinueSDK"):
         await sdk.ide.applyFileSystemEdit(self._diff.backward)
@@ -115,7 +111,7 @@ class ShellCommandsStep(Step):
             f"{cmds_str}\n\nSummarize what was done in these shell commands, using markdown bullet points:"
         )
 
-    async def run(self, sdk: ContinueSDK) -> Coroutine[Observation, None, None]:
+    async def run(self, sdk: ContinueSDK):
         process = subprocess.Popen(
             "/bin/bash",
             stdin=subprocess.PIPE,
@@ -130,8 +126,6 @@ class ShellCommandsStep(Step):
         if err is not None and err != "":
             self._err_text = err
             return TextObservation(text=err)
-
-        return None
 
 
 class DefaultModelEditCodeStep(Step):
@@ -718,9 +712,7 @@ Please output the code to be inserted at the cursor in order to fulfill the user
         self._new_contents = completion
         self._prompt_and_completion += prompt + completion
 
-    async def run(self, sdk: ContinueSDK) -> Coroutine[Observation, None, None]:
-        await sdk.update_ui()
-
+    async def run(self, sdk: ContinueSDK):
         rif_with_contents = []
         for range_in_file in map(
             lambda x: RangeInFile(
@@ -752,12 +744,15 @@ Please output the code to be inserted at the cursor in order to fulfill the user
         )
 
         if sdk.config.disable_summaries:
-            self.name = ""
-            self.description = f"Edited {len(self.range_in_files)} files"
-            await sdk.update_ui()
+            yield SetStep(
+                name="",
+                description=f"Edited {len(self.range_in_files)} files",
+            )
         else:
-            self.name = "Generating summary"
-            self.description = ""
+            yield SetStep(
+                name="Generating summary",
+                description="",
+            )
             async for chunk in sdk.models.summarize.stream_complete(
                 dedent(
                     f"""\
@@ -770,9 +765,9 @@ Please output the code to be inserted at the cursor in order to fulfill the user
             {self.summary_prompt}"""
                 )
             ):
-                self.description += chunk
-                await sdk.update_ui()
+                yield chunk
 
+        # TODO: Follow-up edits might die with this update???
         sdk.context.set("last_edit_user_input", self.user_input)
         sdk.context.set("last_edit_diff", changes)
         sdk.context.set("last_edit_range", self.range_in_files[-1].range)
@@ -787,7 +782,7 @@ class EditFileStep(Step):
     async def describe(self, models: Models) -> Coroutine[str, None, None]:
         return "Editing file: " + self.filepath
 
-    async def run(self, sdk: ContinueSDK) -> Coroutine[Observation, None, None]:
+    async def run(self, sdk: ContinueSDK):
         file_contents = await sdk.ide.readFile(self.filepath)
         await sdk.run_step(
             DefaultModelEditCodeStep(
@@ -829,8 +824,8 @@ class ManualEditStep(ReversibleStep):
             diffs.append(diff)
         return cls(edit_diff=EditDiff.from_sequence(diffs))
 
-    async def run(self, sdk: ContinueSDK) -> Coroutine[Observation, None, None]:
-        return None
+    async def run(self, sdk: ContinueSDK):
+        ...
 
     async def reverse(self, sdk: ContinueSDK):
         await sdk.ide.applyFileSystemEdit(self.edit_diff.backward)
@@ -871,11 +866,11 @@ class WaitForUserInputStep(Step):
         else:
             return f"{self.prompt}\n\n`{self._response}`"
 
-    async def run(self, sdk: ContinueSDK) -> Coroutine[Observation, None, None]:
-        self.description = self.prompt
+    async def run(self, sdk: ContinueSDK):
+        yield SetStep(description=self.prompt)
         resp = await sdk.wait_for_user_input()
-        self.description = f"{self.prompt}\n\n`{resp}`"
-        return TextObservation(text=resp)
+        yield SetStep(description=f"{self.prompt}\n\n`{resp}`")
+        yield TextObservation(text=resp)
 
 
 class WaitForUserConfirmationStep(Step):
@@ -885,7 +880,7 @@ class WaitForUserConfirmationStep(Step):
     async def describe(self, models: Models) -> Coroutine[str, None, None]:
         return self.prompt
 
-    async def run(self, sdk: ContinueSDK) -> Coroutine[Observation, None, None]:
+    async def run(self, sdk: ContinueSDK):
         self.description = self.prompt
         resp = await sdk.wait_for_user_input()
-        return TextObservation(text=resp)
+        yield TextObservation(text=resp)

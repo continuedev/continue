@@ -2,6 +2,10 @@ import os
 import traceback
 from typing import Coroutine, List, Optional, Union
 
+from ..server.gui_protocol import AbstractGUIProtocolServer
+
+from ..server.window_manager import Window
+
 from ..libs.llm.base import LLM
 from ..libs.util.devdata import dev_data_logger
 from ..libs.util.logging import logger
@@ -31,12 +35,11 @@ from .main import (
     ContextItem,
     ContextItemId,
     ContinueCustomException,
-    History,
-    HistoryNode,
     Step,
+    StepDescription,
+    StepGenerator,
 )
 from .models import Models
-from .observation import Observation
 from .steps import (
     DefaultModelEditCodeStep,
     FileSystemEditStep,
@@ -54,12 +57,20 @@ class Autopilot:
 class ContinueSDK(AbstractContinueSDK):
     """The SDK provided as parameters to a step"""
 
-    ide: AbstractIdeProtocolServer
+    window: Window
     models: Models
     lsp: Optional[ContinueLSPClient] = None
     context: Context
     config: ContinueConfig
     __autopilot: Autopilot
+
+    @property
+    def ide(self) -> AbstractIdeProtocolServer:
+        return self.window.ide
+
+    @property
+    def gui(self) -> AbstractGUIProtocolServer:
+        return self.window.gui
 
     def __init__(self, autopilot: Autopilot):
         self.ide = autopilot.ide
@@ -86,30 +97,15 @@ class ContinueSDK(AbstractContinueSDK):
                 name="Invalid Continue Config File", message=formatted_err
             )
             msg_step.description = f"Falling back to default config settings due to the following error in `~/.continue/config.py`.\n```\n{formatted_err}\n```\n\nIt's possible this was caused by an update to the Continue config format. If you'd like to see the new recommended default `config.py`, check [here](https://github.com/continuedev/continue/blob/main/server/continuedev/libs/constants/default_config.py)."
-            self.history.add_node(
-                HistoryNode(step=msg_step, observation=None, depth=0, active=False)
-            )
+            # self.history.add_node(
+            #     HistoryNode(step=msg_step, observation=None, depth=0, active=False)
+            # )
             await self.ide.setFileOpen(getConfigFilePath())
 
         # Start models
         self.models = self.config.models
         await self.update_ui()
         await self.models.start(self)
-
-        # Start LSP
-        # async def start_lsp():
-        #     try:
-        #         sdk.lsp = ContinueLSPClient(
-        #             workspace_dir=sdk.ide.workspace_directory,
-        #         )
-        #         await sdk.lsp.start()
-        #     except Exception as e:
-        #         logger.warning(f"Failed to start LSP client: {e}", exc_info=False)
-        #         sdk.lsp = None
-
-        # create_async_task(
-        #     start_lsp(), on_error=lambda e: logger.error("Failed to setup LSP: %s", e)
-        # )
 
         # When the config is loaded, setup posthog logger
         posthog_logger.setup(
@@ -129,8 +125,8 @@ class ContinueSDK(AbstractContinueSDK):
         return sdk
 
     @property
-    def history(self) -> History:
-        return self.__autopilot.history
+    def history(self) -> List[StepDescription]:
+        return self.__autopilot.session_state.history
 
     def write_log(self, message: str):
         self.history.timeline[self.history.current_index].logs.append(message)
@@ -154,8 +150,9 @@ class ContinueSDK(AbstractContinueSDK):
                     return open_file
             raise Exception(f"Path {path} does not exist")
 
-    async def run_step(self, step: Step) -> Coroutine[Observation, None, None]:
-        return await self.__autopilot._run_singular_step(step)
+    async def run_step(self, step: Step) -> StepGenerator:
+        async for update in self.__autopilot._run_singular_step(step):
+            yield update
 
     async def apply_filesystem_edit(
         self, edit: FileSystemEdit, name: str = None, description: str = None

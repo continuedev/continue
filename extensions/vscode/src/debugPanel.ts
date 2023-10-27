@@ -8,6 +8,7 @@ import {
 } from "./util/vscode";
 import { RangeInFile } from "../schema/RangeInFile";
 import { setFocusedOnContinueInput } from "./commands";
+import { windowId } from "./activation/activate";
 const WebSocket = require("ws");
 
 let websocketConnections: { [url: string]: WebsocketConnection | undefined } =
@@ -67,8 +68,7 @@ class WebsocketConnection {
 
 export let debugPanelWebview: vscode.Webview | undefined;
 export function setupDebugPanel(
-  panel: vscode.WebviewPanel | vscode.WebviewView,
-  sessionIdPromise: Promise<string>
+  panel: vscode.WebviewPanel | vscode.WebviewView
 ): string {
   debugPanelWebview = panel.webview;
   panel.onDidDispose(() => {
@@ -177,7 +177,6 @@ export function setupDebugPanel(
   panel.webview.onDidReceiveMessage(async (data) => {
     switch (data.type) {
       case "onLoad": {
-        const sessionId = await sessionIdPromise;
         panel.webview.postMessage({
           type: "onLoad",
           vscMachineId: getUniqueId(),
@@ -185,7 +184,6 @@ export function setupDebugPanel(
           workspacePaths: vscode.workspace.workspaceFolders?.map(
             (folder) => folder.uri.fsPath
           ),
-          sessionId,
           vscMediaUrl,
           dataSwitchOn: vscode.workspace
             .getConfiguration("continue")
@@ -305,6 +303,7 @@ export function setupDebugPanel(
         <script type="module" nonce="${nonce}" src="${scriptUri}"></script>
 
         <script>localStorage.setItem("ide", "vscode")</script>
+        <script>window.windowId = "${windowId}"</script>
       </body>
     </html>`;
 }
@@ -313,20 +312,12 @@ export class ContinueGUIWebviewViewProvider
   implements vscode.WebviewViewProvider
 {
   public static readonly viewType = "continue.continueGUIView";
-  private readonly sessionIdPromise: Promise<string>;
-
-  constructor(sessionIdPromise: Promise<string>) {
-    this.sessionIdPromise = sessionIdPromise;
-  }
 
   resolveWebviewView(
     webviewView: vscode.WebviewView,
     _context: vscode.WebviewViewResolveContext,
     _token: vscode.CancellationToken
   ): void | Thenable<void> {
-    webviewView.webview.html = setupDebugPanel(
-      webviewView,
-      this.sessionIdPromise
-    );
+    webviewView.webview.html = setupDebugPanel(webviewView);
   }
 }

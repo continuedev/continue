@@ -26,7 +26,7 @@ dependencies {
 //    implementation(libs.annotations)
     implementation("com.squareup.okhttp3:okhttp:4.9.1")
     implementation("org.jetbrains.kotlin:kotlin-stdlib:1.4.32")
-
+    implementation ("io.socket:socket.io-client:2.1.0")
 }
 
 // Set the JVM language level used to build the project. Use Java 11 for 2020.3+, and Java 17 for 2022.2+.

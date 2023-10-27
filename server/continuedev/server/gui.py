@@ -1,16 +1,14 @@
-import asyncio
 import json
 import traceback
-from typing import Any, List, Optional, Type, TypeVar
-import uuid
-from ..plugins.steps.setup_model import SetupModelStep
+from typing import Any, List, Optional, TypeVar
 
 from fastapi import APIRouter, Depends, WebSocket
-from pydantic import BaseModel
+from pydantic import BaseModel, ValidationError
 from starlette.websockets import WebSocketDisconnect, WebSocketState
 from uvicorn.main import Server
 
-from ..core.main import ContextItem
+from ..models.websockets import WebsocketsMessage
+from ..core.main import ContextItem, SessionState, SessionUpdate
 from ..core.models import ALL_MODEL_ROLES, MODEL_CLASSES, MODEL_MODULE_NAMES
 from ..core.steps import DisplayErrorStep
 from ..libs.llm.prompts.chat import (
@@ -28,9 +26,8 @@ from ..libs.util.edit_config import (
     display_llm_class,
 )
 from ..libs.util.logging import logger
-from ..libs.util.queue import AsyncSubscriptionQueue
 from ..libs.util.telemetry import posthog_logger
-from .session_manager import Session, session_manager
+from .websockets_messenger import WebsocketsMessenger
 
 router = APIRouter(prefix="/gui", tags=["gui"])
 
@@ -51,168 +48,55 @@ class AppStatus:
 Server.handle_exit = AppStatus.handle_exit
 
 
-async def websocket_session(session_id: str) -> Session:
-    return await session_manager.get_session(session_id)
-
-
 T = TypeVar("T", bound=BaseModel)
 
 # You should probably abstract away the websocket stuff into a separate class
 
 
 class GUIProtocolServer:
-    websocket: WebSocket
-    session: Session
-    sub_queue: AsyncSubscriptionQueue = AsyncSubscriptionQueue()
+    messenger: WebsocketsMessenger
 
-    def __init__(self, session: Session):
-        self.session = session
-
-    async def _send_json(
-        self, message_type: str, data: Any, message_id: Optional[str] = None
-    ):
-        if self.websocket.application_state == WebSocketState.DISCONNECTED:
-            return message_id
-
-        message_id = message_id or uuid.uuid4().hex
-        await self.websocket.send_json(
-            {"messageType": message_type, "data": data, "messageId": message_id}
-        )
-        return message_id
-
-    async def _receive_json(self, message_id: str, timeout: int = 20) -> Any:
-        try:
-            resp = await asyncio.wait_for(
-                self.sub_queue.get(message_id), timeout=timeout
-            )
-        except asyncio.TimeoutError:
-            raise Exception("GUI Protocol _receive_json timed out after 20 seconds")
-        finally:
-            await self.sub_queue.delete(message_id)
-
-        return resp
-
-    async def _send_and_receive_json(
-        self, data: Any, resp_model: Type[T], message_type: str
-    ) -> T:
-        message_id = uuid.uuid4().hex
-        await self._send_json(message_type, data, message_id=message_id)
-        resp = await self._receive_json(message_id)
-        return resp_model.parse_obj(resp)
+    def __init__(self, websocket: WebSocket):
+        self.messenger = WebsocketsMessenger(websocket)
 
     def on_error(self, e: Exception):
-        return self.session.autopilot.continue_sdk.run_step(
-            DisplayErrorStep.from_exception(e)
-        )
+        # TODO
+        return self.session.autopilot.sdk.run_step(DisplayErrorStep.from_exception(e))
 
-    def handle_json(self, message_type: str, data: Any):
-        if message_type == "main_input":
-            self.on_main_input(data["input"])
-        elif message_type == "step_user_input":
-            self.on_step_user_input(data["input"], data["index"])
-        elif message_type == "refinement_input":
-            self.on_refinement_input(data["input"], data["index"])
-        elif message_type == "reverse_to_index":
-            self.on_reverse_to_index(data["index"])
-        elif message_type == "retry_at_index":
-            self.on_retry_at_index(data["index"])
-        elif message_type == "clear_history":
-            self.on_clear_history()
-        elif message_type == "set_current_session_title":
+    def handle_json(self, msg: WebsocketsMessage):
+        data = msg.data
+        if msg.message_type == "set_current_session_title":
             self.set_current_session_title(data["title"])
-        elif message_type == "delete_at_index":
-            self.on_delete_at_index(data["index"])
-        elif message_type == "delete_context_with_ids":
-            self.on_delete_context_with_ids(data["ids"], data.get("index", None))
-        elif message_type == "toggle_adding_highlighted_code":
-            self.on_toggle_adding_highlighted_code()
-        elif message_type == "set_editing_at_ids":
-            self.on_set_editing_at_ids(data["ids"])
-        elif message_type == "show_logs_at_index":
+        elif msg.message_type == "show_logs_at_index":
             self.on_show_logs_at_index(data["index"])
-        elif message_type == "show_context_virtual_file":
+        elif msg.message_type == "show_context_virtual_file":
             self.show_context_virtual_file(data.get("index", None))
-        elif message_type == "select_context_item":
-            self.select_context_item(data["id"], data["query"])
-        elif message_type == "select_context_item_at_index":
-            self.select_context_item_at_index(data["id"], data["query"], data["index"])
-        elif message_type == "load_session":
+        elif msg.message_type == "load_session":
             self.load_session(data.get("session_id", None))
-        elif message_type == "edit_step_at_index":
-            self.edit_step_at_index(data.get("user_input", ""), data["index"])
-        elif message_type == "set_system_message":
+        elif msg.message_type == "set_system_message":
             self.set_system_message(data["message"])
-        elif message_type == "set_temperature":
+        elif msg.message_type == "set_temperature":
             self.set_temperature(float(data["temperature"]))
-        elif message_type == "add_model_for_role":
+        elif msg.message_type == "add_model_for_role":
             self.add_model_for_role(data["role"], data["model_class"], data["model"])
-        elif message_type == "set_model_for_role_from_index":
+        elif msg.message_type == "set_model_for_role_from_index":
             self.set_model_for_role_from_index(data["role"], data["index"])
-        elif message_type == "save_context_group":
+        elif msg.message_type == "save_context_group":
             self.save_context_group(
                 data["title"], [ContextItem(**item) for item in data["context_items"]]
             )
-        elif message_type == "select_context_group":
+        elif msg.message_type == "select_context_group":
             self.select_context_group(data["id"])
-        elif message_type == "delete_context_group":
+        elif msg.message_type == "delete_context_group":
             self.delete_context_group(data["id"])
-        elif message_type == "preview_context_item":
+        elif msg.message_type == "preview_context_item":
             self.preview_context_item(data["id"])
-
-    def on_main_input(self, input: str):
-        # Do something with user input
-        create_async_task(
-            self.session.autopilot.accept_user_input(input), self.on_error
-        )
-
-    def on_reverse_to_index(self, index: int):
-        # Reverse the history to the given index
-        create_async_task(self.session.autopilot.reverse_to_index(index), self.on_error)
-
-    def on_step_user_input(self, input: str, index: int):
-        create_async_task(
-            self.session.autopilot.give_user_input(input, index), self.on_error
-        )
-
-    def on_refinement_input(self, input: str, index: int):
-        create_async_task(
-            self.session.autopilot.accept_refinement_input(input, index), self.on_error
-        )
-
-    def on_retry_at_index(self, index: int):
-        create_async_task(self.session.autopilot.retry_at_index(index), self.on_error)
-
-    def on_clear_history(self):
-        create_async_task(self.session.autopilot.clear_history(), self.on_error)
-
-    def on_delete_at_index(self, index: int):
-        create_async_task(self.session.autopilot.delete_at_index(index), self.on_error)
-
-    def edit_step_at_index(self, user_input: str, index: int):
-        create_async_task(
-            self.session.autopilot.edit_step_at_index(user_input, index),
-            self.on_error,
-        )
-
-    def on_delete_context_with_ids(self, ids: List[str], index: Optional[int] = None):
-        create_async_task(
-            self.session.autopilot.delete_context_with_ids(ids, index), self.on_error
-        )
-
-    def on_toggle_adding_highlighted_code(self):
-        create_async_task(
-            self.session.autopilot.toggle_adding_highlighted_code(), self.on_error
-        )
-        posthog_logger.capture_event("toggle_adding_highlighted_code", {})
-
-    def on_set_editing_at_ids(self, ids: List[str]):
-        create_async_task(self.session.autopilot.set_editing_at_ids(ids), self.on_error)
 
     def on_show_logs_at_index(self, index: int):
         name = "Continue Prompt"
 
         logs = None
-        timeline = self.session.autopilot.continue_sdk.history.timeline
+        timeline = self.session.autopilot.sdk.history.timeline
         while logs is None and index < len(timeline):
             if len(timeline[index].logs) > 0:
                 logs = timeline[index].logs
@@ -239,8 +123,8 @@ class GUIProtocolServer:
                 context_items = (
                     await self.session.autopilot.context_manager.get_selected_items()
                 )
-            elif index < len(self.session.autopilot.continue_sdk.history.timeline):
-                context_items = self.session.autopilot.continue_sdk.history.timeline[
+            elif index < len(self.session.autopilot.sdk.history.timeline):
+                context_items = self.session.autopilot.sdk.history.timeline[
                     index
                 ].context_used
 
@@ -277,26 +161,26 @@ class GUIProtocolServer:
             self.on_error,
         )
 
-    def load_session(self, session_id: Optional[str] = None):
-        async def load_and_tell_to_reconnect():
-            new_session_id = await session_manager.load_session(
-                self.session.session_id, session_id
-            )
-            await self._send_json(
-                "reconnect_at_session", {"session_id": new_session_id}
-            )
+    # def load_session(self, session_id: Optional[str] = None):
+    #     async def load_and_tell_to_reconnect():
+    #         new_session_id = await session_manager.load_session(
+    #             self.session.session_id, session_id
+    #         )
+    #         await self._send_json(
+    #             "reconnect_at_session", {"session_id": new_session_id}
+    #         )
 
-        create_async_task(load_and_tell_to_reconnect(), self.on_error)
+    #     create_async_task(load_and_tell_to_reconnect(), self.on_error)
 
-        posthog_logger.capture_event("load_session", {"session_id": session_id})
+    #     posthog_logger.capture_event("load_session", {"session_id": session_id})
 
     def set_current_session_title(self, title: str):
         self.session.autopilot.set_current_session_title(title)
 
     def set_system_message(self, message: str):
-        self.session.autopilot.continue_sdk.config.system_message = message
-        self.session.autopilot.continue_sdk.models.set_main_config_params(
-            message, self.session.autopilot.continue_sdk.config.temperature
+        self.session.autopilot.sdk.config.system_message = message
+        self.session.autopilot.sdk.models.set_main_config_params(
+            message, self.session.autopilot.sdk.config.temperature
         )
 
         create_async_task(
@@ -308,7 +192,7 @@ class GUIProtocolServer:
         posthog_logger.capture_event("set_system_message", {"system_message": message})
 
     def set_temperature(self, temperature: float):
-        self.session.autopilot.continue_sdk.config.temperature = temperature
+        self.session.autopilot.sdk.config.temperature = temperature
         create_async_task(
             self.session.autopilot.set_config_attr(
                 ["temperature"], create_float_node(temperature)
@@ -319,13 +203,13 @@ class GUIProtocolServer:
 
     def set_model_for_role_from_index(self, role: str, index: int):
         async def async_stuff():
-            models = self.session.autopilot.continue_sdk.config.models
+            models = self.session.autopilot.sdk.config.models
 
             # Set models in SDK
             temp = models.default
             models.default = models.saved[index]
             models.saved[index] = temp
-            await self.session.autopilot.continue_sdk.start_model(models.default)
+            await self.session.autopilot.sdk.start_model(models.default)
 
             # Set models in config.py
             JOINER = ",\n\t\t"
@@ -343,12 +227,12 @@ class GUIProtocolServer:
                 if other_role != "default":
                     models.__setattr__(other_role, models.default)
 
-            await self.session.autopilot.continue_sdk.update_ui()
+            await self.session.autopilot.sdk.update_ui()
 
         create_async_task(async_stuff(), self.on_error)
 
     def add_model_for_role(self, role: str, model_class: str, model: Any):
-        models = self.session.autopilot.continue_sdk.config.models
+        models = self.session.autopilot.sdk.config.models
 
         model_copy = model.copy()
         if "api_key" in model_copy:
@@ -410,7 +294,7 @@ class GUIProtocolServer:
                 # Set and start the new default model
                 new_model = MODEL_CLASSES[model_class](**model)
                 models.default = new_model
-                await self.session.autopilot.continue_sdk.start_model(models.default)
+                await self.session.autopilot.sdk.start_model(models.default)
 
                 # Construct and set the new models object
                 JOINER = ",\n\t\t"
@@ -460,44 +344,40 @@ class GUIProtocolServer:
             self.session.autopilot.delete_context_group(id), self.on_error
         )
 
+    # region: Send data to GUI
 
-@router.get("/sessions")
-async def get_session(session_id: Optional[str] = None):
-    try:
-        # Assuming load_session is a method of a class, and you have an instance `instance_of_that_class`
-        await protocol.load_session(session_id)
-        return {"message": "Session loaded successfully", "session_id": session_id}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    def run_from_state(self, state: SessionState):
+        # Do something with user input
+        create_async_task(
+            self.session.autopilot.accept_user_input(input), self.on_error
+        )
+
+    async def send_step_update(self, session_update: SessionUpdate):
+        await self.messenger.send("history_update", session_update.dict())
+
+    # endregion
 
 
 @router.websocket("/ws")
-async def websocket_endpoint(
-    websocket: WebSocket, session: Session = Depends(websocket_session)
-):
+async def websocket_endpoint(websocket: WebSocket):
     try:
         await websocket.accept()
 
-        session_manager.register_websocket(session.session_id, websocket)
-        protocol = GUIProtocolServer(session)
-        protocol.websocket = websocket
-
-        # Update any history that may have happened before connection
-        await protocol.session.autopilot.update_subscribers()
+        gui = GUIProtocolServer(websocket)
 
         while AppStatus.should_exit is False:
             message = await websocket.receive_text()
             if isinstance(message, str):
-                message = json.loads(message)
+                json_message = json.loads(message)
 
-            if "messageType" not in message or "data" not in message:
-                logger.warning(f"Invalid message received: {message}")
+            try:
+                message = WebsocketsMessage.parse_obj(json_message)
+            except ValidationError as e:
+                logger.warning(f"Error while validating message: {json_message}")
                 continue  # :o
-            message_type = message["messageType"]
-            data = message["data"]
 
-            logger.debug(f"Received '{message_type}': {data}")
-            protocol.handle_json(message_type, data)
+            logger.debug(f"Received '{message.message_type}': {message.data}")
+            gui.handle_json(message)
 
     except WebSocketDisconnect:
         logger.debug("GUI websocket disconnected")
@@ -510,7 +390,8 @@ async def websocket_endpoint(
             {"error_title": e.__str__() or e.__repr__(), "error_message": err_msg},
         )
 
-        await session.autopilot.ide.showMessage(err_msg)
+        # TODO
+        # await session.autopilot.ide.showMessage(err_msg)
 
         raise e
     finally:
@@ -520,6 +401,3 @@ async def websocket_endpoint(
             and websocket.application_state != WebSocketState.DISCONNECTED
         ):
             await websocket.close()
-
-        await session_manager.persist_session(session.session_id)
-        await session_manager.remove_session(session.session_id)

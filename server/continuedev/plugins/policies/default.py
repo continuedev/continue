@@ -3,7 +3,7 @@ from typing import Type, Union
 from ..steps.chroma import AnswerQuestionChroma
 
 from ...core.config import ContinueConfig
-from ...core.main import History, Policy, Step
+from ...core.main import Policy, SessionState, Step
 from ...core.observation import UserInputObservation
 from ..steps.chat import SimpleChatStep
 from ..steps.custom_command import CustomCommandStep
@@ -64,25 +64,31 @@ class DefaultPolicy(Policy):
     default_step: Type[Step] = SimpleChatStep
     default_params: dict = {}
 
-    def next(self, config: ContinueConfig, history: History) -> Step:
+    def next(self, config: ContinueConfig, session_state: SessionState) -> Step:
         # At the very start, run initial Steps specified in the config
-        if history.get_current() is None:
+        if len(session_state.history) == 0:
             return StepsOnStartupStep()
 
-        observation = history.get_current().observation
-        if observation is not None and isinstance(observation, UserInputObservation):
-            # This could be defined with ObservationTypePolicy. Ergonomics not right though.
+        last_step = session_state.history[-1]
+        observation: UserInputObservation
+        if observation := next(
+            filter(
+                lambda obs: isinstance(obs, UserInputObservation),
+                last_step.observations,
+            ),
+            None,
+        ):
             user_input = observation.user_input
 
             slash_command = parse_slash_command(user_input, config)
             if slash_command is not None:
                 if (
                     getattr(slash_command, "user_input", None) is None
-                    and history.get_current().step.user_input is not None
+                    and last_step.params["user_input"] is not None
                 ):
-                    history.get_current().step.user_input = (
-                        history.get_current().step.user_input.split()[0]
-                    )
+                    last_step.params["user_input"] = last_step.params[
+                        "user_input"
+                    ].split()[0]
                 return slash_command
 
             custom_command = parse_custom_command(user_input, config)
@@ -93,5 +99,3 @@ class DefaultPolicy(Policy):
                 return EditHighlightedCodeStep(user_input=user_input[5:])
 
             return self.default_step(**self.default_params)
-
-        return None
