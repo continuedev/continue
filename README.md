@@ -64,7 +64,7 @@ Press `cmd+shift+r` (MacOS) / `ctrl+shift+r` (Windows) when you come across an e
 
 ### Download for [VS Code](https://marketplace.visualstudio.com/items?itemName=Continue.continue) and [JetBrains](https://plugins.jetbrains.com/plugin/22707-continue-extension)
 
-By default, Continue uses `GPT-4` and `GPT-3.5-turbo` via the OpenAI API. You can adjust the config to use different Large Language Models (LLMs), including local, private models. Read more [here](https://continue.dev/docs/customization/models).
+By default, Continue uses `GPT-4` and `GPT-3.5-turbo` via the OpenAI API. You can adjust the config to use different Large Language Models (LLMs) like [Code Llama, Claude 2, WizardCoder, PaLM 2, and more](github.com/continuedev/what-llm-to-use). Read more about available model providers [here](https://continue.dev/docs/customization/models).
 
 ### [Run the server manually](https://continue.dev/docs/walkthroughs/manually-run-continue)
 
