@@ -100,10 +100,7 @@ export async function activateExtension(context: vscode.ExtensionContext) {
 
     // Initialize IDE Protocol Client
     const serverUrl = getContinueServerUrl();
-    ideProtocolClient = new IdeProtocolClient(
-      `${serverUrl.replace("http", "ws")}/ide/ws`,
-      context
-    );
+    ideProtocolClient = new IdeProtocolClient(serverUrl, context);
   })();
 
   // Register Continue GUI as sidebar webview, and beginning a new session

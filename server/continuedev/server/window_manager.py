@@ -14,34 +14,34 @@ class Window:
 
 
 class WindowManager:
-    windows: Dict[str, Window]
+    windows: Dict[str, Window] = {}
 
-    def get_window(self, window_id: str) -> Window:
-        return self.windows[window_id]
+    def get_window(self, sid: str) -> Window:
+        return self.windows[sid]
 
-    def register_ide(self, window_id: str, ide: AbstractIdeProtocolServer):
-        if window_id not in self.windows:
-            self.windows[window_id] = Window()
+    def register_ide(self, sid: str, ide: AbstractIdeProtocolServer):
+        if sid not in self.windows:
+            self.windows[sid] = Window()
 
-        self.windows[window_id].ide = ide
+        self.windows[sid].ide = ide
 
-    def remove_ide(self, window_id: str):
-        if window_id in self.windows:
-            self.windows[window_id].ide = None
-            if self.windows[window_id].is_closed():
-                del self.windows[window_id]
+    def remove_ide(self, sid: str):
+        if sid in self.windows:
+            self.windows[sid].ide = None
+            if self.windows[sid].is_closed():
+                del self.windows[sid]
 
-    def register_gui(self, window_id: str, gui: AbstractGUIProtocolServer):
-        if window_id not in self.windows:
-            self.windows[window_id] = Window()
+    def register_gui(self, sid: str, gui: AbstractGUIProtocolServer):
+        if sid not in self.windows:
+            self.windows[sid] = Window()
 
-        self.windows[window_id].gui = gui
+        self.windows[sid].gui = gui
 
-    def remove_gui(self, window_id: str):
-        if window_id in self.windows:
-            self.windows[window_id].gui = None
-            if self.windows[window_id].is_closed():
-                del self.windows[window_id]
+    def remove_gui(self, sid: str):
+        if sid in self.windows:
+            self.windows[sid].gui = None
+            if self.windows[sid].is_closed():
+                del self.windows[sid]
 
 
 window_manager = WindowManager()

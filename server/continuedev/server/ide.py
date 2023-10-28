@@ -3,7 +3,6 @@ import asyncio
 import json
 import os
 import traceback
-import uuid
 from typing import (
     Any,
     Callable,
@@ -13,13 +12,12 @@ from typing import (
     Optional,
 )
 from ..models.websockets import WebsocketsMessage
-from .websockets_messenger import WebsocketsMessenger
+from .websockets_messenger import SocketIOMessenger
 from .window_manager import window_manager
 import nest_asyncio
-from fastapi import APIRouter, WebSocket
+from fastapi import APIRouter
 from pydantic import BaseModel, ValidationError
-from starlette.websockets import WebSocketDisconnect, WebSocketState
-from uvicorn.main import Server
+from urllib.parse import parse_qs
 
 
 from ..libs.util.create_async_task import create_async_task
@@ -46,29 +44,15 @@ from ..models.filesystem_edit import (
     SequentialFileSystemEdit,
 )
 from .ide_protocol import AbstractIdeProtocolServer
+import socketio
 
 nest_asyncio.apply()
 
 
 router = APIRouter(prefix="/ide", tags=["ide"])
 
-
-# Graceful shutdown by closing websockets
-original_handler = Server.handle_exit
-
-
-class AppStatus:
-    should_exit = False
-
-    @staticmethod
-    def handle_exit(*args, **kwargs):
-        AppStatus.should_exit = True
-        logger.debug("Shutting down")
-        original_handler(*args, **kwargs)
-
-
-Server.handle_exit = AppStatus.handle_exit
-
+sio = socketio.AsyncServer(async_mode="asgi", cors_allowed_origins="*")
+sio_ide_app = socketio.ASGIApp(socketio_server=sio)
 
 # region: Types
 
@@ -161,11 +145,11 @@ class cached_property_no_none:
 
 
 class IdeProtocolServer(AbstractIdeProtocolServer):
-    messenger: WebsocketsMessenger
+    messenger: SocketIOMessenger
     window_info: WindowInfo
 
-    def __init__(self, websocket: WebSocket, window_info: WindowInfo):
-        self.messenger = WebsocketsMessenger(websocket)
+    def __init__(self, window_info: WindowInfo, sio: socketio.AsyncServer, sid: str):
+        self.messenger = SocketIOMessenger(sio, sid)
         self.window_info = window_info
 
     async def handle_json(self, msg: WebsocketsMessage):
@@ -212,7 +196,7 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
             "listDirectoryContents",
             "fileExists",
         ]:
-            self.messenger.post_to_queue(msg)
+            self.messenger.post(msg)
         elif msg.message_type == "workspaceDirectory":
             self.workspace_directory = data["workspaceDirectory"]
         elif msg.message_type == "uniqueId":
@@ -536,65 +520,33 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
         return EditDiff(forward=edit, backward=backward)
 
 
-@router.websocket("/ws")
-async def websocket_endpoint(websocket: WebSocket, window_info: WindowInfo):
+@sio.event
+async def connect(sid, environ):
+    query = parse_qs(environ.get("QUERY_STRING", ""))
+    window_info_str = query.get("window_info", [None])[0]
+    window_info = WindowInfo.parse_raw(window_info_str)
+
+    # Initialize the IDE Protocol Server
+    ideProtocolServer = IdeProtocolServer(window_info, sio, sid)
+    window_manager.register_ide(sid, ideProtocolServer)
+
+
+@sio.event
+async def disconnect(sid):
+    window_manager.remove_ide(sid)
+
+
+@sio.event
+async def message(sid, data):
+    print("message ", data)
     try:
-        # Accept the websocket connection
-        await websocket.accept()
-        await websocket.send_json(
-            {"messageType": "connected", "data": {}, "messageId": uuid.uuid4().hex}
-        )
+        json_message = json.loads(data)
+        message = WebsocketsMessage.parse_obj(json_message)
+    except json.JSONDecodeError:
+        logger.critical(f"Error decoding json: {data}")
+        return
+    except ValidationError as e:
+        logger.critical(f"Error validating json: {e}")
+        return
 
-        # Message handler
-        def handle_msg(raw_msg):
-            try:
-                json_message = json.loads(raw_msg)
-                message = WebsocketsMessage.parse_obj(json_message)
-            except json.JSONDecodeError:
-                logger.critical(f"Error decoding json: {raw_msg}")
-                return
-            except ValidationError as e:
-                logger.critical(f"Error validating json: {e}")
-                return
-
-            create_async_task(
-                ideProtocolServer.handle_json(message),
-                ideProtocolServer.on_error,
-            )
-
-        # Initialize the IDE Protocol Server
-        ideProtocolServer = IdeProtocolServer(websocket, window_info)
-        window_manager.register_ide(window_info.window_id, ideProtocolServer)
-
-        # Handle messages
-        while AppStatus.should_exit is False:
-            message = await websocket.receive_text()
-            handle_msg(message)
-
-    except WebSocketDisconnect:
-        logger.debug("IDE websocket disconnected")
-    except Exception as e:
-        logger.debug(f"Error in ide websocket: {e}")
-        err_msg = "\n".join(traceback.format_exception(e))
-        posthog_logger.capture_event(
-            "gui_error",
-            {"error_title": e.__str__() or e.__repr__(), "error_message": err_msg},
-        )
-
-        if ideProtocolServer is not None:
-            await ideProtocolServer.showMessage(f"Error in Continue server: {err_msg}")
-
-        raise e
-    finally:
-        logger.debug("Closing ide websocket")
-        if (
-            websocket.client_state != WebSocketState.DISCONNECTED
-            and websocket.application_state != WebSocketState.DISCONNECTED
-        ):
-            await websocket.close()
-
-        posthog_logger.capture_event(
-            "session_ended", {"session_id": ideProtocolServer.session_id}
-        )
-
-        window_manager.remove_ide(window_id=window_info.window_id)
+    await window_manager.get_window(sid).ide.handle_json(message)

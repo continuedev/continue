@@ -11,7 +11,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from ..libs.util.create_async_task import create_async_task
 from ..libs.util.logging import logger
 from .gui import router as gui_router
-from .ide import router as ide_router
+from .ide import router as ide_router, sio_ide_app
 from .meilisearch_server import start_meilisearch, stop_meilisearch
 from .global_config import global_config
 
@@ -36,6 +36,8 @@ app = FastAPI(lifespan=lifespan)
 app.include_router(ide_router)
 app.include_router(gui_router)
 
+app.mount("/ide", sio_ide_app)
+
 # Add CORS support
 app.add_middleware(
     CORSMiddleware,
@@ -44,12 +46,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-
-@app.get("/health")
-def health():
-    logger.debug("Health check")
-    return {"status": "ok"}
 
 
 def run_server(

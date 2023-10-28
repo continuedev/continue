@@ -37,10 +37,6 @@ class AbstractIdeProtocolServer(ABC):
         """Set whether suggestions are locked"""
 
     @abstractmethod
-    async def getSessionId(self):
-        """Get a new session ID"""
-
-    @abstractmethod
     def onAcceptRejectSuggestion(self, accepted: bool):
         """Called when the user accepts or rejects a suggestion"""
 
@@ -107,10 +103,6 @@ class AbstractIdeProtocolServer(ABC):
         edit: Optional[bool] = False,
     ):
         """Called when highlighted code is updated"""
-
-    @abstractmethod
-    def onDeleteAtIndex(self, index: int):
-        """Called when a step is deleted at a given index"""
 
     @abstractmethod
     async def showDiff(self, filepath: str, replacement: str, step_index: int):
