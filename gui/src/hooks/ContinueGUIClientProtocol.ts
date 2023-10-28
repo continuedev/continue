@@ -1,75 +1,57 @@
 import { ContextItem, ContextItemId } from "../schema/FullState";
 import AbstractContinueGUIClientProtocol from "./AbstractContinueGUIClientProtocol";
-import { Messenger, WebsocketMessenger } from "./messenger";
+import { Messenger, SocketIOMessenger, WebsocketMessenger } from "./messenger";
 import { VscodeMessenger } from "./vscodeMessenger";
 
 class ContinueGUIClientProtocol extends AbstractContinueGUIClientProtocol {
   messenger?: Messenger;
-  // Server URL must contain the session ID param
-  serverUrlWithSessionId: string;
+  serverUrl: string;
   useVscodeMessagePassing: boolean;
 
   onStateUpdateCallbacks: ((state: any) => void)[] = [];
 
-  private connectMessenger(
-    serverUrlWithSessionId: string,
-    useVscodeMessagePassing: boolean
-  ) {
-    if (this.messenger) {
-      console.log("Closing session: ", this.serverUrlWithSessionId);
-      this.messenger.close();
-    }
-    this.serverUrlWithSessionId = serverUrlWithSessionId;
+  constructor(serverUrl: string, useVscodeMessagePassing: boolean) {
+    super();
+    this.serverUrl = serverUrl;
+    this.useVscodeMessagePassing = useVscodeMessagePassing;
+
+    this.serverUrl = serverUrl;
     this.useVscodeMessagePassing = useVscodeMessagePassing;
     this.messenger = useVscodeMessagePassing
-      ? new VscodeMessenger(serverUrlWithSessionId)
-      : new WebsocketMessenger(serverUrlWithSessionId);
+      ? new VscodeMessenger(serverUrl)
+      : new SocketIOMessenger(serverUrl);
 
     this.messenger.onClose(() => {
-      console.log("GUI Connection closed: ", serverUrlWithSessionId);
+      console.log("GUI Connection closed: ", serverUrl);
     });
     this.messenger.onError((error) => {
       console.log("GUI Connection error: ", error);
     });
     this.messenger.onOpen(() => {
-      console.log("GUI Connection opened: ", serverUrlWithSessionId);
+      console.log("GUI Connection opened: ", serverUrl);
     });
 
-    this.messenger.onMessageType("reconnect_at_session", (data: any) => {
-      if (data.session_id) {
-        this.onReconnectAtSession(data.session_id);
-      }
-    });
-
-    this.messenger.onMessageType("state_update", (data: any) => {
-      if (data.state) {
-        for (const callback of this.onStateUpdateCallbacks) {
-          callback(data.state);
-        }
-      }
+    this.messenger.onMessage((messageType, data) => {
+      this.handleMessage(messageType, data);
     });
   }
 
-  constructor(
-    serverUrlWithSessionId: string,
-    useVscodeMessagePassing: boolean
-  ) {
-    super();
-    this.serverUrlWithSessionId = serverUrlWithSessionId;
-    this.useVscodeMessagePassing = useVscodeMessagePassing;
-    this.connectMessenger(serverUrlWithSessionId, useVscodeMessagePassing);
+  handleMessage(messageType: string, data: any) {
+    switch (messageType) {
+      case "state_update":
+        if (data.state) {
+          for (const callback of this.onStateUpdateCallbacks) {
+            callback(data.state);
+          }
+        }
+        break;
+      default:
+        console.log("Unknown message type: ", messageType);
+    }
   }
 
   loadSession(session_id?: string): void {
     this.messenger?.send("load_session", { session_id });
-  }
-
-  onReconnectAtSession(session_id: string): void {
-    const urlToReconnect = `${
-      this.serverUrlWithSessionId.split("?")[0]
-    }?session_id=${session_id}`;
-    console.log("Reconnecting at session: ", urlToReconnect);
-    this.connectMessenger(urlToReconnect, this.useVscodeMessagePassing);
   }
 
   sendMainInput(input: string) {

@@ -10,7 +10,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from ..libs.util.create_async_task import create_async_task
 from ..libs.util.logging import logger
-from .gui import router as gui_router
+from .gui import router as gui_router, sio_gui_app
 from .ide import router as ide_router, sio_ide_app
 from .meilisearch_server import start_meilisearch, stop_meilisearch
 from .global_config import global_config
@@ -37,6 +37,7 @@ app.include_router(ide_router)
 app.include_router(gui_router)
 
 app.mount("/ide", sio_ide_app)
+app.mount("/gui", sio_gui_app)
 
 # Add CORS support
 app.add_middleware(

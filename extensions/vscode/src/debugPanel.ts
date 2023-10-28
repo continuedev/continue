@@ -9,62 +9,9 @@ import {
 import { RangeInFile } from "../schema/RangeInFile";
 import { setFocusedOnContinueInput } from "./commands";
 import { windowId } from "./activation/activate";
-const WebSocket = require("ws");
+import * as io from "socket.io-client";
 
-let websocketConnections: { [url: string]: WebsocketConnection | undefined } =
-  {};
-
-class WebsocketConnection {
-  private _ws: WebSocket;
-  private _onMessage: (message: string) => void;
-  private _onOpen: () => void;
-  private _onClose: () => void;
-  private _onError: (e: any) => void;
-
-  constructor(
-    url: string,
-    onMessage: (message: string) => void,
-    onOpen: () => void,
-    onClose: () => void,
-    onError: (e: any) => void
-  ) {
-    this._ws = new WebSocket(url);
-    this._onMessage = onMessage;
-    this._onOpen = onOpen;
-    this._onClose = onClose;
-    this._onError = onError;
-
-    this._ws.addEventListener("message", (event) => {
-      this._onMessage(event.data);
-    });
-    this._ws.addEventListener("close", () => {
-      this._onClose();
-    });
-    this._ws.addEventListener("open", () => {
-      this._onOpen();
-    });
-    this._ws.addEventListener("error", (e: any) => {
-      this._onError(e);
-    });
-  }
-
-  public send(message: string) {
-    if (typeof message !== "string") {
-      message = JSON.stringify(message);
-    }
-    if (this._ws.readyState === WebSocket.OPEN) {
-      this._ws.send(message);
-    } else {
-      this._ws.addEventListener("open", () => {
-        this._ws.send(message);
-      });
-    }
-  }
-
-  public close() {
-    this._ws.close();
-  }
-}
+let sockets: { [url: string]: io.Socket | undefined } = {};
 
 export let debugPanelWebview: vscode.Webview | undefined;
 export function setupDebugPanel(
@@ -144,7 +91,7 @@ export function setupDebugPanel(
         resolve(null);
       };
       const onClose = () => {
-        websocketConnections[url] = undefined;
+        sockets[url] = undefined;
         panel.webview.postMessage({
           type: "websocketForwardingClose",
           url,
@@ -158,17 +105,14 @@ export function setupDebugPanel(
         });
       };
       try {
-        const connection = new WebsocketConnection(
-          url,
-          onMessage,
-          onOpen,
-          onClose,
-          onError
-        );
-        websocketConnections[url] = connection;
+        const socket = io.io(getContinueServerUrl(), {
+          path: "/gui/socket.io",
+          transports: ["websocket", "polling", "flashsocket"],
+        });
+        sockets[url] = socket;
         resolve(null);
       } catch (e) {
-        console.log("Caught it!: ", e);
+        console.log("Failed to connect to GUI websocket for forwarding", e);
         reject(e);
       }
     });
@@ -193,7 +137,7 @@ export function setupDebugPanel(
       }
       case "websocketForwardingOpen": {
         let url = data.url;
-        if (typeof websocketConnections[url] === "undefined") {
+        if (typeof sockets[url] === "undefined") {
           await connectWebsocket(url);
         } else {
           console.log(
@@ -209,24 +153,24 @@ export function setupDebugPanel(
       }
       case "websocketForwardingClose": {
         let url = data.url;
-        let connection = websocketConnections[url];
-        if (typeof connection !== "undefined") {
-          connection.close();
-          websocketConnections[url] = undefined;
+        let socket = sockets[url];
+        if (typeof socket !== "undefined") {
+          socket.close();
+          sockets[url] = undefined;
         }
         break;
       }
       case "websocketForwardingMessage": {
         let url = data.url;
-        let connection = websocketConnections[url];
-        if (typeof connection === "undefined") {
+        let socket = sockets[url];
+        if (typeof socket === "undefined") {
           await connectWebsocket(url);
         }
-        connection = websocketConnections[url];
-        if (typeof connection === "undefined") {
-          throw new Error("Failed to connect websocket in VS Code Extension");
+        socket = sockets[url];
+        if (typeof socket === "undefined") {
+          throw new Error("Failed to connect socket for forwarding");
         }
-        connection.send(data.message);
+        socket.send(data.message);
         break;
       }
       case "openFile": {

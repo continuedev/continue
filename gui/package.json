@@ -29,6 +29,7 @@
     "react-syntax-highlighter": "^15.5.0",
     "react-tooltip": "^5.18.0",
     "seti-file-icons": "^0.0.8",
+    "socket.io-client": "^4.7.2",
     "styled-components": "^5.3.6",
     "vscode-webview": "^1.0.1-beta.1"
   },

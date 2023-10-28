@@ -526,7 +526,6 @@ async def connect(sid, environ):
     window_info_str = query.get("window_info", [None])[0]
     window_info = WindowInfo.parse_raw(window_info_str)
 
-    # Initialize the IDE Protocol Server
     ideProtocolServer = IdeProtocolServer(window_info, sio, sid)
     window_manager.register_ide(sid, ideProtocolServer)
 
@@ -538,7 +537,6 @@ async def disconnect(sid):
 
 @sio.event
 async def message(sid, data):
-    print("message ", data)
     try:
         json_message = json.loads(data)
         message = WebsocketsMessage.parse_obj(json_message)
@@ -549,4 +547,7 @@ async def message(sid, data):
         logger.critical(f"Error validating json: {e}")
         return
 
-    await window_manager.get_window(sid).ide.handle_json(message)
+    if ide := window_manager.get_window(sid).ide:
+        await ide.handle_json(message)
+    else:
+        logger.critical(f"IDE not found for sid {sid}")

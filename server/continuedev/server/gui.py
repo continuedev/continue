@@ -1,11 +1,12 @@
 import json
 import traceback
 from typing import Any, List, Optional, TypeVar
+from urllib.parse import parse_qsl
+import socketio
 
-from fastapi import APIRouter, Depends, WebSocket
+from fastapi import APIRouter, WebSocket
 from pydantic import BaseModel, ValidationError
 from starlette.websockets import WebSocketDisconnect, WebSocketState
-from uvicorn.main import Server
 
 from ..models.websockets import WebsocketsMessage
 from ..core.main import ContextItem, SessionState, SessionUpdate
@@ -28,24 +29,11 @@ from ..libs.util.edit_config import (
 from ..libs.util.logging import logger
 from ..libs.util.telemetry import posthog_logger
 from .websockets_messenger import WebsocketsMessenger
+from .window_manager import window_manager
 
 router = APIRouter(prefix="/gui", tags=["gui"])
-
-# Graceful shutdown by closing websockets
-original_handler = Server.handle_exit
-
-
-class AppStatus:
-    should_exit = False
-
-    @staticmethod
-    def handle_exit(*args, **kwargs):
-        AppStatus.should_exit = True
-        logger.debug("Shutting down")
-        original_handler(*args, **kwargs)
-
-
-Server.handle_exit = AppStatus.handle_exit
+sio = socketio.AsyncServer(async_mode="asgi", cors_allowed_origins="*")
+sio_gui_app = socketio.ASGIApp(socketio_server=sio)
 
 
 T = TypeVar("T", bound=BaseModel)
@@ -356,6 +344,39 @@ class GUIProtocolServer:
         await self.messenger.send("history_update", session_update.dict())
 
     # endregion
+
+
+@sio.event
+async def connect(sid, environ):
+    query = parse_qsl(environ.get("QUERY_STRING", ""))
+    window_info_str = query.get("window_info", [None])[0]
+    window_info = WindowInfo.parse_raw(window_info_str)
+
+    guiProtocolServer = GUIProtocolServer(window_info, sio, sid)
+    window_manager.register_gui(sid, guiProtocolServer)
+
+
+@sio.event
+async def disconnect(sid):
+    window_manager.remove_gui(sid)
+
+
+@sio.event
+async def message(sid, data):
+    try:
+        json_message = json.loads(data)
+        message = WebsocketsMessage.parse_obj(json_message)
+    except json.JSONDecodeError:
+        logger.critical(f"Error decoding json: {data}")
+        return
+    except ValidationError as e:
+        logger.critical(f"Error validating json: {e}")
+        return
+
+    if gui := window_manager.get_window(sid).gui:
+        await gui.handle_json(message)
+    else:
+        logger.critical(f"GUI websocket not found for sid {sid}")
 
 
 @router.websocket("/ws")

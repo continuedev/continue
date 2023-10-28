@@ -1,3 +1,5 @@
+import socketIOClient, { Socket } from "socket.io-client";
+
 export abstract class Messenger {
   abstract send(messageType: string, data: object): void;
 
@@ -17,6 +19,62 @@ export abstract class Messenger {
   abstract onError(callback: (error: any) => void): void;
 
   abstract close(): void;
+}
+
+export class SocketIOMessenger extends Messenger {
+  private socket: Socket;
+
+  constructor(endpoint: string) {
+    super();
+    this.socket = socketIOClient(endpoint);
+  }
+
+  send(messageType: string, data: object): void {
+    this.socket.emit(messageType, data);
+  }
+
+  onMessageType(messageType: string, callback: (data: object) => void): void {
+    this.socket.on(messageType, ({ messageType, data }) => {
+      if (messageType === messageType) {
+        callback(data);
+      }
+    });
+  }
+
+  onMessage(callback: (messageType: string, data: any) => void): void {
+    this.socket.on("message", ({ messageType, data }) => {
+      callback(messageType, data);
+    });
+  }
+
+  onOpen(callback: () => void): void {
+    this.socket.on("connect", callback);
+  }
+
+  onClose(callback: () => void): void {
+    this.socket.on("disconnect", callback);
+  }
+
+  async sendAndReceive(messageType: string, data: any): Promise<any> {
+    // NOTE: This probably doesn't work. Not being used anywhere rn.
+    return new Promise((resolve, reject) => {
+      this.socket.emit(messageType, data, (response: any) => {
+        if (response.error) {
+          reject(response.error);
+        } else {
+          resolve(response);
+        }
+      });
+    });
+  }
+
+  onError(callback: (error: any) => void): void {
+    this.socket.on("error", callback);
+  }
+
+  close(): void {
+    this.socket.disconnect();
+  }
 }
 
 export class WebsocketMessenger extends Messenger {

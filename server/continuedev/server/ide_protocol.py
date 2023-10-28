@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import Any, Callable, Dict, List, Optional, Union
+from ..models.websockets import WebsocketsMessage
 
 from fastapi import WebSocket
 
@@ -13,7 +14,7 @@ class AbstractIdeProtocolServer(ABC):
     ide_info: Optional[Dict] = None
 
     @abstractmethod
-    async def handle_json(self, data: Any):
+    async def handle_json(self, msg: WebsocketsMessage):
         """Handle a json message"""
 
     @abstractmethod
