@@ -1,5 +1,6 @@
 # This is a separate server from server/main.py
 import json
+import traceback
 
 from .protocols.ide import WindowInfo
 from ..models.websockets import WebsocketsMessage
@@ -52,5 +53,6 @@ async def message(sid, data):
         else:
             logger.critical(f"IDE not found for sid {sid}")
     except Exception as e:
-        logger.critical(f"Error handling message: {e}")
+        tb = "\n".join(traceback.format_exception(e, e, e.__traceback__))
+        logger.critical(f"Error handling message: {tb}")
         raise e

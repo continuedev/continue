@@ -10,6 +10,7 @@ from ..libs.llm.base import LLM
 from .filesystem import FileEdit, RangeInFile
 from .filesystem_edit import FileEditWithFullContents
 from .main import Position, Range, Traceback, TracebackFrame
+from ..server.sessions import PersistedSessionInfo
 
 MODELS_TO_GENERATE = (
     [Position, Range, Traceback, TracebackFrame]
@@ -20,6 +21,7 @@ MODELS_TO_GENERATE = (
     + [ContextItem, ContextItemId]
     + [Models]
     + [LLM]
+    + [PersistedSessionInfo]
 )
 
 RENAMES = {"ExampleClass": "RenamedName"}

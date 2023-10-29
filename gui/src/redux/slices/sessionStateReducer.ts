@@ -1,7 +1,8 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { SessionState, StepDescription } from "../../schema/SessionState";
+import { StepDescription } from "../../schema/SessionState";
 import { SessionUpdate } from "../../schema/SessionUpdate";
 import { ContextItem } from "../../schema/ContextItem";
+import { PersistedSessionInfo } from "../../schema/PersistedSessionInfo";
 
 export interface SessionFullState {
   history: StepDescription[];
@@ -75,7 +76,19 @@ export const sessionStateSlice = createSlice({
         active,
       };
     },
-    newSession: (state: SessionFullState) => {
+    newSession: (
+      state: SessionFullState,
+      { payload }: { payload: PersistedSessionInfo | undefined }
+    ) => {
+      if (payload) {
+        return {
+          ...state,
+          history: payload.session_state.history,
+          context_items: payload.session_state.context_items,
+          active: false,
+          title: payload.title,
+        };
+      }
       return {
         ...state,
         history: [],

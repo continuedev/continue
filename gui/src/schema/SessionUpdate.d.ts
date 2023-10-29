@@ -7,18 +7,18 @@
 
 export type SessionUpdate = SessionUpdate1;
 export type Index = number;
-export type Update = SetStep | DeltaStep;
-export type StepType = string;
+export type Update = DeltaStep | SetStep;
 export type Name = string;
 export type Description = string;
+export type Observations = Observation[];
+export type Logs = string[];
+export type StepType = string;
+export type Name1 = string;
+export type Description1 = string;
 export type Hide = boolean;
 export type Depth = number;
 export type Title = string;
 export type Message = string;
-export type Observations = Observation[];
-export type Logs = string[];
-export type Name1 = string;
-export type Description1 = string;
 export type Observations1 = Observation[];
 export type Logs1 = string[];
 export type Stop = boolean;
@@ -29,16 +29,26 @@ export interface SessionUpdate1 {
   stop?: Stop;
   [k: string]: unknown;
 }
-export interface SetStep {
-  step_type?: StepType;
+export interface DeltaStep {
   name?: Name;
   description?: Description;
+  observations?: Observations;
+  logs?: Logs;
+  [k: string]: unknown;
+}
+export interface Observation {
+  [k: string]: unknown;
+}
+export interface SetStep {
+  step_type?: StepType;
+  name?: Name1;
+  description?: Description1;
   params?: Params;
   hide?: Hide;
   depth?: Depth;
   error?: ContinueError;
-  observations?: Observations;
-  logs?: Logs;
+  observations?: Observations1;
+  logs?: Logs1;
   [k: string]: unknown;
 }
 export interface Params {
@@ -47,15 +57,5 @@ export interface Params {
 export interface ContinueError {
   title: Title;
   message: Message;
-  [k: string]: unknown;
-}
-export interface Observation {
-  [k: string]: unknown;
-}
-export interface DeltaStep {
-  name?: Name1;
-  description?: Description1;
-  observations?: Observations1;
-  logs?: Logs1;
   [k: string]: unknown;
 }

@@ -1,4 +1,5 @@
 import json
+import traceback
 from urllib.parse import parse_qs
 import socketio
 from fastapi import APIRouter
@@ -42,5 +43,6 @@ async def message(sid, data):
         else:
             logger.critical(f"GUI websocket not found for sid {sid}")
     except Exception as e:
-        logger.critical(f"Error handling message: {e}")
+        tb = "\n".join(traceback.format_exception(e, e, e.__traceback__))
+        logger.critical(f"Error handling message: {tb}")
         raise e

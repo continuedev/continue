@@ -2,6 +2,39 @@
   "title": "SessionUpdate",
   "$ref": "#/definitions/continuedev__core__main__SessionUpdate",
   "definitions": {
+    "Observation": {
+      "title": "Observation",
+      "type": "object",
+      "properties": {}
+    },
+    "DeltaStep": {
+      "title": "DeltaStep",
+      "type": "object",
+      "properties": {
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "description": {
+          "title": "Description",
+          "type": "string"
+        },
+        "observations": {
+          "title": "Observations",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Observation"
+          }
+        },
+        "logs": {
+          "title": "Logs",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
     "ContinueError": {
       "title": "ContinueError",
       "type": "object",
@@ -19,11 +52,6 @@
         "title",
         "message"
       ]
-    },
-    "Observation": {
-      "title": "Observation",
-      "type": "object",
-      "properties": {}
     },
     "SetStep": {
       "title": "SetStep",
@@ -72,34 +100,6 @@
         }
       }
     },
-    "DeltaStep": {
-      "title": "DeltaStep",
-      "type": "object",
-      "properties": {
-        "name": {
-          "title": "Name",
-          "type": "string"
-        },
-        "description": {
-          "title": "Description",
-          "type": "string"
-        },
-        "observations": {
-          "title": "Observations",
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/Observation"
-          }
-        },
-        "logs": {
-          "title": "Logs",
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        }
-      }
-    },
     "continuedev__core__main__SessionUpdate": {
       "title": "SessionUpdate",
       "type": "object",
@@ -112,10 +112,10 @@
           "title": "Update",
           "anyOf": [
             {
-              "$ref": "#/definitions/SetStep"
+              "$ref": "#/definitions/DeltaStep"
             },
             {
-              "$ref": "#/definitions/DeltaStep"
+              "$ref": "#/definitions/SetStep"
             }
           ]
         },
