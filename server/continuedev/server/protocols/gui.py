@@ -56,6 +56,9 @@ class GUIProtocolServer:
         data = msg.data
         if msg.message_type == "run_from_state":
             await self.run_from_state(SessionState.parse_obj(data["state"]))
+        elif msg.message_type == "stop_session":
+            await self.stop_session()
+
         elif msg.message_type == "set_current_session_title":
             self.set_current_session_title(data["title"])
         elif msg.message_type == "show_logs_at_index":
@@ -337,9 +340,17 @@ class GUIProtocolServer:
 
     # region: Send data to GUI
 
+    _running_autopilot: Optional[Autopilot] = None
+
     async def run_from_state(self, state: SessionState):
         autopilot = self.get_autopilot(state)
+        self._running_autopilot = autopilot
         await autopilot.run()
+        self._running_autopilot = None
+
+    async def stop_session(self):
+        if self._running_autopilot is not None:
+            self._running_autopilot.stopped = True
 
     async def send_session_update(self, session_update: SessionUpdate):
         await self.messenger.send("session_update", session_update.dict())

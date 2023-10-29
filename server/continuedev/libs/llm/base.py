@@ -349,7 +349,7 @@ Settings:
             prompt = self.template_prompt_like_messages(prompt)
 
         if log and self.write_log:
-            self.write_log(self.compile_log_message(prompt, options))
+            await self.write_log(self.compile_log_message(prompt, options))
 
         completion = ""
         async for chunk in self._stream_complete(prompt=prompt, options=options):
@@ -397,7 +397,7 @@ Settings:
             prompt = self.template_prompt_like_messages(prompt)
 
         if log and self.write_log:
-            self.write_log(self.compile_log_message(prompt, options))
+            await self.write_log(self.compile_log_message(prompt, options))
 
         completion = await self._complete(prompt=prompt, options=options)
 
@@ -444,7 +444,7 @@ Settings:
             prompt = format_chat_messages(messages)
 
         if log and self.write_log:
-            self.write_log(self.compile_log_message(prompt, options))
+            await self.write_log(self.compile_log_message(prompt, options))
 
         completion = ""
 

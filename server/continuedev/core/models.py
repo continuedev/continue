@@ -1,4 +1,5 @@
-from typing import List, Optional
+from typing import Callable, Coroutine, List, Optional, Union
+import uuid
 
 from pydantic import BaseModel
 
@@ -100,6 +101,7 @@ class Models(BaseModel):
                 setattr(self, role, self.default)
             else:
                 await model.start(unique_id)
+                model.write_log = self.write_log
 
         self.set_main_config_params(system_message, temperature)
 
@@ -107,3 +109,18 @@ class Models(BaseModel):
         """Stop each LLM (if it's not the default, which is shared)"""
         for model in self.all_models:
             await model.stop()
+
+    _loggers = {}
+
+    async def write_log(self, msg):
+        for logger in self._loggers.values():
+            await logger(msg)
+
+    def add_logger(self, logger: Callable[[str], None]) -> str:
+        logger_id = uuid.uuid4().hex
+        self._loggers[logger_id] = logger
+        return logger_id
+
+    def remove_logger(self, logger_id: str):
+        if logger_id in self._loggers:
+            del self._loggers[logger_id]

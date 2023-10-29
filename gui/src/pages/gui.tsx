@@ -226,8 +226,8 @@ function GUI(props: GUIProps) {
         !e.shiftKey &&
         active
       ) {
-        // TODO: Stop
-        // client?.deleteAtIndex(history.current_index);
+        client?.stopSession();
+        dispatch(setActive(false));
       } else if (e.key === "Escape") {
         dispatch(setBottomMessage(undefined));
       }
@@ -400,6 +400,23 @@ function GUI(props: GUIProps) {
     if (!client) return;
     client.sendStepUserInput(input, index);
   };
+
+  const isLastUserInput = useCallback(
+    (index: number): boolean => {
+      let foundLaterUserInput = false;
+      for (let i = index + 1; i < sessionState.history.length; i++) {
+        if (
+          sessionState.history[i].name === "User Input" &&
+          sessionState.history[i].hide === false
+        ) {
+          foundLaterUserInput = true;
+          break;
+        }
+      }
+      return !foundLaterUserInput;
+    },
+    [sessionState.history]
+  );
 
   const getStepsInUserInputGroup = useCallback(
     (index: number): number[] => {
@@ -624,12 +641,32 @@ function GUI(props: GUIProps) {
                   <ComboBox
                     isMainInput={false}
                     value={step.description as string}
-                    active={
-                      // TODO: Should only be if it's the last user input
-                      active
-                    }
+                    active={active && isLastUserInput(index)}
                     onEnter={(e, value) => {
-                      if (value) client?.editStepAtIndex(value, index);
+                      if (value) {
+                        client?.stopSession();
+                        const newHistory = [
+                          ...sessionState.history.slice(0, index),
+                          {
+                            name: "User Input",
+                            description: value,
+                            observations: [],
+                            logs: [],
+                            step_type: "UserInputStep",
+                            params: { user_input: value },
+                            hide: false,
+                            depth: 0,
+                          },
+                        ];
+                        dispatch(setHistory(newHistory));
+                        dispatch(setActive(true));
+                        const state = {
+                          history: newHistory,
+                          context_items: sessionState.context_items,
+                        };
+                        console.log("State: ", state);
+                        client.runFromState(state);
+                      }
                       e?.stopPropagation();
                       e?.preventDefault();
                     }}
@@ -659,7 +696,7 @@ function GUI(props: GUIProps) {
                     onDelete={() => {
                       // Delete the input and all steps until the next user input
                       getStepsInUserInputGroup(index).forEach((i) => {
-                        client?.deleteAtIndex(i);
+                        // client?.deleteAtIndex(i);
                       });
                     }}
                   />
@@ -693,7 +730,10 @@ function GUI(props: GUIProps) {
                     <ErrorStepContainer
                       onClose={() => onToggleAtIndex(index)}
                       error={step.error}
-                      onDelete={() => client?.deleteAtIndex(index)}
+                      onDelete={() => {
+                        // TODO: Deleting steps, all UI
+                        // client?.deleteAtIndex(index)
+                      }}
                     />
                   ) : (
                     <StepContainer
@@ -718,7 +758,8 @@ function GUI(props: GUIProps) {
                         setWaitingForSteps(true);
                       }}
                       onDelete={() => {
-                        client?.deleteAtIndex(index);
+                        // TODO
+                        // client?.deleteAtIndex(index);
                       }}
                       noUserInputParent={
                         getStepsInUserInputGroup(index).length === 0

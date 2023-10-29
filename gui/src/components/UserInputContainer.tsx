@@ -324,7 +324,7 @@ const UserInputContainer = (props: UserInputContainerProps) => {
                         onClick={(e) => {
                           e.stopPropagation();
                           if (props.active) {
-                            client?.deleteAtIndex(props.groupIndices[1]);
+                            client.stopSession();
                           } else {
                             props.onDelete();
                           }

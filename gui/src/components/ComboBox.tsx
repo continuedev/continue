@@ -1253,7 +1253,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
                       onClick={(e) => {
                         e.stopPropagation();
                         if (props.active && props.groupIndices) {
-                          client?.deleteAtIndex(props.groupIndices[1]);
+                          client?.stopSession();
                         } else {
                           props.onDelete?.();
                         }
@@ -1402,6 +1402,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
             if (active) {
               // TODO: Stop running steps
               // client?.deleteAtIndex(sessionHistory.current_index);
+              client?.stopSession();
               dispatch(setActive(false));
             } else {
               props.onEnter?.(undefined);

@@ -384,8 +384,19 @@ class Autopilot:
         await self.sdk.gui.send_session_update(update)
 
     async def run(self):
+        async def add_log(log: str):
+            await self.handle_session_update(
+                SessionUpdate(
+                    index=len(self.session_state.history) - 1,
+                    update=DeltaStep(logs=[log]),
+                )
+            )
+
+        logger_id = self.config.models.add_logger(add_log)
         while next_step := self.policy.next(self.sdk.config, self.session_state):
             await self.run_step(next_step)
+
+        self.config.models.remove_logger(logger_id)
 
     # async def create_title(self, backup: str = None):
     #     # Want sdk.gui.update_title(title)

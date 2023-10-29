@@ -25,7 +25,7 @@ class Window:
     gui: Optional[GUIProtocolServer] = None
     config: Optional[ContinueConfig] = None
 
-    def get_autopilot(self, session_state: SessionState) -> Optional[Autopilot]:
+    def get_autopilot(self, session_state: SessionState) -> Autopilot:
         return Autopilot(
             session_state=session_state,
             ide=self.ide,
@@ -151,7 +151,7 @@ class WindowManager:
     def get_gui(self, sid: str) -> Optional[GUIProtocolServer]:
         return self.guis.get(sid)
 
-    async def register_gui(self, window_id: str, sio: str, sid: str):
+    async def register_gui(self, window_id: str, sio, sid: str):
         if window_id not in self.windows:
             self.windows[window_id] = Window()
 
