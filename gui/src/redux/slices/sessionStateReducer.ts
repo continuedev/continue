@@ -68,8 +68,6 @@ export const sessionStateSlice = createSlice({
         history[payload.index] = step;
       }
 
-      console.log("History: ", history);
-      console.log("Payload: ", payload);
       return {
         ...state,
         history,
@@ -112,9 +110,25 @@ export const sessionStateSlice = createSlice({
         history: payload,
       };
     },
+    deleteAtIndex: (
+      state: SessionFullState,
+      { payload }: { payload: number }
+    ) => {
+      let newHistory = [...state.history];
+      newHistory[payload] = {
+        ...newHistory[payload],
+        hide: true,
+      };
+      return { ...state, history: newHistory };
+    },
   },
 });
 
-export const { setActive, setHistory, processSessionUpdate, newSession } =
-  sessionStateSlice.actions;
+export const {
+  setActive,
+  setHistory,
+  processSessionUpdate,
+  newSession,
+  deleteAtIndex,
+} = sessionStateSlice.actions;
 export default sessionStateSlice.reducer;

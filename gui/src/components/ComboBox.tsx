@@ -27,7 +27,7 @@ import {
   TrashIcon,
   XMarkIcon,
 } from "@heroicons/react/24/outline";
-import { postVscMessage } from "../vscode";
+import { postToIde } from "../vscode";
 import { GUIClientContext } from "../App";
 import { MeiliSearch } from "meilisearch";
 import { setBottomMessage } from "../redux/slices/uiStateSlice";
@@ -1054,8 +1054,8 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={(e) => {
               if (
-                e.relatedTarget === deleteButtonDivRef.current
-                // || deleteButtonDivRef.current?.contains(e.relatedTarget as Node)
+                e.relatedTarget === deleteButtonDivRef.current ||
+                deleteButtonDivRef.current?.contains(e.relatedTarget as Node)
               ) {
                 return;
               }
@@ -1077,14 +1077,14 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
                 dispatch(setBottomMessage(undefined));
               },
               onBlur: (e) => {
-                // if (
-                //   // topRef.current?.contains(e.relatedTarget as Node) ||
-                //   document
-                //     .getElementById("toggle-context-div")
-                //     ?.contains(e.relatedTarget as Node)
-                // ) {
-                //   return;
-                // }
+                if (
+                  topRef.current?.contains(e.relatedTarget as Node) ||
+                  document
+                    .getElementById("toggle-context-div")
+                    ?.contains(e.relatedTarget as Node)
+                ) {
+                  return;
+                }
                 setInputFocused(false);
               },
               onKeyDown: (event) => {
@@ -1197,7 +1197,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
                     // Remove focus from the input
                     inputRef.current?.blur();
                     // Move cursor back over to the editor
-                    postVscMessage("focusEditor", {});
+                    postToIde("focusEditor", {});
                   }
                 }
                 // Home and end keys
@@ -1241,8 +1241,20 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
                       <HeaderButtonWithText
                         onClick={(e) => {
                           e.stopPropagation();
-                          if (props.groupIndices)
-                            client?.showLogsAtIndex(props.groupIndices[1]);
+                          if (props.groupIndices) {
+                            const content =
+                              "This is the exact prompt sent to the LLM: \n\n" +
+                              timeline
+                                .filter((_, i) => {
+                                  return props.groupIndices?.includes(i);
+                                })
+                                .flatMap((s) => s.logs || [])
+                                .join("\n");
+                            postToIde("showVirtualFile", {
+                              name: "Inspect Prompt",
+                              content,
+                            });
+                          }
                         }}
                         text="Inspect Prompt"
                       >
@@ -1400,8 +1412,6 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
           disabled={!(inputRef.current as any)?.value && !active}
           onClick={() => {
             if (active) {
-              // TODO: Stop running steps
-              // client?.deleteAtIndex(sessionHistory.current_index);
               client?.stopSession();
               dispatch(setActive(false));
             } else {

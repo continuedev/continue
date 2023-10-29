@@ -61,8 +61,6 @@ class GUIProtocolServer:
 
         elif msg.message_type == "set_current_session_title":
             self.set_current_session_title(data["title"])
-        elif msg.message_type == "show_logs_at_index":
-            self.on_show_logs_at_index(data["index"])
         elif msg.message_type == "show_context_virtual_file":
             self.show_context_virtual_file(data.get("index", None))
         elif msg.message_type == "load_session":
@@ -85,31 +83,6 @@ class GUIProtocolServer:
             self.delete_context_group(data["id"])
         elif msg.message_type == "preview_context_item":
             self.preview_context_item(data["id"])
-
-    def on_show_logs_at_index(self, index: int):
-        name = "Continue Prompt"
-
-        logs = None
-        timeline = self.session.autopilot.sdk.history.timeline
-        while logs is None and index < len(timeline):
-            if len(timeline[index].logs) > 0:
-                logs = timeline[index].logs
-                break
-            elif timeline[index].step.name == "User Input":
-                break
-            index += 1
-
-        content = (
-            "Logs not found"
-            if logs is None
-            else "\n\n############################################\n\n".join(
-                ["This is the prompt that was sent to the LLM during this step"] + logs
-            )
-        )
-        create_async_task(
-            self.session.autopilot.ide.showVirtualFile(name, content), self.on_error
-        )
-        posthog_logger.capture_event("show_logs_at_index", {})
 
     def show_context_virtual_file(self, index: Optional[int] = None):
         async def async_stuff():

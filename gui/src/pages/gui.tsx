@@ -20,7 +20,7 @@ import ComboBox from "../components/ComboBox";
 import { usePostHog } from "posthog-js/react";
 import { useDispatch, useSelector } from "react-redux";
 import { RootStore } from "../redux/store";
-import { postVscMessage } from "../vscode";
+import { postToIde } from "../vscode";
 import { isMetaEquivalentKeyPressed } from "../util";
 import {
   setBottomMessage,
@@ -46,6 +46,7 @@ import { useNavigate } from "react-router-dom";
 import SuggestionsArea from "../components/Suggestions";
 import { setTakenActionTrue } from "../redux/slices/miscSlice";
 import {
+  deleteAtIndex,
   newSession,
   setActive,
   setHistory,
@@ -597,7 +598,7 @@ function GUI(props: GUIProps) {
                 opacity: 0.7,
               }}
               onClick={() => {
-                postVscMessage("toggleDevTools", {});
+                postToIde("toggleDevTools", {});
               }}
             >
               <u>View logs</u>
@@ -696,7 +697,8 @@ function GUI(props: GUIProps) {
                     onDelete={() => {
                       // Delete the input and all steps until the next user input
                       getStepsInUserInputGroup(index).forEach((i) => {
-                        // client?.deleteAtIndex(i);
+                        console.log(i);
+                        dispatch(deleteAtIndex(i));
                       });
                     }}
                   />
@@ -731,8 +733,7 @@ function GUI(props: GUIProps) {
                       onClose={() => onToggleAtIndex(index)}
                       error={step.error}
                       onDelete={() => {
-                        // TODO: Deleting steps, all UI
-                        // client?.deleteAtIndex(index)
+                        dispatch(deleteAtIndex(index));
                       }}
                     />
                   ) : (
@@ -758,8 +759,7 @@ function GUI(props: GUIProps) {
                         setWaitingForSteps(true);
                       }}
                       onDelete={() => {
-                        // TODO
-                        // client?.deleteAtIndex(index);
+                        dispatch(deleteAtIndex(index));
                       }}
                       noUserInputParent={
                         getStepsInUserInputGroup(index).length === 0

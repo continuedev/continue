@@ -6,7 +6,7 @@ import {
   setHighlightedCode,
   setServerStatusMessage,
 } from "../redux/slices/miscSlice";
-import { postVscMessage } from "../vscode";
+import { postToIde } from "../vscode";
 import { useSelector } from "react-redux";
 import { RootStore } from "../redux/store";
 import {
@@ -21,18 +21,15 @@ async function clientSetup(
 ) {
   // Listen for updates to the session state
   client.onSessionUpdate((update) => {
-    console.log(update);
     dispatch(processSessionUpdate(update));
   });
 
   fetch(`${serverUrl}/slash_commands`).then(async (resp) => {
     const sc = await resp.json();
-    console.log(sc);
     dispatch(setSlashCommands(sc));
   });
   fetch(`${serverUrl}/context_providers`).then(async (resp) => {
     const cp = await resp.json();
-    console.log(cp);
     dispatch(setContextProviders(cp));
   });
 }
@@ -63,7 +60,7 @@ function useSetup(
       }
     };
     window.addEventListener("message", eventListener);
-    postVscMessage("onLoad", {});
+    postToIde("onLoad", {});
     return () => window.removeEventListener("message", eventListener);
   }, []);
 

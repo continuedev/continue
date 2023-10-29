@@ -8,7 +8,7 @@ import {
 } from "./util/vscode";
 import { RangeInFile } from "../schema/RangeInFile";
 import { setFocusedOnContinueInput } from "./commands";
-import { windowId } from "./activation/activate";
+import { ideProtocolClient, windowId } from "./activation/activate";
 import * as io from "socket.io-client";
 
 let sockets: { [url: string]: io.Socket | undefined } = {};
@@ -163,6 +163,10 @@ export function setupDebugPanel(
       }
       case "openFile": {
         openEditorAndRevealRange(data.path, undefined, vscode.ViewColumn.One);
+        break;
+      }
+      case "showVirtualFile": {
+        ideProtocolClient.showVirtualFile(data.name, data.content);
         break;
       }
       case "toggleDevTools": {

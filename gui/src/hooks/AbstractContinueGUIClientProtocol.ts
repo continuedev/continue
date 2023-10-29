@@ -26,8 +26,6 @@ abstract class AbstractContinueGUIClientProtocol {
 
   abstract toggleAddingHighlightedCode(): void;
 
-  abstract showLogsAtIndex(index: number): void;
-
   abstract showContextVirtualFile(): void;
 
   abstract selectContextItem(id: string, query: string): void;
