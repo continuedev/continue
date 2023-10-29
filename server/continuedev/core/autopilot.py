@@ -18,7 +18,6 @@ from ..libs.util.traceback.traceback_parsers import (
     get_python_traceback,
 )
 from ..models.filesystem import RangeInFileWithContents
-from ..models.main import ContinueBaseModel
 from ..server.protocols.gui_protocol import AbstractGUIProtocolServer
 from ..server.protocols.ide_protocol import AbstractIdeProtocolServer
 from ..plugins.policies.default import DefaultPolicy
@@ -34,6 +33,7 @@ from .main import (
     ContinueError,
     Policy,
     SessionState,
+    SetStep,
     Step,
     UpdateStep,
     SessionUpdate,
@@ -72,7 +72,7 @@ def get_error_title(e: Exception) -> str:
     return e.__str__() or e.__repr__()
 
 
-class Autopilot(ContinueBaseModel):
+class Autopilot:
     session_state: SessionState
     ide: AbstractIdeProtocolServer
     gui: AbstractGUIProtocolServer
@@ -81,13 +81,25 @@ class Autopilot(ContinueBaseModel):
     context: Context = Context()
     # context_manager: ContextManager = ContextManager()
 
+    def __init__(
+        self,
+        session_state: SessionState,
+        ide: AbstractIdeProtocolServer,
+        gui: AbstractGUIProtocolServer,
+        config: ContinueConfig,
+    ):
+        self.session_state = session_state
+        self.ide = ide
+        self.gui = gui
+        self.config = config
+
     @property
     def policy(self) -> Policy:
         return self.config.policy_override or DefaultPolicy()
 
     @property
     def sdk(self) -> ContinueSDK:
-        return ContinueSDK(self.config, self.ide, self.gui)
+        return ContinueSDK(self.config, self.ide, self.gui, self)
 
     class Config:
         arbitrary_types_allowed = True
@@ -220,6 +232,7 @@ class Autopilot(ContinueBaseModel):
         )
 
     _step_depth: int = 0
+    stopped = False
 
     async def _run_singular_step(self, step: "Step") -> AutopilotGenerator:
         # Allow config to set disallowed steps
@@ -227,7 +240,7 @@ class Autopilot(ContinueBaseModel):
             return
 
         # Log the context and step to dev data
-        context_used = await self.context_manager.get_selected_items()
+        context_used = self.session_state.context_items
         self.log_step(step, context_used)
 
         # Update history - do this first so we get top-first tree ordering
@@ -244,7 +257,11 @@ class Autopilot(ContinueBaseModel):
 
         # Try to run step and handle errors
         try:
-            async for update in step(self.sdk):
+            async for update in step.run(self.sdk):
+                if self.stopped:
+                    # TODO: Early stopping
+                    return
+
                 if isinstance(update, str):
                     yield SessionUpdate(
                         index=index, update=DeltaStep(description=update)
@@ -283,7 +300,7 @@ class Autopilot(ContinueBaseModel):
         self._step_depth -= 1
 
         # NOTE: index here doesn't matter, awkward
-        yield SessionUpdate(index=index, stop=True)
+        yield SessionUpdate(index=index, stop=True, update=DeltaStep())
 
         # # Update its description
         # async def update_description():
@@ -342,14 +359,15 @@ class Autopilot(ContinueBaseModel):
 
     async def run_step(self, step: Step):
         async for update in self._run_singular_step(step):
-            await self.handle_history_update(update)
+            await self.handle_session_update(update)
 
-    async def handle_history_update(self, update: AutopilotGeneratorOutput):
+    async def handle_session_update(self, update: AutopilotGeneratorOutput):
         if isinstance(update, StepDescription):
             index = len(self.session_state.history)
             self.session_state.history.append(update)
-            await self.sdk.gui.send_step_update(
-                SessionUpdate(index=index, update=update)
+            set_step = SetStep(**update.dict())
+            await self.sdk.gui.send_session_update(
+                SessionUpdate(index=index, update=set_step)
             )
             return
 
@@ -363,7 +381,7 @@ class Autopilot(ContinueBaseModel):
             )
 
         self.session_state.history[update.index].update(update.update)
-        await self.sdk.gui.send_step_update(update)
+        await self.sdk.gui.send_session_update(update)
 
     async def run(self):
         while next_step := self.policy.next(self.sdk.config, self.session_state):

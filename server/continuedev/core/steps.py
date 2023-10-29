@@ -620,8 +620,6 @@ Please output the code to be inserted at the cursor in order to fulfill the user
                 # Stop early if it is repeating the file_suffix or the step was deleted
                 if repeating_file_suffix:
                     break
-                if sdk.current_step_was_deleted():
-                    return
 
                 # Accumulate lines
                 chunk_lines = chunk.split("\n")

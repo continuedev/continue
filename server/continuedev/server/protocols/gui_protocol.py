@@ -7,7 +7,7 @@ class AbstractGUIProtocolServer(ABC):
     window_id: str
 
     @abstractmethod
-    async def send_step_update(self, session_update: SessionUpdate):
+    async def send_session_update(self, session_update: SessionUpdate):
         ...
 
     @abstractmethod

@@ -14,7 +14,6 @@ from ..models.filesystem_edit import (
 from ..models.main import Range
 from ..server.protocols.ide_protocol import AbstractIdeProtocolServer
 from ..server.protocols.gui_protocol import AbstractGUIProtocolServer
-from .abstract_sdk import AbstractContinueSDK
 from .config import ContinueConfig
 from .lsp import ContinueLSPClient
 from .main import (
@@ -41,7 +40,7 @@ class Autopilot:
     pass
 
 
-class ContinueSDK(AbstractContinueSDK):
+class ContinueSDK:
     """The SDK provided as parameters to a step"""
 
     ide: AbstractIdeProtocolServer
@@ -59,11 +58,13 @@ class ContinueSDK(AbstractContinueSDK):
         config: ContinueConfig,
         ide: AbstractIdeProtocolServer,
         gui: AbstractGUIProtocolServer,
+        autopilot: Autopilot,
     ):
         self.ide = ide
         self.gui = gui
         self.config = config
         self.models = config.models
+        self.__autopilot = autopilot
 
     @property
     def history(self) -> List[StepDescription]:
@@ -100,9 +101,6 @@ class ContinueSDK(AbstractContinueSDK):
                 edit=edit, description=description, **({"name": name} if name else {})
             )
         )
-
-    async def wait_for_user_input(self) -> str:
-        return await self.__autopilot.wait_for_user_input()
 
     async def wait_for_user_confirmation(self, prompt: str):
         return await self.run_step(WaitForUserConfirmationStep(prompt=prompt))
@@ -212,17 +210,25 @@ class ContinueSDK(AbstractContinueSDK):
         raise ContinueCustomException(message, title, with_step)
 
     async def get_chat_context(self) -> List[ChatMessage]:
-        history_context = self.history.to_chat_history()
+        history_context = list(
+            map(
+                lambda step: ChatMessage(
+                    role="assistant",
+                    name=step.step_type,
+                    content=step.description or f"Ran function {step.name}",
+                    summary=f"Called function {step.name}",
+                ),
+                self.history,
+            )
+        )
 
         context_messages: List[
             ChatMessage
-        ] = await self.__autopilot.context_manager.get_chat_messages()
+        ] = []  # await self.__autopilot.context_manager.get_chat_messages()
+        # TODO
 
         # Insert at the end, but don't insert after latest user message or function call
         for msg in context_messages:
             history_context.insert(-1, msg)
 
         return history_context
-
-    def current_step_was_deleted(self):
-        return self.history.timeline[self.history.current_index].deleted

@@ -4,7 +4,6 @@ from ..steps.chroma import AnswerQuestionChroma
 
 from ...core.config import ContinueConfig
 from ...core.main import Policy, SessionState, Step
-from ...core.observation import UserInputObservation
 from ..steps.chat import SimpleChatStep
 from ..steps.custom_command import CustomCommandStep
 from ..steps.main import EditHighlightedCodeStep
@@ -70,15 +69,8 @@ class DefaultPolicy(Policy):
             return StepsOnStartupStep()
 
         last_step = session_state.history[-1]
-        observation: UserInputObservation
-        if observation := next(
-            filter(
-                lambda obs: isinstance(obs, UserInputObservation),
-                last_step.observations,
-            ),
-            None,
-        ):
-            user_input = observation.user_input
+        if last_step.step_type == "UserInputStep":
+            user_input = last_step.description
 
             slash_command = parse_slash_command(user_input, config)
             if slash_command is not None:

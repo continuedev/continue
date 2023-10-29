@@ -341,7 +341,7 @@ class GUIProtocolServer:
         autopilot = self.get_autopilot(state)
         await autopilot.run()
 
-    async def send_step_update(self, session_update: SessionUpdate):
-        await self.messenger.send("step_update", session_update.dict())
+    async def send_session_update(self, session_update: SessionUpdate):
+        await self.messenger.send("session_update", session_update.dict())
 
     # endregion

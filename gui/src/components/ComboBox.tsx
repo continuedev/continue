@@ -1054,8 +1054,8 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={(e) => {
               if (
-                e.relatedTarget === deleteButtonDivRef.current ||
-                deleteButtonDivRef.current?.contains(e.relatedTarget as Node)
+                e.relatedTarget === deleteButtonDivRef.current
+                // || deleteButtonDivRef.current?.contains(e.relatedTarget as Node)
               ) {
                 return;
               }
@@ -1077,14 +1077,14 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
                 dispatch(setBottomMessage(undefined));
               },
               onBlur: (e) => {
-                if (
-                  topRef.current?.contains(e.relatedTarget as Node) ||
-                  document
-                    .getElementById("toggle-context-div")
-                    ?.contains(e.relatedTarget as Node)
-                ) {
-                  return;
-                }
+                // if (
+                //   // topRef.current?.contains(e.relatedTarget as Node) ||
+                //   document
+                //     .getElementById("toggle-context-div")
+                //     ?.contains(e.relatedTarget as Node)
+                // ) {
+                //   return;
+                // }
                 setInputFocused(false);
               },
               onKeyDown: (event) => {

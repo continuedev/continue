@@ -40,16 +40,20 @@ export const sessionStateSlice = createSlice({
           ...state.history[payload.index],
         };
         if (payload.update.name) {
-          step.name += payload.update.name;
+          (step.name = step.name ?? "") + payload.update.name;
         }
         if (payload.update.description) {
-          step.description += payload.update.description;
+          step.description =
+            (step.description ?? "") + payload.update.description;
         }
         if (payload.update.observations) {
-          step.observations.push(...payload.update.observations);
+          step.observations = [
+            ...(step.observations ?? []),
+            ...payload.update.observations,
+          ];
         }
         if (payload.update.logs) {
-          step.logs.push(...payload.update.logs);
+          step.logs = [...(step.logs ?? []), ...payload.update.logs];
         }
       } else if (payload.delta === false) {
         step = {
@@ -63,6 +67,8 @@ export const sessionStateSlice = createSlice({
         history[payload.index] = step;
       }
 
+      console.log("History: ", history);
+      console.log("Payload: ", payload);
       return {
         ...state,
         history,

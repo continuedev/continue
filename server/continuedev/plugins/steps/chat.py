@@ -48,11 +48,6 @@ class SimpleChatStep(Step):
         )
 
         async for chunk in generator:
-            if sdk.current_step_was_deleted():
-                # So that the message doesn't disappear
-                yield DeltaStep(hide=False)
-                break
-
             if "content" in chunk:
                 yield chunk["content"]
 

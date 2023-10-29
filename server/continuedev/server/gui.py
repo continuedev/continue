@@ -36,7 +36,11 @@ async def message(sid, data):
         logger.critical(f"Error validating json: {e}")
         return
 
-    if gui := window_manager.get_gui(sid):
-        await gui.handle_json(message)
-    else:
-        logger.critical(f"GUI websocket not found for sid {sid}")
+    try:
+        if gui := window_manager.get_gui(sid):
+            await gui.handle_json(message)
+        else:
+            logger.critical(f"GUI websocket not found for sid {sid}")
+    except Exception as e:
+        logger.critical(f"Error handling message: {e}")
+        raise e

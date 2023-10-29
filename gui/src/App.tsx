@@ -82,7 +82,8 @@ function App() {
   useEffect(() => {
     if (!client) return;
 
-    client.onStepUpdate((update) => {
+    client.onSessionUpdate((update) => {
+      console.log(update);
       dispatch(processSessionUpdate(update));
     });
   }, [client]);

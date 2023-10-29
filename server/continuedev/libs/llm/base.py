@@ -348,7 +348,7 @@ Settings:
         if not raw:
             prompt = self.template_prompt_like_messages(prompt)
 
-        if log:
+        if log and self.write_log:
             self.write_log(self.compile_log_message(prompt, options))
 
         completion = ""
@@ -396,7 +396,7 @@ Settings:
         if not raw:
             prompt = self.template_prompt_like_messages(prompt)
 
-        if log:
+        if log and self.write_log:
             self.write_log(self.compile_log_message(prompt, options))
 
         completion = await self._complete(prompt=prompt, options=options)
@@ -443,7 +443,7 @@ Settings:
         else:
             prompt = format_chat_messages(messages)
 
-        if log:
+        if log and self.write_log:
             self.write_log(self.compile_log_message(prompt, options))
 
         completion = ""

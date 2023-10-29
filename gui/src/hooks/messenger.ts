@@ -51,7 +51,7 @@ export class SocketIOMessenger extends Messenger {
   }
 
   onMessageType(messageType: string, callback: (data: object) => void): void {
-    this.socket.on(messageType, ({ messageType, data }) => {
+    this.socket.on("message", ({ messageType, data }) => {
       if (messageType === messageType) {
         callback(data);
       }

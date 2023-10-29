@@ -53,7 +53,7 @@ class ContinueGUIClientProtocol extends AbstractContinueGUIClientProtocol {
         }
         break;
       default:
-        console.log("Unknown message type: ", messageType);
+        break;
     }
   }
 
@@ -91,8 +91,8 @@ class ContinueGUIClientProtocol extends AbstractContinueGUIClientProtocol {
     this.onStateUpdateCallbacks.push(callback);
   }
 
-  onStepUpdate(callback: (update: SessionUpdate) => void) {
-    this.messenger?.onMessageType("step_update", (data: SessionUpdate) => {
+  onSessionUpdate(callback: (update: SessionUpdate) => void) {
+    this.messenger?.onMessageType("session_update", (data: SessionUpdate) => {
       callback(data);
     });
   }

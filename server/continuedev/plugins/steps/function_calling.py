@@ -162,9 +162,6 @@ class ChatWithFunctions(Step):
             async for msg_chunk in gpt350613.stream_chat(
                 await sdk.get_chat_context(), functions=functions
             ):
-                if sdk.current_step_was_deleted():
-                    return
-
                 if "content" in msg_chunk and msg_chunk["content"] is not None:
                     msg_content += msg_chunk["content"]
                     # if last_function_called_index_in_history is not None:

@@ -126,8 +126,14 @@ class DeltaStep(BaseModel):
     observations: Optional[List[Observation]] = None
     logs: Optional[List[str]] = None
 
+    def dict(self, *args, **kwargs):
+        kwargs["exclude_none"] = True
+        return super().dict(*args, **kwargs)
 
-UpdateStep = Union[SetStep, DeltaStep]
+
+UpdateStep = Union[
+    DeltaStep, SetStep
+]  # TODO: Pydantic doesn't seem to be respecting the type, changes to the other on init
 
 
 class StepDescription(BaseModel):
@@ -169,6 +175,9 @@ class SessionUpdate(BaseModel):
     index: int
     update: UpdateStep
     stop: Optional[bool] = None
+
+    class Config:
+        smart_union = True
 
     def dict(self, *args, **kwargs):
         d = super().dict(*args, **kwargs)
