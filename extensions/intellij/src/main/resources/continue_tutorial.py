@@ -1,6 +1,12 @@
 """
 Welcome to Continue!
 
+_________               _____ _____                       
+__  ____/______ _______ __  /____(_)_______ ____  _______ 
+_  /     _  __ \__  __ \_  __/__  / __  __ \_  / / /_  _ \
+/ /___   / /_/ /_  / / // /_  _  /  _  / / // /_/ / /  __/
+\____/   \____/ /_/ /_/ \__/  /_/   /_/ /_/ \__,_/  \___/ 
+
 This is a 2 minute tutorial.
 
 It will walk you through two basic features:
@@ -12,6 +18,8 @@ It will walk you through two basic features:
 
 
 """Step 1: Highlight the function below"""
+
+
 def mysterious_function(x):
     for i in range(len(x)):
         for j in range(len(x) - 1):
@@ -35,6 +43,8 @@ select the code and toggle the Continue input box"""
 
 
 """Step 1: Highlight this code"""
+
+
 def bubble_sort(x):
     for i in range(len(x)):
         for j in range(len(x) - 1):
@@ -42,6 +52,7 @@ def bubble_sort(x):
                 x[j], x[j + 1] = x[j + 1], x[j]
 
     return x
+
 
 """Step 2: Use the keyboard shortcut [⌘ ⇧ J] to
 select the code and toggle the /edit slash command"""

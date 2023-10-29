@@ -199,11 +199,8 @@ class LLM(ContinueBaseModel):
         original_dict["class_name"] = self.__class__.__name__
         return original_dict
 
-    async def start(
-        self, write_log: Callable[[str], None] = None, unique_id: Optional[str] = None
-    ):
+    async def start(self, unique_id: Optional[str] = None):
         """Start the connection to the LLM."""
-        self.write_log = write_log
         self.unique_id = unique_id
 
     async def stop(self):

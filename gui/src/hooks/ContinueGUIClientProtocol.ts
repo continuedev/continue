@@ -36,6 +36,10 @@ class ContinueGUIClientProtocol extends AbstractContinueGUIClientProtocol {
     });
   }
 
+  onConnected(callback: () => void) {
+    this.messenger?.onOpen(callback);
+  }
+
   handleMessage(messageType: string, data: any) {
     switch (messageType) {
       case "state_update":
@@ -77,6 +81,14 @@ class ContinueGUIClientProtocol extends AbstractContinueGUIClientProtocol {
       }
     });
     this.onStateUpdateCallbacks.push(callback);
+  }
+
+  onStepUpdate(callback: (update: SessionUpdate) => void) {
+    this.messenger?.onMessageType("step_update", (data: SessionUpdate) => {
+      if (data.update) {
+        callback(data.update);
+      }
+    });
   }
 
   onAvailableSlashCommands(

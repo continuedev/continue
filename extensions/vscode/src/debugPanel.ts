@@ -105,10 +105,13 @@ export function setupDebugPanel(
         });
       };
       try {
-        const socket = io.io(getContinueServerUrl(), {
-          path: "/gui/socket.io",
-          transports: ["websocket", "polling", "flashsocket"],
-        });
+        const socket = io.io(
+          `${getContinueServerUrl()}?window_id=${windowId}`,
+          {
+            path: "/gui/socket.io",
+            transports: ["websocket", "polling", "flashsocket"],
+          }
+        );
         sockets[url] = socket;
         resolve(null);
       } catch (e) {
@@ -248,6 +251,7 @@ export function setupDebugPanel(
 
         <script>localStorage.setItem("ide", "vscode")</script>
         <script>window.windowId = "${windowId}"</script>
+        <script>window.serverUrl = "${getContinueServerUrl()}"</script>
       </body>
     </html>`;
 }

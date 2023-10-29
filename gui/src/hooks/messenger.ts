@@ -26,7 +26,18 @@ export class SocketIOMessenger extends Messenger {
 
   constructor(endpoint: string) {
     super();
-    this.socket = socketIOClient(endpoint);
+    console.log(
+      "Connecting to socket.io endpoint: ",
+      endpoint,
+      (window as any).windowId
+    );
+    this.socket = socketIOClient(
+      `${endpoint}?window_id=${(window as any).windowId}`,
+      {
+        path: "/gui/socket.io",
+        transports: ["websocket", "polling", "flashsocket"],
+      }
+    );
   }
 
   send(messageType: string, data: object): void {

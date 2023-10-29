@@ -2,8 +2,8 @@ import json
 import os
 import traceback
 import uuid
-from functools import cached_property
 from typing import Dict, List, Optional
+from ..server.gui_protocol import AbstractGUIProtocolServer
 
 import redbaron
 from aiohttp import ClientPayloadError
@@ -20,14 +20,11 @@ from ..libs.util.traceback.traceback_parsers import (
 )
 from ..models.filesystem import RangeInFileWithContents
 from ..models.main import ContinueBaseModel
-from ..plugins.context_providers.file import FileContextProvider
-from ..plugins.context_providers.highlighted_code import HighlightedCodeContextProvider
+
 from ..plugins.policies.default import DefaultPolicy
 from ..plugins.steps.on_traceback import DefaultOnTracebackStep
 from ..server.ide_protocol import AbstractIdeProtocolServer
-from ..server.meilisearch_server import stop_meilisearch
 from .config import ContinueConfig
-from .context import ContextManager
 from .main import (
     AutopilotGenerator,
     AutopilotGeneratorOutput,
@@ -76,66 +73,24 @@ def get_error_title(e: Exception) -> str:
 
 
 class Autopilot(ContinueBaseModel):
-    ide: AbstractIdeProtocolServer
     session_state: SessionState
+    ide: AbstractIdeProtocolServer
+    gui: AbstractGUIProtocolServer
+    config: ContinueConfig
 
-    policy: Policy = DefaultPolicy()
     context: Context = Context()
-    context_manager: ContextManager = ContextManager()
-    sdk: ContinueSDK = None
+    # context_manager: ContextManager = ContextManager()
 
-    async def load(
-        self, config: Optional[ContinueConfig] = None, only_reloading: bool = False
-    ):
-        self.sdk = await ContinueSDK.create(self, config=config)
-        if override_policy := self.sdk.config.policy_override:
-            self.policy = override_policy
+    @property
+    def policy(self) -> Policy:
+        return self.config.policy_override or DefaultPolicy()
 
-        # Load documents into the search index
-        await self.context_manager.start(
-            self.sdk.config.context_providers
-            + [
-                HighlightedCodeContextProvider(ide=self.ide),
-                FileContextProvider(workspace_dir=self.ide.workspace_directory),
-            ],
-            self.sdk,
-            only_reloading=only_reloading,
-        )
-
-    async def start(
-        self,
-        config: Optional[ContinueConfig] = None,
-    ):
-        await self.load(config=config, only_reloading=False)
-
-        # Load saved context groups
-        # context_groups_file = getSavedContextGroupsPath()
-        # try:
-        #     with open(context_groups_file, "r") as f:
-        #         json_ob = json.load(f)
-        #         for title, context_group in json_ob.items():
-        #             self._saved_context_groups[title] = [
-        #                 ContextItem(**item) for item in context_group
-        #             ]
-        # except Exception as e:
-        #     logger.warning(
-        #         f"Failed to load saved_context_groups.json: {e}. Reverting to empty list."
-        #     )
-        #     self._saved_context_groups = {}
-        self._saved_context_groups = {}
-
-        self.started = True
-
-    async def reload_config(self):
-        await self.load(config=None, only_reloading=True)
-        await self.update_subscribers()
-
-    async def cleanup(self):
-        stop_meilisearch()
+    @property
+    def sdk(self) -> ContinueSDK:
+        return ContinueSDK(self.config, self.ide, self.gui)
 
     class Config:
         arbitrary_types_allowed = True
-        keep_untouched = (cached_property,)
 
     def get_available_slash_commands(self) -> List[Dict]:
         custom_commands = (
@@ -177,14 +132,14 @@ class Autopilot(ContinueBaseModel):
             traceback = get_tb_func(output)
             if traceback is not None and self.sdk.config.on_traceback is not None:
                 step = self.sdk.config.on_traceback(output=output)
-                await self._run_singular_step(step)
+                await self.run_step(step)
 
     async def handle_debug_terminal(self, content: str):
         """Run the debug terminal step"""
         # Same as above
         # step = self.continue_sdk.config.on_traceback(output=content)
         step = DefaultOnTracebackStep(output=content)
-        await self._run_singular_step(step)
+        await self.run_step(step)
 
     async def handle_highlighted_code(
         self,
@@ -323,7 +278,7 @@ class Autopilot(ContinueBaseModel):
 
             # ContinueCustomException can optionally specify a step to run on the error
             if after_err_step := continue_custom_exception.with_step:
-                await self._run_singular_step(after_err_step)
+                await self.run_step(after_err_step)
 
         self._step_depth -= 1
 
@@ -385,6 +340,10 @@ class Autopilot(ContinueBaseModel):
         #             ),
         #         )
 
+    async def run_step(self, step: Step):
+        async for update in self._run_singular_step(step):
+            await self.handle_history_update(update)
+
     async def handle_history_update(self, update: AutopilotGeneratorOutput):
         if isinstance(update, StepDescription):
             index = len(self.session_state.history)
@@ -406,9 +365,9 @@ class Autopilot(ContinueBaseModel):
         self.session_state.history[update.index].update(update.update)
         await self.sdk.gui.send_step_update(update)
 
-    async def run(self, session_state: SessionState):
-        while next_step := self.policy.next(self.sdk.config, session_state):
-            await self._run_singular_step(next_step)
+    async def run(self):
+        while next_step := self.policy.next(self.sdk.config, self.session_state):
+            await self.run_step(next_step)
 
     # async def create_title(self, backup: str = None):
     #     # Want sdk.gui.update_title(title)

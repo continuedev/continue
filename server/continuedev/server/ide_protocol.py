@@ -12,6 +12,7 @@ class AbstractIdeProtocolServer(ABC):
     websocket: WebSocket
     session_id: Union[str, None]
     ide_info: Optional[Dict] = None
+    window_id: str
 
     @abstractmethod
     async def handle_json(self, msg: WebsocketsMessage):

@@ -1,7 +1,8 @@
 import json
 import traceback
-from typing import Any, List, Optional, TypeVar
-from urllib.parse import parse_qsl
+from typing import Any, Callable, List, Optional, TypeVar
+from urllib.parse import parse_qs, parse_qsl
+from ..core.autopilot import Autopilot
 import socketio
 
 from fastapi import APIRouter, WebSocket
@@ -28,7 +29,7 @@ from ..libs.util.edit_config import (
 )
 from ..libs.util.logging import logger
 from ..libs.util.telemetry import posthog_logger
-from .websockets_messenger import WebsocketsMessenger
+from .websockets_messenger import SocketIOMessenger, WebsocketsMessenger
 from .window_manager import window_manager
 
 router = APIRouter(prefix="/gui", tags=["gui"])
@@ -42,18 +43,31 @@ T = TypeVar("T", bound=BaseModel)
 
 
 class GUIProtocolServer:
-    messenger: WebsocketsMessenger
+    window_id: str
+    messenger: SocketIOMessenger
 
-    def __init__(self, websocket: WebSocket):
-        self.messenger = WebsocketsMessenger(websocket)
+    get_autopilot: Callable[[SessionState], Autopilot]
+
+    def __init__(
+        self,
+        window_id: str,
+        sio: socketio.AsyncServer,
+        sid: str,
+        get_autopilot: Callable[[SessionState], Autopilot],
+    ):
+        self.window_id = window_id
+        self.messenger = SocketIOMessenger(sio, sid)
+        self.get_autopilot = get_autopilot
 
     def on_error(self, e: Exception):
         # TODO
         return self.session.autopilot.sdk.run_step(DisplayErrorStep.from_exception(e))
 
-    def handle_json(self, msg: WebsocketsMessage):
+    async def handle_json(self, msg: WebsocketsMessage):
         data = msg.data
-        if msg.message_type == "set_current_session_title":
+        if msg.message_type == "run_from_state":
+            await self.run_from_state(SessionState.parse_obj(data))
+        elif msg.message_type == "set_current_session_title":
             self.set_current_session_title(data["title"])
         elif msg.message_type == "show_logs_at_index":
             self.on_show_logs_at_index(data["index"])
@@ -334,25 +348,22 @@ class GUIProtocolServer:
 
     # region: Send data to GUI
 
-    def run_from_state(self, state: SessionState):
-        # Do something with user input
-        create_async_task(
-            self.session.autopilot.accept_user_input(input), self.on_error
-        )
+    async def run_from_state(self, state: SessionState):
+        autopilot = self.get_autopilot(state)
+        await autopilot.run()
 
     async def send_step_update(self, session_update: SessionUpdate):
-        await self.messenger.send("history_update", session_update.dict())
+        await self.messenger.send("step_update", session_update.dict())
 
     # endregion
 
 
 @sio.event
 async def connect(sid, environ):
-    query = parse_qsl(environ.get("QUERY_STRING", ""))
-    window_info_str = query.get("window_info", [None])[0]
-    window_info = WindowInfo.parse_raw(window_info_str)
+    query = parse_qs(environ.get("QUERY_STRING", ""))
+    window_id = query.get("window_id", [None])[0]
 
-    guiProtocolServer = GUIProtocolServer(window_info, sio, sid)
+    guiProtocolServer = GUIProtocolServer(window_id, sio, sid)
     window_manager.register_gui(sid, guiProtocolServer)
 
 
@@ -373,52 +384,7 @@ async def message(sid, data):
         logger.critical(f"Error validating json: {e}")
         return
 
-    if gui := window_manager.get_window(sid).gui:
+    if gui := window_manager.get_gui(sid):
         await gui.handle_json(message)
     else:
         logger.critical(f"GUI websocket not found for sid {sid}")
-
-
-@router.websocket("/ws")
-async def websocket_endpoint(websocket: WebSocket):
-    try:
-        await websocket.accept()
-
-        gui = GUIProtocolServer(websocket)
-
-        while AppStatus.should_exit is False:
-            message = await websocket.receive_text()
-            if isinstance(message, str):
-                json_message = json.loads(message)
-
-            try:
-                message = WebsocketsMessage.parse_obj(json_message)
-            except ValidationError as e:
-                logger.warning(f"Error while validating message: {json_message}")
-                continue  # :o
-
-            logger.debug(f"Received '{message.message_type}': {message.data}")
-            gui.handle_json(message)
-
-    except WebSocketDisconnect:
-        logger.debug("GUI websocket disconnected")
-    except Exception as e:
-        # Log, send to PostHog, and send to GUI
-        logger.debug(f"ERROR in gui websocket: {e}")
-        err_msg = "\n".join(traceback.format_exception(e))
-        posthog_logger.capture_event(
-            "gui_error",
-            {"error_title": e.__str__() or e.__repr__(), "error_message": err_msg},
-        )
-
-        # TODO
-        # await session.autopilot.ide.showMessage(err_msg)
-
-        raise e
-    finally:
-        logger.debug("Closing gui websocket")
-        if (
-            websocket.client_state != WebSocketState.DISCONNECTED
-            and websocket.application_state != WebSocketState.DISCONNECTED
-        ):
-            await websocket.close()

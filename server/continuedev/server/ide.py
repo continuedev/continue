@@ -547,7 +547,7 @@ async def message(sid, data):
         logger.critical(f"Error validating json: {e}")
         return
 
-    if ide := window_manager.get_window(sid).ide:
+    if ide := window_manager.get_ide(sid):
         await ide.handle_json(message)
     else:
         logger.critical(f"IDE not found for sid {sid}")

@@ -1,4 +1,5 @@
 from typing import Dict, List, Optional, Type
+from ..libs.util.paths import convertConfigImports, getConfigFilePath
 
 from pydantic import BaseModel, Field, validator
 
@@ -112,3 +113,20 @@ class ContinueConfig(BaseModel):
         spec.loader.exec_module(config)
 
         return config.config
+
+    @staticmethod
+    def load_default(retry: bool = True) -> "ContinueConfig":
+        try:
+            path = getConfigFilePath()
+            config = ContinueConfig.from_filepath(path)
+
+            return config
+        except ModuleNotFoundError as e:
+            if not retry:
+                raise e
+            # Check if the module was "continuedev.src"
+            if e.name == "continuedev.src":
+                convertConfigImports(shorten=True)
+                return ContinueConfig.load_default(retry=False)
+            else:
+                raise e

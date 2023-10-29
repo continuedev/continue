@@ -21,6 +21,29 @@ def anthropic_template_messages(messages: List[Dict[str, str]]) -> str:
     return prompt
 
 
+def zephyr_template_messages(msgs: List[Dict[str, str]]) -> str:
+    """ "
+    <|system|>
+    </s>
+    <|user|>
+    {prompt}</s>
+    <|assistant|>
+    """
+    prompt = ""
+
+    if msgs[0]["role"] == "system":
+        prompt += f"<|system|>{msgs[0]['content']}</s>\n"
+        msgs.pop(0)
+
+    for msg in msgs:
+        prompt += "<|user|>\n" if msg["role"] == "user" else "<|assistant|>\n"
+        prompt += f"{msg['content']}</s>\n"
+
+    prompt += "<|assistant|>\n"
+
+    return prompt
+
+
 def chatml_template_messages(messages: List[Dict[str, str]]) -> str:
     prompt = ""
 

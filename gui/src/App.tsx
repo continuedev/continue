@@ -76,8 +76,16 @@ export const GUIClientContext = createContext<
 function App() {
   const client = useContinueGUIProtocol(false);
   const posthog = usePostHog();
-
   const dispatch = useDispatch();
+
+  useEffect(() => {
+    if (!client) return;
+
+    client.onStepUpdate((update) => {
+      dispatch(processStepUpdate(update));
+    });
+  }, [client]);
+
   useEffect(() => {
     const eventListener = (event: any) => {
       switch (event.data.type) {

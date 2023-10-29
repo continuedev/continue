@@ -1,20 +1,8 @@
 import os
-import traceback
 from typing import Coroutine, List, Optional, Union
 
 from ..server.gui_protocol import AbstractGUIProtocolServer
 
-from ..server.window_manager import Window
-
-from ..libs.llm.base import LLM
-from ..libs.util.devdata import dev_data_logger
-from ..libs.util.logging import logger
-from ..libs.util.paths import (
-    convertConfigImports,
-    getConfigFilePath,
-    getDiffsFolderPath,
-)
-from ..libs.util.telemetry import posthog_logger
 from ..models.filesystem import RangeInFile
 from ..models.filesystem_edit import (
     AddDirectory,
@@ -43,7 +31,6 @@ from .models import Models
 from .steps import (
     DefaultModelEditCodeStep,
     FileSystemEditStep,
-    MessageStep,
     RangeInFileWithContents,
     ShellCommandsStep,
     WaitForUserConfirmationStep,
@@ -57,72 +44,26 @@ class Autopilot:
 class ContinueSDK(AbstractContinueSDK):
     """The SDK provided as parameters to a step"""
 
-    window: Window
-    models: Models
-    lsp: Optional[ContinueLSPClient] = None
-    context: Context
+    ide: AbstractIdeProtocolServer
+    gui: AbstractGUIProtocolServer
     config: ContinueConfig
+    models: Models
+
+    lsp: Optional[ContinueLSPClient] = None
+    context: Context = Context()
+
     __autopilot: Autopilot
 
-    @property
-    def ide(self) -> AbstractIdeProtocolServer:
-        return self.window.ide
-
-    @property
-    def gui(self) -> AbstractGUIProtocolServer:
-        return self.window.gui
-
-    def __init__(self, autopilot: Autopilot):
-        self.ide = autopilot.ide
-        self.__autopilot = autopilot
-        self.context = autopilot.context
-
-    async def load(self, config: Optional[ContinueConfig] = None):
-        # Create necessary directories
-        getDiffsFolderPath()
-
-        try:
-            self.config = config or self._load_config_dot_py()
-        except Exception as e:
-            logger.error(f"Failed to load config.py: {traceback.format_exception(e)}")
-
-            self.config = (
-                ContinueConfig()
-                if self._last_valid_config is None
-                else self._last_valid_config
-            )
-
-            formatted_err = "\n".join(traceback.format_exception(e))
-            msg_step = MessageStep(
-                name="Invalid Continue Config File", message=formatted_err
-            )
-            msg_step.description = f"Falling back to default config settings due to the following error in `~/.continue/config.py`.\n```\n{formatted_err}\n```\n\nIt's possible this was caused by an update to the Continue config format. If you'd like to see the new recommended default `config.py`, check [here](https://github.com/continuedev/continue/blob/main/server/continuedev/libs/constants/default_config.py)."
-            # self.history.add_node(
-            #     HistoryNode(step=msg_step, observation=None, depth=0, active=False)
-            # )
-            await self.ide.setFileOpen(getConfigFilePath())
-
-        # Start models
-        self.models = self.config.models
-        await self.update_ui()
-        await self.models.start(self)
-
-        # When the config is loaded, setup posthog logger
-        posthog_logger.setup(
-            self.ide.unique_id, self.config.allow_anonymous_telemetry, self.ide.ide_info
-        )
-        dev_data_logger.setup(self.config.user_token, self.config.data_server_url)
-
-    @classmethod
-    async def create(
-        cls, autopilot: Autopilot, config: Optional[ContinueConfig] = None
-    ) -> "ContinueSDK":
-        sdk = ContinueSDK(autopilot)
-        autopilot.continue_sdk = sdk
-
-        await sdk.load(config=config)
-
-        return sdk
+    def __init__(
+        self,
+        config: ContinueConfig,
+        ide: AbstractIdeProtocolServer,
+        gui: AbstractGUIProtocolServer,
+    ):
+        self.ide = ide
+        self.gui = gui
+        self.config = config
+        self.models = config.models
 
     @property
     def history(self) -> List[StepDescription]:
@@ -130,9 +71,6 @@ class ContinueSDK(AbstractContinueSDK):
 
     def write_log(self, message: str):
         self.history.timeline[self.history.current_index].logs.append(message)
-
-    async def start_model(self, llm: LLM):
-        await llm.start(unique_id=self.ide.unique_id, write_log=self.write_log)
 
     async def _ensure_absolute_path(self, path: str) -> str:
         if os.path.isabs(path):
@@ -151,7 +89,7 @@ class ContinueSDK(AbstractContinueSDK):
             raise Exception(f"Path {path} does not exist")
 
     async def run_step(self, step: Step) -> StepGenerator:
-        async for update in self.__autopilot._run_singular_step(step):
+        async for update in self.__autopilot.run_step(step):
             yield update
 
     async def apply_filesystem_edit(
@@ -243,25 +181,6 @@ class ContinueSDK(AbstractContinueSDK):
         path = await self._ensure_absolute_path(path)
         return await self.run_step(FileSystemEditStep(edit=DeleteDirectory(path=path)))
 
-    _last_valid_config: ContinueConfig = None
-
-    def _load_config_dot_py(self, retry: bool = True) -> ContinueConfig:
-        try:
-            path = getConfigFilePath()
-            config = ContinueConfig.from_filepath(path)
-            self._last_valid_config = config
-
-            return config
-        except ModuleNotFoundError as e:
-            if not retry:
-                raise e
-            # Check if the module was "continuedev.src"
-            if e.name == "continuedev.src":
-                convertConfigImports(shorten=True)
-                return self._load_config_dot_py(retry=False)
-            else:
-                raise e
-
     def get_code_context(
         self, only_editing: bool = False
     ) -> List[RangeInFileWithContents]:
@@ -304,12 +223,6 @@ class ContinueSDK(AbstractContinueSDK):
             history_context.insert(-1, msg)
 
         return history_context
-
-    async def update_ui(self):
-        await self.__autopilot.update_subscribers()
-
-    async def clear_history(self):
-        await self.__autopilot.clear_history()
 
     def current_step_was_deleted(self):
         return self.history.timeline[self.history.current_index].deleted

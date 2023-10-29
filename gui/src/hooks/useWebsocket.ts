@@ -9,39 +9,32 @@ function useContinueGUIProtocol(useVscodeMessagePassing: boolean = true) {
   //   useVscodeMessagePassing = false;
   // }
 
-  const sessionId = useSelector((state: RootStore) => state.config.sessionId);
   const serverHttpUrl = useSelector((state: RootStore) => state.config.apiUrl);
   const [client, setClient] = useState<ContinueGUIClientProtocol | undefined>(
     undefined
   );
 
   useEffect(() => {
-    console.log(client, sessionId, serverHttpUrl);
-    if (!sessionId || !serverHttpUrl) {
+    if (!serverHttpUrl) {
       if (useVscodeMessagePassing) {
         postVscMessage("onLoad", {});
       }
-      setClient(undefined);
-      return;
     }
+  }, [serverHttpUrl]);
 
-    const serverUrlWithSessionId =
-      serverHttpUrl.replace("http", "ws") +
-      "/gui/ws?session_id=" +
-      encodeURIComponent(sessionId);
+  useEffect(() => {
+    const serverUrl = (window as any).serverUrl;
 
-    console.log(
-      "Creating GUI websocket",
-      serverUrlWithSessionId,
-      useVscodeMessagePassing
-    );
+    console.log("Creating GUI websocket", serverUrl, useVscodeMessagePassing);
     const newClient = new ContinueGUIClientProtocol(
-      serverUrlWithSessionId,
+      serverUrl,
       useVscodeMessagePassing
     );
-    console.log(newClient);
-    setClient(newClient);
-  }, [sessionId, serverHttpUrl]);
+
+    newClient.onConnected(() => {
+      setClient(newClient);
+    });
+  }, []);
 
   return client;
 }
