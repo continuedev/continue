@@ -123,21 +123,6 @@ export function setupDebugPanel(
 
   panel.webview.onDidReceiveMessage(async (data) => {
     switch (data.type) {
-      case "onLoad": {
-        panel.webview.postMessage({
-          type: "onLoad",
-          vscMachineId: getUniqueId(),
-          apiUrl: getContinueServerUrl(),
-          workspacePaths: vscode.workspace.workspaceFolders?.map(
-            (folder) => folder.uri.fsPath
-          ),
-          vscMediaUrl,
-          dataSwitchOn: vscode.workspace
-            .getConfiguration("continue")
-            .get<boolean>("dataSwitch"),
-        });
-        break;
-      }
       case "websocketForwardingOpen": {
         let url = data.url;
         if (typeof sockets[url] === "undefined") {
@@ -252,6 +237,13 @@ export function setupDebugPanel(
         <script>localStorage.setItem("ide", "vscode")</script>
         <script>window.windowId = "${windowId}"</script>
         <script>window.serverUrl = "${getContinueServerUrl()}"</script>
+        <script>window.vscMachineId = "${getUniqueId()}"</script>
+        <script>window.vscMediaUrl = "${vscMediaUrl}"</script>
+        <script>window.workspacePaths = ${JSON.stringify(
+          vscode.workspace.workspaceFolders?.map(
+            (folder) => folder.uri.fsPath
+          ) || []
+        )}</script>
       </body>
     </html>`;
 }

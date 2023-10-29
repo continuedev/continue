@@ -41,7 +41,7 @@ export const sessionStateSlice = createSlice({
           ...state.history[payload.index],
         };
         if (payload.update.name) {
-          (step.name = step.name ?? "") + payload.update.name;
+          step.name = (step.name ?? "") + payload.update.name;
         }
         if (payload.update.description) {
           step.description =

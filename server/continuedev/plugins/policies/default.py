@@ -8,12 +8,13 @@ from ..steps.chat import SimpleChatStep
 from ..steps.custom_command import CustomCommandStep
 from ..steps.main import EditHighlightedCodeStep
 from ..steps.steps_on_startup import StepsOnStartupStep
+from ..steps.cmd import GenerateShellCommandStep
 
 
 # When importing with importlib from config.py, the classes do not pass isinstance checks.
 # Mapping them here is a workaround.
 # Original description of the problem: https://github.com/continuedev/continue/pull/581#issuecomment-1778138841
-REPLACEMENT_SLASH_COMMAND_STEPS = [AnswerQuestionChroma]
+REPLACEMENT_SLASH_COMMAND_STEPS = [AnswerQuestionChroma, GenerateShellCommandStep]
 
 
 def parse_slash_command(inp: str, config: ContinueConfig) -> Union[None, Step]:

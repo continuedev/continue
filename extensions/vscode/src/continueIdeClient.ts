@@ -66,7 +66,11 @@ class IdeProtocolClient {
     });
 
     this.socket.on("message", (message) => {
-      const { messageType, data, messageId } = JSON.parse(message);
+      const {
+        message_type: messageType,
+        data,
+        message_id: messageId,
+      } = message;
       this.handleMessage(messageType, data, messageId).catch((err) => {
         console.log("Error handling message: ", err);
         vscode.window

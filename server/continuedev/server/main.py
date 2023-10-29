@@ -2,7 +2,10 @@ import argparse
 import asyncio
 import atexit
 from contextlib import asynccontextmanager
-from typing import Optional
+from typing import List, Optional
+
+from ..core.main import ContextProviderDescription, SlashCommandDescription
+from ..core.config import ContinueConfig, SlashCommand
 
 import uvicorn
 from fastapi import FastAPI
@@ -49,6 +52,23 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# region: Base endpoints
+
+root_config = ContinueConfig.load_default()
+
+
+@app.get("/slash_commands")
+def get_slash_commands() -> List[SlashCommandDescription]:
+    return root_config.get_slash_command_descriptions()
+
+
+@app.get("/context_providers")
+def get_context_providers() -> List[ContextProviderDescription]:
+    return root_config.get_context_provider_descriptions()
+
+
+# endregion
 
 
 def run_server(

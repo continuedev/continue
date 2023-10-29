@@ -4,7 +4,14 @@ from pydantic import schema_json_of
 
 from ..core.config import ContinueConfig
 from ..core.context import ContextItem, ContextItemId
-from ..core.main import SessionInfo, SessionState, SessionUpdate, ContinueError
+from ..core.main import (
+    SessionInfo,
+    SessionState,
+    SessionUpdate,
+    ContinueError,
+    SlashCommandDescription,
+    ContextProviderDescription,
+)
 from ..core.models import Models
 from ..libs.llm.base import LLM
 from .filesystem import FileEdit, RangeInFile
@@ -16,7 +23,14 @@ MODELS_TO_GENERATE = (
     [Position, Range, Traceback, TracebackFrame]
     + [RangeInFile, FileEdit]
     + [FileEditWithFullContents]
-    + [SessionInfo, SessionState, SessionUpdate, ContinueError]
+    + [
+        SessionInfo,
+        SessionState,
+        SessionUpdate,
+        ContinueError,
+        SlashCommandDescription,
+        ContextProviderDescription,
+    ]
     + [ContinueConfig]
     + [ContextItem, ContextItemId]
     + [Models]

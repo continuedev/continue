@@ -1,11 +1,17 @@
 import { createSlice } from "@reduxjs/toolkit";
 import { RootStore } from "../store";
 
+const windowAny: any = window;
+
 export const configSlice = createSlice({
   name: "config",
   initialState: {
-    apiUrl: "http://localhost:8000",
-    vscMediaUrl: localStorage.getItem("vscMediaUrl") || undefined,
+    apiUrl: windowAny.serverUrl || "http://localhost:8000",
+    vscMediaUrl:
+      windowAny.vscMediaUrl || localStorage.getItem("vscMediaUrl") || undefined,
+    workspacePaths: windowAny.workspacePaths || [],
+    vscMachineId: windowAny.vscMachineId || undefined,
+    windowId: windowAny.windowId || undefined,
   } as RootStore["config"],
   reducers: {
     setWorkspacePaths: (

@@ -66,7 +66,6 @@ class ContinueGUIClientProtocol extends AbstractContinueGUIClientProtocol {
   }
 
   runFromState(sessionState: SessionState) {
-    console.log(this.messenger);
     this.messenger?.send("run_from_state", { state: sessionState });
   }
 

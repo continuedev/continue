@@ -118,6 +118,10 @@ class SetStep(BaseModel):
     observations: Optional[List[Observation]] = None
     logs: Optional[List[str]] = None
 
+    def dict(self, *args, **kwargs):
+        kwargs["exclude_none"] = True
+        return super().dict(*args, **kwargs)
+
 
 class DeltaStep(BaseModel):
     name: Optional[str] = None
@@ -315,7 +319,7 @@ class Policy(ContinueBaseModel):
 class Step(ContinueBaseModel):
     name: str = None
     hide: bool = False
-    description: Union[str, None] = None
+    description: str = ""
 
     class_name: str = "Step"
 

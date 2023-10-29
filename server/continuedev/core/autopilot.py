@@ -270,7 +270,7 @@ class Autopilot:
                     yield SessionUpdate(
                         index=index, update=DeltaStep(observations=[update])
                     )
-                elif isinstance(update, UpdateStep):
+                elif isinstance(update, DeltaStep) or isinstance(update, SetStep):
                     yield SessionUpdate(index=index, update=update)
                 else:
                     logger.warning(f"Unknown type yielded from Step: {update}")

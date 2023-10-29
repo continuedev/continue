@@ -78,6 +78,15 @@ class ContextProvider(BaseModel):
         [], description="List of selected items in the ContextProvider"
     )
 
+    def get_description(self) -> ContextProviderDescription:
+        return ContextProviderDescription(
+            title=self.title,
+            display_title=self.display_title,
+            description=self.description,
+            dynamic=self.dynamic,
+            requires_query=self.requires_query,
+        )
+
     def dict(self, *args, **kwargs):
         original_dict = super().dict(*args, **kwargs)
         original_dict.pop("sdk", None)

@@ -13,6 +13,8 @@ import {
   SlashCommand,
 } from "../schema/ContinueConfig";
 import { ContextItem } from "../schema/ContextItem";
+import { ContextProviderDescription } from "../schema/ContextProviderDescription";
+import { SlashCommandDescription } from "../schema/SlashCommandDescription";
 
 export interface ChatMessage {
   role: "system" | "user" | "assistant";
@@ -24,10 +26,8 @@ export interface RootStore {
     workspacePaths: string[] | undefined;
     apiUrl: string;
     vscMachineId: string | undefined;
-    sessionId: string | undefined;
-    sessionStarted: number | undefined;
     vscMediaUrl: string | undefined;
-    dataSwitchOn: boolean | undefined;
+    windowId: string | undefined;
   };
   misc: {
     highlightedCode: RangeInFile | undefined;
@@ -46,10 +46,10 @@ export interface RootStore {
   serverState: {
     meilisearchUrl: string | undefined;
     userInputQueue: string[];
-    slashCommands: SlashCommand[];
+    slashCommands: SlashCommandDescription[];
     selectedContextItems: ContextItem[];
     config: ContinueConfig;
-    contextProviders: ContextProvider[];
+    contextProviders: ContextProviderDescription[];
     savedContextGroups: any[]; // TODO: Context groups
   };
 }

@@ -5,7 +5,7 @@ from pydantic import BaseModel, Field, validator
 
 from ..libs.llm.openai_free_trial import OpenAIFreeTrial
 from .context import ContextProvider
-from .main import Policy, Step
+from .main import ContextProviderDescription, Policy, SlashCommandDescription, Step
 from .models import Models
 
 
@@ -23,11 +23,23 @@ class SlashCommand(BaseModel):
             "step": self.step.__name__,
         }
 
+    def slash_command_description(self) -> SlashCommandDescription:
+        return SlashCommandDescription(
+            name=self.name,
+            description=self.description,
+        )
+
 
 class CustomCommand(BaseModel):
     name: str
     prompt: str
     description: str
+
+    def slash_command_description(self) -> SlashCommandDescription:
+        return SlashCommandDescription(
+            name=self.name,
+            description=self.description,
+        )
 
 
 class ContinueConfig(BaseModel):
@@ -130,3 +142,44 @@ class ContinueConfig(BaseModel):
                 return ContinueConfig.load_default(retry=False)
             else:
                 raise e
+
+    def get_slash_command_descriptions(self) -> List[SlashCommandDescription]:
+        custom_commands = (
+            list(
+                map(
+                    lambda x: x.slash_command_description(),
+                    self.custom_commands,
+                )
+            )
+            or []
+        )
+        slash_commands = (
+            list(
+                map(
+                    lambda x: x.slash_command_description(),
+                    self.slash_commands,
+                )
+            )
+            or []
+        )
+        cmds = custom_commands + slash_commands
+        cmds.sort(key=lambda x: x.name == "edit", reverse=True)
+        return cmds
+
+    def get_context_provider_descriptions(self) -> List[ContextProviderDescription]:
+        """
+        Returns a list of ContextProviderDescriptions
+        """
+        return [
+            provider.get_description()
+            for provider in self.context_providers
+            if provider.title != "code"  # Code isn't used with '@'
+        ] + [
+            ContextProviderDescription(
+                title="file",
+                display_title="Files",
+                description="Reference files in the current workspace",
+                dynamic=False,
+                requires_query=False,
+            )
+        ]

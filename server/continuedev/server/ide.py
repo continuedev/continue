@@ -39,12 +39,16 @@ async def disconnect(sid):
 @sio.event
 async def message(sid, data):
     try:
+        if isinstance(data, str):
+            data = json.loads(data)
+
         message = WebsocketsMessage.parse_obj(data)
     except json.JSONDecodeError:
         logger.critical(f"Error decoding json: {data}")
         return
     except ValidationError as e:
-        logger.critical(f"Error validating json: {e}")
+        tb = "\n".join(traceback.format_exception(e, e, e.__traceback__))
+        logger.critical(f"Error validating json: {tb}")
         return
 
     try:
