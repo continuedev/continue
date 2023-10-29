@@ -5,67 +5,52 @@
  * and run json-schema-to-typescript to regenerate this file.
  */
 
-export type HistoryNode = HistoryNode1;
+export type SessionState = SessionState1;
+export type StepType = string;
 export type Name = string;
-export type Hide = boolean;
 export type Description = string;
-export type ClassName = string;
-export type SystemMessage = string;
-export type Role = "assistant" | "user" | "system" | "function";
-export type Content = string;
-export type Name1 = string;
-export type Summary = string;
-export type Name2 = string;
-export type Arguments = string;
-export type ChatContext = ChatMessage[];
-export type ManageOwnChatContext = boolean;
+export type Hide = boolean;
 export type Depth = number;
-export type Deleted = boolean;
-export type Active = boolean;
+export type Title = string;
+export type Message = string;
+export type Observations = Observation[];
 export type Logs = string[];
-export type Name3 = string;
+export type History = StepDescription[];
+export type Name1 = string;
 export type Description1 = string;
 export type ProviderTitle = string;
 export type ItemId = string;
-export type Content1 = string;
+export type Content = string;
 export type Editing = boolean;
 export type Editable = boolean;
-export type ContextUsed = ContextItem[];
+export type ContextItems = ContextItem[];
 
 /**
- * A point in history, a list of which make up History
+ * Full session history and important state needed for autopilot to Continue
  */
-export interface HistoryNode1 {
-  step: Step;
-  observation?: Observation;
+export interface SessionState1 {
+  history: History;
+  context_items: ContextItems;
+  [k: string]: unknown;
+}
+export interface StepDescription {
+  step_type: StepType;
+  name: Name;
+  description: Description;
+  params: Params;
+  hide: Hide;
   depth: Depth;
-  deleted?: Deleted;
-  active?: Active;
+  error?: ContinueError;
+  observations?: Observations;
   logs?: Logs;
-  context_used?: ContextUsed;
   [k: string]: unknown;
 }
-export interface Step {
-  name?: Name;
-  hide?: Hide;
-  description?: Description;
-  class_name?: ClassName;
-  system_message?: SystemMessage;
-  chat_context?: ChatContext;
-  manage_own_chat_context?: ManageOwnChatContext;
+export interface Params {
   [k: string]: unknown;
 }
-export interface ChatMessage {
-  role: Role;
-  content?: Content;
-  name?: Name1;
-  summary: Summary;
-  function_call?: FunctionCall;
-  [k: string]: unknown;
-}
-export interface FunctionCall {
-  name: Name2;
-  arguments: Arguments;
+export interface ContinueError {
+  title: Title;
+  message: Message;
   [k: string]: unknown;
 }
 export interface Observation {
@@ -76,7 +61,7 @@ export interface Observation {
  */
 export interface ContextItem {
   description: ContextItemDescription;
-  content: Content1;
+  content: Content;
   editing?: Editing;
   editable?: Editable;
   [k: string]: unknown;
@@ -87,7 +72,7 @@ export interface ContextItem {
  * The id can be used to retrieve the ContextItem from the ContextManager.
  */
 export interface ContextItemDescription {
-  name: Name3;
+  name: Name1;
   description: Description1;
   id: ContextItemId;
   [k: string]: unknown;

@@ -106,12 +106,9 @@
           "type": "string"
         }
       },
-      "required": ["model"]
-    },
-    "ContinueSDK": {
-      "title": "ContinueSDK",
-      "type": "object",
-      "properties": {}
+      "required": [
+        "model"
+      ]
     },
     "continuedev__core__models__Models": {
       "title": "Models",
@@ -138,11 +135,18 @@
             "$ref": "#/definitions/LLM"
           }
         },
-        "sdk": {
-          "$ref": "#/definitions/ContinueSDK"
+        "temperature": {
+          "title": "Temperature",
+          "type": "number"
+        },
+        "system_message": {
+          "title": "System Message",
+          "type": "string"
         }
       },
-      "required": ["default"]
+      "required": [
+        "default"
+      ]
     }
   }
 }

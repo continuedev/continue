@@ -71,6 +71,8 @@ export type Proxy = string;
  */
 export type ApiKey = string;
 export type Saved = LLM[];
+export type Temperature1 = number;
+export type SystemMessage1 = string;
 
 /**
  * Main class that holds the current model configuration
@@ -81,7 +83,8 @@ export interface Models1 {
   edit?: LLM;
   chat?: LLM;
   saved?: Saved;
-  sdk?: ContinueSDK;
+  temperature?: Temperature1;
+  system_message?: SystemMessage1;
   [k: string]: unknown;
 }
 export interface LLM {
@@ -115,8 +118,5 @@ export interface Headers {
  * A dictionary of prompt templates that can be used to customize the behavior of the LLM in certain situations. For example, set the "edit" key in order to change the prompt that is used for the /edit slash command. Each value in the dictionary is a string templated in mustache syntax, and filled in at runtime with the variables specific to the situation. See the documentation for more information.
  */
 export interface PromptTemplates {
-  [k: string]: unknown;
-}
-export interface ContinueSDK {
   [k: string]: unknown;
 }

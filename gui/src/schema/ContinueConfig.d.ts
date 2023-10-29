@@ -100,10 +100,12 @@ export type Proxy = string;
  */
 export type ApiKey = string;
 export type Saved = LLM[];
+export type Temperature1 = number;
+export type SystemMessage2 = string;
 /**
  * The temperature parameter for sampling from the LLM. Higher temperatures will result in more random output, while lower temperatures will result in more predictable output. This value ranges from 0 to 1.
  */
-export type Temperature1 = number;
+export type Temperature2 = number;
 export type Name3 = string;
 export type Prompt = string;
 export type Description1 = string;
@@ -124,7 +126,7 @@ export type OnTraceback = Step;
 /**
  * A system message that will always be followed by the LLM
  */
-export type SystemMessage2 = string;
+export type SystemMessage3 = string;
 /**
  * A Policy object that can be used to override the default behavior of Continue, for example in order to build custom agents that take multiple steps at a time.
  */
@@ -136,7 +138,7 @@ export type Title1 = string;
 /**
  * The ContinueSDK instance accessible by the ContextProvider
  */
-export type Sdk = ContinueSDK1;
+export type Sdk = ContinueSDK;
 /**
  * The display title of the ContextProvider shown in the dropdown menu
  */
@@ -189,11 +191,11 @@ export interface ContinueConfig1 {
   disallowed_steps?: DisallowedSteps;
   allow_anonymous_telemetry?: AllowAnonymousTelemetry;
   models?: Models;
-  temperature?: Temperature1;
+  temperature?: Temperature2;
   custom_commands?: CustomCommands;
   slash_commands?: SlashCommands;
   on_traceback?: OnTraceback;
-  system_message?: SystemMessage2;
+  system_message?: SystemMessage3;
   policy_override?: PolicyOverride;
   context_providers?: ContextProviders;
   user_token?: UserToken;
@@ -233,7 +235,8 @@ export interface Models1 {
   edit?: LLM;
   chat?: LLM;
   saved?: Saved;
-  sdk?: ContinueSDK;
+  temperature?: Temperature1;
+  system_message?: SystemMessage2;
   [k: string]: unknown;
 }
 export interface LLM {
@@ -267,9 +270,6 @@ export interface Headers {
  * A dictionary of prompt templates that can be used to customize the behavior of the LLM in certain situations. For example, set the "edit" key in order to change the prompt that is used for the /edit slash command. Each value in the dictionary is a string templated in mustache syntax, and filled in at runtime with the variables specific to the situation. See the documentation for more information.
  */
 export interface PromptTemplates {
-  [k: string]: unknown;
-}
-export interface ContinueSDK {
   [k: string]: unknown;
 }
 export interface CustomCommand {
@@ -316,7 +316,7 @@ export interface ContextProvider {
 /**
  * To avoid circular imports
  */
-export interface ContinueSDK1 {
+export interface ContinueSDK {
   [k: string]: unknown;
 }
 /**

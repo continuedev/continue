@@ -1,105 +1,86 @@
 {
-  "title": "HistoryNode",
-  "$ref": "#/definitions/continuedev__core__main__HistoryNode",
+  "title": "SessionState",
+  "$ref": "#/definitions/continuedev__core__main__SessionState",
   "definitions": {
-    "FunctionCall": {
-      "title": "FunctionCall",
+    "ContinueError": {
+      "title": "ContinueError",
       "type": "object",
       "properties": {
-        "name": {
-          "title": "Name",
+        "title": {
+          "title": "Title",
           "type": "string"
         },
-        "arguments": {
-          "title": "Arguments",
+        "message": {
+          "title": "Message",
           "type": "string"
         }
       },
       "required": [
-        "name",
-        "arguments"
+        "title",
+        "message"
       ]
-    },
-    "ChatMessage": {
-      "title": "ChatMessage",
-      "type": "object",
-      "properties": {
-        "role": {
-          "title": "Role",
-          "enum": [
-            "assistant",
-            "user",
-            "system",
-            "function"
-          ],
-          "type": "string"
-        },
-        "content": {
-          "title": "Content",
-          "type": "string"
-        },
-        "name": {
-          "title": "Name",
-          "type": "string"
-        },
-        "summary": {
-          "title": "Summary",
-          "type": "string"
-        },
-        "function_call": {
-          "$ref": "#/definitions/FunctionCall"
-        }
-      },
-      "required": [
-        "role",
-        "summary"
-      ]
-    },
-    "Step": {
-      "title": "Step",
-      "type": "object",
-      "properties": {
-        "name": {
-          "title": "Name",
-          "type": "string"
-        },
-        "hide": {
-          "title": "Hide",
-          "default": false,
-          "type": "boolean"
-        },
-        "description": {
-          "title": "Description",
-          "type": "string"
-        },
-        "class_name": {
-          "title": "Class Name",
-          "default": "Step",
-          "type": "string"
-        },
-        "system_message": {
-          "title": "System Message",
-          "type": "string"
-        },
-        "chat_context": {
-          "title": "Chat Context",
-          "default": [],
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/ChatMessage"
-          }
-        },
-        "manage_own_chat_context": {
-          "title": "Manage Own Chat Context",
-          "default": false,
-          "type": "boolean"
-        }
-      }
     },
     "Observation": {
       "title": "Observation",
       "type": "object",
       "properties": {}
+    },
+    "StepDescription": {
+      "title": "StepDescription",
+      "type": "object",
+      "properties": {
+        "step_type": {
+          "title": "Step Type",
+          "type": "string"
+        },
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "description": {
+          "title": "Description",
+          "type": "string"
+        },
+        "params": {
+          "title": "Params",
+          "type": "object"
+        },
+        "hide": {
+          "title": "Hide",
+          "type": "boolean"
+        },
+        "depth": {
+          "title": "Depth",
+          "type": "integer"
+        },
+        "error": {
+          "$ref": "#/definitions/ContinueError"
+        },
+        "observations": {
+          "title": "Observations",
+          "default": [],
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Observation"
+          }
+        },
+        "logs": {
+          "title": "Logs",
+          "default": [],
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "step_type",
+        "name",
+        "description",
+        "params",
+        "hide",
+        "depth"
+      ]
     },
     "ContextItemId": {
       "title": "ContextItemId",
@@ -171,42 +152,20 @@
         "content"
       ]
     },
-    "continuedev__core__main__HistoryNode": {
-      "title": "HistoryNode",
-      "description": "A point in history, a list of which make up History",
+    "continuedev__core__main__SessionState": {
+      "title": "SessionState",
+      "description": "Full session history and important state needed for autopilot to Continue",
       "type": "object",
       "properties": {
-        "step": {
-          "$ref": "#/definitions/Step"
-        },
-        "observation": {
-          "$ref": "#/definitions/Observation"
-        },
-        "depth": {
-          "title": "Depth",
-          "type": "integer"
-        },
-        "deleted": {
-          "title": "Deleted",
-          "default": false,
-          "type": "boolean"
-        },
-        "active": {
-          "title": "Active",
-          "default": true,
-          "type": "boolean"
-        },
-        "logs": {
-          "title": "Logs",
-          "default": [],
+        "history": {
+          "title": "History",
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/definitions/StepDescription"
           }
         },
-        "context_used": {
-          "title": "Context Used",
-          "default": [],
+        "context_items": {
+          "title": "Context Items",
           "type": "array",
           "items": {
             "$ref": "#/definitions/ContextItem"
@@ -214,8 +173,8 @@
         }
       },
       "required": [
-        "step",
-        "depth"
+        "history",
+        "context_items"
       ]
     }
   }

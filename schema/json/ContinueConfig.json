@@ -15,7 +15,10 @@
           "type": "string"
         }
       },
-      "required": ["name", "arguments"]
+      "required": [
+        "name",
+        "arguments"
+      ]
     },
     "ChatMessage": {
       "title": "ChatMessage",
@@ -23,7 +26,12 @@
       "properties": {
         "role": {
           "title": "Role",
-          "enum": ["assistant", "user", "system", "function"],
+          "enum": [
+            "assistant",
+            "user",
+            "system",
+            "function"
+          ],
           "type": "string"
         },
         "content": {
@@ -42,7 +50,10 @@
           "$ref": "#/definitions/FunctionCall"
         }
       },
-      "required": ["role", "summary"]
+      "required": [
+        "role",
+        "summary"
+      ]
     },
     "Step": {
       "title": "Step",
@@ -189,12 +200,9 @@
           "type": "string"
         }
       },
-      "required": ["model"]
-    },
-    "continuedev__core__models__ContinueSDK": {
-      "title": "ContinueSDK",
-      "type": "object",
-      "properties": {}
+      "required": [
+        "model"
+      ]
     },
     "Models": {
       "title": "Models",
@@ -221,11 +229,18 @@
             "$ref": "#/definitions/LLM"
           }
         },
-        "sdk": {
-          "$ref": "#/definitions/continuedev__core__models__ContinueSDK"
+        "temperature": {
+          "title": "Temperature",
+          "type": "number"
+        },
+        "system_message": {
+          "title": "System Message",
+          "type": "string"
         }
       },
-      "required": ["default"]
+      "required": [
+        "default"
+      ]
     },
     "CustomCommand": {
       "title": "CustomCommand",
@@ -244,7 +259,11 @@
           "type": "string"
         }
       },
-      "required": ["name", "prompt", "description"]
+      "required": [
+        "name",
+        "prompt",
+        "description"
+      ]
     },
     "SlashCommand": {
       "title": "SlashCommand",
@@ -267,7 +286,11 @@
           "type": "object"
         }
       },
-      "required": ["name", "description", "step"]
+      "required": [
+        "name",
+        "description",
+        "step"
+      ]
     },
     "Policy": {
       "title": "Policy",
@@ -275,7 +298,7 @@
       "type": "object",
       "properties": {}
     },
-    "continuedev__core__context__ContinueSDK": {
+    "ContinueSDK": {
       "title": "ContinueSDK",
       "description": "To avoid circular imports",
       "type": "object",
@@ -295,7 +318,10 @@
           "type": "string"
         }
       },
-      "required": ["provider_title", "item_id"]
+      "required": [
+        "provider_title",
+        "item_id"
+      ]
     },
     "ContextItemDescription": {
       "title": "ContextItemDescription",
@@ -314,7 +340,11 @@
           "$ref": "#/definitions/ContextItemId"
         }
       },
-      "required": ["name", "description", "id"]
+      "required": [
+        "name",
+        "description",
+        "id"
+      ]
     },
     "ContextItem": {
       "title": "ContextItem",
@@ -339,7 +369,10 @@
           "type": "boolean"
         }
       },
-      "required": ["description", "content"]
+      "required": [
+        "description",
+        "content"
+      ]
     },
     "ContextProvider": {
       "title": "ContextProvider",
@@ -356,7 +389,7 @@
           "description": "The ContinueSDK instance accessible by the ContextProvider",
           "allOf": [
             {
-              "$ref": "#/definitions/continuedev__core__context__ContinueSDK"
+              "$ref": "#/definitions/ContinueSDK"
             }
           ]
         },
@@ -391,7 +424,12 @@
           }
         }
       },
-      "required": ["title", "display_title", "description", "dynamic"]
+      "required": [
+        "title",
+        "display_title",
+        "description",
+        "dynamic"
+      ]
     },
     "continuedev__core__config__ContinueConfig": {
       "title": "ContinueConfig",
@@ -472,7 +510,9 @@
             },
             "edit": null,
             "chat": null,
-            "saved": []
+            "saved": [],
+            "temperature": null,
+            "system_message": null
           },
           "allOf": [
             {
