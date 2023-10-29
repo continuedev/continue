@@ -1,5 +1,4 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { FullState } from "../../schema/FullState";
 import { ContextItem } from "../../schema/ContextItem";
 
 const TEST_TIMELINE = [

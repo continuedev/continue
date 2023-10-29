@@ -1,6 +1,8 @@
-import { ContextItem, ContextItemId } from "../schema/FullState";
+import { ContextItem } from "../schema/ContextItem";
+import { ContextItemId } from "../schema/ContextItemId";
+import { SessionUpdate } from "../schema/SessionUpdate";
 import AbstractContinueGUIClientProtocol from "./AbstractContinueGUIClientProtocol";
-import { Messenger, SocketIOMessenger, WebsocketMessenger } from "./messenger";
+import { Messenger, SocketIOMessenger } from "./messenger";
 import { VscodeMessenger } from "./vscodeMessenger";
 
 class ContinueGUIClientProtocol extends AbstractContinueGUIClientProtocol {
@@ -85,9 +87,7 @@ class ContinueGUIClientProtocol extends AbstractContinueGUIClientProtocol {
 
   onStepUpdate(callback: (update: SessionUpdate) => void) {
     this.messenger?.onMessageType("step_update", (data: SessionUpdate) => {
-      if (data.update) {
-        callback(data.update);
-      }
+      callback(data);
     });
   }
 

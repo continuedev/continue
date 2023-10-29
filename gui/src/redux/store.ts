@@ -1,11 +1,13 @@
 import { configureStore } from "@reduxjs/toolkit";
-import chatReducer from "./slices/chatSlice";
 import configReducer from "./slices/configSlice";
 import miscReducer from "./slices/miscSlice";
 import uiStateReducer from "./slices/uiStateSlice";
-import { FullState } from "../schema/FullState";
 import { RangeInFile } from "../schema/RangeInFile";
 import serverStateReducer from "./slices/serverStateReducer";
+import { SessionState } from "../schema/SessionState";
+import sessionStateReducer, {
+  SessionFullState,
+} from "./slices/sessionStateReducer";
 
 export interface ChatMessage {
   role: "system" | "user" | "assistant";
@@ -22,10 +24,6 @@ export interface RootStore {
     vscMediaUrl: string | undefined;
     dataSwitchOn: boolean | undefined;
   };
-  chat: {
-    messages: ChatMessage[];
-    isStreaming: boolean;
-  };
   misc: {
     highlightedCode: RangeInFile | undefined;
     takenAction: boolean;
@@ -39,16 +37,16 @@ export interface RootStore {
     dialogMessage: string | JSX.Element;
     dialogEntryOn: boolean;
   };
-  serverState: FullState;
+  sessionState: SessionFullState;
 }
 
 const store = configureStore({
   reducer: {
-    chat: chatReducer,
     config: configReducer,
     misc: miscReducer,
     uiState: uiStateReducer,
     serverState: serverStateReducer,
+    sessionState: sessionStateReducer,
   },
 });
 

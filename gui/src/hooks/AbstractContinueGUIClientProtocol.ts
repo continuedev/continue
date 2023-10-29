@@ -1,4 +1,5 @@
-import { ContextItem, ContextItemId } from "../schema/FullState";
+import { ContextItem } from "../schema/ContextItem";
+import { ContextItemId } from "../schema/ContextItemId";
 
 abstract class AbstractContinueGUIClientProtocol {
   abstract sendMainInput(input: string): void;

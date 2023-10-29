@@ -131,8 +131,6 @@ UpdateStep = Union[SetStep, DeltaStep]
 
 
 class StepDescription(BaseModel):
-    # Can this just be a Step? If the step is already included...
-    # Totally! It should be right??
     step_type: str
     name: str
     description: str
