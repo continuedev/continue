@@ -4,10 +4,15 @@ import miscReducer from "./slices/miscSlice";
 import uiStateReducer from "./slices/uiStateSlice";
 import { RangeInFile } from "../schema/RangeInFile";
 import serverStateReducer from "./slices/serverStateReducer";
-import { SessionState } from "../schema/SessionState";
 import sessionStateReducer, {
   SessionFullState,
 } from "./slices/sessionStateReducer";
+import {
+  ContextProvider,
+  ContinueConfig,
+  SlashCommand,
+} from "../schema/ContinueConfig";
+import { ContextItem } from "../schema/ContextItem";
 
 export interface ChatMessage {
   role: "system" | "user" | "assistant";
@@ -38,6 +43,15 @@ export interface RootStore {
     dialogEntryOn: boolean;
   };
   sessionState: SessionFullState;
+  serverState: {
+    meilisearchUrl: string | undefined;
+    userInputQueue: string[];
+    slashCommands: SlashCommand[];
+    selectedContextItems: ContextItem[];
+    config: ContinueConfig;
+    contextProviders: ContextProvider[];
+    savedContextGroups: any[]; // TODO: Context groups
+  };
 }
 
 const store = configureStore({
@@ -45,8 +59,8 @@ const store = configureStore({
     config: configReducer,
     misc: miscReducer,
     uiState: uiStateReducer,
-    serverState: serverStateReducer,
     sessionState: sessionStateReducer,
+    serverState: serverStateReducer,
   },
 });
 

@@ -1,18 +1,18 @@
 from abc import ABC, abstractmethod
-from typing import Any, Callable, Dict, List, Optional, Union
-from ..models.websockets import WebsocketsMessage
+from typing import Callable, Dict, List, Optional, Union
+
+from ...models.websockets import WebsocketsMessage
 
 from fastapi import WebSocket
 
-from ..models.filesystem import RangeInFile, RangeInFileWithContents
-from ..models.filesystem_edit import EditDiff, FileEdit, FileSystemEdit
+from ...models.filesystem import RangeInFile, RangeInFileWithContents
+from ...models.filesystem_edit import EditDiff, FileEdit, FileSystemEdit
 
 
 class AbstractIdeProtocolServer(ABC):
     websocket: WebSocket
     session_id: Union[str, None]
     ide_info: Optional[Dict] = None
-    window_id: str
 
     @abstractmethod
     async def handle_json(self, msg: WebsocketsMessage):

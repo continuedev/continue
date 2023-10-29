@@ -6,7 +6,7 @@ import {
   setDialogMessage,
   setShowDialog,
 } from "../../redux/slices/uiStateSlice";
-import { ContextItem } from "../../schema/FullState";
+import { ContextItem } from "../../schema/ContextItem";
 
 function AddContextGroupDialog({
   selectedContextItems,

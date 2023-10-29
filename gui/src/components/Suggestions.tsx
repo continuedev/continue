@@ -172,28 +172,22 @@ function SuggestionsArea(props: { onClick: (textInput: string) => void }) {
     parseInt(localStorage.getItem("stage") || "0")
   );
   const timeline = useSelector(
-    (state: RootStore) => state.serverState.history.timeline
+    (state: RootStore) => state.sessionState.history
   );
-  const sessionId = useSelector(
-    (state: RootStore) => state.serverState.session_info?.session_id
-  );
+
   const codeIsHighlighted = useSelector((state: RootStore) =>
-    state.serverState.selected_context_items.some(
+    state.serverState.selectedContextItems.some(
       (item) => item.description.id.provider_title === "code"
     )
   );
 
   const [hide, setHide] = useState(false);
 
-  useEffect(() => {
-    setHide(false);
-  }, [sessionId]);
-
   const [numTutorialInputs, setNumTutorialInputs] = useState(0);
 
   const inputsAreOnlyTutorial = useCallback(() => {
     const inputs = timeline.filter(
-      (node) => !node.step.hide && node.step.name === "User Input"
+      (step) => !step.hide && step.name === "User Input"
     );
     return inputs.length - numTutorialInputs <= 0;
   }, [timeline, numTutorialInputs]);

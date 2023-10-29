@@ -1,4 +1,5 @@
 import socketIOClient, { Socket } from "socket.io-client";
+import { v4 } from "uuid";
 
 export abstract class Messenger {
   abstract send(messageType: string, data: object): void;
@@ -41,7 +42,12 @@ export class SocketIOMessenger extends Messenger {
   }
 
   send(messageType: string, data: object): void {
-    this.socket.emit(messageType, data);
+    console.log("Sending message: ", messageType, data);
+    this.socket.emit("message", {
+      message_type: messageType,
+      data,
+      message_id: v4(),
+    });
   }
 
   onMessageType(messageType: string, callback: (data: object) => void): void {
@@ -69,13 +75,17 @@ export class SocketIOMessenger extends Messenger {
   async sendAndReceive(messageType: string, data: any): Promise<any> {
     // NOTE: This probably doesn't work. Not being used anywhere rn.
     return new Promise((resolve, reject) => {
-      this.socket.emit(messageType, data, (response: any) => {
-        if (response.error) {
-          reject(response.error);
-        } else {
-          resolve(response);
+      this.socket.emit(
+        "message",
+        { message_type: messageType, data, message_id: v4() },
+        (response: any) => {
+          if (response.error) {
+            reject(response.error);
+          } else {
+            resolve(response);
+          }
         }
-      });
+      );
     });
   }
 

@@ -1,5 +1,6 @@
 import { ContextItem } from "../schema/ContextItem";
 import { ContextItemId } from "../schema/ContextItemId";
+import { SessionState } from "../schema/SessionState";
 import { SessionUpdate } from "../schema/SessionUpdate";
 import AbstractContinueGUIClientProtocol from "./AbstractContinueGUIClientProtocol";
 import { Messenger, SocketIOMessenger } from "./messenger";
@@ -62,6 +63,11 @@ class ContinueGUIClientProtocol extends AbstractContinueGUIClientProtocol {
 
   sendMainInput(input: string) {
     this.messenger?.send("main_input", { input });
+  }
+
+  runFromState(sessionState: SessionState) {
+    console.log(this.messenger);
+    this.messenger?.send("run_from_state", { state: sessionState });
   }
 
   reverseToIndex(index: number) {

@@ -26,6 +26,7 @@ import Models from "./pages/models";
 import HelpPage from "./pages/help";
 import ModelConfig from "./pages/modelconfig";
 import { usePostHog } from "posthog-js/react";
+import { processSessionUpdate } from "./redux/slices/sessionStateReducer";
 
 const router = createMemoryRouter([
   {
@@ -82,7 +83,7 @@ function App() {
     if (!client) return;
 
     client.onStepUpdate((update) => {
-      dispatch(processStepUpdate(update));
+      dispatch(processSessionUpdate(update));
     });
   }, [client]);
 

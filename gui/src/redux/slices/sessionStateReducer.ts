@@ -7,6 +7,7 @@ export interface SessionFullState {
   history: StepDescription[];
   context_items: ContextItem[];
   active: boolean;
+  title: string;
 }
 
 export const sessionStateSlice = createSlice({
@@ -15,6 +16,7 @@ export const sessionStateSlice = createSlice({
     history: [],
     context_items: [],
     active: false,
+    title: "New Session",
   },
   reducers: {
     processSessionUpdate: (
@@ -67,8 +69,33 @@ export const sessionStateSlice = createSlice({
         active,
       };
     },
+    newSession: (state: SessionFullState) => {
+      return {
+        ...state,
+        history: [],
+        context_items: [],
+        active: false,
+        title: "New Session",
+      };
+    },
+    setActive: (state: SessionFullState, { payload }: { payload: boolean }) => {
+      return {
+        ...state,
+        active: payload,
+      };
+    },
+    setHistory: (
+      state: SessionFullState,
+      { payload }: { payload: StepDescription[] }
+    ) => {
+      return {
+        ...state,
+        history: payload,
+      };
+    },
   },
 });
 
-export const { processSessionUpdate } = sessionStateSlice.actions;
+export const { setActive, setHistory, processSessionUpdate, newSession } =
+  sessionStateSlice.actions;
 export default sessionStateSlice.reducer;

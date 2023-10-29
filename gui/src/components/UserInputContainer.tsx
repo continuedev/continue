@@ -22,7 +22,6 @@ import {
   MagnifyingGlassIcon,
   StopCircleIcon,
 } from "@heroicons/react/24/outline";
-import { HistoryNode } from "../schema/HistoryNode";
 import { GUIClientContext } from "../App";
 import {
   getFontSize,
@@ -145,7 +144,7 @@ const UserInputContainer = (props: UserInputContainerProps) => {
 
   const [prevContent, setPrevContent] = useState("");
 
-  const history = useSelector((state: RootStore) => state.serverState.history);
+  const history = useSelector((state: RootStore) => state.sessionState.history);
 
   useEffect(() => {
     if (isEditing && divRef.current) {
@@ -305,7 +304,7 @@ const UserInputContainer = (props: UserInputContainerProps) => {
                     </HeaderButtonWithText>
                   ) : (
                     <>
-                      {history.timeline
+                      {history
                         .filter(
                           (h, i: number) =>
                             props.groupIndices.includes(i) && h.logs

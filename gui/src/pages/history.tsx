@@ -8,8 +8,8 @@ import { lightGray, secondaryDark, vscBackground } from "../components";
 import styled from "styled-components";
 import { ArrowLeftIcon } from "@heroicons/react/24/outline";
 import CheckDiv from "../components/CheckDiv";
-import { temporarilyClearSession } from "../redux/slices/serverStateReducer";
 import { getFontSize } from "../util";
+import { newSession } from "../redux/slices/sessionStateReducer";
 
 const Tr = styled.tr`
   &:hover {
@@ -183,8 +183,8 @@ function History() {
                     <td>
                       <TdDiv
                         onClick={() => {
-                          client?.loadSession(session.session_id);
-                          dispatch(temporarilyClearSession(true));
+                          // TODO: Load history session, get req
+                          dispatch(newSession());
                           navigate("/");
                         }}
                       >

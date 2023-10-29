@@ -3,7 +3,6 @@ import os
 import traceback
 import uuid
 from typing import Dict, List, Optional
-from ..server.gui_protocol import AbstractGUIProtocolServer
 
 import redbaron
 from aiohttp import ClientPayloadError
@@ -20,10 +19,11 @@ from ..libs.util.traceback.traceback_parsers import (
 )
 from ..models.filesystem import RangeInFileWithContents
 from ..models.main import ContinueBaseModel
-
+from ..server.protocols.gui_protocol import AbstractGUIProtocolServer
+from ..server.protocols.ide_protocol import AbstractIdeProtocolServer
 from ..plugins.policies.default import DefaultPolicy
 from ..plugins.steps.on_traceback import DefaultOnTracebackStep
-from ..server.ide_protocol import AbstractIdeProtocolServer
+
 from .config import ContinueConfig
 from .main import (
     AutopilotGenerator,

@@ -1,5 +1,5 @@
-from ..models.websockets import WebsocketsMessage
-from ..core.main import SessionUpdate
+from ...models.websockets import WebsocketsMessage
+from ...core.main import SessionUpdate
 from abc import ABC, abstractmethod
 
 

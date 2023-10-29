@@ -1,7 +1,6 @@
 import os
 from typing import Coroutine, List, Optional, Union
 
-from ..server.gui_protocol import AbstractGUIProtocolServer
 
 from ..models.filesystem import RangeInFile
 from ..models.filesystem_edit import (
@@ -13,7 +12,8 @@ from ..models.filesystem_edit import (
     FileSystemEdit,
 )
 from ..models.main import Range
-from ..server.ide_protocol import AbstractIdeProtocolServer
+from ..server.protocols.ide_protocol import AbstractIdeProtocolServer
+from ..server.protocols.gui_protocol import AbstractGUIProtocolServer
 from .abstract_sdk import AbstractContinueSDK
 from .config import ContinueConfig
 from .lsp import ContinueLSPClient

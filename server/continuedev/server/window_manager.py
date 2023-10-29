@@ -2,20 +2,11 @@ import traceback
 from typing import Dict, Optional
 
 from ..core.main import SessionState
-
 from ..core.autopilot import Autopilot
-
 from ..libs.util.paths import getConfigFilePath, getDiffsFolderPath
-
-from ..plugins.context_providers.file import FileContextProvider
-
-from ..plugins.context_providers.highlighted_code import HighlightedCodeContextProvider
-
-from ..core.sdk import ContinueSDK
-
 from ..core.config import ContinueConfig
-from .ide_protocol import AbstractIdeProtocolServer
-from .gui_protocol import AbstractGUIProtocolServer
+from .protocols.ide import IdeProtocolServer, WindowInfo
+from .protocols.gui import GUIProtocolServer
 from ..libs.util.logging import logger
 from ..libs.util.telemetry import posthog_logger
 from ..libs.util.devdata import dev_data_logger
@@ -30,8 +21,8 @@ class Window:
     # I suppose this is just a python Future??????
     # What you're doing by forcing the clients to check for None is probably bad practice.
     # Deal with all of this from the parent.
-    ide: Optional[AbstractIdeProtocolServer] = None
-    gui: Optional[AbstractGUIProtocolServer] = None
+    ide: Optional[IdeProtocolServer] = None
+    gui: Optional[GUIProtocolServer] = None
     config: Optional[ContinueConfig] = None
 
     def get_autopilot(self, session_state: SessionState) -> Optional[Autopilot]:
@@ -78,12 +69,16 @@ class Window:
 
         # Start models
         await self.config.models.start(
-            self.ide.unique_id, self.config.system_message, self.config.temperature
+            self.ide.window_info.unique_id,
+            self.config.system_message,
+            self.config.temperature,
         )
 
         # When the config is loaded, setup posthog logger
         posthog_logger.setup(
-            self.ide.unique_id, self.config.allow_anonymous_telemetry, self.ide.ide_info
+            self.ide.window_info.unique_id,
+            self.config.allow_anonymous_telemetry,
+            self.ide.ide_info,
         )
         dev_data_logger.setup(self.config.user_token, self.config.data_server_url)
 
@@ -123,41 +118,54 @@ class WindowManager:
     windows: Dict[str, Window] = {}
 
     # sid to ide/gui
-    guis: Dict[str, AbstractGUIProtocolServer] = {}
-    ides: Dict[str, AbstractIdeProtocolServer] = {}
+    guis: Dict[str, GUIProtocolServer] = {}
+    ides: Dict[str, IdeProtocolServer] = {}
 
     def get_window(self, sid: str) -> Window:
         return self.windows[sid]
 
-    def get_ide(self, sid: str) -> Optional[AbstractIdeProtocolServer]:
+    def get_ide(self, sid: str) -> Optional[IdeProtocolServer]:
         return self.ides.get(sid)
 
-    def register_ide(self, sid: str, ide: AbstractIdeProtocolServer):
-        if ide.window_id not in self.windows:
-            self.windows[ide.window_id] = Window()
+    async def register_ide(self, window_info: WindowInfo, sio: str, sid: str):
+        if window_info.window_id not in self.windows:
+            self.windows[window_info.window_id] = Window()
 
-        self.windows[ide.window_id].ide = ide
+        ide = IdeProtocolServer(window_info, sio, sid)
+        self.windows[window_info.window_id].ide = ide
         self.ides[sid] = ide
+
+        if self.windows[window_info.window_id].gui is not None:
+            await self.windows[window_info.window_id].load()
 
     def remove_ide(self, sid: str):
         ide = self.ides.pop(sid, None)
         if ide is None:
             return
 
-        if window := self.windows.get(ide.window_id):
+        if window := self.windows.get(ide.window_info.window_id):
             window.ide = None
             if window.is_closed():
-                del self.windows[ide.window_id]
+                del self.windows[ide.window_info.window_id]
 
-    def get_gui(self, sid: str) -> Optional[AbstractGUIProtocolServer]:
+    def get_gui(self, sid: str) -> Optional[GUIProtocolServer]:
         return self.guis.get(sid)
 
-    def register_gui(self, sid: str, gui: AbstractGUIProtocolServer):
-        if gui.window_id not in self.windows:
-            self.windows[gui.window_id] = Window()
+    async def register_gui(self, window_id: str, sio: str, sid: str):
+        if window_id not in self.windows:
+            self.windows[window_id] = Window()
 
-        self.windows[gui.window_id].gui = gui
+        gui = GUIProtocolServer(
+            window_id=window_id,
+            sio=sio,
+            sid=sid,
+            get_autopilot=self.windows[window_id].get_autopilot,
+        )
+        self.windows[window_id].gui = gui
         self.guis[sid] = gui
+
+        if self.windows[window_id].ide is not None:
+            await self.windows[window_id].load()
 
     def remove_gui(self, sid: str):
         gui = self.guis.pop(sid, None)

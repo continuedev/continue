@@ -31,6 +31,7 @@
     "seti-file-icons": "^0.0.8",
     "socket.io-client": "^4.7.2",
     "styled-components": "^5.3.6",
+    "uuid": "^9.0.1",
     "vscode-webview": "^1.0.1-beta.1"
   },
   "devDependencies": {

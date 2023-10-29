@@ -40,15 +40,15 @@ import {
   getMetaKeyLabel,
   getPlatform,
 } from "../util";
-import { ContextItem } from "../schema/FullState";
 import StyledMarkdownPreview from "./StyledMarkdownPreview";
-import { temporarilyClearSession } from "../redux/slices/serverStateReducer";
 import { setTakenActionTrue } from "../redux/slices/miscSlice";
 import {
   handleKeyDownJetBrains,
   handleKeyDownJetBrainsMac,
 } from "../util/jetbrains";
 import FileIcon from "./FileIcon";
+import { ContextItem } from "../schema/ContextItem";
+import { newSession, setActive } from "../redux/slices/sessionStateReducer";
 
 const SEARCH_INDEX_NAME = "continue_context_items";
 
@@ -285,7 +285,7 @@ interface ComboBoxProps {
 const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
   const meilisearchUrl = useSelector(
     (state: RootStore) =>
-      state.serverState.meilisearch_url || "http://127.0.0.1:7700"
+      state.serverState.meilisearchUrl || "http://127.0.0.1:7700"
   );
 
   const [searchClient, setSearchClient] = useState<MeiliSearch | undefined>(
@@ -305,7 +305,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
     (state: RootStore) => state.config.workspacePaths
   );
   const sessionHistory = useSelector(
-    (state: RootStore) => state.serverState.history
+    (state: RootStore) => state.sessionState.history
   );
 
   const [history, setHistory] = React.useState<string[]>([]);
@@ -336,7 +336,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
   >(undefined);
 
   const availableSlashCommands = useSelector(
-    (state: RootStore) => state.serverState.slash_commands
+    (state: RootStore) => state.serverState.slashCommands
   ).map((cmd) => {
     return {
       name: `/${cmd.name}`,
@@ -345,14 +345,17 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
   });
   const selectedContextItems = useSelector((state: RootStore) => {
     if (props.index) {
-      return state.serverState.history.timeline[props.index].context_used || [];
+      // TODO
+      return [];
+      // return state.serverState.history.timeline[props.index].context_used || [];
     } else {
-      return state.serverState.selected_context_items;
+      return state.serverState.selectedContextItems;
     }
   });
   const timeline = useSelector(
-    (state: RootStore) => state.serverState.history.timeline
+    (state: RootStore) => state.sessionState.history
   );
+  const active = useSelector((state: RootStore) => state.sessionState.active);
 
   useEffect(() => {
     if (!currentlyInContextQuery) {
@@ -362,7 +365,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
   }, [currentlyInContextQuery]);
 
   const contextProviders = useSelector(
-    (state: RootStore) => state.serverState.context_providers
+    (state: RootStore) => state.serverState.contextProviders
   ) as any[];
 
   const goBackToContextProviders = () => {
@@ -643,8 +646,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
         }
         dispatch(setTakenActionTrue(null));
       } else if (event.data.type === "focusContinueInputWithNewSession") {
-        dispatch(temporarilyClearSession(false));
-        client?.loadSession(undefined);
+        dispatch(newSession());
         dispatch(setTakenActionTrue(null));
       }
     };
@@ -865,99 +867,104 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
           </HiddenHeaderButtonWithText>
           {(props.isMainInput
             ? selectedContextItems
-            : timeline[props.index!].context_used || []
-          ).map((item, idx) => {
-            return (
-              <PillButton
-                areMultipleItems={selectedContextItems.length > 1}
-                key={`${item.description.id.item_id}${idx}`}
-                item={item}
-                editing={
-                  item.editing &&
-                  (inputRef.current as any)?.value?.startsWith("/edit")
-                }
-                editingAny={(inputRef.current as any)?.value?.startsWith(
-                  "/edit"
-                )}
-                stepIndex={props.index}
-                index={idx}
-                onDelete={() => {
-                  client?.deleteContextWithIds(
-                    [item.description.id],
-                    props.index
-                  );
-                  inputRef.current?.focus();
-                  if (
-                    (item.description.id.item_id ===
-                      focusedContextItem?.description.id.item_id &&
-                      focusedContextItem?.description.id.provider_name ===
-                        item.description.id.provider_name) ||
-                    (item.description.id.item_id ===
-                      previewingContextItem?.description.id.item_id &&
-                      previewingContextItem?.description.id.provider_name ===
-                        item.description.id.provider_name)
-                  ) {
-                    setPreviewingContextItem(undefined);
-                    setFocusedContextItem(undefined);
+            : (timeline[props.index!].context_used as any) || []
+          )
+            // TODO: Need to store context_used somewhere
+            .map((item, idx) => {
+              return (
+                <PillButton
+                  areMultipleItems={selectedContextItems.length > 1}
+                  key={`${item.description.id.item_id}${idx}`}
+                  item={item}
+                  editing={
+                    item.editing &&
+                    (inputRef.current as any)?.value?.startsWith("/edit")
                   }
-                }}
-                onClick={(e) => {
-                  if (
+                  editingAny={(inputRef.current as any)?.value?.startsWith(
+                    "/edit"
+                  )}
+                  stepIndex={props.index}
+                  index={idx}
+                  onDelete={() => {
+                    client?.deleteContextWithIds(
+                      [item.description.id],
+                      props.index
+                    );
+                    inputRef.current?.focus();
+                    if (
+                      (item.description.id.item_id ===
+                        focusedContextItem?.description.id.item_id &&
+                        focusedContextItem?.description.id.provider_name ===
+                          item.description.id.provider_name) ||
+                      (item.description.id.item_id ===
+                        previewingContextItem?.description.id.item_id &&
+                        previewingContextItem?.description.id.provider_name ===
+                          item.description.id.provider_name)
+                    ) {
+                      setPreviewingContextItem(undefined);
+                      setFocusedContextItem(undefined);
+                    }
+                  }}
+                  onClick={(e) => {
+                    if (
+                      item.description.id.item_id ===
+                        focusedContextItem?.description.id.item_id &&
+                      focusedContextItem?.description.id.provider_name ===
+                        item.description.id.provider_name
+                    ) {
+                      setFocusedContextItem(undefined);
+                    } else {
+                      setFocusedContextItem(item);
+                    }
+                  }}
+                  onBlur={() => {
+                    setFocusedContextItem(undefined);
+                  }}
+                  toggleViewContent={() => {
+                    setPreviewingContextItem((prev) => {
+                      if (!prev) return item;
+                      if (
+                        prev.description.id.item_id ===
+                          item.description.id.item_id &&
+                        prev.description.id.provider_name ===
+                          item.description.id.provider_name
+                      ) {
+                        return undefined;
+                      } else {
+                        return item;
+                      }
+                    });
+                  }}
+                  previewing={
+                    item.description.id.item_id ===
+                      previewingContextItem?.description.id.item_id &&
+                    previewingContextItem?.description.id.provider_name ===
+                      item.description.id.provider_name
+                  }
+                  focusing={
                     item.description.id.item_id ===
                       focusedContextItem?.description.id.item_id &&
                     focusedContextItem?.description.id.provider_name ===
                       item.description.id.provider_name
-                  ) {
-                    setFocusedContextItem(undefined);
-                  } else {
-                    setFocusedContextItem(item);
                   }
-                }}
-                onBlur={() => {
-                  setFocusedContextItem(undefined);
-                }}
-                toggleViewContent={() => {
-                  setPreviewingContextItem((prev) => {
-                    if (!prev) return item;
+                  prefixInputWithEdit={(should) => {
                     if (
-                      prev.description.id.item_id ===
-                        item.description.id.item_id &&
-                      prev.description.id.provider_name ===
-                        item.description.id.provider_name
+                      !should &&
+                      inputRef.current?.value.startsWith("/edit")
                     ) {
-                      return undefined;
-                    } else {
-                      return item;
+                      downshiftProps.setInputValue(
+                        inputRef.current?.value.replace("/edit ", "")
+                      );
                     }
-                  });
-                }}
-                previewing={
-                  item.description.id.item_id ===
-                    previewingContextItem?.description.id.item_id &&
-                  previewingContextItem?.description.id.provider_name ===
-                    item.description.id.provider_name
-                }
-                focusing={
-                  item.description.id.item_id ===
-                    focusedContextItem?.description.id.item_id &&
-                  focusedContextItem?.description.id.provider_name ===
-                    item.description.id.provider_name
-                }
-                prefixInputWithEdit={(should) => {
-                  if (!should && inputRef.current?.value.startsWith("/edit")) {
+                    if (downshiftProps.inputValue.startsWith("/edit")) return;
                     downshiftProps.setInputValue(
-                      inputRef.current?.value.replace("/edit ", "")
+                      `/edit ${downshiftProps.inputValue}`
                     );
-                  }
-                  if (downshiftProps.inputValue.startsWith("/edit")) return;
-                  downshiftProps.setInputValue(
-                    `/edit ${downshiftProps.inputValue}`
-                  );
-                  inputRef.current?.focus();
-                }}
-              />
-            );
-          })}
+                    inputRef.current?.focus();
+                  }}
+                />
+              );
+            })}
           {/* {selectedContextItems.length > 0 && (
           <HeaderButtonWithText
             onClick={() => {
@@ -1390,30 +1397,17 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
 
       {props.isMainInput && (
         <ContinueButton
-          disabled={
-            !(inputRef.current as any)?.value &&
-            !(
-              (typeof sessionHistory?.current_index !== "undefined" &&
-                sessionHistory.timeline[sessionHistory.current_index]
-                  ?.active) ||
-              false
-            )
-          }
+          disabled={!(inputRef.current as any)?.value && !active}
           onClick={() => {
-            if (
-              typeof sessionHistory?.current_index !== "undefined" &&
-              sessionHistory.timeline[sessionHistory.current_index]?.active
-            ) {
-              client?.deleteAtIndex(sessionHistory.current_index);
+            if (active) {
+              // TODO: Stop running steps
+              // client?.deleteAtIndex(sessionHistory.current_index);
+              dispatch(setActive(false));
             } else {
               props.onEnter?.(undefined);
             }
           }}
-          showStop={
-            (typeof sessionHistory?.current_index !== "undefined" &&
-              sessionHistory.timeline[sessionHistory.current_index]?.active) ||
-            false
-          }
+          showStop={active}
         />
       )}
     </div>

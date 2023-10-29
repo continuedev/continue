@@ -1,16 +1,14 @@
 import { createSlice } from "@reduxjs/toolkit";
 import { ContextItem } from "../../schema/ContextItem";
+import { RootStore } from "../store";
 
 const TEST_TIMELINE = [
   {
-    step: {
-      description: "Hi, please write bubble sort in python",
-      name: "User Input",
-    },
+    description: "Hi, please write bubble sort in python",
+    name: "User Input",
   },
   {
-    step: {
-      description: `\`\`\`python
+    description: `\`\`\`python
 def bubble_sort(arr):
   n = len(arr)
   for i in range(n):
@@ -19,24 +17,18 @@ def bubble_sort(arr):
               arr[j], arr[j + 1] = arr[j + 1], arr[j]
               return arr
 \`\`\``,
-      name: "Bubble Sort in Python",
-    },
+    name: "Bubble Sort in Python",
   },
   {
-    step: {
-      description: "Now write it in Rust",
-      name: "User Input",
-    },
+    description: "Now write it in Rust",
+    name: "User Input",
   },
   {
-    step: {
-      description: "Hello! This is a test...\n\n1, 2, 3, testing...",
-      name: "Testing",
-    },
+    description: "Hello! This is a test...\n\n1, 2, 3, testing...",
+    name: "Testing",
   },
   {
-    step: {
-      description: `Sure, here's bubble sort written in rust: \n\`\`\`rust
+    description: `Sure, here's bubble sort written in rust: \n\`\`\`rust
 fn bubble_sort<T: Ord>(values: &mut[T]) {
   let len = values.len();
   for i in 0..len {
@@ -48,9 +40,7 @@ fn bubble_sort<T: Ord>(values: &mut[T]) {
   }
 }
 \`\`\`\nIs there anything else I can answer?`,
-      name: "Rust Bubble Sort",
-    },
-    active: true,
+    name: "Rust Bubble Sort",
   },
 ];
 
@@ -94,66 +84,28 @@ const TEST_CONTEXT_ITEMS: ContextItem[] = [
   },
 ];
 
-const initialState: FullState = {
-  history: {
-    timeline: [],
-    current_index: 3,
-  } as any,
-  user_input_queue: [],
-  active: false,
-  slash_commands: [],
-  adding_highlighted_code: false,
-  selected_context_items: [],
+const initialState: RootStore["serverState"] = {
+  meilisearchUrl: undefined,
+  userInputQueue: [],
+  slashCommands: [],
+  selectedContextItems: [],
   config: {
     system_message: "",
     temperature: 0.5,
   },
+  contextProviders: [],
+  savedContextGroups: [],
 };
 
 export const serverStateSlice = createSlice({
   name: "serverState",
   initialState,
   reducers: {
-    setServerState: (state, action) => {
-      state.selected_context_items = [];
-      state.user_input_queue = [];
-      state.slash_commands = [];
-      Object.assign(state, action.payload);
-    },
     temporarilyPushToUserInputQueue: (state, action) => {
-      state.user_input_queue = [...state.user_input_queue, action.payload];
-    },
-    temporarilyCreateNewUserInput: (state, action) => {
-      state.history.timeline = [
-        ...state.history.timeline,
-        {
-          step: {
-            description: action.payload,
-            name: "User Input",
-            hide: false,
-          },
-          depth: 0,
-          active: false,
-          context_used: state.selected_context_items,
-        },
-      ];
-    },
-    temporarilyClearSession: (state, action) => {
-      state.history.timeline = [];
-      state.selected_context_items = [];
-      state.session_info = {
-        title: action.payload ? "Loading session..." : "New Session",
-        session_id: "",
-        date_created: "",
-      };
+      state.userInputQueue = [...state.userInputQueue, action.payload];
     },
   },
 });
 
-export const {
-  setServerState,
-  temporarilyPushToUserInputQueue,
-  temporarilyClearSession,
-  temporarilyCreateNewUserInput,
-} = serverStateSlice.actions;
+export const { temporarilyPushToUserInputQueue } = serverStateSlice.actions;
 export default serverStateSlice.reducer;

@@ -5,7 +5,6 @@ import {
   lightGray,
   vscBackground,
 } from "../components";
-import { FullState } from "../schema/FullState";
 import {
   useEffect,
   useRef,
@@ -15,7 +14,6 @@ import {
   useCallback,
   Fragment,
 } from "react";
-import { HistoryNode } from "../schema/HistoryNode";
 import StepContainer from "../components/StepContainer";
 import { GUIClientContext } from "../App";
 import ComboBox from "../components/ComboBox";
@@ -32,12 +30,7 @@ import {
   setShowDialog,
 } from "../redux/slices/uiStateSlice";
 import RingLoader from "../components/RingLoader";
-import {
-  setServerState,
-  temporarilyClearSession,
-  temporarilyCreateNewUserInput,
-  temporarilyPushToUserInputQueue,
-} from "../redux/slices/serverStateReducer";
+import { temporarilyPushToUserInputQueue } from "../redux/slices/serverStateReducer";
 import TimelineItem from "../components/TimelineItem";
 import ErrorStepContainer from "../components/ErrorStepContainer";
 import {
@@ -52,6 +45,12 @@ import HeaderButtonWithText from "../components/HeaderButtonWithText";
 import { useNavigate } from "react-router-dom";
 import SuggestionsArea from "../components/Suggestions";
 import { setTakenActionTrue } from "../redux/slices/miscSlice";
+import {
+  newSession,
+  setActive,
+  setHistory,
+} from "../redux/slices/sessionStateReducer";
+import { StepDescription } from "../schema/SessionState";
 
 const TopGuiDiv = styled.div`
   overflow-y: scroll;
@@ -135,7 +134,7 @@ function GUI(props: GUIProps) {
   // #endregion
 
   // #region Selectors
-  const history = useSelector((state: RootStore) => state.serverState.history);
+  const sessionState = useSelector((state: RootStore) => state.sessionState);
   const defaultModel = useSelector(
     (state: RootStore) => (state.serverState.config as any).models?.default
   );
@@ -143,12 +142,13 @@ function GUI(props: GUIProps) {
     (state: RootStore) => state.misc.serverStatusMessage
   );
   const user_input_queue = useSelector(
-    (state: RootStore) => state.serverState.user_input_queue
+    (state: RootStore) => state.serverState.userInputQueue
   );
 
   const sessionTitle = useSelector(
-    (state: RootStore) => state.serverState.session_info?.title
+    (state: RootStore) => state.sessionState.title
   );
+  const active = useSelector((state: RootStore) => state.sessionState.active);
 
   // #endregion
 
@@ -215,7 +215,7 @@ function GUI(props: GUIProps) {
       top: topGuiDivRef.current?.scrollHeight,
       behavior: "instant" as any,
     });
-  }, [topGuiDivRef.current?.scrollHeight, history.timeline]);
+  }, [topGuiDivRef.current?.scrollHeight, sessionState.history]);
 
   useEffect(() => {
     // Cmd + Backspace to delete current step
@@ -224,10 +224,10 @@ function GUI(props: GUIProps) {
         e.key === "Backspace" &&
         isMetaEquivalentKeyPressed(e) &&
         !e.shiftKey &&
-        typeof history?.current_index !== "undefined" &&
-        history.timeline[history.current_index]?.active
+        active
       ) {
-        client?.deleteAtIndex(history.current_index);
+        // TODO: Stop
+        // client?.deleteAtIndex(history.current_index);
       } else if (e.key === "Escape") {
         dispatch(setBottomMessage(undefined));
       }
@@ -237,34 +237,7 @@ function GUI(props: GUIProps) {
     return () => {
       window.removeEventListener("keydown", listener);
     };
-  }, [client, history]);
-
-  useEffect(() => {
-    client?.onStateUpdate((state: FullState) => {
-      const waitingForSteps =
-        state.active &&
-        state.history.current_index < state.history.timeline.length &&
-        state.history.timeline[state.history.current_index] &&
-        state.history.timeline[
-          state.history.current_index
-        ].step.description?.trim() === "";
-
-      dispatch(setServerState(state));
-
-      setWaitingForSteps(waitingForSteps);
-      setStepsOpen((prev) => {
-        const nextStepsOpen = [...prev];
-        for (
-          let i = nextStepsOpen.length;
-          i < state.history.timeline.length;
-          i++
-        ) {
-          nextStepsOpen.push(undefined);
-        }
-        return nextStepsOpen;
-      });
-    });
-  }, [client]);
+  }, [client, active]);
 
   // #endregion
 
@@ -281,6 +254,7 @@ function GUI(props: GUIProps) {
     dispatch(setTakenActionTrue(null));
     if (mainTextInputRef.current) {
       let input = (mainTextInputRef.current as any).inputValue;
+      console.log("Sending main input", input);
 
       if (input.trim() === "") return;
 
@@ -323,29 +297,28 @@ function GUI(props: GUIProps) {
 
       setWaitingForSteps(true);
 
-      if (
-        history &&
-        history.current_index >= 0 &&
-        history.current_index < history.timeline.length
-      ) {
-        if (
-          history.timeline[history.current_index]?.step.name ===
-          "Waiting for user input"
-        ) {
-          if (input.trim() === "") return;
-          onStepUserInput(input, history!.current_index);
-          return;
-        } else if (
-          history.timeline[history.current_index]?.step.name ===
-          "Waiting for user confirmation"
-        ) {
-          onStepUserInput("ok", history!.current_index);
-          return;
-        }
-      }
-
-      client.sendMainInput(input);
-      dispatch(temporarilyCreateNewUserInput(input));
+      // TODO: Sagas or something might be better?
+      const newHistory = [
+        ...sessionState.history,
+        {
+          name: "User Input",
+          description: input,
+          observations: [],
+          logs: [],
+          step_type: "UserInputStep",
+          params: { user_input: input },
+          hide: false,
+          depth: 0,
+        },
+      ];
+      dispatch(setHistory(newHistory));
+      dispatch(setActive(true));
+      const state = {
+        history: newHistory,
+        context_items: sessionState.context_items,
+      };
+      console.log("State: ", state);
+      client.runFromState(state);
 
       // Increment localstorage counter for popup
       const counter = localStorage.getItem("mainTextEntryCounter");
@@ -437,9 +410,9 @@ function GUI(props: GUIProps) {
       let userInputIndex = -1;
       for (let i = index; i >= 0; i--) {
         if (
-          history?.timeline.length > i &&
-          history.timeline[i].step.name === "User Input" &&
-          history.timeline[i].step.hide === false
+          sessionState.history.length > i &&
+          sessionState.history[i].name === "User Input" &&
+          sessionState.history[i].hide === false
         ) {
           stepsInUserInputGroup.push(i);
           userInputIndex = i;
@@ -448,11 +421,11 @@ function GUI(props: GUIProps) {
       }
       if (stepsInUserInputGroup.length === 0) return [];
 
-      for (let i = userInputIndex + 1; i < history?.timeline.length; i++) {
+      for (let i = userInputIndex + 1; i < sessionState.history.length; i++) {
         if (
-          history?.timeline.length > i &&
-          history.timeline[i].step.name === "User Input" &&
-          history.timeline[i].step.hide === false
+          sessionState.history.length > i &&
+          sessionState.history[i].name === "User Input" &&
+          sessionState.history[i].hide === false
         ) {
           break;
         }
@@ -460,7 +433,7 @@ function GUI(props: GUIProps) {
       }
       return stepsInUserInputGroup;
     },
-    [history.timeline]
+    [sessionState.history]
   );
 
   const onToggleAtIndex = useCallback(
@@ -541,12 +514,11 @@ function GUI(props: GUIProps) {
           }}
         />
         <div className="flex gap-2">
-          {history.timeline.filter((n) => !n.step.hide).length > 0 && (
+          {sessionState.history.filter((n) => !n.hide).length > 0 && (
             <HeaderButtonWithText
               onClick={() => {
-                if (history.timeline.filter((n) => !n.step.hide).length > 0) {
-                  dispatch(temporarilyClearSession(false));
-                  client?.loadSession(undefined);
+                if (sessionState.history.filter((n) => !n.hide).length > 0) {
+                  dispatch(newSession());
                 }
               }}
               text="New Session (⌥⌘N)"
@@ -643,19 +615,18 @@ function GUI(props: GUIProps) {
         }}
       />
       <StepsDiv>
-        {history?.timeline.map((node: HistoryNode, index: number) => {
-          if (node.step.hide) return null;
+        {sessionState.history.map((step: StepDescription, index: number) => {
+          if (step.hide) return null;
           return (
             <Fragment key={index}>
-              {node.step.name === "User Input" ? (
-                node.step.hide || (
+              {step.name === "User Input" ? (
+                step.hide || (
                   <ComboBox
                     isMainInput={false}
-                    value={node.step.description as string}
+                    value={step.description as string}
                     active={
-                      getStepsInUserInputGroup(index).some((i) => {
-                        return history.timeline[i].active;
-                      }) || history.timeline[index].active
+                      // TODO: Should only be if it's the last user input
+                      active
                     }
                     onEnter={(e, value) => {
                       if (value) client?.editStepAtIndex(value, index);
@@ -695,11 +666,11 @@ function GUI(props: GUIProps) {
                 )
               ) : (
                 <TimelineItem
-                  historyNode={node}
+                  historyNode={step}
                   iconElement={
-                    node.step.class_name === "DefaultModelEditCodeStep" ? (
+                    step.step_type === "DefaultModelEditCodeStep" ? (
                       <CodeBracketSquareIcon width="16px" height="16px" />
-                    ) : node.observation?.error ? (
+                    ) : step.error ? (
                       <ExclamationTriangleIcon
                         width="16px"
                         height="16px"
@@ -711,23 +682,23 @@ function GUI(props: GUIProps) {
                   }
                   open={
                     typeof stepsOpen[index] === "undefined"
-                      ? node.observation?.error
+                      ? step.error
                         ? false
                         : true
                       : stepsOpen[index]!
                   }
                   onToggle={() => onToggleAtIndex(index)}
                 >
-                  {node.observation?.error ? (
+                  {step.error ? (
                     <ErrorStepContainer
                       onClose={() => onToggleAtIndex(index)}
-                      historyNode={node}
+                      error={step.error}
                       onDelete={() => client?.deleteAtIndex(index)}
                     />
                   ) : (
                     <StepContainer
                       index={index}
-                      isLast={index === history.timeline.length - 1}
+                      isLast={index === sessionState.history.length - 1}
                       isFirst={index === 0}
                       open={
                         typeof stepsOpen[index] === "undefined"
@@ -738,8 +709,7 @@ function GUI(props: GUIProps) {
                       onUserInput={(input: string) => {
                         onStepUserInput(input, index);
                       }}
-                      inFuture={index > history?.current_index}
-                      historyNode={node}
+                      step={step}
                       onReverse={() => {
                         client?.reverseToIndex(index);
                       }}

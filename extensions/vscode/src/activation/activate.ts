@@ -12,11 +12,11 @@ import registerQuickFixProvider from "../lang-server/codeActions";
 import { getExtensionUri } from "../util/vscode";
 import path from "path";
 import { setupInlineTips } from "./inlineTips";
-import { uuid } from "uuidv4";
+import { v4 } from "uuid";
 
 export let extensionContext: vscode.ExtensionContext | undefined = undefined;
 export let ideProtocolClient: IdeProtocolClient;
-export let windowId: string = uuid();
+export let windowId: string = v4();
 
 function addPythonPathForConfig() {
   // Add to python.analysis.extraPaths global setting so config.py gets LSP

@@ -19,7 +19,7 @@ import { FileEditWithFullContents } from "../schema/FileEditWithFullContents";
 import { diffManager } from "./diffs";
 const os = require("os");
 const path = require("path");
-import { uuid } from "uuidv4";
+import { v4 } from "uuid";
 import { windowId } from "./activation/activate";
 import * as io from "socket.io-client";
 
@@ -86,20 +86,20 @@ class IdeProtocolClient {
     // Listen for new file creation
     vscode.workspace.onDidCreateFiles((event) => {
       const filepaths = event.files.map((file) => file.fsPath);
-      this.send("filesCreated", uuid(), { filepaths });
+      this.send("filesCreated", v4(), { filepaths });
     });
 
     // Listen for file deletion
     vscode.workspace.onDidDeleteFiles((event) => {
       const filepaths = event.files.map((file) => file.fsPath);
-      this.send("filesDeleted", uuid(), { filepaths });
+      this.send("filesDeleted", v4(), { filepaths });
     });
 
     // Listen for file renaming
     vscode.workspace.onDidRenameFiles((event) => {
       const oldFilepaths = event.files.map((file) => file.oldUri.fsPath);
       const newFilepaths = event.files.map((file) => file.newUri.fsPath);
-      this.send("filesRenamed", uuid(), {
+      this.send("filesRenamed", v4(), {
         old_filepaths: oldFilepaths,
         new_filepaths: newFilepaths,
       });
@@ -109,7 +109,7 @@ class IdeProtocolClient {
     vscode.workspace.onDidSaveTextDocument((event) => {
       const filepath = event.uri.fsPath;
       const contents = event.getText();
-      this.send("fileSaved", uuid(), { filepath, contents });
+      this.send("fileSaved", v4(), { filepath, contents });
     });
 
     // Setup listeners for any selection changes in open editors
@@ -388,7 +388,7 @@ class IdeProtocolClient {
   }
 
   async setTelemetryEnabled(enabled: boolean) {
-    this.send("setTelemetryEnabled", uuid(), { enabled });
+    this.send("setTelemetryEnabled", v4(), { enabled });
   }
 
   async showDiff(filepath: string, replacement: string, step_index: number) {
@@ -666,38 +666,38 @@ class IdeProtocolClient {
   }
 
   sendCommandOutput(output: string) {
-    this.send("commandOutput", uuid(), { output });
+    this.send("commandOutput", v4(), { output });
   }
 
   sendHighlightedCode(
     highlightedCode: (RangeInFile & { contents: string })[],
     edit?: boolean
   ) {
-    this.send("highlightedCodePush", uuid(), {
+    this.send("highlightedCodePush", v4(), {
       highlightedCode,
       edit,
     });
   }
 
   sendAcceptRejectSuggestion(accepted: boolean) {
-    this.send("acceptRejectSuggestion", uuid(), { accepted });
+    this.send("acceptRejectSuggestion", v4(), { accepted });
   }
 
   sendAcceptRejectDiff(accepted: boolean, stepIndex: number) {
-    this.send("acceptRejectDiff", uuid(), { accepted, stepIndex });
+    this.send("acceptRejectDiff", v4(), { accepted, stepIndex });
   }
 
   sendMainUserInput(input: string) {
-    this.send("mainUserInput", uuid(), { input });
+    this.send("mainUserInput", v4(), { input });
   }
 
   async debugTerminal() {
     const contents = await this.getTerminalContents();
-    this.send("debugTerminal", uuid(), { contents });
+    this.send("debugTerminal", v4(), { contents });
   }
 
   deleteAtIndex(index: number) {
-    this.send("deleteAtIndex", uuid(), { index });
+    this.send("deleteAtIndex", v4(), { index });
   }
 }
 

@@ -13,10 +13,10 @@ import {
   ExclamationTriangleIcon,
 } from "@heroicons/react/24/outline";
 import { GUIClientContext } from "../App";
-import { ContextItem } from "../schema/FullState";
 import { getFontSize } from "../util";
 import HeaderButtonWithText from "./HeaderButtonWithText";
 import FileIcon from "./FileIcon";
+import { ContextItem } from "../schema/ContextItem";
 
 const Button = styled.button<{ fontSize?: number }>`
   border: none;
