@@ -73,13 +73,12 @@ export class SocketIOMessenger extends Messenger {
   }
 
   async sendAndReceive(messageType: string, data: any): Promise<any> {
-    // NOTE: This probably doesn't work. Not being used anywhere rn.
     return new Promise((resolve, reject) => {
       this.socket.emit(
         "message",
         { message_type: messageType, data, message_id: v4() },
         (response: any) => {
-          if (response.error) {
+          if (response && response.error) {
             reject(response.error);
           } else {
             resolve(response);

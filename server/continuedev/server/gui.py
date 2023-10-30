@@ -43,7 +43,8 @@ async def message(sid, data):
 
     try:
         if gui := window_manager.get_gui(sid):
-            await gui.handle_json(message)
+            resp = await gui.handle_json(message)
+            return resp
         else:
             logger.critical(f"GUI websocket not found for sid {sid}")
     except Exception as e:

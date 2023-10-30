@@ -1017,7 +1017,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
                   width="20px"
                   filename={item.description.name}
                 ></FileIcon>
-                {item.description.description}
+                {item.description.name}
               </PreviewMarkdownHeader>
               <pre className="m-0">
                 <StyledMarkdownPreview

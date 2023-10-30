@@ -62,7 +62,7 @@ class GUIProtocolServer:
         elif msg.message_type == "stop_session":
             await self.stop_session()
         elif msg.message_type == "get_context_item":
-            await self.get_context_item(data["id"], data["query"])
+            return (await self.get_context_item(data["id"], data["query"])).dict()
 
         elif msg.message_type == "set_current_session_title":
             self.set_current_session_title(data["title"])
@@ -335,9 +335,5 @@ class GUIProtocolServer:
 
     async def add_context_item(self, item: ContextItem):
         await self.messenger.send("add_context_item", item.dict())
-
-    async def get_context_item(self, id: str, query: str):
-        context_item = await self.get_context_item(id, query)
-        await self.messenger.send("get_context_item", context_item.dict())
 
     # endregion

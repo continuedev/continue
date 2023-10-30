@@ -203,10 +203,6 @@ class ContinueGUIClientProtocol extends AbstractContinueGUIClientProtocol {
   setCurrentSessionTitle(title: string): void {
     this.messenger?.send("set_current_session_title", { title });
   }
-
-  previewContextItem(id: string): void {
-    this.messenger?.send("preview_context_item", { id });
-  }
 }
 
 export default ContinueGUIClientProtocol;

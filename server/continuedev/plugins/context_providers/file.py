@@ -77,6 +77,13 @@ class FileContextProvider(ContextProvider):
         self.ide.subscribeToFilesDeleted(on_files_deleted)
         self.ide.subscribeToFilesRenamed(on_files_renamed)
 
+    async def get_item(self, id: ContextItemId, query: str) -> ContextItem:
+        item = await super().get_item(id, query)
+        item.description.description = os.path.join(
+            self.ide.workspace_directory, item.description.description
+        )
+        return item
+
     def get_id_for_filepath(self, absolute_filepath: str) -> str:
         return remove_meilisearch_disallowed_chars(absolute_filepath)
 

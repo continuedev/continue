@@ -137,8 +137,27 @@ export function setupDebugPanel(
         socket.send(data.message);
         break;
       }
-      case "openFile": {
-        openEditorAndRevealRange(data.path, undefined, vscode.ViewColumn.One);
+      case "showFile": {
+        ideProtocolClient.openFile(data.filepath);
+        break;
+      }
+      case "showLines": {
+        ideProtocolClient.highlightCode(
+          {
+            filepath: data.filepath,
+            range: {
+              start: {
+                line: data.start,
+                character: 0,
+              },
+              end: {
+                line: data.end + 1,
+                character: 0,
+              },
+            },
+          },
+          "#00ff0022"
+        );
         break;
       }
       case "showVirtualFile": {
