@@ -79,8 +79,6 @@ class GUIProtocolServer:
         elif msg.message_type == "get_config":
             return self.get_config().dict()
 
-        elif msg.message_type == "set_current_session_title":
-            self.set_current_session_title(data["title"])
         elif msg.message_type == "show_context_virtual_file":
             self.show_context_virtual_file(data.get("index", None))
         elif msg.message_type == "load_session":
@@ -170,9 +168,6 @@ class GUIProtocolServer:
     #     create_async_task(load_and_tell_to_reconnect(), self.on_error)
 
     #     posthog_logger.capture_event("load_session", {"session_id": session_id})
-
-    def set_current_session_title(self, title: str):
-        self.session.autopilot.set_current_session_title(title)
 
     async def set_model_for_role_from_index(self, role: str, index: int):
         models = self.get_config().models

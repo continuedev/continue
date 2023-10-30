@@ -75,6 +75,9 @@ function useSetup(
       const cp = await resp.json();
       dispatch(setContextProviders(cp));
     });
+    client.getConfig().then((config) => {
+      dispatch(setConfig(config));
+    });
   }, [client]);
 
   // IDE event listeners

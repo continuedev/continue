@@ -59,8 +59,6 @@ abstract class AbstractContinueGUIClientProtocol {
 
   abstract deleteContextGroup(id: string): void;
 
-  abstract setCurrentSessionTitle(title: string): void;
-
   abstract onConfigUpdate(callback: (config: ContinueConfig) => void);
 }
 

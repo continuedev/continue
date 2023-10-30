@@ -51,6 +51,7 @@ import {
   newSession,
   setActive,
   setHistory,
+  setTitle,
 } from "../redux/slices/sessionStateReducer";
 import { StepDescription } from "../schema/SessionState";
 
@@ -554,7 +555,7 @@ function GUI(props: GUIProps) {
                 e.target.value === "New Session")
             )
               return;
-            client?.setCurrentSessionTitle(e.target.value);
+            dispatch(setTitle(e.target.value));
           }}
           onKeyDown={(e) => {
             if (e.key === "Enter") {

@@ -1,5 +1,7 @@
 from typing import Type, Union
 
+from ..steps.share_session import ShareSessionStep
+
 from ..steps.chroma import AnswerQuestionChroma
 
 from ...core.config import ContinueConfig
@@ -18,6 +20,7 @@ REPLACEMENT_SLASH_COMMAND_STEPS = [
     AnswerQuestionChroma,
     GenerateShellCommandStep,
     EditHighlightedCodeStep,
+    ShareSessionStep,
 ]
 
 

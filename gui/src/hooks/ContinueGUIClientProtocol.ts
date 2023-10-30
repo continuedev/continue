@@ -216,10 +216,6 @@ class ContinueGUIClientProtocol extends AbstractContinueGUIClientProtocol {
   deleteContextGroup(id: string): void {
     this.messenger?.send("delete_context_group", { id });
   }
-
-  setCurrentSessionTitle(title: string): void {
-    this.messenger?.send("set_current_session_title", { title });
-  }
 }
 
 export default ContinueGUIClientProtocol;
