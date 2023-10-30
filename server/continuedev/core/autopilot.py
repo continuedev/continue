@@ -4,6 +4,11 @@ import traceback
 import uuid
 from typing import Dict, List, Optional
 
+from ..libs.util.strings import remove_quotes_and_escapes
+
+from ..libs.llm.prompts.chat import template_alpaca_messages
+from .context import ContextManager
+
 import redbaron
 from aiohttp import ClientPayloadError
 from openai import error as openai_errors
@@ -77,6 +82,7 @@ class Autopilot:
     ide: AbstractIdeProtocolServer
     gui: AbstractGUIProtocolServer
     config: ContinueConfig
+    context_manager: ContextManager
 
     context: Context = Context()
     # context_manager: ContextManager = ContextManager()
@@ -87,11 +93,13 @@ class Autopilot:
         ide: AbstractIdeProtocolServer,
         gui: AbstractGUIProtocolServer,
         config: ContinueConfig,
+        context_manager: ContextManager,
     ):
         self.session_state = session_state
         self.ide = ide
         self.gui = gui
         self.config = config
+        self.context_manager = context_manager
 
     @property
     def policy(self) -> Policy:
@@ -323,40 +331,6 @@ class Autopilot:
         #     ),
         # )
 
-        # Create the session title if not done yet
-        # if (
-        #     self.session_info is None or self.session_info.title is None
-        # ) and not self.history.timeline[index_of_history_node].deleted:
-        #     visible_nodes = list(
-        #         filter(lambda node: not node.step.hide, self.history.timeline)
-        #     )
-
-        #     user_input = None
-        #     should_create_title = False
-        #     for visible_node in visible_nodes:
-        #         if isinstance(visible_node.step, UserInputStep):
-        #             if user_input is None:
-        #                 user_input = visible_node.step.user_input
-        #             else:
-        #                 # More than one user input, so don't create title
-        #                 should_create_title = False
-        #                 break
-        #         elif user_input is None:
-        #             continue
-        #         else:
-        #             # Already have user input, now have the next step
-        #             should_create_title = True
-        #             break
-
-        #     # Only create the title if the step after the first input is done
-        #     if should_create_title:
-        #         create_async_task(
-        #             self.create_title(backup=user_input),
-        #             on_error=lambda e: self.continue_sdk.run_step(
-        #                 DisplayErrorStep.from_exception(e)
-        #             ),
-        #         )
-
     async def run_step(self, step: Step):
         async for update in self._run_singular_step(step):
             await self.handle_session_update(update)
@@ -397,33 +371,6 @@ class Autopilot:
             await self.run_step(next_step)
 
         self.config.models.remove_logger(logger_id)
-
-    # async def create_title(self, backup: str = None):
-    #     # Want sdk.gui.update_title(title)
-    #     # Use the first input and first response to create title for session info, and make the session saveable
-    #     if self.session_info is not None and self.session_info.title is not None:
-    #         return
-
-    #     if self.continue_sdk.config.disable_summaries:
-    #         if backup is not None:
-    #             title = backup
-    #         else:
-    #             title = "New Session"
-    #     else:
-    #         chat_history = list(
-    #             map(lambda x: x.dict(), await self.continue_sdk.get_chat_context())
-    #         )
-    #         chat_history_str = template_alpaca_messages(chat_history)
-    #         title = await self.continue_sdk.models.summarize.complete(
-    #             f"{chat_history_str}\n\nGive a short title to describe the above chat session. Do not put quotes around the title. Do not use more than 6 words. The title is: ",
-    #             max_tokens=20,
-    #             log=False,
-    #         )
-    #         title = remove_quotes_and_escapes(title)
-
-    #     self.set_current_session_title(title)
-    #     await self.update_subscribers()
-    #     dev_data_logger.capture("new_session", self.session_info.dict())
 
     async def reject_diff(self, step_index: int):
         # idk...
@@ -481,5 +428,20 @@ class Autopilot:
         self._persist_context_groups()
 
         posthog_logger.capture_event("delete_context_group", {"title": id})
+
+    async def get_session_title(self) -> str:
+        if self.sdk.config.disable_summaries:
+            return "New Session"
+        else:
+            chat_history = list(
+                map(lambda x: x.dict(), await self.sdk.get_chat_context())
+            )
+            chat_history_str = template_alpaca_messages(chat_history)
+            title = await self.sdk.models.summarize.complete(
+                f"{chat_history_str}\n\nGive a short title to describe the above chat session. Do not put quotes around the title. Do not use more than 6 words. The title is: ",
+                max_tokens=20,
+                log=False,
+            )
+            return remove_quotes_and_escapes(title)
 
     # endregion

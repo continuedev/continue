@@ -76,28 +76,20 @@ class HighlightedCodeContextProvider(ContextProvider):
 
         return items
 
-    async def get_chat_messages(self) -> List[ContextItem]:
-        ranges = self.highlighted_ranges
-        if len(ranges) == 0 and (
-            fallback_item := await self._get_fallback_context_item()
-        ):
-            ranges = [fallback_item]
-
-        fresh_contents_tasks = [
-            self.ide.readRangeInFile(r.rif.to_range_in_file()) for r in ranges
-        ]
-        fresh_contents = await asyncio.gather(*fresh_contents_tasks)
-        for i in range(len(ranges)):
-            ranges[i].rif.contents = fresh_contents[i]
-
-        return [
-            ChatMessage(
-                role="user",
-                content=f"Code in this file is highlighted ({r.rif.filepath}):\n```\n{r.rif.contents}\n```",
-                summary=f"Code in this file is highlighted: {r.rif.filepath}",
+    async def get_chat_message(self, item: ContextItem) -> List[ContextItem]:
+        lines = item.description.name.split("(")[1].split(")")[0].split("-")
+        fresh_content = await self.ide.readRangeInFile(
+            RangeInFile(
+                filepath=item.description.description,
+                range=Range.from_shorthand(int(lines[0]), 0, int(lines[1]), 0),
             )
-            for r in ranges
-        ]
+        )
+
+        return ChatMessage(
+            role="user",
+            content=f"Code in this file is highlighted ({item.description.name}):\n```\n{fresh_content}\n```",
+            summary=f"Code in this file is highlighted: {item.description.name}",
+        )
 
     def _make_sure_is_editing_range(self):
         """If none of the highlighted ranges are currently being edited, the first should be selected"""

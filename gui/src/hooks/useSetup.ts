@@ -1,10 +1,11 @@
 import { Dispatch } from "@reduxjs/toolkit";
 import ContinueGUIClientProtocol from "./ContinueGUIClientProtocol";
-import { useEffect } from "react";
+import { useCallback, useEffect } from "react";
 import {
   addContextItem,
   addHighlightedCode,
   processSessionUpdate,
+  setTitle,
 } from "../redux/slices/sessionStateReducer";
 import { setServerStatusMessage } from "../redux/slices/miscSlice";
 import { postToIde } from "../vscode";
@@ -15,41 +16,53 @@ import {
   setSlashCommands,
 } from "../redux/slices/serverStateReducer";
 
-async function clientSetup(
-  client: ContinueGUIClientProtocol,
-  dispatch: Dispatch<any>,
-  serverUrl: string
-) {
-  // Listen for updates to the session state
-  client.onSessionUpdate((update) => {
-    dispatch(processSessionUpdate(update));
-  });
-
-  client.onAddContextItem((item) => {
-    dispatch(addContextItem(item));
-  });
-
-  fetch(`${serverUrl}/slash_commands`).then(async (resp) => {
-    const sc = await resp.json();
-    dispatch(setSlashCommands(sc));
-  });
-  fetch(`${serverUrl}/context_providers`).then(async (resp) => {
-    const cp = await resp.json();
-    dispatch(setContextProviders(cp));
-  });
-}
-
 function useSetup(
   client: ContinueGUIClientProtocol | undefined,
   dispatch: Dispatch<any>
 ) {
   const serverUrl = useSelector((store: RootStore) => store.config.apiUrl);
+  const active = useSelector((store: RootStore) => store.sessionState.active);
+  const nVisibleSteps = useSelector(
+    (store: RootStore) =>
+      store.sessionState.history.filter((step) => !step.hide).length
+  );
+  const title = useSelector((store: RootStore) => store.sessionState.title);
+  const history = useSelector((store: RootStore) => store.sessionState.history);
+
+  const possiblyGetTitle = useCallback(async () => {
+    console.log("possiblyGetTitle", title, history);
+    if (
+      !active &&
+      title === "New Session" &&
+      history.filter((step) => !step.hide).length > 3
+    ) {
+      const title = await client.getSessionTitle(history);
+      dispatch(setTitle(title));
+    }
+  }, [active, nVisibleSteps, history, title, client]);
 
   // Setup requiring client
   useEffect(() => {
     if (!client) return;
 
-    clientSetup(client, dispatch, serverUrl);
+    // Listen for updates to the session state
+    client.onSessionUpdate((update) => {
+      dispatch(processSessionUpdate(update));
+      possiblyGetTitle();
+    });
+
+    client.onAddContextItem((item) => {
+      dispatch(addContextItem(item));
+    });
+
+    fetch(`${serverUrl}/slash_commands`).then(async (resp) => {
+      const sc = await resp.json();
+      dispatch(setSlashCommands(sc));
+    });
+    fetch(`${serverUrl}/context_providers`).then(async (resp) => {
+      const cp = await resp.json();
+      dispatch(setContextProviders(cp));
+    });
   }, [client]);
 
   // IDE event listeners

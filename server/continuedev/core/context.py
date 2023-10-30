@@ -128,20 +128,13 @@ class ContextProvider(BaseModel):
         This is the only method that must be implemented.
         """
 
-    async def get_chat_messages(self) -> List[ChatMessage]:
-        """
-        Returns all of the chat messages for the context provider.
-
-        Default implementation has a string template.
-        """
-        return [
-            ChatMessage(
-                role="user",
-                content=f"{item.description.name}: {item.description.description}\n\n{item.content}",
-                summary=item.description.description,
-            )
-            for item in await self.get_selected_items()
-        ]
+    async def get_chat_message(self, item: ContextItem) -> ChatMessage:
+        """Returns the ChatMessage for the given ContextItem."""
+        return ChatMessage(
+            role="user",
+            content=f"{item.description.name}: {item.description.description}\n\n{item.content}",
+            summary=item.description.description,
+        )
 
     async def get_item(self, id: ContextItemId, query: str) -> ContextItem:
         """
@@ -211,17 +204,19 @@ class ContextManager:
     It is responsible for compiling all of this information into a single prompt without exceeding the token limit.
     """
 
-    async def get_chat_messages(self) -> List[ChatMessage]:
+    async def get_chat_messages(self, items: List[ContextItem]) -> List[ChatMessage]:
         """
         Returns chat messages from each provider.
         """
-        return sum(
-            [
-                await provider.get_chat_messages()
-                for provider in self.context_providers.values()
-            ],
-            [],
-        )
+        tasks = []
+        for item in items:
+            if item.description.id.provider_title in self.context_providers:
+                tasks.append(
+                    self.context_providers[
+                        item.description.id.provider_title
+                    ].get_chat_message(item)
+                )
+        return await asyncio.gather(*tasks)
 
     def __init__(self):
         self.context_providers = {}

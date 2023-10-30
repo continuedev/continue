@@ -5,7 +5,7 @@ from typing import List, Optional
 from ...server.protocols.ide_protocol import AbstractIdeProtocolServer
 
 from ...core.context import ContextProvider
-from ...core.main import ContextItem, ContextItemDescription, ContextItemId
+from ...core.main import ChatMessage, ContextItem, ContextItemDescription, ContextItemId
 from ...libs.util.filter_files import DEFAULT_IGNORE_PATTERNS
 from ...libs.util.logging import logger
 from .util import remove_meilisearch_disallowed_chars
@@ -86,6 +86,14 @@ class FileContextProvider(ContextProvider):
 
     def get_id_for_filepath(self, absolute_filepath: str) -> str:
         return remove_meilisearch_disallowed_chars(absolute_filepath)
+
+    async def get_chat_message(self, item: ContextItem) -> ChatMessage:
+        """Returns the ChatMessage for the given ContextItem."""
+        return ChatMessage(
+            role="user",
+            content=f"```{item.description.name}\n{item.content}\n```",
+            summary=item.description.description,
+        )
 
     async def get_context_item_for_filepath(
         self, absolute_filepath: str

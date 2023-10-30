@@ -42,7 +42,6 @@ export class SocketIOMessenger extends Messenger {
   }
 
   send(messageType: string, data: object): void {
-    console.log("Sending message: ", messageType, data);
     this.socket.emit("message", {
       message_type: messageType,
       data,
@@ -51,8 +50,8 @@ export class SocketIOMessenger extends Messenger {
   }
 
   onMessageType(messageType: string, callback: (data: object) => void): void {
-    this.socket.on("message", ({ messageType, data }) => {
-      if (messageType === messageType) {
+    this.socket.on("message", ({ message_type, data }) => {
+      if (messageType === message_type) {
         callback(data);
       }
     });

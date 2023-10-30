@@ -51,6 +51,7 @@ import { ContextItem } from "../schema/ContextItem";
 import {
   addContextItem,
   addContextItemAtIndex,
+  deleteContextWithIds,
   newSession,
   setActive,
 } from "../redux/slices/sessionStateReducer";
@@ -219,7 +220,8 @@ const Ul = styled.ul<{
       ? `transform: translateY(-${props.ulHeightPixels + 8}px);`
       : `transform: translateY(${
           (props.isMainInput ? 5 : 4) * (props.fontSize || mainInputFontSize) -
-          (props.isMainInput ? 2 : 4)
+          (props.isMainInput ? 2 : 4) -
+          6
         }px);`}
   position: absolute;
   background: ${vscBackground};
@@ -349,12 +351,13 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
     };
   });
   const selectedContextItems = useSelector((state: RootStore) => {
-    if (props.index) {
+    if (typeof props.index !== "undefined") {
       return state.sessionState.contextItemsAtIndex[props.index] || [];
     } else {
       return state.sessionState.context_items;
     }
   });
+
   const timeline = useSelector(
     (state: RootStore) => state.sessionState.history
   );
@@ -399,7 +402,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
       const contextItem = await client?.getContextItem(id, query);
       if (props.isMainInput) {
         dispatch(addContextItem(contextItem));
-      } else if (props.index) {
+      } else if (typeof props.index !== "undefined") {
         dispatch(
           addContextItemAtIndex({ item: contextItem, index: props.index })
         );
@@ -849,9 +852,11 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
                 : ""
             }
             onClick={() => {
-              client?.deleteContextWithIds(
-                selectedContextItems.map((item) => item.description.id),
-                props.index
+              dispatch(
+                deleteContextWithIds({
+                  ids: selectedContextItems.map((item) => item.description.id),
+                  index: props.index,
+                })
               );
               inputRef.current?.focus();
               setPreviewingContextItem(undefined);
@@ -859,9 +864,13 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
             }}
             onKeyDown={(e: any) => {
               if (e.key === "Backspace") {
-                client?.deleteContextWithIds(
-                  selectedContextItems.map((item) => item.description.id),
-                  props.index
+                dispatch(
+                  deleteContextWithIds({
+                    ids: selectedContextItems.map(
+                      (item) => item.description.id
+                    ),
+                    index: props.index,
+                  })
                 );
                 inputRef.current?.focus();
                 setPreviewingContextItem(undefined);
@@ -887,9 +896,11 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
                 stepIndex={props.index}
                 index={idx}
                 onDelete={() => {
-                  client?.deleteContextWithIds(
-                    [item.description.id],
-                    props.index
+                  dispatch(
+                    deleteContextWithIds({
+                      ids: [item.description.id],
+                      index: props.index,
+                    })
                   );
                   inputRef.current?.focus();
                   if (
@@ -1249,7 +1260,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
                                 .flatMap((s) => s.logs || [])
                                 .join("\n");
                             postToIde("showVirtualFile", {
-                              name: "Inspect Prompt",
+                              name: "inspect_prompt.md",
                               content,
                             });
                           }

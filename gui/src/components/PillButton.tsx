@@ -190,7 +190,6 @@ const PillButton = (props: PillButtonProps) => {
           onClick={(e) => {
             props.onClick?.(e);
             if (props.item.description.id.provider_title === "file") {
-              console.log("showing file", props.item);
               postToIde("showFile", {
                 filepath: props.item.description.description,
               });

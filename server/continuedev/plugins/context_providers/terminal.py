@@ -28,11 +28,12 @@ class TerminalContextProvider(ContextProvider):
             ),
         )
 
-    async def get_chat_messages(self) -> Coroutine[Any, Any, List[ChatMessage]]:
-        msgs = await super().get_chat_messages()
-        for msg in msgs:
-            msg.summary = msg.content[-1000:]
-        return msgs
+    async def get_chat_message(
+        self, item: ContextItem
+    ) -> Coroutine[Any, Any, List[ChatMessage]]:
+        msg = await super().get_chat_message(item)
+        msg.summary = msg.content[-1000:]
+        return msg
 
     async def provide_context_items(self, workspace_dir: str) -> List[ContextItem]:
         return [self._terminal_context_item()]

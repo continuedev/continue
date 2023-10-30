@@ -5,7 +5,7 @@ import socketio
 from pydantic import BaseModel
 
 from ...models.websockets import WebsocketsMessage
-from ...core.main import ContextItem, SessionState, SessionUpdate
+from ...core.main import ContextItem, SessionState, SessionUpdate, StepDescription
 from ...core.models import ALL_MODEL_ROLES, MODEL_CLASSES, MODEL_MODULE_NAMES
 from ...core.steps import DisplayErrorStep
 from ...libs.llm.prompts.chat import (
@@ -63,6 +63,10 @@ class GUIProtocolServer:
             await self.stop_session()
         elif msg.message_type == "get_context_item":
             return (await self.get_context_item(data["id"], data["query"])).dict()
+        elif msg.message_type == "get_session_title":
+            return await self.get_session_title(
+                [StepDescription(**step) for step in data["history"]]
+            )
 
         elif msg.message_type == "set_current_session_title":
             self.set_current_session_title(data["title"])
@@ -335,5 +339,10 @@ class GUIProtocolServer:
 
     async def add_context_item(self, item: ContextItem):
         await self.messenger.send("add_context_item", item.dict())
+
+    async def get_session_title(self, history: List[StepDescription]) -> str:
+        return await self.get_autopilot(
+            SessionState(history=history, context_items=[])
+        ).get_session_title()
 
     # endregion

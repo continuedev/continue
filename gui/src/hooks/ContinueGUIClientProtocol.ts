@@ -1,6 +1,6 @@
 import { ContextItem } from "../schema/ContextItem";
 import { ContextItemId } from "../schema/ContextItemId";
-import { SessionState } from "../schema/SessionState";
+import { SessionState, StepDescription } from "../schema/SessionState";
 import { SessionUpdate } from "../schema/SessionUpdate";
 import AbstractContinueGUIClientProtocol from "./AbstractContinueGUIClientProtocol";
 import { Messenger, SocketIOMessenger } from "./messenger";
@@ -67,6 +67,12 @@ class ContinueGUIClientProtocol extends AbstractContinueGUIClientProtocol {
 
   runFromState(sessionState: SessionState) {
     this.messenger?.send("run_from_state", { state: sessionState });
+  }
+
+  async getSessionTitle(history: StepDescription[]): Promise<string> {
+    return await this.messenger?.sendAndReceive("get_session_title", {
+      history,
+    });
   }
 
   reverseToIndex(index: number) {

@@ -4,6 +4,7 @@ import { SessionUpdate } from "../../schema/SessionUpdate";
 import { ContextItem } from "../../schema/ContextItem";
 import { PersistedSessionInfo } from "../../schema/PersistedSessionInfo";
 import { v4 } from "uuid";
+import { ContextItemId } from "../../schema/ContextItemId";
 
 export interface SessionFullState {
   history: StepDescription[];
@@ -82,6 +83,7 @@ export const sessionStateSlice = createSlice({
       { payload }: { payload: PersistedSessionInfo | undefined }
     ) => {
       if (payload) {
+        console.log("NEW SESSION");
         return {
           ...state,
           history: payload.session_state.history,
@@ -96,6 +98,12 @@ export const sessionStateSlice = createSlice({
         context_items: [],
         active: false,
         title: "New Session",
+      };
+    },
+    setTitle: (state: SessionFullState, { payload }: { payload: string }) => {
+      return {
+        ...state,
+        title: payload,
       };
     },
     setActive: (state: SessionFullState, { payload }: { payload: boolean }) => {
@@ -128,6 +136,7 @@ export const sessionStateSlice = createSlice({
       state: SessionFullState,
       { payload }: { payload: ContextItem }
     ) => {
+      console.log("HERE...", payload);
       return {
         ...state,
         context_items: [...state.context_items, payload],
@@ -182,6 +191,40 @@ export const sessionStateSlice = createSlice({
 
       return { ...state, context_items: contextItems };
     },
+    deleteContextWithIds: (
+      state: SessionFullState,
+      {
+        payload,
+      }: { payload: { ids: ContextItemId[]; index: number | undefined } }
+    ) => {
+      const ids = payload.ids.map((id) => `${id.provider_title}-${id.item_id}`);
+      if (typeof payload.index === "undefined") {
+        return {
+          ...state,
+          context_items: state.context_items.filter(
+            (item) =>
+              !ids.includes(
+                `${item.description.id.provider_title}-${item.description.id.item_id}`
+              )
+          ),
+        };
+      } else {
+        return {
+          ...state,
+          contextItemsAtIndex: {
+            ...state.contextItemsAtIndex,
+            [payload.index]: (
+              state.contextItemsAtIndex[payload.index] ?? []
+            ).filter(
+              (item) =>
+                !ids.includes(
+                  `${item.description.id.provider_title}-${item.description.id.item_id}`
+                )
+            ),
+          },
+        };
+      }
+    },
   },
 });
 
@@ -194,5 +237,7 @@ export const {
   addContextItem,
   addContextItemAtIndex,
   addHighlightedCode,
+  deleteContextWithIds,
+  setTitle,
 } = sessionStateSlice.actions;
 export default sessionStateSlice.reducer;

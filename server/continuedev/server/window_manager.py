@@ -40,6 +40,7 @@ class Window:
             ide=self.ide,
             gui=self.gui,
             config=self.config,
+            context_manager=self.context_manager,
         )
 
     def is_closed(self) -> bool:

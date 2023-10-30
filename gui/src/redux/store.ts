@@ -1,8 +1,7 @@
-import { configureStore } from "@reduxjs/toolkit";
+import { combineReducers, configureStore } from "@reduxjs/toolkit";
 import configReducer from "./slices/configSlice";
 import miscReducer from "./slices/miscSlice";
 import uiStateReducer from "./slices/uiStateSlice";
-import { RangeInFile } from "../schema/RangeInFile";
 import serverStateReducer from "./slices/serverStateReducer";
 import sessionStateReducer, {
   SessionFullState,
@@ -11,6 +10,9 @@ import { ContinueConfig } from "../schema/ContinueConfig";
 import { ContextItem } from "../schema/ContextItem";
 import { ContextProviderDescription } from "../schema/ContextProviderDescription";
 import { SlashCommandDescription } from "../schema/SlashCommandDescription";
+
+import storage from "redux-persist/lib/storage";
+import { persistReducer, persistStore } from "redux-persist";
 
 export interface ChatMessage {
   role: "system" | "user" | "assistant";
@@ -49,14 +51,27 @@ export interface RootStore {
   };
 }
 
-const store = configureStore({
-  reducer: {
-    config: configReducer,
-    misc: miscReducer,
-    uiState: uiStateReducer,
-    sessionState: sessionStateReducer,
-    serverState: serverStateReducer,
-  },
+const rootReducer = combineReducers({
+  config: configReducer,
+  misc: miscReducer,
+  uiState: uiStateReducer,
+  sessionState: sessionStateReducer,
+  serverState: serverStateReducer,
 });
 
-export default store;
+const persistConfig = {
+  key: "root",
+  storage,
+};
+
+const persistedReducer = persistReducer(persistConfig, rootReducer);
+
+export const store = configureStore({
+  reducer: persistedReducer,
+  middleware: (getDefaultMiddleware) =>
+    getDefaultMiddleware({
+      serializableCheck: false,
+    }),
+});
+
+export const persistor = persistStore(store);

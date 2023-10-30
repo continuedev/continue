@@ -70,6 +70,10 @@ class ContinueSDK:
     def history(self) -> List[StepDescription]:
         return self.__autopilot.session_state.history
 
+    @property
+    def context_items(self) -> List[ContextItem]:
+        return self.__autopilot.session_state.context_items
+
     def write_log(self, message: str):
         self.history.timeline[self.history.current_index].logs.append(message)
 
@@ -208,19 +212,18 @@ class ContinueSDK:
         history_context = list(
             map(
                 lambda step: ChatMessage(
-                    role="assistant",
+                    role="user" if step.step_type == "UserInputStep" else "assistant",
                     name=step.step_type,
                     content=step.description or f"Ran function {step.name}",
                     summary=f"Called function {step.name}",
                 ),
-                self.history,
+                filter(lambda x: x.hide is False, self.history[:-1]),
             )
         )
 
         context_messages: List[
             ChatMessage
-        ] = []  # await self.__autopilot.context_manager.get_chat_messages()
-        # TODO
+        ] = await self.__autopilot.context_manager.get_chat_messages(self.context_items)
 
         # Insert at the end, but don't insert after latest user message or function call
         for msg in context_messages:

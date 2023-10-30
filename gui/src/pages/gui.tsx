@@ -46,6 +46,7 @@ import { useNavigate } from "react-router-dom";
 import SuggestionsArea from "../components/Suggestions";
 import { setTakenActionTrue } from "../redux/slices/miscSlice";
 import {
+  addContextItemAtIndex,
   deleteAtIndex,
   newSession,
   setActive,
@@ -312,14 +313,31 @@ function GUI(props: GUIProps) {
           depth: 0,
         },
       ];
-      dispatch(setHistory(newHistory));
-      dispatch(setActive(true));
       const state = {
         history: newHistory,
         context_items: sessionState.context_items,
       };
-      console.log("State: ", state);
+      for (let contextItem of sessionState.context_items) {
+        dispatch(
+          addContextItemAtIndex({
+            item: contextItem,
+            index: newHistory.length - 1,
+          })
+        );
+      }
       client.runFromState(state);
+      newHistory.push({
+        name: "Generating Response...",
+        description: " ",
+        observations: [],
+        logs: [],
+        step_type: "SimpleChatStep",
+        params: {},
+        hide: false,
+        depth: 0,
+      });
+      dispatch(setHistory(newHistory));
+      dispatch(setActive(true));
 
       // Increment localstorage counter for popup
       const counter = localStorage.getItem("mainTextEntryCounter");
