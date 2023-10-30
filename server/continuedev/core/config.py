@@ -1,4 +1,6 @@
 from typing import Dict, List, Optional, Type
+
+from ..libs.util.edit_config import edit_config_property
 from ..libs.util.paths import convertConfigImports, getConfigFilePath
 
 from pydantic import BaseModel, Field, validator
@@ -7,6 +9,7 @@ from ..libs.llm.openai_free_trial import OpenAIFreeTrial
 from .context import ContextProvider
 from .main import ContextProviderDescription, Policy, SlashCommandDescription, Step
 from .models import Models
+from ..libs.util.telemetry import posthog_logger
 
 
 class SlashCommand(BaseModel):
@@ -188,3 +191,13 @@ class ContinueConfig(BaseModel):
                 requires_query=False,
             )
         ]
+
+    def set_temperature(self, temperature: float):
+        self.temperature = temperature
+        edit_config_property(["temperature"], temperature)
+        posthog_logger.capture_event("set_temperature", {"temperature": temperature})
+
+    def set_system_message(self, message: str):
+        self.system_message = message
+        edit_config_property(["system_message"], message)
+        posthog_logger.capture_event("set_system_message", {"message": message})

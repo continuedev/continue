@@ -1,5 +1,6 @@
 import { ContextItem } from "../schema/ContextItem";
 import { ContextItemId } from "../schema/ContextItemId";
+import { ContinueConfig } from "../schema/ContinueConfig";
 
 abstract class AbstractContinueGUIClientProtocol {
   abstract sendMainInput(input: string): void;
@@ -59,6 +60,8 @@ abstract class AbstractContinueGUIClientProtocol {
   abstract deleteContextGroup(id: string): void;
 
   abstract setCurrentSessionTitle(title: string): void;
+
+  abstract onConfigUpdate(callback: (config: ContinueConfig) => void);
 }
 
 export default AbstractContinueGUIClientProtocol;

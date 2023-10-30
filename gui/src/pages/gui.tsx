@@ -252,30 +252,8 @@ function GUI(props: GUIProps) {
     }
   }, [client, user_input_queue, waitingForClient]);
 
-  const onMainTextInput = (event?: any) => {
-    dispatch(setTakenActionTrue(null));
-    if (mainTextInputRef.current) {
-      let input = (mainTextInputRef.current as any).inputValue;
-      console.log("Sending main input", input);
-
-      if (input.trim() === "") return;
-
-      if (input.startsWith("#") && (input.length === 7 || input.length === 4)) {
-        localStorage.setItem("continueButtonColor", input);
-        (mainTextInputRef.current as any).setInputValue("");
-        return;
-      }
-
-      // cmd+enter to /codebase
-      if (event && isMetaEquivalentKeyPressed(event)) {
-        input = `/edit ${input}`;
-      }
-      (mainTextInputRef.current as any).setInputValue("");
-      if (!client) {
-        dispatch(temporarilyPushToUserInputQueue(input));
-        return;
-      }
-
+  const sendInput = useCallback(
+    (input: string) => {
       if (
         defaultModel?.class_name === "OpenAIFreeTrial" &&
         defaultModel?.api_key === "" &&
@@ -412,6 +390,45 @@ function GUI(props: GUIProps) {
       } else {
         localStorage.setItem("mainTextEntryCounter", "1");
       }
+    },
+    [client, sessionState.history, sessionState.context_items]
+  );
+
+  useEffect(() => {
+    const eventListener = (event: any) => {
+      if (event.data.type === "userInput") {
+        sendInput(event.data.input);
+      }
+    };
+    window.addEventListener("message", eventListener);
+    return () => window.removeEventListener("message", eventListener);
+  }, [sendInput]);
+
+  const onMainTextInput = (event?: any) => {
+    dispatch(setTakenActionTrue(null));
+    if (mainTextInputRef.current) {
+      let input = (mainTextInputRef.current as any).inputValue;
+      console.log("Sending main input", input);
+
+      if (input.trim() === "") return;
+
+      if (input.startsWith("#") && (input.length === 7 || input.length === 4)) {
+        localStorage.setItem("continueButtonColor", input);
+        (mainTextInputRef.current as any).setInputValue("");
+        return;
+      }
+
+      // cmd+enter to /codebase
+      if (event && isMetaEquivalentKeyPressed(event)) {
+        input = `/edit ${input}`;
+      }
+      (mainTextInputRef.current as any).setInputValue("");
+      if (!client) {
+        dispatch(temporarilyPushToUserInputQueue(input));
+        return;
+      }
+
+      sendInput(input);
     }
   };
 

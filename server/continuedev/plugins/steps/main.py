@@ -4,7 +4,7 @@ from typing import Coroutine, List, Optional, Union
 
 from pydantic import BaseModel, Field
 
-from ...core.main import ContinueCustomException, Step
+from ...core.main import ContinueCustomException, SetStep, Step
 from ...core.observation import Observation
 from ...core.sdk import ContinueSDK, Models
 from ...core.steps import DefaultModelEditCodeStep
@@ -302,7 +302,7 @@ class EditHighlightedCodeStep(Step):
         return "Editing code"
 
     async def run(self, sdk: ContinueSDK):
-        yield "Editing file..."
+        yield SetStep(description="Editing file...")
 
         range_in_files = await sdk.get_code_context(only_editing=True)
 

@@ -1,4 +1,6 @@
 from typing import Any, Callable, List, Optional, TypeVar
+
+from ...core.config import ContinueConfig
 from ...core.autopilot import Autopilot
 import socketio
 
@@ -37,6 +39,8 @@ class GUIProtocolServer:
 
     get_autopilot: Callable[[SessionState], Autopilot]
     get_context_item: Callable[[str, str], ContextItem]
+    get_config: Callable[[], ContinueConfig]
+    reload_config: Callable[[], None]
 
     def __init__(
         self,
@@ -45,11 +49,15 @@ class GUIProtocolServer:
         sid: str,
         get_autopilot: Callable[[SessionState], Autopilot],
         get_context_item: Callable[[str, str], ContextItem],
+        get_config: Callable[[], ContinueConfig],
+        reload_config: Callable[[], None],
     ):
         self.window_id = window_id
         self.messenger = SocketIOMessenger(sio, sid)
         self.get_autopilot = get_autopilot
         self.get_context_item = get_context_item
+        self.get_config = get_config
+        self.reload_config = reload_config
 
     def on_error(self, e: Exception):
         # TODO
@@ -67,6 +75,8 @@ class GUIProtocolServer:
             return await self.get_session_title(
                 [StepDescription(**step) for step in data["history"]]
             )
+        elif msg.message_type == "get_config":
+            return self.get_config().dict()
 
         elif msg.message_type == "set_current_session_title":
             self.set_current_session_title(data["title"])
@@ -75,9 +85,17 @@ class GUIProtocolServer:
         elif msg.message_type == "load_session":
             self.load_session(data.get("session_id", None))
         elif msg.message_type == "set_system_message":
-            self.set_system_message(data["message"])
+            sys_message = data["system_message"]
+            self.get_config().set_system_message(sys_message)
+            posthog_logger.capture_event(
+                "set_system_message", {"system_message": sys_message}
+            )
+            await self.reload_config()
+            await self.send_config_update()
         elif msg.message_type == "set_temperature":
-            self.set_temperature(float(data["temperature"]))
+            self.get_config().set_temperature(float(data["temperature"]))
+            await self.reload_config()
+            await self.send_config_update()
         elif msg.message_type == "add_model_for_role":
             self.add_model_for_role(data["role"], data["model_class"], data["model"])
         elif msg.message_type == "set_model_for_role_from_index":
@@ -152,30 +170,6 @@ class GUIProtocolServer:
 
     def set_current_session_title(self, title: str):
         self.session.autopilot.set_current_session_title(title)
-
-    def set_system_message(self, message: str):
-        self.session.autopilot.sdk.config.system_message = message
-        self.session.autopilot.sdk.models.set_main_config_params(
-            message, self.session.autopilot.sdk.config.temperature
-        )
-
-        create_async_task(
-            self.session.autopilot.set_config_attr(
-                ["system_message"], create_string_node(message)
-            ),
-            self.on_error,
-        )
-        posthog_logger.capture_event("set_system_message", {"system_message": message})
-
-    def set_temperature(self, temperature: float):
-        self.session.autopilot.sdk.config.temperature = temperature
-        create_async_task(
-            self.session.autopilot.set_config_attr(
-                ["temperature"], create_float_node(temperature)
-            ),
-            self.on_error,
-        )
-        posthog_logger.capture_event("set_temperature", {"temperature": temperature})
 
     def set_model_for_role_from_index(self, role: str, index: int):
         async def async_stuff():
@@ -339,6 +333,9 @@ class GUIProtocolServer:
 
     async def add_context_item(self, item: ContextItem):
         await self.messenger.send("add_context_item", item.dict())
+
+    async def send_config_update(self):
+        await self.messenger.send("config_update", self.get_config().dict())
 
     async def get_session_title(self, history: List[StepDescription]) -> str:
         return await self.get_autopilot(

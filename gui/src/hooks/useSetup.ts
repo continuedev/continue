@@ -13,6 +13,7 @@ import { postToIde } from "../vscode";
 import { useSelector } from "react-redux";
 import { RootStore } from "../redux/store";
 import {
+  setConfig,
   setContextProviders,
   setSlashCommands,
 } from "../redux/slices/serverStateReducer";
@@ -36,6 +37,7 @@ function useSetup(
   useEffect(() => {
     (async () => {
       if (
+        client &&
         !requestedTitle &&
         !active &&
         title === "New Session" &&
@@ -59,6 +61,10 @@ function useSetup(
 
     client.onAddContextItem((item) => {
       dispatch(addContextItem(item));
+    });
+
+    client.onConfigUpdate((config) => {
+      dispatch(setConfig(config));
     });
 
     fetch(`${serverUrl}/slash_commands`).then(async (resp) => {

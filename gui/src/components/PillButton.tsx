@@ -18,6 +18,8 @@ import HeaderButtonWithText from "./HeaderButtonWithText";
 import FileIcon from "./FileIcon";
 import { ContextItem } from "../schema/ContextItem";
 import { postToIde } from "../vscode";
+import { useDispatch } from "react-redux";
+import { setEditingAtIds } from "../redux/slices/sessionStateReducer";
 
 const Button = styled.button<{ fontSize?: number }>`
   border: none;
@@ -142,6 +144,7 @@ const ClickableInsidePillButton = styled(HeaderButtonWithText)<{
 const PillButton = (props: PillButtonProps) => {
   const [isHovered, setIsHovered] = useState(false);
   const client = useContext(GUIClientContext);
+  const dispatch = useDispatch();
 
   const [warning, setWarning] = useState<string | undefined>(undefined);
 
@@ -243,7 +246,12 @@ const PillButton = (props: PillButtonProps) => {
               }
               onClick={() => {
                 if (!props.editing) {
-                  client?.setEditingAtIds([props.item.description.id.item_id]);
+                  dispatch(
+                    setEditingAtIds({
+                      ids: [props.item.description.id],
+                      index: props.index,
+                    })
+                  );
                 }
                 if (!props.editingAny) {
                   props.prefixInputWithEdit?.(true);

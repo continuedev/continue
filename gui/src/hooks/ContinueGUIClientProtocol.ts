@@ -1,5 +1,6 @@
 import { ContextItem } from "../schema/ContextItem";
 import { ContextItemId } from "../schema/ContextItemId";
+import { ContinueConfig } from "../schema/ContinueConfig";
 import { SessionState, StepDescription } from "../schema/SessionState";
 import { SessionUpdate } from "../schema/SessionUpdate";
 import AbstractContinueGUIClientProtocol from "./AbstractContinueGUIClientProtocol";
@@ -102,6 +103,16 @@ class ContinueGUIClientProtocol extends AbstractContinueGUIClientProtocol {
     });
   }
 
+  onConfigUpdate(callback: (config: ContinueConfig) => void) {
+    this.messenger?.onMessageType("config_update", (data: any) => {
+      callback(data);
+    });
+  }
+
+  getConfig(): Promise<ContinueConfig> {
+    return this.messenger?.sendAndReceive("get_config", {});
+  }
+
   onAddContextItem(callback: (item: ContextItem) => void) {
     this.messenger?.onMessageType("add_context_item", (data: ContextItem) => {
       callback(data);
@@ -175,8 +186,8 @@ class ContinueGUIClientProtocol extends AbstractContinueGUIClientProtocol {
     });
   }
 
-  setSystemMessage(message: string): void {
-    this.messenger?.send("set_system_message", { message });
+  setSystemMessage(system_message: string): void {
+    this.messenger?.send("set_system_message", { system_message });
   }
 
   setTemperature(temperature: number): void {

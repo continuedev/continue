@@ -3,6 +3,7 @@ import os
 import traceback
 import uuid
 from typing import Dict, List, Optional
+import inspect
 
 from ..libs.util.strings import remove_quotes_and_escapes
 
@@ -274,18 +275,27 @@ class Autopilot:
                 )
             elif isinstance(update, DeltaStep) or isinstance(update, SetStep):
                 return SessionUpdate(index=index, update=update)
+            elif update is None:
+                return None
             else:
                 logger.warning(f"Unknown type yielded from Step: {update}")
 
         # Try to run step and handle errors
         try:
-            async for update in step.run(self.sdk):
-                if self.stopped:
-                    for update in step.on_stop(self.sdk):
-                        yield handle_step_update(update)
-                    return
+            if inspect.iscoroutinefunction(step.run):
+                await step.run(self.sdk)
+            elif inspect.isasyncgenfunction(step.run):
+                async for update in step.run(self.sdk):
+                    if self.stopped:
+                        for update in step.on_stop(self.sdk):
+                            yield handle_step_update(update)
+                        return
 
-                yield handle_step_update(update)
+                    yield handle_step_update(update)
+            else:
+                logger.warning(
+                    f"{step.__class__.__name__}.run is not a coroutine function or async generator"
+                )
 
         except Exception as e:
             continue_custom_exception = self.handle_error(e, step)
@@ -383,11 +393,6 @@ class Autopilot:
     async def select_context_item(self, id: str, query: str):
         # sdk.gui.select_context_item???
         await self.context_manager.select_context_item(id, query)
-        await self.update_subscribers()
-
-    async def set_config_attr(self, key_path: List[str], value: redbaron.RedBaron):
-        # Bruh
-        edit_config_property(key_path, value)
         await self.update_subscribers()
 
     # region Context Groups

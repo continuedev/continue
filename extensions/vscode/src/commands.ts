@@ -83,7 +83,10 @@ const commandsMap: { [command: string]: (...args: any) => any } = {
       title: "Continue Quick Input",
     });
     if (text) {
-      ideProtocolClient.sendMainUserInput(text);
+      debugPanelWebview?.postMessage({
+        type: "userInput",
+        input: text,
+      });
       if (!text.startsWith("/edit")) {
         vscode.commands.executeCommand("continue.continueGUIView.focus");
       }

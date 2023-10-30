@@ -83,7 +83,7 @@ class HighlightedCodeContextProvider(ContextProvider):
         lines = item.description.name.split("(")[1].split(")")[0].split("-")
         rif = RangeInFile(
             filepath=item.description.description,
-            range=Range.from_shorthand(int(lines[0]), 0, int(lines[1]), 0),
+            range=Range.from_shorthand(int(lines[0]) - 1, 0, int(lines[1]), 0),
         )
         contents = await ide.readRangeInFile(rif)
         return rif.with_contents(contents)

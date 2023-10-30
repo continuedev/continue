@@ -119,6 +119,12 @@ export const serverStateSlice = createSlice({
         contextProviders: action.payload,
       };
     },
+    setConfig: (state, action) => {
+      return {
+        ...state,
+        config: action.payload,
+      };
+    },
   },
 });
 
@@ -126,5 +132,6 @@ export const {
   temporarilyPushToUserInputQueue,
   setContextProviders,
   setSlashCommands,
+  setConfig,
 } = serverStateSlice.actions;
 export default serverStateSlice.reducer;

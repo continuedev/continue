@@ -1,5 +1,5 @@
 import threading
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Union
 from pydantic import BaseModel
 
 import redbaron
@@ -48,7 +48,18 @@ def edit_property(
 edit_lock = threading.Lock()
 
 
-def edit_config_property(key_path: List[str], value: redbaron.RedBaron):
+def edit_config_property(
+    key_path: List[str], value: Union[redbaron.RedBaron, str, float]
+):
+    """
+    key_path: list of strings representing the path to the property
+    value: redbaron node representing the value to set
+    """
+    if isinstance(value, str):
+        value = create_string_node(value)
+    elif isinstance(value, float):
+        value = create_float_node(value)
+
     with edit_lock:
         red = load_red()
         config = get_config_node(red)

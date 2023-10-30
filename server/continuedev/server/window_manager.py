@@ -1,7 +1,5 @@
 import traceback
-from typing import Dict, List, Optional
-
-from ..models.filesystem import RangeInFileWithContents
+from typing import Dict, Optional
 
 from ..core.context import ContextManager
 
@@ -21,18 +19,32 @@ from ..libs.util.devdata import dev_data_logger
 
 
 class Window:
-    # Do you want to have stubs for each? So that if it isn't there yet the functions aren't broken?
-    # Or force users to check?
-
-    # Might be a case where you want to use lazy initialization, or instead
-    # of having the WindowManager pass in the actual ide/gui objects, they pass in async getters
-    # I suppose this is just a python Future??????
-    # What you're doing by forcing the clients to check for None is probably bad practice.
-    # Deal with all of this from the parent.
     ide: Optional[IdeProtocolServer] = None
     gui: Optional[GUIProtocolServer] = None
     config: Optional[ContinueConfig] = None
     context_manager: ContextManager = ContextManager()
+
+    _error_loading_config: Optional[Exception] = None
+    _last_valid_config: Optional[ContinueConfig] = None
+
+    def load_config(self) -> ContinueConfig:
+        # Create necessary directories
+        getDiffsFolderPath()
+
+        try:
+            return ContinueConfig.load_default()
+        except Exception as e:
+            logger.error(f"Failed to load config.py: {traceback.format_exception(e)}")
+            self._error_loading_config = e
+
+            return (
+                ContinueConfig()
+                if self._last_valid_config is None
+                else self._last_valid_config
+            )
+
+    def __init__(self, config: Optional[ContinueConfig] = None) -> None:
+        self.config = config or self.load_config()
 
     def get_autopilot(self, session_state: SessionState) -> Autopilot:
         return Autopilot(
@@ -43,38 +55,35 @@ class Window:
             context_manager=self.context_manager,
         )
 
+    def get_config(self) -> ContinueConfig:
+        return self.config
+
     def is_closed(self) -> bool:
         return self.ide is None and self.gui is None
 
-    _last_valid_config: Optional[ContinueConfig] = None
+    async def reload_config(self):
+        self.load_config()
+        await self.config.models.start(
+            self.ide.window_info.unique_id,
+            self.config.system_message,
+            self.config.temperature,
+        )
 
     async def load(
         self, config: Optional[ContinueConfig] = None, only_reloading: bool = False
     ):
-        # Create necessary directories
-        getDiffsFolderPath()
+        # Need a non-step way of sending a notification to the GUI. Fine to be displayed similarly
 
-        try:
-            self.config = config or ContinueConfig.load_default()
-        except Exception as e:
-            logger.error(f"Failed to load config.py: {traceback.format_exception(e)}")
+        # formatted_err = "\n".join(traceback.format_exception(e))
+        # msg_step = MessageStep(
+        #     name="Invalid Continue Config File", message=formatted_err
+        # )
+        # msg_step.description = f"Falling back to default config settings due to the following error in `~/.continue/config.py`.\n```\n{formatted_err}\n```\n\nIt's possible this was caused by an update to the Continue config format. If you'd like to see the new recommended default `config.py`, check [here](https://github.com/continuedev/continue/blob/main/server/continuedev/libs/constants/default_config.py)."
+        # self.history.add_node(
+        #     HistoryNode(step=msg_step, observation=None, depth=0, active=False)
+        # )
 
-            self.config = (
-                ContinueConfig()
-                if self._last_valid_config is None
-                else self._last_valid_config
-            )
-
-            # Need a non-step way of sending a notification to the GUI. Fine to be displayed similarly
-
-            # formatted_err = "\n".join(traceback.format_exception(e))
-            # msg_step = MessageStep(
-            #     name="Invalid Continue Config File", message=formatted_err
-            # )
-            # msg_step.description = f"Falling back to default config settings due to the following error in `~/.continue/config.py`.\n```\n{formatted_err}\n```\n\nIt's possible this was caused by an update to the Continue config format. If you'd like to see the new recommended default `config.py`, check [here](https://github.com/continuedev/continue/blob/main/server/continuedev/libs/constants/default_config.py)."
-            # self.history.add_node(
-            #     HistoryNode(step=msg_step, observation=None, depth=0, active=False)
-            # )
+        if self._error_loading_config is not None:
             await self.ide.setFileOpen(getConfigFilePath())
 
         # Start models
@@ -102,6 +111,15 @@ class Window:
             self.ide,
             only_reloading=only_reloading,
         )
+
+        async def onFileSavedCallback(filepath: str, contents: str):
+            if filepath.endswith(".continue/config.py") or filepath.endswith(
+                ".continue\\config.py"
+            ):
+                self.config = self.load_config()
+                await self.gui.send_config_update()
+
+        self.ide.subscribeToFileSaved(onFileSavedCallback)
 
         # # Subscribe to highlighted code, pass to the context manager
         # def onHighlightedCodeCallback(
@@ -181,6 +199,8 @@ class WindowManager:
             sid=sid,
             get_autopilot=self.windows[window_id].get_autopilot,
             get_context_item=self.windows[window_id].context_manager.get_context_item,
+            get_config=self.windows[window_id].get_config,
+            reload_config=self.windows[window_id].reload_config,
         )
         self.windows[window_id].gui = gui
         self.guis[sid] = gui

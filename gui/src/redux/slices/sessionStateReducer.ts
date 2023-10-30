@@ -227,6 +227,48 @@ export const sessionStateSlice = createSlice({
         };
       }
     },
+    setEditingAtIds: (
+      state: SessionFullState,
+      {
+        payload,
+      }: { payload: { ids: ContextItemId[]; index: number | undefined } }
+    ) => {
+      const ids = payload.ids.map((id) => `${id.provider_title}-${id.item_id}`);
+      if (typeof payload.index === "undefined") {
+        return {
+          ...state,
+          context_items: state.context_items.map((item) => {
+            if (
+              ids.includes(
+                `${item.description.id.provider_title}-${item.description.id.item_id}`
+              )
+            ) {
+              return { ...item, editing: true };
+            }
+            return item;
+          }),
+        };
+      } else {
+        return {
+          ...state,
+          contextItemsAtIndex: {
+            ...state.contextItemsAtIndex,
+            [payload.index]: (
+              state.contextItemsAtIndex[payload.index] ?? []
+            ).map((item) => {
+              if (
+                ids.includes(
+                  `${item.description.id.provider_title}-${item.description.id.item_id}`
+                )
+              ) {
+                return { ...item, editing: true };
+              }
+              return item;
+            }),
+          },
+        };
+      }
+    },
   },
 });
 
@@ -241,5 +283,6 @@ export const {
   addHighlightedCode,
   deleteContextWithIds,
   setTitle,
+  setEditingAtIds,
 } = sessionStateSlice.actions;
 export default sessionStateSlice.reducer;

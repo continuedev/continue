@@ -287,13 +287,6 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
     def onOpenGUIRequest(self):
         pass
 
-    def __get_autopilot(self):
-        if self.session_id not in self.session_manager.sessions:
-            return None
-
-        autopilot = self.session_manager.sessions[self.session_id].autopilot
-        return autopilot if autopilot.started else None
-
     def onFileEdits(self, edits: List[FileEditWithFullContents]):
         pass
 
@@ -368,10 +361,6 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
                 create_async_task(autopilot.reload_config(), self.on_error)
 
     ## END Subscriptions ##
-
-    def onMainUserInput(self, input: str):
-        if autopilot := self.__get_autopilot():
-            create_async_task(autopilot.accept_user_input(input), self.on_error)
 
     # Request information. Session doesn't matter.
     async def getOpenFiles(self) -> List[str]:
