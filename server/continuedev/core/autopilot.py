@@ -263,31 +263,36 @@ class Autopilot:
             depth=self._step_depth,
         )
 
+        def handle_step_update(update: UpdateStep):
+            if isinstance(update, SessionUpdate):
+                return update
+            elif isinstance(update, str):
+                return SessionUpdate(index=index, update=DeltaStep(description=update))
+            elif isinstance(update, Observation):
+                return SessionUpdate(
+                    index=index, update=DeltaStep(observations=[update])
+                )
+            elif isinstance(update, DeltaStep) or isinstance(update, SetStep):
+                return SessionUpdate(index=index, update=update)
+            else:
+                logger.warning(f"Unknown type yielded from Step: {update}")
+
         # Try to run step and handle errors
         try:
             async for update in step.run(self.sdk):
                 if self.stopped:
-                    # TODO: Early stopping
+                    for update in step.on_stop(self.sdk):
+                        yield handle_step_update(update)
                     return
 
-                if isinstance(update, str):
-                    yield SessionUpdate(
-                        index=index, update=DeltaStep(description=update)
-                    )
-                elif isinstance(update, Observation):
-                    yield SessionUpdate(
-                        index=index, update=DeltaStep(observations=[update])
-                    )
-                elif isinstance(update, DeltaStep) or isinstance(update, SetStep):
-                    yield SessionUpdate(index=index, update=update)
-                else:
-                    logger.warning(f"Unknown type yielded from Step: {update}")
+                yield handle_step_update(update)
+
         except Exception as e:
             continue_custom_exception = self.handle_error(e, step)
 
-            yield SessionUpdate(index=index, update=DeltaStep(hide=False))
+            yield SessionUpdate(index=index, update=SetStep(hide=False))
             while self.session_state.history[index].name != step.name:
-                yield SessionUpdate(index=index, update=DeltaStep(hide=True))
+                yield SessionUpdate(index=index, update=SetStep(hide=True))
                 index -= 1
 
             # i is now the index of the step that we want to show/rerun
@@ -336,6 +341,9 @@ class Autopilot:
             await self.handle_session_update(update)
 
     async def handle_session_update(self, update: AutopilotGeneratorOutput):
+        if update is None:
+            return
+
         if isinstance(update, StepDescription):
             index = len(self.session_state.history)
             self.session_state.history.append(update)
@@ -371,16 +379,6 @@ class Autopilot:
             await self.run_step(next_step)
 
         self.config.models.remove_logger(logger_id)
-
-    async def reject_diff(self, step_index: int):
-        # idk...
-        # Hide the edit step and the UserInputStep before it
-        self.history.timeline[step_index].step.hide = True
-        for i in range(step_index - 1, -1, -1):
-            if isinstance(self.history.timeline[i].step, UserInputStep):
-                self.history.timeline[i].step.hide = True
-                break
-        await self.update_subscribers()
 
     async def select_context_item(self, id: str, query: str):
         # sdk.gui.select_context_item???

@@ -699,10 +699,6 @@ class IdeProtocolClient {
     const contents = await this.getTerminalContents();
     this.send("debugTerminal", v4(), { contents });
   }
-
-  deleteAtIndex(index: number) {
-    this.send("deleteAtIndex", v4(), { index });
-  }
 }
 
 export default IdeProtocolClient;

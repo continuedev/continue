@@ -1,10 +1,11 @@
 import { Dispatch } from "@reduxjs/toolkit";
 import ContinueGUIClientProtocol from "./ContinueGUIClientProtocol";
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   addContextItem,
   addHighlightedCode,
   processSessionUpdate,
+  setActive,
   setTitle,
 } from "../redux/slices/sessionStateReducer";
 import { setServerStatusMessage } from "../redux/slices/miscSlice";
@@ -22,24 +23,30 @@ function useSetup(
 ) {
   const serverUrl = useSelector((store: RootStore) => store.config.apiUrl);
   const active = useSelector((store: RootStore) => store.sessionState.active);
-  const nVisibleSteps = useSelector(
-    (store: RootStore) =>
-      store.sessionState.history.filter((step) => !step.hide).length
-  );
   const title = useSelector((store: RootStore) => store.sessionState.title);
   const history = useSelector((store: RootStore) => store.sessionState.history);
 
-  const possiblyGetTitle = useCallback(async () => {
-    console.log("possiblyGetTitle", title, history);
-    if (
-      !active &&
-      title === "New Session" &&
-      history.filter((step) => !step.hide).length > 3
-    ) {
-      const title = await client.getSessionTitle(history);
-      dispatch(setTitle(title));
-    }
-  }, [active, nVisibleSteps, history, title, client]);
+  const [requestedTitle, setRequestedTitle] = useState(false);
+
+  useEffect(() => {
+    // Override persisted state
+    dispatch(setActive(false));
+  }, []);
+
+  useEffect(() => {
+    (async () => {
+      if (
+        !requestedTitle &&
+        !active &&
+        title === "New Session" &&
+        history.filter((step) => !step.hide).length > 2
+      ) {
+        setRequestedTitle(true);
+        const title = await client.getSessionTitle(history);
+        dispatch(setTitle(title));
+      }
+    })();
+  }, [active, history, title, client, requestedTitle]);
 
   // Setup requiring client
   useEffect(() => {
@@ -48,7 +55,6 @@ function useSetup(
     // Listen for updates to the session state
     client.onSessionUpdate((update) => {
       dispatch(processSessionUpdate(update));
-      possiblyGetTitle();
     });
 
     client.onAddContextItem((item) => {
@@ -80,12 +86,14 @@ function useSetup(
         case "serverStatus":
           dispatch(setServerStatusMessage(event.data.message));
           break;
+        case "stopSession":
+          client?.stopSession();
+          break;
       }
     };
     window.addEventListener("message", eventListener);
-    postToIde("onLoad", {});
     return () => window.removeEventListener("message", eventListener);
-  }, []);
+  }, [client]);
 
   // Save theme colors to local storage
   useEffect(() => {

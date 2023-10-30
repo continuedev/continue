@@ -1,5 +1,8 @@
+import asyncio
 import os
 from typing import Coroutine, List, Optional, Union
+
+from ..plugins.context_providers.highlighted_code import HighlightedCodeContextProvider
 
 
 from ..models.filesystem import RangeInFile
@@ -74,6 +77,10 @@ class ContinueSDK:
     def context_items(self) -> List[ContextItem]:
         return self.__autopilot.session_state.context_items
 
+    @property
+    def stopped(self):
+        return self.__autopilot.stopped
+
     def write_log(self, message: str):
         self.history.timeline[self.history.current_index].logs.append(message)
 
@@ -94,8 +101,7 @@ class ContinueSDK:
             raise Exception(f"Path {path} does not exist")
 
     async def run_step(self, step: Step) -> StepGenerator:
-        async for update in self.__autopilot.run_step(step):
-            yield update
+        await self.__autopilot.run_step(step)
 
     async def apply_filesystem_edit(
         self, edit: FileSystemEdit, name: str = None, description: str = None
@@ -183,18 +189,20 @@ class ContinueSDK:
         path = await self._ensure_absolute_path(path)
         return await self.run_step(FileSystemEditStep(edit=DeleteDirectory(path=path)))
 
-    def get_code_context(
+    async def get_code_context(
         self, only_editing: bool = False
     ) -> List[RangeInFileWithContents]:
-        highlighted_ranges = self.__autopilot.context_manager.context_providers[
-            "code"
-        ].highlighted_ranges
-        context = (
-            list(filter(lambda x: x.item.editing, highlighted_ranges))
-            if only_editing
-            else highlighted_ranges
+        editing = filter(
+            lambda x: x.editable and (x.editing or not only_editing), self.context_items
         )
-        return [c.rif for c in context]
+        return await asyncio.gather(
+            *[
+                HighlightedCodeContextProvider.get_range_in_file_with_contents(
+                    self.ide, item
+                )
+                for item in editing
+            ]
+        )
 
     async def add_context_item(self, item: ContextItem):
         await self.gui.add_context_item(item)

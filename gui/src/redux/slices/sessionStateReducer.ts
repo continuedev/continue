@@ -88,6 +88,7 @@ export const sessionStateSlice = createSlice({
           ...state,
           history: payload.session_state.history,
           context_items: payload.session_state.context_items,
+          contextItemsAtIndex: {},
           active: false,
           title: payload.title,
         };
@@ -96,6 +97,7 @@ export const sessionStateSlice = createSlice({
         ...state,
         history: [],
         context_items: [],
+        contextItemsAtIndex: {},
         active: false,
         title: "New Session",
       };

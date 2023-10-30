@@ -302,7 +302,9 @@ class EditHighlightedCodeStep(Step):
         return "Editing code"
 
     async def run(self, sdk: ContinueSDK):
-        range_in_files = sdk.get_code_context(only_editing=True)
+        yield "Editing file..."
+
+        range_in_files = await sdk.get_code_context(only_editing=True)
 
         # If nothing highlighted, insert at the cursor if possible
         if len(range_in_files) == 0:

@@ -11,6 +11,10 @@ from typing import (
     Optional,
 )
 
+from ...core.main import SessionState
+
+from ...core.autopilot import Autopilot
+
 from ...libs.util.create_async_task import create_async_task
 from ...models.filesystem import (
     FileSystem,
@@ -173,8 +177,6 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
             self.onAcceptRejectDiff(data["accepted"], data["stepIndex"])
         elif msg.message_type == "mainUserInput":
             self.onMainUserInput(data["input"])
-        elif msg.message_type == "deleteAtIndex":
-            self.onDeleteAtIndex(data["index"])
         elif msg.message_type in [
             "highlightedCode",
             "openFiles",
@@ -273,13 +275,6 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
     def onAcceptRejectDiff(self, accepted: bool, step_index: int):
         posthog_logger.capture_event("accept_reject_diff", {"accepted": accepted})
         dev_data_logger.capture("accept_reject_diff", {"accepted": accepted})
-
-        if not accepted:
-            if autopilot := self.__get_autopilot():
-                create_async_task(
-                    autopilot.reject_diff(step_index),
-                    self.on_error,
-                )
 
     def onFileSystemUpdate(self, update: FileSystemEdit):
         # Access to Autopilot (so SessionManager)

@@ -76,18 +76,25 @@ class HighlightedCodeContextProvider(ContextProvider):
 
         return items
 
-    async def get_chat_message(self, item: ContextItem) -> List[ContextItem]:
+    @staticmethod
+    async def get_range_in_file_with_contents(
+        ide, item: ContextItem
+    ) -> RangeInFileWithContents:
         lines = item.description.name.split("(")[1].split(")")[0].split("-")
-        fresh_content = await self.ide.readRangeInFile(
-            RangeInFile(
-                filepath=item.description.description,
-                range=Range.from_shorthand(int(lines[0]), 0, int(lines[1]), 0),
-            )
+        rif = RangeInFile(
+            filepath=item.description.description,
+            range=Range.from_shorthand(int(lines[0]), 0, int(lines[1]), 0),
         )
+        contents = await ide.readRangeInFile(rif)
+        return rif.with_contents(contents)
 
+    async def get_chat_message(self, item: ContextItem) -> List[ContextItem]:
+        rif = await HighlightedCodeContextProvider.get_range_in_file_with_contents(
+            self.ide, item
+        )
         return ChatMessage(
             role="user",
-            content=f"Code in this file is highlighted ({item.description.name}):\n```\n{fresh_content}\n```",
+            content=f"Code in this file is highlighted ({item.description.name}):\n```\n{rif.contents}\n```",
             summary=f"Code in this file is highlighted: {item.description.name}",
         )
 

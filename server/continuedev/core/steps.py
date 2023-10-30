@@ -22,7 +22,14 @@ from ..models.filesystem_edit import (
     FileSystemEdit,
 )
 
-from .main import ChatMessage, ContinueCustomException, SetStep, Step
+from .main import (
+    ChatMessage,
+    ContinueCustomException,
+    DeltaStep,
+    SessionUpdate,
+    SetStep,
+    Step,
+)
 from .observation import TextObservation, UserInputObservation
 
 
@@ -188,6 +195,13 @@ class DefaultModelEditCodeStep(Step):
             return "No edits were made"
         else:
             return None
+
+    def on_stop(self, sdk: ContinueSDK):
+        index = len(sdk.history)
+        for i in range(index - 1, -1, -1):
+            yield SessionUpdate(index=i, update=SetStep(hide=True))
+            if sdk.history[i].step_type == "UserInputStep":
+                break
 
     async def get_prompt_parts(
         self, rif: RangeInFileWithContents, sdk: ContinueSDK, full_file_contents: str
@@ -418,7 +432,7 @@ Please output the code to be inserted at the cursor in order to fulfill the user
                 + "\n".join(full_suffix_lines)
             )
 
-            step_index = sdk.history.current_index
+            step_index = len(sdk.history) - 1
 
             await sdk.ide.showDiff(rif.filepath, new_file_contents, step_index)
 
@@ -617,6 +631,9 @@ Please output the code to be inserted at the cursor in order to fulfill the user
         try:
             last_task_time = time.time()
             async for chunk in generator:
+                if sdk.stopped:
+                    return
+
                 # Stop early if it is repeating the file_suffix or the step was deleted
                 if repeating_file_suffix:
                     break

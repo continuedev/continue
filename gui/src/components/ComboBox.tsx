@@ -788,7 +788,13 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
   }, [inputFocused]);
 
   return (
-    <div ref={topRef}>
+    <div
+      ref={topRef}
+      style={{
+        paddingTop: "4px",
+        backgroundColor: vscBackground,
+      }}
+    >
       {selectedContextItems.length === 0 && props.isMainInput && (
         <div
           style={{

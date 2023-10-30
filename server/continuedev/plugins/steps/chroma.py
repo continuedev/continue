@@ -52,7 +52,7 @@ class CreateCodebaseIndexChroma(Step):
         if index.exists():
             return
 
-        yield DeltaStep(hide=False)
+        yield SetStep(hide=False)
         async for progress in index.build(sdk, ignore_files=self.ignore_files):
             yield SetStep(
                 description=f"Generating codebase embeddings... {int(progress*100)}%",
@@ -122,7 +122,7 @@ class AnswerQuestionChroma(Step):
             context_items.append(ctx_item)
             await sdk.add_context_item(ctx_item)
 
-        yield DeltaStep(hide=True)
+        yield SetStep(hide=True)
 
         model = sdk.models.chat.model
         # if model == "gpt-4":

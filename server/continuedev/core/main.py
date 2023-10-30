@@ -135,11 +135,6 @@ class DeltaStep(BaseModel):
         return super().dict(*args, **kwargs)
 
 
-UpdateStep = Union[
-    DeltaStep, SetStep
-]  # TODO: Pydantic doesn't seem to be respecting the type, changes to the other on init
-
-
 class StepDescription(BaseModel):
     step_type: str
     name: str
@@ -166,7 +161,7 @@ class StepDescription(BaseModel):
             )
         ]
 
-    def update(self, update: UpdateStep):
+    def update(self, update: "UpdateStep"):
         if isinstance(update, DeltaStep):
             for key, value in update.dict(exclude_none=True).items():
                 setattr(self, key, getattr(self, key) + value)
@@ -177,7 +172,7 @@ class StepDescription(BaseModel):
 
 class SessionUpdate(BaseModel):
     index: int
-    update: UpdateStep
+    update: "UpdateStep"
     stop: Optional[bool] = None
 
     class Config:
@@ -189,6 +184,10 @@ class SessionUpdate(BaseModel):
         d["delta"] = isinstance(self.update, DeltaStep)
         return d
 
+
+UpdateStep = Union[DeltaStep, SetStep, SessionUpdate]
+
+SessionUpdate.update_forward_refs()
 
 StepGenerator = AsyncGenerator[Union[str, UpdateStep, Observation], None]
 AutopilotGeneratorOutput = Union[SessionUpdate, StepDescription]
@@ -338,6 +337,9 @@ class Step(ContinueBaseModel):
         if self.description is not None:
             return self.description
         return "Running step: " + self.name
+
+    def on_stop(self, sdk: ContinueSDK):
+        yield None
 
     def dict(self, *args, **kwargs):
         d = super().dict(*args, **kwargs)
