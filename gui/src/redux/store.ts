@@ -7,11 +7,7 @@ import serverStateReducer from "./slices/serverStateReducer";
 import sessionStateReducer, {
   SessionFullState,
 } from "./slices/sessionStateReducer";
-import {
-  ContextProvider,
-  ContinueConfig,
-  SlashCommand,
-} from "../schema/ContinueConfig";
+import { ContinueConfig } from "../schema/ContinueConfig";
 import { ContextItem } from "../schema/ContextItem";
 import { ContextProviderDescription } from "../schema/ContextProviderDescription";
 import { SlashCommandDescription } from "../schema/SlashCommandDescription";
@@ -30,7 +26,6 @@ export interface RootStore {
     windowId: string | undefined;
   };
   misc: {
-    highlightedCode: RangeInFile | undefined;
     takenAction: boolean;
     serverStatusMessage: string;
   };

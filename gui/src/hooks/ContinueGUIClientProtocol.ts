@@ -96,6 +96,12 @@ class ContinueGUIClientProtocol extends AbstractContinueGUIClientProtocol {
     });
   }
 
+  onAddContextItem(callback: (item: ContextItem) => void) {
+    this.messenger?.onMessageType("add_context_item", (data: ContextItem) => {
+      callback(data);
+    });
+  }
+
   onAvailableSlashCommands(
     callback: (commands: { name: string; description: string }[]) => void
   ) {
@@ -139,6 +145,13 @@ class ContinueGUIClientProtocol extends AbstractContinueGUIClientProtocol {
 
   selectContextItem(id: string, query: string): void {
     this.messenger?.send("select_context_item", { id, query });
+  }
+
+  async getContextItem(id: string, query: string): Promise<ContextItem> {
+    return await this.messenger?.sendAndReceive("get_context_item", {
+      id,
+      query,
+    });
   }
 
   selectContextItemAtIndex(id: string, query: string, index: number): void {

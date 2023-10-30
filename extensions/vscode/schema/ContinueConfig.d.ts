@@ -136,10 +136,6 @@ export type PolicyOverride = Policy;
  */
 export type Title1 = string;
 /**
- * The ContinueSDK instance accessible by the ContextProvider
- */
-export type Sdk = ContinueSDK;
-/**
  * The display title of the ContextProvider shown in the dropdown menu
  */
 export type DisplayTitle = string;
@@ -305,7 +301,7 @@ export interface Policy {
  */
 export interface ContextProvider {
   title: Title1;
-  sdk?: Sdk;
+  ide?: Ide;
   display_title: DisplayTitle;
   description: Description3;
   dynamic: Dynamic;
@@ -313,10 +309,7 @@ export interface ContextProvider {
   selected_items?: SelectedItems;
   [k: string]: unknown;
 }
-/**
- * To avoid circular imports
- */
-export interface ContinueSDK {
+export interface Ide {
   [k: string]: unknown;
 }
 /**

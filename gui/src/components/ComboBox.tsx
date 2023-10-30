@@ -48,7 +48,12 @@ import {
 } from "../util/jetbrains";
 import FileIcon from "./FileIcon";
 import { ContextItem } from "../schema/ContextItem";
-import { newSession, setActive } from "../redux/slices/sessionStateReducer";
+import {
+  addContextItem,
+  addContextItemAtIndex,
+  newSession,
+  setActive,
+} from "../redux/slices/sessionStateReducer";
 
 const SEARCH_INDEX_NAME = "continue_context_items";
 
@@ -345,11 +350,9 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
   });
   const selectedContextItems = useSelector((state: RootStore) => {
     if (props.index) {
-      // TODO
-      return [];
-      // return state.serverState.history.timeline[props.index].context_used || [];
+      return state.sessionState.contextItemsAtIndex[props.index] || [];
     } else {
-      return state.serverState.selectedContextItems;
+      return state.sessionState.context_items;
     }
   });
   const timeline = useSelector(
@@ -390,6 +393,20 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
   }, [nestedContextProvider]);
 
   const [prevInputValue, setPrevInputValue] = useState("");
+
+  const selectContextItem = useCallback(
+    async (id: string, query: string) => {
+      const contextItem = await client?.getContextItem(id, query);
+      if (props.isMainInput) {
+        dispatch(addContextItem(contextItem));
+      } else if (props.index) {
+        dispatch(
+          addContextItemAtIndex({ item: contextItem, index: props.index })
+        );
+      }
+    },
+    [client, props.index]
+  );
 
   const onInputValueChangeCallback = useCallback(
     ({ inputValue, highlightedIndex }: any) => {
@@ -658,17 +675,6 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
 
   const deleteButtonDivRef = React.useRef<HTMLDivElement>(null);
 
-  const selectContextItem = useCallback(
-    (id: string, query: string) => {
-      if (props.isMainInput) {
-        client?.selectContextItem(id, query);
-      } else if (props.index) {
-        client?.selectContextItemAtIndex(id, query, props.index);
-      }
-    },
-    [client, props.index]
-  );
-
   const selectContextItemFromDropdown = useCallback(
     (event: any) => {
       const newItem = items[downshiftProps.highlightedIndex];
@@ -865,106 +871,98 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
           >
             <TrashIcon width="1.4em" height="1.4em" />
           </HiddenHeaderButtonWithText>
-          {(props.isMainInput
-            ? selectedContextItems
-            : (timeline[props.index!].context_used as any) || []
-          )
-            // TODO: Need to store context_used somewhere
-            .map((item, idx) => {
-              return (
-                <PillButton
-                  areMultipleItems={selectedContextItems.length > 1}
-                  key={`${item.description.id.item_id}${idx}`}
-                  item={item}
-                  editing={
-                    item.editing &&
-                    (inputRef.current as any)?.value?.startsWith("/edit")
-                  }
-                  editingAny={(inputRef.current as any)?.value?.startsWith(
-                    "/edit"
-                  )}
-                  stepIndex={props.index}
-                  index={idx}
-                  onDelete={() => {
-                    client?.deleteContextWithIds(
-                      [item.description.id],
-                      props.index
-                    );
-                    inputRef.current?.focus();
-                    if (
-                      (item.description.id.item_id ===
-                        focusedContextItem?.description.id.item_id &&
-                        focusedContextItem?.description.id.provider_name ===
-                          item.description.id.provider_name) ||
-                      (item.description.id.item_id ===
-                        previewingContextItem?.description.id.item_id &&
-                        previewingContextItem?.description.id.provider_name ===
-                          item.description.id.provider_name)
-                    ) {
-                      setPreviewingContextItem(undefined);
-                      setFocusedContextItem(undefined);
-                    }
-                  }}
-                  onClick={(e) => {
-                    if (
-                      item.description.id.item_id ===
-                        focusedContextItem?.description.id.item_id &&
+          {selectedContextItems.map((item, idx) => {
+            return (
+              <PillButton
+                areMultipleItems={selectedContextItems.length > 1}
+                key={`${item.description.id.item_id}${idx}`}
+                item={item}
+                editing={
+                  item.editing &&
+                  (inputRef.current as any)?.value?.startsWith("/edit")
+                }
+                editingAny={(inputRef.current as any)?.value?.startsWith(
+                  "/edit"
+                )}
+                stepIndex={props.index}
+                index={idx}
+                onDelete={() => {
+                  client?.deleteContextWithIds(
+                    [item.description.id],
+                    props.index
+                  );
+                  inputRef.current?.focus();
+                  if (
+                    (item.description.id.item_id ===
+                      focusedContextItem?.description.id.item_id &&
                       focusedContextItem?.description.id.provider_name ===
-                        item.description.id.provider_name
-                    ) {
-                      setFocusedContextItem(undefined);
-                    } else {
-                      setFocusedContextItem(item);
-                    }
-                  }}
-                  onBlur={() => {
-                    setFocusedContextItem(undefined);
-                  }}
-                  toggleViewContent={() => {
-                    setPreviewingContextItem((prev) => {
-                      if (!prev) return item;
-                      if (
-                        prev.description.id.item_id ===
-                          item.description.id.item_id &&
-                        prev.description.id.provider_name ===
-                          item.description.id.provider_name
-                      ) {
-                        return undefined;
-                      } else {
-                        return item;
-                      }
-                    });
-                  }}
-                  previewing={
-                    item.description.id.item_id ===
+                        item.description.id.provider_name) ||
+                    (item.description.id.item_id ===
                       previewingContextItem?.description.id.item_id &&
-                    previewingContextItem?.description.id.provider_name ===
-                      item.description.id.provider_name
+                      previewingContextItem?.description.id.provider_name ===
+                        item.description.id.provider_name)
+                  ) {
+                    setPreviewingContextItem(undefined);
+                    setFocusedContextItem(undefined);
                   }
-                  focusing={
+                }}
+                onClick={(e) => {
+                  if (
                     item.description.id.item_id ===
                       focusedContextItem?.description.id.item_id &&
                     focusedContextItem?.description.id.provider_name ===
                       item.description.id.provider_name
+                  ) {
+                    setFocusedContextItem(undefined);
+                  } else {
+                    setFocusedContextItem(item);
                   }
-                  prefixInputWithEdit={(should) => {
+                }}
+                onBlur={() => {
+                  setFocusedContextItem(undefined);
+                }}
+                toggleViewContent={() => {
+                  setPreviewingContextItem((prev) => {
+                    if (!prev) return item;
                     if (
-                      !should &&
-                      inputRef.current?.value.startsWith("/edit")
+                      prev.description.id.item_id ===
+                        item.description.id.item_id &&
+                      prev.description.id.provider_name ===
+                        item.description.id.provider_name
                     ) {
-                      downshiftProps.setInputValue(
-                        inputRef.current?.value.replace("/edit ", "")
-                      );
+                      return undefined;
+                    } else {
+                      return item;
                     }
-                    if (downshiftProps.inputValue.startsWith("/edit")) return;
+                  });
+                }}
+                previewing={
+                  item.description.id.item_id ===
+                    previewingContextItem?.description.id.item_id &&
+                  previewingContextItem?.description.id.provider_name ===
+                    item.description.id.provider_name
+                }
+                focusing={
+                  item.description.id.item_id ===
+                    focusedContextItem?.description.id.item_id &&
+                  focusedContextItem?.description.id.provider_name ===
+                    item.description.id.provider_name
+                }
+                prefixInputWithEdit={(should) => {
+                  if (!should && inputRef.current?.value.startsWith("/edit")) {
                     downshiftProps.setInputValue(
-                      `/edit ${downshiftProps.inputValue}`
+                      inputRef.current?.value.replace("/edit ", "")
                     );
-                    inputRef.current?.focus();
-                  }}
-                />
-              );
-            })}
+                  }
+                  if (downshiftProps.inputValue.startsWith("/edit")) return;
+                  downshiftProps.setInputValue(
+                    `/edit ${downshiftProps.inputValue}`
+                  );
+                  inputRef.current?.focus();
+                }}
+              />
+            );
+          })}
           {/* {selectedContextItems.length > 0 && (
           <HeaderButtonWithText
             onClick={() => {

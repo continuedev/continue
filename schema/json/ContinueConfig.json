@@ -70,6 +70,7 @@
         },
         "description": {
           "title": "Description",
+          "default": "",
           "type": "string"
         },
         "class_name": {
@@ -298,12 +299,6 @@
       "type": "object",
       "properties": {}
     },
-    "ContinueSDK": {
-      "title": "ContinueSDK",
-      "description": "To avoid circular imports",
-      "type": "object",
-      "properties": {}
-    },
     "ContextItemId": {
       "title": "ContextItemId",
       "description": "A ContextItemId is a unique identifier for a ContextItem.",
@@ -384,14 +379,8 @@
           "description": "The title of the ContextProvider. This is what must be typed in the input to trigger the ContextProvider.",
           "type": "string"
         },
-        "sdk": {
-          "title": "Sdk",
-          "description": "The ContinueSDK instance accessible by the ContextProvider",
-          "allOf": [
-            {
-              "$ref": "#/definitions/ContinueSDK"
-            }
-          ]
+        "ide": {
+          "title": "Ide"
         },
         "display_title": {
           "title": "Display Title",

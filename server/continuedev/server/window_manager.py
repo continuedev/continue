@@ -1,5 +1,13 @@
 import traceback
-from typing import Dict, Optional
+from typing import Dict, List, Optional
+
+from ..models.filesystem import RangeInFileWithContents
+
+from ..core.context import ContextManager
+
+from ..plugins.context_providers.highlighted_code import HighlightedCodeContextProvider
+
+from ..plugins.context_providers.file import FileContextProvider
 
 from ..core.main import SessionState
 from ..core.autopilot import Autopilot
@@ -24,6 +32,7 @@ class Window:
     ide: Optional[IdeProtocolServer] = None
     gui: Optional[GUIProtocolServer] = None
     config: Optional[ContinueConfig] = None
+    context_manager: ContextManager = ContextManager()
 
     def get_autopilot(self, session_state: SessionState) -> Autopilot:
         return Autopilot(
@@ -83,15 +92,25 @@ class Window:
         dev_data_logger.setup(self.config.user_token, self.config.data_server_url)
 
         # Load documents into the search index
-        # await self.context_manager.start(
-        #     self.sdk.config.context_providers
-        #     + [
-        #         HighlightedCodeContextProvider(ide=self.sdk.ide),
-        #         FileContextProvider(workspace_dir=self.sdk.ide.workspace_directory),
-        #     ],
-        #     self.sdk,
-        #     only_reloading=only_reloading,
-        # )
+        await self.context_manager.start(
+            self.config.context_providers
+            + [
+                HighlightedCodeContextProvider(ide=self.ide),
+                FileContextProvider(workspace_dir=self.ide.workspace_directory),
+            ],
+            self.ide,
+            only_reloading=only_reloading,
+        )
+
+        # # Subscribe to highlighted code, pass to the context manager
+        # def onHighlightedCodeCallback(
+        #     range_in_files: List[RangeInFileWithContents], edit: bool
+        # ):
+        #     if "file" in self.context_manager.context_providers:
+        #         self.context_manager.context_providers["file"].get_context_item
+        #         await self.gui.add_context_item(item)
+
+        # self.ide.subscribeToHighlightedCode(onHighlightedCodeCallback)
 
         # Load saved context groups
         # context_groups_file = getSavedContextGroupsPath()
@@ -160,6 +179,7 @@ class WindowManager:
             sio=sio,
             sid=sid,
             get_autopilot=self.windows[window_id].get_autopilot,
+            get_context_item=self.windows[window_id].context_manager.get_context_item,
         )
         self.windows[window_id].gui = gui
         self.guis[sid] = gui

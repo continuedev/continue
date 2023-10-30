@@ -1,7 +1,8 @@
 import asyncio
 import time
 from abc import abstractmethod
-from typing import Awaitable, Callable, Dict, List, Optional
+from typing import Any, Awaitable, Callable, Dict, List, Optional
+from ..server.protocols.ide_protocol import AbstractIdeProtocolServer
 
 from meilisearch_python_async import Client
 from pydantic import BaseModel, Field
@@ -48,9 +49,8 @@ class ContextProvider(BaseModel):
         ...,
         description="The title of the ContextProvider. This is what must be typed in the input to trigger the ContextProvider.",
     )
-    sdk: ContinueSDK = Field(
-        None, description="The ContinueSDK instance accessible by the ContextProvider"
-    )
+    ide: Any = None
+
     delete_documents: Callable[[List[str]], Awaitable] = Field(
         None, description="Function to delete documents"
     )
@@ -78,6 +78,10 @@ class ContextProvider(BaseModel):
         [], description="List of selected items in the ContextProvider"
     )
 
+    class Config:
+        arbitrary_types_allowed = True
+        exclude = {"ide", "delete_documents", "update_documents"}
+
     def get_description(self) -> ContextProviderDescription:
         return ContextProviderDescription(
             title=self.title,
@@ -89,18 +93,20 @@ class ContextProvider(BaseModel):
 
     def dict(self, *args, **kwargs):
         original_dict = super().dict(*args, **kwargs)
-        original_dict.pop("sdk", None)
+        original_dict.pop("ide", None)
         original_dict.pop("delete_documents", None)
         original_dict.pop("update_documents", None)
         return original_dict
 
-    async def start(self, sdk: ContinueSDK, delete_documents, update_documents):
+    async def start(
+        self, ide: AbstractIdeProtocolServer, delete_documents, update_documents
+    ):
         """
         Starts the context provider.
 
         Default implementation sets the sdk.
         """
-        self.sdk = sdk
+        self.ide = ide
         self.delete_documents = delete_documents
         self.update_documents = update_documents
 
@@ -159,20 +165,6 @@ class ContextProvider(BaseModel):
 
             return None
 
-    async def delete_context_with_ids(self, ids: List[ContextItemId]):
-        """
-        Deletes the ContextItems with the given IDs, lets ContextProviders recalculate.
-
-        Default implementation simply deletes those with the given ids.
-        """
-        id_strings = {id.to_string() for id in ids}
-        self.selected_items = list(
-            filter(
-                lambda item: item.description.id.to_string() not in id_strings,
-                self.selected_items,
-            )
-        )
-
     async def clear_context(self):
         """
         Clears all context.
@@ -198,13 +190,6 @@ class ContextProvider(BaseModel):
         if new_item := await self.get_item(id, query):
             self.selected_items.append(new_item)
 
-    async def manually_add_context_item(self, context_item: ContextItem):
-        for item in self.selected_items:
-            if item.description.id.item_id == context_item.description.id.item_id:
-                return
-
-        self.selected_items.append(context_item)
-
     async def preview_contents(self, id: ContextItemId):
         """
         Open a virtual file or otherwise preview the contents of the context provider in the IDE
@@ -212,7 +197,7 @@ class ContextProvider(BaseModel):
         if item := next(
             filter(lambda x: x.description.id == id, self.selected_items), None
         ):
-            await self.sdk.ide.showVirtualFile(item.description.name, item.content)
+            await self.ide.showVirtualFile(item.description.name, item.content)
 
 
 class ContextManager:
@@ -225,34 +210,6 @@ class ContextManager:
 
     It is responsible for compiling all of this information into a single prompt without exceeding the token limit.
     """
-
-    def get_provider_descriptions(self) -> List[ContextProviderDescription]:
-        """
-        Returns a list of ContextProviderDescriptions for each context provider.
-        """
-        return [
-            ContextProviderDescription(
-                title=provider.title,
-                display_title=provider.display_title,
-                description=provider.description,
-                dynamic=provider.dynamic,
-                requires_query=provider.requires_query,
-            )
-            for provider in self.context_providers.values()
-            if provider.title != "code"
-        ]
-
-    async def get_selected_items(self) -> List[ContextItem]:
-        """
-        Returns all of the selected ContextItems.
-        """
-        return sum(
-            [
-                await provider.get_selected_items()
-                for provider in self.context_providers.values()
-            ],
-            [],
-        )
 
     async def get_chat_messages(self) -> List[ChatMessage]:
         """
@@ -273,7 +230,7 @@ class ContextManager:
     async def start(
         self,
         context_providers: List[ContextProvider],
-        sdk: ContinueSDK,
+        ide: AbstractIdeProtocolServer,
         only_reloading: bool = False,
     ):
         """
@@ -292,7 +249,7 @@ class ContextManager:
 
         for provider in context_providers:
             await provider.start(
-                sdk,
+                ide,
                 ContextManager.delete_documents,
                 ContextManager.update_documents,
             )
@@ -315,7 +272,7 @@ class ContextManager:
 
             ti = time.time()
             await self.load_index(
-                sdk.ide.workspace_directory, providers_to_load=providers_to_load
+                ide.workspace_directory, providers_to_load=providers_to_load
             )
             logger.info(f"Loaded Meilisearch index in {time.time() - ti:.3f} seconds")
 
@@ -455,9 +412,9 @@ class ContextManager:
                     )
                 await self.load_index(workspace_dir, False)
 
-    async def select_context_item(self, id: str, query: str):
+    async def get_context_item(self, id: str, query: str) -> ContextItem:
         """
-        Selects the ContextItem with the given id.
+        Returns the ContextItem with the given id.
         """
         id: ContextItemId = ContextItemId.from_string(id)
         if id.provider_title not in self.provider_titles:
@@ -481,54 +438,8 @@ class ContextManager:
                 "query": query,
             },
         )
-        await self.context_providers[id.provider_title].add_context_item(id, query)
-
-    async def get_context_item(self, id: str, query: str) -> ContextItem:
-        """
-        Returns the ContextItem with the given id.
-        """
-        id: ContextItemId = ContextItemId.from_string(id)
-        if id.provider_title not in self.provider_titles:
-            raise ValueError(
-                f"Context provider with title {id.provider_title} not found"
-            )
 
         return await self.context_providers[id.provider_title].get_item(id, query)
-
-    async def delete_context_with_ids(self, ids: List[str]):
-        """
-        Deletes the ContextItems with the given IDs, lets ContextProviders recalculate.
-        """
-
-        # Group by provider title
-        provider_title_to_ids: Dict[str, List[ContextItemId]] = {}
-        for id in ids:
-            id: ContextItemId = ContextItemId.from_string(id)
-            if id.provider_title not in provider_title_to_ids:
-                provider_title_to_ids[id.provider_title] = []
-            provider_title_to_ids[id.provider_title].append(id)
-
-        # Recalculate context for each updated provider
-        for provider_title, ids in provider_title_to_ids.items():
-            await self.context_providers[provider_title].delete_context_with_ids(ids)
-
-    async def clear_context(self):
-        """
-        Clears all context.
-        """
-        for provider in self.context_providers.values():
-            await self.context_providers[provider.title].clear_context()
-
-    async def manually_add_context_item(self, item: ContextItem):
-        """
-        Adds the given ContextItem to the list of ContextItems.
-        """
-        if item.description.id.provider_title not in self.provider_titles:
-            return
-
-        await self.context_providers[
-            item.description.id.provider_title
-        ].manually_add_context_item(item)
 
     async def preview_context_item(self, id: str):
         """

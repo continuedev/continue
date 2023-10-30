@@ -6,7 +6,7 @@ import {
   getUniqueId,
   openEditorAndRevealRange,
 } from "./util/vscode";
-import { RangeInFile } from "../schema/RangeInFile";
+import { RangeInFileWithContents } from "../schema/RangeInFileWithContents";
 import { setFocusedOnContinueInput } from "./commands";
 import { ideProtocolClient, windowId } from "./activation/activate";
 import * as io from "socket.io-client";
@@ -49,30 +49,6 @@ export function setupDebugPanel(
   };
 
   const nonce = getNonce();
-
-  vscode.window.onDidChangeTextEditorSelection((e) => {
-    if (e.selections[0].isEmpty) {
-      return;
-    }
-
-    const rangeInFile: RangeInFile = {
-      range: e.selections[0] as any,
-      filepath: e.textEditor.document.fileName,
-    };
-    const filesystem = {
-      [rangeInFile.filepath]: e.textEditor.document.getText(),
-    };
-    panel.webview.postMessage({
-      type: "highlightedCode",
-      rangeInFile,
-      filesystem,
-    });
-
-    panel.webview.postMessage({
-      type: "workspacePath",
-      value: vscode.workspace.workspaceFolders?.[0].uri.fsPath,
-    });
-  });
 
   async function connectWebsocket(url: string) {
     return new Promise((resolve, reject) => {

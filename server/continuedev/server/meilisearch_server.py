@@ -78,7 +78,7 @@ async def ensure_meilisearch_installed() -> bool:
         if meilisearchPath in existing_paths:
             try:
                 os.remove(meilisearchPath)
-            except:
+            except Exception:
                 pass
             existing_paths.remove(meilisearchPath)
 

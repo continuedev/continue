@@ -111,6 +111,11 @@ class ContinueConfig(BaseModel):
         description="If set to `True`, Continue will not generate summaries for each Step. This can be useful if you want to save on compute.",
     )
 
+    @classmethod
+    def schema(cls, *args, **kwargs):
+        kwargs.setdefault("exclude", {"ide"})
+        return super().schema(*args, **kwargs)
+
     @validator("temperature", pre=True)
     def temperature_validator(cls, v):
         return max(0.0, min(1.0, v))

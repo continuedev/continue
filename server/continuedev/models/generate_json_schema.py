@@ -14,14 +14,14 @@ from ..core.main import (
 )
 from ..core.models import Models
 from ..libs.llm.base import LLM
-from .filesystem import FileEdit, RangeInFile
+from .filesystem import FileEdit, RangeInFile, RangeInFileWithContents
 from .filesystem_edit import FileEditWithFullContents
 from .main import Position, Range, Traceback, TracebackFrame
 from ..server.sessions import PersistedSessionInfo
 
 MODELS_TO_GENERATE = (
     [Position, Range, Traceback, TracebackFrame]
-    + [RangeInFile, FileEdit]
+    + [RangeInFile, FileEdit, RangeInFileWithContents]
     + [FileEditWithFullContents]
     + [
         SessionInfo,

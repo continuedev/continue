@@ -36,6 +36,7 @@ class GUIProtocolServer:
     messenger: SocketIOMessenger
 
     get_autopilot: Callable[[SessionState], Autopilot]
+    get_context_item: Callable[[str, str], ContextItem]
 
     def __init__(
         self,
@@ -43,10 +44,12 @@ class GUIProtocolServer:
         sio: socketio.AsyncServer,
         sid: str,
         get_autopilot: Callable[[SessionState], Autopilot],
+        get_context_item: Callable[[str, str], ContextItem],
     ):
         self.window_id = window_id
         self.messenger = SocketIOMessenger(sio, sid)
         self.get_autopilot = get_autopilot
+        self.get_context_item = get_context_item
 
     def on_error(self, e: Exception):
         # TODO
@@ -58,6 +61,8 @@ class GUIProtocolServer:
             await self.run_from_state(SessionState.parse_obj(data["state"]))
         elif msg.message_type == "stop_session":
             await self.stop_session()
+        elif msg.message_type == "get_context_item":
+            await self.get_context_item(data["id"], data["query"])
 
         elif msg.message_type == "set_current_session_title":
             self.set_current_session_title(data["title"])
@@ -327,5 +332,12 @@ class GUIProtocolServer:
 
     async def send_session_update(self, session_update: SessionUpdate):
         await self.messenger.send("session_update", session_update.dict())
+
+    async def add_context_item(self, item: ContextItem):
+        await self.messenger.send("add_context_item", item.dict())
+
+    async def get_context_item(self, id: str, query: str):
+        context_item = await self.get_context_item(id, query)
+        await self.messenger.send("get_context_item", context_item.dict())
 
     # endregion

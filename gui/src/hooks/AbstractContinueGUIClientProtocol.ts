@@ -30,6 +30,8 @@ abstract class AbstractContinueGUIClientProtocol {
 
   abstract selectContextItem(id: string, query: string): void;
 
+  abstract getContextItem(id: string, query: string): Promise<ContextItem>;
+
   abstract selectContextItemAtIndex(
     id: string,
     query: string,

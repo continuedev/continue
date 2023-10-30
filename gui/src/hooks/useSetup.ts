@@ -1,11 +1,12 @@
 import { Dispatch } from "@reduxjs/toolkit";
 import ContinueGUIClientProtocol from "./ContinueGUIClientProtocol";
 import { useEffect } from "react";
-import { processSessionUpdate } from "../redux/slices/sessionStateReducer";
 import {
-  setHighlightedCode,
-  setServerStatusMessage,
-} from "../redux/slices/miscSlice";
+  addContextItem,
+  addHighlightedCode,
+  processSessionUpdate,
+} from "../redux/slices/sessionStateReducer";
+import { setServerStatusMessage } from "../redux/slices/miscSlice";
 import { postToIde } from "../vscode";
 import { useSelector } from "react-redux";
 import { RootStore } from "../redux/store";
@@ -22,6 +23,10 @@ async function clientSetup(
   // Listen for updates to the session state
   client.onSessionUpdate((update) => {
     dispatch(processSessionUpdate(update));
+  });
+
+  client.onAddContextItem((item) => {
+    dispatch(addContextItem(item));
   });
 
   fetch(`${serverUrl}/slash_commands`).then(async (resp) => {
@@ -52,7 +57,12 @@ function useSetup(
     const eventListener = (event: any) => {
       switch (event.data.type) {
         case "highlightedCode":
-          dispatch(setHighlightedCode(event.data.rangeInFile));
+          dispatch(
+            addHighlightedCode({
+              rangeInFileWithContents: event.data.rangeInFileWithContents,
+              edit: event.data.edit,
+            })
+          );
           break;
         case "serverStatus":
           dispatch(setServerStatusMessage(event.data.message));

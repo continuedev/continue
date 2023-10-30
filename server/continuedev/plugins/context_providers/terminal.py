@@ -41,9 +41,7 @@ class TerminalContextProvider(ContextProvider):
         if not id.provider_title == self.title:
             raise Exception("Invalid provider title for item")
 
-        terminal_contents = await self.sdk.ide.getTerminalContents(
-            self.get_last_n_commands
-        )
+        terminal_contents = await self.ide.getTerminalContents(self.get_last_n_commands)
         terminal_contents = terminal_contents[-5000:]
 
         return self._terminal_context_item(terminal_contents)

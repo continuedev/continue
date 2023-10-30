@@ -137,15 +137,17 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
     messenger: SocketIOMessenger
     window_info: WindowInfo
 
+    @property
+    def workspace_directory(self) -> str:
+        return self.window_info.workspace_directory
+
     def __init__(self, window_info: WindowInfo, sio: socketio.AsyncServer, sid: str):
         self.messenger = SocketIOMessenger(sio, sid)
         self.window_info = window_info
 
     async def handle_json(self, msg: WebsocketsMessage):
         data = msg.data
-        if msg.message_type == "getSessionId":
-            await self.getSessionId()
-        elif msg.message_type == "setFileOpen":
+        if msg.message_type == "setFileOpen":
             await self.setFileOpen(data["filepath"], data["open"])
         elif msg.message_type == "setSuggestionsLocked":
             await self.setSuggestionsLocked(data["filepath"], data["locked"])
@@ -313,13 +315,12 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
         range_in_files: List[RangeInFileWithContents],
         edit: Optional[bool] = False,
     ):
-        if autopilot := self.__get_autopilot():
-            create_async_task(
-                autopilot.handle_highlighted_code(range_in_files, edit), self.on_error
-            )
+        for callback in self._highlighted_code_callbacks:
+            self.call_callback(callback, range_in_files, edit)
 
     ## Subscriptions ##
 
+    _highlighted_code_callbacks = []
     _files_created_callbacks = []
     _files_deleted_callbacks = []
     _files_renamed_callbacks = []
@@ -330,6 +331,11 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
             create_async_task(callback(*args, **kwargs), self.on_error)
         else:
             callback(*args, **kwargs)
+
+    def subscribeToHighlightedCode(
+        self, callback: Callable[[List[RangeInFileWithContents], bool], None]
+    ):
+        self._highlighted_code_callbacks.append(callback)
 
     def subscribeToFilesCreated(self, callback: Callable[[List[str]], None]):
         self._files_created_callbacks.append(callback)
