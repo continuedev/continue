@@ -62,7 +62,7 @@ class Window:
         return self.ide is None and self.gui is None
 
     async def reload_config(self):
-        self.load_config()
+        self.config = self.load_config()
         await self.config.models.start(
             self.ide.window_info.unique_id,
             self.config.system_message,

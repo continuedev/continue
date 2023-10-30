@@ -1,6 +1,10 @@
 from typing import Dict, List, Optional, Type
 
-from ..libs.util.edit_config import edit_config_property
+from ..libs.util.edit_config import (
+    create_obj_node,
+    display_llm_class,
+    edit_config_property,
+)
 from ..libs.util.paths import convertConfigImports, getConfigFilePath
 
 from pydantic import BaseModel, Field, validator
@@ -192,12 +196,24 @@ class ContinueConfig(BaseModel):
             )
         ]
 
-    def set_temperature(self, temperature: float):
-        self.temperature = temperature
+    @staticmethod
+    def set_temperature(temperature: float):
         edit_config_property(["temperature"], temperature)
         posthog_logger.capture_event("set_temperature", {"temperature": temperature})
 
-    def set_system_message(self, message: str):
-        self.system_message = message
+    @staticmethod
+    def set_system_message(message: str):
         edit_config_property(["system_message"], message)
         posthog_logger.capture_event("set_system_message", {"message": message})
+
+    @staticmethod
+    def set_models(models: Models, role: str):
+        JOINER = ",\n\t\t"
+        models_args = {
+            "saved": f"[{JOINER.join([display_llm_class(llm) for llm in models.saved])}]",
+            ("default" if role == "*" else role): display_llm_class(models.default),
+        }
+        edit_config_property(
+            ["models"],
+            create_obj_node("Models", models_args),
+        )

@@ -126,12 +126,7 @@ const Layout = () => {
 
   useEffect(() => {
     const handleKeyDown = (event: any) => {
-      if (
-        event.metaKey &&
-        event.altKey &&
-        event.code === "KeyN" &&
-        timeline.filter((n) => !n.hide).length > 0
-      ) {
+      if (event.metaKey && event.altKey && event.code === "KeyN") {
         dispatch(newSession());
       }
       if ((event.metaKey || event.ctrlKey) && event.code === "KeyC") {

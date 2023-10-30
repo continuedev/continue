@@ -47,8 +47,8 @@ class TogetherLLM(LLM):
         "edit": codellama_edit_prompt,
     }
 
-    async def start(self, **kwargs):
-        await super().start(**kwargs)
+    async def start(self, *args, **kwargs):
+        await super().start(*args, **kwargs)
         self._client_session = aiohttp.ClientSession(
             connector=aiohttp.TCPConnector(verify_ssl=self.verify_ssl),
             timeout=aiohttp.ClientTimeout(total=self.timeout),

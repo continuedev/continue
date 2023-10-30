@@ -570,9 +570,7 @@ function GUI(props: GUIProps) {
           {sessionState.history.filter((n) => !n.hide).length > 0 && (
             <HeaderButtonWithText
               onClick={() => {
-                if (sessionState.history.filter((n) => !n.hide).length > 0) {
-                  dispatch(newSession());
-                }
+                dispatch(newSession());
               }}
               text="New Session (⌥⌘N)"
             >

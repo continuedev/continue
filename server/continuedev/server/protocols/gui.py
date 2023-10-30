@@ -23,6 +23,7 @@ from ...libs.util.edit_config import (
     create_obj_node,
     create_string_node,
     display_llm_class,
+    edit_config_property,
 )
 from ...libs.util.telemetry import posthog_logger
 from ..websockets_messenger import SocketIOMessenger
@@ -86,20 +87,22 @@ class GUIProtocolServer:
             self.load_session(data.get("session_id", None))
         elif msg.message_type == "set_system_message":
             sys_message = data["system_message"]
-            self.get_config().set_system_message(sys_message)
+            ContinueConfig.set_system_message(sys_message)
             posthog_logger.capture_event(
                 "set_system_message", {"system_message": sys_message}
             )
             await self.reload_config()
             await self.send_config_update()
         elif msg.message_type == "set_temperature":
-            self.get_config().set_temperature(float(data["temperature"]))
+            ContinueConfig.set_temperature(float(data["temperature"]))
             await self.reload_config()
             await self.send_config_update()
         elif msg.message_type == "add_model_for_role":
-            self.add_model_for_role(data["role"], data["model_class"], data["model"])
+            await self.add_model_for_role(
+                data["role"], data["model_class"], data["model"]
+            )
         elif msg.message_type == "set_model_for_role_from_index":
-            self.set_model_for_role_from_index(data["role"], data["index"])
+            await self.set_model_for_role_from_index(data["role"], data["index"])
         elif msg.message_type == "save_context_group":
             self.save_context_group(
                 data["title"], [ContextItem(**item) for item in data["context_items"]]
@@ -171,129 +174,95 @@ class GUIProtocolServer:
     def set_current_session_title(self, title: str):
         self.session.autopilot.set_current_session_title(title)
 
-    def set_model_for_role_from_index(self, role: str, index: int):
-        async def async_stuff():
-            models = self.session.autopilot.sdk.config.models
+    async def set_model_for_role_from_index(self, role: str, index: int):
+        models = self.get_config().models
+        temp = models.default
+        models.default = models.saved[index]
+        models.saved[index] = temp
 
-            # Set models in SDK
-            temp = models.default
-            models.default = models.saved[index]
-            models.saved[index] = temp
-            await self.session.autopilot.sdk.start_model(models.default)
+        ContinueConfig.set_models(models, role)
+        await self.reload_config()
+        await self.send_config_update()
 
-            # Set models in config.py
-            JOINER = ",\n\t\t"
-            models_args = {
-                "saved": f"[{JOINER.join([display_llm_class(llm) for llm in models.saved])}]",
-                ("default" if role == "*" else role): display_llm_class(models.default),
-            }
-
-            await self.session.autopilot.set_config_attr(
-                ["models"],
-                create_obj_node("Models", models_args),
-            )
-
-            for other_role in ALL_MODEL_ROLES:
-                if other_role != "default":
-                    models.__setattr__(other_role, models.default)
-
-            await self.session.autopilot.sdk.update_ui()
-
-        create_async_task(async_stuff(), self.on_error)
-
-    def add_model_for_role(self, role: str, model_class: str, model: Any):
-        models = self.session.autopilot.sdk.config.models
+    async def add_model_for_role(self, role: str, model_class: str, model: Any):
+        models = self.get_config().models
 
         model_copy = model.copy()
         if "api_key" in model_copy:
             del model_copy["api_key"]
         if "hf_token" in model_copy:
             del model_copy["hf_token"]
+
         posthog_logger.capture_event(
             "select_model_for_role",
             {"role": role, "model_class": model_class, "model": model_copy},
         )
 
         if role == "*":
+            # Remove all previous models in roles and place in saved
+            saved_models = models.saved
+            existing_saved_models = set(
+                [display_llm_class(llm) for llm in saved_models]
+            )
+            for role in ALL_MODEL_ROLES:
+                val = models.__getattribute__(role)
+                if (
+                    val is not None
+                    and display_llm_class(val) not in existing_saved_models
+                ):
+                    saved_models.append(val)
+                    existing_saved_models.add(display_llm_class(val))
+                models.__setattr__(role, None)
 
-            async def async_stuff():
-                # Remove all previous models in roles and place in saved
-                saved_models = models.saved
-                existing_saved_models = set(
-                    [display_llm_class(llm) for llm in saved_models]
-                )
-                for role in ALL_MODEL_ROLES:
-                    val = models.__getattribute__(role)
-                    if (
-                        val is not None
-                        and display_llm_class(val) not in existing_saved_models
-                    ):
-                        saved_models.append(val)
-                        existing_saved_models.add(display_llm_class(val))
-                    models.__setattr__(role, None)
-
-                # Add the requisite import to config.py
-                default_model_display_overrides = {}
+            # Add the requisite import to config.py
+            default_model_display_overrides = {}
+            add_config_import(
+                f"from continuedev.libs.llm.{MODEL_MODULE_NAMES[model_class]} import {model_class}"
+            )
+            if "template_messages" in model:
                 add_config_import(
-                    f"from continuedev.libs.llm.{MODEL_MODULE_NAMES[model_class]} import {model_class}"
+                    f"from continuedev.libs.llm.prompts.chat import {model['template_messages']}"
                 )
-                if "template_messages" in model:
-                    add_config_import(
-                        f"from continuedev.libs.llm.prompts.chat import {model['template_messages']}"
-                    )
-                    sqtm = sqlcoder_template_messages("<MY_DATABASE_SCHEMA>")
-                    sqtm.__name__ = 'sqlcoder_template_messages("<MY_DATABASE_SCHEMA>")'
-                    model["template_messages"] = {
-                        "llama2_template_messages": llama2_template_messages,
-                        "template_alpaca_messages": template_alpaca_messages,
-                        "sqlcoder_template_messages": sqtm,
-                    }[model["template_messages"]]
+                sqtm = sqlcoder_template_messages("<MY_DATABASE_SCHEMA>")
+                sqtm.__name__ = 'sqlcoder_template_messages("<MY_DATABASE_SCHEMA>")'
+                model["template_messages"] = {
+                    "llama2_template_messages": llama2_template_messages,
+                    "template_alpaca_messages": template_alpaca_messages,
+                    "sqlcoder_template_messages": sqtm,
+                }[model["template_messages"]]
 
-                if "prompt_templates" in model and "edit" in model["prompt_templates"]:
-                    default_model_display_overrides[
-                        "prompt_templates"
-                    ] = f"""{{"edit": {model["prompt_templates"]["edit"]}}}"""
-                    add_config_import(
-                        f"from continuedev.libs.llm.prompts.edit import {model['prompt_templates']['edit']}"
-                    )
-                    model["prompt_templates"]["edit"] = {
-                        "codellama_edit_prompt": codellama_edit_prompt,
-                        "alpaca_edit_prompt": alpaca_edit_prompt,
-                    }[model["prompt_templates"]["edit"]]
-
-                # Set and start the new default model
-                new_model = MODEL_CLASSES[model_class](**model)
-                models.default = new_model
-                await self.session.autopilot.sdk.start_model(models.default)
-
-                # Construct and set the new models object
-                JOINER = ",\n\t\t"
-                saved_model_strings = set(
-                    [display_llm_class(llm) for llm in saved_models]
+            if "prompt_templates" in model and "edit" in model["prompt_templates"]:
+                default_model_display_overrides[
+                    "prompt_templates"
+                ] = f"""{{"edit": {model["prompt_templates"]["edit"]}}}"""
+                add_config_import(
+                    f"from continuedev.libs.llm.prompts.edit import {model['prompt_templates']['edit']}"
                 )
-                models_args = {
-                    "default": display_llm_class(
-                        models.default, True, default_model_display_overrides
-                    ),
-                    "saved": f"[{JOINER.join(saved_model_strings)}]",
-                }
+                model["prompt_templates"]["edit"] = {
+                    "codellama_edit_prompt": codellama_edit_prompt,
+                    "alpaca_edit_prompt": alpaca_edit_prompt,
+                }[model["prompt_templates"]["edit"]]
 
-                await self.session.autopilot.set_config_attr(
-                    ["models"],
-                    create_obj_node("Models", models_args),
-                )
+            # Set the new default model
+            new_model = MODEL_CLASSES[model_class](**model)
+            models.default = new_model
 
-                # Set all roles (in-memory) to the new default model
-                for role in ALL_MODEL_ROLES:
-                    if role != "default":
-                        models.__setattr__(role, models.default)
+            # Construct and set the new models object
+            JOINER = ",\n\t\t"
+            saved_model_strings = set([display_llm_class(llm) for llm in saved_models])
+            models_args = {
+                "default": display_llm_class(
+                    models.default, True, default_model_display_overrides
+                ),
+                "saved": f"[{JOINER.join(saved_model_strings)}]",
+            }
 
-                # Display setup help
-                # await self.session.autopilot.continue_sdk.run_step(
-                #     SetupModelStep(model_class=model_class)
-                # )
-
-            create_async_task(async_stuff(), self.on_error)
+            edit_config_property(
+                ["models"],
+                create_obj_node("Models", models_args),
+            )
+            await self.reload_config()
+            await self.send_config_update()
         else:
             # TODO
             pass
