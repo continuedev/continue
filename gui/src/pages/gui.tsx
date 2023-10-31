@@ -159,7 +159,13 @@ function GUI(props: GUIProps) {
   const [waitingForSteps, setWaitingForSteps] = useState(false);
   const [stepsOpen, setStepsOpen] = useState<(boolean | undefined)[]>([]);
   const [waitingForClient, setWaitingForClient] = useState(true);
-  const [showLoading, setShowLoading] = useState(true);
+  const [showLoading, setShowLoading] = useState(false);
+
+  useEffect(() => {
+    setTimeout(() => {
+      setShowLoading(true);
+    }, 5000);
+  }, []);
 
   // #endregion
 
@@ -590,7 +596,7 @@ function GUI(props: GUIProps) {
           </HeaderButtonWithText>
         </div>
       </GUIHeaderDiv>
-      {(takenAction || showLoading) && typeof client === "undefined" && (
+      {takenAction && showLoading && typeof client === "undefined" && (
         <>
           <RingLoader />
           <p

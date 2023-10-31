@@ -12,10 +12,8 @@ function useContinueGUIProtocol(useVscodeMessagePassing: boolean = true) {
     undefined
   );
 
-  const apiUrl = useSelector((store: RootStore) => store.config.apiUrl);
-
   useEffect(() => {
-    const serverUrl = apiUrl || (window as any).serverUrl;
+    const serverUrl = (window as any).serverUrl;
     const windowId = (window as any).windowId;
     if (serverUrl === undefined || serverUrl === null) return;
     if (windowId === undefined || windowId === null) return;
@@ -29,7 +27,7 @@ function useContinueGUIProtocol(useVscodeMessagePassing: boolean = true) {
     newClient.onConnected(() => {
       setClient(newClient);
     });
-  }, [apiUrl, (window as any).windowId]);
+  }, [(window as any).windowId]);
 
   return client;
 }
