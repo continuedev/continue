@@ -6,7 +6,7 @@ import { startContinuePythonServer } from "../activation/environmentSetup";
 import fetch from "node-fetch";
 
 describe("Can start python server", () => {
-  test("Can start python server in under 80 seconds", async function (done) {
+  test("Can start python server in under 80 seconds", async function () {
     const allowedTime = 80_000;
     this.timeout(allowedTime + 10_000);
 
@@ -22,7 +22,5 @@ describe("Can start python server", () => {
     console.log("Server URL: ", serverUrl);
     const response = await fetch(`${serverUrl}/health`);
     assert.equal(response.status, 200);
-
-    done();
   });
 });
