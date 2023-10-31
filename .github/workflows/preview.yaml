@@ -107,6 +107,10 @@ jobs:
         run: |
           pip install -r server/requirements.txt
 
+      - name: Install newer sqlite on linux
+        run: pip install pysqlite3-binary
+        if: matrix.os == 'ubuntu-20.04'
+
       - name: Install tiktoken vocab file
         # Done to avoid extra network request to download the vocab file
         run: |

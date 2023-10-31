@@ -3,6 +3,17 @@ import sys
 
 from server.main import main
 
+# __import__('pysqlite3')
+# import sys
+# sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
+
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+#     }
+# }
+
 if getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"):
     ca_bundle_path = os.path.join(sys._MEIPASS, "ca_bundle", "cacert.pem")
     print("Certificates at: ", ca_bundle_path)
