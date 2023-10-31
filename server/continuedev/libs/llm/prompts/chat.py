@@ -155,7 +155,7 @@ Based on your instructions, here is the SQL query I have generated to answer the
 
 
 def sqlcoder_template_messages(schema: str = SQL_CODER_DEFAULT_SCHEMA):
-    if schema == "<MY_DATABASE_SCHEMA>" or schema == "":
+    if schema in {"<MY_DATABASE_SCHEMA>", ""}:
         schema = SQL_CODER_DEFAULT_SCHEMA
 
     def fn(msgs):

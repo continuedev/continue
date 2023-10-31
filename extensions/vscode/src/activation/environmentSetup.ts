@@ -241,7 +241,7 @@ function runExecutable(path: string) {
       const child = spawn(path, settings);
 
       // Either unref to avoid zombie process, or listen to events because you can
-      if (os.platform() === "win32") {
+      if (os.platform() === "win32" || true) {
         child.stdout.on("data", (data: any) => {
           console.log(`stdout: ${data}`);
         });
