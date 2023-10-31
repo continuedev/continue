@@ -135,6 +135,7 @@ jobs:
           cp sqlite/sqlite3.[ch] pysqlite3/
           cd pysqlite3
           python setup.py build_static build
+        if: matrix.os == 'ubuntu-20.04'
 
       - name: Install tiktoken vocab file
         # Done to avoid extra network request to download the vocab file
