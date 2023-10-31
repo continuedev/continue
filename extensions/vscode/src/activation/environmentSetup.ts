@@ -233,7 +233,7 @@ function runExecutable(path: string) {
       };
       const macLinuxSettings = {
         detached: true,
-        // stdio: "ignore",
+        stdio: "ignore",
       };
       const settings: any =
         os.platform() === "win32" ? windowsSettings : macLinuxSettings;
@@ -241,7 +241,7 @@ function runExecutable(path: string) {
       const child = spawn(path, settings);
 
       // Either unref to avoid zombie process, or listen to events because you can
-      if (os.platform() === "win32" || true) {
+      if (os.platform() === "win32") {
         child.stdout.on("data", (data: any) => {
           console.log(`stdout: ${data}`);
         });
