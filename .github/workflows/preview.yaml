@@ -292,7 +292,8 @@ jobs:
       - uses: actions/download-artifact@v3
 
       # 2. Publish the extension to VS Code Marketplace
-      - run: |
+      - name: Publish to VS Code Marketplace
+        run: |
           cd extensions/vscode
           npx vsce publish --pre-release --packagePath ../../alpine-x64/*.vsix ../../darwin-arm64/*.vsix ../../darwin-x64/*.vsix ../../linux-arm64/*.vsix ../../linux-armhf/*.vsix ../../linux-x64/*.vsix ../../win32-ia32/*.vsix ../../win32-x64/*.vsix ../../win32-arm64/*.vsix
         env:

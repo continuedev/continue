@@ -43,7 +43,6 @@ import {
 import FTCDialog from "../components/dialogs/FTCDialog";
 import HeaderButtonWithText from "../components/HeaderButtonWithText";
 import { useNavigate } from "react-router-dom";
-import SuggestionsArea from "../components/Suggestions";
 import { setTakenActionTrue } from "../redux/slices/miscSlice";
 import {
   addContextItemAtIndex,
@@ -668,11 +667,6 @@ function GUI(props: GUIProps) {
         </>
       )}
       <br />
-      <SuggestionsArea
-        onClick={(textInput) => {
-          client?.sendMainInput(textInput);
-        }}
-      />
       <StepsDiv>
         {sessionState.history.map((step: StepDescription, index: number) => {
           if (step.hide) return null;
