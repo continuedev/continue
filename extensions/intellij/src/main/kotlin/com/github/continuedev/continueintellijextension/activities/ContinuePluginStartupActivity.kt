@@ -539,9 +539,7 @@ class ContinuePluginStartupActivity : StartupActivity, Disposable {
             GlobalScope.async(Dispatchers.IO) {
                 startContinuePythonServer(project)
 
-                val wsUrl = getContinueServerUrl().replace("http://", "ws://").replace("https://", "wss://")
                 val ideProtocolClient = IdeProtocolClient(
-                    "$wsUrl/ide/ws",
                     continuePluginService,
                     defaultStrategy,
                     coroutineScope,
@@ -557,16 +555,12 @@ class ContinuePluginStartupActivity : StartupActivity, Disposable {
                                 coroutineScope
                         )
 
-                val newSessionId = ideProtocolClient.getSessionIdAsync().await()
-                val sessionId = newSessionId ?: ""
-
                 // Reload the WebView
                 continuePluginService?.let {
                     val workspacePaths =
                             if (project.basePath != null) arrayOf(project.basePath) else emptyList<String>()
 
                     continuePluginService.worksapcePaths = workspacePaths as Array<String>
-                    continuePluginService.sessionId = sessionId
                 }
 
                 EditorFactory.getInstance().eventMulticaster.addSelectionListener(

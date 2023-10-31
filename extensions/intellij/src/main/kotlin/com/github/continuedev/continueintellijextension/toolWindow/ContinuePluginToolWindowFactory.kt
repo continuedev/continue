@@ -49,13 +49,6 @@ class ContinuePluginToolWindowFactory : ToolWindowFactory, DumbAware {
             System.setProperty("ide.browser.jcef.jsQueryPoolSize", JS_QUERY_POOL_SIZE)
         }
 
-        suspend fun waitForSessionId(pluginService: ContinuePluginService) {
-            while (pluginService.sessionId == null) {
-                delay(200)
-            }
-            return
-        }
-
         val webView: JBCefBrowser by lazy {
             val browser = JBCefBrowser()
             browser.jbCefClient.setProperty(
@@ -82,15 +75,6 @@ class ContinuePluginToolWindowFactory : ToolWindowFactory, DumbAware {
                 when (type) {
                     "onLoad" -> {
                         GlobalScope.launch {
-                            println("onLoad..............................")
-                            browser.executeJavaScriptAsync(
-                        "window.windowId = \"${continuePluginService.windowId}\";" +
-                                "window.serverUrl = \"${getContinueServerUrl()}\";" +
-                                "window.vscMachineId = \"${getMachineUniqueID()}\";" +
-                                "window.vscMediaUrl = \"http://continue\";" +
-                                "window.workspacePaths = ${Gson().toJson(continuePluginService.worksapcePaths)};"
-                            )
-
                             // Set the colors to match Intellij theme
                             val globalScheme = EditorColorsManager.getInstance().globalScheme
                             val defaultBackground = globalScheme.defaultBackground
@@ -121,20 +105,13 @@ class ContinuePluginToolWindowFactory : ToolWindowFactory, DumbAware {
                             browser.executeJavaScriptAsync("document.body.style.setProperty(\"--vscode-editor-background\", \"$defaultBackgroundHex\");")
                             browser.executeJavaScriptAsync("document.body.style.setProperty(\"--vscode-list-hoverBackground\", \"$secondaryDarkHex\");")
 
-                            // Wait for session ID, then pass the onLoad information
-                            waitForSessionId(continuePluginService)
-
-                            val sessionId = continuePluginService.sessionId
-                            val workspacePaths = continuePluginService.worksapcePaths
-
                             val jsonData = mutableMapOf(
                                     "type" to "onLoad",
-                                    "sessionId" to sessionId,
-                                    "apiUrl" to getContinueServerUrl(),
-                                    "workspacePaths" to workspacePaths,
+                                    "windowId" to continuePluginService.windowId,
+                                    "serverUrl" to getContinueServerUrl(),
+                                    "workspacePaths" to continuePluginService.worksapcePaths,
                                     "vscMachineId" to getMachineUniqueID(),
                                     "vscMediaUrl" to "http://continue",
-                                    "dataSwitchOn" to true
                             )
                             val jsonString = Gson().toJson(jsonData)
                             browser.executeJavaScriptAsync("""window.postMessage($jsonString, "*");""")

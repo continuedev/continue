@@ -17,6 +17,12 @@ import {
   setContextProviders,
   setSlashCommands,
 } from "../redux/slices/serverStateReducer";
+import {
+  setApiUrl,
+  setVscMachineId,
+  setWindowId,
+  setWorkspacePaths,
+} from "../redux/slices/configSlice";
 
 function useSetup(
   client: ContinueGUIClientProtocol | undefined,
@@ -87,6 +93,19 @@ function useSetup(
   useEffect(() => {
     const eventListener = (event: any) => {
       switch (event.data.type) {
+        case "onLoad":
+          (window as any).windowId = event.data.windowId;
+          (window as any).serverUrl = event.data.serverUrl;
+          (window as any).workspacePaths = event.data.workspacePaths;
+          (window as any).vscMachineId = event.data.vscMachineId;
+          (window as any).vscMediaUrl = event.data.vscMediaUrl;
+          dispatch(setWindowId(event.data.windowId));
+          dispatch(setApiUrl(event.data.serverUrl));
+          dispatch(setWorkspacePaths(event.data.workspacePaths));
+          dispatch(setVscMachineId(event.data.vscMachineId));
+          dispatch(setVscMachineId(event.data.vscMachineId));
+
+          break;
         case "highlightedCode":
           dispatch(
             addHighlightedCode({

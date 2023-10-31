@@ -14,6 +14,13 @@ export const configSlice = createSlice({
     windowId: windowAny.windowId || undefined,
   } as RootStore["config"],
   reducers: {
+    setWindowId: (
+      state: RootStore["config"],
+      action: { type: string; payload: string }
+    ) => ({
+      ...state,
+      windowId: action.payload,
+    }),
     setWorkspacePaths: (
       state: RootStore["config"],
       action: { type: string; payload: string[] }
@@ -71,5 +78,6 @@ export const {
   setSessionId,
   setVscMediaUrl,
   setDataSwitchOn,
+  setWindowId,
 } = configSlice.actions;
 export default configSlice.reducer;

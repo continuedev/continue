@@ -1,5 +1,6 @@
 package com.github.continuedev.continueintellijextension.`continue`
 
+import com.github.continuedev.continueintellijextension.activities.getContinueServerUrl
 import com.github.continuedev.continueintellijextension.services.ContinuePluginService
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
@@ -29,13 +30,7 @@ import java.net.URI
 import java.util.*
 import io.socket.client.IO
 import io.socket.client.Socket
-
-
-var uri: URI = URI.create("https://example.com")
-var options: IO.Options = IO.Options.builder()
-        .build()
-
-var socket: Socket = IO.socket(uri, options)
+import java.net.URLEncoder
 
 fun uuid(): String {
     return UUID.randomUUID().toString()
@@ -86,16 +81,15 @@ fun getMachineUniqueID(): String {
 }
 
 class IdeProtocolClient(
-    private val serverUrl: String = "ws://localhost:65432/ide/ws",
     private val continuePluginService: ContinuePluginService,
     private val textSelectionStrategy: TextSelectionStrategy,
     private val coroutineScope: CoroutineScope,
     private val workspacePath: String,
     private val project: Project
 ) {
-    private val eventListeners = mutableListOf<WebSocketEventListener>()
     private var webSocket: WebSocket? = null
-    private val okHttpClient = OkHttpClient()
+
+    private var socket: Socket? = null
 
     val diffManager = DiffManager(project)
 
@@ -103,45 +97,21 @@ class IdeProtocolClient(
         initWebSocket()
     }
 
-    var sessionId: String? = null
-
-    fun getSessionIdAsync(): Deferred<String?> = coroutineScope.async {
-        withTimeoutOrNull(10000) {
-            while ((webSocket?.queueSize() ?: 0) > 0) {
-                delay(1000)
-            }
-        }
-        println("Getting session ID")
-        val respDeferred = sendAndReceive("getSessionId", mapOf())
-        val resp = respDeferred.await()  // Awaiting the deferred response
-        println(resp)
-        val data = (resp as? Map<*, *>)?.get("data") as? Map<*, *>
-        sessionId = data?.get("sessionId").toString()
-        println("New Continue session with ID: $sessionId")
-        sessionId
-    }
-
-    private val pendingResponses: MutableMap<String, CompletableDeferred<Any>> =
-        mutableMapOf()
-
-    fun sendAndReceive(
-        messageType: String,
-        data: Map<String, Any>
-    ): CompletableDeferred<Any> {
-        val deferred = CompletableDeferred<Any>()
-        pendingResponses[messageType] =
-            deferred  // Store the deferred object for later resolution
-
-        sendMessage(messageType, data)
-        return deferred
-    }
-
     private fun serializeMessage(data: Map<String, Any>): String {
         val gson = Gson()
         return gson.toJson(data)
     }
 
-    private fun handleWebsocketMessage(webSocket: WebSocket, text: String) {
+    private fun send(messageType: String, messageId: String, data: Any) {
+        val wsMessage = WebSocketMessage(
+                messageType,
+                messageId,
+                data
+        )
+        socket?.send("message", Gson().toJson(wsMessage))
+    }
+
+    private fun handleWebsocketMessage(text: String) {
         coroutineScope.launch(Dispatchers.IO) {
             val parsedMessage: Map<String, Any> = Gson().fromJson(
                     text,
@@ -159,25 +129,13 @@ class IdeProtocolClient(
             try {
                 when (messageType) {
                     "workspaceDirectory" -> {
-                        webSocket.send(
-                                Gson().toJson(
-                                        WebSocketMessage(
-                                                "workspaceDirectory",
-                                                messageId,
-                                                WorkspaceDirectory(workspaceDirectory())
-                                        )
-                                )
-                        )
+                        send("workspaceDirectory", messageId, WorkspaceDirectory(workspaceDirectory()))
                     }
 
-                    "uniqueId" -> webSocket.send(
-                            Gson().toJson(
-                                    WebSocketMessage(
-                                            "uniqueId",
-                                            messageId,
-                                            UniqueId(uniqueId())
-                                    )
-                            )
+                    "uniqueId" -> send(
+                        "uniqueId",
+                        messageId,
+                        UniqueId(uniqueId())
                     )
 
                     "ide" -> {
@@ -191,16 +149,10 @@ class IdeProtocolClient(
                         if (sshClient != null || sshTty != null) {
                             remoteName = "ssh"
                         }
-                        webSocket.send(
-                                Gson().toJson(
-                                        WebSocketMessage(
-                                                "ide",
-                                                messageId,
-                                                IdeInfo(
-                                                        ideName, ideVersion, remoteName
-                                                )
-                                        )
-                                )
+                        send(
+                            "ide",
+                            messageId,
+                            IdeInfo(ideName, ideVersion, remoteName)
                         )
                     }
 
@@ -215,51 +167,35 @@ class IdeProtocolClient(
                     "readFile" -> {
                         val msg =
                                 ReadFile(readFile(data["filepath"] as String))
-                        webSocket.send(
-                                Gson().toJson(
-                                        WebSocketMessage(
-                                                "readFile",
-                                                messageId,
-                                                msg
-                                        )
-                                )
+                        send(
+                            "readFile",
+                            messageId,
+                            msg
                         )
                     }
 
                     "listDirectoryContents" -> {
-                        webSocket.send(
-                                Gson().toJson(
-                                        WebSocketMessage(
-                                                "listDirectoryContents",
-                                                messageId,
-                                                ListDirectoryContents(listDirectoryContents())
-                                        )
-                                )
+                        send(
+                            "listDirectoryContents",
+                            messageId,
+                            ListDirectoryContents(listDirectoryContents())
                         )
                     }
 
                     "getTerminalContents" -> {
-                        webSocket.send(
-                                Gson().toJson(
-                                        WebSocketMessage(
-                                                "getTerminalContents",
-                                                messageId,
-                                                GetTerminalContents("Terminal cannot be accessed in JetBrains IDE")
-                                        )
-                                )
+                        send(
+                            "getTerminalContents",
+                            messageId,
+                            GetTerminalContents("Terminal cannot be accessed in JetBrains IDE")
                         )
                     }
 
                     "visibleFiles" -> {
                         val msg = VisibleFiles(visibleFiles())
-                        webSocket.send(
-                                Gson().toJson(
-                                        WebSocketMessage(
-                                                "visibleFiles",
-                                                messageId,
-                                                msg
-                                        )
-                                )
+                        send(
+                            "visibleFiles",
+                            messageId,
+                            msg
                         )
                     }
 
@@ -294,14 +230,10 @@ class IdeProtocolClient(
                             val rif = RangeInFile(rifWithContents.filepath, rifWithContents.range)
                             rifs += rif
                         }
-                        webSocket.send(
-                                Gson().toJson(
-                                        WebSocketMessage(
-                                                "highlightedCode",
-                                                messageId,
-                                                HighlightedCode(rifs)
-                                        )
-                                )
+                        send(
+                            "highlightedCode",
+                            messageId,
+                            HighlightedCode(rifs)
                         )
                     }
 
@@ -312,72 +244,72 @@ class IdeProtocolClient(
             } catch (error: Exception) {
                 showMessage("Error handling message of type $messageType: $error")
             }
-
-
-            if (messageType != null) {
-                pendingResponses[messageType]?.complete(parsedMessage)
-                pendingResponses.remove(messageType)
-            }
         }
     }
 
-    private var backoff: Int = 100  // ms
-    
     private fun initWebSocket() {
-        val webSocketListener = object : WebSocketListener() {
-    
-            override fun onOpen(webSocket: WebSocket, response: Response) {
-                // handle onOpen
-                backoff = 100  // reset backoff
-            }
-    
-            override fun onMessage(webSocket: WebSocket, text: String) {
-                handleWebsocketMessage(webSocket, text)
-            }
-    
-            override fun onFailure(
-                    webSocket: WebSocket,
-                    t: Throwable,
-                    response: Response?
-            ) {
-                eventListeners.forEach { it.onErrorOccurred(t) }
-                // handle failure
-                backoff *= 2
-                if (backoff > 10000000) return
-                Thread.sleep(backoff.toLong())
-                initWebSocket()
-            }
-    
-            override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {
-                super.onClosed(webSocket, code, reason)
-                println("Closing Continue IDE websocket")
-                // handle closure
-                backoff *= 2
-                if (backoff > 10000000) return
-                Thread.sleep(backoff.toLong())
-                initWebSocket()
-            }
-    
+        val applicationInfo = ApplicationInfo.getInstance()
+        val ideName: String = applicationInfo.fullApplicationName
+        val ideVersion = applicationInfo.fullVersion
+        val sshClient = System.getenv("SSH_CLIENT")
+        val sshTty = System.getenv("SSH_TTY")
+
+        var remoteName: String? = null
+        if (sshClient != null || sshTty != null) {
+            remoteName = "ssh"
+        }
+        data class IDEInfo(
+            val name: String,
+            val version: String,
+            val remote_name: String
+        )
+
+        val windowInfo = mapOf(
+                "window_id" to continuePluginService.windowId,
+                "workspace_directory" to workspaceDirectory(),
+                "unique_id" to uniqueId(),
+                "ide_info" to IDEInfo(
+                    name = ideName,
+                    version = ideVersion,
+                    remote_name = remoteName ?: ""
+                )
+        )
+
+        val requestUrl = "${getContinueServerUrl()}/?window_info=${
+            URLEncoder.encode(
+                Gson().toJson(windowInfo), "UTF-8"
+        )}"
+
+        val uri: URI = URI.create(requestUrl)
+        val options: IO.Options = IO.Options.builder()
+                .setPath("/ide/socket.io")
+                .setTransports(arrayOf("websocket", "polling", "flashsocket"))
+                .build()
+
+        val socket: Socket = IO.socket(uri, options)
+
+        socket.on(Socket.EVENT_CONNECT) {
+            println("Connected to Continue IDE websocket")
         }
 
-        val request = Request.Builder()
-                .url("${serverUrl}${if (sessionId != null) "?session_id=$sessionId" else ""}")
-                .build()
-    
-        webSocket = okHttpClient.newWebSocket(request, webSocketListener)
+        socket.on(Socket.EVENT_DISCONNECT) {
+            println("Disconnected from Continue IDE websocket")
+        }
+
+        socket.on(Socket.EVENT_CONNECT_ERROR) {
+            println("Error connecting to Continue IDE websocket")
+        }
+
+        socket.on("message") { args ->
+            val data = args[0] as String
+            println("Received message: $data")
+            handleWebsocketMessage(data)
+        }
+
+        socket.connect()
+        this.socket = socket
     }
 
-    fun addEventListener(listener: WebSocketEventListener) {
-        eventListeners.add(listener)
-    }
-
-    fun connect() {
-        // Connection is handled automatically by OkHttp
-    }
-
-    fun disconnect() {
-        webSocket?.close(1000, null)
-    }
 
     private fun sendMessage(messageType: String, message: Map<String, Any>) {
         val sendData = mapOf("messageType" to messageType, "data" to message)
@@ -385,7 +317,7 @@ class IdeProtocolClient(
         webSocket?.send(jsonMessage)
     }
 
-    fun workspaceDirectory(): String {
+    private fun workspaceDirectory(): String {
         return this.workspacePath
     }
 
@@ -427,7 +359,7 @@ class IdeProtocolClient(
         return document?.text ?: ""
     }
 
-    fun getHighlightedCode(): RangeInFileWithContents? {
+    private fun getHighlightedCode(): RangeInFileWithContents? {
         val result = ApplicationManager.getApplication().runReadAction<RangeInFileWithContents?> {
             // Get the editor instance for the currently active editor window
             val editor = FileEditorManager.getInstance(project).selectedTextEditor ?: return@runReadAction null
@@ -460,31 +392,25 @@ class IdeProtocolClient(
         return result
     }
 
-    private fun<T> sendWebSocketMessage(messageType: String, messageId: String, data: T) {
-        webSocket?.send(Gson().toJson(
-                WebSocketMessage(messageType, messageId, data)
-        ))
-    }
-
     fun sendHighlightedCode(edit: Boolean = false) {
         val rif = getHighlightedCode() ?: return
 
-        sendWebSocketMessage("highlightedCodePush", uuid(), HighlightedCodeUpdate(
+        send("highlightedCodePush", uuid(), HighlightedCodeUpdate(
                 listOf(rif),
                 edit
         ))
     }
 
     fun sendMainUserInput(input: String) {
-        sendWebSocketMessage("mainUserInput", uuid(), MainUserInput(input))
+        send("mainUserInput", uuid(), MainUserInput(input))
     }
 
     fun sendAcceptRejectDiff(accepted: Boolean, stepIndex: Int) {
-        sendWebSocketMessage("acceptRejectDiff", uuid(), AcceptRejectDiff(accepted, stepIndex))
+        send("acceptRejectDiff", uuid(), AcceptRejectDiff(accepted, stepIndex))
     }
 
     fun deleteAtIndex(index: Int) {
-        sendWebSocketMessage("deleteAtIndex", uuid(), DeleteAtIndex(index))
+        send("deleteAtIndex", uuid(), DeleteAtIndex(index))
     }
 
     private val DEFAULT_IGNORE_DIRS = listOf(
@@ -514,7 +440,7 @@ class IdeProtocolClient(
     }
 
 
-    fun listDirectoryContents(): List<String> {
+    private fun listDirectoryContents(): List<String> {
         val workspacePath = File(workspaceDirectory())
         val workspaceDir = VirtualFileManager.getInstance().findFileByUrl("file://$workspacePath")
 
@@ -535,7 +461,7 @@ class IdeProtocolClient(
         return contents
     }
 
-    fun saveFile(filepath: String) {
+    private fun saveFile(filepath: String) {
         ApplicationManager.getApplication().invokeLater {
             val file = LocalFileSystem.getInstance().findFileByPath(filepath) ?: return@invokeLater
             val fileDocumentManager = FileDocumentManager.getInstance()
@@ -547,7 +473,7 @@ class IdeProtocolClient(
         }
     }
 
-    fun setFileOpen(filepath: String, open: Boolean = true) {
+    private fun setFileOpen(filepath: String, open: Boolean = true) {
         val file = LocalFileSystem.getInstance().findFileByPath(filepath)
 
         file?.let {
@@ -570,12 +496,12 @@ class IdeProtocolClient(
         }
     }
 
-    fun visibleFiles(): List<String> {
+    private fun visibleFiles(): List<String> {
         val fileEditorManager = FileEditorManager.getInstance(project)
         return fileEditorManager.openFiles.toList().map { it.path }
     }
 
-    fun showMessage(msg: String) {
+    private fun showMessage(msg: String) {
         val statusBar = WindowManager.getInstance().getStatusBar(project)
 
         JBPopupFactory.getInstance()
@@ -588,7 +514,7 @@ class IdeProtocolClient(
             )
     }
 
-    fun highlightCode(rangeInFile: RangeInFile, color: String) {
+    private fun highlightCode(rangeInFile: RangeInFile, color: String) {
         val file =
             LocalFileSystem.getInstance().findFileByPath(rangeInFile.filepath)
 

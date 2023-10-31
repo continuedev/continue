@@ -14,6 +14,9 @@ function useContinueGUIProtocol(useVscodeMessagePassing: boolean = true) {
     const serverUrl = (window as any).serverUrl;
 
     console.log("Creating GUI websocket", serverUrl, useVscodeMessagePassing);
+    document.body.appendChild(
+      document.createTextNode(`WHATWHATWHAT ${serverUrl}`)
+    );
     const newClient = new ContinueGUIClientProtocol(
       serverUrl,
       useVscodeMessagePassing
@@ -22,7 +25,7 @@ function useContinueGUIProtocol(useVscodeMessagePassing: boolean = true) {
     newClient.onConnected(() => {
       setClient(newClient);
     });
-  }, []);
+  }, [(window as any).serverUrl]);
 
   return client;
 }

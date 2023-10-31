@@ -19,7 +19,6 @@ class ContinuePluginService(project: Project) : Disposable {
     var continuePluginWindow: ContinuePluginToolWindowFactory.ContinuePluginWindow? = null
 
     var ideProtocolClient: IdeProtocolClient? = null
-    var sessionId: String? = null
     var worksapcePaths: Array<String>? = null
     var windowId: String = UUID.randomUUID().toString()
 
