@@ -233,7 +233,7 @@ function runExecutable(path: string) {
       };
       const macLinuxSettings = {
         detached: true,
-        stdio: "ignore",
+        // stdio: "ignore",
       };
       const settings: any =
         os.platform() === "win32" ? windowsSettings : macLinuxSettings;
