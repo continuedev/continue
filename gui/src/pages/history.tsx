@@ -196,7 +196,9 @@ function History() {
                             },
                             title: currentSession.title,
                             workspace_directory: workspaceDirectory,
+                            session_id: currentSession.session_id,
                           };
+                          console.log(persistedSessionInfo);
                           await fetch(`${apiUrl}/sessions/save`, {
                             method: "POST",
                             body: JSON.stringify(persistedSessionInfo),

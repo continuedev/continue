@@ -7,7 +7,7 @@
 
 export type SessionUpdate = SessionUpdate1;
 export type Index = number;
-export type Update = DeltaStep | SetStep;
+export type Update = DeltaStep | SetStep | SessionUpdate1;
 export type Name = string;
 export type Description = string;
 export type Observations = Observation[];

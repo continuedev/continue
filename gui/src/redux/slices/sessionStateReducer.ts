@@ -12,6 +12,7 @@ export interface SessionFullState {
   context_items: ContextItem[];
   active: boolean;
   title: string;
+  session_id: string;
 }
 
 export const sessionStateSlice = createSlice({
@@ -22,6 +23,7 @@ export const sessionStateSlice = createSlice({
     active: false,
     title: "New Session",
     contextItemsAtIndex: {},
+    session_id: v4(),
   },
   reducers: {
     processSessionUpdate: (
@@ -54,11 +56,11 @@ export const sessionStateSlice = createSlice({
         if (payload.update.observations) {
           step.observations = [
             ...(step.observations ?? []),
-            ...payload.update.observations,
+            ...(payload.update.observations as any),
           ];
         }
         if (payload.update.logs) {
-          step.logs = [...(step.logs ?? []), ...payload.update.logs];
+          step.logs = [...(step.logs ?? []), ...(payload.update.logs as any)];
         }
       } else if (payload.delta === false) {
         step = {
@@ -91,6 +93,7 @@ export const sessionStateSlice = createSlice({
           contextItemsAtIndex: {},
           active: false,
           title: payload.title,
+          session_id: payload.session_id,
         };
       }
       return {
@@ -100,6 +103,7 @@ export const sessionStateSlice = createSlice({
         contextItemsAtIndex: {},
         active: false,
         title: "New Session",
+        session_id: v4(),
       };
     },
     setTitle: (state: SessionFullState, { payload }: { payload: string }) => {
@@ -187,7 +191,7 @@ export const sessionStateSlice = createSlice({
           },
         },
         content: payload.rangeInFileWithContents.contents,
-        editing: payload.edit,
+        editing: true,
         editable: true,
       });
 
@@ -233,19 +237,16 @@ export const sessionStateSlice = createSlice({
         payload,
       }: { payload: { ids: ContextItemId[]; index: number | undefined } }
     ) => {
-      const ids = payload.ids.map((id) => `${id.provider_title}-${id.item_id}`);
+      const ids = payload.ids.map((id) => id.item_id);
+
       if (typeof payload.index === "undefined") {
         return {
           ...state,
           context_items: state.context_items.map((item) => {
-            if (
-              ids.includes(
-                `${item.description.id.provider_title}-${item.description.id.item_id}`
-              )
-            ) {
-              return { ...item, editing: true };
-            }
-            return item;
+            return {
+              ...item,
+              editing: ids.includes(item.description.id.item_id),
+            };
           }),
         };
       } else {
@@ -256,14 +257,10 @@ export const sessionStateSlice = createSlice({
             [payload.index]: (
               state.contextItemsAtIndex[payload.index] ?? []
             ).map((item) => {
-              if (
-                ids.includes(
-                  `${item.description.id.provider_title}-${item.description.id.item_id}`
-                )
-              ) {
-                return { ...item, editing: true };
-              }
-              return item;
+              return {
+                ...item,
+                editing: ids.includes(item.description.id.item_id),
+              };
             }),
           },
         };

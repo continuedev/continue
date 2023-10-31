@@ -41,7 +41,7 @@ function useSetup(
         !requestedTitle &&
         !active &&
         title === "New Session" &&
-        history.filter((step) => !step.hide).length > 2
+        history.filter((step) => !step.hide).length >= 2
       ) {
         setRequestedTitle(true);
         const title = await client.getSessionTitle(history);

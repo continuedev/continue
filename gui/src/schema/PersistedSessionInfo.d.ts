@@ -26,11 +26,13 @@ export type Editable = boolean;
 export type ContextItems = ContextItem[];
 export type Title1 = string;
 export type WorkspaceDirectory = string;
+export type SessionId = string;
 
 export interface PersistedSessionInfo1 {
   session_state: SessionState;
   title: Title1;
   workspace_directory: WorkspaceDirectory;
+  session_id: SessionId;
   [k: string]: unknown;
 }
 /**

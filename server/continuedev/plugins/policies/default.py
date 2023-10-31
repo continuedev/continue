@@ -1,5 +1,7 @@
 from typing import Type, Union
 
+from ..steps.comment_code import CommentCodeStep
+
 from ..steps.share_session import ShareSessionStep
 
 from ..steps.chroma import AnswerQuestionChroma
@@ -21,6 +23,7 @@ REPLACEMENT_SLASH_COMMAND_STEPS = [
     GenerateShellCommandStep,
     EditHighlightedCodeStep,
     ShareSessionStep,
+    CommentCodeStep,
 ]
 
 

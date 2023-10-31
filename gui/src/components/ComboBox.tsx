@@ -889,6 +889,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
           {selectedContextItems.map((item, idx) => {
             return (
               <PillButton
+                inputIndex={props.index}
                 areMultipleItems={selectedContextItems.length > 1}
                 key={`${item.description.id.item_id}${idx}`}
                 item={item}

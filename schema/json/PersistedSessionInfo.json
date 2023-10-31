@@ -191,12 +191,17 @@
         "workspace_directory": {
           "title": "Workspace Directory",
           "type": "string"
+        },
+        "session_id": {
+          "title": "Session Id",
+          "type": "string"
         }
       },
       "required": [
         "session_state",
         "title",
-        "workspace_directory"
+        "workspace_directory",
+        "session_id"
       ]
     }
   }

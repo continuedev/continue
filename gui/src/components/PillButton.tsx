@@ -18,8 +18,9 @@ import HeaderButtonWithText from "./HeaderButtonWithText";
 import FileIcon from "./FileIcon";
 import { ContextItem } from "../schema/ContextItem";
 import { postToIde } from "../vscode";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { setEditingAtIds } from "../redux/slices/sessionStateReducer";
+import { RootStore } from "../redux/store";
 
 const Button = styled.button<{ fontSize?: number }>`
   border: none;
@@ -81,6 +82,7 @@ interface PillButtonProps {
   editing: boolean;
   editingAny: boolean;
   index: number;
+  inputIndex: number; // index of the ComboBox
   areMultipleItems?: boolean;
   onDelete?: (index?: number) => void;
   onClick?: (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => void;
@@ -158,6 +160,10 @@ const PillButton = (props: PillButtonProps) => {
 
   const pillContainerRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
+
+  const selectedContextItems = useSelector(
+    (store: RootStore) => store.sessionState.context_items
+  );
 
   return (
     <div style={{ position: "relative" }}>
@@ -246,10 +252,16 @@ const PillButton = (props: PillButtonProps) => {
               }
               onClick={() => {
                 if (!props.editing) {
+                  console.log(
+                    props.item.description.id,
+                    props.inputIndex,
+                    "edit",
+                    selectedContextItems
+                  );
                   dispatch(
                     setEditingAtIds({
                       ids: [props.item.description.id],
-                      index: props.index,
+                      index: props.inputIndex,
                     })
                   );
                 }
