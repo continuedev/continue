@@ -464,7 +464,7 @@ function GUI(props: GUIProps) {
       let userInputIndex = -1;
       for (let i = index; i >= 0; i--) {
         if (
-          sessionState.history.length > i &&
+          typeof sessionState.history[i] !== "undefined" &&
           sessionState.history[i].name === "User Input" &&
           sessionState.history[i].hide === false
         ) {
@@ -477,7 +477,7 @@ function GUI(props: GUIProps) {
 
       for (let i = userInputIndex + 1; i < sessionState.history.length; i++) {
         if (
-          sessionState.history.length > i &&
+          typeof sessionState.history[i] !== "undefined" &&
           sessionState.history[i].name === "User Input" &&
           sessionState.history[i].hide === false
         ) {
@@ -571,6 +571,7 @@ function GUI(props: GUIProps) {
           {sessionState.history.filter((n) => !n.hide).length > 0 && (
             <HeaderButtonWithText
               onClick={() => {
+                client?.stopSession();
                 dispatch(newSession());
               }}
               text="New Session (⌥⌘N)"

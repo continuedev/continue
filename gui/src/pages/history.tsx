@@ -218,6 +218,7 @@ function History() {
                           }
                           const json: PersistedSessionInfo =
                             await response.json();
+                          client?.stopSession();
                           dispatch(newSession(json));
                           navigate("/");
                         }}

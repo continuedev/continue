@@ -32,6 +32,9 @@ function useSetup(
   useEffect(() => {
     // Override persisted state
     dispatch(setActive(false));
+
+    // Tell JetBrains the webview is ready
+    postToIde("onLoad", {});
   }, []);
 
   useEffect(() => {

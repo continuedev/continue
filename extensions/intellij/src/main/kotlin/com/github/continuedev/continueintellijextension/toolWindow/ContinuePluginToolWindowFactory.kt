@@ -82,6 +82,15 @@ class ContinuePluginToolWindowFactory : ToolWindowFactory, DumbAware {
                 when (type) {
                     "onLoad" -> {
                         GlobalScope.launch {
+                            println("onLoad..............................")
+                            browser.executeJavaScriptAsync(
+                        "window.windowId = \"${continuePluginService.windowId}\";" +
+                                "window.serverUrl = \"${getContinueServerUrl()}\";" +
+                                "window.vscMachineId = \"${getMachineUniqueID()}\";" +
+                                "window.vscMediaUrl = \"http://continue\";" +
+                                "window.workspacePaths = ${Gson().toJson(continuePluginService.worksapcePaths)};"
+                            )
+
                             // Set the colors to match Intellij theme
                             val globalScheme = EditorColorsManager.getInstance().globalScheme
                             val defaultBackground = globalScheme.defaultBackground

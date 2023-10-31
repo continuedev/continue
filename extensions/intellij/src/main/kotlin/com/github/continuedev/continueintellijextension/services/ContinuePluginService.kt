@@ -11,6 +11,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
+import java.util.UUID
 
 @Service(Service.Level.PROJECT)
 class ContinuePluginService(project: Project) : Disposable {
@@ -20,6 +21,7 @@ class ContinuePluginService(project: Project) : Disposable {
     var ideProtocolClient: IdeProtocolClient? = null
     var sessionId: String? = null
     var worksapcePaths: Array<String>? = null
+    var windowId: String = UUID.randomUUID().toString()
 
     override fun dispose() {
         coroutineScope.cancel()

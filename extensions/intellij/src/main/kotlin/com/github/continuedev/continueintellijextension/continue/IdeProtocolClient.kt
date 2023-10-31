@@ -27,15 +27,15 @@ import java.io.File
 import java.net.NetworkInterface
 import java.net.URI
 import java.util.*
-//import io.socket.client.IO
-//import io.socket.client.Socket
-//
-//
-//var uri: URI = URI.create("https://example.com")
-//var options: IO.Options = IO.Options.builder() // ...
-//        .build()
-//
-//var socket: Socket = IO.socket(uri, options)
+import io.socket.client.IO
+import io.socket.client.Socket
+
+
+var uri: URI = URI.create("https://example.com")
+var options: IO.Options = IO.Options.builder()
+        .build()
+
+var socket: Socket = IO.socket(uri, options)
 
 fun uuid(): String {
     return UUID.randomUUID().toString()

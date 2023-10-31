@@ -666,6 +666,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
         }
         dispatch(setTakenActionTrue(null));
       } else if (event.data.type === "focusContinueInputWithNewSession") {
+        client?.stopSession();
         dispatch(newSession());
         dispatch(setTakenActionTrue(null));
       }

@@ -127,6 +127,7 @@ const Layout = () => {
   useEffect(() => {
     const handleKeyDown = (event: any) => {
       if (event.metaKey && event.altKey && event.code === "KeyN") {
+        client?.stopSession();
         dispatch(newSession());
       }
       if ((event.metaKey || event.ctrlKey) && event.code === "KeyC") {
