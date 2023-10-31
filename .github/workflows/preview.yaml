@@ -7,7 +7,7 @@ on:
 
 jobs:
   # pypi-deployment:
-  #   runs-on: ubuntu-20.04
+  #   runs-on: ubuntu-latest
   #   permissions:
   #     contents: write
   #   steps:
@@ -64,19 +64,19 @@ jobs:
             platform: win32
             arch: arm64
             npm_config_arch: arm
-          - os: ubuntu-20.04
+          - os: ubuntu-latest
             platform: linux
             arch: x64
             npm_config_arch: x64
-          - os: ubuntu-20.04
+          - os: ubuntu-latest
             platform: linux
             arch: arm64
             npm_config_arch: arm64
-          - os: ubuntu-20.04
+          - os: ubuntu-latest
             platform: linux
             arch: armhf
             npm_config_arch: arm
-          - os: ubuntu-20.04
+          - os: ubuntu-latest
             platform: alpine
             arch: x64
             npm_config_arch: x64
@@ -97,7 +97,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: "3.10.8"
+          python-version: "3.11"
 
       - name: Install Pyinstaller
         run: |
@@ -109,33 +109,33 @@ jobs:
 
       # - name: Install newer sqlite on linux
       #   run: pip install pysqlite3-binary
-      #   if: matrix.os == 'ubuntu-20.04'
+      #   if: matrix.os == 'ubuntu-latest'
 
       # Download the latest release of SQLite source code and build the source
       # amalgamation files (sqlite3.c and sqlite3.h).
 
-      - name: Git clone pysqlite3
-        run: git clone https://github.com/coleifer/pysqlite3
-        if: matrix.os == 'ubuntu-20.04'
+      # - name: Git clone pysqlite3
+      #   run: git clone https://github.com/coleifer/pysqlite3
+      #   if: matrix.os == 'ubuntu-latest'
 
-      - name: Install newer sqlite3 on linux
-        run: |
-          wget https://www.sqlite.org/src/tarball/sqlite.tar.gz?r=release \
-          -O sqlite.tar.gz
-          tar xzf sqlite.tar.gz
-          cd sqlite/
-          ./configure
-          make sqlite3.c
-        if: matrix.os == 'ubuntu-20.04'
+      # - name: Install newer sqlite3 on linux
+      #   run: |
+      #     wget https://www.sqlite.org/src/tarball/sqlite.tar.gz?r=release \
+      #     -O sqlite.tar.gz
+      #     tar xzf sqlite.tar.gz
+      #     cd sqlite/
+      #     ./configure
+      #     make sqlite3.c
+      #   if: matrix.os == 'ubuntu-latest'
 
       # Copy the sqlite3 amalgamation files into the root of the pysqlite3 checkout
       # and run build_static + build:
-      - name: Copy and static build
-        run: |
-          cp sqlite/sqlite3.[ch] pysqlite3/
-          cd pysqlite3
-          python setup.py build_static build
-        if: matrix.os == 'ubuntu-20.04'
+      # - name: Copy and static build
+      #   run: |
+      #     cp sqlite/sqlite3.[ch] pysqlite3/
+      #     cd pysqlite3
+      #     python setup.py build_static build
+      #   if: matrix.os == 'ubuntu-latest'
 
       - name: Install tiktoken vocab file
         # Done to avoid extra network request to download the vocab file
@@ -173,7 +173,7 @@ jobs:
           path: extensions/vscode/exe/continue_server
 
       - uses: actions/upload-artifact@v2
-        if: matrix.os == 'ubuntu-20.04' && matrix.arch == 'x64' && matrix.platform == 'linux'
+        if: matrix.os == 'ubuntu-latest' && matrix.arch == 'x64' && matrix.platform == 'linux'
         with:
           name: LinuxBinary
           path: extensions/vscode/exe/continue_server
@@ -230,13 +230,13 @@ jobs:
           export DISPLAY=:99 # Export the display number to the environment
           cd extensions/vscode
           npm run test
-        if: matrix.os == 'ubuntu-20.04'
+        if: matrix.os == 'ubuntu-latest'
 
       - name: Run extension tests
         run: |
           cd extensions/vscode
           npm run test
-        if: matrix.os != 'ubuntu-20.04'
+        if: matrix.os != 'ubuntu-latest'
 
       # 3.5 If on Apple Silicon, download the binary from S3 bucket
       - name: Remove existing binary
@@ -271,7 +271,7 @@ jobs:
         if: always()
 
   publish:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     needs: build
     permissions:
       contents: write
