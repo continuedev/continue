@@ -10,6 +10,7 @@ import com.intellij.openapi.editor.SelectionModel
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.fileEditor.TextEditor
+import com.intellij.openapi.project.DumbAware
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.MessageType
 import com.intellij.openapi.ui.popup.Balloon
@@ -80,13 +81,13 @@ fun getMachineUniqueID(): String {
     return "No MAC Address Found"
 }
 
-class IdeProtocolClient(
+class IdeProtocolClient (
     private val continuePluginService: ContinuePluginService,
     private val textSelectionStrategy: TextSelectionStrategy,
     private val coroutineScope: CoroutineScope,
     private val workspacePath: String,
     private val project: Project
-) {
+): DumbAware {
     private var webSocket: WebSocket? = null
 
     private var socket: Socket? = null
@@ -301,7 +302,7 @@ class IdeProtocolClient(
         }
 
         socket.on("message") { args ->
-            val data = args[0] as String
+            val data = args[0].toString()
             println("Received message: $data")
             handleWebsocketMessage(data)
         }
@@ -395,14 +396,25 @@ class IdeProtocolClient(
     fun sendHighlightedCode(edit: Boolean = false) {
         val rif = getHighlightedCode() ?: return
 
-        send("highlightedCodePush", uuid(), HighlightedCodeUpdate(
-                listOf(rif),
-                edit
-        ))
+//        send("highlightedCodePush", uuid(), HighlightedCodeUpdate(
+//                listOf(rif),
+//                edit
+//        ))
+
+        continuePluginService.dispatchCustomEvent("highlightedCode",
+            mapOf(
+                "type" to "highlightedCode",
+                "rangeInFileWithContents" to rif,
+                "edit" to edit
+            ))
     }
 
     fun sendMainUserInput(input: String) {
-        send("mainUserInput", uuid(), MainUserInput(input))
+        continuePluginService.dispatchCustomEvent("userInput",
+            mapOf(
+                "type" to "userInput",
+                "input" to input,
+            ))
     }
 
     fun sendAcceptRejectDiff(accepted: Boolean, stepIndex: Int) {
@@ -473,7 +485,7 @@ class IdeProtocolClient(
         }
     }
 
-    private fun setFileOpen(filepath: String, open: Boolean = true) {
+    fun setFileOpen(filepath: String, open: Boolean = true) {
         val file = LocalFileSystem.getInstance().findFileByPath(filepath)
 
         file?.let {
@@ -514,7 +526,7 @@ class IdeProtocolClient(
             )
     }
 
-    private fun highlightCode(rangeInFile: RangeInFile, color: String) {
+    fun highlightCode(rangeInFile: RangeInFile, color: String) {
         val file =
             LocalFileSystem.getInstance().findFileByPath(rangeInFile.filepath)
 

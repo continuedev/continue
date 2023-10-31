@@ -1,5 +1,6 @@
 package com.github.continuedev.continueintellijextension.factories
 
+import com.intellij.openapi.project.DumbAware
 import org.cef.browser.CefBrowser
 import org.cef.browser.CefFrame
 import org.cef.callback.CefCallback
@@ -25,7 +26,7 @@ class CustomSchemeHandlerFactory : CefSchemeHandlerFactory {
     }
 }
 
-class CustomResourceHandler : CefResourceHandler {
+class CustomResourceHandler : CefResourceHandler, DumbAware {
     private var state: ResourceHandlerState = ClosedConnection
     private var currentUrl: String? = null
     override fun processRequest(

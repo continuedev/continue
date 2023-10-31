@@ -20,7 +20,6 @@ import {
 import {
   setApiUrl,
   setVscMachineId,
-  setWindowId,
   setWorkspacePaths,
 } from "../redux/slices/configSlice";
 
@@ -99,7 +98,6 @@ function useSetup(
           (window as any).workspacePaths = event.data.workspacePaths;
           (window as any).vscMachineId = event.data.vscMachineId;
           (window as any).vscMediaUrl = event.data.vscMediaUrl;
-          dispatch(setWindowId(event.data.windowId));
           dispatch(setApiUrl(event.data.serverUrl));
           dispatch(setWorkspacePaths(event.data.workspacePaths));
           dispatch(setVscMachineId(event.data.vscMachineId));

@@ -5,6 +5,7 @@ import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.components.State
 import com.intellij.openapi.components.Storage
 import com.intellij.openapi.options.Configurable
+import com.intellij.openapi.project.DumbAware
 import kotlinx.serialization.Serializable
 import java.awt.GridBagConstraints
 import java.awt.GridBagLayout
@@ -15,7 +16,7 @@ import javax.swing.JLabel
 import javax.swing.JPanel
 import javax.swing.JTextField
 
-class ContinueSettingsComponent {
+class ContinueSettingsComponent: DumbAware {
     val panel: JPanel = JPanel(GridBagLayout())
     private val myTextField: JTextField = JTextField()
     private val myCheckBox: JCheckBox =

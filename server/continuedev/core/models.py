@@ -1,7 +1,7 @@
 from typing import Callable, Coroutine, List, Optional, Union
 import uuid
 
-from pydantic import BaseModel
+from pydantic import BaseModel, validator
 
 from ..libs.llm.anthropic import AnthropicLLM
 from ..libs.llm.base import LLM
@@ -75,6 +75,12 @@ class Models(BaseModel):
 
     temperature: Optional[float] = None
     system_message: Optional[str] = None
+
+    @validator("summarize", "edit", "chat", pre=True)
+    def roles_not_none(cls, v):
+        if v is None:
+            return cls.default
+        return v
 
     def dict(self, **kwargs):
         original_dict = super().dict(**kwargs)

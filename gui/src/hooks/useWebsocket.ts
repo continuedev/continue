@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from "react";
 import ContinueGUIClientProtocol from "./ContinueGUIClientProtocol";
+import { useSelector } from "react-redux";
+import { RootStore } from "../redux/store";
 
 function useContinueGUIProtocol(useVscodeMessagePassing: boolean = true) {
   // if (localStorage.getItem("ide") === "jetbrains") {
@@ -10,13 +12,15 @@ function useContinueGUIProtocol(useVscodeMessagePassing: boolean = true) {
     undefined
   );
 
+  const apiUrl = useSelector((store: RootStore) => store.config.apiUrl);
+
   useEffect(() => {
-    const serverUrl = (window as any).serverUrl;
+    const serverUrl = apiUrl || (window as any).serverUrl;
+    const windowId = (window as any).windowId;
+    if (serverUrl === undefined || serverUrl === null) return;
+    if (windowId === undefined || windowId === null) return;
 
     console.log("Creating GUI websocket", serverUrl, useVscodeMessagePassing);
-    document.body.appendChild(
-      document.createTextNode(`WHATWHATWHAT ${serverUrl}`)
-    );
     const newClient = new ContinueGUIClientProtocol(
       serverUrl,
       useVscodeMessagePassing
@@ -25,7 +29,7 @@ function useContinueGUIProtocol(useVscodeMessagePassing: boolean = true) {
     newClient.onConnected(() => {
       setClient(newClient);
     });
-  }, [(window as any).serverUrl]);
+  }, [apiUrl, (window as any).windowId]);
 
   return client;
 }

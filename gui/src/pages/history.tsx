@@ -69,7 +69,7 @@ function History() {
   );
   const currentSession = useSelector((state: RootStore) => state.sessionState);
   const workspaceDirectory = useSelector(
-    (state: RootStore) => state.config.workspacePaths[0]
+    (state: RootStore) => state.config.workspacePaths?.[0] || ""
   );
 
   const [filteringByWorkspace, setFilteringByWorkspace] = useState(false);

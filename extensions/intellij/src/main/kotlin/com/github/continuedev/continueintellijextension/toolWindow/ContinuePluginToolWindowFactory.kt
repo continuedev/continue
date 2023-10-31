@@ -6,6 +6,9 @@ import com.intellij.ui.content.ContentFactory
 import com.intellij.ui.jcef.JBCefJSQuery
 import javax.swing.*
 import com.github.continuedev.continueintellijextension.activities.getContinueServerUrl
+import com.github.continuedev.continueintellijextension.`continue`.Position
+import com.github.continuedev.continueintellijextension.`continue`.Range
+import com.github.continuedev.continueintellijextension.`continue`.RangeInFile
 import com.github.continuedev.continueintellijextension.`continue`.getMachineUniqueID
 import com.github.continuedev.continueintellijextension.factories.CustomSchemeHandlerFactory
 import com.github.continuedev.continueintellijextension.services.ContinuePluginService
@@ -72,6 +75,7 @@ class ContinuePluginToolWindowFactory : ToolWindowFactory, DumbAware {
                 val parser = JsonParser()
                 val json: JsonObject = parser.parse(msg).asJsonObject
                 val type = json.get("type").asString
+                val data = json.get("data").asJsonObject
                 when (type) {
                     "onLoad" -> {
                         GlobalScope.launch {
@@ -118,6 +122,26 @@ class ContinuePluginToolWindowFactory : ToolWindowFactory, DumbAware {
                         }
 
                     }
+                    "showLines" -> {
+                        continuePluginService.ideProtocolClient?.highlightCode(RangeInFile(
+                                data.get("filepath").asString,
+                                Range(Position(
+                                        data.get("startLine").asInt,
+                                        0
+                                ), Position(
+                                        data.get("endLine").asInt + 1,
+                                        0
+                                )),
+
+                        ),"#00ff0022")
+                    }
+                    "showVirtualFile" -> {
+                        continuePluginService.ideProtocolClient?.showVirtualFile(data.get("name").asString, data.get("content").asString)
+                    }
+                    "showFile" -> {
+                        continuePluginService.ideProtocolClient?.setFileOpen(data.get("filepath").asString)
+                    }
+                    "reloadWindow" -> {}
                 }
 
 

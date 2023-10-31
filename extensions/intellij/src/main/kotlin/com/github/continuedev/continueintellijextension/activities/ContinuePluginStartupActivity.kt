@@ -21,6 +21,7 @@ import com.intellij.openapi.editor.EditorFactory
 import com.intellij.openapi.extensions.PluginId
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.keymap.KeymapManager
+import com.intellij.openapi.project.DumbAware
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.startup.StartupActivity
 import com.intellij.openapi.ui.DialogWrapper
@@ -459,7 +460,7 @@ class WelcomeDialogWrapper(val project: Project) : DialogWrapper(true) {
     }
 }
 
-class ContinuePluginStartupActivity : StartupActivity, Disposable {
+class ContinuePluginStartupActivity : StartupActivity, Disposable, DumbAware {
     private val coroutineScope = CoroutineScope(Dispatchers.IO)
 
     override fun runActivity(project: Project) {

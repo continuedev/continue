@@ -25,10 +25,6 @@ class ContinueGUIClientProtocol extends AbstractContinueGUIClientProtocol {
       ? new VscodeMessenger(serverUrl)
       : new SocketIOMessenger(serverUrl);
 
-    document.body.appendChild(
-      document.createTextNode(`WHATWHATWHAT ${serverUrl}`)
-    );
-
     this.messenger.onClose(() => {
       console.log("GUI Connection closed: ", serverUrl);
     });
