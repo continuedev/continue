@@ -866,36 +866,3 @@ class UserInputStep(Step):
         )
         self.description = self.user_input
         return UserInputObservation(user_input=self.user_input)
-
-
-class WaitForUserInputStep(Step):
-    prompt: str
-    name: str = "Waiting for user input"
-
-    _description: Union[str, None] = None
-    _response: Union[str, None] = None
-
-    async def describe(self, models: Models) -> Coroutine[str, None, None]:
-        if self._response is None:
-            return self.prompt
-        else:
-            return f"{self.prompt}\n\n`{self._response}`"
-
-    async def run(self, sdk: ContinueSDK):
-        yield SetStep(description=self.prompt)
-        resp = await sdk.wait_for_user_input()
-        yield SetStep(description=f"{self.prompt}\n\n`{resp}`")
-        yield TextObservation(text=resp)
-
-
-class WaitForUserConfirmationStep(Step):
-    prompt: str
-    name: str = "Waiting for user confirmation"
-
-    async def describe(self, models: Models) -> Coroutine[str, None, None]:
-        return self.prompt
-
-    async def run(self, sdk: ContinueSDK):
-        self.description = self.prompt
-        resp = await sdk.wait_for_user_input()
-        yield TextObservation(text=resp)

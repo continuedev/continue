@@ -143,16 +143,17 @@ class FileContextProvider(ContextProvider):
 
         items = []
         i = 0
+        delta = 1
         while i < len(absolute_filepaths):
             # Don't want to flood with too many requests
             items += await asyncio.gather(
                 *[
                     self.get_context_item_for_filepath(filepath)
-                    for filepath in absolute_filepaths[i : i + 100]
+                    for filepath in absolute_filepaths[i : i + delta]
                 ]
             )
 
-            i += 100
+            i += delta
             await asyncio.sleep(0.1)
 
         items = list(filter(lambda item: item is not None, items))

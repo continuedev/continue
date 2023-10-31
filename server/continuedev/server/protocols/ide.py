@@ -11,10 +11,6 @@ from typing import (
     Optional,
 )
 
-from ...core.main import SessionState
-
-from ...core.autopilot import Autopilot
-
 from ...libs.util.create_async_task import create_async_task
 from ...models.filesystem import (
     FileSystem,

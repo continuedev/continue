@@ -33,7 +33,7 @@ class CreateTableStep(Step):
         migration_filepath = out.text.split(" ")[1]
 
         # Wait for user input
-        await sdk.wait_for_user_confirmation("Fill in the migration?")
+        # await sdk.wait_for_user_confirmation("Fill in the migration?")
 
         # Fill in the migration
         await sdk.edit_file(

@@ -1,7 +1,5 @@
 import json
 from typing import Callable
-
-import aiohttp
 from pydantic import Field
 
 from ...core.main import ContinueCustomException
@@ -39,29 +37,16 @@ class TogetherLLM(LLM):
         description="The base URL for your Together API instance",
     )
 
-    _client_session: aiohttp.ClientSession = None
-
     template_messages: Callable = llama2_template_messages
 
     prompt_templates = {
         "edit": codellama_edit_prompt,
     }
 
-    async def start(self, *args, **kwargs):
-        await super().start(*args, **kwargs)
-        self._client_session = aiohttp.ClientSession(
-            connector=aiohttp.TCPConnector(verify_ssl=self.verify_ssl),
-            timeout=aiohttp.ClientTimeout(total=self.timeout),
-            trust_env=True,
-        )
-
-    async def stop(self):
-        await self._client_session.close()
-
     async def _stream_complete(self, prompt, options):
         args = self.collect_args(options)
 
-        async with self._client_session.post(
+        async with self.create_client_session().post(
             f"{self.base_url}/inference",
             json={
                 "prompt": prompt,
@@ -97,7 +82,7 @@ class TogetherLLM(LLM):
     async def _complete(self, prompt: str, options):
         args = self.collect_args(options)
 
-        async with self._client_session.post(
+        async with self.create_client_session().post(
             f"{self.base_url}/inference",
             json={"prompt": prompt, **args},
             headers={"Authorization": f"Bearer {self.api_key}"},

@@ -1072,7 +1072,8 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
             onMouseLeave={(e) => {
               if (
                 e.relatedTarget === deleteButtonDivRef.current ||
-                deleteButtonDivRef.current?.contains(e.relatedTarget as Node)
+                (e.relatedTarget instanceof Node &&
+                  deleteButtonDivRef.current?.contains(e.relatedTarget as Node))
               ) {
                 return;
               }
@@ -1426,7 +1427,10 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
 
       {props.isMainInput && (
         <ContinueButton
-          disabled={!(inputRef.current as any)?.value && !active}
+          disabled={
+            !active &&
+            (!(inputRef.current as any)?.value || typeof client === "undefined")
+          }
           onClick={() => {
             if (active) {
               client?.stopSession();

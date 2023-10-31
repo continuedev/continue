@@ -3,19 +3,15 @@ import os
 import traceback
 import uuid
 from typing import Dict, List, Optional
+
+from aiohttp import ClientPayloadError
+from openai import error as openai_errors
 import inspect
 
 from ..libs.util.strings import remove_quotes_and_escapes
-
 from ..libs.llm.prompts.chat import template_alpaca_messages
 from .context import ContextManager
-
-import redbaron
-from aiohttp import ClientPayloadError
-from openai import error as openai_errors
-
 from ..libs.util.devdata import dev_data_logger
-from ..libs.util.edit_config import edit_config_property
 from ..libs.util.logging import logger
 from ..libs.util.paths import getSavedContextGroupsPath
 from ..libs.util.telemetry import posthog_logger
@@ -135,15 +131,6 @@ class Autopilot:
         cmds = custom_commands + slash_commands
         cmds.sort(key=lambda x: x["name"] == "edit", reverse=True)
         return cmds
-
-    async def wait_for_user_input(self) -> str:
-        # Goes to sdk.gui
-        self._active = False
-        await self.update_subscribers()
-        user_input = await self._user_input_queue.get(str(self.history.current_index))
-        self._active = True
-        await self.update_subscribers()
-        return user_input
 
     async def handle_command_output(self, output: str):
         # Goes to window?

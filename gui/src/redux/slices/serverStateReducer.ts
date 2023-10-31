@@ -86,7 +86,6 @@ const TEST_CONTEXT_ITEMS: ContextItem[] = [
 
 const initialState: RootStore["serverState"] = {
   meilisearchUrl: undefined,
-  userInputQueue: [],
   slashCommands: [],
   selectedContextItems: [],
   config: {
@@ -101,12 +100,6 @@ export const serverStateSlice = createSlice({
   name: "serverState",
   initialState,
   reducers: {
-    temporarilyPushToUserInputQueue: (state, action) => {
-      return {
-        ...state,
-        userInputQueue: [...state.userInputQueue, action.payload],
-      };
-    },
     setSlashCommands: (state, action) => {
       return {
         ...state,
@@ -128,10 +121,6 @@ export const serverStateSlice = createSlice({
   },
 });
 
-export const {
-  temporarilyPushToUserInputQueue,
-  setContextProviders,
-  setSlashCommands,
-  setConfig,
-} = serverStateSlice.actions;
+export const { setContextProviders, setSlashCommands, setConfig } =
+  serverStateSlice.actions;
 export default serverStateSlice.reducer;

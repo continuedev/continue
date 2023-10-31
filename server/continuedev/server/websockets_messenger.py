@@ -61,6 +61,8 @@ class SocketIOMessenger:
                         title=f"Timed out waiting for response to '{message_type}'",
                         message=f"Timed out waiting for response to '{message_type}'. The message sent was: {data or ''}",
                     )
+            except asyncio.exceptions.CancelledError:
+                print("Cancelled")
 
     def post(self, msg: WebsocketsMessage):
         if msg.message_id in self.futures:

@@ -12,7 +12,7 @@ import { ContextProviderDescription } from "../schema/ContextProviderDescription
 import { SlashCommandDescription } from "../schema/SlashCommandDescription";
 
 import storage from "redux-persist/lib/storage";
-import { persistReducer, persistStore } from "redux-persist";
+import { persistReducer, persistStore, createTransform } from "redux-persist";
 
 export interface ChatMessage {
   role: "system" | "user" | "assistant";
@@ -25,7 +25,6 @@ export interface RootStore {
     apiUrl: string;
     vscMachineId: string | undefined;
     vscMediaUrl: string | undefined;
-    windowId: string | undefined;
   };
   misc: {
     takenAction: boolean;
@@ -42,7 +41,6 @@ export interface RootStore {
   sessionState: SessionFullState;
   serverState: {
     meilisearchUrl: string | undefined;
-    userInputQueue: string[];
     slashCommands: SlashCommandDescription[];
     selectedContextItems: ContextItem[];
     config: ContinueConfig;
@@ -59,9 +57,24 @@ const rootReducer = combineReducers({
   serverState: serverStateReducer,
 });
 
+const windowIDTransform = (windowID) =>
+  createTransform(
+    // transform state on its way to being serialized and persisted.
+    (inboundState, key) => {
+      return { [windowID]: inboundState };
+    },
+    // transform state being rehydrated
+    (outboundState, key) => {
+      return outboundState[windowID] || {};
+    }
+  );
+
 const persistConfig = {
   key: "root",
   storage,
+  transforms: [
+    windowIDTransform((window as any).windowId || "undefinedWindowId"),
+  ],
 };
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);

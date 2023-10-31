@@ -11,7 +11,6 @@ export const configSlice = createSlice({
       windowAny.vscMediaUrl || localStorage.getItem("vscMediaUrl") || undefined,
     workspacePaths: windowAny.workspacePaths || [],
     vscMachineId: windowAny.vscMachineId || undefined,
-    windowId: windowAny.windowId || undefined,
   } as RootStore["config"],
   reducers: {
     setWorkspacePaths: (

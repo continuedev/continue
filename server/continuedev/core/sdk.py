@@ -23,7 +23,6 @@ from .main import (
     ChatMessage,
     Context,
     ContextItem,
-    ContextItemId,
     ContinueCustomException,
     Step,
     StepDescription,
@@ -35,7 +34,6 @@ from .steps import (
     FileSystemEditStep,
     RangeInFileWithContents,
     ShellCommandsStep,
-    WaitForUserConfirmationStep,
 )
 
 
@@ -111,9 +109,6 @@ class ContinueSDK:
                 edit=edit, description=description, **({"name": name} if name else {})
             )
         )
-
-    async def wait_for_user_confirmation(self, prompt: str):
-        return await self.run_step(WaitForUserConfirmationStep(prompt=prompt))
 
     async def run(
         self,

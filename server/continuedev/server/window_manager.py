@@ -116,8 +116,9 @@ class Window:
             if filepath.endswith(".continue/config.py") or filepath.endswith(
                 ".continue\\config.py"
             ):
-                self.config = self.load_config()
-                await self.gui.send_config_update()
+                await self.reload_config()
+                if self.gui is not None:
+                    await self.gui.send_config_update()
 
         self.ide.subscribeToFileSaved(onFileSavedCallback)
 

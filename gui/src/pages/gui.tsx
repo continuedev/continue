@@ -30,7 +30,6 @@ import {
   setShowDialog,
 } from "../redux/slices/uiStateSlice";
 import RingLoader from "../components/RingLoader";
-import { temporarilyPushToUserInputQueue } from "../redux/slices/serverStateReducer";
 import TimelineItem from "../components/TimelineItem";
 import ErrorStepContainer from "../components/ErrorStepContainer";
 import {
@@ -143,9 +142,6 @@ function GUI(props: GUIProps) {
   const serverStatusMessage = useSelector(
     (state: RootStore) => state.misc.serverStatusMessage
   );
-  const user_input_queue = useSelector(
-    (state: RootStore) => state.serverState.userInputQueue
-  );
 
   const sessionTitle = useSelector(
     (state: RootStore) => state.sessionState.title
@@ -248,15 +244,6 @@ function GUI(props: GUIProps) {
   }, [client, active]);
 
   // #endregion
-
-  useEffect(() => {
-    if (client && waitingForClient) {
-      setWaitingForClient(false);
-      for (const input of user_input_queue) {
-        client.sendMainInput(input);
-      }
-    }
-  }, [client, user_input_queue, waitingForClient]);
 
   const sendInput = useCallback(
     (input: string) => {
@@ -412,9 +399,8 @@ function GUI(props: GUIProps) {
 
   const onMainTextInput = (event?: any) => {
     dispatch(setTakenActionTrue(null));
-    if (mainTextInputRef.current) {
+    if (mainTextInputRef.current && client) {
       let input = (mainTextInputRef.current as any).inputValue;
-      console.log("Sending main input", input);
 
       if (input.trim() === "") return;
 
@@ -429,10 +415,6 @@ function GUI(props: GUIProps) {
         input = `/edit ${input}`;
       }
       (mainTextInputRef.current as any).setInputValue("");
-      if (!client) {
-        dispatch(temporarilyPushToUserInputQueue(input));
-        return;
-      }
 
       sendInput(input);
     }
@@ -808,12 +790,6 @@ function GUI(props: GUIProps) {
           );
         })}
       </StepsDiv>
-
-      <div>
-        {user_input_queue?.map?.((input, idx) => {
-          return <UserInputQueueItem key={idx}>{input}</UserInputQueueItem>;
-        })}
-      </div>
 
       <div ref={aboveComboBoxDivRef} />
       <ComboBox
