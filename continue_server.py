@@ -3,9 +3,9 @@ import sys
 
 from server.main import main
 
-__import__('pysqlite3')
-import sys
-sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
+# __import__('pysqlite3')
+# import sys
+# sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
 
 if getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"):
     ca_bundle_path = os.path.join(sys._MEIPASS, "ca_bundle", "cacert.pem")
