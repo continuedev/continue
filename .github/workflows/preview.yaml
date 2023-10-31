@@ -97,7 +97,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: "3.11"
+          python-version: "3.10.8"
 
       - name: Install Pyinstaller
         run: |
@@ -107,28 +107,34 @@ jobs:
         run: |
           pip install -r server/requirements.txt
 
-      - name: Install newer sqlite on linux
-        run: pip install pysqlite3-binary
-        if: matrix.os == 'ubuntu-20.04'
+      # - name: Install newer sqlite on linux
+      #   run: pip install pysqlite3-binary
+      #   if: matrix.os == 'ubuntu-20.04'
 
       # Download the latest release of SQLite source code and build the source
       # amalgamation files (sqlite3.c and sqlite3.h).
 
+      - name: Git clone pysqlite3
+        run: git clone https://github.com/coleifer/pysqlite3
+        if: matrix.os == 'ubuntu-20.04'
+
+      - name: Install newer sqlite3 on linux
+        run: |
+          wget https://www.sqlite.org/src/tarball/sqlite.tar.gz?r=release \
+          -O sqlite.tar.gz
+          tar xzf sqlite.tar.gz
+          cd sqlite/
+          ./configure
+          make sqlite3.c
+        if: matrix.os == 'ubuntu-20.04'
+
       # Copy the sqlite3 amalgamation files into the root of the pysqlite3 checkout
       # and run build_static + build:
-      # - name: Install newer sqlite3 on linux
-      #   run: |
-      #     wget https://www.sqlite.org/src/tarball/sqlite.tar.gz?r=release \
-      #     -O sqlite.tar.gz
-      #     tar xzf sqlite.tar.gz
-      #     cd sqlite/
-      #     ./configure
-      #     make sqlite3.c
-
-      #     cp sqlite/sqlite3.[ch] pysqlite3/
-      #     cd pysqlite3
-      #     python setup.py build_static build
-      #   if: matrix.os == 'ubuntu-20.04'
+      - name: Copy and static build
+        run: |
+          cp sqlite/sqlite3.[ch] pysqlite3/
+          cd pysqlite3
+          python setup.py build_static build
 
       - name: Install tiktoken vocab file
         # Done to avoid extra network request to download the vocab file
