@@ -5,7 +5,7 @@ from contextlib import asynccontextmanager
 from typing import List, Optional
 
 from ..core.main import ContextProviderDescription, SlashCommandDescription
-from ..core.config import ContinueConfig, SlashCommand
+from ..core.config import ContinueConfig
 
 import uvicorn
 from fastapi import FastAPI
@@ -66,6 +66,11 @@ def get_slash_commands() -> List[SlashCommandDescription]:
 @app.get("/context_providers")
 def get_context_providers() -> List[ContextProviderDescription]:
     return root_config.get_context_provider_descriptions()
+
+
+@app.get("/health")
+def health_check():
+    return {"status": "ok"}
 
 
 # endregion
