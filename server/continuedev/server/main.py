@@ -69,7 +69,8 @@ def get_context_providers() -> List[ContextProviderDescription]:
 
 
 @app.get("/health")
-def health_check():
+def health():
+    logger.debug("Health check")
     return {"status": "ok"}
 
 
