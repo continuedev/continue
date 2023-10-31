@@ -1,4 +1,4 @@
-import { useContext, useEffect, useRef, useState } from "react";
+import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import styled from "styled-components";
 import {
   StyledTooltip,
@@ -158,6 +158,23 @@ const PillButton = (props: PillButtonProps) => {
     }
   }, [props.editing, props.item]);
 
+  const setEditing = useCallback(() => {
+    if (!props.editing) {
+      dispatch(
+        setEditingAtIds({
+          ids: [props.item.description.id],
+          index: props.inputIndex,
+        })
+      );
+    }
+    if (!props.editingAny) {
+      props.prefixInputWithEdit?.(true);
+    }
+    if (props.editingAny && props.editing) {
+      props.prefixInputWithEdit?.(false);
+    }
+  }, [props.editing, props.editingAny, props.item, props.inputIndex]);
+
   const pillContainerRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
 
@@ -193,7 +210,7 @@ const PillButton = (props: PillButtonProps) => {
             } else if (e.key === "v") {
               props.toggleViewContent?.();
             } else if (e.key === "e") {
-              client?.setEditingAtIds([props.item.description.id.item_id]);
+              setEditing();
             }
           }}
           onClick={(e) => {
@@ -250,28 +267,7 @@ const PillButton = (props: PillButtonProps) => {
               text={
                 props.editing ? "Editing this range" : "Edit this range (e)"
               }
-              onClick={() => {
-                if (!props.editing) {
-                  console.log(
-                    props.item.description.id,
-                    props.inputIndex,
-                    "edit",
-                    selectedContextItems
-                  );
-                  dispatch(
-                    setEditingAtIds({
-                      ids: [props.item.description.id],
-                      index: props.inputIndex,
-                    })
-                  );
-                }
-                if (!props.editingAny) {
-                  props.prefixInputWithEdit?.(true);
-                }
-                if (props.editingAny && props.editing) {
-                  props.prefixInputWithEdit?.(false);
-                }
-              }}
+              onClick={setEditing}
               tabIndex={-1}
               color="#f0f4"
               selected={props.editing}
