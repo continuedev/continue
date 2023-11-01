@@ -1,3 +1,4 @@
+import asyncio
 import json
 import traceback
 from typing import List
@@ -70,6 +71,7 @@ class ProxyServer(LLM):
                             if chunk.strip() != "":
                                 loaded_chunk = json.loads(chunk)
                                 yield loaded_chunk
+                                await asyncio.sleep(0.01)
 
                     except Exception as e:
                         posthog_logger.capture_event(

@@ -24,7 +24,7 @@ Local Models
 
 Open-Source Models (not local)
 
-- [TogetherLLM](../reference/Models/togetherllm.md) - Use any model from the [Together Models list](https://docs.together.ai/docs/models-inference) with your Together API key.
+- [TogetherLLM](../reference/Models/togetherllm.md) - Use any model from the [Together Models list](https://docs.together.ai/docs/inference-models) with your Together API key.
 - [ReplicateLLM](../reference/Models/replicatellm.md) - Use any open-source model from the [Replicate Streaming List](https://replicate.com/collections/streaming-language-models) with your Replicate API key.
 - [HuggingFaceInferenceAPI](../reference/Models/huggingfaceinferenceapi.md) - Use any open-source model from the [Hugging Face Inference API](https://huggingface.co/inference-api) with your Hugging Face token.
 

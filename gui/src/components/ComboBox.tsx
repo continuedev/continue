@@ -1107,6 +1107,11 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
                 setInputFocused(false);
               },
               onKeyDown: (event) => {
+                // Prevent duplicate calls to keyDown events due to IME.
+                if (isComposing) {
+                  return;
+                }
+                
                 dispatch(setBottomMessage(undefined));
                 if (event.key === "Enter" && event.shiftKey) {
                   // Prevent Downshift's default 'Enter' behavior.

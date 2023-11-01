@@ -65,11 +65,12 @@ class Window:
 
     async def reload_config(self):
         self.config = self.load_config()
-        await self.config.models.start(
-            self.ide.window_info.unique_id,
-            self.config.system_message,
-            self.config.temperature,
-        )
+        if self.ide is not None:
+            await self.config.models.start(
+                self.ide.window_info.unique_id,
+                self.config.system_message,
+                self.config.temperature,
+            )
 
     async def load(
         self, config: Optional[ContinueConfig] = None, only_reloading: bool = False

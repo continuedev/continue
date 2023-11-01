@@ -398,7 +398,7 @@ function GUI(props: GUIProps) {
         localStorage.setItem("mainTextEntryCounter", "1");
       }
     },
-    [client, sessionState.history, sessionState.context_items]
+    [client, sessionState.history, sessionState.context_items, defaultModel]
   );
 
   useEffect(() => {

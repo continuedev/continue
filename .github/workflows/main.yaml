@@ -286,7 +286,7 @@ jobs:
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          git commit -am "ci: 🏷 Update PyPI version [skip ci]"
+          git commit -am "💚 Update package.json version [skip ci]"
 
       - name: Push changes
         uses: ad-m/github-push-action@master

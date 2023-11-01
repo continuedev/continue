@@ -1,5 +1,5 @@
 // Write a component that displays a dialog box with a text field and a button.
-import React, { useEffect, useState } from "react";
+import React, { isValidElement, useEffect, useState } from "react";
 import styled from "styled-components";
 import { Button, secondaryDark, vscBackground, vscForeground } from ".";
 import { isMetaEquivalentKeyPressed } from "../util";
@@ -71,6 +71,10 @@ const TextDialog = (props: {
     };
   }, [props]);
 
+  if (!isValidElement(props.message) && typeof props.message !== "string") {
+    return null;
+  }
+
   return (
     <ScreenCover
       onClick={() => {
@@ -86,7 +90,7 @@ const TextDialog = (props: {
         <Dialog>
           {typeof props.message === "string" ? (
             <ReactMarkdown>{props.message || ""}</ReactMarkdown>
-          ) : (
+          ) : !React.isValidElement(props.message) ? null : (
             props.message
           )}
         </Dialog>

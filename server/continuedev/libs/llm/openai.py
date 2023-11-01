@@ -1,4 +1,5 @@
-from typing import Callable, List, Literal, Optional
+import asyncio
+from typing import List, Literal, Optional
 
 import certifi
 from ..util.count_tokens import MAX_TOKENS_FOR_MODEL
@@ -160,6 +161,11 @@ class OpenAI(LLM):
             ):
                 if not hasattr(chunk, "choices") or len(chunk.choices) == 0:
                     continue
+
+                if self.api_type == "azure":
+                    # To smooth out the response streaming, which typically comes in bursts
+                    await asyncio.sleep(0.01)
+
                 yield chunk.choices[0].delta
         else:
             async for chunk in await openai.Completion.acreate(
