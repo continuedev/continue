@@ -343,18 +343,19 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
   >(undefined);
 
   const availableSlashCommands = useSelector(
-    (state: RootStore) => state.serverState.slashCommands
-  ).map((cmd) => {
-    return {
-      name: `/${cmd.name}`,
-      description: cmd.description,
-    };
-  });
+    (state: RootStore) =>
+      state.serverState.slashCommands?.map((cmd) => {
+        return {
+          name: `/${cmd.name}`,
+          description: cmd.description,
+        };
+      }) || []
+  );
   const selectedContextItems = useSelector((state: RootStore) => {
     if (typeof props.index !== "undefined") {
       return state.sessionState.contextItemsAtIndex[props.index] || [];
     } else {
-      return state.sessionState.context_items;
+      return state.sessionState.context_items || [];
     }
   });
 

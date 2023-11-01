@@ -555,7 +555,7 @@ function GUI(props: GUIProps) {
           }}
         />
         <div className="flex gap-2">
-          {sessionState.history.filter((n) => !n.hide).length > 0 && (
+          {sessionState?.history?.filter((n) => !n.hide).length > 0 && (
             <HeaderButtonWithText
               onClick={() => {
                 client?.stopSession();
@@ -650,7 +650,7 @@ function GUI(props: GUIProps) {
       )}
       <br />
       <StepsDiv>
-        {sessionState.history.map((step: StepDescription, index: number) => {
+        {sessionState?.history?.map((step: StepDescription, index: number) => {
           if (step.hide) return null;
           return (
             <Fragment key={index}>

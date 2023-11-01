@@ -173,19 +173,20 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
             self.onAcceptRejectDiff(data["accepted"], data["stepIndex"])
         elif msg.message_type == "mainUserInput":
             self.onMainUserInput(data["input"])
-        elif msg.message_type in [
-            "highlightedCode",
-            "openFiles",
-            "visibleFiles",
-            "readFile",
-            "editFile",
-            "getUserSecret",
-            "runCommand",
-            "getTerminalContents",
-            "listDirectoryContents",
-            "fileExists",
-        ]:
-            self.messenger.post(msg)
+        # elif msg.message_type in [
+        #     "highlightedCode",
+        #     "openFiles",
+        #     "visibleFiles",
+        #     "readFile",
+        #     "readFiles",
+        #     "editFile",
+        #     "getUserSecret",
+        #     "runCommand",
+        #     "getTerminalContents",
+        #     "listDirectoryContents",
+        #     "fileExists",
+        # ]:
+        #     self.messenger.post(msg)
         elif msg.message_type == "workspaceDirectory":
             self.workspace_directory = data["workspaceDirectory"]
         elif msg.message_type == "uniqueId":

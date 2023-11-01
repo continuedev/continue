@@ -96,9 +96,10 @@ class FileContextProvider(ContextProvider):
         )
 
     async def get_context_item_for_filepath(
-        self, absolute_filepath: str
+        self, absolute_filepath: str, content: Optional[str] = None
     ) -> Optional[ContextItem]:
-        content = await get_file_contents(absolute_filepath, self.ide)
+        if content is None:
+            content = await get_file_contents(absolute_filepath, self.ide)
         if content is None:
             return None
 
@@ -143,7 +144,8 @@ class FileContextProvider(ContextProvider):
 
         items = []
         i = 0
-        delta = 1
+        timeout = 0.1
+        delta = 100
         while i < len(absolute_filepaths):
             # Don't want to flood with too many requests
             items += await asyncio.gather(
@@ -154,7 +156,7 @@ class FileContextProvider(ContextProvider):
             )
 
             i += delta
-            await asyncio.sleep(0.1)
+            await asyncio.sleep(timeout)
 
         items = list(filter(lambda item: item is not None, items))
 

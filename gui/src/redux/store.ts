@@ -72,9 +72,9 @@ const windowIDTransform = (windowID) =>
 const persistConfig = {
   key: "root",
   storage,
-  transforms: [
-    windowIDTransform((window as any).windowId || "undefinedWindowId"),
-  ],
+  // transforms: [
+  //   windowIDTransform((window as any).windowId || "undefinedWindowId"),
+  // ],
 };
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);

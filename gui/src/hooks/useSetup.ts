@@ -49,6 +49,7 @@ function useSetup(
         !requestedTitle &&
         !active &&
         title === "New Session" &&
+        history &&
         history.filter((step) => !step.hide).length >= 2
       ) {
         setRequestedTitle(true);

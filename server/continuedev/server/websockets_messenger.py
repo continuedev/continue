@@ -25,14 +25,18 @@ class SocketIOMessenger:
         self.sid = sid
 
     async def send(
-        self, message_type: str, data: Dict[str, Any], message_id: Optional[str] = None
+        self,
+        message_type: str,
+        data: Dict[str, Any],
+        message_id: Optional[str] = None,
+        callback=None,
     ):
         msg = WebsocketsMessage(
             message_type=message_type,
             data=data,
             message_id=message_id or uuid.uuid4().hex,
         )
-        await self.sio.send(msg.dict(), to=self.sid)
+        await self.sio.send(msg.dict(), to=self.sid, callback=callback)
 
     async def receive(self, message_id: str) -> WebsocketsMessage:
         if message_id not in self.futures:
@@ -46,9 +50,20 @@ class SocketIOMessenger:
         message_id = uuid.uuid4().hex
 
         async def try_with_timeout(timeout: int):
-            await self.send(message_type, data, message_id=message_id)
-            resp = await asyncio.wait_for(self.receive(message_id), timeout=timeout)
-            return resp_model.parse_obj(resp.data)
+            fut = asyncio.Future()
+
+            def callback(ack_data):
+                fut.set_result(ack_data)
+
+            await self.send(
+                message_type, data, message_id=message_id, callback=callback
+            )
+            response = await fut
+            return resp_model.parse_obj(response["data"])
+
+            # await self.send(message_type, data, message_id=message_id)
+            # resp = await asyncio.wait_for(self.receive(message_id), timeout=timeout)
+            # return resp_model.parse_obj(resp.data)
 
         timeout = 1.0
         while True:
@@ -62,7 +77,7 @@ class SocketIOMessenger:
                         message=f"Timed out waiting for response to '{message_type}'. The message sent was: {data or ''}",
                     )
             except asyncio.exceptions.CancelledError:
-                print("Cancelled")
+                print(f"Cancelled task {message_type}")
 
     def post(self, msg: WebsocketsMessage):
         if msg.message_id in self.futures:

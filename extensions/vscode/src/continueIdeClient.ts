@@ -65,26 +65,28 @@ class IdeProtocolClient {
       transports: ["websocket", "polling", "flashsocket"],
     });
 
-    this.socket.on("message", (message) => {
+    this.socket.on("message", (message, callback) => {
       const {
         message_type: messageType,
         data,
         message_id: messageId,
       } = message;
-      this.handleMessage(messageType, data, messageId).catch((err) => {
-        console.log("Error handling message: ", err);
-        vscode.window
-          .showErrorMessage(
-            `Error handling message (${messageType}) from Continue server: ` +
-              err,
-            "View Logs"
-          )
-          .then((selection) => {
-            if (selection === "View Logs") {
-              vscode.commands.executeCommand("continue.viewLogs");
-            }
-          });
-      });
+      this.handleMessage(messageType, data, messageId, callback).catch(
+        (err) => {
+          console.log("Error handling message: ", err);
+          vscode.window
+            .showErrorMessage(
+              `Error handling message (${messageType}) from Continue server: ` +
+                err,
+              "View Logs"
+            )
+            .then((selection) => {
+              if (selection === "View Logs") {
+                vscode.commands.executeCommand("continue.viewLogs");
+              }
+            });
+        }
+      );
     });
 
     // Listen for new file creation
@@ -197,57 +199,69 @@ class IdeProtocolClient {
 
   visibleMessages: Set<string> = new Set();
 
-  async handleMessage(messageType: string, data: any, messageId: string) {
+  async handleMessage(
+    messageType: string,
+    data: any,
+    messageId: string,
+    callback: (data: any) => void
+  ) {
+    const respond = (messageType: string, responseData: any) => {
+      callback({
+        message_type: messageType,
+        data: responseData,
+        message_id: messageId,
+      });
+    };
     switch (messageType) {
       case "highlightedCode":
-        this.send("highlightedCode", messageId, {
+        respond("highlightedCode", {
           highlightedCode: this.getHighlightedCode(),
         });
         break;
       case "workspaceDirectory":
-        this.send("workspaceDirectory", messageId, {
+        respond("workspaceDirectory", {
           workspaceDirectory: this.getWorkspaceDirectory(),
         });
         break;
       case "uniqueId":
-        this.send("uniqueId", messageId, {
+        respond("uniqueId", {
           uniqueId: this.getUniqueId(),
         });
         break;
       case "ide":
-        this.send("ide", messageId, {
+        respond("ide", {
           name: "vscode",
           version: vscode.version,
           remoteName: vscode.env.remoteName,
         });
         break;
       case "fileExists":
-        this.send("fileExists", messageId, {
+        respond("fileExists", {
           exists: await this.fileExists(data.filepath),
         });
         break;
       case "getUserSecret":
-        this.send("getUserSecret", messageId, {
+        respond("getUserSecret", {
           value: await this.getUserSecret(data.key),
         });
         break;
       case "openFiles":
-        this.send("openFiles", messageId, {
+        respond("openFiles", {
           openFiles: this.getOpenFiles(),
         });
         break;
       case "visibleFiles":
-        this.send("visibleFiles", messageId, {
+        respond("visibleFiles", {
           visibleFiles: this.getVisibleFiles(),
         });
         break;
       case "readFile":
-        this.send("readFile", messageId, {
+        respond("readFile", {
           contents: await this.readFile(data.filepath),
         });
         break;
       case "getTerminalContents":
-        this.send("getTerminalContents", messageId, {
+        respond("getTerminalContents", {
           contents: await this.getTerminalContents(data.commands),
         });
         break;
@@ -262,13 +276,13 @@ class IdeProtocolClient {
           console.log("Error listing directory contents: ", e);
           contents = [];
         }
-        this.send("listDirectoryContents", messageId, {
+        respond("listDirectoryContents", {
           contents,
         });
         break;
       case "editFile":
         const fileEdit = await this.editFile(data.edit);
-        this.send("editFile", messageId, {
+        respond("editFile", {
           fileEdit,
         });
         break;
@@ -276,7 +290,7 @@ class IdeProtocolClient {
         this.highlightCode(data.rangeInFile, data.color);
         break;
       case "runCommand":
-        this.send("runCommand", messageId, {
+        respond("runCommand", {
           output: await this.runCommand(data.command),
         });
         break;
@@ -556,19 +570,24 @@ class IdeProtocolClient {
   }
 
   async readFile(filepath: string): Promise<string> {
+    const MAX_BYTES = 500000; // 0.5MB - socket.io has a 1MB limit, but seems to die a bit above 0.5MB
     let contents: string | undefined;
     if (typeof contents === "undefined") {
       try {
         const fileStats = await vscode.workspace.fs.stat(
           uriFromFilePath(filepath)
         );
-        if (fileStats.size > 1000000) {
+        if (fileStats.size > 10 * MAX_BYTES) {
           return "";
         }
 
-        contents = await vscode.workspace.fs
-          .readFile(uriFromFilePath(filepath))
-          .then((bytes) => new TextDecoder().decode(bytes));
+        const bytes = await vscode.workspace.fs.readFile(
+          uriFromFilePath(filepath)
+        );
+
+        // Truncate the buffer to the first MAX_BYTES
+        const truncatedBytes = bytes.slice(0, MAX_BYTES);
+        contents = new TextDecoder().decode(truncatedBytes);
       } catch {
         contents = "";
       }
