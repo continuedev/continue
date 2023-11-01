@@ -5,21 +5,23 @@ import com.github.continuedev.continueintellijextension.toolWindow.ContinuePlugi
 import com.google.gson.Gson
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.components.Service
+import com.intellij.openapi.project.DumbAware
 import com.intellij.openapi.project.Project
 import com.intellij.ui.jcef.executeJavaScriptAsync
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
+import java.util.UUID
 
 @Service(Service.Level.PROJECT)
-class ContinuePluginService(project: Project) : Disposable {
+class ContinuePluginService(project: Project) : Disposable, DumbAware {
     val coroutineScope = CoroutineScope(Dispatchers.Main)
     var continuePluginWindow: ContinuePluginToolWindowFactory.ContinuePluginWindow? = null
 
     var ideProtocolClient: IdeProtocolClient? = null
-    var sessionId: String? = null
     var worksapcePaths: Array<String>? = null
+    var windowId: String = UUID.randomUUID().toString()
 
     override fun dispose() {
         coroutineScope.cancel()

@@ -1,4 +1,6 @@
-import { ContextItem, ContextItemId } from "../schema/FullState";
+import { ContextItem } from "../schema/ContextItem";
+import { ContextItemId } from "../schema/ContextItemId";
+import { ContinueConfig } from "../schema/ContinueConfig";
 
 abstract class AbstractContinueGUIClientProtocol {
   abstract sendMainInput(input: string): void;
@@ -19,19 +21,17 @@ abstract class AbstractContinueGUIClientProtocol {
 
   abstract retryAtIndex(index: number): void;
 
-  abstract deleteAtIndex(index: number): void;
-
   abstract deleteContextWithIds(ids: ContextItemId[], index?: number): void;
 
   abstract setEditingAtIds(ids: string[]): void;
 
   abstract toggleAddingHighlightedCode(): void;
 
-  abstract showLogsAtIndex(index: number): void;
-
   abstract showContextVirtualFile(): void;
 
   abstract selectContextItem(id: string, query: string): void;
+
+  abstract getContextItem(id: string, query: string): Promise<ContextItem>;
 
   abstract selectContextItemAtIndex(
     id: string,
@@ -40,8 +40,6 @@ abstract class AbstractContinueGUIClientProtocol {
   ): void;
 
   abstract loadSession(session_id?: string): void;
-
-  abstract onReconnectAtSession(session_id: string): void;
 
   abstract editStepAtIndex(userInput: string, index: number): void;
 
@@ -61,9 +59,7 @@ abstract class AbstractContinueGUIClientProtocol {
 
   abstract deleteContextGroup(id: string): void;
 
-  abstract setCurrentSessionTitle(title: string): void;
-
-  abstract previewContextItem(id: string): void;
+  abstract onConfigUpdate(callback: (config: ContinueConfig) => void);
 }
 
 export default AbstractContinueGUIClientProtocol;

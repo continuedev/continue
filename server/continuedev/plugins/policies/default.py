@@ -1,20 +1,29 @@
 from typing import Type, Union
 
+from ..steps.clear_history import ClearHistoryStep
+from ..steps.comment_code import CommentCodeStep
+from ..steps.share_session import ShareSessionStep
 from ..steps.chroma import AnswerQuestionChroma
-
 from ...core.config import ContinueConfig
-from ...core.main import History, Policy, Step
-from ...core.observation import UserInputObservation
+from ...core.main import Policy, SessionState, Step
 from ..steps.chat import SimpleChatStep
 from ..steps.custom_command import CustomCommandStep
 from ..steps.main import EditHighlightedCodeStep
 from ..steps.steps_on_startup import StepsOnStartupStep
+from ..steps.cmd import GenerateShellCommandStep
 
 
 # When importing with importlib from config.py, the classes do not pass isinstance checks.
 # Mapping them here is a workaround.
 # Original description of the problem: https://github.com/continuedev/continue/pull/581#issuecomment-1778138841
-REPLACEMENT_SLASH_COMMAND_STEPS = [AnswerQuestionChroma]
+REPLACEMENT_SLASH_COMMAND_STEPS = [
+    AnswerQuestionChroma,
+    GenerateShellCommandStep,
+    EditHighlightedCodeStep,
+    ShareSessionStep,
+    CommentCodeStep,
+    ClearHistoryStep,
+]
 
 
 def parse_slash_command(inp: str, config: ContinueConfig) -> Union[None, Step]:
@@ -64,25 +73,24 @@ class DefaultPolicy(Policy):
     default_step: Type[Step] = SimpleChatStep
     default_params: dict = {}
 
-    def next(self, config: ContinueConfig, history: History) -> Step:
+    def next(self, config: ContinueConfig, session_state: SessionState) -> Step:
         # At the very start, run initial Steps specified in the config
-        if history.get_current() is None:
+        if len(session_state.history) == 0:
             return StepsOnStartupStep()
 
-        observation = history.get_current().observation
-        if observation is not None and isinstance(observation, UserInputObservation):
-            # This could be defined with ObservationTypePolicy. Ergonomics not right though.
-            user_input = observation.user_input
+        last_step = session_state.history[-1]
+        if last_step.step_type == "UserInputStep":
+            user_input = last_step.description
 
             slash_command = parse_slash_command(user_input, config)
             if slash_command is not None:
                 if (
                     getattr(slash_command, "user_input", None) is None
-                    and history.get_current().step.user_input is not None
+                    and last_step.params["user_input"] is not None
                 ):
-                    history.get_current().step.user_input = (
-                        history.get_current().step.user_input.split()[0]
-                    )
+                    last_step.params["user_input"] = last_step.params[
+                        "user_input"
+                    ].split()[0]
                 return slash_command
 
             custom_command = parse_custom_command(user_input, config)
@@ -93,5 +101,3 @@ class DefaultPolicy(Policy):
                 return EditHighlightedCodeStep(user_input=user_input[5:])
 
             return self.default_step(**self.default_params)
-
-        return None

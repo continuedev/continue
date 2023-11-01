@@ -1,0 +1,136 @@
+{
+  "title": "SessionUpdate",
+  "$ref": "#/definitions/continuedev__core__main__SessionUpdate",
+  "definitions": {
+    "Observation": {
+      "title": "Observation",
+      "type": "object",
+      "properties": {}
+    },
+    "DeltaStep": {
+      "title": "DeltaStep",
+      "type": "object",
+      "properties": {
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "description": {
+          "title": "Description",
+          "type": "string"
+        },
+        "observations": {
+          "title": "Observations",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Observation"
+          }
+        },
+        "logs": {
+          "title": "Logs",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "ContinueError": {
+      "title": "ContinueError",
+      "type": "object",
+      "properties": {
+        "title": {
+          "title": "Title",
+          "type": "string"
+        },
+        "message": {
+          "title": "Message",
+          "type": "string"
+        }
+      },
+      "required": [
+        "title",
+        "message"
+      ]
+    },
+    "SetStep": {
+      "title": "SetStep",
+      "type": "object",
+      "properties": {
+        "step_type": {
+          "title": "Step Type",
+          "type": "string"
+        },
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "description": {
+          "title": "Description",
+          "type": "string"
+        },
+        "params": {
+          "title": "Params",
+          "type": "object"
+        },
+        "hide": {
+          "title": "Hide",
+          "type": "boolean"
+        },
+        "depth": {
+          "title": "Depth",
+          "type": "integer"
+        },
+        "error": {
+          "$ref": "#/definitions/ContinueError"
+        },
+        "observations": {
+          "title": "Observations",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Observation"
+          }
+        },
+        "logs": {
+          "title": "Logs",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "continuedev__core__main__SessionUpdate": {
+      "title": "SessionUpdate",
+      "type": "object",
+      "properties": {
+        "index": {
+          "title": "Index",
+          "type": "integer"
+        },
+        "update": {
+          "title": "Update",
+          "anyOf": [
+            {
+              "$ref": "#/definitions/DeltaStep"
+            },
+            {
+              "$ref": "#/definitions/SetStep"
+            },
+            {
+              "$ref": "#/definitions/continuedev__core__main__SessionUpdate"
+            }
+          ]
+        },
+        "stop": {
+          "title": "Stop",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "index",
+        "update"
+      ]
+    }
+  }
+}

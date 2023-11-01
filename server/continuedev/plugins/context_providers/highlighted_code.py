@@ -1,5 +1,7 @@
+import asyncio
 import os
-from typing import Any, Dict, List, Optional
+from typing import Dict, List, Optional
+from ...server.protocols.ide_protocol import AbstractIdeProtocolServer
 
 from pydantic import BaseModel
 
@@ -32,7 +34,10 @@ class HighlightedCodeContextProvider(ContextProvider):
     description = "Highlight code"
     dynamic = True
 
-    ide: Any  # IdeProtocolServer
+    ide: AbstractIdeProtocolServer
+
+    class Config:
+        arbitrary_types_allowed = True
 
     highlighted_ranges: List[HighlightedRangeContextItem] = []
     adding_highlighted_code: bool = True
@@ -71,21 +76,27 @@ class HighlightedCodeContextProvider(ContextProvider):
 
         return items
 
-    async def get_chat_messages(self) -> List[ContextItem]:
-        ranges = self.highlighted_ranges
-        if len(ranges) == 0 and (
-            fallback_item := await self._get_fallback_context_item()
-        ):
-            ranges = [fallback_item]
+    @staticmethod
+    async def get_range_in_file_with_contents(
+        ide, item: ContextItem
+    ) -> RangeInFileWithContents:
+        lines = item.description.name.split("(")[1].split(")")[0].split("-")
+        rif = RangeInFile(
+            filepath=item.description.description,
+            range=Range.from_shorthand(int(lines[0]) - 1, 0, int(lines[1]), 0),
+        )
+        contents = await ide.readRangeInFile(rif)
+        return rif.with_contents(contents)
 
-        return [
-            ChatMessage(
-                role="user",
-                content=f"Code in this file is highlighted ({r.rif.filepath}):\n```\n{r.rif.contents}\n```",
-                summary=f"Code in this file is highlighted: {r.rif.filepath}",
-            )
-            for r in ranges
-        ]
+    async def get_chat_message(self, item: ContextItem) -> List[ContextItem]:
+        rif = await HighlightedCodeContextProvider.get_range_in_file_with_contents(
+            self.ide, item
+        )
+        return ChatMessage(
+            role="user",
+            content=f"Code in this file is highlighted ({item.description.name}):\n```\n{rif.contents}\n```",
+            summary=f"Code in this file is highlighted: {item.description.name}",
+        )
 
     def _make_sure_is_editing_range(self):
         """If none of the highlighted ranges are currently being edited, the first should be selected"""
@@ -131,24 +142,6 @@ class HighlightedCodeContextProvider(ContextProvider):
         self.adding_highlighted_code = False
         self.should_get_fallback_context_item = True
         self.last_added_fallback = False
-
-    async def delete_context_with_ids(
-        self, ids: List[ContextItemId]
-    ) -> List[ContextItem]:
-        ids_to_delete = [id.item_id for id in ids]
-
-        kept_ranges = []
-        for hr in self.highlighted_ranges:
-            if hr.item.description.id.item_id not in ids_to_delete:
-                kept_ranges.append(hr)
-        self.highlighted_ranges = kept_ranges
-
-        self._make_sure_is_editing_range()
-
-        if len(self.highlighted_ranges) == 0 and self.last_added_fallback:
-            self.should_get_fallback_context_item = False
-
-        return [hr.item for hr in self.highlighted_ranges]
 
     def _rif_to_name(
         self,
@@ -274,38 +267,20 @@ class HighlightedCodeContextProvider(ContextProvider):
     ) -> List[ContextItem]:
         raise NotImplementedError()
 
-    async def manually_add_context_item(self, context_item: ContextItem):
-        full_file_content = await self.ide.readFile(
-            context_item.description.description
-        )
-        self.highlighted_ranges.append(
-            HighlightedRangeContextItem(
-                rif=RangeInFileWithContents(
-                    filepath=context_item.description.description,
-                    range=Range.from_lines_snippet_in_file(
-                        content=full_file_content,
-                        snippet=context_item.content,
-                    ),
-                    contents=context_item.content,
-                ),
-                item=context_item,
-            )
-        )
-
     async def preview_contents(self, id: ContextItemId):
         if item := next(
             filter(lambda x: x.item.description.id == id, self.highlighted_ranges), None
         ):
             filepath = os.path.join(
-                self.sdk.ide.workspace_directory, item.item.description.description
+                self.ide.workspace_directory, item.item.description.description
             )
-            await self.sdk.ide.setFileOpen(
+            await self.ide.setFileOpen(
                 filepath,
                 True,
             )
             line_nums_string = item.item.description.name.split(" ")[-1]
             line_nums = line_nums_string[1:-1].split("-")
-            await self.sdk.ide.highlightCode(
+            await self.ide.highlightCode(
                 RangeInFile(
                     filepath=filepath,
                     range=Range.from_shorthand(

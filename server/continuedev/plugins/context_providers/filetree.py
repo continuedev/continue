@@ -44,7 +44,7 @@ class FileTreeContextProvider(ContextProvider):
     workspace_dir: str = Field(None, description="The workspace directory to display")
 
     async def _get_file_tree(self, directory: str) -> str:
-        contents = await self.sdk.ide.listDirectoryContents(directory, recursive=True)
+        contents = await self.ide.listDirectoryContents(directory, recursive=True)
 
         tree = Directory(
             name=split_path(self.workspace_dir)[-1], files=[], directories=[]

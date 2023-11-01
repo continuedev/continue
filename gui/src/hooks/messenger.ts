@@ -1,3 +1,6 @@
+import socketIOClient, { Socket } from "socket.io-client";
+import { v4 } from "uuid";
+
 export abstract class Messenger {
   abstract send(messageType: string, data: object): void;
 
@@ -6,7 +9,13 @@ export abstract class Messenger {
     callback: (data: object) => void
   ): void;
 
-  abstract onMessage(callback: (messageType: string, data: any) => void): void;
+  abstract onMessage(
+    callback: (
+      messageType: string,
+      data: any,
+      ack?: (data: any) => void
+    ) => void
+  ): void;
 
   abstract onOpen(callback: () => void): void;
 
@@ -17,6 +26,103 @@ export abstract class Messenger {
   abstract onError(callback: (error: any) => void): void;
 
   abstract close(): void;
+}
+
+export class SocketIOMessenger extends Messenger {
+  private socket: Socket;
+
+  constructor(endpoint: string) {
+    super();
+    console.log(
+      "Connecting to socket.io endpoint: ",
+      endpoint,
+      (window as any).windowId
+    );
+    this.socket = socketIOClient(
+      `${endpoint}?window_id=${(window as any).windowId}`,
+      {
+        path: "/gui/socket.io",
+        transports: ["websocket", "polling", "flashsocket"],
+      }
+    );
+  }
+
+  send(messageType: string, data: object): void {
+    this.socket.emit("message", {
+      message_type: messageType,
+      data,
+      message_id: v4(),
+    });
+  }
+
+  ackWithMessageMetadata(
+    ack: (data: any) => void,
+    messageId: string,
+    messageType: string
+  ): (data: any) => void {
+    return (data: any) => {
+      ack({ message_id: messageId, message_type: messageType, data });
+    };
+  }
+
+  onMessageType(
+    messageType: string,
+    callback: (data: object, acknowledge?: (data: any) => void) => void
+  ): void {
+    this.socket.on("message", ({ message_type, data }, ack) => {
+      if (messageType === message_type) {
+        callback(data, this.ackWithMessageMetadata(ack, "lolidk", messageType));
+      }
+    });
+  }
+
+  onMessage(
+    callback: (
+      messageType: string,
+      data: any,
+      acknowledge?: (data: any) => void
+    ) => void
+  ): void {
+    this.socket.on("message", ({ message_type, data }, ack) => {
+      callback(
+        message_type,
+        data,
+        this.ackWithMessageMetadata(ack, "lolidk", message_type)
+      );
+    });
+  }
+
+  onOpen(callback: () => void): void {
+    this.socket.on("connect", callback);
+  }
+
+  onClose(callback: () => void): void {
+    this.socket.on("disconnect", callback);
+  }
+
+  async sendAndReceive(messageType: string, data: any): Promise<any> {
+    return new Promise((resolve, reject) => {
+      this.socket.emit(
+        "message",
+        { message_type: messageType, data, message_id: v4() },
+        (response: any) => {
+          if (response && response.error) {
+            reject(response.error);
+          } else {
+            resolve(response);
+          }
+        }
+      );
+    });
+  }
+
+  onError(callback: (error: any) => void): void {
+    this.socket.on("error", callback);
+  }
+
+  close(): void {
+    this.socket.disconnect();
+  }
 }
 
 export class WebsocketMessenger extends Messenger {

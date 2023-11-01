@@ -1,13 +1,9 @@
 import React from "react";
 import styled from "styled-components";
-import { HistoryNode } from "../schema/HistoryNode";
 import { defaultBorderRadius, vscBackground } from ".";
 import HeaderButtonWithText from "./HeaderButtonWithText";
-import {
-  MinusCircleIcon,
-  MinusIcon,
-  XMarkIcon,
-} from "@heroicons/react/24/outline";
+import { MinusCircleIcon, XMarkIcon } from "@heroicons/react/24/outline";
+import { ContinueError } from "../schema/ContinueError";
 
 const Div = styled.div`
   padding: 8px;
@@ -18,7 +14,7 @@ const Div = styled.div`
 `;
 
 interface ErrorStepContainerProps {
-  historyNode: HistoryNode;
+  error: ContinueError;
   onClose: () => void;
   onDelete: () => void;
 }
@@ -43,7 +39,7 @@ function ErrorStepContainer(props: ErrorStepContainerProps) {
       </div>
       <Div>
         <pre style={{ whiteSpace: "pre-wrap", wordWrap: "break-word" }}>
-          {props.historyNode.observation?.error as string}
+          {props.error.message as string}
         </pre>
       </Div>
     </div>

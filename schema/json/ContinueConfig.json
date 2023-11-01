@@ -70,6 +70,7 @@
         },
         "description": {
           "title": "Description",
+          "default": "",
           "type": "string"
         },
         "class_name": {
@@ -204,11 +205,6 @@
         "model"
       ]
     },
-    "continuedev__core__models__ContinueSDK": {
-      "title": "ContinueSDK",
-      "type": "object",
-      "properties": {}
-    },
     "Models": {
       "title": "Models",
       "description": "Main class that holds the current model configuration",
@@ -234,8 +230,13 @@
             "$ref": "#/definitions/LLM"
           }
         },
-        "sdk": {
-          "$ref": "#/definitions/continuedev__core__models__ContinueSDK"
+        "temperature": {
+          "title": "Temperature",
+          "type": "number"
+        },
+        "system_message": {
+          "title": "System Message",
+          "type": "string"
         }
       },
       "required": [
@@ -295,12 +296,6 @@
     "Policy": {
       "title": "Policy",
       "description": "A rule that determines which step to take next",
-      "type": "object",
-      "properties": {}
-    },
-    "continuedev__core__context__ContinueSDK": {
-      "title": "ContinueSDK",
-      "description": "To avoid circular imports",
       "type": "object",
       "properties": {}
     },
@@ -384,14 +379,8 @@
           "description": "The title of the ContextProvider. This is what must be typed in the input to trigger the ContextProvider.",
           "type": "string"
         },
-        "sdk": {
-          "title": "Sdk",
-          "description": "The ContinueSDK instance accessible by the ContextProvider",
-          "allOf": [
-            {
-              "$ref": "#/definitions/continuedev__core__context__ContinueSDK"
-            }
-          ]
+        "ide": {
+          "title": "Ide"
         },
         "display_title": {
           "title": "Display Title",
@@ -510,7 +499,9 @@
             },
             "edit": null,
             "chat": null,
-            "saved": []
+            "saved": [],
+            "temperature": null,
+            "system_message": null
           },
           "allOf": [
             {

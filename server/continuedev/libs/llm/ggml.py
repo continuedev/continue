@@ -53,6 +53,20 @@ class GGML(LLM):
         None, description="OpenAI engine. For use with Azure OpenAI Service."
     )
 
+    api_base: Optional[str] = Field(None, description="OpenAI API base URL.")
+
+    api_type: Optional[Literal["azure", "openai"]] = Field(
+        None, description="OpenAI API type."
+    )
+
+    api_version: Optional[str] = Field(
+        None, description="OpenAI API version. For use with Azure OpenAI Service."
+    )
+
+    engine: Optional[str] = Field(
+        None, description="OpenAI engine. For use with Azure OpenAI Service."
+    )
+
     template_messages: Optional[
         Callable[[List[Dict[str, str]]], str]
     ] = llama2_template_messages
@@ -75,6 +89,19 @@ class GGML(LLM):
                 headers["Authorization"] = f"Bearer {self.api_key}"
 
         return headers
+
+    def get_full_server_url(self, endpoint: str):
+        endpoint = endpoint.lstrip("/").rstrip("/")
+
+        if self.api_type == "azure":
+            if self.engine is None or self.api_version is None or self.api_base is None:
+                raise Exception(
+                    "For Azure OpenAI Service, you must specify engine, api_version, and api_base."
+                )
+
+            return f"{self.api_base}/openai/deployments/{self.engine}/{endpoint}?api-version={self.api_version}"
+        else:
+            return f"{self.server_url}/v1/{endpoint}"
 
     def get_full_server_url(self, endpoint: str):
         endpoint = endpoint.lstrip("/").rstrip("/")
@@ -205,7 +232,7 @@ class GGML(LLM):
             ) as resp:
                 if resp.status != 200:
                     raise Exception(
-                        f"Error calling /chat/completions endpoint: {resp.status}"
+                        f"Error calling /completions endpoint: {resp.status}"
                     )
 
                 text = await resp.text()
@@ -214,7 +241,7 @@ class GGML(LLM):
                     return completion
                 except Exception as e:
                     raise Exception(
-                        f"Error calling /completion endpoint: {e}\n\nResponse text: {text}"
+                        f"Error calling /completions endpoint: {e}\n\nResponse text: {text}"
                     )
 
     async def _complete(self, prompt: str, options: CompletionOptions):

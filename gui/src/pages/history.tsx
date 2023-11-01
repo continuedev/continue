@@ -8,8 +8,9 @@ import { lightGray, secondaryDark, vscBackground } from "../components";
 import styled from "styled-components";
 import { ArrowLeftIcon } from "@heroicons/react/24/outline";
 import CheckDiv from "../components/CheckDiv";
-import { temporarilyClearSession } from "../redux/slices/serverStateReducer";
 import { getFontSize } from "../util";
+import { newSession } from "../redux/slices/sessionStateReducer";
+import { PersistedSessionInfo } from "../schema/PersistedSessionInfo";
 
 const Tr = styled.tr`
   &:hover {
@@ -65,6 +66,10 @@ function History() {
   const apiUrl = useSelector((state: RootStore) => state.config.apiUrl);
   const workspacePaths = useSelector(
     (state: RootStore) => state.config.workspacePaths
+  );
+  const currentSession = useSelector((state: RootStore) => state.sessionState);
+  const workspaceDirectory = useSelector(
+    (state: RootStore) => state.config.workspacePaths?.[0] || ""
   );
 
   const [filteringByWorkspace, setFilteringByWorkspace] = useState(false);
@@ -182,9 +187,39 @@ function History() {
                   <Tr key={index}>
                     <td>
                       <TdDiv
-                        onClick={() => {
-                          client?.loadSession(session.session_id);
-                          dispatch(temporarilyClearSession(true));
+                        onClick={async () => {
+                          // Save current session
+                          const persistedSessionInfo: PersistedSessionInfo = {
+                            session_state: {
+                              history: currentSession.history,
+                              context_items: currentSession.context_items,
+                            },
+                            title: currentSession.title,
+                            workspace_directory: workspaceDirectory,
+                            session_id: currentSession.session_id,
+                          };
+                          console.log(persistedSessionInfo);
+                          await fetch(`${apiUrl}/sessions/save`, {
+                            method: "POST",
+                            body: JSON.stringify(persistedSessionInfo),
+                            headers: {
+                              "Content-Type": "application/json",
+                            },
+                          });
+
+                          // Load new session
+                          const response = await fetch(
+                            `${apiUrl}/sessions/${session.session_id}`
+                          );
+                          if (!response.ok) {
+                            throw new Error(
+                              `HTTP error! status: ${response.status}`
+                            );
+                          }
+                          const json: PersistedSessionInfo =
+                            await response.json();
+                          client?.stopSession();
+                          dispatch(newSession(json));
                           navigate("/");
                         }}
                       >

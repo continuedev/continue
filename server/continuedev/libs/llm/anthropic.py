@@ -37,8 +37,8 @@ class AnthropicLLM(LLM):
     class Config:
         arbitrary_types_allowed = True
 
-    async def start(self, **kwargs):
-        await super().start(**kwargs)
+    async def start(self, *args, **kwargs):
+        await super().start(*args, **kwargs)
         self._async_client = AsyncAnthropic(api_key=self.api_key)
 
         if self.model == "claude-2":

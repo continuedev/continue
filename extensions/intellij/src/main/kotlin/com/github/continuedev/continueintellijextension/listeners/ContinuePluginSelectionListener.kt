@@ -7,13 +7,14 @@ import com.intellij.openapi.editor.SelectionModel
 import com.intellij.openapi.editor.event.SelectionEvent
 import com.intellij.openapi.editor.event.SelectionListener
 import com.intellij.openapi.fileEditor.FileDocumentManager
+import com.intellij.openapi.project.DumbAware
 import com.intellij.openapi.vfs.VirtualFile
 import kotlinx.coroutines.CoroutineScope
 
 class ContinuePluginSelectionListener(
     private val ideProtocolClient: IdeProtocolClient,
     private val coroutineScope: CoroutineScope
-) : SelectionListener {
+) : SelectionListener, DumbAware {
     private val debouncer = Debouncer(100L, coroutineScope)
     override fun selectionChanged(e: SelectionEvent) {
         debouncer.debounce { handleSelection(e) }

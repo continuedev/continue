@@ -1,4 +1,4 @@
-import { useContext, useEffect, useRef, useState } from "react";
+import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import styled from "styled-components";
 import {
   StyledTooltip,
@@ -13,10 +13,14 @@ import {
   ExclamationTriangleIcon,
 } from "@heroicons/react/24/outline";
 import { GUIClientContext } from "../App";
-import { ContextItem } from "../schema/FullState";
 import { getFontSize } from "../util";
 import HeaderButtonWithText from "./HeaderButtonWithText";
 import FileIcon from "./FileIcon";
+import { ContextItem } from "../schema/ContextItem";
+import { postToIde } from "../vscode";
+import { useDispatch, useSelector } from "react-redux";
+import { setEditingAtIds } from "../redux/slices/sessionStateReducer";
+import { RootStore } from "../redux/store";
 
 const Button = styled.button<{ fontSize?: number }>`
   border: none;
@@ -78,6 +82,7 @@ interface PillButtonProps {
   editing: boolean;
   editingAny: boolean;
   index: number;
+  inputIndex: number; // index of the ComboBox
   areMultipleItems?: boolean;
   onDelete?: (index?: number) => void;
   onClick?: (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => void;
@@ -141,6 +146,7 @@ const ClickableInsidePillButton = styled(HeaderButtonWithText)<{
 const PillButton = (props: PillButtonProps) => {
   const [isHovered, setIsHovered] = useState(false);
   const client = useContext(GUIClientContext);
+  const dispatch = useDispatch();
 
   const [warning, setWarning] = useState<string | undefined>(undefined);
 
@@ -152,8 +158,29 @@ const PillButton = (props: PillButtonProps) => {
     }
   }, [props.editing, props.item]);
 
+  const setEditing = useCallback(() => {
+    if (!props.editing) {
+      dispatch(
+        setEditingAtIds({
+          ids: [props.item.description.id],
+          index: props.inputIndex,
+        })
+      );
+    }
+    if (!props.editingAny) {
+      props.prefixInputWithEdit?.(true);
+    }
+    if (props.editingAny && props.editing) {
+      props.prefixInputWithEdit?.(false);
+    }
+  }, [props.editing, props.editingAny, props.item, props.inputIndex]);
+
   const pillContainerRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
+
+  const selectedContextItems = useSelector(
+    (store: RootStore) => store.sessionState.context_items
+  );
 
   return (
     <div style={{ position: "relative" }}>
@@ -183,14 +210,31 @@ const PillButton = (props: PillButtonProps) => {
             } else if (e.key === "v") {
               props.toggleViewContent?.();
             } else if (e.key === "e") {
-              client?.setEditingAtIds([props.item.description.id.item_id]);
+              setEditing();
             }
           }}
           onClick={(e) => {
             props.onClick?.(e);
-            client?.previewContextItem(
-              `${props.item.description.id.provider_title}-${props.item.description.id.item_id}`
-            );
+            if (props.item.description.id.provider_title === "file") {
+              postToIde("showFile", {
+                filepath: props.item.description.description,
+              });
+            } else if (props.item.description.id.provider_title === "code") {
+              const lines = props.item.description.name
+                .split("(")[1]
+                .split(")")[0]
+                .split("-");
+              postToIde("showLines", {
+                filepath: props.item.description.description,
+                start: parseInt(lines[0]) - 1,
+                end: parseInt(lines[1]) - 1,
+              });
+            } else {
+              postToIde("showVirtualFile", {
+                name: props.item.description.name,
+                content: props.item.content,
+              });
+            }
           }}
           onBlur={(e) => {
             if (!pillContainerRef.current?.contains(e.relatedTarget as any)) {
@@ -223,17 +267,7 @@ const PillButton = (props: PillButtonProps) => {
               text={
                 props.editing ? "Editing this range" : "Edit this range (e)"
               }
-              onClick={() => {
-                if (!props.editing) {
-                  client?.setEditingAtIds([props.item.description.id.item_id]);
-                }
-                if (!props.editingAny) {
-                  props.prefixInputWithEdit?.(true);
-                }
-                if (props.editingAny && props.editing) {
-                  props.prefixInputWithEdit?.(false);
-                }
-              }}
+              onClick={setEditing}
               tabIndex={-1}
               color="#f0f4"
               selected={props.editing}

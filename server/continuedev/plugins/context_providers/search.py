@@ -1,4 +1,4 @@
-from typing import List
+from typing import Any, List
 
 from pydantic import Field
 from ripgrepy import Ripgrepy

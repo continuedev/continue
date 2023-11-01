@@ -1,0 +1,39 @@
+{
+  "title": "ContextProviderDescription",
+  "$ref": "#/definitions/continuedev__core__main__ContextProviderDescription",
+  "definitions": {
+    "continuedev__core__main__ContextProviderDescription": {
+      "title": "ContextProviderDescription",
+      "type": "object",
+      "properties": {
+        "title": {
+          "title": "Title",
+          "type": "string"
+        },
+        "display_title": {
+          "title": "Display Title",
+          "type": "string"
+        },
+        "description": {
+          "title": "Description",
+          "type": "string"
+        },
+        "dynamic": {
+          "title": "Dynamic",
+          "type": "boolean"
+        },
+        "requires_query": {
+          "title": "Requires Query",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "title",
+        "display_title",
+        "description",
+        "dynamic",
+        "requires_query"
+      ]
+    }
+  }
+}

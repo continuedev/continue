@@ -76,9 +76,7 @@ interface ModelCardProps {
 }
 
 function ModelCard(props: ModelCardProps) {
-  const vscMediaUrl = useSelector(
-    (state: RootStore) => state.config.vscMediaUrl
-  );
+  const vscMediaUrl = (window as any).vscMediaUrl;
 
   const [dimensionChoices, setDimensionChoices] = useState<string[]>(
     props.dimensions?.map((d) => Object.keys(d.options)[0]) || []

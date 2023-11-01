@@ -110,11 +110,6 @@
         "model"
       ]
     },
-    "ContinueSDK": {
-      "title": "ContinueSDK",
-      "type": "object",
-      "properties": {}
-    },
     "continuedev__core__models__Models": {
       "title": "Models",
       "description": "Main class that holds the current model configuration",
@@ -140,8 +135,13 @@
             "$ref": "#/definitions/LLM"
           }
         },
-        "sdk": {
-          "$ref": "#/definitions/ContinueSDK"
+        "temperature": {
+          "title": "Temperature",
+          "type": "number"
+        },
+        "system_message": {
+          "title": "System Message",
+          "type": "string"
         }
       },
       "required": [

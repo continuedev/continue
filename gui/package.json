@@ -22,14 +22,18 @@
     "prismjs": "^1.29.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "react-error-boundary": "^4.0.11",
     "react-hook-form": "^7.47.0",
     "react-redux": "^8.0.5",
     "react-router-dom": "^6.14.2",
     "react-switch": "^7.0.0",
     "react-syntax-highlighter": "^15.5.0",
     "react-tooltip": "^5.18.0",
+    "redux-persist": "^6.0.0",
     "seti-file-icons": "^0.0.8",
+    "socket.io-client": "^4.7.2",
     "styled-components": "^5.3.6",
+    "uuid": "^9.0.1",
     "vscode-webview": "^1.0.1-beta.1"
   },
   "devDependencies": {

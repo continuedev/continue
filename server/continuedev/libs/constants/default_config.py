@@ -16,7 +16,6 @@ from continuedev.plugins.context_providers import (
     GitHubIssuesContextProvider
 )
 from continuedev.plugins.steps import (
-    ClearHistoryStep,
     CommentCodeStep,
     EditHighlightedCodeStep,
     GenerateShellCommandStep,
@@ -54,11 +53,6 @@ config = ContinueConfig(
             name="comment",
             description="Write comments for the highlighted code",
             step=CommentCodeStep,
-        ),
-        SlashCommand(
-            name="clear",
-            description="Clear step history",
-            step=ClearHistoryStep,
         ),
         SlashCommand(
             name="share",

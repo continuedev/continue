@@ -6,6 +6,9 @@ import com.intellij.ui.content.ContentFactory
 import com.intellij.ui.jcef.JBCefJSQuery
 import javax.swing.*
 import com.github.continuedev.continueintellijextension.activities.getContinueServerUrl
+import com.github.continuedev.continueintellijextension.`continue`.Position
+import com.github.continuedev.continueintellijextension.`continue`.Range
+import com.github.continuedev.continueintellijextension.`continue`.RangeInFile
 import com.github.continuedev.continueintellijextension.`continue`.getMachineUniqueID
 import com.github.continuedev.continueintellijextension.factories.CustomSchemeHandlerFactory
 import com.github.continuedev.continueintellijextension.services.ContinuePluginService
@@ -49,13 +52,6 @@ class ContinuePluginToolWindowFactory : ToolWindowFactory, DumbAware {
             System.setProperty("ide.browser.jcef.jsQueryPoolSize", JS_QUERY_POOL_SIZE)
         }
 
-        suspend fun waitForSessionId(pluginService: ContinuePluginService) {
-            while (pluginService.sessionId == null) {
-                delay(200)
-            }
-            return
-        }
-
         val webView: JBCefBrowser by lazy {
             val browser = JBCefBrowser()
             browser.jbCefClient.setProperty(
@@ -79,6 +75,7 @@ class ContinuePluginToolWindowFactory : ToolWindowFactory, DumbAware {
                 val parser = JsonParser()
                 val json: JsonObject = parser.parse(msg).asJsonObject
                 val type = json.get("type").asString
+                val data = json.get("data").asJsonObject
                 when (type) {
                     "onLoad" -> {
                         GlobalScope.launch {
@@ -112,26 +109,39 @@ class ContinuePluginToolWindowFactory : ToolWindowFactory, DumbAware {
                             browser.executeJavaScriptAsync("document.body.style.setProperty(\"--vscode-editor-background\", \"$defaultBackgroundHex\");")
                             browser.executeJavaScriptAsync("document.body.style.setProperty(\"--vscode-list-hoverBackground\", \"$secondaryDarkHex\");")
 
-                            // Wait for session ID, then pass the onLoad information
-                            waitForSessionId(continuePluginService)
-
-                            val sessionId = continuePluginService.sessionId
-                            val workspacePaths = continuePluginService.worksapcePaths
-
                             val jsonData = mutableMapOf(
                                     "type" to "onLoad",
-                                    "sessionId" to sessionId,
-                                    "apiUrl" to getContinueServerUrl(),
-                                    "workspacePaths" to workspacePaths,
+                                    "windowId" to continuePluginService.windowId,
+                                    "serverUrl" to getContinueServerUrl(),
+                                    "workspacePaths" to continuePluginService.worksapcePaths,
                                     "vscMachineId" to getMachineUniqueID(),
                                     "vscMediaUrl" to "http://continue",
-                                    "dataSwitchOn" to true
                             )
                             val jsonString = Gson().toJson(jsonData)
                             browser.executeJavaScriptAsync("""window.postMessage($jsonString, "*");""")
                         }
 
                     }
+                    "showLines" -> {
+                        continuePluginService.ideProtocolClient?.highlightCode(RangeInFile(
+                                data.get("filepath").asString,
+                                Range(Position(
+                                        data.get("startLine").asInt,
+                                        0
+                                ), Position(
+                                        data.get("endLine").asInt + 1,
+                                        0
+                                )),
+
+                        ),"#00ff0022")
+                    }
+                    "showVirtualFile" -> {
+                        continuePluginService.ideProtocolClient?.showVirtualFile(data.get("name").asString, data.get("content").asString)
+                    }
+                    "showFile" -> {
+                        continuePluginService.ideProtocolClient?.setFileOpen(data.get("filepath").asString)
+                    }
+                    "reloadWindow" -> {}
                 }
 
 

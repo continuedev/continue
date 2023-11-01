@@ -27,7 +27,7 @@ import {
   TrashIcon,
   XMarkIcon,
 } from "@heroicons/react/24/outline";
-import { postVscMessage } from "../vscode";
+import { postToIde } from "../vscode";
 import { GUIClientContext } from "../App";
 import { MeiliSearch } from "meilisearch";
 import { setBottomMessage } from "../redux/slices/uiStateSlice";
@@ -40,15 +40,21 @@ import {
   getMetaKeyLabel,
   getPlatform,
 } from "../util";
-import { ContextItem } from "../schema/FullState";
 import StyledMarkdownPreview from "./StyledMarkdownPreview";
-import { temporarilyClearSession } from "../redux/slices/serverStateReducer";
 import { setTakenActionTrue } from "../redux/slices/miscSlice";
 import {
   handleKeyDownJetBrains,
   handleKeyDownJetBrainsMac,
 } from "../util/jetbrains";
 import FileIcon from "./FileIcon";
+import { ContextItem } from "../schema/ContextItem";
+import {
+  addContextItem,
+  addContextItemAtIndex,
+  deleteContextWithIds,
+  newSession,
+  setActive,
+} from "../redux/slices/sessionStateReducer";
 
 const SEARCH_INDEX_NAME = "continue_context_items";
 
@@ -214,7 +220,8 @@ const Ul = styled.ul<{
       ? `transform: translateY(-${props.ulHeightPixels + 8}px);`
       : `transform: translateY(${
           (props.isMainInput ? 5 : 4) * (props.fontSize || mainInputFontSize) -
-          (props.isMainInput ? 2 : 4)
+          (props.isMainInput ? 2 : 4) -
+          6
         }px);`}
   position: absolute;
   background: ${vscBackground};
@@ -285,7 +292,7 @@ interface ComboBoxProps {
 const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
   const meilisearchUrl = useSelector(
     (state: RootStore) =>
-      state.serverState.meilisearch_url || "http://127.0.0.1:7700"
+      state.serverState.meilisearchUrl || "http://127.0.0.1:7700"
   );
 
   const [searchClient, setSearchClient] = useState<MeiliSearch | undefined>(
@@ -305,7 +312,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
     (state: RootStore) => state.config.workspacePaths
   );
   const sessionHistory = useSelector(
-    (state: RootStore) => state.serverState.history
+    (state: RootStore) => state.sessionState.history
   );
 
   const [history, setHistory] = React.useState<string[]>([]);
@@ -336,23 +343,26 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
   >(undefined);
 
   const availableSlashCommands = useSelector(
-    (state: RootStore) => state.serverState.slash_commands
-  ).map((cmd) => {
-    return {
-      name: `/${cmd.name}`,
-      description: cmd.description,
-    };
-  });
+    (state: RootStore) =>
+      state.serverState.slashCommands?.map((cmd) => {
+        return {
+          name: `/${cmd.name}`,
+          description: cmd.description,
+        };
+      }) || []
+  );
   const selectedContextItems = useSelector((state: RootStore) => {
-    if (props.index) {
-      return state.serverState.history.timeline[props.index].context_used || [];
+    if (typeof props.index !== "undefined") {
+      return state.sessionState.contextItemsAtIndex[props.index] || [];
     } else {
-      return state.serverState.selected_context_items;
+      return state.sessionState.context_items || [];
     }
   });
+
   const timeline = useSelector(
-    (state: RootStore) => state.serverState.history.timeline
+    (state: RootStore) => state.sessionState.history
   );
+  const active = useSelector((state: RootStore) => state.sessionState.active);
 
   useEffect(() => {
     if (!currentlyInContextQuery) {
@@ -362,7 +372,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
   }, [currentlyInContextQuery]);
 
   const contextProviders = useSelector(
-    (state: RootStore) => state.serverState.context_providers
+    (state: RootStore) => state.serverState.contextProviders
   ) as any[];
 
   const goBackToContextProviders = () => {
@@ -387,6 +397,20 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
   }, [nestedContextProvider]);
 
   const [prevInputValue, setPrevInputValue] = useState("");
+
+  const selectContextItem = useCallback(
+    async (id: string, query: string) => {
+      const contextItem = await client?.getContextItem(id, query);
+      if (props.isMainInput) {
+        dispatch(addContextItem(contextItem));
+      } else if (typeof props.index !== "undefined") {
+        dispatch(
+          addContextItemAtIndex({ item: contextItem, index: props.index })
+        );
+      }
+    },
+    [client, props.index]
+  );
 
   const onInputValueChangeCallback = useCallback(
     ({ inputValue, highlightedIndex }: any) => {
@@ -643,8 +667,8 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
         }
         dispatch(setTakenActionTrue(null));
       } else if (event.data.type === "focusContinueInputWithNewSession") {
-        dispatch(temporarilyClearSession(false));
-        client?.loadSession(undefined);
+        client?.stopSession();
+        dispatch(newSession());
         dispatch(setTakenActionTrue(null));
       }
     };
@@ -655,17 +679,6 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
   }, [inputRef.current, props.isMainInput]);
 
   const deleteButtonDivRef = React.useRef<HTMLDivElement>(null);
-
-  const selectContextItem = useCallback(
-    (id: string, query: string) => {
-      if (props.isMainInput) {
-        client?.selectContextItem(id, query);
-      } else if (props.index) {
-        client?.selectContextItemAtIndex(id, query, props.index);
-      }
-    },
-    [client, props.index]
-  );
 
   const selectContextItemFromDropdown = useCallback(
     (event: any) => {
@@ -777,7 +790,13 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
   }, [inputFocused]);
 
   return (
-    <div ref={topRef}>
+    <div
+      ref={topRef}
+      style={{
+        paddingTop: "4px",
+        backgroundColor: vscBackground,
+      }}
+    >
       {selectedContextItems.length === 0 && props.isMainInput && (
         <div
           style={{
@@ -841,9 +860,11 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
                 : ""
             }
             onClick={() => {
-              client?.deleteContextWithIds(
-                selectedContextItems.map((item) => item.description.id),
-                props.index
+              dispatch(
+                deleteContextWithIds({
+                  ids: selectedContextItems.map((item) => item.description.id),
+                  index: props.index,
+                })
               );
               inputRef.current?.focus();
               setPreviewingContextItem(undefined);
@@ -851,9 +872,13 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
             }}
             onKeyDown={(e: any) => {
               if (e.key === "Backspace") {
-                client?.deleteContextWithIds(
-                  selectedContextItems.map((item) => item.description.id),
-                  props.index
+                dispatch(
+                  deleteContextWithIds({
+                    ids: selectedContextItems.map(
+                      (item) => item.description.id
+                    ),
+                    index: props.index,
+                  })
                 );
                 inputRef.current?.focus();
                 setPreviewingContextItem(undefined);
@@ -863,12 +888,10 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
           >
             <TrashIcon width="1.4em" height="1.4em" />
           </HiddenHeaderButtonWithText>
-          {(props.isMainInput
-            ? selectedContextItems
-            : timeline[props.index!].context_used || []
-          ).map((item, idx) => {
+          {selectedContextItems.map((item, idx) => {
             return (
               <PillButton
+                inputIndex={props.index}
                 areMultipleItems={selectedContextItems.length > 1}
                 key={`${item.description.id.item_id}${idx}`}
                 item={item}
@@ -882,9 +905,11 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
                 stepIndex={props.index}
                 index={idx}
                 onDelete={() => {
-                  client?.deleteContextWithIds(
-                    [item.description.id],
-                    props.index
+                  dispatch(
+                    deleteContextWithIds({
+                      ids: [item.description.id],
+                      index: props.index,
+                    })
                   );
                   inputRef.current?.focus();
                   if (
@@ -1012,7 +1037,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
                   width="20px"
                   filename={item.description.name}
                 ></FileIcon>
-                {item.description.description}
+                {item.description.name}
               </PreviewMarkdownHeader>
               <pre className="m-0">
                 <StyledMarkdownPreview
@@ -1048,7 +1073,8 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
             onMouseLeave={(e) => {
               if (
                 e.relatedTarget === deleteButtonDivRef.current ||
-                deleteButtonDivRef.current?.contains(e.relatedTarget as Node)
+                (e.relatedTarget instanceof Node &&
+                  deleteButtonDivRef.current?.contains(e.relatedTarget as Node))
               ) {
                 return;
               }
@@ -1190,7 +1216,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
                     // Remove focus from the input
                     inputRef.current?.blur();
                     // Move cursor back over to the editor
-                    postVscMessage("focusEditor", {});
+                    postToIde("focusEditor", {});
                   }
                 }
                 // Home and end keys
@@ -1234,8 +1260,20 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
                       <HeaderButtonWithText
                         onClick={(e) => {
                           e.stopPropagation();
-                          if (props.groupIndices)
-                            client?.showLogsAtIndex(props.groupIndices[1]);
+                          if (props.groupIndices) {
+                            const content =
+                              "This is the exact prompt sent to the LLM: \n\n" +
+                              timeline
+                                .filter((_, i) => {
+                                  return props.groupIndices?.includes(i);
+                                })
+                                .flatMap((s) => s.logs || [])
+                                .join("\n");
+                            postToIde("showVirtualFile", {
+                              name: "inspect_prompt.md",
+                              content,
+                            });
+                          }
                         }}
                         text="Inspect Prompt"
                       >
@@ -1246,7 +1284,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
                       onClick={(e) => {
                         e.stopPropagation();
                         if (props.active && props.groupIndices) {
-                          client?.deleteAtIndex(props.groupIndices[1]);
+                          client?.stopSession();
                         } else {
                           props.onDelete?.();
                         }
@@ -1391,29 +1429,18 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
       {props.isMainInput && (
         <ContinueButton
           disabled={
-            !(inputRef.current as any)?.value &&
-            !(
-              (typeof sessionHistory?.current_index !== "undefined" &&
-                sessionHistory.timeline[sessionHistory.current_index]
-                  ?.active) ||
-              false
-            )
+            !active &&
+            (!(inputRef.current as any)?.value || typeof client === "undefined")
           }
           onClick={() => {
-            if (
-              typeof sessionHistory?.current_index !== "undefined" &&
-              sessionHistory.timeline[sessionHistory.current_index]?.active
-            ) {
-              client?.deleteAtIndex(sessionHistory.current_index);
+            if (active) {
+              client?.stopSession();
+              dispatch(setActive(false));
             } else {
               props.onEnter?.(undefined);
             }
           }}
-          showStop={
-            (typeof sessionHistory?.current_index !== "undefined" &&
-              sessionHistory.timeline[sessionHistory.current_index]?.active) ||
-            false
-          }
+          showStop={active}
         />
       )}
     </div>

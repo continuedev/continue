@@ -1,0 +1,24 @@
+{
+  "title": "ContinueError",
+  "$ref": "#/definitions/continuedev__core__main__ContinueError",
+  "definitions": {
+    "continuedev__core__main__ContinueError": {
+      "title": "ContinueError",
+      "type": "object",
+      "properties": {
+        "title": {
+          "title": "Title",
+          "type": "string"
+        },
+        "message": {
+          "title": "Message",
+          "type": "string"
+        }
+      },
+      "required": [
+        "title",
+        "message"
+      ]
+    }
+  }
+}

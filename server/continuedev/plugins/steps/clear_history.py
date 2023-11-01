@@ -1,4 +1,4 @@
-from ...core.main import Step
+from ...core.main import SessionUpdate, SetStep, Step
 from ...core.sdk import ContinueSDK
 
 
@@ -7,4 +7,6 @@ class ClearHistoryStep(Step):
     hide: bool = True
 
     async def run(self, sdk: ContinueSDK):
-        await sdk.clear_history()
+        index = len(sdk.history)
+        for i in range(index - 1, -1, -1):
+            yield SessionUpdate(index=i, update=SetStep(hide=True))

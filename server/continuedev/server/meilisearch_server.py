@@ -78,7 +78,7 @@ async def ensure_meilisearch_installed() -> bool:
         if meilisearchPath in existing_paths:
             try:
                 os.remove(meilisearchPath)
-            except:
+            except Exception:
                 pass
             existing_paths.remove(meilisearchPath)
 
@@ -160,7 +160,7 @@ async def start_meilisearch(url: Optional[str] = None):
             shell=True,
         )
 
-    logger.debug("Meilisearch started")
+    logger.info(f"Meilisearch started at {meilisearch_url}")
 
 
 def stop_meilisearch():

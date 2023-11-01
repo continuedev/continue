@@ -52,7 +52,7 @@ const ContextGroupSelectDiv = styled.div`
 function SelectContextGroupDialog() {
   const dispatch = useDispatch();
   const savedContextGroups = useSelector(
-    (state: RootStore) => state.serverState.saved_context_groups
+    (state: RootStore) => state.serverState.savedContextGroups
   );
   const client = useContext(GUIClientContext);
 

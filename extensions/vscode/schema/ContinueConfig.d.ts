@@ -100,10 +100,12 @@ export type Proxy = string;
  */
 export type ApiKey = string;
 export type Saved = LLM[];
+export type Temperature1 = number;
+export type SystemMessage2 = string;
 /**
  * The temperature parameter for sampling from the LLM. Higher temperatures will result in more random output, while lower temperatures will result in more predictable output. This value ranges from 0 to 1.
  */
-export type Temperature1 = number;
+export type Temperature2 = number;
 export type Name3 = string;
 export type Prompt = string;
 export type Description1 = string;
@@ -124,7 +126,7 @@ export type OnTraceback = Step;
 /**
  * A system message that will always be followed by the LLM
  */
-export type SystemMessage2 = string;
+export type SystemMessage3 = string;
 /**
  * A Policy object that can be used to override the default behavior of Continue, for example in order to build custom agents that take multiple steps at a time.
  */
@@ -133,10 +135,6 @@ export type PolicyOverride = Policy;
  * The title of the ContextProvider. This is what must be typed in the input to trigger the ContextProvider.
  */
 export type Title1 = string;
-/**
- * The ContinueSDK instance accessible by the ContextProvider
- */
-export type Sdk = ContinueSDK1;
 /**
  * The display title of the ContextProvider shown in the dropdown menu
  */
@@ -189,11 +187,11 @@ export interface ContinueConfig1 {
   disallowed_steps?: DisallowedSteps;
   allow_anonymous_telemetry?: AllowAnonymousTelemetry;
   models?: Models;
-  temperature?: Temperature1;
+  temperature?: Temperature2;
   custom_commands?: CustomCommands;
   slash_commands?: SlashCommands;
   on_traceback?: OnTraceback;
-  system_message?: SystemMessage2;
+  system_message?: SystemMessage3;
   policy_override?: PolicyOverride;
   context_providers?: ContextProviders;
   user_token?: UserToken;
@@ -233,7 +231,8 @@ export interface Models1 {
   edit?: LLM;
   chat?: LLM;
   saved?: Saved;
-  sdk?: ContinueSDK;
+  temperature?: Temperature1;
+  system_message?: SystemMessage2;
   [k: string]: unknown;
 }
 export interface LLM {
@@ -269,9 +268,6 @@ export interface Headers {
 export interface PromptTemplates {
   [k: string]: unknown;
 }
-export interface ContinueSDK {
-  [k: string]: unknown;
-}
 export interface CustomCommand {
   name: Name3;
   prompt: Prompt;
@@ -305,7 +301,7 @@ export interface Policy {
  */
 export interface ContextProvider {
   title: Title1;
-  sdk?: Sdk;
+  ide?: Ide;
   display_title: DisplayTitle;
   description: Description3;
   dynamic: Dynamic;
@@ -313,10 +309,7 @@ export interface ContextProvider {
   selected_items?: SelectedItems;
   [k: string]: unknown;
 }
-/**
- * To avoid circular imports
- */
-export interface ContinueSDK1 {
+export interface Ide {
   [k: string]: unknown;
 }
 /**

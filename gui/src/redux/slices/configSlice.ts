@@ -1,11 +1,14 @@
 import { createSlice } from "@reduxjs/toolkit";
 import { RootStore } from "../store";
 
+const windowAny: any = window;
+
 export const configSlice = createSlice({
   name: "config",
   initialState: {
-    apiUrl: "http://localhost:8000",
-    vscMediaUrl: localStorage.getItem("vscMediaUrl") || undefined,
+    apiUrl: windowAny.serverUrl || "http://localhost:8000",
+    workspacePaths: windowAny.workspacePaths || [],
+    vscMachineId: windowAny.vscMachineId || undefined,
   } as RootStore["config"],
   reducers: {
     setWorkspacePaths: (
@@ -38,16 +41,6 @@ export const configSlice = createSlice({
       ...state,
       sessionId: action.payload,
     }),
-    setVscMediaUrl: (
-      state: RootStore["config"],
-      action: { type: string; payload: string }
-    ) => {
-      localStorage.setItem("vscMediaUrl", action.payload);
-      return {
-        ...state,
-        vscMediaUrl: action.payload,
-      };
-    },
     setDataSwitchOn: (
       state: RootStore["config"],
       action: { type: string; payload: boolean }
@@ -63,7 +56,6 @@ export const {
   setApiUrl,
   setWorkspacePaths,
   setSessionId,
-  setVscMediaUrl,
   setDataSwitchOn,
 } = configSlice.actions;
 export default configSlice.reducer;

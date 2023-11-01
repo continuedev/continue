@@ -1,0 +1,25 @@
+{
+  "title": "ContextItemId",
+  "$ref": "#/definitions/continuedev__core__main__ContextItemId",
+  "definitions": {
+    "continuedev__core__main__ContextItemId": {
+      "title": "ContextItemId",
+      "description": "A ContextItemId is a unique identifier for a ContextItem.",
+      "type": "object",
+      "properties": {
+        "provider_title": {
+          "title": "Provider Title",
+          "type": "string"
+        },
+        "item_id": {
+          "title": "Item Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "provider_title",
+        "item_id"
+      ]
+    }
+  }
+}

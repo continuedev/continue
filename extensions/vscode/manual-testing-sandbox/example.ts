@@ -1,3 +1,3 @@
 function mergeSortAlgorithm() {
-    // TODO: implement
+  // TODO: implement
 }

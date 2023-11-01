@@ -40,8 +40,8 @@ class ReplicateLLM(LLM):
         "edit": codellama_edit_prompt,
     }
 
-    async def start(self, **kwargs):
-        await super().start(**kwargs)
+    async def start(self, *args, **kwargs):
+        await super().start(*args, **kwargs)
         self._client = replicate.Client(api_token=self.api_key)
 
     async def _complete(self, prompt: str, options):

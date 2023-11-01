@@ -74,7 +74,9 @@ def main():
             break
 
     if not editor_cmd:
-        print("No code editor command is available. Please install a code editor and try again.")
+        print(
+            "No code editor command is available. Please install a code editor and try again."
+        )
         return
 
     resp = run("cd ../../../server; poetry install; poetry run typegen")

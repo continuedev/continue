@@ -1,4 +1,4 @@
-import { postVscMessage } from "../vscode";
+import { postToIde } from "../vscode";
 // import { Messenger } from "../../../src/util/messenger";
 import { Messenger } from "./messenger";
 
@@ -8,11 +8,11 @@ export class VscodeMessenger extends Messenger {
   constructor(serverUrl: string) {
     super();
     this.serverUrl = serverUrl;
-    postVscMessage("websocketForwardingOpen", { url: this.serverUrl });
+    postToIde("websocketForwardingOpen", { url: this.serverUrl });
   }
 
   send(messageType: string, data: object) {
-    postVscMessage("websocketForwardingMessage", {
+    postToIde("websocketForwardingMessage", {
       message: { messageType, data },
       url: this.serverUrl,
     });
@@ -78,6 +78,6 @@ export class VscodeMessenger extends Messenger {
   }
 
   close(): void {
-    postVscMessage("websocketForwardingClose", { url: this.serverUrl });
+    postToIde("websocketForwardingClose", { url: this.serverUrl });
   }
 }

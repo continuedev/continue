@@ -20,7 +20,7 @@ import HeaderButtonWithText from "./HeaderButtonWithText";
 import { useNavigate, useLocation } from "react-router-dom";
 import ModelSelect from "./ModelSelect";
 import ProgressBar from "./ProgressBar";
-import { temporarilyClearSession } from "../redux/slices/serverStateReducer";
+import { newSession } from "../redux/slices/sessionStateReducer";
 import { getFontSize } from "../util";
 
 // #region Styled Components
@@ -119,21 +119,16 @@ const Layout = () => {
   );
 
   const timeline = useSelector(
-    (state: RootStore) => state.serverState.history.timeline
+    (state: RootStore) => state.sessionState.history
   );
 
   // #endregion
 
   useEffect(() => {
     const handleKeyDown = (event: any) => {
-      if (
-        event.metaKey &&
-        event.altKey &&
-        event.code === "KeyN" &&
-        timeline.filter((n) => !n.step.hide).length > 0
-      ) {
-        dispatch(temporarilyClearSession(false));
-        client?.loadSession(undefined);
+      if (event.metaKey && event.altKey && event.code === "KeyN") {
+        client?.stopSession();
+        dispatch(newSession());
       }
       if ((event.metaKey || event.ctrlKey) && event.code === "KeyC") {
         const selection = window.getSelection()?.toString();
