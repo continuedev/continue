@@ -22,6 +22,7 @@ const path = require("path");
 import { v4 } from "uuid";
 import { windowId } from "./activation/activate";
 import * as io from "socket.io-client";
+import { debugPanelWebview } from "./debugPanel";
 
 const continueVirtualDocumentScheme = "continue";
 
@@ -711,7 +712,10 @@ class IdeProtocolClient {
   }
 
   sendMainUserInput(input: string) {
-    this.send("mainUserInput", v4(), { input });
+    debugPanelWebview?.postMessage({
+      type: "userInput",
+      input,
+    });
   }
 
   async debugTerminal() {

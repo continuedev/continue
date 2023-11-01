@@ -168,8 +168,6 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
             self.onAcceptRejectSuggestion(data["accepted"])
         elif msg.message_type == "acceptRejectDiff":
             self.onAcceptRejectDiff(data["accepted"], data["stepIndex"])
-        elif msg.message_type == "mainUserInput":
-            self.onMainUserInput(data["input"])
         elif msg.message_type in [
             "highlightedCode",
             "openFiles",
@@ -234,17 +232,6 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
             "setSuggestionsLocked", {"filepath": filepath, "locked": locked}
         )
 
-    def onTelemetryEnabledChanged(self, enabled: bool):
-        if autopilot := self.__get_autopilot():
-
-            async def change_telemetry():
-                await autopilot.set_config_attr(
-                    ["allow_anonymous_telemetry"], "True" if enabled else "False"
-                )
-                await autopilot.sdk.load()
-
-            create_async_task(change_telemetry(), self.on_error)
-
     async def highlightCode(self, range_in_file: RangeInFile, color: str = "#00ff0022"):
         await self.messenger.send(
             "highlightCode", {"rangeInFile": range_in_file.dict(), "color": color}
@@ -274,13 +261,6 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
         # Access to Autopilot (so SessionManager)
         pass
 
-    def onCloseGUI(self, session_id: str):
-        # Access to SessionManager
-        pass
-
-    def onOpenGUIRequest(self):
-        pass
-
     def onFileEdits(self, edits: List[FileEditWithFullContents]):
         pass
 
@@ -300,12 +280,16 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
     _files_renamed_callbacks = []
     _file_saved_callbacks = []
     _debug_terminal_callbacks = []
+    _telemetry_enabled_callbacks = []
 
     def call_callback(self, callback, *args, **kwargs):
         if asyncio.iscoroutinefunction(callback):
             create_async_task(callback(*args, **kwargs), self.on_error)
         else:
             callback(*args, **kwargs)
+
+    def subscribeToTelemetryEnabled(self, callback: Callable[[bool], None]):
+        self._telemetry_enabled_callbacks.append(callback)
 
     def subscribeToDebugTerminal(self, callback: Callable[[str], None]):
         self._debug_terminal_callbacks.append(callback)
@@ -326,6 +310,10 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
 
     def subscribeToFileSaved(self, callback: Callable[[str, str], None]):
         self._file_saved_callbacks.append(callback)
+
+    def onTelemetryEnabledChanged(self, enabled: bool):
+        for callback in self._telemetry_enabled_callbacks:
+            self.call_callback(callback, enabled)
 
     def onDebugTerminal(self, content: str):
         for callback in self._debug_terminal_callbacks:

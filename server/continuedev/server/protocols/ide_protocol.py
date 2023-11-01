@@ -47,14 +47,6 @@ class AbstractIdeProtocolServer(ABC):
         """Called when a file system update is received"""
 
     @abstractmethod
-    def onCloseGUI(self, session_id: str):
-        """Called when a GUI is closed"""
-
-    @abstractmethod
-    def onOpenGUIRequest(self):
-        """Called when a GUI is requested to be opened"""
-
-    @abstractmethod
     async def getOpenFiles(self) -> List[str]:
         """Get a list of open files"""
 

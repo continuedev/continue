@@ -1,6 +1,7 @@
 from typing import Dict, List, Optional, Type
 
 from ..libs.util.edit_config import (
+    create_bool_node,
     create_obj_node,
     display_llm_class,
     edit_config_property,
@@ -216,4 +217,11 @@ class ContinueConfig(BaseModel):
         edit_config_property(
             ["models"],
             create_obj_node("Models", models_args),
+        )
+
+    @staticmethod
+    def set_telemetry_enabled(enabled: bool):
+        edit_config_property(
+            ["allow_anonymous_telemetry"],
+            create_bool_node(enabled),
         )

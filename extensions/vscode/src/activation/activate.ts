@@ -71,6 +71,36 @@ async function openTutorial(context: vscode.ExtensionContext) {
   }
 }
 
+function showRefactorMigrationMessage() {
+  // Only if the vscode setting continue.manuallyRunningSserver is true
+  const manuallyRunningServer =
+    vscode.workspace
+      .getConfiguration("continue")
+      .get<boolean>("manuallyRunningServer") || false;
+  if (
+    manuallyRunningServer &&
+    extensionContext?.globalState.get<boolean>(
+      "continue.showRefactorMigrationMessage"
+    ) !== false
+  ) {
+    vscode.window
+      .showInformationMessage(
+        "The Continue server protocol was recently updated in a way that requires the latest server version to work properly. Since you are manually running the server, please be sure to upgrade with `pip install --upgrade continuedev`.",
+        "Got it",
+        "Don't show again"
+      )
+      .then((selection) => {
+        if (selection === "Don't show again") {
+          // Get the global state
+          extensionContext?.globalState.update(
+            "continue.showRefactorMigrationMessage",
+            false
+          );
+        }
+      });
+  }
+}
+
 export async function activateExtension(context: vscode.ExtensionContext) {
   extensionContext = context;
 
@@ -92,6 +122,7 @@ export async function activateExtension(context: vscode.ExtensionContext) {
   addPythonPathForConfig();
   await openTutorial(context);
   setupInlineTips(context);
+  showRefactorMigrationMessage();
 
   (async () => {
     // Start the server

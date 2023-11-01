@@ -135,6 +135,12 @@ class Window:
 
         self.ide.subscribeToDebugTerminal(onDebugCallback)
 
+        def onTelemetryChangeCallback(enabled: bool):
+            self.config.allow_anonymous_telemetry = enabled
+            ContinueConfig.set_telemetry_enabled(enabled)
+
+        self.ide.subscribeToTelemetryEnabled(onTelemetryChangeCallback)
+
         # # Subscribe to highlighted code, pass to the context manager
         # def onHighlightedCodeCallback(
         #     range_in_files: List[RangeInFileWithContents], edit: bool

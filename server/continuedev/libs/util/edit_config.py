@@ -147,6 +147,10 @@ def create_literal_node(literal: str) -> redbaron.RedBaron:
     return redbaron.RedBaron(literal)[0]
 
 
+def create_bool_node(bool: bool) -> redbaron.RedBaron:
+    return redbaron.RedBaron(str(bool))[0]
+
+
 def create_float_node(float: float) -> redbaron.RedBaron:
     return redbaron.RedBaron(f"{float}")[0]
 
