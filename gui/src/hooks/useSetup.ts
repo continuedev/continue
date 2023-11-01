@@ -20,7 +20,6 @@ import {
 import {
   setApiUrl,
   setVscMachineId,
-  setVscMediaUrl,
   setWorkspacePaths,
 } from "../redux/slices/configSlice";
 
@@ -103,7 +102,7 @@ function useSetup(
           dispatch(setApiUrl(event.data.serverUrl));
           dispatch(setWorkspacePaths(event.data.workspacePaths));
           dispatch(setVscMachineId(event.data.vscMachineId));
-          dispatch(setVscMediaUrl(event.data.vscMediaUrl));
+          // dispatch(setVscMediaUrl(event.data.vscMediaUrl));
 
           break;
         case "highlightedCode":

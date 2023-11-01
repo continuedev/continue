@@ -7,8 +7,6 @@ export const configSlice = createSlice({
   name: "config",
   initialState: {
     apiUrl: windowAny.serverUrl || "http://localhost:8000",
-    vscMediaUrl:
-      windowAny.vscMediaUrl || localStorage.getItem("vscMediaUrl") || undefined,
     workspacePaths: windowAny.workspacePaths || [],
     vscMachineId: windowAny.vscMachineId || undefined,
   } as RootStore["config"],
@@ -43,16 +41,6 @@ export const configSlice = createSlice({
       ...state,
       sessionId: action.payload,
     }),
-    setVscMediaUrl: (
-      state: RootStore["config"],
-      action: { type: string; payload: string }
-    ) => {
-      localStorage.setItem("vscMediaUrl", action.payload);
-      return {
-        ...state,
-        vscMediaUrl: action.payload,
-      };
-    },
     setDataSwitchOn: (
       state: RootStore["config"],
       action: { type: string; payload: boolean }
@@ -68,7 +56,6 @@ export const {
   setApiUrl,
   setWorkspacePaths,
   setSessionId,
-  setVscMediaUrl,
   setDataSwitchOn,
 } = configSlice.actions;
 export default configSlice.reducer;

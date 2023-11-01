@@ -24,7 +24,6 @@ export interface RootStore {
     workspacePaths: string[] | undefined;
     apiUrl: string;
     vscMachineId: string | undefined;
-    vscMediaUrl: string | undefined;
   };
   misc: {
     takenAction: boolean;

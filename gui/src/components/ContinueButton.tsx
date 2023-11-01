@@ -46,9 +46,7 @@ function ContinueButton(props: {
   disabled: boolean;
   showStop: boolean;
 }) {
-  const vscMediaUrl = useSelector(
-    (state: RootStore) => state.config.vscMediaUrl
-  );
+  const vscMediaUrl = (window as any).vscMediaUrl;
 
   const [buttonColor, setButtonColor] = useState<string | null>(
     localStorage.getItem("continueButtonColor")
