@@ -7,7 +7,7 @@ from ...core.context import ContextProvider
 from ...core.main import ContextItem, ContextItemDescription, ContextItemId
 from ...libs.util.logging import logger
 from ...libs.util.ripgrep import get_rg_path
-from .util import remove_meilisearch_disallowed_chars
+from .util import remove_meilisearch_disallowed_chars, remove_prefix
 
 
 class SearchContextProvider(ContextProvider):
@@ -80,7 +80,7 @@ class SearchContextProvider(ContextProvider):
         if not id.provider_title == self.title:
             raise Exception("Invalid provider title for item")
 
-        query = query.lstrip("search ")
+        query = remove_prefix(text=query, prefix="search").strip()
         results = await self._search(query)
 
         ctx_item = self.BASE_CONTEXT_ITEM.copy()

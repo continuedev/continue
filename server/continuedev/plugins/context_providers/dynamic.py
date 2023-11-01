@@ -4,7 +4,7 @@ from typing import List
 from ...core.context import ContextProvider
 from ...core.main import ContextItem, ContextItemDescription, ContextItemId
 from ...libs.util.create_async_task import create_async_task
-from .util import remove_meilisearch_disallowed_chars
+from .util import remove_meilisearch_disallowed_chars, remove_prefix
 
 
 class DynamicProvider(ContextProvider, ABC):
@@ -40,7 +40,7 @@ class DynamicProvider(ContextProvider, ABC):
         if not id.provider_title == self.title:
             raise Exception("Invalid provider title for item")
 
-        query = query.lstrip(self.title + " ")
+        query = remove_prefix(text=query, prefix=self.title).strip()
         results = await self.get_content(query)
 
         ctx_item = self.BASE_CONTEXT_ITEM.copy()
