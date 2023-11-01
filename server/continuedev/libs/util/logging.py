@@ -34,6 +34,7 @@ console_handler.setLevel(logging.DEBUG)
 
 # Create a formatter
 formatter = logging.Formatter("[%(asctime)s] [%(levelname)s] %(message)s")
+formatter.datefmt = "%Y-%m-%d %H:%M:%S"
 
 # Add the formatter to the handlers
 file_handler.setFormatter(formatter)

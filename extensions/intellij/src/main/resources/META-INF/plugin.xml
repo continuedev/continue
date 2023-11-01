@@ -3,8 +3,8 @@
     <id>com.github.continuedev.continueintellijextension</id>
     <name>Continue</name>
     <vendor>continue-dev</vendor>
-
     <depends>com.intellij.modules.platform</depends>
+    <idea-version since-build="223.0" until-build="233.*"/>
 
     <extensions defaultExtensionNs="com.intellij">
         <toolWindow id="Continue" anchor="right" icon="/tool-window-icon.png"

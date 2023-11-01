@@ -1,3 +1,9 @@
+---
+title: Manually Run Continue
+description: How to run Continue manually
+keywords: [manual, firewall, vpn, air-gapped, self-host]
+---
+
 # Manually Run Continue
 
 You might want to run Continue manually if

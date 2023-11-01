@@ -1,6 +1,5 @@
 import os
 import ssl
-from textwrap import dedent
 from time import time
 from typing import Any, Callable, Coroutine, Dict, Generator, List, Optional, Union
 
@@ -200,11 +199,8 @@ class LLM(ContinueBaseModel):
         original_dict["class_name"] = self.__class__.__name__
         return original_dict
 
-    async def start(
-        self, write_log: Callable[[str], None] = None, unique_id: Optional[str] = None
-    ):
+    async def start(self, unique_id: Optional[str] = None):
         """Start the connection to the LLM."""
-        self.write_log = write_log
         self.unique_id = unique_id
 
     async def stop(self):
@@ -352,8 +348,8 @@ Settings:
         if not raw:
             prompt = self.template_prompt_like_messages(prompt)
 
-        if log:
-            self.write_log(self.compile_log_message(prompt, options))
+        if log and self.write_log:
+            await self.write_log(self.compile_log_message(prompt, options))
 
         completion = ""
         async for chunk in self._stream_complete(prompt=prompt, options=options):
@@ -400,8 +396,8 @@ Settings:
         if not raw:
             prompt = self.template_prompt_like_messages(prompt)
 
-        if log:
-            self.write_log(self.compile_log_message(prompt, options))
+        if log and self.write_log:
+            await self.write_log(self.compile_log_message(prompt, options))
 
         completion = await self._complete(prompt=prompt, options=options)
 
@@ -447,8 +443,8 @@ Settings:
         else:
             prompt = format_chat_messages(messages)
 
-        if log:
-            self.write_log(self.compile_log_message(prompt, options))
+        if log and self.write_log:
+            await self.write_log(self.compile_log_message(prompt, options))
 
         completion = ""
 

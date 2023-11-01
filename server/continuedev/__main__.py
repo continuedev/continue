@@ -22,6 +22,17 @@ app = typer.Typer(invoke_without_command=True)
 console = Console()
 
 
+CONTINUE_ASCII = r"""
+
+_________               _____ _____                       
+__  ____/______ _______ __  /____(_)_______ ____  _______ 
+_  /     _  __ \__  __ \_  __/__  / __  __ \_  / / /_  _ \
+/ /___   / /_/ /_  / / // /_  _  /  _  / / // /_/ / /  __/
+\____/   \____/ /_/ /_/ \__/  /_/   /_/ /_/ \__,_/  \___/ 
+
+"""
+
+
 def main_command(
     port: int = typer.Option(65432, help="server port"),
     host: str = typer.Option("127.0.0.1", help="server host"),
@@ -36,6 +47,7 @@ def main_command(
     if headless:
         run(config)
     else:
+        print(CONTINUE_ASCII)
         run_server(port=port, host=host, meilisearch_url=meilisearch_url)
 
 

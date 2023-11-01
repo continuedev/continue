@@ -21,7 +21,7 @@ class TemplateRecipe(Step):
         return f"Appended a statement to print `Hello, {self.name}!` at the end of the file."
 
     # The code executed when the recipe is run
-    async def run(self, sdk: ContinueSDK) -> Coroutine[Observation, None, None]:
+    async def run(self, sdk: ContinueSDK):
         visible_files = await sdk.ide.getVisibleFiles()
         await sdk.edit_file(
             filename=visible_files[0],

@@ -4,7 +4,7 @@ from typing import Coroutine, List, Optional, Union
 
 from pydantic import BaseModel, Field
 
-from ...core.main import ContinueCustomException, Step
+from ...core.main import ContinueCustomException, SetStep, Step
 from ...core.observation import Observation
 from ...core.sdk import ContinueSDK, Models
 from ...core.steps import DefaultModelEditCodeStep
@@ -25,12 +25,12 @@ class Policy(BaseModel):
 class RunPolicyUntilDoneStep(Step):
     policy: "Policy"
 
-    async def run(self, sdk: ContinueSDK) -> Coroutine[Observation, None, None]:
+    async def run(self, sdk: ContinueSDK):
         next_step = self.policy.next(sdk.config, sdk.history)
         while next_step is not None:
             observation = await sdk.run_step(next_step)
             next_step = self.policy.next(sdk.config, sdk.history)
-        return observation
+        yield observation
 
 
 class FasterEditHighlightedCodeStep(Step):
@@ -84,7 +84,7 @@ class FasterEditHighlightedCodeStep(Step):
     async def describe(self, models: Models) -> Coroutine[str, None, None]:
         return "Editing highlighted code"
 
-    async def run(self, sdk: ContinueSDK) -> Coroutine[Observation, None, None]:
+    async def run(self, sdk: ContinueSDK):
         range_in_files = await sdk.get_code_context(only_editing=True)
         if len(range_in_files) == 0:
             # Get the full contents of all visible files
@@ -169,8 +169,6 @@ class FasterEditHighlightedCodeStep(Step):
             await sdk.ide.saveFile(filepath)
             await sdk.ide.setFileOpen(filepath)
 
-        return None
-
 
 class StarCoderEditHighlightedCodeStep(Step):
     user_input: str
@@ -185,7 +183,7 @@ class StarCoderEditHighlightedCodeStep(Step):
             f"{self._prompt_and_completion}\n\nPlease give brief a description of the changes made above using markdown bullet points:"
         )
 
-    async def run(self, sdk: ContinueSDK) -> Coroutine[Observation, None, None]:
+    async def run(self, sdk: ContinueSDK):
         range_in_files = await sdk.get_code_context(only_editing=True)
         found_highlighted_code = len(range_in_files) > 0
         if not found_highlighted_code:
@@ -259,7 +257,7 @@ class EditAlreadyEditedRangeStep(Step):
                     """
     )
 
-    async def run(self, sdk: ContinueSDK) -> Coroutine[Observation, None, None]:
+    async def run(self, sdk: ContinueSDK):
         if os.path.basename(self.range_in_file.filepath) in os.listdir(
             os.path.expanduser(os.path.join("~", ".continue", "diffs"))
         ):
@@ -303,8 +301,10 @@ class EditHighlightedCodeStep(Step):
     async def describe(self, models: Models) -> Coroutine[str, None, None]:
         return "Editing code"
 
-    async def run(self, sdk: ContinueSDK) -> Coroutine[Observation, None, None]:
-        range_in_files = sdk.get_code_context(only_editing=True)
+    async def run(self, sdk: ContinueSDK):
+        yield SetStep(description="Editing file...")
+
+        range_in_files = await sdk.get_code_context(only_editing=True)
 
         # If nothing highlighted, insert at the cursor if possible
         if len(range_in_files) == 0:
@@ -374,7 +374,7 @@ class SolveTracebackStep(Step):
     async def describe(self, models: Models) -> Coroutine[str, None, None]:
         return f"```\n{self.traceback.full_traceback}\n```"
 
-    async def run(self, sdk: ContinueSDK) -> Coroutine[Observation, None, None]:
+    async def run(self, sdk: ContinueSDK):
         prompt = dedent(
             """I ran into this problem with my Python code:
 
@@ -396,7 +396,6 @@ class SolveTracebackStep(Step):
         await sdk.run_step(
             DefaultModelEditCodeStep(range_in_files=range_in_files, user_input=prompt)
         )
-        return None
 
 
 class EmptyStep(Step):
@@ -405,5 +404,5 @@ class EmptyStep(Step):
     async def describe(self, models: Models) -> Coroutine[str, None, None]:
         return ""
 
-    async def run(self, sdk: ContinueSDK) -> Coroutine[Observation, None, None]:
+    async def run(self, sdk: ContinueSDK):
         pass

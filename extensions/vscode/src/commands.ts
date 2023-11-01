@@ -17,25 +17,26 @@ function addHighlightedCodeToContext(edit: boolean) {
     if (selection.isEmpty) return;
     const range = new vscode.Range(selection.start, selection.end);
     const contents = editor.document.getText(range);
-    ideProtocolClient?.sendHighlightedCode(
-      [
-        {
-          filepath: editor.document.uri.fsPath,
-          contents,
-          range: {
-            start: {
-              line: selection.start.line,
-              character: selection.start.character,
-            },
-            end: {
-              line: selection.end.line,
-              character: selection.end.character,
-            },
-          },
+    const rangeInFileWithContents = {
+      filepath: editor.document.uri.fsPath,
+      contents,
+      range: {
+        start: {
+          line: selection.start.line,
+          character: selection.start.character,
         },
-      ],
-      edit
-    );
+        end: {
+          line: selection.end.line,
+          character: selection.end.character,
+        },
+      },
+    };
+
+    debugPanelWebview?.postMessage({
+      type: "highlightedCode",
+      rangeInFileWithContents,
+      edit,
+    });
   }
 }
 
@@ -82,7 +83,10 @@ const commandsMap: { [command: string]: (...args: any) => any } = {
       title: "Continue Quick Input",
     });
     if (text) {
-      ideProtocolClient.sendMainUserInput(text);
+      debugPanelWebview?.postMessage({
+        type: "userInput",
+        input: text,
+      });
       if (!text.startsWith("/edit")) {
         vscode.commands.executeCommand("continue.continueGUIView.focus");
       }
@@ -107,7 +111,7 @@ const commandsMap: { [command: string]: (...args: any) => any } = {
   "continue.hideInlineTip": () => {
     vscode.workspace
       .getConfiguration("continue")
-      .update("showInlineTip", false);
+      .update("showInlineTip", false, vscode.ConfigurationTarget.Global);
   },
 
   // Commands without keyboard shortcuts

@@ -24,9 +24,7 @@ const FlashingDiv = styled.div`
 `;
 
 function Loader(props: { size?: string }) {
-  const vscMediaUrl = useSelector(
-    (state: RootStore) => state.config.vscMediaUrl
-  );
+  const vscMediaUrl = (window as any).vscMediaUrl;
   return (
     <FlashingDiv>
       {vscMediaUrl ? (

@@ -12,11 +12,16 @@ import com.google.gson.Gson
 import com.intellij.ide.plugins.PluginManagerCore
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.actionSystem.ActionManager
+import com.intellij.openapi.actionSystem.CustomShortcutSet
+import com.intellij.openapi.actionSystem.KeyboardShortcut
+import com.intellij.openapi.actionSystem.Shortcut
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.editor.EditorFactory
 import com.intellij.openapi.extensions.PluginId
 import com.intellij.openapi.fileEditor.FileEditorManager
+import com.intellij.openapi.keymap.KeymapManager
+import com.intellij.openapi.project.DumbAware
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.startup.StartupActivity
 import com.intellij.openapi.ui.DialogWrapper
@@ -455,7 +460,7 @@ class WelcomeDialogWrapper(val project: Project) : DialogWrapper(true) {
     }
 }
 
-class ContinuePluginStartupActivity : StartupActivity, Disposable {
+class ContinuePluginStartupActivity : StartupActivity, Disposable, DumbAware {
     private val coroutineScope = CoroutineScope(Dispatchers.IO)
 
     override fun runActivity(project: Project) {
@@ -469,22 +474,27 @@ class ContinuePluginStartupActivity : StartupActivity, Disposable {
     }
 
     private fun getPlatformSpecificKeyStroke(key: String): String {
-        val osName = System.getProperty("os.name").lowercase()
+        val osName = System.getProperty("os.name").toLowerCase()
         val modifier = if (osName.contains("mac")) "meta" else "control"
         return "$modifier $key"
     }
 
     private fun removeShortcutFromAction(shortcut: String) {
-        val actionManager = ActionManager.getInstance()
+        val keymap = KeymapManager.getInstance().activeKeymap
         val keyStroke = KeyStroke.getKeyStroke(shortcut)
-        val actionIds = actionManager.getActionIds(keyStroke)
+        val actionIds = keymap.getActionIds(keyStroke)
 
-        for (actionId in actionIds) {
-            val action = actionManager.getAction(actionId)
-            val shortcuts = action.shortcutSet.shortcuts.filterNot { it is KeyboardShortcut && it.firstKeyStroke == keyStroke }.toTypedArray()
 
-            action.registerCustomShortcutSet(Shortcut { shortcuts }, null)
-        }
+        val actionManager = ActionManager.getInstance()
+         for (actionId in actionIds) {
+             if (actionId.startsWith("continue")) {
+                 continue
+             }
+             val action = actionManager.getAction(actionId)
+             val shortcuts = action.shortcutSet.shortcuts.filterNot { it is KeyboardShortcut && it.firstKeyStroke == keyStroke }.toTypedArray()
+             val newShortcutSet = CustomShortcutSet(*shortcuts)
+             action.registerCustomShortcutSet(newShortcutSet, null)
+         }
     }
 
     private fun initializePlugin(project: Project) {
@@ -530,9 +540,7 @@ class ContinuePluginStartupActivity : StartupActivity, Disposable {
             GlobalScope.async(Dispatchers.IO) {
                 startContinuePythonServer(project)
 
-                val wsUrl = getContinueServerUrl().replace("http://", "ws://").replace("https://", "wss://")
                 val ideProtocolClient = IdeProtocolClient(
-                    "$wsUrl/ide/ws",
                     continuePluginService,
                     defaultStrategy,
                     coroutineScope,
@@ -548,16 +556,12 @@ class ContinuePluginStartupActivity : StartupActivity, Disposable {
                                 coroutineScope
                         )
 
-                val newSessionId = ideProtocolClient.getSessionIdAsync().await()
-                val sessionId = newSessionId ?: ""
-
                 // Reload the WebView
                 continuePluginService?.let {
                     val workspacePaths =
                             if (project.basePath != null) arrayOf(project.basePath) else emptyList<String>()
 
                     continuePluginService.worksapcePaths = workspacePaths as Array<String>
-                    continuePluginService.sessionId = sessionId
                 }
 
                 EditorFactory.getInstance().eventMulticaster.addSelectionListener(

@@ -1,5 +1,12 @@
 import styled from "styled-components";
-import { Label, Select, Input, defaultBorderRadius, lightGray } from ".";
+import {
+  Label,
+  Select,
+  Input,
+  defaultBorderRadius,
+  lightGray,
+  vscForeground,
+} from ".";
 import { useState } from "react";
 import { useFormContext } from "react-hook-form";
 import { getFontSize } from "../util";

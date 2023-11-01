@@ -4,12 +4,11 @@ import ClassPropertyRef from '@site/src/components/ClassPropertyRef.tsx';
 
 Type '@terminal' to reference the contents of your IDE's terminal.
 
-[View the source](https://github.com/continuedev/continue/blob/main/server/continuedev/libs/llm/plugins/context_providers/terminal.py)
+[View the source](https://github.com/continuedev/continue/tree/main/server/continuedev/plugins/context_providers/terminal.py)
 
 ## Properties
 
 <ClassPropertyRef name='get_last_n_commands' details='{&quot;title&quot;: &quot;Get Last N Commands&quot;, &quot;description&quot;: &quot;The number of previous commands to reference&quot;, &quot;default&quot;: 3, &quot;type&quot;: &quot;integer&quot;}' required={false} default="3"/>
-
 
 ### Inherited Properties
 

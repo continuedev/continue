@@ -2,15 +2,14 @@ import { useEffect, useRef, useState } from "react";
 import styled from "styled-components";
 import { defaultBorderRadius, secondaryDark, vscBackground } from ".";
 import { ArrowPathIcon, XMarkIcon } from "@heroicons/react/24/outline";
-import { HistoryNode } from "../schema/HistoryNode";
 import HeaderButtonWithText from "./HeaderButtonWithText";
 import StyledMarkdownPreview from "./StyledMarkdownPreview";
 import { getFontSize } from "../util";
+import { StepDescription } from "../schema/SessionState";
 
 interface StepContainerProps {
-  historyNode: HistoryNode;
+  step: StepDescription;
   onReverse: () => void;
-  inFuture: boolean;
   onUserInput: (input: string) => void;
   onRetry: () => void;
   onDelete: () => void;
@@ -25,7 +24,6 @@ interface StepContainerProps {
 
 const MainDiv = styled.div<{
   stepDepth: number;
-  inFuture: boolean;
 }>``;
 
 const ButtonsDiv = styled.div`
@@ -58,7 +56,7 @@ function StepContainer(props: StepContainerProps) {
   const [isHovered, setIsHovered] = useState(false);
   const naturalLanguageInputRef = useRef<HTMLTextAreaElement>(null);
   const userInputRef = useRef<HTMLInputElement>(null);
-  const isUserInput = props.historyNode.step.name === "UserInputStep";
+  const isUserInput = props.step.name === "UserInputStep";
 
   useEffect(() => {
     if (userInputRef?.current) {
@@ -74,61 +72,59 @@ function StepContainer(props: StepContainerProps) {
 
   return (
     <MainDiv
-      stepDepth={(props.historyNode.depth as any) || 0}
-      inFuture={props.inFuture}
+      stepDepth={(props.step.depth as any) || 0}
       onMouseEnter={() => {
         setIsHovered(true);
       }}
       onMouseLeave={() => {
         setIsHovered(false);
       }}
-      hidden={props.historyNode.step.hide as any}
+      hidden={props.step.hide as any}
     >
       <div>
-        {isHovered &&
-          (props.historyNode.observation?.error || props.noUserInputParent) && (
-            <ButtonsDiv>
-              {props.historyNode.observation?.error &&
-                ((
-                  <HeaderButtonWithText
-                    text="Retry"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      props.onRetry();
-                    }}
-                  >
-                    <ArrowPathIcon
-                      width="1.4em"
-                      height="1.4em"
-                      onClick={props.onRetry}
-                    />
-                  </HeaderButtonWithText>
-                ) as any)}
-
-              {props.noUserInputParent && (
+        {isHovered && (props.step.error || props.noUserInputParent) && (
+          <ButtonsDiv>
+            {props.step.error &&
+              ((
                 <HeaderButtonWithText
-                  text="Delete"
+                  text="Retry"
                   onClick={(e) => {
                     e.stopPropagation();
-                    props.onDelete();
+                    props.onRetry();
                   }}
                 >
-                  <XMarkIcon
+                  <ArrowPathIcon
                     width="1.4em"
                     height="1.4em"
                     onClick={props.onRetry}
                   />
                 </HeaderButtonWithText>
-              )}
-            </ButtonsDiv>
-          )}
+              ) as any)}
+
+            {props.noUserInputParent && (
+              <HeaderButtonWithText
+                text="Delete"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  props.onDelete();
+                }}
+              >
+                <XMarkIcon
+                  width="1.4em"
+                  height="1.4em"
+                  onClick={props.onRetry}
+                />
+              </HeaderButtonWithText>
+            )}
+          </ButtonsDiv>
+        )}
 
         <ContentDiv
           hidden={!props.open}
           isUserInput={isUserInput}
           fontSize={getFontSize()}
         >
-          <StyledMarkdownPreview source={props.historyNode.step.description} />
+          <StyledMarkdownPreview source={props.step.description} />
         </ContentDiv>
       </div>
     </MainDiv>

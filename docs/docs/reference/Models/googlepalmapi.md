@@ -18,11 +18,9 @@ config = ContinueConfig(
 )
 ```
 
-[View the source](https://github.com/continuedev/continue/blob/main/server/continuedev/libs/llm/libs/llm/google_palm_api.py)
+[View the source](https://github.com/continuedev/continue/tree/main/server/continuedev/libs/llm/google_palm_api.py)
 
 ## Properties
-
-
 
 ### Inherited Properties
 

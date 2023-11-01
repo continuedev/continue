@@ -12,10 +12,11 @@ import registerQuickFixProvider from "../lang-server/codeActions";
 import { getExtensionUri } from "../util/vscode";
 import path from "path";
 import { setupInlineTips } from "./inlineTips";
+import { v4 } from "uuid";
 
 export let extensionContext: vscode.ExtensionContext | undefined = undefined;
-
 export let ideProtocolClient: IdeProtocolClient;
+export let windowId: string = v4();
 
 function addPythonPathForConfig() {
   // Add to python.analysis.extraPaths global setting so config.py gets LSP
@@ -70,8 +71,39 @@ async function openTutorial(context: vscode.ExtensionContext) {
   }
 }
 
+function showRefactorMigrationMessage() {
+  // Only if the vscode setting continue.manuallyRunningSserver is true
+  const manuallyRunningServer =
+    vscode.workspace
+      .getConfiguration("continue")
+      .get<boolean>("manuallyRunningServer") || false;
+  if (
+    manuallyRunningServer &&
+    extensionContext?.globalState.get<boolean>(
+      "continue.showRefactorMigrationMessage"
+    ) !== false
+  ) {
+    vscode.window
+      .showInformationMessage(
+        "The Continue server protocol was recently updated in a way that requires the latest server version to work properly. Since you are manually running the server, please be sure to upgrade with `pip install --upgrade continuedev`.",
+        "Got it",
+        "Don't show again"
+      )
+      .then((selection) => {
+        if (selection === "Don't show again") {
+          // Get the global state
+          extensionContext?.globalState.update(
+            "continue.showRefactorMigrationMessage",
+            false
+          );
+        }
+      });
+  }
+}
+
 export async function activateExtension(context: vscode.ExtensionContext) {
   extensionContext = context;
+
   console.log("Using Continue version: ", getExtensionVersion());
   try {
     console.log(
@@ -81,6 +113,7 @@ export async function activateExtension(context: vscode.ExtensionContext) {
   } catch (e) {
     console.log("Error getting workspace folder: ", e);
   }
+  console.log("Window ID: ", windowId);
 
   // Register commands and providers
   registerAllCodeLensProviders(context);
@@ -89,23 +122,20 @@ export async function activateExtension(context: vscode.ExtensionContext) {
   addPythonPathForConfig();
   await openTutorial(context);
   setupInlineTips(context);
+  showRefactorMigrationMessage();
 
-  // Start the server
-  const sessionIdPromise = (async () => {
+  (async () => {
+    // Start the server
     await startContinuePythonServer();
-
     console.log("Continue server started");
+
     // Initialize IDE Protocol Client
     const serverUrl = getContinueServerUrl();
-    ideProtocolClient = new IdeProtocolClient(
-      `${serverUrl.replace("http", "ws")}/ide/ws`,
-      context
-    );
-    return await ideProtocolClient.getSessionId();
+    ideProtocolClient = new IdeProtocolClient(serverUrl, context);
   })();
 
   // Register Continue GUI as sidebar webview, and beginning a new session
-  const provider = new ContinueGUIWebviewViewProvider(sessionIdPromise);
+  const provider = new ContinueGUIWebviewViewProvider();
 
   context.subscriptions.push(
     vscode.window.registerWebviewViewProvider(
@@ -116,6 +146,4 @@ export async function activateExtension(context: vscode.ExtensionContext) {
       }
     )
   );
-
-  // vscode.commands.executeCommand("continue.focusContinueInput");
 }

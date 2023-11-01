@@ -1,14 +1,24 @@
 {
   "title": "LLM",
-  "$ref": "#/definitions/continuedev__libs__llm__LLM",
+  "$ref": "#/definitions/continuedev__libs__llm__base__LLM",
   "definitions": {
-    "continuedev__libs__llm__LLM": {
+    "continuedev__libs__llm__base__LLM": {
       "title": "LLM",
       "type": "object",
       "properties": {
         "title": {
           "title": "Title",
           "description": "A title that will identify this model in the model selection dropdown",
+          "type": "string"
+        },
+        "unique_id": {
+          "title": "Unique Id",
+          "description": "The unique ID of the user.",
+          "type": "string"
+        },
+        "model": {
+          "title": "Model",
+          "description": "The name of the model to be used (e.g. gpt-4, codellama)",
           "type": "string"
         },
         "system_message": {
@@ -22,22 +32,6 @@
           "default": 2048,
           "type": "integer"
         },
-        "unique_id": {
-          "title": "Unique Id",
-          "description": "The unique ID of the user.",
-          "type": "string"
-        },
-        "model": {
-          "title": "Model",
-          "description": "The name of the model to be used (e.g. gpt-4, codellama)",
-          "type": "string"
-        },
-        "max_tokens": {
-          "title": "Max Tokens",
-          "description": "The maximum number of tokens to generate.",
-          "default": 1024,
-          "type": "integer"
-        },
         "stop_tokens": {
           "title": "Stop Tokens",
           "description": "Tokens that will stop the completion.",
@@ -45,6 +39,31 @@
           "items": {
             "type": "string"
           }
+        },
+        "temperature": {
+          "title": "Temperature",
+          "description": "The temperature of the completion.",
+          "type": "number"
+        },
+        "top_p": {
+          "title": "Top P",
+          "description": "The top_p of the completion.",
+          "type": "number"
+        },
+        "top_k": {
+          "title": "Top K",
+          "description": "The top_k of the completion.",
+          "type": "integer"
+        },
+        "presence_penalty": {
+          "title": "Presence Penalty",
+          "description": "The presence penalty Aof the completion.",
+          "type": "number"
+        },
+        "frequency_penalty": {
+          "title": "Frequency Penalty",
+          "description": "The frequency penalty of the completion.",
+          "type": "number"
         },
         "timeout": {
           "title": "Timeout",
@@ -66,6 +85,14 @@
           "title": "Proxy",
           "description": "Proxy URL to use when making the HTTP request",
           "type": "string"
+        },
+        "headers": {
+          "title": "Headers",
+          "description": "Headers to use when making the HTTP request",
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
         },
         "prompt_templates": {
           "title": "Prompt Templates",

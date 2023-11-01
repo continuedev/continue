@@ -54,19 +54,6 @@ class PostHogLogger:
     _found_disconnected: bool = False
 
     def _capture_event(self, event_name: str, event_properties: Any):
-        # logger.debug(
-        #     f"Logging to PostHog: {event_name} ({self.unique_id}, {self.allow_anonymous_telemetry}): {event_properties}")
-        telemetry_path = os.path.expanduser("~/.continue/telemetry.log")
-
-        # Make sure the telemetry file exists
-        if not os.path.exists(telemetry_path):
-            os.makedirs(os.path.dirname(telemetry_path), exist_ok=True)
-            open(telemetry_path, "w").close()
-
-        with open(telemetry_path, "a") as f:
-            str_to_write = f"{event_name}: {event_properties}\n{self.unique_id}\n{self.allow_anonymous_telemetry}\n\n"
-            f.write(str_to_write)
-
         if not self.allow_anonymous_telemetry:
             return
 

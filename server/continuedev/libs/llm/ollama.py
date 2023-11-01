@@ -52,8 +52,8 @@ class Ollama(LLM):
             "stop": options.stop,
         }
 
-    async def start(self, **kwargs):
-        await super().start(**kwargs)
+    async def start(self, *args, **kwargs):
+        await super().start(*args, **kwargs)
         self._client_session = self.create_client_session()
         try:
             async with self._client_session.post(
@@ -98,6 +98,11 @@ class Ollama(LLM):
                 raise ContinueCustomException(
                     f"Ollama returned an error: {txt}{extra_msg}",
                     "Invalid request to Ollama",
+                )
+            elif resp.status == 404:
+                raise ContinueCustomException(
+                    f"Ollama not found. Please make sure the server is running.\n\n{await resp.text()}",
+                    "Ollama not found. Please make sure the server is running.",
                 )
             elif resp.status != 200:
                 raise ContinueCustomException(

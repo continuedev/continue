@@ -1,79 +1,96 @@
-import { ContextItem, ContextItemId } from "../schema/FullState";
+import { ContextItem } from "../schema/ContextItem";
+import { ContextItemId } from "../schema/ContextItemId";
+import { ContinueConfig } from "../schema/ContinueConfig";
+import { SessionState, StepDescription } from "../schema/SessionState";
+import { SessionUpdate } from "../schema/SessionUpdate";
 import AbstractContinueGUIClientProtocol from "./AbstractContinueGUIClientProtocol";
-import { Messenger, WebsocketMessenger } from "./messenger";
+import { Messenger, SocketIOMessenger } from "./messenger";
 import { VscodeMessenger } from "./vscodeMessenger";
 
 class ContinueGUIClientProtocol extends AbstractContinueGUIClientProtocol {
   messenger?: Messenger;
-  // Server URL must contain the session ID param
-  serverUrlWithSessionId: string;
+  serverUrl: string;
   useVscodeMessagePassing: boolean;
+  getSessionState: () => SessionState;
 
   onStateUpdateCallbacks: ((state: any) => void)[] = [];
 
-  private connectMessenger(
-    serverUrlWithSessionId: string,
-    useVscodeMessagePassing: boolean
+  constructor(
+    serverUrl: string,
+    useVscodeMessagePassing: boolean,
+    getSesionState: () => SessionState
   ) {
-    if (this.messenger) {
-      console.log("Closing session: ", this.serverUrlWithSessionId);
-      this.messenger.close();
-    }
-    this.serverUrlWithSessionId = serverUrlWithSessionId;
+    super();
+    this.serverUrl = serverUrl;
+    this.useVscodeMessagePassing = useVscodeMessagePassing;
+    this.getSessionState = getSesionState;
+
+    this.serverUrl = serverUrl;
     this.useVscodeMessagePassing = useVscodeMessagePassing;
     this.messenger = useVscodeMessagePassing
-      ? new VscodeMessenger(serverUrlWithSessionId)
-      : new WebsocketMessenger(serverUrlWithSessionId);
+      ? new VscodeMessenger(serverUrl)
+      : new SocketIOMessenger(serverUrl);
 
     this.messenger.onClose(() => {
-      console.log("GUI Connection closed: ", serverUrlWithSessionId);
+      console.log("GUI Connection closed: ", serverUrl);
     });
     this.messenger.onError((error) => {
       console.log("GUI Connection error: ", error);
     });
     this.messenger.onOpen(() => {
-      console.log("GUI Connection opened: ", serverUrlWithSessionId);
+      console.log("GUI Connection opened: ", serverUrl);
     });
 
-    this.messenger.onMessageType("reconnect_at_session", (data: any) => {
-      if (data.session_id) {
-        this.onReconnectAtSession(data.session_id);
-      }
-    });
-
-    this.messenger.onMessageType("state_update", (data: any) => {
-      if (data.state) {
-        for (const callback of this.onStateUpdateCallbacks) {
-          callback(data.state);
-        }
-      }
+    this.messenger.onMessage((messageType, data, acknowledge) => {
+      this.handleMessage(messageType, data, acknowledge);
     });
   }
 
-  constructor(
-    serverUrlWithSessionId: string,
-    useVscodeMessagePassing: boolean
+  onConnected(callback: () => void) {
+    this.messenger?.onOpen(callback);
+  }
+
+  handleMessage(
+    messageType: string,
+    data: any,
+    acknowledge: (data: any) => void
   ) {
-    super();
-    this.serverUrlWithSessionId = serverUrlWithSessionId;
-    this.useVscodeMessagePassing = useVscodeMessagePassing;
-    this.connectMessenger(serverUrlWithSessionId, useVscodeMessagePassing);
+    switch (messageType) {
+      case "state_update":
+        if (data.state) {
+          for (const callback of this.onStateUpdateCallbacks) {
+            callback(data.state);
+          }
+        }
+        break;
+      case "get_session_state":
+        const sessionState = this.getSessionState();
+        acknowledge({
+          history: sessionState.history,
+          context_items: sessionState.context_items,
+        });
+        break;
+      default:
+        break;
+    }
   }
 
   loadSession(session_id?: string): void {
     this.messenger?.send("load_session", { session_id });
   }
 
-  onReconnectAtSession(session_id: string): void {
-    const urlToReconnect = `${
-      this.serverUrlWithSessionId.split("?")[0]
-    }?session_id=${session_id}`;
-    console.log("Reconnecting at session: ", urlToReconnect);
-    this.connectMessenger(urlToReconnect, this.useVscodeMessagePassing);
-  }
-
   sendMainInput(input: string) {
     this.messenger?.send("main_input", { input });
+  }
+
+  runFromState(sessionState: SessionState) {
+    this.messenger?.send("run_from_state", { state: sessionState });
+  }
+
+  async getSessionTitle(history: StepDescription[]): Promise<string> {
+    return await this.messenger?.sendAndReceive("get_session_title", {
+      history,
+    });
   }
 
   reverseToIndex(index: number) {
@@ -97,6 +114,28 @@ class ContinueGUIClientProtocol extends AbstractContinueGUIClientProtocol {
     this.onStateUpdateCallbacks.push(callback);
   }
 
+  onSessionUpdate(callback: (update: SessionUpdate) => void) {
+    this.messenger?.onMessageType("session_update", (data: SessionUpdate) => {
+      callback(data);
+    });
+  }
+
+  onConfigUpdate(callback: (config: ContinueConfig) => void) {
+    this.messenger?.onMessageType("config_update", (data: any) => {
+      callback(data);
+    });
+  }
+
+  getConfig(): Promise<ContinueConfig> {
+    return this.messenger?.sendAndReceive("get_config", {});
+  }
+
+  onAddContextItem(callback: (item: ContextItem) => void) {
+    this.messenger?.onMessageType("add_context_item", (data: ContextItem) => {
+      callback(data);
+    });
+  }
+
   onAvailableSlashCommands(
     callback: (commands: { name: string; description: string }[]) => void
   ) {
@@ -107,16 +146,16 @@ class ContinueGUIClientProtocol extends AbstractContinueGUIClientProtocol {
     });
   }
 
+  stopSession() {
+    this.messenger?.send("stop_session", {});
+  }
+
   sendClear() {
     this.messenger?.send("clear_history", {});
   }
 
   retryAtIndex(index: number) {
     this.messenger?.send("retry_at_index", { index });
-  }
-
-  deleteAtIndex(index: number) {
-    this.messenger?.send("delete_at_index", { index });
   }
 
   deleteContextWithIds(ids: ContextItemId[], index?: number) {
@@ -134,16 +173,19 @@ class ContinueGUIClientProtocol extends AbstractContinueGUIClientProtocol {
     this.messenger?.send("toggle_adding_highlighted_code", {});
   }
 
-  showLogsAtIndex(index: number): void {
-    this.messenger?.send("show_logs_at_index", { index });
-  }
-
   showContextVirtualFile(index?: number): void {
     this.messenger?.send("show_context_virtual_file", { index });
   }
 
   selectContextItem(id: string, query: string): void {
     this.messenger?.send("select_context_item", { id, query });
+  }
+
+  async getContextItem(id: string, query: string): Promise<ContextItem> {
+    return await this.messenger?.sendAndReceive("get_context_item", {
+      id,
+      query,
+    });
   }
 
   selectContextItemAtIndex(id: string, query: string, index: number): void {
@@ -161,8 +203,8 @@ class ContinueGUIClientProtocol extends AbstractContinueGUIClientProtocol {
     });
   }
 
-  setSystemMessage(message: string): void {
-    this.messenger?.send("set_system_message", { message });
+  setSystemMessage(system_message: string): void {
+    this.messenger?.send("set_system_message", { system_message });
   }
 
   setTemperature(temperature: number): void {
@@ -190,14 +232,6 @@ class ContinueGUIClientProtocol extends AbstractContinueGUIClientProtocol {
 
   deleteContextGroup(id: string): void {
     this.messenger?.send("delete_context_group", { id });
-  }
-
-  setCurrentSessionTitle(title: string): void {
-    this.messenger?.send("set_current_session_title", { title });
-  }
-
-  previewContextItem(id: string): void {
-    this.messenger?.send("preview_context_item", { id });
   }
 }
 

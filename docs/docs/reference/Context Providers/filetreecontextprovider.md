@@ -4,12 +4,11 @@ import ClassPropertyRef from '@site/src/components/ClassPropertyRef.tsx';
 
 Type '@tree' to reference the contents of your current workspace. The LLM will be able to see the nested directory structure of your project.
 
-[View the source](https://github.com/continuedev/continue/blob/main/server/continuedev/libs/llm/plugins/context_providers/filetree.py)
+[View the source](https://github.com/continuedev/continue/tree/main/server/continuedev/plugins/context_providers/filetree.py)
 
 ## Properties
 
 <ClassPropertyRef name='workspace_dir' details='{&quot;title&quot;: &quot;Workspace Dir&quot;, &quot;description&quot;: &quot;The workspace directory to display&quot;, &quot;type&quot;: &quot;string&quot;}' required={false} default=""/>
-
 
 ### Inherited Properties
 

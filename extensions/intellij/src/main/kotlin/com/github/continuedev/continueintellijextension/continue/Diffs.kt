@@ -12,6 +12,7 @@ import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.fileEditor.FileDocumentManager
+import com.intellij.openapi.project.DumbAware
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.DialogWrapper
 import com.intellij.openapi.util.Disposer
@@ -46,7 +47,7 @@ interface DiffInfo {
     var dialog: DialogWrapper?
 }
 
-class DiffManager(private val project: Project) {
+class DiffManager(private val project: Project): DumbAware {
 
     private val diffContentFactory = DiffContentFactory.getInstance()
 

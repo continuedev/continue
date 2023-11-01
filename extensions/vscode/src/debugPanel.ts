@@ -6,69 +6,16 @@ import {
   getUniqueId,
   openEditorAndRevealRange,
 } from "./util/vscode";
-import { RangeInFile } from "../schema/RangeInFile";
+import { RangeInFileWithContents } from "../schema/RangeInFileWithContents";
 import { setFocusedOnContinueInput } from "./commands";
-const WebSocket = require("ws");
+import { ideProtocolClient, windowId } from "./activation/activate";
+import * as io from "socket.io-client";
 
-let websocketConnections: { [url: string]: WebsocketConnection | undefined } =
-  {};
-
-class WebsocketConnection {
-  private _ws: WebSocket;
-  private _onMessage: (message: string) => void;
-  private _onOpen: () => void;
-  private _onClose: () => void;
-  private _onError: (e: any) => void;
-
-  constructor(
-    url: string,
-    onMessage: (message: string) => void,
-    onOpen: () => void,
-    onClose: () => void,
-    onError: (e: any) => void
-  ) {
-    this._ws = new WebSocket(url);
-    this._onMessage = onMessage;
-    this._onOpen = onOpen;
-    this._onClose = onClose;
-    this._onError = onError;
-
-    this._ws.addEventListener("message", (event) => {
-      this._onMessage(event.data);
-    });
-    this._ws.addEventListener("close", () => {
-      this._onClose();
-    });
-    this._ws.addEventListener("open", () => {
-      this._onOpen();
-    });
-    this._ws.addEventListener("error", (e: any) => {
-      this._onError(e);
-    });
-  }
-
-  public send(message: string) {
-    if (typeof message !== "string") {
-      message = JSON.stringify(message);
-    }
-    if (this._ws.readyState === WebSocket.OPEN) {
-      this._ws.send(message);
-    } else {
-      this._ws.addEventListener("open", () => {
-        this._ws.send(message);
-      });
-    }
-  }
-
-  public close() {
-    this._ws.close();
-  }
-}
+let sockets: { [url: string]: io.Socket | undefined } = {};
 
 export let debugPanelWebview: vscode.Webview | undefined;
 export function setupDebugPanel(
-  panel: vscode.WebviewPanel | vscode.WebviewView,
-  sessionIdPromise: Promise<string>
+  panel: vscode.WebviewPanel | vscode.WebviewView
 ): string {
   debugPanelWebview = panel.webview;
   panel.onDidDispose(() => {
@@ -103,30 +50,6 @@ export function setupDebugPanel(
 
   const nonce = getNonce();
 
-  vscode.window.onDidChangeTextEditorSelection((e) => {
-    if (e.selections[0].isEmpty) {
-      return;
-    }
-
-    const rangeInFile: RangeInFile = {
-      range: e.selections[0] as any,
-      filepath: e.textEditor.document.fileName,
-    };
-    const filesystem = {
-      [rangeInFile.filepath]: e.textEditor.document.getText(),
-    };
-    panel.webview.postMessage({
-      type: "highlightedCode",
-      rangeInFile,
-      filesystem,
-    });
-
-    panel.webview.postMessage({
-      type: "workspacePath",
-      value: vscode.workspace.workspaceFolders?.[0].uri.fsPath,
-    });
-  });
-
   async function connectWebsocket(url: string) {
     return new Promise((resolve, reject) => {
       const onMessage = (message: any) => {
@@ -144,7 +67,7 @@ export function setupDebugPanel(
         resolve(null);
       };
       const onClose = () => {
-        websocketConnections[url] = undefined;
+        sockets[url] = undefined;
         panel.webview.postMessage({
           type: "websocketForwardingClose",
           url,
@@ -158,17 +81,17 @@ export function setupDebugPanel(
         });
       };
       try {
-        const connection = new WebsocketConnection(
-          url,
-          onMessage,
-          onOpen,
-          onClose,
-          onError
+        const socket = io.io(
+          `${getContinueServerUrl()}?window_id=${windowId}`,
+          {
+            path: "/gui/socket.io",
+            transports: ["websocket", "polling", "flashsocket"],
+          }
         );
-        websocketConnections[url] = connection;
+        sockets[url] = socket;
         resolve(null);
       } catch (e) {
-        console.log("Caught it!: ", e);
+        console.log("Failed to connect to GUI websocket for forwarding", e);
         reject(e);
       }
     });
@@ -176,26 +99,9 @@ export function setupDebugPanel(
 
   panel.webview.onDidReceiveMessage(async (data) => {
     switch (data.type) {
-      case "onLoad": {
-        const sessionId = await sessionIdPromise;
-        panel.webview.postMessage({
-          type: "onLoad",
-          vscMachineId: getUniqueId(),
-          apiUrl: getContinueServerUrl(),
-          workspacePaths: vscode.workspace.workspaceFolders?.map(
-            (folder) => folder.uri.fsPath
-          ),
-          sessionId,
-          vscMediaUrl,
-          dataSwitchOn: vscode.workspace
-            .getConfiguration("continue")
-            .get<boolean>("dataSwitch"),
-        });
-        break;
-      }
       case "websocketForwardingOpen": {
         let url = data.url;
-        if (typeof websocketConnections[url] === "undefined") {
+        if (typeof sockets[url] === "undefined") {
           await connectWebsocket(url);
         } else {
           console.log(
@@ -211,28 +117,51 @@ export function setupDebugPanel(
       }
       case "websocketForwardingClose": {
         let url = data.url;
-        let connection = websocketConnections[url];
-        if (typeof connection !== "undefined") {
-          connection.close();
-          websocketConnections[url] = undefined;
+        let socket = sockets[url];
+        if (typeof socket !== "undefined") {
+          socket.close();
+          sockets[url] = undefined;
         }
         break;
       }
       case "websocketForwardingMessage": {
         let url = data.url;
-        let connection = websocketConnections[url];
-        if (typeof connection === "undefined") {
+        let socket = sockets[url];
+        if (typeof socket === "undefined") {
           await connectWebsocket(url);
         }
-        connection = websocketConnections[url];
-        if (typeof connection === "undefined") {
-          throw new Error("Failed to connect websocket in VS Code Extension");
+        socket = sockets[url];
+        if (typeof socket === "undefined") {
+          throw new Error("Failed to connect socket for forwarding");
         }
-        connection.send(data.message);
+        socket.send(data.message);
         break;
       }
-      case "openFile": {
-        openEditorAndRevealRange(data.path, undefined, vscode.ViewColumn.One);
+      case "showFile": {
+        ideProtocolClient.openFile(data.filepath);
+        break;
+      }
+      case "showLines": {
+        ideProtocolClient.highlightCode(
+          {
+            filepath: data.filepath,
+            range: {
+              start: {
+                line: data.start,
+                character: 0,
+              },
+              end: {
+                line: data.end,
+                character: 0,
+              },
+            },
+          },
+          "#00ff0022"
+        );
+        break;
+      }
+      case "showVirtualFile": {
+        ideProtocolClient.showVirtualFile(data.name, data.content);
         break;
       }
       case "toggleDevTools": {
@@ -305,6 +234,15 @@ export function setupDebugPanel(
         <script type="module" nonce="${nonce}" src="${scriptUri}"></script>
 
         <script>localStorage.setItem("ide", "vscode")</script>
+        <script>window.windowId = "${windowId}"</script>
+        <script>window.serverUrl = "${getContinueServerUrl()}"</script>
+        <script>window.vscMachineId = "${getUniqueId()}"</script>
+        <script>window.vscMediaUrl = "${vscMediaUrl}"</script>
+        <script>window.workspacePaths = ${JSON.stringify(
+          vscode.workspace.workspaceFolders?.map(
+            (folder) => folder.uri.fsPath
+          ) || []
+        )}</script>
       </body>
     </html>`;
 }
@@ -313,20 +251,12 @@ export class ContinueGUIWebviewViewProvider
   implements vscode.WebviewViewProvider
 {
   public static readonly viewType = "continue.continueGUIView";
-  private readonly sessionIdPromise: Promise<string>;
-
-  constructor(sessionIdPromise: Promise<string>) {
-    this.sessionIdPromise = sessionIdPromise;
-  }
 
   resolveWebviewView(
     webviewView: vscode.WebviewView,
     _context: vscode.WebviewViewResolveContext,
     _token: vscode.CancellationToken
   ): void | Thenable<void> {
-    webviewView.webview.html = setupDebugPanel(
-      webviewView,
-      this.sessionIdPromise
-    );
+    webviewView.webview.html = setupDebugPanel(webviewView);
   }
 }

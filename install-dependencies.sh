@@ -6,13 +6,14 @@
 
 # Server
 echo "Installing server dependencies..."
-pushd continuedev || exit
+pushd server || exit
 ./install-dependencies.sh
 popd || exit
 
 # VSCode Extension (will also package GUI)
 echo "Installing VSCode extension dependencies..."
-pushd extension || exit
+pushd extensions/vscode || exit
 
 # This does way too many things inline but is the common denominator between many of the scripts
+npm install || exit
 npm run package

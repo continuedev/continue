@@ -1,0 +1,181 @@
+{
+  "title": "SessionState",
+  "$ref": "#/definitions/continuedev__core__main__SessionState",
+  "definitions": {
+    "ContinueError": {
+      "title": "ContinueError",
+      "type": "object",
+      "properties": {
+        "title": {
+          "title": "Title",
+          "type": "string"
+        },
+        "message": {
+          "title": "Message",
+          "type": "string"
+        }
+      },
+      "required": [
+        "title",
+        "message"
+      ]
+    },
+    "Observation": {
+      "title": "Observation",
+      "type": "object",
+      "properties": {}
+    },
+    "StepDescription": {
+      "title": "StepDescription",
+      "type": "object",
+      "properties": {
+        "step_type": {
+          "title": "Step Type",
+          "type": "string"
+        },
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "description": {
+          "title": "Description",
+          "type": "string"
+        },
+        "params": {
+          "title": "Params",
+          "type": "object"
+        },
+        "hide": {
+          "title": "Hide",
+          "type": "boolean"
+        },
+        "depth": {
+          "title": "Depth",
+          "type": "integer"
+        },
+        "error": {
+          "$ref": "#/definitions/ContinueError"
+        },
+        "observations": {
+          "title": "Observations",
+          "default": [],
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Observation"
+          }
+        },
+        "logs": {
+          "title": "Logs",
+          "default": [],
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "step_type",
+        "name",
+        "description",
+        "params",
+        "hide",
+        "depth"
+      ]
+    },
+    "ContextItemId": {
+      "title": "ContextItemId",
+      "description": "A ContextItemId is a unique identifier for a ContextItem.",
+      "type": "object",
+      "properties": {
+        "provider_title": {
+          "title": "Provider Title",
+          "type": "string"
+        },
+        "item_id": {
+          "title": "Item Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "provider_title",
+        "item_id"
+      ]
+    },
+    "ContextItemDescription": {
+      "title": "ContextItemDescription",
+      "description": "A ContextItemDescription is a description of a ContextItem that is displayed to the user when they type '@'.\n\nThe id can be used to retrieve the ContextItem from the ContextManager.",
+      "type": "object",
+      "properties": {
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "description": {
+          "title": "Description",
+          "type": "string"
+        },
+        "id": {
+          "$ref": "#/definitions/ContextItemId"
+        }
+      },
+      "required": [
+        "name",
+        "description",
+        "id"
+      ]
+    },
+    "ContextItem": {
+      "title": "ContextItem",
+      "description": "A ContextItem is a single item that is stored in the ContextManager.",
+      "type": "object",
+      "properties": {
+        "description": {
+          "$ref": "#/definitions/ContextItemDescription"
+        },
+        "content": {
+          "title": "Content",
+          "type": "string"
+        },
+        "editing": {
+          "title": "Editing",
+          "default": false,
+          "type": "boolean"
+        },
+        "editable": {
+          "title": "Editable",
+          "default": false,
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "description",
+        "content"
+      ]
+    },
+    "continuedev__core__main__SessionState": {
+      "title": "SessionState",
+      "description": "Full session history and important state needed for autopilot to Continue",
+      "type": "object",
+      "properties": {
+        "history": {
+          "title": "History",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/StepDescription"
+          }
+        },
+        "context_items": {
+          "title": "Context Items",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ContextItem"
+          }
+        }
+      },
+      "required": [
+        "history",
+        "context_items"
+      ]
+    }
+  }
+}

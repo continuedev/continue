@@ -40,10 +40,8 @@ class OpenAIFreeTrial(LLM):
         if self.llm is not None:
             self.llm.system_message = self.system_message
 
-    async def start(
-        self, write_log: Callable[[str], None] = None, unique_id: Optional[str] = None
-    ):
-        await super().start(write_log=write_log, unique_id=unique_id)
+    async def start(self, unique_id: Optional[str] = None):
+        await super().start(unique_id=unique_id)
         if self.api_key is None or self.api_key.strip() == "":
             self.llm = ProxyServer(
                 model=self.model,
@@ -58,7 +56,7 @@ class OpenAIFreeTrial(LLM):
                 ca_bundle_path=self.ca_bundle_path,
             )
 
-        await self.llm.start(write_log=write_log, unique_id=unique_id)
+        await self.llm.start(unique_id=unique_id)
 
     async def stop(self):
         await self.llm.stop()

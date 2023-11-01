@@ -70,9 +70,7 @@ function ModelConfig() {
   const client = useContext(GUIClientContext);
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const vscMediaUrl = useSelector(
-    (state: RootStore) => state.config.vscMediaUrl
-  );
+  const vscMediaUrl = (window as any).vscMediaUrl;
 
   const disableModelCards = useCallback(() => {
     return (

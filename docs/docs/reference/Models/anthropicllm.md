@@ -17,11 +17,9 @@ config = ContinueConfig(
 
 Claude 2 is not yet publicly released. You can request early access [here](https://www.anthropic.com/earlyaccess).
 
-[View the source](https://github.com/continuedev/continue/blob/main/server/continuedev/libs/llm/libs/llm/anthropic.py)
+[View the source](https://github.com/continuedev/continue/tree/main/server/continuedev/libs/llm/anthropic.py)
 
 ## Properties
-
-
 
 ### Inherited Properties
 

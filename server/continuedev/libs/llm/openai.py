@@ -1,5 +1,5 @@
 import asyncio
-from typing import Callable, List, Literal, Optional
+from typing import List, Literal, Optional
 
 import certifi
 from ..util.count_tokens import MAX_TOKENS_FOR_MODEL
@@ -91,10 +91,8 @@ class OpenAI(LLM):
         None, description="OpenAI engine. For use with Azure OpenAI Service."
     )
 
-    async def start(
-        self, unique_id: Optional[str] = None, write_log: Callable[[str], None] = None
-    ):
-        await super().start(write_log=write_log, unique_id=unique_id)
+    async def start(self, unique_id: Optional[str] = None):
+        await super().start(unique_id=unique_id)
 
         if self.context_length is None:
             self.context_length = MAX_TOKENS_FOR_MODEL.get(self.model, 4096)
@@ -165,6 +163,11 @@ class OpenAI(LLM):
             ):
                 if not hasattr(chunk, "choices") or len(chunk.choices) == 0:
                     continue
+
+                if self.api_type == "azure":
+                    # To smooth out the response streaming, which typically comes in bursts
+                    await asyncio.sleep(0.01)
+
                 yield chunk.choices[0].delta
         else:
             async for chunk in await openai.Completion.acreate(

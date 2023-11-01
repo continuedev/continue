@@ -1,6 +1,7 @@
-from typing import List, Optional
+from typing import Callable, Coroutine, List, Optional, Union
+import uuid
 
-from pydantic import BaseModel
+from pydantic import BaseModel, validator
 
 from ..libs.llm.anthropic import AnthropicLLM
 from ..libs.llm.base import LLM
@@ -14,6 +15,7 @@ from ..libs.llm.openai import OpenAI
 from ..libs.llm.openai_free_trial import OpenAIFreeTrial
 from ..libs.llm.replicate import ReplicateLLM
 from ..libs.llm.together import TogetherLLM
+from ..libs.llm.text_gen_webui import TextGenWebUI
 
 
 class ContinueSDK(BaseModel):
@@ -41,6 +43,7 @@ MODEL_CLASSES = {
         HuggingFaceInferenceAPI,
         HuggingFaceTGI,
         GooglePaLMAPI,
+        TextGenWebUI,
     ]
 }
 
@@ -56,7 +59,7 @@ MODEL_MODULE_NAMES = {
     "HuggingFaceInferenceAPI": "hf_inference_api",
     "HuggingFaceTGI": "hf_tgi",
     "GooglePaLMAPI": "google_palm_api",
-    "TextGenWebUI": "text_gen_webui"
+    "TextGenWebUI": "text_gen_webui",
 }
 
 
@@ -70,13 +73,17 @@ class Models(BaseModel):
 
     saved: List[LLM] = []
 
-    # TODO namespace these away to not confuse readers,
-    # or split Models into ModelsConfig, which gets turned into Models
-    sdk: ContinueSDK = None
+    temperature: Optional[float] = None
+    system_message: Optional[str] = None
+
+    @validator("summarize", "edit", "chat", pre=True)
+    def roles_not_none(cls, v):
+        if v is None:
+            return cls.default
+        return v
 
     def dict(self, **kwargs):
         original_dict = super().dict(**kwargs)
-        original_dict.pop("sdk", None)
         return original_dict
 
     @property
@@ -84,36 +91,42 @@ class Models(BaseModel):
         models = [getattr(self, role) for role in ALL_MODEL_ROLES]
         return [model for model in models if model is not None]
 
-    @property
-    def system_message(self) -> Optional[str]:
-        if self.sdk:
-            return self.sdk.config.system_message
-        return None
-    
-    @property
-    def temperature(self) -> Optional[float]:
-        if self.sdk:
-            return self.sdk.config.temperature
-        return None
-
-    def set_main_config_params(self, system_msg: Optional[str], temperature: Optional[float]):
+    def set_main_config_params(
+        self, system_msg: Optional[str], temperature: Optional[float]
+    ):
+        self.system_message = system_msg
+        self.temperature = temperature
         for model in self.all_models:
             model.set_main_config_params(system_msg, temperature)
 
-    async def start(self, sdk: "ContinueSDK"):
+    async def start(self, unique_id: str, system_message: str, temperature: float):
         """Start each of the LLMs, or fall back to default"""
-        self.sdk = sdk
-
         for role in ALL_MODEL_ROLES:
-            model = getattr(self, role)
+            model: LLM = getattr(self, role)
             if model is None:
                 setattr(self, role, self.default)
             else:
-                await sdk.start_model(model)
+                await model.start(unique_id)
+                model.write_log = self.write_log
 
-        self.set_main_config_params(self.system_message, self.temperature)
+        self.set_main_config_params(system_message, temperature)
 
-    async def stop(self, sdk: "ContinueSDK"):
+    async def stop(self):
         """Stop each LLM (if it's not the default, which is shared)"""
         for model in self.all_models:
             await model.stop()
+
+    _loggers = {}
+
+    async def write_log(self, msg):
+        for logger in self._loggers.values():
+            await logger(msg)
+
+    def add_logger(self, logger: Callable[[str], None]) -> str:
+        logger_id = uuid.uuid4().hex
+        self._loggers[logger_id] = logger
+        return logger_id
+
+    def remove_logger(self, logger_id: str):
+        if logger_id in self._loggers:
+            del self._loggers[logger_id]

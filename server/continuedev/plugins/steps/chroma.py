@@ -1,6 +1,7 @@
 import asyncio
 import os
-from typing import Coroutine, Dict, List, Optional, Union
+from typing import Coroutine, List, Optional, Union
+
 
 from ...libs.index.hyde import code_hyde
 
@@ -9,20 +10,22 @@ from ...libs.index.chunkers.chunk_directory import chunk_directory
 from ...libs.index.indices.meilisearch_index import MeilisearchCodebaseIndex
 
 from ...libs.llm.base import CompletionOptions
-from ...libs.index.rerankers.default import default_reranker_parallel
 from ...libs.index.rerankers.single_token import single_token_reranker_parallel
-from ...libs.util.strings import shorten_filepaths
 
 from pydantic import Field
 
-from ...core.main import ContextItem, ContextItemDescription, ContextItemId, Step
-from ...core.observation import Observation
+from ...core.main import (
+    ContextItem,
+    ContextItemDescription,
+    ContextItemId,
+    SetStep,
+    Step,
+)
 from ...core.sdk import ContinueSDK
 from ...core.steps import EditFileStep
 from ...libs.index.indices.chroma_index import MAX_CHUNK_SIZE, ChromaCodebaseIndex
 from ...server.meilisearch_server import remove_meilisearch_disallowed_chars
 from .chat import SimpleChatStep
-from ...core.steps import EditFileStep
 
 
 class CreateCodebaseIndexChroma(Step):
@@ -43,7 +46,7 @@ class CreateCodebaseIndexChroma(Step):
     async def describe(self, models) -> Coroutine[str, None, None]:
         return "Generated codebase embeddings."
 
-    async def run(self, sdk: ContinueSDK) -> Coroutine[Observation, None, None]:
+    async def run(self, sdk: ContinueSDK):
         chroma_index = ChromaCodebaseIndex(
             sdk.ide.workspace_directory,
             openai_api_key=self.openai_api_key,
@@ -80,13 +83,17 @@ class CreateCodebaseIndexChroma(Step):
 
             total_progress += 50
 
+        yield SetStep(hide=False)
         if not meilisearch_exists:
             async for progress in meilisearch_index.build(
                 sdk, ignore_files=self.ignore_files, chunks=chunks
             ):
                 self.description = f"Generating codebase embeddings... {int(progress*100 / indices_to_build + total_progress)}%"
                 print(self.description, flush=True)
-                await sdk.update_ui()
+
+                yield SetStep(
+                    description=f"Generating codebase embeddings... {int(progress*100)}%",
+                )
 
         await asyncio.sleep(1)
         self.hide = True
@@ -124,15 +131,13 @@ class AnswerQuestionChroma(Step):
         else:
             return self._answer
 
-    async def run(self, sdk: ContinueSDK) -> Coroutine[Observation, None, None]:
+    async def run(self, sdk: ContinueSDK):
         chroma_index = ChromaCodebaseIndex(
             sdk.ide.workspace_directory, openai_api_key=self.openai_api_key
         )
         meilisearch_index = MeilisearchCodebaseIndex(sdk.ide.workspace_directory)
 
-        self.hide = False
-        self.description = f"Scanning {self.n_retrieve} files..."
-        await sdk.update_ui()
+        yield SetStep(hide=False, description="Scanning codebase...")
 
         # Get top chunks from index
         to_retrieve_from_each = (
@@ -151,8 +156,7 @@ class AnswerQuestionChroma(Step):
                 chunks.append(chunk)
 
         # Rerank to select top results
-        self.description = f"Selecting most important files..."
-        await sdk.update_ui()
+        yield SetStep(description="Selecting most important files...")
 
         if self.use_reranking:
             chunks = await single_token_reranker_parallel(
@@ -184,7 +188,8 @@ class AnswerQuestionChroma(Step):
             context_items.append(ctx_item)
             await sdk.add_context_item(ctx_item)
 
-        self.hide = True
+        yield SetStep(hide=True)
+
         model = sdk.models.chat.model
         # if model == "gpt-4":
         #     model = "gpt-4-32k"  # Not publicly available yet?
@@ -207,7 +212,7 @@ class EditFileChroma(Step):
     user_input: str
     hide: bool = True
 
-    async def run(self, sdk: ContinueSDK) -> Coroutine[Observation, None, None]:
+    async def run(self, sdk: ContinueSDK):
         index = ChromaCodebaseIndex(sdk.ide.workspace_directory)
         results = index.query_codebase_index(self.user_input)
 

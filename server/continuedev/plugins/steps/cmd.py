@@ -1,8 +1,6 @@
 from textwrap import dedent
-from typing import Coroutine
 
-from ...core.main import Step
-from ...core.observation import Observation
+from ...core.main import SetStep, Step
 from ...core.sdk import ContinueSDK
 from ...libs.util.strings import remove_quotes_and_escapes
 
@@ -10,7 +8,7 @@ from ...libs.util.strings import remove_quotes_and_escapes
 class GenerateShellCommandStep(Step):
     user_input: str
 
-    async def run(self, sdk: ContinueSDK) -> Coroutine[Observation, None, None]:
+    async def run(self, sdk: ContinueSDK):
         cmd = await sdk.models.default.complete(
             dedent(
                 f"""\
@@ -27,4 +25,4 @@ class GenerateShellCommandStep(Step):
 
         await sdk.ide.runCommand(cmd)
 
-        self.description = f"Generated shell command: {cmd}"
+        yield SetStep(description=f"Generated shell command: {cmd}")
