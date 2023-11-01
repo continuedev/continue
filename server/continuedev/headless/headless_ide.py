@@ -13,7 +13,7 @@ from ..models.filesystem import (
     RealFileSystem,
 )
 from ..models.filesystem_edit import EditDiff, FileEdit, FileSystemEdit
-from ..server.ide_protocol import AbstractIdeProtocolServer
+from ..server.protocols.ide_protocol import AbstractIdeProtocolServer
 
 load_dotenv()
 

@@ -47,6 +47,7 @@ class SimpleChatStep(Step):
             },
         )
 
+        yield SetStep(description="")
         async for chunk in generator:
             if "content" in chunk:
                 yield chunk["content"]

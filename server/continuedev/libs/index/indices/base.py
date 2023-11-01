@@ -1,6 +1,8 @@
 from abc import ABC, abstractmethod
 from typing import AsyncGenerator, List, Optional
 
+from ....server.protocols.ide_protocol import AbstractIdeProtocolServer
+
 from ....core.sdk import ContinueSDK
 from ..chunkers import Chunk
 
@@ -19,7 +21,7 @@ class CodebaseIndex(ABC):
     @abstractmethod
     async def build(
         self,
-        sdk: ContinueSDK,
+        ide: AbstractIdeProtocolServer,
         ignore_files: List[str] = [],
         chunks: Optional[List[Chunk]] = None,
     ) -> AsyncGenerator[float, None]:

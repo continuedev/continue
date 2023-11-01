@@ -1,5 +1,6 @@
 import asyncio
 from functools import cached_property
+from ....server.protocols.ide_protocol import AbstractIdeProtocolServer
 from meilisearch_python_async import Client
 from meilisearch_python_async.errors import MeilisearchApiError
 from ....server.meilisearch_server import get_meilisearch_url
@@ -7,7 +8,6 @@ from .base import CodebaseIndex
 from ..chunkers import Chunk
 from typing import Any, AsyncGenerator, Dict, List, Optional
 
-from ....core.sdk import ContinueSDK
 from ....server.meilisearch_server import remove_meilisearch_disallowed_chars
 from ...util.logging import logger
 
@@ -65,7 +65,7 @@ class MeilisearchCodebaseIndex(CodebaseIndex):
 
     async def build(
         self,
-        sdk: ContinueSDK,
+        ide: AbstractIdeProtocolServer,
         ignore_files: List[str] = [],
         chunks: Optional[List[Chunk]] = None,
     ) -> AsyncGenerator[float, None]:

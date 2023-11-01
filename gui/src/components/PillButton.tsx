@@ -27,9 +27,9 @@ const Button = styled.button<{ fontSize?: number }>`
   color: ${vscForeground};
   background-color: ${secondaryDark};
   border-radius: ${defaultBorderRadius};
-  padding: 4px;
-  padding-left: 8px;
-  padding-right: 8px;
+  padding: 3.5px;
+  padding-left: 3px;
+  padding-right: 5px;
   overflow: hidden;
   font-size: ${(props) => props.fontSize || getFontSize()}px;
 

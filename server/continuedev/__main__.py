@@ -2,6 +2,12 @@ import asyncio
 import os
 from typing import Optional
 
+from .core.config import ContinueConfig
+
+from .headless.headless_ide import LocalIdeProtocol
+
+from .libs.index.build_index import build_index
+
 from .libs.util.ext_to_lang import ext_to_lang
 from .libs.index.chunkers.chunk import Chunk
 from dotenv import load_dotenv
@@ -12,8 +18,7 @@ import typer
 
 from . import run
 from .server.main import run_server
-from .headless import start_headless_session
-from .plugins.steps.chroma import CreateCodebaseIndexChroma
+from .headless import get_headless_autopilot
 from .libs.index.pipelines.main import main_retrieval_pipeline
 
 load_dotenv()
@@ -101,11 +106,11 @@ def search(
     directory = os.path.abspath(directory)
 
     async def run():
-        session = await start_headless_session(config, directory=directory)
+        autopilot = await get_headless_autopilot(config=config, directory=directory)
 
         results = await main_retrieval_pipeline(
             query,
-            session.autopilot.continue_sdk,
+            autopilot.sdk,
             openai_api_key=None,  # os.environ.get("OPENAI_API_KEY"),
         )
 
@@ -135,10 +140,13 @@ def index(
     print(f"Indexing {directory}...")
 
     async def run():
-        session = await start_headless_session(config, directory=directory)
-        await session.autopilot.run_from_step(
-            CreateCodebaseIndexChroma(openai_api_key=openai_api_key)
-        )
+        if config is None:
+            config = ContinueConfig.load_default()
+        else:
+            config = ContinueConfig.from_filepath(config)
+        config.retrieval_settings.openai_api_key = openai_api_key
+        await build_index(ide=LocalIdeProtocol(), config=config)
+        print("Indexing complete")
 
     asyncio.run(run())
 

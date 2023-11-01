@@ -1,19 +1,10 @@
-import asyncio
 import os
-from typing import Coroutine, List, Optional, Union
-
+from typing import Coroutine, List, Union
 
 from ...libs.index.hyde import code_hyde
-
-from ...libs.index.chunkers.chunk_directory import chunk_directory
-
 from ...libs.index.indices.meilisearch_index import MeilisearchCodebaseIndex
-
 from ...libs.llm.base import CompletionOptions
 from ...libs.index.rerankers.single_token import single_token_reranker_parallel
-
-from pydantic import Field
-
 from ...core.main import (
     ContextItem,
     ContextItemDescription,
@@ -23,105 +14,15 @@ from ...core.main import (
 )
 from ...core.sdk import ContinueSDK
 from ...core.steps import EditFileStep
-from ...libs.index.indices.chroma_index import MAX_CHUNK_SIZE, ChromaCodebaseIndex
+from ...libs.index.indices.chroma_index import ChromaCodebaseIndex
 from ...server.meilisearch_server import remove_meilisearch_disallowed_chars
 from .chat import SimpleChatStep
-
-
-class CreateCodebaseIndexChroma(Step):
-    name: str = "Create Codebase Index"
-    hide: bool = True
-    description: str = "Generating codebase embeddings... 1%"
-    openai_api_key: Optional[str] = Field(None, description="OpenAI API key")
-    api_base: Optional[str] = Field(None, description="OpenAI API base URL")
-    api_type: Optional[str] = Field(None, description="OpenAI API type")
-    api_version: Optional[str] = Field(None, description="OpenAI API version")
-    organization_id: Optional[str] = Field(None, description="OpenAI organization ID")
-
-    ignore_files: List[str] = Field(
-        [],
-        description="Files to ignore when indexing the codebase. You can use glob patterns, such as **/*.py. This is useful for directories that contain generated code, or other directories that are not relevant to the codebase.",
-    )
-
-    async def describe(self, models) -> Coroutine[str, None, None]:
-        return "Generated codebase embeddings."
-
-    async def run(self, sdk: ContinueSDK):
-        chroma_index = ChromaCodebaseIndex(
-            sdk.ide.workspace_directory,
-            openai_api_key=self.openai_api_key,
-            api_base=self.api_base,
-            api_type=self.api_type,
-            api_version=self.api_version,
-            organization_id=self.organization_id,
-        )
-        meilisearch_index = MeilisearchCodebaseIndex(sdk.ide.workspace_directory)
-
-        indices_to_build = 0
-        chroma_exists = await chroma_index.exists()
-        meilisearch_exists = await meilisearch_index.exists()
-        if not chroma_exists:
-            indices_to_build += 1
-        if not meilisearch_exists:
-            indices_to_build += 1
-
-        if indices_to_build == 0:
-            return
-
-        self.hide = False
-
-        chunks = await chunk_directory(sdk, MAX_CHUNK_SIZE)
-
-        total_progress = 0
-        if not chroma_exists:
-            async for progress in chroma_index.build(
-                sdk, ignore_files=self.ignore_files, chunks=chunks
-            ):
-                self.description = f"Generating codebase embeddings... {int(progress*100 / indices_to_build)}%"
-                print(self.description, flush=True)
-                await sdk.update_ui()
-
-            total_progress += 50
-
-        yield SetStep(hide=False)
-        if not meilisearch_exists:
-            async for progress in meilisearch_index.build(
-                sdk, ignore_files=self.ignore_files, chunks=chunks
-            ):
-                self.description = f"Generating codebase embeddings... {int(progress*100 / indices_to_build + total_progress)}%"
-                print(self.description, flush=True)
-
-                yield SetStep(
-                    description=f"Generating codebase embeddings... {int(progress*100)}%",
-                )
-
-        await asyncio.sleep(1)
-        self.hide = True
 
 
 class AnswerQuestionChroma(Step):
     user_input: str
     _answer: Union[str, None] = None
     name: str = "Answer Question"
-
-    n_retrieve: Optional[int] = Field(
-        50, description="Number of results to initially retrieve from vector database"
-    )
-    n_final: Optional[int] = Field(
-        10, description="Final number of results to use after re-ranking"
-    )
-
-    use_reranking: bool = Field(
-        True,
-        description="Whether to use re-ranking, which will allow initial selection of n_retrieve results, then will use an LLM to select the top n_final results",
-    )
-    rerank_group_size: int = Field(
-        5,
-        description="Number of results to group together when re-ranking. Each group will be processed in parallel.",
-    )
-    openai_api_key: str = Field(
-        None, description="OpenAI API key. Required if use_reranking is True"
-    )
 
     hide: bool = True
 
@@ -132,8 +33,10 @@ class AnswerQuestionChroma(Step):
             return self._answer
 
     async def run(self, sdk: ContinueSDK):
+        settings = sdk.config.retrieval_settings
+
         chroma_index = ChromaCodebaseIndex(
-            sdk.ide.workspace_directory, openai_api_key=self.openai_api_key
+            sdk.ide.workspace_directory, openai_api_key=settings.openai_api_key
         )
         meilisearch_index = MeilisearchCodebaseIndex(sdk.ide.workspace_directory)
 
@@ -141,7 +44,7 @@ class AnswerQuestionChroma(Step):
 
         # Get top chunks from index
         to_retrieve_from_each = (
-            self.n_retrieve if self.use_reranking else self.n_final
+            settings.n_retrieve if settings.use_reranking else settings.n_final
         ) // 2
         hyde = await code_hyde(self.user_input, "", sdk)
         chroma_chunks = await chroma_index.query(hyde, n=to_retrieve_from_each)
@@ -158,13 +61,13 @@ class AnswerQuestionChroma(Step):
         # Rerank to select top results
         yield SetStep(description="Selecting most important files...")
 
-        if self.use_reranking:
+        if settings.use_reranking:
             chunks = await single_token_reranker_parallel(
                 chunks,
                 self.user_input,
-                self.n_final,
+                settings.n_final,
                 sdk,
-                # group_size=self.rerank_group_size,
+                # group_size=settings.rerank_group_size,
             )
 
         # Add context items

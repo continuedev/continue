@@ -1,6 +1,8 @@
 import asyncio
 from typing import Dict, List, Optional
 
+from ....server.protocols.ide_protocol import AbstractIdeProtocolServer
+
 from ...util.filter_files import DEFAULT_IGNORE_PATTERNS, should_filter_path
 
 from .chunk import Chunk
@@ -44,41 +46,25 @@ FILE_IGNORE_PATTERNS = [
 MAX_SIZE_IN_CHARS = 50_000
 
 
-async def get_file_contents(filepath: str, sdk: ContinueSDK) -> str:
+async def get_file_contents(filepath: str, ide: AbstractIdeProtocolServer) -> str:
     try:
-        return (await sdk.ide.readFile(filepath))[:MAX_SIZE_IN_CHARS]
+        return (await ide.readFile(filepath))[:MAX_SIZE_IN_CHARS]
     except Exception as _:
         return None
 
 
 async def get_contents_of_files(
-    files: List[str], sdk: ContinueSDK, ignore_files: List[str] = []
+    files: List[str], ide: AbstractIdeProtocolServer, ignore_files: List[str] = []
 ) -> List[str]:
     # Get file contents for all at once
-    tasks = []
-
-    async def readFile(filepath: str) -> Optional[str]:
-        timeout = 0.1
-        while True:
-            try:
-                return await get_file_contents(filepath, sdk)
-            except Exception as e:
-                if timeout > 4:
-                    return None
-                await asyncio.sleep(timeout)
-                timeout *= 2
-
-    for file in files:
-        tasks.append(readFile(file))
-
-    return await asyncio.gather(*tasks)
+    return await asyncio.gather(*[ide.readFile(file) for file in files])
 
 
 async def get_all_file_contents(
-    sdk: ContinueSDK, ignore_files: List[str] = [], group_size: int = 100
+    ide: AbstractIdeProtocolServer, ignore_files: List[str] = [], group_size: int = 100
 ) -> Dict[str, str]:
     # Get list of filenames to index
-    files = await sdk.ide.listDirectoryContents(sdk.ide.workspace_directory, True)
+    files = await ide.listDirectoryContents(ide.workspace_directory, True)
 
     # Filter from ignore_directories
     files = list(
@@ -95,7 +81,7 @@ async def get_all_file_contents(
     i = 0
     # Don't want to flood with too many requests
     while i < len(files):
-        items += await get_contents_of_files(files[i : i + group_size], sdk)
+        items += await get_contents_of_files(files[i : i + group_size], ide)
 
         i += group_size
         await asyncio.sleep(0.1)
@@ -103,8 +89,10 @@ async def get_all_file_contents(
     return dict(filter(lambda tup: tup[1] is not None, zip(files, items)))
 
 
-async def chunk_directory(sdk: ContinueSDK, max_chunk_size: int) -> List[Chunk]:
-    file_contents = await get_all_file_contents(sdk)
+async def chunk_directory(
+    ide: AbstractIdeProtocolServer, max_chunk_size: int
+) -> List[Chunk]:
+    file_contents = await get_all_file_contents(ide)
 
     chunks = []
     for filepath, contents in file_contents.items():

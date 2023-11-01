@@ -94,6 +94,7 @@ const initialState: RootStore["serverState"] = {
   },
   contextProviders: [],
   savedContextGroups: [],
+  indexingProgress: 1.0,
 };
 
 export const serverStateSlice = createSlice({
@@ -118,9 +119,19 @@ export const serverStateSlice = createSlice({
         config: action.payload,
       };
     },
+    setIndexingProgress: (state, { payload }: { payload: number }) => {
+      return {
+        ...state,
+        indexingProgress: payload,
+      };
+    },
   },
 });
 
-export const { setContextProviders, setSlashCommands, setConfig } =
-  serverStateSlice.actions;
+export const {
+  setContextProviders,
+  setSlashCommands,
+  setConfig,
+  setIndexingProgress,
+} = serverStateSlice.actions;
 export default serverStateSlice.reducer;

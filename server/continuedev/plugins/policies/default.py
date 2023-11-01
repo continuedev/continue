@@ -100,4 +100,7 @@ class DefaultPolicy(Policy):
             if user_input.startswith("/edit"):
                 return EditHighlightedCodeStep(user_input=user_input[5:])
 
+            if user_input.startswith("/codebase "):
+                return AnswerQuestionChroma(user_input=user_input[len("/codebase ") :])
+
             return self.default_step(**self.default_params)

@@ -1,6 +1,10 @@
 import traceback
 from typing import Dict, Optional
 
+from ..libs.util.create_async_task import create_async_task
+
+from ..libs.index.build_index import build_index
+
 from ..plugins.steps.on_traceback import DefaultOnTracebackStep
 
 from ..core.context import ContextManager
@@ -141,6 +145,12 @@ class Window:
             ContinueConfig.set_telemetry_enabled(enabled)
 
         self.ide.subscribeToTelemetryEnabled(onTelemetryChangeCallback)
+
+        async def index():
+            async for progress in build_index(self.ide, self.config):
+                await self.gui.send_indexing_progress(progress)
+
+        create_async_task(index(), on_error=self.ide.on_error)
 
         # # Subscribe to highlighted code, pass to the context manager
         # def onHighlightedCodeCallback(
