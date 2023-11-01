@@ -151,7 +151,7 @@ export function setupDebugPanel(
                 character: 0,
               },
               end: {
-                line: data.end + 1,
+                line: data.end,
                 character: 0,
               },
             },

@@ -177,16 +177,55 @@ export const sessionStateSlice = createSlice({
         payload: { rangeInFileWithContents: any; edit: boolean };
       }
     ) => {
-      // TODO: Merging
       let contextItems = [...state.context_items].map((item) => {
         return { ...item, editing: false };
       });
-      const lineNums = `(${
-        payload.rangeInFileWithContents.range.start.line + 1
-      }-${payload.rangeInFileWithContents.range.end.line + 1})`;
       const base = payload.rangeInFileWithContents.filepath
         .split(/[\\/]/)
         .pop();
+
+      // Merge if there is overlap
+      for (let i = 0; i < contextItems.length; i++) {
+        const item = contextItems[i];
+        if (
+          item.description.description ===
+          payload.rangeInFileWithContents.filepath
+        ) {
+          let newStart = payload.rangeInFileWithContents.range.start.line;
+          let newEnd = payload.rangeInFileWithContents.range.end.line;
+          let [oldStart, oldEnd] = item.description.name
+            .split("(")[1]
+            .split(")")[0]
+            .split("-")
+            .map((x: string) => parseInt(x) - 1);
+          if (newStart > oldEnd || newEnd < oldStart) {
+            continue;
+          }
+          const startLine = Math.min(newStart, oldStart);
+          const endLine = Math.max(newEnd, oldEnd);
+
+          // const oldContents = item.content.split("\n");
+          // const newContents =
+          //   payload.rangeInFileWithContents.contents.split("\n");
+          // const finalContents = [];
+
+          contextItems[i] = {
+            ...item,
+            description: {
+              ...item.description,
+              name: `${base} (${startLine + 1}-${endLine + 1})`,
+            },
+            content: payload.rangeInFileWithContents.contents,
+            editing: true,
+            editable: true,
+          };
+          return { ...state, context_items: contextItems };
+        }
+      }
+
+      const lineNums = `(${
+        payload.rangeInFileWithContents.range.start.line + 1
+      }-${payload.rangeInFileWithContents.range.end.line + 1})`;
       contextItems.push({
         description: {
           name: `${base} ${lineNums}`,

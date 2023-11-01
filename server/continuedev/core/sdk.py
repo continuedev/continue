@@ -79,8 +79,8 @@ class ContinueSDK:
     def stopped(self):
         return self.__autopilot.stopped
 
-    def write_log(self, message: str):
-        self.history.timeline[self.history.current_index].logs.append(message)
+    async def start_model(self, model):
+        await model.start(self.ide.unique_id)
 
     async def _ensure_absolute_path(self, path: str) -> str:
         if os.path.isabs(path):
