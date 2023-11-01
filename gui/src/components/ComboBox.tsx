@@ -22,8 +22,19 @@ import {
   ArrowLeftIcon,
   ArrowRightIcon,
   ArrowUpLeftIcon,
+  ArrowUpOnSquareIcon,
+  BeakerIcon,
   ChevronDownIcon,
   ChevronRightIcon,
+  Cog6ToothIcon,
+  CommandLineIcon,
+  FolderIcon,
+  GlobeAltIcon,
+  HashtagIcon,
+  MagnifyingGlassIcon,
+  PaintBrushIcon,
+  PlusIcon,
+  SparklesIcon,
   TrashIcon,
   XMarkIcon,
 } from "@heroicons/react/24/outline";
@@ -58,6 +69,30 @@ import {
 } from "../redux/slices/sessionStateReducer";
 
 const SEARCH_INDEX_NAME = "continue_context_items";
+
+const ICONS_FOR_DROPDOWN: { [key: string]: any } = {
+  file: FolderIcon,
+  terminal: CommandLineIcon,
+  diff: PlusIcon,
+  search: MagnifyingGlassIcon,
+  url: GlobeAltIcon,
+  "/edit": PaintBrushIcon,
+  "/clear": TrashIcon,
+  "/test": BeakerIcon,
+  "/config": Cog6ToothIcon,
+  "/comment": HashtagIcon,
+  "/share": ArrowUpOnSquareIcon,
+  "/cmd": CommandLineIcon,
+  "/codebase": SparklesIcon,
+};
+
+function DropdownIcon(props: { provider: string; className?: string }) {
+  const Icon = ICONS_FOR_DROPDOWN[props.provider];
+  if (!Icon) {
+    return null;
+  }
+  return <Icon className={props.className} height="1.2em" width="1.2em" />;
+}
 
 // #region styled components
 
@@ -1405,6 +1440,8 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
                         filename={item.name}
                       ></FileIcon>
                     )}
+                    <DropdownIcon provider={item.name} className="mr-2" />
+                    <DropdownIcon provider={item.id} className="mr-2" />
                     {item.name}
                     {"  "}
                   </div>
