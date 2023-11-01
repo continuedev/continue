@@ -105,6 +105,11 @@ const vscodeShortcuts: KeyboardShortcutProps[] = [
     windows: "⌃ ⌫",
     description: "Stop Active Step",
   },
+  {
+    mac: "Tab",
+    windows: "Tab",
+    description: "Toggle between context items",
+  },
 ];
 
 const jetbrainsShortcuts: KeyboardShortcutProps[] = [
@@ -147,6 +152,11 @@ const jetbrainsShortcuts: KeyboardShortcutProps[] = [
     mac: "⌘ ⌫",
     windows: "⌃ ⌫",
     description: "Stop Active Step",
+  },
+  {
+    mac: "Tab",
+    windows: "Tab",
+    description: "Toggle between context items",
   },
 ];
 

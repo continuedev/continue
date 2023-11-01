@@ -1,3 +1,4 @@
+import asyncio
 import os
 from typing import Coroutine, List, Union
 
@@ -72,6 +73,7 @@ class AnswerQuestionChroma(Step):
 
         # Add context items
         context_items: List[ContextItem] = []
+        i = 0
         for chunk in chunks:
             # Can we select the context item through the normal means so that the name is disambiguated?
             # Also so you don't have to understand the internals of the context provider
@@ -90,6 +92,9 @@ class AnswerQuestionChroma(Step):
 
             context_items.append(ctx_item)
             await sdk.add_context_item(ctx_item)
+            if i < 8:
+                await asyncio.sleep(0.06)
+            i += 1
 
         yield SetStep(hide=True)
 

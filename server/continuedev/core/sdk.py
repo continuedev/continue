@@ -200,6 +200,7 @@ class ContinueSDK:
         )
 
     async def add_context_item(self, item: ContextItem):
+        self.__autopilot.session_state.context_items.append(item)
         await self.gui.add_context_item(item)
 
     def set_loading_message(self, message: str):

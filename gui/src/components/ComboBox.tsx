@@ -884,7 +884,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
               }
             }}
           >
-            <TrashIcon width="1.4em" height="1.4em" />
+            <TrashIcon width="1.2em" height="1.2em" />
           </HiddenHeaderButtonWithText>
           {selectedContextItems.length < 8 ? (
             selectedContextItems.map((item, idx) => {
@@ -987,12 +987,22 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
             })
           ) : (
             <div
+              onClick={() => {
+                if (props.isMainInput) {
+                  setShowContextToggleOn((prev) => !prev);
+                } else {
+                  inputRef.current?.focus();
+                  setShowContextItemsIfNotMain(true);
+                }
+              }}
               style={{
                 color: lightGray,
                 backgroundColor: vscBackground,
                 fontSize: "12px",
                 alignItems: "center",
                 display: "flex",
+                height: "100%",
+                cursor: "pointer",
               }}
             >
               {selectedContextItems.length} snippets selected
