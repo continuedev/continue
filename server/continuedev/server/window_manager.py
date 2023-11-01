@@ -1,6 +1,8 @@
 import traceback
 from typing import Dict, Optional
 
+from ..plugins.steps.on_traceback import DefaultOnTracebackStep
+
 from ..core.context import ContextManager
 
 from ..plugins.context_providers.highlighted_code import HighlightedCodeContextProvider
@@ -121,6 +123,17 @@ class Window:
                     await self.gui.send_config_update()
 
         self.ide.subscribeToFileSaved(onFileSavedCallback)
+
+        async def onDebugCallback(terminal_contents: str):
+            if self.gui is not None:
+                # Does this really work though? Because you need to give the correct index
+                print("Debugging terminal")
+                session_state = await self.gui.get_session_state()
+                await self.gui.run_from_state(
+                    session_state, DefaultOnTracebackStep(output=terminal_contents)
+                )
+
+        self.ide.subscribeToDebugTerminal(onDebugCallback)
 
         # # Subscribe to highlighted code, pass to the context manager
         # def onHighlightedCodeCallback(

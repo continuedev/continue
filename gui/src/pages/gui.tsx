@@ -1,10 +1,12 @@
 import styled from "styled-components";
 import {
+  Button,
   Input,
   defaultBorderRadius,
   lightGray,
   vscBackground,
 } from "../components";
+import { ErrorBoundary } from "react-error-boundary";
 import {
   useEffect,
   useRef,
@@ -121,6 +123,19 @@ const GUIHeaderDiv = styled.div`
   background-color: ${vscBackground};
 `;
 
+function fallbackRender({ error, resetErrorBoundary }) {
+  // Call resetErrorBoundary() to reset the error boundary and retry the render.
+
+  return (
+    <div role="alert">
+      <p>Something went wrong:</p>
+      <pre style={{ color: "red" }}>{error.message}</pre>
+
+      <Button onClick={resetErrorBoundary}>Restart</Button>
+    </div>
+  );
+}
+
 interface GUIProps {
   firstObservation?: any;
 }
@@ -227,8 +242,7 @@ function GUI(props: GUIProps) {
       if (
         e.key === "Backspace" &&
         isMetaEquivalentKeyPressed(e) &&
-        !e.shiftKey &&
-        active
+        !e.shiftKey
       ) {
         client?.stopSession();
         dispatch(setActive(false));
@@ -555,17 +569,15 @@ function GUI(props: GUIProps) {
           }}
         />
         <div className="flex gap-2">
-          {sessionState?.history?.filter((n) => !n.hide).length > 0 && (
-            <HeaderButtonWithText
-              onClick={() => {
-                client?.stopSession();
-                dispatch(newSession());
-              }}
-              text="New Session (⌥⌘N)"
-            >
-              <PlusIcon width="1.4em" height="1.4em" />
-            </HeaderButtonWithText>
-          )}
+          <HeaderButtonWithText
+            onClick={() => {
+              client?.stopSession();
+              dispatch(newSession());
+            }}
+            text="New Session (⌥⌘N)"
+          >
+            <PlusIcon width="1.4em" height="1.4em" />
+          </HeaderButtonWithText>
 
           <HeaderButtonWithText
             onClick={() => {
@@ -649,143 +661,153 @@ function GUI(props: GUIProps) {
         </>
       )}
       <br />
+
       <StepsDiv>
         {sessionState?.history?.map((step: StepDescription, index: number) => {
           if (step.hide) return null;
+
           return (
             <Fragment key={index}>
-              {step.name === "User Input" ? (
-                step.hide || (
-                  <ComboBox
-                    isMainInput={false}
-                    value={step.description as string}
-                    active={active && isLastUserInput(index)}
-                    onEnter={(e, value) => {
-                      if (value) {
-                        client?.stopSession();
-                        const newHistory = [
-                          ...sessionState.history.slice(0, index),
-                          {
-                            name: "User Input",
-                            description: value,
-                            observations: [],
-                            logs: [],
-                            step_type: "UserInputStep",
-                            params: { user_input: value },
-                            hide: false,
-                            depth: 0,
-                          },
-                        ];
-                        dispatch(setHistory(newHistory));
-                        dispatch(setActive(true));
-                        const state = {
-                          history: newHistory,
-                          context_items: sessionState.context_items,
-                        };
-                        console.log("State: ", state);
-                        client.runFromState(state);
-                      }
-                      e?.stopPropagation();
-                      e?.preventDefault();
-                    }}
-                    groupIndices={getStepsInUserInputGroup(index)}
-                    onToggle={(isOpen: boolean) => {
-                      // Collapse all steps in the section
-                      setStepsOpen((prev) => {
-                        const nextStepsOpen = [...prev];
-                        getStepsInUserInputGroup(index).forEach((i) => {
-                          nextStepsOpen[i] = isOpen;
-                        });
-                        return nextStepsOpen;
-                      });
-                    }}
-                    onToggleAll={(isOpen: boolean) => {
-                      // Collapse _all_ steps
-                      setStepsOpen((prev) => {
-                        return prev.map((_) => isOpen);
-                      });
-                    }}
-                    isToggleOpen={
-                      typeof stepsOpen[index] === "undefined"
-                        ? true
-                        : stepsOpen[index]!
-                    }
-                    index={index}
-                    onDelete={() => {
-                      // Delete the input and all steps until the next user input
-                      getStepsInUserInputGroup(index).forEach((i) => {
-                        console.log(i);
-                        dispatch(deleteAtIndex(i));
-                      });
-                    }}
-                  />
-                )
-              ) : (
-                <TimelineItem
-                  historyNode={step}
-                  iconElement={
-                    step.step_type === "DefaultModelEditCodeStep" ? (
-                      <CodeBracketSquareIcon width="16px" height="16px" />
-                    ) : step.error ? (
-                      <ExclamationTriangleIcon
-                        width="16px"
-                        height="16px"
-                        color="red"
-                      />
-                    ) : (
-                      <ChatBubbleOvalLeftIcon width="16px" height="16px" />
-                    )
-                  }
-                  open={
-                    typeof stepsOpen[index] === "undefined"
-                      ? step.error
-                        ? false
-                        : true
-                      : stepsOpen[index]!
-                  }
-                  onToggle={() => onToggleAtIndex(index)}
-                >
-                  {step.error ? (
-                    <ErrorStepContainer
-                      onClose={() => onToggleAtIndex(index)}
-                      error={step.error}
-                      onDelete={() => {
-                        dispatch(deleteAtIndex(index));
+              <ErrorBoundary
+                FallbackComponent={fallbackRender}
+                onReset={() => {
+                  client?.stopSession();
+                  dispatch(newSession());
+                }}
+              >
+                {step.name === "User Input" ? (
+                  step.hide || (
+                    <ComboBox
+                      isMainInput={false}
+                      value={step.description as string}
+                      active={active && isLastUserInput(index)}
+                      onEnter={(e, value) => {
+                        if (value) {
+                          client?.stopSession();
+                          const newHistory = [
+                            ...sessionState.history.slice(0, index),
+                            {
+                              name: "User Input",
+                              description: value,
+                              observations: [],
+                              logs: [],
+                              step_type: "UserInputStep",
+                              params: { user_input: value },
+                              hide: false,
+                              depth: 0,
+                            },
+                          ];
+                          dispatch(setHistory(newHistory));
+                          dispatch(setActive(true));
+                          const state = {
+                            history: newHistory,
+                            context_items: sessionState.context_items,
+                          };
+                          console.log("State: ", state);
+                          client.runFromState(state);
+                        }
+                        e?.stopPropagation();
+                        e?.preventDefault();
                       }}
-                    />
-                  ) : (
-                    <StepContainer
-                      index={index}
-                      isLast={index === sessionState.history.length - 1}
-                      isFirst={index === 0}
-                      open={
+                      groupIndices={getStepsInUserInputGroup(index)}
+                      onToggle={(isOpen: boolean) => {
+                        // Collapse all steps in the section
+                        setStepsOpen((prev) => {
+                          const nextStepsOpen = [...prev];
+                          getStepsInUserInputGroup(index).forEach((i) => {
+                            nextStepsOpen[i] = isOpen;
+                          });
+                          return nextStepsOpen;
+                        });
+                      }}
+                      onToggleAll={(isOpen: boolean) => {
+                        // Collapse _all_ steps
+                        setStepsOpen((prev) => {
+                          return prev.map((_) => isOpen);
+                        });
+                      }}
+                      isToggleOpen={
                         typeof stepsOpen[index] === "undefined"
                           ? true
                           : stepsOpen[index]!
                       }
-                      key={index}
-                      onUserInput={(input: string) => {
-                        onStepUserInput(input, index);
-                      }}
-                      step={step}
-                      onReverse={() => {
-                        client?.reverseToIndex(index);
-                      }}
-                      onRetry={() => {
-                        client?.retryAtIndex(index);
-                        setWaitingForSteps(true);
-                      }}
+                      index={index}
                       onDelete={() => {
-                        dispatch(deleteAtIndex(index));
+                        // Delete the input and all steps until the next user input
+                        getStepsInUserInputGroup(index).forEach((i) => {
+                          console.log(i);
+                          dispatch(deleteAtIndex(i));
+                        });
                       }}
-                      noUserInputParent={
-                        getStepsInUserInputGroup(index).length === 0
-                      }
                     />
-                  )}
-                </TimelineItem>
-              )}
-              {/* <div className="h-2"></div> */}
+                  )
+                ) : (
+                  <TimelineItem
+                    historyNode={step}
+                    iconElement={
+                      step.step_type === "DefaultModelEditCodeStep" ? (
+                        <CodeBracketSquareIcon width="16px" height="16px" />
+                      ) : step.error ? (
+                        <ExclamationTriangleIcon
+                          width="16px"
+                          height="16px"
+                          color="red"
+                        />
+                      ) : (
+                        <ChatBubbleOvalLeftIcon width="16px" height="16px" />
+                      )
+                    }
+                    open={
+                      typeof stepsOpen[index] === "undefined"
+                        ? step.error
+                          ? false
+                          : true
+                        : stepsOpen[index]!
+                    }
+                    onToggle={() => onToggleAtIndex(index)}
+                  >
+                    {step.error ? (
+                      <ErrorStepContainer
+                        onClose={() => onToggleAtIndex(index)}
+                        error={step.error}
+                        onDelete={() => {
+                          dispatch(deleteAtIndex(index));
+                        }}
+                      />
+                    ) : (
+                      <StepContainer
+                        index={index}
+                        isLast={index === sessionState.history.length - 1}
+                        isFirst={index === 0}
+                        open={
+                          typeof stepsOpen[index] === "undefined"
+                            ? true
+                            : stepsOpen[index]!
+                        }
+                        key={index}
+                        onUserInput={(input: string) => {
+                          onStepUserInput(input, index);
+                        }}
+                        step={step}
+                        onReverse={() => {
+                          client?.reverseToIndex(index);
+                        }}
+                        onRetry={() => {
+                          client?.retryAtIndex(index);
+                          setWaitingForSteps(true);
+                        }}
+                        onDelete={() => {
+                          dispatch(deleteAtIndex(index));
+                        }}
+                        noUserInputParent={
+                          getStepsInUserInputGroup(index).length === 0
+                        }
+                      />
+                    )}
+                  </TimelineItem>
+                )}
+                {/* <div className="h-2"></div> */}
+              </ErrorBoundary>
             </Fragment>
           );
         })}

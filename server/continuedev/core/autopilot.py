@@ -82,7 +82,6 @@ class Autopilot:
     context_manager: ContextManager
 
     context: Context = Context()
-    # context_manager: ContextManager = ContextManager()
 
     def __init__(
         self,
@@ -108,62 +107,6 @@ class Autopilot:
 
     class Config:
         arbitrary_types_allowed = True
-
-    def get_available_slash_commands(self) -> List[Dict]:
-        custom_commands = (
-            list(
-                map(
-                    lambda x: {"name": x.name, "description": x.description},
-                    self.sdk.config.custom_commands,
-                )
-            )
-            or []
-        )
-        slash_commands = (
-            list(
-                map(
-                    lambda x: {"name": x.name, "description": x.description},
-                    self.sdk.config.slash_commands,
-                )
-            )
-            or []
-        )
-        cmds = custom_commands + slash_commands
-        cmds.sort(key=lambda x: x["name"] == "edit", reverse=True)
-        return cmds
-
-    async def handle_command_output(self, output: str):
-        # Goes to window?
-        # Should server keep the latest state as a copy, or does the IDE need to ask the GUI?
-        get_traceback_funcs = [get_python_traceback, get_javascript_traceback]
-        for get_tb_func in get_traceback_funcs:
-            traceback = get_tb_func(output)
-            if traceback is not None and self.sdk.config.on_traceback is not None:
-                step = self.sdk.config.on_traceback(output=output)
-                await self.run_step(step)
-
-    async def handle_debug_terminal(self, content: str):
-        """Run the debug terminal step"""
-        # Same as above
-        # step = self.continue_sdk.config.on_traceback(output=content)
-        step = DefaultOnTracebackStep(output=content)
-        await self.run_step(step)
-
-    async def handle_highlighted_code(
-        self,
-        range_in_files: List[RangeInFileWithContents],
-        edit: Optional[bool] = False,
-    ):
-        # Same as above
-        if "code" not in self.context_manager.context_providers:
-            return
-
-        # Add to context manager
-        await self.context_manager.context_providers["code"].handle_highlighted_code(
-            range_in_files, edit
-        )
-
-        await self.update_subscribers()
 
     def handle_error(self, e: Exception, step: Step) -> ContinueCustomException:
         is_continue_custom_exception = (
@@ -362,7 +305,7 @@ class Autopilot:
         self.session_state.history[update.index].update(update.update)
         await self.sdk.gui.send_session_update(update)
 
-    async def run(self):
+    async def run(self, step: Optional[Step] = None):
         async def add_log(log: str):
             await self.handle_session_update(
                 SessionUpdate(
@@ -372,15 +315,13 @@ class Autopilot:
             )
 
         logger_id = self.config.models.add_logger(add_log)
+
+        if step is not None:
+            await self.run_step(step)
         while next_step := self.policy.next(self.sdk.config, self.session_state):
             await self.run_step(next_step)
 
         self.config.models.remove_logger(logger_id)
-
-    async def select_context_item(self, id: str, query: str):
-        # sdk.gui.select_context_item???
-        await self.context_manager.select_context_item(id, query)
-        await self.update_subscribers()
 
     # region Context Groups
 

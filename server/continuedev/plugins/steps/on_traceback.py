@@ -68,11 +68,8 @@ class DefaultOnTracebackStep(Step):
 
         tb = extract_traceback_str(self.output) or self.output[-8000:]
 
-        await sdk.run_step(
-            UserInputStep(
-                user_input=f"""I got the following error, can you please help explain how to fix it?\n\n{tb}""",
-            )
-        )
+        prompt = f"""I got the following error, can you please help explain how to fix it?\n\n{tb}"""
+        await sdk.run_step(UserInputStep(user_input=prompt, description=prompt))
         await sdk.run_step(SimpleChatStep(name="Help With Traceback"))
 
 

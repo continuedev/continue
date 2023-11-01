@@ -3,7 +3,7 @@ from typing import List, Optional
 
 from ...libs.llm.base import CompletionOptions
 
-from ...core.main import ChatMessage, DeltaStep, SetStep, Step
+from ...core.main import ChatMessage, SetStep, Step
 from ...core.sdk import ContinueSDK
 from ...libs.util.devdata import dev_data_logger
 from ...libs.util.strings import remove_quotes_and_escapes

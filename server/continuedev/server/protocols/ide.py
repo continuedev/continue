@@ -161,9 +161,6 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
                 [RangeInFileWithContents(**rif) for rif in data["highlightedCode"]],
                 edit=data.get("edit", False),
             )
-        elif msg.message_type == "commandOutput":
-            output = data["output"]
-            self.onCommandOutput(output)
         elif msg.message_type == "debugTerminal":
             content = data["contents"]
             self.onDebugTerminal(content)
@@ -287,14 +284,6 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
     def onFileEdits(self, edits: List[FileEditWithFullContents]):
         pass
 
-    def onCommandOutput(self, output: str):
-        if autopilot := self.__get_autopilot():
-            create_async_task(autopilot.handle_command_output(output), self.on_error)
-
-    def onDebugTerminal(self, content: str):
-        if autopilot := self.__get_autopilot():
-            create_async_task(autopilot.handle_debug_terminal(content), self.on_error)
-
     def onHighlightedCodeUpdate(
         self,
         range_in_files: List[RangeInFileWithContents],
@@ -310,12 +299,16 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
     _files_deleted_callbacks = []
     _files_renamed_callbacks = []
     _file_saved_callbacks = []
+    _debug_terminal_callbacks = []
 
     def call_callback(self, callback, *args, **kwargs):
         if asyncio.iscoroutinefunction(callback):
             create_async_task(callback(*args, **kwargs), self.on_error)
         else:
             callback(*args, **kwargs)
+
+    def subscribeToDebugTerminal(self, callback: Callable[[str], None]):
+        self._debug_terminal_callbacks.append(callback)
 
     def subscribeToHighlightedCode(
         self, callback: Callable[[List[RangeInFileWithContents], bool], None]
@@ -333,6 +326,10 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
 
     def subscribeToFileSaved(self, callback: Callable[[str, str], None]):
         self._file_saved_callbacks.append(callback)
+
+    def onDebugTerminal(self, content: str):
+        for callback in self._debug_terminal_callbacks:
+            self.call_callback(callback, content)
 
     def onFilesCreated(self, filepaths: List[str]):
         for callback in self._files_created_callbacks:

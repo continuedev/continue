@@ -3,7 +3,7 @@ import History from "./pages/history";
 import Help from "./pages/help";
 import Layout from "./components/Layout";
 import { createContext } from "react";
-import useContinueGUIProtocol from "./hooks/useWebsocket";
+import useContinueGUIProtocol from "./hooks/useContinueClient";
 import ContinueGUIClientProtocol from "./hooks/ContinueGUIClientProtocol";
 import { useDispatch } from "react-redux";
 import { RouterProvider, createMemoryRouter } from "react-router-dom";

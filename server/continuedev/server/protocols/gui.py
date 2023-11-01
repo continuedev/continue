@@ -1,13 +1,14 @@
-from typing import Any, Callable, List, Optional, TypeVar
+from typing import Any, Callable, Dict, List, Optional, TypeVar
 
 from ...core.config import ContinueConfig
 from ...core.autopilot import Autopilot
 import socketio
+import uuid
 
 from pydantic import BaseModel
 
 from ...models.websockets import WebsocketsMessage
-from ...core.main import ContextItem, SessionState, SessionUpdate, StepDescription
+from ...core.main import ContextItem, SessionState, SessionUpdate, Step, StepDescription
 from ...core.models import ALL_MODEL_ROLES, MODEL_CLASSES, MODEL_MODULE_NAMES
 from ...core.steps import DisplayErrorStep
 from ...libs.llm.prompts.chat import (
@@ -19,9 +20,7 @@ from ...libs.llm.prompts.edit import codellama_edit_prompt, alpaca_edit_prompt
 from ...libs.util.create_async_task import create_async_task
 from ...libs.util.edit_config import (
     add_config_import,
-    create_float_node,
     create_obj_node,
-    create_string_node,
     display_llm_class,
     edit_config_property,
 )
@@ -280,20 +279,26 @@ class GUIProtocolServer:
 
     # region: Send data to GUI
 
-    _running_autopilot: Optional[Autopilot] = None
+    _running_autopilots: Dict[str, Autopilot] = {}
 
-    async def run_from_state(self, state: SessionState):
+    async def run_from_state(self, state: SessionState, step: Optional[Step] = None):
         autopilot = self.get_autopilot(state)
-        self._running_autopilot = autopilot
-        await autopilot.run()
-        self._running_autopilot = None
+        cancel_token = str(uuid.uuid4())
+        self._running_autopilots[cancel_token] = autopilot
+        await autopilot.run(step=step)
+        del self._running_autopilots[cancel_token]
 
     async def stop_session(self):
-        if self._running_autopilot is not None:
-            self._running_autopilot.stopped = True
+        for autopilot in self._running_autopilots.values():
+            autopilot.stopped = True
 
     async def send_session_update(self, session_update: SessionUpdate):
         await self.messenger.send("session_update", session_update.dict())
+
+    async def get_session_state(self) -> SessionState:
+        return await self.messenger.send_and_receive(
+            {}, SessionState, "get_session_state"
+        )
 
     async def add_context_item(self, item: ContextItem):
         await self.messenger.send("add_context_item", item.dict())

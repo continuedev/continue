@@ -9,7 +9,13 @@ export abstract class Messenger {
     callback: (data: object) => void
   ): void;
 
-  abstract onMessage(callback: (messageType: string, data: any) => void): void;
+  abstract onMessage(
+    callback: (
+      messageType: string,
+      data: any,
+      ack?: (data: any) => void
+    ) => void
+  ): void;
 
   abstract onOpen(callback: () => void): void;
 
@@ -49,17 +55,40 @@ export class SocketIOMessenger extends Messenger {
     });
   }
 
-  onMessageType(messageType: string, callback: (data: object) => void): void {
-    this.socket.on("message", ({ message_type, data }) => {
+  ackWithMessageMetadata(
+    ack: (data: any) => void,
+    messageId: string,
+    messageType: string
+  ): (data: any) => void {
+    return (data: any) => {
+      ack({ message_id: messageId, message_type: messageType, data });
+    };
+  }
+
+  onMessageType(
+    messageType: string,
+    callback: (data: object, acknowledge?: (data: any) => void) => void
+  ): void {
+    this.socket.on("message", ({ message_type, data }, ack) => {
       if (messageType === message_type) {
-        callback(data);
+        callback(data, this.ackWithMessageMetadata(ack, "lolidk", messageType));
       }
     });
   }
 
-  onMessage(callback: (messageType: string, data: any) => void): void {
-    this.socket.on("message", ({ messageType, data }) => {
-      callback(messageType, data);
+  onMessage(
+    callback: (
+      messageType: string,
+      data: any,
+      acknowledge?: (data: any) => void
+    ) => void
+  ): void {
+    this.socket.on("message", ({ message_type, data }, ack) => {
+      callback(
+        message_type,
+        data,
+        this.ackWithMessageMetadata(ack, "lolidk", message_type)
+      );
     });
   }
 

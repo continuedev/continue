@@ -33,6 +33,8 @@ export const sessionStateSlice = createSlice({
       let active = state.active;
       if (typeof payload.stop === "boolean") {
         active = !payload.stop;
+      } else {
+        active = true;
       }
 
       let step: StepDescription | undefined = undefined;
@@ -71,7 +73,11 @@ export const sessionStateSlice = createSlice({
 
       let history = [...state.history];
       if (step) {
-        history[payload.index] = step;
+        if (payload.index >= history.length) {
+          history.push(step);
+        } else {
+          history[payload.index] = step;
+        }
       }
 
       return {

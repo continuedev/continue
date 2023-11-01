@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import ContinueGUIClientProtocol from "./ContinueGUIClientProtocol";
 import { useSelector } from "react-redux";
 import { RootStore } from "../redux/store";
@@ -12,6 +12,20 @@ function useContinueGUIProtocol(useVscodeMessagePassing: boolean = true) {
     undefined
   );
 
+  const sessionState = useSelector((store: RootStore) => store.sessionState);
+
+  const getSessionState = () => {
+    return {
+      history: sessionState.history,
+      context_items: sessionState.context_items,
+    };
+  };
+
+  useEffect(() => {
+    if (!client) return;
+    client.getSessionState = getSessionState;
+  }, [sessionState]);
+
   useEffect(() => {
     const serverUrl = (window as any).serverUrl;
     const windowId = (window as any).windowId;
@@ -21,7 +35,8 @@ function useContinueGUIProtocol(useVscodeMessagePassing: boolean = true) {
     console.log("Creating GUI websocket", serverUrl, useVscodeMessagePassing);
     const newClient = new ContinueGUIClientProtocol(
       serverUrl,
-      useVscodeMessagePassing
+      useVscodeMessagePassing,
+      getSessionState
     );
 
     newClient.onConnected(() => {

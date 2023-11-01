@@ -11,13 +11,19 @@ class ContinueGUIClientProtocol extends AbstractContinueGUIClientProtocol {
   messenger?: Messenger;
   serverUrl: string;
   useVscodeMessagePassing: boolean;
+  getSessionState: () => SessionState;
 
   onStateUpdateCallbacks: ((state: any) => void)[] = [];
 
-  constructor(serverUrl: string, useVscodeMessagePassing: boolean) {
+  constructor(
+    serverUrl: string,
+    useVscodeMessagePassing: boolean,
+    getSesionState: () => SessionState
+  ) {
     super();
     this.serverUrl = serverUrl;
     this.useVscodeMessagePassing = useVscodeMessagePassing;
+    this.getSessionState = getSesionState;
 
     this.serverUrl = serverUrl;
     this.useVscodeMessagePassing = useVscodeMessagePassing;
@@ -35,8 +41,8 @@ class ContinueGUIClientProtocol extends AbstractContinueGUIClientProtocol {
       console.log("GUI Connection opened: ", serverUrl);
     });
 
-    this.messenger.onMessage((messageType, data) => {
-      this.handleMessage(messageType, data);
+    this.messenger.onMessage((messageType, data, acknowledge) => {
+      this.handleMessage(messageType, data, acknowledge);
     });
   }
 
@@ -44,7 +50,11 @@ class ContinueGUIClientProtocol extends AbstractContinueGUIClientProtocol {
     this.messenger?.onOpen(callback);
   }
 
-  handleMessage(messageType: string, data: any) {
+  handleMessage(
+    messageType: string,
+    data: any,
+    acknowledge: (data: any) => void
+  ) {
     switch (messageType) {
       case "state_update":
         if (data.state) {
@@ -52,6 +62,13 @@ class ContinueGUIClientProtocol extends AbstractContinueGUIClientProtocol {
             callback(data.state);
           }
         }
+        break;
+      case "get_session_state":
+        const sessionState = this.getSessionState();
+        acknowledge({
+          history: sessionState.history,
+          context_items: sessionState.context_items,
+        });
         break;
       default:
         break;
