@@ -288,7 +288,7 @@ class GUIProtocolServer:
                 "step run",
                 {
                     "step_name": step_to_log.name,
-                    "params": step_to_log.params,
+                    "params": step_to_log.params if step is None else step.dict(),
                     "context": list(
                         map(
                             lambda item: item.dict(),

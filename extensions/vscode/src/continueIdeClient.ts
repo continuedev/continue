@@ -719,7 +719,7 @@ class IdeProtocolClient {
   }
 
   async debugTerminal() {
-    const contents = await this.getTerminalContents();
+    const contents = (await this.getTerminalContents()).trim();
     this.send("debugTerminal", v4(), { contents });
   }
 }
