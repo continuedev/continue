@@ -42,6 +42,9 @@ def main_command(
     meilisearch_url: Optional[str] = typer.Option(
         None, help="The URL of the MeiliSearch server if running manually"
     ),
+    disable_meilisearch: bool = typer.Option(
+        False, help="Disable the MeiliSearch server"
+    ),
     config: Optional[str] = typer.Option(
         None, help="The path to the configuration file"
     ),
@@ -51,7 +54,12 @@ def main_command(
         run(config)
     else:
         print(CONTINUE_ASCII)
-        run_server(port=port, host=host, meilisearch_url=meilisearch_url)
+        run_server(
+            port=port,
+            host=host,
+            meilisearch_url=meilisearch_url,
+            disable_meilisearch=disable_meilisearch,
+        )
 
 
 @app.callback()
@@ -61,6 +69,9 @@ def main(
     host: str = typer.Option("127.0.0.1", help="server host"),
     meilisearch_url: Optional[str] = typer.Option(
         None, help="The URL of the MeiliSearch server if running manually"
+    ),
+    disable_meilisearch: bool = typer.Option(
+        False, help="Disable the MeiliSearch server"
     ),
     config: Optional[str] = typer.Option(
         None, help="The path to the configuration file"
@@ -74,6 +85,7 @@ def main(
             meilisearch_url=meilisearch_url,
             config=config,
             headless=headless,
+            disable_meilisearch=disable_meilisearch,
         )
 
 

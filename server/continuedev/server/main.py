@@ -88,11 +88,15 @@ def cleanup():
 
 
 def run_server(
-    port: int = 65432, host: str = "127.0.0.1", meilisearch_url: Optional[str] = None
+    port: int = 65432,
+    host: str = "127.0.0.1",
+    meilisearch_url: Optional[str] = None,
+    disable_meilisearch: bool = False,
 ):
     try:
         global global_config
         global_config.meilisearch_url = meilisearch_url
+        global_config.disable_meilisearch = disable_meilisearch
 
         logger.debug("------ Begin Logs ------")
         atexit.register(cleanup)

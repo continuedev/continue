@@ -83,7 +83,10 @@ async def ensure_meilisearch_installed() -> bool:
                 pass
             existing_paths.remove(meilisearchPath)
 
-        await download_meilisearch()
+        try:
+            await asyncio.wait_for(download_meilisearch(), timeout=60)
+        except asyncio.TimeoutError:
+            logger.critical("Timed out trying to download MeiliSearch")
 
         # Clear the existing directories
         for p in existing_paths:
@@ -140,6 +143,10 @@ async def start_meilisearch(url: Optional[str] = None):
     if url is not None:
         logger.debug("Using MeiliSearch at URL: " + url)
         meilisearch_url = url
+        return
+
+    if global_config.disable_meilisearch:
+        logger.debug("MeiliSearch disabled")
         return
 
     serverPath = getServerFolderPath()
