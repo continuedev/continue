@@ -9,7 +9,6 @@ import chromadb
 from chromadb.config import Settings
 from chromadb.utils import embedding_functions
 from ....server.protocols.ide_protocol import AbstractIdeProtocolServer
-from ..chunkers.chunk_directory import chunk_directory
 from .base import CodebaseIndex
 from dotenv import load_dotenv
 from openai.error import RateLimitError
@@ -17,10 +16,8 @@ from pydantic import BaseModel
 
 from ..chunkers.chunk import Chunk
 from ..git import GitProject
-from ...util.filter_files import DEFAULT_IGNORE_PATTERNS, should_filter_path
 from ...util.logging import logger
 from ...util.paths import getEmbeddingsPathForBranch
-from ..chunkers import chunk_document
 
 load_dotenv()
 

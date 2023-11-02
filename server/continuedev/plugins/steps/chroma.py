@@ -37,6 +37,7 @@ class AnswerQuestionChroma(Step):
 
     async def run(self, sdk: ContinueSDK):
         settings = sdk.config.retrieval_settings
+        use_reranking = settings.use_reranking and "gpt" in sdk.models.summarize.model
 
         chroma_index = ChromaCodebaseIndex(
             sdk.ide.workspace_directory, openai_api_key=settings.openai_api_key
@@ -47,7 +48,7 @@ class AnswerQuestionChroma(Step):
 
         # Get top chunks from index
         to_retrieve_from_each = (
-            settings.n_retrieve if settings.use_reranking else settings.n_final
+            settings.n_retrieve if use_reranking else settings.n_final
         ) // 2
         hyde = await code_hyde(self.user_input, "", sdk)
         chroma_chunks = await chroma_index.query(hyde, n=to_retrieve_from_each)
@@ -64,7 +65,7 @@ class AnswerQuestionChroma(Step):
         # Rerank to select top results
         yield SetStep(description="Selecting most important files...")
 
-        if settings.use_reranking:
+        if use_reranking:
             chunks = await single_token_reranker_parallel(
                 chunks,
                 self.user_input,

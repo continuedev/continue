@@ -166,7 +166,10 @@ class OpenAI(LLM):
 
                 if self.api_type == "azure":
                     # To smooth out the response streaming, which typically comes in bursts
-                    await asyncio.sleep(0.01)
+                    if self.model == "gpt-4":
+                        await asyncio.sleep(0.03)
+                    else:
+                        await asyncio.sleep(0.01)
 
                 yield chunk.choices[0].delta
         else:

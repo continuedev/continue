@@ -71,7 +71,11 @@ class ProxyServer(LLM):
                             if chunk.strip() != "":
                                 loaded_chunk = json.loads(chunk)
                                 yield loaded_chunk
-                                await asyncio.sleep(0.01)
+
+                                if self.model == "gpt-4":
+                                    await asyncio.sleep(0.03)
+                                else:
+                                    await asyncio.sleep(0.01)
 
                     except Exception as e:
                         posthog_logger.capture_event(

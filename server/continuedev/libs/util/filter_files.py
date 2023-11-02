@@ -1,5 +1,6 @@
-import fnmatch
+# import fnmatch
 from typing import List
+import pathspec
 
 DEFAULT_IGNORE_DIRS = [
     ".git",
@@ -30,4 +31,8 @@ def should_filter_path(
     path: str, ignore_patterns: List[str] = DEFAULT_IGNORE_PATTERNS
 ) -> bool:
     """Returns whether a file should be filtered"""
-    return any(fnmatch.fnmatch(path, pattern) for pattern in ignore_patterns)
+    spec = pathspec.PathSpec.from_lines(
+        pathspec.patterns.GitWildMatchPattern, ignore_patterns
+    )
+    return spec.match_file(path)
+    # return any(fnmatch.fnmatch(path, pattern) for pattern in ignore_patterns)
