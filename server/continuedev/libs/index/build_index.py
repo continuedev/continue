@@ -39,9 +39,7 @@ async def build_index(
         async for progress in chroma_index.build(
             ide, ignore_files=settings.ignore_files, chunks=chunks
         ):
-            description = f"Generating codebase embeddings... {int(progress*100 / indices_to_build)}%"
             yield progress / indices_to_build
-            print(description, flush=True)
 
         total_progress += 50
 
@@ -49,6 +47,4 @@ async def build_index(
         async for progress in meilisearch_index.build(
             ide, ignore_files=settings.ignore_files, chunks=chunks
         ):
-            description = f"Generating codebase embeddings... {int(progress*100 / indices_to_build + total_progress)}%"
-            print(description, flush=True)
             yield progress / indices_to_build + total_progress / 100

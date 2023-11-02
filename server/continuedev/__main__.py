@@ -1,13 +1,11 @@
 import asyncio
 import os
 from typing import Optional
+from tqdm import tqdm
 
 from .core.config import ContinueConfig
-
 from .headless.headless_ide import LocalIdeProtocol
-
 from .libs.index.build_index import build_index
-
 from .libs.util.ext_to_lang import ext_to_lang
 from .libs.index.chunkers.chunk import Chunk
 from dotenv import load_dotenv
@@ -140,12 +138,20 @@ def index(
     print(f"Indexing {directory}...")
 
     async def run():
+        nonlocal config
         if config is None:
             config = ContinueConfig.load_default()
         else:
             config = ContinueConfig.from_filepath(config)
         config.retrieval_settings.openai_api_key = openai_api_key
-        await build_index(ide=LocalIdeProtocol(), config=config)
+
+        pbar = tqdm(total=100)
+        async for progress in build_index(
+            ide=LocalIdeProtocol(workspace_directory=directory), config=config
+        ):
+            pbar.update(int(progress * 100) - pbar.n)
+
+        pbar.close()
         print("Indexing complete")
 
     asyncio.run(run())

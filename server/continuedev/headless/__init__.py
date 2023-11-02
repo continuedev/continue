@@ -13,15 +13,18 @@ async def get_headless_autopilot(
     directory: Optional[str] = ".",
     state: Optional[SessionState] = None,
     config: Optional[Union[str, ContinueConfig]] = None,
-    context_providers: List[ContextProvider] = None,
+    context_providers: List[ContextProvider] = [],
 ) -> Autopilot:
     if config is not None:
         if isinstance(config, str):
             config: ContinueConfig = ContinueConfig.from_filepath(config)
+    else:
+        config = ContinueConfig.load_default()
 
     ide = LocalIdeProtocol(workspace_directory=directory)
     context_manager = ContextManager()
-    await context_manager.start(context_providers=context_providers, ide=ide)
+    # await context_manager.start(context_providers=context_providers, ide=ide)
+    await config.models.start("HEADLESS", config.system_message, config.temperature)
 
     return Autopilot(
         session_state=state,

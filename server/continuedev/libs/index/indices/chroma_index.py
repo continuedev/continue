@@ -225,8 +225,6 @@ class ChromaCodebaseIndex(CodebaseIndex):
                 indent=4,
             )
 
-        logger.debug("Codebase index created")
-
     async def update(self):
         """Update the index with a list of files."""
 

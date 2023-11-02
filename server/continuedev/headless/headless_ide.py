@@ -94,7 +94,10 @@ class LocalIdeProtocol(AbstractIdeProtocolServer):
 
     async def readFile(self, filepath: str) -> str:
         """Read a file"""
-        return self.filesystem.read(filepath)
+        try:
+            return self.filesystem.read(filepath)
+        except UnicodeDecodeError:
+            return ""
 
     async def readRangeInFile(self, range_in_file: RangeInFile) -> str:
         """Read a range in a file"""
