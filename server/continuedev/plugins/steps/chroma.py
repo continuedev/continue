@@ -19,6 +19,8 @@ from ...libs.index.indices.chroma_index import ChromaCodebaseIndex
 from ...server.meilisearch_server import remove_meilisearch_disallowed_chars
 from .chat import SimpleChatStep
 
+PROMPT = """Use the above code to answer the following question. You should not reference any files outside of what is shown, unless they are commonly known files, like a .gitignore or package.json. Reference the filenames whenever possible. Here is the question: '{user_input}'. Response: """
+
 
 class AnswerQuestionChroma(Step):
     user_input: str
@@ -109,6 +111,7 @@ class AnswerQuestionChroma(Step):
                 name="Answer Question",
                 description=f"Reading from {len(context_items)} files...",
                 completion_options=CompletionOptions(model=model),
+                prompt=PROMPT.format(user_input=self.user_input),
             )
         )
 
