@@ -68,6 +68,7 @@ import {
   setActive,
 } from "../redux/slices/sessionStateReducer";
 import RingLoader from "./RingLoader";
+import CodeSnippetPreview from "./CodeSnippetPreview";
 
 const SEARCH_INDEX_NAME = "continue_context_items";
 
@@ -164,28 +165,6 @@ const HiddenHeaderButtonWithText = styled.button<{ pinVisible: boolean }>`
 `;
 
 const mainInputFontSize = getFontSize();
-
-const PreviewMarkdownDiv = styled.div`
-  padding: 0px;
-  background-color: ${secondaryDark};
-  border-radius: ${defaultBorderRadius};
-  margin: 8px;
-  overflow: hidden;
-
-  & div {
-    background-color: ${secondaryDark};
-  }
-`;
-
-const PreviewMarkdownHeader = styled.p`
-  margin: 0;
-  padding: 4px 8px;
-  border-bottom: 1px solid ${lightGray};
-  word-break: break-all;
-  font-size: ${getFontSize()}px;
-  display: flex;
-  align-items: center;
-`;
 
 const MainTextInput = styled.textarea<{
   inQueryForDynamicProvider: boolean;
@@ -1116,70 +1095,10 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
       {showContextToggleOn && (
         <div>
           {selectedContextItems.map((item) => (
-            <PreviewMarkdownDiv>
-              <PreviewMarkdownHeader className="flex justify-between">
-                <div className="flex items-center">
-                  <FileIcon
-                    height="20px"
-                    width="20px"
-                    filename={item.description.name}
-                  ></FileIcon>
-                  {item.description.name}
-                </div>
-                <div className="flex items-center">
-                  <HeaderButtonWithText
-                    text="View"
-                    onClick={() => {
-                      if (item.description.id.provider_title === "file") {
-                        postToIde("showFile", {
-                          filepath: item.description.description,
-                        });
-                      } else if (
-                        item.description.id.provider_title === "code"
-                      ) {
-                        const lines = item.description.name
-                          .split("(")[1]
-                          .split(")")[0]
-                          .split("-");
-                        postToIde("showLines", {
-                          filepath: item.description.description,
-                          start: parseInt(lines[0]) - 1,
-                          end: parseInt(lines[1]) - 1,
-                        });
-                      } else {
-                        postToIde("showVirtualFile", {
-                          name: item.description.name,
-                          content: item.content,
-                        });
-                      }
-                    }}
-                  >
-                    <ArrowUpLeftIcon width="1.2em" height="1.2em" />
-                  </HeaderButtonWithText>
-                  <HeaderButtonWithText
-                    text="Delete"
-                    onClick={() => {
-                      dispatch(
-                        deleteContextWithIds({
-                          ids: [item.description.id],
-                          index: props.index,
-                        })
-                      );
-                    }}
-                  >
-                    <TrashIcon width="1.2em" height="1.2em" />
-                  </HeaderButtonWithText>
-                </div>
-              </PreviewMarkdownHeader>
-              <pre className="m-0">
-                <StyledMarkdownPreview
-                  source={`\`\`\`${getMarkdownLanguageTagForFile(
-                    item.description.description
-                  )}\n${item.content}\n\`\`\``}
-                  maxHeight={200}
-                />
-              </pre>
-            </PreviewMarkdownDiv>
+            <CodeSnippetPreview
+              index={props.index}
+              item={item}
+            ></CodeSnippetPreview>
           ))}
         </div>
       )}
