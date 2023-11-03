@@ -13,7 +13,7 @@ from ..models.filesystem import (
     RealFileSystem,
 )
 from ..models.filesystem_edit import EditDiff, FileEdit, FileSystemEdit
-from ..server.ide_protocol import AbstractIdeProtocolServer
+from ..server.protocols.ide_protocol import AbstractIdeProtocolServer
 
 load_dotenv()
 
@@ -31,6 +31,10 @@ class LocalIdeProtocol(AbstractIdeProtocolServer):
     unique_id: str = get_mac_address()
 
     filesystem: FileSystem = RealFileSystem()
+
+    def __init__(self, workspace_directory: str = None):
+        if workspace_directory:
+            self.workspace_directory = workspace_directory
 
     async def handle_json(self, data: Any):
         """Handle a json message"""
@@ -90,7 +94,10 @@ class LocalIdeProtocol(AbstractIdeProtocolServer):
 
     async def readFile(self, filepath: str) -> str:
         """Read a file"""
-        return self.filesystem.read(filepath)
+        try:
+            return self.filesystem.read(filepath)
+        except UnicodeDecodeError:
+            return ""
 
     async def readRangeInFile(self, range_in_file: RangeInFile) -> str:
         """Read a range in a file"""

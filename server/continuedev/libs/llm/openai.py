@@ -3,8 +3,10 @@ from typing import List, Literal, Optional
 
 import certifi
 from ..util.count_tokens import MAX_TOKENS_FOR_MODEL
+from ..util.logging import logger
 from .prompts.chat import template_alpaca_messages
 import openai
+from openai.error import RateLimitError
 from pydantic import Field
 
 from ...core.main import ChatMessage
@@ -164,7 +166,10 @@ class OpenAI(LLM):
 
                 if self.api_type == "azure":
                     # To smooth out the response streaming, which typically comes in bursts
-                    await asyncio.sleep(0.01)
+                    if self.model == "gpt-4":
+                        await asyncio.sleep(0.03)
+                    else:
+                        await asyncio.sleep(0.01)
 
                 yield chunk.choices[0].delta
         else:
@@ -187,12 +192,21 @@ class OpenAI(LLM):
             args["model"] not in NON_CHAT_MODELS
             and not self.use_legacy_completions_endpoint
         ):
-            resp = await openai.ChatCompletion.acreate(
-                messages=[{"role": "user", "content": prompt}],
-                **args,
-                headers=self.headers,
-            )
-            return resp.choices[0].message.content
+            wait_time = 0.2
+            while True:
+                try:
+                    resp = await openai.ChatCompletion.acreate(
+                        messages=[{"role": "user", "content": prompt}],
+                        **args,
+                        headers=self.headers,
+                    )
+                    return resp.choices[0].message.content
+                except RateLimitError as e:
+                    logger.debug(f"Rate limit exceeded, waiting {wait_time} seconds")
+                    await asyncio.sleep(wait_time)
+                    wait_time *= 2
+                    if wait_time > 2**10:
+                        raise e
         else:
             return (
                 (

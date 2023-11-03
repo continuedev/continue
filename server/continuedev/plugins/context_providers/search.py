@@ -15,7 +15,7 @@ class SearchContextProvider(ContextProvider):
 
     title = "search"
     display_title = "Search"
-    description = "Search workspace for matches of an exact string"
+    description = "Search workspace for exact matches"
     dynamic = True
     requires_query = True
 

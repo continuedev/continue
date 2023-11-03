@@ -461,7 +461,7 @@ export const MODEL_INFO: { [key: string]: ModelInfo } = {
     icon: "ollama.png",
     tags: [ModelProviderTag["Local"], ModelProviderTag["Open-Source"]],
     packages: osModels,
-    collectInputFor: [...completionParamsInputs],
+    collectInputFor: [...completionParamsInputs, serverUrlInput],
   },
   together: {
     title: "TogetherAI",
@@ -745,7 +745,10 @@ After it's up and running, you can start using Continue.`,
       'New users can try out Continue for free using a proxy server that securely makes calls to OpenAI using our API key. If you are ready to use your own API key or have used all 250 free uses, you can enter your API key in config.py where it says `api_key=""` or select another model provider.',
     icon: "openai.png",
     tags: [ModelProviderTag.Free],
-    packages: [gpt4, gpt35turbo],
+    packages: [
+      { ...gpt4, title: "GPT-4 (trial)" },
+      { ...gpt35turbo, title: "GPT-3.5-Turbo (trial)" },
+    ],
     collectInputFor: [...completionParamsInputs],
   },
 };

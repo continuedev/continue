@@ -15,6 +15,7 @@ import { RootStore } from "../redux/store";
 import {
   setConfig,
   setContextProviders,
+  setIndexingProgress,
   setSlashCommands,
 } from "../redux/slices/serverStateReducer";
 import {
@@ -66,6 +67,10 @@ function useSetup(
     // Listen for updates to the session state
     client.onSessionUpdate((update) => {
       dispatch(processSessionUpdate(update));
+    });
+
+    client.onIndexingProgress((progress) => {
+      dispatch(setIndexingProgress(progress));
     });
 
     client.onAddContextItem((item) => {

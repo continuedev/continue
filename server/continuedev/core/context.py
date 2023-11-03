@@ -1,7 +1,7 @@
 import asyncio
 import time
 from abc import abstractmethod
-from typing import Any, Awaitable, Callable, Dict, List, Optional
+from typing import Any, Awaitable, Callable, List, Optional
 from ..server.protocols.ide_protocol import AbstractIdeProtocolServer
 
 from meilisearch_python_async import Client
@@ -398,8 +398,8 @@ class ContextManager:
         except Exception as e:
             logger.debug(f"Error loading meilisearch index: {e}")
             if should_retry:
-                await restart_meilisearch()
                 try:
+                    await restart_meilisearch()
                     await asyncio.wait_for(poll_meilisearch_running(), timeout=20)
                 except asyncio.TimeoutError:
                     logger.warning(

@@ -120,6 +120,12 @@ class ContinueGUIClientProtocol extends AbstractContinueGUIClientProtocol {
     });
   }
 
+  onIndexingProgress(callback: (progress: number) => void) {
+    this.messenger?.onMessageType("indexing_progress", (data: any) => {
+      callback(data.progress);
+    });
+  }
+
   onConfigUpdate(callback: (config: ContinueConfig) => void) {
     this.messenger?.onMessageType("config_update", (data: any) => {
       callback(data);

@@ -73,6 +73,11 @@ class ProxyServer(LLM):
                                 yield loaded_chunk
                                 await asyncio.sleep(0.01)
 
+                                if self.model == "gpt-4":
+                                    await asyncio.sleep(0.03)
+                                else:
+                                    await asyncio.sleep(0.01)
+
                     except Exception as e:
                         posthog_logger.capture_event(
                             "proxy_server_parse_error",

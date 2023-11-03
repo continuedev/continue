@@ -22,6 +22,7 @@ import ModelSelect from "./ModelSelect";
 import ProgressBar from "./ProgressBar";
 import { newSession } from "../redux/slices/sessionStateReducer";
 import { getFontSize } from "../util";
+import IndexingProgressBar from "./IndexingProgressBar";
 
 // #region Styled Components
 const FOOTER_HEIGHT = "1.8em";
@@ -73,6 +74,8 @@ const Footer = styled.footer`
   align-items: center;
   width: calc(100% - 16px);
   height: ${FOOTER_HEIGHT};
+  background-color: transparent;
+  backdrop-filter: blur(12px);
 
   overflow: hidden;
 `;
@@ -104,6 +107,9 @@ const Layout = () => {
   );
   const showDialog = useSelector(
     (state: RootStore) => state.uiState.showDialog
+  );
+  const indexingProgress = useSelector(
+    (state: RootStore) => state.serverState.indexingProgress
   );
 
   const defaultModel = useSelector(
@@ -217,7 +223,8 @@ const Layout = () => {
                   />
                 )}
               <ModelSelect />
-              {defaultModel?.class_name === "OpenAIFreeTrial" &&
+              {indexingProgress >= 1 && // Would take up too much space together with indexing progress
+                defaultModel?.class_name === "OpenAIFreeTrial" &&
                 defaultModel?.api_key === "" &&
                 (location.pathname === "/settings" ||
                   parseInt(localStorage.getItem("ftc") || "0") >= 125) && (
@@ -226,6 +233,13 @@ const Layout = () => {
                     total={250}
                   />
                 )}
+
+              {indexingProgress < 1 && (
+                <IndexingProgressBar
+                  completed={indexingProgress * 100}
+                  total={100}
+                />
+              )}
             </div>
             <HeaderButtonWithText
               text="Help"

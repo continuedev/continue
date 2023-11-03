@@ -76,6 +76,7 @@ const TitleTextInput = styled(Input)`
   margin-right: 8px;
   padding-top: 6px;
   padding-bottom: 6px;
+  background-color: transparent;
 
   &:focus {
     outline: none;
@@ -120,7 +121,8 @@ const GUIHeaderDiv = styled.div`
   position: sticky;
   top: 0;
   z-index: 100;
-  background-color: ${vscBackground};
+  background-color: transparent;
+  backdrop-filter: blur(12px);
 `;
 
 function fallbackRender({ error, resetErrorBoundary }) {
@@ -426,7 +428,7 @@ function GUI(props: GUIProps) {
 
       // cmd+enter to /codebase
       if (event && isMetaEquivalentKeyPressed(event)) {
-        input = `/edit ${input}`;
+        input = `/codebase ${input}`;
       }
       (mainTextInputRef.current as any).setInputValue("");
 
@@ -591,7 +593,7 @@ function GUI(props: GUIProps) {
       </GUIHeaderDiv>
       {takenAction && showLoading && typeof client === "undefined" && (
         <>
-          <RingLoader />
+          <RingLoader size={32} />
           <p
             style={{
               textAlign: "center",

@@ -8,6 +8,7 @@ import {
 } from ".";
 import MarkdownPreview from "@uiw/react-markdown-preview";
 import { getFontSize } from "../util";
+import LinkableCode from "./LinkableCode";
 
 const StyledMarkdownPreviewComponent = styled(MarkdownPreview)<{
   light?: boolean;
@@ -70,6 +71,10 @@ function StyledMarkdownPreview(props: StyledMarkdownPreviewProps) {
               {props.children}
             </a>
           );
+        },
+        code: ({ node, ...props }) => {
+          console.log(node, props);
+          return <LinkableCode {...props}></LinkableCode>;
         },
       }}
       className={props.className}

@@ -1,6 +1,10 @@
 import traceback
 from typing import Dict, Optional
 
+from ..libs.util.create_async_task import create_async_task
+
+from ..libs.index.build_index import build_index
+
 from ..plugins.steps.on_traceback import DefaultOnTracebackStep
 
 from ..core.context import ContextManager
@@ -88,6 +92,12 @@ class Window:
 
         if self._error_loading_config is not None:
             await self.ide.setFileOpen(getConfigFilePath())
+
+        async def index():
+            async for progress in build_index(self.ide, self.config):
+                await self.gui.send_indexing_progress(progress)
+
+        create_async_task(index(), on_error=self.ide.on_error)
 
         # Start models
         await self.config.models.start(

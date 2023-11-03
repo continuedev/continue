@@ -1,6 +1,6 @@
 import React from "react";
 import styled, { keyframes } from "styled-components";
-import { buttonColor, vscBackground, vscForeground } from ".";
+import { vscForeground } from ".";
 
 const rotate = keyframes`
   0% {
@@ -11,10 +11,14 @@ const rotate = keyframes`
   }
 `;
 
-const LoaderSvg = styled.svg`
+const LoaderSvg = styled.svg<{
+  width?: string;
+  height?: string;
+  period?: number;
+}>`
   transform: rotate(-90deg);
-  width: 40px;
-  height: 40px;
+  width: ${(props) => props.width || "40px"};
+  height: ${(props) => props.height || "40px"};
   opacity: 50%;
 
   circle {
@@ -23,17 +27,41 @@ const LoaderSvg = styled.svg`
     stroke-width: 2;
     stroke-dasharray: 100;
     stroke-dashoffset: 0;
-    animation: ${rotate} 6s ease-out infinite;
+    animation: ${rotate} ${(props) => props.period || 6}s ease-out infinite;
     stroke-linecap: round;
   }
 `;
 
-const RingLoader = () => (
-  <div className="m-auto w-full text-center mt-2">
-    <LoaderSvg viewBox="0 0 32 32">
-      <circle cx="16" cy="16" r="14" />
-    </LoaderSvg>
-  </div>
-);
+const RingLoader = (props: {
+  size: number;
+  wFull?: boolean;
+  className?: string;
+  width?: string;
+  height?: string;
+  period?: number;
+}) => {
+  const viewBox = `0 0 ${props.size} ${props.size}`;
+  const size = (props.size / 2).toString();
+  const r = "14"; //(props.size / 2 - 2).toString();
+  return (
+    <div
+      className={
+        "m-auto text-center mt-2" +
+        (props.wFull === false ? "" : " w-full") +
+        " " +
+        props.className
+      }
+    >
+      <LoaderSvg
+        period={props.period}
+        width={props.width}
+        height={props.height}
+        viewBox={viewBox}
+      >
+        <circle cx={size} cy={size} r={r} />
+      </LoaderSvg>
+    </div>
+  );
+};
 
 export default RingLoader;

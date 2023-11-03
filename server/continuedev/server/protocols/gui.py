@@ -310,6 +310,9 @@ class GUIProtocolServer:
     async def send_session_update(self, session_update: SessionUpdate):
         await self.messenger.send("session_update", session_update.dict())
 
+    async def send_indexing_progress(self, progress: float):
+        await self.messenger.send("indexing_progress", {"progress": progress})
+
     async def get_session_state(self) -> SessionState:
         return await self.messenger.send_and_receive(
             {}, SessionState, "get_session_state"

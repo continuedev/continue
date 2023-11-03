@@ -3,7 +3,7 @@ import { StyledTooltip } from ".";
 import ReactDOM from "react-dom";
 
 const InfoHover = ({ msg }: { msg: string }) => {
-  const id = "info-hover";
+  const id = `info-hover-${encodeURIComponent(msg)}`;
 
   const tooltipPortalDiv = document.getElementById("tooltip-portal-div");
 
