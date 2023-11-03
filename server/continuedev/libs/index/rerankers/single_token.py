@@ -1,8 +1,8 @@
 import asyncio
 from typing import List
+from ...llm.base import LLM
 
 import openai
-from ....core.sdk import ContinueSDK
 from ..chunkers.chunk import Chunk
 from ...util.logging import logger
 
@@ -44,26 +44,14 @@ Relevant:
 """
 
 
-async def single_token_reranker(
-    chunk: Chunk, user_input: str, sdk: ContinueSDK
-) -> float:
-    openai_api_key = None
-    if sdk.models.summarize is not None and hasattr(
-        sdk.models.summarize, "openai_api_key"
-    ):
-        openai_api_key = sdk.models.summarize.openai_api_key
-
-    elif sdk.models.default is not None and hasattr(
-        sdk.models.default, "openai_api_key"
-    ):
-        openai_api_key = sdk.models.default.openai_api_key
-
+async def single_token_reranker(chunk: Chunk, user_input: str, model: LLM) -> float:
     compiled_prompt = PROMPT.format(
         query=user_input, document=chunk.content, document_id=chunk.document_id
     )
 
-    if openai_api_key is not None and False:
-        openai.api_key = openai_api_key
+    if False:
+        # TODO: Continuous ranking with logits
+        # openai.api_key = openai_api_key
         response = openai.Completion.create(
             model="gpt-3.5-turbo",
             prompt=compiled_prompt,
@@ -75,23 +63,27 @@ async def single_token_reranker(
         )
         return response["choices"][0]["logprobs"]["token_logprobs"][0]
     else:
-        completion = await sdk.models.summarize.complete(
-            compiled_prompt, log=False, max_tokens=1, temperature=0.0
-        )
-        l = completion.strip().lower().replace('"', "").replace("'", "")
-        if l == "yes":
+        try:
+            completion = await model.complete(
+                compiled_prompt, log=False, max_tokens=1, temperature=0.0
+            )
+        except Exception:
+            return 0.5
+
+        answer = completion.strip().lower().replace('"', "").replace("'", "")
+        if answer == "yes":
             return 1.0
-        elif l == "no":
+        elif answer == "no":
             return 0.0
         else:
-            logger.warning(f"Unexpected response from single token reranker: {l}")
+            logger.warning(f"Unexpected response from single token reranker: {answer}")
             return 0.0
 
 
 async def single_token_reranker_parallel(
-    chunks: List[Chunk], user_input: str, n: int, sdk: ContinueSDK
+    chunks: List[Chunk], user_input: str, n: int, model: LLM
 ) -> List[Chunk]:
-    tasks = [single_token_reranker(chunk, user_input, sdk) for chunk in chunks]
+    tasks = [single_token_reranker(chunk, user_input, model) for chunk in chunks]
     results = await asyncio.gather(*tasks)
 
     # Sort by results, return top n

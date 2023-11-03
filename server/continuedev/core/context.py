@@ -398,8 +398,8 @@ class ContextManager:
         except Exception as e:
             logger.debug(f"Error loading meilisearch index: {e}")
             if should_retry:
-                await restart_meilisearch()
                 try:
+                    await restart_meilisearch()
                     await asyncio.wait_for(poll_meilisearch_running(), timeout=20)
                 except asyncio.TimeoutError:
                     logger.warning(

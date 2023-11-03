@@ -461,7 +461,7 @@ export const MODEL_INFO: { [key: string]: ModelInfo } = {
     icon: "ollama.png",
     tags: [ModelProviderTag["Local"], ModelProviderTag["Open-Source"]],
     packages: osModels,
-    collectInputFor: [...completionParamsInputs],
+    collectInputFor: [...completionParamsInputs, serverUrlInput],
   },
   together: {
     title: "TogetherAI",

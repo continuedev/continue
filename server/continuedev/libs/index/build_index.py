@@ -22,7 +22,8 @@ async def build_index(
 
     indices_to_build = 0
     chroma_exists = await chroma_index.exists()
-    meilisearch_exists = await meilisearch_index.exists()
+    # meilisearch_exists = await meilisearch_index.exists()
+    meilisearch_exists = chroma_exists
     if not chroma_exists:
         indices_to_build += 1
     if not meilisearch_exists:

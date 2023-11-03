@@ -1,10 +1,10 @@
 import asyncio
 import os
-from typing import Coroutine, List, Union
+from typing import Coroutine, List, Optional, Union
 
-from ...libs.index.hyde import code_hyde
+from ...libs.index.hyde import code_hyde, generate_keywords
 from ...libs.index.indices.meilisearch_index import MeilisearchCodebaseIndex
-from ...libs.llm.base import CompletionOptions
+from ...libs.llm.base import LLM, CompletionOptions
 from ...libs.index.rerankers.single_token import single_token_reranker_parallel
 from ...core.main import (
     ContextItem,
@@ -19,7 +19,41 @@ from ...libs.index.indices.chroma_index import ChromaCodebaseIndex
 from ...server.meilisearch_server import remove_meilisearch_disallowed_chars
 from .chat import SimpleChatStep
 
-PROMPT = """Use the above code to answer the following question. You should not reference any files outside of what is shown, unless they are commonly known files, like a .gitignore or package.json. Reference the filenames whenever possible. Here is the question: '{user_input}'. Response: """
+PROMPT = """Use the above code to answer the following question. You should not reference any files outside of what is shown, unless they are commonly known files, like a .gitignore or package.json. Reference the filenames whenever possible. If there isn't enough information to answer the question, suggest where the user might look to learn more. Here is the question: '{user_input}'. Response: """
+
+
+async def get_faster_model(sdk: ContinueSDK) -> Optional[LLM]:
+    # First, check for GPT-3/3.5
+    models = sdk.config.models.all_models
+    if gpt3_model := next(filter(lambda m: "gpt-3" in m.model, models), None):
+        return gpt3_model
+
+    # Then, check for OpenAIFreeTrial
+    if openai_free_trial_model := next(
+        filter(lambda m: m.__class__.__name__ == "OpenAIFreeTrial", models), None
+    ):
+        new_model = openai_free_trial_model.copy()
+        new_model.model = "gpt-3.5-turbo"
+        await new_model.start(sdk.ide.window_info.unique_id)
+        return new_model
+
+    # Then, check for an API Key
+    if openai_model := next(
+        filter(
+            lambda m: hasattr(m, "api_key")
+            and m.api_key is not None
+            and m.api_key.startswith("sk-"),
+            models,
+        ),
+        None,
+    ):
+        new_model = openai_model.copy()
+        new_model.model = "gpt-3.5-turbo"
+        await new_model.start(sdk.ide.window_info.unique_id)
+        return new_model
+
+    # Return None, so re-ranking probably shouldn't happen
+    return None
 
 
 class AnswerQuestionChroma(Step):
@@ -37,7 +71,8 @@ class AnswerQuestionChroma(Step):
 
     async def run(self, sdk: ContinueSDK):
         settings = sdk.config.retrieval_settings
-        use_reranking = settings.use_reranking and "gpt" in sdk.models.summarize.model
+        faster_model = await get_faster_model(sdk)
+        use_reranking = settings.use_reranking and faster_model is not None
 
         chroma_index = ChromaCodebaseIndex(
             sdk.ide.workspace_directory, openai_api_key=settings.openai_api_key
@@ -50,11 +85,33 @@ class AnswerQuestionChroma(Step):
         to_retrieve_from_each = (
             settings.n_retrieve if use_reranking else settings.n_final
         ) // 2
-        hyde = await code_hyde(self.user_input, "", sdk)
-        chroma_chunks = await chroma_index.query(hyde, n=to_retrieve_from_each)
-        meilisearch_chunks = await meilisearch_index.query(
-            self.user_input, n=to_retrieve_from_each
+
+        # Use HyDE only if a faster model is available
+        query = self.user_input
+        keywords = None
+        if faster_model is not None:
+            resps = await asyncio.gather(
+                *[
+                    code_hyde(self.user_input, "", faster_model),
+                    generate_keywords(self.user_input, faster_model),
+                ]
+            )
+            query = resps[0]
+            keywords = resps[1]
+
+        # Get meilisearch chunks first, fill in the rest with chroma
+        if keywords is None:
+            meilisearch_chunks = await meilisearch_index.query(
+                self.user_input, n=to_retrieve_from_each
+            )
+        else:
+            meilisearch_chunks = await meilisearch_index.query_keywords(
+                keywords, n=to_retrieve_from_each
+            )
+        chroma_chunks = await chroma_index.query(
+            query, n=2 * to_retrieve_from_each - len(meilisearch_chunks)
         )
+
         chunk_ids = set()
         chunks = []
         for chunk in chroma_chunks + meilisearch_chunks:
@@ -70,7 +127,7 @@ class AnswerQuestionChroma(Step):
                 chunks,
                 self.user_input,
                 settings.n_final,
-                sdk,
+                faster_model,
                 # group_size=settings.rerank_group_size,
             )
 

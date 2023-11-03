@@ -36,7 +36,7 @@ class MeilisearchCodebaseIndex(CodebaseIndex):
 
     def chunk_to_meilisearch_document(self, chunk: Chunk, index: int) -> Dict[str, Any]:
         return {
-            "id": index,
+            "id": str(index),
             "content": chunk.content,
             "document_id": chunk.document_id,
             **chunk.other_metadata,
@@ -78,14 +78,18 @@ class MeilisearchCodebaseIndex(CodebaseIndex):
             try:
                 await search_client.create_index(self.index_name)
                 index = await search_client.get_index(self.index_name)
+                # await index.update_ranking_rules(
+                #     ["attribute", "words", "typo", "proximity", "sort", "exactness"]
+                # )
+                await index.update_searchable_attributes(["content", "document_id"])
 
                 i = 0
                 GROUP_SIZE = 100
                 while i < len(chunks):
                     await index.add_documents(
                         [
-                            self.chunk_to_meilisearch_document(chunk, i)
-                            for i, chunk in enumerate(chunks[i : i + GROUP_SIZE])
+                            self.chunk_to_meilisearch_document(chunk, j)
+                            for j, chunk in enumerate(chunks[i : i + GROUP_SIZE])
                         ]
                     )
 
@@ -102,8 +106,7 @@ class MeilisearchCodebaseIndex(CodebaseIndex):
         """Updates the index, yielding progress as a float between 0 and 1"""
         raise NotImplementedError()
 
-    async def query(self, query: str, n: int = 4) -> List[Chunk]:
-        """Queries the index, returning the top n results"""
+    async def _query(self, query: str, n: int = 4) -> List[Chunk]:
         async with Client(get_meilisearch_url()) as search_client:
             try:
                 results = await search_client.index(self.index_name).search(
@@ -119,3 +122,30 @@ class MeilisearchCodebaseIndex(CodebaseIndex):
                 logger.warning(f"Error while retrieving document from meilisearch: {e}")
 
             return []
+
+    async def query(self, query: str, n: int = 4) -> List[Chunk]:
+        """Queries the index, returning the top n results"""
+        return await self._query(query, n=n)
+
+    async def query_keywords(self, keywords: List[str], n: int = 4) -> List[Chunk]:
+        count_per_chunk = {}
+        id_to_chunk = {}
+        for keyword in keywords:
+            chunks = await self._query(keyword, n=n)
+            for chunk in chunks:
+                if chunk.id not in count_per_chunk:
+                    count_per_chunk[chunk.id] = 0
+                    id_to_chunk[chunk.id] = chunk
+                count_per_chunk[chunk.id] += 1
+
+        # Sort by count
+        sorted_chunks = sorted(
+            count_per_chunk.items(), key=lambda item: item[1], reverse=True
+        )
+
+        # Get top n
+        chunks = []
+        for chunk_id, count in sorted_chunks[:n]:
+            chunks.append(id_to_chunk[chunk_id])
+
+        return chunks

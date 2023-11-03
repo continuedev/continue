@@ -74,6 +74,8 @@ const Footer = styled.footer`
   align-items: center;
   width: calc(100% - 16px);
   height: ${FOOTER_HEIGHT};
+  background-color: transparent;
+  backdrop-filter: blur(12px);
 
   overflow: hidden;
 `;
