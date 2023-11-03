@@ -45,6 +45,7 @@ export interface RootStore {
     config: ContinueConfig;
     contextProviders: ContextProviderDescription[];
     savedContextGroups: any[]; // TODO: Context groups
+    indexingProgress: number;
   };
 }
 

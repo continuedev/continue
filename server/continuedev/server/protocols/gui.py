@@ -282,6 +282,21 @@ class GUIProtocolServer:
     _running_autopilots: Dict[str, Autopilot] = {}
 
     async def run_from_state(self, state: SessionState, step: Optional[Step] = None):
+        if step is not None or len(state.history) > 0:
+            step_to_log = step or state.history[-1]
+            posthog_logger.capture_event(
+                "step run",
+                {
+                    "step_name": step_to_log.name,
+                    "params": step_to_log.params if step is None else step.dict(),
+                    "context": list(
+                        map(
+                            lambda item: item.dict(),
+                            state.context_items,
+                        )
+                    ),
+                },
+            )
         autopilot = self.get_autopilot(state)
         cancel_token = str(uuid.uuid4())
         self._running_autopilots[cancel_token] = autopilot
@@ -294,6 +309,9 @@ class GUIProtocolServer:
 
     async def send_session_update(self, session_update: SessionUpdate):
         await self.messenger.send("session_update", session_update.dict())
+
+    async def send_indexing_progress(self, progress: float):
+        await self.messenger.send("indexing_progress", {"progress": progress})
 
     async def get_session_state(self) -> SessionState:
         return await self.messenger.send_and_receive(

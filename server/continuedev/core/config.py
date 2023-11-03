@@ -50,6 +50,32 @@ class CustomCommand(BaseModel):
         )
 
 
+class RetrievalSettings(BaseModel):
+    n_retrieve: Optional[int] = Field(
+        50, description="Number of results to initially retrieve from vector database"
+    )
+    n_final: Optional[int] = Field(
+        10, description="Final number of results to use after re-ranking"
+    )
+    use_reranking: bool = Field(
+        True,
+        description="Whether to use re-ranking, which will allow initial selection of n_retrieve results, then will use an LLM to select the top n_final results",
+    )
+    rerank_group_size: int = Field(
+        5,
+        description="Number of results to group together when re-ranking. Each group will be processed in parallel.",
+    )
+    ignore_files: List[str] = Field(
+        [],
+        description="Files to ignore when indexing the codebase. You can use glob patterns, such as **/*.py. This is useful for directories that contain generated code, or other directories that are not relevant to the codebase.",
+    )
+    openai_api_key: Optional[str] = Field(None, description="OpenAI API key")
+    api_base: Optional[str] = Field(None, description="OpenAI API base URL")
+    api_type: Optional[str] = Field(None, description="OpenAI API type")
+    api_version: Optional[str] = Field(None, description="OpenAI API version")
+    organization_id: Optional[str] = Field(None, description="OpenAI organization ID")
+
+
 class ContinueConfig(BaseModel):
     """
     Continue can be deeply customized by editing the `ContinueConfig` object in `~/.continue/config.py` (`%userprofile%\.continue\config.py` for Windows) on your machine. This class is instantiated from the config file for every new session.
@@ -117,6 +143,10 @@ class ContinueConfig(BaseModel):
     disable_summaries: Optional[bool] = Field(
         False,
         description="If set to `True`, Continue will not generate summaries for each Step. This can be useful if you want to save on compute.",
+    )
+    retrieval_settings: Optional[RetrievalSettings] = Field(
+        RetrievalSettings(),
+        description="Settings for the retrieval system. Read more about the retrieval system in the documentation.",
     )
 
     @classmethod

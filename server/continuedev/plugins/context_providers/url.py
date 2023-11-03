@@ -6,7 +6,7 @@ from pydantic import Field
 
 from ...core.context import ContextProvider
 from ...core.main import ContextItem, ContextItemDescription, ContextItemId
-from .util import remove_meilisearch_disallowed_chars
+from .util import remove_meilisearch_disallowed_chars, remove_prefix
 
 
 class URLContextProvider(ContextProvider):
@@ -92,7 +92,7 @@ class URLContextProvider(ContextProvider):
             raise Exception("Invalid provider title for item")
 
         # Generate the dynamic item
-        url = query.lstrip("url ").strip()
+        url = remove_prefix(text=query, prefix="url").strip()
         if url is None or url == "":
             return None
         content, title = self._get_url_text_contents_and_title(url)

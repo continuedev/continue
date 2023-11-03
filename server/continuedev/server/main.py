@@ -77,12 +77,29 @@ def health():
 # endregion
 
 
+async def cleanup_coroutine():
+    logger.debug("------ End logs ------")
+
+
+def cleanup():
+    loop = asyncio.new_event_loop()
+    loop.run_until_complete(cleanup_coroutine())
+    loop.close()
+
+
 def run_server(
-    port: int = 65432, host: str = "127.0.0.1", meilisearch_url: Optional[str] = None
+    port: int = 65432,
+    host: str = "127.0.0.1",
+    meilisearch_url: Optional[str] = None,
+    disable_meilisearch: bool = False,
 ):
     try:
         global global_config
         global_config.meilisearch_url = meilisearch_url
+        global_config.disable_meilisearch = disable_meilisearch
+
+        logger.debug("------ Begin Logs ------")
+        atexit.register(cleanup)
 
         config = uvicorn.Config(app, host=host, port=port)
         server = uvicorn.Server(config)
@@ -100,18 +117,6 @@ def run_server(
         cleanup()
         raise e
 
-
-async def cleanup_coroutine():
-    logger.debug("------ End logs ------")
-
-
-def cleanup():
-    loop = asyncio.new_event_loop()
-    loop.run_until_complete(cleanup_coroutine())
-    loop.close()
-
-
-atexit.register(cleanup)
 
 if __name__ == "__main__":
     try:

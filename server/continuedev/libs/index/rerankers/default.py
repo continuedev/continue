@@ -2,13 +2,12 @@ import asyncio
 import os
 from typing import Dict, List
 
+from ...llm.base import LLM
 from ..chunkers.chunk import Chunk
-
-from continuedev.core.sdk import ContinueSDK
 
 
 async def decide_include_remove(
-    chunks: List[Chunk], user_input: str, n: int, sdk: ContinueSDK
+    chunks: List[Chunk], user_input: str, n: int, model: LLM
 ) -> Dict[str, str]:
     """
     Reranks the results from the codebase index based on the user input.
@@ -88,15 +87,15 @@ Now for the real task, here are the top {len(chunks)} results from the codebase 
 
 List the results that are not useful in answering the request, using in the same format from the example. Only choose those that are completely unrelated, and no more than {n // 2}:"""
 
-    include = sdk.models.summarize.complete(include_prompt, log=False)
-    remove = sdk.models.summarize.complete(remove_prompt, log=False)
+    include = model.complete(include_prompt, log=False)
+    remove = model.complete(remove_prompt, log=False)
     include_completion, remove_completion = await asyncio.gather(include, remove)
 
     return include_completion.split("\n"), remove_completion.split("\n")
 
 
 async def default_reranker_parallel(
-    chunks: List[Chunk], user_input: str, n: int, sdk: ContinueSDK
+    chunks: List[Chunk], user_input: str, n: int, model: LLM, group_size: int = 10
 ) -> List[Chunk]:
     """
     A reranker, given a mapping from id to contents, returns the subset of the mapping that is most relevant to the user_input
@@ -106,7 +105,7 @@ async def default_reranker_parallel(
     group = []
     for chunk in chunks:
         group.append(chunk)
-        if len(group) == 10:
+        if len(group) == group_size:
             groups.append(group)
             group = []
 
@@ -119,7 +118,7 @@ async def default_reranker_parallel(
 
     tasks = []
     for group in groups:
-        tasks.append(decide_include_remove(group, user_input, n, sdk))
+        tasks.append(decide_include_remove(group, user_input, n, model))
 
     reranking_results = await asyncio.gather(*tasks)
     for rr in reranking_results:
