@@ -214,15 +214,18 @@ class GUIProtocolServer:
                 f"from continuedev.libs.llm.{MODEL_MODULE_NAMES[model_class]} import {model_class}"
             )
             if "template_messages" in model:
-                add_config_import(
-                    f"from continuedev.libs.llm.prompts.chat import {model['template_messages']}"
-                )
+                if model["template_messages"] != "None":
+                    add_config_import(
+                        f"from continuedev.libs.llm.prompts.chat import {model['template_messages']}"
+                    )
+
                 sqtm = sqlcoder_template_messages("<MY_DATABASE_SCHEMA>")
                 sqtm.__name__ = 'sqlcoder_template_messages("<MY_DATABASE_SCHEMA>")'
                 model["template_messages"] = {
                     "llama2_template_messages": llama2_template_messages,
                     "template_alpaca_messages": template_alpaca_messages,
                     "sqlcoder_template_messages": sqtm,
+                    "None": None,
                 }[model["template_messages"]]
 
             if "prompt_templates" in model and "edit" in model["prompt_templates"]:

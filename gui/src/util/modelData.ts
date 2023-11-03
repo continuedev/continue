@@ -168,6 +168,7 @@ enum ChatTemplates {
   "alpaca" = "template_alpaca_messages",
   "llama2" = "llama2_template_messages",
   "sqlcoder" = "sqlcoder_template_messages",
+  "None" = "None",
 }
 
 const codeLlamaInstruct: ModelPackage = {
@@ -547,6 +548,7 @@ export const MODEL_INFO: { [key: string]: ModelInfo } = {
     tags: [ModelProviderTag["Local"], ModelProviderTag["Open-Source"]],
     params: {
       server_url: "http://localhost:1234",
+      template_messages: ChatTemplates.None,
     },
     packages: osModels,
     collectInputFor: [...completionParamsInputs],

@@ -60,7 +60,31 @@ function CodeSnippetPreview(props: CodeSnippetPreviewProps) {
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
-      <PreviewMarkdownHeader className="flex justify-between">
+      <PreviewMarkdownHeader
+        className="flex justify-between cursor-pointer"
+        onClick={() => {
+          if (props.item.description.id.provider_title === "file") {
+            postToIde("showFile", {
+              filepath: props.item.description.description,
+            });
+          } else if (props.item.description.id.provider_title === "code") {
+            const lines = props.item.description.name
+              .split("(")[1]
+              .split(")")[0]
+              .split("-");
+            postToIde("showLines", {
+              filepath: props.item.description.description,
+              start: parseInt(lines[0]) - 1,
+              end: parseInt(lines[1]) - 1,
+            });
+          } else {
+            postToIde("showVirtualFile", {
+              name: props.item.description.name,
+              content: props.item.content,
+            });
+          }
+        }}
+      >
         <div className="flex items-center">
           <FileIcon
             height="20px"
@@ -70,33 +94,6 @@ function CodeSnippetPreview(props: CodeSnippetPreviewProps) {
           {props.item.description.name}
         </div>
         <div className="flex items-center">
-          <HeaderButtonWithText
-            text="View"
-            onClick={() => {
-              if (props.item.description.id.provider_title === "file") {
-                postToIde("showFile", {
-                  filepath: props.item.description.description,
-                });
-              } else if (props.item.description.id.provider_title === "code") {
-                const lines = props.item.description.name
-                  .split("(")[1]
-                  .split(")")[0]
-                  .split("-");
-                postToIde("showLines", {
-                  filepath: props.item.description.description,
-                  start: parseInt(lines[0]) - 1,
-                  end: parseInt(lines[1]) - 1,
-                });
-              } else {
-                postToIde("showVirtualFile", {
-                  name: props.item.description.name,
-                  content: props.item.content,
-                });
-              }
-            }}
-          >
-            <ArrowUpLeftIcon width="1.2em" height="1.2em" />
-          </HeaderButtonWithText>
           <HeaderButtonWithText
             text="Delete"
             onClick={() => {

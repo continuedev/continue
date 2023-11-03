@@ -1092,8 +1092,28 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
           />
         </pre>
       )}
-      {showContextToggleOn && (
+      {showContextToggleOn && selectedContextItems.length >= 8 && (
         <div>
+          <HeaderButtonWithText
+            className="m-2 ml-4"
+            text="Delete All"
+            onClick={() => {
+              dispatch(
+                deleteContextWithIds({
+                  ids: selectedContextItems.map((item) => item.description.id),
+                  index: props.index,
+                })
+              );
+              inputRef.current?.focus();
+              setPreviewingContextItem(undefined);
+              setFocusedContextItem(undefined);
+            }}
+          >
+            <div className="flex">
+              <TrashIcon width="1.2em" height="1.2em" />
+              Delete All
+            </div>
+          </HeaderButtonWithText>
           {selectedContextItems.map((item) => (
             <CodeSnippetPreview
               index={props.index}

@@ -23,6 +23,7 @@ const GridDiv = styled.div`
   grid-template-rows: 1fr auto;
   align-items: center;
   justify-items: center;
+  margin-left: 8px;
 `;
 
 const P = styled.p`
