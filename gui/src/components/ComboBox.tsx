@@ -1519,7 +1519,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
             <span
               onClick={() => {
                 const inputValue = downshiftProps.inputValue;
-                if (inputValue.startsWith("/codebase")) {
+                if (inputValue?.startsWith("/codebase")) {
                   downshiftProps.setInputValue(
                     inputValue.replace("/codebase ", "")
                   );
@@ -1530,7 +1530,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
               }}
               className={"hover:underline cursor-pointer float-right"}
             >
-              {downshiftProps.inputValue.startsWith("/codebase")
+              {downshiftProps.inputValue?.startsWith("/codebase")
                 ? "Using codebase"
                 : "⌘ ⏎ Use codebase"}
             </span>
