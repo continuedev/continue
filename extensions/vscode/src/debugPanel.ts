@@ -9,7 +9,8 @@ let sockets: { [url: string]: io.Socket | undefined } = {};
 
 export let debugPanelWebview: vscode.Webview | undefined;
 export function getSidebarContent(
-  panel: vscode.WebviewPanel | vscode.WebviewView
+  panel: vscode.WebviewPanel | vscode.WebviewView,
+  page: string | undefined = undefined
 ): string {
   debugPanelWebview = panel.webview;
   panel.onDidDispose(() => {
@@ -133,6 +134,21 @@ export function getSidebarContent(
       }
       case "showFile": {
         ideProtocolClient.openFile(data.filepath);
+        break;
+      }
+      case "readRangeInFile": {
+        vscode.workspace.openTextDocument(data.filepath).then((document) => {
+          let start = new vscode.Position(0, 0);
+          let end = new vscode.Position(5, 0);
+          let range = new vscode.Range(start, end);
+
+          let contents = document.getText(range);
+          panel.webview.postMessage({
+            type: "readRangeInFile",
+            messageId: data.messageId,
+            contents,
+          });
+        });
         break;
       }
       case "showLines": {

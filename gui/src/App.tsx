@@ -13,6 +13,7 @@ import Models from "./pages/models";
 import HelpPage from "./pages/help";
 import ModelConfig from "./pages/modelconfig";
 import useSetup from "./hooks/useSetup";
+import MonacoPage from "./pages/monaco";
 
 const router = createMemoryRouter([
   {
@@ -23,10 +24,12 @@ const router = createMemoryRouter([
       {
         path: "/index.html",
         element: <GUI />,
+        // element: <MonacoPage />,
       },
       {
         path: "/",
         element: <GUI />,
+        // element: <MonacoPage />,
       },
       {
         path: "/history",
@@ -51,6 +54,10 @@ const router = createMemoryRouter([
       {
         path: "/modelconfig/:modelName",
         element: <ModelConfig />,
+      },
+      {
+        path: "/monaco",
+        element: <MonacoPage />,
       },
     ],
   },
