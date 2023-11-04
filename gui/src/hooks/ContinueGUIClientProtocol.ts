@@ -260,7 +260,7 @@ class ContinueGUIClientProtocol extends AbstractContinueGUIClientProtocol {
       workspace_directory: workspaceDirectory,
       session_id: currentSession.session_id,
     };
-    console.log(persistedSessionInfo);
+
     await fetch(`${this.serverUrl}/sessions/save`, {
       method: "POST",
       body: JSON.stringify(persistedSessionInfo),
@@ -274,6 +274,21 @@ class ContinueGUIClientProtocol extends AbstractContinueGUIClientProtocol {
     await fetch(`${this.serverUrl}/sessions/delete`, {
       method: "POST",
       body: JSON.stringify({ session_id }),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+  }
+
+  async sendPromptCompletionFeedback(
+    type: string,
+    prompt: string,
+    completion: string,
+    feedback: boolean
+  ) {
+    await fetch(`${this.serverUrl}/feedback`, {
+      method: "POST",
+      body: JSON.stringify({ type, prompt, completion, feedback }),
       headers: {
         "Content-Type": "application/json",
       },

@@ -710,7 +710,7 @@ function GUI(props: GUIProps) {
                             history: newHistory,
                             context_items: sessionState.context_items,
                           };
-                          console.log("State: ", state);
+
                           client.runFromState(state);
                         }
                         e?.stopPropagation();
@@ -742,7 +742,6 @@ function GUI(props: GUIProps) {
                       onDelete={() => {
                         // Delete the input and all steps until the next user input
                         getStepsInUserInputGroup(index).forEach((i) => {
-                          console.log(i);
                           dispatch(deleteAtIndex(i));
                         });
                       }}

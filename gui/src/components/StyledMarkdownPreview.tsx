@@ -48,8 +48,18 @@ const StyledMarkdownPreviewComponent = styled(MarkdownPreview)<{
   }
 
   background-color: ${(props) => (props.light ? "transparent" : vscBackground)};
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-    Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+  font-family:
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    Oxygen,
+    Ubuntu,
+    Cantarell,
+    "Open Sans",
+    "Helvetica Neue",
+    sans-serif;
   font-size: ${(props) => props.fontSize || getFontSize()}px;
   padding: 8px;
   color: ${vscForeground};
@@ -73,7 +83,6 @@ function StyledMarkdownPreview(props: StyledMarkdownPreviewProps) {
           );
         },
         code: ({ node, ...props }) => {
-          console.log(node, props);
           return <LinkableCode {...props}></LinkableCode>;
         },
       }}
