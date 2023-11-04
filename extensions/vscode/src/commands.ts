@@ -4,7 +4,7 @@ import * as os from "os";
 import * as fs from "fs";
 
 import { acceptDiffCommand, rejectDiffCommand } from "./diffs";
-import { debugPanelWebview } from "./debugPanel";
+import { debugPanelWebview, getSidebarContent } from "./debugPanel";
 import { ideProtocolClient } from "./activation/activate";
 
 let focusedOnContinueInput = false;
@@ -154,6 +154,18 @@ const commandsMap: { [command: string]: (...args: any) => any } = {
   },
   "continue.sendToTerminal": (text: string) => {
     ideProtocolClient.runCommand(text);
+  },
+  "continue.openFullScreen": () => {
+    // Close the sidebars
+    vscode.commands.executeCommand("workbench.action.closeSidebar");
+    vscode.commands.executeCommand("workbench.action.closeAuxiliaryBar");
+    vscode.commands.executeCommand("workbench.action.toggleZenMode");
+    const panel = vscode.window.createWebviewPanel(
+      "continue.continueGUIView",
+      "Continue",
+      vscode.ViewColumn.One
+    );
+    panel.webview.html = getSidebarContent(panel);
   },
 };
 

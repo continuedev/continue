@@ -1,12 +1,6 @@
 import * as vscode from "vscode";
 import { getContinueServerUrl } from "./bridge";
-import {
-  getExtensionUri,
-  getNonce,
-  getUniqueId,
-  openEditorAndRevealRange,
-} from "./util/vscode";
-import { RangeInFileWithContents } from "../schema/RangeInFileWithContents";
+import { getExtensionUri, getNonce, getUniqueId } from "./util/vscode";
 import { setFocusedOnContinueInput } from "./commands";
 import { ideProtocolClient, windowId } from "./activation/activate";
 import * as io from "socket.io-client";
@@ -14,7 +8,7 @@ import * as io from "socket.io-client";
 let sockets: { [url: string]: io.Socket | undefined } = {};
 
 export let debugPanelWebview: vscode.Webview | undefined;
-export function setupDebugPanel(
+export function getSidebarContent(
   panel: vscode.WebviewPanel | vscode.WebviewView
 ): string {
   debugPanelWebview = panel.webview;
@@ -257,6 +251,6 @@ export class ContinueGUIWebviewViewProvider
     _context: vscode.WebviewViewResolveContext,
     _token: vscode.CancellationToken
   ): void | Thenable<void> {
-    webviewView.webview.html = setupDebugPanel(webviewView);
+    webviewView.webview.html = getSidebarContent(webviewView);
   }
 }

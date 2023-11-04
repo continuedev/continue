@@ -109,6 +109,11 @@
         "command": "continue.debugTerminal",
         "category": "Continue",
         "title": "Debug Terminal"
+      },
+      {
+        "command": "continue.openFullScreen",
+        "category": "Continue",
+        "title": "Open Full Screen"
       }
     ],
     "keybindings": [
@@ -146,6 +151,11 @@
         "command": "continue.debugTerminal",
         "mac": "cmd+shift+r",
         "key": "ctrl+shift+r"
+      },
+      {
+        "command": "continue.openFullScreen",
+        "mac": "cmd+l",
+        "key": "ctrl+l"
       }
     ],
     "menus": {
