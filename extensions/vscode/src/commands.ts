@@ -40,6 +40,33 @@ function addHighlightedCodeToContext(edit: boolean) {
   }
 }
 
+async function addEntireFileToContext(filepath: vscode.Uri, edit: boolean) {
+  focusedOnContinueInput = !focusedOnContinueInput;
+
+  // Get the contents of the file
+  const contents = (await vscode.workspace.fs.readFile(filepath)).toString();
+  const rangeInFileWithContents = {
+    filepath: filepath.fsPath,
+    contents: contents,
+    range: {
+      start: {
+        line: 0,
+        character: 0,
+      },
+      end: {
+        line: contents.split(os.EOL).length - 1,
+        character: 0,
+      },
+    },
+  };
+
+  debugPanelWebview?.postMessage({
+    type: "highlightedCode",
+    rangeInFileWithContents,
+    edit,
+  });
+}
+
 export const setFocusedOnContinueInput = (value: boolean) => {
   focusedOnContinueInput = value;
 };
@@ -130,6 +157,9 @@ const commandsMap: { [command: string]: (...args: any) => any } = {
   "continue.sendMainUserInput": (text: string) => {
     ideProtocolClient.sendMainUserInput(text);
   },
+  "continue.shareSession": () => {
+    ideProtocolClient.sendMainUserInput("/share");
+  },
   "continue.selectRange": (startLine: number, endLine: number) => {
     if (!vscode.window.activeTextEditor) {
       return;
@@ -166,6 +196,16 @@ const commandsMap: { [command: string]: (...args: any) => any } = {
       vscode.ViewColumn.One
     );
     panel.webview.html = getSidebarContent(panel);
+  },
+  "continue.selectFilesAsContext": (
+    firstUri: vscode.Uri,
+    uris: vscode.Uri[]
+  ) => {
+    vscode.commands.executeCommand("continue.continueGUIView.focus");
+
+    for (const uri of uris) {
+      addEntireFileToContext(uri, false);
+    }
   },
 };
 

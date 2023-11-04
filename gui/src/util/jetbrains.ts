@@ -79,7 +79,6 @@ export const handleKeyDownJetBrains = (e, text: string, setText) => {
       setText(newValue);
 
       // Set the cursor to the start of the word
-      console.log(prevSpaceIndex);
       setTimeout(() => {
         // The browser likes to set the cursor to the end bc setText is delayed, so we wait, imperceptibly
         e.target.selectionStart = prevSpaceIndex + 1;

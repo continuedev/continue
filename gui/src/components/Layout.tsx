@@ -2,7 +2,7 @@ import styled from "styled-components";
 import { defaultBorderRadius, secondaryDark, vscForeground } from ".";
 import { Outlet } from "react-router-dom";
 import TextDialog from "./TextDialog";
-import { useContext, useEffect } from "react";
+import { useCallback, useContext, useEffect } from "react";
 import { GUIClientContext } from "../App";
 import { useDispatch, useSelector } from "react-redux";
 import { RootStore } from "../redux/store";
@@ -127,13 +127,22 @@ const Layout = () => {
   const timeline = useSelector(
     (state: RootStore) => state.sessionState.history
   );
+  const workspacePaths = useSelector(
+    (state: RootStore) => state.config.workspacePaths
+  );
+  const sessionState = useSelector((state: RootStore) => state.sessionState);
 
   // #endregion
+
+  const persistSession = useCallback(() => {
+    client?.persistSession(sessionState, workspacePaths[0] || "");
+  }, [client, sessionState, workspacePaths]);
 
   useEffect(() => {
     const handleKeyDown = (event: any) => {
       if (event.metaKey && event.altKey && event.code === "KeyN") {
         client?.stopSession();
+        persistSession();
         dispatch(newSession());
       }
       if ((event.metaKey || event.ctrlKey) && event.code === "KeyC") {
@@ -152,7 +161,7 @@ const Layout = () => {
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [client, timeline]);
+  }, [client, timeline, persistSession]);
 
   useEffect(() => {
     const handler = (event: any) => {

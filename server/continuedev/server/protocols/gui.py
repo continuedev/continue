@@ -110,6 +110,8 @@ class GUIProtocolServer:
             self.delete_context_group(data["id"])
         elif msg.message_type == "preview_context_item":
             self.preview_context_item(data["id"])
+        elif msg.message_type == "delete_model_at_index":
+            await self.delete_model_at_index(data["index"])
 
     def show_context_virtual_file(self, index: Optional[int] = None):
         async def async_stuff():
@@ -175,6 +177,14 @@ class GUIProtocolServer:
         models.saved[index] = temp
 
         ContinueConfig.set_models(models, role)
+        await self.reload_config()
+        await self.send_config_update()
+
+    async def delete_model_at_index(self, index: int):
+        models = self.get_config().models
+        models.saved.pop(index)
+
+        ContinueConfig.set_models(models, "*")
         await self.reload_config()
         await self.send_config_update()
 

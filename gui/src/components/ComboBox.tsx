@@ -205,7 +205,7 @@ const DeleteButtonDiv = styled.div`
   right: 12px;
   background-color: ${secondaryDark};
   border-radius: ${defaultBorderRadius};
-  z-index: 100;
+  z-index: 50;
 `;
 
 const DynamicQueryTitleDiv = styled.div`
@@ -330,9 +330,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
   const workspacePaths = useSelector(
     (state: RootStore) => state.config.workspacePaths
   );
-  const sessionHistory = useSelector(
-    (state: RootStore) => state.sessionState.history
-  );
+  const sessionState = useSelector((state: RootStore) => state.sessionState);
 
   const [history, setHistory] = React.useState<string[]>([]);
   // The position of the current command you are typing now, so the one that will be appended to history once you press enter
@@ -675,6 +673,10 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
     };
   }, []);
 
+  const persistSession = useCallback(() => {
+    client?.persistSession(sessionState, workspacePaths[0] || "");
+  }, [client, sessionState, workspacePaths]);
+
   useEffect(() => {
     if (!inputRef.current || !props.isMainInput) {
       return;
@@ -695,6 +697,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
         dispatch(setTakenActionTrue(null));
       } else if (event.data.type === "focusContinueInputWithNewSession") {
         client?.stopSession();
+        persistSession();
         dispatch(newSession());
         dispatch(setTakenActionTrue(null));
       }
@@ -703,7 +706,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
     return () => {
       window.removeEventListener("message", handler);
     };
-  }, [inputRef.current, props.isMainInput]);
+  }, [inputRef.current, props.isMainInput, persistSession]);
 
   const deleteButtonDivRef = React.useRef<HTMLDivElement>(null);
 

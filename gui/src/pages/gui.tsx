@@ -153,6 +153,10 @@ function GUI(props: GUIProps) {
 
   // #region Selectors
   const sessionState = useSelector((state: RootStore) => state.sessionState);
+  const workspacePaths = useSelector(
+    (state: RootStore) => state.config.workspacePaths
+  );
+
   const defaultModel = useSelector(
     (state: RootStore) => (state.serverState.config as any).models?.default
   );
@@ -574,6 +578,7 @@ function GUI(props: GUIProps) {
           <HeaderButtonWithText
             onClick={() => {
               client?.stopSession();
+              client?.persistSession(sessionState, workspacePaths[0] || "");
               dispatch(newSession());
             }}
             text="New Session (⌥⌘N)"

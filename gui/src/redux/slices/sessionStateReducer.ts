@@ -158,7 +158,6 @@ export const sessionStateSlice = createSlice({
       { payload }: { payload: PersistedSessionInfo | undefined }
     ) => {
       if (payload) {
-        console.log("NEW SESSION");
         return {
           ...state,
           history: payload.session_state.history,
@@ -215,7 +214,6 @@ export const sessionStateSlice = createSlice({
       state: SessionFullState,
       { payload }: { payload: ContextItem }
     ) => {
-      console.log("HERE...", payload);
       return {
         ...state,
         context_items: [...state.context_items, payload],

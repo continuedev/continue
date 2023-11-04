@@ -4,8 +4,11 @@ import atexit
 from contextlib import asynccontextmanager
 from typing import List, Optional
 
+from pydantic import BaseModel
+
 from ..core.main import ContextProviderDescription, SlashCommandDescription
 from ..core.config import ContinueConfig
+from ..libs.util.devdata import dev_data_logger
 
 import uvicorn
 from fastapi import FastAPI
@@ -72,6 +75,18 @@ def get_context_providers() -> List[ContextProviderDescription]:
 def health():
     logger.debug("Health check")
     return {"status": "ok"}
+
+
+class FeedbackBody(BaseModel):
+    type: str
+    prompt: str
+    completion: str
+    feedback: bool
+
+
+@app.post("/feedback")
+def feedback(body: FeedbackBody):
+    dev_data_logger.capture("feedback", body.dict())
 
 
 # endregion
