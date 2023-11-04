@@ -205,7 +205,7 @@ const DeleteButtonDiv = styled.div`
   right: 12px;
   background-color: ${secondaryDark};
   border-radius: ${defaultBorderRadius};
-  z-index: 100;
+  z-index: 50;
 `;
 
 const DynamicQueryTitleDiv = styled.div`

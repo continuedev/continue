@@ -101,14 +101,29 @@
         "title": "Toggle Right Sidebar"
       },
       {
+        "command": "continue.focusContinueInput",
+        "category": "Continue",
+        "title": "Add Highlighted Code to Context"
+      },
+      {
         "command": "continue.focusContinueInputWithEdit",
         "category": "Continue",
-        "title": "Focus Continue Input With Edit"
+        "title": "Edit Highlighted Code"
       },
       {
         "command": "continue.debugTerminal",
         "category": "Continue",
         "title": "Debug Terminal"
+      },
+      {
+        "command": "continue.shareSession",
+        "category": "Continue",
+        "title": "Share Session"
+      },
+      {
+        "command": "continue.selectFilesAsContext",
+        "category": "Continue",
+        "title": "Continue: Select Files as Context"
       }
     ],
     "keybindings": [
@@ -148,8 +163,50 @@
         "key": "ctrl+shift+r"
       }
     ],
+    "submenus": [
+      {
+        "id": "continue.continueSubMenu",
+        "label": "Continue"
+      }
+    ],
     "menus": {
-      "view/title": []
+      "terminal/context": [
+        {
+          "command": "continue.debugTerminal",
+          "group": "1_debug@1"
+        }
+      ],
+      "webview/context": [
+        {
+          "command": "continue.shareSession",
+          "group": "navigation@1"
+        }
+      ],
+      "editor/context": [
+        {
+          "submenu": "continue.continueSubMenu",
+          "group": "1_debug@1",
+          "when": "editorHasSelection"
+        }
+      ],
+      "continue.continueSubMenu": [
+        {
+          "command": "continue.focusContinueInput",
+          "when": "editorHasSelection",
+          "group": "Continue"
+        },
+        {
+          "command": "continue.focusContinueInputWithEdit",
+          "group": "Continue",
+          "when": "editorHasSelection"
+        }
+      ],
+      "explorer/context": [
+        {
+          "command": "continue.selectFilesAsContext",
+          "group": "1_debug@1"
+        }
+      ]
     },
     "viewsContainers": {
       "activitybar": [
