@@ -239,6 +239,10 @@ class ContinueGUIClientProtocol extends AbstractContinueGUIClientProtocol {
   deleteContextGroup(id: string): void {
     this.messenger?.send("delete_context_group", { id });
   }
+
+  deleteModelAtIndex(index: number) {
+    this.messenger?.send("delete_model_at_index", { index });
+  }
 }
 
 export default ContinueGUIClientProtocol;

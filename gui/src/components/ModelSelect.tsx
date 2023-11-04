@@ -11,95 +11,16 @@ import React, { Fragment, useContext, useEffect, useState } from "react";
 import { GUIClientContext } from "../App";
 import { RootStore } from "../redux/store";
 import { useDispatch, useSelector } from "react-redux";
-import { ChevronUpDownIcon, PlusIcon } from "@heroicons/react/24/outline";
+import {
+  ChevronUpDownIcon,
+  PencilIcon,
+  PlusIcon,
+  TrashIcon,
+} from "@heroicons/react/24/outline";
 import { useNavigate } from "react-router-dom";
 import { Listbox, Transition } from "@headlessui/react";
 import ReactDOM from "react-dom";
-
-const MODEL_INFO: { title: string; class: string; args: any }[] = [
-  {
-    title: "OpenAI",
-    class: "OpenAI",
-    args: {
-      model: "gpt-4",
-      api_key: "",
-    },
-  },
-  {
-    title: "Anthropic",
-    class: "AnthropicLLM",
-    args: {
-      model: "claude-2",
-      api_key: "<ANTHROPIC_API_KEY>",
-    },
-  },
-  {
-    title: "Ollama",
-    class: "Ollama",
-    args: {
-      model: "codellama",
-    },
-  },
-  {
-    title: "TogetherAI",
-    class: "TogetherLLM",
-    args: {
-      model: "togethercomputer/CodeLlama-13b-Instruct",
-      api_key: "<TOGETHER_API_KEY>",
-    },
-  },
-  {
-    title: "Replicate",
-    class: "ReplicateLLM",
-    args: {
-      model:
-        "replicate/llama-2-70b-chat:58d078176e02c219e11eb4da5a02a7830a283b14cf8f94537af893ccff5ee781",
-      api_key: "<REPLICATE_API_KEY>",
-    },
-  },
-  {
-    title: "llama.cpp",
-    class: "LlamaCpp",
-    args: {},
-  },
-  {
-    title: "HuggingFace Inference API",
-    class: "HuggingFaceInferenceAPI",
-    args: {
-      endpoint_url: "<INFERENCE_API_ENDPOINT_URL>",
-      hf_token: "<HUGGING_FACE_TOKEN>",
-    },
-  },
-  {
-    title: "Google PaLM API",
-    class: "GooglePaLMAPI",
-    args: {
-      model: "chat-bison-001",
-      api_key: "<MAKERSUITE_API_KEY>",
-    },
-  },
-  {
-    title: "LM Studio",
-    class: "GGML",
-    args: {
-      server_url: "http://localhost:1234",
-    },
-  },
-  {
-    title: "Other OpenAI-compatible API",
-    class: "GGML",
-    args: {
-      server_url: "<SERVER_URL>",
-    },
-  },
-  {
-    title: "GPT-4 limited free trial",
-    class: "OpenAIFreeTrial",
-    args: {
-      model: "gpt-4",
-    },
-  },
-];
+import HeaderButtonWithText from "./HeaderButtonWithText";
 
 const GridDiv = styled.div`
   display: grid;
@@ -213,6 +134,48 @@ const StyledListboxOption = styled(Listbox.Option)<{ selected: boolean }>`
   }
 `;
 
+function ListBoxOption({ option, idx }: { option: Option; idx: number }) {
+  const client = useContext(GUIClientContext);
+  const [hovered, setHovered] = useState(false);
+
+  return (
+    <StyledListboxOption
+      key={idx}
+      selected={
+        option.value ===
+        JSON.stringify({
+          t: "default",
+          idx: -1,
+        })
+      }
+      value={option.value}
+      onMouseEnter={() => {
+        setHovered(true);
+      }}
+      onMouseLeave={() => {
+        setHovered(false);
+      }}
+    >
+      <div className="flex items-center justify-between gap-3">
+        <span>{option.title}</span>
+        {idx > 0 && hovered && (
+          <HeaderButtonWithText
+            text="Delete"
+            onClick={(e) => {
+              client?.deleteModelAtIndex(idx - 1); // -1 because 0 is default, not in saved array
+              e.stopPropagation();
+              e.preventDefault();
+            }}
+          >
+            <TrashIcon width="1.2em" height="1.2em" />
+          </HeaderButtonWithText>
+        )}
+        {idx === 0 && <TrashIcon width="1.2em" height="1.2em" opacity={0.0} />}
+      </div>
+    </StyledListboxOption>
+  );
+}
+
 function modelSelectTitle(model: any): string {
   if (model?.title) return model?.title;
   if (model?.model !== undefined && model?.model.trim() !== "") {
@@ -315,19 +278,7 @@ function ModelSelect(props: {}) {
                 >
                   <StyledListboxOptions>
                     {options.map((option, idx) => (
-                      <StyledListboxOption
-                        key={idx}
-                        selected={
-                          option.value ===
-                          JSON.stringify({
-                            t: "default",
-                            idx: -1,
-                          })
-                        }
-                        value={option.value}
-                      >
-                        <span>{option.title}</span>
-                      </StyledListboxOption>
+                      <ListBoxOption option={option} idx={idx} />
                     ))}
                   </StyledListboxOptions>
                 </Transition>,
