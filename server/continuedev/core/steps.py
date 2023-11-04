@@ -356,7 +356,11 @@ Please output the code to be inserted at the cursor in order to fulfill the user
         return prompt
 
     def is_end_line(self, line: str) -> bool:
-        return "</modified_code_to_edit>" in line or "</code_to_edit>" in line
+        return (
+            "</modified_code_to_edit>" in line
+            or "</code_to_edit>" in line
+            or "[/CODE]" in line
+        )
 
     def line_to_be_ignored(self, line: str, is_first_line: bool = False) -> bool:
         return (
@@ -598,7 +602,7 @@ Please output the code to be inserted at the cursor in order to fulfill the user
                 messages = rendered
 
             params = {"prompt": rendered}
-            if isinstance(template, PromptTemplate):
+            if template.__class__.__name__ == "PromptTemplate":
                 params.update(template.dict(exclude={"prompt"}))
 
             params.update(

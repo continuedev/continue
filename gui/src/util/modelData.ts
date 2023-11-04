@@ -112,7 +112,7 @@ const completionParamsInputs = [
   FrequencyPenaltyInput,
 ];
 
-const serverUrlInput = {
+const serverUrlInput: InputDescriptor = {
   inputType: CollectInputType.text,
   key: "server_url",
   label: "Server URL",
@@ -462,7 +462,10 @@ export const MODEL_INFO: { [key: string]: ModelInfo } = {
     icon: "ollama.png",
     tags: [ModelProviderTag["Local"], ModelProviderTag["Open-Source"]],
     packages: osModels,
-    collectInputFor: [...completionParamsInputs, serverUrlInput],
+    collectInputFor: [
+      ...completionParamsInputs,
+      { ...serverUrlInput, defaultValue: "http://localhost:11434" },
+    ],
   },
   together: {
     title: "TogetherAI",
