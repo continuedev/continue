@@ -170,7 +170,7 @@ function ListBoxOption({ option, idx }: { option: Option; idx: number }) {
             <TrashIcon width="1.2em" height="1.2em" />
           </HeaderButtonWithText>
         )}
-        {idx === 0 && <TrashIcon width="1.2em" height="1.2em" opacity={0.0} />}
+        {idx === 0 && <TrashIcon width="1.8em" height="1.6em" opacity={0.0} />}
       </div>
     </StyledListboxOption>
   );
