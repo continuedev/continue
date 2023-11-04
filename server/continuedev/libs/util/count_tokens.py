@@ -128,6 +128,7 @@ def prune_chat_history(
         while (
             tokens_removed < distance_from_third[i]
             and total_tokens - total_tokens_removed > context_length
+            and len(lines) > 0
         ):
             delta = count_tokens(lines.pop(-1), model_name)
             tokens_removed += delta

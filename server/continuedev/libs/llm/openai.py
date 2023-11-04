@@ -164,14 +164,15 @@ class OpenAI(LLM):
                 if not hasattr(chunk, "choices") or len(chunk.choices) == 0:
                     continue
 
+                delta = chunk.choices[0].delta
                 if self.api_type == "azure":
-                    # To smooth out the response streaming, which typically comes in bursts
                     if self.model == "gpt-4":
                         await asyncio.sleep(0.03)
                     else:
                         await asyncio.sleep(0.01)
 
-                yield chunk.choices[0].delta
+                yield delta
+
         else:
             async for chunk in await openai.Completion.acreate(
                 prompt=template_alpaca_messages(messages),

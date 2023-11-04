@@ -1,4 +1,4 @@
-from typing import Callable, Coroutine, List, Optional, Union
+from typing import Callable, List, Optional
 import uuid
 
 from pydantic import BaseModel, validator
