@@ -82,10 +82,12 @@ function useSetup(
     });
 
     fetch(`${serverUrl}/slash_commands`).then(async (resp) => {
+      if (resp.status !== 200) return;
       const sc = await resp.json();
       dispatch(setSlashCommands(sc));
     });
     fetch(`${serverUrl}/context_providers`).then(async (resp) => {
+      if (resp.status !== 200) return;
       const cp = await resp.json();
       dispatch(setContextProviders(cp));
     });

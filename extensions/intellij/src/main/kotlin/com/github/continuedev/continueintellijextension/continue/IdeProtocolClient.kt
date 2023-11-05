@@ -297,9 +297,10 @@ class IdeProtocolClient (
             println("Disconnected from Continue IDE websocket")
         }
 
-        socket.on(Socket.EVENT_CONNECT_ERROR) {
+        socket.on(Socket.EVENT_CONNECT_ERROR, { args ->
             println("Error connecting to Continue IDE websocket")
-        }
+            println(args[0].toString())
+        })
 
         socket.on("message") { args ->
             val data = args[0].toString()

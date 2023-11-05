@@ -486,15 +486,15 @@ class ContinuePluginStartupActivity : StartupActivity, Disposable, DumbAware {
 
 
         val actionManager = ActionManager.getInstance()
-         for (actionId in actionIds) {
-             if (actionId.startsWith("continue")) {
-                 continue
-             }
-             val action = actionManager.getAction(actionId)
-             val shortcuts = action.shortcutSet.shortcuts.filterNot { it is KeyboardShortcut && it.firstKeyStroke == keyStroke }.toTypedArray()
-             val newShortcutSet = CustomShortcutSet(*shortcuts)
-             action.registerCustomShortcutSet(newShortcutSet, null)
-         }
+//         for (actionId in actionIds) {
+//             if (actionId.startsWith("continue")) {
+//                 continue
+//             }
+//             val action = actionManager.getAction(actionId)
+//             val shortcuts = action.shortcutSet.shortcuts.filterNot { it is KeyboardShortcut && it.firstKeyStroke == keyStroke }.toTypedArray()
+//             val newShortcutSet = CustomShortcutSet(*shortcuts)
+//             action.registerCustomShortcutSet(newShortcutSet, null)
+//         }
     }
 
     private fun initializePlugin(project: Project) {
