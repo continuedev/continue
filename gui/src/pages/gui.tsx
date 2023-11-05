@@ -153,9 +153,7 @@ function GUI(props: GUIProps) {
 
   // #region Selectors
   const sessionState = useSelector((state: RootStore) => state.sessionState);
-  const workspacePaths = useSelector(
-    (state: RootStore) => state.config.workspacePaths
-  );
+  const workspacePaths = (window as any).workspacePaths || [];
 
   const defaultModel = useSelector(
     (state: RootStore) => (state.serverState.config as any).models?.default

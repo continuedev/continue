@@ -18,11 +18,7 @@ import {
   setIndexingProgress,
   setSlashCommands,
 } from "../redux/slices/serverStateReducer";
-import {
-  setApiUrl,
-  setVscMachineId,
-  setWorkspacePaths,
-} from "../redux/slices/configSlice";
+import { setApiUrl, setVscMachineId } from "../redux/slices/configSlice";
 
 function useSetup(
   client: ContinueGUIClientProtocol | undefined,
@@ -107,7 +103,6 @@ function useSetup(
           (window as any).vscMachineId = event.data.vscMachineId;
           (window as any).vscMediaUrl = event.data.vscMediaUrl;
           dispatch(setApiUrl(event.data.serverUrl));
-          dispatch(setWorkspacePaths(event.data.workspacePaths));
           dispatch(setVscMachineId(event.data.vscMachineId));
           // dispatch(setVscMediaUrl(event.data.vscMediaUrl));
 

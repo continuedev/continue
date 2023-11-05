@@ -127,9 +127,7 @@ const Layout = () => {
   const timeline = useSelector(
     (state: RootStore) => state.sessionState.history
   );
-  const workspacePaths = useSelector(
-    (state: RootStore) => state.config.workspacePaths
-  );
+  const workspacePaths = (window as any).workspacePaths || [];
   const sessionState = useSelector((state: RootStore) => state.sessionState);
 
   // #endregion

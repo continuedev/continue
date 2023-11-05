@@ -18,6 +18,7 @@ from ..server.meilisearch_server import (
     poll_meilisearch_running,
     restart_meilisearch,
     start_meilisearch,
+    remove_meilisearch_disallowed_chars,
 )
 from .main import (
     ChatMessage,
@@ -349,7 +350,8 @@ class ContextManager:
                     context_items = await provider.provide_context_items(workspace_dir)
                     documents = [
                         {
-                            "id": item.description.id.to_string(),
+                            "id": item.description.id.to_string()
+                            + remove_meilisearch_disallowed_chars(workspace_dir),
                             "name": item.description.name,
                             "description": item.description.description,
                             "content": item.content,

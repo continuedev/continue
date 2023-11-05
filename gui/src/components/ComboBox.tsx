@@ -327,9 +327,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
 
   const client = useContext(GUIClientContext);
   const dispatch = useDispatch();
-  const workspacePaths = useSelector(
-    (state: RootStore) => state.config.workspacePaths
-  );
+  const workspacePaths = (window as any).workspacePaths || [];
   const sessionState = useSelector((state: RootStore) => state.sessionState);
 
   const [history, setHistory] = React.useState<string[]>([]);
