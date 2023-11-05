@@ -10,7 +10,7 @@ from typing import (
     List,
     Optional,
 )
-
+from ...models.main import Position
 from ...libs.util.create_async_task import create_async_task
 from ...models.filesystem import (
     FileSystem,
@@ -105,6 +105,22 @@ class ListDirectoryContentsResponse(BaseModel):
 
 class FileExistsResponse(BaseModel):
     exists: bool
+
+
+class GotoDefinitionResponse(BaseModel):
+    locations: List[Dict[str, Any]]
+
+
+class ReferencesResponse(BaseModel):
+    locations: List[Dict[str, Any]]
+
+
+class DocumentSymbolResponse(BaseModel):
+    symbols: List[Dict[str, Any]]
+
+
+class FoldingRangeResponse(BaseModel):
+    ranges: List[Dict[str, Any]]
 
 
 # endregion
@@ -212,6 +228,11 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
                 "replacement": replacement,
                 "step_index": step_index,
             },
+        )
+
+    async def showMultiFileEdit(self, edits: List[FileEdit]):
+        await self.messenger.send(
+            "showMultiFileEdit", {"edits": [edit.dict() for edit in edits]}
         )
 
     async def setFileOpen(self, filepath: str, open: bool = True):
@@ -472,3 +493,53 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
             raise TypeError("Unknown FileSystemEdit type: " + str(type(edit)))
 
         return EditDiff(forward=edit, backward=backward)
+
+    # region Language Server Protocol
+    async def goto_definition(self, filepath: str, position: Position):
+        return await self.messenger.send_and_receive(
+            {"filepath": filepath, "position": position.dict()},
+            GotoDefinitionResponse,
+            "textDocument/definition",
+        )
+
+    async def document_symbol(self, filepath: str):
+        return await self.messenger.send_and_receive(
+            "textDocument/documentSymbol",
+            DocumentSymbolResponse,
+            textDocument={"uri": filepath},
+        )
+
+    async def find_references(
+        self, filepath: str, position: Position, include_declaration: bool = False
+    ):
+        return await self.messenger.send_and_receive(
+            {
+                "filepath": filepath,
+                "position": position.dict(),
+                "context": {"includeDeclaration": include_declaration},
+            },
+            ReferencesResponse,
+            "textDocument/references",
+        )
+
+    async def folding_range(self, filepath: str):
+        return await self.messenger.send_and_receive(
+            {"filepath": filepath},
+            FoldingRangeResponse,
+            "textDocument/foldingRange",
+        )
+
+    async def get_enclosing_folding_range(self, rif: RangeInFile):
+        ranges = await self.folding_range(rif.filepath)
+
+        max_start_position = Position(line=0, character=0)
+        max_range = None
+        for r in ranges:
+            if r.range.contains(rif.range.start):
+                if r.range.start > max_start_position:
+                    max_start_position = r.range.start
+                    max_range = r
+
+        return max_range
+
+    # endregion

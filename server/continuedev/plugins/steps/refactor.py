@@ -3,7 +3,7 @@ from typing import List, Optional
 
 from ripgrepy import Ripgrepy
 
-from ...core.main import Step
+from ...core.main import SetStep, Step
 from ...core.models import Models
 from ...core.sdk import ContinueSDK
 from ...libs.llm.prompts.edit import codellama_edit_prompt
@@ -24,11 +24,8 @@ class RefactorReferencesStep(Step):
         return f"Renamed all instances of `{self.function_name}` to `{self.new_function_name}` in `{self.filepath}`"
 
     async def run(self, sdk: ContinueSDK):
-        while sdk.lsp is None or not sdk.lsp.ready:
-            await asyncio.sleep(0.1)
-
-        references = await sdk.lsp.find_references(
-            self.symbol_location.position, self.symbol_location.filepath, False
+        references = await sdk.ide.find_references(
+            self.symbol_location.filepath, self.symbol_location.position, False
         )
         await sdk.run_step(
             ParallelEditStep(user_input=self.user_input, range_in_files=references)
@@ -69,9 +66,11 @@ class ParallelEditStep(Step):
 
     hide: bool = True
 
-    async def single_edit(self, sdk: ContinueSDK, range_in_file: RangeInFile):
+    async def single_edit(
+        self, sdk: ContinueSDK, range_in_file: RangeInFile
+    ) -> FileEdit:
         # TODO: Can use folding info to get a more intuitively shaped range
-        expanded_range = await sdk.lsp.get_enclosing_folding_range(range_in_file)
+        expanded_range = await sdk.ide.get_enclosing_folding_range(range_in_file)
         if (
             expanded_range is None
             or expanded_range.range.start.line != range_in_file.range.start.line
@@ -109,15 +108,13 @@ class ParallelEditStep(Step):
 
         print(new_code + "\n\n-------------------\n\n")
 
-        await sdk.ide.applyFileSystemEdit(
-            FileEdit(
-                filepath=range_in_file.filepath,
-                range=expanded_range,
-                replacement=new_code,
-            )
+        return FileEdit(
+            filepath=range_in_file.filepath,
+            range=expanded_range,
+            replacement=new_code,
         )
 
-    async def edit_file(self, sdk: ContinueSDK, filepath: str):
+    async def edit_file(self, sdk: ContinueSDK, filepath: str) -> List[FileEdit]:
         ranges_in_file = [
             range_in_file
             for range_in_file in self.range_in_files
@@ -125,12 +122,24 @@ class ParallelEditStep(Step):
         ]
         # Sort in reverse order so that we don't mess up the ranges
         ranges_in_file.sort(key=lambda x: x.range.start.line, reverse=True)
-        for i in range(len(ranges_in_file)):
-            await self.single_edit(sdk=sdk, range_in_file=ranges_in_file[i])
+        return await asyncio.gather(
+            *[
+                self.single_edit(
+                    sdk=sdk,
+                    range_in_file=ranges_in_file[i],
+                )
+                for i in range(len(ranges_in_file))
+            ]
+        )
 
     async def run(self, sdk: ContinueSDK):
         tasks = []
         for filepath in set([rif.filepath for rif in self.range_in_files]):
             tasks.append(self.edit_file(sdk=sdk, filepath=filepath))
 
-        await asyncio.gather(*tasks)
+        edits_per_file = await asyncio.gather(*tasks)
+        all_edits = []
+        for edits in edits_per_file:
+            all_edits += edits
+
+        await sdk.ide.showMultiFileEdit(edits=all_edits)

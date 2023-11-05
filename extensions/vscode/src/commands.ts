@@ -207,6 +207,17 @@ const commandsMap: { [command: string]: (...args: any) => any } = {
       addEntireFileToContext(uri, false);
     }
   },
+  "continue.updateAllReferences": (filepath: vscode.Uri) => {
+    // Get the cursor position in the editor
+    const editor = vscode.window.activeTextEditor;
+    if (!editor) {
+      return;
+    }
+    const position = editor.selection.active;
+    ideProtocolClient.sendMainUserInput(
+      `/references ${filepath.fsPath} ${position.line} ${position.character}`
+    );
+  },
 };
 
 export function registerAllCommands(context: vscode.ExtensionContext) {

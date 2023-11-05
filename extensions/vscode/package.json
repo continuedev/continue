@@ -129,6 +129,11 @@
         "command": "continue.selectFilesAsContext",
         "category": "Continue",
         "title": "Continue: Select Files as Context"
+      },
+      {
+        "command": "continue.updateAllReferences",
+        "category": "Continue",
+        "title": "Update All References"
       }
     ],
     "keybindings": [
@@ -195,8 +200,7 @@
       "editor/context": [
         {
           "submenu": "continue.continueSubMenu",
-          "group": "1_debug@1",
-          "when": "editorHasSelection"
+          "group": "1_debug@1"
         }
       ],
       "continue.continueSubMenu": [
@@ -209,6 +213,10 @@
           "command": "continue.focusContinueInputWithEdit",
           "group": "Continue",
           "when": "editorHasSelection"
+        },
+        {
+          "command": "continue.updateAllReferences",
+          "group": "Continue"
         }
       ],
       "explorer/context": [

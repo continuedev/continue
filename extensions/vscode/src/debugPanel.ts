@@ -4,13 +4,15 @@ import { getExtensionUri, getNonce, getUniqueId } from "./util/vscode";
 import { setFocusedOnContinueInput } from "./commands";
 import { ideProtocolClient, windowId } from "./activation/activate";
 import * as io from "socket.io-client";
+import { FileEdit } from "../schema/FileEdit";
 
 let sockets: { [url: string]: io.Socket | undefined } = {};
 
 export let debugPanelWebview: vscode.Webview | undefined;
 export function getSidebarContent(
   panel: vscode.WebviewPanel | vscode.WebviewView,
-  page: string | undefined = undefined
+  page: string | undefined = undefined,
+  edits: FileEdit[] | undefined = undefined
 ): string {
   debugPanelWebview = panel.webview;
   panel.onDidDispose(() => {
@@ -253,6 +255,9 @@ export function getSidebarContent(
             (folder) => folder.uri.fsPath
           ) || []
         )}</script>
+
+        ${edits && `<script>window.edits = ${JSON.stringify(edits)}</script>`}
+        ${page && `<script>window.location.pathname = "${page}"</script>`}
       </body>
     </html>`;
 }

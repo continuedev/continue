@@ -1,6 +1,8 @@
 from abc import ABC, abstractmethod
 from typing import Callable, Dict, List, Optional, Union
 
+from ...models.main import Position
+
 from ...models.websockets import WebsocketsMessage
 
 from fastapi import WebSocket
@@ -150,3 +152,29 @@ class AbstractIdeProtocolServer(ABC):
 
     workspace_directory: str
     unique_id: str
+
+    # region Language Server Protocol
+
+    @abstractmethod
+    async def goto_definition(self, filepath: str, position: Position):
+        raise NotImplementedError()
+
+    @abstractmethod
+    async def document_symbol(self, filepath: str):
+        raise NotImplementedError()
+
+    @abstractmethod
+    async def find_references(
+        self, filepath: str, position: Position, include_declaration: bool = False
+    ):
+        raise NotImplementedError()
+
+    @abstractmethod
+    async def folding_range(self, filepath: str):
+        raise NotImplementedError()
+
+    @abstractmethod
+    async def get_enclosing_folding_range(self, position: Position, filepath: str):
+        raise NotImplementedError()
+
+    # endregion

@@ -1,5 +1,9 @@
 from typing import Type, Union
 
+from ...models.main import Position, PositionInFile
+
+from ..steps.refactor import RefactorReferencesStep
+
 from ..steps.clear_history import ClearHistoryStep
 from ..steps.comment_code import CommentCodeStep
 from ..steps.share_session import ShareSessionStep
@@ -102,5 +106,15 @@ class DefaultPolicy(Policy):
 
             if user_input.startswith("/codebase "):
                 return AnswerQuestionChroma(user_input=user_input[len("/codebase ") :])
+
+            if user_input.startswith("/references "):
+                args = user_input.split()
+                return RefactorReferencesStep(
+                    user_input="Update this reference to reflect the new definition",
+                    symbol_location=PositionInFile(
+                        filepath=args[1],
+                        position=Position(line=int(args[2]), character=int(args[3])),
+                    ),
+                )
 
             return self.default_step(**self.default_params)

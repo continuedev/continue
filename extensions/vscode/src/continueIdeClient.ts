@@ -22,7 +22,7 @@ const path = require("path");
 import { v4 } from "uuid";
 import { windowId } from "./activation/activate";
 import * as io from "socket.io-client";
-import { debugPanelWebview } from "./debugPanel";
+import { debugPanelWebview, getSidebarContent } from "./debugPanel";
 
 const continueVirtualDocumentScheme = "continue";
 
@@ -206,7 +206,7 @@ class IdeProtocolClient {
     messageId: string,
     callback: (data: any) => void
   ) {
-    const respond = (messageType: string, responseData: any) => {
+    const respond = (responseData: any) => {
       callback({
         message_type: messageType,
         data: responseData,
@@ -215,54 +215,54 @@ class IdeProtocolClient {
     };
     switch (messageType) {
       case "highlightedCode":
-        respond("highlightedCode", {
+        respond({
           highlightedCode: this.getHighlightedCode(),
         });
         break;
       case "workspaceDirectory":
-        respond("workspaceDirectory", {
+        respond({
           workspaceDirectory: this.getWorkspaceDirectory(),
         });
         break;
       case "uniqueId":
-        respond("uniqueId", {
+        respond({
           uniqueId: this.getUniqueId(),
         });
         break;
       case "ide":
-        respond("ide", {
+        respond({
           name: "vscode",
           version: vscode.version,
           remoteName: vscode.env.remoteName,
         });
         break;
       case "fileExists":
-        respond("fileExists", {
+        respond({
           exists: await this.fileExists(data.filepath),
         });
         break;
       case "getUserSecret":
-        respond("getUserSecret", {
+        respond({
           value: await this.getUserSecret(data.key),
         });
         break;
       case "openFiles":
-        respond("openFiles", {
+        respond({
           openFiles: this.getOpenFiles(),
         });
         break;
       case "visibleFiles":
-        respond("visibleFiles", {
+        respond({
           visibleFiles: this.getVisibleFiles(),
         });
         break;
       case "readFile":
-        respond("readFile", {
+        respond({
           contents: await this.readFile(data.filepath),
         });
         break;
       case "getTerminalContents":
-        respond("getTerminalContents", {
+        respond({
           contents: await this.getTerminalContents(data.commands),
         });
         break;
@@ -277,13 +277,13 @@ class IdeProtocolClient {
           console.log("Error listing directory contents: ", e);
           contents = [];
         }
-        respond("listDirectoryContents", {
+        respond({
           contents,
         });
         break;
       case "editFile":
         const fileEdit = await this.editFile(data.edit);
-        respond("editFile", {
+        respond({
           fileEdit,
         });
         break;
@@ -291,7 +291,7 @@ class IdeProtocolClient {
         this.highlightCode(data.rangeInFile, data.color);
         break;
       case "runCommand":
-        respond("runCommand", {
+        respond({
           output: await this.runCommand(data.command),
         });
         break;
@@ -328,12 +328,71 @@ class IdeProtocolClient {
       case "showDiff":
         await this.showDiff(data.filepath, data.replacement, data.step_index);
         break;
+      case "showMultiFileEdit":
+        this.showMultiFileEdit(data.edits);
+        break;
       case "getSessionId":
       case "connected":
+        break;
+      case "textDocument/definition":
+        respond({
+          locations: await this.gotoDefinition(data.filepath, data.position),
+        });
+        break;
+      case "textDocument/documentSymbol":
+        respond({ symbols: await this.documentSymbol(data.filepath) });
+        break;
+      case "textDocument/references":
+        const locations = await this.references(data.filepath, data.position);
+        respond({
+          locations,
+        });
+        break;
+      case "textDocument/foldingRange":
+        respond({
+          ranges: await this.foldingRanges(data.filepath),
+        });
         break;
       default:
         throw Error("Unknown message type:" + messageType);
     }
+  }
+
+  async gotoDefinition(
+    filepath: string,
+    position: vscode.Position
+  ): Promise<vscode.Location[]> {
+    const locations: vscode.Location[] = await vscode.commands.executeCommand(
+      "vscode.executeDefinitionProvider",
+      uriFromFilePath(filepath),
+      position
+    );
+    return locations;
+  }
+
+  async documentSymbol(filepath: string): Promise<vscode.DocumentSymbol[]> {
+    return await vscode.commands.executeCommand(
+      "vscode.executeDocumentSymbolProvider",
+      uriFromFilePath(filepath)
+    );
+  }
+
+  async references(
+    filepath: string,
+    position: vscode.Position
+  ): Promise<vscode.Location[]> {
+    return await vscode.commands.executeCommand(
+      "vscode.executeReferenceProvider",
+      uriFromFilePath(filepath),
+      position
+    );
+  }
+
+  async foldingRanges(filepath: string): Promise<vscode.FoldingRange[]> {
+    return await vscode.commands.executeCommand(
+      "vscode.executeFoldingRangeProvider",
+      uriFromFilePath(filepath)
+    );
   }
 
   getWorkspaceDirectory() {
@@ -412,6 +471,16 @@ class IdeProtocolClient {
 
   async showDiff(filepath: string, replacement: string, step_index: number) {
     await diffManager.writeDiff(filepath, replacement, step_index);
+  }
+
+  showMultiFileEdit(edits: FileEdit[]) {
+    vscode.commands.executeCommand("workbench.action.closeAuxiliaryBar");
+    const panel = vscode.window.createWebviewPanel(
+      "continue.continueGUIView",
+      "Continue",
+      vscode.ViewColumn.One
+    );
+    panel.webview.html = getSidebarContent(panel, "/monaco", edits);
   }
 
   openFile(filepath: string) {
