@@ -207,6 +207,10 @@ class IdeProtocolClient {
     callback: (data: any) => void
   ) {
     const respond = (messageType: string, responseData: any) => {
+      if (typeof callback === "undefined") {
+        console.log("callback is undefined");
+        return;
+      }
       callback({
         message_type: messageType,
         data: responseData,
