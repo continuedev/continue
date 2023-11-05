@@ -1095,10 +1095,10 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
           />
         </pre>
       )}
-      {showContextToggleOn && selectedContextItems.length >= 8 && (
+      {showContextToggleOn && (
         <div>
           <HeaderButtonWithText
-            className="m-2 ml-4"
+            className="m-2 mr-4 float-right"
             text="Delete All"
             onClick={() => {
               dispatch(
@@ -1112,7 +1112,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
               setFocusedContextItem(undefined);
             }}
           >
-            <div className="flex">
+            <div className="flex items-center">
               <TrashIcon width="1.2em" height="1.2em" />
               Delete All
             </div>

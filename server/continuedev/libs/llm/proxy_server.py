@@ -4,6 +4,7 @@ import traceback
 from typing import List
 
 import aiohttp
+from pydantic import validator
 from ..util.count_tokens import MAX_TOKENS_FOR_MODEL
 
 from ...core.main import ChatMessage
@@ -34,6 +35,10 @@ class ProxyServer(LLM):
 
     def get_headers(self):
         return {"unique_id": self.unique_id}
+
+    @validator("context_length")
+    def context_length_for_model(cls, v, values):
+        return MAX_TOKENS_FOR_MODEL.get(values["model"], 4096)
 
     async def _complete(self, prompt: str, options):
         args = self.collect_args(options)

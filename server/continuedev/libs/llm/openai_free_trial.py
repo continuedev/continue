@@ -1,4 +1,7 @@
-from typing import Callable, List, Optional
+from typing import List, Optional
+from ..util.count_tokens import MAX_TOKENS_FOR_MODEL
+
+from pydantic import validator
 
 from ...core.main import ChatMessage
 from .base import LLM
@@ -35,6 +38,10 @@ class OpenAIFreeTrial(LLM):
     api_key: Optional[str] = None
 
     llm: Optional[LLM] = None
+
+    @validator("context_length")
+    def context_length_for_model(cls, v, values):
+        return MAX_TOKENS_FOR_MODEL.get(values["model"], 4096)
 
     def update_llm_properties(self):
         if self.llm is not None:

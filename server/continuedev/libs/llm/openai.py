@@ -7,7 +7,7 @@ from ..util.logging import logger
 from .prompts.chat import template_alpaca_messages
 import openai
 from openai.error import RateLimitError
-from pydantic import Field
+from pydantic import Field, validator
 
 from ...core.main import ChatMessage
 from .base import LLM
@@ -90,6 +90,10 @@ class OpenAI(LLM):
     engine: Optional[str] = Field(
         None, description="OpenAI engine. For use with Azure OpenAI Service."
     )
+
+    @validator("context_length")
+    def context_length_for_model(cls, v, values):
+        return MAX_TOKENS_FOR_MODEL.get(values["model"], 4096)
 
     async def start(self, unique_id: Optional[str] = None):
         await super().start(unique_id=unique_id)
