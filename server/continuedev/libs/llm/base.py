@@ -5,6 +5,7 @@ from typing import Any, Callable, Coroutine, Dict, Generator, List, Optional, Un
 
 import aiohttp
 import certifi
+from ..util.templating import render_templated_string
 from pydantic import Field, validator
 
 from ...core.main import ChatMessage
@@ -298,7 +299,13 @@ Settings:
         msgs = [{"role": "user", "content": prompt}]
 
         if self.get_system_message() is not None:
-            msgs.insert(0, {"role": "system", "content": self.get_system_message()})
+            msgs.insert(
+                0,
+                {
+                    "role": "system",
+                    "content": render_templated_string(self.get_system_message()),
+                },
+            )
 
         return self.template_messages(msgs)
 
