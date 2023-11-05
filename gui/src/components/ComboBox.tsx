@@ -817,6 +817,12 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
     }
   }, [inputFocused]);
 
+  useEffect(() => {
+    if (selectedContextItems.length > 0) {
+      setShowContextItemsIfNotMain(true);
+    }
+  }, [selectedContextItems]);
+
   return (
     <div
       ref={topRef}
@@ -1096,7 +1102,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
       {showContextToggleOn && (
         <div>
           <HeaderButtonWithText
-            className="m-2 mr-4 float-right"
+            className="mr-4 ml-auto -mt-2"
             text="Delete All"
             onClick={() => {
               dispatch(
