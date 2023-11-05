@@ -60,7 +60,12 @@ async def get_contents_of_files(
 
 
 def gi_basename(path: str) -> str:
-    return path[: path.index(".gitignore")]
+    if ".gitignore" in path:
+        return path[: path.index(".gitignore")]
+    elif ".continueignore" in path:
+        return path[: path.index(".continueignore")]
+    else:
+        return path
 
 
 async def get_all_file_contents(
