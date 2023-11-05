@@ -76,10 +76,16 @@ class Models(BaseModel):
     temperature: Optional[float] = None
     system_message: Optional[str] = None
 
-    @validator("summarize", "edit", "chat", pre=True)
-    def roles_not_none(cls, v):
+    @validator(
+        "summarize",
+        "edit",
+        "chat",
+        pre=True,
+        always=True,
+    )
+    def roles_not_none(cls, v, values):
         if v is None:
-            return cls.default
+            return values["default"]
         return v
 
     def dict(self, **kwargs):
