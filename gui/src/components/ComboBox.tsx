@@ -1427,83 +1427,86 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
               {nestedContextProvider.description}
             </div>
           )}
-          {downshiftProps.isOpen &&
-            items.map((item, index) => (
-              <Li
-                style={{
-                  borderTop: index === 0 ? "none" : `0.5px solid ${lightGray}`,
-                }}
-                key={`${item.name}${index}`}
-                {...downshiftProps.getItemProps({ item, index })}
-                highlighted={downshiftProps.highlightedIndex === index}
-                selected={downshiftProps.selectedItem === item}
-                onClick={(e) => {
-                  selectContextItemFromDropdown(e);
-                  e.stopPropagation();
-                  e.preventDefault();
-                  inputRef.current?.focus();
-                }}
-              >
-                <span className="flex justify-between w-full items-center">
-                  <div className="flex items-center justify-center">
-                    {nestedContextProvider && (
-                      <FileIcon
-                        height="20px"
-                        width="20px"
-                        filename={item.name}
-                      ></FileIcon>
-                    )}
-                    <DropdownIcon provider={item.name} className="mr-2" />
-                    <DropdownIcon provider={item.id} className="mr-2" />
-                    {item.name}
-                    {"  "}
-                  </div>
-                  <span
-                    style={{
-                      color: vscForeground,
-                      float: "right",
-                      textAlign: "right",
-                    }}
-                    hidden={downshiftProps.highlightedIndex !== index}
-                  >
-                    {item.description}
+          <div style={{ maxHeight: `${UlMaxHeight - 50}px`, overflow: "auto" }}>
+            {downshiftProps.isOpen &&
+              items.map((item, index) => (
+                <Li
+                  style={{
+                    borderTop:
+                      index === 0 ? "none" : `0.5px solid ${lightGray}`,
+                  }}
+                  key={`${item.name}${index}`}
+                  {...downshiftProps.getItemProps({ item, index })}
+                  highlighted={downshiftProps.highlightedIndex === index}
+                  selected={downshiftProps.selectedItem === item}
+                  onClick={(e) => {
+                    selectContextItemFromDropdown(e);
+                    e.stopPropagation();
+                    e.preventDefault();
+                    inputRef.current?.focus();
+                  }}
+                >
+                  <span className="flex justify-between w-full items-center">
+                    <div className="flex items-center justify-center">
+                      {nestedContextProvider && (
+                        <FileIcon
+                          height="20px"
+                          width="20px"
+                          filename={item.name}
+                        ></FileIcon>
+                      )}
+                      <DropdownIcon provider={item.name} className="mr-2" />
+                      <DropdownIcon provider={item.id} className="mr-2" />
+                      {item.name}
+                      {"  "}
+                    </div>
+                    <span
+                      style={{
+                        color: vscForeground,
+                        float: "right",
+                        textAlign: "right",
+                      }}
+                      hidden={downshiftProps.highlightedIndex !== index}
+                    >
+                      {item.description}
+                    </span>
                   </span>
-                </span>
-                {contextProviders
-                  ?.filter(
-                    (provider) => !provider.dynamic || provider.requires_query
-                  )
-                  .find((provider) => provider.title === item.id) && (
-                  <ArrowRightIcon
-                    width="1.2em"
-                    height="1.2em"
-                    color={vscForeground}
-                    className="ml-2 flex-shrink-0"
-                  />
-                )}
-              </Li>
-            ))}
-          {downshiftProps.isOpen && items.length === 0 && (
-            <Li
-              key="empty-items-li"
-              highlighted={false}
-              selected={false}
-              isLastItem={false}
-            >
-              <span
-                style={{
-                  color: lightGray,
-                  float: "right",
-                  textAlign: "right",
-                  display: "flex",
-                  width: "100%",
-                  cursor: "default",
-                }}
+                  {contextProviders
+                    ?.filter(
+                      (provider) => !provider.dynamic || provider.requires_query
+                    )
+                    .find((provider) => provider.title === item.id) && (
+                    <ArrowRightIcon
+                      width="1.2em"
+                      height="1.2em"
+                      color={vscForeground}
+                      className="ml-2 flex-shrink-0"
+                    />
+                  )}
+                </Li>
+              ))}
+            {downshiftProps.isOpen && items.length === 0 && (
+              <Li
+                key="empty-items-li"
+                highlighted={false}
+                selected={false}
+                isLastItem={false}
               >
-                No items found
-              </span>
-            </Li>
-          )}
+                <span
+                  style={{
+                    color: lightGray,
+                    float: "right",
+                    textAlign: "right",
+                    display: "flex",
+                    width: "100%",
+                    cursor: "default",
+                  }}
+                >
+                  No items found
+                </span>
+              </Li>
+            )}
+          </div>
         </Ul>
       </div>
 
