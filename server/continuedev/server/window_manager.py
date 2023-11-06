@@ -93,11 +93,11 @@ class Window:
         if self._error_loading_config is not None:
             await self.ide.setFileOpen(getConfigFilePath())
 
-        async def index():
-            async for progress in build_index(self.ide, self.config):
-                await self.gui.send_indexing_progress(progress)
+        # async def index():
+        #     async for progress in build_index(self.ide, self.config):
+        #         await self.gui.send_indexing_progress(progress)
 
-        create_async_task(index(), on_error=self.ide.on_error)
+        # create_async_task(index(), on_error=self.ide.on_error)
 
         # Start models
         await self.config.models.start(
@@ -115,15 +115,15 @@ class Window:
         dev_data_logger.setup(self.config.user_token, self.config.data_server_url)
 
         # Load documents into the search index
-        await self.context_manager.start(
-            self.config.context_providers
-            + [
-                HighlightedCodeContextProvider(ide=self.ide),
-                FileContextProvider(workspace_dir=self.ide.workspace_directory),
-            ],
-            self.ide,
-            only_reloading=only_reloading,
-        )
+        # await self.context_manager.start(
+        #     self.config.context_providers
+        #     + [
+        #         HighlightedCodeContextProvider(ide=self.ide),
+        #         FileContextProvider(workspace_dir=self.ide.workspace_directory),
+        #     ],
+        #     self.ide,
+        #     only_reloading=only_reloading,
+        # )
 
         async def onFileSavedCallback(filepath: str, contents: str):
             if filepath.endswith(".continue/config.py") or filepath.endswith(
