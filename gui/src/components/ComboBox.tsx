@@ -707,6 +707,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
   }, [inputRef.current, props.isMainInput, persistSession]);
 
   const deleteButtonDivRef = React.useRef<HTMLDivElement>(null);
+  const stickyDropdownHeaderDiv = React.useRef<HTMLDivElement>(null);
 
   const selectContextItemFromDropdown = useCallback(
     (event: any) => {
@@ -1408,6 +1409,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
         >
           {nestedContextProvider && (
             <div
+              ref={stickyDropdownHeaderDiv}
               style={{
                 backgroundColor: secondaryDark,
                 borderBottom: `0.5px solid ${lightGray}`,
@@ -1431,7 +1433,15 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
               {nestedContextProvider.description}
             </div>
           )}
-          <div style={{ maxHeight: `${UlMaxHeight - 50}px`, overflow: "auto" }}>
+          <div
+            style={{
+              maxHeight: `${
+                UlMaxHeight -
+                (stickyDropdownHeaderDiv.current?.clientHeight || 50)
+              }px`,
+              overflow: "auto",
+            }}
+          >
             {downshiftProps.isOpen &&
               items.map((item, index) => (
                 <Li
