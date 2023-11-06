@@ -26,15 +26,16 @@ Julia is the #37 most popular language according to the [2023 Stack Overflow Dev
 
 ## Stack Overflow & GitHub presence
 
-Julia has 12,402 [tags on Stack Overflow](https://stackoverflow.com/tags)
+Julia has 12,402 [tagged questions on Stack Overflow](https://stackoverflow.com/tags)
 
 Julia projects have had 39,305 [PRs on GitHub since 2014](https://madnight.github.io/githut/#/pull_requests/2023/3)
 
 Julia projects have had 51,276 [issues on GitHub since 2014](https://madnight.github.io/githut/#/issues/2023/3)
 
-Julia projects have recieved 166,898 [pushes on GitHub since 2014](https://madnight.github.io/githut/#/pushes/2023/3)
+Julia projects have had 166,898 [pushes on GitHub since 2014](https://madnight.github.io/githut/#/pushes/2023/3)
 
-Julia projects have recieved 52,326 [stars on GitHub since 2014](https://madnight.github.io/githut/#/stars/2023/3)
+Julia projects have had 52,326 [stars on GitHub since 2014](https://madnight.github.io/githut/#/stars/2023/3)
+
 ## Anecdotes from developers
 
 [u/LoganKilpatrick1](https://www.reddit.com/r/Julia/comments/zzvkso/comment/j2i6knx/)
