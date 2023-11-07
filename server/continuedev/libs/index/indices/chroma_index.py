@@ -212,8 +212,6 @@ class ChromaCodebaseIndex(CodebaseIndex):
                     raise e
             except sqlite3.OperationalError as e:
                 logger.debug(f"SQL error: {e}")
-                os.chmod(self.chroma_dir, 0o777)
-                os.chmod(os.path.join(self.chroma_dir, "chroma.sqlite3"), 0o777)
                 del collections[self.directory]
 
         # Metadata keeps track of number of chunks per file, used in update()

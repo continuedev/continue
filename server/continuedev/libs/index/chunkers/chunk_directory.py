@@ -53,6 +53,7 @@ FILE_IGNORE_PATTERNS = [
     "*.mkv",
     "*.mkv",
     "*.webm",
+    "*.jar",
 ]
 
 MAX_SIZE_IN_CHARS = 50_000

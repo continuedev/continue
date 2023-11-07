@@ -67,7 +67,7 @@ fun serverVersionPath(): String {
 fun serverBinaryPath(): String {
     val exeFile = if (System.getProperty("os.name").toLowerCase()
             .contains("win")
-    ) "run.exe" else "run"
+    ) "continue_server.exe" else "continue_server"
     return Paths.get(serverPath(), "exe", exeFile).toString()
 }
 
@@ -484,17 +484,17 @@ class ContinuePluginStartupActivity : StartupActivity, Disposable, DumbAware {
         val keyStroke = KeyStroke.getKeyStroke(shortcut)
         val actionIds = keymap.getActionIds(keyStroke)
 
-
-        val actionManager = ActionManager.getInstance()
-//         for (actionId in actionIds) {
-//             if (actionId.startsWith("continue")) {
-//                 continue
-//             }
-//             val action = actionManager.getAction(actionId)
-//             val shortcuts = action.shortcutSet.shortcuts.filterNot { it is KeyboardShortcut && it.firstKeyStroke == keyStroke }.toTypedArray()
-//             val newShortcutSet = CustomShortcutSet(*shortcuts)
-//             action.registerCustomShortcutSet(newShortcutSet, null)
-//         }
+         for (actionId in actionIds) {
+             if (actionId.startsWith("continue")) {
+                 continue
+             }
+             val shortcuts = keymap.getShortcuts(actionId)
+             for (shortcut in shortcuts) {
+                 if (shortcut is KeyboardShortcut && shortcut.firstKeyStroke == keyStroke) {
+                     keymap.removeShortcut(actionId, shortcut)
+                 }
+             }
+         }
     }
 
     private fun initializePlugin(project: Project) {

@@ -160,7 +160,7 @@ function StepContainer(props: StepContainerProps) {
           <StyledMarkdownPreview source={props.step.description} />
         </ContentDiv>
         {(isHovered || typeof feedback !== "undefined") && !active && (
-          <div className="flex items-center gap-2 bottom-1 right-2 absolute">
+          <div className="flex items-center gap-2 bottom-0 right-2 absolute">
             {feedback === false || (
               <HandThumbUpIcon
                 className={

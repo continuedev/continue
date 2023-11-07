@@ -144,7 +144,7 @@ const jetbrainsShortcuts: KeyboardShortcutProps[] = [
     description: "Toggle Auxiliary Bar",
   },
   {
-    mac: "⌘ ⌃ N",
+    mac: "⌥ ⌘ N",
     windows: "⌥ ⌃ N",
     description: "New Session",
   },
