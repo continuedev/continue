@@ -32,8 +32,6 @@ class Ollama(LLM):
         "http://localhost:11434", description="URL of the Ollama server"
     )
 
-    _client_session: aiohttp.ClientSession = None
-
     template_messages: Callable = llama2_template_messages
 
     prompt_templates = {
@@ -54,73 +52,72 @@ class Ollama(LLM):
 
     async def start(self, *args, **kwargs):
         await super().start(*args, **kwargs)
-        self._client_session = self.create_client_session()
         try:
-            async with self._client_session.post(
-                f"{self.server_url}/api/generate",
-                proxy=self.proxy,
-                json={
-                    "prompt": "",
-                    "model": self.model,
-                },
-            ) as _:
-                pass
+            async with self.create_client_session() as session:
+                async with session.post(
+                    f"{self.server_url}/api/generate",
+                    proxy=self.proxy,
+                    json={
+                        "prompt": "",
+                        "model": self.model,
+                    },
+                ) as _:
+                    pass
         except Exception as e:
             logger.warning(f"Error pre-loading Ollama model: {e}")
 
-    async def stop(self):
-        await self._client_session.close()
-
     async def get_downloaded_models(self):
-        async with self._client_session.get(
-            f"{self.server_url}/api/tags",
-            proxy=self.proxy,
-        ) as resp:
-            js_data = await resp.json()
-            return list(map(lambda x: x["name"], js_data["models"]))
+        async with self.create_client_session() as session:
+            async with session.get(
+                f"{self.server_url}/api/tags",
+                proxy=self.proxy,
+            ) as resp:
+                js_data = await resp.json()
+                return list(map(lambda x: x["name"], js_data["models"]))
 
     async def _stream_complete(self, prompt, options):
-        async with self._client_session.post(
-            f"{self.server_url}/api/generate",
-            json={
-                "template": prompt,
-                "model": self.model,
-                "system": self.system_message,
-                "options": self.collect_args(options),
-            },
-            proxy=self.proxy,
-        ) as resp:
-            if resp.status == 400:
-                txt = await resp.text()
-                extra_msg = ""
-                if "no such file" in txt:
-                    extra_msg = f"\n\nThis means that the model '{self.model}' is not downloaded.\n\nYou have the following models downloaded: {', '.join(await self.get_downloaded_models())}.\n\nTo download this model, run `ollama run {self.model}` in your terminal."
-                raise ContinueCustomException(
-                    f"Ollama returned an error: {txt}{extra_msg}",
-                    "Invalid request to Ollama",
-                )
-            elif resp.status == 404:
-                raise ContinueCustomException(
-                    f"Ollama not found. Please make sure the server is running.\n\n{await resp.text()}",
-                    "Ollama not found. Please make sure the server is running.",
-                )
-            elif resp.status != 200:
-                raise ContinueCustomException(
-                    f"Ollama returned an error: {await resp.text()}",
-                    "Invalid request to Ollama",
-                )
-            async for line in resp.content.iter_any():
-                if line:
-                    json_chunk = line.decode("utf-8")
-                    chunks = json_chunk.split("\n")
-                    for chunk in chunks:
-                        if chunk.strip() != "":
-                            try:
-                                j = json.loads(chunk)
-                            except Exception as e:
-                                logger.warning(
-                                    f"Error parsing Ollama response: {e} {chunk}"
-                                )
-                                continue
-                            if "response" in j:
-                                yield j["response"]
+        async with self.create_client_session() as session:
+            async with session.post(
+                f"{self.server_url}/api/generate",
+                json={
+                    "template": prompt,
+                    "model": self.model,
+                    "system": self.system_message,
+                    "options": self.collect_args(options),
+                },
+                proxy=self.proxy,
+            ) as resp:
+                if resp.status == 400:
+                    txt = await resp.text()
+                    extra_msg = ""
+                    if "no such file" in txt:
+                        extra_msg = f"\n\nThis means that the model '{self.model}' is not downloaded.\n\nYou have the following models downloaded: {', '.join(await self.get_downloaded_models())}.\n\nTo download this model, run `ollama run {self.model}` in your terminal."
+                    raise ContinueCustomException(
+                        f"Ollama returned an error: {txt}{extra_msg}",
+                        "Invalid request to Ollama",
+                    )
+                elif resp.status == 404:
+                    raise ContinueCustomException(
+                        f"Ollama not found. Please make sure the server is running.\n\n{await resp.text()}",
+                        "Ollama not found. Please make sure the server is running.",
+                    )
+                elif resp.status != 200:
+                    raise ContinueCustomException(
+                        f"Ollama returned an error: {await resp.text()}",
+                        "Invalid request to Ollama",
+                    )
+                async for line in resp.content.iter_any():
+                    if line:
+                        json_chunk = line.decode("utf-8")
+                        chunks = json_chunk.split("\n")
+                        for chunk in chunks:
+                            if chunk.strip() != "":
+                                try:
+                                    j = json.loads(chunk)
+                                except Exception as e:
+                                    logger.warning(
+                                        f"Error parsing Ollama response: {e} {chunk}"
+                                    )
+                                    continue
+                                if "response" in j:
+                                    yield j["response"]

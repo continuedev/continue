@@ -46,66 +46,70 @@ class TogetherLLM(LLM):
     async def _stream_complete(self, prompt, options):
         args = self.collect_args(options)
 
-        async with self.create_client_session().post(
-            f"{self.base_url}/inference",
-            json={
-                "prompt": prompt,
-                "stream_tokens": True,
-                **args,
-            },
-            headers={"Authorization": f"Bearer {self.api_key}"},
-            proxy=self.proxy,
-        ) as resp:
-            async for line in resp.content.iter_chunks():
-                if line[1]:
-                    json_chunk = line[0].decode("utf-8")
-                    if json_chunk.startswith(": ping - ") or json_chunk.startswith(
-                        "data: [DONE]"
-                    ):
-                        continue
+        async with self.create_client_session() as session:
+            async with session.post(
+                f"{self.base_url}/inference",
+                json={
+                    "prompt": prompt,
+                    "stream_tokens": True,
+                    **args,
+                },
+                headers={"Authorization": f"Bearer {self.api_key}"},
+                proxy=self.proxy,
+            ) as resp:
+                async for line in resp.content.iter_chunks():
+                    if line[1]:
+                        json_chunk = line[0].decode("utf-8")
+                        if json_chunk.startswith(": ping - ") or json_chunk.startswith(
+                            "data: [DONE]"
+                        ):
+                            continue
 
-                    chunks = json_chunk.split("\n")
-                    for chunk in chunks:
-                        if chunk.strip() != "":
-                            if chunk.startswith("data: "):
-                                chunk = chunk[6:]
-                            if chunk == "[DONE]":
-                                break
-                            try:
-                                json_chunk = json.loads(chunk)
-                            except Exception as e:
-                                logger.warning(f"Invalid JSON chunk: {chunk}\n\n{e}")
-                                continue
-                            if "choices" in json_chunk:
-                                yield json_chunk["choices"][0]["text"]
+                        chunks = json_chunk.split("\n")
+                        for chunk in chunks:
+                            if chunk.strip() != "":
+                                if chunk.startswith("data: "):
+                                    chunk = chunk[6:]
+                                if chunk == "[DONE]":
+                                    break
+                                try:
+                                    json_chunk = json.loads(chunk)
+                                except Exception as e:
+                                    logger.warning(
+                                        f"Invalid JSON chunk: {chunk}\n\n{e}"
+                                    )
+                                    continue
+                                if "choices" in json_chunk:
+                                    yield json_chunk["choices"][0]["text"]
 
     async def _complete(self, prompt: str, options):
         args = self.collect_args(options)
 
-        async with self.create_client_session().post(
-            f"{self.base_url}/inference",
-            json={"prompt": prompt, **args},
-            headers={"Authorization": f"Bearer {self.api_key}"},
-            proxy=self.proxy,
-        ) as resp:
-            text = await resp.text()
-            j = json.loads(text)
-            try:
-                if "choices" not in j["output"]:
-                    raise Exception(text)
-                if "output" in j:
-                    return j["output"]["choices"][0]["text"]
-            except Exception as e:
-                j = await resp.json()
-                if "error" in j:
-                    if j["error"].startswith("invalid hexlify value"):
-                        raise ContinueCustomException(
-                            message=f"Invalid Together API key:\n\n{j['error']}",
-                            title="Together API Error",
-                        )
-                    else:
-                        raise ContinueCustomException(
-                            message=j["error"], title="Together API Error"
-                        )
+        async with self.create_client_session() as session:
+            async with session.post(
+                f"{self.base_url}/inference",
+                json={"prompt": prompt, **args},
+                headers={"Authorization": f"Bearer {self.api_key}"},
+                proxy=self.proxy,
+            ) as resp:
+                text = await resp.text()
+                j = json.loads(text)
+                try:
+                    if "choices" not in j["output"]:
+                        raise Exception(text)
+                    if "output" in j:
+                        return j["output"]["choices"][0]["text"]
+                except Exception as e:
+                    j = await resp.json()
+                    if "error" in j:
+                        if j["error"].startswith("invalid hexlify value"):
+                            raise ContinueCustomException(
+                                message=f"Invalid Together API key:\n\n{j['error']}",
+                                title="Together API Error",
+                            )
+                        else:
+                            raise ContinueCustomException(
+                                message=j["error"], title="Together API Error"
+                            )
 
-                raise e
+                    raise e

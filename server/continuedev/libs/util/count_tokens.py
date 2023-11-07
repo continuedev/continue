@@ -20,7 +20,7 @@ DEFAULT_ARGS = {
     "temperature": 0.5,
 }
 
-MAX_TOKENS_FOR_MODEL = {
+CONTEXT_LENGTH_FOR_MODEL = {
     "gpt-3.5-turbo": 4096,
     "gpt-3.5-turbo-0613": 4096,
     "gpt-3.5-turbo-16k": 16_384,
@@ -29,6 +29,7 @@ MAX_TOKENS_FOR_MODEL = {
     "gpt-35-turbo-0613": 4096,
     "gpt-35-turbo": 4096,
     "gpt-4-32k": 32_768,
+    "gpt-4-1106-preview": 128_000,
 }
 
 already_saw_import_err = False

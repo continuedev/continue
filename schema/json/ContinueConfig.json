@@ -420,6 +420,70 @@
         "dynamic"
       ]
     },
+    "RetrievalSettings": {
+      "title": "RetrievalSettings",
+      "type": "object",
+      "properties": {
+        "n_retrieve": {
+          "title": "N Retrieve",
+          "description": "Number of results to initially retrieve from vector database",
+          "default": 50,
+          "type": "integer"
+        },
+        "n_final": {
+          "title": "N Final",
+          "description": "Final number of results to use after re-ranking",
+          "default": 10,
+          "type": "integer"
+        },
+        "use_reranking": {
+          "title": "Use Reranking",
+          "description": "Whether to use re-ranking, which will allow initial selection of n_retrieve results, then will use an LLM to select the top n_final results",
+          "default": true,
+          "type": "boolean"
+        },
+        "rerank_group_size": {
+          "title": "Rerank Group Size",
+          "description": "Number of results to group together when re-ranking. Each group will be processed in parallel.",
+          "default": 5,
+          "type": "integer"
+        },
+        "ignore_files": {
+          "title": "Ignore Files",
+          "description": "Files to ignore when indexing the codebase. You can use glob patterns, such as **/*.py. This is useful for directories that contain generated code, or other directories that are not relevant to the codebase.",
+          "default": [],
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "openai_api_key": {
+          "title": "Openai Api Key",
+          "description": "OpenAI API key",
+          "type": "string"
+        },
+        "api_base": {
+          "title": "Api Base",
+          "description": "OpenAI API base URL",
+          "type": "string"
+        },
+        "api_type": {
+          "title": "Api Type",
+          "description": "OpenAI API type",
+          "type": "string"
+        },
+        "api_version": {
+          "title": "Api Version",
+          "description": "OpenAI API version",
+          "type": "string"
+        },
+        "organization_id": {
+          "title": "Organization Id",
+          "description": "OpenAI organization ID",
+          "type": "string"
+        }
+      }
+    },
     "continuedev__core__config__ContinueConfig": {
       "title": "ContinueConfig",
       "description": "Continue can be deeply customized by editing the `ContinueConfig` object in `~/.continue/config.py` (`%userprofile%\\.continue\\config.py` for Windows) on your machine. This class is instantiated from the config file for every new session.",
@@ -497,8 +561,50 @@
               "llm": null,
               "class_name": "OpenAIFreeTrial"
             },
-            "edit": null,
-            "chat": null,
+            "edit": {
+              "title": null,
+              "model": "gpt-4",
+              "system_message": null,
+              "context_length": 2048,
+              "stop_tokens": null,
+              "temperature": null,
+              "top_p": null,
+              "top_k": null,
+              "presence_penalty": null,
+              "frequency_penalty": null,
+              "timeout": 300,
+              "verify_ssl": null,
+              "ca_bundle_path": null,
+              "proxy": null,
+              "headers": null,
+              "prompt_templates": {},
+              "template_messages": null,
+              "api_key": null,
+              "llm": null,
+              "class_name": "OpenAIFreeTrial"
+            },
+            "chat": {
+              "title": null,
+              "model": "gpt-4",
+              "system_message": null,
+              "context_length": 2048,
+              "stop_tokens": null,
+              "temperature": null,
+              "top_p": null,
+              "top_k": null,
+              "presence_penalty": null,
+              "frequency_penalty": null,
+              "timeout": 300,
+              "verify_ssl": null,
+              "ca_bundle_path": null,
+              "proxy": null,
+              "headers": null,
+              "prompt_templates": {},
+              "template_messages": null,
+              "api_key": null,
+              "llm": null,
+              "class_name": "OpenAIFreeTrial"
+            },
             "saved": [],
             "temperature": null,
             "system_message": null
@@ -587,6 +693,33 @@
           "description": "If set to `True`, Continue will not generate summaries for each Step. This can be useful if you want to save on compute.",
           "default": false,
           "type": "boolean"
+        },
+        "disable_indexing": {
+          "title": "Disable Indexing",
+          "description": "If set to `True`, Continue will not index the codebase. This is mainly used for debugging purposes.",
+          "default": false,
+          "type": "boolean"
+        },
+        "retrieval_settings": {
+          "title": "Retrieval Settings",
+          "description": "Settings for the retrieval system. Read more about the retrieval system in the documentation.",
+          "default": {
+            "n_retrieve": 50,
+            "n_final": 10,
+            "use_reranking": true,
+            "rerank_group_size": 5,
+            "ignore_files": [],
+            "openai_api_key": null,
+            "api_base": null,
+            "api_type": null,
+            "api_version": null,
+            "organization_id": null
+          },
+          "allOf": [
+            {
+              "$ref": "#/definitions/RetrievalSettings"
+            }
+          ]
         }
       }
     }

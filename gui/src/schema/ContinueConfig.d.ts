@@ -178,6 +178,54 @@ export type DataServerUrl = string;
  * If set to `True`, Continue will not generate summaries for each Step. This can be useful if you want to save on compute.
  */
 export type DisableSummaries = boolean;
+/**
+ * If set to `True`, Continue will not index the codebase. This is mainly used for debugging purposes.
+ */
+export type DisableIndexing = boolean;
+/**
+ * Settings for the retrieval system. Read more about the retrieval system in the documentation.
+ */
+export type RetrievalSettings = RetrievalSettings1;
+/**
+ * Number of results to initially retrieve from vector database
+ */
+export type NRetrieve = number;
+/**
+ * Final number of results to use after re-ranking
+ */
+export type NFinal = number;
+/**
+ * Whether to use re-ranking, which will allow initial selection of n_retrieve results, then will use an LLM to select the top n_final results
+ */
+export type UseReranking = boolean;
+/**
+ * Number of results to group together when re-ranking. Each group will be processed in parallel.
+ */
+export type RerankGroupSize = number;
+/**
+ * Files to ignore when indexing the codebase. You can use glob patterns, such as ** /*.py. This is useful for directories that contain generated code, or other directories that are not relevant to the codebase.
+ */
+export type IgnoreFiles = string[];
+/**
+ * OpenAI API key
+ */
+export type OpenaiApiKey = string;
+/**
+ * OpenAI API base URL
+ */
+export type ApiBase = string;
+/**
+ * OpenAI API type
+ */
+export type ApiType = string;
+/**
+ * OpenAI API version
+ */
+export type ApiVersion = string;
+/**
+ * OpenAI organization ID
+ */
+export type OrganizationId = string;
 
 /**
  * Continue can be deeply customized by editing the `ContinueConfig` object in `~/.continue/config.py` (`%userprofile%\.continue\config.py` for Windows) on your machine. This class is instantiated from the config file for every new session.
@@ -197,6 +245,8 @@ export interface ContinueConfig1 {
   user_token?: UserToken;
   data_server_url?: DataServerUrl;
   disable_summaries?: DisableSummaries;
+  disable_indexing?: DisableIndexing;
+  retrieval_settings?: RetrievalSettings;
   [k: string]: unknown;
 }
 export interface Step {
@@ -339,5 +389,18 @@ export interface ContextItemDescription {
 export interface ContextItemId {
   provider_title: ProviderTitle;
   item_id: ItemId;
+  [k: string]: unknown;
+}
+export interface RetrievalSettings1 {
+  n_retrieve?: NRetrieve;
+  n_final?: NFinal;
+  use_reranking?: UseReranking;
+  rerank_group_size?: RerankGroupSize;
+  ignore_files?: IgnoreFiles;
+  openai_api_key?: OpenaiApiKey;
+  api_base?: ApiBase;
+  api_type?: ApiType;
+  api_version?: ApiVersion;
+  organization_id?: OrganizationId;
   [k: string]: unknown;
 }
