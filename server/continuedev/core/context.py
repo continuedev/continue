@@ -228,6 +228,7 @@ class ContextManager:
         context_providers: List[ContextProvider],
         ide: AbstractIdeProtocolServer,
         only_reloading: bool = False,
+        disable_indexing: bool = False,
     ):
         """
         Starts the context manager.
@@ -275,7 +276,9 @@ class ContextManager:
         providers_to_load = (
             new_context_providers if only_reloading else context_providers
         )
-        create_async_task(load_index(providers_to_load), on_err)
+
+        if not disable_indexing:
+            create_async_task(load_index(providers_to_load), on_err)
 
     @staticmethod
     async def update_documents(context_items: List[ContextItem], workspace_dir: str):

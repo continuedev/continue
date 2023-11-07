@@ -123,16 +123,16 @@ class Window:
         dev_data_logger.setup(self.config.user_token, self.config.data_server_url)
 
         # Load documents into the search index
-        if not self.config.disable_indexing:
-            await self.context_manager.start(
-                self.config.context_providers
-                + [
-                    HighlightedCodeContextProvider(ide=self.ide),
-                    FileContextProvider(workspace_dir=self.ide.workspace_directory),
-                ],
-                self.ide,
-                only_reloading=only_reloading,
-            )
+        await self.context_manager.start(
+            self.config.context_providers
+            + [
+                HighlightedCodeContextProvider(ide=self.ide),
+                FileContextProvider(workspace_dir=self.ide.workspace_directory),
+            ],
+            self.ide,
+            only_reloading=only_reloading,
+            disable_indexing=self.config.disable_indexing,
+        )
 
         async def onFileSavedCallback(filepath: str, contents: str):
             if filepath.endswith(".continue/config.py") or filepath.endswith(
