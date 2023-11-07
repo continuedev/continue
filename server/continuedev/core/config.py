@@ -15,6 +15,7 @@ from .context import ContextProvider
 from .main import ContextProviderDescription, Policy, SlashCommandDescription, Step
 from .models import Models
 from ..libs.util.telemetry import posthog_logger
+from ..libs.util.logging import logger
 
 
 class SlashCommand(BaseModel):
@@ -159,32 +160,32 @@ class ContinueConfig(BaseModel):
         return max(0.0, min(1.0, v))
 
     @staticmethod
-    def from_filepath(filepath: str) -> "ContinueConfig":
+    def from_filepath(filepath: str, retry: bool = True) -> "ContinueConfig":
         # Use importlib to load the config file config.py at the given path
-        import importlib.util
+        try:
+            import importlib.util
 
-        spec = importlib.util.spec_from_file_location("config", filepath)
-        config = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(config)
+            spec = importlib.util.spec_from_file_location("config", filepath)
+            config = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(config)
 
-        return config.config
+            return config.config
+        except ModuleNotFoundError as e:
+            # Check if the module was "continuedev.src"
+            if retry and e.name == "continuedev.src":
+                convertConfigImports(shorten=True)
+                return ContinueConfig.from_filepath(filepath, retry=False)
+            else:
+                logger.critical(f"Failed to load config.py: {e}")
+        except Exception as e:
+            logger.critical(f"Failed to load config.py: {e}")
+
+        return ContinueConfig()
 
     @staticmethod
-    def load_default(retry: bool = True) -> "ContinueConfig":
-        try:
-            path = getConfigFilePath()
-            config = ContinueConfig.from_filepath(path)
-
-            return config
-        except ModuleNotFoundError as e:
-            if not retry:
-                raise e
-            # Check if the module was "continuedev.src"
-            if e.name == "continuedev.src":
-                convertConfigImports(shorten=True)
-                return ContinueConfig.load_default(retry=False)
-            else:
-                raise e
+    def load_default() -> "ContinueConfig":
+        path = getConfigFilePath()
+        return ContinueConfig.from_filepath(path)
 
     def get_slash_command_descriptions(self) -> List[SlashCommandDescription]:
         custom_commands = (

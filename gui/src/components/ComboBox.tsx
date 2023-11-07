@@ -671,9 +671,9 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
     };
   }, []);
 
-  const persistSession = useCallback(() => {
+  const persistSession = () => {
     client?.persistSession(sessionState, workspacePaths[0] || "");
-  }, [client, sessionState, workspacePaths]);
+  };
 
   useEffect(() => {
     if (!inputRef.current || !props.isMainInput) {
@@ -704,7 +704,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
     return () => {
       window.removeEventListener("message", handler);
     };
-  }, [inputRef.current, props.isMainInput, persistSession]);
+  }, [inputRef.current, props.isMainInput]);
 
   const deleteButtonDivRef = React.useRef<HTMLDivElement>(null);
   const stickyDropdownHeaderDiv = React.useRef<HTMLDivElement>(null);

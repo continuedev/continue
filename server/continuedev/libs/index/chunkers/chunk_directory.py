@@ -40,6 +40,19 @@ FILE_IGNORE_PATTERNS = [
     "*.dylib",
     "*.ncb",
     "*.sdf",
+    "*.woff",
+    "*.woff2",
+    "*.eot",
+    "*.cur",
+    "*.avi",
+    "*.mpg",
+    "*.mpeg",
+    "*.mov",
+    "*.mp3",
+    "*.mp4",
+    "*.mkv",
+    "*.mkv",
+    "*.webm",
 ]
 
 MAX_SIZE_IN_CHARS = 50_000

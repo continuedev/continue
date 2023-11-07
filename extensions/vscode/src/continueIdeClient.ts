@@ -575,7 +575,7 @@ class IdeProtocolClient {
   }
 
   async readFile(filepath: string): Promise<string> {
-    const MAX_BYTES = 500000; // 0.5MB - socket.io has a 1MB limit, but seems to die a bit above 0.5MB
+    const MAX_BYTES = 100000; // 0.1MB - socket.io has a 1MB limit, but seems to die a around 0.5MB
     let contents: string | undefined;
     if (typeof contents === "undefined") {
       try {

@@ -115,6 +115,7 @@ def migrateConfigFile(existing: str) -> Optional[str]:
         .replace("TextGenUI", "TextGenWebUI")
         .replace("text_gen_interface", "text_gen_webui")
         .replace(".steps.chroma", ".steps.codebase")
+        .replace("\xa0", " ")
     )
     if migrated != existing:
         return migrated
