@@ -59,15 +59,6 @@ const sidebars = {
         },
       ],
     },
-    {
-      type: "category",
-      label: "🧑‍💻 Programming languages",
-      collapsible: true,
-      collapsed: true,
-      items: [
-        "languages/julia",
-      ],
-    },
   ],
 };
 
