@@ -310,10 +310,10 @@ suspend fun startContinuePythonServer(project: Project) {
     // Determine from OS details which file to download
     val filename = when {
         System.getProperty("os.name")
-            .toLowerCase().contains("win") -> "windows/run.exe"
+            .toLowerCase().contains("win") -> "windows/continue_server.exe"
         System.getProperty("os.name").startsWith("Mac", ignoreCase = true) ->
-            if (System.getProperty("os.arch") == "arm64") "apple-silicon/run" else "mac/run"
-        else -> "linux/run"
+            if (System.getProperty("os.arch") == "arm64") "apple-silicon/continue_server" else "mac/continue_server"
+        else -> "linux/continue_server"
     }
 
     val destination = serverBinaryPath()

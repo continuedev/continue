@@ -588,6 +588,14 @@ Please output the code to be inserted at the cursor in order to fulfill the user
                     "user_input": self.user_input,
                     "file_prefix": file_prefix,
                     "file_suffix": file_suffix,
+                    "context_items": "\n\n".join(
+                        list(
+                            map(
+                                lambda x: x.content,
+                                await sdk.get_context_item_chat_messages(),
+                            )
+                        )
+                    ),
                 },
             )
             if isinstance(rendered, str):

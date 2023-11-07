@@ -234,3 +234,15 @@ class ContinueSDK:
             history_context.insert(-1, msg)
 
         return history_context
+
+    async def get_context_item_chat_messages(
+        self, exclude: str = None
+    ) -> List[ChatMessage]:
+        return await self.__autopilot.context_manager.get_chat_messages(
+            # list(
+            # filter(
+            # lambda x: x.description,
+            self.context_items
+            # )
+            # )
+        )
