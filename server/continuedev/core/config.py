@@ -152,7 +152,7 @@ class ContinueConfig(BaseModel):
 
     @classmethod
     def schema(cls, *args, **kwargs):
-        kwargs.setdefault("exclude", {"ide"})
+        # kwargs.setdefault("exclude", {"ide"})
         return super().schema(*args, **kwargs)
 
     @validator("temperature", pre=True)

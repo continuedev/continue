@@ -4,15 +4,17 @@ import ClassPropertyRef from '@site/src/components/ClassPropertyRef.tsx';
 
 Type '@diff' to reference all of the changes you've made to your current branch. This is useful if you want to summarize what you've done or ask for a general review of your work before committing.
 
-[View the source](https://github.com/continuedev/continue/tree/main/server/continuedev/plugins/context_providers/diff.py)
+[View the source](https://github.com/continuedev/continue/blob/main/server/continuedev/libs/llm/plugins/context_providers/diff.py)
 
 ## Properties
 
 <ClassPropertyRef name='workspace_dir' details='{&quot;title&quot;: &quot;Workspace Dir&quot;, &quot;description&quot;: &quot;The workspace directory in which to run `git diff`&quot;, &quot;type&quot;: &quot;string&quot;}' required={false} default=""/>
 
+
 ### Inherited Properties
 
 <ClassPropertyRef name='title' details='{&quot;title&quot;: &quot;Title&quot;, &quot;default&quot;: &quot;diff&quot;, &quot;type&quot;: &quot;string&quot;}' required={false} default="diff"/>
+<ClassPropertyRef name='ide' details='{&quot;title&quot;: &quot;Ide&quot;}' required={false} default=""/>
 <ClassPropertyRef name='display_title' details='{&quot;title&quot;: &quot;Display Title&quot;, &quot;default&quot;: &quot;Diff&quot;, &quot;type&quot;: &quot;string&quot;}' required={false} default="Diff"/>
 <ClassPropertyRef name='description' details='{&quot;title&quot;: &quot;Description&quot;, &quot;default&quot;: &quot;Output of &#x27;git diff&#x27; in current repo&quot;, &quot;type&quot;: &quot;string&quot;}' required={false} default="Output of &#x27;git diff&#x27; in current repo"/>
 <ClassPropertyRef name='dynamic' details='{&quot;title&quot;: &quot;Dynamic&quot;, &quot;default&quot;: true, &quot;type&quot;: &quot;boolean&quot;}' required={false} default="True"/>
