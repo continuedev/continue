@@ -14,7 +14,7 @@ Clojure is the #36 most popular language according to the [2023 Stack Overflow D
 
 ## Datasets
 
-❌ Clojure is not included in [The Stack dataset](https://arxiv.org/abs/2211.15533)
+✅ Clojure is included in [The Stack dataset](https://arxiv.org/abs/2211.15533)
 
 ❌ Clojure is not included in the [CodeParrot dataset](https://huggingface.co/datasets/codeparrot/github-code)
 

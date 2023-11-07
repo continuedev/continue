@@ -14,7 +14,7 @@ Erlang is the #38 most popular language according to the [2023 Stack Overflow De
 
 ## Datasets
 
-❌ Erlang is not included in [The Stack dataset](https://arxiv.org/abs/2211.15533)
+✅ Erlang is included in [The Stack dataset](https://arxiv.org/abs/2211.15533)
 
 ❌ Erlang is not included in the [CodeParrot dataset](https://huggingface.co/datasets/codeparrot/github-code)
 
