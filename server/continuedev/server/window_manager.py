@@ -40,8 +40,10 @@ class Window:
         try:
             return ContinueConfig.load_default()
         except Exception as e:
-            logger.error(f"Failed to load config.py: {traceback.format_exception(e)}")
-            self._error_loading_config = e
+            self._error_loading_config = "\n".join(
+                traceback.format_exception(e, e, e.__traceback__)
+            )
+            logger.error(f"Failed to load config.py: {self._error_loading_config}")
 
             return (
                 ContinueConfig()
@@ -81,7 +83,7 @@ class Window:
     ):
         # Need a non-step way of sending a notification to the GUI. Fine to be displayed similarly
 
-        # formatted_err = "\n".join(traceback.format_exception(e))
+        # formatted_err = "\n".join(traceback.format_exception(e, e, e.__traceback__))
         # msg_step = MessageStep(
         #     name="Invalid Continue Config File", message=formatted_err
         # )
@@ -92,6 +94,10 @@ class Window:
 
         if self._error_loading_config is not None:
             await self.ide.setFileOpen(getConfigFilePath())
+            await self.ide.showMessage(
+                f"""We found an error while loading your config.py. For now, Continue is falling back to the default configuration. If you need help solving this error, please reach out to us on Discord by clicking the question mark button in the bottom right.\n\n{self._error_loading_config}"""
+            )
+            self._error_loading_config = None
 
         async def index():
             async for progress in build_index(self.ide, self.config):

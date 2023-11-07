@@ -88,7 +88,7 @@ class ProxyServer(LLM):
                             {
                                 "error_title": "Proxy server stream_chat parsing failed",
                                 "error_message": "\n".join(
-                                    traceback.format_exception(e)
+                                    traceback.format_exception(e, e, e.__traceback__)
                                 ),
                             },
                         )

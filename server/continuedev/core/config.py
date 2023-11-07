@@ -176,11 +176,7 @@ class ContinueConfig(BaseModel):
                 convertConfigImports(shorten=True)
                 return ContinueConfig.from_filepath(filepath, retry=False)
             else:
-                logger.critical(f"Failed to load config.py: {e}")
-        except Exception as e:
-            logger.critical(f"Failed to load config.py: {e}")
-
-        return ContinueConfig()
+                raise e
 
     @staticmethod
     def load_default() -> "ContinueConfig":

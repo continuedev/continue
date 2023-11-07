@@ -58,7 +58,11 @@ app.add_middleware(
 
 # region: Base endpoints
 
-root_config = ContinueConfig.load_default()
+try:
+    root_config = ContinueConfig.load_default()
+except Exception as e:
+    logger.error(f"Failed to load config.py: {e}")
+    root_config = ContinueConfig()
 
 
 @app.get("/slash_commands")
