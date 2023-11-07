@@ -52,7 +52,7 @@ class Window:
             )
 
     def __init__(self, config: Optional[ContinueConfig] = None) -> None:
-        self.config = config or self.load_config()
+        self.config = config or self.load_config() or ContinueConfig()
 
     def get_autopilot(self, session_state: SessionState) -> Autopilot:
         return Autopilot(
@@ -99,11 +99,13 @@ class Window:
             )
             self._error_loading_config = None
 
-        async def index():
-            async for progress in build_index(self.ide, self.config):
-                await self.gui.send_indexing_progress(progress)
+        if not self.config.disable_indexing:
 
-        create_async_task(index(), on_error=self.ide.on_error)
+            async def index():
+                async for progress in build_index(self.ide, self.config):
+                    await self.gui.send_indexing_progress(progress)
+
+            create_async_task(index(), on_error=self.ide.on_error)
 
         # Start models
         await self.config.models.start(
@@ -121,15 +123,16 @@ class Window:
         dev_data_logger.setup(self.config.user_token, self.config.data_server_url)
 
         # Load documents into the search index
-        await self.context_manager.start(
-            self.config.context_providers
-            + [
-                HighlightedCodeContextProvider(ide=self.ide),
-                FileContextProvider(workspace_dir=self.ide.workspace_directory),
-            ],
-            self.ide,
-            only_reloading=only_reloading,
-        )
+        if not self.config.disable_indexing:
+            await self.context_manager.start(
+                self.config.context_providers
+                + [
+                    HighlightedCodeContextProvider(ide=self.ide),
+                    FileContextProvider(workspace_dir=self.ide.workspace_directory),
+                ],
+                self.ide,
+                only_reloading=only_reloading,
+            )
 
         async def onFileSavedCallback(filepath: str, contents: str):
             if filepath.endswith(".continue/config.py") or filepath.endswith(

@@ -145,6 +145,10 @@ class ContinueConfig(BaseModel):
         False,
         description="If set to `True`, Continue will not generate summaries for each Step. This can be useful if you want to save on compute.",
     )
+    disable_indexing: Optional[bool] = Field(
+        False,
+        description="If set to `True`, Continue will not index the codebase. This is mainly used for debugging purposes.",
+    )
     retrieval_settings: Optional[RetrievalSettings] = Field(
         RetrievalSettings(),
         description="Settings for the retrieval system. Read more about the retrieval system in the documentation.",
