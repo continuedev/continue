@@ -44,8 +44,8 @@ app.include_router(ide_router)
 app.include_router(gui_router)
 app.include_router(sessions_router)
 
-app.mount("/ide", sio_ide_app)
-app.mount("/gui", sio_gui_app)
+app.mount("/ide", sio_ide_app, name="ide")
+app.mount("/gui", sio_gui_app, name="gui")
 
 # Add CORS support
 app.add_middleware(
