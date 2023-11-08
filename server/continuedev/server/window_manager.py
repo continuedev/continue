@@ -221,6 +221,7 @@ class WindowManager:
 
         if self.windows[window_info.window_id].gui is not None:
             await self.windows[window_info.window_id].load()
+            logger.info(f"There are {len(self.windows)} sessions currently open")
 
     def remove_ide(self, sid: str):
         ide = self.ides.pop(sid, None)
@@ -253,6 +254,7 @@ class WindowManager:
 
         if self.windows[window_id].ide is not None:
             await self.windows[window_id].load()
+            logger.info(f"There are {len(self.windows)} sessions currently open")
 
     def remove_gui(self, sid: str):
         gui = self.guis.pop(sid, None)
