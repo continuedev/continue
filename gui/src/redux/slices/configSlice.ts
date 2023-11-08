@@ -6,17 +6,9 @@ const windowAny: any = window;
 export const configSlice = createSlice({
   name: "config",
   initialState: {
-    apiUrl: windowAny.serverUrl || "http://localhost:8000",
     vscMachineId: windowAny.vscMachineId || undefined,
   } as RootStore["config"],
   reducers: {
-    setApiUrl: (
-      state: RootStore["config"],
-      action: { type: string; payload: string }
-    ) => ({
-      ...state,
-      apiUrl: action.payload,
-    }),
     setVscMachineId: (
       state: RootStore["config"],
       action: { type: string; payload: string }
@@ -41,6 +33,6 @@ export const configSlice = createSlice({
   },
 });
 
-export const { setVscMachineId, setApiUrl, setSessionId, setDataSwitchOn } =
+export const { setVscMachineId, setSessionId, setDataSwitchOn } =
   configSlice.actions;
 export default configSlice.reducer;

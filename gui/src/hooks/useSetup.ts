@@ -18,13 +18,13 @@ import {
   setIndexingProgress,
   setSlashCommands,
 } from "../redux/slices/serverStateReducer";
-import { setApiUrl, setVscMachineId } from "../redux/slices/configSlice";
+import { setVscMachineId } from "../redux/slices/configSlice";
 
 function useSetup(
   client: ContinueGUIClientProtocol | undefined,
   dispatch: Dispatch<any>
 ) {
-  const serverUrl = useSelector((store: RootStore) => store.config.apiUrl);
+  const serverUrl = (window as any).serverUrl;
   const active = useSelector((store: RootStore) => store.sessionState.active);
   const title = useSelector((store: RootStore) => store.sessionState.title);
   const history = useSelector((store: RootStore) => store.sessionState.history);
@@ -102,7 +102,6 @@ function useSetup(
           (window as any).workspacePaths = event.data.workspacePaths;
           (window as any).vscMachineId = event.data.vscMachineId;
           (window as any).vscMediaUrl = event.data.vscMediaUrl;
-          dispatch(setApiUrl(event.data.serverUrl));
           dispatch(setVscMachineId(event.data.vscMachineId));
           // dispatch(setVscMediaUrl(event.data.vscMediaUrl));
 

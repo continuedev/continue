@@ -21,7 +21,6 @@ export interface ChatMessage {
 
 export interface RootStore {
   config: {
-    apiUrl: string;
     vscMachineId: string | undefined;
   };
   misc: {

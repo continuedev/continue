@@ -63,7 +63,7 @@ function TableRow({
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const client = useContext(GUIClientContext);
-  const apiUrl = useSelector((state: RootStore) => state.config.apiUrl);
+  const apiUrl = (window as any).serverUrl;
   const currentSession = useSelector((state: RootStore) => state.sessionState);
   const workspacePaths = (window as any).workspacePaths || [""];
   const [hovered, setHovered] = useState(false);
@@ -136,7 +136,7 @@ function History() {
     SessionInfo[]
   >([]);
   const client = useContext(GUIClientContext);
-  const apiUrl = useSelector((state: RootStore) => state.config.apiUrl);
+  const apiUrl = (window as any).serverUrl;
   const workspacePaths = (window as any).workspacePaths || [];
 
   const deleteSessionInUI = async (sessionId: string) => {

@@ -489,24 +489,26 @@ class IdeProtocolClient {
   // Checks to see if the editor is a code editor.
   // In some cases vscode.window.visibleTextEditors can return non-code editors
   // e.g. terminal editors in side-by-side mode
-  private editorIsCode(editor: vscode.TextEditor) {
-    return !(
-      editor.document.languageId === "plaintext" &&
-      editor.document.getText() === "accessible-buffer-accessible-buffer-"
+  private documentIsCode(document: vscode.TextDocument) {
+    return (
+      !(
+        document.languageId === "plaintext" &&
+        document.getText() === "accessible-buffer-accessible-buffer-"
+      ) && !document.uri.scheme.startsWith("git")
     );
   }
 
   getOpenFiles(): string[] {
-    return vscode.window.visibleTextEditors
-      .filter((editor) => this.editorIsCode(editor))
-      .map((editor) => {
-        return editor.document.uri.fsPath;
+    return vscode.workspace.textDocuments
+      .filter((document) => this.documentIsCode(document))
+      .map((document) => {
+        return document.uri.fsPath;
       });
   }
 
   getVisibleFiles(): string[] {
     return vscode.window.visibleTextEditors
-      .filter((editor) => this.editorIsCode(editor))
+      .filter((editor) => this.documentIsCode(editor.document))
       .map((editor) => {
         return editor.document.uri.fsPath;
       });
@@ -514,7 +516,7 @@ class IdeProtocolClient {
 
   saveFile(filepath: string) {
     vscode.window.visibleTextEditors
-      .filter((editor) => this.editorIsCode(editor))
+      .filter((editor) => this.documentIsCode(editor.document))
       .forEach((editor) => {
         if (editor.document.uri.fsPath === filepath) {
           editor.document.save();
@@ -659,7 +661,7 @@ class IdeProtocolClient {
     // TODO
     let rangeInFiles: RangeInFile[] = [];
     vscode.window.visibleTextEditors
-      .filter((editor) => this.editorIsCode(editor))
+      .filter((editor) => this.documentIsCode(editor.document))
       .forEach((editor) => {
         editor.selections.forEach((selection) => {
           // if (!selection.isEmpty) {
