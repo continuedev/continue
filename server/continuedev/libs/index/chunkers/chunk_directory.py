@@ -1,6 +1,6 @@
 import asyncio
 import os
-from typing import Dict, List
+from typing import AsyncGenerator, Dict, List, Tuple
 
 from ....server.protocols.ide_protocol import AbstractIdeProtocolServer
 from ...util.filter_files import DEFAULT_IGNORE_PATTERNS, should_filter_path
@@ -82,10 +82,9 @@ def gi_basename(path: str) -> str:
         return path
 
 
-async def get_all_file_contents(
-    ide: AbstractIdeProtocolServer, ignore_files: List[str] = [], group_size: int = 100
-) -> Dict[str, str]:
-    # Get list of filenames to index
+async def get_non_ignored_filepaths(
+    ide: AbstractIdeProtocolServer, ignore_files: List[str] = []
+):
     files = await ide.listDirectoryContents(ide.workspace_directory, True)
 
     # Get all .gitignores first
@@ -130,6 +129,14 @@ async def get_all_file_contents(
             files,
         )
     )
+    return files
+
+
+async def get_all_file_contents(
+    ide: AbstractIdeProtocolServer, ignore_files: List[str] = [], group_size: int = 100
+) -> Dict[str, str]:
+    # Get list of filenames to index
+    files = await get_non_ignored_filepaths(ide, ignore_files)
 
     items = []
     i = 0
@@ -153,3 +160,27 @@ async def chunk_directory(
         chunks += chunk_document(filepath, contents, max_chunk_size)
 
     return chunks
+
+
+async def stream_file_contents(
+    ide: AbstractIdeProtocolServer, ignore_files: List[str] = [], group_size: int = 100
+) -> AsyncGenerator[Tuple[str, str, float], None]:
+    # Get list of filenames to index
+    # TODO: Don't get all at once, walk the tree, or break up
+    files = await get_non_ignored_filepaths(ide, ignore_files)
+
+    # Don't want to flood with too many requests
+    i = 0
+    total = len(files)
+    for file in files:
+        contents = await get_file_contents(file, ide)
+        yield (file, contents, i / total)
+        i += 1
+
+
+async def stream_chunk_directory(
+    ide: AbstractIdeProtocolServer, max_chunk_size: int
+) -> AsyncGenerator[Tuple[Chunk, float], None]:
+    async for file, contents, progress in stream_file_contents(ide):
+        for chunk in chunk_document(file, contents, max_chunk_size):
+            yield (chunk, progress)

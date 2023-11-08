@@ -1,12 +1,12 @@
 import asyncio
 from functools import cached_property
-from ....server.protocols.ide_protocol import AbstractIdeProtocolServer
 from meilisearch_python_async import Client
 from meilisearch_python_async.errors import MeilisearchApiError
+from meilisearch_python_async.index import Index
 from ....server.meilisearch_server import get_meilisearch_url
 from .base import CodebaseIndex
 from ..chunkers import Chunk
-from typing import Any, AsyncGenerator, Dict, List, Optional
+from typing import Any, AsyncGenerator, Dict, List
 
 from ....server.meilisearch_server import remove_meilisearch_disallowed_chars
 from ...util.logging import logger
@@ -63,17 +63,16 @@ class MeilisearchCodebaseIndex(CodebaseIndex):
             other_metadata=other_metadata,
         )
 
-    async def build(
-        self,
-        ide: AbstractIdeProtocolServer,
-        ignore_files: List[str] = [],
-        chunks: Optional[List[Chunk]] = None,
-    ) -> AsyncGenerator[float, None]:
-        """Builds the index, yielding progress as a float between 0 and 1"""
-        if chunks is None:
-            logger.warning("Meilisearch index requires chunks to be passed in")
-            yield 1
+    async def add_chunks(self, chunks: List[Chunk], index: Index, offset: int):
+        await index.add_documents(
+            [
+                self.chunk_to_meilisearch_document(chunk, j + offset)
+                for j, chunk in enumerate(chunks)
+            ]
+        )
 
+    async def build(self, chunks: AsyncGenerator[Chunk, None]):
+        """Builds the index, yielding progress as a float between 0 and 1"""
         async with Client(get_meilisearch_url()) as search_client:
             try:
                 await search_client.create_index(self.index_name)
@@ -85,22 +84,27 @@ class MeilisearchCodebaseIndex(CodebaseIndex):
 
                 i = 0
                 GROUP_SIZE = 100
-                while i < len(chunks):
-                    await index.add_documents(
-                        [
-                            self.chunk_to_meilisearch_document(chunk, j)
-                            for j, chunk in enumerate(chunks[i : i + GROUP_SIZE])
-                        ]
+                group = []
+                async for chunk in chunks:
+                    if len(group) < GROUP_SIZE:
+                        group.append(chunk)
+                        continue
+
+                    await self.add_chunks(
+                        group,
+                        index,
+                        i,
                     )
 
                     i += GROUP_SIZE
-                    yield i / len(chunks)
+                    group = []
                     await asyncio.sleep(0.1)
+
+                if len(group) > 0:
+                    await self.add_chunks(group, index, i)
 
             except Exception as e:
                 logger.warning(f"Error while building meilisearch index: {e}")
-
-        yield 1
 
     async def update(self) -> AsyncGenerator[float, None]:
         """Updates the index, yielding progress as a float between 0 and 1"""
