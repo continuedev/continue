@@ -78,6 +78,14 @@ class Window:
                 self.config.temperature,
             )
 
+    async def display_config_error(self):
+        if self._error_loading_config is not None:
+            await self.ide.setFileOpen(getConfigFilePath())
+            await self.ide.showMessage(
+                f"""We found an error while loading your config.py. For now, Continue is falling back to the default configuration. If you need help solving this error, please reach out to us on Discord by clicking the question mark button in the bottom right.\n\n{self._error_loading_config}"""
+            )
+            self._error_loading_config = None
+
     async def load(
         self, config: Optional[ContinueConfig] = None, only_reloading: bool = False
     ):
@@ -92,12 +100,7 @@ class Window:
         #     HistoryNode(step=msg_step, observation=None, depth=0, active=False)
         # )
 
-        if self._error_loading_config is not None:
-            await self.ide.setFileOpen(getConfigFilePath())
-            await self.ide.showMessage(
-                f"""We found an error while loading your config.py. For now, Continue is falling back to the default configuration. If you need help solving this error, please reach out to us on Discord by clicking the question mark button in the bottom right.\n\n{self._error_loading_config}"""
-            )
-            self._error_loading_config = None
+        await self.display_config_error()
 
         if not self.config.disable_indexing:
 
@@ -141,6 +144,8 @@ class Window:
                 await self.reload_config()
                 if self.gui is not None:
                     await self.gui.send_config_update()
+
+                await self.display_config_error()
 
         self.ide.subscribeToFileSaved(onFileSavedCallback)
 

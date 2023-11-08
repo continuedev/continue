@@ -12,6 +12,7 @@ interface HeaderButtonWithTextProps {
   className?: string;
   onKeyDown?: (e: any) => void;
   tabIndex?: number;
+  style?: React.CSSProperties;
 }
 
 const HeaderButtonWithText = React.forwardRef<
@@ -39,6 +40,7 @@ const HeaderButtonWithText = React.forwardRef<
         onClick={props.onClick}
         onKeyDown={props.onKeyDown}
         className={props.className}
+        style={props.style}
         ref={ref}
         tabIndex={props.tabIndex}
       >
