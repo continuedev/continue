@@ -106,7 +106,8 @@ class Window:
 
             async def index():
                 async for progress in build_index(self.ide, self.config):
-                    await self.gui.send_indexing_progress(progress)
+                    if self.gui is not None:
+                        await self.gui.send_indexing_progress(progress)
 
             create_async_task(index(), on_error=self.ide.on_error)
 
