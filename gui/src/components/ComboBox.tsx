@@ -28,6 +28,7 @@ import {
   ChevronRightIcon,
   Cog6ToothIcon,
   CommandLineIcon,
+  ExclamationTriangleIcon,
   FolderIcon,
   FolderOpenIcon,
   GlobeAltIcon,
@@ -797,6 +798,24 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
     ]
   );
 
+  const [contextLengthFillPercentage, setContextLengthFillPercentage] =
+    useState<number>(0);
+
+  const contextLength = useSelector(
+    (store: RootStore) =>
+      store.serverState.config.models?.default?.context_length || 4096
+  );
+
+  useEffect(() => {
+    let tokenEstimate = selectedContextItems.reduce((acc, item) => {
+      return acc + item.content.length / Math.E; // Just an estimate of tokens / char
+    }, 0);
+    tokenEstimate += downshiftProps.inputValue.length / Math.E;
+    setContextLengthFillPercentage(
+      tokenEstimate / Math.max(1, contextLength - 600)
+    );
+  }, [selectedContextItems, contextLength]);
+
   const [isComposing, setIsComposing] = useState(false);
 
   const [showContextToggleOn, setShowContextToggleOn] = useState(false);
@@ -1033,6 +1052,19 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
                   size={32}
                   wFull={false}
                 ></RingLoader>
+              )}
+              {contextLengthFillPercentage > 1 && (
+                <HeaderButtonWithText
+                  text={`Context selected may exceed token limit (~${(
+                    100 * contextLengthFillPercentage
+                  ).toFixed(0)}%)`}
+                >
+                  <ExclamationTriangleIcon
+                    width="1.0em"
+                    height="1.0em"
+                    color="red"
+                  />
+                </HeaderButtonWithText>
               )}
             </>
           ) : (
