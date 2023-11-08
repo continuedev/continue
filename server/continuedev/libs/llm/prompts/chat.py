@@ -34,6 +34,8 @@ def zephyr_template_messages(msgs: List[Dict[str, str]]) -> str:
     if msgs[0]["role"] == "system":
         prompt += f"<|system|>{msgs[0]['content']}</s>\n"
         msgs.pop(0)
+    else:
+        prompt += "<|system|> </s>\n"
 
     for msg in msgs:
         prompt += "<|user|>\n" if msg["role"] == "user" else "<|assistant|>\n"
