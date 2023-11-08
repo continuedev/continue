@@ -129,11 +129,17 @@ function fallbackRender({ error, resetErrorBoundary }) {
   // Call resetErrorBoundary() to reset the error boundary and retry the render.
 
   return (
-    <div role="alert">
+    <div
+      role="alert"
+      className="px-2"
+      style={{ backgroundColor: vscBackground }}
+    >
       <p>Something went wrong:</p>
       <pre style={{ color: "red" }}>{error.message}</pre>
 
-      <Button onClick={resetErrorBoundary}>Restart</Button>
+      <div className="text-center">
+        <Button onClick={resetErrorBoundary}>Restart</Button>
+      </div>
     </div>
   );
 }
@@ -747,7 +753,7 @@ function GUI(props: GUIProps) {
                   )
                 ) : (
                   <TimelineItem
-                    historyNode={step}
+                    step={step}
                     iconElement={
                       step.step_type === "DefaultModelEditCodeStep" ? (
                         <CodeBracketSquareIcon width="16px" height="16px" />

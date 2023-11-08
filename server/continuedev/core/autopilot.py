@@ -238,11 +238,12 @@ class Autopilot:
             # i is now the index of the step that we want to show/rerun
             yield SessionUpdate(
                 index=index,
-                update=DeltaStep(
+                update=SetStep(
                     error=ContinueError(
                         title=continue_custom_exception.title,
                         message=continue_custom_exception.message,
-                    )
+                    ),
+                    hide=False,
                 ),
             )
 
