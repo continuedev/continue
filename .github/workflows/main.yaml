@@ -306,6 +306,14 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           branch: ${{ github.ref }}
 
+      # 4.5 Send to Discord Webhook
+      - name: Discord Commits
+        uses: Sniddl/discord-commits@v1.6
+        with:
+          webhook: ${{ secrets.DISCORD_WEBHOOK }}
+          template: "avatar-with-link"
+          include-extras: true
+
       # 5. Download binaries and upload to S3
       - name: Download Linux build
         uses: actions/download-artifact@v2
