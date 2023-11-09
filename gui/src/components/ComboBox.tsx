@@ -1586,7 +1586,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
             >
               {downshiftProps.inputValue?.startsWith("/codebase")
                 ? "Using codebase"
-                : "⌘ ⏎ Use codebase"}
+                : `${getMetaKeyLabel()} ⏎ Use codebase`}
             </span>
           </div>
           <br />
