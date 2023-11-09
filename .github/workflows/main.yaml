@@ -276,7 +276,7 @@ jobs:
           cd extensions/vscode
           npx ovsx publish -p ${{ secrets.VSX_REGISTRY_TOKEN }} --packagePath ../../alpine-x64/*.vsix ../../darwin-arm64/*.vsix ../../darwin-x64/*.vsix ../../linux-arm64/*.vsix ../../linux-armhf/*.vsix ../../linux-x64/*.vsix ../../win32-ia32/*.vsix ../../win32-x64/*.vsix ../../win32-arm64/*.vsix
 
-      # Update the changelog
+      # 3.5 Update the changelog
       - name: Batch a new patch version
         uses: miniscruff/changie-action@VERSION # view action repo for latest version
         with:
@@ -302,7 +302,6 @@ jobs:
           branch: ${{ github.ref }}
 
       # 5. Download binaries and upload to S3
-      Skipping this until JetBrains is up-to-date
       - name: Download Linux build
         uses: actions/download-artifact@v2
         with:
