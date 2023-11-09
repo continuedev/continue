@@ -4,6 +4,7 @@ from typing import Dict, List, Tuple
 
 from pydantic import BaseModel
 
+from ..libs.util.filter_files import should_filter_path
 from ..models.main import AbstractModel, Position, Range
 from .filesystem_edit import (
     AddDirectory,
@@ -332,6 +333,7 @@ class RealFileSystem(FileSystem):
             # Walk
             paths = []
             for root, dirs, files in os.walk(path):
+                dirs[:] = list(filter(lambda p: not should_filter_path(p), dirs))
                 for f in files:
                     paths.append(os.path.join(root, f))
 

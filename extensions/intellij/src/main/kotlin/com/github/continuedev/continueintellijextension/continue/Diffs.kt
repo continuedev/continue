@@ -36,7 +36,7 @@ fun getDiffDirectory(): File {
     return diffDir
 }
 fun escapeFilepath(filepath: String): String {
-    return filepath.replace("/", "\$f\$").replace("\\", "\$b\$")
+    return filepath.replace("/", "_f_").replace("\\", "_b_")
 }
 
 interface DiffInfo {
@@ -175,7 +175,7 @@ class DiffManager(private val project: Project): DumbAware {
                             override fun createActions(): Array<Action> {
                                 val okAction = getOKAction()
                                 val cmdCtrl = if (System.getProperty("os.name").toLowerCase().contains("mac")) "⌘" else "⌃"
-                                okAction.putValue(Action.NAME, "Accept ($cmdCtrl ⇧ ↵)")
+                                okAction.putValue(Action.NAME, "Accept ($cmdCtrl ⇧ ⏎)")
 
                                 val cancelAction = getCancelAction()
                                 cancelAction.putValue(Action.NAME, "Reject ($cmdCtrl ⇧ ⌫)")

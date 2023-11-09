@@ -7,7 +7,7 @@ import argparse
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--arch", type=str)
-parser.add_argument("--dir", type=bool, default=False)
+parser.add_argument("--dir", action="store_true")
 options = parser.parse_args()
 
 block_cipher = None

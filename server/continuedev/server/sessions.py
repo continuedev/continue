@@ -30,11 +30,40 @@ async def list_sessions():
     """List all sessions"""
     sessions_list_file = getSessionsListFilePath()
     if not os.path.exists(sessions_list_file):
-        print("Returning empty sessions list")
         return []
     sessions = json.load(open(sessions_list_file, "r"))
-    print("Returning sessions list: ", sessions)
     return sessions
+
+
+class DeleteSessionBody(BaseModel):
+    session_id: str
+
+
+@router.post("/delete")
+async def delete_session(body: DeleteSessionBody):
+    """Delete a session"""
+    session_file = getSessionFilePath(body.session_id)
+    if not os.path.exists(session_file):
+        raise Exception(f"Session file {session_file} does not exist")
+    os.remove(session_file)
+
+    # Read and update the sessions list
+    with open(getSessionsListFilePath(), "r") as f:
+        try:
+            sessions_list: List[SessionInfo] = json.load(f)
+        except json.JSONDecodeError:
+            raise Exception(
+                f"It looks like there is a JSON formatting error in your sessions.json file ({getSessionsListFilePath()}). Please fix this before creating a new session."
+            )
+
+    sessions_list = [
+        session for session in sessions_list if session["session_id"] != body.session_id
+    ]
+
+    with open(getSessionsListFilePath(), "w") as f:
+        json.dump(sessions_list, f)
+
+    return
 
 
 @router.get("/{session_id}")

@@ -110,6 +110,8 @@ class GUIProtocolServer:
             self.delete_context_group(data["id"])
         elif msg.message_type == "preview_context_item":
             self.preview_context_item(data["id"])
+        elif msg.message_type == "delete_model_at_index":
+            await self.delete_model_at_index(data["index"])
 
     def show_context_virtual_file(self, index: Optional[int] = None):
         async def async_stuff():
@@ -178,6 +180,14 @@ class GUIProtocolServer:
         await self.reload_config()
         await self.send_config_update()
 
+    async def delete_model_at_index(self, index: int):
+        models = self.get_config().models
+        models.saved.pop(index)
+
+        ContinueConfig.set_models(models, "*")
+        await self.reload_config()
+        await self.send_config_update()
+
     async def add_model_for_role(self, role: str, model_class: str, model: Any):
         models = self.get_config().models
 
@@ -214,15 +224,18 @@ class GUIProtocolServer:
                 f"from continuedev.libs.llm.{MODEL_MODULE_NAMES[model_class]} import {model_class}"
             )
             if "template_messages" in model:
-                add_config_import(
-                    f"from continuedev.libs.llm.prompts.chat import {model['template_messages']}"
-                )
+                if model["template_messages"] != "None":
+                    add_config_import(
+                        f"from continuedev.libs.llm.prompts.chat import {model['template_messages']}"
+                    )
+
                 sqtm = sqlcoder_template_messages("<MY_DATABASE_SCHEMA>")
                 sqtm.__name__ = 'sqlcoder_template_messages("<MY_DATABASE_SCHEMA>")'
                 model["template_messages"] = {
                     "llama2_template_messages": llama2_template_messages,
                     "template_alpaca_messages": template_alpaca_messages,
                     "sqlcoder_template_messages": sqtm,
+                    "None": None,
                 }[model["template_messages"]]
 
             if "prompt_templates" in model and "edit" in model["prompt_templates"]:
@@ -309,6 +322,9 @@ class GUIProtocolServer:
 
     async def send_session_update(self, session_update: SessionUpdate):
         await self.messenger.send("session_update", session_update.dict())
+
+    async def send_indexing_progress(self, progress: float):
+        await self.messenger.send("indexing_progress", {"progress": progress})
 
     async def get_session_state(self) -> SessionState:
         return await self.messenger.send_and_receive(

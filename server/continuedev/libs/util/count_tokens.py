@@ -20,7 +20,7 @@ DEFAULT_ARGS = {
     "temperature": 0.5,
 }
 
-MAX_TOKENS_FOR_MODEL = {
+CONTEXT_LENGTH_FOR_MODEL = {
     "gpt-3.5-turbo": 4096,
     "gpt-3.5-turbo-0613": 4096,
     "gpt-3.5-turbo-16k": 16_384,
@@ -29,6 +29,7 @@ MAX_TOKENS_FOR_MODEL = {
     "gpt-35-turbo-0613": 4096,
     "gpt-35-turbo": 4096,
     "gpt-4-32k": 32_768,
+    "gpt-4-1106-preview": 128_000,
 }
 
 already_saw_import_err = False
@@ -119,7 +120,7 @@ def prune_chat_history(
         count_tokens(message.content, model_name) - context_length / 3
         for message in longer_than_one_third
     ]
-    total_tokens_removed = 0
+
     for i in range(len(longer_than_one_third)):
         # Prune line-by-line
         message = longer_than_one_third[i]
@@ -127,11 +128,12 @@ def prune_chat_history(
         tokens_removed = 0
         while (
             tokens_removed < distance_from_third[i]
-            and total_tokens - total_tokens_removed > context_length
+            and total_tokens > context_length
+            and len(lines) > 0
         ):
-            delta = count_tokens(lines.pop(-1), model_name)
+            delta = count_tokens("\n" + lines.pop(-1), model_name)
             tokens_removed += delta
-            total_tokens_removed += delta
+            total_tokens -= delta
 
         message.content = "\n".join(lines)
 

@@ -1,0 +1,46 @@
+{
+  "basePath": "/Users/natesesti/Desktop/continue/server/continuedev",
+  "questions": [
+    {
+      "q": "How does the Continue FastAPI server work?",
+      "files": ["server/main.py", "server/gui.py", "server/ide.py"]
+    },
+    {
+      "q": "Where is logic for pruning the prompt tokens?",
+      "files": ["libs/util/count_tokens.py", "libs/llm/base.py"]
+    },
+    {
+      "q": "Where does codebase indexing happen?",
+      "files": [
+        "plugins/steps/chroma.py",
+        "libs/index/indices/chroma_index.py",
+        "libs/index/indices/meilisearch_index.py",
+        "libs/index/indices/base.py",
+        "core/context.py"
+      ]
+    },
+    {
+      "q": "How is meilisearch used?",
+      "files": [
+        "plugins/steps/chroma.py",
+        "libs/index/indices/meilisearch_index.py",
+        "libs/index/indices/base.py",
+        "core/context.py",
+        "server/meilisearch_server.py"
+      ]
+    },
+    {
+      "q": "I want to update Ollama integration",
+      "files": ["libs/llm/ollama.py"]
+    },
+    {
+      "q": "How does Continue chunk code?",
+      "files": [
+        "libs/index/chunkers/basic.py",
+        "libs/index/chunkers/chunk_directory.py",
+        "libs/index/chunkers/chunk.py",
+        "libs/index/chunkers/code.py"
+      ]
+    }
+  ]
+}

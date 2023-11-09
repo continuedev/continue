@@ -2,7 +2,7 @@ import styled from "styled-components";
 import { defaultBorderRadius, secondaryDark, vscForeground } from ".";
 import { Outlet } from "react-router-dom";
 import TextDialog from "./TextDialog";
-import { useContext, useEffect } from "react";
+import { useCallback, useContext, useEffect } from "react";
 import { GUIClientContext } from "../App";
 import { useDispatch, useSelector } from "react-redux";
 import { RootStore } from "../redux/store";
@@ -22,6 +22,7 @@ import ModelSelect from "./ModelSelect";
 import ProgressBar from "./ProgressBar";
 import { newSession } from "../redux/slices/sessionStateReducer";
 import { getFontSize } from "../util";
+import IndexingProgressBar from "./IndexingProgressBar";
 
 // #region Styled Components
 const FOOTER_HEIGHT = "1.8em";
@@ -73,6 +74,8 @@ const Footer = styled.footer`
   align-items: center;
   width: calc(100% - 16px);
   height: ${FOOTER_HEIGHT};
+  background-color: transparent;
+  backdrop-filter: blur(12px);
 
   overflow: hidden;
 `;
@@ -105,6 +108,9 @@ const Layout = () => {
   const showDialog = useSelector(
     (state: RootStore) => state.uiState.showDialog
   );
+  const indexingProgress = useSelector(
+    (state: RootStore) => state.serverState.indexingProgress
+  );
 
   const defaultModel = useSelector(
     (state: RootStore) => (state.serverState.config as any).models?.default
@@ -121,13 +127,20 @@ const Layout = () => {
   const timeline = useSelector(
     (state: RootStore) => state.sessionState.history
   );
+  const workspacePaths = (window as any).workspacePaths || [];
+  const sessionState = useSelector((state: RootStore) => state.sessionState);
 
   // #endregion
+
+  const persistSession = useCallback(() => {
+    client?.persistSession(sessionState, workspacePaths[0] || "");
+  }, [client, sessionState, workspacePaths]);
 
   useEffect(() => {
     const handleKeyDown = (event: any) => {
       if (event.metaKey && event.altKey && event.code === "KeyN") {
         client?.stopSession();
+        persistSession();
         dispatch(newSession());
       }
       if ((event.metaKey || event.ctrlKey) && event.code === "KeyC") {
@@ -146,7 +159,7 @@ const Layout = () => {
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [client, timeline]);
+  }, [client, timeline, persistSession]);
 
   useEffect(() => {
     const handler = (event: any) => {
@@ -217,7 +230,8 @@ const Layout = () => {
                   />
                 )}
               <ModelSelect />
-              {defaultModel?.class_name === "OpenAIFreeTrial" &&
+              {indexingProgress >= 1 && // Would take up too much space together with indexing progress
+                defaultModel?.class_name === "OpenAIFreeTrial" &&
                 defaultModel?.api_key === "" &&
                 (location.pathname === "/settings" ||
                   parseInt(localStorage.getItem("ftc") || "0") >= 125) && (
@@ -226,6 +240,13 @@ const Layout = () => {
                     total={250}
                   />
                 )}
+
+              {indexingProgress < 1 && (
+                <IndexingProgressBar
+                  completed={indexingProgress * 100}
+                  total={100}
+                />
+              )}
             </div>
             <HeaderButtonWithText
               text="Help"

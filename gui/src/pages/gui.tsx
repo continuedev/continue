@@ -76,6 +76,7 @@ const TitleTextInput = styled(Input)`
   margin-right: 8px;
   padding-top: 6px;
   padding-bottom: 6px;
+  background-color: transparent;
 
   &:focus {
     outline: none;
@@ -120,18 +121,25 @@ const GUIHeaderDiv = styled.div`
   position: sticky;
   top: 0;
   z-index: 100;
-  background-color: ${vscBackground};
+  background-color: transparent;
+  backdrop-filter: blur(12px);
 `;
 
 function fallbackRender({ error, resetErrorBoundary }) {
   // Call resetErrorBoundary() to reset the error boundary and retry the render.
 
   return (
-    <div role="alert">
+    <div
+      role="alert"
+      className="px-2"
+      style={{ backgroundColor: vscBackground }}
+    >
       <p>Something went wrong:</p>
       <pre style={{ color: "red" }}>{error.message}</pre>
 
-      <Button onClick={resetErrorBoundary}>Restart</Button>
+      <div className="text-center">
+        <Button onClick={resetErrorBoundary}>Restart</Button>
+      </div>
     </div>
   );
 }
@@ -151,6 +159,8 @@ function GUI(props: GUIProps) {
 
   // #region Selectors
   const sessionState = useSelector((state: RootStore) => state.sessionState);
+  const workspacePaths = (window as any).workspacePaths || [];
+
   const defaultModel = useSelector(
     (state: RootStore) => (state.serverState.config as any).models?.default
   );
@@ -426,7 +436,7 @@ function GUI(props: GUIProps) {
 
       // cmd+enter to /codebase
       if (event && isMetaEquivalentKeyPressed(event)) {
-        input = `/edit ${input}`;
+        input = `/codebase ${input}`;
       }
       (mainTextInputRef.current as any).setInputValue("");
 
@@ -572,6 +582,7 @@ function GUI(props: GUIProps) {
           <HeaderButtonWithText
             onClick={() => {
               client?.stopSession();
+              client?.persistSession(sessionState, workspacePaths[0] || "");
               dispatch(newSession());
             }}
             text="New Session (⌥⌘N)"
@@ -591,7 +602,7 @@ function GUI(props: GUIProps) {
       </GUIHeaderDiv>
       {takenAction && showLoading && typeof client === "undefined" && (
         <>
-          <RingLoader />
+          <RingLoader size={32} />
           <p
             style={{
               textAlign: "center",
@@ -703,7 +714,7 @@ function GUI(props: GUIProps) {
                             history: newHistory,
                             context_items: sessionState.context_items,
                           };
-                          console.log("State: ", state);
+
                           client.runFromState(state);
                         }
                         e?.stopPropagation();
@@ -735,7 +746,6 @@ function GUI(props: GUIProps) {
                       onDelete={() => {
                         // Delete the input and all steps until the next user input
                         getStepsInUserInputGroup(index).forEach((i) => {
-                          console.log(i);
                           dispatch(deleteAtIndex(i));
                         });
                       }}
@@ -743,7 +753,7 @@ function GUI(props: GUIProps) {
                   )
                 ) : (
                   <TimelineItem
-                    historyNode={step}
+                    step={step}
                     iconElement={
                       step.step_type === "DefaultModelEditCodeStep" ? (
                         <CodeBracketSquareIcon width="16px" height="16px" />

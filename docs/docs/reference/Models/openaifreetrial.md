@@ -25,11 +25,12 @@ The `OpenAIFreeTrial` class will automatically switch to using your API key inst
 
 These classes support any models available through the OpenAI API, assuming your API key has access, including "gpt-4", "gpt-3.5-turbo", "gpt-3.5-turbo-16k", and "gpt-4-32k".
 
-[View the source](https://github.com/continuedev/continue/tree/main/server/continuedev/libs/llm/openai_free_trial.py)
+[View the source](https://github.com/continuedev/continue/blob/main/server/continuedev/libs/llm/libs/llm/openai_free_trial.py)
 
 ## Properties
 
 <ClassPropertyRef name='llm' details='{&quot;$ref&quot;: &quot;#/definitions/LLM&quot;}' required={false} default=""/>
+
 
 ### Inherited Properties
 

@@ -126,10 +126,10 @@ class ContinuePluginToolWindowFactory : ToolWindowFactory, DumbAware {
                         continuePluginService.ideProtocolClient?.highlightCode(RangeInFile(
                                 data.get("filepath").asString,
                                 Range(Position(
-                                        data.get("startLine").asInt,
+                                        data.get("start").asInt,
                                         0
                                 ), Position(
-                                        data.get("endLine").asInt + 1,
+                                        data.get("end").asInt + 1,
                                         0
                                 )),
 

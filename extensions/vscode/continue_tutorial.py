@@ -64,7 +64,7 @@ select the code and toggle the /edit slash command"""
 """Step 3: Request an edit and press Enter"""
 
 """Step 4: Use keyboard shortcuts to
-accept [⌘ ⇧ ↵] or reject [⌘ ⇧ ⌫] the edit"""
+accept [⌘ ⇧ ⏎] or reject [⌘ ⇧ ⌫] the edit"""
 
 # endregion
 

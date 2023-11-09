@@ -60,6 +60,8 @@ abstract class AbstractContinueGUIClientProtocol {
   abstract deleteContextGroup(id: string): void;
 
   abstract onConfigUpdate(callback: (config: ContinueConfig) => void);
+
+  abstract deleteModelAtIndex(index: number): void;
 }
 
 export default AbstractContinueGUIClientProtocol;

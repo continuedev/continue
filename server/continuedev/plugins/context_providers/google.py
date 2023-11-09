@@ -6,7 +6,7 @@ from pydantic import Field
 
 from ...core.context import ContextProvider
 from ...core.main import ContextItem, ContextItemDescription, ContextItemId
-from .util import remove_meilisearch_disallowed_chars
+from ...server.meilisearch_server import remove_meilisearch_disallowed_chars
 
 
 class GoogleContextProvider(ContextProvider):

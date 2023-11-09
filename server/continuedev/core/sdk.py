@@ -200,6 +200,7 @@ class ContinueSDK:
         )
 
     async def add_context_item(self, item: ContextItem):
+        self.__autopilot.session_state.context_items.append(item)
         await self.gui.add_context_item(item)
 
     def set_loading_message(self, message: str):
@@ -233,3 +234,15 @@ class ContinueSDK:
             history_context.insert(-1, msg)
 
         return history_context
+
+    async def get_context_item_chat_messages(
+        self, exclude: str = None
+    ) -> List[ChatMessage]:
+        return await self.__autopilot.context_manager.get_chat_messages(
+            # list(
+            # filter(
+            # lambda x: x.description,
+            self.context_items
+            # )
+            # )
+        )

@@ -1,3 +1,4 @@
 {
-  "python.defaultInterpreterPath": "${workspaceFolder}/server/.venv/bin/python3"
+  "python.defaultInterpreterPath": "${workspaceFolder}/server/.venv/bin/python3",
+  "continue.showInlineTip": false
 }

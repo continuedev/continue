@@ -21,8 +21,6 @@ export interface ChatMessage {
 
 export interface RootStore {
   config: {
-    workspacePaths: string[] | undefined;
-    apiUrl: string;
     vscMachineId: string | undefined;
   };
   misc: {
@@ -45,6 +43,7 @@ export interface RootStore {
     config: ContinueConfig;
     contextProviders: ContextProviderDescription[];
     savedContextGroups: any[]; // TODO: Context groups
+    indexingProgress: number;
   };
 }
 

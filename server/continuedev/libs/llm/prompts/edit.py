@@ -37,7 +37,7 @@ _codellama_edit_prompt = dedent(
             You are an expert programmer and personal assistant, here is your task: "Rewrite the above code in order to {{{user_input}}}"
 
             Your answer should start with a [CODE] tag and end with a [/CODE] tag.
-            [/INST]
+            [/INST] Sure! Here's the code you requested:
             [CODE]"""
 )
 

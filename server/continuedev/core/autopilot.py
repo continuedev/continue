@@ -238,11 +238,12 @@ class Autopilot:
             # i is now the index of the step that we want to show/rerun
             yield SessionUpdate(
                 index=index,
-                update=DeltaStep(
+                update=SetStep(
                     error=ContinueError(
                         title=continue_custom_exception.title,
                         message=continue_custom_exception.message,
-                    )
+                    ),
+                    hide=False,
                 ),
             )
 
@@ -368,6 +369,9 @@ class Autopilot:
                 map(lambda x: x.dict(), await self.sdk.get_chat_context())
             )
             chat_history_str = template_alpaca_messages(chat_history)
+            if self.sdk.models.summarize is None:
+                return "New Session"
+
             title = await self.sdk.models.summarize.complete(
                 f"{chat_history_str}\n\nGive a short title to describe the above chat session. Do not put quotes around the title. Do not use more than 6 words. The title is: ",
                 max_tokens=20,

@@ -62,6 +62,6 @@ select the code and toggle the /edit slash command"""
 # e.g.) write comments
 
 """Step 4: Use keyboard shortcuts to
-accept [⌘ ⇧ ↵] or reject [⌘ ⇧ ⌫] the edit"""
+accept [⌘ ⇧ ⏎] or reject [⌘ ⇧ ⌫] the edit"""
 
 # endregion

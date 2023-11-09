@@ -245,7 +245,7 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
         ).output
 
     def on_error(self, e: Exception) -> Coroutine:
-        err_msg = "\n".join(traceback.format_exception(e))
+        err_msg = "\n".join(traceback.format_exception(e, e, e.__traceback__))
         e_title = e.__str__() or e.__repr__()
         return self.showMessage(f"Error in Continue server: {e_title}\n {err_msg}")
 

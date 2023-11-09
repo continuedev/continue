@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "continuedev"
-version = "0.1.78"
+version = "0.1.86"
 description = ""
 authors = ["Nate Sesti <sestinj@gmail.com>"]
 readme = "README.md"
@@ -37,7 +37,10 @@ chromadb = "^0.4.12"
 fastapi = "0.95.2"
 tree-sitter = "^0.20.2"
 tree-sitter-languages = "^1.7.0"
+rich = "^13.6.0"
 python-socketio = "^5.10.0"
+pathspec = "^0.11.2"
+tqdm = "^4.66.1"
 
 [tool.poetry.scripts]
 typegen = "continuedev.models.generate_json_schema:main"
@@ -45,6 +48,7 @@ typegen = "continuedev.models.generate_json_schema:main"
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.4.1"
 pytest-asyncio = "^0.21.1"
+ipykernel = "^6.26.0"
 
 [build-system]
 requires = ["poetry-core"]

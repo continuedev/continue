@@ -112,7 +112,7 @@ const completionParamsInputs = [
   FrequencyPenaltyInput,
 ];
 
-const serverUrlInput = {
+const serverUrlInput: InputDescriptor = {
   inputType: CollectInputType.text,
   key: "server_url",
   label: "Server URL",
@@ -168,6 +168,7 @@ enum ChatTemplates {
   "alpaca" = "template_alpaca_messages",
   "llama2" = "llama2_template_messages",
   "sqlcoder" = "sqlcoder_template_messages",
+  "None" = "None",
 }
 
 const codeLlamaInstruct: ModelPackage = {
@@ -359,9 +360,21 @@ const osModels = [
   codeup,
 ];
 
+const gpt4turbo: ModelPackage = {
+  title: "GPT-4 Turbo",
+  description:
+    "A faster, cheaper version of GPT-4 with a longer context length",
+  params: {
+    model: "gpt-4-1106-preview",
+    context_length: 128_000,
+    title: "GPT-4 Turbo",
+    api_key: "",
+  },
+};
+
 const gpt4: ModelPackage = {
   title: "GPT-4",
-  description: "The latest model from OpenAI",
+  description: "The most powerful model from OpenAI",
   params: {
     model: "gpt-4",
     context_length: 8096,
@@ -408,7 +421,7 @@ export const MODEL_INFO: { [key: string]: ModelInfo } = {
       "Use gpt-4, gpt-3.5-turbo, or any other OpenAI model. See [here](https://openai.com/product#made-for-developers) to obtain an API key.",
     icon: "openai.png",
     tags: [ModelProviderTag["Requires API Key"]],
-    packages: [gpt4, gpt35turbo],
+    packages: [gpt4, gpt35turbo, gpt4turbo],
     collectInputFor: [
       {
         inputType: CollectInputType.text,
@@ -461,7 +474,10 @@ export const MODEL_INFO: { [key: string]: ModelInfo } = {
     icon: "ollama.png",
     tags: [ModelProviderTag["Local"], ModelProviderTag["Open-Source"]],
     packages: osModels,
-    collectInputFor: [...completionParamsInputs],
+    collectInputFor: [
+      ...completionParamsInputs,
+      { ...serverUrlInput, defaultValue: "http://localhost:11434" },
+    ],
   },
   together: {
     title: "TogetherAI",
@@ -547,6 +563,7 @@ export const MODEL_INFO: { [key: string]: ModelInfo } = {
     tags: [ModelProviderTag["Local"], ModelProviderTag["Open-Source"]],
     params: {
       server_url: "http://localhost:1234",
+      template_messages: ChatTemplates.None,
     },
     packages: osModels,
     collectInputFor: [...completionParamsInputs],
@@ -745,7 +762,10 @@ After it's up and running, you can start using Continue.`,
       'New users can try out Continue for free using a proxy server that securely makes calls to OpenAI using our API key. If you are ready to use your own API key or have used all 250 free uses, you can enter your API key in config.py where it says `api_key=""` or select another model provider.',
     icon: "openai.png",
     tags: [ModelProviderTag.Free],
-    packages: [gpt4, gpt35turbo],
+    packages: [
+      { ...gpt4, title: "GPT-4 (trial)" },
+      { ...gpt35turbo, title: "GPT-3.5-Turbo (trial)" },
+    ],
     collectInputFor: [...completionParamsInputs],
   },
 };

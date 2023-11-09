@@ -1,11 +1,24 @@
-import { useEffect, useRef, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import styled from "styled-components";
-import { defaultBorderRadius, secondaryDark, vscBackground } from ".";
-import { ArrowPathIcon, XMarkIcon } from "@heroicons/react/24/outline";
+import {
+  defaultBorderRadius,
+  lightGray,
+  secondaryDark,
+  vscBackground,
+} from ".";
+import {
+  ArrowPathIcon,
+  HandThumbDownIcon,
+  HandThumbUpIcon,
+  XMarkIcon,
+} from "@heroicons/react/24/outline";
 import HeaderButtonWithText from "./HeaderButtonWithText";
 import StyledMarkdownPreview from "./StyledMarkdownPreview";
 import { getFontSize } from "../util";
 import { StepDescription } from "../schema/SessionState";
+import { useSelector } from "react-redux";
+import { RootStore } from "../redux/store";
+import { GUIClientContext } from "../App";
 
 interface StepContainerProps {
   step: StepDescription;
@@ -57,6 +70,11 @@ function StepContainer(props: StepContainerProps) {
   const naturalLanguageInputRef = useRef<HTMLTextAreaElement>(null);
   const userInputRef = useRef<HTMLInputElement>(null);
   const isUserInput = props.step.name === "UserInputStep";
+  const sessionHistory = useSelector(
+    (store: RootStore) => store.sessionState.history
+  );
+  const active = useSelector((store: RootStore) => store.sessionState.active);
+  const client = useContext(GUIClientContext);
 
   useEffect(() => {
     if (userInputRef?.current) {
@@ -70,6 +88,21 @@ function StepContainer(props: StepContainerProps) {
     }
   }, [isHovered]);
 
+  const [feedback, setFeedback] = useState<boolean | undefined>(undefined);
+
+  const sendFeedback = (feedback: boolean) => {
+    setFeedback(feedback);
+    console.log(sessionHistory, props.index);
+    const logs = sessionHistory[props.index].logs;
+    if (!logs || logs.length < 1) return;
+    const prompt = logs[0].split("#########\n")[1];
+    const completion = props.step.description;
+
+    console.log(prompt, completion, client);
+
+    client?.sendPromptCompletionFeedback("chat", prompt, completion, feedback);
+  };
+
   return (
     <MainDiv
       stepDepth={(props.step.depth as any) || 0}
@@ -81,7 +114,7 @@ function StepContainer(props: StepContainerProps) {
       }}
       hidden={props.step.hide as any}
     >
-      <div>
+      <div className="relative">
         {isHovered && (props.step.error || props.noUserInputParent) && (
           <ButtonsDiv>
             {props.step.error &&
@@ -126,6 +159,38 @@ function StepContainer(props: StepContainerProps) {
         >
           <StyledMarkdownPreview source={props.step.description} />
         </ContentDiv>
+        {(isHovered || typeof feedback !== "undefined") && !active && (
+          <div className="flex items-center gap-2 bottom-0 right-2 absolute">
+            {feedback === false || (
+              <HandThumbUpIcon
+                className={
+                  "cursor-pointer hover:text-green-500" +
+                  (feedback === true ? " text-green-500" : "")
+                }
+                width="1.2em"
+                height="1.2em"
+                color={lightGray}
+                onClick={() => {
+                  sendFeedback(true);
+                }}
+              />
+            )}
+            {feedback === true || (
+              <HandThumbDownIcon
+                className={
+                  "cursor-pointer hover:text-red-500" +
+                  (feedback === false ? " text-red-500" : "")
+                }
+                width="1.2em"
+                height="1.2em"
+                color={lightGray}
+                onClick={() => {
+                  sendFeedback(false);
+                }}
+              />
+            )}
+          </div>
+        )}
       </div>
     </MainDiv>
   );

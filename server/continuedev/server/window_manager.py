@@ -1,6 +1,10 @@
 import traceback
 from typing import Dict, Optional
 
+from ..libs.util.create_async_task import create_async_task
+
+from ..libs.index.build_index import build_index
+
 from ..plugins.steps.on_traceback import DefaultOnTracebackStep
 
 from ..core.context import ContextManager
@@ -36,8 +40,10 @@ class Window:
         try:
             return ContinueConfig.load_default()
         except Exception as e:
-            logger.error(f"Failed to load config.py: {traceback.format_exception(e)}")
-            self._error_loading_config = e
+            self._error_loading_config = "\n".join(
+                traceback.format_exception(e, e, e.__traceback__)
+            )
+            logger.error(f"Failed to load config.py: {self._error_loading_config}")
 
             return (
                 ContinueConfig()
@@ -46,7 +52,7 @@ class Window:
             )
 
     def __init__(self, config: Optional[ContinueConfig] = None) -> None:
-        self.config = config or self.load_config()
+        self.config = config or self.load_config() or ContinueConfig()
 
     def get_autopilot(self, session_state: SessionState) -> Autopilot:
         return Autopilot(
@@ -72,12 +78,20 @@ class Window:
                 self.config.temperature,
             )
 
+    async def display_config_error(self):
+        if self._error_loading_config is not None:
+            await self.ide.setFileOpen(getConfigFilePath())
+            await self.ide.showMessage(
+                f"""We found an error while loading your config.py. For now, Continue is falling back to the default configuration. If you need help solving this error, please reach out to us on Discord by clicking the question mark button in the bottom right.\n\n{self._error_loading_config}"""
+            )
+            self._error_loading_config = None
+
     async def load(
         self, config: Optional[ContinueConfig] = None, only_reloading: bool = False
     ):
         # Need a non-step way of sending a notification to the GUI. Fine to be displayed similarly
 
-        # formatted_err = "\n".join(traceback.format_exception(e))
+        # formatted_err = "\n".join(traceback.format_exception(e, e, e.__traceback__))
         # msg_step = MessageStep(
         #     name="Invalid Continue Config File", message=formatted_err
         # )
@@ -86,8 +100,16 @@ class Window:
         #     HistoryNode(step=msg_step, observation=None, depth=0, active=False)
         # )
 
-        if self._error_loading_config is not None:
-            await self.ide.setFileOpen(getConfigFilePath())
+        await self.display_config_error()
+
+        if not self.config.disable_indexing:
+
+            async def index():
+                async for progress in build_index(self.ide, self.config):
+                    if self.gui is not None:
+                        await self.gui.send_indexing_progress(progress)
+
+            create_async_task(index(), on_error=self.ide.on_error)
 
         # Start models
         await self.config.models.start(
@@ -113,6 +135,7 @@ class Window:
             ],
             self.ide,
             only_reloading=only_reloading,
+            disable_indexing=self.config.disable_indexing,
         )
 
         async def onFileSavedCallback(filepath: str, contents: str):
@@ -122,6 +145,8 @@ class Window:
                 await self.reload_config()
                 if self.gui is not None:
                     await self.gui.send_config_update()
+
+                await self.display_config_error()
 
         self.ide.subscribeToFileSaved(onFileSavedCallback)
 
@@ -196,6 +221,7 @@ class WindowManager:
 
         if self.windows[window_info.window_id].gui is not None:
             await self.windows[window_info.window_id].load()
+            logger.info(f"There are {len(self.windows)} sessions currently open")
 
     def remove_ide(self, sid: str):
         ide = self.ides.pop(sid, None)
@@ -228,6 +254,7 @@ class WindowManager:
 
         if self.windows[window_id].ide is not None:
             await self.windows[window_id].load()
+            logger.info(f"There are {len(self.windows)} sessions currently open")
 
     def remove_gui(self, sid: str):
         gui = self.guis.pop(sid, None)

@@ -1,7 +1,7 @@
 import asyncio
 import time
 from abc import abstractmethod
-from typing import Any, Awaitable, Callable, Dict, List, Optional
+from typing import Any, Awaitable, Callable, List, Optional
 from ..server.protocols.ide_protocol import AbstractIdeProtocolServer
 
 from meilisearch_python_async import Client
@@ -18,6 +18,7 @@ from ..server.meilisearch_server import (
     poll_meilisearch_running,
     restart_meilisearch,
     start_meilisearch,
+    remove_meilisearch_disallowed_chars,
 )
 from .main import (
     ChatMessage,
@@ -227,6 +228,7 @@ class ContextManager:
         context_providers: List[ContextProvider],
         ide: AbstractIdeProtocolServer,
         only_reloading: bool = False,
+        disable_indexing: bool = False,
     ):
         """
         Starts the context manager.
@@ -274,7 +276,9 @@ class ContextManager:
         providers_to_load = (
             new_context_providers if only_reloading else context_providers
         )
-        create_async_task(load_index(providers_to_load), on_err)
+
+        if not disable_indexing:
+            create_async_task(load_index(providers_to_load), on_err)
 
     @staticmethod
     async def update_documents(context_items: List[ContextItem], workspace_dir: str):
@@ -349,7 +353,8 @@ class ContextManager:
                     context_items = await provider.provide_context_items(workspace_dir)
                     documents = [
                         {
-                            "id": item.description.id.to_string(),
+                            "id": item.description.id.to_string()
+                            + remove_meilisearch_disallowed_chars(workspace_dir),
                             "name": item.description.name,
                             "description": item.description.description,
                             "content": item.content,
@@ -398,8 +403,8 @@ class ContextManager:
         except Exception as e:
             logger.debug(f"Error loading meilisearch index: {e}")
             if should_retry:
-                await restart_meilisearch()
                 try:
+                    await restart_meilisearch()
                     await asyncio.wait_for(poll_meilisearch_running(), timeout=20)
                 except asyncio.TimeoutError:
                     logger.warning(

@@ -34,6 +34,8 @@ def zephyr_template_messages(msgs: List[Dict[str, str]]) -> str:
     if msgs[0]["role"] == "system":
         prompt += f"<|system|>{msgs[0]['content']}</s>\n"
         msgs.pop(0)
+    else:
+        prompt += "<|system|> </s>\n"
 
     for msg in msgs:
         prompt += "<|user|>\n" if msg["role"] == "user" else "<|assistant|>\n"
@@ -58,12 +60,12 @@ def template_alpaca_messages(msgs: List[Dict[str, str]]) -> str:
     prompt = ""
 
     if msgs[0]["role"] == "system":
-        prompt += f"{msgs[0]['content']}\n"
+        prompt += f"{msgs[0]['content']}\n\n"
         msgs.pop(0)
 
     for msg in msgs:
         prompt += "### Instruction:\n" if msg["role"] == "user" else "### Response:\n"
-        prompt += f"{msg['content']}\n"
+        prompt += f"{msg['content']}\n\n"
 
     prompt += "### Response:\n"
 

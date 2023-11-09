@@ -22,8 +22,21 @@ import {
   ArrowLeftIcon,
   ArrowRightIcon,
   ArrowUpLeftIcon,
+  ArrowUpOnSquareIcon,
+  BeakerIcon,
   ChevronDownIcon,
   ChevronRightIcon,
+  Cog6ToothIcon,
+  CommandLineIcon,
+  ExclamationTriangleIcon,
+  FolderIcon,
+  FolderOpenIcon,
+  GlobeAltIcon,
+  HashtagIcon,
+  MagnifyingGlassIcon,
+  PaintBrushIcon,
+  PlusIcon,
+  SparklesIcon,
   TrashIcon,
   XMarkIcon,
 } from "@heroicons/react/24/outline";
@@ -39,6 +52,7 @@ import {
   getMarkdownLanguageTagForFile,
   getMetaKeyLabel,
   getPlatform,
+  isMetaEquivalentKeyPressed,
 } from "../util";
 import StyledMarkdownPreview from "./StyledMarkdownPreview";
 import { setTakenActionTrue } from "../redux/slices/miscSlice";
@@ -55,8 +69,35 @@ import {
   newSession,
   setActive,
 } from "../redux/slices/sessionStateReducer";
+import RingLoader from "./RingLoader";
+import CodeSnippetPreview from "./CodeSnippetPreview";
 
 const SEARCH_INDEX_NAME = "continue_context_items";
+
+const ICONS_FOR_DROPDOWN: { [key: string]: any } = {
+  file: FolderIcon,
+  terminal: CommandLineIcon,
+  diff: PlusIcon,
+  search: MagnifyingGlassIcon,
+  url: GlobeAltIcon,
+  open: FolderOpenIcon,
+  "/edit": PaintBrushIcon,
+  "/clear": TrashIcon,
+  "/test": BeakerIcon,
+  "/config": Cog6ToothIcon,
+  "/comment": HashtagIcon,
+  "/share": ArrowUpOnSquareIcon,
+  "/cmd": CommandLineIcon,
+  "/codebase": SparklesIcon,
+};
+
+function DropdownIcon(props: { provider: string; className?: string }) {
+  const Icon = ICONS_FOR_DROPDOWN[props.provider];
+  if (!Icon) {
+    return null;
+  }
+  return <Icon className={props.className} height="1.2em" width="1.2em" />;
+}
 
 // #region styled components
 
@@ -100,8 +141,8 @@ const GradientBorder = styled.div<{
   margin-top: 8px;
 `;
 
-const HiddenHeaderButtonWithText = styled.button`
-  opacity: 0;
+const HiddenHeaderButtonWithText = styled.button<{ pinVisible: boolean }>`
+  opacity: ${({ pinVisible }) => (pinVisible ? 1 : 0)};
   background-color: transparent;
   border: none;
   outline: none;
@@ -127,28 +168,6 @@ const HiddenHeaderButtonWithText = styled.button`
 `;
 
 const mainInputFontSize = getFontSize();
-
-const PreviewMarkdownDiv = styled.div`
-  padding: 0px;
-  background-color: ${secondaryDark};
-  border-radius: ${defaultBorderRadius};
-  margin: 8px;
-  overflow: hidden;
-
-  & div {
-    background-color: ${secondaryDark};
-  }
-`;
-
-const PreviewMarkdownHeader = styled.p`
-  margin: 0;
-  padding: 4px 8px;
-  border-bottom: 1px solid ${lightGray};
-  word-break: break-all;
-  font-size: ${getFontSize()}px;
-  display: flex;
-  align-items: center;
-`;
 
 const MainTextInput = styled.textarea<{
   inQueryForDynamicProvider: boolean;
@@ -189,7 +208,7 @@ const DeleteButtonDiv = styled.div`
   right: 12px;
   background-color: ${secondaryDark};
   border-radius: ${defaultBorderRadius};
-  z-index: 100;
+  z-index: 50;
 `;
 
 const DynamicQueryTitleDiv = styled.div`
@@ -224,7 +243,10 @@ const Ul = styled.ul<{
           6
         }px);`}
   position: absolute;
-  background: ${vscBackground};
+  /* background: ${vscBackground}; */
+  background-color: transparent;
+  backdrop-filter: blur(12px);
+
   color: ${vscForeground};
   max-height: ${UlMaxHeight}px;
   margin-left: 1px;
@@ -253,7 +275,7 @@ const Li = styled.li<{
   isLastItem: boolean;
 }>`
   background-color: ${({ highlighted }) =>
-    highlighted ? buttonColor + "66" : secondaryDark};
+    highlighted ? buttonColor + "66" : "transparent"};
   ${({ selected }) => selected && "font-weight: bold;"}
   padding: 0.5rem 0.5rem;
   display: flex;
@@ -308,12 +330,8 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
 
   const client = useContext(GUIClientContext);
   const dispatch = useDispatch();
-  const workspacePaths = useSelector(
-    (state: RootStore) => state.config.workspacePaths
-  );
-  const sessionHistory = useSelector(
-    (state: RootStore) => state.sessionState.history
-  );
+  const workspacePaths = (window as any).workspacePaths || [];
+  const sessionState = useSelector((state: RootStore) => state.sessionState);
 
   const [history, setHistory] = React.useState<string[]>([]);
   // The position of the current command you are typing now, so the one that will be appended to history once you press enter
@@ -400,7 +418,13 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
 
   const selectContextItem = useCallback(
     async (id: string, query: string) => {
+      const timeout = setTimeout(() => {
+        setWaitingForContextItem(true);
+      }, 0.1);
       const contextItem = await client?.getContextItem(id, query);
+      clearTimeout(timeout);
+      setWaitingForContextItem(false);
+      if (!contextItem) return;
       if (props.isMainInput) {
         dispatch(addContextItem(contextItem));
       } else if (typeof props.index !== "undefined") {
@@ -552,6 +576,8 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
     },
   });
 
+  const [waitingForContextItem, setWaitingForContextItem] = useState(false);
+
   useEffect(() => {
     if (downshiftProps.highlightedIndex < 0) {
       downshiftProps.setHighlightedIndex(0);
@@ -648,6 +674,10 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
     };
   }, []);
 
+  const persistSession = () => {
+    client?.persistSession(sessionState, workspacePaths[0] || "");
+  };
+
   useEffect(() => {
     if (!inputRef.current || !props.isMainInput) {
       return;
@@ -668,6 +698,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
         dispatch(setTakenActionTrue(null));
       } else if (event.data.type === "focusContinueInputWithNewSession") {
         client?.stopSession();
+        persistSession();
         dispatch(newSession());
         dispatch(setTakenActionTrue(null));
       }
@@ -679,6 +710,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
   }, [inputRef.current, props.isMainInput]);
 
   const deleteButtonDivRef = React.useRef<HTMLDivElement>(null);
+  const stickyDropdownHeaderDiv = React.useRef<HTMLDivElement>(null);
 
   const selectContextItemFromDropdown = useCallback(
     (event: any) => {
@@ -766,6 +798,24 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
     ]
   );
 
+  const [contextLengthFillPercentage, setContextLengthFillPercentage] =
+    useState<number>(0);
+
+  const contextLength = useSelector(
+    (store: RootStore) =>
+      store.serverState.config.models?.default?.context_length || 4096
+  );
+
+  useEffect(() => {
+    let tokenEstimate = selectedContextItems.reduce((acc, item) => {
+      return acc + item.content.length / Math.E; // Just an estimate of tokens / char
+    }, 0);
+    tokenEstimate += downshiftProps.inputValue.length / Math.E;
+    setContextLengthFillPercentage(
+      tokenEstimate / Math.max(1, contextLength - 600)
+    );
+  }, [selectedContextItems, contextLength]);
+
   const [isComposing, setIsComposing] = useState(false);
 
   const [showContextToggleOn, setShowContextToggleOn] = useState(false);
@@ -788,6 +838,12 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
       setShowContextItemsIfNotMain(false);
     }
   }, [inputFocused]);
+
+  useEffect(() => {
+    if (selectedContextItems.length > 0) {
+      setShowContextItemsIfNotMain(true);
+    }
+  }, [selectedContextItems]);
 
   return (
     <div
@@ -817,10 +873,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
           >
             + Add Context
           </span>
-          {(downshiftProps.inputValue?.startsWith("/edit") ||
-            (inputFocused &&
-              metaKeyPressed &&
-              downshiftProps.inputValue?.length > 0)) && (
+          {downshiftProps.inputValue?.startsWith("/edit") && (
             <span className="float-right">Inserting at cursor</span>
           )}
         </div>
@@ -854,6 +907,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
           )}
 
           <HiddenHeaderButtonWithText
+            pinVisible={selectedContextItems.length >= 8}
             className={
               selectedContextItems.length > 0
                 ? `pill-button-${props.index || "main"}`
@@ -886,103 +940,156 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
               }
             }}
           >
-            <TrashIcon width="1.4em" height="1.4em" />
+            <TrashIcon width="1.2em" height="1.2em" />
           </HiddenHeaderButtonWithText>
-          {selectedContextItems.map((item, idx) => {
-            return (
-              <PillButton
-                inputIndex={props.index}
-                areMultipleItems={selectedContextItems.length > 1}
-                key={`${item.description.id.item_id}${idx}`}
-                item={item}
-                editing={
-                  item.editing &&
-                  (inputRef.current as any)?.value?.startsWith("/edit")
-                }
-                editingAny={(inputRef.current as any)?.value?.startsWith(
-                  "/edit"
-                )}
-                stepIndex={props.index}
-                index={idx}
-                onDelete={() => {
-                  dispatch(
-                    deleteContextWithIds({
-                      ids: [item.description.id],
-                      index: props.index,
-                    })
-                  );
-                  inputRef.current?.focus();
-                  if (
-                    (item.description.id.item_id ===
-                      focusedContextItem?.description.id.item_id &&
-                      focusedContextItem?.description.id.provider_name ===
-                        item.description.id.provider_name) ||
-                    (item.description.id.item_id ===
-                      previewingContextItem?.description.id.item_id &&
-                      previewingContextItem?.description.id.provider_name ===
-                        item.description.id.provider_name)
-                  ) {
-                    setPreviewingContextItem(undefined);
-                    setFocusedContextItem(undefined);
-                  }
-                }}
-                onClick={(e) => {
-                  if (
-                    item.description.id.item_id ===
-                      focusedContextItem?.description.id.item_id &&
-                    focusedContextItem?.description.id.provider_name ===
-                      item.description.id.provider_name
-                  ) {
-                    setFocusedContextItem(undefined);
-                  } else {
-                    setFocusedContextItem(item);
-                  }
-                }}
-                onBlur={() => {
-                  setFocusedContextItem(undefined);
-                }}
-                toggleViewContent={() => {
-                  setPreviewingContextItem((prev) => {
-                    if (!prev) return item;
-                    if (
-                      prev.description.id.item_id ===
-                        item.description.id.item_id &&
-                      prev.description.id.provider_name ===
-                        item.description.id.provider_name
-                    ) {
-                      return undefined;
-                    } else {
-                      return item;
+          {selectedContextItems.length < 8 ? (
+            <>
+              {selectedContextItems.map((item, idx) => {
+                return (
+                  <PillButton
+                    inputIndex={props.index}
+                    areMultipleItems={selectedContextItems.length > 1}
+                    key={`${item.description.id.item_id}${idx}`}
+                    item={item}
+                    editing={
+                      item.editing &&
+                      (inputRef.current as any)?.value?.startsWith("/edit")
                     }
-                  });
-                }}
-                previewing={
-                  item.description.id.item_id ===
-                    previewingContextItem?.description.id.item_id &&
-                  previewingContextItem?.description.id.provider_name ===
-                    item.description.id.provider_name
-                }
-                focusing={
-                  item.description.id.item_id ===
-                    focusedContextItem?.description.id.item_id &&
-                  focusedContextItem?.description.id.provider_name ===
-                    item.description.id.provider_name
-                }
-                prefixInputWithEdit={(should) => {
-                  if (!should && inputRef.current?.value.startsWith("/edit")) {
-                    downshiftProps.setInputValue(
-                      inputRef.current?.value.replace("/edit ", "")
-                    );
-                  }
-                  if (downshiftProps.inputValue.startsWith("/edit")) return;
-                  downshiftProps.setInputValue(
-                    `/edit ${downshiftProps.inputValue}`
-                  );
+                    editingAny={(inputRef.current as any)?.value?.startsWith(
+                      "/edit"
+                    )}
+                    stepIndex={props.index}
+                    index={idx}
+                    onDelete={() => {
+                      dispatch(
+                        deleteContextWithIds({
+                          ids: [item.description.id],
+                          index: props.index,
+                        })
+                      );
+                      inputRef.current?.focus();
+                      if (
+                        (item.description.id.item_id ===
+                          focusedContextItem?.description.id.item_id &&
+                          focusedContextItem?.description.id.provider_name ===
+                            item.description.id.provider_name) ||
+                        (item.description.id.item_id ===
+                          previewingContextItem?.description.id.item_id &&
+                          previewingContextItem?.description.id
+                            .provider_name ===
+                            item.description.id.provider_name)
+                      ) {
+                        setPreviewingContextItem(undefined);
+                        setFocusedContextItem(undefined);
+                      }
+                    }}
+                    onClick={(e) => {
+                      if (
+                        item.description.id.item_id ===
+                          focusedContextItem?.description.id.item_id &&
+                        focusedContextItem?.description.id.provider_name ===
+                          item.description.id.provider_name
+                      ) {
+                        setFocusedContextItem(undefined);
+                      } else {
+                        setFocusedContextItem(item);
+                      }
+                    }}
+                    onBlur={() => {
+                      setFocusedContextItem(undefined);
+                    }}
+                    toggleViewContent={() => {
+                      setPreviewingContextItem((prev) => {
+                        if (!prev) return item;
+                        if (
+                          prev.description.id.item_id ===
+                            item.description.id.item_id &&
+                          prev.description.id.provider_name ===
+                            item.description.id.provider_name
+                        ) {
+                          return undefined;
+                        } else {
+                          return item;
+                        }
+                      });
+                    }}
+                    previewing={
+                      item.description.id.item_id ===
+                        previewingContextItem?.description.id.item_id &&
+                      previewingContextItem?.description.id.provider_name ===
+                        item.description.id.provider_name
+                    }
+                    focusing={
+                      item.description.id.item_id ===
+                        focusedContextItem?.description.id.item_id &&
+                      focusedContextItem?.description.id.provider_name ===
+                        item.description.id.provider_name
+                    }
+                    prefixInputWithEdit={(should) => {
+                      if (
+                        !should &&
+                        inputRef.current?.value.startsWith("/edit")
+                      ) {
+                        downshiftProps.setInputValue(
+                          inputRef.current?.value.replace("/edit ", "")
+                        );
+                      }
+                      if (downshiftProps.inputValue.startsWith("/edit")) return;
+                      downshiftProps.setInputValue(
+                        `/edit ${downshiftProps.inputValue}`
+                      );
+                      inputRef.current?.focus();
+                    }}
+                  />
+                );
+              })}
+              {waitingForContextItem && (
+                <RingLoader
+                  period={1.5}
+                  className="ml-0 mt-1 mb-0"
+                  width="1.0em"
+                  height="1.0em"
+                  size={32}
+                  wFull={false}
+                ></RingLoader>
+              )}
+              {contextLengthFillPercentage > 1 && (
+                <HeaderButtonWithText
+                  text={`Context selected may exceed token limit (~${(
+                    100 * contextLengthFillPercentage
+                  ).toFixed(0)}%)`}
+                >
+                  <ExclamationTriangleIcon
+                    width="1.0em"
+                    height="1.0em"
+                    color="red"
+                  />
+                </HeaderButtonWithText>
+              )}
+            </>
+          ) : (
+            <div
+              onClick={() => {
+                if (props.isMainInput) {
+                  setShowContextToggleOn((prev) => !prev);
+                } else {
                   inputRef.current?.focus();
-                }}
-              />
-            );
-          })}
+                  setShowContextItemsIfNotMain(true);
+                }
+              }}
+              style={{
+                color: lightGray,
+                backgroundColor: vscBackground,
+                fontSize: "12px",
+                alignItems: "center",
+                display: "flex",
+                height: "100%",
+                cursor: "pointer",
+              }}
+            >
+              {selectedContextItems.length} snippets selected
+            </div>
+          )}
           {/* {selectedContextItems.length > 0 && (
           <HeaderButtonWithText
             onClick={() => {
@@ -1029,25 +1136,31 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
       )}
       {showContextToggleOn && (
         <div>
+          <HeaderButtonWithText
+            className="mr-4 ml-auto -mt-2"
+            text="Delete All"
+            onClick={() => {
+              dispatch(
+                deleteContextWithIds({
+                  ids: selectedContextItems.map((item) => item.description.id),
+                  index: props.index,
+                })
+              );
+              inputRef.current?.focus();
+              setPreviewingContextItem(undefined);
+              setFocusedContextItem(undefined);
+            }}
+          >
+            <div className="flex items-center">
+              <TrashIcon width="1.2em" height="1.2em" />
+              Delete All
+            </div>
+          </HeaderButtonWithText>
           {selectedContextItems.map((item) => (
-            <PreviewMarkdownDiv>
-              <PreviewMarkdownHeader>
-                <FileIcon
-                  height="20px"
-                  width="20px"
-                  filename={item.description.name}
-                ></FileIcon>
-                {item.description.name}
-              </PreviewMarkdownHeader>
-              <pre className="m-0">
-                <StyledMarkdownPreview
-                  source={`\`\`\`${getMarkdownLanguageTagForFile(
-                    item.description.description
-                  )}\n${item.content}\n\`\`\``}
-                  maxHeight={200}
-                />
-              </pre>
-            </PreviewMarkdownDiv>
+            <CodeSnippetPreview
+              index={props.index}
+              item={item}
+            ></CodeSnippetPreview>
           ))}
         </div>
       )}
@@ -1111,7 +1224,6 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
                 if (isComposing) {
                   return;
                 }
-                
                 dispatch(setBottomMessage(undefined));
                 if (event.key === "Enter" && event.shiftKey) {
                   // Prevent Downshift's default 'Enter' behavior.
@@ -1331,6 +1443,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
         >
           {nestedContextProvider && (
             <div
+              ref={stickyDropdownHeaderDiv}
               style={{
                 backgroundColor: secondaryDark,
                 borderBottom: `0.5px solid ${lightGray}`,
@@ -1354,82 +1467,131 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
               {nestedContextProvider.description}
             </div>
           )}
-          {downshiftProps.isOpen &&
-            items.map((item, index) => (
-              <Li
-                style={{
-                  borderTop: index === 0 ? "none" : `0.5px solid ${lightGray}`,
-                }}
-                key={`${item.name}${index}`}
-                {...downshiftProps.getItemProps({ item, index })}
-                highlighted={downshiftProps.highlightedIndex === index}
-                selected={downshiftProps.selectedItem === item}
-                onClick={(e) => {
-                  selectContextItemFromDropdown(e);
-                  e.stopPropagation();
-                  e.preventDefault();
-                  inputRef.current?.focus();
-                }}
-              >
-                <span className="flex justify-between w-full items-center">
-                  <div className="flex items-center justify-center">
-                    {nestedContextProvider && (
-                      <FileIcon
-                        height="20px"
-                        width="20px"
-                        filename={item.name}
-                      ></FileIcon>
-                    )}
-                    {item.name}
-                    {"  "}
-                  </div>
-                  <span
-                    style={{
-                      color: lightGray,
-                      float: "right",
-                      textAlign: "right",
-                    }}
-                  >
-                    {item.description}
+          <div
+            style={{
+              maxHeight: `${
+                UlMaxHeight -
+                (stickyDropdownHeaderDiv.current?.clientHeight || 50)
+              }px`,
+              overflow: "auto",
+            }}
+          >
+            {downshiftProps.isOpen &&
+              items.map((item, index) => (
+                <Li
+                  style={{
+                    borderTop:
+                      index === 0 ? "none" : `0.5px solid ${lightGray}`,
+                  }}
+                  key={`${item.name}${index}`}
+                  {...downshiftProps.getItemProps({ item, index })}
+                  highlighted={downshiftProps.highlightedIndex === index}
+                  selected={downshiftProps.selectedItem === item}
+                  onClick={(e) => {
+                    selectContextItemFromDropdown(e);
+                    e.stopPropagation();
+                    e.preventDefault();
+                    inputRef.current?.focus();
+                  }}
+                >
+                  <span className="flex justify-between w-full items-center">
+                    <div className="flex items-center justify-center">
+                      {nestedContextProvider && (
+                        <FileIcon
+                          height="20px"
+                          width="20px"
+                          filename={item.name}
+                        ></FileIcon>
+                      )}
+                      <DropdownIcon provider={item.name} className="mr-2" />
+                      <DropdownIcon provider={item.id} className="mr-2" />
+                      {item.name}
+                      {"  "}
+                    </div>
+                    <span
+                      style={{
+                        color: vscForeground,
+                        float: "right",
+                        textAlign: "right",
+                      }}
+                      hidden={downshiftProps.highlightedIndex !== index}
+                    >
+                      {item.description}
+                    </span>
                   </span>
-                </span>
-                {contextProviders
-                  ?.filter(
-                    (provider) => !provider.dynamic || provider.requires_query
-                  )
-                  .find((provider) => provider.title === item.id) && (
-                  <ArrowRightIcon
-                    width="1.2em"
-                    height="1.2em"
-                    color={lightGray}
-                    className="ml-2 flex-shrink-0"
-                  />
-                )}
-              </Li>
-            ))}
-          {downshiftProps.isOpen && items.length === 0 && (
-            <Li
-              key="empty-items-li"
-              highlighted={false}
-              selected={false}
-              isLastItem={false}
-            >
-              <span
-                style={{
-                  color: lightGray,
-                  float: "right",
-                  textAlign: "right",
-                  display: "flex",
-                  width: "100%",
-                  cursor: "default",
-                }}
+                  {contextProviders
+                    ?.filter(
+                      (provider) => !provider.dynamic || provider.requires_query
+                    )
+                    .find((provider) => provider.title === item.id) && (
+                    <ArrowRightIcon
+                      width="1.2em"
+                      height="1.2em"
+                      color={vscForeground}
+                      className="ml-2 flex-shrink-0"
+                    />
+                  )}
+                </Li>
+              ))}
+            {downshiftProps.isOpen && items.length === 0 && (
+              <Li
+                key="empty-items-li"
+                highlighted={false}
+                selected={false}
+                isLastItem={false}
               >
-                No items found
-              </span>
-            </Li>
-          )}
+                <span
+                  style={{
+                    color: lightGray,
+                    float: "right",
+                    textAlign: "right",
+                    display: "flex",
+                    width: "100%",
+                    cursor: "default",
+                  }}
+                >
+                  No items found
+                </span>
+              </Li>
+            )}
+          </div>
         </Ul>
       </div>
+
+      {props.isMainInput && (
+        <>
+          <div
+            style={{
+              color: lightGray,
+              fontSize: "10px",
+              backgroundColor: vscBackground,
+              width: "calc(100% - 16px)",
+              height: "0",
+              marginTop: "4px",
+            }}
+          >
+            <span
+              onClick={() => {
+                const inputValue = downshiftProps.inputValue;
+                if (inputValue?.startsWith("/codebase")) {
+                  downshiftProps.setInputValue(
+                    inputValue.replace("/codebase ", "")
+                  );
+                } else {
+                  downshiftProps.setInputValue("/codebase " + inputValue);
+                }
+                inputRef.current?.focus();
+              }}
+              className={"hover:underline cursor-pointer float-right"}
+            >
+              {downshiftProps.inputValue?.startsWith("/codebase")
+                ? "Using codebase"
+                : "⌘ ⏎ Use codebase"}
+            </span>
+          </div>
+          <br />
+        </>
+      )}
 
       {props.isMainInput && (
         <ContinueButton

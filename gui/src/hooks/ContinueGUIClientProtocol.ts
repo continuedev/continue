@@ -1,6 +1,8 @@
+import { SessionFullState } from "../redux/slices/sessionStateReducer";
 import { ContextItem } from "../schema/ContextItem";
 import { ContextItemId } from "../schema/ContextItemId";
 import { ContinueConfig } from "../schema/ContinueConfig";
+import { PersistedSessionInfo } from "../schema/PersistedSessionInfo";
 import { SessionState, StepDescription } from "../schema/SessionState";
 import { SessionUpdate } from "../schema/SessionUpdate";
 import AbstractContinueGUIClientProtocol from "./AbstractContinueGUIClientProtocol";
@@ -120,6 +122,12 @@ class ContinueGUIClientProtocol extends AbstractContinueGUIClientProtocol {
     });
   }
 
+  onIndexingProgress(callback: (progress: number) => void) {
+    this.messenger?.onMessageType("indexing_progress", (data: any) => {
+      callback(data.progress);
+    });
+  }
+
   onConfigUpdate(callback: (config: ContinueConfig) => void) {
     this.messenger?.onMessageType("config_update", (data: any) => {
       callback(data);
@@ -232,6 +240,59 @@ class ContinueGUIClientProtocol extends AbstractContinueGUIClientProtocol {
 
   deleteContextGroup(id: string): void {
     this.messenger?.send("delete_context_group", { id });
+  }
+
+  deleteModelAtIndex(index: number) {
+    this.messenger?.send("delete_model_at_index", { index });
+  }
+
+  async persistSession(
+    currentSession: SessionFullState,
+    workspaceDirectory: string
+  ) {
+    // Save current session
+    const persistedSessionInfo: PersistedSessionInfo = {
+      session_state: {
+        history: currentSession.history,
+        context_items: currentSession.context_items,
+      },
+      title: currentSession.title,
+      workspace_directory: workspaceDirectory,
+      session_id: currentSession.session_id,
+    };
+
+    await fetch(`${this.serverUrl}/sessions/save`, {
+      method: "POST",
+      body: JSON.stringify(persistedSessionInfo),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+  }
+
+  async deleteSession(session_id: string) {
+    await fetch(`${this.serverUrl}/sessions/delete`, {
+      method: "POST",
+      body: JSON.stringify({ session_id }),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+  }
+
+  async sendPromptCompletionFeedback(
+    type: string,
+    prompt: string,
+    completion: string,
+    feedback: boolean
+  ) {
+    await fetch(`${this.serverUrl}/feedback`, {
+      method: "POST",
+      body: JSON.stringify({ type, prompt, completion, feedback }),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
   }
 }
 

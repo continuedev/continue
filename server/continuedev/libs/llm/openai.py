@@ -2,10 +2,12 @@ import asyncio
 from typing import List, Literal, Optional
 
 import certifi
-from ..util.count_tokens import MAX_TOKENS_FOR_MODEL
+from ..util.count_tokens import CONTEXT_LENGTH_FOR_MODEL
+from ..util.logging import logger
 from .prompts.chat import template_alpaca_messages
 import openai
-from pydantic import Field
+from openai.error import RateLimitError
+from pydantic import Field, validator
 
 from ...core.main import ChatMessage
 from .base import LLM
@@ -16,6 +18,7 @@ CHAT_MODELS = {
     "gpt-4",
     "gpt-3.5-turbo-0613",
     "gpt-4-32k",
+    "gpt-4-1106-preview"
 }
 NON_CHAT_MODELS = {
     "gpt-3.5-turbo-instruct",
@@ -89,11 +92,15 @@ class OpenAI(LLM):
         None, description="OpenAI engine. For use with Azure OpenAI Service."
     )
 
+    @validator("context_length")
+    def context_length_for_model(cls, v, values):
+        return CONTEXT_LENGTH_FOR_MODEL.get(values["model"], 4096)
+
     async def start(self, unique_id: Optional[str] = None):
         await super().start(unique_id=unique_id)
 
         if self.context_length is None:
-            self.context_length = MAX_TOKENS_FOR_MODEL.get(self.model, 4096)
+            self.context_length = CONTEXT_LENGTH_FOR_MODEL.get(self.model, 4096)
 
         openai.api_key = self.api_key
         if self.api_type is not None:
@@ -162,11 +169,15 @@ class OpenAI(LLM):
                 if not hasattr(chunk, "choices") or len(chunk.choices) == 0:
                     continue
 
+                delta = chunk.choices[0].delta
                 if self.api_type == "azure":
-                    # To smooth out the response streaming, which typically comes in bursts
-                    await asyncio.sleep(0.01)
+                    if self.model == "gpt-4":
+                        await asyncio.sleep(0.03)
+                    else:
+                        await asyncio.sleep(0.01)
 
-                yield chunk.choices[0].delta
+                yield delta
+
         else:
             async for chunk in await openai.Completion.acreate(
                 prompt=template_alpaca_messages(messages),
@@ -187,12 +198,21 @@ class OpenAI(LLM):
             args["model"] not in NON_CHAT_MODELS
             and not self.use_legacy_completions_endpoint
         ):
-            resp = await openai.ChatCompletion.acreate(
-                messages=[{"role": "user", "content": prompt}],
-                **args,
-                headers=self.headers,
-            )
-            return resp.choices[0].message.content
+            wait_time = 0.2
+            while True:
+                try:
+                    resp = await openai.ChatCompletion.acreate(
+                        messages=[{"role": "user", "content": prompt}],
+                        **args,
+                        headers=self.headers,
+                    )
+                    return resp.choices[0].message.content
+                except RateLimitError as e:
+                    logger.debug(f"Rate limit exceeded, waiting {wait_time} seconds")
+                    await asyncio.sleep(wait_time)
+                    wait_time *= 2
+                    if wait_time > 2**10:
+                        raise e
         else:
             return (
                 (

@@ -58,8 +58,8 @@ class DevDataLogger:
     def capture(self, table_name: str, data: Dict[str, Any]):
         try:
             data = {**self._static_columns(), **data}
-            self._to_data_server(table_name, data)
             self._to_local(table_name, data)
+            self._to_data_server(table_name, data)
         except Exception as e:
             logger.warning(f"Failed to capture dev data: {e}")
 

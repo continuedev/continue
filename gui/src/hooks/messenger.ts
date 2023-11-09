@@ -43,6 +43,7 @@ export class SocketIOMessenger extends Messenger {
       {
         path: "/gui/socket.io",
         transports: ["websocket", "polling", "flashsocket"],
+        reconnectionDelayMax: 1000,
       }
     );
   }

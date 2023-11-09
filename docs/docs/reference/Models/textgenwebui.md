@@ -2,25 +2,20 @@ import ClassPropertyRef from '@site/src/components/ClassPropertyRef.tsx';
 
 # TextGenWebUI
 
-    TextGenWebUI is a comprehensive, open-source language model UI and local server. You can set it up with an OpenAI-compatible server plugin, but if for some reason that doesn't work, you can use this class like so:
+TextGenWebUI is a comprehensive, open-source language model UI and local server. You can set it up with an OpenAI-compatible server plugin, but if for some reason that doesn't work, you can use this class like so:
 
-    ```python title="~/.continue/config.py"
-<<<<<<<< HEAD:server/continuedev/libs/llm/text_gen_interface.py
-    from continuedev.libs.llm.text_gen_interface import TextGenUI
-========
-    from continuedev.libs.llm.text_gen_webui import TextGenWebUI
->>>>>>>> 16b0a48035350d350e05ae5fe17478ae78042904:server/continuedev/libs/llm/text_gen_webui.py
+```python title="~/.continue/config.py"
+from continuedev.libs.llm.text_gen_webui import TextGenWebUI
 
-    config = ContinueConfig(
-        ...
-        models=Models(
-            default=TextGenWebUI(
-                model="<MODEL_NAME>",
-            )
+config = ContinueConfig(
+    ...
+    models=Models(
+        default=TextGenWebUI(
+            model="<MODEL_NAME>",
         )
     )
-    ```
-
+)
+```
 
 [View the source](https://github.com/continuedev/continue/blob/main/server/continuedev/libs/llm/libs/llm/text_gen_webui.py)
 

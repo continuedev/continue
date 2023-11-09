@@ -239,7 +239,10 @@ class DefaultModelEditCodeStep(Step):
         )
 
         # If using 3.5 and overflows, upgrade to 3.5.16k
-        if model_to_use.model == "gpt-3.5-turbo":
+        if (
+            model_to_use.model == "gpt-3.5-turbo"
+            and model_to_use.__class__.__name__ == "OpenAI"
+        ):
             if total_tokens > model_to_use.context_length:
                 model_to_use = OpenAIFreeTrial(model="gpt-3.5-turbo-0613")
                 await sdk.start_model(model_to_use)
@@ -356,7 +359,11 @@ Please output the code to be inserted at the cursor in order to fulfill the user
         return prompt
 
     def is_end_line(self, line: str) -> bool:
-        return "</modified_code_to_edit>" in line or "</code_to_edit>" in line
+        return (
+            "</modified_code_to_edit>" in line
+            or "</code_to_edit>" in line
+            or "[/CODE]" in line
+        )
 
     def line_to_be_ignored(self, line: str, is_first_line: bool = False) -> bool:
         return (
@@ -584,6 +591,14 @@ Please output the code to be inserted at the cursor in order to fulfill the user
                     "user_input": self.user_input,
                     "file_prefix": file_prefix,
                     "file_suffix": file_suffix,
+                    "context_items": "\n\n".join(
+                        list(
+                            map(
+                                lambda x: x.content,
+                                await sdk.get_context_item_chat_messages(),
+                            )
+                        )
+                    ),
                 },
             )
             if isinstance(rendered, str):
@@ -598,7 +613,7 @@ Please output the code to be inserted at the cursor in order to fulfill the user
                 messages = rendered
 
             params = {"prompt": rendered}
-            if isinstance(template, PromptTemplate):
+            if template.__class__.__name__ == "PromptTemplate":
                 params.update(template.dict(exclude={"prompt"}))
 
             params.update(

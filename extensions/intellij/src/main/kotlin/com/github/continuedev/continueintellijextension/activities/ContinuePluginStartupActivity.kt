@@ -67,7 +67,7 @@ fun serverVersionPath(): String {
 fun serverBinaryPath(): String {
     val exeFile = if (System.getProperty("os.name").toLowerCase()
             .contains("win")
-    ) "run.exe" else "run"
+    ) "continue_server.exe" else "continue_server"
     return Paths.get(serverPath(), "exe", exeFile).toString()
 }
 
@@ -310,10 +310,10 @@ suspend fun startContinuePythonServer(project: Project) {
     // Determine from OS details which file to download
     val filename = when {
         System.getProperty("os.name")
-            .toLowerCase().contains("win") -> "windows/run.exe"
+            .toLowerCase().contains("win") -> "windows/continue_server.exe"
         System.getProperty("os.name").startsWith("Mac", ignoreCase = true) ->
-            if (System.getProperty("os.arch") == "arm64") "apple-silicon/run" else "mac/run"
-        else -> "linux/run"
+            if (System.getProperty("os.arch") == "arm64") "apple-silicon/continue_server" else "mac/continue_server"
+        else -> "linux/continue_server"
     }
 
     val destination = serverBinaryPath()
@@ -484,16 +484,16 @@ class ContinuePluginStartupActivity : StartupActivity, Disposable, DumbAware {
         val keyStroke = KeyStroke.getKeyStroke(shortcut)
         val actionIds = keymap.getActionIds(keyStroke)
 
-
-        val actionManager = ActionManager.getInstance()
          for (actionId in actionIds) {
              if (actionId.startsWith("continue")) {
                  continue
              }
-             val action = actionManager.getAction(actionId)
-             val shortcuts = action.shortcutSet.shortcuts.filterNot { it is KeyboardShortcut && it.firstKeyStroke == keyStroke }.toTypedArray()
-             val newShortcutSet = CustomShortcutSet(*shortcuts)
-             action.registerCustomShortcutSet(newShortcutSet, null)
+             val shortcuts = keymap.getShortcuts(actionId)
+             for (shortcut in shortcuts) {
+                 if (shortcut is KeyboardShortcut && shortcut.firstKeyStroke == keyStroke) {
+                     keymap.removeShortcut(actionId, shortcut)
+                 }
+             }
          }
     }
 

@@ -71,8 +71,8 @@ const vscodeShortcuts: KeyboardShortcutProps[] = [
     description: "Edit Highlighted Code",
   },
   {
-    mac: "⌘ ⇧ ↵",
-    windows: "⌃ ⇧ ↵",
+    mac: "⌘ ⇧ ⏎",
+    windows: "⌃ ⇧ ⏎",
     description: "Accept Diff",
   },
   {
@@ -105,6 +105,11 @@ const vscodeShortcuts: KeyboardShortcutProps[] = [
     windows: "⌃ ⌫",
     description: "Stop Active Step",
   },
+  {
+    mac: "Tab",
+    windows: "Tab",
+    description: "Toggle between context items",
+  },
 ];
 
 const jetbrainsShortcuts: KeyboardShortcutProps[] = [
@@ -119,8 +124,8 @@ const jetbrainsShortcuts: KeyboardShortcutProps[] = [
     description: "Edit Highlighted Code",
   },
   {
-    mac: "⌘ ⇧ ↵",
-    windows: "⌃ ⇧ ↵",
+    mac: "⌘ ⇧ ⏎",
+    windows: "⌃ ⇧ ⏎",
     description: "Accept Diff",
   },
   {
@@ -139,7 +144,7 @@ const jetbrainsShortcuts: KeyboardShortcutProps[] = [
     description: "Toggle Auxiliary Bar",
   },
   {
-    mac: "⌘ ⌃ N",
+    mac: "⌥ ⌘ N",
     windows: "⌥ ⌃ N",
     description: "New Session",
   },
@@ -147,6 +152,11 @@ const jetbrainsShortcuts: KeyboardShortcutProps[] = [
     mac: "⌘ ⌫",
     windows: "⌃ ⌫",
     description: "Stop Active Step",
+  },
+  {
+    mac: "Tab",
+    windows: "Tab",
+    description: "Toggle between context items",
   },
 ];
 

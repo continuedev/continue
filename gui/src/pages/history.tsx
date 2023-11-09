@@ -6,11 +6,12 @@ import { RootStore } from "../redux/store";
 import { useNavigate } from "react-router-dom";
 import { lightGray, secondaryDark, vscBackground } from "../components";
 import styled from "styled-components";
-import { ArrowLeftIcon } from "@heroicons/react/24/outline";
+import { ArrowLeftIcon, TrashIcon } from "@heroicons/react/24/outline";
 import CheckDiv from "../components/CheckDiv";
 import { getFontSize } from "../util";
 import { newSession } from "../redux/slices/sessionStateReducer";
 import { PersistedSessionInfo } from "../schema/PersistedSessionInfo";
+import HeaderButtonWithText from "../components/HeaderButtonWithText";
 
 const Tr = styled.tr`
   &:hover {
@@ -50,6 +51,79 @@ const TdDiv = styled.div`
   padding-bottom: 0.5rem;
 `;
 
+function TableRow({
+  session,
+  date,
+  onDelete,
+}: {
+  session: SessionInfo;
+  date: Date;
+  onDelete: (sessionId: string) => void;
+}) {
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const client = useContext(GUIClientContext);
+  const apiUrl = (window as any).serverUrl;
+  const currentSession = useSelector((state: RootStore) => state.sessionState);
+  const workspacePaths = (window as any).workspacePaths || [""];
+  const [hovered, setHovered] = useState(false);
+
+  return (
+    <td
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
+      <div className="flex justify-between items-center w-full">
+        <TdDiv
+          onClick={async () => {
+            // Save current session
+            client?.persistSession(currentSession, workspacePaths[0]);
+
+            // Load new session
+            const response = await fetch(
+              `${apiUrl}/sessions/${session.session_id}`
+            );
+            if (!response.ok) {
+              throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            const json: PersistedSessionInfo = await response.json();
+            client?.stopSession();
+            dispatch(newSession(json));
+            navigate("/");
+          }}
+        >
+          <div className="text-md">{session.title}</div>
+          <div className="text-gray-400">
+            {date.toLocaleString("en-US", {
+              year: "2-digit",
+              month: "2-digit",
+              day: "2-digit",
+              hour: "numeric",
+              minute: "2-digit",
+              hour12: true,
+            })}
+            {" | "}
+            {lastPartOfPath(session.workspace_directory || "")}/
+          </div>
+        </TdDiv>
+
+        {hovered && (
+          <HeaderButtonWithText
+            className="mr-2"
+            text="Delete"
+            onClick={async () => {
+              client?.deleteSession(session.session_id);
+              onDelete(session.session_id);
+            }}
+          >
+            <TrashIcon width="1.3em" height="1.3em" />
+          </HeaderButtonWithText>
+        )}
+      </div>
+    </td>
+  );
+}
+
 function lastPartOfPath(path: string): string {
   const sep = path.includes("/") ? "/" : "\\";
   return path.split(sep).pop() || path;
@@ -57,20 +131,19 @@ function lastPartOfPath(path: string): string {
 
 function History() {
   const navigate = useNavigate();
-  const dispatch = useDispatch();
   const [sessions, setSessions] = useState<SessionInfo[]>([]);
   const [filteredAndSortedSessions, setFilteredAndSortedSessions] = useState<
     SessionInfo[]
   >([]);
   const client = useContext(GUIClientContext);
-  const apiUrl = useSelector((state: RootStore) => state.config.apiUrl);
-  const workspacePaths = useSelector(
-    (state: RootStore) => state.config.workspacePaths
-  );
-  const currentSession = useSelector((state: RootStore) => state.sessionState);
-  const workspaceDirectory = useSelector(
-    (state: RootStore) => state.config.workspacePaths?.[0] || ""
-  );
+  const apiUrl = (window as any).serverUrl;
+  const workspacePaths = (window as any).workspacePaths || [];
+
+  const deleteSessionInUI = async (sessionId: string) => {
+    setSessions((prev) =>
+      prev.filter((session) => session.session_id !== sessionId)
+    );
+  };
 
   const [filteringByWorkspace, setFilteringByWorkspace] = useState(false);
 
@@ -185,59 +258,11 @@ function History() {
                     )}
 
                   <Tr key={index}>
-                    <td>
-                      <TdDiv
-                        onClick={async () => {
-                          // Save current session
-                          const persistedSessionInfo: PersistedSessionInfo = {
-                            session_state: {
-                              history: currentSession.history,
-                              context_items: currentSession.context_items,
-                            },
-                            title: currentSession.title,
-                            workspace_directory: workspaceDirectory,
-                            session_id: currentSession.session_id,
-                          };
-                          console.log(persistedSessionInfo);
-                          await fetch(`${apiUrl}/sessions/save`, {
-                            method: "POST",
-                            body: JSON.stringify(persistedSessionInfo),
-                            headers: {
-                              "Content-Type": "application/json",
-                            },
-                          });
-
-                          // Load new session
-                          const response = await fetch(
-                            `${apiUrl}/sessions/${session.session_id}`
-                          );
-                          if (!response.ok) {
-                            throw new Error(
-                              `HTTP error! status: ${response.status}`
-                            );
-                          }
-                          const json: PersistedSessionInfo =
-                            await response.json();
-                          client?.stopSession();
-                          dispatch(newSession(json));
-                          navigate("/");
-                        }}
-                      >
-                        <div className="text-md">{session.title}</div>
-                        <div className="text-gray-400">
-                          {date.toLocaleString("en-US", {
-                            year: "2-digit",
-                            month: "2-digit",
-                            day: "2-digit",
-                            hour: "numeric",
-                            minute: "2-digit",
-                            hour12: true,
-                          })}
-                          {" | "}
-                          {lastPartOfPath(session.workspace_directory || "")}/
-                        </div>
-                      </TdDiv>
-                    </td>
+                    <TableRow
+                      session={session}
+                      date={date}
+                      onDelete={() => deleteSessionInUI(session.session_id)}
+                    ></TableRow>
                   </Tr>
                 </Fragment>
               );

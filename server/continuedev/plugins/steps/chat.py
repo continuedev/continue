@@ -23,15 +23,11 @@ class SimpleChatStep(Step):
     manage_own_chat_context: bool = True
     description: str = ""
     messages: List[ChatMessage] = None
+    prompt: Optional[str] = None
 
     completion_options: Optional[CompletionOptions] = None
 
     async def run(self, sdk: ContinueSDK):
-        messages = self.messages or await sdk.get_chat_context()
-
-        kwargs = self.completion_options.dict() if self.completion_options else {}
-        generator = sdk.models.chat.stream_chat(messages, **kwargs)
-
         posthog_logger.capture_event(
             "model_use",
             {
@@ -47,6 +43,15 @@ class SimpleChatStep(Step):
             },
         )
 
+        messages = self.messages or await sdk.get_chat_context()
+
+        if self.prompt and messages:
+            messages[-1].content = self.prompt
+
+        kwargs = self.completion_options.dict() if self.completion_options else {}
+        generator = sdk.models.chat.stream_chat(messages, **kwargs)
+
+        yield SetStep(description="")
         async for chunk in generator:
             if "content" in chunk:
                 yield chunk["content"]

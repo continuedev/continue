@@ -1,4 +1,5 @@
 import asyncio
+import json
 from typing import Any, Dict, Optional, Type, TypeVar
 import uuid
 from ..core.main import ContinueCustomException
@@ -31,6 +32,14 @@ class SocketIOMessenger:
         message_id: Optional[str] = None,
         callback=None,
     ):
+        def empty_callback(*args):
+            pass
+
+        if callback is None:
+            # If not set, the protocol sends a different message
+            # and the client won't get an ack object
+            callback = empty_callback
+
         msg = WebsocketsMessage(
             message_type=message_type,
             data=data,
@@ -59,6 +68,9 @@ class SocketIOMessenger:
                 message_type, data, message_id=message_id, callback=callback
             )
             response = await fut
+            if isinstance(response, str):
+                response = json.loads(response)
+
             return resp_model.parse_obj(response["data"])
 
             # await self.send(message_type, data, message_id=message_id)
@@ -70,6 +82,7 @@ class SocketIOMessenger:
             try:
                 return await try_with_timeout(timeout)
             except asyncio.TimeoutError:
+                print(f"Timed out waiting for response to '{message_type}'")
                 timeout *= 1.5
                 if timeout > 10:
                     raise ContinueCustomException(

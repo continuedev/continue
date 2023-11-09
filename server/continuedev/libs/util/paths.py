@@ -55,14 +55,14 @@ def decode_escaped_path(path: str) -> str:
     """We use a custom escaping scheme to record the full path of a file as a
     corresponding basename, but withut URL encoding, because then the URI just gets
     interpreted as a full path again."""
-    return path.replace("$f$", "/").replace("$b$", "\\")
+    return path.replace("_f_", "/").replace("_b_", "\\")
 
 
 def encode_escaped_path(path: str) -> str:
     """We use a custom escaping scheme to record the full path of a file as a
     corresponding basename, but withut URL encoding, because then the URI just gets
     interpreted as a full path again."""
-    return path.replace("/", "$f$").replace("\\", "$b$")
+    return path.replace("/", "_f_").replace("\\", "_b_")
 
 
 def getEmbeddingsPathForBranch(workspace_dir: str, branch_name: str):
@@ -114,6 +114,8 @@ def migrateConfigFile(existing: str) -> Optional[str]:
         .replace("medium=", "summarize=")
         .replace("TextGenUI", "TextGenWebUI")
         .replace("text_gen_interface", "text_gen_webui")
+        .replace(".steps.chroma", ".steps.codebase")
+        .replace("\xa0", " ")
     )
     if migrated != existing:
         return migrated

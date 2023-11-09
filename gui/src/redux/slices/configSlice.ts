@@ -6,27 +6,9 @@ const windowAny: any = window;
 export const configSlice = createSlice({
   name: "config",
   initialState: {
-    apiUrl: windowAny.serverUrl || "http://localhost:8000",
-    workspacePaths: windowAny.workspacePaths || [],
     vscMachineId: windowAny.vscMachineId || undefined,
   } as RootStore["config"],
   reducers: {
-    setWorkspacePaths: (
-      state: RootStore["config"],
-      action: { type: string; payload: string[] }
-    ) => {
-      return {
-        ...state,
-        workspacePaths: action.payload,
-      };
-    },
-    setApiUrl: (
-      state: RootStore["config"],
-      action: { type: string; payload: string }
-    ) => ({
-      ...state,
-      apiUrl: action.payload,
-    }),
     setVscMachineId: (
       state: RootStore["config"],
       action: { type: string; payload: string }
@@ -51,11 +33,6 @@ export const configSlice = createSlice({
   },
 });
 
-export const {
-  setVscMachineId,
-  setApiUrl,
-  setWorkspacePaths,
-  setSessionId,
-  setDataSwitchOn,
-} = configSlice.actions;
+export const { setVscMachineId, setSessionId, setDataSwitchOn } =
+  configSlice.actions;
 export default configSlice.reducer;

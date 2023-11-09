@@ -5,6 +5,7 @@ from typing import Any, Callable, Coroutine, Dict, Generator, List, Optional, Un
 
 import aiohttp
 import certifi
+from ..util.templating import render_templated_string
 from pydantic import Field, validator
 
 from ...core.main import ChatMessage
@@ -12,7 +13,7 @@ from ...models.main import ContinueBaseModel
 from ..util.count_tokens import (
     DEFAULT_ARGS,
     DEFAULT_MAX_TOKENS,
-    MAX_TOKENS_FOR_MODEL,
+    CONTEXT_LENGTH_FOR_MODEL,
     compile_chat_messages,
     count_tokens,
     format_chat_messages,
@@ -254,7 +255,8 @@ class LLM(ContinueBaseModel):
     def compile_log_message(
         self, prompt: str, completion_options: CompletionOptions
     ) -> str:
-        dict = completion_options.dict(exclude_unset=True, exclude_none=True)
+        dict = {"context_length": self.context_length}
+        dict.update(completion_options.dict(exclude_unset=True, exclude_none=True))
         settings = "\n".join([f"{key}: {value}" for key, value in dict.items()])
         return f"""\
 Settings:
@@ -279,8 +281,8 @@ Settings:
     ) -> List[Dict]:
         # In case gpt-3.5-turbo-16k or something else is specified that has longer context_length
         context_length = self.context_length
-        if options.model != self.model and options.model in MAX_TOKENS_FOR_MODEL:
-            context_length = MAX_TOKENS_FOR_MODEL[options.model]
+        if options.model != self.model and options.model in CONTEXT_LENGTH_FOR_MODEL:
+            context_length = CONTEXT_LENGTH_FOR_MODEL[options.model]
 
         return compile_chat_messages(
             model_name=options.model,
@@ -298,7 +300,13 @@ Settings:
         msgs = [{"role": "user", "content": prompt}]
 
         if self.get_system_message() is not None:
-            msgs.insert(0, {"role": "system", "content": self.get_system_message()})
+            msgs.insert(
+                0,
+                {
+                    "role": "system",
+                    "content": render_templated_string(self.get_system_message()),
+                },
+            )
 
         return self.template_messages(msgs)
 

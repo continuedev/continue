@@ -17,11 +17,12 @@ config = ContinueConfig(
 )
 ```
 
-[View the source](https://github.com/continuedev/continue/tree/main/server/continuedev/libs/llm/queued.py)
+[View the source](https://github.com/continuedev/continue/blob/main/server/continuedev/libs/llm/libs/llm/queued.py)
 
 ## Properties
 
 <ClassPropertyRef name='llm' details='{&quot;title&quot;: &quot;Llm&quot;, &quot;description&quot;: &quot;The LLM to wrap with a lock&quot;, &quot;allOf&quot;: [{&quot;$ref&quot;: &quot;#/definitions/LLM&quot;}]}' required={true} default=""/>
+
 
 ### Inherited Properties
 
