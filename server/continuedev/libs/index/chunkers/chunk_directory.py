@@ -1,6 +1,6 @@
 import asyncio
 import os
-from typing import AsyncGenerator, Dict, List, Tuple
+from typing import AsyncGenerator, Callable, List, Tuple
 
 from ....server.protocols.ide_protocol import AbstractIdeProtocolServer
 from ...util.filter_files import DEFAULT_IGNORE_PATTERNS, should_filter_path
@@ -82,9 +82,9 @@ def gi_basename(path: str) -> str:
         return path
 
 
-async def get_non_ignored_filepaths(
+async def get_all_filepaths(
     ide: AbstractIdeProtocolServer, ignore_files: List[str] = []
-):
+) -> Tuple[List[str], Callable[[str], bool]]:
     files = await ide.listDirectoryContents(ide.workspace_directory, True)
 
     # Get all .gitignores first
@@ -116,50 +116,16 @@ async def get_non_ignored_filepaths(
 
         return patterns
 
-    # Filter from ignore_directories
-    files = list(
-        filter(
-            lambda file: not should_filter_path(
-                file,
-                ignore_files
-                + DEFAULT_IGNORE_PATTERNS
-                + FILE_IGNORE_PATTERNS
-                + gitignore_patterns_for_file(file),
-            ),
-            files,
+    def should_ignore_file(filepath: str) -> bool:
+        return should_filter_path(
+            filepath,
+            ignore_files
+            + DEFAULT_IGNORE_PATTERNS
+            + FILE_IGNORE_PATTERNS
+            + gitignore_patterns_for_file(filepath),
         )
-    )
-    return files
 
-
-async def get_all_file_contents(
-    ide: AbstractIdeProtocolServer, ignore_files: List[str] = [], group_size: int = 100
-) -> Dict[str, str]:
-    # Get list of filenames to index
-    files = await get_non_ignored_filepaths(ide, ignore_files)
-
-    items = []
-    i = 0
-    # Don't want to flood with too many requests
-    while i < len(files):
-        items += await get_contents_of_files(files[i : i + group_size], ide)
-
-        i += group_size
-        await asyncio.sleep(0.1)
-
-    return dict(filter(lambda tup: tup[1] is not None, zip(files, items)))
-
-
-async def chunk_directory(
-    ide: AbstractIdeProtocolServer, max_chunk_size: int
-) -> List[Chunk]:
-    file_contents = await get_all_file_contents(ide)
-
-    chunks = []
-    for filepath, contents in file_contents.items():
-        chunks += chunk_document(filepath, contents, max_chunk_size)
-
-    return chunks
+    return files, should_ignore_file
 
 
 async def stream_file_contents(
@@ -167,12 +133,14 @@ async def stream_file_contents(
 ) -> AsyncGenerator[Tuple[str, str, float], None]:
     # Get list of filenames to index
     # TODO: Don't get all at once, walk the tree, or break up
-    files = await get_non_ignored_filepaths(ide, ignore_files)
+    files, should_ignore = await get_all_filepaths(ide, ignore_files)
 
     # Don't want to flood with too many requests
     i = 0
     total = len(files)
     for file in files:
+        if should_ignore(file):
+            continue
         contents = await get_file_contents(file, ide)
         yield (file, contents, i / total)
         i += 1
