@@ -195,15 +195,18 @@ class Autopilot:
         )
 
         def handle_step_update(update: UpdateStep):
-            if isinstance(update, SessionUpdate):
+            if update.__class__.__name__ == "SessionUpdate":
                 return update
             elif isinstance(update, str):
                 return SessionUpdate(index=index, update=DeltaStep(description=update))
-            elif isinstance(update, Observation):
+            elif update.__class__.__name__ == "Observation":
                 return SessionUpdate(
                     index=index, update=DeltaStep(observations=[update])
                 )
-            elif isinstance(update, DeltaStep) or isinstance(update, SetStep):
+            elif (
+                update.__class__.__name__ == "DeltaStep"
+                or update.__class__.__name__ == "SetStep"
+            ):
                 return SessionUpdate(index=index, update=update)
             elif update is None:
                 return None
