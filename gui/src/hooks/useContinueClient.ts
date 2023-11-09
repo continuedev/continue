@@ -26,13 +26,13 @@ function useContinueGUIProtocol(useVscodeMessagePassing: boolean = true) {
     client.getSessionState = getSessionState;
   }, [sessionState]);
 
-  useEffect(() => {
-    const serverUrl = (window as any).serverUrl;
-    const windowId = (window as any).windowId;
-    if (serverUrl === undefined || serverUrl === null) return;
-    if (windowId === undefined || windowId === null) return;
+  const load = () => {
+    const windowAny = window as any;
+    const serverUrl = windowAny.serverUrl;
+    const windowId = windowAny.windowId;
+    if (serverUrl === undefined || serverUrl === null) return false;
+    if (windowId === undefined || windowId === null) return false;
 
-    console.log("Creating GUI websocket", serverUrl, useVscodeMessagePassing);
     const newClient = new ContinueGUIClientProtocol(
       serverUrl,
       useVscodeMessagePassing,
@@ -42,7 +42,19 @@ function useContinueGUIProtocol(useVscodeMessagePassing: boolean = true) {
     newClient.onConnected(() => {
       setClient(newClient);
     });
-  }, [(window as any).windowId]);
+
+    return true;
+  };
+  useEffect(() => {
+    // Because sometimes window.... aren't set immediately, but they can't be used as useEffect dependencies
+    const interval = setInterval(() => {
+      if (load()) {
+        clearInterval(interval);
+      }
+    }, 200);
+
+    return () => clearInterval(interval);
+  }, []);
 
   return client;
 }
