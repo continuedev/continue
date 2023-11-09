@@ -1,0 +1,3 @@
+kind: Changed
+body: Moved from Websockets to Socket.io for server communication
+time: 2023-11-08T20:48:01.210629-08:00
