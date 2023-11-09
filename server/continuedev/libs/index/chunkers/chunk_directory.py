@@ -1,6 +1,6 @@
 import asyncio
 import os
-from typing import AsyncGenerator, Callable, List, Tuple
+from typing import AsyncGenerator, Callable, List, Optional, Tuple
 
 from ....server.protocols.ide_protocol import AbstractIdeProtocolServer
 from ...util.filter_files import DEFAULT_IGNORE_PATTERNS, should_filter_path
@@ -130,7 +130,7 @@ async def get_all_filepaths(
 
 async def stream_file_contents(
     ide: AbstractIdeProtocolServer, ignore_files: List[str] = [], group_size: int = 100
-) -> AsyncGenerator[Tuple[str, str, float], None]:
+) -> AsyncGenerator[Tuple[str, Optional[str], float], None]:
     # Get list of filenames to index
     # TODO: Don't get all at once, walk the tree, or break up
     files, should_ignore = await get_all_filepaths(ide, ignore_files)
@@ -140,7 +140,10 @@ async def stream_file_contents(
     total = len(files)
     for file in files:
         if should_ignore(file):
+            total = max(1, total - 1)
+            yield (file, None, i / total)
             continue
+
         contents = await get_file_contents(file, ide)
         yield (file, contents, i / total)
         i += 1
@@ -148,7 +151,10 @@ async def stream_file_contents(
 
 async def stream_chunk_directory(
     ide: AbstractIdeProtocolServer, max_chunk_size: int
-) -> AsyncGenerator[Tuple[Chunk, float], None]:
+) -> AsyncGenerator[Tuple[Optional[Chunk], float], None]:
     async for file, contents, progress in stream_file_contents(ide):
+        if contents is None:
+            yield (None, progress)
+            continue
         for chunk in chunk_document(file, contents, max_chunk_size):
             yield (chunk, progress)

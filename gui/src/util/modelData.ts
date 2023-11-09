@@ -360,9 +360,21 @@ const osModels = [
   codeup,
 ];
 
+const gpt4turbo: ModelPackage = {
+  title: "GPT-4 Turbo",
+  description:
+    "A faster, cheaper version of GPT-4 with a longer context length",
+  params: {
+    model: "gpt-4-1106-preview",
+    context_length: 128_000,
+    title: "GPT-4 Turbo",
+    api_key: "",
+  },
+};
+
 const gpt4: ModelPackage = {
   title: "GPT-4",
-  description: "The latest model from OpenAI",
+  description: "The most powerful model from OpenAI",
   params: {
     model: "gpt-4",
     context_length: 8096,
@@ -409,7 +421,7 @@ export const MODEL_INFO: { [key: string]: ModelInfo } = {
       "Use gpt-4, gpt-3.5-turbo, or any other OpenAI model. See [here](https://openai.com/product#made-for-developers) to obtain an API key.",
     icon: "openai.png",
     tags: [ModelProviderTag["Requires API Key"]],
-    packages: [gpt4, gpt35turbo],
+    packages: [gpt4, gpt35turbo, gpt4turbo],
     collectInputFor: [
       {
         inputType: CollectInputType.text,

@@ -63,8 +63,9 @@ async def build_index(
     meilisearch_task = asyncio.create_task(meilisearch_task())
 
     async for chunk, progress in stream_chunk_directory(ide, MAX_CHUNK_SIZE):
-        buffers[0].append(chunk)
-        buffers[1].append(chunk)
+        if chunk is not None:
+            buffers[0].append(chunk)
+            buffers[1].append(chunk)
         yield progress
 
     done = True
