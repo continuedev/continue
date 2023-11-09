@@ -4,13 +4,16 @@ import ClassPropertyRef from '@site/src/components/ClassPropertyRef.tsx';
 
 The FileContextProvider is a ContextProvider that allows you to search files in the open workspace.
 
-[View the source](https://github.com/continuedev/continue/tree/main/server/continuedev/plugins/context_providers/file.py)
+[View the source](https://github.com/continuedev/continue/blob/main/server/continuedev/libs/llm/plugins/context_providers/file.py)
 
 ## Properties
+
+
 
 ### Inherited Properties
 
 <ClassPropertyRef name='title' details='{&quot;title&quot;: &quot;Title&quot;, &quot;default&quot;: &quot;file&quot;, &quot;type&quot;: &quot;string&quot;}' required={false} default="file"/>
+<ClassPropertyRef name='ide' details='{&quot;title&quot;: &quot;Ide&quot;}' required={false} default=""/>
 <ClassPropertyRef name='display_title' details='{&quot;title&quot;: &quot;Display Title&quot;, &quot;default&quot;: &quot;Files&quot;, &quot;type&quot;: &quot;string&quot;}' required={false} default="Files"/>
 <ClassPropertyRef name='description' details='{&quot;title&quot;: &quot;Description&quot;, &quot;default&quot;: &quot;Reference files in the current workspace&quot;, &quot;type&quot;: &quot;string&quot;}' required={false} default="Reference files in the current workspace"/>
 <ClassPropertyRef name='dynamic' details='{&quot;title&quot;: &quot;Dynamic&quot;, &quot;default&quot;: false, &quot;type&quot;: &quot;boolean&quot;}' required={false} default="False"/>

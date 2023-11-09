@@ -4,6 +4,7 @@ import json
 import os
 import re
 from functools import cached_property
+import sqlite3
 from typing import AsyncGenerator, Dict, List, Literal, Optional
 import chromadb
 from chromadb.config import Settings
@@ -149,34 +150,7 @@ class ChromaCodebaseIndex(CodebaseIndex):
         collections[self.directory] = collection
         return collection
 
-    async def build(
-        self,
-        ide: AbstractIdeProtocolServer,
-        ignore_files: List[str] = [],
-        chunks: Optional[List[Chunk]] = None,
-    ) -> AsyncGenerator[float, None]:
-        """Create a new index for the current branch."""
-
-        if await self.exists():
-            return
-
-        if chunks is None:
-            raise Exception("Chunks must be passed in to build Chroma index")
-
-        # Construct list of chunks for each file
-        chunks = list(
-            filter(
-                lambda c: len(c.content.strip()) > 0,
-                chunks,
-            )
-        )
-
-        num_chunks_per_file = {}
-        for chunk in chunks:
-            num_chunks_per_file[chunk.document_id] = (
-                num_chunks_per_file.get(chunk.document_id, 0) + 1
-            )
-
+    async def add_chunks(self, chunks: List[Chunk]):
         # Flatten chunks, metadata, and ids for insertion to Chroma
         documents = []
         metadatas = []
@@ -193,6 +167,9 @@ class ChromaCodebaseIndex(CodebaseIndex):
         wait_time = 4.0
         while i < len(ids):
             try:
+                if i > 0:
+                    await asyncio.sleep(0.05)
+
                 self.collection.add(
                     documents=documents[i : i + 100],
                     metadatas=metadatas[i : i + 100],
@@ -200,26 +177,47 @@ class ChromaCodebaseIndex(CodebaseIndex):
                 )
                 i += 100
 
-                # Give a progress update (1.0 is completed)
-                yield min(1.0, i / len(ids))
-                await asyncio.sleep(0.05)
             except RateLimitError as e:
                 logger.debug(f"Rate limit exceeded, waiting {wait_time} seconds")
                 await asyncio.sleep(wait_time)
                 wait_time *= 2
                 if wait_time > 2**10:
                     raise e
-            # except sqlite3.OperationalError as e:
-            #     logger.debug(f"SQL error: {e}")
-            #     os.chmod(self.chroma_dir, 0o777)
-            #     os.chmod(os.path.join(self.chroma_dir, "chroma.sqlite3"), 0o777)
+
+            except sqlite3.OperationalError as e:
+                logger.debug(f"SQL error: {e}")
+                del collections[self.directory]
+
+    async def build(
+        self,
+        chunks: AsyncGenerator[Chunk, None],
+    ):
+        """Create a new index for the current branch."""
+
+        if await self.exists():
+            return
+
+        group = []
+        group_size = 100
+        async for chunk in chunks:
+            if chunk.content.strip() == "":
+                continue
+
+            if len(group) < group_size:
+                group.append(chunk)
+                continue
+
+            await self.add_chunks([chunk])
+
+        if len(group) > 0:
+            await self.add_chunks(group)
 
         # Metadata keeps track of number of chunks per file, used in update()
         with open(f"{self.index_dir}/metadata.json", "w") as f:
             json.dump(
                 {
                     "commit": self.git_project.current_commit,
-                    "chunks": num_chunks_per_file,
+                    "chunks": {},  # TODO: This was removed, is it necessary?
                 },
                 f,
                 indent=4,

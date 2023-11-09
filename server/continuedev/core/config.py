@@ -15,6 +15,7 @@ from .context import ContextProvider
 from .main import ContextProviderDescription, Policy, SlashCommandDescription, Step
 from .models import Models
 from ..libs.util.telemetry import posthog_logger
+from ..libs.util.logging import logger
 
 
 class SlashCommand(BaseModel):
@@ -144,6 +145,10 @@ class ContinueConfig(BaseModel):
         False,
         description="If set to `True`, Continue will not generate summaries for each Step. This can be useful if you want to save on compute.",
     )
+    disable_indexing: Optional[bool] = Field(
+        False,
+        description="If set to `True`, Continue will not index the codebase. This is mainly used for debugging purposes.",
+    )
     retrieval_settings: Optional[RetrievalSettings] = Field(
         RetrievalSettings(),
         description="Settings for the retrieval system. Read more about the retrieval system in the documentation.",
@@ -151,7 +156,7 @@ class ContinueConfig(BaseModel):
 
     @classmethod
     def schema(cls, *args, **kwargs):
-        kwargs.setdefault("exclude", {"ide"})
+        # kwargs.setdefault("exclude", {"ide"})
         return super().schema(*args, **kwargs)
 
     @validator("temperature", pre=True)
@@ -159,32 +164,28 @@ class ContinueConfig(BaseModel):
         return max(0.0, min(1.0, v))
 
     @staticmethod
-    def from_filepath(filepath: str) -> "ContinueConfig":
+    def from_filepath(filepath: str, retry: bool = True) -> "ContinueConfig":
         # Use importlib to load the config file config.py at the given path
-        import importlib.util
-
-        spec = importlib.util.spec_from_file_location("config", filepath)
-        config = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(config)
-
-        return config.config
-
-    @staticmethod
-    def load_default(retry: bool = True) -> "ContinueConfig":
         try:
-            path = getConfigFilePath()
-            config = ContinueConfig.from_filepath(path)
+            import importlib.util
 
-            return config
+            spec = importlib.util.spec_from_file_location("config", filepath)
+            config = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(config)
+
+            return config.config
         except ModuleNotFoundError as e:
-            if not retry:
-                raise e
             # Check if the module was "continuedev.src"
-            if e.name == "continuedev.src":
+            if retry and e.name == "continuedev.src":
                 convertConfigImports(shorten=True)
-                return ContinueConfig.load_default(retry=False)
+                return ContinueConfig.from_filepath(filepath, retry=False)
             else:
                 raise e
+
+    @staticmethod
+    def load_default() -> "ContinueConfig":
+        path = getConfigFilePath()
+        return ContinueConfig.from_filepath(path)
 
     def get_slash_command_descriptions(self) -> List[SlashCommandDescription]:
         custom_commands = (

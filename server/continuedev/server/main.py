@@ -44,8 +44,8 @@ app.include_router(ide_router)
 app.include_router(gui_router)
 app.include_router(sessions_router)
 
-app.mount("/ide", sio_ide_app)
-app.mount("/gui", sio_gui_app)
+app.mount("/ide", sio_ide_app, name="ide")
+app.mount("/gui", sio_gui_app, name="gui")
 
 # Add CORS support
 app.add_middleware(
@@ -58,7 +58,11 @@ app.add_middleware(
 
 # region: Base endpoints
 
-root_config = ContinueConfig.load_default()
+try:
+    root_config = ContinueConfig.load_default()
+except Exception as e:
+    logger.error(f"Failed to load config.py: {e}")
+    root_config = ContinueConfig()
 
 
 @app.get("/slash_commands")

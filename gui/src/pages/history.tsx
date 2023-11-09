@@ -63,11 +63,9 @@ function TableRow({
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const client = useContext(GUIClientContext);
-  const apiUrl = useSelector((state: RootStore) => state.config.apiUrl);
+  const apiUrl = (window as any).serverUrl;
   const currentSession = useSelector((state: RootStore) => state.sessionState);
-  const workspaceDirectory = useSelector(
-    (state: RootStore) => state.config.workspacePaths?.[0] || ""
-  );
+  const workspacePaths = (window as any).workspacePaths || [""];
   const [hovered, setHovered] = useState(false);
 
   return (
@@ -79,7 +77,7 @@ function TableRow({
         <TdDiv
           onClick={async () => {
             // Save current session
-            client?.persistSession(currentSession, workspaceDirectory);
+            client?.persistSession(currentSession, workspacePaths[0]);
 
             // Load new session
             const response = await fetch(
@@ -138,10 +136,8 @@ function History() {
     SessionInfo[]
   >([]);
   const client = useContext(GUIClientContext);
-  const apiUrl = useSelector((state: RootStore) => state.config.apiUrl);
-  const workspacePaths = useSelector(
-    (state: RootStore) => state.config.workspacePaths
-  );
+  const apiUrl = (window as any).serverUrl;
+  const workspacePaths = (window as any).workspacePaths || [];
 
   const deleteSessionInUI = async (sessionId: string) => {
     setSessions((prev) =>

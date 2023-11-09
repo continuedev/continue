@@ -207,6 +207,10 @@ class IdeProtocolClient {
     callback: (data: any) => void
   ) {
     const respond = (responseData: any) => {
+      if (typeof callback === "undefined") {
+        console.log("callback is undefined");
+        return;
+      }
       callback({
         message_type: messageType,
         data: responseData,
@@ -554,24 +558,26 @@ class IdeProtocolClient {
   // Checks to see if the editor is a code editor.
   // In some cases vscode.window.visibleTextEditors can return non-code editors
   // e.g. terminal editors in side-by-side mode
-  private editorIsCode(editor: vscode.TextEditor) {
-    return !(
-      editor.document.languageId === "plaintext" &&
-      editor.document.getText() === "accessible-buffer-accessible-buffer-"
+  private documentIsCode(document: vscode.TextDocument) {
+    return (
+      !(
+        document.languageId === "plaintext" &&
+        document.getText() === "accessible-buffer-accessible-buffer-"
+      ) && !document.uri.scheme.startsWith("git")
     );
   }
 
   getOpenFiles(): string[] {
-    return vscode.window.visibleTextEditors
-      .filter((editor) => this.editorIsCode(editor))
-      .map((editor) => {
-        return editor.document.uri.fsPath;
+    return vscode.workspace.textDocuments
+      .filter((document) => this.documentIsCode(document))
+      .map((document) => {
+        return document.uri.fsPath;
       });
   }
 
   getVisibleFiles(): string[] {
     return vscode.window.visibleTextEditors
-      .filter((editor) => this.editorIsCode(editor))
+      .filter((editor) => this.documentIsCode(editor.document))
       .map((editor) => {
         return editor.document.uri.fsPath;
       });
@@ -579,7 +585,7 @@ class IdeProtocolClient {
 
   saveFile(filepath: string) {
     vscode.window.visibleTextEditors
-      .filter((editor) => this.editorIsCode(editor))
+      .filter((editor) => this.documentIsCode(editor.document))
       .forEach((editor) => {
         if (editor.document.uri.fsPath === filepath) {
           editor.document.save();
@@ -640,7 +646,7 @@ class IdeProtocolClient {
   }
 
   async readFile(filepath: string): Promise<string> {
-    const MAX_BYTES = 500000; // 0.5MB - socket.io has a 1MB limit, but seems to die a bit above 0.5MB
+    const MAX_BYTES = 100000; // 0.1MB - socket.io has a 1MB limit, but seems to die a around 0.5MB
     let contents: string | undefined;
     if (typeof contents === "undefined") {
       try {
@@ -724,7 +730,7 @@ class IdeProtocolClient {
     // TODO
     let rangeInFiles: RangeInFile[] = [];
     vscode.window.visibleTextEditors
-      .filter((editor) => this.editorIsCode(editor))
+      .filter((editor) => this.documentIsCode(editor.document))
       .forEach((editor) => {
         editor.selections.forEach((selection) => {
           // if (!selection.isEmpty) {

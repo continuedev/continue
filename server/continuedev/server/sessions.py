@@ -30,10 +30,8 @@ async def list_sessions():
     """List all sessions"""
     sessions_list_file = getSessionsListFilePath()
     if not os.path.exists(sessions_list_file):
-        print("Returning empty sessions list")
         return []
     sessions = json.load(open(sessions_list_file, "r"))
-    print("Returning sessions list: ", sessions)
     return sessions
 
 

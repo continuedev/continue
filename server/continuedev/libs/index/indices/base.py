@@ -19,13 +19,8 @@ class CodebaseIndex(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    async def build(
-        self,
-        ide: AbstractIdeProtocolServer,
-        ignore_files: List[str] = [],
-        chunks: Optional[List[Chunk]] = None,
-    ) -> AsyncGenerator[float, None]:
-        """Builds the index, yielding progress as a float between 0 and 1. Optionally takes a list of chunks, otherwise builds its own"""
+    async def build(self, chunks: AsyncGenerator[Chunk, None]):
+        """Builds the index, yielding progress as a float between 0 and 1. Chunks are yielded from the given generator."""
         raise NotImplementedError()
 
     @abstractmethod

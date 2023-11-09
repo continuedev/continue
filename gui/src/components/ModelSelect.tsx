@@ -156,7 +156,7 @@ function ListBoxOption({ option, idx }: { option: Option; idx: number }) {
         setHovered(false);
       }}
     >
-      <div className="flex items-center justify-between gap-3 h-5">
+      <div className="flex items-center justify-between gap-3 h-5 relative">
         <span>{option.title}</span>
         {idx > 0 && hovered && (
           <HeaderButtonWithText
@@ -166,6 +166,8 @@ function ListBoxOption({ option, idx }: { option: Option; idx: number }) {
               e.stopPropagation();
               e.preventDefault();
             }}
+            style={{ backgroundColor: secondaryDark }}
+            className="absolute right-0 p-1"
           >
             <TrashIcon width="1.2em" height="1.2em" />
           </HeaderButtonWithText>

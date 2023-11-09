@@ -1,5 +1,6 @@
 package com.github.continuedev.continueintellijextension.`continue`
 
+import com.github.continuedev.continueintellijextension.*
 import com.github.continuedev.continueintellijextension.activities.getContinueServerUrl
 import com.github.continuedev.continueintellijextension.services.ContinuePluginService
 import com.google.gson.Gson
@@ -23,22 +24,28 @@ import com.intellij.openapi.vfs.VirtualFileManager
 import com.intellij.openapi.wm.WindowManager
 import com.intellij.testFramework.LightVirtualFile
 import com.intellij.ui.awt.RelativePoint
+import io.socket.client.Ack
+import io.socket.client.IO
+import io.socket.client.Socket
+import io.socket.emitter.Emitter;
 import kotlinx.coroutines.*
 import okhttp3.*
 import java.io.File
+import java.io.FileInputStream
+import java.io.IOException
 import java.net.NetworkInterface
 import java.net.URI
-import java.util.*
-import io.socket.client.IO
-import io.socket.client.Socket
 import java.net.URLEncoder
+import java.nio.charset.Charset
+import java.util.*
+
 
 fun uuid(): String {
     return UUID.randomUUID().toString()
 }
 
 
-data class WebSocketMessage<T>(val messageType: String, val messageId: String, val data: T)
+data class WebSocketMessage<T>(val message_type: String, val message_id: String, val data: T)
 data class WorkspaceDirectory(val workspaceDirectory: String)
 data class UniqueId(val uniqueId: String)
 data class ReadFile(val contents: String)
@@ -112,14 +119,14 @@ class IdeProtocolClient (
         socket?.send("message", Gson().toJson(wsMessage))
     }
 
-    private fun handleWebsocketMessage(text: String) {
+    private fun handleWebsocketMessage(text: String, respond: (String, String, Any) -> Unit) {
         coroutineScope.launch(Dispatchers.IO) {
             val parsedMessage: Map<String, Any> = Gson().fromJson(
                     text,
                     object : TypeToken<Map<String, Any>>() {}.type
             )
-            val messageType = parsedMessage["messageType"] as? String
-            val messageId = parsedMessage["messageId"] as? String
+            val messageType = parsedMessage["message_type"] as? String
+            val messageId = parsedMessage["message_id"] as? String
             if (messageId == null) {
 
                 println("Received message without messageId: $text")
@@ -127,13 +134,17 @@ class IdeProtocolClient (
             }
             val data = parsedMessage["data"] as Map<*, *>
 
+//            fun respond(t: String, a: String, b: Any) {
+//
+//            }
+
             try {
                 when (messageType) {
                     "workspaceDirectory" -> {
-                        send("workspaceDirectory", messageId, WorkspaceDirectory(workspaceDirectory()))
+                        respond("workspaceDirectory", messageId, WorkspaceDirectory(workspaceDirectory()))
                     }
 
-                    "uniqueId" -> send(
+                    "uniqueId" -> respond(
                         "uniqueId",
                         messageId,
                         UniqueId(uniqueId())
@@ -150,7 +161,7 @@ class IdeProtocolClient (
                         if (sshClient != null || sshTty != null) {
                             remoteName = "ssh"
                         }
-                        send(
+                        respond(
                             "ide",
                             messageId,
                             IdeInfo(ideName, ideVersion, remoteName)
@@ -168,7 +179,7 @@ class IdeProtocolClient (
                     "readFile" -> {
                         val msg =
                                 ReadFile(readFile(data["filepath"] as String))
-                        send(
+                        respond(
                             "readFile",
                             messageId,
                             msg
@@ -176,7 +187,7 @@ class IdeProtocolClient (
                     }
 
                     "listDirectoryContents" -> {
-                        send(
+                        respond(
                             "listDirectoryContents",
                             messageId,
                             ListDirectoryContents(listDirectoryContents())
@@ -184,7 +195,7 @@ class IdeProtocolClient (
                     }
 
                     "getTerminalContents" -> {
-                        send(
+                        respond(
                             "getTerminalContents",
                             messageId,
                             GetTerminalContents("Terminal cannot be accessed in JetBrains IDE")
@@ -193,7 +204,7 @@ class IdeProtocolClient (
 
                     "visibleFiles" -> {
                         val msg = VisibleFiles(visibleFiles())
-                        send(
+                        respond(
                             "visibleFiles",
                             messageId,
                             msg
@@ -231,7 +242,7 @@ class IdeProtocolClient (
                             val rif = RangeInFile(rifWithContents.filepath, rifWithContents.range)
                             rifs += rif
                         }
-                        send(
+                        respond(
                             "highlightedCode",
                             messageId,
                             HighlightedCode(rifs)
@@ -297,14 +308,29 @@ class IdeProtocolClient (
             println("Disconnected from Continue IDE websocket")
         }
 
-        socket.on(Socket.EVENT_CONNECT_ERROR) {
+        socket.on(Socket.EVENT_CONNECT_ERROR, { args ->
             println("Error connecting to Continue IDE websocket")
-        }
+            println(args[0].toString())
+        })
+
 
         socket.on("message") { args ->
             val data = args[0].toString()
-            println("Received message: $data")
-            handleWebsocketMessage(data)
+            if (args.size == 1) {
+                println("Received message without ack: $data")
+                return@on
+            }
+            val ack = args[args.size - 1] as Ack
+            fun respond(messageType: String, messageId: String, data: Any) {
+                val wsMessage = WebSocketMessage(
+                        messageType,
+                        messageId,
+                        data
+                )
+                ack.call(Gson().toJson(wsMessage))
+            }
+            handleWebsocketMessage(data, ::respond)
+//                ack.call()
         }
 
         socket.connect()
@@ -313,7 +339,7 @@ class IdeProtocolClient (
 
 
     private fun sendMessage(messageType: String, message: Map<String, Any>) {
-        val sendData = mapOf("messageType" to messageType, "data" to message)
+        val sendData = mapOf("message_type" to messageType, "data" to message)
         val jsonMessage = serializeMessage(sendData)
         webSocket?.send(jsonMessage)
     }
@@ -351,14 +377,25 @@ class IdeProtocolClient (
     }
 
     fun readFile(filepath: String): String {
-        val file =
-            LocalFileSystem.getInstance().findFileByPath(filepath) ?: return ""
-        val documentManager = FileDocumentManager.getInstance()
-        val document = ApplicationManager.getApplication().runReadAction(Computable {
-            documentManager.getDocument(file)
-        })
-        return document?.text ?: ""
+        try {
+            val file = File(filepath)
+            if (!file.exists()) return ""
+
+            FileInputStream(file).use { fis ->
+                val sizeToRead = minOf(100000, file.length()).toInt()
+                val buffer = ByteArray(sizeToRead)
+                val bytesRead = fis.read(buffer, 0, sizeToRead)
+                if (bytesRead <= 0) return ""
+
+                // Here we assume the file encoding is UTF-8; adjust as necessary for different encodings.
+                return String(buffer, 0, bytesRead, Charset.forName("UTF-8"))
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            return ""
+        }
     }
+
 
     private fun getHighlightedCode(): RangeInFileWithContents? {
         val result = ApplicationManager.getApplication().runReadAction<RangeInFileWithContents?> {

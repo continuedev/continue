@@ -1,6 +1,6 @@
 import asyncio
 import os
-from typing import Dict, List
+from typing import AsyncGenerator, Callable, List, Optional, Tuple
 
 from ....server.protocols.ide_protocol import AbstractIdeProtocolServer
 from ...util.filter_files import DEFAULT_IGNORE_PATTERNS, should_filter_path
@@ -40,6 +40,20 @@ FILE_IGNORE_PATTERNS = [
     "*.dylib",
     "*.ncb",
     "*.sdf",
+    "*.woff",
+    "*.woff2",
+    "*.eot",
+    "*.cur",
+    "*.avi",
+    "*.mpg",
+    "*.mpeg",
+    "*.mov",
+    "*.mp3",
+    "*.mp4",
+    "*.mkv",
+    "*.mkv",
+    "*.webm",
+    "*.jar",
 ]
 
 MAX_SIZE_IN_CHARS = 50_000
@@ -60,13 +74,17 @@ async def get_contents_of_files(
 
 
 def gi_basename(path: str) -> str:
-    return path[: path.index(".gitignore")]
+    if ".gitignore" in path:
+        return path[: path.index(".gitignore")]
+    elif ".continueignore" in path:
+        return path[: path.index(".continueignore")]
+    else:
+        return path
 
 
-async def get_all_file_contents(
-    ide: AbstractIdeProtocolServer, ignore_files: List[str] = [], group_size: int = 100
-) -> Dict[str, str]:
-    # Get list of filenames to index
+async def get_all_filepaths(
+    ide: AbstractIdeProtocolServer, ignore_files: List[str] = []
+) -> Tuple[List[str], Callable[[str], bool]]:
     files = await ide.listDirectoryContents(ide.workspace_directory, True)
 
     # Get all .gitignores first
@@ -98,39 +116,45 @@ async def get_all_file_contents(
 
         return patterns
 
-    # Filter from ignore_directories
-    files = list(
-        filter(
-            lambda file: not should_filter_path(
-                file,
-                ignore_files
-                + DEFAULT_IGNORE_PATTERNS
-                + FILE_IGNORE_PATTERNS
-                + gitignore_patterns_for_file(file),
-            ),
-            files,
+    def should_ignore_file(filepath: str) -> bool:
+        return should_filter_path(
+            filepath,
+            ignore_files
+            + DEFAULT_IGNORE_PATTERNS
+            + FILE_IGNORE_PATTERNS
+            + gitignore_patterns_for_file(filepath),
         )
-    )
 
-    items = []
-    i = 0
+    return files, should_ignore_file
+
+
+async def stream_file_contents(
+    ide: AbstractIdeProtocolServer, ignore_files: List[str] = [], group_size: int = 100
+) -> AsyncGenerator[Tuple[str, Optional[str], float], None]:
+    # Get list of filenames to index
+    # TODO: Don't get all at once, walk the tree, or break up
+    files, should_ignore = await get_all_filepaths(ide, ignore_files)
+
     # Don't want to flood with too many requests
-    while i < len(files):
-        items += await get_contents_of_files(files[i : i + group_size], ide)
+    i = 0
+    total = len(files)
+    for file in files:
+        if should_ignore(file):
+            total = max(1, total - 1)
+            yield (file, None, i / total)
+            continue
 
-        i += group_size
-        await asyncio.sleep(0.1)
+        contents = await get_file_contents(file, ide)
+        yield (file, contents, i / total)
+        i += 1
 
-    return dict(filter(lambda tup: tup[1] is not None, zip(files, items)))
 
-
-async def chunk_directory(
+async def stream_chunk_directory(
     ide: AbstractIdeProtocolServer, max_chunk_size: int
-) -> List[Chunk]:
-    file_contents = await get_all_file_contents(ide)
-
-    chunks = []
-    for filepath, contents in file_contents.items():
-        chunks += chunk_document(filepath, contents, max_chunk_size)
-
-    return chunks
+) -> AsyncGenerator[Tuple[Optional[Chunk], float], None]:
+    async for file, contents, progress in stream_file_contents(ide):
+        if contents is None:
+            yield (None, progress)
+            continue
+        for chunk in chunk_document(file, contents, max_chunk_size):
+            yield (chunk, progress)

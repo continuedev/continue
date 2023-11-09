@@ -28,7 +28,9 @@ import {
   ChevronRightIcon,
   Cog6ToothIcon,
   CommandLineIcon,
+  ExclamationTriangleIcon,
   FolderIcon,
+  FolderOpenIcon,
   GlobeAltIcon,
   HashtagIcon,
   MagnifyingGlassIcon,
@@ -78,6 +80,7 @@ const ICONS_FOR_DROPDOWN: { [key: string]: any } = {
   diff: PlusIcon,
   search: MagnifyingGlassIcon,
   url: GlobeAltIcon,
+  open: FolderOpenIcon,
   "/edit": PaintBrushIcon,
   "/clear": TrashIcon,
   "/test": BeakerIcon,
@@ -327,9 +330,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
 
   const client = useContext(GUIClientContext);
   const dispatch = useDispatch();
-  const workspacePaths = useSelector(
-    (state: RootStore) => state.config.workspacePaths
-  );
+  const workspacePaths = (window as any).workspacePaths || [];
   const sessionState = useSelector((state: RootStore) => state.sessionState);
 
   const [history, setHistory] = React.useState<string[]>([]);
@@ -673,9 +674,9 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
     };
   }, []);
 
-  const persistSession = useCallback(() => {
+  const persistSession = () => {
     client?.persistSession(sessionState, workspacePaths[0] || "");
-  }, [client, sessionState, workspacePaths]);
+  };
 
   useEffect(() => {
     if (!inputRef.current || !props.isMainInput) {
@@ -706,9 +707,10 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
     return () => {
       window.removeEventListener("message", handler);
     };
-  }, [inputRef.current, props.isMainInput, persistSession]);
+  }, [inputRef.current, props.isMainInput]);
 
   const deleteButtonDivRef = React.useRef<HTMLDivElement>(null);
+  const stickyDropdownHeaderDiv = React.useRef<HTMLDivElement>(null);
 
   const selectContextItemFromDropdown = useCallback(
     (event: any) => {
@@ -796,6 +798,24 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
     ]
   );
 
+  const [contextLengthFillPercentage, setContextLengthFillPercentage] =
+    useState<number>(0);
+
+  const contextLength = useSelector(
+    (store: RootStore) =>
+      store.serverState.config.models?.default?.context_length || 4096
+  );
+
+  useEffect(() => {
+    let tokenEstimate = selectedContextItems.reduce((acc, item) => {
+      return acc + item.content.length / Math.E; // Just an estimate of tokens / char
+    }, 0);
+    tokenEstimate += downshiftProps.inputValue.length / Math.E;
+    setContextLengthFillPercentage(
+      tokenEstimate / Math.max(1, contextLength - 600)
+    );
+  }, [selectedContextItems, contextLength]);
+
   const [isComposing, setIsComposing] = useState(false);
 
   const [showContextToggleOn, setShowContextToggleOn] = useState(false);
@@ -818,6 +838,12 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
       setShowContextItemsIfNotMain(false);
     }
   }, [inputFocused]);
+
+  useEffect(() => {
+    if (selectedContextItems.length > 0) {
+      setShowContextItemsIfNotMain(true);
+    }
+  }, [selectedContextItems]);
 
   return (
     <div
@@ -1027,6 +1053,19 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
                   wFull={false}
                 ></RingLoader>
               )}
+              {contextLengthFillPercentage > 1 && (
+                <HeaderButtonWithText
+                  text={`Context selected may exceed token limit (~${(
+                    100 * contextLengthFillPercentage
+                  ).toFixed(0)}%)`}
+                >
+                  <ExclamationTriangleIcon
+                    width="1.0em"
+                    height="1.0em"
+                    color="red"
+                  />
+                </HeaderButtonWithText>
+              )}
             </>
           ) : (
             <div
@@ -1095,10 +1134,10 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
           />
         </pre>
       )}
-      {showContextToggleOn && selectedContextItems.length >= 8 && (
+      {showContextToggleOn && (
         <div>
           <HeaderButtonWithText
-            className="m-2 ml-4"
+            className="mr-4 ml-auto -mt-2"
             text="Delete All"
             onClick={() => {
               dispatch(
@@ -1112,7 +1151,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
               setFocusedContextItem(undefined);
             }}
           >
-            <div className="flex">
+            <div className="flex items-center">
               <TrashIcon width="1.2em" height="1.2em" />
               Delete All
             </div>
@@ -1404,6 +1443,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
         >
           {nestedContextProvider && (
             <div
+              ref={stickyDropdownHeaderDiv}
               style={{
                 backgroundColor: secondaryDark,
                 borderBottom: `0.5px solid ${lightGray}`,
@@ -1427,83 +1467,94 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
               {nestedContextProvider.description}
             </div>
           )}
-          {downshiftProps.isOpen &&
-            items.map((item, index) => (
-              <Li
-                style={{
-                  borderTop: index === 0 ? "none" : `0.5px solid ${lightGray}`,
-                }}
-                key={`${item.name}${index}`}
-                {...downshiftProps.getItemProps({ item, index })}
-                highlighted={downshiftProps.highlightedIndex === index}
-                selected={downshiftProps.selectedItem === item}
-                onClick={(e) => {
-                  selectContextItemFromDropdown(e);
-                  e.stopPropagation();
-                  e.preventDefault();
-                  inputRef.current?.focus();
-                }}
-              >
-                <span className="flex justify-between w-full items-center">
-                  <div className="flex items-center justify-center">
-                    {nestedContextProvider && (
-                      <FileIcon
-                        height="20px"
-                        width="20px"
-                        filename={item.name}
-                      ></FileIcon>
-                    )}
-                    <DropdownIcon provider={item.name} className="mr-2" />
-                    <DropdownIcon provider={item.id} className="mr-2" />
-                    {item.name}
-                    {"  "}
-                  </div>
-                  <span
-                    style={{
-                      color: vscForeground,
-                      float: "right",
-                      textAlign: "right",
-                    }}
-                    hidden={downshiftProps.highlightedIndex !== index}
-                  >
-                    {item.description}
+          <div
+            style={{
+              maxHeight: `${
+                UlMaxHeight -
+                (stickyDropdownHeaderDiv.current?.clientHeight || 50)
+              }px`,
+              overflow: "auto",
+            }}
+          >
+            {downshiftProps.isOpen &&
+              items.map((item, index) => (
+                <Li
+                  style={{
+                    borderTop:
+                      index === 0 ? "none" : `0.5px solid ${lightGray}`,
+                  }}
+                  key={`${item.name}${index}`}
+                  {...downshiftProps.getItemProps({ item, index })}
+                  highlighted={downshiftProps.highlightedIndex === index}
+                  selected={downshiftProps.selectedItem === item}
+                  onClick={(e) => {
+                    selectContextItemFromDropdown(e);
+                    e.stopPropagation();
+                    e.preventDefault();
+                    inputRef.current?.focus();
+                  }}
+                >
+                  <span className="flex justify-between w-full items-center">
+                    <div className="flex items-center justify-center">
+                      {nestedContextProvider && (
+                        <FileIcon
+                          height="20px"
+                          width="20px"
+                          filename={item.name}
+                        ></FileIcon>
+                      )}
+                      <DropdownIcon provider={item.name} className="mr-2" />
+                      <DropdownIcon provider={item.id} className="mr-2" />
+                      {item.name}
+                      {"  "}
+                    </div>
+                    <span
+                      style={{
+                        color: vscForeground,
+                        float: "right",
+                        textAlign: "right",
+                      }}
+                      hidden={downshiftProps.highlightedIndex !== index}
+                    >
+                      {item.description}
+                    </span>
                   </span>
-                </span>
-                {contextProviders
-                  ?.filter(
-                    (provider) => !provider.dynamic || provider.requires_query
-                  )
-                  .find((provider) => provider.title === item.id) && (
-                  <ArrowRightIcon
-                    width="1.2em"
-                    height="1.2em"
-                    color={vscForeground}
-                    className="ml-2 flex-shrink-0"
-                  />
-                )}
-              </Li>
-            ))}
-          {downshiftProps.isOpen && items.length === 0 && (
-            <Li
-              key="empty-items-li"
-              highlighted={false}
-              selected={false}
-              isLastItem={false}
-            >
-              <span
-                style={{
-                  color: lightGray,
-                  float: "right",
-                  textAlign: "right",
-                  display: "flex",
-                  width: "100%",
-                  cursor: "default",
-                }}
+                  {contextProviders
+                    ?.filter(
+                      (provider) => !provider.dynamic || provider.requires_query
+                    )
+                    .find((provider) => provider.title === item.id) && (
+                    <ArrowRightIcon
+                      width="1.2em"
+                      height="1.2em"
+                      color={vscForeground}
+                      className="ml-2 flex-shrink-0"
+                    />
+                  )}
+                </Li>
+              ))}
+            {downshiftProps.isOpen && items.length === 0 && (
+              <Li
+                key="empty-items-li"
+                highlighted={false}
+                selected={false}
+                isLastItem={false}
               >
-                No items found
-              </span>
-            </Li>
-          )}
+                <span
+                  style={{
+                    color: lightGray,
+                    float: "right",
+                    textAlign: "right",
+                    display: "flex",
+                    width: "100%",
+                    cursor: "default",
+                  }}
+                >
+                  No items found
+                </span>
+              </Li>
+            )}
+          </div>
         </Ul>
       </div>
 
@@ -1535,7 +1586,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
             >
               {downshiftProps.inputValue?.startsWith("/codebase")
                 ? "Using codebase"
-                : "⌘ ⏎ Use codebase"}
+                : `${getMetaKeyLabel()} ⏎ Use codebase`}
             </span>
           </div>
           <br />

@@ -76,11 +76,16 @@ function serverVersionPath(): string {
 }
 
 function serverBinaryPath(): string {
-  return path.join(
+  let binaryPath = path.join(
     serverPath(),
     "exe",
     `continue_server${os.platform() === "win32" ? ".exe" : ""}`
   );
+  // If it's a directory, this is a directory mode pyinstaller binary
+  if (fs.existsSync(binaryPath) && fs.lstatSync(binaryPath).isDirectory()) {
+    binaryPath = path.join(binaryPath, "continue_server");
+  }
+  return binaryPath;
 }
 
 export function getExtensionVersion() {
@@ -206,11 +211,15 @@ export async function downloadFromS3(
 
 function includedBinaryPath(): string {
   const extensionPath = getExtensionUri().fsPath;
-  return path.join(
+  let binaryPath = path.join(
     extensionPath,
     "exe",
     `continue_server${os.platform() === "win32" ? ".exe" : ""}`
   );
+  if (fs.existsSync(binaryPath) && fs.lstatSync(binaryPath).isDirectory()) {
+    binaryPath = path.join(binaryPath, "continue_server");
+  }
+  return binaryPath;
 }
 
 function runExecutable(path: string) {

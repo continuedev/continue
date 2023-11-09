@@ -2,6 +2,8 @@ import asyncio
 import time
 from abc import abstractmethod
 from typing import Any, Awaitable, Callable, List, Optional
+
+from ..libs.util.paths import migration
 from ..server.protocols.ide_protocol import AbstractIdeProtocolServer
 
 from meilisearch_python_async import Client
@@ -18,6 +20,7 @@ from ..server.meilisearch_server import (
     poll_meilisearch_running,
     restart_meilisearch,
     start_meilisearch,
+    remove_meilisearch_disallowed_chars,
 )
 from .main import (
     ChatMessage,
@@ -227,6 +230,7 @@ class ContextManager:
         context_providers: List[ContextProvider],
         ide: AbstractIdeProtocolServer,
         only_reloading: bool = False,
+        disable_indexing: bool = False,
     ):
         """
         Starts the context manager.
@@ -274,7 +278,9 @@ class ContextManager:
         providers_to_load = (
             new_context_providers if only_reloading else context_providers
         )
-        create_async_task(load_index(providers_to_load), on_err)
+
+        if not disable_indexing:
+            create_async_task(load_index(providers_to_load), on_err)
 
     @staticmethod
     async def update_documents(context_items: List[ContextItem], workspace_dir: str):
@@ -333,6 +339,12 @@ class ContextManager:
             async with Client(get_meilisearch_url()) as search_client:
                 # First, create the index if it doesn't exist
                 # The index is currently shared by all workspaces
+
+                # Check if need to migrate to new id format
+                # If so, delete the index before recreating
+                async with migration("meilisearch_context_items_001"):
+                    await search_client.delete_index_if_exists(SEARCH_INDEX_NAME)
+
                 await search_client.create_index(SEARCH_INDEX_NAME)
                 globalSearchIndex = await search_client.get_index(SEARCH_INDEX_NAME)
                 await globalSearchIndex.update_ranking_rules(
@@ -349,7 +361,8 @@ class ContextManager:
                     context_items = await provider.provide_context_items(workspace_dir)
                     documents = [
                         {
-                            "id": item.description.id.to_string(),
+                            "id": item.description.id.to_string()
+                            + remove_meilisearch_disallowed_chars(workspace_dir),
                             "name": item.description.name,
                             "description": item.description.description,
                             "content": item.content,

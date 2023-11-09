@@ -38,7 +38,7 @@ def render_templated_string(template: str) -> str:
             escaped_var = escape_var(var)
             template = template.replace(var, escaped_var)
 
-            if os.path.exists(var):
+            if os.path.exists(var) and os.path.isfile(var):
                 args[escaped_var] = open(var, "r").read()
             else:
                 args[escaped_var] = ""
