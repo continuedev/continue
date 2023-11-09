@@ -41,8 +41,8 @@ MATLAB projects have had 84,982 [stars on GitHub since 2014](https://madnight.gi
 [u/worblyhead](https://www.reddit.com/r/matlab/comments/12fwjx5/comment/jficv03/?utm_source=share&utm_medium=web2x&context=3)
 > Yep, pretty much all the MATLAB code ChatGPT write for me worked. There was one instance whereby there was a multiplication that went away as it used * instead of .* To multiply two vectors. When I pointed that out, it corrected the code. In this case it was an order of operations issue and it correctly got it sorted by adjusting the parentheses. Pretty impressive so far.
 
-[u/TheBlackCat13](https://www.reddit.com/r/matlab/comments/158l86g/comment/jtb1g61/?utm_source=share&utm_medium=web2x&context=3)
-> Converting the syntax isn't hard for something like chatgpt. But converting the function signatures is much harder to automate, especially third-party ones. I am currently in the process of doing Matlab to python for code relying on third-party packages, and it is certainly time consuming, but there isn't much alternative.
+[u/Latter_Trouble_3227](https://www.reddit.com/r/matlab/comments/y07uop/comment/jbgoj6h/?utm_source=share&utm_medium=web2x&context=3)
+> Yes, you can use Co-Pilot with Matlab code. However, it won't work with the usual MATLAB IDE, so you have to use one of the supported IDEs (e.g. VS Code or JetBrains).
 
 [u/LevelHelicopter9420](https://www.reddit.com/r/matlab/comments/12fwjx5/comment/jfll3tu/?utm_source=share&utm_medium=web2x&context=3)
 > Why would you think such a simple plot with callback on click would not work? Now I wonder if it made the callback zoom-safe. I was using update callbacks after only 8 months of college experience with Matlab. And yet, I can’t make chatGPT to give me the correct answer to a function inverse involving rational polynomials (at least the steps it got right, allowed me to remember how to do function inverses)
