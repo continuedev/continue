@@ -282,6 +282,12 @@ jobs:
           version: latest
           args: batch patch
 
+      - name: Merge changelog
+        uses: miniscruff/changie-action@v2
+        with:
+          version: latest
+          args: merge
+
       # 4. Update the package.json version and push changes
       - name: Update version in package.json
         run: |
