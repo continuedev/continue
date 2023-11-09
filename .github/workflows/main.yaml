@@ -276,6 +276,19 @@ jobs:
           cd extensions/vscode
           npx ovsx publish -p ${{ secrets.VSX_REGISTRY_TOKEN }} --packagePath ../../alpine-x64/*.vsix ../../darwin-arm64/*.vsix ../../darwin-x64/*.vsix ../../linux-arm64/*.vsix ../../linux-armhf/*.vsix ../../linux-x64/*.vsix ../../win32-ia32/*.vsix ../../win32-x64/*.vsix ../../win32-arm64/*.vsix
 
+      # 3.5 Update the changelog
+      - name: Batch a new patch version
+        uses: miniscruff/changie-action@v2
+        with:
+          version: latest
+          args: batch patch
+
+      - name: Merge changelog
+        uses: miniscruff/changie-action@v2
+        with:
+          version: latest
+          args: merge
+
       # 4. Update the package.json version and push changes
       - name: Update version in package.json
         run: |
@@ -294,44 +307,51 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           branch: ${{ github.ref }}
 
+      # 4.5 Send to Discord Webhook
+      - name: Discord Commits
+        uses: Sniddl/discord-commits@v1.6
+        with:
+          webhook: ${{ secrets.DISCORD_WEBHOOK }}
+          template: "avatar-with-link"
+          include-extras: true
+
       # 5. Download binaries and upload to S3
-      # Skipping this until JetBrains is up-to-date
-      # - name: Download Linux build
-      #   uses: actions/download-artifact@v2
-      #   with:
-      #     name: LinuxBinary
-      #     path: exe/linux
+      - name: Download Linux build
+        uses: actions/download-artifact@v2
+        with:
+          name: LinuxBinary
+          path: exe/linux
 
-      # - name: Download macOS build
-      #   uses: actions/download-artifact@v2
-      #   with:
-      #     name: macOSBinary
-      #     path: exe/mac
+      - name: Download macOS build
+        uses: actions/download-artifact@v2
+        with:
+          name: macOSBinary
+          path: exe/mac
 
-      # - name: Download Windows build
-      #   uses: actions/download-artifact@v2
-      #   with:
-      #     name: WindowsBinary
-      #     path: exe/windows
+      - name: Download Windows build
+        uses: actions/download-artifact@v2
+        with:
+          name: WindowsBinary
+          path: exe/windows
 
-      # - name: Upload binaries to S3 (s3.continue.dev)
-      #   uses: jakejarvis/s3-sync-action@master
-      #   with:
-      #     args: --acl public-read --follow-symlinks
-      #   env:
-      #     AWS_S3_BUCKET: s3.continue.dev
-      #     AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-      #     AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      #     AWS_REGION: "us-west-1"
-      #     SOURCE_DIR: "exe"
+      - name: Upload binaries to S3 (s3.continue.dev)
+        uses: jakejarvis/s3-sync-action@master
+        with:
+          args: --acl public-read --follow-symlinks
+        env:
+          AWS_S3_BUCKET: s3.continue.dev
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: "us-west-1"
+          SOURCE_DIR: "exe"
 
-      # - name: Upload binaries to S3 (continue-server-binaries)
-      #   uses: jakejarvis/s3-sync-action@master
-      #   with:
-      #     args: --acl public-read --follow-symlinks
-      #   env:
-      #     AWS_S3_BUCKET: continue-server-binaries
-      #     AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-      #     AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      #     AWS_REGION: "us-west-1"
-      #     SOURCE_DIR: "exe"
+      - name: Upload binaries to S3 (continue-server-binaries)
+        uses: jakejarvis/s3-sync-action@master
+        with:
+          args: --acl public-read --follow-symlinks
+        env:
+          AWS_S3_BUCKET: continue-server-binaries
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: "us-west-1"
+          SOURCE_DIR: "exe"

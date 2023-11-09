@@ -316,7 +316,6 @@ class IdeProtocolClient (
 
         socket.on("message") { args ->
             val data = args[0].toString()
-            println("Received message: $data")
             if (args.size == 1) {
                 println("Received message without ack: $data")
                 return@on
