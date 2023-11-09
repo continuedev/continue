@@ -2,6 +2,8 @@ import asyncio
 import time
 from abc import abstractmethod
 from typing import Any, Awaitable, Callable, List, Optional
+
+from ..libs.util.paths import migration
 from ..server.protocols.ide_protocol import AbstractIdeProtocolServer
 
 from meilisearch_python_async import Client
@@ -337,6 +339,12 @@ class ContextManager:
             async with Client(get_meilisearch_url()) as search_client:
                 # First, create the index if it doesn't exist
                 # The index is currently shared by all workspaces
+
+                # Check if need to migrate to new id format
+                # If so, delete the index before recreating
+                async with migration("meilisearch_context_items_001"):
+                    await search_client.delete_index_if_exists(SEARCH_INDEX_NAME)
+
                 await search_client.create_index(SEARCH_INDEX_NAME)
                 globalSearchIndex = await search_client.get_index(SEARCH_INDEX_NAME)
                 await globalSearchIndex.update_ranking_rules(
