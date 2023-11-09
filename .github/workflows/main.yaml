@@ -277,9 +277,9 @@ jobs:
 
       # 3.5 Update the changelog
       - name: Batch a new patch version
-        uses: miniscruff/changie-action@VERSION # view action repo for latest version
+        uses: miniscruff/changie-action@v2
         with:
-          version: latest # use the latest changie version
+          version: latest
           args: batch patch
 
       # 4. Update the package.json version and push changes
