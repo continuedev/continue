@@ -1,21 +1,18 @@
 import * as vscode from "vscode";
 import { getContinueServerUrl } from "./bridge";
-import {
-  getExtensionUri,
-  getNonce,
-  getUniqueId,
-  openEditorAndRevealRange,
-} from "./util/vscode";
-import { RangeInFileWithContents } from "../schema/RangeInFileWithContents";
-import { setFocusedOnContinueInput } from "./commands";
+import { getExtensionUri, getNonce, getUniqueId } from "./util/vscode";
 import { ideProtocolClient, windowId } from "./activation/activate";
 import * as io from "socket.io-client";
+import { FileEdit } from "../schema/FileEdit";
 
 let sockets: { [url: string]: io.Socket | undefined } = {};
 
 export let debugPanelWebview: vscode.Webview | undefined;
-export function setupDebugPanel(
-  panel: vscode.WebviewPanel | vscode.WebviewView
+export function getSidebarContent(
+  panel: vscode.WebviewPanel | vscode.WebviewView,
+  page: string | undefined = undefined,
+  edits: FileEdit[] | undefined = undefined,
+  isFullScreen: boolean = false
 ): string {
   debugPanelWebview = panel.webview;
   panel.onDidDispose(() => {
@@ -141,6 +138,21 @@ export function setupDebugPanel(
         ideProtocolClient.openFile(data.filepath);
         break;
       }
+      case "readRangeInFile": {
+        vscode.workspace.openTextDocument(data.filepath).then((document) => {
+          let start = new vscode.Position(0, 0);
+          let end = new vscode.Position(5, 0);
+          let range = new vscode.Range(start, end);
+
+          let contents = document.getText(range);
+          panel.webview.postMessage({
+            type: "readRangeInFile",
+            messageId: data.messageId,
+            contents,
+          });
+        });
+        break;
+      }
       case "showLines": {
         ideProtocolClient.highlightCode(
           {
@@ -174,10 +186,13 @@ export function setupDebugPanel(
         break;
       }
       case "focusEditor": {
-        setFocusedOnContinueInput(false);
         vscode.commands.executeCommand(
           "workbench.action.focusActiveEditorGroup"
         );
+        break;
+      }
+      case "toggleFullScreen": {
+        vscode.commands.executeCommand("continue.toggleFullScreen");
         break;
       }
       case "withProgress": {
@@ -243,6 +258,10 @@ export function setupDebugPanel(
             (folder) => folder.uri.fsPath
           ) || []
         )}</script>
+        <script>window.isFullScreen = ${isFullScreen}</script>
+
+        ${edits && `<script>window.edits = ${JSON.stringify(edits)}</script>`}
+        ${page && `<script>window.location.pathname = "${page}"</script>`}
       </body>
     </html>`;
 }
@@ -257,6 +276,6 @@ export class ContinueGUIWebviewViewProvider
     _context: vscode.WebviewViewResolveContext,
     _token: vscode.CancellationToken
   ): void | Thenable<void> {
-    webviewView.webview.html = setupDebugPanel(webviewView);
+    webviewView.webview.html = getSidebarContent(webviewView);
   }
 }

@@ -79,7 +79,12 @@ class TogetherLLM(LLM):
                                         f"Invalid JSON chunk: {chunk}\n\n{e}"
                                     )
                                     continue
-                                if "choices" in json_chunk:
+                                if "error" in json_chunk:
+                                    raise ContinueCustomException(
+                                        message=json_chunk["error"],
+                                        title="Together API Error",
+                                    )
+                                elif "choices" in json_chunk:
                                     yield json_chunk["choices"][0]["text"]
 
     async def _complete(self, prompt: str, options):

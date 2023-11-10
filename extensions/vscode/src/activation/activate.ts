@@ -1,7 +1,10 @@
 import * as vscode from "vscode";
 import IdeProtocolClient from "../continueIdeClient";
 import { getContinueServerUrl } from "../bridge";
-import { ContinueGUIWebviewViewProvider } from "../debugPanel";
+import {
+  ContinueGUIWebviewViewProvider,
+  getSidebarContent,
+} from "../debugPanel";
 import {
   getExtensionVersion,
   startContinuePythonServer,

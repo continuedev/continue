@@ -10,6 +10,7 @@
   "dependencies": {
     "@headlessui/react": "^1.7.17",
     "@heroicons/react": "^2.0.18",
+    "@monaco-editor/react": "^4.6.0",
     "@reduxjs/toolkit": "^1.9.3",
     "@types/vscode-webview": "^1.57.1",
     "@uiw/react-markdown-preview": "^4.1.13",

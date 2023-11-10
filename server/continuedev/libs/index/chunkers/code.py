@@ -14,7 +14,7 @@ file_extension_to_language = {
     "rs": "rust",
     "c": "c",
     "cpp": "cpp",
-    "cs": "csharp",
+    "cs": "c_sharp",
     "php": "php",
     "scala": "scala",
     "swift": "swift",
@@ -159,7 +159,11 @@ def code_chunker(
     if contents is None or len(contents.strip()) == 0:
         return []
 
-    parser = get_parser_for_file(filepath)
+    try:
+        parser = get_parser_for_file(filepath)
+    except Exception:
+        return []
+
     tree = parser.parse(bytes(contents, "utf8"))
 
     return list(get_smart_collapsed_chunks(tree.root_node, contents, max_chunk_size))

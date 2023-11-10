@@ -1,7 +1,7 @@
 {
   "name": "continue",
   "icon": "media/icon.png",
-  "version": "0.5.1",
+  "version": "0.5.3",
   "repository": {
     "type": "git",
     "url": "https://github.com/continuedev/continue"
@@ -116,6 +116,11 @@
         "title": "Debug Terminal"
       },
       {
+        "command": "continue.toggleFullScreen",
+        "category": "Continue",
+        "title": "Toggle Full Screen"
+      },
+      {
         "command": "continue.shareSession",
         "category": "Continue",
         "title": "Share Session"
@@ -161,6 +166,11 @@
         "command": "continue.debugTerminal",
         "mac": "cmd+shift+r",
         "key": "ctrl+shift+r"
+      },
+      {
+        "command": "continue.toggleFullScreen",
+        "mac": "cmd+k cmd+m",
+        "key": "ctrl+k ctrl+m"
       }
     ],
     "submenus": [
@@ -185,8 +195,7 @@
       "editor/context": [
         {
           "submenu": "continue.continueSubMenu",
-          "group": "1_debug@1",
-          "when": "editorHasSelection"
+          "group": "1_debug@1"
         }
       ],
       "continue.continueSubMenu": [

@@ -8,6 +8,7 @@ from ..constants.main import (
     CONTINUE_SERVER_FOLDER,
     CONTINUE_SESSIONS_FOLDER,
 )
+from contextlib import asynccontextmanager
 
 
 def find_data_file(filename):
@@ -19,6 +20,34 @@ def getGlobalFolderPath():
     path = os.path.join(os.path.expanduser("~"), CONTINUE_GLOBAL_FOLDER)
     os.makedirs(path, exist_ok=True)
     return path
+
+
+def getMigrationsPath():
+    path = os.path.join(getGlobalFolderPath(), ".migrations")
+    os.makedirs(path, exist_ok=True)
+    return path
+
+
+def hasMigrated(migration_id: str) -> bool:
+    path = os.path.join(getMigrationsPath(), migration_id)
+    return os.path.exists(path)
+
+
+def markMigrated(migration_id: str):
+    path = os.path.join(getMigrationsPath(), migration_id)
+    with open(path, "w") as f:
+        f.write("")
+
+
+@asynccontextmanager
+async def migration(migration_id: str):
+    has_migrated = hasMigrated(migration_id)
+    if has_migrated:
+        return
+    try:
+        yield
+    finally:
+        markMigrated(migration_id)
 
 
 def getSessionsFolderPath():
