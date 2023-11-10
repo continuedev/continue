@@ -167,6 +167,7 @@ enum EditPromptTemplates {
 enum ChatTemplates {
   "alpaca" = "template_alpaca_messages",
   "llama2" = "llama2_template_messages",
+  "phind" = "phind_template_messages",
   "sqlcoder" = "sqlcoder_template_messages",
   "None" = "None",
 }
@@ -282,7 +283,7 @@ const phindCodeLlama: ModelPackage = {
     title: "Phind CodeLlama",
     model: "phind-codellama",
     context_length: 2048,
-    template_messages: ChatTemplates.llama2,
+    template_messages: ChatTemplates.phind,
     prompt_templates: {
       edit: EditPromptTemplates.codellama,
     },
