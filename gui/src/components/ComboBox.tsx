@@ -89,6 +89,7 @@ const ICONS_FOR_DROPDOWN: { [key: string]: any } = {
   "/share": ArrowUpOnSquareIcon,
   "/cmd": CommandLineIcon,
   "/codebase": SparklesIcon,
+  "/so": GlobeAltIcon,
 };
 
 function DropdownIcon(props: { provider: string; className?: string }) {
@@ -1134,7 +1135,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
           />
         </pre>
       )}
-      {showContextToggleOn && (
+      {showContextToggleOn && selectedContextItems.length > 0 && (
         <div>
           <HeaderButtonWithText
             className="mr-4 ml-auto -mt-2"

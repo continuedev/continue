@@ -212,6 +212,7 @@ class ContextManager:
         Returns chat messages from each provider.
         """
         tasks = []
+        msgs = []
         for item in items:
             if item.description.id.provider_title in self.context_providers:
                 tasks.append(
@@ -219,7 +220,16 @@ class ContextManager:
                         item.description.id.provider_title
                     ].get_chat_message(item)
                 )
-        return await asyncio.gather(*tasks)
+            else:
+                msgs.append(
+                    ChatMessage(
+                        role="user",
+                        content=item.content,
+                        summary=item.description.description,
+                    )
+                )
+
+        return (await asyncio.gather(*tasks)) + msgs
 
     def __init__(self):
         self.context_providers = {}

@@ -505,9 +505,9 @@ class IdeProtocolClient {
     vscode.workspace
       .openTextDocument(
         vscode.Uri.parse(
-          `${continueVirtualDocumentScheme}:${name}?${encodeURIComponent(
-            contents
-          )}`
+          `${continueVirtualDocumentScheme}:${encodeURIComponent(
+            name
+          )}?${encodeURIComponent(contents)}`
         )
       )
       .then((doc) => {

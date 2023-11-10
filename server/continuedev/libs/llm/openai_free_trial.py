@@ -39,7 +39,7 @@ class OpenAIFreeTrial(LLM):
 
     llm: Optional[LLM] = None
 
-    @validator("context_length")
+    @validator("context_length", pre=True, always=True)
     def context_length_for_model(cls, v, values):
         return CONTEXT_LENGTH_FOR_MODEL.get(values["model"], 4096)
 

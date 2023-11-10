@@ -80,10 +80,7 @@ def count_chat_message_tokens(model_name: str, chat_message: ChatMessage) -> int
     return count_tokens(chat_message.content, model_name) + TOKENS_PER_MESSAGE
 
 
-def prune_raw_prompt_from_top(
-    model_name: str, context_length: int, prompt: str, tokens_for_completion: int
-):
-    max_tokens = context_length - tokens_for_completion - TOKEN_BUFFER_FOR_SAFETY
+def prune_string_from_top(model_name: str, max_tokens: int, prompt: str):
     encoding = encoding_for_model(model_name)
 
     if encoding is None:
@@ -93,8 +90,29 @@ def prune_raw_prompt_from_top(
     tokens = encoding.encode(prompt, disallowed_special=())
     if len(tokens) <= max_tokens:
         return prompt
-    else:
-        return encoding.decode(tokens[-max_tokens:])
+
+    return encoding.decode(tokens[-max_tokens:])
+
+
+def prune_string_from_bottom(model_name: str, max_tokens: int, prompt: str):
+    encoding = encoding_for_model(model_name)
+
+    if encoding is None:
+        desired_length_in_chars = max_tokens * 2
+        return prompt[:desired_length_in_chars]
+
+    tokens = encoding.encode(prompt, disallowed_special=())
+    if len(tokens) <= max_tokens:
+        return prompt
+
+    return encoding.decode(tokens[:max_tokens])
+
+
+def prune_raw_prompt_from_top(
+    model_name: str, context_length: int, prompt: str, tokens_for_completion: int
+):
+    max_tokens = context_length - tokens_for_completion - TOKEN_BUFFER_FOR_SAFETY
+    return prune_string_from_top(model_name, max_tokens, prompt)
 
 
 def prune_chat_history(

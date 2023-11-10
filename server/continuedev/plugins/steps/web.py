@@ -1,10 +1,15 @@
+from typing import Optional
+
+from ...server.meilisearch_server import remove_meilisearch_disallowed_chars
+from ...libs.util.count_tokens import prune_string_from_bottom
 import requests
 import json
 from bs4 import BeautifulSoup
+import html2text
 
 from ...libs.llm.base import CompletionOptions
 from .chat import SimpleChatStep
-from ...core.main import Step
+from ...core.main import ContextItem, ContextItemDescription, ContextItemId, Step
 from ...core.sdk import ContinueSDK
 from dotenv import load_dotenv
 import os
@@ -12,10 +17,7 @@ import os
 load_dotenv()
 SERPER_API_KEY = os.getenv("SERPER_API_KEY")
 
-PROMPT = """
-{sources}
-
-Use the above sources to answer this question. Provide links to the sources in markdown whenever possible:
+PROMPT = """The above sources are excerpts from related StackOverflow questions. Use them to help answer the below question from our user. Provide links to the sources in markdown whenever possible:
 
 {user_input}
 """
@@ -24,7 +26,7 @@ Use the above sources to answer this question. Provide links to the sources in m
 async def get_results(q: str):
     url = "https://google.serper.dev/search"
 
-    payload = json.dumps({"q": q})
+    payload = json.dumps({"q": f"{q} site:stackoverflow.com"})
     headers = {
         "X-API-KEY": SERPER_API_KEY,
         "Content-Type": "application/json",
@@ -35,33 +37,89 @@ async def get_results(q: str):
     return response.json()
 
 
-async def get_link_contents(url: str):
+async def get_link_contents(url: str) -> Optional[str]:
     response = requests.get(url)
     soup = BeautifulSoup(response.text, "html.parser")
-    return soup.get_text()
+    converter = html2text.HTML2Text()
+
+    title = soup.find("h1", {"class": "fs-headline1"}).text.strip()
+    bodies = soup.find_all("div", {"class": "js-post-body"})
+    if len(bodies) < 2:
+        return None
+
+    question = converter.handle(str(bodies[0]))
+    answer = converter.handle(str(bodies[1]))
+
+    content = f"""\
+# Question: [{title}]({url})
+
+{question}
+
+# Best Answer
+
+{answer}
+"""
+    return content
 
 
 class WebSearchChatStep(Step):
     user_input: str
     name: str = "Chat using Web Search for reference"
+    max_sources: int = 3
+    hide: bool = True
 
     async def run(self, sdk: ContinueSDK):
         model = sdk.models.chat.model
-        # if model == "gpt-4":
-        #     model = "gpt-4-32k"  # Not publicly available yet?
-        if model == "gpt-3.5-turbo":
-            model = "gpt-3.5-turbo-16k"
+
+        context_length = sdk.models.chat.context_length
 
         sources = []
         results = await get_results(self.user_input)
-        for result in results:
-            contents = await get_link_contents(result["link"])
-            sources.append(f"{result['title']}\n\n{contents}\n\n---\n\n")
+        links = [result["link"] for result in results["organic"]]
+
+        total_tokens = sdk.models.chat.count_tokens(self.user_input) + 200
+        for link in links:
+            if contents := await get_link_contents(link):
+                sources.append(contents)
+                new_tokens = sdk.models.chat.count_tokens(contents)
+                total_tokens += new_tokens
+
+                should_break = False
+                if total_tokens >= context_length:
+                    # Prune the last source line-by-line from the bottom
+                    sources[-1] = prune_string_from_bottom(
+                        sdk.models.chat.model,
+                        context_length - (total_tokens - new_tokens),
+                        sources[-1],
+                    )
+                    should_break = True
+
+                if len(sources) >= self.max_sources:
+                    should_break = True
+
+                await sdk.add_context_item(
+                    ContextItem(
+                        content=sources[-1],
+                        description=ContextItemDescription(
+                            name=f"StackOverflow #{len(sources)}",
+                            description="StackOverflow Answer",
+                            id=ContextItemId(
+                                provider_title="",
+                                item_id=remove_meilisearch_disallowed_chars(
+                                    links[len(sources) - 1]
+                                ),
+                            ),
+                        ),
+                    )
+                )
+
+                if should_break:
+                    break
 
         await sdk.run_step(
             SimpleChatStep(
                 name="Answer Question",
                 completion_options=CompletionOptions(model=model),
-                prompt=PROMPT.format(user_input=self.user_input, sources=sources),
+                prompt=PROMPT.format(user_input=self.user_input),
             )
         )
