@@ -42,6 +42,7 @@ python-socketio = "^5.10.0"
 pathspec = "^0.11.2"
 tqdm = "^4.66.1"
 html2text = "^2020.1.16"
+pygit2 = "^1.13.2"
 
 [tool.poetry.scripts]
 typegen = "continuedev.models.generate_json_schema:main"

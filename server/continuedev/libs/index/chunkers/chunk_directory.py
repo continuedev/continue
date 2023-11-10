@@ -1,12 +1,12 @@
 import asyncio
 import os
-from typing import AsyncGenerator, Callable, List, Optional, Tuple
+from typing import AsyncGenerator, Callable, Generator, List, Optional, Tuple
 
 from ....server.protocols.ide_protocol import AbstractIdeProtocolServer
 from ...util.filter_files import DEFAULT_IGNORE_PATTERNS, should_filter_path
 from .chunk import Chunk
 from . import chunk_document
-
+from .fast_index import stream_files_to_update
 
 FILE_IGNORE_PATTERNS = [
     # File Names
@@ -158,3 +158,22 @@ async def stream_chunk_directory(
             continue
         for chunk in chunk_document(file, contents, max_chunk_size):
             yield (chunk, progress)
+
+
+def local_stream_chunk_directory(
+    repo_root: str,
+    max_chunk_size: int,
+) -> Generator[Tuple[Optional[Chunk], float], None, None]:
+    for filepath in stream_files_to_update(repo_root):
+        # Ignore if the file is too large (cutoff is 10MB)
+        if os.path.getsize(filepath) > 10_000_000:
+            continue
+
+        contents = open(filepath, "r").read()
+        if contents.strip() == "":
+            continue
+
+        # TODO: How to estimate progress, or is stream_files_to_update fast
+        # enough to do all at once?
+        for chunk in chunk_document(filepath, contents, max_chunk_size):
+            yield (chunk, 0.0)
