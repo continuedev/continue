@@ -527,20 +527,21 @@ export const MODEL_INFO: { [key: string]: ModelInfo } = {
             });
           }),
       }),
-      updatedObj(wizardCoder, {
-        "params.model": "WizardLM/WizardCoder-15B-V1.0",
-        "params.title": "WizardCoder-15b",
-        "dimensions[0].options": {
-          "15b": {
-            model: "WizardLM/WizardCoder-15B-V1.0",
-            title: "WizardCoder-15b",
-          },
-          "34b (Python)": {
-            model: "WizardLM/WizardCoder-Python-34B-V1.0",
-            title: "WizardCoder-34b-Python",
-          },
-        },
-      }),
+      // Support was dropped recently?
+      // updatedObj(wizardCoder, {
+      //   "params.model": "WizardLM/WizardCoder-15B-V1.0",
+      //   "params.title": "WizardCoder-15b",
+      //   "dimensions[0].options": {
+      //     "15b": {
+      //       model: "WizardLM/WizardCoder-15B-V1.0",
+      //       title: "WizardCoder-15b",
+      //     },
+      //     "34b (Python)": {
+      //       model: "WizardLM/WizardCoder-Python-34B-V1.0",
+      //       title: "WizardCoder-34b-Python",
+      //     },
+      //   },
+      // }),
       updatedObj(phindCodeLlama, {
         "params.model": "Phind/Phind-CodeLlama-34B-Python-v1",
       }),
