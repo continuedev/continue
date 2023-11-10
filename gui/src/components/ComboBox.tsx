@@ -815,7 +815,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
     setContextLengthFillPercentage(
       tokenEstimate / Math.max(1, contextLength - 600)
     );
-  }, [selectedContextItems, contextLength]);
+  }, [selectedContextItems.length, contextLength]);
 
   const [isComposing, setIsComposing] = useState(false);
 
