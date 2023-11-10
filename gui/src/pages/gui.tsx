@@ -23,7 +23,7 @@ import { usePostHog } from "posthog-js/react";
 import { useDispatch, useSelector } from "react-redux";
 import { RootStore } from "../redux/store";
 import { postToIde } from "../vscode";
-import { isMetaEquivalentKeyPressed } from "../util";
+import { getMetaKeyLabel, isMetaEquivalentKeyPressed } from "../util";
 import {
   setBottomMessage,
   setDialogEntryOn,
@@ -35,6 +35,8 @@ import RingLoader from "../components/RingLoader";
 import TimelineItem from "../components/TimelineItem";
 import ErrorStepContainer from "../components/ErrorStepContainer";
 import {
+  ArrowsPointingInIcon,
+  ArrowsPointingOutIcon,
   ChatBubbleOvalLeftIcon,
   CodeBracketSquareIcon,
   ExclamationTriangleIcon,
@@ -579,13 +581,27 @@ function GUI(props: GUIProps) {
           }}
         />
         <div className="flex gap-2">
+          {localStorage.getItem("ide") === "vscode" && (
+            <HeaderButtonWithText
+              onClick={() => {
+                postToIde("toggleFullScreen", {});
+              }}
+              text={`Toggle Full Screen (${getMetaKeyLabel()}K M)`}
+            >
+              {(window as any).isFullScreen ? (
+                <ArrowsPointingInIcon width="1.4em" height="1.4em" />
+              ) : (
+                <ArrowsPointingOutIcon width="1.4em" height="1.4em" />
+              )}
+            </HeaderButtonWithText>
+          )}
           <HeaderButtonWithText
             onClick={() => {
               client?.stopSession();
               client?.persistSession(sessionState, workspacePaths[0] || "");
               dispatch(newSession());
             }}
-            text="New Session (⌥⌘N)"
+            text={`New Session (⌥${getMetaKeyLabel()}N)`}
           >
             <PlusIcon width="1.4em" height="1.4em" />
           </HeaderButtonWithText>

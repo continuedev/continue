@@ -1,7 +1,7 @@
 {
   "name": "continue",
   "icon": "media/icon.png",
-  "version": "0.5.1",
+  "version": "0.5.2",
   "repository": {
     "type": "git",
     "url": "https://github.com/continuedev/continue"
@@ -116,9 +116,9 @@
         "title": "Debug Terminal"
       },
       {
-        "command": "continue.openFullScreen",
+        "command": "continue.toggleFullScreen",
         "category": "Continue",
-        "title": "Open Full Screen"
+        "title": "Toggle Full Screen"
       },
       {
         "command": "continue.shareSession",
@@ -129,11 +129,6 @@
         "command": "continue.selectFilesAsContext",
         "category": "Continue",
         "title": "Continue: Select Files as Context"
-      },
-      {
-        "command": "continue.updateAllReferences",
-        "category": "Continue",
-        "title": "Update All References"
       }
     ],
     "keybindings": [
@@ -173,9 +168,9 @@
         "key": "ctrl+shift+r"
       },
       {
-        "command": "continue.openFullScreen",
-        "mac": "cmd+l",
-        "key": "ctrl+l"
+        "command": "continue.toggleFullScreen",
+        "mac": "cmd+k cmd+m",
+        "key": "ctrl+k ctrl+m"
       }
     ],
     "submenus": [
@@ -213,10 +208,6 @@
           "command": "continue.focusContinueInputWithEdit",
           "group": "Continue",
           "when": "editorHasSelection"
-        },
-        {
-          "command": "continue.updateAllReferences",
-          "group": "Continue"
         }
       ],
       "explorer/context": [
