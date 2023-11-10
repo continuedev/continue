@@ -11,12 +11,10 @@ from ...libs.llm.base import CompletionOptions
 from .chat import SimpleChatStep
 from ...core.main import ContextItem, ContextItemDescription, ContextItemId, Step
 from ...core.sdk import ContinueSDK
-from dotenv import load_dotenv
-import os
+from ...libs.util.logging import logger
 
-load_dotenv()
-SERPER_API_KEY = os.getenv("SERPER_API_KEY")
-
+# SERVER_URL = "http://127.0.0.1:8080"
+SERVER_URL = "https://proxy-server-l6vsfbzhba-uw.a.run.app"
 PROMPT = """The above sources are excerpts from related StackOverflow questions. Use them to help answer the below question from our user. Provide links to the sources in markdown whenever possible:
 
 {user_input}
@@ -24,17 +22,16 @@ PROMPT = """The above sources are excerpts from related StackOverflow questions.
 
 
 async def get_results(q: str):
-    url = "https://google.serper.dev/search"
-
     payload = json.dumps({"q": f"{q} site:stackoverflow.com"})
-    headers = {
-        "X-API-KEY": SERPER_API_KEY,
-        "Content-Type": "application/json",
-    }
 
-    response = requests.request("POST", url, headers=headers, data=payload)
-
-    return response.json()
+    try:
+        response = requests.request("POST", f"{SERVER_URL}/search", data=payload)
+        return response.json()
+    except Exception:
+        logger.warning(
+            "You have been rate limited. Try the search endpoint again in a few minutes."
+        )
+        return {"organic": []}
 
 
 async def get_link_contents(url: str) -> Optional[str]:
@@ -62,9 +59,9 @@ async def get_link_contents(url: str) -> Optional[str]:
     return content
 
 
-class WebSearchChatStep(Step):
+class StackOverflowStep(Step):
     user_input: str
-    name: str = "Chat using Web Search for reference"
+    name: str = "Chat using StackOverflow for reference"
     max_sources: int = 3
     hide: bool = True
 

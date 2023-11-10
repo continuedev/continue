@@ -1,9 +1,8 @@
 from typing import Type, Union
 
+from ..steps.stack_overflow import StackOverflowStep
 from ...models.main import Position, PositionInFile
-
 from ..steps.refactor import RefactorReferencesStep
-
 from ..steps.clear_history import ClearHistoryStep
 from ..steps.comment_code import CommentCodeStep
 from ..steps.share_session import ShareSessionStep
@@ -27,6 +26,7 @@ REPLACEMENT_SLASH_COMMAND_STEPS = [
     ShareSessionStep,
     CommentCodeStep,
     ClearHistoryStep,
+    StackOverflowStep,
 ]
 
 
@@ -106,6 +106,9 @@ class DefaultPolicy(Policy):
 
             if user_input.startswith("/codebase "):
                 return AnswerQuestionChroma(user_input=user_input[len("/codebase ") :])
+
+            if user_input.startswith("/so "):
+                return StackOverflowStep(user_input=user_input[len("/so ") :])
 
             if user_input.startswith("/references "):
                 args = user_input.split()

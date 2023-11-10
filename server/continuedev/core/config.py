@@ -15,7 +15,6 @@ from .context import ContextProvider
 from .main import ContextProviderDescription, Policy, SlashCommandDescription, Step
 from .models import Models
 from ..libs.util.telemetry import posthog_logger
-from ..libs.util.logging import logger
 
 
 class SlashCommand(BaseModel):
