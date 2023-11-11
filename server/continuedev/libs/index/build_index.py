@@ -3,7 +3,7 @@ from typing import AsyncGenerator
 from ...core.config import ContinueConfig
 from ...server.protocols.ide_protocol import AbstractIdeProtocolServer
 from ...libs.index.chunkers.chunk_directory import (
-    stream_chunk_directory,
+    local_stream_chunk_directory,
 )
 from ...libs.index.indices.meilisearch_index import MeilisearchCodebaseIndex
 from ...libs.index.indices.chroma_index import MAX_CHUNK_SIZE, ChromaCodebaseIndex
@@ -62,7 +62,9 @@ async def build_index(
     chroma_task = asyncio.create_task(chroma_task())
     meilisearch_task = asyncio.create_task(meilisearch_task())
 
-    async for chunk, progress in stream_chunk_directory(ide, MAX_CHUNK_SIZE):
+    for chunk, progress in local_stream_chunk_directory(
+        ide.workspace_directory, MAX_CHUNK_SIZE
+    ):
         if chunk is not None:
             buffers[0].append(chunk)
             buffers[1].append(chunk)

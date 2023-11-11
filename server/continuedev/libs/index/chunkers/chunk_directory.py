@@ -2,59 +2,14 @@ import asyncio
 import os
 from typing import AsyncGenerator, Callable, Generator, List, Optional, Tuple
 
+from .ignore import should_ignore_file_factory
+
 from ....server.protocols.ide_protocol import AbstractIdeProtocolServer
-from ...util.filter_files import DEFAULT_IGNORE_PATTERNS, should_filter_path
+
 from .chunk import Chunk
 from . import chunk_document
 from .fast_index import stream_files_to_update
 
-FILE_IGNORE_PATTERNS = [
-    # File Names
-    "**/.DS_Store",
-    "**/package-lock.json",
-    "**/yarn.lock",
-    # File Types
-    "*.log",
-    "*.ttf",
-    "*.png",
-    "*.jpg",
-    "*.jpeg",
-    "*.gif",
-    "*.mp4",
-    "*.svg",
-    "*.ico",
-    "*.pdf",
-    "*.zip",
-    "*.gz",
-    "*.tar",
-    "*.tgz",
-    "*.rar",
-    "*.7z",
-    "*.exe",
-    "*.dll",
-    "*.obj",
-    "*.o",
-    "*.a",
-    "*.lib",
-    "*.so",
-    "*.dylib",
-    "*.ncb",
-    "*.sdf",
-    "*.woff",
-    "*.woff2",
-    "*.eot",
-    "*.cur",
-    "*.avi",
-    "*.mpg",
-    "*.mpeg",
-    "*.mov",
-    "*.mp3",
-    "*.mp4",
-    "*.mkv",
-    "*.mkv",
-    "*.webm",
-    "*.jar",
-]
 
 MAX_SIZE_IN_CHARS = 50_000
 
@@ -71,15 +26,6 @@ async def get_contents_of_files(
 ) -> List[str]:
     # Get file contents for all at once
     return await asyncio.gather(*[ide.readFile(file) for file in files])
-
-
-def gi_basename(path: str) -> str:
-    if ".gitignore" in path:
-        return path[: path.index(".gitignore")]
-    elif ".continueignore" in path:
-        return path[: path.index(".continueignore")]
-    else:
-        return path
 
 
 async def get_all_filepaths(
@@ -100,30 +46,7 @@ async def get_all_filepaths(
         path: content for path, content in zip(gitignore_paths, gitignore_contents)
     }
 
-    def gitignore_patterns_for_file(filepath: str) -> List[str]:
-        paths = list(
-            filter(
-                lambda gitignore_path: filepath.startswith(gi_basename(gitignore_path)),
-                gitignore_paths,
-            )
-        )
-        patterns = []
-        for path in paths:
-            base = gi_basename(path)
-            for pattern in gitignores[path].split("\n"):
-                if pattern.strip() != "":
-                    patterns.append(os.path.join(base, pattern.strip()))
-
-        return patterns
-
-    def should_ignore_file(filepath: str) -> bool:
-        return should_filter_path(
-            filepath,
-            ignore_files
-            + DEFAULT_IGNORE_PATTERNS
-            + FILE_IGNORE_PATTERNS
-            + gitignore_patterns_for_file(filepath),
-        )
+    should_ignore_file = should_ignore_file_factory(ignore_files, gitignores)
 
     return files, should_ignore_file
 
@@ -161,15 +84,20 @@ async def stream_chunk_directory(
 
 
 def local_stream_chunk_directory(
-    repo_root: str,
+    workspace_dir: str,
     max_chunk_size: int,
 ) -> Generator[Tuple[Optional[Chunk], float], None, None]:
-    for filepath in stream_files_to_update(repo_root):
+    for filepath in stream_files_to_update(workspace_dir):
         # Ignore if the file is too large (cutoff is 10MB)
         if os.path.getsize(filepath) > 10_000_000:
             continue
 
-        contents = open(filepath, "r").read()
+        try:
+            contents = open(filepath, "r").read()
+        except Exception as e:
+            print(e, filepath)
+            continue
+
         if contents.strip() == "":
             continue
 

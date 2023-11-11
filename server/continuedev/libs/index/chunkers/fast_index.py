@@ -8,8 +8,9 @@ those you have indexed. Then purge any that don't exist.
 
 from contextlib import contextmanager
 import os
-from typing import Generator
+from typing import Callable, Generator
 from ...util.paths import getGlobalFolderPath
+from .ignore import should_ignore_file_factory, local_find_gitignores
 import pygit2
 
 SET_PATH = os.path.join(getGlobalFolderPath(), "set")
@@ -73,50 +74,52 @@ def disk_set() -> Generator[DiskSet, None, None]:
         set.close()
 
 
-def stream_files_to_update(repo_root: str) -> Generator[str, None, None]:
-    repo = pygit2.Repository(repo_root)
+def stream_files_to_update(workspace_dir: str) -> Generator[str, None, None]:
+    repo = pygit2.Repository(workspace_dir)
     commit = repo.head.peel(pygit2.Commit)
 
+    gitignores = local_find_gitignores(workspace_dir)
+    should_ignore = should_ignore_file_factory([], gitignores)
+
     with disk_set() as already_indexed:
-        yield from files_to_update_in(commit, already_indexed)
+        yield from files_to_update_in(
+            commit, already_indexed, repo.workdir, should_ignore
+        )
 
     # Yield from files changed in the working tree
-    for filepath, flags in repo.status().items():
-        if flags.status == pygit2.GIT_STATUS_CURRENT:
-            continue
-        if flags.status == pygit2.GIT_STATUS_INDEX_NEW:
+    should_yield = set(
+        [
+            pygit2.GIT_STATUS_INDEX_NEW,
+            pygit2.GIT_STATUS_INDEX_MODIFIED,
+            pygit2.GIT_STATUS_WT_MODIFIED,
+            pygit2.GIT_STATUS_WT_NEW,
+        ]
+    )
+    for filepath, status in repo.status().items():
+        if status in should_yield and not should_ignore(filepath):
             yield filepath
-        elif flags.status == pygit2.GIT_STATUS_INDEX_MODIFIED:
-            yield filepath
-        elif flags.status == pygit2.GIT_STATUS_INDEX_DELETED:
-            continue
-        elif flags.status == pygit2.GIT_STATUS_WT_NEW:
-            yield filepath
-        elif flags.status == pygit2.GIT_STATUS_WT_MODIFIED:
-            yield filepath
-        elif flags.status == pygit2.GIT_STATUS_WT_DELETED:
-            continue
-        elif flags.status == pygit2.GIT_STATUS_IGNORED:
-            continue
-        elif flags.status == pygit2.GIT_STATUS_CONFLICTED:
-            continue
-        else:
-            raise Exception("Unknown diff status: " + str(flags))
 
 
 def files_to_update_in(
-    obj: pygit2.Object, already_indexed: DiskSet
+    obj: pygit2.Object,
+    already_indexed: DiskSet,
+    path: str,
+    should_ignore: Callable[[str], bool],
 ) -> Generator[str, None, None]:
     """Given an object, yield all files to update"""
-    if obj.hex in already_indexed:
+    if obj.hex in already_indexed or should_ignore(path):
         return
 
     if obj.type == pygit2.GIT_OBJ_BLOB:
-        yield obj.name
+        yield path
     elif obj.type == pygit2.GIT_OBJ_TREE:
         for entry in obj:
-            yield from files_to_update_in(entry)
+            yield from files_to_update_in(
+                entry, already_indexed, os.path.join(path, entry.name), should_ignore
+            )
     elif obj.type == pygit2.GIT_OBJ_COMMIT:
-        yield from files_to_update_in(obj.tree)
+        yield from files_to_update_in(obj.tree, already_indexed, path, should_ignore)
     else:
         raise Exception("Unknown type: " + str(obj.type))
+
+    already_indexed.add(obj.hex)
