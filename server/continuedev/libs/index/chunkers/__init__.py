@@ -19,7 +19,7 @@ def _chunk_document_without_id(
 
 
 def chunk_document(
-    filepath: str, contents: Optional[str], max_chunk_size: int
+    filepath: str, contents: Optional[str], max_chunk_size: int, digest: str
 ) -> List[Chunk]:
     chunks = _chunk_document_without_id(filepath, contents, max_chunk_size)
-    return [chunk.with_id(filepath, i) for i, chunk in enumerate(chunks)]
+    return [chunk.with_id(digest, i) for i, chunk in enumerate(chunks)]

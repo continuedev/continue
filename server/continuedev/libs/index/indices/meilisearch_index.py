@@ -1,7 +1,6 @@
 import asyncio
 from functools import cached_property
 from meilisearch_python_async import Client
-from meilisearch_python_async.errors import MeilisearchApiError
 from meilisearch_python_async.index import Index
 from ....server.meilisearch_server import get_meilisearch_url
 from .base import CodebaseIndex
@@ -21,18 +20,6 @@ class MeilisearchCodebaseIndex(CodebaseIndex):
     @cached_property
     def index_name(self) -> str:
         return remove_meilisearch_disallowed_chars(self.directory)
-
-    async def exists(self) -> bool:
-        """Returns whether the index exists (has been built)"""
-        async with Client(get_meilisearch_url()) as search_client:
-            try:
-                index = await search_client.get_index(self.index_name)
-                return index is not None
-            except MeilisearchApiError as e:
-                return False
-            except Exception as e:
-                logger.warning(f"Error while checking if meilisearch index exists: {e}")
-                return False
 
     def chunk_to_meilisearch_document(self, chunk: Chunk, index: int) -> Dict[str, Any]:
         return {
@@ -105,10 +92,6 @@ class MeilisearchCodebaseIndex(CodebaseIndex):
 
             except Exception as e:
                 logger.warning(f"Error while building meilisearch index: {e}")
-
-    async def update(self) -> AsyncGenerator[float, None]:
-        """Updates the index, yielding progress as a float between 0 and 1"""
-        raise NotImplementedError()
 
     async def _query(self, query: str, n: int = 4) -> List[Chunk]:
         async with Client(get_meilisearch_url()) as search_client:

@@ -23,14 +23,6 @@ async def build_index(
     )
     meilisearch_index = MeilisearchCodebaseIndex(ide.workspace_directory)
 
-    chroma_exists = await chroma_index.exists()
-    # meilisearch_exists = await meilisearch_index.exists()
-    meilisearch_exists = chroma_exists
-
-    if chroma_exists and meilisearch_exists:
-        yield 1
-        return
-
     n = 2
     done = False
     buffers = [[] for _ in range(n)]
@@ -51,16 +43,10 @@ async def build_index(
             else:
                 await asyncio.sleep(0.1)
 
-    async def chroma_task():
-        if not chroma_exists:
-            await chroma_index.build(generator_for_chroma())
-
-    async def meilisearch_task():
-        if not meilisearch_exists:
-            await meilisearch_index.build(generator_for_meilisearch())
-
-    chroma_task = asyncio.create_task(chroma_task())
-    meilisearch_task = asyncio.create_task(meilisearch_task())
+    chroma_task = asyncio.create_task(chroma_index.build(generator_for_chroma()))
+    meilisearch_task = asyncio.create_task(
+        meilisearch_index.build(generator_for_meilisearch())
+    )
 
     for chunk, progress in local_stream_chunk_directory(
         ide.workspace_directory, MAX_CHUNK_SIZE

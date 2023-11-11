@@ -1,34 +1,28 @@
 import asyncio
-
-import json
 import os
 import re
 from functools import cached_property
 import sqlite3
-from typing import AsyncGenerator, Dict, List, Literal, Optional
+from typing import AsyncGenerator, Dict, List, Literal
 import chromadb
 from chromadb.config import Settings
 from chromadb.utils import embedding_functions
-from ....server.protocols.ide_protocol import AbstractIdeProtocolServer
 from .base import CodebaseIndex
 from dotenv import load_dotenv
 from openai.error import RateLimitError
 from pydantic import BaseModel
 
 from ..chunkers.chunk import Chunk
-from ..git import GitProject
 from ...util.logging import logger
-from ...util.paths import getEmbeddingsPathForBranch
+from ...util.paths import getIndexFolderPath
 
 load_dotenv()
-
-
-# Mapping of workspace_dir to chromadb collection
-collections = {}
 
 EmbeddingsType = Literal["default", "openai"]
 
 MAX_CHUNK_SIZE = 512
+
+collection: chromadb.Collection = None
 
 
 class CodebaseIndexMetadata(BaseModel):
@@ -37,26 +31,21 @@ class CodebaseIndexMetadata(BaseModel):
 
 
 class ChromaCodebaseIndex(CodebaseIndex):
-    directory: str
-    client: chromadb.Client
+    client: chromadb.ClientAPI
     openai_api_key: str = None
     api_base: str = None
     api_version: str = None
     api_type: str = None
     organization_id: str = None
-    git_project: GitProject
 
     def __init__(
         self,
-        directory: str,
         openai_api_key: str = None,
         api_base: str = None,
         api_version: str = None,
         api_type: str = None,
         organization_id: str = None,
     ):
-        self.directory = directory
-        self.git_project = GitProject(directory)
         self.openai_api_key = openai_api_key
         self.api_base = api_base
         self.api_version = api_version
@@ -80,7 +69,8 @@ class ChromaCodebaseIndex(CodebaseIndex):
     @cached_property
     def index_dir(self) -> str:
         directory = os.path.join(
-            getEmbeddingsPathForBranch(self.directory, self.git_project.current_branch),
+            getIndexFolderPath(),
+            "chroma",
             self.embeddings_type,
         )
         os.makedirs(directory, exist_ok=True)
@@ -88,15 +78,13 @@ class ChromaCodebaseIndex(CodebaseIndex):
 
     @property
     def index_name(self) -> str:
-        return (
-            f"{self.directory}/{self.git_project.current_branch}/{self.embeddings_type}"
-        )
+        return self.embeddings_type
 
     @cached_property
     def metadata_path(self) -> str:
         return os.path.join(self.index_dir, "metadata.json")
 
-    async def exists(self):
+    def exists(self):
         """Check whether the codebase index has already been built and saved on disk"""
         return os.path.exists(self.metadata_path)
 
@@ -128,12 +116,14 @@ class ChromaCodebaseIndex(CodebaseIndex):
 
     @property
     def collection(self):
-        if self.directory in collections and os.path.exists(self.chroma_dir):
-            return collections[self.directory]
+        global collection
+
+        if os.path.exists(self.chroma_dir):
+            return collection
 
         kwargs = {
             "name": self.convert_to_valid_chroma_collection(
-                self.git_project.current_branch
+                f"chroma-{self.embeddings_type}"
             ),
         }
         if self.openai_api_key is not None:
@@ -147,10 +137,11 @@ class ChromaCodebaseIndex(CodebaseIndex):
             )
 
         collection = self.client.get_or_create_collection(**kwargs)
-        collections[self.directory] = collection
         return collection
 
     async def add_chunks(self, chunks: List[Chunk]):
+        global collection
+
         # Flatten chunks, metadata, and ids for insertion to Chroma
         documents = []
         metadatas = []
@@ -170,7 +161,7 @@ class ChromaCodebaseIndex(CodebaseIndex):
                 if i > 0:
                     await asyncio.sleep(0.05)
 
-                self.collection.add(
+                self.collection.upsert(
                     documents=documents[i : i + 100],
                     metadatas=metadatas[i : i + 100],
                     ids=ids[i : i + 100],
@@ -186,16 +177,13 @@ class ChromaCodebaseIndex(CodebaseIndex):
 
             except sqlite3.OperationalError as e:
                 logger.debug(f"SQL error: {e}")
-                del collections[self.directory]
+                collection = None
 
     async def build(
         self,
         chunks: AsyncGenerator[Chunk, None],
     ):
         """Create a new index for the current branch."""
-
-        if await self.exists():
-            return
 
         group = []
         group_size = 100
@@ -212,67 +200,9 @@ class ChromaCodebaseIndex(CodebaseIndex):
         if len(group) > 0:
             await self.add_chunks(group)
 
-        # Metadata keeps track of number of chunks per file, used in update()
-        with open(f"{self.index_dir}/metadata.json", "w") as f:
-            json.dump(
-                {
-                    "commit": self.git_project.current_commit,
-                    "chunks": {},  # TODO: This was removed, is it necessary?
-                },
-                f,
-                indent=4,
-            )
-
-    async def update(self):
-        """Update the index with a list of files."""
-
-        if not await self.exists():
-            self.build()
-        else:
-            metadata = self.get_metadata()
-            (
-                modified_files,
-                deleted_files,
-            ) = self.git_project.get_modified_deleted_files(metadata.commit)
-
-            for file in deleted_files:
-                num_chunks = metadata.chunks[file]
-                for i in range(num_chunks):
-                    self.collection.delete(file)
-
-                del metadata.chunks[file]
-
-                logger.debug(f"Deleted {file}")
-
-            for file in modified_files:
-                if file in metadata.chunks:
-                    num_chunks = metadata.chunks[file]
-
-                    for i in range(num_chunks):
-                        self.collection.delete(file)
-
-                    logger.debug(f"Deleted old version of {file}")
-
-                with open(file, "r") as f:
-                    f.read()
-
-                # for i, text in enumerate(text_chunks):
-                #     index.insert(Document(text=text, doc_id=f"{file}::{i}"))
-
-                # metadata.chunks[file] = len(text_chunks)
-
-                logger.debug(f"Inserted new version of {file}")
-
-            metadata.commit = self.git_project.current_commit
-
-            with open(self.metadata_path, "w") as f:
-                f.write(metadata.json())
-
-            logger.debug("Codebase index updated")
-
     async def query(self, query: str, n: int = 4) -> List[Chunk]:
         """Query the codebase index for top n results"""
-        if not await self.exists():
+        if not self.exists():
             logger.warning(f"No index found for the codebase at {self.index_dir}")
             return []
 
@@ -300,3 +230,7 @@ class ChromaCodebaseIndex(CodebaseIndex):
                 )
             )
         return chunks
+
+    async def delete_branch(self):
+        self.collection.copy
+        self.collection.delete()

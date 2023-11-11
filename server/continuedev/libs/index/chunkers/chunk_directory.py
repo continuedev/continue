@@ -87,7 +87,7 @@ def local_stream_chunk_directory(
     workspace_dir: str,
     max_chunk_size: int,
 ) -> Generator[Tuple[Optional[Chunk], float], None, None]:
-    for filepath in stream_files_to_update(workspace_dir):
+    for filepath, digest in stream_files_to_update(workspace_dir):
         # Ignore if the file is too large (cutoff is 10MB)
         if os.path.getsize(filepath) > 10_000_000:
             continue
@@ -103,5 +103,5 @@ def local_stream_chunk_directory(
 
         # TODO: How to estimate progress, or is stream_files_to_update fast
         # enough to do all at once?
-        for chunk in chunk_document(filepath, contents, max_chunk_size):
+        for chunk in chunk_document(filepath, contents, max_chunk_size, digest):
             yield (chunk, 0.0)

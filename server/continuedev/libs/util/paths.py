@@ -74,8 +74,8 @@ def getDiffsFolderPath():
     return path
 
 
-def getEmbeddingsFolderPath():
-    path = os.path.join(getGlobalFolderPath(), "embeddings")
+def getIndexFolderPath():
+    path = os.path.join(getGlobalFolderPath(), "index")
     os.makedirs(path, exist_ok=True)
     return path
 
@@ -96,7 +96,7 @@ def encode_escaped_path(path: str) -> str:
 
 def getEmbeddingsPathForBranch(workspace_dir: str, branch_name: str):
     path = os.path.join(
-        getEmbeddingsFolderPath(), encode_escaped_path(workspace_dir), branch_name
+        getIndexFolderPath(), encode_escaped_path(workspace_dir), branch_name
     )
     os.makedirs(path, exist_ok=True)
     return path
