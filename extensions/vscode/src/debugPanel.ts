@@ -241,7 +241,7 @@ export function getSidebarContent(
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300&display=swap" rel="stylesheet">
         <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
-        
+
         <title>Continue</title>
       </head>
       <body>
@@ -260,8 +260,8 @@ export function getSidebarContent(
         )}</script>
         <script>window.isFullScreen = ${isFullScreen}</script>
 
-        ${edits && `<script>window.edits = ${JSON.stringify(edits)}</script>`}
-        ${page && `<script>window.location.pathname = "${page}"</script>`}
+        ${edits ? `<script>window.edits = ${JSON.stringify(edits)}</script>` : ''}
+        ${page ? `<script>window.location.pathname = "${page}"</script>` : ''}
       </body>
     </html>`;
 }
