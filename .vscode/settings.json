@@ -1,4 +1,5 @@
 {
   "python.defaultInterpreterPath": "${workspaceFolder}/server/.venv/bin/python3",
-  "continue.showInlineTip": false
+  "continue.showInlineTip": false,
+  "rust-analyzer.linkedProjects": ["./server/Cargo.toml"]
 }
