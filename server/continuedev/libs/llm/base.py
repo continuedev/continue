@@ -314,11 +314,11 @@ Settings:
         tokens = self.count_tokens(completion)
         dev_data_logger.capture(
             "tokens_generated",
-            {"model": model, "tokens": tokens},
+            {"model": model, "tokens": tokens, "model_class": self.__class__.__name__},
         )
         posthog_logger.capture_event(
             "tokens_generated",
-            {"model": model, "tokens": tokens},
+            {"model": model, "tokens": tokens, "model_class": self.__class__.__name__},
         )
 
     async def stream_complete(

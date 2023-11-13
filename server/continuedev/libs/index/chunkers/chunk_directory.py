@@ -9,6 +9,7 @@ from ....server.protocols.ide_protocol import AbstractIdeProtocolServer
 from .chunk import Chunk
 from . import chunk_document
 from .fast_index import stream_files_to_update
+from continuedev.continuedev import sync_results
 
 
 MAX_SIZE_IN_CHARS = 50_000
@@ -87,7 +88,9 @@ def local_stream_chunk_directory(
     workspace_dir: str,
     max_chunk_size: int,
 ) -> Generator[Tuple[Optional[Chunk], float], None, None]:
-    for filepath, digest in stream_files_to_update(workspace_dir):
+    for (add_filepath, add_digest), (del_filepath, del_digest) in sync_results(
+        workspace_dir, branch
+    ):
         # Ignore if the file is too large (cutoff is 10MB)
         if os.path.getsize(filepath) > 10_000_000:
             continue
