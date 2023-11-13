@@ -41,6 +41,7 @@ const SectionHeader = styled.tr`
   font-weight: bold;
   text-align: center;
   margin: 0;
+  position: sticky;
 `;
 
 const TdDiv = styled.div`
@@ -147,6 +148,8 @@ function History() {
   };
 
   const [filteringByWorkspace, setFilteringByWorkspace] = useState(false);
+  const stickyHistoryHeaderRef = React.useRef<HTMLDivElement>(null);
+  const [headerHeight, setHeaderHeight] = useState(0);
 
   useEffect(() => {
     const fetchSessions = async () => {
@@ -184,6 +187,10 @@ function History() {
     );
   }, [filteringByWorkspace, sessions]);
 
+  useEffect(() => {
+      setHeaderHeight(stickyHistoryHeaderRef.current?.clientHeight || 100);
+  }, [stickyHistoryHeaderRef.current]);
+
   const yesterday = new Date(Date.now() - 1000 * 60 * 60 * 24);
   const lastWeek = new Date(Date.now() - 1000 * 60 * 60 * 24 * 7);
   const lastMonth = new Date(Date.now() - 1000 * 60 * 60 * 24 * 30);
@@ -191,7 +198,7 @@ function History() {
 
   return (
     <div className="overflow-y-scroll" style={{ fontSize: getFontSize() }}>
-      <div className="sticky top-0" style={{ backgroundColor: vscBackground }}>
+      <div ref={stickyHistoryHeaderRef} className="sticky top-0" style={{ backgroundColor: vscBackground }}>
         <div
           className="items-center flex m-0 p-0"
           style={{
@@ -245,17 +252,17 @@ function History() {
               return (
                 <Fragment key={index}>
                   {index === 0 && date > yesterday && (
-                    <SectionHeader>Today</SectionHeader>
+                    <SectionHeader style={{ top: `${headerHeight}px` }}>Today</SectionHeader>
                   )}
                   {date < yesterday &&
                     date > lastWeek &&
                     prevDate > yesterday && (
-                      <SectionHeader>This Week</SectionHeader>
+                    <SectionHeader style={{ top: `${headerHeight}px` }}>This Week</SectionHeader>
                     )}
                   {date < lastWeek &&
                     date > lastMonth &&
                     prevDate > lastWeek && (
-                      <SectionHeader>This Month</SectionHeader>
+                    <SectionHeader style={{ top: `${headerHeight}px` }}>This Month</SectionHeader>
                     )}
 
                   <Tr key={index}>
