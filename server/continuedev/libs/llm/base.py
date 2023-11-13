@@ -82,6 +82,9 @@ class LLM(ContinueBaseModel):
         2048,
         description="The maximum context length of the LLM in tokens, as counted by count_tokens.",
     )
+    max_tokens: int = Field(
+        DEFAULT_MAX_TOKENS, description="The maximum number of tokens to generate."
+    )
 
     stop_tokens: Optional[List[str]] = Field(
         None, description="Tokens that will stop the completion."
@@ -148,6 +151,7 @@ class LLM(ContinueBaseModel):
             "context_length": {
                 "description": "The maximum context length of the LLM in tokens, as counted by count_tokens."
             },
+            "max_tokens": {"description": "The maximum number of tokens to generate."},
             "unique_id": {"description": "The unique ID of the user."},
             "model": {
                 "description": "The name of the model to be used (e.g. gpt-4, codellama)"
@@ -345,7 +349,7 @@ Settings:
             presence_penalty=presence_penalty or self.presence_penalty,
             frequency_penalty=frequency_penalty or self.frequency_penalty,
             stop=stop or self.stop_tokens,
-            max_tokens=max_tokens,
+            max_tokens=max_tokens or self.max_tokens,
             functions=functions,
         )
 
@@ -393,7 +397,7 @@ Settings:
             presence_penalty=presence_penalty or self.presence_penalty,
             frequency_penalty=frequency_penalty or self.frequency_penalty,
             stop=stop or self.stop_tokens,
-            max_tokens=max_tokens,
+            max_tokens=max_tokens or self.max_tokens,
             functions=functions,
         )
 
@@ -439,7 +443,7 @@ Settings:
             presence_penalty=presence_penalty or self.presence_penalty,
             frequency_penalty=frequency_penalty or self.frequency_penalty,
             stop=stop or self.stop_tokens,
-            max_tokens=max_tokens,
+            max_tokens=max_tokens or self.max_tokens,
             functions=functions,
         )
 

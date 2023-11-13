@@ -276,17 +276,17 @@ jobs:
           npx ovsx publish -p ${{ secrets.VSX_REGISTRY_TOKEN }} --packagePath ../../alpine-x64/*.vsix ../../darwin-arm64/*.vsix ../../darwin-x64/*.vsix ../../linux-arm64/*.vsix ../../linux-armhf/*.vsix ../../linux-x64/*.vsix ../../win32-ia32/*.vsix ../../win32-x64/*.vsix ../../win32-arm64/*.vsix
 
       # 3.5 Update the changelog
-      - name: Batch a new patch version
-        uses: miniscruff/changie-action@v2
-        with:
-          version: latest
-          args: batch patch
+      # - name: Batch a new patch version
+      #   uses: miniscruff/changie-action@v2
+      #   with:
+      #     version: latest
+      #     args: batch patch
 
-      - name: Merge changelog
-        uses: miniscruff/changie-action@v2
-        with:
-          version: latest
-          args: merge
+      # - name: Merge changelog
+      #   uses: miniscruff/changie-action@v2
+      #   with:
+      #     version: latest
+      #     args: merge
 
       # 4. Update the package.json version and push changes
       - name: Update version in package.json
