@@ -1,20 +1,19 @@
 from typing import Type, Union
 
-from ..steps.stack_overflow import StackOverflowStep
-from ...models.main import Position, PositionInFile
-from ..steps.refactor import RefactorReferencesStep
-from ..steps.clear_history import ClearHistoryStep
-from ..steps.comment_code import CommentCodeStep
-from ..steps.share_session import ShareSessionStep
-from ..steps.codebase import AnswerQuestionChroma
-from ...core.config.serialized_config import ContinueConfig
+from ...core.config.config import ContinueConfig
 from ...core.main import Policy, SessionState, Step
+from ...models.main import Position, PositionInFile
 from ..steps.chat import SimpleChatStep
+from ..steps.clear_history import ClearHistoryStep
+from ..steps.cmd import GenerateShellCommandStep
+from ..steps.codebase import AnswerQuestionChroma
+from ..steps.comment_code import CommentCodeStep
 from ..steps.custom_command import CustomCommandStep
 from ..steps.main import EditHighlightedCodeStep
+from ..steps.refactor import RefactorReferencesStep
+from ..steps.share_session import ShareSessionStep
+from ..steps.stack_overflow import StackOverflowStep
 from ..steps.steps_on_startup import StepsOnStartupStep
-from ..steps.cmd import GenerateShellCommandStep
-
 
 # When importing with importlib from config.py, the classes do not pass isinstance checks.
 # Mapping them here is a workaround.

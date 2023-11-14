@@ -1,7 +1,7 @@
 import json
 from typing import Any, Callable, Coroutine, Dict, List, Literal, Optional
 
-from pydantic import Field
+from pydantic import Field, validator
 
 from ...core.main import ChatMessage, ContinueCustomException
 from ..util.logging import logger
@@ -31,10 +31,15 @@ class GGML(LLM):
     ```
     """
 
-    api_base: str = Field(
+    api_base: Optional[str] = Field(
         "http://localhost:8000",
         description="URL of the OpenAI-compatible server where the model is being served",
     )
+
+    @validator("api_base", pre=True, always=True)
+    def set_api_base(cls, api_base):
+        return api_base or "http://localhost:8000"
+
     model: str = Field(
         "ggml", description="The name of the model to use (optional for the GGML class)"
     )

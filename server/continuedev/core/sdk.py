@@ -2,9 +2,6 @@ import asyncio
 import os
 from typing import Coroutine, List, Optional, Union
 
-from ..plugins.context_providers.highlighted_code import HighlightedCodeContextProvider
-
-
 from ..models.filesystem import RangeInFile
 from ..models.filesystem_edit import (
     AddDirectory,
@@ -15,9 +12,10 @@ from ..models.filesystem_edit import (
     FileSystemEdit,
 )
 from ..models.main import Range
-from ..server.protocols.ide_protocol import AbstractIdeProtocolServer
+from ..plugins.context_providers.highlighted_code import HighlightedCodeContextProvider
 from ..server.protocols.gui_protocol import AbstractGUIProtocolServer
-from .config.serialized_config import ContinueConfig
+from ..server.protocols.ide_protocol import AbstractIdeProtocolServer
+from .config.config import ContinueConfig
 from .lsp import ContinueLSPClient
 from .main import (
     ChatMessage,

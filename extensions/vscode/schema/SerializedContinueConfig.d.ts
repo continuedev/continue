@@ -6,18 +6,6 @@
  */
 
 export type SerializedContinueConfig = SerializedContinueConfig1;
-export type Step =
-  | "AnswerQuestionChroma"
-  | "GenerateShellCommandStep"
-  | "EditHighlightedCodeStep"
-  | "ShareSessionStep"
-  | "CommentCodeStep"
-  | "ClearHistoryStep"
-  | "StackOverflowStep";
-/**
- * Steps that will be automatically run at the beginning of a new session
- */
-export type StepsOnStartup = StepWithParams[];
 /**
  * Steps that are not allowed to be run, and will be skipped if attempted
  */
@@ -99,6 +87,10 @@ export type Stop = string[];
  */
 export type MaxTokens = number;
 /**
+ * A system message that will always be followed by the LLM
+ */
+export type SystemMessage = string;
+/**
  * Options for the HTTP request to the LLM.
  */
 export type RequestOptions = RequestOptions1;
@@ -140,11 +132,24 @@ export type Edit = string;
  */
 export type Summarize = string;
 /**
+ * A system message that will always be followed by the LLM
+ */
+export type SystemMessage1 = string;
+/**
  * Default options for completion. These will be overriden by any options set for a specific model.
  */
 export type CompletionOptions1 = BaseCompletionOptions;
 export type Name = string;
 export type Description = string;
+export type Step =
+  | "AnswerQuestionChroma"
+  | "GenerateShellCommandStep"
+  | "EditHighlightedCodeStep"
+  | "ShareSessionStep"
+  | "CommentCodeStep"
+  | "ClearHistoryStep"
+  | "StackOverflowStep"
+  | "OpenConfigStep";
 /**
  * An array of slash commands that let you map custom Steps to a shortcut.
  */
@@ -156,10 +161,11 @@ export type Description1 = string;
  * An array of custom commands that allow you to reuse prompts. Each has name, description, and prompt properties. When you enter /<name> in the text input, it will act as a shortcut to the prompt.
  */
 export type CustomCommands = CustomCommand[];
+export type Name2 = "diff" | "github" | "terminal" | "open" | "google" | "search" | "url";
 /**
  * A list of ContextProvider objects that can be used to provide context to the LLM by typing '@'. Read more about ContextProviders in the documentation.
  */
-export type ContextProviders = StepWithParams[];
+export type ContextProviders = ContextProviderWithParams[];
 /**
  * An optional token to identify the user.
  */
@@ -222,11 +228,11 @@ export type ApiVersion = string;
 export type OrganizationId = string;
 
 export interface SerializedContinueConfig1 {
-  steps_on_startup?: StepsOnStartup;
   disallowed_steps?: DisallowedSteps;
   allow_anonymous_telemetry?: AllowAnonymousTelemetry;
   models?: Models;
   model_roles?: ModelRoles;
+  system_message?: SystemMessage1;
   completion_options?: CompletionOptions1;
   slash_commands?: SlashCommands;
   custom_commands?: CustomCommands;
@@ -238,14 +244,6 @@ export interface SerializedContinueConfig1 {
   retrieval_settings?: RetrievalSettings;
   [k: string]: unknown;
 }
-export interface StepWithParams {
-  step: Step;
-  params: Params;
-  [k: string]: unknown;
-}
-export interface Params {
-  [k: string]: unknown;
-}
 export interface ModelDescription {
   title: Title;
   provider: Provider;
@@ -255,6 +253,7 @@ export interface ModelDescription {
   context_length?: ContextLength;
   template?: Template;
   completion_options?: CompletionOptions;
+  system_message?: SystemMessage;
   request_options?: RequestOptions;
   [k: string]: unknown;
 }
@@ -292,20 +291,25 @@ export interface ModelRoles1 {
 export interface SlashCommand {
   name: Name;
   description: Description;
-  step: Step1;
-  params?: Params1;
+  step: Step;
+  params?: Params;
   [k: string]: unknown;
 }
-export interface Step1 {
-  [k: string]: unknown;
-}
-export interface Params1 {
+export interface Params {
   [k: string]: unknown;
 }
 export interface CustomCommand {
   name: Name1;
   prompt: Prompt;
   description: Description1;
+  [k: string]: unknown;
+}
+export interface ContextProviderWithParams {
+  name: Name2;
+  params?: Params1;
+  [k: string]: unknown;
+}
+export interface Params1 {
   [k: string]: unknown;
 }
 export interface RetrievalSettings1 {

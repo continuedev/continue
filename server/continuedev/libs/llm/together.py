@@ -1,6 +1,7 @@
 import json
-from typing import Callable
-from pydantic import Field
+from typing import Callable, Optional
+
+from pydantic import Field, validator
 
 from ...core.main import ContinueCustomException
 from ..util.logging import logger
@@ -32,10 +33,14 @@ class TogetherLLM(LLM):
     api_key: str = Field(..., description="Together API key")
 
     model: str = "togethercomputer/RedPajama-INCITE-7B-Instruct"
-    api_base: str = Field(
+    api_base: Optional[str] = Field(
         "https://api.together.xyz",
         description="The base URL for your Together API instance",
     )
+
+    @validator("api_base", pre=True, always=True)
+    def set_api_base(cls, api_base):
+        return api_base or "https://api.together.xyz"
 
     async def _stream_complete(self, prompt, options):
         args = self.collect_args(options)

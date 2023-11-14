@@ -1,5 +1,6 @@
 import json
-from typing import Any, List
+from typing import Any, List, Optional
+
 import websockets
 from pydantic import Field
 
@@ -26,10 +27,10 @@ class TextGenWebUI(LLM):
     """
 
     model: str = "text-gen-webui"
-    api_base: str = Field(
+    api_base: Optional[str] = Field(
         "http://localhost:5000", description="URL of your TextGenWebUI server"
     )
-    streaming_url: str = Field(
+    streaming_url: Optional[str] = Field(
         "http://localhost:5005",
         description="URL of your TextGenWebUI streaming server (separate from main server URL)",
     )

@@ -1,27 +1,21 @@
 import traceback
 from typing import Dict, Optional
 
-from ..libs.util.create_async_task import create_async_task
-
-from ..libs.index.build_index import build_index
-
-from ..plugins.steps.on_traceback import DefaultOnTracebackStep
-
-from ..core.context import ContextManager
-
-from ..plugins.context_providers.highlighted_code import HighlightedCodeContextProvider
-
-from ..plugins.context_providers.file import FileContextProvider
-
-from ..core.main import SessionState
 from ..core.autopilot import Autopilot
-from ..libs.util.paths import getConfigFilePath, getDiffsFolderPath
-from ..core.config.serialized_config import ContinueConfig
-from .protocols.ide import IdeProtocolServer, WindowInfo
-from .protocols.gui import GUIProtocolServer
-from ..libs.util.logging import logger
-from ..libs.util.telemetry import posthog_logger
+from ..core.config.config import ContinueConfig
+from ..core.context import ContextManager
+from ..core.main import SessionState
+from ..libs.index.build_index import build_index
+from ..libs.util.create_async_task import create_async_task
 from ..libs.util.devdata import dev_data_logger
+from ..libs.util.logging import logger
+from ..libs.util.paths import getConfigFilePath, getDiffsFolderPath
+from ..libs.util.telemetry import posthog_logger
+from ..plugins.context_providers.file import FileContextProvider
+from ..plugins.context_providers.highlighted_code import HighlightedCodeContextProvider
+from ..plugins.steps.on_traceback import DefaultOnTracebackStep
+from .protocols.gui import GUIProtocolServer
+from .protocols.ide import IdeProtocolServer, WindowInfo
 
 
 class Window:
@@ -75,7 +69,7 @@ class Window:
             await self.config.models.start(
                 self.ide.window_info.unique_id,
                 self.config.system_message,
-                self.config.temperature,
+                self.config.completion_options.temperature,
             )
 
     async def display_config_error(self):
@@ -115,7 +109,7 @@ class Window:
         await self.config.models.start(
             self.ide.window_info.unique_id,
             self.config.system_message,
-            self.config.temperature,
+            self.config.completion_options.temperature,
         )
 
         # When the config is loaded, setup posthog logger

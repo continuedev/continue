@@ -2,33 +2,6 @@
   "title": "SerializedContinueConfig",
   "$ref": "#/definitions/continuedev__core__config__serialized_config__SerializedContinueConfig",
   "definitions": {
-    "StepWithParams": {
-      "title": "StepWithParams",
-      "type": "object",
-      "properties": {
-        "step": {
-          "title": "Step",
-          "enum": [
-            "AnswerQuestionChroma",
-            "GenerateShellCommandStep",
-            "EditHighlightedCodeStep",
-            "ShareSessionStep",
-            "CommentCodeStep",
-            "ClearHistoryStep",
-            "StackOverflowStep"
-          ],
-          "type": "string"
-        },
-        "params": {
-          "title": "Params",
-          "type": "object"
-        }
-      },
-      "required": [
-        "step",
-        "params"
-      ]
-    },
     "BaseCompletionOptions": {
       "title": "BaseCompletionOptions",
       "type": "object",
@@ -189,6 +162,11 @@
             }
           ]
         },
+        "system_message": {
+          "title": "System Message",
+          "description": "A system message that will always be followed by the LLM",
+          "type": "string"
+        },
         "request_options": {
           "title": "Request Options",
           "description": "Options for the HTTP request to the LLM.",
@@ -254,7 +232,18 @@
           "type": "string"
         },
         "step": {
-          "title": "Step"
+          "title": "Step",
+          "enum": [
+            "AnswerQuestionChroma",
+            "GenerateShellCommandStep",
+            "EditHighlightedCodeStep",
+            "ShareSessionStep",
+            "CommentCodeStep",
+            "ClearHistoryStep",
+            "StackOverflowStep",
+            "OpenConfigStep"
+          ],
+          "type": "string"
         },
         "params": {
           "title": "Params",
@@ -289,6 +278,33 @@
         "name",
         "prompt",
         "description"
+      ]
+    },
+    "ContextProviderWithParams": {
+      "title": "ContextProviderWithParams",
+      "type": "object",
+      "properties": {
+        "name": {
+          "title": "Name",
+          "enum": [
+            "diff",
+            "github",
+            "terminal",
+            "open",
+            "google",
+            "search",
+            "url"
+          ],
+          "type": "string"
+        },
+        "params": {
+          "title": "Params",
+          "default": {},
+          "type": "object"
+        }
+      },
+      "required": [
+        "name"
       ]
     },
     "RetrievalSettings": {
@@ -359,15 +375,6 @@
       "title": "SerializedContinueConfig",
       "type": "object",
       "properties": {
-        "steps_on_startup": {
-          "title": "Steps On Startup",
-          "description": "Steps that will be automatically run at the beginning of a new session",
-          "default": [],
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/StepWithParams"
-          }
-        },
         "disallowed_steps": {
           "title": "Disallowed Steps",
           "description": "Steps that are not allowed to be run, and will be skipped if attempted",
@@ -461,7 +468,7 @@
           "default": [],
           "type": "array",
           "items": {
-            "$ref": "#/definitions/StepWithParams"
+            "$ref": "#/definitions/ContextProviderWithParams"
           }
         },
         "user_token": {

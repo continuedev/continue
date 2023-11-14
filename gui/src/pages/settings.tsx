@@ -92,8 +92,10 @@ function Settings() {
   const submitChanges = () => {
     if (!client) return;
 
-    const systemMessage = formMethods.watch("system_message");
-    const temperature = formMethods.watch("temperature");
+    const systemMessage = formMethods.watch("system_message") as
+      | string
+      | undefined;
+    const temperature = formMethods.watch("temperature") as number | undefined;
     // const models = formMethods.watch("models");
 
     client.setSystemMessage(systemMessage || "");
@@ -176,8 +178,8 @@ function Settings() {
               </div>
               <div className="text-center" style={{ marginTop: "-25px" }}>
                 <p className="text-sm text-gray-500">
-                  {formMethods.watch("temperature") ||
-                    config.temperature ||
+                  {(formMethods.watch("temperature") as number | undefined) ||
+                    config.completion_options.temperature ||
                     "-"}
                 </p>
               </div>

@@ -1,31 +1,28 @@
 from typing import Any, Dict, List, Optional, Type
 
-from anthropic import RequestOptions
 from pydantic import BaseModel, Field
 
-from ...models.llm import BaseCompletionOptions
+from ...models.llm import BaseCompletionOptions, RequestOptions
 from ..main import SlashCommandDescription, Step
+from .context import ContextProviderName
 from .shared import ModelProvider, StepName, TemplateType
 
 
 class StepWithParams(BaseModel):
     name: StepName
-    params: Dict[str, Any]
+    params: Dict[str, Any] = {}
+
+
+class ContextProviderWithParams(BaseModel):
+    name: ContextProviderName
+    params: Dict[str, Any] = {}
 
 
 class SlashCommand(BaseModel):
     name: str
     description: str
-    step: Type[Step]
+    step: StepName
     params: Optional[Dict] = {}
-
-    def dict(self, *args, **kwargs):
-        return {
-            "name": self.name,
-            "description": self.description,
-            "params": self.params,
-            "step": self.step.__name__,
-        }
 
     def slash_command_description(self) -> SlashCommandDescription:
         return SlashCommandDescription(
@@ -159,6 +156,10 @@ class SerializedContinueConfig(BaseModel):
         default=ModelRoles(default="GPT-4 (trial)"),
         description="Roles for models. Each entry should be the title of a model in the models array.",
     )
+    system_message: Optional[str] = Field(
+        default=None,
+        description="A system message that will always be followed by the LLM",
+    )
     completion_options: BaseCompletionOptions = Field(
         default=BaseCompletionOptions(),
         description="Default options for completion. These will be overriden by any options set for a specific model.",
@@ -177,7 +178,7 @@ class SerializedContinueConfig(BaseModel):
         ],
         description="An array of custom commands that allow you to reuse prompts. Each has name, description, and prompt properties. When you enter /<name> in the text input, it will act as a shortcut to the prompt.",
     )
-    context_providers: List[StepWithParams] = Field(
+    context_providers: List[ContextProviderWithParams] = Field(
         default=[],
         description="A list of ContextProvider objects that can be used to provide context to the LLM by typing '@'. Read more about ContextProviders in the documentation.",
     )

@@ -22,7 +22,11 @@ StepName = Literal[
     "CommentCodeStep",
     "ClearHistoryStep",
     "StackOverflowStep",
+    "OpenConfigStep",
+    "GenerateShellCommandStep",
 ]
+
+ContextProviderName = Literal["diff", "github"]
 
 TemplateType = Literal["llama2", "alpaca", "zephyr", "phind", "anthropic", "chatml"]
 

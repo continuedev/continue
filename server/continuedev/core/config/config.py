@@ -1,6 +1,7 @@
-from typing import Dict, List, Optional, Type
+import json
+from typing import List, Optional
 
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field
 
 from ...libs.llm.base import BaseCompletionOptions
 from ...libs.llm.openai_free_trial import OpenAIFreeTrial
@@ -18,6 +19,7 @@ from ..models import Models
 from .context import CONTEXT_PROVIDER_NAME_TO_CLASS
 from .serialized_config import (
     CustomCommand,
+    ModelDescription,
     RetrievalSettings,
     SerializedContinueConfig,
     SlashCommand,
@@ -47,6 +49,10 @@ class ContinueConfig(BaseModel):
             summarize=OpenAIFreeTrial(model="gpt-3.5-turbo"),
         ),
         description="Configuration for the models used by Continue. Read more about how to configure models in the documentation.",
+    )
+    system_message: Optional[str] = Field(
+        default=None,
+        description="A system message that will always be followed by the LLM",
     )
     completion_options: BaseCompletionOptions = Field(
         default=BaseCompletionOptions(),
@@ -98,10 +104,6 @@ class ContinueConfig(BaseModel):
         description="Settings for the retrieval system. Read more about the retrieval system in the documentation.",
     )
 
-    @validator("temperature", pre=True)
-    def temperature_validator(cls, v):
-        return max(0.0, min(1.0, v))
-
     @staticmethod
     def from_serialized_config(config: SerializedContinueConfig) -> "ContinueConfig":
         context_providers = [
@@ -112,6 +114,7 @@ class ContinueConfig(BaseModel):
             disallowed_steps=config.disallowed_steps,
             allow_anonymous_telemetry=config.allow_anonymous_telemetry,
             models=Models.from_serialized_config(config),
+            system_message=config.system_message,
             completion_options=config.completion_options,
             custom_commands=config.custom_commands,
             slash_commands=config.slash_commands,
@@ -125,6 +128,12 @@ class ContinueConfig(BaseModel):
 
     @staticmethod
     def from_filepath(filepath: str, retry: bool = True) -> "ContinueConfig":
+        if filepath.endswith(".json"):
+            serialized_config = json.load(open(filepath))
+            return ContinueConfig.from_serialized_config(
+                SerializedContinueConfig(**serialized_config)
+            )
+
         # Use importlib to load the config file config.py at the given path
         try:
             import importlib.util
@@ -144,7 +153,7 @@ class ContinueConfig(BaseModel):
 
     @staticmethod
     def load_default() -> "ContinueConfig":
-        path = getConfigFilePath()
+        path = getConfigFilePath(json=True)
         return ContinueConfig.from_filepath(path)
 
     def get_slash_command_descriptions(self) -> List[SlashCommandDescription]:

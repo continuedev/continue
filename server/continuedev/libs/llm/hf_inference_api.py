@@ -1,4 +1,4 @@
-from typing import Callable, Dict, List, Union
+from typing import Callable, Dict, List, Optional, Union
 
 from huggingface_hub import InferenceClient
 from pydantic import Field
@@ -32,7 +32,7 @@ class HuggingFaceInferenceAPI(LLM):
         description="The name of the model to use (optional for the HuggingFaceInferenceAPI class)",
     )
     api_key: str = Field(..., description="Your Hugging Face API token")
-    api_base: str = Field(
+    api_base: Optional[str] = Field(
         None, description="Your Hugging Face Inference API endpoint URL"
     )
 

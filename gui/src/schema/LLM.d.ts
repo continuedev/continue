@@ -27,13 +27,9 @@ export type SystemMessage = string;
  */
 export type ContextLength = number;
 /**
- * The maximum number of tokens to generate.
+ * Options for the completion endpoint. Read more about the completion options in the documentation.
  */
-export type MaxTokens = number;
-/**
- * Tokens that will stop the completion.
- */
-export type StopTokens = string[];
+export type CompletionOptions = BaseCompletionOptions;
 /**
  * The temperature of the completion.
  */
@@ -55,6 +51,18 @@ export type PresencePenalty = number;
  */
 export type FrequencyPenalty = number;
 /**
+ * The stop tokens of the completion.
+ */
+export type Stop = string[];
+/**
+ * The maximum number of tokens to generate.
+ */
+export type MaxTokens = number;
+/**
+ * Options for the HTTP request to the LLM.
+ */
+export type RequestOptions = RequestOptions1;
+/**
  * Set the timeout for each request to the LLM. If you are running a local LLM that takes a while to respond, you might want to set this to avoid timeouts.
  */
 export type Timeout = number;
@@ -74,6 +82,10 @@ export type Proxy = string;
  * The API key for the LLM provider.
  */
 export type ApiKey = string;
+/**
+ * The base URL of the LLM API.
+ */
+export type ApiBase = string;
 
 export interface LLM1 {
   title?: Title;
@@ -81,20 +93,29 @@ export interface LLM1 {
   model: Model;
   system_message?: SystemMessage;
   context_length?: ContextLength;
-  max_tokens?: MaxTokens;
-  stop_tokens?: StopTokens;
+  completion_options?: CompletionOptions;
+  request_options?: RequestOptions;
+  prompt_templates?: PromptTemplates;
+  api_key?: ApiKey;
+  api_base?: ApiBase;
+  [k: string]: unknown;
+}
+export interface BaseCompletionOptions {
   temperature?: Temperature;
   top_p?: TopP;
   top_k?: TopK;
   presence_penalty?: PresencePenalty;
   frequency_penalty?: FrequencyPenalty;
+  stop?: Stop;
+  max_tokens?: MaxTokens;
+  [k: string]: unknown;
+}
+export interface RequestOptions1 {
   timeout?: Timeout;
   verify_ssl?: VerifySsl;
   ca_bundle_path?: CaBundlePath;
   proxy?: Proxy;
   headers?: Headers;
-  prompt_templates?: PromptTemplates;
-  api_key?: ApiKey;
   [k: string]: unknown;
 }
 /**

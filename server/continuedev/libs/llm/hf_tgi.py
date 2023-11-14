@@ -1,10 +1,10 @@
 import json
-from typing import Any, Callable, List
-from ..util.count_tokens import DEFAULT_MAX_TOKENS
+from typing import Any, Callable, List, Optional
 
-from pydantic import Field
+from pydantic import Field, validator
 
 from ...core.main import ChatMessage
+from ..util.count_tokens import DEFAULT_MAX_TOKENS
 from .base import LLM, CompletionOptions
 from .prompts.chat import llama2_template_messages
 from .prompts.edit import codellama_edit_prompt
@@ -12,7 +12,13 @@ from .prompts.edit import codellama_edit_prompt
 
 class HuggingFaceTGI(LLM):
     model: str = "huggingface-tgi"
-    api_base: str = Field("http://localhost:8080", description="URL of your TGI server")
+    api_base: Optional[str] = Field(
+        "http://localhost:8080", description="URL of your TGI server"
+    )
+
+    @validator("api_base", pre=True, always=True)
+    def set_api_base(cls, api_base):
+        return api_base or "http://localhost:8080"
 
     class Config:
         arbitrary_types_allowed = True

@@ -1,6 +1,7 @@
 import json
-from typing import Any, Callable, Dict
-from pydantic import Field
+from typing import Any, Callable, Dict, Optional
+
+from pydantic import Field, validator
 
 from ...core.main import ContinueCustomException
 from ..util.logging import logger
@@ -24,9 +25,13 @@ class Ollama(LLM):
     """
 
     model: str = "llama2"
-    api_base: str = Field(
+    api_base: Optional[str] = Field(
         "http://localhost:11434", description="URL of the Ollama server"
     )
+
+    @validator("api_base", pre=True, always=True)
+    def set_api_base(cls, api_base):
+        return api_base or "http://localhost:11434"
 
     class Config:
         arbitrary_types_allowed = True

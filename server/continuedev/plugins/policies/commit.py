@@ -12,7 +12,7 @@
 from textwrap import dedent
 from typing import Literal
 
-from ...core.config.serialized_config import ContinueConfig
+from ...core.config.config import ContinueConfig
 from ...core.main import Policy, SessionState, Step
 from ...core.observation import TextObservation
 from ...core.sdk import ContinueSDK

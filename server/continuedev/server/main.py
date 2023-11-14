@@ -4,23 +4,23 @@ import atexit
 from contextlib import asynccontextmanager
 from typing import List, Optional
 
-from pydantic import BaseModel
-
-from ..core.main import ContextProviderDescription, SlashCommandDescription
-from ..core.config.serialized_config import ContinueConfig
-from ..libs.util.devdata import dev_data_logger
-
 import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
 
+from ..core.config.config import ContinueConfig
+from ..core.main import ContextProviderDescription, SlashCommandDescription
 from ..libs.util.create_async_task import create_async_task
+from ..libs.util.devdata import dev_data_logger
 from ..libs.util.logging import logger
-from .gui import router as gui_router, sio_gui_app
-from .ide import router as ide_router, sio_ide_app
-from .sessions import router as sessions_router
-from .meilisearch_server import start_meilisearch, stop_meilisearch
 from .global_config import global_config
+from .gui import router as gui_router
+from .gui import sio_gui_app
+from .ide import router as ide_router
+from .ide import sio_ide_app
+from .meilisearch_server import start_meilisearch, stop_meilisearch
+from .sessions import router as sessions_router
 
 
 @asynccontextmanager

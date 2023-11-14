@@ -2,15 +2,15 @@ import asyncio
 from typing import List, Literal, Optional
 
 import certifi
-from ..util.count_tokens import CONTEXT_LENGTH_FOR_MODEL
-from ..util.logging import logger
-from .prompts.chat import template_alpaca_messages
 import openai
 from openai.error import RateLimitError
 from pydantic import Field, validator
 
 from ...core.main import ChatMessage
+from ..util.count_tokens import CONTEXT_LENGTH_FOR_MODEL
+from ..util.logging import logger
 from .base import LLM
+from .prompts.chat import template_alpaca_messages
 
 CHAT_MODELS = {
     "gpt-3.5-turbo",

@@ -1,0 +1,831 @@
+{
+  "title": "ContinueConfig",
+  "$ref": "#/definitions/continuedev__core__config__config__ContinueConfig",
+  "definitions": {
+    "FunctionCall": {
+      "title": "FunctionCall",
+      "type": "object",
+      "properties": {
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "arguments": {
+          "title": "Arguments",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "arguments"
+      ]
+    },
+    "ChatMessage": {
+      "title": "ChatMessage",
+      "type": "object",
+      "properties": {
+        "role": {
+          "title": "Role",
+          "enum": [
+            "assistant",
+            "user",
+            "system",
+            "function"
+          ],
+          "type": "string"
+        },
+        "content": {
+          "title": "Content",
+          "type": "string"
+        },
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "summary": {
+          "title": "Summary",
+          "type": "string"
+        },
+        "function_call": {
+          "$ref": "#/definitions/FunctionCall"
+        }
+      },
+      "required": [
+        "role",
+        "summary"
+      ]
+    },
+    "Step": {
+      "title": "Step",
+      "type": "object",
+      "properties": {
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "hide": {
+          "title": "Hide",
+          "default": false,
+          "type": "boolean"
+        },
+        "description": {
+          "title": "Description",
+          "default": "",
+          "type": "string"
+        },
+        "class_name": {
+          "title": "Class Name",
+          "default": "Step",
+          "type": "string"
+        },
+        "system_message": {
+          "title": "System Message",
+          "type": "string"
+        },
+        "chat_context": {
+          "title": "Chat Context",
+          "default": [],
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ChatMessage"
+          }
+        },
+        "manage_own_chat_context": {
+          "title": "Manage Own Chat Context",
+          "default": false,
+          "type": "boolean"
+        }
+      }
+    },
+    "BaseCompletionOptions": {
+      "title": "BaseCompletionOptions",
+      "type": "object",
+      "properties": {
+        "temperature": {
+          "title": "Temperature",
+          "description": "The temperature of the completion.",
+          "type": "number"
+        },
+        "top_p": {
+          "title": "Top P",
+          "description": "The top_p of the completion.",
+          "type": "number"
+        },
+        "top_k": {
+          "title": "Top K",
+          "description": "The top_k of the completion.",
+          "type": "integer"
+        },
+        "presence_penalty": {
+          "title": "Presence Penalty",
+          "description": "The presence penalty Aof the completion.",
+          "type": "number"
+        },
+        "frequency_penalty": {
+          "title": "Frequency Penalty",
+          "description": "The frequency penalty of the completion.",
+          "type": "number"
+        },
+        "stop": {
+          "title": "Stop",
+          "description": "The stop tokens of the completion.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "max_tokens": {
+          "title": "Max Tokens",
+          "description": "The maximum number of tokens to generate.",
+          "default": 600,
+          "type": "integer"
+        }
+      }
+    },
+    "RequestOptions": {
+      "title": "RequestOptions",
+      "type": "object",
+      "properties": {
+        "timeout": {
+          "title": "Timeout",
+          "description": "Set the timeout for each request to the LLM. If you are running a local LLM that takes a while to respond, you might want to set this to avoid timeouts.",
+          "default": 300,
+          "type": "integer"
+        },
+        "verify_ssl": {
+          "title": "Verify Ssl",
+          "description": "Whether to verify SSL certificates for requests.",
+          "type": "boolean"
+        },
+        "ca_bundle_path": {
+          "title": "Ca Bundle Path",
+          "description": "Path to a custom CA bundle to use when making the HTTP request",
+          "type": "string"
+        },
+        "proxy": {
+          "title": "Proxy",
+          "description": "Proxy URL to use when making the HTTP request",
+          "type": "string"
+        },
+        "headers": {
+          "title": "Headers",
+          "description": "Headers to use when making the HTTP request",
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "LLM": {
+      "title": "LLM",
+      "type": "object",
+      "properties": {
+        "title": {
+          "title": "Title",
+          "description": "A title that will identify this model in the model selection dropdown",
+          "type": "string"
+        },
+        "unique_id": {
+          "title": "Unique Id",
+          "description": "The unique ID of the user.",
+          "type": "string"
+        },
+        "model": {
+          "title": "Model",
+          "description": "The name of the model to be used (e.g. gpt-4, codellama)",
+          "type": "string"
+        },
+        "system_message": {
+          "title": "System Message",
+          "description": "A system message that will always be followed by the LLM",
+          "type": "string"
+        },
+        "context_length": {
+          "title": "Context Length",
+          "description": "The maximum context length of the LLM in tokens, as counted by count_tokens.",
+          "default": 2048,
+          "type": "integer"
+        },
+        "completion_options": {
+          "title": "Completion Options",
+          "description": "Options for the completion endpoint. Read more about the completion options in the documentation.",
+          "default": {
+            "temperature": null,
+            "top_p": null,
+            "top_k": null,
+            "presence_penalty": null,
+            "frequency_penalty": null,
+            "stop": null,
+            "max_tokens": 600
+          },
+          "allOf": [
+            {
+              "$ref": "#/definitions/BaseCompletionOptions"
+            }
+          ]
+        },
+        "request_options": {
+          "title": "Request Options",
+          "description": "Options for the HTTP request to the LLM.",
+          "default": {
+            "timeout": 300,
+            "verify_ssl": null,
+            "ca_bundle_path": null,
+            "proxy": null,
+            "headers": null
+          },
+          "allOf": [
+            {
+              "$ref": "#/definitions/RequestOptions"
+            }
+          ]
+        },
+        "prompt_templates": {
+          "title": "Prompt Templates",
+          "description": "A dictionary of prompt templates that can be used to customize the behavior of the LLM in certain situations. For example, set the \"edit\" key in order to change the prompt that is used for the /edit slash command. Each value in the dictionary is a string templated in mustache syntax, and filled in at runtime with the variables specific to the situation. See the documentation for more information.",
+          "default": {},
+          "type": "object"
+        },
+        "api_key": {
+          "title": "Api Key",
+          "description": "The API key for the LLM provider.",
+          "type": "string"
+        },
+        "api_base": {
+          "title": "Api Base",
+          "description": "The base URL of the LLM API.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "model"
+      ]
+    },
+    "Models": {
+      "title": "Models",
+      "description": "Main class that holds the current model configuration",
+      "type": "object",
+      "properties": {
+        "default": {
+          "$ref": "#/definitions/LLM"
+        },
+        "summarize": {
+          "$ref": "#/definitions/LLM"
+        },
+        "edit": {
+          "$ref": "#/definitions/LLM"
+        },
+        "chat": {
+          "$ref": "#/definitions/LLM"
+        },
+        "saved": {
+          "title": "Saved",
+          "default": [],
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/LLM"
+          }
+        },
+        "temperature": {
+          "title": "Temperature",
+          "type": "number"
+        },
+        "system_message": {
+          "title": "System Message",
+          "type": "string"
+        }
+      },
+      "required": [
+        "default"
+      ]
+    },
+    "CustomCommand": {
+      "title": "CustomCommand",
+      "type": "object",
+      "properties": {
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "prompt": {
+          "title": "Prompt",
+          "type": "string"
+        },
+        "description": {
+          "title": "Description",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "prompt",
+        "description"
+      ]
+    },
+    "SlashCommand": {
+      "title": "SlashCommand",
+      "type": "object",
+      "properties": {
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "description": {
+          "title": "Description",
+          "type": "string"
+        },
+        "step": {
+          "title": "Step",
+          "enum": [
+            "AnswerQuestionChroma",
+            "GenerateShellCommandStep",
+            "EditHighlightedCodeStep",
+            "ShareSessionStep",
+            "CommentCodeStep",
+            "ClearHistoryStep",
+            "StackOverflowStep",
+            "OpenConfigStep"
+          ],
+          "type": "string"
+        },
+        "params": {
+          "title": "Params",
+          "default": {},
+          "type": "object"
+        }
+      },
+      "required": [
+        "name",
+        "description",
+        "step"
+      ]
+    },
+    "Policy": {
+      "title": "Policy",
+      "description": "A rule that determines which step to take next",
+      "type": "object",
+      "properties": {}
+    },
+    "ContextItemId": {
+      "title": "ContextItemId",
+      "description": "A ContextItemId is a unique identifier for a ContextItem.",
+      "type": "object",
+      "properties": {
+        "provider_title": {
+          "title": "Provider Title",
+          "type": "string"
+        },
+        "item_id": {
+          "title": "Item Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "provider_title",
+        "item_id"
+      ]
+    },
+    "ContextItemDescription": {
+      "title": "ContextItemDescription",
+      "description": "A ContextItemDescription is a description of a ContextItem that is displayed to the user when they type '@'.\n\nThe id can be used to retrieve the ContextItem from the ContextManager.",
+      "type": "object",
+      "properties": {
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "description": {
+          "title": "Description",
+          "type": "string"
+        },
+        "id": {
+          "$ref": "#/definitions/ContextItemId"
+        }
+      },
+      "required": [
+        "name",
+        "description",
+        "id"
+      ]
+    },
+    "ContextItem": {
+      "title": "ContextItem",
+      "description": "A ContextItem is a single item that is stored in the ContextManager.",
+      "type": "object",
+      "properties": {
+        "description": {
+          "$ref": "#/definitions/ContextItemDescription"
+        },
+        "content": {
+          "title": "Content",
+          "type": "string"
+        },
+        "editing": {
+          "title": "Editing",
+          "default": false,
+          "type": "boolean"
+        },
+        "editable": {
+          "title": "Editable",
+          "default": false,
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "description",
+        "content"
+      ]
+    },
+    "ContextProvider": {
+      "title": "ContextProvider",
+      "description": "The ContextProvider class is a plugin that lets you provide new information to the LLM by typing '@'.\nWhen you type '@', the context provider will be asked to populate a list of options.\nThese options will be updated on each keystroke.\nWhen you hit enter on an option, the context provider will add that item to the autopilot's list of context (which is all stored in the ContextManager object).",
+      "type": "object",
+      "properties": {
+        "title": {
+          "title": "Title",
+          "description": "The title of the ContextProvider. This is what must be typed in the input to trigger the ContextProvider.",
+          "type": "string"
+        },
+        "ide": {
+          "title": "Ide"
+        },
+        "display_title": {
+          "title": "Display Title",
+          "description": "The display title of the ContextProvider shown in the dropdown menu",
+          "type": "string"
+        },
+        "description": {
+          "title": "Description",
+          "description": "A description of the ContextProvider displayed in the dropdown menu",
+          "type": "string"
+        },
+        "dynamic": {
+          "title": "Dynamic",
+          "description": "Indicates whether the ContextProvider is dynamic",
+          "type": "boolean"
+        },
+        "requires_query": {
+          "title": "Requires Query",
+          "description": "Indicates whether the ContextProvider requires a query. For example, the SearchContextProvider requires you to type '@search <STRING_TO_SEARCH>'. This will change the behavior of the UI so that it can indicate the expectation for a query.",
+          "default": false,
+          "type": "boolean"
+        },
+        "selected_items": {
+          "title": "Selected Items",
+          "description": "List of selected items in the ContextProvider",
+          "default": [],
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ContextItem"
+          }
+        }
+      },
+      "required": [
+        "title",
+        "display_title",
+        "description",
+        "dynamic"
+      ]
+    },
+    "RetrievalSettings": {
+      "title": "RetrievalSettings",
+      "type": "object",
+      "properties": {
+        "n_retrieve": {
+          "title": "N Retrieve",
+          "description": "Number of results to initially retrieve from vector database",
+          "default": 50,
+          "type": "integer"
+        },
+        "n_final": {
+          "title": "N Final",
+          "description": "Final number of results to use after re-ranking",
+          "default": 10,
+          "type": "integer"
+        },
+        "use_reranking": {
+          "title": "Use Reranking",
+          "description": "Whether to use re-ranking, which will allow initial selection of n_retrieve results, then will use an LLM to select the top n_final results",
+          "default": true,
+          "type": "boolean"
+        },
+        "rerank_group_size": {
+          "title": "Rerank Group Size",
+          "description": "Number of results to group together when re-ranking. Each group will be processed in parallel.",
+          "default": 5,
+          "type": "integer"
+        },
+        "ignore_files": {
+          "title": "Ignore Files",
+          "description": "Files to ignore when indexing the codebase. You can use glob patterns, such as **/*.py. This is useful for directories that contain generated code, or other directories that are not relevant to the codebase.",
+          "default": [],
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "openai_api_key": {
+          "title": "Openai Api Key",
+          "description": "OpenAI API key",
+          "type": "string"
+        },
+        "api_base": {
+          "title": "Api Base",
+          "description": "OpenAI API base URL",
+          "type": "string"
+        },
+        "api_type": {
+          "title": "Api Type",
+          "description": "OpenAI API type",
+          "type": "string"
+        },
+        "api_version": {
+          "title": "Api Version",
+          "description": "OpenAI API version",
+          "type": "string"
+        },
+        "organization_id": {
+          "title": "Organization Id",
+          "description": "OpenAI organization ID",
+          "type": "string"
+        }
+      }
+    },
+    "continuedev__core__config__config__ContinueConfig": {
+      "title": "ContinueConfig",
+      "description": "Continue can be deeply customized by editing the `ContinueConfig` object in `~/.continue/config.py` (`%userprofile%\\.continue\\config.py` for Windows) on your machine. This class is instantiated from the config file for every new session.",
+      "type": "object",
+      "properties": {
+        "steps_on_startup": {
+          "title": "Steps On Startup",
+          "description": "Steps that will be automatically run at the beginning of a new session",
+          "default": [],
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Step"
+          }
+        },
+        "disallowed_steps": {
+          "title": "Disallowed Steps",
+          "description": "Steps that are not allowed to be run, and will be skipped if attempted",
+          "default": [],
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "allow_anonymous_telemetry": {
+          "title": "Allow Anonymous Telemetry",
+          "description": "If this field is set to True, we will collect anonymous telemetry as described in the documentation page on telemetry. If set to False, we will not collect any data.",
+          "default": true,
+          "type": "boolean"
+        },
+        "models": {
+          "title": "Models",
+          "description": "Configuration for the models used by Continue. Read more about how to configure models in the documentation.",
+          "default": {
+            "default": {
+              "title": null,
+              "model": "gpt-4",
+              "system_message": null,
+              "context_length": 8192,
+              "completion_options": {
+                "temperature": null,
+                "top_p": null,
+                "top_k": null,
+                "presence_penalty": null,
+                "frequency_penalty": null,
+                "stop": null,
+                "max_tokens": 600
+              },
+              "request_options": {
+                "timeout": 300,
+                "verify_ssl": null,
+                "ca_bundle_path": null,
+                "proxy": null,
+                "headers": null
+              },
+              "prompt_templates": {},
+              "template_messages": null,
+              "api_key": null,
+              "api_base": null,
+              "llm": null,
+              "class_name": "OpenAIFreeTrial"
+            },
+            "summarize": {
+              "title": null,
+              "model": "gpt-3.5-turbo",
+              "system_message": null,
+              "context_length": 4096,
+              "completion_options": {
+                "temperature": null,
+                "top_p": null,
+                "top_k": null,
+                "presence_penalty": null,
+                "frequency_penalty": null,
+                "stop": null,
+                "max_tokens": 600
+              },
+              "request_options": {
+                "timeout": 300,
+                "verify_ssl": null,
+                "ca_bundle_path": null,
+                "proxy": null,
+                "headers": null
+              },
+              "prompt_templates": {},
+              "template_messages": null,
+              "api_key": null,
+              "api_base": null,
+              "llm": null,
+              "class_name": "OpenAIFreeTrial"
+            },
+            "edit": {
+              "title": null,
+              "model": "gpt-4",
+              "system_message": null,
+              "context_length": 8192,
+              "completion_options": {
+                "temperature": null,
+                "top_p": null,
+                "top_k": null,
+                "presence_penalty": null,
+                "frequency_penalty": null,
+                "stop": null,
+                "max_tokens": 600
+              },
+              "request_options": {
+                "timeout": 300,
+                "verify_ssl": null,
+                "ca_bundle_path": null,
+                "proxy": null,
+                "headers": null
+              },
+              "prompt_templates": {},
+              "template_messages": null,
+              "api_key": null,
+              "api_base": null,
+              "llm": null,
+              "class_name": "OpenAIFreeTrial"
+            },
+            "chat": {
+              "title": null,
+              "model": "gpt-4",
+              "system_message": null,
+              "context_length": 8192,
+              "completion_options": {
+                "temperature": null,
+                "top_p": null,
+                "top_k": null,
+                "presence_penalty": null,
+                "frequency_penalty": null,
+                "stop": null,
+                "max_tokens": 600
+              },
+              "request_options": {
+                "timeout": 300,
+                "verify_ssl": null,
+                "ca_bundle_path": null,
+                "proxy": null,
+                "headers": null
+              },
+              "prompt_templates": {},
+              "template_messages": null,
+              "api_key": null,
+              "api_base": null,
+              "llm": null,
+              "class_name": "OpenAIFreeTrial"
+            },
+            "saved": [],
+            "temperature": null,
+            "system_message": null
+          },
+          "allOf": [
+            {
+              "$ref": "#/definitions/Models"
+            }
+          ]
+        },
+        "system_message": {
+          "title": "System Message",
+          "description": "A system message that will always be followed by the LLM",
+          "type": "string"
+        },
+        "completion_options": {
+          "title": "Completion Options",
+          "description": "Options for the completion endpoint. Read more about the completion options in the documentation.",
+          "default": {
+            "temperature": null,
+            "top_p": null,
+            "top_k": null,
+            "presence_penalty": null,
+            "frequency_penalty": null,
+            "stop": null,
+            "max_tokens": 600
+          },
+          "allOf": [
+            {
+              "$ref": "#/definitions/BaseCompletionOptions"
+            }
+          ]
+        },
+        "custom_commands": {
+          "title": "Custom Commands",
+          "description": "An array of custom commands that allow you to reuse prompts. Each has name, description, and prompt properties. When you enter /<name> in the text input, it will act as a shortcut to the prompt.",
+          "default": [
+            {
+              "name": "test",
+              "prompt": "Write a comprehensive set of unit tests for the selected code. It should setup, run tests that check for correctness including important edge cases, and teardown. Ensure that the tests are complete and sophisticated. Give the tests just as chat output, don't edit any file.",
+              "description": "This is an example custom command. Use /config to edit it and create more"
+            }
+          ],
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/CustomCommand"
+          }
+        },
+        "slash_commands": {
+          "title": "Slash Commands",
+          "description": "An array of slash commands that let you map custom Steps to a shortcut.",
+          "default": [],
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/SlashCommand"
+          }
+        },
+        "on_traceback": {
+          "title": "On Traceback",
+          "description": "The step that will be run when a traceback is detected (when you use the shortcut cmd+shift+R)",
+          "allOf": [
+            {
+              "$ref": "#/definitions/Step"
+            }
+          ]
+        },
+        "policy_override": {
+          "title": "Policy Override",
+          "description": "A Policy object that can be used to override the default behavior of Continue, for example in order to build custom agents that take multiple steps at a time.",
+          "allOf": [
+            {
+              "$ref": "#/definitions/Policy"
+            }
+          ]
+        },
+        "context_providers": {
+          "title": "Context Providers",
+          "description": "A list of ContextProvider objects that can be used to provide context to the LLM by typing '@'. Read more about ContextProviders in the documentation.",
+          "default": [],
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ContextProvider"
+          }
+        },
+        "user_token": {
+          "title": "User Token",
+          "description": "An optional token to identify the user.",
+          "type": "string"
+        },
+        "data_server_url": {
+          "title": "Data Server Url",
+          "description": "The URL of the server where development data is sent. No data is sent unless a valid user token is provided.",
+          "default": "https://us-west1-autodebug.cloudfunctions.net",
+          "type": "string"
+        },
+        "disable_summaries": {
+          "title": "Disable Summaries",
+          "description": "If set to `True`, Continue will not generate summaries for each Step. This can be useful if you want to save on compute.",
+          "default": false,
+          "type": "boolean"
+        },
+        "disable_indexing": {
+          "title": "Disable Indexing",
+          "description": "If set to `True`, Continue will not index the codebase. This is mainly used for debugging purposes.",
+          "default": false,
+          "type": "boolean"
+        },
+        "retrieval_settings": {
+          "title": "Retrieval Settings",
+          "description": "Settings for the retrieval system. Read more about the retrieval system in the documentation.",
+          "default": {
+            "n_retrieve": 50,
+            "n_final": 10,
+            "use_reranking": true,
+            "rerank_group_size": 5,
+            "ignore_files": [],
+            "openai_api_key": null,
+            "api_base": null,
+            "api_type": null,
+            "api_version": null,
+            "organization_id": null
+          },
+          "allOf": [
+            {
+              "$ref": "#/definitions/RetrievalSettings"
+            }
+          ]
+        }
+      }
+    }
+  }
+}

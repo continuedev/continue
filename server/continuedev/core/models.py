@@ -109,12 +109,13 @@ class Models(BaseModel):
             completion_options = config.completion_options.dict()
             completion_options.update(model.completion_options.dict(exclude_none=True))
             model_class.system_message = model.system_message
-            return LLM(
+            return model_class(
+                title=model.title,
                 api_key=model.api_key,
                 completion_options=cast(BaseCompletionOptions, completion_options),
                 request_options=model.request_options,
                 system_message=model.system_message,
-                api_base=model.api_base,  # TODO
+                api_base=model.api_base,
                 model=model.model,
                 template_messages=autodetect_template_function(model.model),
                 prompt_templates=autodetect_prompt_templates(model.model),
@@ -145,7 +146,12 @@ class Models(BaseModel):
         for model in self.all_models:
             model.set_main_config_params(system_msg, temperature)
 
-    async def start(self, unique_id: str, system_message: str, temperature: float):
+    async def start(
+        self,
+        unique_id: str,
+        system_message: Optional[str],
+        temperature: Optional[float],
+    ):
         """Start each of the LLMs, or fall back to default"""
         for role in ALL_MODEL_ROLES:
             model: LLM = getattr(self, role)

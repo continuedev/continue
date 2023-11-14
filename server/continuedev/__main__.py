@@ -1,23 +1,22 @@
 import asyncio
 import os
 from typing import Optional
-from tqdm import tqdm
 
-from .core.config.serialized_config import ContinueConfig
-from .headless.headless_ide import LocalIdeProtocol
-from .libs.index.build_index import build_index
-from .libs.util.ext_to_lang import ext_to_lang
-from .libs.index.chunkers.chunk import Chunk
+import typer
 from dotenv import load_dotenv
 from rich.console import Console
 from rich.markdown import Markdown
-
-import typer
+from tqdm import tqdm
 
 from . import run
-from .server.main import run_server
+from .core.config.config import ContinueConfig
 from .headless import get_headless_autopilot
+from .headless.headless_ide import LocalIdeProtocol
+from .libs.index.build_index import build_index
+from .libs.index.chunkers.chunk import Chunk
 from .libs.index.pipelines.main import main_retrieval_pipeline
+from .libs.util.ext_to_lang import ext_to_lang
+from .server.main import run_server
 
 load_dotenv()
 app = typer.Typer(invoke_without_command=True)

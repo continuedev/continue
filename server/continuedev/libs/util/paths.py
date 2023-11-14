@@ -1,5 +1,6 @@
 import os
 import re
+from contextlib import asynccontextmanager
 from typing import Optional
 
 from ..constants.default_config import default_config
@@ -8,7 +9,6 @@ from ..constants.main import (
     CONTINUE_SERVER_FOLDER,
     CONTINUE_SESSIONS_FOLDER,
 )
-from contextlib import asynccontextmanager
 
 
 def find_data_file(filename):
@@ -152,8 +152,10 @@ def migrateConfigFile(existing: str) -> Optional[str]:
     return None
 
 
-def getConfigFilePath() -> str:
-    path = os.path.join(getGlobalFolderPath(), "config.py")
+def getConfigFilePath(json: bool = False) -> str:
+    path = os.path.join(
+        getGlobalFolderPath(), "config.py" if not json else "config.json"
+    )
     os.makedirs(os.path.dirname(path), exist_ok=True)
 
     if not os.path.exists(path):
