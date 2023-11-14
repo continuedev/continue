@@ -35,8 +35,6 @@ class OpenAIFreeTrial(LLM):
     These classes support any models available through the OpenAI API, assuming your API key has access, including "gpt-4", "gpt-3.5-turbo", "gpt-3.5-turbo-16k", and "gpt-4-32k".
     """
 
-    api_key: Optional[str] = None
-
     llm: Optional[LLM] = None
 
     @validator("context_length", pre=True, always=True)
@@ -52,15 +50,15 @@ class OpenAIFreeTrial(LLM):
         if self.api_key is None or self.api_key.strip() == "":
             self.llm = ProxyServer(
                 model=self.model,
-                verify_ssl=self.verify_ssl,
-                ca_bundle_path=self.ca_bundle_path,
+                verify_ssl=self.request_options.verify_ssl,
+                ca_bundle_path=self.request_options.ca_bundle_path,
             )
         else:
             self.llm = OpenAI(
                 api_key=self.api_key,
                 model=self.model,
-                verify_ssl=self.verify_ssl,
-                ca_bundle_path=self.ca_bundle_path,
+                verify_ssl=self.request_options.verify_ssl,
+                ca_bundle_path=self.request_options.ca_bundle_path,
             )
 
         await self.llm.start(unique_id=unique_id)

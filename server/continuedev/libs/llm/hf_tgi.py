@@ -12,15 +12,7 @@ from .prompts.edit import codellama_edit_prompt
 
 class HuggingFaceTGI(LLM):
     model: str = "huggingface-tgi"
-    server_url: str = Field(
-        "http://localhost:8080", description="URL of your TGI server"
-    )
-
-    template_messages: Callable[[List[ChatMessage]], str] = llama2_template_messages
-
-    prompt_templates = {
-        "edit": codellama_edit_prompt,
-    }
+    api_base: str = Field("http://localhost:8080", description="URL of your TGI server")
 
     class Config:
         arbitrary_types_allowed = True
@@ -42,7 +34,7 @@ class HuggingFaceTGI(LLM):
 
         async with self.create_client_session() as client_session:
             async with client_session.post(
-                f"{self.server_url}/generate_stream",
+                f"{self.api_base}/generate_stream",
                 json={"inputs": prompt, "parameters": args},
                 headers={"Content-Type": "application/json"},
                 proxy=self.proxy,

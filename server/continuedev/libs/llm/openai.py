@@ -18,7 +18,7 @@ CHAT_MODELS = {
     "gpt-4",
     "gpt-3.5-turbo-0613",
     "gpt-4-32k",
-    "gpt-4-1106-preview"
+    "gpt-4-1106-preview",
 }
 NON_CHAT_MODELS = {
     "gpt-3.5-turbo-instruct",
@@ -71,8 +71,6 @@ class OpenAI(LLM):
         description="OpenAI API key",
     )
 
-    proxy: Optional[str] = Field(None, description="Proxy URL to use for requests.")
-
     api_base: Optional[str] = Field(None, description="OpenAI API base URL.")
 
     api_type: Optional[Literal["azure", "openai"]] = Field(
@@ -83,13 +81,13 @@ class OpenAI(LLM):
         None, description="OpenAI API version. For use with Azure OpenAI Service."
     )
 
+    engine: Optional[str] = Field(
+        None, description="OpenAI engine. For use with Azure OpenAI Service."
+    )
+
     use_legacy_completions_endpoint: bool = Field(
         False,
         description="Manually specify to use the legacy completions endpoint instead of chat completions.",
-    )
-
-    engine: Optional[str] = Field(
-        None, description="OpenAI engine. For use with Azure OpenAI Service."
     )
 
     @validator("context_length")
@@ -110,13 +108,16 @@ class OpenAI(LLM):
         if self.api_version is not None:
             openai.api_version = self.api_version
 
-        if self.verify_ssl is not None and self.verify_ssl is False:
+        if (
+            self.request_options.verify_ssl is not None
+            and self.request_options.verify_ssl is False
+        ):
             openai.verify_ssl_certs = False
 
-        if self.proxy is not None:
-            openai.proxy = self.proxy
+        if self.request_options.proxy is not None:
+            openai.proxy = self.request_options.proxy
 
-        openai.ca_bundle_path = self.ca_bundle_path or certifi.where()
+        openai.ca_bundle_path = self.request_options.ca_bundle_path or certifi.where()
 
         session = self.create_client_session()
         openai.aiosession.set(session)
@@ -142,13 +143,13 @@ class OpenAI(LLM):
             async for chunk in await openai.ChatCompletion.acreate(
                 messages=[{"role": "user", "content": prompt}],
                 **args,
-                headers=self.headers,
+                headers=self.request_options.headers,
             ):
                 if len(chunk.choices) > 0 and "content" in chunk.choices[0].delta:
                     yield chunk.choices[0].delta.content
         else:
             async for chunk in await openai.Completion.acreate(
-                prompt=prompt, **args, headers=self.headers
+                prompt=prompt, **args, headers=self.request_options.headers
             ):
                 if len(chunk.choices) > 0:
                     yield chunk.choices[0].text
@@ -164,7 +165,7 @@ class OpenAI(LLM):
                 messages=messages,
                 stream=True,
                 **args,
-                headers=self.headers,
+                headers=self.request_options.headers,
             ):
                 if not hasattr(chunk, "choices") or len(chunk.choices) == 0:
                     continue
@@ -183,7 +184,7 @@ class OpenAI(LLM):
                 prompt=template_alpaca_messages(messages),
                 stream=True,
                 **args,
-                headers=self.headers,
+                headers=self.request_options.headers,
             ):
                 if len(chunk.choices) > 0:
                     yield {
@@ -204,7 +205,7 @@ class OpenAI(LLM):
                     resp = await openai.ChatCompletion.acreate(
                         messages=[{"role": "user", "content": prompt}],
                         **args,
-                        headers=self.headers,
+                        headers=self.request_options.headers,
                     )
                     return resp.choices[0].message.content
                 except RateLimitError as e:
@@ -217,7 +218,7 @@ class OpenAI(LLM):
             return (
                 (
                     await openai.Completion.acreate(
-                        prompt=prompt, **args, headers=self.headers
+                        prompt=prompt, **args, headers=self.request_options.headers
                     )
                 )
                 .choices[0]

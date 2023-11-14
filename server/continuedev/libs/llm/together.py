@@ -32,30 +32,24 @@ class TogetherLLM(LLM):
     api_key: str = Field(..., description="Together API key")
 
     model: str = "togethercomputer/RedPajama-INCITE-7B-Instruct"
-    base_url: str = Field(
+    api_base: str = Field(
         "https://api.together.xyz",
         description="The base URL for your Together API instance",
     )
-
-    template_messages: Callable = llama2_template_messages
-
-    prompt_templates = {
-        "edit": codellama_edit_prompt,
-    }
 
     async def _stream_complete(self, prompt, options):
         args = self.collect_args(options)
 
         async with self.create_client_session() as session:
             async with session.post(
-                f"{self.base_url}/inference",
+                f"{self.api_base}/inference",
                 json={
                     "prompt": prompt,
                     "stream_tokens": True,
                     **args,
                 },
                 headers={"Authorization": f"Bearer {self.api_key}"},
-                proxy=self.proxy,
+                proxy=self.request_options.proxy,
             ) as resp:
                 async for line in resp.content.iter_chunks():
                     if line[1]:
@@ -92,10 +86,10 @@ class TogetherLLM(LLM):
 
         async with self.create_client_session() as session:
             async with session.post(
-                f"{self.base_url}/inference",
+                f"{self.api_base}/inference",
                 json={"prompt": prompt, **args},
                 headers={"Authorization": f"Bearer {self.api_key}"},
-                proxy=self.proxy,
+                proxy=self.request_options.proxy,
             ) as resp:
                 text = await resp.text()
                 j = json.loads(text)

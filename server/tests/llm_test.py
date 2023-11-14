@@ -142,7 +142,7 @@ class TestGGML(TestBaseLLM):
             model="gpt-3.5-turbo",
             context_length=cls.context_length,
             system_message=cls.system_message,
-            server_url="https://api.openai.com",
+            api_base="https://api.openai.com",
             api_key=os.environ["OPENAI_API_KEY"],
         )
         start_model(cls.llm)

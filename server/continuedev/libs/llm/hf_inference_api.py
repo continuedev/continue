@@ -31,18 +31,10 @@ class HuggingFaceInferenceAPI(LLM):
         "Hugging Face Inference API",
         description="The name of the model to use (optional for the HuggingFaceInferenceAPI class)",
     )
-    hf_token: str = Field(..., description="Your Hugging Face API token")
-    endpoint_url: str = Field(
+    api_key: str = Field(..., description="Your Hugging Face API token")
+    api_base: str = Field(
         None, description="Your Hugging Face Inference API endpoint URL"
     )
-
-    template_messages: Union[
-        Callable[[List[Dict[str, str]]], str], None
-    ] = llama2_template_messages
-
-    prompt_templates = {
-        "edit": codellama_edit_prompt,
-    }
 
     class Config:
         arbitrary_types_allowed = True
@@ -63,7 +55,7 @@ class HuggingFaceInferenceAPI(LLM):
     async def _stream_complete(self, prompt, options):
         args = self.collect_args(options)
 
-        client = InferenceClient(self.endpoint_url, token=self.hf_token)
+        client = InferenceClient(self.api_base, token=self.api_key)
 
         stream = client.text_generation(prompt, stream=True, details=True, **args)
 

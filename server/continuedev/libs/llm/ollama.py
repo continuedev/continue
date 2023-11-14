@@ -1,14 +1,10 @@
 import json
 from typing import Any, Callable, Dict
-
-import aiohttp
 from pydantic import Field
 
 from ...core.main import ContinueCustomException
 from ..util.logging import logger
 from .base import LLM, CompletionOptions
-from .prompts.chat import llama2_template_messages
-from .prompts.edit import codellama_edit_prompt
 
 
 class Ollama(LLM):
@@ -28,15 +24,9 @@ class Ollama(LLM):
     """
 
     model: str = "llama2"
-    server_url: str = Field(
+    api_base: str = Field(
         "http://localhost:11434", description="URL of the Ollama server"
     )
-
-    template_messages: Callable = llama2_template_messages
-
-    prompt_templates = {
-        "edit": codellama_edit_prompt,
-    }
 
     class Config:
         arbitrary_types_allowed = True
@@ -55,8 +45,8 @@ class Ollama(LLM):
         try:
             async with self.create_client_session() as session:
                 async with session.post(
-                    f"{self.server_url}/api/generate",
-                    proxy=self.proxy,
+                    f"{self.api_base}/api/generate",
+                    proxy=self.request_options.proxy,
                     json={
                         "prompt": "",
                         "model": self.model,
@@ -69,8 +59,8 @@ class Ollama(LLM):
     async def get_downloaded_models(self):
         async with self.create_client_session() as session:
             async with session.get(
-                f"{self.server_url}/api/tags",
-                proxy=self.proxy,
+                f"{self.api_base}/api/tags",
+                proxy=self.request_options.proxy,
             ) as resp:
                 js_data = await resp.json()
                 return list(map(lambda x: x["name"], js_data["models"]))
@@ -78,14 +68,14 @@ class Ollama(LLM):
     async def _stream_complete(self, prompt, options):
         async with self.create_client_session() as session:
             async with session.post(
-                f"{self.server_url}/api/generate",
+                f"{self.api_base}/api/generate",
                 json={
                     "template": prompt,
                     "model": self.model,
                     "system": self.system_message,
                     "options": self.collect_args(options),
                 },
-                proxy=self.proxy,
+                proxy=self.request_options.proxy,
             ) as resp:
                 if resp.status == 400:
                     txt = await resp.text()

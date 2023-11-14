@@ -122,6 +122,7 @@ class LLM(ContinueBaseModel):
     api_key: Optional[str] = Field(
         None, description="The API key for the LLM provider."
     )
+    api_base: Optional[str] = Field(None, description="The base URL of the LLM API.")
 
     class Config:
         arbitrary_types_allowed = True
@@ -136,47 +137,15 @@ class LLM(ContinueBaseModel):
             "context_length": {
                 "description": "The maximum context length of the LLM in tokens, as counted by count_tokens."
             },
-            "max_tokens": {"description": "The maximum number of tokens to generate."},
             "unique_id": {"description": "The unique ID of the user."},
             "model": {
                 "description": "The name of the model to be used (e.g. gpt-4, codellama)"
-            },
-            "timeout": {
-                "description": "Set the timeout for each request to the LLM. If you are running a local LLM that takes a while to respond, you might want to set this to avoid timeouts."
             },
             "prompt_templates": {
                 "description": 'A dictionary of prompt templates that can be used to customize the behavior of the LLM in certain situations. For example, set the "edit" key in order to change the prompt that is used for the /edit slash command. Each value in the dictionary is a string templated in mustache syntax, and filled in at runtime with the variables specific to the situation OR an instance of the PromptTemplate class if you want to control other parameters. See the documentation for more information.'
             },
             "template_messages": {
                 "description": "A function that takes a list of messages and returns a prompt. This ensures that models like llama2, which are trained on specific chat formats, will always receive input in that format."
-            },
-            "write_log": {
-                "description": "A function that is called upon every prompt and completion, by default to log to the file which can be viewed by clicking on the magnifying glass."
-            },
-            "api_key": {"description": "The API key for the LLM provider."},
-            "verify_ssl": {
-                "description": "Whether to verify SSL certificates for requests."
-            },
-            "ca_bundle_path": {
-                "description": "Path to a custom CA bundle to use when making the HTTP request"
-            },
-            "headers": {"description": "Headers to use when making the HTTP request"},
-            "proxy": {"description": "Proxy URL to use when making the HTTP request"},
-            "stop_tokens": {"description": "Tokens that will stop the completion."},
-            "temperature": {
-                "description": "The sampling temperature used for generation."
-            },
-            "top_p": {
-                "description": "The top_p sampling parameter used for generation."
-            },
-            "top_k": {
-                "description": "The top_k sampling parameter used for generation."
-            },
-            "presence_penalty": {
-                "description": "The presence penalty used for completions."
-            },
-            "frequency_penalty": {
-                "description": "The frequency penalty used for completions."
             },
         }
 
@@ -205,23 +174,25 @@ class LLM(ContinueBaseModel):
         self._config_temperature = temperature
 
     def create_client_session(self):
-        if self.verify_ssl is False:
+        if self.request_options.verify_ssl is False:
             return aiohttp.ClientSession(
                 connector=aiohttp.TCPConnector(verify_ssl=False),
-                timeout=aiohttp.ClientTimeout(total=self.timeout),
-                headers=self.headers,
+                timeout=aiohttp.ClientTimeout(total=self.request_options.timeout),
+                headers=self.request_options.headers,
                 trust_env=True,
             )
         else:
             ca_bundle_path = (
-                certifi.where() if self.ca_bundle_path is None else self.ca_bundle_path
+                certifi.where()
+                if self.request_options.ca_bundle_path is None
+                else self.request_options.ca_bundle_path
             )
             if os.path.exists(ca_bundle_path):
                 ssl_context = ssl.create_default_context(cafile=ca_bundle_path)
                 return aiohttp.ClientSession(
                     connector=aiohttp.TCPConnector(ssl_context=ssl_context),
-                    timeout=aiohttp.ClientTimeout(total=self.timeout),
-                    headers=self.headers,
+                    timeout=aiohttp.ClientTimeout(total=self.request_options.timeout),
+                    headers=self.request_options.headers,
                     trust_env=True,
                 )
             else:
@@ -230,8 +201,8 @@ class LLM(ContinueBaseModel):
                     ca_bundle_path,
                 )
                 return aiohttp.ClientSession(
-                    timeout=aiohttp.ClientTimeout(total=self.timeout),
-                    headers=self.headers,
+                    timeout=aiohttp.ClientTimeout(total=self.request_options.timeout),
+                    headers=self.request_options.headers,
                     trust_env=True,
                 )
 
@@ -328,13 +299,15 @@ Settings:
         """Yield completion response, either streamed or not."""
         options = CompletionOptions(
             model=model or self.model,
-            temperature=temperature or self.temperature,
-            top_p=top_p or self.top_p,
-            top_k=top_k or self.top_k,
-            presence_penalty=presence_penalty or self.presence_penalty,
-            frequency_penalty=frequency_penalty or self.frequency_penalty,
-            stop=stop or self.stop_tokens,
-            max_tokens=max_tokens or self.max_tokens,
+            temperature=temperature or self.completion_options.temperature,
+            top_p=top_p or self.completion_options.top_p,
+            top_k=top_k or self.completion_options.top_k,
+            presence_penalty=presence_penalty
+            or self.completion_options.presence_penalty,
+            frequency_penalty=frequency_penalty
+            or self.completion_options.frequency_penalty,
+            stop=stop or self.completion_options.stop,
+            max_tokens=max_tokens or self.completion_options.max_tokens,
             functions=functions,
         )
 
@@ -376,13 +349,15 @@ Settings:
         """Yield completion response, either streamed or not."""
         options = CompletionOptions(
             model=model or self.model,
-            temperature=temperature or self.temperature,
-            top_p=top_p or self.top_p,
-            top_k=top_k or self.top_k,
-            presence_penalty=presence_penalty or self.presence_penalty,
-            frequency_penalty=frequency_penalty or self.frequency_penalty,
-            stop=stop or self.stop_tokens,
-            max_tokens=max_tokens or self.max_tokens,
+            temperature=temperature or self.completion_options.temperature,
+            top_p=top_p or self.completion_options.top_p,
+            top_k=top_k or self.completion_options.top_k,
+            presence_penalty=presence_penalty
+            or self.completion_options.presence_penalty,
+            frequency_penalty=frequency_penalty
+            or self.completion_options.frequency_penalty,
+            stop=stop or self.completion_options.stop,
+            max_tokens=max_tokens or self.completion_options.max_tokens,
             functions=functions,
         )
 
@@ -422,13 +397,15 @@ Settings:
         """Yield completion response, either streamed or not."""
         options = CompletionOptions(
             model=model or self.model,
-            temperature=temperature or self.temperature,
-            top_p=top_p or self.top_p,
-            top_k=top_k or self.top_k,
-            presence_penalty=presence_penalty or self.presence_penalty,
-            frequency_penalty=frequency_penalty or self.frequency_penalty,
-            stop=stop or self.stop_tokens,
-            max_tokens=max_tokens or self.max_tokens,
+            temperature=temperature or self.completion_options.temperature,
+            top_p=top_p or self.completion_options.top_p,
+            top_k=top_k or self.completion_options.top_k,
+            presence_penalty=presence_penalty
+            or self.completion_options.presence_penalty,
+            frequency_penalty=frequency_penalty
+            or self.completion_options.frequency_penalty,
+            stop=stop or self.completion_options.stop,
+            max_tokens=max_tokens or self.completion_options.max_tokens,
             functions=functions,
         )
 

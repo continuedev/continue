@@ -33,17 +33,12 @@ class LlamaCpp(LLM):
     """
 
     model: str = "llamacpp"
-    server_url: str = Field("http://localhost:8080", description="URL of the server")
+    api_base: str = Field("http://localhost:8080", description="URL of the server")
 
     llama_cpp_args: Dict[str, Any] = Field(
         {"stop": ["[INST]"]},
         description="A list of additional arguments to pass to llama.cpp. See [here](https://github.com/ggerganov/llama.cpp/tree/master/examples/server#api-endpoints) for the complete catalog of options.",
     )
-
-    template_messages: Callable = llama2_template_messages
-    prompt_templates = {
-        "edit": codellama_edit_prompt,
-    }
 
     class Config:
         arbitrary_types_allowed = True
@@ -71,10 +66,10 @@ class LlamaCpp(LLM):
         async def server_generator():
             async with self.create_client_session() as client_session:
                 async with client_session.post(
-                    f"{self.server_url}/completion",
+                    f"{self.api_base}/completion",
                     json={"prompt": prompt, "stream": True, **args},
                     headers=headers,
-                    proxy=self.proxy,
+                    proxy=self.request_options.proxy,
                 ) as resp:
                     async for line in resp.content:
                         content = line.decode("utf-8")

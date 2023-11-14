@@ -1,13 +1,10 @@
 import json
-from typing import Any, Callable, Dict, List, Union
-
+from typing import Any, List
 import websockets
 from pydantic import Field
 
 from ...core.main import ChatMessage
 from .base import LLM
-from .prompts.chat import llama2_template_messages
-from .prompts.edit import simplest_edit_prompt
 
 
 class TextGenWebUI(LLM):
@@ -29,21 +26,13 @@ class TextGenWebUI(LLM):
     """
 
     model: str = "text-gen-webui"
-    server_url: str = Field(
+    api_base: str = Field(
         "http://localhost:5000", description="URL of your TextGenWebUI server"
     )
     streaming_url: str = Field(
         "http://localhost:5005",
         description="URL of your TextGenWebUI streaming server (separate from main server URL)",
     )
-
-    prompt_templates = {
-        "edit": simplest_edit_prompt,
-    }
-
-    template_messages: Union[
-        Callable[[List[Dict[str, str]]], str], None
-    ] = llama2_template_messages
 
     class Config:
         arbitrary_types_allowed = True
