@@ -1,9 +1,12 @@
-from typing import Any, Dict, List, Optional, Type
+from contextlib import contextmanager
+from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, Field
 
+from ...libs.util.paths import getConfigFilePath
+from ...libs.util.telemetry import posthog_logger
 from ...models.llm import BaseCompletionOptions, RequestOptions
-from ..main import SlashCommandDescription, Step
+from ..main import SlashCommandDescription
 from .context import ContextProviderName
 from .shared import ModelProvider, StepName, TemplateType
 
@@ -73,6 +76,9 @@ class RetrievalSettings(BaseModel):
 
 
 class ModelDescription(BaseModel):
+    class Config:
+        extra = "allow"
+
     title: str = Field(
         default=...,
         description="The title you wish to give your model.",
@@ -131,6 +137,9 @@ class ModelRoles(BaseModel):
         default=None,
         description="The model to use for summarization. If not set, will fall back to default.",
     )
+
+
+CONFIG_JSON_PATH = getConfigFilePath(json=True)
 
 
 class SerializedContinueConfig(BaseModel):
@@ -201,3 +210,67 @@ class SerializedContinueConfig(BaseModel):
         default=RetrievalSettings(),
         description="Settings for the retrieval system. Read more about the retrieval system in the documentation.",
     )
+
+    @staticmethod
+    @contextmanager
+    def edit_config():
+        config = SerializedContinueConfig.parse_file(CONFIG_JSON_PATH)
+        yield config
+        with open(CONFIG_JSON_PATH, "w") as f:
+            f.write(config.json(exclude_none=True, exclude_defaults=True, indent=2))
+
+    @staticmethod
+    def set_temperature(temperature: float):
+        with SerializedContinueConfig.edit_config() as config:
+            config.completion_options.temperature = temperature
+
+            posthog_logger.capture_event(
+                "set_temperature", {"temperature": temperature}
+            )
+
+    @staticmethod
+    def set_system_message(message: str):
+        with SerializedContinueConfig.edit_config() as config:
+            config.system_message = message
+
+        posthog_logger.capture_event("set_system_message", {"message": message})
+
+    @staticmethod
+    def set_model_for_role(title: str, role: str):
+        with SerializedContinueConfig.edit_config() as config:
+            if role == "*":
+                config.model_roles.default = title
+
+                if config.model_roles.chat is None:
+                    config.model_roles.chat = title
+
+                if config.model_roles.edit is None:
+                    config.model_roles.edit = title
+
+                if config.model_roles.summarize is None:
+                    config.model_roles.summarize = title
+            else:
+                config.model_roles.__setattr__(role, title)
+
+    @staticmethod
+    def add_model(model: ModelDescription):
+        with SerializedContinueConfig.edit_config() as config:
+            config.models.append(model)
+
+    @staticmethod
+    def set_telemetry_enabled(enabled: bool):
+        with SerializedContinueConfig.edit_config() as config:
+            config.allow_anonymous_telemetry = enabled
+
+    @staticmethod
+    def delete_model(title: str):
+        with SerializedContinueConfig.edit_config() as config:
+            config.models = [model for model in config.models if model.title != title]
+            if config.model_roles.default == title:
+                config.model_roles.default = config.models[0].title
+            if config.model_roles.chat == title:
+                config.model_roles.chat = None
+            if config.model_roles.edit == title:
+                config.model_roles.edit = None
+            if config.model_roles.summarize == title:
+                config.model_roles.summarize = None

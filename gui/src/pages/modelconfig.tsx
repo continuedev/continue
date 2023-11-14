@@ -223,7 +223,7 @@ function ModelConfig() {
                         : parseFloat(formMethods.watch(d.key));
                   }
 
-                  client?.addModelForRole("*", modelInfo.class, {
+                  client?.addModelForRole("*", {
                     ...pkg.params,
                     ...modelInfo.params,
                     ..._.merge(
@@ -255,7 +255,7 @@ function ModelConfig() {
                     : parseFloat(formMethods.watch(d.key));
               }
 
-              client?.addModelForRole("*", modelInfo.class, {
+              client?.addModelForRole("*", {
                 ...modelInfo.packages[0]?.params,
                 ...modelInfo.params,
                 ...formParams,

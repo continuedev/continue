@@ -104,29 +104,32 @@ class Models(BaseModel):
         edit = model_with_title(config.model_roles.edit, default)
         summarize = model_with_title(config.model_roles.summarize, default)
 
+        saved = [
+            model_with_title(model.title, default)
+            for model in config.models
+            if model.title
+            not in [default.title, chat.title, edit.title, summarize.title]
+        ]
+
         def create_llm(model: ModelDescription) -> LLM:
             model_class = MODEL_CLASSES[MODEL_PROVIDER_TO_MODEL_CLASS[model.provider]]
             completion_options = config.completion_options.dict()
             completion_options.update(model.completion_options.dict(exclude_none=True))
-            model_class.system_message = model.system_message
-            return model_class(
-                title=model.title,
-                api_key=model.api_key,
-                completion_options=cast(BaseCompletionOptions, completion_options),
-                request_options=model.request_options,
-                system_message=model.system_message,
-                api_base=model.api_base,
-                model=model.model,
-                template_messages=autodetect_template_function(model.model),
-                prompt_templates=autodetect_prompt_templates(model.model),
-                context_length=model.context_length,
-            )  # TODO: This doesn't yet match up with all of the fields. Check individual model types. Update them. Update the docs.
+
+            # Allow extra fields to be passed through
+            kwargs = {**model.dict(exclude_none=True)}
+            kwargs["completion_options"] = completion_options
+            kwargs["template_messages"] = autodetect_template_function(model.model)
+            kwargs["prompt_templates"] = autodetect_prompt_templates(model.model)
+
+            return model_class(**kwargs)
 
         return Models(
             default=create_llm(default),
             chat=create_llm(chat),
             edit=create_llm(edit),
             summarize=create_llm(summarize),
+            saved=[create_llm(model) for model in saved],
         )
 
     def dict(self, **kwargs):

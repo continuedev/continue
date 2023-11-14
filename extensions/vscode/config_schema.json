@@ -184,10 +184,105 @@
           ]
         }
       },
-      "required": [
-        "title",
-        "provider",
-        "model"
+      "required": ["title", "provider", "model"],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "provider": {
+                "enum": [
+                  "openai",
+                  "anthropic",
+                  "google-palm",
+                  "huggingface-inference-api",
+                  "replicate",
+                  "together"
+                ]
+              }
+            }
+          },
+          "then": {
+            "required": ["api_key"]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "provider": {
+                "enum": ["huggingface-tgi"]
+              }
+            }
+          },
+          "then": {
+            "required": ["api_base"]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "provider": {
+                "enum": ["openai", "openai-aiohttp"]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "engine": {
+                "type": "string"
+              },
+              "api_type": {
+                "type": "string"
+              },
+              "api_version": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "api_type": {
+                "const": "azure"
+              }
+            }
+          },
+          "then": {
+            "required": ["engine", "api_version", "api_base"]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "provider": {
+                "enum": ["openai"]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "use_legacy_completions_endpoint": {
+                "type": "boolean"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "provider": {
+                "enum": ["text-gen-webui"]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "streaming_url": {
+                "type": "string"
+              }
+            }
+          }
+        }
       ]
     },
     "ModelRoles": {
@@ -215,9 +310,7 @@
           "type": "string"
         }
       },
-      "required": [
-        "default"
-      ]
+      "required": ["default"]
     },
     "SlashCommand": {
       "title": "SlashCommand",
@@ -251,11 +344,7 @@
           "type": "object"
         }
       },
-      "required": [
-        "name",
-        "description",
-        "step"
-      ]
+      "required": ["name", "description", "step"]
     },
     "CustomCommand": {
       "title": "CustomCommand",
@@ -274,11 +363,7 @@
           "type": "string"
         }
       },
-      "required": [
-        "name",
-        "prompt",
-        "description"
-      ]
+      "required": ["name", "prompt", "description"]
     },
     "ContextProviderWithParams": {
       "title": "ContextProviderWithParams",
@@ -303,9 +388,7 @@
           "type": "object"
         }
       },
-      "required": [
-        "name"
-      ]
+      "required": ["name"]
     },
     "RetrievalSettings": {
       "title": "RetrievalSettings",
@@ -419,6 +502,11 @@
               "$ref": "#/definitions/ModelRoles"
             }
           ]
+        },
+        "system_message": {
+          "title": "System Message",
+          "description": "A system message that will always be followed by the LLM",
+          "type": "string"
         },
         "completion_options": {
           "title": "Completion Options",

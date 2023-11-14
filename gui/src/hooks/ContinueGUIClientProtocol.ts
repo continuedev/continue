@@ -3,6 +3,7 @@ import { ContextItem } from "../schema/ContextItem";
 import { ContextItemId } from "../schema/ContextItemId";
 import { ContinueConfig } from "../schema/ContinueConfig";
 import { PersistedSessionInfo } from "../schema/PersistedSessionInfo";
+import { ModelDescription } from "../schema/SerializedContinueConfig";
 import { SessionState, StepDescription } from "../schema/SessionState";
 import { SessionUpdate } from "../schema/SessionUpdate";
 import AbstractContinueGUIClientProtocol from "./AbstractContinueGUIClientProtocol";
@@ -215,8 +216,8 @@ class ContinueGUIClientProtocol extends AbstractContinueGUIClientProtocol {
     this.messenger?.send("set_temperature", { temperature });
   }
 
-  addModelForRole(role: string, model_class: string, model: any): void {
-    this.messenger?.send("add_model_for_role", { role, model, model_class });
+  addModelForRole(role: string, model: ModelDescription): void {
+    this.messenger?.send("add_model_for_role", { role, model });
   }
 
   setModelForRoleFromIndex(role: string, index: number): void {

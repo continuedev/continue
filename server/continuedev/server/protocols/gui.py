@@ -1,34 +1,19 @@
 import uuid
-from typing import Any, Awaitable, Callable, Dict, List, Optional, TypeVar
+from typing import Awaitable, Callable, Dict, List, Optional, TypeVar
 
 import socketio
 from pydantic import BaseModel
 
 from ...core.autopilot import Autopilot
 from ...core.config.config import ContinueConfig
+from ...core.config.serialized_config import ModelDescription, SerializedContinueConfig
 from ...core.main import ContextItem, SessionState, SessionUpdate, Step, StepDescription
-from ...core.models import ALL_MODEL_ROLES, MODEL_CLASSES, MODEL_MODULE_NAMES
-from ...libs.llm.prompts.chat import (
-    llama2_template_messages,
-    phind_template_messages,
-    sqlcoder_template_messages,
-    template_alpaca_messages,
-)
-from ...libs.llm.prompts.edit import alpaca_edit_prompt, codellama_edit_prompt
-from ...libs.util.edit_config import (
-    add_config_import,
-    create_obj_node,
-    display_llm_class,
-    edit_config_property,
-)
 from ...libs.util.telemetry import posthog_logger
 from ...libs.util.types import AsyncFunc
 from ...models.websockets import WebsocketsMessage
 from ..websockets_messenger import SocketIOMessenger
 
 T = TypeVar("T", bound=BaseModel)
-
-# You should probably abstract away the websocket stuff into a separate class
 
 
 class GUIProtocolServer:
@@ -74,19 +59,19 @@ class GUIProtocolServer:
 
         elif msg.message_type == "set_system_message":
             sys_message = data["system_message"]
-            ContinueConfig.set_system_message(sys_message)
+            SerializedContinueConfig.set_system_message(sys_message)
             posthog_logger.capture_event(
                 "set_system_message", {"system_message": sys_message}
             )
             await self.reload_config()
             await self.send_config_update()
         elif msg.message_type == "set_temperature":
-            ContinueConfig.set_temperature(float(data["temperature"]))
+            SerializedContinueConfig.set_temperature(float(data["temperature"]))
             await self.reload_config()
             await self.send_config_update()
         elif msg.message_type == "add_model_for_role":
             await self.add_model_for_role(
-                data["role"], data["model_class"], data["model"]
+                data["role"], ModelDescription(**data["model"])
             )
         elif msg.message_type == "set_model_for_role_from_index":
             await self.set_model_for_role_from_index(data["role"], data["index"])
@@ -95,110 +80,21 @@ class GUIProtocolServer:
 
     async def set_model_for_role_from_index(self, role: str, index: int):
         models = self.get_config().models
-        temp = models.default
-        models.default = models.saved[index]
-        models.saved[index] = temp
-
-        ContinueConfig.set_models(models, role)
-        await self.reload_config()
-        await self.send_config_update()
+        if title := models.saved[index].title:
+            SerializedContinueConfig.set_model_for_role(title, role)
+            await self.reload_config()
+            await self.send_config_update()
 
     async def delete_model_at_index(self, index: int):
         models = self.get_config().models
-        models.saved.pop(index)
-
-        ContinueConfig.set_models(models, "*")
-        await self.reload_config()
-        await self.send_config_update()
-
-    async def add_model_for_role(self, role: str, model_class: str, model: Any):
-        models = self.get_config().models
-
-        model_copy = model.copy()
-        if "api_key" in model_copy:
-            del model_copy["api_key"]
-        if "hf_token" in model_copy:
-            del model_copy["hf_token"]
-
-        posthog_logger.capture_event(
-            "select_model_for_role",
-            {"role": role, "model_class": model_class, "model": model_copy},
-        )
-
-        if role == "*":
-            # Remove all previous models in roles and place in saved
-            saved_models = models.saved
-            existing_saved_models = set(
-                [display_llm_class(llm) for llm in saved_models]
-            )
-            for role in ALL_MODEL_ROLES:
-                val = models.__getattribute__(role)
-                if (
-                    val is not None
-                    and display_llm_class(val) not in existing_saved_models
-                ):
-                    saved_models.append(val)
-                    existing_saved_models.add(display_llm_class(val))
-                models.__setattr__(role, None)
-
-            # Add the requisite import to config.py
-            default_model_display_overrides = {}
-            add_config_import(
-                f"from continuedev.libs.llm.{MODEL_MODULE_NAMES[model_class]} import {model_class}"
-            )
-            if "template_messages" in model:
-                if model["template_messages"] != "None":
-                    add_config_import(
-                        f"from continuedev.libs.llm.prompts.chat import {model['template_messages']}"
-                    )
-
-                sqtm = sqlcoder_template_messages("<MY_DATABASE_SCHEMA>")
-                sqtm.__name__ = 'sqlcoder_template_messages("<MY_DATABASE_SCHEMA>")'
-                model["template_messages"] = {
-                    "llama2_template_messages": llama2_template_messages,
-                    "template_alpaca_messages": template_alpaca_messages,
-                    "phind_template_messages": phind_template_messages,
-                    "sqlcoder_template_messages": sqtm,
-                    "None": None,
-                }[model["template_messages"]]
-
-            if "prompt_templates" in model and "edit" in model["prompt_templates"]:
-                default_model_display_overrides[
-                    "prompt_templates"
-                ] = f"""{{"edit": {model["prompt_templates"]["edit"]}}}"""
-                add_config_import(
-                    f"from continuedev.libs.llm.prompts.edit import {model['prompt_templates']['edit']}"
-                )
-                model["prompt_templates"]["edit"] = {
-                    "codellama_edit_prompt": codellama_edit_prompt,
-                    "alpaca_edit_prompt": alpaca_edit_prompt,
-                }[model["prompt_templates"]["edit"]]
-
-            # Set the new default model
-            new_model = MODEL_CLASSES[model_class](**model)
-            models.default = new_model
-
-            # Construct and set the new models object
-            JOINER = ",\n\t\t"
-            saved_model_strings = set([display_llm_class(llm) for llm in saved_models])
-            models_args = {
-                "default": display_llm_class(
-                    models.default, True, default_model_display_overrides
-                ),
-                "saved": f"[{JOINER.join(saved_model_strings)}]",
-            }
-
-            edit_config_property(
-                ["models"],
-                create_obj_node("Models", models_args),
-            )
+        if title := models.saved[index].title:
+            SerializedContinueConfig.delete_model(title)
             await self.reload_config()
             await self.send_config_update()
-        else:
-            # TODO
-            pass
 
-    # region: Send data to GUI
+    async def add_model_for_role(self, role: str, model: ModelDescription):
+        SerializedContinueConfig.add_model(model)
+        SerializedContinueConfig.set_model_for_role(model.title, role)
 
     _running_autopilots: Dict[str, Autopilot] = {}
 
@@ -251,5 +147,3 @@ class GUIProtocolServer:
         return await self.get_autopilot(
             SessionState(history=history, context_items=[])
         ).get_session_title()
-
-    # endregion

@@ -278,7 +278,7 @@
     "jsonValidation": [
       {
         "fileMatch": "config.json",
-        "url": "./SerializedContinueConfig.json"
+        "url": "./config_schema.json"
       }
     ]
   },

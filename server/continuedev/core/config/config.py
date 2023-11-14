@@ -154,7 +154,8 @@ class ContinueConfig(BaseModel):
     @staticmethod
     def load_default() -> "ContinueConfig":
         path = getConfigFilePath(json=True)
-        return ContinueConfig.from_filepath(path)
+        config = ContinueConfig.from_filepath(path)
+        return config
 
     def get_slash_command_descriptions(self) -> List[SlashCommandDescription]:
         custom_commands = (
@@ -196,32 +197,3 @@ class ContinueConfig(BaseModel):
                 requires_query=False,
             )
         ]
-
-    @staticmethod
-    def set_temperature(temperature: float):
-        edit_config_property(["temperature"], temperature)
-        posthog_logger.capture_event("set_temperature", {"temperature": temperature})
-
-    @staticmethod
-    def set_system_message(message: str):
-        edit_config_property(["system_message"], message)
-        posthog_logger.capture_event("set_system_message", {"message": message})
-
-    @staticmethod
-    def set_models(models: Models, role: str):
-        JOINER = ",\n\t\t"
-        models_args = {
-            "saved": f"[{JOINER.join([display_llm_class(llm) for llm in models.saved])}]",
-            ("default" if role == "*" else role): display_llm_class(models.default),
-        }
-        edit_config_property(
-            ["models"],
-            create_obj_node("Models", models_args),
-        )
-
-    @staticmethod
-    def set_telemetry_enabled(enabled: bool):
-        edit_config_property(
-            ["allow_anonymous_telemetry"],
-            create_bool_node(enabled),
-        )

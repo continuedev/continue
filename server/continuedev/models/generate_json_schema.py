@@ -3,7 +3,7 @@ import os
 from pydantic import schema_json_of
 
 from ..core.config.config import ContinueConfig
-from ..core.config.serialized_config import SerializedContinueConfig
+from ..core.config.serialized_config import ModelDescription, SerializedContinueConfig
 from ..core.context import ContextItem, ContextItemId
 from ..core.main import (
     ContextProviderDescription,
@@ -32,7 +32,7 @@ MODELS_TO_GENERATE = (
         SlashCommandDescription,
         ContextProviderDescription,
     ]
-    + [SerializedContinueConfig]
+    + [SerializedContinueConfig, ModelDescription]
     + [ContinueConfig]
     + [ContextItem, ContextItemId]
     + [Models]
