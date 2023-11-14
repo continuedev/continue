@@ -1,128 +1,87 @@
 import os
 import ssl
 from time import time
-from typing import Any, Callable, Coroutine, Dict, Generator, List, Optional, Union
+from typing import Any, AsyncGenerator, Callable, Coroutine, Dict, List, Optional, Union
 
 import aiohttp
 import certifi
-from ...core.config.shared import RequestOptions
-from ..util.templating import render_templated_string
-from pydantic import Field, validator
+from pydantic import Field
 
 from ...core.main import ChatMessage
+from ...models.llm import (
+    BaseCompletionOptions,
+    CompletionOptions,
+    RequestOptions,
+)
 from ...models.main import ContinueBaseModel
 from ..util.count_tokens import (
-    DEFAULT_ARGS,
-    DEFAULT_MAX_TOKENS,
     CONTEXT_LENGTH_FOR_MODEL,
+    DEFAULT_ARGS,
     compile_chat_messages,
     count_tokens,
     format_chat_messages,
     prune_raw_prompt_from_top,
 )
 from ..util.devdata import dev_data_logger
-from ..util.telemetry import posthog_logger
 from ..util.logging import logger
-
-
-class BaseCompletionOptions(ContinueBaseModel):
-    @validator(
-        "*",
-        pre=True,
-        always=True,
-    )
-    def ignore_none_and_set_default(cls, value, field):
-        return value if value is not None else field.default
-
-    temperature: Optional[float] = Field(
-        None, description="The temperature of the completion."
-    )
-    top_p: Optional[float] = Field(None, description="The top_p of the completion.")
-    top_k: Optional[int] = Field(None, description="The top_k of the completion.")
-    presence_penalty: Optional[float] = Field(
-        None, description="The presence penalty Aof the completion."
-    )
-    frequency_penalty: Optional[float] = Field(
-        None, description="The frequency penalty of the completion."
-    )
-    stop: Optional[List[str]] = Field(
-        None, description="The stop tokens of the completion."
-    )
-    max_tokens: int = Field(
-        DEFAULT_MAX_TOKENS, description="The maximum number of tokens to generate."
-    )
-
-
-class CompletionOptions(BaseCompletionOptions):
-    """Options for the completion."""
-
-    @validator(
-        "*",
-        pre=True,
-        always=True,
-    )
-    def ignore_none_and_set_default(cls, value, field):
-        return value if value is not None else field.default
-
-    model: Optional[str] = Field(None, description="The model name")
-    functions: Optional[List[Any]] = Field(
-        None, description="The functions/tools to make available to the model."
-    )
-
-
-class PromptTemplate(CompletionOptions):
-    prompt: str = Field(description="The prompt to be used for the completion.")
-    raw: bool = Field(False, description="Whether to use the raw prompt or not.")
+from ..util.telemetry import posthog_logger
+from ..util.templating import render_templated_string
 
 
 class LLM(ContinueBaseModel):
     title: Optional[str] = Field(
-        None,
+        default=None,
         description="A title that will identify this model in the model selection dropdown",
     )
 
-    unique_id: Optional[str] = Field(None, description="The unique ID of the user.")
+    unique_id: Optional[str] = Field(
+        default=None, description="The unique ID of the user."
+    )
     model: str = Field(
-        ..., description="The name of the model to be used (e.g. gpt-4, codellama)"
+        default=...,
+        description="The name of the model to be used (e.g. gpt-4, codellama)",
     )
 
     system_message: Optional[str] = Field(
-        None, description="A system message that will always be followed by the LLM"
+        default=None,
+        description="A system message that will always be followed by the LLM",
     )
 
     context_length: int = Field(
-        2048,
+        default=2048,
         description="The maximum context length of the LLM in tokens, as counted by count_tokens.",
     )
 
     completion_options: BaseCompletionOptions = Field(
-        BaseCompletionOptions(),
+        default=BaseCompletionOptions(),
         description="Options for the completion endpoint. Read more about the completion options in the documentation.",
     )
 
     request_options: RequestOptions = Field(
-        RequestOptions(),
+        default=RequestOptions(),
         description="Options for the HTTP request to the LLM.",
     )
 
     prompt_templates: dict = Field(
-        {},
+        default={},
         description='A dictionary of prompt templates that can be used to customize the behavior of the LLM in certain situations. For example, set the "edit" key in order to change the prompt that is used for the /edit slash command. Each value in the dictionary is a string templated in mustache syntax, and filled in at runtime with the variables specific to the situation. See the documentation for more information.',
     )
 
     template_messages: Optional[Callable[[List[Dict[str, str]]], str]] = Field(
-        None,
+        default=None,
         description="A function that takes a list of messages and returns a prompt. This ensures that models like llama2, which are trained on specific chat formats, will always receive input in that format.",
     )
-    write_log: Optional[Callable[[str], None]] = Field(
-        None,
+    write_log: Optional[Callable[[str], Coroutine]] = Field(
+        default=None,
         description="A function that is called upon every prompt and completion, by default to log to the file which can be viewed by clicking on the magnifying glass.",
     )
 
     api_key: Optional[str] = Field(
-        None, description="The API key for the LLM provider."
+        default=None, description="The API key for the LLM provider."
     )
-    api_base: Optional[str] = Field(None, description="The base URL of the LLM API.")
+    api_base: Optional[str] = Field(
+        default=None, description="The base URL of the LLM API."
+    )
 
     class Config:
         arbitrary_types_allowed = True
@@ -264,13 +223,13 @@ Settings:
                 0,
                 {
                     "role": "system",
-                    "content": render_templated_string(self.get_system_message()),
+                    "content": render_templated_string(self.get_system_message() or ""),
                 },
             )
 
         return self.template_messages(msgs)
 
-    def log_tokens_generated(self, model: str, completion: int):
+    def log_tokens_generated(self, model: str, completion: str):
         tokens = self.count_tokens(completion)
         dev_data_logger.capture(
             "tokens_generated",
@@ -285,17 +244,17 @@ Settings:
         self,
         prompt: str,
         raw: bool = False,
-        model: str = None,
-        temperature: float = None,
-        top_p: float = None,
-        top_k: int = None,
-        presence_penalty: float = None,
-        frequency_penalty: float = None,
+        model: Optional[str] = None,
+        temperature: Optional[float] = None,
+        top_p: Optional[float] = None,
+        top_k: Optional[int] = None,
+        presence_penalty: Optional[float] = None,
+        frequency_penalty: Optional[float] = None,
         stop: Optional[List[str]] = None,
         max_tokens: Optional[int] = None,
         functions: Optional[List[Any]] = None,
         log: bool = True,
-    ) -> Generator[Union[Any, List, Dict], None, None]:
+    ) -> AsyncGenerator[Union[Any, List, Dict], None]:
         """Yield completion response, either streamed or not."""
         options = CompletionOptions(
             model=model or self.model,
@@ -335,12 +294,12 @@ Settings:
         self,
         prompt: str,
         raw: bool = False,
-        model: str = None,
-        temperature: float = None,
-        top_p: float = None,
-        top_k: int = None,
-        presence_penalty: float = None,
-        frequency_penalty: float = None,
+        model: Optional[str] = None,
+        temperature: Optional[float] = None,
+        top_p: Optional[float] = None,
+        top_k: Optional[int] = None,
+        presence_penalty: Optional[float] = None,
+        frequency_penalty: Optional[float] = None,
         stop: Optional[List[str]] = None,
         max_tokens: Optional[int] = None,
         functions: Optional[List[Any]] = None,
@@ -383,17 +342,17 @@ Settings:
     async def stream_chat(
         self,
         messages: List[ChatMessage],
-        model: str = None,
-        temperature: float = None,
-        top_p: float = None,
-        top_k: int = None,
-        presence_penalty: float = None,
-        frequency_penalty: float = None,
+        model: Optional[str] = None,
+        temperature: Optional[float] = None,
+        top_p: Optional[float] = None,
+        top_k: Optional[int] = None,
+        presence_penalty: Optional[float] = None,
+        frequency_penalty: Optional[float] = None,
         stop: Optional[List[str]] = None,
         max_tokens: Optional[int] = None,
         functions: Optional[List[Any]] = None,
         log: bool = True,
-    ) -> Generator[Union[Any, List, Dict], None, None]:
+    ) -> AsyncGenerator[Union[Any, List, Dict], None]:
         """Yield completion response, either streamed or not."""
         options = CompletionOptions(
             model=model or self.model,
@@ -469,22 +428,21 @@ Settings:
 
     def _stream_complete(
         self, prompt, options: CompletionOptions
-    ) -> Generator[str, None, None]:
+    ) -> AsyncGenerator[str, None]:
         """Stream the completion through generator."""
         raise NotImplementedError
 
-    async def _complete(
-        self, prompt: str, options: CompletionOptions
-    ) -> Coroutine[Any, Any, str]:
+    async def _complete(self, prompt: str, options: CompletionOptions) -> str:
         """Return the completion of the text with the given temperature."""
         completion = ""
         async for chunk in self._stream_complete(prompt=prompt, options=options):
             completion += chunk
+
         return completion
 
     async def _stream_chat(
         self, messages: List[ChatMessage], options: CompletionOptions
-    ) -> Generator[Union[Any, List, Dict], None, None]:
+    ) -> AsyncGenerator[Dict[str, str], None]:
         """Stream the chat through generator."""
         if self.template_messages is None:
             raise NotImplementedError(

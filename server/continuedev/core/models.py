@@ -1,11 +1,15 @@
-from typing import Callable, Dict, List, Optional
 import uuid
-from .config.serialized_config import ModelDescription, SerializedContinueConfig
+from typing import Callable, Dict, List, Optional, Type, cast
 
 from pydantic import BaseModel, validator
 
+from ..core.config.shared import (
+    MODEL_PROVIDER_TO_MODEL_CLASS,
+    autodetect_prompt_templates,
+    autodetect_template_function,
+)
 from ..libs.llm.anthropic import AnthropicLLM
-from ..libs.llm.base import LLM
+from ..libs.llm.base import LLM, BaseCompletionOptions
 from ..libs.llm.ggml import GGML
 from ..libs.llm.google_palm_api import GooglePaLMAPI
 from ..libs.llm.hf_inference_api import HuggingFaceInferenceAPI
@@ -15,13 +19,9 @@ from ..libs.llm.ollama import Ollama
 from ..libs.llm.openai import OpenAI
 from ..libs.llm.openai_free_trial import OpenAIFreeTrial
 from ..libs.llm.replicate import ReplicateLLM
-from ..libs.llm.together import TogetherLLM
 from ..libs.llm.text_gen_webui import TextGenWebUI
-from ..core.config.shared import (
-    MODEL_PROVIDER_TO_MODEL_CLASS,
-    autodetect_prompt_templates,
-    autodetect_template_function,
-)
+from ..libs.llm.together import TogetherLLM
+from .config.serialized_config import ModelDescription, SerializedContinueConfig
 
 
 class ContinueSDK(BaseModel):
@@ -35,7 +35,7 @@ ALL_MODEL_ROLES = [
     "chat",
 ]
 
-MODEL_CLASSES: Dict[str, LLM] = {
+MODEL_CLASSES: Dict[str, Type[LLM]] = {
     cls.__name__: cls
     for cls in [
         OpenAI,
@@ -96,7 +96,7 @@ class Models(BaseModel):
 
     @staticmethod
     def from_serialized_config(config: SerializedContinueConfig) -> "Models":
-        def model_with_title(title: str, fallback: ModelDescription):
+        def model_with_title(title: Optional[str], fallback: ModelDescription):
             return next(filter(lambda x: x.title == title, config.models), fallback)
 
         default = model_with_title(config.model_roles.default, config.models[0])
@@ -111,7 +111,7 @@ class Models(BaseModel):
             model_class.system_message = model.system_message
             return LLM(
                 api_key=model.api_key,
-                completion_options=completion_options,
+                completion_options=cast(BaseCompletionOptions, completion_options),
                 request_options=model.request_options,
                 system_message=model.system_message,
                 api_base=model.api_base,  # TODO

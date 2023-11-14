@@ -3,25 +3,24 @@ import time
 from abc import abstractmethod
 from typing import Any, Awaitable, Callable, List, Optional
 
-from ..libs.util.paths import migration
-from ..server.protocols.ide_protocol import AbstractIdeProtocolServer
-
 from meilisearch_python_async import Client
 from pydantic import BaseModel, Field
 
 from ..libs.util.create_async_task import create_async_task
 from ..libs.util.devdata import dev_data_logger
 from ..libs.util.logging import logger
+from ..libs.util.paths import migration
 from ..libs.util.telemetry import posthog_logger
 from ..server.global_config import global_config
 from ..server.meilisearch_server import (
     check_meilisearch_running,
     get_meilisearch_url,
     poll_meilisearch_running,
+    remove_meilisearch_disallowed_chars,
     restart_meilisearch,
     start_meilisearch,
-    remove_meilisearch_disallowed_chars,
 )
+from ..server.protocols.ide_protocol import AbstractIdeProtocolServer
 from .main import (
     ChatMessage,
     ContextItem,
@@ -139,7 +138,7 @@ class ContextProvider(BaseModel):
             summary=item.description.description,
         )
 
-    async def get_item(self, id: ContextItemId, query: str) -> ContextItem:
+    async def get_item(self, id: ContextItemId, query: str) -> Optional[ContextItem]:
         """
         Returns the ContextItem with the given id.
 
@@ -463,13 +462,13 @@ class ContextManager:
         """
         Opens a virtual file or otherwise previews the contents of the context provider in the IDE.
         """
-        id: ContextItemId = ContextItemId.from_string(id)
-        if id.provider_title not in self.provider_titles:
+        item_id: ContextItemId = ContextItemId.from_string(id)
+        if item_id.provider_title not in self.provider_titles:
             raise ValueError(
-                f"Context provider with title {id.provider_title} not found"
+                f"Context provider with title {item_id.provider_title} not found"
             )
 
-        await self.context_providers[id.provider_title].preview_contents(id)
+        await self.context_providers[item_id.provider_title].preview_contents(item_id)
 
 
 """

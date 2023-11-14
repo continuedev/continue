@@ -1,4 +1,4 @@
-from typing import Any, Callable, Coroutine
+from typing import Any, Callable, Coroutine, Optional
 
 from anthropic import AI_PROMPT, HUMAN_PROMPT, AsyncAnthropic
 
@@ -25,21 +25,16 @@ class AnthropicLLM(LLM):
 
     """
 
-    api_key: str
+    api_key: Optional[str]
     "Anthropic API key"
 
     model: str = "claude-2"
-
-    _async_client: AsyncAnthropic = None
-
-    template_messages: Callable = anthropic_template_messages
 
     class Config:
         arbitrary_types_allowed = True
 
     async def start(self, *args, **kwargs):
         await super().start(*args, **kwargs)
-        self._async_client = AsyncAnthropic(api_key=self.api_key)
 
         if self.model == "claude-2":
             self.context_length = 100_000
@@ -61,14 +56,16 @@ class AnthropicLLM(LLM):
         args = self.collect_args(options)
         prompt = f"{HUMAN_PROMPT} {prompt} {AI_PROMPT}"
 
-        async for chunk in await self._async_client.completions.create(
-            prompt=prompt, stream=True, **args
-        ):
+        async for chunk in await AsyncAnthropic(
+            api_key=self.api_key
+        ).completions.create(prompt=prompt, stream=True, **args):
             yield chunk.completion
 
     async def _complete(self, prompt: str, options) -> Coroutine[Any, Any, str]:
         args = self.collect_args(options)
         prompt = f"{HUMAN_PROMPT} {prompt} {AI_PROMPT}"
         return (
-            await self._async_client.completions.create(prompt=prompt, **args)
+            await AsyncAnthropic(api_key=self.api_key).completions.create(
+                prompt=prompt, **args
+            )
         ).completion

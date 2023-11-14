@@ -181,10 +181,6 @@ class ContinueGUIClientProtocol extends AbstractContinueGUIClientProtocol {
     this.messenger?.send("toggle_adding_highlighted_code", {});
   }
 
-  showContextVirtualFile(index?: number): void {
-    this.messenger?.send("show_context_virtual_file", { index });
-  }
-
   selectContextItem(id: string, query: string): void {
     this.messenger?.send("select_context_item", { id, query });
   }

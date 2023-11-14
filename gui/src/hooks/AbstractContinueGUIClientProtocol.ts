@@ -27,8 +27,6 @@ abstract class AbstractContinueGUIClientProtocol {
 
   abstract toggleAddingHighlightedCode(): void;
 
-  abstract showContextVirtualFile(): void;
-
   abstract selectContextItem(id: string, query: string): void;
 
   abstract getContextItem(id: string, query: string): Promise<ContextItem>;

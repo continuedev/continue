@@ -2,22 +2,23 @@ import os
 
 from pydantic import schema_json_of
 
+from ..core.config.config import ContinueConfig
 from ..core.config.serialized_config import SerializedContinueConfig
 from ..core.context import ContextItem, ContextItemId
 from ..core.main import (
+    ContextProviderDescription,
+    ContinueError,
     SessionInfo,
     SessionState,
     SessionUpdate,
-    ContinueError,
     SlashCommandDescription,
-    ContextProviderDescription,
 )
 from ..core.models import Models
 from ..libs.llm.base import LLM
+from ..server.sessions import PersistedSessionInfo
 from .filesystem import FileEdit, RangeInFile, RangeInFileWithContents
 from .filesystem_edit import FileEditWithFullContents
 from .main import Position, Range, Traceback, TracebackFrame
-from ..server.sessions import PersistedSessionInfo
 
 MODELS_TO_GENERATE = (
     [Position, Range, Traceback, TracebackFrame]
@@ -32,6 +33,7 @@ MODELS_TO_GENERATE = (
         ContextProviderDescription,
     ]
     + [SerializedContinueConfig]
+    + [ContinueConfig]
     + [ContextItem, ContextItemId]
     + [Models]
     + [LLM]

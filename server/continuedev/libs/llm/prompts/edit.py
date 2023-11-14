@@ -1,6 +1,6 @@
 from textwrap import dedent
 
-from ...llm.base import PromptTemplate
+from ....models.llm import PromptTemplate
 
 simplified_edit_prompt = dedent(
     """\

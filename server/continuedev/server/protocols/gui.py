@@ -1,24 +1,20 @@
-from typing import Any, Callable, Dict, List, Optional, TypeVar
-
-from ...core.config.serialized_config import ContinueConfig
-from ...core.autopilot import Autopilot
-import socketio
 import uuid
+from typing import Any, Awaitable, Callable, Dict, List, Optional, TypeVar
 
+import socketio
 from pydantic import BaseModel
 
-from ...models.websockets import WebsocketsMessage
+from ...core.autopilot import Autopilot
+from ...core.config.config import ContinueConfig
 from ...core.main import ContextItem, SessionState, SessionUpdate, Step, StepDescription
 from ...core.models import ALL_MODEL_ROLES, MODEL_CLASSES, MODEL_MODULE_NAMES
-from ...core.steps import DisplayErrorStep
 from ...libs.llm.prompts.chat import (
     llama2_template_messages,
+    phind_template_messages,
     sqlcoder_template_messages,
     template_alpaca_messages,
-    phind_template_messages,
 )
-from ...libs.llm.prompts.edit import codellama_edit_prompt, alpaca_edit_prompt
-from ...libs.util.create_async_task import create_async_task
+from ...libs.llm.prompts.edit import alpaca_edit_prompt, codellama_edit_prompt
 from ...libs.util.edit_config import (
     add_config_import,
     create_obj_node,
@@ -26,8 +22,9 @@ from ...libs.util.edit_config import (
     edit_config_property,
 )
 from ...libs.util.telemetry import posthog_logger
+from ...libs.util.types import AsyncFunc
+from ...models.websockets import WebsocketsMessage
 from ..websockets_messenger import SocketIOMessenger
-
 
 T = TypeVar("T", bound=BaseModel)
 
@@ -39,9 +36,9 @@ class GUIProtocolServer:
     messenger: SocketIOMessenger
 
     get_autopilot: Callable[[SessionState], Autopilot]
-    get_context_item: Callable[[str, str], ContextItem]
+    get_context_item: Callable[[str, str], Awaitable[ContextItem]]
     get_config: Callable[[], ContinueConfig]
-    reload_config: Callable[[], None]
+    reload_config: AsyncFunc
 
     def __init__(
         self,
@@ -49,9 +46,9 @@ class GUIProtocolServer:
         sio: socketio.AsyncServer,
         sid: str,
         get_autopilot: Callable[[SessionState], Autopilot],
-        get_context_item: Callable[[str, str], ContextItem],
+        get_context_item: Callable[[str, str], Awaitable[ContextItem]],
         get_config: Callable[[], ContinueConfig],
-        reload_config: Callable[[], None],
+        reload_config: AsyncFunc,
     ):
         self.window_id = window_id
         self.messenger = SocketIOMessenger(sio, sid)
@@ -59,10 +56,6 @@ class GUIProtocolServer:
         self.get_context_item = get_context_item
         self.get_config = get_config
         self.reload_config = reload_config
-
-    def on_error(self, e: Exception):
-        # TODO
-        return self.session.autopilot.sdk.run_step(DisplayErrorStep.from_exception(e))
 
     async def handle_json(self, msg: WebsocketsMessage):
         data = msg.data
@@ -79,10 +72,6 @@ class GUIProtocolServer:
         elif msg.message_type == "get_config":
             return self.get_config().dict()
 
-        elif msg.message_type == "show_context_virtual_file":
-            self.show_context_virtual_file(data.get("index", None))
-        elif msg.message_type == "load_session":
-            self.load_session(data.get("session_id", None))
         elif msg.message_type == "set_system_message":
             sys_message = data["system_message"]
             ContinueConfig.set_system_message(sys_message)
@@ -101,75 +90,8 @@ class GUIProtocolServer:
             )
         elif msg.message_type == "set_model_for_role_from_index":
             await self.set_model_for_role_from_index(data["role"], data["index"])
-        elif msg.message_type == "save_context_group":
-            self.save_context_group(
-                data["title"], [ContextItem(**item) for item in data["context_items"]]
-            )
-        elif msg.message_type == "select_context_group":
-            self.select_context_group(data["id"])
-        elif msg.message_type == "delete_context_group":
-            self.delete_context_group(data["id"])
-        elif msg.message_type == "preview_context_item":
-            self.preview_context_item(data["id"])
         elif msg.message_type == "delete_model_at_index":
             await self.delete_model_at_index(data["index"])
-
-    def show_context_virtual_file(self, index: Optional[int] = None):
-        async def async_stuff():
-            if index is None:
-                context_items = (
-                    await self.session.autopilot.context_manager.get_selected_items()
-                )
-            elif index < len(self.session.autopilot.sdk.history.timeline):
-                context_items = self.session.autopilot.sdk.history.timeline[
-                    index
-                ].context_used
-
-            ctx = "\n\n-----------------------------------\n\n".join(
-                ["These are the context items that will be passed to the LLM"]
-                + list(map(lambda x: x.content, context_items))
-            )
-            await self.session.autopilot.ide.showVirtualFile(
-                "Continue - Selected Context", ctx
-            )
-
-        create_async_task(
-            async_stuff(),
-            self.on_error,
-        )
-
-    def select_context_item(self, id: str, query: str):
-        """Called when user selects an item from the dropdown"""
-        create_async_task(
-            self.session.autopilot.select_context_item(id, query), self.on_error
-        )
-
-    def select_context_item_at_index(self, id: str, query: str, index: int):
-        """Called when user selects an item from the dropdown for prev UserInputStep"""
-        create_async_task(
-            self.session.autopilot.select_context_item_at_index(id, query, index),
-            self.on_error,
-        )
-
-    def preview_context_item(self, id: str):
-        """Called when user clicks on an item from the dropdown"""
-        create_async_task(
-            self.session.autopilot.context_manager.preview_context_item(id),
-            self.on_error,
-        )
-
-    # def load_session(self, session_id: Optional[str] = None):
-    #     async def load_and_tell_to_reconnect():
-    #         new_session_id = await session_manager.load_session(
-    #             self.session.session_id, session_id
-    #         )
-    #         await self._send_json(
-    #             "reconnect_at_session", {"session_id": new_session_id}
-    #         )
-
-    #     create_async_task(load_and_tell_to_reconnect(), self.on_error)
-
-    #     posthog_logger.capture_event("load_session", {"session_id": session_id})
 
     async def set_model_for_role_from_index(self, role: str, index: int):
         models = self.get_config().models
@@ -276,22 +198,6 @@ class GUIProtocolServer:
             # TODO
             pass
 
-    def save_context_group(self, title: str, context_items: List[ContextItem]):
-        create_async_task(
-            self.session.autopilot.save_context_group(title, context_items),
-            self.on_error,
-        )
-
-    def select_context_group(self, id: str):
-        create_async_task(
-            self.session.autopilot.select_context_group(id), self.on_error
-        )
-
-    def delete_context_group(self, id: str):
-        create_async_task(
-            self.session.autopilot.delete_context_group(id), self.on_error
-        )
-
     # region: Send data to GUI
 
     _running_autopilots: Dict[str, Autopilot] = {}
@@ -303,7 +209,9 @@ class GUIProtocolServer:
                 "step run",
                 {
                     "step_name": step_to_log.name,
-                    "params": step_to_log.params if step is None else step.dict(),
+                    "params": step.dict()
+                    if step is not None
+                    else state.history[-1].params,
                     "context": list(
                         map(
                             lambda item: item.dict(),
