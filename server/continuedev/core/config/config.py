@@ -1,79 +1,29 @@
 from typing import Dict, List, Optional, Type
 
-from ..libs.util.edit_config import (
+from ...libs.llm.base import BaseCompletionOptions
+
+from .serialized_config import (
+    CustomCommand,
+    RetrievalSettings,
+    SerializedContinueConfig,
+    SlashCommand,
+)
+
+from ...libs.util.edit_config import (
     create_bool_node,
     create_obj_node,
     display_llm_class,
     edit_config_property,
 )
-from ..libs.util.paths import convertConfigImports, getConfigFilePath
+from ...libs.util.paths import convertConfigImports, getConfigFilePath
 
 from pydantic import BaseModel, Field, validator
 
-from ..libs.llm.openai_free_trial import OpenAIFreeTrial
-from .context import ContextProvider
-from .main import ContextProviderDescription, Policy, SlashCommandDescription, Step
-from .models import Models
-from ..libs.util.telemetry import posthog_logger
-
-
-class SlashCommand(BaseModel):
-    name: str
-    description: str
-    step: Type[Step]
-    params: Optional[Dict] = {}
-
-    def dict(self, *args, **kwargs):
-        return {
-            "name": self.name,
-            "description": self.description,
-            "params": self.params,
-            "step": self.step.__name__,
-        }
-
-    def slash_command_description(self) -> SlashCommandDescription:
-        return SlashCommandDescription(
-            name=self.name,
-            description=self.description,
-        )
-
-
-class CustomCommand(BaseModel):
-    name: str
-    prompt: str
-    description: str
-
-    def slash_command_description(self) -> SlashCommandDescription:
-        return SlashCommandDescription(
-            name=self.name,
-            description=self.description,
-        )
-
-
-class RetrievalSettings(BaseModel):
-    n_retrieve: Optional[int] = Field(
-        50, description="Number of results to initially retrieve from vector database"
-    )
-    n_final: Optional[int] = Field(
-        10, description="Final number of results to use after re-ranking"
-    )
-    use_reranking: bool = Field(
-        True,
-        description="Whether to use re-ranking, which will allow initial selection of n_retrieve results, then will use an LLM to select the top n_final results",
-    )
-    rerank_group_size: int = Field(
-        5,
-        description="Number of results to group together when re-ranking. Each group will be processed in parallel.",
-    )
-    ignore_files: List[str] = Field(
-        [],
-        description="Files to ignore when indexing the codebase. You can use glob patterns, such as **/*.py. This is useful for directories that contain generated code, or other directories that are not relevant to the codebase.",
-    )
-    openai_api_key: Optional[str] = Field(None, description="OpenAI API key")
-    api_base: Optional[str] = Field(None, description="OpenAI API base URL")
-    api_type: Optional[str] = Field(None, description="OpenAI API type")
-    api_version: Optional[str] = Field(None, description="OpenAI API version")
-    organization_id: Optional[str] = Field(None, description="OpenAI organization ID")
+from ...libs.llm.openai_free_trial import OpenAIFreeTrial
+from ..context import ContextProvider
+from ..main import ContextProviderDescription, Policy, SlashCommandDescription, Step
+from ..models import Models
+from ...libs.util.telemetry import posthog_logger
 
 
 class ContinueConfig(BaseModel):
@@ -100,9 +50,9 @@ class ContinueConfig(BaseModel):
         ),
         description="Configuration for the models used by Continue. Read more about how to configure models in the documentation.",
     )
-    temperature: Optional[float] = Field(
-        0.5,
-        description="The temperature parameter for sampling from the LLM. Higher temperatures will result in more random output, while lower temperatures will result in more predictable output. This value ranges from 0 to 1.",
+    completion_options: BaseCompletionOptions = Field(
+        BaseCompletionOptions(),
+        description="Options for the completion endpoint. Read more about the completion options in the documentation.",
     )
     custom_commands: Optional[List[CustomCommand]] = Field(
         [
@@ -121,9 +71,6 @@ class ContinueConfig(BaseModel):
     on_traceback: Optional[Step] = Field(
         None,
         description="The step that will be run when a traceback is detected (when you use the shortcut cmd+shift+R)",
-    )
-    system_message: Optional[str] = Field(
-        None, description="A system message that will always be followed by the LLM"
     )
     policy_override: Optional[Policy] = Field(
         None,
@@ -153,14 +100,26 @@ class ContinueConfig(BaseModel):
         description="Settings for the retrieval system. Read more about the retrieval system in the documentation.",
     )
 
-    @classmethod
-    def schema(cls, *args, **kwargs):
-        # kwargs.setdefault("exclude", {"ide"})
-        return super().schema(*args, **kwargs)
-
     @validator("temperature", pre=True)
     def temperature_validator(cls, v):
         return max(0.0, min(1.0, v))
+
+    @staticmethod
+    def from_serialized_config(config: SerializedContinueConfig) -> "ContinueConfig":
+        return ContinueConfig(
+            disallowed_steps=config.disallowed_steps,
+            allow_anonymous_telemetry=config.allow_anonymous_telemetry,
+            models=Models.from_serialized_config(config),
+            completion_options=config.completion_options,
+            custom_commands=config.custom_commands,
+            slash_commands=config.slash_commands,
+            context_providers=config.context_providers,
+            user_token=config.user_token,
+            data_server_url=config.data_server_url,
+            disable_summaries=config.disable_summaries,
+            disable_indexing=config.disable_indexing,
+            retrieval_settings=config.retrieval_settings,
+        )
 
     @staticmethod
     def from_filepath(filepath: str, retry: bool = True) -> "ContinueConfig":

@@ -1,4 +1,4 @@
-from ...core.config import ContinueConfig
+from ...core.config.serialized_config import ContinueConfig
 from ...core.main import Policy, SessionState, Step
 from ...core.observation import TextObservation
 from ...core.steps import ShellCommandsStep

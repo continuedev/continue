@@ -5,7 +5,11 @@ See https://continue.dev/docs/customization to for documentation of the availabl
 """
 
 from continuedev.core.models import Models
-from continuedev.core.config import CustomCommand, SlashCommand, ContinueConfig
+from continuedev.core.config.serialized_config import (
+    CustomCommand,
+    SlashCommand,
+    ContinueConfig,
+)
 from continuedev.libs.llm import OpenAIFreeTrial
 
 from continuedev.plugins.context_providers import (

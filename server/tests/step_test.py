@@ -1,5 +1,5 @@
 import pytest
-from continuedev.core.config import ContinueConfig
+from continuedev.core.config.serialized_config import ContinueConfig
 from continuedev.core.steps import UserInputStep
 from continuedev.headless import start_headless_session
 from continuedev.models.filesystem import Range, RangeInFileWithContents

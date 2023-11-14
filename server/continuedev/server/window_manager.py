@@ -16,7 +16,7 @@ from ..plugins.context_providers.file import FileContextProvider
 from ..core.main import SessionState
 from ..core.autopilot import Autopilot
 from ..libs.util.paths import getConfigFilePath, getDiffsFolderPath
-from ..core.config import ContinueConfig
+from ..core.config.serialized_config import ContinueConfig
 from .protocols.ide import IdeProtocolServer, WindowInfo
 from .protocols.gui import GUIProtocolServer
 from ..libs.util.logging import logger

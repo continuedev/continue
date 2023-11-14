@@ -6,7 +6,7 @@ from ..core.context import ContextManager, ContextProvider
 from ..core.main import SessionState
 from ..core.autopilot import Autopilot
 from .headless_ide import LocalIdeProtocol
-from ..core.config import ContinueConfig
+from ..core.config.serialized_config import ContinueConfig
 
 
 async def get_headless_autopilot(

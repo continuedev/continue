@@ -7,7 +7,7 @@ from ..steps.clear_history import ClearHistoryStep
 from ..steps.comment_code import CommentCodeStep
 from ..steps.share_session import ShareSessionStep
 from ..steps.codebase import AnswerQuestionChroma
-from ...core.config import ContinueConfig
+from ...core.config.serialized_config import ContinueConfig
 from ...core.main import Policy, SessionState, Step
 from ..steps.chat import SimpleChatStep
 from ..steps.custom_command import CustomCommandStep

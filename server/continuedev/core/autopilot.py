@@ -25,7 +25,7 @@ from ..server.protocols.ide_protocol import AbstractIdeProtocolServer
 from ..plugins.policies.default import DefaultPolicy
 from ..plugins.steps.on_traceback import DefaultOnTracebackStep
 
-from .config import ContinueConfig
+from .config.serialized_config import ContinueConfig
 from .main import (
     AutopilotGenerator,
     AutopilotGeneratorOutput,

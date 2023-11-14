@@ -7,7 +7,7 @@ from typing import List, Optional
 from pydantic import BaseModel
 
 from ..core.main import ContextProviderDescription, SlashCommandDescription
-from ..core.config import ContinueConfig
+from ..core.config.serialized_config import ContinueConfig
 from ..libs.util.devdata import dev_data_logger
 
 import uvicorn

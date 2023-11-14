@@ -274,6 +274,12 @@
           }
         ]
       }
+    ],
+    "jsonValidation": [
+      {
+        "fileMatch": "config.json",
+        "url": "./SerializedContinueConfig.json"
+      }
     ]
   },
   "scripts": {

@@ -1,6 +1,6 @@
 import asyncio
 from typing import AsyncGenerator
-from ...core.config import ContinueConfig
+from ...core.config.serialized_config import ContinueConfig
 from ...server.protocols.ide_protocol import AbstractIdeProtocolServer
 from ...libs.index.chunkers.chunk_directory import (
     stream_chunk_directory,

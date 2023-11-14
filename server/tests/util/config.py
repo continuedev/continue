@@ -1,4 +1,4 @@
-from continuedev.core.config import ContinueConfig
+from continuedev.core.config.serialized_config import ContinueConfig
 from continuedev.core.models import Models
 from continuedev.libs.llm.openai_free_trial import OpenAIFreeTrial
 

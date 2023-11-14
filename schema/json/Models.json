@@ -32,6 +32,12 @@
           "default": 2048,
           "type": "integer"
         },
+        "max_tokens": {
+          "title": "Max Tokens",
+          "description": "The maximum number of tokens to generate.",
+          "default": 600,
+          "type": "integer"
+        },
         "stop_tokens": {
           "title": "Stop Tokens",
           "description": "Tokens that will stop the completion.",

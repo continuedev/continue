@@ -1,6 +1,6 @@
 from typing import Any, Callable, Dict, List, Optional, TypeVar
 
-from ...core.config import ContinueConfig
+from ...core.config.serialized_config import ContinueConfig
 from ...core.autopilot import Autopilot
 import socketio
 import uuid
@@ -15,7 +15,7 @@ from ...libs.llm.prompts.chat import (
     llama2_template_messages,
     sqlcoder_template_messages,
     template_alpaca_messages,
-    phind_template_messages
+    phind_template_messages,
 )
 from ...libs.llm.prompts.edit import codellama_edit_prompt, alpaca_edit_prompt
 from ...libs.util.create_async_task import create_async_task

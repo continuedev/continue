@@ -3,7 +3,7 @@ import os
 from typing import Optional
 from tqdm import tqdm
 
-from .core.config import ContinueConfig
+from .core.config.serialized_config import ContinueConfig
 from .headless.headless_ide import LocalIdeProtocol
 from .libs.index.build_index import build_index
 from .libs.util.ext_to_lang import ext_to_lang

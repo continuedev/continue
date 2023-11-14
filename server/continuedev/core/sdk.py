@@ -17,7 +17,7 @@ from ..models.filesystem_edit import (
 from ..models.main import Range
 from ..server.protocols.ide_protocol import AbstractIdeProtocolServer
 from ..server.protocols.gui_protocol import AbstractGUIProtocolServer
-from .config import ContinueConfig
+from .config.serialized_config import ContinueConfig
 from .lsp import ContinueLSPClient
 from .main import (
     ChatMessage,

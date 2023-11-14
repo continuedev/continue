@@ -5,6 +5,7 @@ from typing import Any, Callable, Coroutine, Dict, Generator, List, Optional, Un
 
 import aiohttp
 import certifi
+from ...core.config.shared import RequestOptions
 from ..util.templating import render_templated_string
 from pydantic import Field, validator
 
@@ -24,9 +25,7 @@ from ..util.telemetry import posthog_logger
 from ..util.logging import logger
 
 
-class CompletionOptions(ContinueBaseModel):
-    """Options for the completion."""
-
+class BaseCompletionOptions(ContinueBaseModel):
     @validator(
         "*",
         pre=True,
@@ -35,7 +34,6 @@ class CompletionOptions(ContinueBaseModel):
     def ignore_none_and_set_default(cls, value, field):
         return value if value is not None else field.default
 
-    model: Optional[str] = Field(None, description="The model name")
     temperature: Optional[float] = Field(
         None, description="The temperature of the completion."
     )
@@ -53,6 +51,20 @@ class CompletionOptions(ContinueBaseModel):
     max_tokens: int = Field(
         DEFAULT_MAX_TOKENS, description="The maximum number of tokens to generate."
     )
+
+
+class CompletionOptions(BaseCompletionOptions):
+    """Options for the completion."""
+
+    @validator(
+        "*",
+        pre=True,
+        always=True,
+    )
+    def ignore_none_and_set_default(cls, value, field):
+        return value if value is not None else field.default
+
+    model: Optional[str] = Field(None, description="The model name")
     functions: Optional[List[Any]] = Field(
         None, description="The functions/tools to make available to the model."
     )
@@ -82,44 +94,17 @@ class LLM(ContinueBaseModel):
         2048,
         description="The maximum context length of the LLM in tokens, as counted by count_tokens.",
     )
-    max_tokens: int = Field(
-        DEFAULT_MAX_TOKENS, description="The maximum number of tokens to generate."
+
+    completion_options: BaseCompletionOptions = Field(
+        BaseCompletionOptions(),
+        description="Options for the completion endpoint. Read more about the completion options in the documentation.",
     )
 
-    stop_tokens: Optional[List[str]] = Field(
-        None, description="Tokens that will stop the completion."
-    )
-    temperature: Optional[float] = Field(
-        None, description="The temperature of the completion."
-    )
-    top_p: Optional[float] = Field(None, description="The top_p of the completion.")
-    top_k: Optional[int] = Field(None, description="The top_k of the completion.")
-    presence_penalty: Optional[float] = Field(
-        None, description="The presence penalty Aof the completion."
-    )
-    frequency_penalty: Optional[float] = Field(
-        None, description="The frequency penalty of the completion."
+    request_options: RequestOptions = Field(
+        RequestOptions(),
+        description="Options for the HTTP request to the LLM.",
     )
 
-    timeout: Optional[int] = Field(
-        300,
-        description="Set the timeout for each request to the LLM. If you are running a local LLM that takes a while to respond, you might want to set this to avoid timeouts.",
-    )
-    verify_ssl: Optional[bool] = Field(
-        None, description="Whether to verify SSL certificates for requests."
-    )
-    ca_bundle_path: str = Field(
-        None,
-        description="Path to a custom CA bundle to use when making the HTTP request",
-    )
-    proxy: Optional[str] = Field(
-        None,
-        description="Proxy URL to use when making the HTTP request",
-    )
-    headers: Optional[Dict[str, str]] = Field(
-        None,
-        description="Headers to use when making the HTTP request",
-    )
     prompt_templates: dict = Field(
         {},
         description='A dictionary of prompt templates that can be used to customize the behavior of the LLM in certain situations. For example, set the "edit" key in order to change the prompt that is used for the /edit slash command. Each value in the dictionary is a string templated in mustache syntax, and filled in at runtime with the variables specific to the situation. See the documentation for more information.',

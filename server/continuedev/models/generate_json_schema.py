@@ -2,7 +2,7 @@ import os
 
 from pydantic import schema_json_of
 
-from ..core.config import ContinueConfig
+from ..core.config.serialized_config import SerializedContinueConfig
 from ..core.context import ContextItem, ContextItemId
 from ..core.main import (
     SessionInfo,
@@ -31,7 +31,7 @@ MODELS_TO_GENERATE = (
         SlashCommandDescription,
         ContextProviderDescription,
     ]
-    + [ContinueConfig]
+    + [SerializedContinueConfig]
     + [ContextItem, ContextItemId]
     + [Models]
     + [LLM]
