@@ -58,10 +58,6 @@ jobs:
             npm_config_arch: x64
           - os: windows-latest
             platform: win32
-            arch: ia32
-            npm_config_arch: ia32
-          - os: windows-latest
-            platform: win32
             arch: arm64
             npm_config_arch: arm
           - os: ubuntu-latest
@@ -265,7 +261,7 @@ jobs:
       - name: Publish (VS Code Marketplace)
         run: |
           cd extensions/vscode
-          npx vsce publish --packagePath ../../alpine-x64/*.vsix ../../darwin-arm64/*.vsix ../../darwin-x64/*.vsix ../../linux-arm64/*.vsix ../../linux-armhf/*.vsix ../../linux-x64/*.vsix ../../win32-ia32/*.vsix ../../win32-x64/*.vsix ../../win32-arm64/*.vsix
+          npx vsce publish --packagePath ../../alpine-x64/*.vsix ../../darwin-arm64/*.vsix ../../darwin-x64/*.vsix ../../linux-arm64/*.vsix ../../linux-armhf/*.vsix ../../linux-x64/*.vsix ../../win32-x64/*.vsix ../../win32-arm64/*.vsix
         env:
           VSCE_PAT: ${{ secrets.VSCE_TOKEN }}
 
@@ -273,7 +269,7 @@ jobs:
       - name: Publish (Open VSX Registry)
         run: |
           cd extensions/vscode
-          npx ovsx publish -p ${{ secrets.VSX_REGISTRY_TOKEN }} --packagePath ../../alpine-x64/*.vsix ../../darwin-arm64/*.vsix ../../darwin-x64/*.vsix ../../linux-arm64/*.vsix ../../linux-armhf/*.vsix ../../linux-x64/*.vsix ../../win32-ia32/*.vsix ../../win32-x64/*.vsix ../../win32-arm64/*.vsix
+          npx ovsx publish -p ${{ secrets.VSX_REGISTRY_TOKEN }} --packagePath ../../alpine-x64/*.vsix ../../darwin-arm64/*.vsix ../../darwin-x64/*.vsix ../../linux-arm64/*.vsix ../../linux-armhf/*.vsix ../../linux-x64/*.vsix ../../win32-x64/*.vsix ../../win32-arm64/*.vsix
 
       # 3.5 Update the changelog
       # - name: Batch a new patch version
