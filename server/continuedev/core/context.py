@@ -9,7 +9,7 @@ from pydantic import BaseModel, Field
 from ..libs.util.create_async_task import create_async_task
 from ..libs.util.devdata import dev_data_logger
 from ..libs.util.logging import logger
-from ..libs.util.paths import migration
+from ..libs.util.paths import migrate
 from ..libs.util.telemetry import posthog_logger
 from ..server.global_config import global_config
 from ..server.meilisearch_server import (
@@ -351,8 +351,13 @@ class ContextManager:
 
                 # Check if need to migrate to new id format
                 # If so, delete the index before recreating
-                async with migration("meilisearch_context_items_001"):
+                async def migrate_fn():
                     await search_client.delete_index_if_exists(SEARCH_INDEX_NAME)
+
+                await migrate(
+                    "meilisearch_context_items_001",
+                    migrate_fn,
+                )
 
                 await search_client.create_index(SEARCH_INDEX_NAME)
                 globalSearchIndex = await search_client.get_index(SEARCH_INDEX_NAME)

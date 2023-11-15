@@ -1,7 +1,6 @@
 import os
 import re
-from contextlib import asynccontextmanager
-from typing import Optional
+from typing import Awaitable, Callable, Optional
 
 from ..constants.default_config import default_config
 from ..constants.main import (
@@ -39,14 +38,9 @@ def markMigrated(migration_id: str):
         f.write("")
 
 
-@asynccontextmanager
-async def migration(migration_id: str):
-    has_migrated = hasMigrated(migration_id)
-    if has_migrated:
-        return
-    try:
-        yield
-    finally:
+async def migrate(migration_id: str, migrate_func: Callable[[], Awaitable]):
+    if not hasMigrated(migration_id):
+        await migrate_func()
         markMigrated(migration_id)
 
 

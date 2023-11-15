@@ -108,9 +108,10 @@ class Ollama(LLM):
                         "Invalid request to Ollama",
                     )
                 elif resp.status == 404:
+                    model_name = self.get_model_name()
                     raise ContinueCustomException(
-                        f"Ollama not found. Please make sure the server is running.\n\n{await resp.text()}",
-                        "Ollama not found. Please make sure the server is running.",
+                        f"Ollama returned 404. Make sure the server is running and '{model_name}' is downloaded with `ollama run {model_name}`.\n\n{await resp.text()}",
+                        f"Ollama returned 404. Make sure the server is running and '{model_name}' is downloaded with `ollama run {model_name}`.",
                     )
                 elif resp.status != 200:
                     raise ContinueCustomException(

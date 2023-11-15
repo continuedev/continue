@@ -2,10 +2,11 @@ import importlib.util
 import json
 import os
 from contextlib import contextmanager
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Type, Union
 
 from pydantic import BaseModel, Field, validator
 
+from ..libs.constants.default_config import default_config_json
 from ..libs.llm.base import LLM
 from ..libs.llm.openai_free_trial import OpenAIFreeTrial
 from ..libs.util.logging import logger
@@ -44,7 +45,7 @@ class ContextProviderWithParams(BaseModel):
 class SlashCommand(BaseModel):
     name: str
     description: str
-    step: StepName
+    step: Union[Type[Step], StepName]
     params: Optional[Dict] = {}
 
     # Allow step class for the migration
@@ -52,10 +53,10 @@ class SlashCommand(BaseModel):
     def step_is_string(cls, v):
         if isinstance(v, str):
             return v
-        elif isinstance(v, object):
+        elif isinstance(v, object) and v.__class__.__name__ == "ModelMetaclass":
             return str(v).split(".")[-1].split("'")[0]
         else:
-            raise ValueError("Step must be a string or a Step object")
+            return v
 
     def slash_command_description(self) -> SlashCommandDescription:
         return SlashCommandDescription(
@@ -461,7 +462,7 @@ class ContinueConfig(BaseModel):
                 SerializedContinueConfig(**serialized_config)
             )
             if modifier := ContinueConfig.modifier_from_filepath(
-                filepath[: len(".json")] + ".py"
+                filepath[: -len(".json")] + ".py"
             ):
                 try:
                     return modifier(initial_config)
@@ -487,14 +488,21 @@ class ContinueConfig(BaseModel):
             try:
                 # If they have pre-existing old config.py this will work
                 config = ContinueConfig.from_filepath(py_path)
-            except Exception:
-                # Otherwise go with the default
-                config = ContinueConfig()
+                with open(json_path, "w") as f:
+                    json.dump(
+                        config.to_serialized_continue_config().dict(
+                            exclude_none=True, exclude_defaults=True
+                        ),
+                        f,
+                        indent=2,
+                    )
+                return config
+            except Exception as e:
+                logger.warning(f"Failed to load config from {py_path}: {e}")
+                with open(json_path, "w") as f:
+                    f.write(default_config_json)
 
-            with open(json_path, "w") as f:
-                json.dump(config.to_serialized_continue_config().dict(), f)
-
-            return config
+                return ContinueConfig.load_default()
 
         # And then the second time, load from the json file
         config = ContinueConfig.from_filepath(json_path)
@@ -583,6 +591,12 @@ class ContinueConfig(BaseModel):
             summarize=(self.models.summarize or self.models.default).title,
         )
 
+        slash_commands = []
+        for slash_command in self.slash_commands:
+            if not isinstance(slash_command.step, str):
+                slash_command.step = slash_command.step.__class__.__name__
+            slash_commands.append(slash_command)
+
         return SerializedContinueConfig(
             disallowed_steps=self.disallowed_steps,
             allow_anonymous_telemetry=self.allow_anonymous_telemetry,
@@ -591,7 +605,7 @@ class ContinueConfig(BaseModel):
             system_message=self.system_message,
             completion_options=self.completion_options,
             custom_commands=self.custom_commands,
-            slash_commands=self.slash_commands,
+            slash_commands=slash_commands,
             context_providers=[
                 ContextProviderWithParams(
                     name=CLASS_TO_CONTEXT_PROVIDER_NAME[provider.title],
