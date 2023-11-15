@@ -240,15 +240,9 @@ class SerializedContinueConfig(BaseModel):
         with SerializedContinueConfig.edit_config() as config:
             if role == "*":
                 config.model_roles.default = title
-
-                if config.model_roles.chat is None:
-                    config.model_roles.chat = title
-
-                if config.model_roles.edit is None:
-                    config.model_roles.edit = title
-
-                if config.model_roles.summarize is None:
-                    config.model_roles.summarize = title
+                config.model_roles.chat = title
+                config.model_roles.edit = title
+                config.model_roles.summarize = title
             else:
                 config.model_roles.__setattr__(role, title)
 

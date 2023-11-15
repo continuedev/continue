@@ -49,7 +49,7 @@ function Models() {
             description={modelInfo.description}
             tags={modelInfo.tags}
             icon={modelInfo.icon}
-            refUrl={`https://continue.dev/docs/reference/Models/${modelInfo.class.toLowerCase()}`}
+            refUrl={`https://continue.dev/docs/reference/Models/${modelInfo.provider.toLowerCase()}`}
             onClick={(e) => {
               navigate(`/modelconfig/${name}`);
             }}

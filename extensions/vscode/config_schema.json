@@ -245,7 +245,8 @@
               "api_type": {
                 "const": "azure"
               }
-            }
+            },
+            "required": ["api_type"]
           },
           "then": {
             "required": ["engine", "api_version", "api_base"]

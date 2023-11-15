@@ -1,0 +1,18 @@
+{
+  "title": "ModelProvider",
+  "enum": [
+    "openai",
+    "openai-free-trial",
+    "openai-aiohttp",
+    "anthropic",
+    "together",
+    "ollama",
+    "huggingface-tgi",
+    "huggingface-inference-api",
+    "llama.cpp",
+    "replicate",
+    "text-gen-webui",
+    "google-palm"
+  ],
+  "type": "string"
+}

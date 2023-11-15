@@ -1,6 +1,7 @@
 import _ from "lodash";
+import { ModelProvider } from "../schema/ModelProvider";
 
-function updatedObj(old: any, pathToValue: { [key: string]: any }) {
+export function updatedObj(old: any, pathToValue: { [key: string]: any }) {
   const newObject = _.cloneDeep(old);
   for (const key in pathToValue) {
     if (typeof pathToValue[key] === "function") {
@@ -55,7 +56,7 @@ const contextLengthInput: InputDescriptor = {
 };
 const temperatureInput: InputDescriptor = {
   inputType: CollectInputType.number,
-  key: "temperature",
+  key: "completion_options.temperature",
   label: "Temperature",
   defaultValue: undefined,
   required: false,
@@ -65,7 +66,7 @@ const temperatureInput: InputDescriptor = {
 };
 const topPInput: InputDescriptor = {
   inputType: CollectInputType.number,
-  key: "top_p",
+  key: "completion_options.top_p",
   label: "Top-P",
   defaultValue: undefined,
   required: false,
@@ -75,7 +76,7 @@ const topPInput: InputDescriptor = {
 };
 const topKInput: InputDescriptor = {
   inputType: CollectInputType.number,
-  key: "top_k",
+  key: "completion_options.top_k",
   label: "Top-K",
   defaultValue: undefined,
   required: false,
@@ -85,7 +86,7 @@ const topKInput: InputDescriptor = {
 };
 const presencePenaltyInput: InputDescriptor = {
   inputType: CollectInputType.number,
-  key: "presence_penalty",
+  key: "completion_options.presence_penalty",
   label: "Presence Penalty",
   defaultValue: undefined,
   required: false,
@@ -95,7 +96,7 @@ const presencePenaltyInput: InputDescriptor = {
 };
 const FrequencyPenaltyInput: InputDescriptor = {
   inputType: CollectInputType.number,
-  key: "frequency_penalty",
+  key: "completion_options.frequency_penalty",
   label: "Frequency Penalty",
   defaultValue: undefined,
   required: false,
@@ -112,17 +113,17 @@ const completionParamsInputs = [
   FrequencyPenaltyInput,
 ];
 
-const serverUrlInput: InputDescriptor = {
+const apiBaseInput: InputDescriptor = {
   inputType: CollectInputType.text,
-  key: "server_url",
-  label: "Server URL",
+  key: "api_base",
+  label: "API Base",
   placeholder: "e.g. http://localhost:8080",
   required: false,
 };
 
 export interface ModelInfo {
   title: string;
-  class: string;
+  provider: ModelProvider;
   description: string;
   longDescription?: string;
   icon?: string;
@@ -159,19 +160,6 @@ export interface ModelPackage {
   dimensions?: PackageDimension[];
 }
 
-enum EditPromptTemplates {
-  "codellama" = "codellama_edit_prompt",
-  "alpaca" = "alpaca_edit_prompt",
-}
-
-enum ChatTemplates {
-  "alpaca" = "template_alpaca_messages",
-  "llama2" = "llama2_template_messages",
-  "phind" = "phind_template_messages",
-  "sqlcoder" = "sqlcoder_template_messages",
-  "None" = "None",
-}
-
 const codeLlamaInstruct: ModelPackage = {
   title: "CodeLlama Instruct",
   description:
@@ -181,7 +169,6 @@ const codeLlamaInstruct: ModelPackage = {
     title: "CodeLlama-7b-Instruct",
     model: "codellama:7b-instruct",
     context_length: 2048,
-    template_messages: ChatTemplates.llama2,
   },
   icon: "meta.png",
   dimensions: [
@@ -214,7 +201,6 @@ const llama2Chat: ModelPackage = {
     title: "Llama2-7b-Chat",
     model: "llama2:7b-chat",
     context_length: 2048,
-    template_messages: ChatTemplates.llama2,
   },
   icon: "meta.png",
   dimensions: [
@@ -248,10 +234,6 @@ const wizardCoder: ModelPackage = {
     title: "WizardCoder-7b-Python",
     model: "wizardcoder:7b-python",
     context_length: 2048,
-    template_messages: ChatTemplates.alpaca,
-    prompt_templates: {
-      edit: EditPromptTemplates.alpaca,
-    },
   },
   icon: "wizardlm.png",
   dimensions: [
@@ -283,10 +265,6 @@ const phindCodeLlama: ModelPackage = {
     title: "Phind CodeLlama",
     model: "phind-codellama",
     context_length: 2048,
-    template_messages: ChatTemplates.phind,
-    prompt_templates: {
-      edit: EditPromptTemplates.codellama,
-    },
   },
 };
 
@@ -298,10 +276,6 @@ const mistral: ModelPackage = {
     title: "Mistral",
     model: "mistral",
     context_length: 2048,
-    template_messages: ChatTemplates.llama2,
-    prompt_templates: {
-      edit: EditPromptTemplates.codellama,
-    },
   },
   icon: "mistral.png",
 };
@@ -314,10 +288,6 @@ const sqlCoder: ModelPackage = {
     title: "SQLCoder",
     model: "sqlcoder",
     context_length: 2048,
-    template_messages: ChatTemplates.sqlcoder,
-    prompt_templates: {
-      edit: EditPromptTemplates.codellama,
-    },
   },
   dimensions: [
     {
@@ -344,10 +314,6 @@ const codeup: ModelPackage = {
     title: "CodeUp",
     model: "codeup",
     context_length: 2048,
-    template_messages: ChatTemplates.llama2,
-    prompt_templates: {
-      edit: EditPromptTemplates.alpaca,
-    },
   },
 };
 
@@ -416,7 +382,7 @@ function replicateConvertModelName(model: string): string {
 export const MODEL_INFO: { [key: string]: ModelInfo } = {
   openai: {
     title: "OpenAI",
-    class: "OpenAI",
+    provider: "openai",
     description: "Use gpt-4, gpt-3.5-turbo, or any other OpenAI model",
     longDescription:
       "Use gpt-4, gpt-3.5-turbo, or any other OpenAI model. See [here](https://openai.com/product#made-for-developers) to obtain an API key.",
@@ -436,7 +402,7 @@ export const MODEL_INFO: { [key: string]: ModelInfo } = {
   },
   anthropic: {
     title: "Anthropic",
-    class: "AnthropicLLM",
+    provider: "anthropic",
     description:
       "Claude-2 is a highly capable model with a 100k context length",
     icon: "anthropic.png",
@@ -452,6 +418,10 @@ export const MODEL_INFO: { [key: string]: ModelInfo } = {
         required: true,
       },
       ...completionParamsInputs,
+      {
+        ...contextLengthInput,
+        defaultValue: 100_000,
+      },
     ],
     packages: [
       {
@@ -467,7 +437,7 @@ export const MODEL_INFO: { [key: string]: ModelInfo } = {
   },
   ollama: {
     title: "Ollama",
-    class: "Ollama",
+    provider: "ollama",
     description:
       "One of the fastest ways to get started with local models on Mac or Linux",
     longDescription:
@@ -477,12 +447,12 @@ export const MODEL_INFO: { [key: string]: ModelInfo } = {
     packages: osModels,
     collectInputFor: [
       ...completionParamsInputs,
-      { ...serverUrlInput, defaultValue: "http://localhost:11434" },
+      { ...apiBaseInput, defaultValue: "http://localhost:11434" },
     ],
   },
   together: {
     title: "TogetherAI",
-    class: "TogetherLLM",
+    provider: "together",
     description:
       "Use the TogetherAI API for extremely fast streaming of open-source models",
     icon: "together.png",
@@ -556,7 +526,7 @@ export const MODEL_INFO: { [key: string]: ModelInfo } = {
   },
   lmstudio: {
     title: "LM Studio",
-    class: "GGML",
+    provider: "openai-aiohttp",
     description:
       "One of the fastest ways to get started with local models on Mac or Windows",
     longDescription:
@@ -565,14 +535,13 @@ export const MODEL_INFO: { [key: string]: ModelInfo } = {
     tags: [ModelProviderTag["Local"], ModelProviderTag["Open-Source"]],
     params: {
       server_url: "http://localhost:1234",
-      template_messages: ChatTemplates.None,
     },
     packages: osModels,
     collectInputFor: [...completionParamsInputs],
   },
   replicate: {
     title: "Replicate",
-    class: "ReplicateLLM",
+    provider: "replicate",
     description: "Use the Replicate API to run open-source models",
     longDescription: `Replicate is a hosted service that makes it easy to run ML models. To get started with Replicate:\n1. Obtain an API key from [here](https://replicate.com)\n2. Paste below\n3. Select a model preset`,
     params: {
@@ -645,7 +614,7 @@ export const MODEL_INFO: { [key: string]: ModelInfo } = {
   },
   llamacpp: {
     title: "llama.cpp",
-    class: "LlamaCpp",
+    provider: "llama.cpp",
     description: "If you are running the llama.cpp server from source",
     longDescription: `llama.cpp comes with a [built-in server](https://github.com/ggerganov/llama.cpp/tree/master/examples/server#llamacppexampleserver) that can be run from source. To do this:
     
@@ -666,7 +635,7 @@ After it's up and running, you can start using Continue.`,
   },
   textgenwebui: {
     title: "text-generation-webui",
-    class: "TextGenWebUI",
+    provider: "text-gen-webui",
     description: "A popular open-source front-end for serving LLMs locally",
     longDescription: `text-generation-webui is a comprehensive, open-source language model UI and local server. You can also set it up with an [OpenAI-compatible server extension](https://github.com/oobabooga/text-generation-webui/tree/main/extensions/openai#an-openedai-api-openai-like), but this model provider is made to interface with the built-in server, which has a different format. To setup the text-generation-webui server, take the following steps:
 
@@ -687,7 +656,7 @@ After it's up and running, you can start using Continue.`,
   },
   palm: {
     title: "Google PaLM API",
-    class: "GooglePaLMAPI",
+    provider: "google-palm",
     description:
       "Try out the Google PaLM API, which is currently in public preview, using an API key from Google Makersuite",
     longDescription: `To get started with Google Makersuite, obtain your API key from [here](https://developers.generativeai.google/products/makersuite) and paste it below.
@@ -717,7 +686,7 @@ After it's up and running, you can start using Continue.`,
   },
   hftgi: {
     title: "HuggingFace TGI",
-    class: "HuggingFaceTGI",
+    provider: "huggingface-tgi",
     description:
       "HuggingFace Text Generation Inference is an advanced, highly-performant option for serving open-source models to multiple people",
     longDescription:
@@ -727,12 +696,12 @@ After it's up and running, you can start using Continue.`,
     packages: osModels,
     collectInputFor: [
       ...completionParamsInputs,
-      { ...serverUrlInput, defaultValue: "http://localhost:8080" },
+      { ...apiBaseInput, defaultValue: "http://localhost:8080" },
     ],
   },
   ggml: {
     title: "Other OpenAI-compatible API",
-    class: "GGML",
+    provider: "openai-aiohttp",
     description:
       "If you are using any other OpenAI-compatible API, for example text-gen-webui, FastChat, LocalAI, or llama-cpp-python, you can simply enter your server URL",
     longDescription: `If you are using any other OpenAI-compatible API, you can simply enter your server URL. If you still need to set up your model server, you can follow a guide below:
@@ -746,7 +715,7 @@ After it's up and running, you can start using Continue.`,
     },
     collectInputFor: [
       {
-        ...serverUrlInput,
+        ...apiBaseInput,
         defaultValue: "http://localhost:8000",
       },
       ...completionParamsInputs,
@@ -756,8 +725,8 @@ After it's up and running, you can start using Continue.`,
     packages: osModels,
   },
   freetrial: {
-    title: "GPT-4 limited free trial",
-    class: "OpenAIFreeTrial",
+    title: "OpenAI limited free trial",
+    provider: "openai-free-trial",
     description:
       "New users can try out Continue for free using a proxy server that securely makes calls to OpenAI using our API key",
     longDescription:

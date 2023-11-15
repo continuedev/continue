@@ -16,6 +16,7 @@ import {
   MODEL_INFO,
   MODEL_PROVIDER_TAG_COLORS,
   ModelInfo,
+  updatedObj,
 } from "../util/modelData";
 import { RootStore } from "../redux/store";
 import StyledMarkdownPreview from "../components/StyledMarkdownPreview";
@@ -215,12 +216,14 @@ function ModelConfig() {
                 dimensions={pkg.dimensions}
                 onClick={(e, dimensionChoices) => {
                   if (disableModelCards()) return;
-                  const formParams: any = {};
+                  let formParams: any = {};
                   for (const d of modelInfo.collectInputFor || []) {
-                    formParams[d.key] =
-                      d.inputType === "text"
-                        ? formMethods.watch(d.key)
-                        : parseFloat(formMethods.watch(d.key));
+                    formParams = updatedObj(formParams, {
+                      [d.key]:
+                        d.inputType === "text"
+                          ? formMethods.watch(d.key)
+                          : parseFloat(formMethods.watch(d.key)),
+                    });
                   }
 
                   client?.addModelForRole("*", {
@@ -236,6 +239,7 @@ function ModelConfig() {
                       }) || [])
                     ),
                     ...formParams,
+                    provider: modelInfo.provider,
                   });
                   navigate("/");
                 }}

@@ -95,6 +95,8 @@ class GUIProtocolServer:
     async def add_model_for_role(self, role: str, model: ModelDescription):
         SerializedContinueConfig.add_model(model)
         SerializedContinueConfig.set_model_for_role(model.title, role)
+        await self.reload_config()
+        await self.send_config_update()
 
     _running_autopilots: Dict[str, Autopilot] = {}
 
