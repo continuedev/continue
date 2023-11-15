@@ -2,20 +2,17 @@ import ClassPropertyRef from '@site/src/components/ClassPropertyRef.tsx';
 
 # GooglePaLMAPI
 
-The Google PaLM API is currently in public preview, so production applications are not supported yet. However, you can [create an API key in Google MakerSuite](https://makersuite.google.com/u/2/app/apikey) and begin trying out the `chat-bison-001` model. Change `~/.continue/config.py` to look like this:
+The Google PaLM API is currently in public preview, so production applications are not supported yet. However, you can [create an API key in Google MakerSuite](https://makersuite.google.com/u/2/app/apikey) and begin trying out the `chat-bison-001` model. Change `~/.continue/config.json` to look like this:
 
-```python title="~/.continue/config.py"
-from continuedev.core.models import Models
-from continuedev.libs.llm.hf_inference_api import GooglePaLMAPI
-
-config = ContinueConfig(
-    ...
-    models=Models(
-        default=GooglePaLMAPI(
-            model="chat-bison-001"
-            api_key="<MAKERSUITE_API_KEY>",
-    )
-)
+```json title="~/.continue/config.json"
+{
+    "models": [{
+        "title": "Chat Bison",
+        "provider": "google-palm",
+        "model": "chat-bison-001",
+        "api_key": "YOUR_API_KEY"
+    }]
+}
 ```
 
 [View the source](https://github.com/continuedev/continue/blob/main/server/continuedev/libs/llm/google_palm_api.py)

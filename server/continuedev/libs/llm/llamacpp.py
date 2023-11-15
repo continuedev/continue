@@ -1,11 +1,9 @@
 import json
-from typing import Any, Callable, Dict, Optional
+from typing import Any, Dict, Optional
 
 from pydantic import Field, validator
 
 from .base import LLM
-from .prompts.chat import llama2_template_messages
-from .prompts.edit import codellama_edit_prompt
 
 
 class LlamaCpp(LLM):
@@ -16,19 +14,17 @@ class LlamaCpp(LLM):
     .\server.exe -c 4096 --host 0.0.0.0 -t 16 --mlock -m models\meta\llama\codellama-7b-instruct.Q8_0.gguf
     ```
 
-    After it's up and running, change `~/.continue/config.py` to look like this:
+    After it's up and running, change `~/.continue/config.json` to look like this:
 
-    ```python title="~/.continue/config.py"
-    from continuedev.libs.llm.llamacpp import LlamaCpp
-
-    config = ContinueConfig(
-        ...
-        models=Models(
-            default=LlamaCpp(
-                max_context_length=4096,
-                server_url="http://localhost:8080")
-        )
-    )
+    ```json title="~/.continue/config.json"
+    {
+        "models": [{
+            "title": "Llama CPP",
+            "provider": "llama.cpp",
+            "model": "MODEL_NAME",
+            "api_base": "http://localhost:8080"
+        }]
+    }
     ```
     """
 

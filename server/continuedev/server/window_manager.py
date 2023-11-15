@@ -11,7 +11,7 @@ from ..libs.index.build_index import build_index
 from ..libs.util.create_async_task import create_async_task
 from ..libs.util.devdata import dev_data_logger
 from ..libs.util.logging import logger
-from ..libs.util.paths import getConfigFilePath, getDiffsFolderPath
+from ..libs.util.paths import getConfigFilePath, getDiffsFolderPath, migration
 from ..libs.util.telemetry import posthog_logger
 from ..plugins.context_providers.file import FileContextProvider
 from ..plugins.context_providers.highlighted_code import HighlightedCodeContextProvider
@@ -89,6 +89,12 @@ class Window:
     async def load(
         self, config: Optional[ContinueConfig] = None, only_reloading: bool = False
     ):
+        async with migration("config_json_001"):
+            if self.ide is not None:
+                await self.ide.showMessage(
+                    f"Continue has migrated to using a JSON config file (config.json). To learn more, visit https://continue.dev/docs/config-file-migration."
+                )
+
         # Need a non-step way of sending a notification to the GUI. Fine to be displayed similarly
 
         # formatted_err = "\n".join(traceback.format_exception(e, e, e.__traceback__))

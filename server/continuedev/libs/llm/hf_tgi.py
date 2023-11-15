@@ -1,13 +1,10 @@
 import json
-from typing import Any, Callable, List, Optional
+from typing import Any, Optional
 
 from pydantic import Field, validator
 
-from ...core.main import ChatMessage
 from ..util.count_tokens import DEFAULT_MAX_TOKENS
 from .base import LLM, CompletionOptions
-from .prompts.chat import llama2_template_messages
-from .prompts.edit import codellama_edit_prompt
 
 
 class HuggingFaceTGI(LLM):
@@ -43,7 +40,7 @@ class HuggingFaceTGI(LLM):
                 f"{self.api_base}/generate_stream",
                 json={"inputs": prompt, "parameters": args},
                 headers={"Content-Type": "application/json"},
-                proxy=self.proxy,
+                proxy=self.request_options.proxy,
             ) as resp:
                 async for line in resp.content.iter_any():
                     if line:

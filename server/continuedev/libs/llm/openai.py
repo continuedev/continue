@@ -41,21 +41,18 @@ class OpenAI(LLM):
     """
     The OpenAI class can be used to access OpenAI models like gpt-4 and gpt-3.5-turbo.
 
-    If you are locally serving a model that uses an OpenAI-compatible server, you can simply change the `api_base` in the `OpenAI` class like this:
+    If you are locally serving a model that uses an OpenAI-compatible server, you can simply change the `api_base` like this:
 
-    ```python title="~/.continue/config.py"
-    from continuedev.libs.llm.openai import OpenAI
-
-    config = ContinueConfig(
-        ...
-        models=Models(
-            default=OpenAI(
-                api_key="EMPTY",
-                model="<MODEL_NAME>",
-                api_base="http://localhost:8000", # change to your server
-            )
-        )
-    )
+    ```json title="~/.continue/config.json"
+    {
+        "models": [{
+            "title": "OpenAI-compatible server",
+            "provider": "openai",
+            "model": "MODEL_NAME",
+            "api_key": "EMPTY",
+            "api_base": "http://localhost:8000"
+        }]
+    }
     ```
 
     Options for serving models locally with an OpenAI-compatible server include:

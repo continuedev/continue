@@ -8,19 +8,17 @@ Run the llama.cpp server binary to start the API server. If running on a remote 
 .\server.exe -c 4096 --host 0.0.0.0 -t 16 --mlock -m models\meta\llama\codellama-7b-instruct.Q8_0.gguf
 ```
 
-After it's up and running, change `~/.continue/config.py` to look like this:
+After it's up and running, change `~/.continue/config.json` to look like this:
 
-```python title="~/.continue/config.py"
-from continuedev.libs.llm.llamacpp import LlamaCpp
-
-config = ContinueConfig(
-    ...
-    models=Models(
-        default=LlamaCpp(
-            max_context_length=4096,
-            server_url="http://localhost:8080")
-    )
-)
+```json title="~/.continue/config.json"
+{
+    "models": [{
+        "title": "Llama CPP",
+        "provider": "llama.cpp",
+        "model": "MODEL_NAME",
+        "api_base": "http://localhost:8080"
+    }]
+}
 ```
 
 [View the source](https://github.com/continuedev/continue/blob/main/server/continuedev/libs/llm/llamacpp.py)

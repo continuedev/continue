@@ -11,21 +11,17 @@ from .base import LLM
 
 class TogetherLLM(LLM):
     """
-    The Together API is a cloud platform for running large AI models. You can sign up [here](https://api.together.xyz/signup), copy your API key on the initial welcome screen, and then hit the play button on any model from the [Together Models list](https://docs.together.ai/docs/models-inference). Change `~/.continue/config.py` to look like this:
+    The Together API is a cloud platform for running large AI models. You can sign up [here](https://api.together.xyz/signup), copy your API key on the initial welcome screen, and then hit the play button on any model from the [Together Models list](https://docs.together.ai/docs/models-inference). Change `~/.continue/config.json` to look like this:
 
-    ```python title="~/.continue/config.py"
-    from continuedev.core.models import Models
-    from continuedev.libs.llm.together import TogetherLLM
-
-    config = ContinueConfig(
-        ...
-        models=Models(
-            default=TogetherLLM(
-                api_key="<API_KEY>",
-                model="togethercomputer/llama-2-13b-chat"
-            )
-        )
-    )
+    ```json title="~/.continue/config.json"
+    {
+        "models": [{
+            "title": "Together CodeLlama",
+            "provider": "together",
+            "model": "codellama-13b",
+            "api_key": "YOUR_API_KEY"
+        }]
+    }
     ```
     """
 

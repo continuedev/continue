@@ -1,24 +1,23 @@
-from typing import Any, Callable, Coroutine, Optional
+from typing import Any, Coroutine, Optional
 
 from anthropic import AI_PROMPT, HUMAN_PROMPT, AsyncAnthropic
 
 from .base import LLM, CompletionOptions
-from .prompts.chat import anthropic_template_messages
 
 
 class AnthropicLLM(LLM):
     """
-    Import the `AnthropicLLM` class and set it as the default model:
+    To setup Anthropic, add the following to your `config.json` file:
 
-    ```python title="~/.continue/config.py"
-    from continuedev.libs.llm.anthropic import AnthropicLLM
-
-    config = ContinueConfig(
-        ...
-        models=Models(
-            default=AnthropicLLM(api_key="<API_KEY>", model="claude-2")
-        )
-    )
+    ```json title="~/.continue/config.json"
+    {
+        "models": [{
+            "title": "Anthropic",
+            "provider": "anthropic",
+            "model": "claude-2",
+            "api_key": "YOUR_API_KEY"
+        }]
+    }
     ```
 
     Claude 2 is not yet publicly released. You can request early access [here](https://www.anthropic.com/earlyaccess).

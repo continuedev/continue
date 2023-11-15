@@ -85,7 +85,7 @@ import ClassPropertyRef from '@site/src/components/ClassPropertyRef.tsx';
 
 {properties}
 
-### Inherited Properties
+{"### Inherited Properties" if inherited_properties else ""}
 
 {inherited_properties}"""
     )
@@ -109,6 +109,7 @@ for module_name, module_title in LLM_MODULES:
 config_module = importlib.import_module("continuedev.core.config")
 config_obj = getattr(config_module, "SerializedContinueConfig")
 schema = config_obj.schema()
+schema["title"] = "Configuration Options"
 markdown_docs = docs_from_schema(schema, "core/config.py")
 with open("docs/docs/reference/config.md", "w") as f:
     f.write(markdown_docs)

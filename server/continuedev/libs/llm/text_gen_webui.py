@@ -12,17 +12,14 @@ class TextGenWebUI(LLM):
     """
     TextGenWebUI is a comprehensive, open-source language model UI and local server. You can set it up with an OpenAI-compatible server plugin, but if for some reason that doesn't work, you can use this class like so:
 
-    ```python title="~/.continue/config.py"
-    from continuedev.libs.llm.text_gen_webui import TextGenWebUI
-
-    config = ContinueConfig(
-        ...
-        models=Models(
-            default=TextGenWebUI(
-                model="<MODEL_NAME>",
-            )
-        )
-    )
+    ```json title="~/.continue/config.json"
+    {
+        "models": [{
+            "title": "Text Generation WebUI",
+            "provider": "text-gen-webui",
+            "model": "MODEL_NAME"
+        }]
+    }
     ```
     """
 

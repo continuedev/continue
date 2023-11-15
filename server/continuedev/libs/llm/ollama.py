@@ -1,5 +1,5 @@
 import json
-from typing import Any, Callable, Dict, Optional
+from typing import Any, Dict, Optional
 
 from pydantic import Field, validator
 
@@ -12,15 +12,14 @@ class Ollama(LLM):
     """
     [Ollama](https://ollama.ai/) is an application for Mac and Linux that makes it easy to locally run open-source models, including Llama-2. Download the app from the website, and it will walk you through setup in a couple of minutes. You can also read more in their [README](https://github.com/jmorganca/ollama). Continue can then be configured to use the `Ollama` LLM class:
 
-    ```python title="~/.continue/config.py"
-    from continuedev.libs.llm.ollama import Ollama
-
-    config = ContinueConfig(
-        ...
-        models=Models(
-            default=Ollama(model="llama2")
-        )
-    )
+    ```json title="~/.continue/config.json"
+    {
+        "models": [{
+            "title": "Ollama",
+            "provider": "ollama",
+            "model": "llama2-7b",
+        }]
+    }
     ```
     """
 

@@ -4,7 +4,6 @@ description: Continue collects anonymous usage information
 keywords: [telemetry, anonymous, usage info, opt out]
 ---
 
-
 # 🦔 Telemetry
 
 ## Overview
@@ -25,13 +24,13 @@ All data is anonymous and cleaned of PII before being sent to PostHog.
 
 ## How to opt out
 
-The `~/.continue` directory contains a `config.py` file that looks like this:
+The `~/.continue` directory contains a `config.json` file that looks like this:
 
-```python
-config = ContinueConfig(
-    allow_anonymous_telemetry=True,
+```json title="~/.continue/config.json"
+{
+    "allow_anonymous_telemetry": true,
     ...
-)
+}
 ```
 
-You can turn off anonymous telemetry by changing the value of `allow_anonymous_telemetry` to `False`.
+You can turn off anonymous telemetry by changing the value of `allow_anonymous_telemetry` to `false`.

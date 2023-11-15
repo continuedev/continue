@@ -4,19 +4,17 @@ import ClassPropertyRef from '@site/src/components/ClassPropertyRef.tsx';
 
 See our [5 minute quickstart](https://github.com/continuedev/ggml-server-example) to run any model locally with ggml. While these models don't yet perform as well, they are free, entirely private, and run offline.
 
-Once the model is running on localhost:8000, change `~/.continue/config.py` to look like this:
+Once the model is running on localhost:8000, change `~/.continue/config.json` to look like this:
 
-```python title="~/.continue/config.py"
-from continuedev.libs.llm.ggml import GGML
-
-config = ContinueConfig(
-    ...
-    models=Models(
-        default=GGML(
-            max_context_length=2048,
-            server_url="http://localhost:8000")
-    )
-)
+```json title="~/.continue/config.json"
+{
+    "models": [{
+        "title": "GGML",
+        "provider": "openai-aiohttp",
+        "model": "MODEL_NAME",
+        "api_base": "http://localhost:8000"
+    }]
+}
 ```
 
 [View the source](https://github.com/continuedev/continue/blob/main/server/continuedev/libs/llm/ggml.py)
