@@ -1,4 +1,4 @@
-from ...core.main import Step
+from ...core.main import SetStep, Step
 from ...core.sdk import ContinueSDK
 from ...libs.util.paths import getConfigFilePath
 from ...models.filesystem import RangeInFile
@@ -24,16 +24,9 @@ class SetupModelStep(Step):
     hide: bool = True
 
     async def run(self, sdk: ContinueSDK):
-        await sdk.ide.setFileOpen(getConfigFilePath())
-        self.description = MODEL_CLASS_TO_MESSAGE.get(
-            self.model_class, "Please finish setting up this model in `config.py`"
-        )
-
-        config_contents = await sdk.ide.readFile(getConfigFilePath())
-        start = config_contents.find("default=") + len("default=")
-        end = config_contents.find("saved=") - 1
-        range = Range.from_indices(config_contents, start, end)
-        range.end.line -= 1
-        await sdk.ide.highlightCode(
-            RangeInFile(filepath=getConfigFilePath(), range=range)
+        await sdk.ide.setFileOpen(getConfigFilePath(json=True))
+        yield SetStep(
+            description=MODEL_CLASS_TO_MESSAGE.get(
+                self.model_class, "Please finish setting up this model in `config.py`"
+            )
         )

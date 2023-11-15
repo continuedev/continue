@@ -1,3 +1,4 @@
+import os
 import traceback
 from typing import Dict, Optional
 
@@ -5,6 +6,7 @@ from ..core.autopilot import Autopilot
 from ..core.config import ContinueConfig
 from ..core.context import ContextManager
 from ..core.main import SessionState
+from ..libs.constants.default_config import default_config_json
 from ..libs.index.build_index import build_index
 from ..libs.util.create_async_task import create_async_task
 from ..libs.util.devdata import dev_data_logger
@@ -74,7 +76,11 @@ class Window:
 
     async def display_config_error(self):
         if self._error_loading_config is not None:
-            await self.ide.setFileOpen(getConfigFilePath())
+            if not os.path.exists(getConfigFilePath(json=True)):
+                with open(getConfigFilePath(json=True), "w") as f:
+                    f.write(default_config_json)
+
+            await self.ide.setFileOpen(getConfigFilePath(json=True))
             await self.ide.showMessage(
                 f"""We found an error while loading your config.py. For now, Continue is falling back to the default configuration. If you need help solving this error, please reach out to us on Discord by clicking the question mark button in the bottom right.\n\n{self._error_loading_config}"""
             )

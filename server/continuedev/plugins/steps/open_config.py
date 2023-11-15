@@ -15,4 +15,4 @@ class OpenConfigStep(Step):
         )
 
     async def run(self, sdk: ContinueSDK):
-        await sdk.ide.setFileOpen(getConfigFilePath())
+        await sdk.ide.setFileOpen(getConfigFilePath(json=True))
