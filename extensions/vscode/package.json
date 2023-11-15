@@ -1,7 +1,7 @@
 {
   "name": "continue",
   "icon": "media/icon.png",
-  "version": "0.6.1",
+  "version": "0.7.1",
   "repository": {
     "type": "git",
     "url": "https://github.com/continuedev/continue"
@@ -170,7 +170,8 @@
       {
         "command": "continue.toggleFullScreen",
         "mac": "cmd+k cmd+m",
-        "key": "ctrl+k ctrl+m"
+        "key": "ctrl+k ctrl+m",
+        "when": "!terminalFocus"
       }
     ],
     "submenus": [
