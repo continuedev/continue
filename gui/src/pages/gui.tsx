@@ -586,7 +586,7 @@ function GUI(props: GUIProps) {
               onClick={() => {
                 postToIde("toggleFullScreen", {});
               }}
-              text={`Toggle Full Screen (${getMetaKeyLabel()}K M)`}
+              text={`Toggle Full Screen (${getMetaKeyLabel()}K ${getMetaKeyLabel()}M)`}
             >
               {(window as any).isFullScreen ? (
                 <ArrowsPointingInIcon width="1.4em" height="1.4em" />

@@ -170,7 +170,8 @@
       {
         "command": "continue.toggleFullScreen",
         "mac": "cmd+k cmd+m",
-        "key": "ctrl+k ctrl+m"
+        "key": "ctrl+k ctrl+m",
+        "when": "!terminalFocus"
       }
     ],
     "submenus": [
