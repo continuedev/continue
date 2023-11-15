@@ -1,3 +1,4 @@
+import importlib.util
 import json
 import os
 from contextlib import contextmanager
@@ -7,11 +8,8 @@ from pydantic import BaseModel, Field, validator
 
 from ..libs.llm.base import LLM
 from ..libs.llm.openai_free_trial import OpenAIFreeTrial
-from ..libs.util.paths import (
-    convertConfigImports,
-    getConfigFilePath,
-    getGlobalFolderPath,
-)
+from ..libs.util.logging import logger
+from ..libs.util.paths import getConfigFilePath, getGlobalFolderPath
 from ..libs.util.telemetry import posthog_logger
 from ..models.llm import BaseCompletionOptions, RequestOptions
 from .config_utils.context import (
@@ -228,7 +226,7 @@ class SerializedContinueConfig(BaseModel):
     )
     data_server_url: Optional[str] = Field(
         default="https://us-west1-autodebug.cloudfunctions.net",
-        description="The URL of the server where development data is sent. No data is sent unless a valid user token is provided.",
+        description="The URL of the server where development data is sent. No data is sent unless you have explicitly set the `user_token` property to a valid token that we have shared.",
     )
     disable_summaries: Optional[bool] = Field(
         default=False,
@@ -402,7 +400,7 @@ class ContinueConfig(BaseModel):
     )
     data_server_url: Optional[str] = Field(
         default="https://us-west1-autodebug.cloudfunctions.net",
-        description="The URL of the server where development data is sent. No data is sent unless a valid user token is provided.",
+        description="The URL of the server where development data is sent. No data is sent unless you have explicitly set the `user_token` property to a valid token that we have shared.",
     )
     disable_summaries: Optional[bool] = Field(
         default=False,
@@ -440,29 +438,45 @@ class ContinueConfig(BaseModel):
         )
 
     @staticmethod
-    def from_filepath(filepath: str, retry: bool = True) -> "ContinueConfig":
-        if filepath.endswith(".json"):
-            serialized_config = json.load(open(filepath))
-            return ContinueConfig.from_serialized_config(
-                SerializedContinueConfig(**serialized_config)
-            )
-
-        # Use importlib to load the config file config.py at the given path
+    def modifier_from_filepath(filepath: str):
         try:
-            import importlib.util
-
             spec = importlib.util.spec_from_file_location("config", filepath)
             config = importlib.util.module_from_spec(spec)
             spec.loader.exec_module(config)
 
-            return config.config
-        except ModuleNotFoundError as e:
-            # Check if the module was "continuedev.src"
-            if retry and e.name == "continuedev.src":
-                convertConfigImports(shorten=True)
-                return ContinueConfig.from_filepath(filepath, retry=False)
-            else:
-                raise e
+            if hasattr(config, "modify_config"):
+                return config.modify_config
+
+        except Exception as e:
+            logger.warning(f"Failed to load config modifier from {filepath}: {e}")
+            return None
+
+        return None
+
+    @staticmethod
+    def from_filepath(filepath: str, retry: bool = True) -> "ContinueConfig":
+        if filepath.endswith(".json"):
+            serialized_config = json.load(open(filepath))
+            initial_config = ContinueConfig.from_serialized_config(
+                SerializedContinueConfig(**serialized_config)
+            )
+            if modifier := ContinueConfig.modifier_from_filepath(
+                filepath[: len(".json")] + ".py"
+            ):
+                try:
+                    return modifier(initial_config)
+                except Exception as e:
+                    logger.warning(f"Failed to modify config: {e}")
+                    return initial_config
+
+            return initial_config
+
+        # Use importlib to load the config file config.py at the given path
+        spec = importlib.util.spec_from_file_location("config", filepath)
+        config = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(config)
+
+        return config.config
 
     @staticmethod
     def load_default() -> "ContinueConfig":

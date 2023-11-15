@@ -79,7 +79,7 @@ import ClassPropertyRef from '@site/src/components/ClassPropertyRef.tsx';
 
 {dedent(schema.get("description", ""))}
 
-[View the source](https://github.com/continuedev/continue/blob/main/server/continuedev/libs/llm/{filepath})
+[View the source](https://github.com/continuedev/continue/blob/main/server/continuedev/{filepath})
 
 ## Properties
 
@@ -105,8 +105,9 @@ for module_name, module_title in LLM_MODULES:
     with open(f"docs/docs/reference/Models/{module_title.lower()}.md", "w") as f:
         f.write(markdown_docs)
 
+# SerializedContinueConfig
 config_module = importlib.import_module("continuedev.core.config")
-config_obj = getattr(config_module, "ContinueConfig")
+config_obj = getattr(config_module, "SerializedContinueConfig")
 schema = config_obj.schema()
 markdown_docs = docs_from_schema(schema, "core/config.py")
 with open("docs/docs/reference/config.md", "w") as f:

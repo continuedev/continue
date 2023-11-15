@@ -1,6 +1,7 @@
 from typing import Dict, Literal
 
 from ...plugins.context_providers.diff import DiffContextProvider
+from ...plugins.context_providers.filetree import FileTreeContextProvider
 from ...plugins.context_providers.github import GitHubIssuesContextProvider
 from ...plugins.context_providers.google import GoogleContextProvider
 from ...plugins.context_providers.open_tabs import OpenTabsContextProvider
@@ -16,6 +17,7 @@ ContextProviderName = Literal[
     "google",
     "search",
     "url",
+    "tree",
 ]
 
 CONTEXT_PROVIDER_NAME_TO_CLASS = {
@@ -26,6 +28,7 @@ CONTEXT_PROVIDER_NAME_TO_CLASS = {
     "google": GoogleContextProvider,
     "search": SearchContextProvider,
     "url": URLContextProvider,
+    "tree": FileTreeContextProvider,
 }
 
 CLASS_TO_CONTEXT_PROVIDER_NAME: Dict[str, ContextProviderName] = {
@@ -36,4 +39,5 @@ CLASS_TO_CONTEXT_PROVIDER_NAME: Dict[str, ContextProviderName] = {
     "GoogleContextProvider": "google",
     "SearchContextProvider": "search",
     "URLContextProvider": "url",
+    "FileTreeContextProvider": "tree",
 }

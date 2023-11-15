@@ -15,7 +15,7 @@ There are two ways to add custom slash commands:
 
 ## "Custom Commands" (Use Natural Language)
 
-You can add custom slash commands by adding a `CustomCommand` object to the `custom_commands` property. Each `CustomCommand` has
+You can add custom slash commands by adding to the `custom_commands` property in `config.json`.
 
 - `name`: the name of the command, which will be invoked with `/name`
 - `description`: a short description of the command, which will appear in the dropdown
@@ -23,25 +23,21 @@ You can add custom slash commands by adding a `CustomCommand` object to the `cus
 
 Custom commands are great when you are frequently reusing a prompt. For example, if you've crafted a great prompt and frequently ask the LLM to check for mistakes in your code, you could add a command like this:
 
-```python
-config = ContinueConfig(
-    ...
-    custom_commands=[
-        CustomCommand(
-            name="check",
-            description="Check for mistakes in my code",
-            prompt=dedent("""\
-            Please read the highlighted code and check for any mistakes. You should look for the following, and be extremely vigilant:
-            - Syntax errors
-            - Logic errors
-            - Security vulnerabilities
-            - Performance issues
-            - Anything else that looks wrong
+```json
+custom_commands=[{
+        "name": "check",
+        "description": "Check for mistakes in my code",
+        "prompt": """\
+        Please read the highlighted code and check for any mistakes. You should look for the following, and be extremely vigilant:
+        - Syntax errors
+        - Logic errors
+        - Security vulnerabilities
+        - Performance issues
+        - Anything else that looks wrong
 
-            Once you find an error, please explain it as clearly as possible, but without using extra words. For example, instead of saying "I think there is a syntax error on line 5", you should say "Syntax error on line 5". Give your answer as one bullet point per mistake found.""")
-        )
-    ]
-)
+        Once you find an error, please explain it as clearly as possible, but without using extra words. For example, instead of saying "I think there is a syntax error on line 5", you should say "Syntax error on line 5". Give your answer as one bullet point per mistake found.""")
+    )
+}]
 ```
 
 ## Custom Slash Commands

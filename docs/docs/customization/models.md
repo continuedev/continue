@@ -6,7 +6,7 @@ keywords: [openai, anthropic, PaLM, ollama, ggml]
 
 # Models
 
-Continue makes it easy to swap out different LLM providers. You can either click the "+" button next to the model dropdown to configure in the UI or manually add them to your `config.py`. Once you've done this, you will be able to switch between them with the model selection dropdown.
+Continue makes it easy to swap out different LLM providers. You can either click the "+" button next to the model dropdown to configure in the UI or manually add them to your `config.json`. Once you've done this, you will be able to switch between them with the model selection dropdown.
 
 Commercial Models
 
@@ -30,23 +30,52 @@ Open-Source Models (not local)
 
 ## Change the default LLM
 
-In `config.py`, you'll find the `models` property:
+In `config.json`, you'll find the `models` property, a list of the models that you have saved to use with Continue:
 
-```python
-from continuedev.core.models import Models
-
-config = ContinueConfig(
-    ...
-    models=Models(
-        default=OpenAIFreeTrial(model="gpt-4"),
-        summarize=OpenAIFreeTrial(model="gpt-3.5-turbo")
-    )
-)
+```json
+"models": [
+    {
+        "title": "Smart Model",
+        "provider": "openai-free-trial",
+        "model": "gpt-4"
+    },
+    {
+        "title": "Fast Model",
+        "provider": "openai-free-trial",
+        "model": "gpt-3.5-turbo"
+    }
+]
 ```
 
-The `default` and `summarize` properties are different _model roles_. This allows different models to be used for different tasks. The available roles are `default`, `summarize`, `edit`, and `chat`. `edit` is used when you use the '/edit' slash command, `chat` is used for all chat responses, and `summarize` is used for summarizing. If not set, all roles will fall back to `default`. The values of these fields must be of the [`LLM`](https://github.com/continuedev/continue/blob/main/server/continuedev/libs/llm/__init__.py) class, which implements methods for retrieving and streaming completions from an LLM.
+Also in `config.json` is the `model_roles` property. This is optional, but allows you to specify different models to be used for different tasks. The available roles are `default`, `summarize`, `edit`, and `chat`. `edit` is used when you use the '/edit' slash command, `chat` is used for all chat responses, and `summarize` is used for summarizing. If not set, all roles will fall back to `default`. The values of each role must match the `title` property of one of the models in `models`.
 
-Below, we describe the `LLM` classes available in the Continue core library, and how they can be used.
+```json
+"model_roles": {
+    "default": "Smart Model",
+    "summarize": "Fast Model"
+}
+```
+
+Just by specifying the `model` and `provider` properties, we will automatically detect prompt templates and other important information, but if you're looking to do something beyond this basic setup, we'll explain a few other options below.
+
+## Azure OpenAI Service
+
+If you'd like to use OpenAI models but are concerned about privacy, you can use the Azure OpenAI service, which is GDPR and HIPAA compliant. After applying for access [here](https://azure.microsoft.com/en-us/products/ai-services/openai-service), you will typically hear back within only a few days. Once you have access, set up a model in `config.json` like so:
+
+```json
+"models": [{
+    "title": "Azure OpenAI",
+    "provider": "openai",
+    "model": "gpt-4",
+    "api_base": "https://my-azure-openai-instance.openai.azure.com/",
+    "engine": "my-azure-openai-deployment",
+    "api_version": "2023-07-01-preview",
+    "api_type": "azure",
+    "api_key": "<MY_API_KEY>"
+}]
+```
+
+The easiest way to find this information is from the chat playground in the Azure OpenAI portal. Under the "Chat Session" section, click "View Code" to see each of these parameters.
 
 ## Self-hosting an open-source model
 
@@ -54,35 +83,9 @@ If you want to self-host on Colab, RunPod, HuggingFace, Haven, or another hostin
 
 If by chance the provider has the exact same API interface as OpenAI, the `OpenAI` class will work for you out of the box, after changing only the `api_base` parameter.
 
-## Azure OpenAI Service
-
-If you'd like to use OpenAI models but are concerned about privacy, you can use the Azure OpenAI service, which is GDPR and HIPAA compliant. After applying for access [here](https://azure.microsoft.com/en-us/products/ai-services/openai-service), you will typically hear back within only a few days. Once you have access, instantiate the model like so:
-
-```python
-from continuedev.libs.llm.openai import OpenAI
-
-config = ContinueConfig(
-    ...
-    models=Models(
-        default=OpenAI(
-            api_key="my-api-key",
-            model="gpt-3.5-turbo",
-            api_base="https://my-azure-openai-instance.openai.azure.com/",
-            engine="my-azure-openai-deployment",
-            api_version="2023-07-01-preview",
-            api_type="azure"
-        )
-    )
-)
-```
-
-The easiest way to find this information is from the chat playground in the Azure OpenAI portal. Under the "Chat Session" section, click "View Code" to see each of these parameters. Finally, find one of your Azure OpenAI keys and enter it in the VS Code settings under `continue.OPENAI_API_KEY`.
-
-Note that you can also use these parameters for uses other than Azure, such as self-hosting a model.
-
 ## Customizing the Chat Template
 
-Most open-source models expect a specific chat format, for example llama2 and codellama expect the input to look like "[INST] How do I write bubble sort in Rust? [/INST]". Other than for the OpenAI classes, the llama2 chat format is the default, but this is not correct for all models. If you are receiving nonsense responses, you can use the `template_messages` property to set the chat template to match the model you are using. This property is a function that takes a list of `ChatMessage`s and returns a string.
+Most open-source models expect a specific chat format, for example llama2 and codellama expect the input to look like "[INST] How do I write bubble sort in Rust? [/INST]". Continue will automatically attempt to detect the correct prompt format based on the `model` value that you provide, but if you are receiving nonsense responses, you can use the `template` property to explicitly set the format that you expect. The options are: `["llama2", "alpaca", "zephyr", "phind", "anthropic", "chatml"]`.
 
 Here is an example of `template_messages` for the Alpaca/Vicuna format:
 
