@@ -79,15 +79,15 @@ The easiest way to find this information is from the chat playground in the Azur
 
 ## Self-hosting an open-source model
 
-If you want to self-host on Colab, RunPod, HuggingFace, Haven, or another hosting provider, you will need to wire up a new LLM class. It only needs to implement 3 primary methods: `stream_complete`, `complete`, and `stream_chat`, and you can see examples in `server/continuedev/libs/llm`.
+If you want to self-host on Colab, RunPod, HuggingFace, Haven, or another hosting provider, you will need to wire up a new LLM class. It only needs to implement 3 primary methods: `stream_complete`, `complete`, and `stream_chat`, and you can see examples in [`server/continuedev/libs/llm`](https://github.com/continuedev/continue/tree/main/server/continuedev/libs/llm).
 
 If by chance the provider has the exact same API interface as OpenAI, the `OpenAI` class will work for you out of the box, after changing only the `api_base` parameter.
 
 ## Customizing the Chat Template
 
-Most open-source models expect a specific chat format, for example llama2 and codellama expect the input to look like "[INST] How do I write bubble sort in Rust? [/INST]". Continue will automatically attempt to detect the correct prompt format based on the `model` value that you provide, but if you are receiving nonsense responses, you can use the `template` property to explicitly set the format that you expect. The options are: `["llama2", "alpaca", "zephyr", "phind", "anthropic", "chatml"]`.
+Most open-source models expect a specific chat format, for example llama2 and codellama expect the input to look like `"[INST] How do I write bubble sort in Rust? [/INST]"`. Continue will automatically attempt to detect the correct prompt format based on the `model`value that you provide, but if you are receiving nonsense responses, you can use the`template`property to explicitly set the format that you expect. The options are:`["llama2", "alpaca", "zephyr", "phind", "anthropic", "chatml"]`.
 
-Here is an example of `template_messages` for the Alpaca/Vicuna format:
+If you want to create an entirely new chat template, this can be done in [config.py](./code-config.md) by defining a function and adding it to the `template_messages` property of your `LLM`. Here is an example of `template_messages` for the Alpaca/Vicuna format:
 
 ```python
 def template_alpaca_messages(msgs: List[Dict[str, str]]) -> str:
@@ -108,26 +108,17 @@ def template_alpaca_messages(msgs: List[Dict[str, str]]) -> str:
 
 It can then be used like this:
 
-```python
-from continuedev.libs.llm.chat import template_alpaca_messages
-from continuedev.libs.llm.ollama import Ollama
-...
-config=ContinueConfig(
-    ...
-    models=Models(
-        default=Ollama(
-            model="vicuna",
-            template_messages=template_alpaca_messages
-        )
-    )
-)
+```python title="~/.continue/config.py"
+def modify_config(config: ContinueConfig) -> ContinueConfig:
+    config.models[0].template_messages = template_alpaca_messages
+    return config
 ```
 
 This exact function and a few other default implementations are available in [`continuedev.libs.llm.prompts.chat`](https://github.com/continuedev/continue/blob/main/server/continuedev/libs/llm/prompts/chat.py).
 
 ## Customizing the /edit Prompt
 
-You also have access to customize the prompt used in the '/edit' slash command. We already have a well-engineered prompt for GPT-4 and a sensible default for less powerful open-source models, but you might wish to play with the prompt and try to find a more reliable alternative if you are for example getting English as well as code in your output.
+You also have access to customize the prompt used in the '/edit' slash command. We already have a well-engineered prompt for GPT-4 and sensible defaults for less powerful open-source models, but you might wish to play with the prompt and try to find a more reliable alternative if you are for example getting English as well as code in your output.
 
 To customize the prompt, use the `prompt_templates` property of any `LLM`, which is a dictionary, and set the "edit" key to a template string with Mustache syntax. The 'file_prefix', 'file_suffix', 'code_to_edit', and 'user_input' variables are available in the template. Here is an example (the default for non-GPT-4 models):
 
@@ -145,22 +136,12 @@ Output nothing except for the code. No code block, no English explanation, no st
 """
 ````
 
-It can then be used like this:
+It can then be used like this in `config.py`:
 
-```python
-from continuedev.libs.llm.ollama import Ollama
-...
-config=ContinueConfig(
-    ...
-    models=Models(
-        default=Ollama(
-            model="vicuna",
-            prompt_templates={
-                "edit": "<INSERT_TEMPLATE_HERE>"
-            }
-        )
-    )
-)
+```python title="~/.continue/config.py"
+def modify_config(config: ContinueConfig) -> ContinueConfig:
+    config.models[0].prompt_templates["edit"] = "<INSERT_TEMPLATE_HERE>"
+    return config
 ```
 
 A few pre-made templates are available in [`continuedev.libs.llm.prompts.edit`](https://github.com/continuedev/continue/blob/main/server/continuedev/libs/llm/prompts/edit.py).

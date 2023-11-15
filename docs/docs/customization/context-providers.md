@@ -131,16 +131,13 @@ class GitHubIssuesContextProvider(ContextProvider):
 
 It can then be set in the `ContinueConfig` like so:
 
-```python
-config = ContinueConfig(
-    ...
-    context_providers=[
-        GitHubIssuesContextProvider(
+```python title="~/.continue/config.py"
+def modify_config(config: ContinueConfig) -> ContinueConfig:
+    config.context_providers.append(GitHubIssuesContextProvider(
             repo_name="my-github-username-or-org/my-github-repo",
             auth_token="my-github-auth-token"
-        )
-    ]
-)
+    ))
+    return config
 ```
 
 This example is a situation where you request all of the data (issues in this case) beforehand, and store them in the ContextProvider.
