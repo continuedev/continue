@@ -2,6 +2,86 @@
   "title": "LLM",
   "$ref": "#/definitions/continuedev__libs__llm__base__LLM",
   "definitions": {
+    "BaseCompletionOptions": {
+      "title": "BaseCompletionOptions",
+      "type": "object",
+      "properties": {
+        "temperature": {
+          "title": "Temperature",
+          "description": "The temperature of the completion.",
+          "type": "number"
+        },
+        "top_p": {
+          "title": "Top P",
+          "description": "The top_p of the completion.",
+          "type": "number"
+        },
+        "top_k": {
+          "title": "Top K",
+          "description": "The top_k of the completion.",
+          "type": "integer"
+        },
+        "presence_penalty": {
+          "title": "Presence Penalty",
+          "description": "The presence penalty Aof the completion.",
+          "type": "number"
+        },
+        "frequency_penalty": {
+          "title": "Frequency Penalty",
+          "description": "The frequency penalty of the completion.",
+          "type": "number"
+        },
+        "stop": {
+          "title": "Stop",
+          "description": "The stop tokens of the completion.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "max_tokens": {
+          "title": "Max Tokens",
+          "description": "The maximum number of tokens to generate.",
+          "default": 600,
+          "type": "integer"
+        }
+      }
+    },
+    "RequestOptions": {
+      "title": "RequestOptions",
+      "type": "object",
+      "properties": {
+        "timeout": {
+          "title": "Timeout",
+          "description": "Set the timeout for each request to the LLM. If you are running a local LLM that takes a while to respond, you might want to set this to avoid timeouts.",
+          "default": 300,
+          "type": "integer"
+        },
+        "verify_ssl": {
+          "title": "Verify Ssl",
+          "description": "Whether to verify SSL certificates for requests.",
+          "type": "boolean"
+        },
+        "ca_bundle_path": {
+          "title": "Ca Bundle Path",
+          "description": "Path to a custom CA bundle to use when making the HTTP request",
+          "type": "string"
+        },
+        "proxy": {
+          "title": "Proxy",
+          "description": "Proxy URL to use when making the HTTP request",
+          "type": "string"
+        },
+        "headers": {
+          "title": "Headers",
+          "description": "Headers to use when making the HTTP request",
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      }
+    },
     "continuedev__libs__llm__base__LLM": {
       "title": "LLM",
       "type": "object",
@@ -32,67 +112,39 @@
           "default": 2048,
           "type": "integer"
         },
-        "stop_tokens": {
-          "title": "Stop Tokens",
-          "description": "Tokens that will stop the completion.",
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
+        "completion_options": {
+          "title": "Completion Options",
+          "description": "Options for the completion endpoint. Read more about the completion options in the documentation.",
+          "default": {
+            "temperature": null,
+            "top_p": null,
+            "top_k": null,
+            "presence_penalty": null,
+            "frequency_penalty": null,
+            "stop": null,
+            "max_tokens": 600
+          },
+          "allOf": [
+            {
+              "$ref": "#/definitions/BaseCompletionOptions"
+            }
+          ]
         },
-        "temperature": {
-          "title": "Temperature",
-          "description": "The temperature of the completion.",
-          "type": "number"
-        },
-        "top_p": {
-          "title": "Top P",
-          "description": "The top_p of the completion.",
-          "type": "number"
-        },
-        "top_k": {
-          "title": "Top K",
-          "description": "The top_k of the completion.",
-          "type": "integer"
-        },
-        "presence_penalty": {
-          "title": "Presence Penalty",
-          "description": "The presence penalty Aof the completion.",
-          "type": "number"
-        },
-        "frequency_penalty": {
-          "title": "Frequency Penalty",
-          "description": "The frequency penalty of the completion.",
-          "type": "number"
-        },
-        "timeout": {
-          "title": "Timeout",
-          "description": "Set the timeout for each request to the LLM. If you are running a local LLM that takes a while to respond, you might want to set this to avoid timeouts.",
-          "default": 300,
-          "type": "integer"
-        },
-        "verify_ssl": {
-          "title": "Verify Ssl",
-          "description": "Whether to verify SSL certificates for requests.",
-          "type": "boolean"
-        },
-        "ca_bundle_path": {
-          "title": "Ca Bundle Path",
-          "description": "Path to a custom CA bundle to use when making the HTTP request",
-          "type": "string"
-        },
-        "proxy": {
-          "title": "Proxy",
-          "description": "Proxy URL to use when making the HTTP request",
-          "type": "string"
-        },
-        "headers": {
-          "title": "Headers",
-          "description": "Headers to use when making the HTTP request",
-          "type": "object",
-          "additionalProperties": {
-            "type": "string"
-          }
+        "request_options": {
+          "title": "Request Options",
+          "description": "Options for the HTTP request to the LLM.",
+          "default": {
+            "timeout": 300,
+            "verify_ssl": null,
+            "ca_bundle_path": null,
+            "proxy": null,
+            "headers": null
+          },
+          "allOf": [
+            {
+              "$ref": "#/definitions/RequestOptions"
+            }
+          ]
         },
         "prompt_templates": {
           "title": "Prompt Templates",
@@ -103,6 +155,11 @@
         "api_key": {
           "title": "Api Key",
           "description": "The API key for the LLM provider.",
+          "type": "string"
+        },
+        "api_base": {
+          "title": "Api Base",
+          "description": "The base URL of the LLM API.",
           "type": "string"
         }
       },

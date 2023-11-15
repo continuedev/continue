@@ -42,9 +42,12 @@ export default function ClassPropertyRef(props: ClassPropertyRefProps) {
         {props.default && (
           <span>
             {" "}
-            = {details.type === "string" && '"'}
-            {props.default}
-            {details.type === "string" && '"'}
+            ={" "}
+            <code>
+              {details.type === "string" && '"'}
+              {props.default}
+              {details.type === "string" && '"'}
+            </code>
           </span>
         )}
       </div>

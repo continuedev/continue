@@ -4,7 +4,7 @@ import ClassPropertyRef from '@site/src/components/ClassPropertyRef.tsx';
 
 The GitHubIssuesContextProvider is a ContextProvider that allows you to search GitHub issues in a repo. Type '@issue' to reference the title and contents of an issue.
 
-[View the source](https://github.com/continuedev/continue/blob/main/server/continuedev/libs/llm/plugins/context_providers/github.py)
+[View the source](https://github.com/continuedev/continue/blob/main/server/continuedev/plugins/context_providers/github.py)
 
 ## Properties
 

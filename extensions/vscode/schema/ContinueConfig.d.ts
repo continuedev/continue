@@ -56,9 +56,9 @@ export type SystemMessage1 = string;
  */
 export type ContextLength = number;
 /**
- * Tokens that will stop the completion.
+ * Options for the completion endpoint. Read more about the completion options in the documentation.
  */
-export type StopTokens = string[];
+export type CompletionOptions = BaseCompletionOptions;
 /**
  * The temperature of the completion.
  */
@@ -80,6 +80,18 @@ export type PresencePenalty = number;
  */
 export type FrequencyPenalty = number;
 /**
+ * The stop tokens of the completion.
+ */
+export type Stop = string[];
+/**
+ * The maximum number of tokens to generate.
+ */
+export type MaxTokens = number;
+/**
+ * Options for the HTTP request to the LLM.
+ */
+export type RequestOptions = RequestOptions1;
+/**
  * Set the timeout for each request to the LLM. If you are running a local LLM that takes a while to respond, you might want to set this to avoid timeouts.
  */
 export type Timeout = number;
@@ -99,13 +111,21 @@ export type Proxy = string;
  * The API key for the LLM provider.
  */
 export type ApiKey = string;
+/**
+ * The base URL of the LLM API.
+ */
+export type ApiBase = string;
 export type Saved = LLM[];
 export type Temperature1 = number;
 export type SystemMessage2 = string;
 /**
- * The temperature parameter for sampling from the LLM. Higher temperatures will result in more random output, while lower temperatures will result in more predictable output. This value ranges from 0 to 1.
+ * A system message that will always be followed by the LLM
  */
-export type Temperature2 = number;
+export type SystemMessage3 = string;
+/**
+ * Options for the completion endpoint. Read more about the completion options in the documentation.
+ */
+export type CompletionOptions1 = BaseCompletionOptions;
 export type Name3 = string;
 export type Prompt = string;
 export type Description1 = string;
@@ -115,6 +135,15 @@ export type Description1 = string;
 export type CustomCommands = CustomCommand[];
 export type Name4 = string;
 export type Description2 = string;
+export type Step1 =
+  | "AnswerQuestionChroma"
+  | "GenerateShellCommandStep"
+  | "EditHighlightedCodeStep"
+  | "ShareSessionStep"
+  | "CommentCodeStep"
+  | "ClearHistoryStep"
+  | "StackOverflowStep"
+  | "OpenConfigStep";
 /**
  * An array of slash commands that let you map custom Steps to a shortcut.
  */
@@ -123,10 +152,6 @@ export type SlashCommands = SlashCommand[];
  * The step that will be run when a traceback is detected (when you use the shortcut cmd+shift+R)
  */
 export type OnTraceback = Step;
-/**
- * A system message that will always be followed by the LLM
- */
-export type SystemMessage3 = string;
 /**
  * A Policy object that can be used to override the default behavior of Continue, for example in order to build custom agents that take multiple steps at a time.
  */
@@ -213,7 +238,7 @@ export type OpenaiApiKey = string;
 /**
  * OpenAI API base URL
  */
-export type ApiBase = string;
+export type ApiBase1 = string;
 /**
  * OpenAI API type
  */
@@ -235,11 +260,11 @@ export interface ContinueConfig1 {
   disallowed_steps?: DisallowedSteps;
   allow_anonymous_telemetry?: AllowAnonymousTelemetry;
   models?: Models;
-  temperature?: Temperature2;
+  system_message?: SystemMessage3;
+  completion_options?: CompletionOptions1;
   custom_commands?: CustomCommands;
   slash_commands?: SlashCommands;
   on_traceback?: OnTraceback;
-  system_message?: SystemMessage3;
   policy_override?: PolicyOverride;
   context_providers?: ContextProviders;
   user_token?: UserToken;
@@ -291,19 +316,29 @@ export interface LLM {
   model: Model;
   system_message?: SystemMessage1;
   context_length?: ContextLength;
-  stop_tokens?: StopTokens;
+  completion_options?: CompletionOptions;
+  request_options?: RequestOptions;
+  prompt_templates?: PromptTemplates;
+  api_key?: ApiKey;
+  api_base?: ApiBase;
+  [k: string]: unknown;
+}
+export interface BaseCompletionOptions {
   temperature?: Temperature;
   top_p?: TopP;
   top_k?: TopK;
   presence_penalty?: PresencePenalty;
   frequency_penalty?: FrequencyPenalty;
+  stop?: Stop;
+  max_tokens?: MaxTokens;
+  [k: string]: unknown;
+}
+export interface RequestOptions1 {
   timeout?: Timeout;
   verify_ssl?: VerifySsl;
   ca_bundle_path?: CaBundlePath;
   proxy?: Proxy;
   headers?: Headers;
-  prompt_templates?: PromptTemplates;
-  api_key?: ApiKey;
   [k: string]: unknown;
 }
 /**
@@ -329,9 +364,6 @@ export interface SlashCommand {
   description: Description2;
   step: Step1;
   params?: Params;
-  [k: string]: unknown;
-}
-export interface Step1 {
   [k: string]: unknown;
 }
 export interface Params {
@@ -398,7 +430,7 @@ export interface RetrievalSettings1 {
   rerank_group_size?: RerankGroupSize;
   ignore_files?: IgnoreFiles;
   openai_api_key?: OpenaiApiKey;
-  api_base?: ApiBase;
+  api_base?: ApiBase1;
   api_type?: ApiType;
   api_version?: ApiVersion;
   organization_id?: OrganizationId;

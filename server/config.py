@@ -4,15 +4,18 @@ This is the Continue configuration file.
 See https://continue.dev/docs/customization to for documentation of the available options.
 """
 
+from continuedev.core.config import (
+    ContinueConfig,
+    CustomCommand,
+    SlashCommand,
+)
 from continuedev.core.models import Models
-from continuedev.core.config import CustomCommand, SlashCommand, ContinueConfig
 from continuedev.libs.llm import OpenAIFreeTrial
-
 from continuedev.plugins.context_providers import (
     DiffContextProvider,
+    GitHubIssuesContextProvider,
     TerminalContextProvider,
     URLContextProvider,
-    GitHubIssuesContextProvider,
 )
 from continuedev.plugins.steps import (
     ClearHistoryStep,

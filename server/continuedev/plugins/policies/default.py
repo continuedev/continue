@@ -1,33 +1,20 @@
 from typing import Type, Union
 
-from ..steps.stack_overflow import StackOverflowStep
-from ...models.main import Position, PositionInFile
-from ..steps.refactor import RefactorReferencesStep
-from ..steps.clear_history import ClearHistoryStep
-from ..steps.comment_code import CommentCodeStep
-from ..steps.share_session import ShareSessionStep
-from ..steps.codebase import AnswerQuestionChroma
 from ...core.config import ContinueConfig
+from ...core.config_utils.step_name_to_class import step_name_to_step_class
 from ...core.main import Policy, SessionState, Step
+from ...models.main import Position, PositionInFile
 from ..steps.chat import SimpleChatStep
+from ..steps.codebase import AnswerQuestionChroma
 from ..steps.custom_command import CustomCommandStep
 from ..steps.main import EditHighlightedCodeStep
+from ..steps.refactor import RefactorReferencesStep
+from ..steps.stack_overflow import StackOverflowStep
 from ..steps.steps_on_startup import StepsOnStartupStep
-from ..steps.cmd import GenerateShellCommandStep
-
 
 # When importing with importlib from config.py, the classes do not pass isinstance checks.
 # Mapping them here is a workaround.
 # Original description of the problem: https://github.com/continuedev/continue/pull/581#issuecomment-1778138841
-REPLACEMENT_SLASH_COMMAND_STEPS = [
-    AnswerQuestionChroma,
-    GenerateShellCommandStep,
-    EditHighlightedCodeStep,
-    ShareSessionStep,
-    CommentCodeStep,
-    ClearHistoryStep,
-    StackOverflowStep,
-]
 
 
 def parse_slash_command(inp: str, config: ContinueConfig) -> Union[None, Step]:
@@ -43,11 +30,22 @@ def parse_slash_command(inp: str, config: ContinueConfig) -> Union[None, Step]:
                 params = slash_command.params
                 params["user_input"] = after_command
                 try:
-                    for replacement_step in REPLACEMENT_SLASH_COMMAND_STEPS:
-                        if slash_command.step.__name__ == replacement_step.__name__:
-                            return replacement_step(**params)
+                    if isinstance(slash_command.step, str):
+                        if slash_command.step not in step_name_to_step_class:
+                            return None
 
-                    return slash_command.step(**params)
+                        return step_name_to_step_class[slash_command.step](**params)
+                    elif isinstance(slash_command.step, object):
+                        if (
+                            slash_command.step.__class__.__name__
+                            not in step_name_to_step_class
+                        ):
+                            return slash_command.step(**params)
+
+                        return step_name_to_step_class[
+                            slash_command.step.__class__.__name__
+                        ](**params)
+
                 except TypeError as e:
                     raise Exception(
                         f"Incorrect params used for slash command '{command_name}': {e}"

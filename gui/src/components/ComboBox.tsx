@@ -1091,16 +1091,6 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
               {selectedContextItems.length} snippets selected
             </div>
           )}
-          {/* {selectedContextItems.length > 0 && (
-          <HeaderButtonWithText
-            onClick={() => {
-              client?.showContextVirtualFile(props.index);
-            }}
-            text="View Current Context"
-          >
-            <MagnifyingGlassIcon width="1.4em" height="1.4em" />
-          </HeaderButtonWithText>
-        )} */}
         </div>
       ) : (
         selectedContextItems.length > 0 && (

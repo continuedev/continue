@@ -1,3 +1,4 @@
+import inspect
 import json
 import os
 import traceback
@@ -6,26 +7,24 @@ from typing import Dict, List, Optional
 
 from aiohttp import ClientPayloadError
 from openai import error as openai_errors
-import inspect
 
-from ..libs.util.strings import remove_quotes_and_escapes
 from ..libs.llm.prompts.chat import template_alpaca_messages
-from .context import ContextManager
 from ..libs.util.devdata import dev_data_logger
 from ..libs.util.logging import logger
 from ..libs.util.paths import getSavedContextGroupsPath
+from ..libs.util.strings import remove_quotes_and_escapes
 from ..libs.util.telemetry import posthog_logger
 from ..libs.util.traceback.traceback_parsers import (
     get_javascript_traceback,
     get_python_traceback,
 )
 from ..models.filesystem import RangeInFileWithContents
-from ..server.protocols.gui_protocol import AbstractGUIProtocolServer
-from ..server.protocols.ide_protocol import AbstractIdeProtocolServer
 from ..plugins.policies.default import DefaultPolicy
 from ..plugins.steps.on_traceback import DefaultOnTracebackStep
-
+from ..server.protocols.gui_protocol import AbstractGUIProtocolServer
+from ..server.protocols.ide_protocol import AbstractIdeProtocolServer
 from .config import ContinueConfig
+from .context import ContextManager
 from .main import (
     AutopilotGenerator,
     AutopilotGeneratorOutput,
@@ -33,14 +32,14 @@ from .main import (
     ContextItem,
     ContinueCustomException,
     ContinueError,
+    DeltaStep,
     Policy,
     SessionState,
+    SessionUpdate,
     SetStep,
     Step,
-    UpdateStep,
-    SessionUpdate,
     StepDescription,
-    DeltaStep,
+    UpdateStep,
 )
 from .observation import Observation
 from .sdk import ContinueSDK

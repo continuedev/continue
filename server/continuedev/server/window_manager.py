@@ -1,27 +1,23 @@
+import os
 import traceback
 from typing import Dict, Optional
 
-from ..libs.util.create_async_task import create_async_task
-
-from ..libs.index.build_index import build_index
-
-from ..plugins.steps.on_traceback import DefaultOnTracebackStep
-
-from ..core.context import ContextManager
-
-from ..plugins.context_providers.highlighted_code import HighlightedCodeContextProvider
-
-from ..plugins.context_providers.file import FileContextProvider
-
-from ..core.main import SessionState
 from ..core.autopilot import Autopilot
-from ..libs.util.paths import getConfigFilePath, getDiffsFolderPath
 from ..core.config import ContinueConfig
-from .protocols.ide import IdeProtocolServer, WindowInfo
-from .protocols.gui import GUIProtocolServer
-from ..libs.util.logging import logger
-from ..libs.util.telemetry import posthog_logger
+from ..core.context import ContextManager
+from ..core.main import SessionState
+from ..libs.constants.default_config import default_config_json
+from ..libs.index.build_index import build_index
+from ..libs.util.create_async_task import create_async_task
 from ..libs.util.devdata import dev_data_logger
+from ..libs.util.logging import logger
+from ..libs.util.paths import getConfigFilePath, getDiffsFolderPath, migrate
+from ..libs.util.telemetry import posthog_logger
+from ..plugins.context_providers.file import FileContextProvider
+from ..plugins.context_providers.highlighted_code import HighlightedCodeContextProvider
+from ..plugins.steps.on_traceback import DefaultOnTracebackStep
+from .protocols.gui import GUIProtocolServer
+from .protocols.ide import IdeProtocolServer, WindowInfo
 
 
 class Window:
@@ -75,12 +71,16 @@ class Window:
             await self.config.models.start(
                 self.ide.window_info.unique_id,
                 self.config.system_message,
-                self.config.temperature,
+                self.config.completion_options.temperature,
             )
 
     async def display_config_error(self):
         if self._error_loading_config is not None:
-            await self.ide.setFileOpen(getConfigFilePath())
+            if not os.path.exists(getConfigFilePath(json=True)):
+                with open(getConfigFilePath(json=True), "w") as f:
+                    f.write(default_config_json)
+
+            await self.ide.setFileOpen(getConfigFilePath(json=True))
             await self.ide.showMessage(
                 f"""We found an error while loading your config.py. For now, Continue is falling back to the default configuration. If you need help solving this error, please reach out to us on Discord by clicking the question mark button in the bottom right.\n\n{self._error_loading_config}"""
             )
@@ -89,6 +89,18 @@ class Window:
     async def load(
         self, config: Optional[ContinueConfig] = None, only_reloading: bool = False
     ):
+        if self.ide is not None:
+
+            async def migrate_fn():
+                await self.ide.showMessage(
+                    f"Continue has migrated to using a JSON config file (config.json). To learn more, visit [https://continue.dev/docs/config-file-migration](https://continue.dev/docs/config-file-migration)."
+                )
+
+            await migrate(
+                "config_json_001",
+                migrate_fn,
+            )
+
         # Need a non-step way of sending a notification to the GUI. Fine to be displayed similarly
 
         # formatted_err = "\n".join(traceback.format_exception(e, e, e.__traceback__))
@@ -115,7 +127,7 @@ class Window:
         await self.config.models.start(
             self.ide.window_info.unique_id,
             self.config.system_message,
-            self.config.temperature,
+            self.config.completion_options.temperature,
         )
 
         # When the config is loaded, setup posthog logger
@@ -139,8 +151,11 @@ class Window:
         )
 
         async def onFileSavedCallback(filepath: str, contents: str):
-            if filepath.endswith(".continue/config.py") or filepath.endswith(
-                ".continue\\config.py"
+            if (
+                filepath.endswith(".continue/config.py")
+                or filepath.endswith(".continue\\config.py")
+                or filepath.endswith(".continue/config.json")
+                or filepath.endswith(".continue\\config.json")
             ):
                 await self.reload_config()
                 if self.gui is not None:

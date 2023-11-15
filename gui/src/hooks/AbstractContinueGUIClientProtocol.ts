@@ -1,6 +1,7 @@
 import { ContextItem } from "../schema/ContextItem";
 import { ContextItemId } from "../schema/ContextItemId";
 import { ContinueConfig } from "../schema/ContinueConfig";
+import { ModelDescription } from "../schema/SerializedContinueConfig";
 
 abstract class AbstractContinueGUIClientProtocol {
   abstract sendMainInput(input: string): void;
@@ -27,8 +28,6 @@ abstract class AbstractContinueGUIClientProtocol {
 
   abstract toggleAddingHighlightedCode(): void;
 
-  abstract showContextVirtualFile(): void;
-
   abstract selectContextItem(id: string, query: string): void;
 
   abstract getContextItem(id: string, query: string): Promise<ContextItem>;
@@ -47,11 +46,7 @@ abstract class AbstractContinueGUIClientProtocol {
 
   abstract setTemperature(temperature: number): void;
 
-  abstract addModelForRole(
-    role: string,
-    model_class: string,
-    model: string
-  ): void;
+  abstract addModelForRole(role: string, model: ModelDescription): void;
 
   abstract saveContextGroup(title: string, contextItems: ContextItem[]): void;
 

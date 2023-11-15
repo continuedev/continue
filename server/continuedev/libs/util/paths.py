@@ -1,6 +1,6 @@
 import os
 import re
-from typing import Optional
+from typing import Awaitable, Callable, Optional
 
 from ..constants.default_config import default_config
 from ..constants.main import (
@@ -8,7 +8,6 @@ from ..constants.main import (
     CONTINUE_SERVER_FOLDER,
     CONTINUE_SESSIONS_FOLDER,
 )
-from contextlib import asynccontextmanager
 
 
 def find_data_file(filename):
@@ -39,14 +38,9 @@ def markMigrated(migration_id: str):
         f.write("")
 
 
-@asynccontextmanager
-async def migration(migration_id: str):
-    has_migrated = hasMigrated(migration_id)
-    if has_migrated:
-        return
-    try:
-        yield
-    finally:
+async def migrate(migration_id: str, migrate_func: Callable[[], Awaitable]):
+    if not hasMigrated(migration_id):
+        await migrate_func()
         markMigrated(migration_id)
 
 
@@ -145,6 +139,7 @@ def migrateConfigFile(existing: str) -> Optional[str]:
         .replace("text_gen_interface", "text_gen_webui")
         .replace(".steps.chroma", ".steps.codebase")
         .replace("\xa0", " ")
+        .replace("server_url", "api_base")
     )
     if migrated != existing:
         return migrated
@@ -152,23 +147,27 @@ def migrateConfigFile(existing: str) -> Optional[str]:
     return None
 
 
-def getConfigFilePath() -> str:
-    path = os.path.join(getGlobalFolderPath(), "config.py")
+def getConfigFilePath(json: bool = False) -> str:
+    path = os.path.join(
+        getGlobalFolderPath(), "config.py" if not json else "config.json"
+    )
     os.makedirs(os.path.dirname(path), exist_ok=True)
 
-    if not os.path.exists(path):
-        with open(path, "w") as f:
-            f.write(default_config)
-    else:
-        # Make any necessary migrations
-        with open(path, "r") as f:
-            existing_content = f.read()
-
-        migrated = migrateConfigFile(existing_content)
-
-        if migrated is not None:
+    # Until migration considered complete, don't do this for .json
+    if not json:
+        if not os.path.exists(path):
             with open(path, "w") as f:
-                f.write(migrated)
+                f.write(default_config)
+        else:
+            # Make any necessary migrations
+            with open(path, "r") as f:
+                existing_content = f.read()
+
+            migrated = migrateConfigFile(existing_content)
+
+            if migrated is not None:
+                with open(path, "w") as f:
+                    f.write(migrated)
 
     return path
 

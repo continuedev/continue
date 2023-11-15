@@ -1,46 +1,45 @@
 import json
-from typing import Any, Callable, Coroutine, Dict, List, Literal, Optional
+from typing import Any, Coroutine, List, Literal, Optional
 
-from pydantic import Field
+from pydantic import Field, validator
 
 from ...core.main import ChatMessage, ContinueCustomException
 from ..util.logging import logger
 from .base import LLM, CompletionOptions
 from .openai import CHAT_MODELS
-from .prompts.chat import llama2_template_messages
-from .prompts.edit import codellama_edit_prompt
 
 
 class GGML(LLM):
     """
     See our [5 minute quickstart](https://github.com/continuedev/ggml-server-example) to run any model locally with ggml. While these models don't yet perform as well, they are free, entirely private, and run offline.
 
-    Once the model is running on localhost:8000, change `~/.continue/config.py` to look like this:
+    Once the model is running on localhost:8000, change `~/.continue/config.json` to look like this:
 
-    ```python title="~/.continue/config.py"
-    from continuedev.libs.llm.ggml import GGML
-
-    config = ContinueConfig(
-        ...
-        models=Models(
-            default=GGML(
-                max_context_length=2048,
-                server_url="http://localhost:8000")
-        )
-    )
+    ```json title="~/.continue/config.json"
+    {
+        "models": [{
+            "title": "GGML",
+            "provider": "openai-aiohttp",
+            "model": "MODEL_NAME",
+            "api_base": "http://localhost:8000"
+        }]
+    }
     ```
     """
 
-    server_url: str = Field(
+    api_base: Optional[str] = Field(
         "http://localhost:8000",
         description="URL of the OpenAI-compatible server where the model is being served",
     )
+
+    @validator("api_base", pre=True, always=True)
+    def set_api_base(cls, api_base):
+        return api_base or "http://localhost:8000"
+
     model: str = Field(
         "ggml", description="The name of the model to use (optional for the GGML class)"
     )
 
-    api_base: Optional[str] = Field(None, description="OpenAI API base URL.")
-
     api_type: Optional[Literal["azure", "openai"]] = Field(
         None, description="OpenAI API type."
     )
@@ -52,28 +51,6 @@ class GGML(LLM):
     engine: Optional[str] = Field(
         None, description="OpenAI engine. For use with Azure OpenAI Service."
     )
-
-    api_base: Optional[str] = Field(None, description="OpenAI API base URL.")
-
-    api_type: Optional[Literal["azure", "openai"]] = Field(
-        None, description="OpenAI API type."
-    )
-
-    api_version: Optional[str] = Field(
-        None, description="OpenAI API version. For use with Azure OpenAI Service."
-    )
-
-    engine: Optional[str] = Field(
-        None, description="OpenAI engine. For use with Azure OpenAI Service."
-    )
-
-    template_messages: Optional[
-        Callable[[List[Dict[str, str]]], str]
-    ] = llama2_template_messages
-
-    prompt_templates = {
-        "edit": codellama_edit_prompt,
-    }
 
     class Config:
         arbitrary_types_allowed = True
@@ -101,20 +78,7 @@ class GGML(LLM):
 
             return f"{self.api_base}/openai/deployments/{self.engine}/{endpoint}?api-version={self.api_version}"
         else:
-            return f"{self.server_url}/v1/{endpoint}"
-
-    def get_full_server_url(self, endpoint: str):
-        endpoint = endpoint.lstrip("/").rstrip("/")
-
-        if self.api_type == "azure":
-            if self.engine is None or self.api_version is None or self.api_base is None:
-                raise Exception(
-                    "For Azure OpenAI Service, you must specify engine, api_version, and api_base."
-                )
-
-            return f"{self.api_base}/openai/deployments/{self.engine}/{endpoint}?api-version={self.api_version}"
-        else:
-            return f"{self.server_url}/v1/{endpoint}"
+            return f"{self.api_base}/v1/{endpoint}"
 
     async def _raw_stream_complete(self, prompt, options):
         args = self.collect_args(options)
@@ -128,7 +92,7 @@ class GGML(LLM):
                     **args,
                 },
                 headers=self.get_headers(),
-                proxy=self.proxy,
+                proxy=self.request_options.proxy,
             ) as resp:
                 if resp.status != 200:
                     raise Exception(
@@ -167,7 +131,7 @@ class GGML(LLM):
                     self.get_full_server_url(endpoint="chat/completions"),
                     json={"messages": messages, "stream": True, **args},
                     headers=self.get_headers(),
-                    proxy=self.proxy,
+                    proxy=self.request_options.proxy,
                 ) as resp:
                     if resp.status != 200:
                         detail = (
@@ -228,7 +192,7 @@ class GGML(LLM):
                     **args,
                 },
                 headers=self.get_headers(),
-                proxy=self.proxy,
+                proxy=self.request_options.proxy,
             ) as resp:
                 if resp.status != 200:
                     raise Exception(

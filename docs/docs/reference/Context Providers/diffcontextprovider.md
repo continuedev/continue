@@ -4,7 +4,7 @@ import ClassPropertyRef from '@site/src/components/ClassPropertyRef.tsx';
 
 Type '@diff' to reference all of the changes you've made to your current branch. This is useful if you want to summarize what you've done or ask for a general review of your work before committing.
 
-[View the source](https://github.com/continuedev/continue/blob/main/server/continuedev/libs/llm/plugins/context_providers/diff.py)
+[View the source](https://github.com/continuedev/continue/blob/main/server/continuedev/plugins/context_providers/diff.py)
 
 ## Properties
 

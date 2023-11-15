@@ -3,7 +3,6 @@ import json
 import traceback
 from typing import List
 
-import aiohttp
 from pydantic import validator
 from ..util.count_tokens import CONTEXT_LENGTH_FOR_MODEL
 
@@ -41,7 +40,7 @@ class ProxyServer(LLM):
                 f"{SERVER_URL}/complete",
                 json={"messages": [{"role": "user", "content": prompt}], **args},
                 headers=self.get_headers(),
-                proxy=self.proxy,
+                proxy=self.request_options.proxy,
             ) as resp:
                 resp_text = await resp.text()
                 if resp.status != 200:
@@ -56,7 +55,7 @@ class ProxyServer(LLM):
                 f"{SERVER_URL}/stream_chat",
                 json={"messages": messages, **args},
                 headers=self.get_headers(),
-                proxy=self.proxy,
+                proxy=self.request_options.proxy,
             ) as resp:
                 if resp.status != 200:
                     raise Exception(await resp.text())
@@ -100,7 +99,7 @@ class ProxyServer(LLM):
                 f"{SERVER_URL}/stream_complete",
                 json={"messages": [{"role": "user", "content": prompt}], **args},
                 headers=self.get_headers(),
-                proxy=self.proxy,
+                proxy=self.request_options.proxy,
             ) as resp:
                 if resp.status != 200:
                     raise Exception(await resp.text())

@@ -1,61 +1,68 @@
 import json
-from typing import Callable
-from pydantic import Field
+from typing import Any, Dict, Optional
+
+from continuedev.models.llm import CompletionOptions
+from pydantic import Field, validator
 
 from ...core.main import ContinueCustomException
 from ..util.logging import logger
 from .base import LLM
-from .prompts.chat import llama2_template_messages
-from .prompts.edit import codellama_edit_prompt
 
 
 class TogetherLLM(LLM):
     """
-    The Together API is a cloud platform for running large AI models. You can sign up [here](https://api.together.xyz/signup), copy your API key on the initial welcome screen, and then hit the play button on any model from the [Together Models list](https://docs.together.ai/docs/models-inference). Change `~/.continue/config.py` to look like this:
+    The Together API is a cloud platform for running large AI models. You can sign up [here](https://api.together.xyz/signup), copy your API key on the initial welcome screen, and then hit the play button on any model from the [Together Models list](https://docs.together.ai/docs/models-inference). Change `~/.continue/config.json` to look like this:
 
-    ```python title="~/.continue/config.py"
-    from continuedev.core.models import Models
-    from continuedev.libs.llm.together import TogetherLLM
-
-    config = ContinueConfig(
-        ...
-        models=Models(
-            default=TogetherLLM(
-                api_key="<API_KEY>",
-                model="togethercomputer/llama-2-13b-chat"
-            )
-        )
-    )
+    ```json title="~/.continue/config.json"
+    {
+        "models": [{
+            "title": "Together CodeLlama",
+            "provider": "together",
+            "model": "codellama-13b",
+            "api_key": "YOUR_API_KEY"
+        }]
+    }
     ```
     """
 
     api_key: str = Field(..., description="Together API key")
 
     model: str = "togethercomputer/RedPajama-INCITE-7B-Instruct"
-    base_url: str = Field(
+    api_base: Optional[str] = Field(
         "https://api.together.xyz",
         description="The base URL for your Together API instance",
     )
 
-    template_messages: Callable = llama2_template_messages
+    @validator("api_base", pre=True, always=True)
+    def set_api_base(cls, api_base):
+        return api_base or "https://api.together.xyz"
 
-    prompt_templates = {
-        "edit": codellama_edit_prompt,
-    }
+    def collect_args(self, options: CompletionOptions) -> Dict[str, Any]:
+        args = super().collect_args(options)
+        args["model"] = {
+            "codellama-7b": "togethercomputer/CodeLlama-7b-Instruct",
+            "codellama-13b": "togethercomputer/CodeLlama-13b-Instruct",
+            "codellama-34b": "togethercomputer/CodeLlama-34b-Instruct",
+            "llama2-7b": "togethercomputer/llama-2-7b-chat",
+            "llama2-13b": "togethercomputer/llama-2-13b-chat",
+            "llama2-70b": "togethercomputer/llama-2-70b-chat",
+            "mistral-7b": "mistralai/Mistral-7B-Instruct-v0.1",
+        }.get(self.model, self.model)
+        return args
 
     async def _stream_complete(self, prompt, options):
         args = self.collect_args(options)
 
         async with self.create_client_session() as session:
             async with session.post(
-                f"{self.base_url}/inference",
+                f"{self.api_base}/inference",
                 json={
                     "prompt": prompt,
                     "stream_tokens": True,
                     **args,
                 },
                 headers={"Authorization": f"Bearer {self.api_key}"},
-                proxy=self.proxy,
+                proxy=self.request_options.proxy,
             ) as resp:
                 async for line in resp.content.iter_chunks():
                     if line[1]:
@@ -92,10 +99,10 @@ class TogetherLLM(LLM):
 
         async with self.create_client_session() as session:
             async with session.post(
-                f"{self.base_url}/inference",
+                f"{self.api_base}/inference",
                 json={"prompt": prompt, **args},
                 headers={"Authorization": f"Bearer {self.api_key}"},
-                proxy=self.proxy,
+                proxy=self.request_options.proxy,
             ) as resp:
                 text = await resp.text()
                 j = json.loads(text)

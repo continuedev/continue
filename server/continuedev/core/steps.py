@@ -1,11 +1,11 @@
 # These steps are depended upon by ContinueSDK
 import difflib
 import subprocess
-from textwrap import dedent
 import time
+from textwrap import dedent
 from typing import Coroutine, List, Optional, Union
 
-from ..libs.llm.base import LLM, PromptTemplate
+from ..libs.llm.base import LLM
 from ..libs.llm.openai_free_trial import OpenAIFreeTrial
 from ..libs.util.count_tokens import DEFAULT_MAX_TOKENS
 from ..libs.util.devdata import dev_data_logger
@@ -16,20 +16,8 @@ from ..libs.util.strings import (
 from ..libs.util.telemetry import posthog_logger
 from ..libs.util.templating import render_prompt_template
 from ..models.filesystem import FileSystem, RangeInFile, RangeInFileWithContents
-from ..models.filesystem_edit import (
-    EditDiff,
-    FileEditWithFullContents,
-    FileSystemEdit,
-)
-
-from .main import (
-    ChatMessage,
-    ContinueCustomException,
-    DeltaStep,
-    SessionUpdate,
-    SetStep,
-    Step,
-)
+from ..models.filesystem_edit import EditDiff, FileEditWithFullContents, FileSystemEdit
+from .main import ChatMessage, ContinueCustomException, SessionUpdate, SetStep, Step
 from .observation import TextObservation, UserInputObservation
 
 
@@ -626,7 +614,7 @@ Please output the code to be inserted at the cursor in order to fulfill the user
             async def gen():
                 async for chunk in model_to_use.stream_chat(
                     messages,
-                    temperature=sdk.config.temperature,
+                    temperature=sdk.config.completion_options.temperature,
                     max_tokens=min(max_tokens, model_to_use.context_length // 2),
                 ):
                     if "content" in chunk:
