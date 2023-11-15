@@ -41,10 +41,6 @@ _codellama_edit_prompt = dedent(
             [CODE]"""
 )
 
-codellama_edit_prompt = PromptTemplate(
-    prompt=_codellama_edit_prompt, raw=True, stop=["[/CODE]"]
-)
-
 _alpaca_edit_prompt = dedent(
     """\
             Below is an instruction that describes a task, paired with an input that provides further context. Write a response that appropriately completes the request.
@@ -59,8 +55,51 @@ _alpaca_edit_prompt = dedent(
 
             ### Response:
             
+            Sure! Here's the code you requested:
             ```
             """
 )
 
+_phind_edit_prompt = dedent(
+    """\
+            ### System Prompt
+            You are an expert programmer and write code on the first attempt without any errors or fillers.
+
+            ### User Message:
+            Rewrite the code to satisfy this request: "{{{user_input}}}"
+
+            ```
+            {{{code_to_edit}}}
+            ```
+
+            ### Assistant:
+            Sure! Here's the code you requested:
+
+            ```
+            """
+)
+
+_zephyr_edit_prompt = dedent(
+    """\
+            <|system|>
+            You are an expert programmer and write code on the first attempt without any errors or fillers.</s>
+            <|user|>
+            Rewrite the code to satisfy this request: "{{{user_input}}}"
+
+            ```
+            {{{code_to_edit}}}
+            ```</s>
+            <|assistant|>
+            Sure! Here's the code you requested:
+            
+            ```
+            """
+)
+
+
+codellama_edit_prompt = PromptTemplate(
+    prompt=_codellama_edit_prompt, raw=True, stop=["[/CODE]"]
+)
 alpaca_edit_prompt = PromptTemplate(prompt=_alpaca_edit_prompt, raw=True, stop=["```"])
+phind_edit_prompt = PromptTemplate(prompt=_phind_edit_prompt, raw=True, stop=["```"])
+zephyr_edit_prompt = PromptTemplate(prompt=_zephyr_edit_prompt, raw=True, stop=["```"])

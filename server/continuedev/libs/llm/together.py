@@ -1,13 +1,12 @@
 import json
-from typing import Callable, Optional
+from typing import Any, Dict, Optional
 
+from continuedev.models.llm import CompletionOptions
 from pydantic import Field, validator
 
 from ...core.main import ContinueCustomException
 from ..util.logging import logger
 from .base import LLM
-from .prompts.chat import llama2_template_messages
-from .prompts.edit import codellama_edit_prompt
 
 
 class TogetherLLM(LLM):
@@ -41,6 +40,19 @@ class TogetherLLM(LLM):
     @validator("api_base", pre=True, always=True)
     def set_api_base(cls, api_base):
         return api_base or "https://api.together.xyz"
+
+    def collect_args(self, options: CompletionOptions) -> Dict[str, Any]:
+        args = super().collect_args(options)
+        args["model"] = {
+            "codellama-7b": "togethercomputer/CodeLlama-7b-Instruct",
+            "codellama-13b": "togethercomputer/CodeLlama-13b-Instruct",
+            "codellama-34b": "togethercomputer/CodeLlama-34b-Instruct",
+            "llama2-7b": "togethercomputer/llama-2-7b-chat",
+            "llama2-13b": "togethercomputer/llama-2-13b-chat",
+            "llama2-70b": "togethercomputer/llama-2-70b-chat",
+            "mistral-7b": "mistralai/Mistral-7B-Instruct-v0.1",
+        }.get(self.model, self.model)
+        return args
 
     async def _stream_complete(self, prompt, options):
         args = self.collect_args(options)

@@ -190,6 +190,44 @@
           "if": {
             "properties": {
               "provider": {
+                "type": "str"
+              }
+            },
+            "not": {
+              "required": ["provider"]
+            }
+          },
+          "then": {
+            "properties": {
+              "model": {
+                "enum": [
+                  "gpt-3.5-turbo",
+                  "gpt-3.5-turbo-16k",
+                  "gpt-4",
+                  "gpt-3.5-turbo-0613",
+                  "gpt-4-32k",
+                  "gpt-4-1106-preview",
+                  "mistral-7b",
+                  "llama2-7b",
+                  "llama2-13b",
+                  "codellama-7b",
+                  "codellama-13b",
+                  "codellama-34b",
+                  "phind-codellama-34b",
+                  "wizardcoder-7b",
+                  "wizardcoder-13b",
+                  "wizardcoder-34b",
+                  "zephyr-7b",
+                  "codeup-13b"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "provider": {
                 "enum": [
                   "openai",
                   "anthropic",
@@ -199,7 +237,8 @@
                   "together"
                 ]
               }
-            }
+            },
+            "required": ["provider"]
           },
           "then": {
             "required": ["api_key"]
@@ -215,7 +254,8 @@
           },
           "then": {
             "required": ["api_base"]
-          }
+          },
+          "required": ["provider"]
         },
         {
           "if": {
@@ -223,7 +263,8 @@
               "provider": {
                 "enum": ["openai", "openai-aiohttp"]
               }
-            }
+            },
+            "required": ["provider"]
           },
           "then": {
             "properties": {
@@ -235,6 +276,205 @@
               },
               "api_version": {
                 "type": "string"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "provider": {
+                "enum": ["openai", "openai-aiohttp"]
+              }
+            },
+            "required": ["provider"]
+          },
+          "then": {
+            "properties": {
+              "model": {
+                "enum": [
+                  "gpt-3.5-turbo",
+                  "gpt-3.5-turbo-16k",
+                  "gpt-4",
+                  "gpt-3.5-turbo-0613",
+                  "gpt-4-32k",
+                  "gpt-4-1106-preview"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "provider": {
+                "enum": ["replicate"]
+              }
+            },
+            "required": ["provider"]
+          },
+          "then": {
+            "properties": {
+              "model": {
+                "enum": [
+                  "codellama-7b",
+                  "codellama-13b",
+                  "codellama-34b",
+                  "llama2-7b",
+                  "llama2-13b"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "provider": {
+                "enum": ["openai-free-trial"]
+              }
+            },
+            "required": ["provider"]
+          },
+          "then": {
+            "properties": {
+              "model": {
+                "enum": ["gpt-3.5-turbo", "gpt-4"]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "provider": {
+                "enum": ["openai", "openai-aiohttp"]
+              },
+              "api_type": {
+                "not": {
+                  "const": "azure"
+                }
+              }
+            },
+            "required": ["provider"]
+          },
+          "then": {
+            "properties": {
+              "model": {
+                "enum": [
+                  "gpt-3.5-turbo",
+                  "gpt-3.5-turbo-16k",
+                  "gpt-4",
+                  "gpt-3.5-turbo-0613",
+                  "gpt-4-32k",
+                  "gpt-4-1106-preview",
+                  "mistral-7b",
+                  "llama2-7b",
+                  "llama2-13b",
+                  "codellama-7b",
+                  "codellama-13b",
+                  "codellama-34b",
+                  "phind-codellama-34b",
+                  "wizardcoder-7b",
+                  "wizardcoder-13b",
+                  "wizardcoder-34b",
+                  "zephyr-7b",
+                  "codeup-13b"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "provider": {
+                "enum": ["anthropic"]
+              }
+            },
+            "required": ["provider"]
+          },
+          "then": {
+            "properties": {
+              "model": {
+                "enum": ["claude-2"]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "provider": {
+                "enum": ["google-palm"]
+              }
+            },
+            "required": ["provider"]
+          },
+          "then": {
+            "properties": {
+              "model": {
+                "enum": ["chat-bison-001"]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "provider": {
+                "enum": ["together"]
+              }
+            },
+            "required": ["provider"]
+          },
+          "then": {
+            "properties": {
+              "model": {
+                "enum": [
+                  "mistral-7b",
+                  "llama2-7b",
+                  "llama2-13b",
+                  "codellama-7b",
+                  "codellama-13b",
+                  "codellama-34b"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "provider": {
+                "enum": [
+                  "ollama",
+                  "huggingface-tgi",
+                  "huggingface-inference-api",
+                  "llama.cpp",
+                  "text-gen-webui"
+                ]
+              }
+            },
+            "required": ["provider"]
+          },
+          "then": {
+            "properties": {
+              "model": {
+                "enum": [
+                  "mistral-7b",
+                  "llama2-7b",
+                  "llama2-13b",
+                  "codellama-7b",
+                  "codellama-13b",
+                  "codellama-34b",
+                  "phind-codellama-34b",
+                  "wizardcoder-7b",
+                  "wizardcoder-13b",
+                  "wizardcoder-34b",
+                  "zephyr-7b",
+                  "codeup-13b"
+                ]
               }
             }
           }
@@ -258,7 +498,8 @@
               "provider": {
                 "enum": ["openai"]
               }
-            }
+            },
+            "required": ["provider"]
           },
           "then": {
             "properties": {
@@ -274,7 +515,8 @@
               "provider": {
                 "enum": ["text-gen-webui"]
               }
-            }
+            },
+            "required": ["provider"]
           },
           "then": {
             "properties": {

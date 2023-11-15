@@ -11,7 +11,9 @@ from ...libs.llm.prompts.chat import (
 from ...libs.llm.prompts.edit import (
     alpaca_edit_prompt,
     codellama_edit_prompt,
+    phind_edit_prompt,
     simplest_edit_prompt,
+    zephyr_edit_prompt,
 )
 
 StepName = Literal[
@@ -74,7 +76,11 @@ def autodetect_prompt_templates(model: str):
     templates = {}
 
     edit_template = None
-    if template_type == "llama2":
+    if template_type == "phind":
+        edit_template = phind_edit_prompt
+    elif template_type == "zephyr":
+        edit_template = zephyr_edit_prompt
+    elif template_type == "llama2":
         edit_template = codellama_edit_prompt
     elif template_type == "alpaca":
         edit_template = alpaca_edit_prompt
@@ -116,3 +122,30 @@ MODEL_PROVIDER_TO_MODEL_CLASS = {
     "text-gen-webui": "TextGenWebUI",
     "google-palm": "GooglePaLMAPI",
 }
+
+MODELS = [
+    # OpenAI
+    "gpt-3.5-turbo",
+    "gpt-3.5-turbo-16k",
+    "gpt-4",
+    "gpt-3.5-turbo-0613",
+    "gpt-4-32k",
+    "gpt-4-1106-preview",
+    # Open-Source
+    "mistral-7b",
+    "llama2-7b",
+    "llama2-13b",
+    "codellama-7b",
+    "codellama-13b",
+    "codellama-34b",
+    "phind-codellama-34b",
+    "wizardcoder-7b",
+    "wizardcoder-13b",
+    "wizardcoder-34b",
+    "zephyr-7b",
+    "codeup-13b",
+    # Anthropic
+    "claude-2",
+    # Google PaLM
+    "chat-bison-001",
+]

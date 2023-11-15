@@ -40,10 +40,19 @@ class ReplicateLLM(LLM):
         await super().start(*args, **kwargs)
         self._client = replicate.Client(api_token=self.api_key)
 
+    def get_model_name(self):
+        return {
+            "codellama-7b": "meta/codellama-7b-instruct:6527b83e01e41412db37de5110a8670e3701ee95872697481a355e05ce12af0e",
+            "codellama-13b": "meta/codellama-13b-instruct:1f01a52ff933873dff339d5fb5e1fd6f24f77456836f514fa05e91c1a42699c7",
+            "codellama-34b": "meta/codellama-34b-instruct:8281a5c610f6e88237ff3ddaf3c33b56f60809e2bdd19fbec2fda742aa18167e",
+            "llama2-7b": "meta/llama-2-7b-chat:8e6975e5ed6174911a6ff3d60540dfd4844201974602551e10e9e87ab143d81e",
+            "llama2-13b": "meta/llama-2-13b-chat:f4e2de70d66816a838a89eeeb621910adffb0dd0baba3976c96980970978018d",
+        }.get(self.model, self.model)
+
     async def _complete(self, prompt: str, options):
         def helper():
             output = self._client.run(
-                self.model, input={"message": prompt, "prompt": prompt}
+                self.get_model_name(), input={"message": prompt, "prompt": prompt}
             )
             completion = ""
             for item in output:
@@ -59,13 +68,13 @@ class ReplicateLLM(LLM):
 
     async def _stream_complete(self, prompt, options):
         for item in self._client.run(
-            self.model, input={"message": prompt, "prompt": prompt}
+            self.get_model_name(), input={"message": prompt, "prompt": prompt}
         ):
             yield item
 
     async def _stream_chat(self, messages: List[ChatMessage], options):
         for item in self._client.run(
-            self.model,
+            self.get_model_name(),
             input={
                 "message": messages[-1]["content"],
                 "prompt": messages[-1]["content"],

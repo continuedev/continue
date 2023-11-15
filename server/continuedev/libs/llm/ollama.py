@@ -43,7 +43,24 @@ class Ollama(LLM):
             "top_k": options.top_k,
             "num_predict": options.max_tokens,
             "stop": options.stop,
+            "num_ctx": self.context_length,
         }
+
+    def get_model_name(self):
+        return {
+            "mistral-7b": "mistral:7b",
+            "llama2-7b": "llama2:7b",
+            "llama2-13b": "llama2:13b",
+            "codellama-7b": "codellama:7b",
+            "codellama-13b": "codellama:13b",
+            "codellama-34b": "codellama:34b",
+            "phind-codellama-34b": "phind-codellama:34b-v2",
+            "wizardcoder-7b": "wizardcoder:7b-python",
+            "wizardcoder-13b": "wizardcoder:13b-python",
+            "wizardcoder-34b": "wizardcoder:34b-python",
+            "zephyr-7b": "zephyr:7b",
+            "codeup-13b": "codeup:13b",
+        }.get(self.model, self.model)
 
     async def start(self, *args, **kwargs):
         await super().start(*args, **kwargs)
@@ -54,7 +71,7 @@ class Ollama(LLM):
                     proxy=self.request_options.proxy,
                     json={
                         "prompt": "",
-                        "model": self.model,
+                        "model": self.get_model_name(),
                     },
                 ) as _:
                     pass
@@ -76,7 +93,7 @@ class Ollama(LLM):
                 f"{self.api_base}/api/generate",
                 json={
                     "template": prompt,
-                    "model": self.model,
+                    "model": self.get_model_name(),
                     "system": self.system_message,
                     "options": self.collect_args(options),
                 },
@@ -86,7 +103,7 @@ class Ollama(LLM):
                     txt = await resp.text()
                     extra_msg = ""
                     if "no such file" in txt:
-                        extra_msg = f"\n\nThis means that the model '{self.model}' is not downloaded.\n\nYou have the following models downloaded: {', '.join(await self.get_downloaded_models())}.\n\nTo download this model, run `ollama run {self.model}` in your terminal."
+                        extra_msg = f"\n\nThis means that the model '{self.get_model_name()}' is not downloaded.\n\nYou have the following models downloaded: {', '.join(await self.get_downloaded_models())}.\n\nTo download this model, run `ollama run {self.get_model_name()}` in your terminal."
                     raise ContinueCustomException(
                         f"Ollama returned an error: {txt}{extra_msg}",
                         "Invalid request to Ollama",
