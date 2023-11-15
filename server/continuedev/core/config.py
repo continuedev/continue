@@ -484,7 +484,13 @@ class ContinueConfig(BaseModel):
         if not os.path.exists(json_path):
             # MIGRATE FROM OLD CONFIG FORMAT TO JSON
             py_path = getConfigFilePath()
-            config = ContinueConfig.from_filepath(py_path)
+            try:
+                # If they have pre-existing old config.py this will work
+                config = ContinueConfig.from_filepath(py_path)
+            except Exception:
+                # Otherwise go with the default
+                config = ContinueConfig()
+
             with open(json_path, "w") as f:
                 json.dump(config.to_serialized_continue_config().dict(), f)
 
