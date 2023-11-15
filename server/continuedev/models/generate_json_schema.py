@@ -2,9 +2,8 @@ import os
 
 from pydantic import schema_json_of
 
-from ..core.config.config import ContinueConfig
-from ..core.config.serialized_config import ModelDescription, SerializedContinueConfig
-from ..core.config.shared import ModelName, ModelProvider
+from ..core.config import ContinueConfig, ModelDescription, SerializedContinueConfig
+from ..core.config_utils.shared import ModelName, ModelProvider
 from ..core.context import ContextItem, ContextItemId
 from ..core.main import (
     ContextProviderDescription,

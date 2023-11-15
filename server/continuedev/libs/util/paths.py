@@ -145,6 +145,7 @@ def migrateConfigFile(existing: str) -> Optional[str]:
         .replace("text_gen_interface", "text_gen_webui")
         .replace(".steps.chroma", ".steps.codebase")
         .replace("\xa0", " ")
+        .replace("server_url", "api_base")
     )
     if migrated != existing:
         return migrated
@@ -158,19 +159,21 @@ def getConfigFilePath(json: bool = False) -> str:
     )
     os.makedirs(os.path.dirname(path), exist_ok=True)
 
-    if not os.path.exists(path):
-        with open(path, "w") as f:
-            f.write(default_config)
-    else:
-        # Make any necessary migrations
-        with open(path, "r") as f:
-            existing_content = f.read()
-
-        migrated = migrateConfigFile(existing_content)
-
-        if migrated is not None:
+    # Until migration considered complete, don't do this for .json
+    if not json:
+        if not os.path.exists(path):
             with open(path, "w") as f:
-                f.write(migrated)
+                f.write(default_config)
+        else:
+            # Make any necessary migrations
+            with open(path, "r") as f:
+                existing_content = f.read()
+
+            migrated = migrateConfigFile(existing_content)
+
+            if migrated is not None:
+                with open(path, "w") as f:
+                    f.write(migrated)
 
     return path
 

@@ -15,7 +15,7 @@ from ..models.main import Range
 from ..plugins.context_providers.highlighted_code import HighlightedCodeContextProvider
 from ..server.protocols.gui_protocol import AbstractGUIProtocolServer
 from ..server.protocols.ide_protocol import AbstractIdeProtocolServer
-from .config.config import ContinueConfig
+from .config import ContinueConfig
 from .lsp import ContinueLSPClient
 from .main import (
     ChatMessage,

@@ -23,7 +23,7 @@ from ..plugins.policies.default import DefaultPolicy
 from ..plugins.steps.on_traceback import DefaultOnTracebackStep
 from ..server.protocols.gui_protocol import AbstractGUIProtocolServer
 from ..server.protocols.ide_protocol import AbstractIdeProtocolServer
-from .config.config import ContinueConfig
+from .config import ContinueConfig
 from .context import ContextManager
 from .main import (
     AutopilotGenerator,

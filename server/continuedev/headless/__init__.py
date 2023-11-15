@@ -1,7 +1,7 @@
 from typing import List, Optional, Union
 
 from ..core.autopilot import Autopilot
-from ..core.config.config import ContinueConfig
+from ..core.config import ContinueConfig
 from ..core.context import ContextManager, ContextProvider
 from ..core.main import SessionState
 from ..server.protocols.cli_gui import CommandLineGUI

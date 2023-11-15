@@ -1,15 +1,10 @@
 import uuid
-from typing import Callable, Dict, List, Optional, Type, cast
+from typing import Callable, Dict, List, Optional, Type
 
 from pydantic import BaseModel, validator
 
-from ..core.config.shared import (
-    MODEL_PROVIDER_TO_MODEL_CLASS,
-    autodetect_prompt_templates,
-    autodetect_template_function,
-)
 from ..libs.llm.anthropic import AnthropicLLM
-from ..libs.llm.base import LLM, BaseCompletionOptions
+from ..libs.llm.base import LLM
 from ..libs.llm.ggml import GGML
 from ..libs.llm.google_palm_api import GooglePaLMAPI
 from ..libs.llm.hf_inference_api import HuggingFaceInferenceAPI
@@ -21,7 +16,6 @@ from ..libs.llm.openai_free_trial import OpenAIFreeTrial
 from ..libs.llm.replicate import ReplicateLLM
 from ..libs.llm.text_gen_webui import TextGenWebUI
 from ..libs.llm.together import TogetherLLM
-from .config.serialized_config import ModelDescription, SerializedContinueConfig
 
 
 class ContinueSDK(BaseModel):
@@ -93,44 +87,6 @@ class Models(BaseModel):
         if v is None:
             return values["default"]
         return v
-
-    @staticmethod
-    def from_serialized_config(config: SerializedContinueConfig) -> "Models":
-        def model_with_title(title: Optional[str], fallback: ModelDescription):
-            return next(filter(lambda x: x.title == title, config.models), fallback)
-
-        default = model_with_title(config.model_roles.default, config.models[0])
-        chat = model_with_title(config.model_roles.chat, default)
-        edit = model_with_title(config.model_roles.edit, default)
-        summarize = model_with_title(config.model_roles.summarize, default)
-
-        saved = [
-            model_with_title(model.title, default)
-            for model in config.models
-            if model.title
-            not in [default.title, chat.title, edit.title, summarize.title]
-        ]
-
-        def create_llm(model: ModelDescription) -> LLM:
-            model_class = MODEL_CLASSES[MODEL_PROVIDER_TO_MODEL_CLASS[model.provider]]
-            completion_options = config.completion_options.dict()
-            completion_options.update(model.completion_options.dict(exclude_none=True))
-
-            # Allow extra fields to be passed through
-            kwargs = {**model.dict(exclude_none=True)}
-            kwargs["completion_options"] = completion_options
-            kwargs["template_messages"] = autodetect_template_function(model.model)
-            kwargs["prompt_templates"] = autodetect_prompt_templates(model.model)
-
-            return model_class(**kwargs)
-
-        return Models(
-            default=create_llm(default),
-            chat=create_llm(chat),
-            edit=create_llm(edit),
-            summarize=create_llm(summarize),
-            saved=[create_llm(model) for model in saved],
-        )
 
     def dict(self, **kwargs):
         original_dict = super().dict(**kwargs)

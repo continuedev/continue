@@ -1,10 +1,8 @@
 import asyncio
 from typing import AsyncGenerator
 
-from ...core.config.config import ContinueConfig
-from ...libs.index.chunkers.chunk_directory import (
-    stream_chunk_directory,
-)
+from ...core.config import ContinueConfig
+from ...libs.index.chunkers.chunk_directory import stream_chunk_directory
 from ...libs.index.indices.chroma_index import MAX_CHUNK_SIZE, ChromaCodebaseIndex
 from ...libs.index.indices.meilisearch_index import MeilisearchCodebaseIndex
 from ...server.protocols.ide_protocol import AbstractIdeProtocolServer

@@ -9,7 +9,7 @@ from rich.markdown import Markdown
 from tqdm import tqdm
 
 from . import run
-from .core.config.config import ContinueConfig
+from .core.config import ContinueConfig
 from .headless import get_headless_autopilot
 from .headless.headless_ide import LocalIdeProtocol
 from .libs.index.build_index import build_index

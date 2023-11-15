@@ -111,7 +111,7 @@ ModelProvider = Literal[
 MODEL_PROVIDER_TO_MODEL_CLASS = {
     "openai": "OpenAI",
     "openai-free-trial": "OpenAIFreeTrial",
-    "openai-aiohttp": "OpenAIFreeTrial",
+    "openai-aiohttp": "GGML",
     "anthropic": "AnthropicLLM",
     "together": "TogetherLLM",
     "ollama": "Ollama",
@@ -121,6 +121,20 @@ MODEL_PROVIDER_TO_MODEL_CLASS = {
     "replicate": "ReplicateLLM",
     "text-gen-webui": "TextGenWebUI",
     "google-palm": "GooglePaLMAPI",
+}
+
+MODEL_CLASS_TO_MODEL_PROVIDER: Dict[str, ModelProvider] = {
+    "OpenAI": "openai",
+    "OpenAIFreeTrial": "openai-free-trial",
+    "AnthropicLLM": "anthropic",
+    "TogetherLLM": "together",
+    "Ollama": "ollama",
+    "HuggingFaceTGI": "huggingface-tgi",
+    "HuggingFaceInferenceAPI": "huggingface-inference-api",
+    "LlamaCpp": "llama.cpp",
+    "ReplicateLLM": "replicate",
+    "TextGenWebUI": "text-gen-webui",
+    "GooglePaLMAPI": "google-palm",
 }
 
 MODELS = [

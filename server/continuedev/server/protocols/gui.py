@@ -5,8 +5,7 @@ import socketio
 from pydantic import BaseModel
 
 from ...core.autopilot import Autopilot
-from ...core.config.config import ContinueConfig
-from ...core.config.serialized_config import ModelDescription, SerializedContinueConfig
+from ...core.config import ContinueConfig, ModelDescription, SerializedContinueConfig
 from ...core.main import ContextItem, SessionState, SessionUpdate, Step, StepDescription
 from ...libs.util.telemetry import posthog_logger
 from ...libs.util.types import AsyncFunc

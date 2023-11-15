@@ -1,4 +1,4 @@
-from typing import Literal
+from typing import Dict, Literal
 
 from ...plugins.context_providers.diff import DiffContextProvider
 from ...plugins.context_providers.github import GitHubIssuesContextProvider
@@ -26,4 +26,14 @@ CONTEXT_PROVIDER_NAME_TO_CLASS = {
     "google": GoogleContextProvider,
     "search": SearchContextProvider,
     "url": URLContextProvider,
+}
+
+CLASS_TO_CONTEXT_PROVIDER_NAME: Dict[str, ContextProviderName] = {
+    "DiffContextProvider": "diff",
+    "GitHubIssuesContextProvider": "github",
+    "TerminalContextProvider": "terminal",
+    "OpenTabsContextProvider": "open",
+    "GoogleContextProvider": "google",
+    "SearchContextProvider": "search",
+    "URLContextProvider": "url",
 }

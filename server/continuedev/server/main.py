@@ -9,7 +9,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
-from ..core.config.config import ContinueConfig
+from ..core.config import ContinueConfig
 from ..core.main import ContextProviderDescription, SlashCommandDescription
 from ..libs.util.create_async_task import create_async_task
 from ..libs.util.devdata import dev_data_logger

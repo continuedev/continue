@@ -1,7 +1,7 @@
 import asyncio
 from typing import Union
 
-from .core.config.config import ContinueConfig
+from .core.config import ContinueConfig
 from .core.main import Step
 
 # from .headless import start_headless_session

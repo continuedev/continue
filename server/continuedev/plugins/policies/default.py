@@ -1,6 +1,6 @@
 from typing import Type, Union
 
-from ...core.config.config import ContinueConfig
+from ...core.config import ContinueConfig
 from ...core.main import Policy, SessionState, Step
 from ...models.main import Position, PositionInFile
 from ..steps.chat import SimpleChatStep

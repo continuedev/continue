@@ -2,7 +2,7 @@ import traceback
 from typing import Dict, Optional
 
 from ..core.autopilot import Autopilot
-from ..core.config.config import ContinueConfig
+from ..core.config import ContinueConfig
 from ..core.context import ContextManager
 from ..core.main import SessionState
 from ..libs.index.build_index import build_index
