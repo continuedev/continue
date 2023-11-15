@@ -1,5 +1,6 @@
 import _ from "lodash";
 import { ModelProvider } from "../schema/ModelProvider";
+import { ModelName } from "../schema/ModelName";
 
 export function updatedObj(old: any, pathToValue: { [key: string]: any }) {
   const newObject = _.cloneDeep(old);
@@ -149,7 +150,7 @@ export interface ModelPackage {
   tags?: ModelProviderTag[];
   icon?: string;
   params: {
-    model: string;
+    model: ModelName;
     template_messages?: string;
     context_length: number;
     stop_tokens?: string[];
@@ -166,8 +167,8 @@ const codeLlamaInstruct: ModelPackage = {
     "A model from Meta, fine-tuned for code generation and conversation",
   refUrl: "",
   params: {
-    title: "CodeLlama-7b-Instruct",
-    model: "codellama:7b-instruct",
+    title: "CodeLlama-7b",
+    model: "codellama-7b",
     context_length: 2048,
   },
   icon: "meta.png",
@@ -177,16 +178,16 @@ const codeLlamaInstruct: ModelPackage = {
       description: "The number of parameters in the model",
       options: {
         "7b": {
-          model: "codellama:7b-instruct",
-          title: "CodeLlama-7b-Instruct",
+          model: "codellama-7b",
+          title: "CodeLlama-7b",
         },
         "13b": {
-          model: "codellama:13b-instruct",
-          title: "CodeLlama-13b-Instruct",
+          model: "codellama-13b",
+          title: "CodeLlama-13b",
         },
         "34b": {
-          model: "codellama:34b-instruct",
-          title: "CodeLlama-34b-Instruct",
+          model: "codellama-34b",
+          title: "CodeLlama-34b",
         },
       },
     },
@@ -198,8 +199,8 @@ const llama2Chat: ModelPackage = {
   description: "The latest Llama model from Meta, fine-tuned for chat",
   refUrl: "",
   params: {
-    title: "Llama2-7b-Chat",
-    model: "llama2:7b-chat",
+    title: "Llama2-7b",
+    model: "llama2-7b",
     context_length: 2048,
   },
   icon: "meta.png",
@@ -209,16 +210,16 @@ const llama2Chat: ModelPackage = {
       description: "The number of parameters in the model",
       options: {
         "7b": {
-          model: "llama2:7b-chat",
-          title: "Llama2-7b-Chat",
+          model: "llama2-7b",
+          title: "Llama2-7b",
         },
         "13b": {
-          model: "llama2:13b-chat",
-          title: "Llama2-13b-Chat",
+          model: "llama2-13b",
+          title: "Llama2-13b",
         },
         "34b": {
-          model: "llama2:34b-chat",
-          title: "Llama2-34b-Chat",
+          model: "llama2-34b",
+          title: "Llama2-34b",
         },
       },
     },
@@ -231,8 +232,8 @@ const wizardCoder: ModelPackage = {
     "A CodeLlama-based code generation model from WizardLM, focused on Python",
   refUrl: "",
   params: {
-    title: "WizardCoder-7b-Python",
-    model: "wizardcoder:7b-python",
+    title: "WizardCoder-7b",
+    model: "wizardcoder-7b",
     context_length: 2048,
   },
   icon: "wizardlm.png",
@@ -242,16 +243,16 @@ const wizardCoder: ModelPackage = {
       description: "The number of parameters in the model",
       options: {
         "7b": {
-          model: "wizardcoder:7b-python",
-          title: "WizardCoder-7b-Python",
+          model: "wizardcoder-7b",
+          title: "WizardCoder-7b",
         },
         "13b": {
-          model: "wizardcoder:13b-python",
-          title: "WizardCoder-13b-Python",
+          model: "wizardcoder-13b",
+          title: "WizardCoder-13b",
         },
         "34b": {
-          model: "wizardcoder:34b-python",
-          title: "WizardCoder-34b-Python",
+          model: "wizardcoder-34b",
+          title: "WizardCoder-34b",
         },
       },
     },
@@ -263,7 +264,7 @@ const phindCodeLlama: ModelPackage = {
   description: "A finetune of CodeLlama by Phind",
   params: {
     title: "Phind CodeLlama",
-    model: "phind-codellama",
+    model: "phind-codellama-34b",
     context_length: 2048,
   },
 };
@@ -274,37 +275,10 @@ const mistral: ModelPackage = {
     "A 7b parameter base model created by Mistral AI, very competent for code generation and other tasks",
   params: {
     title: "Mistral",
-    model: "mistral",
+    model: "mistral-7b",
     context_length: 2048,
   },
   icon: "mistral.png",
-};
-
-const sqlCoder: ModelPackage = {
-  title: "SQLCoder",
-  description:
-    "A finetune of StarCoder by Defog.ai, focused specifically on SQL",
-  params: {
-    title: "SQLCoder",
-    model: "sqlcoder",
-    context_length: 2048,
-  },
-  dimensions: [
-    {
-      name: "Parameter Count",
-      description: "The number of parameters in the model",
-      options: {
-        "7b": {
-          model: "sqlcoder:7b",
-          title: "SQLCoder-7b",
-        },
-        "13b": {
-          model: "sqlcoder:15b",
-          title: "SQLCoder-15b",
-        },
-      },
-    },
-  ],
 };
 
 const codeup: ModelPackage = {
@@ -312,7 +286,7 @@ const codeup: ModelPackage = {
   description: "An open-source coding model based on Llama2",
   params: {
     title: "CodeUp",
-    model: "codeup",
+    model: "codeup-13b",
     context_length: 2048,
   },
 };
@@ -322,7 +296,6 @@ const osModels = [
   llama2Chat,
   wizardCoder,
   phindCodeLlama,
-  sqlCoder,
   mistral,
   codeup,
 ];
@@ -361,23 +334,6 @@ const gpt35turbo: ModelPackage = {
     api_key: "",
   },
 };
-
-const OLLAMA_TO_REPLICATE_MODEL_NAMES: { [key: string]: string } = {
-  "codellama:7b-instruct":
-    "meta/codellama-7b-instruct:6527b83e01e41412db37de5110a8670e3701ee95872697481a355e05ce12af0e",
-  "codellama:13b-instruct":
-    "meta/codellama-13b-instruct:1f01a52ff933873dff339d5fb5e1fd6f24f77456836f514fa05e91c1a42699c7",
-  "codellama:34b-instruct":
-    "meta/codellama-34b-instruct:8281a5c610f6e88237ff3ddaf3c33b56f60809e2bdd19fbec2fda742aa18167e",
-  "llama2:7b-chat":
-    "meta/llama-2-7b-chat:8e6975e5ed6174911a6ff3d60540dfd4844201974602551e10e9e87ab143d81e",
-  "llama2:13b-chat":
-    "meta/llama-2-13b-chat:f4e2de70d66816a838a89eeeb621910adffb0dd0baba3976c96980970978018d",
-};
-
-function replicateConvertModelName(model: string): string {
-  return OLLAMA_TO_REPLICATE_MODEL_NAMES[model] || model;
-}
 
 export const MODEL_INFO: { [key: string]: ModelInfo } = {
   openai: {
@@ -474,55 +430,12 @@ export const MODEL_INFO: { [key: string]: ModelInfo } = {
       },
       ...completionParamsInputs,
     ],
-    packages: [
-      updatedObj(llama2Chat, {
-        "dimensions[0].options": (options: any) =>
-          _.mapValues(options, (option) => {
-            return _.assign({}, option, {
-              model:
-                "togethercomputer/" +
-                option.model.replace("llama2", "llama-2").replace(":", "-"),
-            });
-          }),
-      }),
-      updatedObj(codeLlamaInstruct, {
-        "dimensions[0].options": (options: any) =>
-          _.mapValues(options, (option) => {
-            return _.assign({}, option, {
-              model:
-                "togethercomputer/" +
-                option.model
-                  .replace("codellama", "CodeLlama")
-                  .replace(":", "-")
-                  .replace("instruct", "Instruct"),
-            });
-          }),
-      }),
-      // Support was dropped recently?
-      // updatedObj(wizardCoder, {
-      //   "params.model": "WizardLM/WizardCoder-15B-V1.0",
-      //   "params.title": "WizardCoder-15b",
-      //   "dimensions[0].options": {
-      //     "15b": {
-      //       model: "WizardLM/WizardCoder-15B-V1.0",
-      //       title: "WizardCoder-15b",
-      //     },
-      //     "34b (Python)": {
-      //       model: "WizardLM/WizardCoder-Python-34B-V1.0",
-      //       title: "WizardCoder-34b-Python",
-      //     },
-      //   },
-      // }),
-      updatedObj(phindCodeLlama, {
-        "params.model": "Phind/Phind-CodeLlama-34B-Python-v1",
-      }),
-      updatedObj(mistral, {
-        "params.model": "mistralai/Mistral-7B-Instruct-v0.1",
-      }),
-    ].map((p) => {
-      p.params.context_length = 4096;
-      return p;
-    }),
+    packages: [llama2Chat, codeLlamaInstruct, phindCodeLlama, mistral].map(
+      (p) => {
+        p.params.context_length = 4096;
+        return p;
+      }
+    ),
   },
   lmstudio: {
     title: "LM Studio",
@@ -562,55 +475,7 @@ export const MODEL_INFO: { [key: string]: ModelInfo } = {
       ModelProviderTag["Requires API Key"],
       ModelProviderTag["Open-Source"],
     ],
-    packages: [
-      ...[codeLlamaInstruct, llama2Chat]
-        .map((p: ModelPackage) => {
-          if (p.title === "Llama2 Chat") {
-            return updatedObj(p, {
-              "dimensions[0].options.34b": undefined,
-              "dimensions[0].options.70b": {
-                model:
-                  "meta/llama-2-70b-chat:02e509c789964a7ea8736978a43525956ef40397be9033abf9fd2badfe68c9e3",
-                title: "Llama2-70b-Chat",
-              },
-            });
-          }
-          return p;
-        })
-        .map((p) => {
-          return updatedObj(p, {
-            "params.model": (model: string) => {
-              return replicateConvertModelName(model);
-            },
-            "dimensions[0].options": (options: any) => {
-              const newOptions: any = {};
-              for (const key in options) {
-                newOptions[key] = {
-                  ...options[key],
-                  model: replicateConvertModelName(options[key]?.model),
-                };
-              }
-              return newOptions;
-            },
-          });
-        }),
-      updatedObj(wizardCoder, {
-        title: "WizardCoder (15b)",
-        "params.model":
-          "andreasjansson/wizardcoder-python-34b-v1-gguf:67eed332a5389263b8ede41be3ee7dc119fa984e2bde287814c4abed19a45e54",
-        dimensions: undefined,
-      }),
-      updatedObj(sqlCoder, {
-        dimensions: undefined,
-        title: "SQLCoder (15b)",
-        "params.model":
-          "gregwdata/defog-sqlcoder-q8:0a9abc0d143072fd5d8920ad90b8fbaafaf16b10ffdad24bd897b5bffacfce0b",
-      }),
-      updatedObj(mistral, {
-        "params.model":
-          "a16z-infra/mistral-7b-instruct-v0.1:83b6a56e7c828e667f21fd596c338fd4f0039b46bcfa18d973e8e70e455fda70",
-      }),
-    ],
+    packages: [codeLlamaInstruct, llama2Chat, wizardCoder, mistral],
   },
   llamacpp: {
     title: "llama.cpp",

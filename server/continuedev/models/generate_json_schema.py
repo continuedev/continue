@@ -3,11 +3,8 @@ import os
 from pydantic import schema_json_of
 
 from ..core.config.config import ContinueConfig
-from ..core.config.serialized_config import (
-    ModelDescription,
-    ModelProvider,
-    SerializedContinueConfig,
-)
+from ..core.config.serialized_config import ModelDescription, SerializedContinueConfig
+from ..core.config.shared import ModelName, ModelProvider
 from ..core.context import ContextItem, ContextItemId
 from ..core.main import (
     ContextProviderDescription,
@@ -36,7 +33,8 @@ MODELS_TO_GENERATE = (
         SlashCommandDescription,
         ContextProviderDescription,
     ]
-    + [SerializedContinueConfig, ModelDescription, ModelProvider]
+    + [SerializedContinueConfig, ModelDescription]
+    + [ModelProvider, ModelName]
     + [ContinueConfig]
     + [ContextItem, ContextItemId]
     + [Models]
@@ -61,6 +59,8 @@ def main():
         title = RENAMES.get(model.__name__, model.__name__)
         if model == ModelProvider:
             title = "ModelProvider"
+        elif model == ModelName:
+            title = "ModelName"
         try:
             json = schema_json_of(model, indent=2, title=title)
         except Exception as e:
