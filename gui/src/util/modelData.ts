@@ -396,6 +396,18 @@ const gpt35turbo: ModelPackage = {
   },
 };
 
+const gpt4_agent: ModelPackage = {
+  title: "GPT4_Agent",
+  description:
+    "GPT4 Agent",
+  params: {
+    model: "gpt4_agent",
+    context_length: 8096,
+    title: "GPT4_Agent",
+    api_key: "",
+  },
+};
+
 const OLLAMA_TO_REPLICATE_MODEL_NAMES: { [key: string]: string } = {
   "codellama:7b-instruct":
     "meta/codellama-7b-instruct:6527b83e01e41412db37de5110a8670e3701ee95872697481a355e05ce12af0e",
@@ -769,5 +781,28 @@ After it's up and running, you can start using Continue.`,
       { ...gpt35turbo, title: "GPT-3.5-Turbo (trial)" },
     ],
     collectInputFor: [...completionParamsInputs],
+  },
+  openai_agent: {
+    title: "OpenAIAgent",
+    class: "OpenAIAgent",
+    description:
+      "OpenAIAgent description",
+    longDescription:
+      'OpenAIAgent longDescription',
+    icon: "openai.png",
+    tags: [ModelProviderTag.Free],
+    packages: [
+      { ...gpt4_agent, title: "GPT-4 Agent" }
+    ],
+    collectInputFor: [
+      {
+        inputType: CollectInputType.text,
+        key: "api_key",
+        label: "API Key",
+        placeholder: "Enter your OpenAI API key",
+        required: true,
+      },
+      ...completionParamsInputs,
+    ],
   },
 };

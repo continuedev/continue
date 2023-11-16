@@ -7,7 +7,8 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.8.1"
-openai = "^0.27.5"
+openai = "1.2.0"
+aiohttp = "^3.8.6"
 boltons = "^23.0.0"
 pydantic = "^1.10.8"
 uvicorn = "^0.21.1"

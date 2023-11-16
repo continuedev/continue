@@ -16,7 +16,7 @@ from ..libs.llm.openai_free_trial import OpenAIFreeTrial
 from ..libs.llm.replicate import ReplicateLLM
 from ..libs.llm.together import TogetherLLM
 from ..libs.llm.text_gen_webui import TextGenWebUI
-
+from ..libs.llm.openai_agent import OpenAIAgent
 
 class ContinueSDK(BaseModel):
     pass
@@ -44,6 +44,7 @@ MODEL_CLASSES = {
         HuggingFaceTGI,
         GooglePaLMAPI,
         TextGenWebUI,
+        OpenAIAgent
     ]
 }
 
@@ -60,6 +61,7 @@ MODEL_MODULE_NAMES = {
     "HuggingFaceTGI": "hf_tgi",
     "GooglePaLMAPI": "google_palm_api",
     "TextGenWebUI": "text_gen_webui",
+    "OpenAIAgent": "openai_agent", 
 }
 
 

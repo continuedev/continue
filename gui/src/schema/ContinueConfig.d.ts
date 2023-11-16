@@ -56,6 +56,10 @@ export type SystemMessage1 = string;
  */
 export type ContextLength = number;
 /**
+ * The maximum number of tokens to generate.
+ */
+export type MaxTokens = number;
+/**
  * Tokens that will stop the completion.
  */
 export type StopTokens = string[];
@@ -291,6 +295,7 @@ export interface LLM {
   model: Model;
   system_message?: SystemMessage1;
   context_length?: ContextLength;
+  max_tokens?: MaxTokens;
   stop_tokens?: StopTokens;
   temperature?: Temperature;
   top_p?: TopP;

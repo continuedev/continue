@@ -12,7 +12,7 @@ from chromadb.utils import embedding_functions
 from ....server.protocols.ide_protocol import AbstractIdeProtocolServer
 from .base import CodebaseIndex
 from dotenv import load_dotenv
-from openai.error import RateLimitError
+from openai import RateLimitError
 from pydantic import BaseModel
 
 from ..chunkers.chunk import Chunk
