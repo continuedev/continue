@@ -33,7 +33,8 @@ export type Provider =
   | "llama.cpp"
   | "replicate"
   | "text-gen-webui"
-  | "google-palm";
+  | "google-palm"
+  | "lmstudio";
 /**
  * The name of the model. Used to autodetect prompt template.
  */
@@ -142,14 +143,17 @@ export type CompletionOptions1 = BaseCompletionOptions;
 export type Name = string;
 export type Description = string;
 export type Step =
-  | "AnswerQuestionChroma"
-  | "GenerateShellCommandStep"
-  | "EditHighlightedCodeStep"
-  | "ShareSessionStep"
-  | "CommentCodeStep"
-  | "ClearHistoryStep"
-  | "StackOverflowStep"
-  | "OpenConfigStep";
+  | unknown
+  | (
+      | "AnswerQuestionChroma"
+      | "GenerateShellCommandStep"
+      | "EditHighlightedCodeStep"
+      | "ShareSessionStep"
+      | "CommentCodeStep"
+      | "ClearHistoryStep"
+      | "StackOverflowStep"
+      | "OpenConfigStep"
+    );
 /**
  * An array of slash commands that let you map custom Steps to a shortcut.
  */
@@ -161,7 +165,7 @@ export type Description1 = string;
  * An array of custom commands that allow you to reuse prompts. Each has name, description, and prompt properties. When you enter /<name> in the text input, it will act as a shortcut to the prompt.
  */
 export type CustomCommands = CustomCommand[];
-export type Name2 = "diff" | "github" | "terminal" | "open" | "google" | "search" | "url";
+export type Name2 = "diff" | "github" | "terminal" | "open" | "google" | "search" | "url" | "tree";
 /**
  * A list of ContextProvider objects that can be used to provide context to the LLM by typing '@'. Read more about ContextProviders in the documentation.
  */
@@ -171,7 +175,7 @@ export type ContextProviders = ContextProviderWithParams[];
  */
 export type UserToken = string;
 /**
- * The URL of the server where development data is sent. No data is sent unless a valid user token is provided.
+ * The URL of the server where development data is sent. No data is sent unless you have explicitly set the `user_token` property to a valid token that we have shared.
  */
 export type DataServerUrl = string;
 /**

@@ -1,6 +1,6 @@
 {
   "title": "ContinueConfig",
-  "$ref": "#/definitions/continuedev__core__config__config__ContinueConfig",
+  "$ref": "#/definitions/continuedev__core__config__ContinueConfig",
   "definitions": {
     "FunctionCall": {
       "title": "FunctionCall",
@@ -337,17 +337,22 @@
         },
         "step": {
           "title": "Step",
-          "enum": [
-            "AnswerQuestionChroma",
-            "GenerateShellCommandStep",
-            "EditHighlightedCodeStep",
-            "ShareSessionStep",
-            "CommentCodeStep",
-            "ClearHistoryStep",
-            "StackOverflowStep",
-            "OpenConfigStep"
-          ],
-          "type": "string"
+          "anyOf": [
+            {},
+            {
+              "enum": [
+                "AnswerQuestionChroma",
+                "GenerateShellCommandStep",
+                "EditHighlightedCodeStep",
+                "ShareSessionStep",
+                "CommentCodeStep",
+                "ClearHistoryStep",
+                "StackOverflowStep",
+                "OpenConfigStep"
+              ],
+              "type": "string"
+            }
+          ]
         },
         "params": {
           "title": "Params",
@@ -552,7 +557,7 @@
         }
       }
     },
-    "continuedev__core__config__config__ContinueConfig": {
+    "continuedev__core__config__ContinueConfig": {
       "title": "ContinueConfig",
       "description": "Continue can be deeply customized by editing the `ContinueConfig` object in `~/.continue/config.py` (`%userprofile%\\.continue\\config.py` for Windows) on your machine. This class is instantiated from the config file for every new session.",
       "type": "object",
@@ -788,7 +793,7 @@
         },
         "data_server_url": {
           "title": "Data Server Url",
-          "description": "The URL of the server where development data is sent. No data is sent unless a valid user token is provided.",
+          "description": "The URL of the server where development data is sent. No data is sent unless you have explicitly set the `user_token` property to a valid token that we have shared.",
           "default": "https://us-west1-autodebug.cloudfunctions.net",
           "type": "string"
         },

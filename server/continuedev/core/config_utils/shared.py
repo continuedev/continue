@@ -107,6 +107,7 @@ ModelProvider = Literal[
     "replicate",
     "text-gen-webui",
     "google-palm",
+    "lmstudio",
 ]
 
 MODEL_PROVIDER_TO_MODEL_CLASS = {
@@ -122,6 +123,7 @@ MODEL_PROVIDER_TO_MODEL_CLASS = {
     "replicate": "ReplicateLLM",
     "text-gen-webui": "TextGenWebUI",
     "google-palm": "GooglePaLMAPI",
+    "lmstudio": "LMStudio",
 }
 
 MODEL_CLASS_TO_MODEL_PROVIDER: Dict[str, ModelProvider] = {
@@ -136,6 +138,7 @@ MODEL_CLASS_TO_MODEL_PROVIDER: Dict[str, ModelProvider] = {
     "ReplicateLLM": "replicate",
     "TextGenWebUI": "text-gen-webui",
     "GooglePaLMAPI": "google-palm",
+    "LMStudio": "lmstudio",
 }
 
 MODELS = [

@@ -13,11 +13,7 @@ from ..libs.util.logging import logger
 from ..libs.util.paths import getConfigFilePath, getGlobalFolderPath
 from ..libs.util.telemetry import posthog_logger
 from ..models.llm import BaseCompletionOptions, RequestOptions
-from .config_utils.context import (
-    CLASS_TO_CONTEXT_PROVIDER_NAME,
-    CONTEXT_PROVIDER_NAME_TO_CLASS,
-    ContextProviderName,
-)
+from .config_utils.context import CONTEXT_PROVIDER_NAME_TO_CLASS, ContextProviderName
 from .config_utils.shared import (
     MODEL_CLASS_TO_MODEL_PROVIDER,
     MODEL_PROVIDER_TO_MODEL_CLASS,

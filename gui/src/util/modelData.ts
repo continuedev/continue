@@ -193,14 +193,7 @@ const codeLlamaInstruct: ModelPackage = {
       },
     },
   ],
-  providerOptions: [
-    "ollama",
-    "lmstudio",
-    "together",
-    "hftgi",
-    "llamacpp",
-    "replicate",
-  ],
+  providerOptions: ["ollama", "lmstudio", "together", "llamacpp", "replicate"],
 };
 
 const llama2Chat: ModelPackage = {
@@ -233,14 +226,7 @@ const llama2Chat: ModelPackage = {
       },
     },
   ],
-  providerOptions: [
-    "ollama",
-    "lmstudio",
-    "together",
-    "hftgi",
-    "llamacpp",
-    "replicate",
-  ],
+  providerOptions: ["ollama", "lmstudio", "together", "llamacpp", "replicate"],
 };
 
 const wizardCoder: ModelPackage = {
@@ -274,7 +260,7 @@ const wizardCoder: ModelPackage = {
       },
     },
   ],
-  providerOptions: ["ollama", "lmstudio", "hftgi", "llamacpp", "replicate"],
+  providerOptions: ["ollama", "lmstudio", "llamacpp", "replicate"],
 };
 
 const phindCodeLlama: ModelPackage = {
@@ -285,7 +271,7 @@ const phindCodeLlama: ModelPackage = {
     model: "phind-codellama-34b",
     context_length: 2048,
   },
-  providerOptions: ["ollama", "lmstudio", "hftgi", "llamacpp", "replicate"],
+  providerOptions: ["ollama", "lmstudio", "llamacpp", "replicate"],
 };
 
 const mistral: ModelPackage = {
@@ -298,15 +284,34 @@ const mistral: ModelPackage = {
     context_length: 2048,
   },
   icon: "mistral.png",
-  providerOptions: [
-    "ollama",
-    "lmstudio",
-    "together",
-    "hftgi",
-    "llamacpp",
-    "replicate",
-  ],
+  providerOptions: ["ollama", "lmstudio", "together", "llamacpp", "replicate"],
 };
+
+const zephyr: ModelPackage = {
+  title: "Zephyr-Beta (7b)",
+  description:
+    "A fine-tune of Mistral, trained on publicly available and synthetic datasets.",
+  params: {
+    title: "Zephyr",
+    model: "zephyr-7b",
+    context_length: 2048,
+  },
+  icon: "mistral.png",
+  providerOptions: ["ollama", "lmstudio", "llamacpp", "replicate"],
+};
+
+// const deepseek: ModelPackage = {
+//   title: "DeepSeek-Coder",
+//   description:
+//     "A fine-tune of Mistral, trained on publicly available and synthetic datasets.",
+//   params: {
+//     title: "DeepSeek",
+//     model: "deepseek-7b",
+//     context_length: 2048,
+//   },
+//   icon: "mistral.png",
+//   providerOptions: ["ollama", "lmstudio", "llamacpp", "replicate"],
+// };
 
 const codeup: ModelPackage = {
   title: "CodeUp (13b)",
@@ -316,7 +321,7 @@ const codeup: ModelPackage = {
     model: "codeup-13b",
     context_length: 2048,
   },
-  providerOptions: ["ollama", "lmstudio", "hftgi", "llamacpp", "replicate"],
+  providerOptions: ["ollama", "lmstudio", "llamacpp", "replicate"],
 };
 
 const osModels = [
@@ -326,6 +331,7 @@ const osModels = [
   phindCodeLlama,
   mistral,
   codeup,
+  zephyr,
 ];
 
 const gpt4turbo: ModelPackage = {
@@ -408,6 +414,7 @@ export const MODEL_INFO: ModelPackage[] = [
   phindCodeLlama,
   codeup,
   chatBison,
+  zephyr,
 ];
 
 export const PROVIDER_INFO: { [key: string]: ModelInfo } = {
@@ -512,7 +519,7 @@ export const PROVIDER_INFO: { [key: string]: ModelInfo } = {
   },
   lmstudio: {
     title: "LM Studio",
-    provider: "openai-aiohttp",
+    provider: "lmstudio",
     description:
       "One of the fastest ways to get started with local models on Mac or Windows",
     longDescription:
@@ -548,7 +555,7 @@ export const PROVIDER_INFO: { [key: string]: ModelInfo } = {
       ModelProviderTag["Requires API Key"],
       ModelProviderTag["Open-Source"],
     ],
-    packages: [codeLlamaInstruct, llama2Chat, wizardCoder, mistral],
+    packages: [codeLlamaInstruct, llama2Chat, wizardCoder, mistral, zephyr],
   },
   llamacpp: {
     title: "llama.cpp",
@@ -620,21 +627,6 @@ After it's up and running, you can start using Continue.`,
           context_length: 8000,
         },
       },
-    ],
-  },
-  hftgi: {
-    title: "HuggingFace TGI",
-    provider: "huggingface-tgi",
-    description:
-      "HuggingFace Text Generation Inference is an advanced, highly-performant option for serving open-source models to multiple people",
-    longDescription:
-      "HuggingFace Text Generation Inference is an advanced, highly-performant option for serving open-source models to multiple people. To get started, follow the [Quick Tour](https://huggingface.co/docs/text-generation-inference/quicktour) on their website to set up the Docker container. Make sure to enter the server URL below that corresponds to the host and port you set up for the Docker container.",
-    icon: "hf.png",
-    tags: [ModelProviderTag.Local, ModelProviderTag["Open-Source"]],
-    packages: osModels,
-    collectInputFor: [
-      ...completionParamsInputs,
-      { ...apiBaseInput, defaultValue: "http://localhost:8080" },
     ],
   },
   "openai-aiohttp": {

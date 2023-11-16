@@ -1,8 +1,9 @@
 import json
 from typing import Any, Dict, Optional
 
-from continuedev.models.llm import CompletionOptions
 from pydantic import Field, validator
+
+from continuedev.models.llm import CompletionOptions
 
 from ...core.main import ContinueCustomException
 from ..util.logging import logger

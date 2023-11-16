@@ -1,6 +1,6 @@
 {
   "title": "ModelDescription",
-  "$ref": "#/definitions/continuedev__core__config__serialized_config__ModelDescription",
+  "$ref": "#/definitions/continuedev__core__config__ModelDescription",
   "definitions": {
     "BaseCompletionOptions": {
       "title": "BaseCompletionOptions",
@@ -82,7 +82,7 @@
         }
       }
     },
-    "continuedev__core__config__serialized_config__ModelDescription": {
+    "continuedev__core__config__ModelDescription": {
       "title": "ModelDescription",
       "type": "object",
       "properties": {
@@ -106,7 +106,8 @@
             "llama.cpp",
             "replicate",
             "text-gen-webui",
-            "google-palm"
+            "google-palm",
+            "lmstudio"
           ],
           "type": "string"
         },

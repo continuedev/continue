@@ -1,6 +1,6 @@
 {
   "title": "SerializedContinueConfig",
-  "$ref": "#/definitions/continuedev__core__config__serialized_config__SerializedContinueConfig",
+  "$ref": "#/definitions/continuedev__core__config__SerializedContinueConfig",
   "definitions": {
     "BaseCompletionOptions": {
       "title": "BaseCompletionOptions",
@@ -106,7 +106,8 @@
             "llama.cpp",
             "replicate",
             "text-gen-webui",
-            "google-palm"
+            "google-palm",
+            "lmstudio"
           ],
           "type": "string"
         },
@@ -233,17 +234,22 @@
         },
         "step": {
           "title": "Step",
-          "enum": [
-            "AnswerQuestionChroma",
-            "GenerateShellCommandStep",
-            "EditHighlightedCodeStep",
-            "ShareSessionStep",
-            "CommentCodeStep",
-            "ClearHistoryStep",
-            "StackOverflowStep",
-            "OpenConfigStep"
-          ],
-          "type": "string"
+          "anyOf": [
+            {},
+            {
+              "enum": [
+                "AnswerQuestionChroma",
+                "GenerateShellCommandStep",
+                "EditHighlightedCodeStep",
+                "ShareSessionStep",
+                "CommentCodeStep",
+                "ClearHistoryStep",
+                "StackOverflowStep",
+                "OpenConfigStep"
+              ],
+              "type": "string"
+            }
+          ]
         },
         "params": {
           "title": "Params",
@@ -293,7 +299,8 @@
             "open",
             "google",
             "search",
-            "url"
+            "url",
+            "tree"
           ],
           "type": "string"
         },
@@ -371,7 +378,7 @@
         }
       }
     },
-    "continuedev__core__config__serialized_config__SerializedContinueConfig": {
+    "continuedev__core__config__SerializedContinueConfig": {
       "title": "SerializedContinueConfig",
       "type": "object",
       "properties": {
@@ -483,7 +490,7 @@
         },
         "data_server_url": {
           "title": "Data Server Url",
-          "description": "The URL of the server where development data is sent. No data is sent unless a valid user token is provided.",
+          "description": "The URL of the server where development data is sent. No data is sent unless you have explicitly set the `user_token` property to a valid token that we have shared.",
           "default": "https://us-west1-autodebug.cloudfunctions.net",
           "type": "string"
         },

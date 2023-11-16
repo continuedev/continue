@@ -136,14 +136,17 @@ export type CustomCommands = CustomCommand[];
 export type Name4 = string;
 export type Description2 = string;
 export type Step1 =
-  | "AnswerQuestionChroma"
-  | "GenerateShellCommandStep"
-  | "EditHighlightedCodeStep"
-  | "ShareSessionStep"
-  | "CommentCodeStep"
-  | "ClearHistoryStep"
-  | "StackOverflowStep"
-  | "OpenConfigStep";
+  | unknown
+  | (
+      | "AnswerQuestionChroma"
+      | "GenerateShellCommandStep"
+      | "EditHighlightedCodeStep"
+      | "ShareSessionStep"
+      | "CommentCodeStep"
+      | "ClearHistoryStep"
+      | "StackOverflowStep"
+      | "OpenConfigStep"
+    );
 /**
  * An array of slash commands that let you map custom Steps to a shortcut.
  */
@@ -196,7 +199,7 @@ export type ContextProviders = ContextProvider[];
  */
 export type UserToken = string;
 /**
- * The URL of the server where development data is sent. No data is sent unless a valid user token is provided.
+ * The URL of the server where development data is sent. No data is sent unless you have explicitly set the `user_token` property to a valid token that we have shared.
  */
 export type DataServerUrl = string;
 /**

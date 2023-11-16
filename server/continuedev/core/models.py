@@ -10,6 +10,7 @@ from ..libs.llm.google_palm_api import GooglePaLMAPI
 from ..libs.llm.hf_inference_api import HuggingFaceInferenceAPI
 from ..libs.llm.hf_tgi import HuggingFaceTGI
 from ..libs.llm.llamacpp import LlamaCpp
+from ..libs.llm.lmstudio import LMStudio
 from ..libs.llm.ollama import Ollama
 from ..libs.llm.openai import OpenAI
 from ..libs.llm.openai_free_trial import OpenAIFreeTrial
@@ -44,6 +45,7 @@ MODEL_CLASSES: Dict[str, Type[LLM]] = {
         HuggingFaceTGI,
         GooglePaLMAPI,
         TextGenWebUI,
+        LMStudio,
     ]
 }
 
@@ -60,6 +62,7 @@ MODEL_MODULE_NAMES = {
     "HuggingFaceTGI": "hf_tgi",
     "GooglePaLMAPI": "google_palm_api",
     "TextGenWebUI": "text_gen_webui",
+    "LMStudio": "lmstudio",
 }
 
 
