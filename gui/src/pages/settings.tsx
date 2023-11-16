@@ -119,7 +119,7 @@ function Settings() {
     if (!config) return;
 
     formMethods.setValue("system_message", config.system_message);
-    formMethods.setValue("temperature", config.temperature);
+    formMethods.setValue("temperature", config.completion_options?.temperature);
   }, [config]);
 
   return (
@@ -179,7 +179,7 @@ function Settings() {
               <div className="text-center" style={{ marginTop: "-25px" }}>
                 <p className="text-sm text-gray-500">
                   {(formMethods.watch("temperature") as number | undefined) ||
-                    config.completion_options.temperature ||
+                    config.completion_options?.temperature ||
                     "-"}
                 </p>
               </div>
