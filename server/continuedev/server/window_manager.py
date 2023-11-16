@@ -255,6 +255,11 @@ class WindowManager:
         if window_id not in self.windows:
             self.windows[window_id] = Window()
 
+        async def open_config():
+            ide = self.windows[window_id].ide
+            if ide is not None:
+                await ide.setFileOpen(getConfigFilePath(json=True))
+
         gui = GUIProtocolServer(
             window_id=window_id,
             sio=sio,
@@ -263,6 +268,7 @@ class WindowManager:
             get_context_item=self.windows[window_id].context_manager.get_context_item,
             get_config=self.windows[window_id].get_config,
             reload_config=self.windows[window_id].reload_config,
+            open_config=open_config,
         )
         self.windows[window_id].gui = gui
         self.guis[sid] = gui

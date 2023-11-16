@@ -284,7 +284,7 @@
           "if": {
             "properties": {
               "provider": {
-                "enum": ["openai", "openai-aiohttp"]
+                "enum": ["openai"]
               }
             },
             "required": ["provider"]

@@ -159,6 +159,7 @@ export interface ModelPackage {
     [key: string]: any;
   };
   dimensions?: PackageDimension[];
+  providerOptions?: string[];
 }
 
 const codeLlamaInstruct: ModelPackage = {
@@ -192,6 +193,14 @@ const codeLlamaInstruct: ModelPackage = {
       },
     },
   ],
+  providerOptions: [
+    "ollama",
+    "lmstudio",
+    "together",
+    "hftgi",
+    "llamacpp",
+    "replicate",
+  ],
 };
 
 const llama2Chat: ModelPackage = {
@@ -223,6 +232,14 @@ const llama2Chat: ModelPackage = {
         },
       },
     },
+  ],
+  providerOptions: [
+    "ollama",
+    "lmstudio",
+    "together",
+    "hftgi",
+    "llamacpp",
+    "replicate",
   ],
 };
 
@@ -257,6 +274,7 @@ const wizardCoder: ModelPackage = {
       },
     },
   ],
+  providerOptions: ["ollama", "lmstudio", "hftgi", "llamacpp", "replicate"],
 };
 
 const phindCodeLlama: ModelPackage = {
@@ -267,6 +285,7 @@ const phindCodeLlama: ModelPackage = {
     model: "phind-codellama-34b",
     context_length: 2048,
   },
+  providerOptions: ["ollama", "lmstudio", "hftgi", "llamacpp", "replicate"],
 };
 
 const mistral: ModelPackage = {
@@ -279,6 +298,14 @@ const mistral: ModelPackage = {
     context_length: 2048,
   },
   icon: "mistral.png",
+  providerOptions: [
+    "ollama",
+    "lmstudio",
+    "together",
+    "hftgi",
+    "llamacpp",
+    "replicate",
+  ],
 };
 
 const codeup: ModelPackage = {
@@ -289,6 +316,7 @@ const codeup: ModelPackage = {
     model: "codeup-13b",
     context_length: 2048,
   },
+  providerOptions: ["ollama", "lmstudio", "hftgi", "llamacpp", "replicate"],
 };
 
 const osModels = [
@@ -310,6 +338,8 @@ const gpt4turbo: ModelPackage = {
     title: "GPT-4 Turbo",
     api_key: "",
   },
+  providerOptions: ["openai", "freetrial"],
+  icon: "openai.png",
 };
 
 const gpt4: ModelPackage = {
@@ -321,6 +351,8 @@ const gpt4: ModelPackage = {
     api_key: "",
     title: "GPT-4",
   },
+  providerOptions: ["openai", "freetrial"],
+  icon: "openai.png",
 };
 
 const gpt35turbo: ModelPackage = {
@@ -333,9 +365,52 @@ const gpt35turbo: ModelPackage = {
     title: "GPT-3.5-Turbo",
     api_key: "",
   },
+  providerOptions: ["openai", "freetrial"],
+  icon: "openai.png",
 };
 
-export const MODEL_INFO: { [key: string]: ModelInfo } = {
+const claude2: ModelPackage = {
+  title: "Claude-2",
+  description: "A highly capable model with a 100k context length",
+  params: {
+    model: "claude-2",
+    context_length: 100000,
+    title: "Claude-2",
+    api_key: "",
+  },
+  providerOptions: ["anthropic"],
+  icon: "anthropic.png",
+};
+
+const chatBison: ModelPackage = {
+  title: "chat-bison-001",
+  description:
+    "Google PaLM's chat-bison-001 model, fine-tuned for chatting about code",
+  params: {
+    model: "chat-bison-001",
+    context_length: 8000,
+    api_key: "",
+    title: "Chat Bison",
+  },
+  providerOptions: ["palm"],
+  icon: "google-palm.png",
+};
+
+export const MODEL_INFO: ModelPackage[] = [
+  gpt4,
+  gpt35turbo,
+  gpt4turbo,
+  claude2,
+  mistral,
+  codeLlamaInstruct,
+  llama2Chat,
+  wizardCoder,
+  phindCodeLlama,
+  codeup,
+  chatBison,
+];
+
+export const PROVIDER_INFO: { [key: string]: ModelInfo } = {
   openai: {
     title: "OpenAI",
     provider: "openai",
@@ -562,7 +637,7 @@ After it's up and running, you can start using Continue.`,
       { ...apiBaseInput, defaultValue: "http://localhost:8080" },
     ],
   },
-  ggml: {
+  "openai-aiohttp": {
     title: "Other OpenAI-compatible API",
     provider: "openai-aiohttp",
     description:

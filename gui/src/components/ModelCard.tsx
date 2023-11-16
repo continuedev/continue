@@ -1,12 +1,18 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import styled from "styled-components";
 import { buttonColor, defaultBorderRadius, lightGray } from ".";
 import { useSelector } from "react-redux";
 import { RootStore } from "../redux/store";
 import { BookOpenIcon } from "@heroicons/react/24/outline";
 import HeaderButtonWithText from "./HeaderButtonWithText";
-import { MODEL_PROVIDER_TAG_COLORS, PackageDimension } from "../util/modelData";
+import {
+  MODEL_PROVIDER_TAG_COLORS,
+  PROVIDER_INFO,
+  PackageDimension,
+} from "../util/modelData";
 import InfoHover from "./InfoHover";
+import { GUIClientContext } from "../App";
+import { useNavigate } from "react-router-dom";
 
 const Div = styled.div<{ color: string; disabled: boolean; hovered: boolean }>`
   border: 1px solid ${lightGray};
@@ -34,6 +40,9 @@ const DimensionsDiv = styled.div`
   margin-left: auto;
   padding: 4px;
   /* width: fit-content; */
+
+  flex-wrap: wrap;
+  row-gap: 12px;
 
   border-top: 1px solid ${lightGray};
 `;
@@ -67,12 +76,14 @@ interface ModelCardProps {
   tags?: string[];
   refUrl?: string;
   icon?: string;
-  onClick: (
+  onClick?: (
     e: React.MouseEvent<HTMLDivElement, MouseEvent>,
-    dimensionChoices?: string[]
+    dimensionChoices?: string[],
+    selectedProvider?: string
   ) => void;
   disabled?: boolean;
   dimensions?: PackageDimension[];
+  providerOptions?: string[];
 }
 
 function ModelCard(props: ModelCardProps) {
@@ -83,6 +94,16 @@ function ModelCard(props: ModelCardProps) {
   );
 
   const [hovered, setHovered] = useState(false);
+
+  const [selectedProvider, setSelectedProvider] = useState<string | undefined>(
+    undefined
+  );
+
+  useEffect(() => {
+    if (props.providerOptions?.length) {
+      setSelectedProvider(props.providerOptions[0]);
+    }
+  }, [props.providerOptions]);
 
   return (
     <Div
@@ -101,7 +122,8 @@ function ModelCard(props: ModelCardProps) {
                 if ((e.target as any).closest("a")) {
                   return;
                 }
-                props.onClick(e, dimensionChoices);
+
+                props.onClick(e, dimensionChoices, selectedProvider);
               }
         }
       >
@@ -149,31 +171,78 @@ function ModelCard(props: ModelCardProps) {
         )}
       </div>
 
-      {props.dimensions?.length && (
+      {(props.dimensions?.length || props.providerOptions?.length) && (
         <DimensionsDiv>
           {props.dimensions?.map((dimension, i) => {
             return (
+              <>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <InfoHover msg={dimension.description} />
+                    <p className="mx-2 text-sm my-0 py-0">{dimension.name}</p>
+                  </div>
+                  <div className="flex items-center">
+                    {Object.keys(dimension.options).map((key) => {
+                      return (
+                        <DimensionOptionDiv
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            const newChoices = [...dimensionChoices];
+                            newChoices[i] = key;
+                            setDimensionChoices(newChoices);
+                          }}
+                          selected={dimensionChoices[i] === key}
+                        >
+                          {key}
+                        </DimensionOptionDiv>
+                      );
+                    })}
+                  </div>
+                </div>
+                <br />
+              </>
+            );
+          })}
+          {props.providerOptions?.length && (
+            <div className="flex items-center flex-wrap justify-end rtl">
               <div className="flex items-center">
-                <InfoHover msg={dimension.description} />
-                <p className="mx-2 text-sm my-0 py-0">{dimension.name}</p>
-                {Object.keys(dimension.options).map((key) => {
+                <InfoHover
+                  msg={
+                    "Select the provider through which you will access the model"
+                  }
+                />
+              </div>
+              <div className="flex items-center flex-wrap justify-end rtl">
+                {props.providerOptions?.map((option, i) => {
+                  const info = PROVIDER_INFO[option];
                   return (
-                    <DimensionOptionDiv
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        const newChoices = [...dimensionChoices];
-                        newChoices[i] = key;
-                        setDimensionChoices(newChoices);
+                    <HeaderButtonWithText
+                      text={info.title}
+                      className="p-2 text-center mx-1 items-center"
+                      style={{
+                        backgroundColor:
+                          (i === 0 &&
+                            typeof selectedProvider === "undefined") ||
+                          selectedProvider === option
+                            ? buttonColor + "aa"
+                            : undefined,
                       }}
-                      selected={dimensionChoices[i] === key}
+                      onClick={() => {
+                        setSelectedProvider(option);
+                      }}
                     >
-                      {key}
-                    </DimensionOptionDiv>
+                      {vscMediaUrl && info.icon && (
+                        <img
+                          src={`${vscMediaUrl}/logos/${info.icon}`}
+                          height="24px"
+                        />
+                      )}
+                    </HeaderButtonWithText>
                   );
                 })}
               </div>
-            );
-          })}
+            </div>
+          )}
         </DimensionsDiv>
       )}
     </Div>

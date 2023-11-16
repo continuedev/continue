@@ -6,8 +6,9 @@ import { lightGray, vscBackground } from "../components";
 import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { GUIClientContext } from "../App";
-import { setShowDialog } from "../redux/slices/uiStateSlice";
-import { MODEL_INFO } from "../util/modelData";
+import { MODEL_INFO, PROVIDER_INFO } from "../util/modelData";
+import Toggle from "../components/Toggle";
+import _ from "lodash";
 
 const GridDiv = styled.div`
   display: grid;
@@ -21,7 +22,9 @@ const GridDiv = styled.div`
 function Models() {
   const navigate = useNavigate();
   const client = useContext(GUIClientContext);
-  const dispatch = useDispatch();
+
+  const [providersSelected, setProvidersSelected] = React.useState(true);
+
   return (
     <div className="overflow-y-scroll">
       <div
@@ -38,24 +41,62 @@ function Models() {
           onClick={() => navigate("/")}
           className="inline-block ml-4 cursor-pointer"
         />
-        <h3 className="text-lg font-bold m-2 inline-block">
-          Select LLM Provider
-        </h3>
+        <h3 className="text-lg font-bold m-2 inline-block">Add new model</h3>
       </div>
-      <GridDiv>
-        {Object.entries(MODEL_INFO).map(([name, modelInfo]) => (
-          <ModelCard
-            title={modelInfo.title}
-            description={modelInfo.description}
-            tags={modelInfo.tags}
-            icon={modelInfo.icon}
-            refUrl={`https://continue.dev/docs/reference/Models/${modelInfo.provider.toLowerCase()}`}
-            onClick={(e) => {
-              navigate(`/modelconfig/${name}`);
-            }}
-          />
-        ))}
-      </GridDiv>
+      <br />
+      <Toggle
+        selected={providersSelected}
+        optionOne={"Providers"}
+        optionTwo={"Models"}
+        onClick={() => {
+          setProvidersSelected((prev) => !prev);
+        }}
+      ></Toggle>
+      {providersSelected ? (
+        <GridDiv>
+          {Object.entries(PROVIDER_INFO).map(([name, modelInfo]) => (
+            <ModelCard
+              title={modelInfo.title}
+              description={modelInfo.description}
+              tags={modelInfo.tags}
+              icon={modelInfo.icon}
+              refUrl={`https://continue.dev/docs/reference/Models/${modelInfo.provider.toLowerCase()}`}
+              onClick={(e) => {
+                navigate(`/modelconfig/${name}`);
+              }}
+            />
+          ))}
+        </GridDiv>
+      ) : (
+        <GridDiv>
+          {Object.entries(MODEL_INFO).map(([name, pkg]) => (
+            <ModelCard
+              title={pkg.title}
+              description={pkg.description}
+              tags={pkg.tags}
+              icon={pkg.icon}
+              dimensions={pkg.dimensions}
+              providerOptions={pkg.providerOptions}
+              onClick={(e, dimensionChoices, selectedProvider) => {
+                client?.addModelForRole("*", {
+                  ...pkg.params,
+                  ..._.merge(
+                    {},
+                    ...(pkg.dimensions?.map((dimension, i) => {
+                      if (!dimensionChoices?.[i]) return {};
+                      return {
+                        ...dimension.options[dimensionChoices[i]],
+                      };
+                    }) || [])
+                  ),
+                  provider: PROVIDER_INFO[selectedProvider].provider,
+                });
+                navigate("/");
+              }}
+            />
+          ))}
+        </GridDiv>
+      )}
     </div>
   );
 }

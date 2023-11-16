@@ -9,16 +9,15 @@ import {
   vscBackground,
 } from "../components";
 import { useNavigate } from "react-router-dom";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 import { GUIClientContext } from "../App";
 import { useParams } from "react-router-dom";
 import {
-  MODEL_INFO,
+  PROVIDER_INFO,
   MODEL_PROVIDER_TAG_COLORS,
   ModelInfo,
   updatedObj,
 } from "../util/modelData";
-import { RootStore } from "../redux/store";
 import StyledMarkdownPreview from "../components/StyledMarkdownPreview";
 import { FormProvider, useForm } from "react-hook-form";
 import _ from "lodash";
@@ -64,7 +63,7 @@ function ModelConfig() {
 
   useEffect(() => {
     if (modelName) {
-      setModelInfo(MODEL_INFO[modelName]);
+      setModelInfo(PROVIDER_INFO[modelName]);
     }
   }, [modelName]);
 
@@ -181,12 +180,16 @@ function ModelConfig() {
                 if (d.required) return null;
                 return (
                   <div>
-                    <label htmlFor={d.key}>{d.key}</label>
+                    <label htmlFor={d.key}>
+                      {d.key.split(".")[d.key.split(".").length - 1]}
+                    </label>
                     <Input
                       type={d.inputType}
                       id={d.key}
                       className="border-2 border-gray-200 rounded-md p-2 m-2"
-                      placeholder={d.key}
+                      placeholder={
+                        d.key.split(".")[d.key.split(".").length - 1]
+                      }
                       defaultValue={d.defaultValue}
                       min={d.min}
                       max={d.max}

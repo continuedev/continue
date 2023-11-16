@@ -23,6 +23,7 @@ class GUIProtocolServer:
     get_context_item: Callable[[str, str], Awaitable[ContextItem]]
     get_config: Callable[[], ContinueConfig]
     reload_config: AsyncFunc
+    open_config: Callable[[], Awaitable[None]]
 
     def __init__(
         self,
@@ -33,6 +34,7 @@ class GUIProtocolServer:
         get_context_item: Callable[[str, str], Awaitable[ContextItem]],
         get_config: Callable[[], ContinueConfig],
         reload_config: AsyncFunc,
+        open_config: Callable[[], Awaitable[None]],
     ):
         self.window_id = window_id
         self.messenger = SocketIOMessenger(sio, sid)
@@ -40,6 +42,7 @@ class GUIProtocolServer:
         self.get_context_item = get_context_item
         self.get_config = get_config
         self.reload_config = reload_config
+        self.open_config = open_config
 
     async def handle_json(self, msg: WebsocketsMessage):
         data = msg.data
@@ -72,6 +75,7 @@ class GUIProtocolServer:
             await self.add_model_for_role(
                 data["role"], ModelDescription(**data["model"])
             )
+            await self.open_config()
         elif msg.message_type == "set_model_for_role_from_index":
             await self.set_model_for_role_from_index(data["role"], data["index"])
         elif msg.message_type == "delete_model_at_index":
