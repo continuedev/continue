@@ -8,11 +8,7 @@ import certifi
 from pydantic import Field
 
 from ...core.main import ChatMessage
-from ...models.llm import (
-    BaseCompletionOptions,
-    CompletionOptions,
-    RequestOptions,
-)
+from ...models.llm import BaseCompletionOptions, CompletionOptions, RequestOptions
 from ...models.main import ContinueBaseModel
 from ..util.count_tokens import (
     CONTEXT_LENGTH_FOR_MODEL,

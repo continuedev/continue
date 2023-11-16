@@ -51,6 +51,9 @@ def autodetect_template_type(model: str) -> Optional[TemplateType]:
     if "alpaca" in lower or "wizard" in lower:
         return "alpaca"
 
+    if "mistral" in lower:
+        return "llama2"
+
     return "chatml"
 
 

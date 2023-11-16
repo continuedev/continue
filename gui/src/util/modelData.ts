@@ -430,12 +430,10 @@ export const MODEL_INFO: { [key: string]: ModelInfo } = {
       },
       ...completionParamsInputs,
     ],
-    packages: [llama2Chat, codeLlamaInstruct, phindCodeLlama, mistral].map(
-      (p) => {
-        p.params.context_length = 4096;
-        return p;
-      }
-    ),
+    packages: [llama2Chat, codeLlamaInstruct, mistral].map((p) => {
+      p.params.context_length = 4096;
+      return p;
+    }),
   },
   lmstudio: {
     title: "LM Studio",
