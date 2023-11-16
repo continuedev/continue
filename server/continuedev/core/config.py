@@ -314,10 +314,15 @@ class SerializedContinueConfig(BaseModel):
 
         def create_llm(model: ModelDescription) -> LLM:
             model_class = MODEL_CLASSES[MODEL_PROVIDER_TO_MODEL_CLASS[model.provider]]
-            completion_options = self.completion_options.dict()
+            completion_options = self.completion_options.dict(
+                exclude_none=True, exclude_defaults=True
+            )
             completion_options.update(
                 model.completion_options.dict(exclude_none=True, exclude_defaults=True)
             )
+
+            if "max_tokens" not in completion_options:
+                completion_options["max_tokens"] = min(2048, model.context_length // 2)
 
             # Allow extra fields to be passed through
             kwargs = {**model.dict(exclude_none=True)}

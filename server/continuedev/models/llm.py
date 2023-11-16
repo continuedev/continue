@@ -2,7 +2,6 @@ from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, Field, validator
 
-from ..libs.util.count_tokens import DEFAULT_MAX_TOKENS
 from .main import ContinueBaseModel
 
 
@@ -55,8 +54,8 @@ class BaseCompletionOptions(ContinueBaseModel):
     stop: Optional[List[str]] = Field(
         default=None, description="The stop tokens of the completion."
     )
-    max_tokens: int = Field(
-        default=DEFAULT_MAX_TOKENS,
+    max_tokens: Optional[int] = Field(
+        default=None,
         description="The maximum number of tokens to generate.",
     )
 
