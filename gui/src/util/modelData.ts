@@ -82,8 +82,7 @@ const topKInput: InputDescriptor = {
   defaultValue: undefined,
   required: false,
   min: 0,
-  max: 1,
-  step: 0.01,
+  step: 1,
 };
 const presencePenaltyInput: InputDescriptor = {
   inputType: CollectInputType.number,
