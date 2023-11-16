@@ -13,6 +13,8 @@ class GGML(LLM):
     """
     See our [5 minute quickstart](https://github.com/continuedev/ggml-server-example) to run any model locally with ggml. While these models don't yet perform as well, they are free, entirely private, and run offline.
 
+    You can also use this class for [LM Studio](https://lmstudio.ai).
+
     Once the model is running on localhost:8000, change `~/.continue/config.json` to look like this:
 
     ```json title="~/.continue/config.json"
