@@ -185,7 +185,7 @@ class OpenAIAgent(LLM):
             tools=[{
                     "type": "function",
                     "function": {
-                        "name": "getProjectFile",
+                        "name": "get_project_file",
                         "description": "Returns the contents of the requested file",
                         "parameters": {
                             "type": "object",
@@ -199,7 +199,7 @@ class OpenAIAgent(LLM):
                 {
                     "type": "function",
                     "function": {
-                        "name": "getCurrentTime",
+                        "name": "get_current_time",
                         "description": "Returns the current data time in  ISO 8601 standard",
                         "parameters": {    
                             "type": "object",
@@ -260,14 +260,14 @@ class OpenAIAgent(LLM):
                     arguments = json.loads(call.function.arguments)
                     print(f'function_name={function_name} args={arguments}')
                     # Call the corresponding function based on the function name
-                    if function_name == 'getProjectFile':                        
+                    if function_name == 'get_project_file':                        
                         outputs.append(
                             {
                                 "tool_call_id": call.id,
                                 "output": self.get_project_file(arguments),
                             }
                         )
-                    elif function_name == 'getCurrentTime':                        
+                    elif function_name == 'get_current_time':                        
                         outputs.append(
                             {
                                 "tool_call_id": call.id,
