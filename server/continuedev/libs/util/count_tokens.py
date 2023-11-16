@@ -14,7 +14,7 @@ aliases = {
     "ggml": "gpt-3.5-turbo",
     "claude-2": "gpt-3.5-turbo",
 }
-DEFAULT_MAX_TOKENS = 600
+DEFAULT_MAX_TOKENS = 1000
 DEFAULT_ARGS = {
     "max_tokens": DEFAULT_MAX_TOKENS,
     "temperature": 0.5,
