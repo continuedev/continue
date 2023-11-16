@@ -2,7 +2,7 @@ import importlib.util
 import json
 import os
 from contextlib import contextmanager
-from typing import Any, Dict, List, Optional, Type, Union
+from typing import Any, Dict, List, Optional, Type, Union, cast
 
 from pydantic import BaseModel, Field, validator
 
@@ -608,11 +608,11 @@ class ContinueConfig(BaseModel):
             slash_commands=slash_commands,
             context_providers=[
                 ContextProviderWithParams(
-                    name=CLASS_TO_CONTEXT_PROVIDER_NAME[provider.title],
+                    name=cast(ContextProviderName, provider.title),
                     params=provider.dict(exclude_none=True, exclude_defaults=True),
                 )
                 for provider in self.context_providers
-                if provider.title in CLASS_TO_CONTEXT_PROVIDER_NAME
+                if provider.title in CONTEXT_PROVIDER_NAME_TO_CLASS
             ],
             user_token=self.user_token,
             data_server_url=self.data_server_url,
