@@ -64,7 +64,7 @@ class OpenAIAgent(LLM):
         self._client = OpenAI(api_key=self.api_key)
 
         # TODO Need to add a config variable to be passed in
-        self.assistant_id='thread_lCb2rKUzIOodcA3MZaZu61Bv'
+        self.assistant_id='asst_b8ydQJFvg4O5pgYKXwsoktlH'
 
         self.retrieve_or_create_assistant()
         self.thread_id = self._client.beta.threads.create().id

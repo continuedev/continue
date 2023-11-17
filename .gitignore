@@ -151,3 +151,4 @@ codeql
 continue_server.build
 continue_server.dist
 extensions/vscode/vscode_keyboard_shortcuts.md
+server/.venv
