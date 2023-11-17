@@ -44,7 +44,14 @@ config = ContinueConfig(
 )
 ```
 
-The `default` and `summarize` properties are different _model roles_. This allows different models to be used for different tasks. The available roles are `default`, `summarize`, `edit`, and `chat`. `edit` is used when you use the '/edit' slash command, `chat` is used for all chat responses, and `summarize` is used for summarizing. If not set, all roles will fall back to `default`. The values of these fields must be of the [`LLM`](https://github.com/continuedev/continue/blob/main/server/continuedev/libs/llm/__init__.py) class, which implements methods for retrieving and streaming completions from an LLM.
+The `default` and `summarize` properties are different _model roles_. This allows different models to be used for different tasks. The values assigned to these roles must be of the [`LLM`](https://github.com/continuedev/continue/blob/main/server/continuedev/libs/llm/__init__.py) class, which implements methods for retrieving and streaming completions from an LLM. The available roles are:
+- `edit` is used for generating code changes when using the '/edit' and '/comment' slash commands
+- `chat` is used for all chat responses
+- `summarize` is used for creating summaries. The model with this role will be used in the following scenarios:
+    - generating the Continue session title
+    - generating a summary of changes shown when you use the '/edit' slash command
+    - when the Continue session chat messages exceed the context length, they are summarized to avoid complete truncation
+- `default` is the fallback, used when the other model roles are not specified
 
 Below, we describe the `LLM` classes available in the Continue core library, and how they can be used.
 
