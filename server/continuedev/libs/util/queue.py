@@ -1,5 +1,6 @@
 import asyncio
 from typing import Dict
+
 from ...models.websockets import WebsocketsMessage
 
 
@@ -15,7 +16,7 @@ class WebsocketsSubscriptionQueue:
     async def get(self, message_id: str) -> WebsocketsMessage:
         if message_id not in self.queues:
             self.queues.update({message_id: asyncio.Queue()})
-        return self.queues[message_id].get()
+        return await self.queues[message_id].get()
 
     async def delete(self, message_id: str):
         if message_id in self.queues:

@@ -6,7 +6,6 @@ from pydantic import BaseModel
 
 from ...core.context import ContextProvider
 from ...core.main import ContextItem, ContextItemDescription, ContextItemId
-from ...libs.index.indices.chroma_index import ChromaIndexManager
 
 
 class EmbeddingResult(BaseModel):
@@ -50,7 +49,7 @@ class EmbeddingsProvider(ContextProvider):
             ),
         )
 
-    async def _get_query_results(self, query: str) -> str:
+    async def _get_query_results(self, query: str) -> List[EmbeddingResult]:
         results = self.index.query_codebase_index(query)
 
         ret = []

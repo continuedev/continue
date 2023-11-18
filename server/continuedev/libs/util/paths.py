@@ -172,7 +172,7 @@ def getConfigFilePath(json: bool = False) -> str:
     return path
 
 
-def convertConfigImports(shorten: bool) -> str:
+def convertConfigImports(shorten: bool):
     path = getConfigFilePath()
     # Make any necessary migrations
     with open(path, "r") as f:

@@ -132,17 +132,8 @@ const Layout = () => {
 
   // #endregion
 
-  const persistSession = useCallback(() => {
-    client?.persistSession(sessionState, workspacePaths[0] || "");
-  }, [client, sessionState, workspacePaths]);
-
   useEffect(() => {
     const handleKeyDown = (event: any) => {
-      if (event.metaKey && event.altKey && event.code === "KeyN") {
-        client?.stopSession();
-        persistSession();
-        dispatch(newSession());
-      }
       if ((event.metaKey || event.ctrlKey) && event.code === "KeyC") {
         const selection = window.getSelection()?.toString();
         if (selection) {
@@ -159,7 +150,7 @@ const Layout = () => {
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [client, timeline, persistSession]);
+  }, [client, timeline]);
 
   useEffect(() => {
     const handler = (event: any) => {

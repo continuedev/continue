@@ -1,4 +1,4 @@
-from typing import Any, Coroutine, List
+from typing import List
 
 from pydantic import Field
 
@@ -28,9 +28,7 @@ class TerminalContextProvider(ContextProvider):
             ),
         )
 
-    async def get_chat_message(
-        self, item: ContextItem
-    ) -> Coroutine[Any, Any, List[ChatMessage]]:
+    async def get_chat_message(self, item: ContextItem) -> ChatMessage:
         msg = await super().get_chat_message(item)
         msg.summary = msg.content[-1000:]
         return msg

@@ -30,11 +30,9 @@ class ReplicateLLM(LLM):
 
     model: str = "replicate/llama-2-70b-chat:58d078176e02c219e11eb4da5a02a7830a283b14cf8f94537af893ccff5ee781"
 
-    _client: replicate.Client = None
-
-    async def start(self, *args, **kwargs):
-        await super().start(*args, **kwargs)
-        self._client = replicate.Client(api_token=self.api_key)
+    @property
+    def _client(self) -> replicate.Client:
+        return replicate.Client(api_token=self.api_key)
 
     def get_model_name(self):
         return {
@@ -75,8 +73,8 @@ class ReplicateLLM(LLM):
         for item in self._client.run(
             self.get_model_name(),
             input={
-                "message": messages[-1]["content"],
-                "prompt": messages[-1]["content"],
+                "message": messages[-1].content,
+                "prompt": messages[-1].content,
             },
         ):
-            yield {"content": item, "role": "assistant"}
+            yield ChatMessage(role="assistant", content=item)

@@ -1,5 +1,5 @@
 import json
-from typing import Any, List, Optional
+from typing import Any, AsyncGenerator, List, Optional
 
 import websockets
 from pydantic import Field
@@ -44,6 +44,9 @@ class TextGenWebUI(LLM):
     async def _stream_complete(self, prompt, options):
         args = self.collect_args(options)
 
+        if self.streaming_url is None:
+            raise Exception("TextGenWebUI streaming server URL was set to None.")
+
         ws_url = f"{self.streaming_url.replace('http://', 'ws://').replace('https://', 'wss://')}"
         payload = json.dumps({"prompt": prompt, "stream": True, **args})
         async with websockets.connect(
@@ -62,15 +65,20 @@ class TextGenWebUI(LLM):
                 elif incoming_data_event == "stream_end":
                     break
 
-    async def _stream_chat(self, messages: List[ChatMessage], options):
+    async def _stream_chat(
+        self, messages: List[ChatMessage], options
+    ) -> AsyncGenerator[ChatMessage, None]:
         args = self.collect_args(options)
 
         async def generator():
+            if self.streaming_url is None:
+                raise Exception("TextGenWebUI streaming server URL was set to None.")
+
             ws_url = f"{self.streaming_url.replace('http://', 'ws://').replace('https://', 'wss://')}"
-            history = list(map(lambda x: x["content"], messages))
+            history = list(map(lambda x: x.content, messages))
             payload = json.dumps(
                 {
-                    "user_input": messages[-1]["content"],
+                    "user_input": messages[-1].content,
                     "history": {"internal": [history], "visible": [history]},
                     "stream": True,
                     **args,
@@ -91,10 +99,10 @@ class TextGenWebUI(LLM):
                     if incoming_data_event == "text_stream":
                         visible = incoming_data["history"]["visible"][-1]
                         if len(visible) > 0:
-                            yield {
-                                "role": "assistant",
-                                "content": visible[-1].replace(prev, ""),
-                            }
+                            yield ChatMessage(
+                                role="assistant", content=visible[-1].replace(prev, "")
+                            )
+
                             prev = visible[-1]
                     elif incoming_data_event == "stream_end":
                         break

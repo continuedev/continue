@@ -1,19 +1,13 @@
 import json
 import os
 import time
-from typing import List
-import uuid
-
-from pydantic import BaseModel
-from ..core.main import SessionInfo, SessionState, StepDescription
 
 from fastapi import APIRouter
+from pydantic import BaseModel, ValidationError
 
-from ..libs.util.paths import (
-    getSessionFilePath,
-    getSessionsListFilePath,
-)
+from ..core.main import SessionInfo, SessionState, StepDescription
 from ..libs.util.logging import logger
+from ..libs.util.paths import getSessionFilePath, getSessionsListFilePath
 
 router = APIRouter(prefix="/sessions", tags=["sessions"])
 
@@ -50,18 +44,24 @@ async def delete_session(body: DeleteSessionBody):
     # Read and update the sessions list
     with open(getSessionsListFilePath(), "r") as f:
         try:
-            sessions_list: List[SessionInfo] = json.load(f)
+            raw_sessions_list = json.load(f)
+            sessions_list = [SessionInfo(**session) for session in raw_sessions_list]
         except json.JSONDecodeError:
             raise Exception(
                 f"It looks like there is a JSON formatting error in your sessions.json file ({getSessionsListFilePath()}). Please fix this before creating a new session."
             )
+        except ValidationError as e:
+            raise Exception(
+                f"It looks like there is a validation error in your sessions.json file ({getSessionsListFilePath()}). Please fix this before creating a new session. Error: {e}"
+            )
 
     sessions_list = [
-        session for session in sessions_list if session["session_id"] != body.session_id
+        session for session in sessions_list if session.session_id != body.session_id
     ]
 
     with open(getSessionsListFilePath(), "w") as f:
-        json.dump(sessions_list, f)
+        raw_sessions_list = [session.dict() for session in sessions_list]
+        json.dump(raw_sessions_list, f)
 
     return
 
@@ -125,18 +125,23 @@ async def save_session(body: PersistedSessionInfo):
     # Read and update the sessions list
     with open(getSessionsListFilePath(), "r") as f:
         try:
-            sessions_list: List[SessionInfo] = json.load(f)
+            raw_sessions_list = json.load(f)
+            sessions_list = [SessionInfo(**session) for session in raw_sessions_list]
         except json.JSONDecodeError:
             raise Exception(
                 f"It looks like there is a JSON formatting error in your sessions.json file ({getSessionsListFilePath()}). Please fix this before creating a new session."
             )
+        except ValidationError as e:
+            raise Exception(
+                f"It looks like there is a validation error in your sessions.json file ({getSessionsListFilePath()}). Please fix this before creating a new session. Error: {e}"
+            )
 
     found = False
     for session_info in sessions_list:
-        if session_info["session_id"] == body.session_id:
-            session_info["title"] = body.title
-            session_info["workspace_directory"] = body.workspace_directory
-            session_info["date_created"] = str(time.time())
+        if session_info.session_id == body.session_id:
+            session_info.title = body.title
+            session_info.workspace_directory = body.workspace_directory
+            session_info.date_created = str(time.time())
             found = True
             break
 
@@ -147,12 +152,13 @@ async def save_session(body: PersistedSessionInfo):
             date_created=str(time.time()),
             workspace_directory=body.workspace_directory,
         )
-        sessions_list.append(session_info.dict())
+        sessions_list.append(session_info)
 
     for session_info in sessions_list:
         # A migration
-        if "workspace_directory" not in session_info:
-            session_info["workspace_directory"] = ""
+        if session_info.workspace_directory is None:
+            session_info.workspace_directory = ""
 
     with open(getSessionsListFilePath(), "w") as f:
-        json.dump(sessions_list, f)
+        raw_sessions_list = [session.dict() for session in sessions_list]
+        json.dump(raw_sessions_list, f)

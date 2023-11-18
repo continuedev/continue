@@ -1,17 +1,17 @@
+import json
 from typing import Optional
 
-from ...server.meilisearch_server import remove_meilisearch_disallowed_chars
-from ...libs.util.count_tokens import prune_string_from_bottom
-import requests
-import json
-from bs4 import BeautifulSoup
 import html2text
+import requests
+from bs4 import BeautifulSoup
 
-from ...libs.llm.base import CompletionOptions
-from .chat import SimpleChatStep
 from ...core.main import ContextItem, ContextItemDescription, ContextItemId, Step
 from ...core.sdk import ContinueSDK
+from ...libs.llm.base import CompletionOptions
+from ...libs.util.count_tokens import prune_string_from_bottom
 from ...libs.util.logging import logger
+from ...server.meilisearch_server import remove_meilisearch_disallowed_chars
+from .chat import SimpleChatStep
 
 # SERVER_URL = "http://127.0.0.1:8080"
 SERVER_URL = "https://proxy-server-l6vsfbzhba-uw.a.run.app"
@@ -39,7 +39,8 @@ async def get_link_contents(url: str) -> Optional[str]:
     soup = BeautifulSoup(response.text, "html.parser")
     converter = html2text.HTML2Text()
 
-    title = soup.find("h1", {"class": "fs-headline1"}).text.strip()
+    h1 = soup.find("h1", {"class": "fs-headline1"})
+    title = h1.text.strip() if h1 else "No Title"
     bodies = soup.find_all("div", {"class": "js-post-body"})
     if len(bodies) < 2:
         return None

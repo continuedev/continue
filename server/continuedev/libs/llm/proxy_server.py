@@ -1,12 +1,12 @@
 import asyncio
 import json
-import traceback
 from typing import List
 
 from pydantic import validator
-from ..util.count_tokens import CONTEXT_LENGTH_FOR_MODEL
 
 from ...core.main import ChatMessage
+from ..util.count_tokens import CONTEXT_LENGTH_FOR_MODEL
+from ..util.errors import format_exc
 from ..util.telemetry import posthog_logger
 from .base import LLM
 
@@ -69,7 +69,10 @@ class ProxyServer(LLM):
                             for chunk in chunks:
                                 if chunk.strip() != "":
                                     loaded_chunk = json.loads(chunk)
-                                    yield loaded_chunk
+                                    yield ChatMessage(
+                                        role="assistant",
+                                        content=loaded_chunk.get("content", ""),
+                                    )
 
                                     if self.model == "gpt-4":
                                         await asyncio.sleep(0.03)
@@ -81,11 +84,7 @@ class ProxyServer(LLM):
                                 "proxy_server_parse_error",
                                 {
                                     "error_title": "Proxy server stream_chat parsing failed",
-                                    "error_message": "\n".join(
-                                        traceback.format_exception(
-                                            e, e, e.__traceback__
-                                        )
-                                    ),
+                                    "error_message": format_exc(e),
                                 },
                             )
                     else:

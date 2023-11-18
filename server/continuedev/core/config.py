@@ -41,7 +41,7 @@ class ContextProviderWithParams(BaseModel):
 class SlashCommand(BaseModel):
     name: str
     description: str
-    step: Union[Type[Step], StepName]
+    step: Union[Type[Step], StepName, str]
     params: Optional[Dict] = {}
 
     # Allow step class for the migration
@@ -343,7 +343,7 @@ class SerializedContinueConfig(BaseModel):
 
 class ContinueConfig(BaseModel):
     """
-    Continue can be deeply customized by editing the `ContinueConfig` object in `~/.continue/config.py` (`%userprofile%\.continue\config.py` for Windows) on your machine. This class is instantiated from the config file for every new session.
+    Continue can be deeply customized by editing the `ContinueConfig` object in `~/.continue/config.py` (`%userprofile%\\.continue\\config.py` for Windows) on your machine. This class is instantiated from the config file for every new session.
     """
 
     steps_on_startup: List[Step] = Field(
@@ -354,7 +354,7 @@ class ContinueConfig(BaseModel):
         default=[],
         description="Steps that are not allowed to be run, and will be skipped if attempted",
     )
-    allow_anonymous_telemetry: Optional[bool] = Field(
+    allow_anonymous_telemetry: bool = Field(
         default=True,
         description="If this field is set to True, we will collect anonymous telemetry as described in the documentation page on telemetry. If set to False, we will not collect any data.",
     )
@@ -410,7 +410,7 @@ class ContinueConfig(BaseModel):
         default=False,
         description="If set to `True`, Continue will not generate summaries for each Step. This can be useful if you want to save on compute.",
     )
-    disable_indexing: Optional[bool] = Field(
+    disable_indexing: bool = Field(
         default=False,
         description="If set to `True`, Continue will not index the codebase. This is mainly used for debugging purposes.",
     )
@@ -427,7 +427,9 @@ class ContinueConfig(BaseModel):
         ]
         return ContinueConfig(
             disallowed_steps=config.disallowed_steps,
-            allow_anonymous_telemetry=config.allow_anonymous_telemetry,
+            allow_anonymous_telemetry=config.allow_anonymous_telemetry
+            if config.allow_anonymous_telemetry is not None
+            else True,
             models=config.construct_models(),
             system_message=config.system_message,
             completion_options=config.completion_options,
@@ -437,19 +439,21 @@ class ContinueConfig(BaseModel):
             user_token=config.user_token,
             data_server_url=config.data_server_url,
             disable_summaries=config.disable_summaries,
-            disable_indexing=config.disable_indexing,
+            disable_indexing=config.disable_indexing or False,
             retrieval_settings=config.retrieval_settings,
         )
 
     @staticmethod
     def modifier_from_filepath(filepath: str):
         try:
-            spec = importlib.util.spec_from_file_location("config", filepath)
-            config = importlib.util.module_from_spec(spec)
-            spec.loader.exec_module(config)
+            if spec := importlib.util.spec_from_file_location("config", filepath):
+                config = importlib.util.module_from_spec(spec)
 
-            if hasattr(config, "modify_config"):
-                return config.modify_config
+                if spec.loader:
+                    spec.loader.exec_module(config)
+
+                    if hasattr(config, "modify_config"):
+                        return config.modify_config
 
         except Exception as e:
             logger.warning(f"Failed to load config modifier from {filepath}: {e}")
@@ -476,11 +480,14 @@ class ContinueConfig(BaseModel):
             return initial_config
 
         # Use importlib to load the config file config.py at the given path
-        spec = importlib.util.spec_from_file_location("config", filepath)
-        config = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(config)
+        if spec := importlib.util.spec_from_file_location("config", filepath):
+            config = importlib.util.module_from_spec(spec)
+            if spec.loader:
+                spec.loader.exec_module(config)
 
-        return config.config
+                return config.config
+
+        raise Exception(f"Failed to load config from {filepath}")
 
     @staticmethod
     def load_default() -> "ContinueConfig":
@@ -516,7 +523,7 @@ class ContinueConfig(BaseModel):
             list(
                 map(
                     lambda x: x.slash_command_description(),
-                    self.custom_commands,
+                    self.custom_commands or [],
                 )
             )
             or []
@@ -525,7 +532,7 @@ class ContinueConfig(BaseModel):
             list(
                 map(
                     lambda x: x.slash_command_description(),
-                    self.slash_commands,
+                    self.slash_commands or [],
                 )
             )
             or []
@@ -546,7 +553,7 @@ class ContinueConfig(BaseModel):
             ContextProviderDescription(
                 title="file",
                 display_title="Files",
-                description="Reference files in the current workspace",
+                description="Type to search the workspace",
                 dynamic=False,
                 requires_query=False,
             )
@@ -595,7 +602,7 @@ class ContinueConfig(BaseModel):
         )
 
         slash_commands = []
-        for slash_command in self.slash_commands:
+        for slash_command in self.slash_commands or []:
             if not isinstance(slash_command.step, str):
                 slash_command.step = slash_command.step.__class__.__name__
             slash_commands.append(slash_command)

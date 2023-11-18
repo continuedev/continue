@@ -10,7 +10,7 @@
 
 
 from textwrap import dedent
-from typing import Literal
+from typing import Literal, Optional
 
 from ...core.config import ContinueConfig
 from ...core.main import Policy, SessionState, Step
@@ -67,7 +67,9 @@ class CommitPolicy(Policy):
 
     current_step: Literal["plan", "write", "review", "cleanup"] = "plan"
 
-    def next(self, config: ContinueConfig, session_state: SessionState) -> Step:
+    def next(
+        self, config: ContinueConfig, session_state: SessionState
+    ) -> Optional[Step]:
         if len(session_state.history) == 0:
             return (
                 PlanStep(user_input=self.user_input)

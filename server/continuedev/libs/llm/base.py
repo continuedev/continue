@@ -1,7 +1,7 @@
 import os
 import ssl
 from time import time
-from typing import Any, AsyncGenerator, Callable, Coroutine, Dict, List, Optional, Union
+from typing import Any, AsyncGenerator, Callable, Coroutine, Dict, List, Optional
 
 import aiohttp
 import certifi
@@ -21,7 +21,6 @@ from ..util.count_tokens import (
 from ..util.devdata import dev_data_logger
 from ..util.logging import logger
 from ..util.telemetry import posthog_logger
-from ..util.templating import render_templated_string
 
 
 class LLM(ContinueBaseModel):
@@ -63,7 +62,7 @@ class LLM(ContinueBaseModel):
         description='A dictionary of prompt templates that can be used to customize the behavior of the LLM in certain situations. For example, set the "edit" key in order to change the prompt that is used for the /edit slash command. Each value in the dictionary is a string templated in mustache syntax, and filled in at runtime with the variables specific to the situation. See the documentation for more information.',
     )
 
-    template_messages: Optional[Callable[[List[Dict[str, str]]], str]] = Field(
+    template_messages: Optional[Callable[[List[ChatMessage]], str]] = Field(
         default=None,
         description="A function that takes a list of messages and returns a prompt. This ensures that models like llama2, which are trained on specific chat formats, will always receive input in that format.",
     )
@@ -124,7 +123,9 @@ class LLM(ContinueBaseModel):
     _config_system_message: Optional[str] = None
     _config_temperature: Optional[float] = None
 
-    def set_main_config_params(self, system_msg: str, temperature: float):
+    def set_main_config_params(
+        self, system_msg: Optional[str], temperature: Optional[float]
+    ):
         self._config_system_message = system_msg
         self._config_temperature = temperature
 
@@ -193,7 +194,7 @@ Settings:
         options: CompletionOptions,
         msgs: List[ChatMessage],
         functions: Optional[List[Any]] = None,
-    ) -> List[Dict]:
+    ) -> List[ChatMessage]:
         # In case gpt-3.5-turbo-16k or something else is specified that has longer context_length
         context_length = self.context_length
         if options.model != self.model and options.model in CONTEXT_LENGTH_FOR_MODEL:
@@ -212,15 +213,12 @@ Settings:
         if self.template_messages is None:
             return prompt
 
-        msgs = [{"role": "user", "content": prompt}]
+        msgs = [ChatMessage(role="user", content=prompt, summary=prompt)]
 
-        if self.get_system_message() is not None:
+        if system_message := self.get_system_message():
             msgs.insert(
                 0,
-                {
-                    "role": "system",
-                    "content": render_templated_string(self.get_system_message() or ""),
-                },
+                ChatMessage(role="system", content=system_message, summary=""),
             )
 
         return self.template_messages(msgs)
@@ -250,7 +248,7 @@ Settings:
         max_tokens: Optional[int] = None,
         functions: Optional[List[Any]] = None,
         log: bool = True,
-    ) -> AsyncGenerator[Union[Any, List, Dict], None]:
+    ) -> AsyncGenerator[str, None]:
         """Yield completion response, either streamed or not."""
         options = CompletionOptions(
             model=model or self.model,
@@ -348,7 +346,7 @@ Settings:
         max_tokens: Optional[int] = None,
         functions: Optional[List[Any]] = None,
         log: bool = True,
-    ) -> AsyncGenerator[Union[Any, List, Dict], None]:
+    ) -> AsyncGenerator[ChatMessage, None]:
         """Yield completion response, either streamed or not."""
         options = CompletionOptions(
             model=model or self.model,
@@ -383,8 +381,8 @@ Settings:
         if self.template_messages is None:
             async for chunk in self._stream_chat(messages=messages, options=options):
                 yield chunk
-                if "content" in chunk:
-                    completion += chunk["content"]
+                if chunk.content:
+                    completion += chunk.content
                     if tf is None:
                         tf = time()
                         ttft = tf - ti
@@ -395,14 +393,14 @@ Settings:
                                 "model_class": self.__class__.__name__,
                                 "time": ttft,
                                 "tokens": sum(
-                                    self.count_tokens(m["content"]) for m in messages
+                                    self.count_tokens(m.content or "") for m in messages
                                 ),
                             },
                         )
 
         else:
             async for chunk in self._stream_complete(prompt=prompt, options=options):
-                yield {"role": "assistant", "content": chunk}
+                yield ChatMessage(role="assistant", content=chunk, summary=chunk)
                 completion += chunk
                 if tf is None:
                     tf = time()
@@ -438,7 +436,7 @@ Settings:
 
     async def _stream_chat(
         self, messages: List[ChatMessage], options: CompletionOptions
-    ) -> AsyncGenerator[Dict[str, str], None]:
+    ) -> AsyncGenerator[ChatMessage, None]:
         """Stream the chat through generator."""
         if self.template_messages is None:
             raise NotImplementedError(
@@ -448,7 +446,7 @@ Settings:
         async for chunk in self._stream_complete(
             prompt=self.template_messages(messages), options=options
         ):
-            yield {"role": "assistant", "content": chunk}
+            yield ChatMessage(role="assistant", content=chunk, summary=chunk)
 
     def count_tokens(self, text: str):
         """Return the number of tokens in the given text."""

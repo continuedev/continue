@@ -42,7 +42,7 @@ class GitHubIssuesContextProvider(ContextProvider):
                 description=ContextItemDescription(
                     name=f"Issue #{issue.number}",
                     description=issue.title,
-                    id=ContextItemId(provider_title=self.title, item_id=issue.id),
+                    id=ContextItemId(provider_title=self.title, item_id=str(issue.id)),
                 ),
             )
             for issue in issues

@@ -1,5 +1,5 @@
 import asyncio
-from typing import List, Literal, Optional
+from typing import AsyncGenerator, List, Literal, Optional
 
 import certifi
 import openai
@@ -68,22 +68,23 @@ class OpenAI(LLM):
         description="OpenAI API key",
     )
 
-    api_base: Optional[str] = Field(None, description="OpenAI API base URL.")
+    api_base: Optional[str] = Field(default=None, description="OpenAI API base URL.")
 
     api_type: Optional[Literal["azure", "openai"]] = Field(
-        None, description="OpenAI API type."
+        default=None, description="OpenAI API type."
     )
 
     api_version: Optional[str] = Field(
-        None, description="OpenAI API version. For use with Azure OpenAI Service."
+        default=None,
+        description="OpenAI API version. For use with Azure OpenAI Service.",
     )
 
     engine: Optional[str] = Field(
-        None, description="OpenAI engine. For use with Azure OpenAI Service."
+        default=None, description="OpenAI engine. For use with Azure OpenAI Service."
     )
 
     use_legacy_completions_endpoint: bool = Field(
-        False,
+        default=False,
         description="Manually specify to use the legacy completions endpoint instead of chat completions.",
     )
 
@@ -151,7 +152,9 @@ class OpenAI(LLM):
                 if len(chunk.choices) > 0:
                     yield chunk.choices[0].text
 
-    async def _stream_chat(self, messages: List[ChatMessage], options):
+    async def _stream_chat(
+        self, messages: List[ChatMessage], options
+    ) -> AsyncGenerator[ChatMessage, None]:
         args = self.collect_args(options)
 
         if (
@@ -159,7 +162,7 @@ class OpenAI(LLM):
             and not self.use_legacy_completions_endpoint
         ):
             async for chunk in await openai.ChatCompletion.acreate(
-                messages=messages,
+                messages=[msg.to_dict() for msg in messages],
                 stream=True,
                 **args,
                 headers=self.request_options.headers,
@@ -174,7 +177,7 @@ class OpenAI(LLM):
                     else:
                         await asyncio.sleep(0.01)
 
-                yield delta
+                yield ChatMessage(role="assistant", content=delta.get("content", ""))
 
         else:
             async for chunk in await openai.Completion.acreate(
@@ -184,10 +187,7 @@ class OpenAI(LLM):
                 headers=self.request_options.headers,
             ):
                 if len(chunk.choices) > 0:
-                    yield {
-                        "role": "assistant",
-                        "content": chunk.choices[0].text,
-                    }
+                    ChatMessage(role="assistant", content=chunk.choices[0].text)
 
     async def _complete(self, prompt: str, options):
         args = self.collect_args(options)

@@ -7,9 +7,11 @@ from .core.main import Step
 # from .headless import start_headless_session
 
 
-def run(step_or_config: Union[Step, ContinueConfig]):
+def run(step_or_config: Union[Step, ContinueConfig, str]):
     if isinstance(step_or_config, ContinueConfig):
         config = step_or_config
+    elif isinstance(step_or_config, str):
+        config = ContinueConfig.from_filepath(step_or_config)
     else:
         config = ContinueConfig()
         config.steps_on_startup = [step_or_config]

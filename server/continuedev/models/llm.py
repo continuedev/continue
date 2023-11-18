@@ -54,7 +54,7 @@ class BaseCompletionOptions(ContinueBaseModel):
     stop: Optional[List[str]] = Field(
         default=None, description="The stop tokens of the completion."
     )
-    max_tokens: Optional[int] = Field(
+    max_tokens: int = Field(
         default=None,
         description="The maximum number of tokens to generate.",
     )

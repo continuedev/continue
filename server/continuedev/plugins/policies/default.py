@@ -1,4 +1,4 @@
-from typing import Type, Union
+from typing import Optional, Type, Union
 
 from ...core.config import ContinueConfig
 from ...core.config_utils.step_name_to_class import step_name_to_step_class
@@ -25,9 +25,9 @@ def parse_slash_command(inp: str, config: ContinueConfig) -> Union[None, Step]:
         command_name = inp.split(" ")[0].strip()
         after_command = " ".join(inp.split(" ")[1:])
 
-        for slash_command in config.slash_commands:
+        for slash_command in config.slash_commands or []:
             if slash_command.name == command_name[1:]:
-                params = slash_command.params
+                params = slash_command.params or {}
                 params["user_input"] = after_command
                 try:
                     if isinstance(slash_command.step, str):
@@ -56,7 +56,7 @@ def parse_slash_command(inp: str, config: ContinueConfig) -> Union[None, Step]:
 def parse_custom_command(inp: str, config: ContinueConfig) -> Union[None, Step]:
     command_name = inp.split(" ")[0].strip()
     after_command = " ".join(inp.split(" ")[1:])
-    for custom_cmd in config.custom_commands:
+    for custom_cmd in config.custom_commands or []:
         if custom_cmd.name == command_name[1:]:
             slash_command = parse_slash_command(custom_cmd.prompt, config)
             if slash_command is not None:
@@ -75,7 +75,9 @@ class DefaultPolicy(Policy):
     default_step: Type[Step] = SimpleChatStep
     default_params: dict = {}
 
-    def next(self, config: ContinueConfig, session_state: SessionState) -> Step:
+    def next(
+        self, config: ContinueConfig, session_state: SessionState
+    ) -> Optional[Step]:
         # At the very start, run initial Steps specified in the config
         if len(session_state.history) == 0:
             return StepsOnStartupStep()

@@ -1,16 +1,17 @@
 import asyncio
 import json
-from typing import Any, Dict, Optional, Type, TypeVar
 import uuid
-from ..core.main import ContinueCustomException
+from typing import Any, Dict, Optional, Type, TypeVar
 
+from fastapi import WebSocket
 from fastapi.websockets import WebSocketState
 from pydantic import BaseModel
-from ..models.websockets import WebsocketsMessage
-from fastapi import WebSocket
-from ..libs.util.queue import WebsocketsSubscriptionQueue
-from ..libs.util.logging import logger
 from socketio import AsyncServer
+
+from ..core.main import ContinueCustomException
+from ..libs.util.logging import logger
+from ..libs.util.queue import WebsocketsSubscriptionQueue
+from ..models.websockets import WebsocketsMessage
 
 T = TypeVar("T", bound=BaseModel)
 
@@ -58,7 +59,7 @@ class SocketIOMessenger:
     ) -> T:
         message_id = uuid.uuid4().hex
 
-        async def try_with_timeout(timeout: int):
+        async def try_with_timeout(timeout: float):
             fut = asyncio.Future()
 
             def callback(ack_data):
@@ -134,7 +135,7 @@ class WebsocketsMessenger:
     ) -> T:
         message_id = uuid.uuid4().hex
 
-        async def try_with_timeout(timeout: int):
+        async def try_with_timeout(timeout: float):
             await self.send(message_type, data, message_id=message_id)
             resp = await asyncio.wait_for(self.receive(message_id), timeout=timeout)
             return resp_model.parse_obj(resp.data)

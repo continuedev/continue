@@ -2,12 +2,8 @@ import asyncio
 import traceback
 from typing import Callable, Coroutine, Optional
 
-# import nest_asyncio
-
 from .logging import logger
 from .telemetry import posthog_logger
-
-# nest_asyncio.apply()
 
 
 def create_async_task(

@@ -36,12 +36,11 @@ class GooglePaLMAPI(LLM):
     async def _stream_chat(self, messages: List[ChatMessage], options):
         msg_lst = []
         for message in messages:
-            msg_lst.append({"content": message["content"]})
+            msg_lst.append({"content": message.content})
 
         api_url = f"https://generativelanguage.googleapis.com/v1beta2/models/{self.model}:generateMessage?key={self.api_key}"
         body = {"prompt": {"messages": msg_lst}}
         response = requests.post(api_url, json=body)
-        yield {
-            "content": response.json()["candidates"][0]["content"],
-            "role": "assistant",
-        }
+        yield ChatMessage(
+            role="assistant", content=response.json()["candidates"][0]["content"]
+        )

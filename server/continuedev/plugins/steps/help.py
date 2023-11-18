@@ -1,6 +1,6 @@
 from textwrap import dedent
 
-from ...core.main import ChatMessage, Step
+from ...core.main import ChatMessage, DeltaStep, Step
 from ...core.sdk import ContinueSDK
 from ...libs.util.telemetry import posthog_logger
 
@@ -61,9 +61,7 @@ class HelpStep(Step):
             messages = await sdk.get_chat_context()
             generator = sdk.models.default.stream_chat(messages)
             async for chunk in generator:
-                if "content" in chunk:
-                    self.description += chunk["content"]
-                    await sdk.update_ui()
+                yield DeltaStep(description=chunk.content)
 
         posthog_logger.capture_event(
             "help", {"question": question, "answer": self.description}

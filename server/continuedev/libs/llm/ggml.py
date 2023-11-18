@@ -1,5 +1,5 @@
 import json
-from typing import Any, Coroutine, List, Literal, Optional
+from typing import Any, AsyncGenerator, Coroutine, List, Literal, Optional
 
 from pydantic import Field, validator
 
@@ -122,10 +122,12 @@ class GGML(LLM):
                             ):
                                 yield j["choices"][0]["text"]
 
-    async def _stream_chat(self, messages: List[ChatMessage], options):
+    async def _stream_chat(
+        self, messages: List[ChatMessage], options
+    ) -> AsyncGenerator[ChatMessage, None]:
         args = self.collect_args(options)
 
-        async def generator():
+        async def generator() -> AsyncGenerator[Any, None]:
             async with self.create_client_session() as client_session:
                 async with client_session.post(
                     self.get_full_server_url(endpoint="chat/completions"),
@@ -149,7 +151,7 @@ class GGML(LLM):
                                 detail = json_detail["message"]
                             elif "detail" in json_detail:
                                 detail = json_detail["detail"]
-                        except:
+                        except Exception:
                             pass
 
                         raise ContinueCustomException(
@@ -168,8 +170,11 @@ class GGML(LLM):
                             ):
                                 continue
                             try:
-                                yield json.loads(chunk[6:])["choices"][0]["delta"]
-                            except:
+                                delta = json.loads(chunk[6:])["choices"][0]["delta"]
+                                yield ChatMessage(
+                                    role="assistant", content=delta.get("content", "")
+                                )
+                            except Exception:
                                 pass
 
         # Because quite often the first attempt fails, and it works thereafter
@@ -212,10 +217,9 @@ class GGML(LLM):
         completion = ""
         if self.model in CHAT_MODELS:
             async for chunk in self._stream_chat(
-                [{"role": "user", "content": prompt}], options
+                [ChatMessage(role="user", content=prompt)], options
             ):
-                if "content" in chunk:
-                    completion += chunk["content"]
+                completion += chunk.content
 
         else:
             async for chunk in self._raw_stream_complete(prompt, options):
@@ -226,10 +230,9 @@ class GGML(LLM):
     async def _stream_complete(self, prompt, options: CompletionOptions):
         if self.model in CHAT_MODELS:
             async for chunk in self._stream_chat(
-                [{"role": "user", "content": prompt}], options
+                [ChatMessage(role="user", content=prompt)], options
             ):
-                if "content" in chunk:
-                    yield chunk["content"]
+                yield chunk.content
 
         else:
             async for chunk in self._raw_stream_complete(prompt, options):

@@ -1,7 +1,7 @@
 import uuid
-from typing import Callable, Dict, List, Optional, Type
+from typing import Any, Callable, Dict, List, Optional, Type
 
-from pydantic import BaseModel, validator
+from pydantic import BaseModel, Field, validator
 
 from ..libs.llm.anthropic import AnthropicLLM
 from ..libs.llm.base import LLM
@@ -70,9 +70,9 @@ class Models(BaseModel):
     """Main class that holds the current model configuration"""
 
     default: LLM
-    summarize: Optional[LLM] = None
-    edit: Optional[LLM] = None
-    chat: Optional[LLM] = None
+    summarize: LLM = Field(default=None)
+    edit: LLM = Field(default=None)
+    chat: LLM = Field(default=None)
 
     saved: List[LLM] = []
 
@@ -136,7 +136,7 @@ class Models(BaseModel):
         for logger in self._loggers.values():
             await logger(msg)
 
-    def add_logger(self, logger: Callable[[str], None]) -> str:
+    def add_logger(self, logger: Callable[[str], Any]) -> str:
         logger_id = uuid.uuid4().hex
         self._loggers[logger_id] = logger
         return logger_id

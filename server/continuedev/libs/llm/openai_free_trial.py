@@ -1,8 +1,9 @@
 from typing import List, Optional
 
-from pydantic import validator
+from pydantic import Field, validator
 
 from ...core.main import ChatMessage
+from ...models.llm import RequestOptions
 from ..util.count_tokens import CONTEXT_LENGTH_FOR_MODEL
 from .base import LLM
 from .openai import OpenAI
@@ -43,32 +44,38 @@ class OpenAIFreeTrial(LLM):
     ```
     """
 
-    llm: Optional[LLM] = None
+    llm: LLM = Field(default=None, description="The LLM to use for completion.")
+
+    @validator("llm", pre=True, always=True)
+    def set_llm(cls, llm, values):
+        api_key = values.get("api_key")
+        if api_key is None or api_key.strip() == "":
+            return ProxyServer(
+                model=values["model"],
+                request_options=RequestOptions(
+                    timeout=values["request_options"].timeout,
+                    verify_ssl=values["request_options"].verify_ssl,
+                ),
+            )
+        else:
+            return OpenAI(
+                api_key=api_key,
+                model=values["model"],
+                request_options=RequestOptions(
+                    timeout=values["request_options"].timeout,
+                    verify_ssl=values["request_options"].verify_ssl,
+                ),
+            )
 
     @validator("context_length", pre=True, always=True)
     def context_length_for_model(cls, v, values):
         return CONTEXT_LENGTH_FOR_MODEL.get(values["model"], 4096)
 
     def update_llm_properties(self):
-        if self.llm is not None:
-            self.llm.system_message = self.system_message
+        self.llm.system_message = self.system_message
 
     async def start(self, unique_id: Optional[str] = None):
         await super().start(unique_id=unique_id)
-        if self.api_key is None or self.api_key.strip() == "":
-            self.llm = ProxyServer(
-                model=self.model,
-                verify_ssl=self.request_options.verify_ssl,
-                ca_bundle_path=self.request_options.ca_bundle_path,
-            )
-        else:
-            self.llm = OpenAI(
-                api_key=self.api_key,
-                model=self.model,
-                verify_ssl=self.request_options.verify_ssl,
-                ca_bundle_path=self.request_options.ca_bundle_path,
-            )
-
         await self.llm.start(unique_id=unique_id)
 
     async def stop(self):

@@ -1,7 +1,5 @@
-import asyncio
 import os
 from typing import Dict, List, Optional
-from ...server.protocols.ide_protocol import AbstractIdeProtocolServer
 
 from pydantic import BaseModel
 
@@ -14,6 +12,7 @@ from ...core.context import (
 from ...core.main import ChatMessage
 from ...models.filesystem import RangeInFile, RangeInFileWithContents
 from ...models.main import Range
+from ...server.protocols.ide_protocol import AbstractIdeProtocolServer
 
 
 class HighlightedRangeContextItem(BaseModel):
@@ -46,7 +45,7 @@ class HighlightedCodeContextProvider(ContextProvider):
     should_get_fallback_context_item: bool = True
     last_added_fallback: bool = False
 
-    async def _get_fallback_context_item(self) -> HighlightedRangeContextItem:
+    async def _get_fallback_context_item(self) -> Optional[HighlightedRangeContextItem]:
         # Used to automatically include the currently open file. Disabled for now.
         return None
 
@@ -88,7 +87,7 @@ class HighlightedCodeContextProvider(ContextProvider):
         contents = await ide.readRangeInFile(rif)
         return rif.with_contents(contents)
 
-    async def get_chat_message(self, item: ContextItem) -> List[ContextItem]:
+    async def get_chat_message(self, item: ContextItem) -> ChatMessage:
         rif = await HighlightedCodeContextProvider.get_range_in_file_with_contents(
             self.ide, item
         )
@@ -146,7 +145,7 @@ class HighlightedCodeContextProvider(ContextProvider):
     def _rif_to_name(
         self,
         rif: RangeInFileWithContents,
-        display_filename: str = None,
+        display_filename: Optional[str] = None,
         show_line_nums: bool = True,
     ) -> str:
         line_nums = (
@@ -204,7 +203,9 @@ class HighlightedCodeContextProvider(ContextProvider):
                 self.highlighted_ranges = [
                     HighlightedRangeContextItem(
                         rif=range_in_files[0],
-                        item=self._rif_to_context_item(range_in_files[0], 0, edit),
+                        item=self._rif_to_context_item(
+                            range_in_files[0], 0, edit or False
+                        ),
                     )
                 ]
 
@@ -261,11 +262,6 @@ class HighlightedCodeContextProvider(ContextProvider):
 
         for hr in self.highlighted_ranges:
             hr.item.editing = hr.item.description.id.item_id in ids
-
-    async def add_context_item(
-        self, id: ContextItemId, query: str, prev: List[ContextItem] = None
-    ) -> List[ContextItem]:
-        raise NotImplementedError()
 
     async def preview_contents(self, id: ContextItemId):
         if item := next(

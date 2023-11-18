@@ -1,11 +1,10 @@
 import os
 from textwrap import dedent
-from typing import Coroutine, List, Optional, Union
+from typing import List, Optional, Union
 
 from pydantic import BaseModel, Field
 
 from ...core.main import ContinueCustomException, SetStep, Step
-from ...core.observation import Observation
 from ...core.sdk import ContinueSDK, Models
 from ...core.steps import DefaultModelEditCodeStep
 from ...libs.llm.base import LLM
@@ -19,7 +18,8 @@ from ...models.main import Range, Traceback
 
 
 class Policy(BaseModel):
-    pass
+    def next(self, config, history) -> Optional[Step]:
+        ...
 
 
 class RunPolicyUntilDoneStep(Step):
@@ -27,10 +27,14 @@ class RunPolicyUntilDoneStep(Step):
 
     async def run(self, sdk: ContinueSDK):
         next_step = self.policy.next(sdk.config, sdk.history)
+
+        observation = None
         while next_step is not None:
             observation = await sdk.run_step(next_step)
             next_step = self.policy.next(sdk.config, sdk.history)
-        yield observation
+
+        if observation:
+            yield observation
 
 
 class FasterEditHighlightedCodeStep(Step):
@@ -81,7 +85,7 @@ class FasterEditHighlightedCodeStep(Step):
 """
     )
 
-    async def describe(self, models: Models) -> Coroutine[str, None, None]:
+    async def describe(self, models: Models) -> str:
         return "Editing highlighted code"
 
     async def run(self, sdk: ContinueSDK):
@@ -178,7 +182,7 @@ class StarCoderEditHighlightedCodeStep(Step):
 
     _prompt_and_completion: str = ""
 
-    async def describe(self, models: Models) -> Coroutine[str, None, None]:
+    async def describe(self, models: Models) -> str:
         return await models.summarize.complete(
             f"{self._prompt_and_completion}\n\nPlease give brief a description of the changes made above using markdown bullet points:"
         )
@@ -207,12 +211,13 @@ class StarCoderEditHighlightedCodeStep(Step):
                 code=rif.contents, user_request=self.user_input
             )
 
+            segs = ["", ""]
             if found_highlighted_code:
                 full_file_contents = await sdk.ide.readFile(rif.filepath)
                 segs = full_file_contents.split(rif.contents)
                 prompt = f"<file_prefix>{segs[0]}<file_suffix>{segs[1]}" + prompt
 
-            completion = str(await sdk.models.starcoder.complete(prompt))
+            completion = str(await sdk.models.edit.complete(prompt))
             eot_token = "<|endoftext|>"
             completion = completion.removesuffix(eot_token)
 
@@ -298,7 +303,7 @@ class EditHighlightedCodeStep(Step):
 
     summary_prompt: Optional[str] = None
 
-    async def describe(self, models: Models) -> Coroutine[str, None, None]:
+    async def describe(self, models: Models) -> str:
         return "Editing code"
 
     async def run(self, sdk: ContinueSDK):
@@ -371,7 +376,7 @@ class UserInputStep(Step):
 class SolveTracebackStep(Step):
     traceback: Traceback
 
-    async def describe(self, models: Models) -> Coroutine[str, None, None]:
+    async def describe(self, models: Models) -> str:
         return f"```\n{self.traceback.full_traceback}\n```"
 
     async def run(self, sdk: ContinueSDK):
@@ -401,7 +406,7 @@ class SolveTracebackStep(Step):
 class EmptyStep(Step):
     hide: bool = True
 
-    async def describe(self, models: Models) -> Coroutine[str, None, None]:
+    async def describe(self, models: Models) -> str:
         return ""
 
     async def run(self, sdk: ContinueSDK):

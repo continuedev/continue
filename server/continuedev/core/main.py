@@ -1,7 +1,7 @@
 import json
-from typing import Any, AsyncGenerator, Coroutine, Dict, List, Literal, Optional, Union
+from typing import Any, AsyncGenerator, Dict, List, Literal, Optional, Union, cast
 
-from pydantic import BaseModel, validator
+from pydantic import BaseModel, Field, validator
 from pydantic.schema import schema
 
 from ..models.main import ContinueBaseModel
@@ -17,13 +17,19 @@ class FunctionCall(ContinueBaseModel):
 
 class ChatMessage(ContinueBaseModel):
     role: ChatMessageRole
-    content: Optional[str] = None
+    content: str = ""
     name: Optional[str] = None
     # A summary for pruning chat context to fit context window. Often the Step name.
-    summary: str
+    summary: str = Field(default=None, title="Summary")
     function_call: Optional[FunctionCall] = None
 
-    def to_dict(self, with_functions: bool) -> Dict:
+    @validator("summary", pre=True, always=True)
+    def summary_is_content(cls, summary, values):
+        if summary is None:
+            return values.get("content", "")
+        return summary
+
+    def to_dict(self, with_functions: bool) -> Dict[str, str]:
         d = self.dict()
         del d["summary"]
         if d["function_call"] is not None:
@@ -76,10 +82,10 @@ unincluded_parameters = [
 ]
 
 
-def step_to_json_schema(step) -> str:
+def step_to_json_schema(step) -> Dict[str, Any]:
     pydantic_class = step.__class__
     schema_data = schema([pydantic_class])
-    resolved_schema = resolve_refs(schema_data)
+    resolved_schema = cast(Dict[str, Any], resolve_refs(schema_data))
     parameters = resolved_schema["definitions"][pydantic_class.__name__]
     for parameter in unincluded_parameters:
         if parameter in parameters["properties"]:
@@ -148,18 +154,6 @@ class StepDescription(BaseModel):
     error: Optional[ContinueError] = None
     observations: List[Observation] = []
     logs: List[str] = []
-
-    def to_chat_messages(self) -> List[ChatMessage]:
-        if self.step.description is None or self.step.manage_own_chat_context:
-            return self.step.chat_context
-        return self.step.chat_context + [
-            ChatMessage(
-                role="assistant",
-                name=self.step.__class__.__name__,
-                content=self.step.description or f"Ran function {self.step.name}",
-                summary=f"Called function {self.step.name}",
-            )
-        ]
 
     def update(self, update: "UpdateStep"):
         if isinstance(update, DeltaStep):
@@ -298,9 +292,14 @@ class SessionState(ContinueBaseModel):
     context_items: List[ContextItem]
     # future: List = []
 
+    @staticmethod
+    def from_empty():
+        return SessionState(history=[], context_items=[])
+
 
 class ContinueSDK:
-    ...
+    async def run_step(self, step: "Step"):
+        ...
 
 
 class Models:
@@ -311,12 +310,14 @@ class Policy(ContinueBaseModel):
     """A rule that determines which step to take next"""
 
     # Note that history is mutable, kinda sus
-    def next(self, config: ContinueConfig, session_state: SessionState) -> "Step":
+    def next(
+        self, config: ContinueConfig, session_state: SessionState
+    ) -> Optional["Step"]:
         raise NotImplementedError
 
 
 class Step(ContinueBaseModel):
-    name: str = None
+    name: str = Field(default=None, title="Name")
     hide: bool = False
     description: str = ""
 
@@ -333,13 +334,13 @@ class Step(ContinueBaseModel):
     class Config:
         copy_on_model_validation = False
 
-    async def describe(self, models: Models) -> Coroutine[str, None, None]:
+    async def describe(self, models: Models) -> str:
         if self.description is not None:
             return self.description
         return "Running step: " + self.name
 
-    def on_stop(self, sdk: ContinueSDK):
-        yield None
+    def on_stop(self, sdk: ContinueSDK) -> Optional[StepGenerator]:
+        pass
 
     def dict(self, *args, **kwargs):
         d = super().dict(*args, **kwargs)
@@ -376,10 +377,9 @@ class SequentialStep(Step):
     steps: List[Step]
     hide: bool = True
 
-    async def run(self, sdk: ContinueSDK) -> StepGenerator:
+    async def run(self, sdk: ContinueSDK):
         for step in self.steps:
-            async for update in sdk.run_step(step):
-                yield update
+            await sdk.run_step(step)
 
 
 class ValidatorObservation(Observation):

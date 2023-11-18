@@ -1,18 +1,19 @@
 import asyncio
 import os
-import shutil
 import re
+import shutil
+import signal
 import subprocess
 from typing import Optional
 
 import aiofiles
 import aiohttp
-from .global_config import global_config
 import psutil
 from meilisearch_python_async import Client
 
 from ..libs.util.logging import logger
 from ..libs.util.paths import getMeilisearchExePath, getServerFolderPath
+from .global_config import global_config
 
 
 async def download_file(url: str, filename: str):
@@ -124,7 +125,7 @@ async def check_meilisearch_running() -> bool:
         return False
 
 
-async def poll_meilisearch_running(frequency: int = 0.1) -> bool:
+async def poll_meilisearch_running(frequency: float = 0.1) -> bool:
     """
     Polls MeiliSearch to see if it is running.
     """
@@ -187,7 +188,7 @@ def kill_proc(port):
         try:
             for conns in proc.connections(kind="inet"):
                 if conns.laddr.port == port:
-                    proc.send_signal(psutil.signal.SIGTERM)  # or SIGKILL
+                    proc.send_signal(signal.SIGTERM)
         except psutil.AccessDenied:
             logger.warning(f"Failed to kill process on port {port} (access denied)")
             return

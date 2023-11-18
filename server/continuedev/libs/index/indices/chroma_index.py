@@ -1,24 +1,24 @@
 import asyncio
-
 import json
 import os
 import re
-from functools import cached_property
 import sqlite3
-from typing import AsyncGenerator, Dict, List, Literal, Optional
+from functools import cached_property
+from typing import Any, AsyncGenerator, Dict, List, Literal, Optional
+
 import chromadb
+from chromadb.api import ClientAPI
 from chromadb.config import Settings
 from chromadb.utils import embedding_functions
-from ....server.protocols.ide_protocol import AbstractIdeProtocolServer
-from .base import CodebaseIndex
 from dotenv import load_dotenv
 from openai.error import RateLimitError
 from pydantic import BaseModel
 
-from ..chunkers.chunk import Chunk
-from ..git import GitProject
 from ...util.logging import logger
 from ...util.paths import getEmbeddingsPathForBranch
+from ..chunkers.chunk import Chunk
+from ..git import GitProject
+from .base import CodebaseIndex
 
 load_dotenv()
 
@@ -38,22 +38,22 @@ class CodebaseIndexMetadata(BaseModel):
 
 class ChromaCodebaseIndex(CodebaseIndex):
     directory: str
-    client: chromadb.Client
-    openai_api_key: str = None
-    api_base: str = None
-    api_version: str = None
-    api_type: str = None
-    organization_id: str = None
+    client: ClientAPI
+    openai_api_key: Optional[str] = None
+    api_base: Optional[str] = None
+    api_version: Optional[str] = None
+    api_type: Optional[str] = None
+    organization_id: Optional[str] = None
     git_project: GitProject
 
     def __init__(
         self,
         directory: str,
-        openai_api_key: str = None,
-        api_base: str = None,
-        api_version: str = None,
-        api_type: str = None,
-        organization_id: str = None,
+        openai_api_key: Optional[str] = None,
+        api_base: Optional[str] = None,
+        api_version: Optional[str] = None,
+        api_type: Optional[str] = None,
+        organization_id: Optional[str] = None,
     ):
         self.directory = directory
         self.git_project = GitProject(directory)
@@ -131,7 +131,7 @@ class ChromaCodebaseIndex(CodebaseIndex):
         if self.directory in collections and os.path.exists(self.chroma_dir):
             return collections[self.directory]
 
-        kwargs = {
+        kwargs: Dict[str, Any] = {
             "name": self.convert_to_valid_chroma_collection(
                 self.git_project.current_branch
             ),

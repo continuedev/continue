@@ -1,8 +1,6 @@
 from ...core.main import SetStep, Step
 from ...core.sdk import ContinueSDK
 from ...libs.util.paths import getConfigFilePath
-from ...models.filesystem import RangeInFile
-from ...models.main import Range
 
 MODEL_CLASS_TO_MESSAGE = {
     "OpenAI": "Obtain your OpenAI API key from [here](https://platform.openai.com/account/api-keys) and paste it into the `api_key` field at config.models.default.api_key in `config.py`. Then reload the VS Code window for changes to take effect.",

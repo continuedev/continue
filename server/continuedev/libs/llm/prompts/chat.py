@@ -196,7 +196,7 @@ def llama2_template_messages(msgs: List[Dict[str, str]]) -> str:
             prompt += f"[INST] {system_message}{msgs[1]['content']} [/INST]"
         else:
             prompt += f"[INST] {system_message} [/INST]"
-            return
+            return prompt
 
     for i in range(2 if has_system else 0, len(msgs)):
         if msgs[i]["role"] == "user":
