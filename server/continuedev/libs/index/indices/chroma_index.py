@@ -122,7 +122,7 @@ class ChromaCodebaseIndex(CodebaseIndex):
         name = re.sub("[^a-z0-9._-]", "a", name)
 
         # Replace consecutive dots with a single dot
-        name = re.sub("\.\.+", ".", name)
+        name = re.sub("\\.\\.+", ".", name)
 
         return name
 

@@ -55,7 +55,7 @@ class BaseCompletionOptions(ContinueBaseModel):
         default=None, description="The stop tokens of the completion."
     )
     max_tokens: int = Field(
-        default=None,
+        default=1023,
         description="The maximum number of tokens to generate.",
     )
 

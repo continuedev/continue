@@ -57,8 +57,8 @@ class HighlightedCodeContextProvider(ContextProvider):
             content = await self.ide.readFile(visible_files[0])
             rif = RangeInFileWithContents.from_entire_file(visible_files[0], content)
 
-            item = self._rif_to_context_item(rif, 0, True)
-            item.description.name = self._rif_to_name(rif, show_line_nums=False)
+            item = self.rif_to_context_item(rif, 0, True)
+            item.description.name = self.rif_to_name(rif, show_line_nums=False)
 
             self.last_added_fallback = True
             return HighlightedRangeContextItem(rif=rif, item=item)
@@ -119,14 +119,14 @@ class HighlightedCodeContextProvider(ContextProvider):
         for hr in self.highlighted_ranges:
             basename = os.path.basename(hr.rif.filepath)
             if len(name_status[basename]) > 1:
-                hr.item.description.name = self._rif_to_name(
+                hr.item.description.name = self.rif_to_name(
                     hr.rif,
                     display_filename=os.path.join(
                         os.path.basename(os.path.dirname(hr.rif.filepath)), basename
                     ),
                 )
             else:
-                hr.item.description.name = self._rif_to_name(
+                hr.item.description.name = self.rif_to_name(
                     hr.rif, display_filename=basename
                 )
 
@@ -142,8 +142,8 @@ class HighlightedCodeContextProvider(ContextProvider):
         self.should_get_fallback_context_item = True
         self.last_added_fallback = False
 
-    def _rif_to_name(
-        self,
+    @staticmethod
+    def rif_to_name(
         rif: RangeInFileWithContents,
         display_filename: Optional[str] = None,
         show_line_nums: bool = True,
@@ -155,14 +155,15 @@ class HighlightedCodeContextProvider(ContextProvider):
         )
         return f"{display_filename or os.path.basename(rif.filepath)}{line_nums}"
 
-    def _rif_to_context_item(
-        self, rif: RangeInFileWithContents, idx: int, editing: bool
+    @staticmethod
+    def rif_to_context_item(
+        rif: RangeInFileWithContents, idx: int, editing: bool
     ) -> ContextItem:
         return ContextItem(
             description=ContextItemDescription(
-                name=self._rif_to_name(rif),
+                name=HighlightedCodeContextProvider.rif_to_name(rif),
                 description=rif.filepath,
-                id=ContextItemId(provider_title=self.title, item_id=str(idx)),
+                id=ContextItemId(provider_title="code", item_id=str(idx)),
             ),
             content=rif.contents,
             editing=editing if editing is not None else False,
@@ -203,7 +204,7 @@ class HighlightedCodeContextProvider(ContextProvider):
                 self.highlighted_ranges = [
                     HighlightedRangeContextItem(
                         rif=range_in_files[0],
-                        item=self._rif_to_context_item(
+                        item=self.rif_to_context_item(
                             range_in_files[0], 0, edit or False
                         ),
                     )
@@ -235,7 +236,7 @@ class HighlightedCodeContextProvider(ContextProvider):
                 new_ranges.append(
                     HighlightedRangeContextItem(
                         rif=new_hr,
-                        item=self._rif_to_context_item(
+                        item=self.rif_to_context_item(
                             new_hr, len(self.highlighted_ranges) + i, edit
                         ),
                     )

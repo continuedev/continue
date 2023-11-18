@@ -29,7 +29,7 @@ class ChatMessage(ContinueBaseModel):
             return values.get("content", "")
         return summary
 
-    def to_dict(self, with_functions: bool) -> Dict[str, str]:
+    def to_dict(self, with_functions: bool = False) -> Dict[str, str]:
         d = self.dict()
         del d["summary"]
         if d["function_call"] is not None:

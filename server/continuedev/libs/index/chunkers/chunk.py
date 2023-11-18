@@ -1,6 +1,6 @@
-from typing import Any, Dict
-from ....models.main import ContinueBaseModel
 from chromadb.types import Metadata
+
+from ....models.main import ContinueBaseModel
 
 
 class ChunkWithoutID(ContinueBaseModel):

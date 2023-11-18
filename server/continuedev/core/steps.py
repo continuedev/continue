@@ -624,8 +624,7 @@ Please output the code to be inserted at the cursor in order to fulfill the user
                     temperature=sdk.config.completion_options.temperature,
                     max_tokens=min(max_tokens, model_to_use.context_length // 2),
                 ):
-                    if "content" in chunk:
-                        yield chunk["content"]
+                    yield chunk.content
 
             generator = gen()
 

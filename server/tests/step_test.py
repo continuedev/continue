@@ -1,9 +1,11 @@
 import pytest
 from continuedev.core.config import ContinueConfig
 from continuedev.core.steps import UserInputStep
-from continuedev.headless import start_headless_session
+from continuedev.headless import get_headless_autopilot
 from continuedev.models.filesystem import Range, RangeInFileWithContents
-from continuedev.plugins.steps.chat import SimpleChatStep
+from continuedev.plugins.context_providers.highlighted_code import (
+    HighlightedCodeContextProvider,
+)
 from continuedev.plugins.steps.main import EditHighlightedCodeStep
 from continuedev.plugins.steps.on_traceback import DefaultOnTracebackStep
 from util.prompts import dotenv_test_pair, tokyo_test_pair
@@ -14,55 +16,44 @@ TEST_CONFIG = ContinueConfig()
 @pytest.mark.asyncio
 async def test_step():
     pytest.skip("TODO: too slow")
-    session = await start_headless_session(config=TEST_CONFIG)
+    autopilot = await get_headless_autopilot(config=TEST_CONFIG)
 
-    await session.autopilot.run_from_step(UserInputStep(user_input=tokyo_test_pair[0]))
+    await autopilot.run(UserInputStep(user_input=tokyo_test_pair[0]))
 
-    full_state = await session.autopilot.get_full_state()
+    state = autopilot.session_state
 
-    assert isinstance(full_state.history.timeline[-1].step, SimpleChatStep)
-
-    assert not full_state.history.timeline[-1].step.hide
-
-    assert (
-        full_state.history.timeline[-1].step.description.strip().lower()
-        == tokyo_test_pair[1]
-    )
-
-    await session.autopilot.cleanup()
+    assert state.history[-1].step_type == "SimpleChatStep"
+    assert not state.history[-1].hide
+    assert state.history[-1].description.strip().lower() == tokyo_test_pair[1]
 
 
 @pytest.mark.asyncio
 async def test_traceback_step():
     pytest.skip("TODO: too slow")
-    session = await start_headless_session(config=TEST_CONFIG)
+    autopilot = await get_headless_autopilot(config=TEST_CONFIG)
 
-    await session.autopilot.run_from_step(
-        DefaultOnTracebackStep(output=dotenv_test_pair[0])
-    )
+    await autopilot.run(DefaultOnTracebackStep(output=dotenv_test_pair[0]))
 
-    full_state = await session.autopilot.get_full_state()
-    assert dotenv_test_pair[1] in full_state.history.timeline[-1].step.description
-
-    await session.autopilot.cleanup()
+    state = autopilot.session_state
+    assert dotenv_test_pair[1] in state.history[-1].description
 
 
 @pytest.mark.asyncio
 async def test_edit_step():
     pytest.skip("TODO: too slow")
-    session = await start_headless_session(config=TEST_CONFIG)
-
+    autopilot = await get_headless_autopilot(config=TEST_CONFIG)
+    sdk = autopilot.sdk
     range_in_file = RangeInFileWithContents(
         filepath=__file__, range=Range.from_shorthand(0, 0, 0, 0), contents=""
     )
-
-    await session.autopilot.handle_highlighted_code(range_in_files=[range_in_file])
-
-    await session.autopilot.run_from_step(
-        EditHighlightedCodeStep(user_input="Don't edit this code")
+    await sdk.add_context_item(
+        HighlightedCodeContextProvider.rif_to_context_item(range_in_file, 0, True)
     )
 
-    full_state = await session.autopilot.get_full_state()
-    assert isinstance(full_state.history.timeline[-1].step.description, str)
+    await autopilot.run(EditHighlightedCodeStep(user_input="Don't edit this code"))
 
-    await session.autopilot.cleanup()
+    state = autopilot.session_state
+    assert (
+        isinstance(state.history[-1].description, str)
+        and len(state.history[-1].description) > 0
+    )

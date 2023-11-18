@@ -1,8 +1,9 @@
-from typing import Any, Coroutine, Optional
+from typing import Any, Callable, Coroutine, Optional
 
 from anthropic import AI_PROMPT, HUMAN_PROMPT, AsyncAnthropic
 
 from .base import LLM, CompletionOptions
+from .prompts.chat import anthropic_template_messages
 
 
 class AnthropicLLM(LLM):
@@ -28,6 +29,8 @@ class AnthropicLLM(LLM):
     "Anthropic API key"
 
     model: str = "claude-2"
+
+    template_messages: Callable = anthropic_template_messages
 
     class Config:
         arbitrary_types_allowed = True

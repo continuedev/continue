@@ -41,15 +41,16 @@ class GGML(LLM):
     )
 
     api_type: Optional[Literal["azure", "openai"]] = Field(
-        None, description="OpenAI API type."
+        default=None, description="OpenAI API type."
     )
 
     api_version: Optional[str] = Field(
-        None, description="OpenAI API version. For use with Azure OpenAI Service."
+        default=None,
+        description="OpenAI API version. For use with Azure OpenAI Service.",
     )
 
     engine: Optional[str] = Field(
-        None, description="OpenAI engine. For use with Azure OpenAI Service."
+        default=None, description="OpenAI engine. For use with Azure OpenAI Service."
     )
 
     class Config:
@@ -131,7 +132,11 @@ class GGML(LLM):
             async with self.create_client_session() as client_session:
                 async with client_session.post(
                     self.get_full_server_url(endpoint="chat/completions"),
-                    json={"messages": messages, "stream": True, **args},
+                    json={
+                        "messages": [msg.to_dict() for msg in messages],
+                        "stream": True,
+                        **args,
+                    },
                     headers=self.get_headers(),
                     proxy=self.request_options.proxy,
                 ) as resp:

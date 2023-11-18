@@ -53,7 +53,7 @@ class ProxyServer(LLM):
         async with self.create_client_session() as session:
             async with session.post(
                 f"{SERVER_URL}/stream_chat",
-                json={"messages": messages, **args},
+                json={"messages": [msg.to_dict() for msg in messages], **args},
                 headers=self.get_headers(),
                 proxy=self.request_options.proxy,
             ) as resp:

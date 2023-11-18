@@ -210,8 +210,8 @@ def flatten_messages(msgs: List[ChatMessage]) -> List[ChatMessage]:
     """If there are multiple adjacent messages with same "role", combine them"""
     flattened = []
     for msg in msgs:
-        if len(flattened) > 0 and flattened[-1]["role"] == msg.role:
-            flattened[-1]["content"] += "\n\n" + (msg.content or "")
+        if len(flattened) > 0 and flattened[-1].role == msg.role:
+            flattened[-1].content += "\n\n" + (msg.content or "")
         else:
             flattened.append(msg)
 
