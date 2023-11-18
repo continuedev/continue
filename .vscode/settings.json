@@ -2,5 +2,8 @@
   "python.defaultInterpreterPath": "${workspaceFolder}/server/.venv/bin/python3",
   "python.analysis.extraPaths": [],
   "python.autoComplete.extraPaths": [],
-  "continue.showInlineTip": false
+  "continue.showInlineTip": false,
+  "python.testing.pytestArgs": ["server"],
+  "python.testing.unittestEnabled": false,
+  "python.testing.pytestEnabled": true
 }
