@@ -519,7 +519,10 @@ class ContinueConfig(BaseModel):
                     f.write(default_config_json)
 
                 # Rename config.py to config.old.py
-                os.rename(py_path, py_path.replace(".py", ".old.py"))
+                old_path = py_path.replace(".py", ".py.old")
+                if os.path.exists(old_path):
+                    os.remove(old_path)
+                os.rename(py_path, old_path)
 
                 return ContinueConfig.load_default()
 
