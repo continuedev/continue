@@ -188,7 +188,7 @@ def kill_proc(port):
         try:
             for conns in proc.connections(kind="inet"):
                 if conns.laddr.port == port:
-                    proc.send_signal(signal.SIGTERM)
+                    proc.send_signal(signal.SIGKILL)
         except psutil.AccessDenied:
             logger.warning(f"Failed to kill process on port {port} (access denied)")
             return
