@@ -7,7 +7,12 @@ mod sync;
 fn sync_results(
     dir: String,
     branch: String,
-) -> PyResult<(Vec<(String, String)>, Vec<(String, String)>)> {
+) -> PyResult<(
+    Vec<(String, String)>,
+    Vec<(String, String)>,
+    Vec<(String, String)>,
+    Vec<(String, String)>,
+)> {
     return sync::sync(Path::new(&dir), Some(&branch))
         .map_err(|err| PyErr::new::<exceptions::PyException, _>(format!("{}", err)));
 }

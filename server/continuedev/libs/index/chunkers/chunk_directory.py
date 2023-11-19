@@ -2,15 +2,13 @@ import asyncio
 import os
 from typing import AsyncGenerator, Callable, Generator, List, Optional, Tuple
 
-from .ignore import should_ignore_file_factory
-
-from ....server.protocols.ide_protocol import AbstractIdeProtocolServer
-
-from .chunk import Chunk
-from . import chunk_document
-from .fast_index import stream_files_to_update
 from continuedev.continuedev import sync_results
 
+from ....server.protocols.ide_protocol import AbstractIdeProtocolServer
+from . import chunk_document
+from .chunk import Chunk
+from .fast_index import stream_files_to_update
+from .ignore import should_ignore_file_factory
 
 MAX_SIZE_IN_CHARS = 50_000
 
@@ -85,9 +83,27 @@ async def stream_chunk_directory(
 
 
 def local_stream_chunk_directory(
-    workspace_dir: str,
-    max_chunk_size: int,
+    workspace_dir: str, max_chunk_size: int, branch: str
 ) -> Generator[Tuple[Optional[Chunk], float], None, None]:
+    (compute, delete, add_label, remove_label) = sync_results(workspace_dir, branch)
+
+    for filepath, digest in compute:
+        # Ignore if the file is too large (cutoff is 10MB)
+        if os.path.getsize(filepath) > 10_000_000:
+            continue
+
+        try:
+            contents = open(filepath, "r").read()
+        except Exception as e:
+            print(e, filepath)
+            continue
+
+        if contents.strip() == "":
+            continue
+
+        for chunk in chunk_document(filepath, contents, max_chunk_size, digest):
+            yield (chunk, 0.0)
+
     for (add_filepath, add_digest), (del_filepath, del_digest) in sync_results(
         workspace_dir, branch
     ):

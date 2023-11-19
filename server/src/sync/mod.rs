@@ -1,11 +1,10 @@
 mod merkle;
 use homedir::get_my_home;
-use ignore;
 use merkle::{build_walk, compute_tree_for_dir, diff, hash_string, ObjectHash};
 use std::{
     collections::HashMap,
     fs::{File, OpenOptions},
-    io::{BufRead, BufReader, Read, Seek, SeekFrom, Write},
+    io::{Read, Seek, SeekFrom, Write},
     path::{Path, PathBuf},
     time::{SystemTime, UNIX_EPOCH},
 };
@@ -212,7 +211,7 @@ impl IndexCache {
     // TODO: You could add_bulk, remove_bulk if this gets slow
 
     fn read_rev_tags(&self, hash: [u8; ITEM_SIZE]) -> HashMap<String, Vec<String>> {
-        let mut rev_tags_path = IndexCache::rev_tags_path(hash);
+        let rev_tags_path = IndexCache::rev_tags_path(hash);
         let mut rev_tags_file = OpenOptions::new()
             .read(true)
             .write(true)
@@ -221,14 +220,14 @@ impl IndexCache {
             .unwrap();
         let mut contents = String::new();
         rev_tags_file.read_to_string(&mut contents).unwrap();
-        let mut rev_tags: HashMap<String, Vec<String>> =
+        let rev_tags: HashMap<String, Vec<String>> =
             serde_json::from_str(&contents).unwrap_or(HashMap::new());
 
         return rev_tags;
     }
 
     fn write_rev_tags(&self, hash: [u8; ITEM_SIZE], rev_tags: HashMap<String, Vec<String>>) {
-        let mut rev_tags_path = IndexCache::rev_tags_path(hash);
+        let rev_tags_path = IndexCache::rev_tags_path(hash);
         let mut rev_tags_file = OpenOptions::new()
             .read(true)
             .write(true)
@@ -253,7 +252,7 @@ impl IndexCache {
         let tag_str = self.tag_str();
         let hash_str = hash_string(item.hash);
         if !rev_tags.contains_key(hash_str.as_str()) {
-            rev_tags.insert(hash_str, Vec::new());
+            rev_tags.insert(hash_str.clone(), Vec::new());
         }
         rev_tags.get_mut(hash_str.as_str()).unwrap().push(tag_str);
         self.write_rev_tags(item.hash, rev_tags);
@@ -281,7 +280,7 @@ impl IndexCache {
         let tag_str = self.tag_str();
         let hash_str = hash_string(item.hash);
         if rev_tags.contains_key(hash_str.as_str()) {
-            let mut tags = rev_tags.get_mut(hash_str.as_str()).unwrap();
+            let tags = rev_tags.get_mut(hash_str.as_str()).unwrap();
             let index = tags.iter().position(|x| *x == tag_str).unwrap();
             tags.remove(index);
             if tags.len() == 0 {
