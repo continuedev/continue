@@ -7,7 +7,8 @@ from functools import cached_property
 from typing import Any, AsyncGenerator, Dict, List, Literal, Optional
 
 import chromadb
-from chromadb.api import ClientAPI
+
+# from chromadb.api import ClientAPI
 from chromadb.config import Settings
 from chromadb.utils import embedding_functions
 from dotenv import load_dotenv
@@ -38,7 +39,7 @@ class CodebaseIndexMetadata(BaseModel):
 
 class ChromaCodebaseIndex(CodebaseIndex):
     directory: str
-    client: ClientAPI
+    client: Any
     openai_api_key: Optional[str] = None
     api_base: Optional[str] = None
     api_version: Optional[str] = None
