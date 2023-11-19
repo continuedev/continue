@@ -24,6 +24,11 @@ def temp_clear_config():
     py_path = getConfigFilePath(json=False)
 
     # Move them somewhere temporary
+    if os.path.exists(json_path + ".bak"):
+        os.remove(json_path + ".bak")
+    if os.path.exists(py_path + ".bak"):
+        os.remove(py_path + ".bak")
+
     if os.path.exists(json_path):
         os.rename(json_path, json_path + ".bak")
     if os.path.exists(py_path):
@@ -32,6 +37,10 @@ def temp_clear_config():
     yield
 
     # Name them back
+    if os.path.exists(json_path):
+        os.remove(json_path)
+    if os.path.exists(py_path):
+        os.remove(py_path)
     if os.path.exists(json_path + ".bak"):
         os.rename(json_path + ".bak", json_path)
     if os.path.exists(py_path + ".bak"):
