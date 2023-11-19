@@ -259,7 +259,9 @@ jobs:
 
   publish:
     runs-on: ubuntu-latest
-    needs: build, pytest
+    needs:
+      - build
+      - pytest
     permissions:
       contents: write
     steps:
