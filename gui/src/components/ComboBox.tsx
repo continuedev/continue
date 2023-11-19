@@ -372,7 +372,8 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
   );
   const selectedContextItems = useSelector((state: RootStore) => {
     if (typeof props.index !== "undefined") {
-      return state.sessionState.contextItemsAtIndex[props.index] || [];
+      return (state.sessionState.history[props.index].params["context_items"] ||
+        []) as ContextItem[];
     } else {
       return state.sessionState.context_items || [];
     }

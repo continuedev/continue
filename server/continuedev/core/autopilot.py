@@ -216,9 +216,10 @@ class Autopilot:
             elif inspect.isasyncgenfunction(step.run):
                 async for update in step.run(self.sdk):  # type: ignore (stub type)
                     if self.stopped:
-                        for update in step.on_stop(self.sdk):  # type: ignore (stub type)
-                            if handled := handle_step_update(update):
-                                yield handled
+                        if stop_generator := step.on_stop(self.sdk):  # type: ignore (stub type)
+                            for update in stop_generator:  # type: ignore
+                                if handled := handle_step_update(update):  # type: ignore
+                                    yield handled
                         return
 
                     if handled := handle_step_update(update):
@@ -329,9 +330,7 @@ class Autopilot:
         if self.sdk.config.disable_summaries:
             return "New Session"
         else:
-            chat_history = list(
-                map(lambda x: x.dict(), await self.sdk.get_chat_context())
-            )
+            chat_history = await self.sdk.get_chat_context()
             chat_history_str = template_alpaca_messages(chat_history)
             if self.sdk.models.summarize is None:
                 return "New Session"
