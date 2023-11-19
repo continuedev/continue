@@ -24,5 +24,8 @@ export type ModelName =
   | "wizardcoder-34b"
   | "zephyr-7b"
   | "codeup-13b"
+  | "deepseek-1b"
+  | "deepseek-7b"
+  | "deepseek-33b"
   | "claude-2"
   | "chat-bison-001";

@@ -60,6 +60,9 @@ class URLContextProvider(ContextProvider):
         )
 
     def _get_url_text_contents_and_title(self, url: str) -> Tuple[str, str]:
+        if not url.startswith("http"):
+            url = "https://" + url
+
         response = requests.get(url)
         soup = BeautifulSoup(response.text, "html.parser")
         title = url.replace("https://", "").replace("http://", "").replace("www.", "")

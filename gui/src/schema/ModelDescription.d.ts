@@ -46,7 +46,7 @@ export type ContextLength = number;
 /**
  * The chat template used to format messages. This is auto-detected for most models, but can be overridden here.
  */
-export type Template = "llama2" | "alpaca" | "zephyr" | "phind" | "anthropic" | "chatml";
+export type Template = "llama2" | "alpaca" | "zephyr" | "phind" | "anthropic" | "chatml" | "deepseek";
 /**
  * Options for the completion endpoint. Read more about the completion options in the documentation.
  */

@@ -329,9 +329,7 @@ class Autopilot:
         if self.sdk.config.disable_summaries:
             return "New Session"
         else:
-            chat_history = list(
-                map(lambda x: x.dict(), await self.sdk.get_chat_context())
-            )
+            chat_history = await self.sdk.get_chat_context()
             chat_history_str = template_alpaca_messages(chat_history)
             if self.sdk.models.summarize is None:
                 return "New Session"

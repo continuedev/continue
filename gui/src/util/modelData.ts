@@ -299,18 +299,17 @@ const zephyr: ModelPackage = {
   providerOptions: ["ollama", "lmstudio", "llamacpp", "replicate"],
 };
 
-// const deepseek: ModelPackage = {
-//   title: "DeepSeek-Coder",
-//   description:
-//     "A fine-tune of Mistral, trained on publicly available and synthetic datasets.",
-//   params: {
-//     title: "DeepSeek",
-//     model: "deepseek-7b",
-//     context_length: 2048,
-//   },
-//   icon: "mistral.png",
-//   providerOptions: ["ollama", "lmstudio", "llamacpp", "replicate"],
-// };
+const deepseek: ModelPackage = {
+  title: "DeepSeek-Coder",
+  description:
+    "A model pre-trained on 2 trillion tokens including 80+ programming languages and a repo-level corpus.",
+  params: {
+    title: "DeepSeek",
+    model: "deepseek-7b",
+    context_length: 2048,
+  },
+  providerOptions: ["lmstudio", "llamacpp"],
+};
 
 const codeup: ModelPackage = {
   title: "CodeUp (13b)",
@@ -414,6 +413,7 @@ export const MODEL_INFO: ModelPackage[] = [
   codeup,
   chatBison,
   zephyr,
+  deepseek,
 ];
 
 export const PROVIDER_INFO: { [key: string]: ModelInfo } = {
@@ -528,7 +528,7 @@ export const PROVIDER_INFO: { [key: string]: ModelInfo } = {
     params: {
       server_url: "http://localhost:1234",
     },
-    packages: osModels,
+    packages: [...osModels, deepseek],
     collectInputFor: [...completionParamsInputs],
   },
   replicate: {
@@ -574,7 +574,7 @@ export const PROVIDER_INFO: { [key: string]: ModelInfo } = {
 After it's up and running, you can start using Continue.`,
     icon: "llamacpp.png",
     tags: [ModelProviderTag.Local, ModelProviderTag["Open-Source"]],
-    packages: osModels,
+    packages: [...osModels, deepseek],
     collectInputFor: [...completionParamsInputs],
   },
   textgenwebui: {
@@ -595,7 +595,7 @@ After it's up and running, you can start using Continue.`,
 6. Once the model is loaded, you can start using Continue`,
     icon: undefined,
     tags: [ModelProviderTag.Local, ModelProviderTag["Open-Source"]],
-    packages: osModels,
+    packages: [...osModels, deepseek],
     collectInputFor: [...completionParamsInputs],
   },
   palm: {

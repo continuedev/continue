@@ -42,7 +42,7 @@
         "max_tokens": {
           "title": "Max Tokens",
           "description": "The maximum number of tokens to generate.",
-          "default": 600,
+          "default": 1023,
           "type": "integer"
         }
       }
@@ -122,7 +122,7 @@
             "presence_penalty": null,
             "frequency_penalty": null,
             "stop": null,
-            "max_tokens": 600
+            "max_tokens": 1023
           },
           "allOf": [
             {

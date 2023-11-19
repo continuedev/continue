@@ -36,6 +36,7 @@
         },
         "content": {
           "title": "Content",
+          "default": "",
           "type": "string"
         },
         "name": {
@@ -51,8 +52,7 @@
         }
       },
       "required": [
-        "role",
-        "summary"
+        "role"
       ]
     },
     "Step": {
@@ -137,7 +137,7 @@
         "max_tokens": {
           "title": "Max Tokens",
           "description": "The maximum number of tokens to generate.",
-          "default": 600,
+          "default": 1023,
           "type": "integer"
         }
       }
@@ -217,7 +217,7 @@
             "presence_penalty": null,
             "frequency_penalty": null,
             "stop": null,
-            "max_tokens": 600
+            "max_tokens": 1023
           },
           "allOf": [
             {
@@ -350,6 +350,9 @@
                 "StackOverflowStep",
                 "OpenConfigStep"
               ],
+              "type": "string"
+            },
+            {
               "type": "string"
             }
           ]
@@ -602,7 +605,7 @@
                 "presence_penalty": null,
                 "frequency_penalty": null,
                 "stop": null,
-                "max_tokens": 600
+                "max_tokens": 1023
               },
               "request_options": {
                 "timeout": 300,
@@ -615,7 +618,33 @@
               "template_messages": null,
               "api_key": null,
               "api_base": null,
-              "llm": null,
+              "llm": {
+                "title": null,
+                "model": "gpt-4",
+                "system_message": null,
+                "context_length": 2048,
+                "completion_options": {
+                  "temperature": null,
+                  "top_p": null,
+                  "top_k": null,
+                  "presence_penalty": null,
+                  "frequency_penalty": null,
+                  "stop": null,
+                  "max_tokens": 1023
+                },
+                "request_options": {
+                  "timeout": 300,
+                  "verify_ssl": null,
+                  "ca_bundle_path": null,
+                  "proxy": null,
+                  "headers": null
+                },
+                "prompt_templates": {},
+                "template_messages": null,
+                "api_key": null,
+                "api_base": null,
+                "class_name": "ProxyServer"
+              },
               "class_name": "OpenAIFreeTrial"
             },
             "summarize": {
@@ -630,7 +659,7 @@
                 "presence_penalty": null,
                 "frequency_penalty": null,
                 "stop": null,
-                "max_tokens": 600
+                "max_tokens": 1023
               },
               "request_options": {
                 "timeout": 300,
@@ -643,7 +672,33 @@
               "template_messages": null,
               "api_key": null,
               "api_base": null,
-              "llm": null,
+              "llm": {
+                "title": null,
+                "model": "gpt-3.5-turbo",
+                "system_message": null,
+                "context_length": 2048,
+                "completion_options": {
+                  "temperature": null,
+                  "top_p": null,
+                  "top_k": null,
+                  "presence_penalty": null,
+                  "frequency_penalty": null,
+                  "stop": null,
+                  "max_tokens": 1023
+                },
+                "request_options": {
+                  "timeout": 300,
+                  "verify_ssl": null,
+                  "ca_bundle_path": null,
+                  "proxy": null,
+                  "headers": null
+                },
+                "prompt_templates": {},
+                "template_messages": null,
+                "api_key": null,
+                "api_base": null,
+                "class_name": "ProxyServer"
+              },
               "class_name": "OpenAIFreeTrial"
             },
             "edit": {
@@ -658,7 +713,7 @@
                 "presence_penalty": null,
                 "frequency_penalty": null,
                 "stop": null,
-                "max_tokens": 600
+                "max_tokens": 1023
               },
               "request_options": {
                 "timeout": 300,
@@ -671,7 +726,33 @@
               "template_messages": null,
               "api_key": null,
               "api_base": null,
-              "llm": null,
+              "llm": {
+                "title": null,
+                "model": "gpt-4",
+                "system_message": null,
+                "context_length": 2048,
+                "completion_options": {
+                  "temperature": null,
+                  "top_p": null,
+                  "top_k": null,
+                  "presence_penalty": null,
+                  "frequency_penalty": null,
+                  "stop": null,
+                  "max_tokens": 1023
+                },
+                "request_options": {
+                  "timeout": 300,
+                  "verify_ssl": null,
+                  "ca_bundle_path": null,
+                  "proxy": null,
+                  "headers": null
+                },
+                "prompt_templates": {},
+                "template_messages": null,
+                "api_key": null,
+                "api_base": null,
+                "class_name": "ProxyServer"
+              },
               "class_name": "OpenAIFreeTrial"
             },
             "chat": {
@@ -686,7 +767,7 @@
                 "presence_penalty": null,
                 "frequency_penalty": null,
                 "stop": null,
-                "max_tokens": 600
+                "max_tokens": 1023
               },
               "request_options": {
                 "timeout": 300,
@@ -699,7 +780,33 @@
               "template_messages": null,
               "api_key": null,
               "api_base": null,
-              "llm": null,
+              "llm": {
+                "title": null,
+                "model": "gpt-4",
+                "system_message": null,
+                "context_length": 2048,
+                "completion_options": {
+                  "temperature": null,
+                  "top_p": null,
+                  "top_k": null,
+                  "presence_penalty": null,
+                  "frequency_penalty": null,
+                  "stop": null,
+                  "max_tokens": 1023
+                },
+                "request_options": {
+                  "timeout": 300,
+                  "verify_ssl": null,
+                  "ca_bundle_path": null,
+                  "proxy": null,
+                  "headers": null
+                },
+                "prompt_templates": {},
+                "template_messages": null,
+                "api_key": null,
+                "api_base": null,
+                "class_name": "ProxyServer"
+              },
               "class_name": "OpenAIFreeTrial"
             },
             "saved": [],
@@ -727,7 +834,7 @@
             "presence_penalty": null,
             "frequency_penalty": null,
             "stop": null,
-            "max_tokens": 600
+            "max_tokens": 1023
           },
           "allOf": [
             {

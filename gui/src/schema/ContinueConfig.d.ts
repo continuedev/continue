@@ -146,7 +146,8 @@ export type Step1 =
       | "ClearHistoryStep"
       | "StackOverflowStep"
       | "OpenConfigStep"
-    );
+    )
+  | string;
 /**
  * An array of slash commands that let you map custom Steps to a shortcut.
  */
@@ -291,7 +292,7 @@ export interface ChatMessage {
   role: Role;
   content?: Content;
   name?: Name1;
-  summary: Summary;
+  summary?: Summary;
   function_call?: FunctionCall;
   [k: string]: unknown;
 }

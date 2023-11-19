@@ -3,6 +3,7 @@ from typing import Any, Dict, Literal, Optional
 from ...libs.llm.prompts.chat import (
     anthropic_template_messages,
     chatml_template_messages,
+    deepseek_template_messages,
     llama2_template_messages,
     phind_template_messages,
     template_alpaca_messages,
@@ -11,6 +12,7 @@ from ...libs.llm.prompts.chat import (
 from ...libs.llm.prompts.edit import (
     alpaca_edit_prompt,
     codellama_edit_prompt,
+    deepseek_edit_prompt,
     phind_edit_prompt,
     simplest_edit_prompt,
     zephyr_edit_prompt,
@@ -28,7 +30,9 @@ StepName = Literal[
     "GenerateShellCommandStep",
 ]
 
-TemplateType = Literal["llama2", "alpaca", "zephyr", "phind", "anthropic", "chatml"]
+TemplateType = Literal[
+    "llama2", "alpaca", "zephyr", "phind", "anthropic", "chatml", "deepseek"
+]
 
 
 def autodetect_template_type(model: str) -> Optional[TemplateType]:
@@ -54,6 +58,9 @@ def autodetect_template_type(model: str) -> Optional[TemplateType]:
     if "mistral" in lower:
         return "llama2"
 
+    if "deepseek" in lower:
+        return "deepseek"
+
     return "chatml"
 
 
@@ -66,6 +73,7 @@ def autodetect_template_function(model: str):
             "zephyr": zephyr_template_messages,
             "anthropic": anthropic_template_messages,
             "chatml": chatml_template_messages,
+            "deepseek": deepseek_template_messages,
         }
         return mapping[template_type]
     return None
@@ -85,6 +93,8 @@ def autodetect_prompt_templates(model: str):
         edit_template = codellama_edit_prompt
     elif template_type == "alpaca":
         edit_template = alpaca_edit_prompt
+    elif template_type == "deepseek":
+        edit_template = deepseek_edit_prompt
     elif template_type is not None:
         edit_template = simplest_edit_prompt
 
@@ -162,6 +172,9 @@ MODELS = [
     "wizardcoder-34b",
     "zephyr-7b",
     "codeup-13b",
+    "deepseek-1b",
+    "deepseek-7b",
+    "deepseek-33b",
     # Anthropic
     "claude-2",
     # Google PaLM
@@ -189,6 +202,9 @@ ModelName = Literal[
     "wizardcoder-34b",
     "zephyr-7b",
     "codeup-13b",
+    "deepseek-1b",
+    "deepseek-7b",
+    "deepseek-33b",
     # Anthropic
     "claude-2",
     # Google PaLM
