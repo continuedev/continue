@@ -8,7 +8,8 @@ from continuedev.plugins.context_providers.highlighted_code import (
 )
 from continuedev.plugins.steps.main import EditHighlightedCodeStep
 from continuedev.plugins.steps.on_traceback import DefaultOnTracebackStep
-from util.prompts import dotenv_test_pair, tokyo_test_pair
+
+from .util.prompts import dotenv_test_pair, tokyo_test_pair
 
 TEST_CONFIG = ContinueConfig()
 

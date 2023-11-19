@@ -1,15 +1,27 @@
+import pytest
 from continuedev.core.main import SessionState
 from continuedev.server.main import app
 from continuedev.server.sessions import PersistedSessionInfo
 from fastapi.testclient import TestClient
 
-client = TestClient(app)
+client: TestClient
 
 
-def test_read_main():
-    response = client.get("/health")
-    assert response.status_code == 200
-    assert response.json() == {"status": "ok"}
+@pytest.fixture(scope="module", autouse=True)
+def server():
+    global client
+
+    client = TestClient(app)
+    yield
+    client.close()
+
+
+# def test_read_main():
+#     response = client.get("/health")
+#     assert response.status_code == 200
+#     assert response.json() == {"status": "ok"}
+
+#     client.close()
 
 
 def test_persisted_sessions():

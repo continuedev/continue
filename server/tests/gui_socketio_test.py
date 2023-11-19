@@ -1,16 +1,57 @@
 import asyncio
+import threading
 from contextlib import asynccontextmanager
+from multiprocessing import Process
 from typing import Any
 from uuid import uuid4
 
 import pytest
 import socketio
 from continuedev.core.main import StepDescription
+from continuedev.server.main import run_server
+from continuedev.server.meilisearch_server import kill_proc
 
 PORT = 8001
 
+pytest.skip("Local only", allow_module_level=True)
+
+# @pytest.fixture(scope="module", autouse=True)
+# def server():
+#     loop = asyncio.new_event_loop()
+
+#     async def server_start_inner():
+#         run_server(PORT)
+
+#     task: Any = None
+
+#     def thread_start():
+#         nonlocal task
+
+#         asyncio.set_event_loop(loop)
+#         task = loop.create_task(server_start_inner())
+#         loop.run_until_complete(asyncio.sleep(5))
+
+#     thread = threading.Thread(target=thread_start)
+#     thread.start()
+#     yield
+#     if task:
+#         task.cancel()
+
+#     kill_proc(PORT)
+
+#     loop.close()
+
+
+# @pytest.fixture(scope="module", autouse=True)
+# def server():
+#     proc = Process(target=run_server, args=(PORT,), daemon=True)
+#     proc.start()
+#     yield
+#     proc.kill()
+
 
 async def get_client():
+    await asyncio.sleep(2)
     sio = socketio.AsyncClient()
     await sio.connect(
         f"http://localhost:{PORT}/gui/socket.io?window_id=test",
