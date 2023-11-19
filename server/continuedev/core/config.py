@@ -122,7 +122,9 @@ class ModelDescription(BaseModel):
     api_key: Optional[str] = Field(
         default=None, description="OpenAI, Anthropic, Together, or other API key"
     )
-    api_base: Optional[str] = Field(None, description="The base URL of the LLM API.")
+    api_base: Optional[str] = Field(
+        default=None, description="The base URL of the LLM API."
+    )
 
     context_length: int = Field(
         default=2048,
@@ -180,12 +182,12 @@ class SerializedContinueConfig(BaseModel):
     )
     models: List[ModelDescription] = Field(
         default=[
-            {
-                "title": "GPT-4 (trial)",
-                "provider": "openai-free-trial",
-                "model": "gpt-4",
-                "api_key": "",
-            }
+            ModelDescription(
+                title="GPT-4 (trial)",
+                provider="openai-free-trial",
+                model="gpt-4",
+                api_key="",
+            )
         ]
     )
     model_roles: ModelRoles = Field(
@@ -506,15 +508,22 @@ class ContinueConfig(BaseModel):
                         f,
                         indent=2,
                     )
+
+                # Rename config.py to config.old.py
+                os.rename(py_path, py_path.replace(".py", ".old.py"))
+
                 return config
             except Exception as e:
                 logger.warning(f"Failed to load config from {py_path}: {e}")
                 with open(json_path, "w") as f:
                     f.write(default_config_json)
 
+                # Rename config.py to config.old.py
+                os.rename(py_path, py_path.replace(".py", ".old.py"))
+
                 return ContinueConfig.load_default()
 
-        # And then the second time, load from the json file
+        # The second time and thereafter, load from the json file
         config = ContinueConfig.from_filepath(json_path)
         return config
 
