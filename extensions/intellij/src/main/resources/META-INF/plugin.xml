@@ -66,7 +66,7 @@
         </action>
         <action id="continue.focusContinueInputWithEdit"
                 class="com.github.continuedev.continueintellijextension.actions.FocusContinueInputWithEditAction"
-                text="Focus Continue Input With Edit"
+                text="Edit selected code"
                 description="Focus Continue Input With Edit">
             <keyboard-shortcut keymap="$default"
                                first-keystroke="ctrl shift J"/>
@@ -89,13 +89,15 @@
 
         <action id="continue.focusContinueInput"
                 class="com.github.continuedev.continueintellijextension.actions.FocusContinueInputAction"
-                text="Focus Continue Input"
+                text="Add selected code to context"
                 description="Focus Continue Input">
             <keyboard-shortcut keymap="$default"
                                first-keystroke="ctrl J"/>
             <keyboard-shortcut keymap="Mac OS X"
                                first-keystroke="meta J"/>
+            <add-to-group group-id="EditorPopupMenu"/>
         </action>
+
     </actions>
 
 

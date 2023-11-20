@@ -216,9 +216,10 @@ class Autopilot:
             elif inspect.isasyncgenfunction(step.run):
                 async for update in step.run(self.sdk):  # type: ignore (stub type)
                     if self.stopped:
-                        for update in step.on_stop(self.sdk):  # type: ignore (stub type)
-                            if handled := handle_step_update(update):
-                                yield handled
+                        if on_stop_generator := step.on_stop(self.sdk):  # type: ignore (stub type)
+                            for update in on_stop_generator:  # type: ignore
+                                if handled := handle_step_update(update):
+                                    yield handled
                         return
 
                     if handled := handle_step_update(update):
