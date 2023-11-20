@@ -132,6 +132,13 @@ const Layout = () => {
   // #endregion
 
   useEffect(() => {
+    if (localStorage.getItem("migrationMessageSeen") !== "true") {
+      localStorage.setItem("migrationMessageSeen", "true");
+      navigate("/migration");
+    }
+  }, []);
+
+  useEffect(() => {
     const handleKeyDown = (event: any) => {
       if ((event.metaKey || event.ctrlKey) && event.code === "KeyC") {
         const selection = window.getSelection()?.toString();

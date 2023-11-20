@@ -14,6 +14,7 @@ import HelpPage from "./pages/help";
 import ModelConfig from "./pages/modelconfig";
 import useSetup from "./hooks/useSetup";
 import MonacoPage from "./pages/monaco";
+import MigrationPage from "./pages/migration";
 
 const router = createMemoryRouter([
   {
@@ -56,6 +57,10 @@ const router = createMemoryRouter([
       {
         path: "/monaco",
         element: <MonacoPage />,
+      },
+      {
+        path: "/migration",
+        element: <MigrationPage />,
       },
     ],
   },
