@@ -47,7 +47,17 @@ In `config.json`, you'll find the `models` property, a list of the models that y
 ]
 ```
 
-Also in `config.json` is the `model_roles` property. This is optional, but allows you to specify different models to be used for different tasks. The available roles are `default`, `summarize`, `edit`, and `chat`. `edit` is used when you use the '/edit' slash command, `chat` is used for all chat responses, and `summarize` is used for summarizing. If not set, all roles will fall back to `default`. The values of each role must match the `title` property of one of the models in `models`.
+Also in `config.json` is the `model_roles` property. This is optional, but allows you to specify different models to be used for different tasks. The values of each role must match the `title` property of one of the models in `models`. The available roles are:
+
+- `edit` is used for generating code changes when using the '/edit' and '/comment' slash commands
+- `chat` is used for all chat responses
+- `summarize` is used for creating summaries. The model with this role will be used in the following scenarios:
+  - generating the Continue session title
+  - generating a summary of changes shown when you use the '/edit' slash command
+  - when the Continue session chat messages exceed the context length, they are summarized to avoid complete truncation
+- `default` is the fallback, used when the other model roles are not specified
+
+Here's an example the will use GPT-4 for all tasks except summarization, which will use GPT-3.5 Turbo:
 
 ```json
 "model_roles": {
