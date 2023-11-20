@@ -3,7 +3,8 @@ from typing import List, Optional
 
 from ...libs.llm.base import CompletionOptions
 
-from ...core.main import ChatMessage, SetStep, Step
+# absolute import needed so instanceof works
+from server.continuedev.core.main import ChatMessage, SetStep, Step
 from ...core.sdk import ContinueSDK
 from ...libs.util.devdata import dev_data_logger
 from ...libs.util.strings import remove_quotes_and_escapes
@@ -53,6 +54,10 @@ class SimpleChatStep(Step):
 
         yield SetStep(description="")
         async for chunk in generator:
+            print("Type of chunk:", type(chunk))
+            print("Type of SetStep:", SetStep)
+
+
             if "content" in chunk:
                 yield chunk["content"]
 
@@ -62,6 +67,8 @@ class SimpleChatStep(Step):
                     self.description = self.description[:-end_size] + html.unescape(
                         self.description[-end_size:]
                     )
+            elif isinstance(chunk, SetStep):
+                yield chunk
 
         if sdk.config.disable_summaries:
             self.name = ""

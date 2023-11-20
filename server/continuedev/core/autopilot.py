@@ -296,6 +296,8 @@ class Autopilot:
                 SessionUpdate(index=index, update=set_step)
             )
             return
+        elif isinstance(update, SetStep):
+            await self.sdk.gui.send_session_update(update)
 
         if update.index > len(self.session_state.history):
             raise Exception(

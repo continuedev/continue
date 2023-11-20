@@ -10,8 +10,7 @@ import openai
 from ..util.count_tokens import CONTEXT_LENGTH_FOR_MODEL
 from openai import OpenAI
 from pydantic import validator
-
-from ...core.main import ChatMessage
+from server.continuedev.core.main import ChatMessage, SetStep
 from .base import LLM
 
 from .proxy_server import ProxyServer
@@ -64,7 +63,7 @@ class OpenAIAgent(LLM):
         self._client = OpenAI(api_key=self.api_key)
 
         # TODO Need to add a config variable to be passed in
-        self.assistant_id='asst_b8ydQJFvg4O5pgYKXwsoktlH'
+        self.assistant_id='asst_NEZJY5p6lSqhfYrCg644Qc5Y'
 
         self.retrieve_or_create_assistant()
         self.thread_id = self._client.beta.threads.create().id
@@ -98,10 +97,11 @@ class OpenAIAgent(LLM):
         self.run_id=run.id
 
         # This is where we can pass the runner to the soon to be built OpenAIFunction Step
-        # yield {
-        #     "content": run.id,
-        #     "role": 'openai.runner',
-        # }
+        yield SetStep(
+            name="OpenAI Function Listener",
+            description=f"Starting OpenAI Function Listener for runId={run.id}",
+            params={'run_id': run.id}
+        )
 
 
         run_result = self._client.beta.threads.runs.retrieve(
@@ -138,7 +138,7 @@ class OpenAIAgent(LLM):
                     thread_id=self.thread_id,
                     run_id=self.run_id
                 )
-            print(run_result.status)
+            print(f'run_id={run_result.id} state={run_result.status}')
 
 
         # Print the result

@@ -123,7 +123,7 @@ On the IDE side, this is implemented in [continueIdeClient.ts](./extensions/vsco
 
 ### Continue GUI Websockets Protocol
 
-On the GUI side, this is implemented in [ContinueGUIClientProtocol.ts](./gui/src/hooks/ContinueGUIClientProtocol.ts). On the server side, this is implemented in [gui.py](./continuedev/src/continuedev/server/gui.py). You can see [gui_protocol.py](./continuedev/src/continuedev/server/gui_protocol.py) or [AbstractContinueGUIClientProtocol.ts](./gui/src/hooks/AbstractContinueGUIClientProtocol.ts) for the protocol definition.
+On the GUI side, this is implemented in [ContinueGUIClientProtocol.ts](./gui/src/hooks/ContinueGUIClientProtocol.ts). On the server side, this is implemented in [gui.py](./server/continuedev/server/protocols/gui.py). You can see [gui_protocol.py](./continuedev/src/continuedev/server/gui_protocol.py) or [AbstractContinueGUIClientProtocol.ts](./gui/src/hooks/AbstractContinueGUIClientProtocol.ts) for the protocol definition.
 
 When state is updated on the server, we currently send the entirety of the object over websockets to the GUI. This will of course have to be improved soon. The state object, `FullState`, is defined in [core/main.py](./server/continuedev/core/main.py) and includes:
 
