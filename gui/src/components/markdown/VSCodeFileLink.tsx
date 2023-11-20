@@ -1,5 +1,5 @@
 import React from "react";
-import { postToIde } from "../vscode";
+import { postToIde } from "../../util/ide";
 
 function VSCodeFileLink(props: { path: string; text?: string }) {
   return (

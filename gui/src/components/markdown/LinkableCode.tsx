@@ -1,9 +1,9 @@
 import React, { useCallback, useEffect, useState } from "react";
 import styled from "styled-components";
-import { defaultBorderRadius, secondaryDark } from ".";
+import { defaultBorderRadius, secondaryDark } from "..";
 import { useDispatch, useSelector } from "react-redux";
-import { RootStore } from "../redux/store";
-import { postToIde } from "../vscode";
+import { RootStore } from "../../redux/store";
+import { postToIde } from "../../util/ide";
 
 const StyledCode = styled.code<{ link: boolean }>`
   color: ${(props) => (props.link ? "#ff43433" : "#f78383")};

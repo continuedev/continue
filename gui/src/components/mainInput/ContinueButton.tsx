@@ -1,10 +1,10 @@
 import styled from "styled-components";
-import { Button, vscBackground } from ".";
+import { Button, vscBackground } from "..";
 import { PlayIcon, StopIcon } from "@heroicons/react/24/outline";
 import { useSelector } from "react-redux";
-import { RootStore } from "../redux/store";
+import { RootStore } from "../../redux/store";
 import { useEffect, useState } from "react";
-import { getPlatform } from "../util";
+import { getPlatform } from "../../util";
 
 const StyledButton = styled(Button)<{
   color?: string | null;

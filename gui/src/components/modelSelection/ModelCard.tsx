@@ -1,18 +1,14 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import styled from "styled-components";
-import { buttonColor, defaultBorderRadius, lightGray } from ".";
-import { useSelector } from "react-redux";
-import { RootStore } from "../redux/store";
+import { buttonColor, defaultBorderRadius, lightGray } from "..";
 import { BookOpenIcon } from "@heroicons/react/24/outline";
-import HeaderButtonWithText from "./HeaderButtonWithText";
+import HeaderButtonWithText from "../HeaderButtonWithText";
 import {
   MODEL_PROVIDER_TAG_COLORS,
   PROVIDER_INFO,
   PackageDimension,
-} from "../util/modelData";
-import InfoHover from "./InfoHover";
-import { GUIClientContext } from "../App";
-import { useNavigate } from "react-router-dom";
+} from "../../util/modelData";
+import InfoHover from "../InfoHover";
 
 const Div = styled.div<{ color: string; disabled: boolean; hovered: boolean }>`
   border: 1px solid ${lightGray};

@@ -1,15 +1,8 @@
 import styled from "styled-components";
-import {
-  Label,
-  Select,
-  Input,
-  defaultBorderRadius,
-  lightGray,
-  vscForeground,
-} from ".";
+import { Label, Select, Input, defaultBorderRadius, lightGray } from "..";
 import { useState } from "react";
 import { useFormContext } from "react-hook-form";
-import { getFontSize } from "../util";
+import { getFontSize } from "../../util";
 
 const Div = styled.div<{ dashed: boolean }>`
   border: 1px ${(props) => (props.dashed ? "dashed" : "solid")} ${lightGray};

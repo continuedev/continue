@@ -1,18 +1,18 @@
 import React from "react";
-import { defaultBorderRadius, lightGray, secondaryDark } from ".";
+import { defaultBorderRadius, lightGray, secondaryDark } from "..";
 import styled from "styled-components";
-import { getFontSize, getMarkdownLanguageTagForFile } from "../util";
-import FileIcon from "./FileIcon";
-import HeaderButtonWithText from "./HeaderButtonWithText";
-import { ContextItem } from "../schema/ContextItem";
-import { postToIde } from "../vscode";
+import { getFontSize, getMarkdownLanguageTagForFile } from "../../util";
+import FileIcon from "../FileIcon";
+import HeaderButtonWithText from "../HeaderButtonWithText";
+import { ContextItem } from "../../schema/ContextItem";
+import { postToIde } from "../../util/ide";
 import {
   ArrowUpLeftIcon,
   ChevronDownIcon,
   ChevronUpIcon,
   TrashIcon,
 } from "@heroicons/react/24/outline";
-import { deleteContextWithIds } from "../redux/slices/sessionStateReducer";
+import { deleteContextWithIds } from "../../redux/slices/sessionStateReducer";
 import { useDispatch } from "react-redux";
 import StyledMarkdownPreview from "./StyledMarkdownPreview";
 

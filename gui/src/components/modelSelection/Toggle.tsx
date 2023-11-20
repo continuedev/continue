@@ -1,12 +1,6 @@
-import React, { useState } from "react";
+import React from "react";
 import styled from "styled-components";
-import {
-  buttonColor,
-  defaultBorderRadius,
-  lightGray,
-  secondaryDark,
-  vscBackground,
-} from ".";
+import { buttonColor, defaultBorderRadius, lightGray, secondaryDark } from "..";
 
 const TopDiv = styled.div`
   display: flex;

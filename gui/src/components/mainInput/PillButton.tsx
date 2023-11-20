@@ -6,21 +6,21 @@ import {
   lightGray,
   secondaryDark,
   vscForeground,
-} from ".";
+} from "..";
 import {
   TrashIcon,
   PaintBrushIcon,
   ExclamationTriangleIcon,
 } from "@heroicons/react/24/outline";
-import { GUIClientContext } from "../App";
-import { getFontSize } from "../util";
-import HeaderButtonWithText from "./HeaderButtonWithText";
-import FileIcon from "./FileIcon";
-import { ContextItem } from "../schema/ContextItem";
-import { postToIde } from "../vscode";
+import { GUIClientContext } from "../../App";
+import { getFontSize } from "../../util";
+import HeaderButtonWithText from "../HeaderButtonWithText";
+import FileIcon from "../FileIcon";
+import { ContextItem } from "../../schema/ContextItem";
+import { postToIde } from "../../util/ide";
 import { useDispatch, useSelector } from "react-redux";
-import { setEditingAtIds } from "../redux/slices/sessionStateReducer";
-import { RootStore } from "../redux/store";
+import { setEditingAtIds } from "../../redux/slices/sessionStateReducer";
+import { RootStore } from "../../redux/store";
 
 const Button = styled.button<{ fontSize?: number }>`
   border: none;

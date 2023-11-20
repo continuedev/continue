@@ -1,6 +1,5 @@
-import { postToIde } from "../vscode";
-// import { Messenger } from "../../../src/util/messenger";
-import { Messenger } from "./messenger";
+import { postToIde } from "../../util/ide";
+import { Messenger } from ".";
 
 export class VscodeMessenger extends Messenger {
   serverUrl: string;

@@ -7,8 +7,9 @@ import { ModelDescription } from "../schema/SerializedContinueConfig";
 import { SessionState, StepDescription } from "../schema/SessionState";
 import { SessionUpdate } from "../schema/SessionUpdate";
 import AbstractContinueGUIClientProtocol from "./AbstractContinueGUIClientProtocol";
-import { Messenger, SocketIOMessenger } from "./messenger";
-import { VscodeMessenger } from "./vscodeMessenger";
+import { Messenger } from "./messenger";
+import { VscodeMessenger } from "./messenger/VscodeMessenger";
+import { SocketIOMessenger } from "./messenger/SocketIOMessenger";
 
 class ContinueGUIClientProtocol extends AbstractContinueGUIClientProtocol {
   messenger?: Messenger;

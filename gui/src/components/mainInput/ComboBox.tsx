@@ -15,9 +15,9 @@ import {
   secondaryDark,
   vscBackground,
   vscForeground,
-} from ".";
+} from "..";
 import PillButton from "./PillButton";
-import HeaderButtonWithText from "./HeaderButtonWithText";
+import HeaderButtonWithText from "../HeaderButtonWithText";
 import {
   ArrowLeftIcon,
   ArrowRightIcon,
@@ -40,12 +40,12 @@ import {
   TrashIcon,
   XMarkIcon,
 } from "@heroicons/react/24/outline";
-import { postToIde } from "../vscode";
-import { GUIClientContext } from "../App";
+import { postToIde } from "../../util/ide";
+import { GUIClientContext } from "../../App";
 import { MeiliSearch } from "meilisearch";
-import { setBottomMessage } from "../redux/slices/uiStateSlice";
+import { setBottomMessage } from "../../redux/slices/uiStateSlice";
 import { useDispatch, useSelector } from "react-redux";
-import { RootStore } from "../redux/store";
+import { RootStore } from "../../redux/store";
 import ContinueButton from "./ContinueButton";
 import {
   getFontSize,
@@ -53,24 +53,24 @@ import {
   getMetaKeyLabel,
   getPlatform,
   isMetaEquivalentKeyPressed,
-} from "../util";
-import StyledMarkdownPreview from "./StyledMarkdownPreview";
-import { setTakenActionTrue } from "../redux/slices/miscSlice";
+} from "../../util";
+import StyledMarkdownPreview from "../markdown/StyledMarkdownPreview";
+import { setTakenActionTrue } from "../../redux/slices/miscSlice";
 import {
   handleKeyDownJetBrains,
   handleKeyDownJetBrainsMac,
-} from "../util/jetbrains";
-import FileIcon from "./FileIcon";
-import { ContextItem } from "../schema/ContextItem";
+} from "../../util/jetbrains";
+import FileIcon from "../FileIcon";
+import { ContextItem } from "../../schema/ContextItem";
 import {
   addContextItem,
   addContextItemAtIndex,
   deleteContextWithIds,
   newSession,
   setActive,
-} from "../redux/slices/sessionStateReducer";
-import RingLoader from "./RingLoader";
-import CodeSnippetPreview from "./CodeSnippetPreview";
+} from "../../redux/slices/sessionStateReducer";
+import RingLoader from "../loaders/RingLoader";
+import CodeSnippetPreview from "../markdown/CodeSnippetPreview";
 
 const SEARCH_INDEX_NAME = "continue_context_items";
 

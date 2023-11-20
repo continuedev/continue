@@ -1,6 +1,6 @@
 import React from "react";
 import styled, { keyframes } from "styled-components";
-import { vscForeground } from ".";
+import { vscForeground } from "..";
 
 const rotate = keyframes`
   0% {

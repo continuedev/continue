@@ -4,7 +4,7 @@ import Help from "./pages/help";
 import Layout from "./components/Layout";
 import { createContext } from "react";
 import useContinueGUIProtocol from "./hooks/useContinueClient";
-import ContinueGUIClientProtocol from "./hooks/ContinueGUIClientProtocol";
+import ContinueGUIClientProtocol from "./client/ContinueGUIClientProtocol";
 import { useDispatch } from "react-redux";
 import { RouterProvider, createMemoryRouter } from "react-router-dom";
 import ErrorPage from "./pages/error";
@@ -24,12 +24,10 @@ const router = createMemoryRouter([
       {
         path: "/index.html",
         element: <GUI />,
-        // element: <MonacoPage />,
       },
       {
         path: "/",
         element: <GUI />,
-        // element: <MonacoPage />,
       },
       {
         path: "/history",

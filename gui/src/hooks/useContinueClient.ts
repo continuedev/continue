@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
-import ContinueGUIClientProtocol from "./ContinueGUIClientProtocol";
+import ContinueGUIClientProtocol from "../client/ContinueGUIClientProtocol";
 import { useSelector } from "react-redux";
 import { RootStore } from "../redux/store";
 

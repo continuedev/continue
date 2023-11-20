@@ -5,20 +5,20 @@ import {
   lightGray,
   secondaryDark,
   vscBackground,
-} from ".";
+} from "..";
 import {
   ArrowPathIcon,
   HandThumbDownIcon,
   HandThumbUpIcon,
   XMarkIcon,
 } from "@heroicons/react/24/outline";
-import HeaderButtonWithText from "./HeaderButtonWithText";
-import StyledMarkdownPreview from "./StyledMarkdownPreview";
-import { getFontSize } from "../util";
-import { StepDescription } from "../schema/SessionState";
+import HeaderButtonWithText from "../HeaderButtonWithText";
+import StyledMarkdownPreview from "../markdown/StyledMarkdownPreview";
+import { getFontSize } from "../../util";
+import { StepDescription } from "../../schema/SessionState";
 import { useSelector } from "react-redux";
-import { RootStore } from "../redux/store";
-import { GUIClientContext } from "../App";
+import { RootStore } from "../../redux/store";
+import { GUIClientContext } from "../../App";
 
 interface StepContainerProps {
   step: StepDescription;

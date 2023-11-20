@@ -1,9 +1,9 @@
 import React from "react";
 import styled from "styled-components";
-import { defaultBorderRadius, vscBackground } from ".";
-import HeaderButtonWithText from "./HeaderButtonWithText";
+import { defaultBorderRadius, vscBackground } from "..";
+import HeaderButtonWithText from "../HeaderButtonWithText";
 import { MinusCircleIcon, XMarkIcon } from "@heroicons/react/24/outline";
-import { ContinueError } from "../schema/ContinueError";
+import { ContinueError } from "../../schema/ContinueError";
 
 const Div = styled.div`
   padding: 8px;

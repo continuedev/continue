@@ -1,8 +1,6 @@
-// Write a component that displays a dialog box with a text field and a button.
-import React, { isValidElement, useEffect, useState } from "react";
+import React, { isValidElement, useEffect } from "react";
 import styled from "styled-components";
-import { Button, secondaryDark, vscBackground, vscForeground } from ".";
-import { isMetaEquivalentKeyPressed } from "../util";
+import { secondaryDark, vscBackground, vscForeground } from "..";
 import { ReactMarkdown } from "react-markdown/lib/react-markdown";
 
 const ScreenCover = styled.div`

@@ -1,5 +1,5 @@
 import React, { useContext } from "react";
-import ModelCard from "../components/ModelCard";
+import ModelCard from "../components/modelSelection/ModelCard";
 import styled from "styled-components";
 import { ArrowLeftIcon } from "@heroicons/react/24/outline";
 import { lightGray, vscBackground } from "../components";
@@ -7,7 +7,7 @@ import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { GUIClientContext } from "../App";
 import { MODEL_INFO, PROVIDER_INFO } from "../util/modelData";
-import Toggle from "../components/Toggle";
+import Toggle from "../components/modelSelection/Toggle";
 import _ from "lodash";
 
 const GridDiv = styled.div`

@@ -5,9 +5,9 @@ import {
   secondaryDark,
   vscBackground,
   vscForeground,
-} from ".";
+} from "..";
 import MarkdownPreview from "@uiw/react-markdown-preview";
-import { getFontSize } from "../util";
+import { getFontSize } from "../../util";
 import LinkableCode from "./LinkableCode";
 
 const StyledMarkdownPreviewComponent = styled(MarkdownPreview)<{

@@ -16,13 +16,13 @@ import {
   useCallback,
   Fragment,
 } from "react";
-import StepContainer from "../components/StepContainer";
+import StepContainer from "../components/gui/StepContainer";
 import { GUIClientContext } from "../App";
-import ComboBox from "../components/ComboBox";
+import ComboBox from "../components/mainInput/ComboBox";
 import { usePostHog } from "posthog-js/react";
 import { useDispatch, useSelector } from "react-redux";
 import { RootStore } from "../redux/store";
-import { postToIde } from "../vscode";
+import { postToIde } from "../util/ide";
 import { getMetaKeyLabel, isMetaEquivalentKeyPressed } from "../util";
 import {
   setBottomMessage,
@@ -31,9 +31,9 @@ import {
   setDisplayBottomMessageOnBottom,
   setShowDialog,
 } from "../redux/slices/uiStateSlice";
-import RingLoader from "../components/RingLoader";
-import TimelineItem from "../components/TimelineItem";
-import ErrorStepContainer from "../components/ErrorStepContainer";
+import RingLoader from "../components/loaders/RingLoader";
+import TimelineItem from "../components/gui/TimelineItem";
+import ErrorStepContainer from "../components/gui/ErrorStepContainer";
 import {
   ArrowsPointingInIcon,
   ArrowsPointingOutIcon,

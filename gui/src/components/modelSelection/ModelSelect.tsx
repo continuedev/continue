@@ -6,21 +6,20 @@ import {
   secondaryDark,
   vscBackground,
   vscForeground,
-} from ".";
+} from "..";
 import React, { Fragment, useContext, useEffect, useState } from "react";
-import { GUIClientContext } from "../App";
-import { RootStore } from "../redux/store";
-import { useDispatch, useSelector } from "react-redux";
+import { GUIClientContext } from "../../App";
+import { RootStore } from "../../redux/store";
+import { useSelector } from "react-redux";
 import {
   ChevronUpDownIcon,
-  PencilIcon,
   PlusIcon,
   TrashIcon,
 } from "@heroicons/react/24/outline";
 import { useNavigate } from "react-router-dom";
 import { Listbox, Transition } from "@headlessui/react";
 import ReactDOM from "react-dom";
-import HeaderButtonWithText from "./HeaderButtonWithText";
+import HeaderButtonWithText from "../HeaderButtonWithText";
 
 const GridDiv = styled.div`
   display: grid;

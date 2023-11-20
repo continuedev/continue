@@ -14,7 +14,7 @@ import {
 } from "../components";
 import styled from "styled-components";
 import { ArrowLeftIcon } from "@heroicons/react/24/outline";
-import Loader from "../components/Loader";
+import Loader from "../components/loaders/Loader";
 import InfoHover from "../components/InfoHover";
 import { FormProvider, useForm } from "react-hook-form";
 import { getFontSize } from "../util";

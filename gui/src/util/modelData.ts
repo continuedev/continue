@@ -1,3 +1,7 @@
+/*
+This is the data that populates the model selection page.
+*/
+
 import _ from "lodash";
 import { ModelProvider } from "../schema/ModelProvider";
 import { ModelName } from "../schema/ModelName";

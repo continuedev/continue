@@ -1,8 +1,8 @@
 import styled from "styled-components";
 import { defaultBorderRadius, secondaryDark, vscForeground } from ".";
 import { Outlet } from "react-router-dom";
-import TextDialog from "./TextDialog";
-import { useCallback, useContext, useEffect } from "react";
+import TextDialog from "./dialogs";
+import { useContext, useEffect } from "react";
 import { GUIClientContext } from "../App";
 import { useDispatch, useSelector } from "react-redux";
 import { RootStore } from "../redux/store";
@@ -18,11 +18,10 @@ import {
 } from "@heroicons/react/24/outline";
 import HeaderButtonWithText from "./HeaderButtonWithText";
 import { useNavigate, useLocation } from "react-router-dom";
-import ModelSelect from "./ModelSelect";
-import ProgressBar from "./ProgressBar";
-import { newSession } from "../redux/slices/sessionStateReducer";
+import ModelSelect from "./modelSelection/ModelSelect";
+import ProgressBar from "./loaders/ProgressBar";
 import { getFontSize } from "../util";
-import IndexingProgressBar from "./IndexingProgressBar";
+import IndexingProgressBar from "./loaders/IndexingProgressBar";
 
 // #region Styled Components
 const FOOTER_HEIGHT = "1.8em";

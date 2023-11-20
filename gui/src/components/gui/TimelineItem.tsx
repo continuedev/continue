@@ -1,9 +1,9 @@
 import React from "react";
-import { lightGray, vscBackground } from ".";
+import { lightGray, vscBackground } from "..";
 import styled from "styled-components";
 import { ChatBubbleOvalLeftIcon } from "@heroicons/react/24/outline";
-import { getFontSize } from "../util";
-import { StepDescription } from "../schema/SessionState";
+import { getFontSize } from "../../util";
+import { StepDescription } from "../../schema/SessionState";
 
 const CollapseButton = styled.div`
   background-color: ${vscBackground};

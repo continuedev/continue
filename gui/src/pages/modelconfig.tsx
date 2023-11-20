@@ -1,5 +1,5 @@
 import React, { useCallback, useContext, useEffect, useState } from "react";
-import ModelCard from "../components/ModelCard";
+import ModelCard from "../components/modelSelection/ModelCard";
 import styled from "styled-components";
 import { ArrowLeftIcon } from "@heroicons/react/24/outline";
 import {
@@ -18,7 +18,7 @@ import {
   ModelInfo,
   updatedObj,
 } from "../util/modelData";
-import StyledMarkdownPreview from "../components/StyledMarkdownPreview";
+import StyledMarkdownPreview from "../components/markdown/StyledMarkdownPreview";
 import { FormProvider, useForm } from "react-hook-form";
 import _ from "lodash";
 

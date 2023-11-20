@@ -4,8 +4,8 @@ import {
   lightGray,
   secondaryDark,
   vscForeground,
-} from ".";
-import { getFontSize } from "../util";
+} from "..";
+import { getFontSize } from "../../util";
 
 const Div = styled.div<{ fontSize?: number }>`
   resize: none;

@@ -6,16 +6,16 @@ import {
   lightGray,
   secondaryDark,
   vscForeground,
-} from ".";
+} from "..";
 import {
   PaperAirplaneIcon,
   SparklesIcon,
   XMarkIcon,
 } from "@heroicons/react/24/outline";
 import { useSelector } from "react-redux";
-import { RootStore } from "../redux/store";
-import HeaderButtonWithText from "./HeaderButtonWithText";
-import { getFontSize } from "../util";
+import { RootStore } from "../../redux/store";
+import HeaderButtonWithText from "../HeaderButtonWithText";
+import { getFontSize } from "../../util";
 import { usePostHog } from "posthog-js/react";
 
 const Div = styled.div<{ isDisabled: boolean }>`

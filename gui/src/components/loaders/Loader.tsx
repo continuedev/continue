@@ -1,5 +1,5 @@
 import { useSelector } from "react-redux";
-import { RootStore } from "../redux/store";
+import { RootStore } from "../../redux/store";
 import styled from "styled-components";
 import { PlayIcon } from "@heroicons/react/24/outline";
 

@@ -1,6 +1,6 @@
 import React from "react";
 import styled from "styled-components";
-import { StyledTooltip, lightGray, vscForeground } from ".";
+import { StyledTooltip, lightGray, vscForeground } from "..";
 
 const ProgressBarWrapper = styled.div`
   width: 100px;
@@ -23,6 +23,7 @@ const GridDiv = styled.div`
   grid-template-rows: 1fr auto;
   align-items: center;
   justify-items: center;
+  margin-left: 8px;
 `;
 
 const P = styled.p`
@@ -41,40 +42,24 @@ interface ProgressBarProps {
   total: number;
 }
 
-const ProgressBar = ({ completed, total }: ProgressBarProps) => {
+const IndexingProgressBar = ({ completed, total }: ProgressBarProps) => {
   const fillPercentage = Math.min(100, Math.max(0, (completed / total) * 100));
 
   return (
     <>
-      <a
-        href="https://continue.dev/docs/customization/models"
-        className="no-underline ml-2"
-      >
-        <GridDiv data-tooltip-id="usage_progress_bar">
-          <ProgressBarWrapper>
-            <ProgressBarFill
-              completed={fillPercentage}
-              color={
-                completed / total > 0.75
-                  ? completed / total > 0.95
-                    ? "#f00"
-                    : "#fc0"
-                  : undefined
-              }
-            />
-          </ProgressBarWrapper>
-          <P>
-            Free Uses: {completed} / {total}
-          </P>
-        </GridDiv>
-      </a>
+      <GridDiv data-tooltip-id="usage_progress_bar">
+        <ProgressBarWrapper>
+          <ProgressBarFill completed={fillPercentage} />
+        </ProgressBarWrapper>
+        <P>Indexing ({Math.trunc((completed / total) * 100)}%)</P>
+      </GridDiv>
       <StyledTooltip id="usage_progress_bar" place="bottom">
         {
-          "Continue allows you to use our OpenAI API key for up to 250 inputs. After this, you can either use your own API key, or use a local LLM. Click the progress bar to go to the docs and learn more."
+          "Continue is indexing your codebase locally. You can find the index in ~/.continue/embeddings."
         }
       </StyledTooltip>
     </>
   );
 };
 
-export default ProgressBar;
+export default IndexingProgressBar;
