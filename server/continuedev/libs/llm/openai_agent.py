@@ -98,48 +98,43 @@ class OpenAIAgent(LLM):
 
         # This is where we can pass the runner to the soon to be built OpenAIFunction Step
         yield SetStep(
+            step_type="openai_run_function",
             name="OpenAI Function Listener",
             description=f"Starting OpenAI Function Listener for runId={run.id}",
-            params={'run_id': run.id}
+            params={'run_id': run.id, 
+                    'thread_id': self.thread_id,
+                    'api_key': self.api_key}
         )
 
 
-        run_result = self._client.beta.threads.runs.retrieve(
-            thread_id=self.thread_id,
-            run_id=self.run_id)
-        print(run_result)
+
+
 
         # Loop until the status is 'completed'
-        while run_result.status != 'completed':
+        while True:
+            run_result = self._client.beta.threads.runs.retrieve(
+                thread_id=self.thread_id,
+                run_id=self.run_id)
+            print(run_result)
+            print(f'run_id={run_result.id} state={run_result.status}')
+
             if run_result.status == 'failed':
                 raise Exception(
                     f"Error result: {run_result.last_error}"
                 )  
-            if run_result.status == 'expired':
+            elif run_result.status == 'expired':
                 raise Exception(
                     f"Expired result: {run_result.last_error}"
                 )           
-            if run_result.status == 'cancelled':
+            elif run_result.status == 'cancelled':
                 yield {
                     "content": "Cancelled",
                     "role": 'user',
                 }
+            elif run_result.status == 'completed':
+                break
 
-            if run_result.required_action is not None:
-                outputs =self.handle_required_actions(run_result)
-                run_result=self._client.beta.threads.runs.submit_tool_outputs(
-                    thread_id=self.thread_id,
-                    run_id=self.run_id,
-                    tool_outputs=outputs
-                    )
-            else:
-                time.sleep(.2)  # Wait for 1 second before checking again to avoid rate limiting
-                run_result = self._client.beta.threads.runs.retrieve(
-                    thread_id=self.thread_id,
-                    run_id=self.run_id
-                )
-            print(f'run_id={run_result.id} state={run_result.status}')
-
+            await asyncio.sleep(.2)  # Wait for 1 second before checking again to avoid rate limiting                     
 
         # Print the result
         self.print_results()
@@ -162,10 +157,6 @@ class OpenAIAgent(LLM):
 
   
 
-
-
-    def upload_file(self, file_path):
-        return f'Here is where the file would be uploaded for {file_path}'
 
 
     def retrieve_or_create_assistant(self):
@@ -215,13 +206,6 @@ class OpenAIAgent(LLM):
         )
    
 
-    def get_current_time(self):
-        str= datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ')
-        print(f'get_current_time()={str}')
-        return str
-
-  
-
     def print_results(self):
 
         try:
@@ -246,38 +230,6 @@ class OpenAIAgent(LLM):
         file_path=args['file_path']
         return f'file contents goes here for {file_path}'
 
-
-    # Define a function to handle the required actions
-    def handle_required_actions(self, run):
-        outputs = []
-        if run.status == 'requires_action':
-            required_action = run.required_action
-            if required_action and required_action.type == 'submit_tool_outputs':
-                
-                tool_calls = required_action.submit_tool_outputs.tool_calls
-                for call in tool_calls:
-                    function_name = call.function.name
-                    arguments = json.loads(call.function.arguments)
-                    print(f'function_name={function_name} args={arguments}')
-                    # Call the corresponding function based on the function name
-                    if function_name == 'get_project_file':                        
-                        outputs.append(
-                            {
-                                "tool_call_id": call.id,
-                                "output": self.get_project_file(arguments),
-                            }
-                        )
-                    elif function_name == 'get_current_time':                        
-                        outputs.append(
-                            {
-                                "tool_call_id": call.id,
-                                "output": self.get_current_time()
-                            }
-                        )                                        
-                    else:
-                        print(f"No handler for function: {function_name}")    
-        
-        return outputs
                                 
 OPENAI_AGENT_DEV_INSTRUCTIONS="""
 # GOALS

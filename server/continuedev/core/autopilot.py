@@ -5,6 +5,7 @@ import uuid
 from typing import Dict, List, Optional
 
 from aiohttp import ClientPayloadError
+from continuedev.plugins.steps.draft.openai_run_func import OpenAIRunFunction
 import openai
 import inspect
 
@@ -296,8 +297,12 @@ class Autopilot:
                 SessionUpdate(index=index, update=set_step)
             )
             return
-        elif isinstance(update, SetStep):
-            await self.sdk.gui.send_session_update(update)
+        elif isinstance(update.update, SetStep):
+            if update.update.step_type == 'openai_run_function':
+                step=OpenAIRunFunction(run_id=update.update.params['run_id'], 
+                                       thread_id=update.update.params['thread_id'],
+                                       api_key=update.update.params['api_key'])
+                await step.run(sdk=self.sdk)
 
         if update.index > len(self.session_state.history):
             raise Exception(
