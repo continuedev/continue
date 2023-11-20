@@ -1,9 +1,7 @@
 import asyncio
 import os
-from typing import Coroutine, List, Optional, Union
-
-from ..plugins.context_providers.highlighted_code import HighlightedCodeContextProvider
-
+from abc import ABC
+from typing import List, Optional, Union
 
 from ..models.filesystem import RangeInFile
 from ..models.filesystem_edit import (
@@ -15,18 +13,21 @@ from ..models.filesystem_edit import (
     FileSystemEdit,
 )
 from ..models.main import Range
-from ..server.protocols.ide_protocol import AbstractIdeProtocolServer
+from ..plugins.context_providers.highlighted_code import HighlightedCodeContextProvider
 from ..server.protocols.gui_protocol import AbstractGUIProtocolServer
+from ..server.protocols.ide_protocol import AbstractIdeProtocolServer
+from .abstract_sdk import AbstractContinueSDK
 from .config import ContinueConfig
+from .context import ContextManager
 from .lsp import ContinueLSPClient
 from .main import (
     ChatMessage,
     Context,
     ContextItem,
     ContinueCustomException,
+    SessionState,
     Step,
     StepDescription,
-    StepGenerator,
 )
 from .models import Models
 from .steps import (
@@ -37,11 +38,20 @@ from .steps import (
 )
 
 
-class Autopilot:
-    pass
+class Autopilot(ABC):
+    session_state: SessionState
+    ide: AbstractIdeProtocolServer
+    gui: AbstractGUIProtocolServer
+    config: ContinueConfig
+    context_manager: ContextManager
+
+    context: Context = Context()
+
+    async def run_step(self, step: Step):
+        ...
 
 
-class ContinueSDK:
+class ContinueSDK(AbstractContinueSDK):
     """The SDK provided as parameters to a step"""
 
     ide: AbstractIdeProtocolServer
@@ -75,13 +85,6 @@ class ContinueSDK:
     def context_items(self) -> List[ContextItem]:
         return self.__autopilot.session_state.context_items
 
-    @property
-    def stopped(self):
-        return self.__autopilot.stopped
-
-    async def start_model(self, model):
-        await model.start(self.ide.unique_id)
-
     async def _ensure_absolute_path(self, path: str) -> str:
         if os.path.isabs(path):
             return path
@@ -98,46 +101,45 @@ class ContinueSDK:
                     return open_file
             raise Exception(f"Path {path} does not exist")
 
-    async def run_step(self, step: Step) -> StepGenerator:
+    async def run_step(self, step: Step):
         await self.__autopilot.run_step(step)
 
     async def apply_filesystem_edit(
-        self, edit: FileSystemEdit, name: str = None, description: str = None
+        self,
+        edit: FileSystemEdit,
+        name: str = "Filesystem Edit",
+        description: str = "Filesystem Edit",
     ):
         return await self.run_step(
-            FileSystemEditStep(
-                edit=edit, description=description, **({"name": name} if name else {})
-            )
+            FileSystemEditStep(edit=edit, description=description, name=name)
         )
 
     async def run(
         self,
         commands: Union[List[str], str],
-        cwd: str = None,
-        name: str = None,
-        description: str = None,
+        cwd: Optional[str] = None,
+        name: str = "Run Command",
+        description: str = "Run Command",
         handle_error: bool = True,
-    ) -> Coroutine[str, None, None]:
+    ):
         commands = commands if isinstance(commands, List) else [commands]
-        return (
-            await self.run_step(
-                ShellCommandsStep(
-                    cmds=commands,
-                    cwd=cwd,
-                    description=description,
-                    handle_error=handle_error,
-                    **({"name": name} if name else {}),
-                )
+        await self.run_step(
+            ShellCommandsStep(
+                cmds=commands,
+                cwd=cwd,
+                description=description,
+                handle_error=handle_error,
+                name=name,
             )
-        ).text
+        )  # TODO: Return the output
 
     async def edit_file(
         self,
         filename: str,
         prompt: str,
-        name: str = None,
+        name: str = "Edit File",
         description: str = "",
-        range: Range = None,
+        range: Optional[Range] = None,
     ):
         filepath = await self._ensure_absolute_path(filename)
 
@@ -152,7 +154,7 @@ class ContinueSDK:
                 ],
                 user_input=prompt,
                 description=description,
-                **({"name": name} if name else {}),
+                name=name,
             )
         )
 
@@ -167,7 +169,7 @@ class ContinueSDK:
         dir_name = os.path.dirname(filepath)
         os.makedirs(dir_name, exist_ok=True)
         return await self.run_step(
-            FileSystemEditStep(edit=AddFile(filepath=filepath, content=content))
+            FileSystemEditStep(edit=AddFile(filepath=filepath, content=content or ""))
         )
 
     async def delete_file(self, filename: str):
@@ -236,7 +238,7 @@ class ContinueSDK:
         return history_context
 
     async def get_context_item_chat_messages(
-        self, exclude: str = None
+        self, exclude: Optional[str] = None
     ) -> List[ChatMessage]:
         return await self.__autopilot.context_manager.get_chat_messages(
             # list(

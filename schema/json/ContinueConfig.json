@@ -36,6 +36,7 @@
         },
         "content": {
           "title": "Content",
+          "default": "",
           "type": "string"
         },
         "name": {
@@ -51,8 +52,7 @@
         }
       },
       "required": [
-        "role",
-        "summary"
+        "role"
       ]
     },
     "Step": {
@@ -97,6 +97,86 @@
         }
       }
     },
+    "BaseCompletionOptions": {
+      "title": "BaseCompletionOptions",
+      "type": "object",
+      "properties": {
+        "temperature": {
+          "title": "Temperature",
+          "description": "The temperature of the completion.",
+          "type": "number"
+        },
+        "top_p": {
+          "title": "Top P",
+          "description": "The top_p of the completion.",
+          "type": "number"
+        },
+        "top_k": {
+          "title": "Top K",
+          "description": "The top_k of the completion.",
+          "type": "integer"
+        },
+        "presence_penalty": {
+          "title": "Presence Penalty",
+          "description": "The presence penalty Aof the completion.",
+          "type": "number"
+        },
+        "frequency_penalty": {
+          "title": "Frequency Penalty",
+          "description": "The frequency penalty of the completion.",
+          "type": "number"
+        },
+        "stop": {
+          "title": "Stop",
+          "description": "The stop tokens of the completion.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "max_tokens": {
+          "title": "Max Tokens",
+          "description": "The maximum number of tokens to generate.",
+          "default": 1023,
+          "type": "integer"
+        }
+      }
+    },
+    "RequestOptions": {
+      "title": "RequestOptions",
+      "type": "object",
+      "properties": {
+        "timeout": {
+          "title": "Timeout",
+          "description": "Set the timeout for each request to the LLM. If you are running a local LLM that takes a while to respond, you might want to set this to avoid timeouts.",
+          "default": 300,
+          "type": "integer"
+        },
+        "verify_ssl": {
+          "title": "Verify Ssl",
+          "description": "Whether to verify SSL certificates for requests.",
+          "type": "boolean"
+        },
+        "ca_bundle_path": {
+          "title": "Ca Bundle Path",
+          "description": "Path to a custom CA bundle to use when making the HTTP request",
+          "type": "string"
+        },
+        "proxy": {
+          "title": "Proxy",
+          "description": "Proxy URL to use when making the HTTP request",
+          "type": "string"
+        },
+        "headers": {
+          "title": "Headers",
+          "description": "Headers to use when making the HTTP request",
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      }
+    },
     "LLM": {
       "title": "LLM",
       "type": "object",
@@ -127,67 +207,39 @@
           "default": 2048,
           "type": "integer"
         },
-        "stop_tokens": {
-          "title": "Stop Tokens",
-          "description": "Tokens that will stop the completion.",
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
+        "completion_options": {
+          "title": "Completion Options",
+          "description": "Options for the completion endpoint. Read more about the completion options in the documentation.",
+          "default": {
+            "temperature": null,
+            "top_p": null,
+            "top_k": null,
+            "presence_penalty": null,
+            "frequency_penalty": null,
+            "stop": null,
+            "max_tokens": 1023
+          },
+          "allOf": [
+            {
+              "$ref": "#/definitions/BaseCompletionOptions"
+            }
+          ]
         },
-        "temperature": {
-          "title": "Temperature",
-          "description": "The temperature of the completion.",
-          "type": "number"
-        },
-        "top_p": {
-          "title": "Top P",
-          "description": "The top_p of the completion.",
-          "type": "number"
-        },
-        "top_k": {
-          "title": "Top K",
-          "description": "The top_k of the completion.",
-          "type": "integer"
-        },
-        "presence_penalty": {
-          "title": "Presence Penalty",
-          "description": "The presence penalty Aof the completion.",
-          "type": "number"
-        },
-        "frequency_penalty": {
-          "title": "Frequency Penalty",
-          "description": "The frequency penalty of the completion.",
-          "type": "number"
-        },
-        "timeout": {
-          "title": "Timeout",
-          "description": "Set the timeout for each request to the LLM. If you are running a local LLM that takes a while to respond, you might want to set this to avoid timeouts.",
-          "default": 300,
-          "type": "integer"
-        },
-        "verify_ssl": {
-          "title": "Verify Ssl",
-          "description": "Whether to verify SSL certificates for requests.",
-          "type": "boolean"
-        },
-        "ca_bundle_path": {
-          "title": "Ca Bundle Path",
-          "description": "Path to a custom CA bundle to use when making the HTTP request",
-          "type": "string"
-        },
-        "proxy": {
-          "title": "Proxy",
-          "description": "Proxy URL to use when making the HTTP request",
-          "type": "string"
-        },
-        "headers": {
-          "title": "Headers",
-          "description": "Headers to use when making the HTTP request",
-          "type": "object",
-          "additionalProperties": {
-            "type": "string"
-          }
+        "request_options": {
+          "title": "Request Options",
+          "description": "Options for the HTTP request to the LLM.",
+          "default": {
+            "timeout": 300,
+            "verify_ssl": null,
+            "ca_bundle_path": null,
+            "proxy": null,
+            "headers": null
+          },
+          "allOf": [
+            {
+              "$ref": "#/definitions/RequestOptions"
+            }
+          ]
         },
         "prompt_templates": {
           "title": "Prompt Templates",
@@ -198,6 +250,11 @@
         "api_key": {
           "title": "Api Key",
           "description": "The API key for the LLM provider.",
+          "type": "string"
+        },
+        "api_base": {
+          "title": "Api Base",
+          "description": "The base URL of the LLM API.",
           "type": "string"
         }
       },
@@ -279,7 +336,26 @@
           "type": "string"
         },
         "step": {
-          "title": "Step"
+          "title": "Step",
+          "anyOf": [
+            {},
+            {
+              "enum": [
+                "AnswerQuestionChroma",
+                "GenerateShellCommandStep",
+                "EditHighlightedCodeStep",
+                "ShareSessionStep",
+                "CommentCodeStep",
+                "ClearHistoryStep",
+                "StackOverflowStep",
+                "OpenConfigStep"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "string"
+            }
+          ]
         },
         "params": {
           "title": "Params",
@@ -521,88 +597,216 @@
               "title": null,
               "model": "gpt-4",
               "system_message": null,
-              "context_length": 2048,
-              "stop_tokens": null,
-              "temperature": null,
-              "top_p": null,
-              "top_k": null,
-              "presence_penalty": null,
-              "frequency_penalty": null,
-              "timeout": 300,
-              "verify_ssl": null,
-              "ca_bundle_path": null,
-              "proxy": null,
-              "headers": null,
+              "context_length": 8192,
+              "completion_options": {
+                "temperature": null,
+                "top_p": null,
+                "top_k": null,
+                "presence_penalty": null,
+                "frequency_penalty": null,
+                "stop": null,
+                "max_tokens": 1023
+              },
+              "request_options": {
+                "timeout": 300,
+                "verify_ssl": null,
+                "ca_bundle_path": null,
+                "proxy": null,
+                "headers": null
+              },
               "prompt_templates": {},
               "template_messages": null,
               "api_key": null,
-              "llm": null,
+              "api_base": null,
+              "llm": {
+                "title": null,
+                "model": "gpt-4",
+                "system_message": null,
+                "context_length": 2048,
+                "completion_options": {
+                  "temperature": null,
+                  "top_p": null,
+                  "top_k": null,
+                  "presence_penalty": null,
+                  "frequency_penalty": null,
+                  "stop": null,
+                  "max_tokens": 1023
+                },
+                "request_options": {
+                  "timeout": 300,
+                  "verify_ssl": null,
+                  "ca_bundle_path": null,
+                  "proxy": null,
+                  "headers": null
+                },
+                "prompt_templates": {},
+                "template_messages": null,
+                "api_key": null,
+                "api_base": null,
+                "class_name": "ProxyServer"
+              },
               "class_name": "OpenAIFreeTrial"
             },
             "summarize": {
               "title": null,
               "model": "gpt-3.5-turbo",
               "system_message": null,
-              "context_length": 2048,
-              "stop_tokens": null,
-              "temperature": null,
-              "top_p": null,
-              "top_k": null,
-              "presence_penalty": null,
-              "frequency_penalty": null,
-              "timeout": 300,
-              "verify_ssl": null,
-              "ca_bundle_path": null,
-              "proxy": null,
-              "headers": null,
+              "context_length": 4096,
+              "completion_options": {
+                "temperature": null,
+                "top_p": null,
+                "top_k": null,
+                "presence_penalty": null,
+                "frequency_penalty": null,
+                "stop": null,
+                "max_tokens": 1023
+              },
+              "request_options": {
+                "timeout": 300,
+                "verify_ssl": null,
+                "ca_bundle_path": null,
+                "proxy": null,
+                "headers": null
+              },
               "prompt_templates": {},
               "template_messages": null,
               "api_key": null,
-              "llm": null,
+              "api_base": null,
+              "llm": {
+                "title": null,
+                "model": "gpt-3.5-turbo",
+                "system_message": null,
+                "context_length": 2048,
+                "completion_options": {
+                  "temperature": null,
+                  "top_p": null,
+                  "top_k": null,
+                  "presence_penalty": null,
+                  "frequency_penalty": null,
+                  "stop": null,
+                  "max_tokens": 1023
+                },
+                "request_options": {
+                  "timeout": 300,
+                  "verify_ssl": null,
+                  "ca_bundle_path": null,
+                  "proxy": null,
+                  "headers": null
+                },
+                "prompt_templates": {},
+                "template_messages": null,
+                "api_key": null,
+                "api_base": null,
+                "class_name": "ProxyServer"
+              },
               "class_name": "OpenAIFreeTrial"
             },
             "edit": {
               "title": null,
               "model": "gpt-4",
               "system_message": null,
-              "context_length": 2048,
-              "stop_tokens": null,
-              "temperature": null,
-              "top_p": null,
-              "top_k": null,
-              "presence_penalty": null,
-              "frequency_penalty": null,
-              "timeout": 300,
-              "verify_ssl": null,
-              "ca_bundle_path": null,
-              "proxy": null,
-              "headers": null,
+              "context_length": 8192,
+              "completion_options": {
+                "temperature": null,
+                "top_p": null,
+                "top_k": null,
+                "presence_penalty": null,
+                "frequency_penalty": null,
+                "stop": null,
+                "max_tokens": 1023
+              },
+              "request_options": {
+                "timeout": 300,
+                "verify_ssl": null,
+                "ca_bundle_path": null,
+                "proxy": null,
+                "headers": null
+              },
               "prompt_templates": {},
               "template_messages": null,
               "api_key": null,
-              "llm": null,
+              "api_base": null,
+              "llm": {
+                "title": null,
+                "model": "gpt-4",
+                "system_message": null,
+                "context_length": 2048,
+                "completion_options": {
+                  "temperature": null,
+                  "top_p": null,
+                  "top_k": null,
+                  "presence_penalty": null,
+                  "frequency_penalty": null,
+                  "stop": null,
+                  "max_tokens": 1023
+                },
+                "request_options": {
+                  "timeout": 300,
+                  "verify_ssl": null,
+                  "ca_bundle_path": null,
+                  "proxy": null,
+                  "headers": null
+                },
+                "prompt_templates": {},
+                "template_messages": null,
+                "api_key": null,
+                "api_base": null,
+                "class_name": "ProxyServer"
+              },
               "class_name": "OpenAIFreeTrial"
             },
             "chat": {
               "title": null,
               "model": "gpt-4",
               "system_message": null,
-              "context_length": 2048,
-              "stop_tokens": null,
-              "temperature": null,
-              "top_p": null,
-              "top_k": null,
-              "presence_penalty": null,
-              "frequency_penalty": null,
-              "timeout": 300,
-              "verify_ssl": null,
-              "ca_bundle_path": null,
-              "proxy": null,
-              "headers": null,
+              "context_length": 8192,
+              "completion_options": {
+                "temperature": null,
+                "top_p": null,
+                "top_k": null,
+                "presence_penalty": null,
+                "frequency_penalty": null,
+                "stop": null,
+                "max_tokens": 1023
+              },
+              "request_options": {
+                "timeout": 300,
+                "verify_ssl": null,
+                "ca_bundle_path": null,
+                "proxy": null,
+                "headers": null
+              },
               "prompt_templates": {},
               "template_messages": null,
               "api_key": null,
-              "llm": null,
+              "api_base": null,
+              "llm": {
+                "title": null,
+                "model": "gpt-4",
+                "system_message": null,
+                "context_length": 2048,
+                "completion_options": {
+                  "temperature": null,
+                  "top_p": null,
+                  "top_k": null,
+                  "presence_penalty": null,
+                  "frequency_penalty": null,
+                  "stop": null,
+                  "max_tokens": 1023
+                },
+                "request_options": {
+                  "timeout": 300,
+                  "verify_ssl": null,
+                  "ca_bundle_path": null,
+                  "proxy": null,
+                  "headers": null
+                },
+                "prompt_templates": {},
+                "template_messages": null,
+                "api_key": null,
+                "api_base": null,
+                "class_name": "ProxyServer"
+              },
               "class_name": "OpenAIFreeTrial"
             },
             "saved": [],
@@ -615,11 +819,28 @@
             }
           ]
         },
-        "temperature": {
-          "title": "Temperature",
-          "description": "The temperature parameter for sampling from the LLM. Higher temperatures will result in more random output, while lower temperatures will result in more predictable output. This value ranges from 0 to 1.",
-          "default": 0.5,
-          "type": "number"
+        "system_message": {
+          "title": "System Message",
+          "description": "A system message that will always be followed by the LLM",
+          "type": "string"
+        },
+        "completion_options": {
+          "title": "Completion Options",
+          "description": "Options for the completion endpoint. Read more about the completion options in the documentation.",
+          "default": {
+            "temperature": null,
+            "top_p": null,
+            "top_k": null,
+            "presence_penalty": null,
+            "frequency_penalty": null,
+            "stop": null,
+            "max_tokens": 1023
+          },
+          "allOf": [
+            {
+              "$ref": "#/definitions/BaseCompletionOptions"
+            }
+          ]
         },
         "custom_commands": {
           "title": "Custom Commands",
@@ -654,11 +875,6 @@
             }
           ]
         },
-        "system_message": {
-          "title": "System Message",
-          "description": "A system message that will always be followed by the LLM",
-          "type": "string"
-        },
         "policy_override": {
           "title": "Policy Override",
           "description": "A Policy object that can be used to override the default behavior of Continue, for example in order to build custom agents that take multiple steps at a time.",
@@ -684,7 +900,7 @@
         },
         "data_server_url": {
           "title": "Data Server Url",
-          "description": "The URL of the server where development data is sent. No data is sent unless a valid user token is provided.",
+          "description": "The URL of the server where development data is sent. No data is sent unless you have explicitly set the `user_token` property to a valid token that we have shared.",
           "default": "https://us-west1-autodebug.cloudfunctions.net",
           "type": "string"
         },

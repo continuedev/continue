@@ -1,7 +1,7 @@
-from typing import Callable, List, Optional
 import uuid
+from typing import Any, Callable, Dict, List, Optional, Type
 
-from pydantic import BaseModel, validator
+from pydantic import BaseModel, Field, validator
 
 from ..libs.llm.anthropic import AnthropicLLM
 from ..libs.llm.base import LLM
@@ -10,12 +10,13 @@ from ..libs.llm.google_palm_api import GooglePaLMAPI
 from ..libs.llm.hf_inference_api import HuggingFaceInferenceAPI
 from ..libs.llm.hf_tgi import HuggingFaceTGI
 from ..libs.llm.llamacpp import LlamaCpp
+from ..libs.llm.lmstudio import LMStudio
 from ..libs.llm.ollama import Ollama
 from ..libs.llm.openai import OpenAI
 from ..libs.llm.openai_free_trial import OpenAIFreeTrial
 from ..libs.llm.replicate import ReplicateLLM
-from ..libs.llm.together import TogetherLLM
 from ..libs.llm.text_gen_webui import TextGenWebUI
+from ..libs.llm.together import TogetherLLM
 
 
 class ContinueSDK(BaseModel):
@@ -29,7 +30,7 @@ ALL_MODEL_ROLES = [
     "chat",
 ]
 
-MODEL_CLASSES = {
+MODEL_CLASSES: Dict[str, Type[LLM]] = {
     cls.__name__: cls
     for cls in [
         OpenAI,
@@ -44,6 +45,7 @@ MODEL_CLASSES = {
         HuggingFaceTGI,
         GooglePaLMAPI,
         TextGenWebUI,
+        LMStudio,
     ]
 }
 
@@ -60,6 +62,7 @@ MODEL_MODULE_NAMES = {
     "HuggingFaceTGI": "hf_tgi",
     "GooglePaLMAPI": "google_palm_api",
     "TextGenWebUI": "text_gen_webui",
+    "LMStudio": "lmstudio",
 }
 
 
@@ -67,9 +70,9 @@ class Models(BaseModel):
     """Main class that holds the current model configuration"""
 
     default: LLM
-    summarize: Optional[LLM] = None
-    edit: Optional[LLM] = None
-    chat: Optional[LLM] = None
+    summarize: LLM = Field(default=None)
+    edit: LLM = Field(default=None)
+    chat: LLM = Field(default=None)
 
     saved: List[LLM] = []
 
@@ -105,7 +108,12 @@ class Models(BaseModel):
         for model in self.all_models:
             model.set_main_config_params(system_msg, temperature)
 
-    async def start(self, unique_id: str, system_message: str, temperature: float):
+    async def start(
+        self,
+        unique_id: str,
+        system_message: Optional[str],
+        temperature: Optional[float],
+    ):
         """Start each of the LLMs, or fall back to default"""
         for role in ALL_MODEL_ROLES:
             model: LLM = getattr(self, role)
@@ -128,7 +136,7 @@ class Models(BaseModel):
         for logger in self._loggers.values():
             await logger(msg)
 
-    def add_logger(self, logger: Callable[[str], None]) -> str:
+    def add_logger(self, logger: Callable[[str], Any]) -> str:
         logger_id = uuid.uuid4().hex
         self._loggers[logger_id] = logger
         return logger_id

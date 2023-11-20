@@ -1,29 +1,25 @@
-from typing import Callable, Dict, List, Union
+from typing import Optional
 
 from huggingface_hub import InferenceClient
 from pydantic import Field
 
 from .base import LLM, CompletionOptions
-from .prompts.chat import llama2_template_messages
-from .prompts.edit import codellama_edit_prompt
 
 
 class HuggingFaceInferenceAPI(LLM):
     """
-    Hugging Face Inference API is a great option for newly released language models. Sign up for an account and add billing [here](https://huggingface.co/settings/billing), access the Inference Endpoints [here](https://ui.endpoints.huggingface.co), click on “New endpoint”, and fill out the form (e.g. select a model like [WizardCoder-Python-34B-V1.0](https://huggingface.co/WizardLM/WizardCoder-Python-34B-V1.0)), and then deploy your model by clicking “Create Endpoint”. Change `~/.continue/config.py` to look like this:
+    Hugging Face Inference API is a great option for newly released language models. Sign up for an account and add billing [here](https://huggingface.co/settings/billing), access the Inference Endpoints [here](https://ui.endpoints.huggingface.co), click on “New endpoint”, and fill out the form (e.g. select a model like [WizardCoder-Python-34B-V1.0](https://huggingface.co/WizardLM/WizardCoder-Python-34B-V1.0)), and then deploy your model by clicking “Create Endpoint”. Change `~/.continue/config.json` to look like this:
 
-    ```python title="~/.continue/config.py"
-    from continuedev.core.models import Models
-    from continuedev.libs.llm.hf_inference_api import HuggingFaceInferenceAPI
-
-    config = ContinueConfig(
-        ...
-        models=Models(
-            default=HuggingFaceInferenceAPI(
-                endpoint_url="<INFERENCE_API_ENDPOINT_URL>",
-                hf_token="<HUGGING_FACE_TOKEN>",
-        )
-    )
+    ```json title="~/.continue/config.json"
+    {
+        "models": [{
+            "title": "Hugging Face Inference API",
+            "provider": "huggingface-inference-api",
+            "model": "MODEL_NAME",
+            "api_key": "YOUR_HF_TOKEN",
+            "api_base": "INFERENCE_API_ENDPOINT_URL"
+        }]
+    }
     ```
     """
 
@@ -31,18 +27,10 @@ class HuggingFaceInferenceAPI(LLM):
         "Hugging Face Inference API",
         description="The name of the model to use (optional for the HuggingFaceInferenceAPI class)",
     )
-    hf_token: str = Field(..., description="Your Hugging Face API token")
-    endpoint_url: str = Field(
+    api_key: str = Field(..., description="Your Hugging Face API token")
+    api_base: Optional[str] = Field(
         None, description="Your Hugging Face Inference API endpoint URL"
     )
-
-    template_messages: Union[
-        Callable[[List[Dict[str, str]]], str], None
-    ] = llama2_template_messages
-
-    prompt_templates = {
-        "edit": codellama_edit_prompt,
-    }
 
     class Config:
         arbitrary_types_allowed = True
@@ -63,7 +51,7 @@ class HuggingFaceInferenceAPI(LLM):
     async def _stream_complete(self, prompt, options):
         args = self.collect_args(options)
 
-        client = InferenceClient(self.endpoint_url, token=self.hf_token)
+        client = InferenceClient(self.api_base, token=self.api_key)
 
         stream = client.text_generation(prompt, stream=True, details=True, **args)
 

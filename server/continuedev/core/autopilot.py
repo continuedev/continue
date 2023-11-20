@@ -1,31 +1,21 @@
-import json
-import os
-import traceback
+import inspect
 import uuid
-from typing import Dict, List, Optional
+from typing import List, Optional, cast
 
 from aiohttp import ClientPayloadError
 from openai import error as openai_errors
-import inspect
 
-from ..libs.util.strings import remove_quotes_and_escapes
 from ..libs.llm.prompts.chat import template_alpaca_messages
-from .context import ContextManager
 from ..libs.util.devdata import dev_data_logger
+from ..libs.util.errors import format_exc
 from ..libs.util.logging import logger
-from ..libs.util.paths import getSavedContextGroupsPath
+from ..libs.util.strings import remove_quotes_and_escapes
 from ..libs.util.telemetry import posthog_logger
-from ..libs.util.traceback.traceback_parsers import (
-    get_javascript_traceback,
-    get_python_traceback,
-)
-from ..models.filesystem import RangeInFileWithContents
+from ..plugins.policies.default import DefaultPolicy
 from ..server.protocols.gui_protocol import AbstractGUIProtocolServer
 from ..server.protocols.ide_protocol import AbstractIdeProtocolServer
-from ..plugins.policies.default import DefaultPolicy
-from ..plugins.steps.on_traceback import DefaultOnTracebackStep
-
 from .config import ContinueConfig
+from .context import ContextManager
 from .main import (
     AutopilotGenerator,
     AutopilotGeneratorOutput,
@@ -33,18 +23,17 @@ from .main import (
     ContextItem,
     ContinueCustomException,
     ContinueError,
+    DeltaStep,
     Policy,
     SessionState,
+    SessionUpdate,
     SetStep,
     Step,
-    UpdateStep,
-    SessionUpdate,
     StepDescription,
-    DeltaStep,
+    UpdateStep,
 )
 from .observation import Observation
 from .sdk import ContinueSDK
-from .steps import UserInputStep
 
 
 def get_error_title(e: Exception) -> str:
@@ -58,7 +47,7 @@ def get_error_title(e: Exception) -> str:
         isinstance(e, openai_errors.InvalidRequestError)
         and e.code == "context_length_exceeded"
     ):
-        return e._message
+        return e._message or e.__str__()
     elif isinstance(e, ClientPayloadError):
         return "The request failed. Please try again."
     elif isinstance(e, openai_errors.APIConnectionError):
@@ -103,7 +92,7 @@ class Autopilot:
 
     @property
     def sdk(self) -> ContinueSDK:
-        return ContinueSDK(self.config, self.ide, self.gui, self)
+        return ContinueSDK(self.config, self.ide, self.gui, self)  # type: ignore because of circular import
 
     class Config:
         arbitrary_types_allowed = True
@@ -114,12 +103,13 @@ class Autopilot:
             or e.__class__.__name__ == ContinueCustomException.__name__
         )
 
-        error_string = (
-            e.message
-            if is_continue_custom_exception
-            else "\n".join(traceback.format_exception(e, e, e.__traceback__))
-        )
-        error_title = e.title if is_continue_custom_exception else get_error_title(e)
+        if is_continue_custom_exception:
+            e = cast(ContinueCustomException, e)
+            error_string = e.message
+            error_title = e.title
+        else:
+            error_string = format_exc(e)
+            error_title = get_error_title(e)
 
         # Attach an InternalErrorObservation to the step and unhide it.
         logger.error(f"Error while running step: \n{error_string}\n{error_title}")
@@ -134,7 +124,7 @@ class Autopilot:
         )
 
         if is_continue_custom_exception:
-            return e
+            return cast(ContinueCustomException, e)
         else:
             return ContinueCustomException(title=error_title, message=error_string)
 
@@ -175,7 +165,10 @@ class Autopilot:
 
     async def _run_singular_step(self, step: "Step") -> AutopilotGenerator:
         # Allow config to set disallowed steps
-        if step.__class__.__name__ in self.sdk.config.disallowed_steps:
+        if (
+            self.sdk.config.disallowed_steps is not None
+            and step.__class__.__name__ in self.sdk.config.disallowed_steps
+        ):
             return
 
         # Log the context and step to dev data
@@ -194,14 +187,17 @@ class Autopilot:
             depth=self._step_depth,
         )
 
-        def handle_step_update(update: UpdateStep):
+        def handle_step_update(
+            update: UpdateStep,
+        ) -> Optional[AutopilotGeneratorOutput]:
             if update.__class__.__name__ == "SessionUpdate":
-                return update
+                return update  # type: ignore
             elif isinstance(update, str):
                 return SessionUpdate(index=index, update=DeltaStep(description=update))
             elif update.__class__.__name__ == "Observation":
                 return SessionUpdate(
-                    index=index, update=DeltaStep(observations=[update])
+                    index=index,
+                    update=DeltaStep(observations=[cast(Observation, update)]),
                 )
             elif (
                 update.__class__.__name__ == "DeltaStep"
@@ -216,15 +212,18 @@ class Autopilot:
         # Try to run step and handle errors
         try:
             if inspect.iscoroutinefunction(step.run):
-                await step.run(self.sdk)
+                await step.run(self.sdk)  # type: ignore (stub type)
             elif inspect.isasyncgenfunction(step.run):
-                async for update in step.run(self.sdk):
+                async for update in step.run(self.sdk):  # type: ignore (stub type)
                     if self.stopped:
-                        for update in step.on_stop(self.sdk):
-                            yield handle_step_update(update)
+                        if on_stop_generator := step.on_stop(self.sdk):  # type: ignore (stub type)
+                            for update in on_stop_generator:  # type: ignore
+                                if handled := handle_step_update(update):
+                                    yield handled
                         return
 
-                    yield handle_step_update(update)
+                    if handled := handle_step_update(update):
+                        yield handled
             else:
                 logger.warning(
                     f"{step.__class__.__name__}.run is not a coroutine function or async generator"
@@ -322,55 +321,16 @@ class Autopilot:
 
         if step is not None:
             await self.run_step(step)
-        while next_step := self.policy.next(self.sdk.config, self.session_state):
+        while next_step := self.policy.next(self.sdk.config, self.session_state):  # type: ignore (stub type)
             await self.run_step(next_step)
 
         self.config.models.remove_logger(logger_id)
-
-    # region Context Groups
-
-    _saved_context_groups: Dict[str, List[ContextItem]] = {}
-
-    def _persist_context_groups(self):
-        context_groups_file = getSavedContextGroupsPath()
-        if os.path.exists(context_groups_file):
-            with open(context_groups_file, "w") as f:
-                dict_to_save = {
-                    title: [item.dict() for item in context_items]
-                    for title, context_items in self._saved_context_groups.items()
-                }
-                json.dump(dict_to_save, f)
-
-    async def save_context_group(self, title: str, context_items: List[ContextItem]):
-        self._saved_context_groups[title] = context_items
-        await self.update_subscribers()
-
-        # Update saved context groups
-        self._persist_context_groups()
-
-        posthog_logger.capture_event(
-            "save_context_group", {"title": title, "length": len(context_items)}
-        )
-
-    async def delete_context_group(self, id: str):
-        if id not in self._saved_context_groups:
-            logger.warning(f"Context group {id} not found")
-            return
-        del self._saved_context_groups[id]
-        await self.update_subscribers()
-
-        # Update saved context groups
-        self._persist_context_groups()
-
-        posthog_logger.capture_event("delete_context_group", {"title": id})
 
     async def get_session_title(self) -> str:
         if self.sdk.config.disable_summaries:
             return "New Session"
         else:
-            chat_history = list(
-                map(lambda x: x.dict(), await self.sdk.get_chat_context())
-            )
+            chat_history = await self.sdk.get_chat_context()
             chat_history_str = template_alpaca_messages(chat_history)
             if self.sdk.models.summarize is None:
                 return "New Session"
@@ -381,5 +341,3 @@ class Autopilot:
                 log=False,
             )
             return remove_quotes_and_escapes(title)
-
-    # endregion

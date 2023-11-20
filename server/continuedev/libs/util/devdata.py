@@ -5,7 +5,7 @@ This file contains mechanisms for logging development data to files, SQL databas
 
 import json
 from datetime import datetime
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 import aiohttp
 
@@ -15,10 +15,12 @@ from .paths import getDevDataFilePath
 
 
 class DevDataLogger:
-    user_token: str = None
-    data_server_url: str = None
+    user_token: Optional[str] = None
+    data_server_url: Optional[str] = None
 
-    def setup(self, user_token: str = None, data_server_url: str = None):
+    def setup(
+        self, user_token: Optional[str] = None, data_server_url: Optional[str] = None
+    ):
         self.user_token = user_token
         self.data_server_url = data_server_url
 
@@ -38,9 +40,12 @@ class DevDataLogger:
                     },
                 )
 
+        async def on_error(e: Exception):
+            logger.warning(f"Failed to send dev data: {e}")
+
         create_async_task(
             _async_helper(self, table_name, data),
-            lambda e: logger.warning(f"Failed to send dev data: {e}"),
+            on_error,
         )
 
     def _static_columns(self):

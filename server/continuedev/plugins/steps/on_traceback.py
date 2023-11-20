@@ -2,12 +2,11 @@ import os
 from textwrap import dedent
 from typing import Dict, List, Optional, Tuple
 
-from ...libs.util.telemetry import posthog_logger
-
 from ...core.main import ChatMessage, ContinueCustomException, Step
 from ...core.sdk import ContinueSDK
 from ...core.steps import UserInputStep
 from ...libs.util.filter_files import should_filter_path
+from ...libs.util.telemetry import posthog_logger
 from ...libs.util.traceback.traceback_parsers import (
     get_javascript_traceback,
     get_python_traceback,
@@ -23,6 +22,8 @@ def extract_traceback_str(output: str) -> str:
     for tb_parser in [get_python_traceback, get_javascript_traceback]:
         if parsed_tb := tb_parser(tb):
             return parsed_tb
+
+    return ""
 
 
 class DefaultOnTracebackStep(Step):
@@ -93,12 +94,12 @@ def find_external_call(
 
 def get_func_source_for_frame(frame: Dict) -> str:
     """Get the source for the function called in the frame."""
-    pass
+    return ""
 
 
 async def fetch_docs_for_external_call(external_call: Dict, next_frame: Dict) -> str:
     """Fetch docs for the external call."""
-    pass
+    return ""
 
 
 class SolvePythonTracebackStep(Step):
@@ -109,10 +110,10 @@ class SolvePythonTracebackStep(Step):
     async def external_call_prompt(
         self, sdk: ContinueSDK, external_call: Tuple[Dict, Dict], tb_string: str
     ) -> str:
-        external_call, next_frame = external_call
-        source_line = external_call["source_line"]
+        external_call_dict, next_frame = external_call
+        source_line = external_call_dict["source_line"]
         external_func_source = get_func_source_for_frame(next_frame)
-        docs = await fetch_docs_for_external_call(external_call, next_frame)
+        docs = await fetch_docs_for_external_call(external_call_dict, next_frame)
 
         prompt = dedent(
             f"""\
@@ -163,7 +164,7 @@ class SolvePythonTracebackStep(Step):
 
     async def run(self, sdk: ContinueSDK):
         tb_string = get_python_traceback(self.output)
-        tb = parse_python_traceback(tb_string)
+        tb = parse_python_traceback(tb_string or "")
 
         if external_call := find_external_call(tb.frames):
             prompt = await self.external_call_prompt(sdk, external_call, tb_string)

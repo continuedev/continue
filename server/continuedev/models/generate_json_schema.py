@@ -2,22 +2,23 @@ import os
 
 from pydantic import schema_json_of
 
-from ..core.config import ContinueConfig
+from ..core.config import ContinueConfig, ModelDescription, SerializedContinueConfig
+from ..core.config_utils.shared import ModelName, ModelProvider
 from ..core.context import ContextItem, ContextItemId
 from ..core.main import (
+    ContextProviderDescription,
+    ContinueError,
     SessionInfo,
     SessionState,
     SessionUpdate,
-    ContinueError,
     SlashCommandDescription,
-    ContextProviderDescription,
 )
 from ..core.models import Models
 from ..libs.llm.base import LLM
+from ..server.sessions import PersistedSessionInfo
 from .filesystem import FileEdit, RangeInFile, RangeInFileWithContents
 from .filesystem_edit import FileEditWithFullContents
 from .main import Position, Range, Traceback, TracebackFrame
-from ..server.sessions import PersistedSessionInfo
 
 MODELS_TO_GENERATE = (
     [Position, Range, Traceback, TracebackFrame]
@@ -31,6 +32,8 @@ MODELS_TO_GENERATE = (
         SlashCommandDescription,
         ContextProviderDescription,
     ]
+    + [SerializedContinueConfig, ModelDescription]
+    + [ModelProvider, ModelName]
     + [ContinueConfig]
     + [ContextItem, ContextItemId]
     + [Models]
@@ -53,6 +56,10 @@ def main():
     clear_schemas()
     for model in MODELS_TO_GENERATE:
         title = RENAMES.get(model.__name__, model.__name__)
+        if model == ModelProvider:
+            title = "ModelProvider"
+        elif model == ModelName:
+            title = "ModelName"
         try:
             json = schema_json_of(model, indent=2, title=title)
         except Exception as e:

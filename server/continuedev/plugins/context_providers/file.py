@@ -2,18 +2,19 @@ import asyncio
 import os
 from typing import List, Optional
 
-from ...server.protocols.ide_protocol import AbstractIdeProtocolServer
-
 from ...core.context import ContextProvider
 from ...core.main import ChatMessage, ContextItem, ContextItemDescription, ContextItemId
 from ...libs.util.filter_files import DEFAULT_IGNORE_PATTERNS
 from ...libs.util.logging import logger
 from ...server.meilisearch_server import remove_meilisearch_disallowed_chars
+from ...server.protocols.ide_protocol import AbstractIdeProtocolServer
 
 MAX_SIZE_IN_CHARS = 50_000
 
 
-async def get_file_contents(filepath: str, ide: AbstractIdeProtocolServer) -> str:
+async def get_file_contents(
+    filepath: str, ide: AbstractIdeProtocolServer
+) -> Optional[str]:
     try:
         return (await ide.readFile(filepath))[:MAX_SIZE_IN_CHARS]
     except Exception as _:
@@ -29,7 +30,7 @@ class FileContextProvider(ContextProvider):
     ignore_patterns: List[str] = DEFAULT_IGNORE_PATTERNS
 
     display_title = "Files"
-    description = "Reference files in the current workspace"
+    description = "Type to search the workspace"
     dynamic = False
 
     async def start(self, *args):
@@ -77,11 +78,11 @@ class FileContextProvider(ContextProvider):
         self.ide.subscribeToFilesDeleted(on_files_deleted)
         self.ide.subscribeToFilesRenamed(on_files_renamed)
 
-    async def get_item(self, id: ContextItemId, query: str) -> ContextItem:
-        item = await super().get_item(id, query)
-        item.description.description = os.path.join(
-            self.ide.workspace_directory, item.description.description
-        )
+    async def get_item(self, id: ContextItemId, query: str) -> Optional[ContextItem]:
+        if item := await super().get_item(id, query):
+            item.description.description = os.path.join(
+                self.ide.workspace_directory, item.description.description
+            )
         return item
 
     def get_id_for_filepath(self, absolute_filepath: str) -> str:

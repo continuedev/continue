@@ -140,5 +140,5 @@ def clean_pii_from_any(v: Any) -> Any:
                 return cleaned_text
             else:
                 return v
-        except:
+        except Exception:
             return v

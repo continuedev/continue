@@ -297,7 +297,7 @@ class FoldingRange(BaseModel):
 class ContinueLSPClient(BaseModel):
     workspace_dir: str
 
-    lsp_client: LSPClient = None
+    lsp_client: LSPClient
     lsp_thread: Optional[threading.Thread] = None
 
     @property
@@ -339,7 +339,7 @@ class ContinueLSPClient(BaseModel):
     async def goto_definition(
         self, position: Position, filename: str
     ) -> List[RangeInFile]:
-        response = self.lsp_client.goto_definition(
+        response = await self.lsp_client.goto_definition(
             filename,
             position,
         )

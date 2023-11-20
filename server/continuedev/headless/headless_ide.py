@@ -1,7 +1,7 @@
 import os
 import subprocess
 import uuid
-from typing import Any, Callable, Coroutine, List, Optional
+from typing import Any, Callable, List, Optional
 
 from dotenv import load_dotenv
 from fastapi import WebSocket
@@ -13,6 +13,7 @@ from ..models.filesystem import (
     RealFileSystem,
 )
 from ..models.filesystem_edit import EditDiff, FileEdit, FileSystemEdit
+from ..models.main import Position
 from ..server.protocols.ide_protocol import AbstractIdeProtocolServer
 
 load_dotenv()
@@ -25,14 +26,14 @@ def get_mac_address():
 
 
 class LocalIdeProtocol(AbstractIdeProtocolServer):
-    websocket: WebSocket = None
+    websocket: WebSocket
     session_id: Optional[str]
     workspace_directory: str = os.getcwd()
     unique_id: str = get_mac_address()
 
     filesystem: FileSystem = RealFileSystem()
 
-    def __init__(self, workspace_directory: str = None):
+    def __init__(self, workspace_directory: Optional[str] = None):
         if workspace_directory:
             self.workspace_directory = workspace_directory
 
@@ -82,15 +83,15 @@ class LocalIdeProtocol(AbstractIdeProtocolServer):
 
     async def getOpenFiles(self) -> List[str]:
         """Get a list of open files"""
-        pass
+        return []
 
     async def getVisibleFiles(self) -> List[str]:
         """Get a list of visible files"""
-        pass
+        return []
 
     async def getHighlightedCode(self) -> List[RangeInFile]:
         """Get a list of highlighted code"""
-        pass
+        return []
 
     async def readFile(self, filepath: str) -> str:
         """Read a file"""
@@ -171,14 +172,31 @@ class LocalIdeProtocol(AbstractIdeProtocolServer):
         """Called when a file is saved"""
         pass
 
-    async def fileExists(self, filepath: str) -> Coroutine[Any, Any, str]:
+    async def fileExists(self, filepath: str) -> bool:
         """Check if a file exists"""
         return self.filesystem.exists(filepath)
 
-    async def getTerminalContents(self) -> Coroutine[Any, Any, str]:
+    async def getTerminalContents(self) -> str:
         return ""
 
     async def listDirectoryContents(
         self, directory: str, recursive: bool = False
     ) -> List[str]:
         return self.filesystem.list_directory_contents(directory, recursive=recursive)
+
+    async def goto_definition(self, filepath: str, position: Position):
+        raise NotImplementedError()
+
+    async def document_symbol(self, filepath: str):
+        raise NotImplementedError()
+
+    async def find_references(
+        self, filepath: str, position: Position, include_declaration: bool = False
+    ):
+        raise NotImplementedError()
+
+    async def folding_range(self, filepath: str):
+        raise NotImplementedError()
+
+    async def get_enclosing_folding_range(self, position: Position, filepath: str):
+        raise NotImplementedError()

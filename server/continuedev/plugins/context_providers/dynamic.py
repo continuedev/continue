@@ -17,7 +17,6 @@ class DynamicProvider(ContextProvider, ABC):
 
     name: str
 
-    workspace_dir: str = None
     dynamic: bool = True
 
     @property
@@ -32,7 +31,6 @@ class DynamicProvider(ContextProvider, ABC):
         )
 
     async def provide_context_items(self, workspace_dir: str) -> List[ContextItem]:
-        self.workspace_dir = workspace_dir
         create_async_task(self.setup())
         return [self.BASE_CONTEXT_ITEM]
 

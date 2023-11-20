@@ -1,6 +1,12 @@
-import _ from "lodash";
+/*
+This is the data that populates the model selection page.
+*/
 
-function updatedObj(old: any, pathToValue: { [key: string]: any }) {
+import _ from "lodash";
+import { ModelProvider } from "../schema/ModelProvider";
+import { ModelName } from "../schema/ModelName";
+
+export function updatedObj(old: any, pathToValue: { [key: string]: any }) {
   const newObject = _.cloneDeep(old);
   for (const key in pathToValue) {
     if (typeof pathToValue[key] === "function") {
@@ -55,7 +61,7 @@ const contextLengthInput: InputDescriptor = {
 };
 const temperatureInput: InputDescriptor = {
   inputType: CollectInputType.number,
-  key: "temperature",
+  key: "completion_options.temperature",
   label: "Temperature",
   defaultValue: undefined,
   required: false,
@@ -65,7 +71,7 @@ const temperatureInput: InputDescriptor = {
 };
 const topPInput: InputDescriptor = {
   inputType: CollectInputType.number,
-  key: "top_p",
+  key: "completion_options.top_p",
   label: "Top-P",
   defaultValue: undefined,
   required: false,
@@ -75,17 +81,16 @@ const topPInput: InputDescriptor = {
 };
 const topKInput: InputDescriptor = {
   inputType: CollectInputType.number,
-  key: "top_k",
+  key: "completion_options.top_k",
   label: "Top-K",
   defaultValue: undefined,
   required: false,
   min: 0,
-  max: 1,
-  step: 0.01,
+  step: 1,
 };
 const presencePenaltyInput: InputDescriptor = {
   inputType: CollectInputType.number,
-  key: "presence_penalty",
+  key: "completion_options.presence_penalty",
   label: "Presence Penalty",
   defaultValue: undefined,
   required: false,
@@ -95,7 +100,7 @@ const presencePenaltyInput: InputDescriptor = {
 };
 const FrequencyPenaltyInput: InputDescriptor = {
   inputType: CollectInputType.number,
-  key: "frequency_penalty",
+  key: "completion_options.frequency_penalty",
   label: "Frequency Penalty",
   defaultValue: undefined,
   required: false,
@@ -112,17 +117,17 @@ const completionParamsInputs = [
   FrequencyPenaltyInput,
 ];
 
-const serverUrlInput: InputDescriptor = {
+const apiBaseInput: InputDescriptor = {
   inputType: CollectInputType.text,
-  key: "server_url",
-  label: "Server URL",
+  key: "api_base",
+  label: "API Base",
   placeholder: "e.g. http://localhost:8080",
   required: false,
 };
 
 export interface ModelInfo {
   title: string;
-  class: string;
+  provider: ModelProvider;
   description: string;
   longDescription?: string;
   icon?: string;
@@ -148,7 +153,7 @@ export interface ModelPackage {
   tags?: ModelProviderTag[];
   icon?: string;
   params: {
-    model: string;
+    model: ModelName;
     template_messages?: string;
     context_length: number;
     stop_tokens?: string[];
@@ -157,19 +162,7 @@ export interface ModelPackage {
     [key: string]: any;
   };
   dimensions?: PackageDimension[];
-}
-
-enum EditPromptTemplates {
-  "codellama" = "codellama_edit_prompt",
-  "alpaca" = "alpaca_edit_prompt",
-}
-
-enum ChatTemplates {
-  "alpaca" = "template_alpaca_messages",
-  "llama2" = "llama2_template_messages",
-  "phind" = "phind_template_messages",
-  "sqlcoder" = "sqlcoder_template_messages",
-  "None" = "None",
+  providerOptions?: string[];
 }
 
 const codeLlamaInstruct: ModelPackage = {
@@ -178,10 +171,9 @@ const codeLlamaInstruct: ModelPackage = {
     "A model from Meta, fine-tuned for code generation and conversation",
   refUrl: "",
   params: {
-    title: "CodeLlama-7b-Instruct",
-    model: "codellama:7b-instruct",
+    title: "CodeLlama-7b",
+    model: "codellama-7b",
     context_length: 2048,
-    template_messages: ChatTemplates.llama2,
   },
   icon: "meta.png",
   dimensions: [
@@ -190,20 +182,21 @@ const codeLlamaInstruct: ModelPackage = {
       description: "The number of parameters in the model",
       options: {
         "7b": {
-          model: "codellama:7b-instruct",
-          title: "CodeLlama-7b-Instruct",
+          model: "codellama-7b",
+          title: "CodeLlama-7b",
         },
         "13b": {
-          model: "codellama:13b-instruct",
-          title: "CodeLlama-13b-Instruct",
+          model: "codellama-13b",
+          title: "CodeLlama-13b",
         },
         "34b": {
-          model: "codellama:34b-instruct",
-          title: "CodeLlama-34b-Instruct",
+          model: "codellama-34b",
+          title: "CodeLlama-34b",
         },
       },
     },
   ],
+  providerOptions: ["ollama", "lmstudio", "together", "llamacpp", "replicate"],
 };
 
 const llama2Chat: ModelPackage = {
@@ -211,10 +204,9 @@ const llama2Chat: ModelPackage = {
   description: "The latest Llama model from Meta, fine-tuned for chat",
   refUrl: "",
   params: {
-    title: "Llama2-7b-Chat",
-    model: "llama2:7b-chat",
+    title: "Llama2-7b",
+    model: "llama2-7b",
     context_length: 2048,
-    template_messages: ChatTemplates.llama2,
   },
   icon: "meta.png",
   dimensions: [
@@ -223,20 +215,21 @@ const llama2Chat: ModelPackage = {
       description: "The number of parameters in the model",
       options: {
         "7b": {
-          model: "llama2:7b-chat",
-          title: "Llama2-7b-Chat",
+          model: "llama2-7b",
+          title: "Llama2-7b",
         },
         "13b": {
-          model: "llama2:13b-chat",
-          title: "Llama2-13b-Chat",
+          model: "llama2-13b",
+          title: "Llama2-13b",
         },
         "34b": {
-          model: "llama2:34b-chat",
-          title: "Llama2-34b-Chat",
+          model: "llama2-34b",
+          title: "Llama2-34b",
         },
       },
     },
   ],
+  providerOptions: ["ollama", "lmstudio", "together", "llamacpp", "replicate"],
 };
 
 const wizardCoder: ModelPackage = {
@@ -245,13 +238,9 @@ const wizardCoder: ModelPackage = {
     "A CodeLlama-based code generation model from WizardLM, focused on Python",
   refUrl: "",
   params: {
-    title: "WizardCoder-7b-Python",
-    model: "wizardcoder:7b-python",
+    title: "WizardCoder-7b",
+    model: "wizardcoder-7b",
     context_length: 2048,
-    template_messages: ChatTemplates.alpaca,
-    prompt_templates: {
-      edit: EditPromptTemplates.alpaca,
-    },
   },
   icon: "wizardlm.png",
   dimensions: [
@@ -260,20 +249,21 @@ const wizardCoder: ModelPackage = {
       description: "The number of parameters in the model",
       options: {
         "7b": {
-          model: "wizardcoder:7b-python",
-          title: "WizardCoder-7b-Python",
+          model: "wizardcoder-7b",
+          title: "WizardCoder-7b",
         },
         "13b": {
-          model: "wizardcoder:13b-python",
-          title: "WizardCoder-13b-Python",
+          model: "wizardcoder-13b",
+          title: "WizardCoder-13b",
         },
         "34b": {
-          model: "wizardcoder:34b-python",
-          title: "WizardCoder-34b-Python",
+          model: "wizardcoder-34b",
+          title: "WizardCoder-34b",
         },
       },
     },
   ],
+  providerOptions: ["ollama", "lmstudio", "llamacpp", "replicate"],
 };
 
 const phindCodeLlama: ModelPackage = {
@@ -281,13 +271,10 @@ const phindCodeLlama: ModelPackage = {
   description: "A finetune of CodeLlama by Phind",
   params: {
     title: "Phind CodeLlama",
-    model: "phind-codellama",
+    model: "phind-codellama-34b",
     context_length: 2048,
-    template_messages: ChatTemplates.phind,
-    prompt_templates: {
-      edit: EditPromptTemplates.codellama,
-    },
   },
+  providerOptions: ["ollama", "lmstudio", "llamacpp", "replicate"],
 };
 
 const mistral: ModelPackage = {
@@ -296,45 +283,36 @@ const mistral: ModelPackage = {
     "A 7b parameter base model created by Mistral AI, very competent for code generation and other tasks",
   params: {
     title: "Mistral",
-    model: "mistral",
+    model: "mistral-7b",
     context_length: 2048,
-    template_messages: ChatTemplates.llama2,
-    prompt_templates: {
-      edit: EditPromptTemplates.codellama,
-    },
   },
   icon: "mistral.png",
+  providerOptions: ["ollama", "lmstudio", "together", "llamacpp", "replicate"],
 };
 
-const sqlCoder: ModelPackage = {
-  title: "SQLCoder",
+const zephyr: ModelPackage = {
+  title: "Zephyr-Beta (7b)",
   description:
-    "A finetune of StarCoder by Defog.ai, focused specifically on SQL",
+    "A fine-tune of Mistral, trained on publicly available and synthetic datasets.",
   params: {
-    title: "SQLCoder",
-    model: "sqlcoder",
+    title: "Zephyr",
+    model: "zephyr-7b",
     context_length: 2048,
-    template_messages: ChatTemplates.sqlcoder,
-    prompt_templates: {
-      edit: EditPromptTemplates.codellama,
-    },
   },
-  dimensions: [
-    {
-      name: "Parameter Count",
-      description: "The number of parameters in the model",
-      options: {
-        "7b": {
-          model: "sqlcoder:7b",
-          title: "SQLCoder-7b",
-        },
-        "13b": {
-          model: "sqlcoder:15b",
-          title: "SQLCoder-15b",
-        },
-      },
-    },
-  ],
+  icon: "mistral.png",
+  providerOptions: ["ollama", "lmstudio", "llamacpp", "replicate"],
+};
+
+const deepseek: ModelPackage = {
+  title: "DeepSeek-Coder",
+  description:
+    "A model pre-trained on 2 trillion tokens including 80+ programming languages and a repo-level corpus.",
+  params: {
+    title: "DeepSeek",
+    model: "deepseek-7b",
+    context_length: 2048,
+  },
+  providerOptions: ["lmstudio", "llamacpp"],
 };
 
 const codeup: ModelPackage = {
@@ -342,13 +320,10 @@ const codeup: ModelPackage = {
   description: "An open-source coding model based on Llama2",
   params: {
     title: "CodeUp",
-    model: "codeup",
+    model: "codeup-13b",
     context_length: 2048,
-    template_messages: ChatTemplates.llama2,
-    prompt_templates: {
-      edit: EditPromptTemplates.alpaca,
-    },
   },
+  providerOptions: ["ollama", "lmstudio", "llamacpp", "replicate"],
 };
 
 const osModels = [
@@ -356,9 +331,9 @@ const osModels = [
   llama2Chat,
   wizardCoder,
   phindCodeLlama,
-  sqlCoder,
   mistral,
   codeup,
+  zephyr,
 ];
 
 const gpt4turbo: ModelPackage = {
@@ -371,6 +346,8 @@ const gpt4turbo: ModelPackage = {
     title: "GPT-4 Turbo",
     api_key: "",
   },
+  providerOptions: ["openai", "freetrial"],
+  icon: "openai.png",
 };
 
 const gpt4: ModelPackage = {
@@ -382,6 +359,8 @@ const gpt4: ModelPackage = {
     api_key: "",
     title: "GPT-4",
   },
+  providerOptions: ["openai", "freetrial"],
+  icon: "openai.png",
 };
 
 const gpt35turbo: ModelPackage = {
@@ -394,29 +373,57 @@ const gpt35turbo: ModelPackage = {
     title: "GPT-3.5-Turbo",
     api_key: "",
   },
+  providerOptions: ["openai", "freetrial"],
+  icon: "openai.png",
 };
 
-const OLLAMA_TO_REPLICATE_MODEL_NAMES: { [key: string]: string } = {
-  "codellama:7b-instruct":
-    "meta/codellama-7b-instruct:6527b83e01e41412db37de5110a8670e3701ee95872697481a355e05ce12af0e",
-  "codellama:13b-instruct":
-    "meta/codellama-13b-instruct:1f01a52ff933873dff339d5fb5e1fd6f24f77456836f514fa05e91c1a42699c7",
-  "codellama:34b-instruct":
-    "meta/codellama-34b-instruct:8281a5c610f6e88237ff3ddaf3c33b56f60809e2bdd19fbec2fda742aa18167e",
-  "llama2:7b-chat":
-    "meta/llama-2-7b-chat:8e6975e5ed6174911a6ff3d60540dfd4844201974602551e10e9e87ab143d81e",
-  "llama2:13b-chat":
-    "meta/llama-2-13b-chat:f4e2de70d66816a838a89eeeb621910adffb0dd0baba3976c96980970978018d",
+const claude2: ModelPackage = {
+  title: "Claude-2",
+  description: "A highly capable model with a 100k context length",
+  params: {
+    model: "claude-2",
+    context_length: 100000,
+    title: "Claude-2",
+    api_key: "",
+  },
+  providerOptions: ["anthropic"],
+  icon: "anthropic.png",
 };
 
-function replicateConvertModelName(model: string): string {
-  return OLLAMA_TO_REPLICATE_MODEL_NAMES[model] || model;
-}
+const chatBison: ModelPackage = {
+  title: "chat-bison-001",
+  description:
+    "Google PaLM's chat-bison-001 model, fine-tuned for chatting about code",
+  params: {
+    model: "chat-bison-001",
+    context_length: 8000,
+    api_key: "",
+    title: "Chat Bison",
+  },
+  providerOptions: ["palm"],
+  icon: "google-palm.png",
+};
 
-export const MODEL_INFO: { [key: string]: ModelInfo } = {
+export const MODEL_INFO: ModelPackage[] = [
+  gpt4,
+  gpt35turbo,
+  gpt4turbo,
+  claude2,
+  mistral,
+  codeLlamaInstruct,
+  llama2Chat,
+  wizardCoder,
+  phindCodeLlama,
+  codeup,
+  chatBison,
+  zephyr,
+  deepseek,
+];
+
+export const PROVIDER_INFO: { [key: string]: ModelInfo } = {
   openai: {
     title: "OpenAI",
-    class: "OpenAI",
+    provider: "openai",
     description: "Use gpt-4, gpt-3.5-turbo, or any other OpenAI model",
     longDescription:
       "Use gpt-4, gpt-3.5-turbo, or any other OpenAI model. See [here](https://openai.com/product#made-for-developers) to obtain an API key.",
@@ -436,7 +443,7 @@ export const MODEL_INFO: { [key: string]: ModelInfo } = {
   },
   anthropic: {
     title: "Anthropic",
-    class: "AnthropicLLM",
+    provider: "anthropic",
     description:
       "Claude-2 is a highly capable model with a 100k context length",
     icon: "anthropic.png",
@@ -452,6 +459,10 @@ export const MODEL_INFO: { [key: string]: ModelInfo } = {
         required: true,
       },
       ...completionParamsInputs,
+      {
+        ...contextLengthInput,
+        defaultValue: 100_000,
+      },
     ],
     packages: [
       {
@@ -467,7 +478,7 @@ export const MODEL_INFO: { [key: string]: ModelInfo } = {
   },
   ollama: {
     title: "Ollama",
-    class: "Ollama",
+    provider: "ollama",
     description:
       "One of the fastest ways to get started with local models on Mac or Linux",
     longDescription:
@@ -477,12 +488,12 @@ export const MODEL_INFO: { [key: string]: ModelInfo } = {
     packages: osModels,
     collectInputFor: [
       ...completionParamsInputs,
-      { ...serverUrlInput, defaultValue: "http://localhost:11434" },
+      { ...apiBaseInput, defaultValue: "http://localhost:11434" },
     ],
   },
   together: {
     title: "TogetherAI",
-    class: "TogetherLLM",
+    provider: "together",
     description:
       "Use the TogetherAI API for extremely fast streaming of open-source models",
     icon: "together.png",
@@ -504,59 +515,14 @@ export const MODEL_INFO: { [key: string]: ModelInfo } = {
       },
       ...completionParamsInputs,
     ],
-    packages: [
-      updatedObj(llama2Chat, {
-        "dimensions[0].options": (options: any) =>
-          _.mapValues(options, (option) => {
-            return _.assign({}, option, {
-              model:
-                "togethercomputer/" +
-                option.model.replace("llama2", "llama-2").replace(":", "-"),
-            });
-          }),
-      }),
-      updatedObj(codeLlamaInstruct, {
-        "dimensions[0].options": (options: any) =>
-          _.mapValues(options, (option) => {
-            return _.assign({}, option, {
-              model:
-                "togethercomputer/" +
-                option.model
-                  .replace("codellama", "CodeLlama")
-                  .replace(":", "-")
-                  .replace("instruct", "Instruct"),
-            });
-          }),
-      }),
-      // Support was dropped recently?
-      // updatedObj(wizardCoder, {
-      //   "params.model": "WizardLM/WizardCoder-15B-V1.0",
-      //   "params.title": "WizardCoder-15b",
-      //   "dimensions[0].options": {
-      //     "15b": {
-      //       model: "WizardLM/WizardCoder-15B-V1.0",
-      //       title: "WizardCoder-15b",
-      //     },
-      //     "34b (Python)": {
-      //       model: "WizardLM/WizardCoder-Python-34B-V1.0",
-      //       title: "WizardCoder-34b-Python",
-      //     },
-      //   },
-      // }),
-      updatedObj(phindCodeLlama, {
-        "params.model": "Phind/Phind-CodeLlama-34B-Python-v1",
-      }),
-      updatedObj(mistral, {
-        "params.model": "mistralai/Mistral-7B-Instruct-v0.1",
-      }),
-    ].map((p) => {
+    packages: [llama2Chat, codeLlamaInstruct, mistral].map((p) => {
       p.params.context_length = 4096;
       return p;
     }),
   },
   lmstudio: {
     title: "LM Studio",
-    class: "GGML",
+    provider: "lmstudio",
     description:
       "One of the fastest ways to get started with local models on Mac or Windows",
     longDescription:
@@ -565,14 +531,13 @@ export const MODEL_INFO: { [key: string]: ModelInfo } = {
     tags: [ModelProviderTag["Local"], ModelProviderTag["Open-Source"]],
     params: {
       server_url: "http://localhost:1234",
-      template_messages: ChatTemplates.None,
     },
-    packages: osModels,
+    packages: [...osModels, deepseek],
     collectInputFor: [...completionParamsInputs],
   },
   replicate: {
     title: "Replicate",
-    class: "ReplicateLLM",
+    provider: "replicate",
     description: "Use the Replicate API to run open-source models",
     longDescription: `Replicate is a hosted service that makes it easy to run ML models. To get started with Replicate:\n1. Obtain an API key from [here](https://replicate.com)\n2. Paste below\n3. Select a model preset`,
     params: {
@@ -593,59 +558,11 @@ export const MODEL_INFO: { [key: string]: ModelInfo } = {
       ModelProviderTag["Requires API Key"],
       ModelProviderTag["Open-Source"],
     ],
-    packages: [
-      ...[codeLlamaInstruct, llama2Chat]
-        .map((p: ModelPackage) => {
-          if (p.title === "Llama2 Chat") {
-            return updatedObj(p, {
-              "dimensions[0].options.34b": undefined,
-              "dimensions[0].options.70b": {
-                model:
-                  "meta/llama-2-70b-chat:02e509c789964a7ea8736978a43525956ef40397be9033abf9fd2badfe68c9e3",
-                title: "Llama2-70b-Chat",
-              },
-            });
-          }
-          return p;
-        })
-        .map((p) => {
-          return updatedObj(p, {
-            "params.model": (model: string) => {
-              return replicateConvertModelName(model);
-            },
-            "dimensions[0].options": (options: any) => {
-              const newOptions: any = {};
-              for (const key in options) {
-                newOptions[key] = {
-                  ...options[key],
-                  model: replicateConvertModelName(options[key]?.model),
-                };
-              }
-              return newOptions;
-            },
-          });
-        }),
-      updatedObj(wizardCoder, {
-        title: "WizardCoder (15b)",
-        "params.model":
-          "andreasjansson/wizardcoder-python-34b-v1-gguf:67eed332a5389263b8ede41be3ee7dc119fa984e2bde287814c4abed19a45e54",
-        dimensions: undefined,
-      }),
-      updatedObj(sqlCoder, {
-        dimensions: undefined,
-        title: "SQLCoder (15b)",
-        "params.model":
-          "gregwdata/defog-sqlcoder-q8:0a9abc0d143072fd5d8920ad90b8fbaafaf16b10ffdad24bd897b5bffacfce0b",
-      }),
-      updatedObj(mistral, {
-        "params.model":
-          "a16z-infra/mistral-7b-instruct-v0.1:83b6a56e7c828e667f21fd596c338fd4f0039b46bcfa18d973e8e70e455fda70",
-      }),
-    ],
+    packages: [codeLlamaInstruct, llama2Chat, wizardCoder, mistral, zephyr],
   },
   llamacpp: {
     title: "llama.cpp",
-    class: "LlamaCpp",
+    provider: "llama.cpp",
     description: "If you are running the llama.cpp server from source",
     longDescription: `llama.cpp comes with a [built-in server](https://github.com/ggerganov/llama.cpp/tree/master/examples/server#llamacppexampleserver) that can be run from source. To do this:
     
@@ -661,12 +578,12 @@ export const MODEL_INFO: { [key: string]: ModelInfo } = {
 After it's up and running, you can start using Continue.`,
     icon: "llamacpp.png",
     tags: [ModelProviderTag.Local, ModelProviderTag["Open-Source"]],
-    packages: osModels,
+    packages: [...osModels, deepseek],
     collectInputFor: [...completionParamsInputs],
   },
   textgenwebui: {
     title: "text-generation-webui",
-    class: "TextGenWebUI",
+    provider: "text-gen-webui",
     description: "A popular open-source front-end for serving LLMs locally",
     longDescription: `text-generation-webui is a comprehensive, open-source language model UI and local server. You can also set it up with an [OpenAI-compatible server extension](https://github.com/oobabooga/text-generation-webui/tree/main/extensions/openai#an-openedai-api-openai-like), but this model provider is made to interface with the built-in server, which has a different format. To setup the text-generation-webui server, take the following steps:
 
@@ -682,12 +599,12 @@ After it's up and running, you can start using Continue.`,
 6. Once the model is loaded, you can start using Continue`,
     icon: undefined,
     tags: [ModelProviderTag.Local, ModelProviderTag["Open-Source"]],
-    packages: osModels,
+    packages: [...osModels, deepseek],
     collectInputFor: [...completionParamsInputs],
   },
   palm: {
     title: "Google PaLM API",
-    class: "GooglePaLMAPI",
+    provider: "google-palm",
     description:
       "Try out the Google PaLM API, which is currently in public preview, using an API key from Google Makersuite",
     longDescription: `To get started with Google Makersuite, obtain your API key from [here](https://developers.generativeai.google/products/makersuite) and paste it below.
@@ -715,24 +632,9 @@ After it's up and running, you can start using Continue.`,
       },
     ],
   },
-  hftgi: {
-    title: "HuggingFace TGI",
-    class: "HuggingFaceTGI",
-    description:
-      "HuggingFace Text Generation Inference is an advanced, highly-performant option for serving open-source models to multiple people",
-    longDescription:
-      "HuggingFace Text Generation Inference is an advanced, highly-performant option for serving open-source models to multiple people. To get started, follow the [Quick Tour](https://huggingface.co/docs/text-generation-inference/quicktour) on their website to set up the Docker container. Make sure to enter the server URL below that corresponds to the host and port you set up for the Docker container.",
-    icon: "hf.png",
-    tags: [ModelProviderTag.Local, ModelProviderTag["Open-Source"]],
-    packages: osModels,
-    collectInputFor: [
-      ...completionParamsInputs,
-      { ...serverUrlInput, defaultValue: "http://localhost:8080" },
-    ],
-  },
-  ggml: {
+  "openai-aiohttp": {
     title: "Other OpenAI-compatible API",
-    class: "GGML",
+    provider: "openai-aiohttp",
     description:
       "If you are using any other OpenAI-compatible API, for example text-gen-webui, FastChat, LocalAI, or llama-cpp-python, you can simply enter your server URL",
     longDescription: `If you are using any other OpenAI-compatible API, you can simply enter your server URL. If you still need to set up your model server, you can follow a guide below:
@@ -746,7 +648,7 @@ After it's up and running, you can start using Continue.`,
     },
     collectInputFor: [
       {
-        ...serverUrlInput,
+        ...apiBaseInput,
         defaultValue: "http://localhost:8000",
       },
       ...completionParamsInputs,
@@ -756,8 +658,8 @@ After it's up and running, you can start using Continue.`,
     packages: osModels,
   },
   freetrial: {
-    title: "GPT-4 limited free trial",
-    class: "OpenAIFreeTrial",
+    title: "OpenAI limited free trial",
+    provider: "openai-free-trial",
     description:
       "New users can try out Continue for free using a proxy server that securely makes calls to OpenAI using our API key",
     longDescription:

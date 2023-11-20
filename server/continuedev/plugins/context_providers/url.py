@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional, Tuple
 
 import requests
 from bs4 import BeautifulSoup
@@ -59,12 +59,15 @@ class URLContextProvider(ContextProvider):
             ),
         )
 
-    def _get_url_text_contents_and_title(self, url: str) -> (str, str):
+    def _get_url_text_contents_and_title(self, url: str) -> Tuple[str, str]:
+        if not url.startswith("http"):
+            url = "https://" + url
+
         response = requests.get(url)
         soup = BeautifulSoup(response.text, "html.parser")
         title = url.replace("https://", "").replace("http://", "").replace("www.", "")
         if soup.title is not None:
-            title = soup.title.string
+            title = soup.title.string or title
         return soup.get_text(), title
 
     async def provide_context_items(self, workspace_dir: str) -> List[ContextItem]:
@@ -74,7 +77,7 @@ class URLContextProvider(ContextProvider):
 
         return [self.DYNAMIC_CONTEXT_ITEM] + self.static_url_context_items
 
-    async def get_item(self, id: ContextItemId, query: str) -> ContextItem:
+    async def get_item(self, id: ContextItemId, query: str) -> Optional[ContextItem]:
         # Check if the item is a static item
         matching_static_item = next(
             (

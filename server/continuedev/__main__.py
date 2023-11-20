@@ -1,23 +1,23 @@
 import asyncio
 import os
 from typing import Optional
-from tqdm import tqdm
 
-from .core.config import ContinueConfig
-from .headless.headless_ide import LocalIdeProtocol
-from .libs.index.build_index import build_index
-from .libs.util.ext_to_lang import ext_to_lang
-from .libs.index.chunkers.chunk import Chunk
+import typer
 from dotenv import load_dotenv
 from rich.console import Console
 from rich.markdown import Markdown
-
-import typer
+from tqdm import tqdm
 
 from . import run
-from .server.main import run_server
+from .core.config import ContinueConfig, RetrievalSettings
 from .headless import get_headless_autopilot
+from .headless.headless_ide import LocalIdeProtocol
+from .libs.index.build_index import build_index
+from .libs.index.chunkers.chunk import Chunk
 from .libs.index.pipelines.main import main_retrieval_pipeline
+from .libs.util.ext_to_lang import ext_to_lang
+from .libs.util.paths import getConfigFilePath
+from .server.main import run_server
 
 load_dotenv()
 app = typer.Typer(invoke_without_command=True)
@@ -51,7 +51,7 @@ def main_command(
     headless: bool = typer.Option(False, help="Run in headless mode"),
 ):
     if headless:
-        run(config)
+        run(config or getConfigFilePath())
     else:
         print(CONTINUE_ASCII)
         run_server(
@@ -151,15 +151,20 @@ def index(
 
     async def run():
         nonlocal config
+        config_obj = None
         if config is None:
-            config = ContinueConfig.load_default()
+            config_obj = ContinueConfig.load_default()
         else:
-            config = ContinueConfig.from_filepath(config)
-        config.retrieval_settings.openai_api_key = openai_api_key
+            config_obj = ContinueConfig.from_filepath(config)
+
+        if config_obj.retrieval_settings is None:
+            config_obj.retrieval_settings = RetrievalSettings()
+
+        config_obj.retrieval_settings.openai_api_key = openai_api_key
 
         pbar = tqdm(total=100)
         async for progress in build_index(
-            ide=LocalIdeProtocol(workspace_directory=directory), config=config
+            ide=LocalIdeProtocol(workspace_directory=directory), config=config_obj
         ):
             pbar.update(int(progress * 100) - pbar.n)
 

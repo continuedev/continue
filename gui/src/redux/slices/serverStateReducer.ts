@@ -1,5 +1,4 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { ContextItem } from "../../schema/ContextItem";
 import { RootStore } from "../store";
 
 const TEST_SLASH_COMMANDS = [

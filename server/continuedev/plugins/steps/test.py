@@ -1,10 +1,10 @@
 import asyncio
 import json
-import requests
-from bs4 import BeautifulSoup
-from html2text import html2text
-from dotenv import load_dotenv
 import os
+
+import requests
+from dotenv import load_dotenv
+from html2text import html2text
 
 load_dotenv()
 SERPER_API_KEY = os.getenv("SERPER_API_KEY")

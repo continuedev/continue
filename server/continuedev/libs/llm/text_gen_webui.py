@@ -1,49 +1,36 @@
 import json
-from typing import Any, Callable, Dict, List, Union
+from typing import Any, AsyncGenerator, List, Optional
 
 import websockets
 from pydantic import Field
 
 from ...core.main import ChatMessage
 from .base import LLM
-from .prompts.chat import llama2_template_messages
-from .prompts.edit import simplest_edit_prompt
 
 
 class TextGenWebUI(LLM):
     """
     TextGenWebUI is a comprehensive, open-source language model UI and local server. You can set it up with an OpenAI-compatible server plugin, but if for some reason that doesn't work, you can use this class like so:
 
-    ```python title="~/.continue/config.py"
-    from continuedev.libs.llm.text_gen_webui import TextGenWebUI
-
-    config = ContinueConfig(
-        ...
-        models=Models(
-            default=TextGenWebUI(
-                model="<MODEL_NAME>",
-            )
-        )
-    )
+    ```json title="~/.continue/config.json"
+    {
+        "models": [{
+            "title": "Text Generation WebUI",
+            "provider": "text-gen-webui",
+            "model": "MODEL_NAME"
+        }]
+    }
     ```
     """
 
     model: str = "text-gen-webui"
-    server_url: str = Field(
+    api_base: Optional[str] = Field(
         "http://localhost:5000", description="URL of your TextGenWebUI server"
     )
-    streaming_url: str = Field(
+    streaming_url: Optional[str] = Field(
         "http://localhost:5005",
         description="URL of your TextGenWebUI streaming server (separate from main server URL)",
     )
-
-    prompt_templates = {
-        "edit": simplest_edit_prompt,
-    }
-
-    template_messages: Union[
-        Callable[[List[Dict[str, str]]], str], None
-    ] = llama2_template_messages
 
     class Config:
         arbitrary_types_allowed = True
@@ -56,6 +43,9 @@ class TextGenWebUI(LLM):
 
     async def _stream_complete(self, prompt, options):
         args = self.collect_args(options)
+
+        if self.streaming_url is None:
+            raise Exception("TextGenWebUI streaming server URL was set to None.")
 
         ws_url = f"{self.streaming_url.replace('http://', 'ws://').replace('https://', 'wss://')}"
         payload = json.dumps({"prompt": prompt, "stream": True, **args})
@@ -75,15 +65,20 @@ class TextGenWebUI(LLM):
                 elif incoming_data_event == "stream_end":
                     break
 
-    async def _stream_chat(self, messages: List[ChatMessage], options):
+    async def _stream_chat(
+        self, messages: List[ChatMessage], options
+    ) -> AsyncGenerator[ChatMessage, None]:
         args = self.collect_args(options)
 
         async def generator():
+            if self.streaming_url is None:
+                raise Exception("TextGenWebUI streaming server URL was set to None.")
+
             ws_url = f"{self.streaming_url.replace('http://', 'ws://').replace('https://', 'wss://')}"
-            history = list(map(lambda x: x["content"], messages))
+            history = list(map(lambda x: x.content, messages))
             payload = json.dumps(
                 {
-                    "user_input": messages[-1]["content"],
+                    "user_input": messages[-1].content,
                     "history": {"internal": [history], "visible": [history]},
                     "stream": True,
                     **args,
@@ -104,10 +99,10 @@ class TextGenWebUI(LLM):
                     if incoming_data_event == "text_stream":
                         visible = incoming_data["history"]["visible"][-1]
                         if len(visible) > 0:
-                            yield {
-                                "role": "assistant",
-                                "content": visible[-1].replace(prev, ""),
-                            }
+                            yield ChatMessage(
+                                role="assistant", content=visible[-1].replace(prev, "")
+                            )
+
                             prev = visible[-1]
                     elif incoming_data_event == "stream_end":
                         break

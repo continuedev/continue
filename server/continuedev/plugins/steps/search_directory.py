@@ -68,7 +68,7 @@ class EditAllMatchesStep(Step):
     async def run(self, sdk: ContinueSDK):
         # Search all files for a given string
         range_in_files = find_all_matches_in_dir(
-            self.pattern, self.directory or await sdk.ide.getWorkspaceDirectory()
+            self.pattern, self.directory or sdk.ide.workspace_directory
         )
 
         tasks = [

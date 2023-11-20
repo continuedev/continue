@@ -1,5 +1,5 @@
 import React, { useCallback, useContext, useEffect, useState } from "react";
-import ModelCard from "../components/ModelCard";
+import ModelCard from "../components/modelSelection/ModelCard";
 import styled from "styled-components";
 import { ArrowLeftIcon } from "@heroicons/react/24/outline";
 import {
@@ -9,16 +9,16 @@ import {
   vscBackground,
 } from "../components";
 import { useNavigate } from "react-router-dom";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 import { GUIClientContext } from "../App";
 import { useParams } from "react-router-dom";
 import {
-  MODEL_INFO,
+  PROVIDER_INFO,
   MODEL_PROVIDER_TAG_COLORS,
   ModelInfo,
+  updatedObj,
 } from "../util/modelData";
-import { RootStore } from "../redux/store";
-import StyledMarkdownPreview from "../components/StyledMarkdownPreview";
+import StyledMarkdownPreview from "../components/markdown/StyledMarkdownPreview";
 import { FormProvider, useForm } from "react-hook-form";
 import _ from "lodash";
 
@@ -63,7 +63,7 @@ function ModelConfig() {
 
   useEffect(() => {
     if (modelName) {
-      setModelInfo(MODEL_INFO[modelName]);
+      setModelInfo(PROVIDER_INFO[modelName]);
     }
   }, [modelName]);
 
@@ -180,12 +180,16 @@ function ModelConfig() {
                 if (d.required) return null;
                 return (
                   <div>
-                    <label htmlFor={d.key}>{d.key}</label>
+                    <label htmlFor={d.key}>
+                      {d.key.split(".")[d.key.split(".").length - 1]}
+                    </label>
                     <Input
                       type={d.inputType}
                       id={d.key}
                       className="border-2 border-gray-200 rounded-md p-2 m-2"
-                      placeholder={d.key}
+                      placeholder={
+                        d.key.split(".")[d.key.split(".").length - 1]
+                      }
                       defaultValue={d.defaultValue}
                       min={d.min}
                       max={d.max}
@@ -215,15 +219,17 @@ function ModelConfig() {
                 dimensions={pkg.dimensions}
                 onClick={(e, dimensionChoices) => {
                   if (disableModelCards()) return;
-                  const formParams: any = {};
+                  let formParams: any = {};
                   for (const d of modelInfo.collectInputFor || []) {
-                    formParams[d.key] =
-                      d.inputType === "text"
-                        ? formMethods.watch(d.key)
-                        : parseFloat(formMethods.watch(d.key));
+                    formParams = updatedObj(formParams, {
+                      [d.key]:
+                        d.inputType === "text"
+                          ? formMethods.watch(d.key)
+                          : parseFloat(formMethods.watch(d.key)),
+                    });
                   }
 
-                  client?.addModelForRole("*", modelInfo.class, {
+                  client?.addModelForRole("*", {
                     ...pkg.params,
                     ...modelInfo.params,
                     ..._.merge(
@@ -236,6 +242,7 @@ function ModelConfig() {
                       }) || [])
                     ),
                     ...formParams,
+                    provider: modelInfo.provider,
                   });
                   navigate("/");
                 }}
@@ -255,7 +262,7 @@ function ModelConfig() {
                     : parseFloat(formMethods.watch(d.key));
               }
 
-              client?.addModelForRole("*", modelInfo.class, {
+              client?.addModelForRole("*", {
                 ...modelInfo.packages[0]?.params,
                 ...modelInfo.params,
                 ...formParams,

@@ -1,11 +1,8 @@
 import asyncio
 import os
-from typing import Coroutine, List, Optional, Union
+from typing import List, Optional, Union
 
-from ...libs.index.hyde import code_hyde, generate_keywords
-from ...libs.index.indices.meilisearch_index import MeilisearchCodebaseIndex
-from ...libs.llm.base import LLM, CompletionOptions
-from ...libs.index.rerankers.single_token import single_token_reranker_parallel
+from ...core.config import RetrievalSettings
 from ...core.main import (
     ContextItem,
     ContextItemDescription,
@@ -15,7 +12,11 @@ from ...core.main import (
 )
 from ...core.sdk import ContinueSDK
 from ...core.steps import EditFileStep
+from ...libs.index.hyde import code_hyde, generate_keywords
 from ...libs.index.indices.chroma_index import ChromaCodebaseIndex
+from ...libs.index.indices.meilisearch_index import MeilisearchCodebaseIndex
+from ...libs.index.rerankers.single_token import single_token_reranker_parallel
+from ...libs.llm.base import LLM, CompletionOptions
 from ...server.meilisearch_server import remove_meilisearch_disallowed_chars
 from .chat import SimpleChatStep
 
@@ -63,14 +64,14 @@ class AnswerQuestionChroma(Step):
 
     hide: bool = True
 
-    async def describe(self, llm) -> Coroutine[str, None, None]:
+    async def describe(self, llm) -> str:
         if self._answer is None:
             return f"Answering the question: {self.user_input}"
         else:
             return self._answer
 
     async def run(self, sdk: ContinueSDK):
-        settings = sdk.config.retrieval_settings
+        settings = sdk.config.retrieval_settings or RetrievalSettings()
         faster_model = await get_faster_model(sdk)
         use_reranking = settings.use_reranking and faster_model is not None
 
@@ -83,7 +84,7 @@ class AnswerQuestionChroma(Step):
 
         # Get top chunks from index
         to_retrieve_from_each = (
-            settings.n_retrieve if use_reranking else settings.n_final
+            (settings.n_retrieve if use_reranking else settings.n_final) or 25
         ) // 2
 
         # Use HyDE only if a faster model is available
@@ -126,7 +127,7 @@ class AnswerQuestionChroma(Step):
             chunks = await single_token_reranker_parallel(
                 chunks,
                 self.user_input,
-                settings.n_final,
+                settings.n_final or 10,
                 faster_model,
                 # group_size=settings.rerank_group_size,
             )
