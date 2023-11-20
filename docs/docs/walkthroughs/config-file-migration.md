@@ -1,3 +1,9 @@
+---
+title: Config File Migration
+description: Migrating from config.py to config.json
+keywords: [json, config, configuration, migration]
+---
+
 # Migration to `config.json`
 
 On November 20, 2023, we migrated to using JSON as the primary config file format. If you previously used Continue, we will have attempted to automatically translate your existing config.py into a config.json file. If this fails, we will fallback to a default config.json. Your previous config.py will still be kept, but moved to config.py.old for reference. Below you can find a list of changes that were made in case you need to manually migrate your config, as well as examples of proper config.json files.
