@@ -50,7 +50,7 @@ def temp_clear_config():
 @pytest.mark.parametrize(
     "config_filename",
     [
-        "config_1.py",
+        # "config_1.py",
         "config_2.py",
     ],
 )

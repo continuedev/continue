@@ -509,10 +509,20 @@ class ContinueConfig(BaseModel):
         json_path = os.path.join(getGlobalFolderPath(), "config.json")
         if not os.path.exists(json_path):
             # MIGRATE FROM OLD CONFIG FORMAT TO JSON
+            def move_config_to_old():
+                old_path = py_path.replace(".py", ".py.old")
+                if os.path.exists(old_path):
+                    os.remove(old_path)
+                os.rename(py_path, old_path)
+
+
             py_path = getConfigFilePath()
             try:
                 # If they have pre-existing old config.py this will work
                 config = ContinueConfig.from_filepath(py_path)
+                if os.path.exists(json_path):
+                    os.remove(json_path)
+
                 with open(json_path, "w") as f:
                     json.dump(
                         config.to_serialized_continue_config().dict(
@@ -523,7 +533,7 @@ class ContinueConfig(BaseModel):
                     )
 
                 # Rename config.py to config.old.py
-                os.rename(py_path, py_path.replace(".py", ".old.py"))
+                move_config_to_old()
 
                 return config
             except Exception as e:
@@ -532,10 +542,7 @@ class ContinueConfig(BaseModel):
                     f.write(default_config_json)
 
                 # Rename config.py to config.old.py
-                old_path = py_path.replace(".py", ".py.old")
-                if os.path.exists(old_path):
-                    os.remove(old_path)
-                os.rename(py_path, old_path)
+                move_config_to_old()
 
                 return ContinueConfig.load_default()
 

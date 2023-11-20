@@ -12,7 +12,7 @@ from continuedev.libs.llm.together import TogetherLLM
 from continuedev.libs.util.count_tokens import DEFAULT_ARGS
 from dotenv import load_dotenv
 
-from .util.prompts import tokyo_test_pair
+from util.prompts import tokyo_test_pair
 
 load_dotenv()
 
