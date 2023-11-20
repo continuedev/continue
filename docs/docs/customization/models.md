@@ -120,7 +120,7 @@ It can then be used like this:
 
 ```python title="~/.continue/config.py"
 def modify_config(config: ContinueConfig) -> ContinueConfig:
-    config.models[0].template_messages = template_alpaca_messages
+    config.models.default.template_messages = template_alpaca_messages
     return config
 ```
 
@@ -150,7 +150,7 @@ It can then be used like this in `config.py`:
 
 ```python title="~/.continue/config.py"
 def modify_config(config: ContinueConfig) -> ContinueConfig:
-    config.models[0].prompt_templates["edit"] = "<INSERT_TEMPLATE_HERE>"
+    config.models.edit.prompt_templates["edit"] = "<INSERT_TEMPLATE_HERE>"
     return config
 ```
 
