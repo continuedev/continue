@@ -130,7 +130,7 @@ This exact function and a few other default implementations are available in [`c
 
 You also have access to customize the prompt used in the '/edit' slash command. We already have a well-engineered prompt for GPT-4 and sensible defaults for less powerful open-source models, but you might wish to play with the prompt and try to find a more reliable alternative if you are for example getting English as well as code in your output.
 
-To customize the prompt, use the `prompt_templates` property of any `LLM`, which is a dictionary, and set the "edit" key to a template string with Mustache syntax. The 'file_prefix', 'file_suffix', 'code_to_edit', and 'user_input' variables are available in the template. Here is an example (the default for non-GPT-4 models):
+To customize the prompt, use the `prompt_templates` property of any `LLM`, which is a dictionary, and set the "edit" key to a template string with Mustache syntax. The 'file_prefix', 'file_suffix', 'code_to_edit', 'context_items', and 'user_input' variables are available in the template. Here is an example (the default for non-GPT-4 models):
 
 ````python
 """
