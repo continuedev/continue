@@ -104,8 +104,9 @@ class Window:
         async def migrate_fn():
             if self.ide is not None:
                 await self.ide.showMessage(
-                    "Continue has migrated to using a JSON config file (config.json). To learn more, visit [https://continue.dev/docs/config-file-migration](https://continue.dev/docs/config-file-migration)."
+                    "Continue has migrated to using a JSON config file (config.json). An auto-migration was attempted, but you may want to double check that the settings match your previous setup. To learn more, visit [https://continue.dev/docs/walkthroughs/config-file-migration](https://continue.dev/docs/walkthroughs/config-file-migration) or reach out on Discord."
                 )
+                await self.ide.setFileOpen(getConfigFilePath(json=True))
 
         await migrate(
             "config_json_001",

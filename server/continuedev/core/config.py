@@ -466,7 +466,20 @@ class ContinueConfig(BaseModel):
     @staticmethod
     def from_filepath(filepath: str, retry: bool = True) -> "ContinueConfig":
         if filepath.endswith(".json"):
-            serialized_config = json.load(open(filepath))
+            try:
+                contents = open(filepath).read()
+                if contents.strip() == "":
+                    raise ValueError("Empty config file")
+
+                serialized_config = json.loads(contents)
+
+            except ValueError as e:
+                logger.warning(f"Found empty config.json at {filepath}: {e}")
+                with open(filepath, "w") as f:
+                    f.write(default_config_json)
+
+                serialized_config = json.load(open(filepath))
+
             initial_config = ContinueConfig.from_serialized_config(
                 SerializedContinueConfig(**serialized_config)
             )
@@ -579,15 +592,46 @@ class ContinueConfig(BaseModel):
             self.models.edit,
             self.models.summarize,
         ]
-        titles = set()
+        seen = set()
         models: List[LLM] = []
         for model in pre_models:
-            if model is None or model.title in titles:
+            if model is None or (model.title, model.model) in seen:
                 # Remove duplicate models
                 continue  # : )
 
-            titles.add(model.title)
+            seen.add((model.title, model.model))
             models.append(model)
+
+        completion_options_keys = [
+            "temperature",
+            "top_p",
+            "top_k",
+            "max_tokens",
+            "presence_penalty",
+            "frequency_penalty",
+        ]
+        request_options_keys = [
+            "timeout",
+            "verify_ssl",
+            "ca_bundle_path",
+            "proxy",
+            "headers",
+        ]
+        for model in models:
+            for key in completion_options_keys:
+                if hasattr(model, key):
+                    setattr(model.completion_options, key, getattr(model, key))
+                    delattr(model, key)
+
+            for key in request_options_keys:
+                if hasattr(model, key):
+                    setattr(model.request_options, key, getattr(model, key))
+                    delattr(model, key)
+
+        for key in completion_options_keys:
+            if hasattr(self, key):
+                setattr(self.completion_options, key, getattr(self, key))
+                delattr(self, key)
 
         BACKUP_TITLE = "LLM"
 

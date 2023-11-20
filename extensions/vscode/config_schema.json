@@ -445,7 +445,8 @@
                   "llama2-13b",
                   "codellama-7b",
                   "codellama-13b",
-                  "codellama-34b"
+                  "codellama-34b",
+                  "phind-codellama-34b"
                 ]
               }
             }

@@ -66,6 +66,14 @@ def test_load_old_config(config_filename):
         config = ContinueConfig.load_default()
         validate_continue_config(config)
 
+        if config_filename == "config_2.py":
+            model = config.models.default
+            assert model.completion_options.temperature == 0.1
+            assert model.completion_options.top_p == 0.75
+            assert model.completion_options.top_k == 40
+            assert model.context_length == 16384
+            assert model.request_options.timeout == 8000
+
 
 def validate_continue_config(config: ContinueConfig):
     ctx_provs = config.get_context_provider_descriptions()

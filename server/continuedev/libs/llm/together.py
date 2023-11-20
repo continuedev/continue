@@ -48,6 +48,7 @@ class TogetherLLM(LLM):
             "llama2-13b": "togethercomputer/llama-2-13b-chat",
             "llama2-70b": "togethercomputer/llama-2-70b-chat",
             "mistral-7b": "mistralai/Mistral-7B-Instruct-v0.1",
+            "phind-codellama-34b": "Phind/Phind-CodeLlama-34B-v2"
         }.get(self.model, self.model)
         return args
 
