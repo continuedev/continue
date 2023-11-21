@@ -2,7 +2,9 @@ import asyncio
 from datetime import datetime
 import html
 import json
+import os
 from typing import List, Optional
+from continuedev.libs.index.chunkers.chunk_directory import get_all_filepaths
 
 from continuedev.libs.llm.base import CompletionOptions
 
@@ -12,12 +14,15 @@ from continuedev.core.sdk import ContinueSDK, Models
 from continuedev.libs.util.devdata import dev_data_logger
 from continuedev.libs.util.strings import remove_quotes_and_escapes
 from continuedev.libs.util.telemetry import posthog_logger
+from continuedev.plugins.context_providers.file import get_file_contents
 from openai import OpenAI
+from continuedev.plugins.context_providers.search import SearchContextProvider
 
 class OpenAIRunFunction(Step):
     run_id: str
     api_key: str
     thread_id: str
+    user_input: str
 
     async def describe(self, models: Models):
         return f"`OpenAI Thread Run Listener to respond to function requests for thread_id={self.dict['thread_id']}`."
@@ -40,7 +45,7 @@ class OpenAIRunFunction(Step):
                 return    
            
             if run_result.required_action is not None:
-                outputs =self.handle_required_actions(run_result)
+                outputs =await self.handle_required_actions(sdk, run_result)
                 run_result=client.beta.threads.runs.submit_tool_outputs(
                     thread_id=self.thread_id,
                     run_id=self.run_id,
@@ -52,9 +57,21 @@ class OpenAIRunFunction(Step):
           
 
  
+    async def list_project_files(self, sdk):
+        files, should_ignore = await get_all_filepaths(sdk.ide)
+        relative_filepaths = [os.path.relpath(path, sdk.ide.workspace_directory) for path in files]
+        return  '\n'.join(relative_filepaths)
 
-    def get_project_file(self, file_path):
-        return f'Here is where the file would be uploaded for {file_path}'
+        #return f'Here is where the file would be uploaded for {file_path}'
+
+    async def get_project_file(self, sdk, file_path):
+        abs_path = os.path.join(sdk.ide.workspace_directory, file_path)
+        contents = await get_file_contents(abs_path, sdk.ide)    
+        if len(contents) == 0:
+            contents=f'file not found {abs_path}'
+        
+        return contents
+        #return f'Here is where the file would be uploaded for {file_path}'
 
 
     def get_current_time(self):
@@ -67,7 +84,7 @@ class OpenAIRunFunction(Step):
 
 
     # Define a function to handle the required actions
-    def handle_required_actions(self, run):
+    async def handle_required_actions(self, sdk, run):
         outputs = []
         if run.status == 'requires_action':
             required_action = run.required_action
@@ -80,20 +97,32 @@ class OpenAIRunFunction(Step):
                     print(f'function_name={function_name} args={arguments}')
                     # Call the corresponding function based on the function name
                     if function_name == 'get_project_file':                        
-
+                        contents = await self.get_project_file(sdk, arguments['file_path'])
+                        print(f'get_project_file=\n{contents}')
                         outputs.append(
                             {
                                 "tool_call_id": call.id,
-                                "output": self.get_project_file(arguments),
+                                "output": contents,
                             }
                         )
-                    elif function_name == 'get_current_time':                        
+                    elif function_name == 'get_current_time':   
+                        current_time = self.get_current_time()  
+                        print(f'get_current_time=\n{current_time}')                   
                         outputs.append(
                             {
                                 "tool_call_id": call.id,
-                                "output": self.get_current_time()
+                                "output": current_time
                             }
-                        )                                        
+                        )   
+                    elif function_name == 'list_project_files':   
+                        files = await self.list_project_files(sdk)
+                        print(f'list_project_files=\n{files}')             
+                        outputs.append(
+                            {
+                                "tool_call_id": call.id,
+                                "output": files
+                            }
+                        )                                     
                     else:
                         print(f"No handler for function: {function_name}")    
         

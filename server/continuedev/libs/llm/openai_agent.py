@@ -3,11 +3,13 @@ from datetime import datetime
 import time
 from typing import List, Optional
 
+
 from openai import OpenAIError
 
 import openai
 
-from ..util.count_tokens import CONTEXT_LENGTH_FOR_MODEL
+
+from continuedev.libs.util.count_tokens import CONTEXT_LENGTH_FOR_MODEL
 from openai import OpenAI
 from pydantic import validator
 from continuedev.core.main import ChatMessage, SetStep
@@ -17,6 +19,7 @@ from .proxy_server import ProxyServer
 
 
 import json
+
 
 class OpenAIAgent(LLM):
     """
@@ -97,13 +100,14 @@ class OpenAIAgent(LLM):
         self.run_id=run.id
 
         # This is where we can pass the runner to the soon to be built OpenAIFunction Step
-        yield SetStep(
-            step_type="openai_run_function",
-            name="OpenAI Function Listener",
-            description=f"Starting OpenAI Function Listener for runId={run.id}",
-            params={'run_id': run.id, 
-                    'thread_id': self.thread_id,
-                    'api_key': self.api_key}
+        
+        from continuedev.plugins.steps.openai_run_func import OpenAIRunFunction
+
+        yield OpenAIRunFunction(
+            run_id= run.id, 
+            thread_id= self.thread_id,
+            api_key= self.api_key,
+            user_input=f'/open_ai_run_func {run.id} {self.thread_id} {self.api_key}'
         )
 
 
@@ -200,7 +204,20 @@ class OpenAIAgent(LLM):
                             "required": []
                         }
                     }
-                }               
+                },
+                {
+                    "type": "function",
+                    "function": {
+                        "name": "list_project_files",
+                        "description": "Returns a list of all the files in the project",
+                        "parameters": {    
+                            "type": "object",
+                            "properties": {                            
+                            },                        
+                            "required": []
+                        }
+                    }
+                }
             ]
 
         )

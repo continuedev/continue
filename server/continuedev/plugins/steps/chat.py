@@ -1,6 +1,8 @@
 import html
 from typing import List, Optional
 
+from continuedev.plugins.steps.openai_run_func import OpenAIRunFunction
+
 from ...libs.llm.base import CompletionOptions
 
 # absolute import needed so instanceof works
@@ -67,7 +69,8 @@ class SimpleChatStep(Step):
                     self.description = self.description[:-end_size] + html.unescape(
                         self.description[-end_size:]
                     )
-            elif isinstance(chunk, SetStep):
+            elif isinstance(chunk, OpenAIRunFunction):
+                await chunk.run(sdk=sdk)
                 yield chunk
 
         if sdk.config.disable_summaries:

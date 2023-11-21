@@ -22,6 +22,7 @@ from continuedev.plugins.steps import (
     GenerateShellCommandStep,
     OpenConfigStep,
 )
+from continuedev.plugins.steps.openai_run_func import OpenAIRunFunction
 from continuedev.plugins.steps.share_session import ShareSessionStep
 
 config = ContinueConfig(
@@ -69,6 +70,11 @@ config = ContinueConfig(
             name="cmd",
             description="Generate a shell command",
             step=GenerateShellCommandStep,
+        ),
+        SlashCommand(
+            name="open_ai_run_func",
+            description="Create a Function Listener",
+            step=OpenAIRunFunction,
         ),
     ],
     context_providers=[
