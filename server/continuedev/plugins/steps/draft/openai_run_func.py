@@ -4,14 +4,14 @@ import html
 import json
 from typing import List, Optional
 
-from server.continuedev.libs.llm.base import CompletionOptions
+from continuedev.libs.llm.base import CompletionOptions
 
 # absolute import needed so instanceof works
-from server.continuedev.core.main import ChatMessage, SetStep, Step
-from server.continuedev.core.sdk import ContinueSDK, Models
-from server.continuedev.libs.util.devdata import dev_data_logger
-from server.continuedev.libs.util.strings import remove_quotes_and_escapes
-from server.continuedev.libs.util.telemetry import posthog_logger
+from continuedev.core.main import ChatMessage, SetStep, Step
+from continuedev.core.sdk import ContinueSDK, Models
+from continuedev.libs.util.devdata import dev_data_logger
+from continuedev.libs.util.strings import remove_quotes_and_escapes
+from continuedev.libs.util.telemetry import posthog_logger
 from openai import OpenAI
 
 class OpenAIRunFunction(Step):

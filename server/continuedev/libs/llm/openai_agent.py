@@ -10,7 +10,7 @@ import openai
 from ..util.count_tokens import CONTEXT_LENGTH_FOR_MODEL
 from openai import OpenAI
 from pydantic import validator
-from server.continuedev.core.main import ChatMessage, SetStep
+from continuedev.core.main import ChatMessage, SetStep
 from .base import LLM
 
 from .proxy_server import ProxyServer
