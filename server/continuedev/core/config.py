@@ -2,7 +2,7 @@ import importlib.util
 import json
 import os
 from contextlib import contextmanager
-from typing import Any, Dict, List, Optional, Type, Union, cast
+from typing import Any, Callable, Dict, List, Optional, Tuple, Type, Union, cast
 
 from pydantic import BaseModel, Field, validator
 
@@ -446,7 +446,9 @@ class ContinueConfig(BaseModel):
         )
 
     @staticmethod
-    def modifier_from_filepath(filepath: str):
+    def modifiers_from_filepath(
+        filepath: str,
+    ) -> Tuple[Optional[Callable], Optional[Callable]]:
         try:
             if spec := importlib.util.spec_from_file_location("config", filepath):
                 config = importlib.util.module_from_spec(spec)
@@ -454,14 +456,21 @@ class ContinueConfig(BaseModel):
                 if spec.loader:
                     spec.loader.exec_module(config)
 
+                    modify_config = None
+                    modify_json = None
                     if hasattr(config, "modify_config"):
-                        return config.modify_config
+                        modify_config = config.modify_config
+
+                    if hasattr(config, "modify_json"):
+                        modify_json = config.modify_json
+
+                    return modify_config, modify_json
 
         except Exception as e:
             logger.warning(f"Failed to load config modifier from {filepath}: {e}")
-            return None
+            return None, None
 
-        return None
+        return None, None
 
     @staticmethod
     def from_filepath(filepath: str, retry: bool = True) -> "ContinueConfig":
@@ -480,19 +489,26 @@ class ContinueConfig(BaseModel):
 
                 serialized_config = json.load(open(filepath))
 
-            initial_config = ContinueConfig.from_serialized_config(
-                SerializedContinueConfig(**serialized_config)
-            )
-            if modifier := ContinueConfig.modifier_from_filepath(
+            serialized = SerializedContinueConfig(**serialized_config)
+
+            modify_config, modify_json = ContinueConfig.modifiers_from_filepath(
                 filepath[: -len(".json")] + ".py"
-            ):
+            )
+
+            if modify_json:
                 try:
-                    return modifier(initial_config)
+                    serialized = modify_json(serialized)
                 except Exception as e:
                     logger.warning(f"Failed to modify config: {e}")
-                    return initial_config
 
-            return initial_config
+            final_config = ContinueConfig.from_serialized_config(serialized)
+            if modify_config:
+                try:
+                    final_config = modify_config(final_config)
+                except Exception as e:
+                    logger.warning(f"Failed to modify config: {e}")
+
+            return final_config
 
         # Use importlib to load the config file config.py at the given path
         if spec := importlib.util.spec_from_file_location("config", filepath):
@@ -514,7 +530,6 @@ class ContinueConfig(BaseModel):
                 if os.path.exists(old_path):
                     os.remove(old_path)
                 os.rename(py_path, old_path)
-
 
             py_path = getConfigFilePath()
             try:

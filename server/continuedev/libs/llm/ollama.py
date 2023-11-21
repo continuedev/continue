@@ -87,7 +87,7 @@ class Ollama(LLM):
                 return list(map(lambda x: x["name"], js_data["models"]))
 
     async def _stream_complete(self, prompt, options):
-        prompt = prompt.replace("{", "\\{").replace("}", "\\}")
+        prompt = prompt.replace("{{", "\\{\\{").replace("}}", "\\}\\}")
 
         async with self.create_client_session() as session:
             async with session.post(
