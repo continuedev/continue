@@ -91,10 +91,9 @@ class Ollama(LLM):
             async with session.post(
                 f"{self.api_base}/api/generate",
                 json={
-                    "template": prompt,
+                    "prompt": prompt,
                     "raw": True,
                     "model": self.get_model_name(),
-                    "system": self.system_message,
                     "options": self.collect_args(options),
                 },
                 proxy=self.request_options.proxy,

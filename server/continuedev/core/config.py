@@ -449,6 +449,9 @@ class ContinueConfig(BaseModel):
     def modifiers_from_filepath(
         filepath: str,
     ) -> Tuple[Optional[Callable], Optional[Callable]]:
+        if not os.path.exists(filepath):
+            return None, None
+
         try:
             if spec := importlib.util.spec_from_file_location("config", filepath):
                 config = importlib.util.module_from_spec(spec)
