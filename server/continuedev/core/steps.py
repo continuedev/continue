@@ -586,6 +586,9 @@ Please output the code to be inserted at the cursor in order to fulfill the user
                     "user_input": self.user_input,
                     "file_prefix": file_prefix,
                     "file_suffix": file_suffix,
+                    "system_message": model_to_use.system_message
+                    or sdk.config.system_message
+                    or "",
                     "context_items": "\n\n".join(
                         list(
                             map(
