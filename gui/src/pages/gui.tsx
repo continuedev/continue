@@ -313,6 +313,7 @@ function GUI(props: GUIProps) {
       const state = {
         history: newHistory,
         context_items: sessionState.context_items,
+        session_id: sessionState.session_id
       };
       for (let contextItem of sessionState.context_items) {
         dispatch(
@@ -729,6 +730,7 @@ function GUI(props: GUIProps) {
                           const state = {
                             history: newHistory,
                             context_items: sessionState.context_items,
+                            session_id: sessionState.session_id
                           };
 
                           client.runFromState(state);

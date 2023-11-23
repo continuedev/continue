@@ -312,7 +312,7 @@ class GUIProtocolServer:
                     ),
                 },
             )
-        autopilot = self.get_autopilot(state)
+        autopilot = self.get_autopilot(state)          
         cancel_token = str(uuid.uuid4())
         self._running_autopilots[cancel_token] = autopilot
         await autopilot.run(step=step)

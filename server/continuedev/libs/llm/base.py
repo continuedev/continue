@@ -41,6 +41,7 @@ class CompletionOptions(ContinueBaseModel):
     )
     top_p: Optional[float] = Field(None, description="The top_p of the completion.")
     top_k: Optional[int] = Field(None, description="The top_k of the completion.")
+    assistant_id: Optional[str] = Field(None, description="The OpenAI assistent_id.")
     presence_penalty: Optional[float] = Field(
         None, description="The presence penalty Aof the completion."
     )
@@ -55,6 +56,9 @@ class CompletionOptions(ContinueBaseModel):
     )
     functions: Optional[List[Any]] = Field(
         None, description="The functions/tools to make available to the model."
+    )
+    session_id: Optional[str] = Field(
+        None, description="The session id of the UI chat window."
     )
 
 
@@ -94,6 +98,7 @@ class LLM(ContinueBaseModel):
     )
     top_p: Optional[float] = Field(None, description="The top_p of the completion.")
     top_k: Optional[int] = Field(None, description="The top_k of the completion.")
+    assistant_id: Optional[str] = Field(None, description="The OpenAI assistent_id.")
     presence_penalty: Optional[float] = Field(
         None, description="The presence penalty Aof the completion."
     )
@@ -187,12 +192,16 @@ class LLM(ContinueBaseModel):
             "top_k": {
                 "description": "The top_k sampling parameter used for generation."
             },
+            "assistent_id": {
+                "description": "OpenAIs Assistents Id."
+            },
             "presence_penalty": {
                 "description": "The presence penalty used for completions."
             },
             "frequency_penalty": {
                 "description": "The frequency penalty used for completions."
             },
+
         }
 
     def dict(self, **kwargs):
@@ -333,11 +342,13 @@ Settings:
         temperature: float = None,
         top_p: float = None,
         top_k: int = None,
+        assistent_id: str=None,
         presence_penalty: float = None,
         frequency_penalty: float = None,
         stop: Optional[List[str]] = None,
         max_tokens: Optional[int] = None,
         functions: Optional[List[Any]] = None,
+        session_id: Optional[str] = None,
         log: bool = True,
     ) -> Generator[Union[Any, List, Dict], None, None]:
         """Yield completion response, either streamed or not."""
@@ -346,11 +357,13 @@ Settings:
             temperature=temperature or self.temperature,
             top_p=top_p or self.top_p,
             top_k=top_k or self.top_k,
+            assistant_id=assistent_id or self.assistant_id,
             presence_penalty=presence_penalty or self.presence_penalty,
             frequency_penalty=frequency_penalty or self.frequency_penalty,
             stop=stop or self.stop_tokens,
             max_tokens=max_tokens or self.max_tokens,
             functions=functions,
+            session_id = session_id
         )
 
         prompt = prune_raw_prompt_from_top(
@@ -381,11 +394,13 @@ Settings:
         temperature: float = None,
         top_p: float = None,
         top_k: int = None,
+        assistent_id: str=None,
         presence_penalty: float = None,
         frequency_penalty: float = None,
         stop: Optional[List[str]] = None,
         max_tokens: Optional[int] = None,
         functions: Optional[List[Any]] = None,
+        session_id: Optional[str] = None,
         log: bool = True,
     ) -> str:
         """Yield completion response, either streamed or not."""
@@ -394,11 +409,13 @@ Settings:
             temperature=temperature or self.temperature,
             top_p=top_p or self.top_p,
             top_k=top_k or self.top_k,
+            assistant_id=assistent_id or self.assistant_id,
             presence_penalty=presence_penalty or self.presence_penalty,
             frequency_penalty=frequency_penalty or self.frequency_penalty,
             stop=stop or self.stop_tokens,
             max_tokens=max_tokens or self.max_tokens,
             functions=functions,
+            session_id = session_id
         )
 
         prompt = prune_raw_prompt_from_top(
@@ -427,12 +444,14 @@ Settings:
         temperature: float = None,
         top_p: float = None,
         top_k: int = None,
+        assistent_id: str=None,
         presence_penalty: float = None,
         frequency_penalty: float = None,
         stop: Optional[List[str]] = None,
         max_tokens: Optional[int] = None,
         functions: Optional[List[Any]] = None,
         log: bool = True,
+        session_id: Optional[str] = None,
     ) -> Generator[Union[Any, List, Dict], None, None]:
         """Yield completion response, either streamed or not."""
         options = CompletionOptions(
@@ -440,11 +459,13 @@ Settings:
             temperature=temperature or self.temperature,
             top_p=top_p or self.top_p,
             top_k=top_k or self.top_k,
+            assistant_id=assistent_id or self.assistant_id,
             presence_penalty=presence_penalty or self.presence_penalty,
             frequency_penalty=frequency_penalty or self.frequency_penalty,
             stop=stop or self.stop_tokens,
             max_tokens=max_tokens or self.max_tokens,
             functions=functions,
+            session_id = session_id
         )
 
         messages = self.compile_chat_messages(

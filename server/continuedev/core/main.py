@@ -296,6 +296,7 @@ class SessionState(ContinueBaseModel):
 
     history: List[StepDescription]
     context_items: List[ContextItem]
+    session_id: Optional[str] = None
     # future: List = []
 
 

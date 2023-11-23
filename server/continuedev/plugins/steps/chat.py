@@ -45,14 +45,15 @@ class SimpleChatStep(Step):
                 "provider": sdk.models.default.__class__.__name__,
             },
         )
-
+  
         messages = self.messages or await sdk.get_chat_context()
 
         if self.prompt and messages:
             messages[-1].content = self.prompt
 
         kwargs = self.completion_options.dict() if self.completion_options else {}
-        generator = sdk.models.chat.stream_chat(messages, **kwargs)
+        session_id = sdk.get_session_id()
+        generator = sdk.models.chat.stream_chat(messages, session_id=session_id, **kwargs)
 
         yield SetStep(description="")
         async for chunk in generator:
@@ -84,6 +85,7 @@ class SimpleChatStep(Step):
                             f'"{self.description}"\n\nPlease write a short title summarizing the message quoted above. Use no more than 10 words:',
                             max_tokens=20,
                             log=False,
+                            session_id = sdk.get_session_id()
                         )
                     ),
                     200,

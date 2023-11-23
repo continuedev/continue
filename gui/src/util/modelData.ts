@@ -83,6 +83,13 @@ const topKInput: InputDescriptor = {
   max: 1,
   step: 0.01,
 };
+const assistantIdInput: InputDescriptor = {
+  inputType: CollectInputType.number,
+  key: "assitant_id",
+  label: "AssitantId",
+  placeholder: "#assitant_id",
+  required: false,
+};
 const presencePenaltyInput: InputDescriptor = {
   inputType: CollectInputType.number,
   key: "presence_penalty",
