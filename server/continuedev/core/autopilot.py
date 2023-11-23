@@ -3,7 +3,13 @@ import uuid
 from typing import List, Optional, cast
 
 from aiohttp import ClientPayloadError
-from openai import error as openai_errors
+from openai import (
+    APIConnectionError,
+    APIError,
+    BadRequestError,
+    RateLimitError,
+    Timeout,
+)
 
 from ..libs.llm.prompts.chat import template_alpaca_messages
 from ..libs.util.devdata import dev_data_logger
@@ -37,22 +43,19 @@ from .sdk import ContinueSDK
 
 
 def get_error_title(e: Exception) -> str:
-    if isinstance(e, openai_errors.APIError):
+    if isinstance(e, APIError):
         return "OpenAI is overloaded with requests. Please try again."
-    elif isinstance(e, openai_errors.RateLimitError):
+    elif isinstance(e, RateLimitError):
         return "This OpenAI API key has been rate limited. Please try again."
-    elif isinstance(e, openai_errors.Timeout):
+    elif isinstance(e, Timeout):
         return "OpenAI timed out. Please try again."
-    elif (
-        isinstance(e, openai_errors.InvalidRequestError)
-        and e.code == "context_length_exceeded"
-    ):
-        return e._message or e.__str__()
+    elif isinstance(e, BadRequestError) and e.code == "context_length_exceeded":
+        return e.message or e.__str__()
     elif isinstance(e, ClientPayloadError):
         return "The request failed. Please try again."
-    elif isinstance(e, openai_errors.APIConnectionError):
+    elif isinstance(e, APIConnectionError):
         return 'The request failed. Please check your internet connection and try again. If this issue persists, you can use our API key for free by going to VS Code settings and changing the value of continue.OPENAI_API_KEY to ""'
-    elif isinstance(e, openai_errors.InvalidRequestError):
+    elif isinstance(e, BadRequestError):
         return "Invalid request sent to OpenAI. Please try again."
     elif "rate_limit_ip_middleware" in e.__str__():
         return "You have reached your limit for free usage of our token. You can continue using Continue by entering your own OpenAI API key in VS Code settings."

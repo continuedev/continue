@@ -2,9 +2,7 @@ import json
 import os
 from typing import List
 
-import openai
 from directory_tree import display_tree
-from dotenv import load_dotenv
 from pydantic import Field
 
 from ...core.main import ChatMessage, FunctionCall, Models, Step, step_to_json_schema
@@ -12,10 +10,6 @@ from ...core.sdk import ContinueSDK
 from ...core.steps import MessageStep
 from ...libs.llm.openai import OpenAI
 from .main import EditHighlightedCodeStep
-
-load_dotenv()
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-openai.api_key = OPENAI_API_KEY
 
 FREE_USAGE_STEP_NAME = "Please enter OpenAI API key"
 

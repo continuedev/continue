@@ -12,7 +12,7 @@ import chromadb
 from chromadb.config import Settings
 from chromadb.utils import embedding_functions
 from dotenv import load_dotenv
-from openai.error import RateLimitError
+from openai import RateLimitError
 from pydantic import BaseModel
 
 from ...util.logging import logger
