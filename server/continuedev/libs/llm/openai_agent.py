@@ -70,6 +70,7 @@ class OpenAIAgent(LLM):
         self._client = OpenAI(api_key=self.api_key)
 
         self.retrieve_or_create_assistant()
+        self.title = self._assistant.name
 
         db = os.path.join(getGlobalFolderPath(), 'continue_server.db')
         self._conn = sqlite3.connect(db)
