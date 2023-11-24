@@ -98,10 +98,10 @@
       "name": "Extension (VSCode)",
       "type": "extensionHost",
       "request": "launch",
-      "cwd": "${workspaceFolder}/extensions/vscode",
+      "cwd": "/Users/laib/ai/continue_poc_test/",
       "args": [
         // Pass a directory to manually test in
-        "${workspaceFolder}/extensions/vscode",
+        "/Users/laib/ai/continue_poc_test/",
         "${workspaceFolder}/extensions/vscode/manual-testing-sandbox/example.ts",
         "--extensionDevelopmentPath=${workspaceFolder}/extensions/vscode"
       ],

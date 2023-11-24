@@ -255,7 +255,7 @@ class OpenAIAgent(LLM):
     def get_thread(self, session_id):
         thread_id = self._session_2_thread_map.get(session_id, None)
         if thread_id is None:
-            self.create_thread(session_id)
+            thread_id = self.create_thread(session_id)
         return thread_id         
 
 
@@ -275,15 +275,15 @@ class OpenAIAgent(LLM):
             except OpenAIError:
                 print(f"ERROR loading thread={thread_id}")
 
-        # Cleanup any existing threads that are still running
-        runs = self._client.beta.threads.runs.list(self.thread_id)
-        for run in runs:
-            if run.status in ('queued', 'in_progress', 'requires_action', 'cancelling'):
-                self._client.beta.threads.runs.cancel(
-                    thread_id=run.thread_id,
-                    run_id=run.id
-                )
-                print(f'CANCELING existing thread={run.thread_id}')
+            # Cleanup any existing threads that are still running
+            runs = self._client.beta.threads.runs.list(thread_id)
+            for run in runs:
+                if run.status in ('queued', 'in_progress', 'requires_action', 'cancelling'):
+                    self._client.beta.threads.runs.cancel(
+                        thread_id=run.thread_id,
+                        run_id=run.id
+                    )
+                    print(f'CANCELING existing thread={run.thread_id}')
             
                                 
     def create_thread(self, session_id):

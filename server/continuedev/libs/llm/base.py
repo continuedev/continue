@@ -41,7 +41,7 @@ class CompletionOptions(ContinueBaseModel):
     )
     top_p: Optional[float] = Field(None, description="The top_p of the completion.")
     top_k: Optional[int] = Field(None, description="The top_k of the completion.")
-    assistant_id: Optional[str] = Field(None, description="The OpenAI assistent_id.")
+    assistant_id: Optional[str] = Field(None, description="The OpenAI assistant_id.")
     presence_penalty: Optional[float] = Field(
         None, description="The presence penalty Aof the completion."
     )
@@ -98,7 +98,7 @@ class LLM(ContinueBaseModel):
     )
     top_p: Optional[float] = Field(None, description="The top_p of the completion.")
     top_k: Optional[int] = Field(None, description="The top_k of the completion.")
-    assistant_id: Optional[str] = Field(None, description="The OpenAI assistent_id.")
+    assistant_id: Optional[str] = Field(None, description="The OpenAI assistant_id.")
     presence_penalty: Optional[float] = Field(
         None, description="The presence penalty Aof the completion."
     )
@@ -192,7 +192,7 @@ class LLM(ContinueBaseModel):
             "top_k": {
                 "description": "The top_k sampling parameter used for generation."
             },
-            "assistent_id": {
+            "assistant_id": {
                 "description": "OpenAIs Assistents Id."
             },
             "presence_penalty": {
@@ -342,7 +342,7 @@ Settings:
         temperature: float = None,
         top_p: float = None,
         top_k: int = None,
-        assistent_id: str=None,
+        assistant_id: str=None,
         presence_penalty: float = None,
         frequency_penalty: float = None,
         stop: Optional[List[str]] = None,
@@ -357,7 +357,7 @@ Settings:
             temperature=temperature or self.temperature,
             top_p=top_p or self.top_p,
             top_k=top_k or self.top_k,
-            assistant_id=assistent_id or self.assistant_id,
+            assistant_id=assistant_id or self.assistant_id,
             presence_penalty=presence_penalty or self.presence_penalty,
             frequency_penalty=frequency_penalty or self.frequency_penalty,
             stop=stop or self.stop_tokens,
@@ -394,7 +394,7 @@ Settings:
         temperature: float = None,
         top_p: float = None,
         top_k: int = None,
-        assistent_id: str=None,
+        assistant_id: str=None,
         presence_penalty: float = None,
         frequency_penalty: float = None,
         stop: Optional[List[str]] = None,
@@ -409,7 +409,7 @@ Settings:
             temperature=temperature or self.temperature,
             top_p=top_p or self.top_p,
             top_k=top_k or self.top_k,
-            assistant_id=assistent_id or self.assistant_id,
+            assistant_id=assistant_id or self.assistant_id,
             presence_penalty=presence_penalty or self.presence_penalty,
             frequency_penalty=frequency_penalty or self.frequency_penalty,
             stop=stop or self.stop_tokens,
@@ -444,7 +444,7 @@ Settings:
         temperature: float = None,
         top_p: float = None,
         top_k: int = None,
-        assistent_id: str=None,
+        assistant_id: str=None,
         presence_penalty: float = None,
         frequency_penalty: float = None,
         stop: Optional[List[str]] = None,
@@ -459,7 +459,7 @@ Settings:
             temperature=temperature or self.temperature,
             top_p=top_p or self.top_p,
             top_k=top_k or self.top_k,
-            assistant_id=assistent_id or self.assistant_id,
+            assistant_id=assistant_id or self.assistant_id,
             presence_penalty=presence_penalty or self.presence_penalty,
             frequency_penalty=frequency_penalty or self.frequency_penalty,
             stop=stop or self.stop_tokens,
