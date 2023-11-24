@@ -53,6 +53,14 @@ class GGML(LLM):
         default=None, description="OpenAI engine. For use with Azure OpenAI Service."
     )
 
+    chat_endpoint: str = Field(
+        default="chat/completions", description="The endpoint to call for chat completions"
+    )
+    
+    completions_endpoint: str = Field(
+        default="completions", description="The endpoint to call for chat completions"
+    )
+
     class Config:
         arbitrary_types_allowed = True
 
@@ -86,7 +94,7 @@ class GGML(LLM):
 
         async with self.create_client_session() as client_session:
             async with client_session.post(
-                self.get_full_server_url(endpoint="completions"),
+                self.get_full_server_url(endpoint=self.completions_endpoint),
                 json={
                     "prompt": prompt,
                     "stream": True,
@@ -131,7 +139,7 @@ class GGML(LLM):
         async def generator() -> AsyncGenerator[Any, None]:
             async with self.create_client_session() as client_session:
                 async with client_session.post(
-                    self.get_full_server_url(endpoint="chat/completions"),
+                    self.get_full_server_url(endpoint=self.chat_endpoint),
                     json={
                         "messages": [msg.to_dict() for msg in messages],
                         "stream": True,
@@ -196,7 +204,7 @@ class GGML(LLM):
 
         async with self.create_client_session() as client_session:
             async with client_session.post(
-                self.get_full_server_url(endpoint="completions"),
+                self.get_full_server_url(endpoint=self.completions_endpoint),
                 json={
                     "prompt": prompt,
                     **args,
