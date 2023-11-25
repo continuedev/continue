@@ -24,6 +24,8 @@ class SimpleChatStep(Step):
     messages: Optional[List[ChatMessage]] = None
     prompt: Optional[str] = None
 
+    hide: bool = True
+
     completion_options: Optional[CompletionOptions] = None
 
     async def run(self, sdk: ContinueSDK):
@@ -50,7 +52,7 @@ class SimpleChatStep(Step):
         kwargs = self.completion_options.dict() if self.completion_options else {}
         generator = sdk.models.chat.stream_chat(messages, **kwargs)
 
-        yield SetStep(description="")
+        yield SetStep(description="", hide=False)
         async for chunk in generator:
             if chunk.content != "":
                 yield chunk.content
