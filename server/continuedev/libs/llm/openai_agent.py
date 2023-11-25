@@ -3,6 +3,7 @@ from datetime import datetime
 import time
 import os
 from typing import List, Optional
+
 from continuedev.libs.util.paths import getGlobalFolderPath
 
 
@@ -17,11 +18,11 @@ from openai import OpenAI
 from pydantic import validator
 from continuedev.core.main import ChatMessage, SetStep
 from .base import LLM
-
+from ...libs.util.logging import getLogger
 from .proxy_server import ProxyServer
 
 
-import json
+logger = getLogger('OpenAIAgent')
 
 
 class OpenAIAgent(LLM):
@@ -60,6 +61,7 @@ class OpenAIAgent(LLM):
     _client: Optional[OpenAI] = None
     _assistant: Optional[str] = None
     _run_id: Optional[str] = None
+    _name: Optional[str] = None
 
     _conn: Optional[sqlite3.connect] = None
     _session_2_thread_map: dict = {}
@@ -71,6 +73,7 @@ class OpenAIAgent(LLM):
     async def start(self, unique_id: Optional[str] = None):
         await super().start(unique_id=unique_id)        
         self._client = OpenAI(api_key=self.api_key)
+        self._name = f'agt_{unique_id[-6:]}'
 
         self.retrieve_or_create_assistant()
         self.title = self._assistant.name
@@ -79,7 +82,6 @@ class OpenAIAgent(LLM):
         db = os.path.join(getGlobalFolderPath(), 'continue_server.db')
         self._conn = sqlite3.connect(db)
         self.load_threads_map()
-        #print(f'URL https://platform.openai.com/playground?assistant={self.assistant_id}&mode=assistant&thread={self.thread_id}')
        
 
 
@@ -92,7 +94,7 @@ class OpenAIAgent(LLM):
 
     async def _stream_chat(self, messages: List[ChatMessage], options):   
         if options.session_id is None:
-            print ("session_id is None")
+            logger.error(f'{self._name}:session_id is None')
             return
 
         thread_id= self.get_thread(options.session_id)
@@ -111,13 +113,17 @@ class OpenAIAgent(LLM):
         )
         self._run_id=run.id
 
+        logger.debug(f'{self._name}: URL https://platform.openai.com/playground?assistant={self.assistant_id}&mode=assistant&thread={thread_id}')
+       
+
         # This is where we can pass the runner to the soon to be built OpenAIFunction Step       
         from continuedev.plugins.steps.openai_run_func import OpenAIRunFunction
         yield OpenAIRunFunction(
             run_id= self._run_id, 
             thread_id= thread_id,
             api_key= self.api_key,
-            user_input=f'/open_ai_run_func {run.id} {thread_id} {self.api_key}'
+            user_input=f'/open_ai_run_func {run.id} {thread_id} {self.api_key}',
+            name= self._name
         )
 
 
@@ -148,9 +154,6 @@ class OpenAIAgent(LLM):
 
             await asyncio.sleep(.2)  # Wait for 1 second before checking again to avoid rate limiting                     
 
-        # Print the result
-        #self.print_results(thread_id)
-
 
         result_msgs = self._client.beta.threads.messages.list(
             thread_id=thread_id,
@@ -160,7 +163,7 @@ class OpenAIAgent(LLM):
         msg = result_msgs.data[0]
 
         timestamp = datetime.fromtimestamp(msg.created_at).strftime('%Y-%m-%d %H:%M:%S')        
-        print (f'{timestamp} {msg.role}: {msg.content[0].text.value}')
+        logger.info(f'{self._name}: RESULT - {timestamp} {msg.role}: {msg.content[0].text.value}')
 
         yield {
             "content": msg.content[0].text.value,
@@ -172,7 +175,7 @@ class OpenAIAgent(LLM):
     def retrieve_or_create_assistant(self):
         try:
             self._assistant = self._client.beta.assistants.retrieve(self.assistant_id)
-            print(f"LOADING existing assistant={self._assistant.id} name={self._assistant.name}")
+            logger.info(f'{self._name}: LOADING existing assistant={self._assistant.id} name={self._assistant.name}')
         except OpenAIError:
             try:
                 # create a standard name
@@ -181,7 +184,7 @@ class OpenAIAgent(LLM):
                 for assistant in my_assistants.data:
                     if assistant.name == name:   
                         self._assistant = assistant        
-                        print(f"MATCHED new assistant={self._assistant.id} name={self._assistant.name}")         
+                        logger.info(f'{self._name}: MATCHED new assistant={self._assistant.id} name={self._assistant.name}')         
                         break
                     
                 else:
@@ -191,13 +194,14 @@ class OpenAIAgent(LLM):
                         model=self.model,
                         tools=[{"type": "retrieval"}]
                     )
-                    print(f"CREATING new assistant={self._assistant.id} name={self._assistant.name}")
-                self.assistant_id = self._assistant.id
-                self.title = self._assistant.name
+                    logger.info(f'{self._name}: CREATING new assistant={self._assistant.id} name={self._assistant.name}')
+
                 
             except OpenAIError as e:
-                print(f"Error creating assistant: {e}")
-
+                logger.error(f'{self._name}: creating assistant: {e}')
+        self.assistant_id = self._assistant.id
+        self.title = self._assistant.name
+      
         self._assistant = self._client.beta.assistants.update(
             assistant_id=self._assistant.id,
             tools=[{
@@ -246,24 +250,6 @@ class OpenAIAgent(LLM):
         )
    
 
-    def print_results(self, thread_id):
-
-        try:
-            messages = self._client.beta.threads.messages.list(thread_id=thread_id )
-        except openai.NotFoundError as e:
-        # Handle the NotFoundError
-            print(f"NotFoundError occurred: {e}")
-        # Optionally, add additional logic to handle the error, like logging or default actions
-        except Exception as e:
-        # Catch other potential exceptions
-            print(f"An unexpected error occurred: {e}")
-        # Handle other exceptions or re-raise them
-
-        for data_i, threadMessage in enumerate(messages.data):
-            timestamp = datetime.fromtimestamp(threadMessage.created_at).strftime('%Y-%m-%d %H:%M:%S')        
-            print (f'{timestamp} {threadMessage.role}: {threadMessage.content[0].text.value}')
-
-
     def get_project_file(self, args):
         file_path=args['file_path']
         return f'file contents goes here for {file_path}'
@@ -275,13 +261,13 @@ class OpenAIAgent(LLM):
             cursor = self._conn.cursor()
             for row in cursor.execute(f"SELECT * FROM threads where session_id='{session_id}'"):
                 thread_id, session_id = row[0], row[1]
-                print(f"LOADING existing thread={thread_id} for session_id={session_id}")
+                logger.info(f'{self._name}: LOADING existing thread={thread_id} for session_id={session_id}')
                 self._session_2_thread_map[session_id] = thread_id
 
             if thread_id is None:
                 thread_id = self.create_thread(session_id)
         else:
-            print(f'CACHED thread_id={thread_id}  for session_id={session_id}')
+            logger.info(f'{self._name}: CACHED thread_id={thread_id}  for session_id={session_id}')
 
  
         # Cleanup any existing runs on thread that are still running
@@ -292,7 +278,7 @@ class OpenAIAgent(LLM):
                     thread_id=run.thread_id,
                     run_id=run.id
                 )
-                print(f'CANCELING existing thread={run.thread_id}')
+                logger.info(f'{self._name}: CANCELING existing rhread_id={run.thread_id} run_id={run.id}')
 
         return thread_id         
 
@@ -306,7 +292,7 @@ class OpenAIAgent(LLM):
                                 
     def create_thread(self, session_id):
         thread_id = self._client.beta.threads.create().id
-        print(f"CREATING new thread={thread_id} session_id={session_id}")
+        logger.info(f'{self._name}: CREATING thread={thread_id} session_id={session_id}')
         
         cursor = self._conn.cursor()
         cursor.execute(f"INSERT INTO threads VALUES ('{thread_id}','{session_id}')")        

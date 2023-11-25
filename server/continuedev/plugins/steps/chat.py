@@ -57,10 +57,6 @@ class SimpleChatStep(Step):
 
         yield SetStep(description="")
         async for chunk in generator:
-            print("Type of chunk:", type(chunk))
-            print("Type of SetStep:", SetStep)
-
-
             if "content" in chunk:
                 yield chunk["content"]
 
