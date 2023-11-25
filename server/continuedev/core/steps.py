@@ -3,7 +3,7 @@ import difflib
 import subprocess
 import time
 from textwrap import dedent
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, AsyncGenerator, Dict, List, Optional, Union
 
 from pydantic import Field
 
@@ -20,7 +20,15 @@ from ..libs.util.templating import render_prompt_template
 from ..models.filesystem import FileSystem, RangeInFile, RangeInFileWithContents
 from ..models.filesystem_edit import EditDiff, FileEditWithFullContents, FileSystemEdit
 from .abstract_sdk import AbstractContinueSDK
-from .main import ChatMessage, ContinueCustomException, SessionUpdate, SetStep, Step
+from .main import (
+    ChatMessage,
+    ContextItem,
+    ContinueCustomException,
+    DeltaStep,
+    SessionUpdate,
+    SetStep,
+    Step,
+)
 from .observation import TextObservation, UserInputObservation
 
 
@@ -373,7 +381,9 @@ Please output the code to be inserted at the cursor in order to fulfill the user
             or "<code_to_edit>" in line
         )
 
-    async def stream_rif(self, rif: RangeInFileWithContents, sdk: AbstractContinueSDK):
+    async def stream_rif(
+        self, rif: RangeInFileWithContents, sdk: AbstractContinueSDK
+    ) -> AsyncGenerator[SetStep, None]:
         await sdk.ide.saveFile(rif.filepath)
         full_file_contents = await sdk.ide.readFile(rif.filepath)
 
@@ -643,6 +653,10 @@ Please output the code to be inserted at the cursor in order to fulfill the user
         try:
             last_task_time = time.time()
             async for chunk in generator:
+                yield SetStep(
+                    hide=False
+                )  # Doing this so that there are breakpoints for cancellation
+
                 # Stop early if it is repeating the file_suffix or the step was deleted
                 if repeating_file_suffix:
                     break
@@ -757,7 +771,8 @@ Please output the code to be inserted at the cursor in order to fulfill the user
 
         for rif in rif_with_contents:
             await sdk.ide.setSuggestionsLocked(rif.filepath, True)
-            await self.stream_rif(rif, sdk)
+            async for update in self.stream_rif(rif, sdk):
+                yield update
             await sdk.ide.setSuggestionsLocked(rif.filepath, False)
 
         changes = "\n".join(
@@ -857,6 +872,7 @@ class ManualEditStep(ReversibleStep):
 
 class UserInputStep(Step):
     user_input: str
+    context_items: List[ContextItem] = []
     name: str = "User Input"
     hide: bool = False
 
