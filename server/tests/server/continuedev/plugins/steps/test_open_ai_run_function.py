@@ -1,55 +1,39 @@
+import asyncio
 import unittest
-from unittest import mock
-from ...server.continuedev.plugins.steps.openai_run_func import OpenAIRunFunction  
+from unittest import TestCase
+from unittest.mock import patch, MagicMock, AsyncMock
+from continuedev.plugins.steps.openai_run_func import OpenAIRunFunction
 
-class TestOpenAIRunFunction(unittest.TestCase):
+class TestOpenAIRunFunction(TestCase):
     def setUp(self):
-        self.file_list = [
-            "README.md",
-            "CONTRIBUTING.md",
-            "index.html",
-            "main.py",
-            "utils/helpers.py"
-        ]
-        self.open_ai_run_function = OpenAIRunFunction(self.file_list)
+        self.open_ai_run_function = OpenAIRunFunction(
+            api_key = "mock_api_key",
+            thread_id = "mock_thread_id",
+            run_id = "mock_run_id",
+            user_input = "/mock_user_input",
+            name = "mock_name",
+        )
+        
+    @patch('continuedev.plugins.steps.openai_run_func.get_file_contents', new_callable=AsyncMock)
+    @patch('continuedev.plugins.steps.openai_run_func.get_all_filepaths', new_callable=AsyncMock)
+    def test_get_project_file(self, get_all_filepaths_mock, get_file_contents_mock):
+        # Here we simulate that get_all_filepaths method returns file paths including 'README.md'
+        get_all_filepaths_mock.return_value = (['/path/to/workspace/README.md','another','asdf'], None)
 
-    @mock.patch('your_module.OpenAIRunFunction.fetch_file_content')  # Patch the fetch_file_content method
-    def test_get_project_file_exact_match(self, mock_fetch_file_content):
-        mock_fetch_file_content.return_value = "Exact file content"
-        
-        expected_content = "Exact file content"
-        actual_content = self.open_ai_run_function.get_project_file("README.md")
-        
-        # Verify that the mock was called with the correct filename
-        mock_fetch_file_content.assert_called_with("README.md")
+        # And simulate get_file_contents returning 'Mocked file content.'
+        get_file_contents_mock.return_value = 'Mocked file content.'
 
-        # Verify the returned file content matches the mock return value
-        self.assertEqual(actual_content, expected_content)
+        # Mock SDK object
+        sdk_mock = MagicMock()
+        sdk_mock.ide.workspace_directory = '/path/to/workspace'
 
-    @mock.patch('your_module.OpenAIRunFunction.fetch_file_content')  # Patch the fetch_file_content method
-    def test_get_project_file_fuzzy_match(self, mock_fetch_file_content):
-        mock_fetch_file_content.return_value = "Fuzzy file content"
-        
-        expected_content = "Fuzzy file content"
-        actual_content = self.open_ai_run_function.get_project_file("REDEME.md")  # Intentionally misspelled
-        
-        # Verify that the mock was called with the closely matched filename
-        mock_fetch_file_content.assert_called_with("README.md")
-        
-        # Verify the returned file content matches the mock return value
-        self.assertEqual(actual_content, expected_content)
+       
+        # Call the async method under test
+        file_content = asyncio.run(self.open_ai_run_function.get_project_file(sdk_mock, 'README'))
 
-    @mock.patch('your_module.OpenAIRunFunction.fetch_file_content')
-    def test_get_project_file_no_match(self, mock_fetch_file_content):
-        # Since we expect no match, the fetch_file_content method should not be called
-        expected_content = "No closely matched file found for 'NOT_A_FILE.md'."
-        actual_content = self.open_ai_run_function.get_project_file("NOT_A_FILE.md")  # Nonexistent file
-        
-        # Verify that the mock was not called because there should be no match
-        mock_fetch_file_content.assert_not_called()
-        
-        # Verify the returned message about not finding a closely matched file
-        self.assertEqual(actual_content, expected_content)
+        # Assert file_content matches the mocked content and other appropriate assertions
+        self.assertEqual(file_content, 'Mocked file content.')
+        get_file_contents_mock.assert_called_once_with('/path/to/workspace/README.md', sdk_mock.ide)
 
 if __name__ == '__main__':
     unittest.main()

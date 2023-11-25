@@ -19,7 +19,7 @@ from openai import OpenAI
 from continuedev.plugins.context_providers.search import SearchContextProvider
 from tqdm import tqdm
 from ...libs.util.logging import getLogger
-
+from fuzzywuzzy import process
 
 logger = getLogger('OpenAIRunFunction')
 
@@ -79,11 +79,11 @@ class OpenAIRunFunction(Step):
     async def get_project_file(self, sdk, file_path):
         abs_path = os.path.join(sdk.ide.workspace_directory, file_path)
         if os.path.exists(abs_path) == False:
-            fuzzy_path = self.fuzzy_match_project_file(sdk, file_path)
+            fuzzy_path = await self.fuzzy_match_project_file(sdk, file_path)
             if fuzzy_path:
                 logger.debug(f'{self.name}: get_project_file()={file_path} fuzzy matched to {fuzzy_path}')
                 abs_path = os.path.join(sdk.ide.workspace_directory, fuzzy_path)
-            else
+            else:
                 logger.info(f'{self.name}: get_project_file()={abs_path} does not exist')
                 return f'ERROR: Failed to find file: {file_path}'
             
@@ -94,7 +94,7 @@ class OpenAIRunFunction(Step):
         return contents
         #return f'Here is where the file would be uploaded for {file_path}'
 
-    def fuzzy_match_project_file(self, sdk, filename, threshold=80):
+    async def fuzzy_match_project_file(self, sdk, filename, threshold=80):
         """
         Retrieves the contents of the requested file with fuzzy match on the filename.
         
@@ -106,12 +106,13 @@ class OpenAIRunFunction(Step):
             str: The contents of the matched file or an error message.
         """
         # Perform fuzzy matching to find the best match above a certain threshold
-        best_match, score = process.extractOne(filename, self.list_project_files(sdk))
+        files, should_ignore = await get_all_filepaths(sdk.ide)
+        best_match, score = process.extractOne(filename,files )
 
         # Check if the matching score is above the threshold
         if score >= threshold:
             # If the score is above the threshold, fetch and return the file content
-            return self.fetch_file_content(best_match)
+            return best_match
         else:
             # If no file is closely matched enough, return an error message
             return None
