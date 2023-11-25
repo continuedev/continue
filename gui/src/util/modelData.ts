@@ -373,7 +373,7 @@ const gpt_4_1106_preview: ModelPackage = {
   description:
     "A faster, cheaper version of GPT-4 with a longer context length",
   params: {
-    model: "gpt_4_1106_preview",
+    model: "gpt-4-1106-preview",
     context_length: 128_000,
     title: "GPT-4 Turbo",
     api_key: "",

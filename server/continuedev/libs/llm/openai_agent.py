@@ -97,7 +97,7 @@ class OpenAIAgent(LLM):
 
         thread_id= self.get_thread(options.session_id)
 
-        self.last_message = self._client.beta.threads.messages.create(
+        last_message = self._client.beta.threads.messages.create(
             thread_id=thread_id,
             role=messages[-1]['role'],
             content=messages[-1]['content'],
@@ -154,7 +154,7 @@ class OpenAIAgent(LLM):
 
         result_msgs = self._client.beta.threads.messages.list(
             thread_id=thread_id,
-            after=self.last_message.id,
+            after=last_message.id,
             order='asc'
         )
         msg = result_msgs.data[0]
@@ -175,13 +175,26 @@ class OpenAIAgent(LLM):
             print(f"LOADING existing assistant={self._assistant.id} name={self._assistant.name}")
         except OpenAIError:
             try:
-                self._assistant = self._client.beta.assistants.create(
-                    name=self.title,
-                    instructions=OPENAI_AGENT_DEV_INSTRUCTIONS,
-                    model=self.model,
-                    tools=[{"type": "retrieval"}]
-                )
-                print(f"CREATING new assistant={self._assistant.id} name={self._assistant.name}")
+                # create a standard name
+                name = f'Continue Assistant: {self.title}'
+                my_assistants = self._client.beta.assistants.list()
+                for assistant in my_assistants.data:
+                    if assistant.name == name:   
+                        self._assistant = assistant        
+                        print(f"MATCHED new assistant={self._assistant.id} name={self._assistant.name}")         
+                        break
+                    
+                else:
+                    self._assistant = self._client.beta.assistants.create(
+                        name=name,
+                        instructions=OPENAI_AGENT_DEV_INSTRUCTIONS,
+                        model=self.model,
+                        tools=[{"type": "retrieval"}]
+                    )
+                    print(f"CREATING new assistant={self._assistant.id} name={self._assistant.name}")
+                self.assistant_id = self._assistant.id
+                self.title = self._assistant.name
+                
             except OpenAIError as e:
                 print(f"Error creating assistant: {e}")
 
