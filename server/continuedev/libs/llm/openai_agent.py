@@ -34,11 +34,12 @@ class OpenAIAgent(LLM):
     from continuedev.libs.llm.openai_agent import OpenAIAgent
     API_KEY = "<API_KEY>"
     config = ContinueConfig(
+        disable_summaries=True,
         ...
         models=Models(
             default=OpenAI(
                 api_key="EMPTY",
-                model="gpt4_agent",
+                model="gpt35turbo",
                 api_base="http://localhost:8000", # change to your server
             )         
         )
@@ -58,6 +59,8 @@ class OpenAIAgent(LLM):
 
     _client: Optional[OpenAI] = None
     _assistant: Optional[str] = None
+    _run_id: Optional[str] = None
+
     _conn: Optional[sqlite3.connect] = None
     _session_2_thread_map: dict = {}
     
@@ -72,6 +75,7 @@ class OpenAIAgent(LLM):
         self.retrieve_or_create_assistant()
         self.title = self._assistant.name
 
+
         db = os.path.join(getGlobalFolderPath(), 'continue_server.db')
         self._conn = sqlite3.connect(db)
         self.load_threads_map()
@@ -81,12 +85,9 @@ class OpenAIAgent(LLM):
 
 
     async def _stream_complete(self, prompt, options):
-         async for chunk in self._stream_chat(
-                [{"role": "user", "content": prompt}], options
-            ):
-                if "content" in chunk:
-                    yield chunk["content"]
-
+        return
+      
+    
 
 
     async def _stream_chat(self, messages: List[ChatMessage], options):   
@@ -102,35 +103,33 @@ class OpenAIAgent(LLM):
             content=messages[-1]['content'],
         )
 
+
         run = self._client.beta.threads.runs.create(
         thread_id=thread_id,
         assistant_id=self._assistant.id,
         instructions=self.system_message
         )
-        self.run_id=run.id
+        self._run_id=run.id
 
-        # This is where we can pass the runner to the soon to be built OpenAIFunction Step
-        
+        # This is where we can pass the runner to the soon to be built OpenAIFunction Step       
         from continuedev.plugins.steps.openai_run_func import OpenAIRunFunction
-
         yield OpenAIRunFunction(
-            run_id= run.id, 
+            run_id= self._run_id, 
             thread_id= thread_id,
             api_key= self.api_key,
             user_input=f'/open_ai_run_func {run.id} {thread_id} {self.api_key}'
         )
 
 
-
-
-
+       
+            
         # Loop until the status is 'completed'
         while True:
             run_result = self._client.beta.threads.runs.retrieve(
                 thread_id=thread_id,
-                run_id=self.run_id)            
-            print(f'RESULT run_id={run_result.id} state={run_result.status}')
-
+                run_id=self._run_id)            
+            
+ 
             if run_result.status == 'failed':
                 raise Exception(
                     f"Error result: {run_result.last_error}"
@@ -150,7 +149,7 @@ class OpenAIAgent(LLM):
             await asyncio.sleep(.2)  # Wait for 1 second before checking again to avoid rate limiting                     
 
         # Print the result
-        self.print_results(thread_id)
+        #self.print_results(thread_id)
 
 
         result_msgs = self._client.beta.threads.messages.list(
@@ -175,14 +174,17 @@ class OpenAIAgent(LLM):
             self._assistant = self._client.beta.assistants.retrieve(self.assistant_id)
             print(f"LOADING existing assistant={self._assistant.id} name={self._assistant.name}")
         except OpenAIError:
-            self._assistant = self._client.beta.assistants.create(
-                name="Continue Agent",
-                instructions=OPENAI_AGENT_DEV_INSTRUCTIONS,
-                model="gpt-4-1106-preview",
-                tools=[{"type": "retrieval"}]
-            )
-            print(f"CREATING new assistant={self._assistant.id} name={self._assistant.name}")
-        
+            try:
+                self._assistant = self._client.beta.assistants.create(
+                    name=self.title,
+                    instructions=OPENAI_AGENT_DEV_INSTRUCTIONS,
+                    model=self.model,
+                    tools=[{"type": "retrieval"}]
+                )
+                print(f"CREATING new assistant={self._assistant.id} name={self._assistant.name}")
+            except OpenAIError as e:
+                print(f"Error creating assistant: {e}")
+
         self._assistant = self._client.beta.assistants.update(
             assistant_id=self._assistant.id,
             tools=[{
@@ -255,8 +257,30 @@ class OpenAIAgent(LLM):
 
     def get_thread(self, session_id):
         thread_id = self._session_2_thread_map.get(session_id, None)
+        
         if thread_id is None:
-            thread_id = self.create_thread(session_id)
+            cursor = self._conn.cursor()
+            for row in cursor.execute(f"SELECT * FROM threads where session_id='{session_id}'"):
+                thread_id, session_id = row[0], row[1]
+                print(f"LOADING existing thread={thread_id} for session_id={session_id}")
+                self._session_2_thread_map[session_id] = thread_id
+
+            if thread_id is None:
+                thread_id = self.create_thread(session_id)
+        else:
+            print(f'CACHED thread_id={thread_id}  for session_id={session_id}')
+
+ 
+        # Cleanup any existing runs on thread that are still running
+        runs = self._client.beta.threads.runs.list(thread_id)
+        for run in runs:
+            if run.status in ('queued', 'in_progress', 'requires_action', 'cancelling'):
+                self._client.beta.threads.runs.cancel(
+                    thread_id=run.thread_id,
+                    run_id=run.id
+                )
+                print(f'CANCELING existing thread={run.thread_id}')
+
         return thread_id         
 
 
@@ -265,26 +289,6 @@ class OpenAIAgent(LLM):
         cursor = self._conn.cursor()
         cursor.execute('''CREATE TABLE IF NOT EXISTS threads (thread_id text, session_id text)''')
         self._conn.commit()
-
-        cursor = self._conn.cursor()
-        for row in cursor.execute('SELECT * FROM threads'):
-            thread_id, session_id = row[0], row[1]
-            try:
-                thread = self._client.beta.threads.retrieve(thread_id)
-                print(f"LOADING existing thread={thread.id} for session_id={session_id}")
-                self._session_2_thread_map[session_id] = thread.id
-            except OpenAIError:
-                print(f"ERROR loading thread={thread_id}")
-
-            # Cleanup any existing threads that are still running
-            runs = self._client.beta.threads.runs.list(thread_id)
-            for run in runs:
-                if run.status in ('queued', 'in_progress', 'requires_action', 'cancelling'):
-                    self._client.beta.threads.runs.cancel(
-                        thread_id=run.thread_id,
-                        run_id=run.id
-                    )
-                    print(f'CANCELING existing thread={run.thread_id}')
             
                                 
     def create_thread(self, session_id):

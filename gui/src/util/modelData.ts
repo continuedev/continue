@@ -368,17 +368,30 @@ const osModels = [
   codeup,
 ];
 
-const gpt4turbo: ModelPackage = {
+const gpt_4_1106_preview: ModelPackage = {
   title: "GPT-4 Turbo",
   description:
     "A faster, cheaper version of GPT-4 with a longer context length",
   params: {
-    model: "gpt-4-1106-preview",
+    model: "gpt_4_1106_preview",
     context_length: 128_000,
     title: "GPT-4 Turbo",
     api_key: "",
   },
 };
+
+const gpt_3_5_turbo_1106: ModelPackage = {
+  title: "GPT-3.5 Turbo 1106",
+  description:
+    "GPT-3.5 Turbo is the cheapest with a 16K context length",
+  params: {
+    model: "gpt-3.5-turbo-1106",
+    context_length: 16_000,
+    title: "GPT-3.5 Turbo 1106",
+    api_key: "",
+  },
+};
+
 
 const gpt4: ModelPackage = {
   title: "GPT-4",
@@ -403,17 +416,7 @@ const gpt35turbo: ModelPackage = {
   },
 };
 
-const gpt4_agent: ModelPackage = {
-  title: "GPT4_Agent",
-  description:
-    "GPT4 Agent",
-  params: {
-    model: "gpt4_agent",
-    context_length: 8096,
-    title: "GPT4_Agent",
-    api_key: "",
-  },
-};
+
 
 const OLLAMA_TO_REPLICATE_MODEL_NAMES: { [key: string]: string } = {
   "codellama:7b-instruct":
@@ -441,7 +444,7 @@ export const MODEL_INFO: { [key: string]: ModelInfo } = {
       "Use gpt-4, gpt-3.5-turbo, or any other OpenAI model. See [here](https://openai.com/product#made-for-developers) to obtain an API key.",
     icon: "openai.png",
     tags: [ModelProviderTag["Requires API Key"]],
-    packages: [gpt4, gpt35turbo, gpt4turbo],
+    packages: [gpt4, gpt35turbo, gpt_4_1106_preview],
     collectInputFor: [
       {
         inputType: CollectInputType.text,
@@ -799,7 +802,8 @@ After it's up and running, you can start using Continue.`,
     icon: "openai.png",
     tags: [ModelProviderTag.Free],
     packages: [
-      { ...gpt4_agent, title: "GPT-4 Agent" }
+      { ...gpt_4_1106_preview, title: "GPT-4 Turbo" },
+      { ...gpt_3_5_turbo_1106, title: "GPT-3.5 Turbo 1106" },
     ],
     collectInputFor: [
       {

@@ -72,7 +72,7 @@ class SimpleChatStep(Step):
                     )
             elif isinstance(chunk, OpenAIRunFunction):
                 await chunk.run(sdk=sdk)
-                yield chunk
+                #yield chunk
 
         if sdk.config.disable_summaries:
             self.name = ""

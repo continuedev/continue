@@ -17,6 +17,7 @@ from continuedev.libs.util.telemetry import posthog_logger
 from continuedev.plugins.context_providers.file import get_file_contents
 from openai import OpenAI
 from continuedev.plugins.context_providers.search import SearchContextProvider
+from tqdm import tqdm
 
 class OpenAIRunFunction(Step):
     run_id: str
@@ -32,7 +33,8 @@ class OpenAIRunFunction(Step):
         run_result = client.beta.threads.runs.retrieve(
             thread_id=self.thread_id,
             run_id=self.run_id)
-        print(run_result)
+        print(f'OpenAIRunFunction run_id={run_result.id} state={run_result.status}  STARTED')
+        pbar = tqdm(total=100, desc=f'Run({self.run_id})', unit=" update", leave=True)
 
         # Loop until the status is 'completed'
         while True :
@@ -40,8 +42,10 @@ class OpenAIRunFunction(Step):
                 thread_id=self.thread_id,
                 run_id=self.run_id
             )
-            print(f'run_id={run_result.id} state={run_result.status}')
+            #print(f'run_id={run_result.id} state={run_result.status}')
             if run_result.status in ('completed', 'failed', 'expired', 'cancelled'):
+                print(f'OpenAIRunFunction run_id={run_result.id} state={run_result.status}  COMPLETED')
+
                 return    
            
             if run_result.required_action is not None:
@@ -51,7 +55,8 @@ class OpenAIRunFunction(Step):
                     run_id=self.run_id,
                     tool_outputs=outputs
                     )
-            else:
+            else:  
+                pbar.update(1)                
                 await asyncio.sleep(.2)  
                
           

@@ -18,7 +18,8 @@ CHAT_MODELS = {
     "gpt-4",
     "gpt-3.5-turbo-0613",
     "gpt-4-32k",
-    "gpt-4-1106-preview"
+    "gpt_4_1106_preview",
+    "gpt_3_5_turbo_1106"
 }
 NON_CHAT_MODELS = {
     "gpt-3.5-turbo-instruct",
