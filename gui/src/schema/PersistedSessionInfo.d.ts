@@ -24,15 +24,16 @@ export type Content = string;
 export type Editing = boolean;
 export type Editable = boolean;
 export type ContextItems = ContextItem[];
+export type SessionId = string;
 export type Title1 = string;
 export type WorkspaceDirectory = string;
-export type SessionId = string;
+export type SessionId1 = string;
 
 export interface PersistedSessionInfo1 {
   session_state: SessionState;
   title: Title1;
   workspace_directory: WorkspaceDirectory;
-  session_id: SessionId;
+  session_id: SessionId1;
   [k: string]: unknown;
 }
 /**
@@ -41,6 +42,7 @@ export interface PersistedSessionInfo1 {
 export interface SessionState {
   history: History;
   context_items: ContextItems;
+  session_id?: SessionId;
   [k: string]: unknown;
 }
 export interface StepDescription {

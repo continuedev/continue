@@ -17,6 +17,7 @@ export type Provider =
   | "openai"
   | "openai-free-trial"
   | "openai-aiohttp"
+  | "openai-agent"
   | "anthropic"
   | "together"
   | "ollama"

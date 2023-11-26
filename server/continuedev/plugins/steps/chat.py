@@ -44,7 +44,7 @@ class SimpleChatStep(Step):
                 "provider": sdk.models.default.__class__.__name__,
             },
         )
-  
+
         messages = self.messages or await sdk.get_chat_context()
 
         if self.prompt and messages:
@@ -67,7 +67,6 @@ class SimpleChatStep(Step):
                     )
             elif isinstance(chunk, OpenAIRunFunction):
                 await chunk.run(sdk=sdk)
-                #yield chunk
 
         if sdk.config.disable_summaries:
             self.name = ""

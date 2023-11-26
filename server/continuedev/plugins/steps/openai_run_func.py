@@ -29,11 +29,13 @@ class OpenAIRunFunction(Step):
     thread_id: str
     user_input: str
     name: str
+    content: str
 
     async def describe(self, models: Models):
         return f"`OpenAI Thread Run Listener to respond to function requests for thread_id={self.dict['thread_id']}`."
 
     async def run(self, sdk: ContinueSDK):
+        sdk.config.disable_summaries = True
         client = OpenAI(api_key=self.api_key)
         run_result = client.beta.threads.runs.retrieve(
             thread_id=self.thread_id,
@@ -71,7 +73,7 @@ class OpenAIRunFunction(Step):
         files, should_ignore = await get_all_filepaths(sdk.ide)
         relative_filepaths = [os.path.relpath(path, sdk.ide.workspace_directory) for path in files]
         str = '\n'.join(relative_filepaths)
-        logger.info(f'{self.name}: list_project_files()={str}')
+        logger.info(f'{self.name}: list_project_files()= returned {len(files)} filenames')
         return str
 
         #return f'Here is where the file would be uploaded for {file_path}'
@@ -90,7 +92,9 @@ class OpenAIRunFunction(Step):
         contents = await get_file_contents(abs_path, sdk.ide)    
         if len(contents) == 0:
             contents=f'file not found {abs_path}'
-        logger.info(f'{self.name}: get_project_file()={contents}')
+            logger.error(f'{self.name}:  get_project_file({file_path}) - file not found')
+        else:   
+            logger.info(f'{self.name}: get_project_file({file_path})={abs_path} size={len(contents)}')
         return contents
         #return f'Here is where the file would be uploaded for {file_path}'
 

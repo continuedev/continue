@@ -101,9 +101,10 @@ class OpenAIAgent(LLM):
 
         last_message = self._client.beta.threads.messages.create(
             thread_id=thread_id,
-            role=messages[-1]['role'],
-            content=messages[-1]['content'],
+            role=messages[-1].role,
+            content=messages[-1].content,
         )
+        logger.info(f'{self._name}: REQUEST {last_message.role} - {last_message.content[0].text.value}')
 
 
         run = self._client.beta.threads.runs.create(
@@ -123,7 +124,8 @@ class OpenAIAgent(LLM):
             thread_id= thread_id,
             api_key= self.api_key,
             user_input=f'/open_ai_run_func {run.id} {thread_id} {self.api_key}',
-            name= self._name
+            name= self._name,
+            content=""
         )
 
 
@@ -165,10 +167,8 @@ class OpenAIAgent(LLM):
         timestamp = datetime.fromtimestamp(msg.created_at).strftime('%Y-%m-%d %H:%M:%S')        
         logger.info(f'{self._name}: RESULT - {timestamp} {msg.role}: {msg.content[0].text.value}')
 
-        yield {
-            "content": msg.content[0].text.value,
-            "role": {msg.role},
-        }
+        yield ChatMessage(role="assistant", content=msg.content[0].text.value, summary=msg.content[0].text.value)
+     
 
  
 

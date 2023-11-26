@@ -94,6 +94,7 @@ CONTEXT_LENGTH_FOR_MODEL = {
     "gpt-35-turbo": 4096,
     "gpt-4-32k": 32_768,
     "gpt-4-1106-preview": 128_000,
+    "gpt-3.5-turbo-1106": 16_384,
 }
 
 already_saw_import_err = False

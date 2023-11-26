@@ -355,17 +355,21 @@ Settings:
         max_tokens: Optional[int] = None,
         functions: Optional[List[Any]] = None,
         log: bool = True,
+        session_id: Optional[str] = None,
     ) -> AsyncGenerator[ChatMessage, None]:
         """Yield completion response, either streamed or not."""
         options = CompletionOptions(
             model=model or self.model,
-            temperature=temperature or self.temperature,
-            top_p=top_p or self.top_p,
-            top_k=top_k or self.top_k,            assistant_id=assistant_id or self.assistant_id,
-            presence_penalty=presence_penalty or self.presence_penalty,
-            frequency_penalty=frequency_penalty or self.frequency_penalty,
-            stop=stop or self.stop_tokens,
-            max_tokens=max_tokens or self.max_tokens,
+            temperature=temperature or self.completion_options.temperature,
+            top_p=top_p or self.completion_options.top_p,
+            top_k=top_k or self.completion_options.top_k,               
+            assistant_id=assistant_id or self.assistant_id,
+            presence_penalty=presence_penalty
+            or self.completion_options.presence_penalty,
+            frequency_penalty=frequency_penalty
+            or self.completion_options.frequency_penalty,
+            stop=stop or self.completion_options.stop,
+            max_tokens=max_tokens or self.completion_options.max_tokens,
             functions=functions,
             session_id = session_id
         )

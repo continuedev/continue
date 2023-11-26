@@ -24,6 +24,7 @@ export type Title = string;
 export type Provider =
   | "openai"
   | "openai-free-trial"
+  | "openai-agent"
   | "openai-aiohttp"
   | "anthropic"
   | "together"

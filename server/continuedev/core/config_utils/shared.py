@@ -107,6 +107,7 @@ def autodetect_prompt_templates(model: str):
 ModelProvider = Literal[
     "openai",
     "openai-free-trial",
+    "openai-agent",
     "openai-aiohttp",
     "anthropic",
     "together",
@@ -123,6 +124,7 @@ ModelProvider = Literal[
 MODEL_PROVIDER_TO_MODEL_CLASS = {
     "openai": "OpenAI",
     "openai-free-trial": "OpenAIFreeTrial",
+    "openai-agent": "OpenAIAgent",
     "openai-aiohttp": "GGML",
     "anthropic": "AnthropicLLM",
     "together": "TogetherLLM",
@@ -139,6 +141,7 @@ MODEL_PROVIDER_TO_MODEL_CLASS = {
 MODEL_CLASS_TO_MODEL_PROVIDER: Dict[str, ModelProvider] = {
     "OpenAI": "openai",
     "OpenAIFreeTrial": "openai-free-trial",
+    "OpenAIAgent": "openai-agent",
     "AnthropicLLM": "anthropic",
     "TogetherLLM": "together",
     "Ollama": "ollama",
@@ -157,6 +160,7 @@ MODELS = [
     "gpt-3.5-turbo-16k",
     "gpt-4",
     "gpt-3.5-turbo-0613",
+    "gpt-3.5-turbo-1106",
     "gpt-4-32k",
     "gpt-4-1106-preview",
     # Open-Source
@@ -187,6 +191,7 @@ ModelName = Literal[
     "gpt-3.5-turbo-16k",
     "gpt-4",
     "gpt-3.5-turbo-0613",
+    "gpt-3.5-turbo-1106",
     "gpt-4-32k",
     "gpt-4-1106-preview",
     # Open-Source

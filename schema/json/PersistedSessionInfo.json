@@ -170,6 +170,10 @@
           "items": {
             "$ref": "#/definitions/ContextItem"
           }
+        },
+        "session_id": {
+          "title": "Session Id",
+          "type": "string"
         }
       },
       "required": [

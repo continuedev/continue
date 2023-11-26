@@ -17,9 +17,9 @@ CHAT_MODELS = {
     "gpt-3.5-turbo-16k",
     "gpt-4",
     "gpt-3.5-turbo-0613",
+    "gpt-3.5-turbo-1106",
     "gpt-4-32k",
-    "gpt_4_1106_preview",,
-    "gpt_3_5_turbo_1106"
+    "gpt-4-1106-preview",
 }
 NON_CHAT_MODELS = {
     "gpt-3.5-turbo-instruct",
@@ -119,7 +119,7 @@ class OpenAI(LLM):
         openai.ca_bundle_path = self.request_options.ca_bundle_path or certifi.where()
 
         session = self.create_client_session()
-        openai.aiosession.set(session)
+        #openai.aiosession.set(session)
 
     def collect_args(self, options):
         args = super().collect_args(options)

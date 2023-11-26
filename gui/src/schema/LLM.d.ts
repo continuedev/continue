@@ -27,7 +27,7 @@ export type SystemMessage = string;
  */
 export type ContextLength = number;
 /**
- * Tokens that will stop the completion.
+ * Options for the completion endpoint. Read more about the completion options in the documentation.
  */
 export type CompletionOptions = BaseCompletionOptions;
 /**
