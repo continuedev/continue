@@ -22,7 +22,7 @@ Set `temperature` to any value between 0 and 1. Higher values will make the LLM 
 
 Policies can be used to deeply change the behavior of Continue, or to build agents that take longer sequences of actions on their own. The [`DefaultPolicy`](https://github.com/continuedev/continue/blob/main/server/continuedev/plugins/policies/default.py) handles the parsing of slash commands, and otherwise always chooses the `SimpleChatStep`, but you could customize by for example always taking a "review" step after editing code. To do so, create a new `Policy` subclass that implements the `next` method:
 
-```python
+```python title="~/.continue/config.py"
 class ReviewEditsPolicy(Policy):
 
     default_step: Step = SimpleChatStep()
@@ -50,9 +50,9 @@ class ReviewEditsPolicy(Policy):
 
 Then, in `~/.continue/config.py`, override the default policy:
 
-```python
-config=ContinueConfig(
-    ...
-    policy_override=ReviewEditsPolicy()
-)
+```python title="~/.continue/config.py"
+
+def modify_config(config: ContinueConfig) -> ContinueConfig:
+    config.policy_override = ReviewEditsPolicy()
+    return config
 ```

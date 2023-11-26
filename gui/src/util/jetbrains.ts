@@ -1,5 +1,7 @@
 import { isMetaEquivalentKeyPressed } from ".";
 
+// JetBrains IDEs cause odd behavior by overriding certain keybindings, so we simulate the expected behavior here.
+
 export const handleKeyDownJetBrainsMac = (e, text: string, setText) => {
   const isCmdOrCtrlPressed = isMetaEquivalentKeyPressed(e);
 

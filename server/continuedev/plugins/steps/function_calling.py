@@ -1,9 +1,6 @@
-import html
 import json
 import os
-from textwrap import dedent
-from typing import Any, Coroutine, List, Optional
-from ...libs.llm.base import CompletionOptions
+from typing import List
 
 import openai
 from directory_tree import display_tree
@@ -14,10 +11,6 @@ from ...core.main import ChatMessage, FunctionCall, Models, Step, step_to_json_s
 from ...core.sdk import ContinueSDK
 from ...core.steps import MessageStep
 from ...libs.llm.openai import OpenAI
-from ...libs.llm.openai_free_trial import OpenAIFreeTrial
-from ...libs.util.devdata import dev_data_logger
-from ...libs.util.strings import remove_quotes_and_escapes
-from ...libs.util.telemetry import posthog_logger
 from .main import EditHighlightedCodeStep
 
 load_dotenv()
@@ -39,9 +32,7 @@ class AddFileStep(Step):
     filename: str
     file_contents: str
 
-    async def describe(
-        self, models: Models
-    ) -> Coroutine[Any, Any, Coroutine[str, None, None]]:
+    async def describe(self, models: Models) -> str:
         return f"Added a file named `{self.filename}` to the workspace."
 
     async def run(self, sdk: ContinueSDK):
@@ -57,9 +48,7 @@ class DeleteFileStep(Step):
     description = "Delete a file from the workspace."
     filename: str
 
-    async def describe(
-        self, models: Models
-    ) -> Coroutine[Any, Any, Coroutine[str, None, None]]:
+    async def describe(self, models: Models) -> str:
         return f"Deleted a file named `{self.filename}` from the workspace."
 
     async def run(self, sdk: ContinueSDK):
@@ -71,9 +60,7 @@ class AddDirectoryStep(Step):
     description = "Add a directory to the workspace."
     directory_name: str
 
-    async def describe(
-        self, models: Models
-    ) -> Coroutine[Any, Any, Coroutine[str, None, None]]:
+    async def describe(self, models: Models) -> str:
         return f"Added a directory named `{self.directory_name}` to the workspace."
 
     async def run(self, sdk: ContinueSDK):
@@ -96,9 +83,7 @@ class ViewDirectoryTreeStep(Step):
     name: str = "View Directory Tree"
     description: str = "View the directory tree to learn which folder and files exist. You should always do this before adding new files."
 
-    async def describe(
-        self, models: Models
-    ) -> Coroutine[Any, Any, Coroutine[str, None, None]]:
+    async def describe(self, models: Models) -> str:
         return "Viewed the directory tree."
 
     async def run(self, sdk: ContinueSDK):
@@ -135,8 +120,6 @@ class ChatWithFunctions(Step):
     hide: bool = True
 
     async def run(self, sdk: ContinueSDK):
-        await sdk.update_ui()
-
         step_name_step_class_map = {
             step.name.replace(" ", ""): step.__class__ for step in self.functions
         }
@@ -157,32 +140,29 @@ class ChatWithFunctions(Step):
             msg_step = None
 
             gpt350613 = OpenAI(model="gpt-3.5-turbo-0613")
-            await sdk.start_model(gpt350613)
 
             async for msg_chunk in gpt350613.stream_chat(
                 await sdk.get_chat_context(), functions=functions
             ):
-                if "content" in msg_chunk and msg_chunk["content"] is not None:
-                    msg_content += msg_chunk["content"]
+                if msg_chunk.content != "":
+                    msg_content += msg_chunk.content
                     # if last_function_called_index_in_history is not None:
                     #     while sdk.history.timeline[last_function_called_index].step.hide:
                     #         last_function_called_index += 1
                     #     sdk.history.timeline[last_function_called_index_in_history].step.description = msg_content
                     if msg_step is None:
-                        msg_step = MessageStep(
-                            name="Chat", message=msg_chunk["content"]
-                        )
+                        msg_step = MessageStep(name="Chat", message=msg_chunk.content)
                         await sdk.run_step(msg_step)
                     else:
                         msg_step.description = msg_content
-                    await sdk.update_ui()
-                elif "function_call" in msg_chunk or func_name != "":
+
+                elif msg_chunk.function_call or func_name != "":
                     was_function_called = True
-                    if "function_call" in msg_chunk:
-                        if "arguments" in msg_chunk["function_call"]:
-                            func_args += msg_chunk["function_call"]["arguments"]
-                        if "name" in msg_chunk["function_call"]:
-                            func_name += msg_chunk["function_call"]["name"]
+                    if msg_chunk.function_call:
+                        if msg_chunk.function_call.arguments:
+                            func_args += msg_chunk.function_call.arguments
+                        if msg_chunk.function_call.name:
+                            func_name += msg_chunk.function_call.name
 
             if not was_function_called:
                 self.chat_context.append(
@@ -221,12 +201,12 @@ class ChatWithFunctions(Step):
                 self.chat_context.append(
                     ChatMessage(
                         role="assistant",
-                        content=None,
+                        content="",
                         function_call=FunctionCall(name=func_name, arguments=func_args),
                         summary=f"Called function {func_name}",
                     )
                 )
-                sdk.history.current_index + 1
+
                 if func_name not in step_name_step_class_map:
                     raise Exception(
                         f"The model tried to call a function ({func_name}) that does not exist. Please try again."
@@ -258,4 +238,3 @@ class ChatWithFunctions(Step):
                 last_function_called_params = fn_call_params
 
                 await sdk.run_step(step_to_run)
-                await sdk.update_ui()

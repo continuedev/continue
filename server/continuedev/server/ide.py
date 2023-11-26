@@ -1,17 +1,17 @@
 # This is a separate server from server/main.py
 import json
-import traceback
-
-from .protocols.ide import WindowInfo
-from ..models.websockets import WebsocketsMessage
-from .window_manager import window_manager
-import nest_asyncio
-from fastapi import APIRouter
-from pydantic import ValidationError
 from urllib.parse import parse_qs
 
-from ..libs.util.logging import logger
+import nest_asyncio
 import socketio
+from fastapi import APIRouter
+from pydantic import ValidationError
+
+from ..libs.util.errors import format_exc
+from ..libs.util.logging import logger
+from ..models.websockets import WebsocketsMessage
+from .protocols.ide import WindowInfo
+from .window_manager import window_manager
 
 nest_asyncio.apply()
 
@@ -47,7 +47,7 @@ async def message(sid, data):
         logger.critical(f"Error decoding json: {data}")
         return
     except ValidationError as e:
-        tb = "\n".join(traceback.format_exception(e, e, e.__traceback__))
+        tb = format_exc(e)
         logger.critical(f"Error validating json: {tb}")
         return
 
@@ -57,6 +57,6 @@ async def message(sid, data):
         else:
             logger.critical(f"IDE not found for sid {sid}")
     except Exception as e:
-        tb = "\n".join(traceback.format_exception(e, e, e.__traceback__))
+        tb = format_exc(e)
         logger.critical(f"Error handling message: {tb}")
         raise e

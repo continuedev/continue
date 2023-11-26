@@ -1,6 +1,6 @@
 import os
 from abc import abstractmethod
-from typing import Dict, List, Tuple
+from typing import Dict, Generator, List, Tuple
 
 from pydantic import BaseModel
 
@@ -142,17 +142,12 @@ class FileSystem(AbstractModel):
         raise NotImplementedError
 
     @abstractmethod
-    def apply_edit(self, edit: FileSystemEdit) -> EditDiff:
-        """Apply edit to filesystem, calculate the reverse edit, and return and EditDiff"""
-        raise NotImplementedError
-
-    @abstractmethod
     def list_directory_contents(self, path: str, recursive: bool = False) -> List[str]:
         """List the contents of a directory"""
         raise NotImplementedError
 
     @classmethod
-    def read_range_in_str(self, s: str, r: Range) -> str:
+    def read_range_in_str(cls, s: str, r: Range) -> str:
         lines = s.split("\n")[r.start.line : r.end.line + 1]
         if len(lines) == 0:
             return ""
@@ -391,7 +386,9 @@ class VirtualFileSystem(FileSystem):
         self.write(edit.filepath, new_content)
         return EditDiff(edit=edit, original=original)
 
-    def list_directory_contents(self, path: str, recursive: bool = False) -> List[str]:
+    def list_directory_contents(
+        self, path: str, recursive: bool = False
+    ) -> Generator[str, None, None]:
         """List the contents of a directory"""
         if recursive:
             for filepath in self.files:

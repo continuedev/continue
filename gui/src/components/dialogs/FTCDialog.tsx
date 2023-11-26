@@ -55,10 +55,11 @@ function FTCDialog() {
         <Button
           disabled={!apiKey}
           onClick={() => {
-            client?.addModelForRole("*", "OpenAI", {
+            client?.addModelForRole("*", {
               model: "gpt-4",
               api_key: apiKey,
               title: "GPT-4",
+              provider: "openai",
             });
             dispatch(setShowDialog(false));
           }}

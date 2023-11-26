@@ -9,20 +9,17 @@ from .base import LLM
 
 class GooglePaLMAPI(LLM):
     """
-    The Google PaLM API is currently in public preview, so production applications are not supported yet. However, you can [create an API key in Google MakerSuite](https://makersuite.google.com/u/2/app/apikey) and begin trying out the `chat-bison-001` model. Change `~/.continue/config.py` to look like this:
+    The Google PaLM API is currently in public preview, so production applications are not supported yet. However, you can [create an API key in Google MakerSuite](https://makersuite.google.com/u/2/app/apikey) and begin trying out the `chat-bison-001` model. Change `~/.continue/config.json` to look like this:
 
-    ```python title="~/.continue/config.py"
-    from continuedev.core.models import Models
-    from continuedev.libs.llm.hf_inference_api import GooglePaLMAPI
-
-    config = ContinueConfig(
-        ...
-        models=Models(
-            default=GooglePaLMAPI(
-                model="chat-bison-001"
-                api_key="<MAKERSUITE_API_KEY>",
-        )
-    )
+    ```json title="~/.continue/config.json"
+    {
+        "models": [{
+            "title": "Chat Bison",
+            "provider": "google-palm",
+            "model": "chat-bison-001",
+            "api_key": "YOUR_API_KEY"
+        }]
+    }
     ```
     """
 
@@ -39,12 +36,11 @@ class GooglePaLMAPI(LLM):
     async def _stream_chat(self, messages: List[ChatMessage], options):
         msg_lst = []
         for message in messages:
-            msg_lst.append({"content": message["content"]})
+            msg_lst.append({"content": message.content})
 
         api_url = f"https://generativelanguage.googleapis.com/v1beta2/models/{self.model}:generateMessage?key={self.api_key}"
         body = {"prompt": {"messages": msg_lst}}
         response = requests.post(api_url, json=body)
-        yield {
-            "content": response.json()["candidates"][0]["content"],
-            "role": "assistant",
-        }
+        yield ChatMessage(
+            role="assistant", content=response.json()["candidates"][0]["content"]
+        )

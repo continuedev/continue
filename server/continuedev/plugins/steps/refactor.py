@@ -3,7 +3,7 @@ from typing import List, Optional
 
 from ripgrepy import Ripgrepy
 
-from ...core.main import SetStep, Step
+from ...core.main import Step
 from ...core.models import Models
 from ...core.sdk import ContinueSDK
 from ...libs.llm.prompts.edit import codellama_edit_prompt

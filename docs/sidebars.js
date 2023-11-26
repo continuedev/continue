@@ -42,6 +42,7 @@ const sidebars = {
         "walkthroughs/running-continue-without-internet",
         "walkthroughs/headless-mode",
         "walkthroughs/codebase-embeddings",
+        "walkthroughs/config-file-migration",
       ],
     },
     "development-data",

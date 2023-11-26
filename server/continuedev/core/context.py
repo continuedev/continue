@@ -3,25 +3,24 @@ import time
 from abc import abstractmethod
 from typing import Any, Awaitable, Callable, List, Optional
 
-from ..libs.util.paths import migration
-from ..server.protocols.ide_protocol import AbstractIdeProtocolServer
-
 from meilisearch_python_async import Client
 from pydantic import BaseModel, Field
 
 from ..libs.util.create_async_task import create_async_task
 from ..libs.util.devdata import dev_data_logger
 from ..libs.util.logging import logger
+from ..libs.util.paths import migrate
 from ..libs.util.telemetry import posthog_logger
 from ..server.global_config import global_config
 from ..server.meilisearch_server import (
     check_meilisearch_running,
     get_meilisearch_url,
     poll_meilisearch_running,
+    remove_meilisearch_disallowed_chars,
     restart_meilisearch,
     start_meilisearch,
-    remove_meilisearch_disallowed_chars,
 )
+from ..server.protocols.ide_protocol import AbstractIdeProtocolServer
 from .main import (
     ChatMessage,
     ContextItem,
@@ -139,7 +138,7 @@ class ContextProvider(BaseModel):
             summary=item.description.description,
         )
 
-    async def get_item(self, id: ContextItemId, query: str) -> ContextItem:
+    async def get_item(self, id: ContextItemId, query: str) -> Optional[ContextItem]:
         """
         Returns the ContextItem with the given id.
 
@@ -286,7 +285,9 @@ class ContextManager:
             logger.info(f"Loaded Meilisearch index in {time.time() - ti:.3f} seconds")
 
         providers_to_load = (
-            new_context_providers if only_reloading else context_providers
+            list(new_context_providers.values())
+            if only_reloading
+            else context_providers
         )
 
         if not disable_indexing:
@@ -352,8 +353,13 @@ class ContextManager:
 
                 # Check if need to migrate to new id format
                 # If so, delete the index before recreating
-                async with migration("meilisearch_context_items_001"):
+                async def migrate_fn():
                     await search_client.delete_index_if_exists(SEARCH_INDEX_NAME)
+
+                await migrate(
+                    "meilisearch_context_items_001",
+                    migrate_fn,
+                )
 
                 await search_client.create_index(SEARCH_INDEX_NAME)
                 globalSearchIndex = await search_client.get_index(SEARCH_INDEX_NAME)
@@ -387,9 +393,8 @@ class ContextManager:
                     return len(documents)
 
                 async def safe_load(provider: ContextProvider):
-                    ti = time.time()
                     try:
-                        num_documents = await asyncio.wait_for(
+                        await asyncio.wait_for(
                             load_context_provider(provider), timeout=20
                         )
                     except asyncio.TimeoutError:
@@ -403,7 +408,6 @@ class ContextManager:
                         )
                         return
 
-                    tf = time.time()
                     # logger.info(
                     #     f"Loaded {num_documents} documents into meilisearch in {tf - ti} seconds for context provider {provider.title}"
                     # )
@@ -430,46 +434,48 @@ class ContextManager:
                     )
                 await self.load_index(workspace_dir, False)
 
-    async def get_context_item(self, id: str, query: str) -> ContextItem:
+    async def get_context_item(self, id: str, query: str) -> Optional[ContextItem]:
         """
         Returns the ContextItem with the given id.
         """
-        id: ContextItemId = ContextItemId.from_string(id)
-        if id.provider_title not in self.provider_titles:
+        item_id: ContextItemId = ContextItemId.from_string(id)
+        if item_id.provider_title not in self.provider_titles:
             raise ValueError(
-                f"Context provider with title {id.provider_title} not found"
+                f"Context provider with title {item_id.provider_title} not found"
             )
 
         posthog_logger.capture_event(
             "select_context_item",
             {
-                "provider_title": id.provider_title,
-                "item_id": id.item_id,
+                "provider_title": item_id.provider_title,
+                "item_id": item_id.item_id,
                 "query": query,
             },
         )
         dev_data_logger.capture(
             "select_context_item",
             {
-                "provider_title": id.provider_title,
-                "item_id": id.item_id,
+                "provider_title": item_id.provider_title,
+                "item_id": item_id.item_id,
                 "query": query,
             },
         )
 
-        return await self.context_providers[id.provider_title].get_item(id, query)
+        return await self.context_providers[item_id.provider_title].get_item(
+            item_id, query
+        )
 
     async def preview_context_item(self, id: str):
         """
         Opens a virtual file or otherwise previews the contents of the context provider in the IDE.
         """
-        id: ContextItemId = ContextItemId.from_string(id)
-        if id.provider_title not in self.provider_titles:
+        item_id: ContextItemId = ContextItemId.from_string(id)
+        if item_id.provider_title not in self.provider_titles:
             raise ValueError(
-                f"Context provider with title {id.provider_title} not found"
+                f"Context provider with title {item_id.provider_title} not found"
             )
 
-        await self.context_providers[id.provider_title].preview_contents(id)
+        await self.context_providers[item_id.provider_title].preview_contents(item_id)
 
 
 """

@@ -1,5 +1,5 @@
 import { Dispatch } from "@reduxjs/toolkit";
-import ContinueGUIClientProtocol from "./ContinueGUIClientProtocol";
+import ContinueGUIClientProtocol from "../client/ContinueGUIClientProtocol";
 import { useCallback, useEffect, useState } from "react";
 import {
   addContextItem,
@@ -9,7 +9,7 @@ import {
   setTitle,
 } from "../redux/slices/sessionStateReducer";
 import { setServerStatusMessage } from "../redux/slices/miscSlice";
-import { postToIde } from "../vscode";
+import { postToIde } from "../util/ide";
 import { useSelector } from "react-redux";
 import { RootStore } from "../redux/store";
 import {

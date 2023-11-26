@@ -275,6 +275,12 @@
           }
         ]
       }
+    ],
+    "jsonValidation": [
+      {
+        "fileMatch": "config.json",
+        "url": "./config_schema.json"
+      }
     ]
   },
   "scripts": {

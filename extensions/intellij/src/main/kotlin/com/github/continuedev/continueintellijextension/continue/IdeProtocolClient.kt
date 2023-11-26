@@ -555,7 +555,8 @@ class IdeProtocolClient (
 
         JBPopupFactory.getInstance()
             .createHtmlTextBalloonBuilder(msg, MessageType.INFO, null)
-            .setFadeoutTime(5000)
+            .setFadeoutTime(10000)
+            .setHideOnAction(false)
             .createBalloon()
             .show(
                 RelativePoint.getSouthEastOf(statusBar.component),

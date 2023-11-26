@@ -14,7 +14,7 @@ import {
 } from "../components";
 import styled from "styled-components";
 import { ArrowLeftIcon } from "@heroicons/react/24/outline";
-import Loader from "../components/Loader";
+import Loader from "../components/loaders/Loader";
 import InfoHover from "../components/InfoHover";
 import { FormProvider, useForm } from "react-hook-form";
 import { getFontSize } from "../util";
@@ -92,8 +92,10 @@ function Settings() {
   const submitChanges = () => {
     if (!client) return;
 
-    const systemMessage = formMethods.watch("system_message");
-    const temperature = formMethods.watch("temperature");
+    const systemMessage = formMethods.watch("system_message") as
+      | string
+      | undefined;
+    const temperature = formMethods.watch("temperature") as number | undefined;
     // const models = formMethods.watch("models");
 
     client.setSystemMessage(systemMessage || "");
@@ -117,7 +119,7 @@ function Settings() {
     if (!config) return;
 
     formMethods.setValue("system_message", config.system_message);
-    formMethods.setValue("temperature", config.temperature);
+    formMethods.setValue("temperature", config.completion_options?.temperature);
   }, [config]);
 
   return (
@@ -176,8 +178,8 @@ function Settings() {
               </div>
               <div className="text-center" style={{ marginTop: "-25px" }}>
                 <p className="text-sm text-gray-500">
-                  {formMethods.watch("temperature") ||
-                    config.temperature ||
+                  {(formMethods.watch("temperature") as number | undefined) ||
+                    config.completion_options?.temperature ||
                     "-"}
                 </p>
               </div>

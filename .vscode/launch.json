@@ -52,6 +52,14 @@
       "justMyCode": true
     },
     {
+      "name": "Schema",
+      "type": "python",
+      "request": "launch",
+      "module": "continuedev.models.generate_json_schema",
+      "justMyCode": true,
+      "cwd": "${workspaceFolder}/server"
+    },
+    {
       "name": "Server",
       "type": "python",
       "request": "launch",

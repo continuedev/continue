@@ -1,36 +1,34 @@
-import traceback
+import os
 from typing import Dict, Optional
 
-from ..libs.util.create_async_task import create_async_task
+from socketio import AsyncServer
 
-from ..libs.index.build_index import build_index
-
-from ..plugins.steps.on_traceback import DefaultOnTracebackStep
-
-from ..core.context import ContextManager
-
-from ..plugins.context_providers.highlighted_code import HighlightedCodeContextProvider
-
-from ..plugins.context_providers.file import FileContextProvider
-
-from ..core.main import SessionState
 from ..core.autopilot import Autopilot
-from ..libs.util.paths import getConfigFilePath, getDiffsFolderPath
-from ..core.config import ContinueConfig
-from .protocols.ide import IdeProtocolServer, WindowInfo
-from .protocols.gui import GUIProtocolServer
-from ..libs.util.logging import logger
-from ..libs.util.telemetry import posthog_logger
+from ..core.config import ContinueConfig, SerializedContinueConfig
+from ..core.context import ContextManager
+from ..core.main import SessionState
+from ..libs.constants.default_config import default_config_json
+from ..libs.index.build_index import build_index
+from ..libs.util.create_async_task import create_async_task
 from ..libs.util.devdata import dev_data_logger
+from ..libs.util.errors import format_exc
+from ..libs.util.logging import logger
+from ..libs.util.paths import getConfigFilePath, getDiffsFolderPath, migrate
+from ..libs.util.telemetry import posthog_logger
+from ..plugins.context_providers.file import FileContextProvider
+from ..plugins.context_providers.highlighted_code import HighlightedCodeContextProvider
+from ..plugins.steps.on_traceback import DefaultOnTracebackStep
+from .protocols.gui import GUIProtocolServer
+from .protocols.ide import IdeProtocolServer, WindowInfo
 
 
 class Window:
     ide: Optional[IdeProtocolServer] = None
     gui: Optional[GUIProtocolServer] = None
-    config: Optional[ContinueConfig] = None
+    config: ContinueConfig
     context_manager: ContextManager = ContextManager()
 
-    _error_loading_config: Optional[Exception] = None
+    _error_loading_config: Optional[str] = None
     _last_valid_config: Optional[ContinueConfig] = None
 
     def load_config(self) -> ContinueConfig:
@@ -40,9 +38,7 @@ class Window:
         try:
             return ContinueConfig.load_default()
         except Exception as e:
-            self._error_loading_config = "\n".join(
-                traceback.format_exception(e, e, e.__traceback__)
-            )
+            self._error_loading_config = format_exc(e)
             logger.error(f"Failed to load config.py: {self._error_loading_config}")
 
             return (
@@ -54,7 +50,10 @@ class Window:
     def __init__(self, config: Optional[ContinueConfig] = None) -> None:
         self.config = config or self.load_config() or ContinueConfig()
 
-    def get_autopilot(self, session_state: SessionState) -> Autopilot:
+    def get_autopilot(self, session_state: SessionState) -> Optional[Autopilot]:
+        if self.ide is None or self.gui is None or self.config is None:
+            return None
+
         return Autopilot(
             session_state=session_state,
             ide=self.ide,
@@ -63,7 +62,7 @@ class Window:
             context_manager=self.context_manager,
         )
 
-    def get_config(self) -> ContinueConfig:
+    def get_config(self) -> Optional[ContinueConfig]:
         return self.config
 
     def is_closed(self) -> bool:
@@ -75,20 +74,42 @@ class Window:
             await self.config.models.start(
                 self.ide.window_info.unique_id,
                 self.config.system_message,
-                self.config.temperature,
+                self.config.completion_options.temperature,
             )
 
     async def display_config_error(self):
         if self._error_loading_config is not None:
-            await self.ide.setFileOpen(getConfigFilePath())
-            await self.ide.showMessage(
-                f"""We found an error while loading your config.py. For now, Continue is falling back to the default configuration. If you need help solving this error, please reach out to us on Discord by clicking the question mark button in the bottom right.\n\n{self._error_loading_config}"""
-            )
-            self._error_loading_config = None
+            if not os.path.exists(getConfigFilePath(json=True)):
+                with open(getConfigFilePath(json=True), "w") as f:
+                    f.write(default_config_json)
+
+            if self.ide is not None:
+                await self.ide.setFileOpen(getConfigFilePath(json=True))
+                await self.ide.showMessage(
+                    f"""We found an error while loading your config.py. For now, Continue is falling back to the default configuration. If you need help solving this error, please reach out to us on Discord by clicking the question mark button in the bottom right.\n\n{self._error_loading_config}"""
+                )
+
+                self._error_loading_config = None
+
+    async def on_error(self, e: Exception):
+        if self.ide is not None:
+            await self.ide.on_error(e)
 
     async def load(
         self, config: Optional[ContinueConfig] = None, only_reloading: bool = False
     ):
+        if self.ide is None:
+            return
+
+        async def migrate_fn():
+            if self.ide is not None:
+                await self.ide.setFileOpen(getConfigFilePath(json=True))
+
+        await migrate(
+            "config_json_001",
+            migrate_fn,
+        )
+
         # Need a non-step way of sending a notification to the GUI. Fine to be displayed similarly
 
         # formatted_err = "\n".join(traceback.format_exception(e, e, e.__traceback__))
@@ -102,20 +123,24 @@ class Window:
 
         await self.display_config_error()
 
-        if not self.config.disable_indexing:
-
-            async def index():
+        async def index():
+            if (
+                self.ide is not None
+                and self.gui is not None
+                and self.config is not None
+                and not self.config.disable_indexing
+            ):
                 async for progress in build_index(self.ide, self.config):
                     if self.gui is not None:
                         await self.gui.send_indexing_progress(progress)
 
-            create_async_task(index(), on_error=self.ide.on_error)
+        create_async_task(index(), on_error=self.on_error)
 
         # Start models
         await self.config.models.start(
             self.ide.window_info.unique_id,
             self.config.system_message,
-            self.config.temperature,
+            self.config.completion_options.temperature,
         )
 
         # When the config is loaded, setup posthog logger
@@ -139,8 +164,11 @@ class Window:
         )
 
         async def onFileSavedCallback(filepath: str, contents: str):
-            if filepath.endswith(".continue/config.py") or filepath.endswith(
-                ".continue\\config.py"
+            if (
+                filepath.endswith(".continue/config.py")
+                or filepath.endswith(".continue\\config.py")
+                or filepath.endswith(".continue/config.json")
+                or filepath.endswith(".continue\\config.json")
             ):
                 await self.reload_config()
                 if self.gui is not None:
@@ -163,7 +191,7 @@ class Window:
 
         def onTelemetryChangeCallback(enabled: bool):
             self.config.allow_anonymous_telemetry = enabled
-            ContinueConfig.set_telemetry_enabled(enabled)
+            SerializedContinueConfig.set_telemetry_enabled(enabled)
 
         self.ide.subscribeToTelemetryEnabled(onTelemetryChangeCallback)
 
@@ -211,7 +239,7 @@ class WindowManager:
     def get_ide(self, sid: str) -> Optional[IdeProtocolServer]:
         return self.ides.get(sid)
 
-    async def register_ide(self, window_info: WindowInfo, sio: str, sid: str):
+    async def register_ide(self, window_info: WindowInfo, sio: AsyncServer, sid: str):
         if window_info.window_id not in self.windows:
             self.windows[window_info.window_id] = Window()
 
@@ -240,6 +268,11 @@ class WindowManager:
         if window_id not in self.windows:
             self.windows[window_id] = Window()
 
+        async def open_config():
+            ide = self.windows[window_id].ide
+            if ide is not None:
+                await ide.setFileOpen(getConfigFilePath(json=True))
+
         gui = GUIProtocolServer(
             window_id=window_id,
             sio=sio,
@@ -248,6 +281,7 @@ class WindowManager:
             get_context_item=self.windows[window_id].context_manager.get_context_item,
             get_config=self.windows[window_id].get_config,
             reload_config=self.windows[window_id].reload_config,
+            open_config=open_config,
         )
         self.windows[window_id].gui = gui
         self.guis[sid] = gui

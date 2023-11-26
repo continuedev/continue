@@ -1,4 +1,4 @@
-from typing import Any, Callable, Coroutine
+from typing import Any, Callable, Coroutine, Optional
 
 from anthropic import AI_PROMPT, HUMAN_PROMPT, AsyncAnthropic
 
@@ -8,29 +8,27 @@ from .prompts.chat import anthropic_template_messages
 
 class AnthropicLLM(LLM):
     """
-    Import the `AnthropicLLM` class and set it as the default model:
+    To setup Anthropic, add the following to your `config.json` file:
 
-    ```python title="~/.continue/config.py"
-    from continuedev.libs.llm.anthropic import AnthropicLLM
-
-    config = ContinueConfig(
-        ...
-        models=Models(
-            default=AnthropicLLM(api_key="<API_KEY>", model="claude-2")
-        )
-    )
+    ```json title="~/.continue/config.json"
+    {
+        "models": [{
+            "title": "Anthropic",
+            "provider": "anthropic",
+            "model": "claude-2",
+            "api_key": "YOUR_API_KEY"
+        }]
+    }
     ```
 
     Claude 2 is not yet publicly released. You can request early access [here](https://www.anthropic.com/earlyaccess).
 
     """
 
-    api_key: str
+    api_key: Optional[str]
     "Anthropic API key"
 
     model: str = "claude-2"
-
-    _async_client: AsyncAnthropic = None
 
     template_messages: Callable = anthropic_template_messages
 
@@ -39,7 +37,6 @@ class AnthropicLLM(LLM):
 
     async def start(self, *args, **kwargs):
         await super().start(*args, **kwargs)
-        self._async_client = AsyncAnthropic(api_key=self.api_key)
 
         if self.model == "claude-2":
             self.context_length = 100_000
@@ -61,14 +58,16 @@ class AnthropicLLM(LLM):
         args = self.collect_args(options)
         prompt = f"{HUMAN_PROMPT} {prompt} {AI_PROMPT}"
 
-        async for chunk in await self._async_client.completions.create(
-            prompt=prompt, stream=True, **args
-        ):
+        async for chunk in await AsyncAnthropic(
+            api_key=self.api_key
+        ).completions.create(prompt=prompt, stream=True, **args):
             yield chunk.completion
 
     async def _complete(self, prompt: str, options) -> Coroutine[Any, Any, str]:
         args = self.collect_args(options)
         prompt = f"{HUMAN_PROMPT} {prompt} {AI_PROMPT}"
         return (
-            await self._async_client.completions.create(prompt=prompt, **args)
+            await AsyncAnthropic(api_key=self.api_key).completions.create(
+                prompt=prompt, **args
+            )
         ).completion

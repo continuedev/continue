@@ -3,11 +3,10 @@ from typing import List, Optional
 
 from continuedev.plugins.steps.openai_run_func import OpenAIRunFunction
 
-from ...libs.llm.base import CompletionOptions
-
 # absolute import needed so instanceof works
 from continuedev.core.main import ChatMessage, SetStep, Step
 from ...core.sdk import ContinueSDK
+from ...libs.llm.base import CompletionOptions
 from ...libs.util.devdata import dev_data_logger
 from ...libs.util.strings import remove_quotes_and_escapes
 from ...libs.util.telemetry import posthog_logger
@@ -25,7 +24,7 @@ class SimpleChatStep(Step):
     name: str = "Generating Response..."
     manage_own_chat_context: bool = True
     description: str = ""
-    messages: List[ChatMessage] = None
+    messages: Optional[List[ChatMessage]] = None
     prompt: Optional[str] = None
 
     completion_options: Optional[CompletionOptions] = None
@@ -57,11 +56,11 @@ class SimpleChatStep(Step):
 
         yield SetStep(description="")
         async for chunk in generator:
-            if "content" in chunk:
-                yield chunk["content"]
+            if chunk.content != "":
+                yield chunk.content
 
                 # HTML unencode
-                end_size = len(chunk["content"]) - 6
+                end_size = len(chunk.content) - 6
                 if "&" in self.description[-end_size:]:
                     self.description = self.description[:-end_size] + html.unescape(
                         self.description[-end_size:]

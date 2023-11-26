@@ -1,8 +1,8 @@
 import styled from "styled-components";
 import { defaultBorderRadius, secondaryDark, vscForeground } from ".";
 import { Outlet } from "react-router-dom";
-import TextDialog from "./TextDialog";
-import { useCallback, useContext, useEffect } from "react";
+import TextDialog from "./dialogs";
+import { useContext, useEffect } from "react";
 import { GUIClientContext } from "../App";
 import { useDispatch, useSelector } from "react-redux";
 import { RootStore } from "../redux/store";
@@ -18,11 +18,10 @@ import {
 } from "@heroicons/react/24/outline";
 import HeaderButtonWithText from "./HeaderButtonWithText";
 import { useNavigate, useLocation } from "react-router-dom";
-import ModelSelect from "./ModelSelect";
-import ProgressBar from "./ProgressBar";
-import { newSession } from "../redux/slices/sessionStateReducer";
+import ModelSelect from "./modelSelection/ModelSelect";
+import ProgressBar from "./loaders/ProgressBar";
 import { getFontSize } from "../util";
-import IndexingProgressBar from "./IndexingProgressBar";
+import IndexingProgressBar from "./loaders/IndexingProgressBar";
 
 // #region Styled Components
 const FOOTER_HEIGHT = "1.8em";
@@ -132,17 +131,15 @@ const Layout = () => {
 
   // #endregion
 
-  const persistSession = useCallback(() => {
-    client?.persistSession(sessionState, workspacePaths[0] || "");
-  }, [client, sessionState, workspacePaths]);
+  useEffect(() => {
+    if (localStorage.getItem("migrationMessageSeen") !== "true") {
+      localStorage.setItem("migrationMessageSeen", "true");
+      navigate("/migration");
+    }
+  }, []);
 
   useEffect(() => {
     const handleKeyDown = (event: any) => {
-      if (event.metaKey && event.altKey && event.code === "KeyN") {
-        client?.stopSession();
-        persistSession();
-        dispatch(newSession());
-      }
       if ((event.metaKey || event.ctrlKey) && event.code === "KeyC") {
         const selection = window.getSelection()?.toString();
         if (selection) {
@@ -159,7 +156,7 @@ const Layout = () => {
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [client, timeline, persistSession]);
+  }, [client, timeline]);
 
   useEffect(() => {
     const handler = (event: any) => {
