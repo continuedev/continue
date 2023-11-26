@@ -625,7 +625,7 @@ Please output the code to be inserted at the cursor in order to fulfill the user
                 params.update(template.dict(exclude={"prompt"}))  # type: ignore
 
             params.update(
-                {"max_tokens": min(max_tokens, model_to_use.context_length // 2)}
+                {"max_tokens": min(max_tokens, model_to_use.context_length // 2, 4096)}
             )
             generator = model_to_use.stream_complete(**params)
 
