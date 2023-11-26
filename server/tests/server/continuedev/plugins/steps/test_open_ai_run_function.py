@@ -14,6 +14,7 @@ class TestOpenAIRunFunction(TestCase):
             name = "mock_name",
         )
         
+        
     @patch('continuedev.plugins.steps.openai_run_func.get_file_contents', new_callable=AsyncMock)
     @patch('continuedev.plugins.steps.openai_run_func.get_all_filepaths', new_callable=AsyncMock)
     def test_get_project_file(self, get_all_filepaths_mock, get_file_contents_mock):
