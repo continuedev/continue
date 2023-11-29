@@ -78,6 +78,28 @@ cd continue/extensions/vscode/scripts && python3 install_from_source.py
 > brew install openjdk@11
 > ```
 
+## Running in docker
+
+### Using Basic Docker Commands
+
+#### 1. Build the Docker Image:
+
+Open a terminal in the root directory of your project and run the following command to build a Docker image for your application:
+
+
+```bash
+docker build -t continue .
+```
+
+#### 2. Run the Docker Container:
+
+After the image is successfully built, you can run a Docker container from the image using the following command:
+
+```bash
+docker run -d -p 65432:65432 continue
+```
+This command will start a container in detached mode (-d) and map port 65432 on your host to port 65432 inside the container. Adjust the port numbers and container name as needed.
+
 # Understanding the codebase
 
 - [Continue Server README](./README.md): learn about the core of Continue, which can be downloaded as a [PyPI package](https://pypi.org/project/continuedev/)
