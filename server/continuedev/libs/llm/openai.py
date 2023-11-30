@@ -39,14 +39,45 @@ NON_CHAT_MODELS = {
 
 class OpenAI(LLM):
     """
-    The OpenAI class can be used to access OpenAI models like gpt-4 and gpt-3.5-turbo.
+    The OpenAI class can be used to access OpenAI models like GPT-4, GPT-4 Turbo, and GPT-3.5 Turbo.
 
-    If you are locally serving a model that uses an OpenAI-compatible server, you can simply change the `api_base` like this:
+    ### Azure OpenAI Service
+    
+    If you'd like to use OpenAI models but are concerned about privacy, you can use the Azure OpenAI service, which is GDPR and HIPAA compliant. After applying for access [here](https://azure.microsoft.com/en-us/products/ai-services/openai-service), you will typically hear back within only a few days. Once you have access, set up a model in `config.json` like so:
+    
+    ```json
+    "models": [{
+        "title": "Azure OpenAI",
+        "provider": "openai",
+        "model": "gpt-4",
+        "api_base": "https://my-azure-openai-instance.openai.azure.com/",
+        "engine": "my-azure-openai-deployment",
+        "api_version": "2023-07-01-preview",
+        "api_type": "azure",
+        "api_key": "<MY_API_KEY>"
+    }]
+    ```
+
+    The easiest way to find this information is from the chat playground in the Azure OpenAI portal. Under the "Chat Session" section, click "View Code" to see each of these parameters.
+    
+    ### OpenAI compatible servers / APIs
+    
+    OpenAI compatible servers
+    - [text-gen-webui](https://github.com/oobabooga/text-generation-webui/tree/main/extensions/openai#setup--installation)
+    - [FastChat](https://github.com/lm-sys/FastChat/blob/main/docs/openai_api.md)
+    - [LocalAI](https://localai.io/basics/getting_started/)
+    - [llama-cpp-python](https://github.com/abetlen/llama-cpp-python#web-server)
+    
+    OpenAI compatible APIs
+    - [Anyscale Endpoints](https://github.com/continuedev/deploy-os-code-llm#others)
+    - [Anyscale Private Endpoints](https://github.com/continuedev/deploy-os-code-llm#anyscale-private-endpoints)
+    
+    If you are [using an OpenAI compatible server / API](../model-setup/select-provider#local), you can change the `api_base` like this:
 
     ```json title="~/.continue/config.json"
     {
         "models": [{
-            "title": "OpenAI-compatible server",
+            "title": "OpenAI-compatible server / API",
             "provider": "openai",
             "model": "MODEL_NAME",
             "api_key": "EMPTY",
@@ -54,13 +85,6 @@ class OpenAI(LLM):
         }]
     }
     ```
-
-    Options for serving models locally with an OpenAI-compatible server include:
-
-    - [text-gen-webui](https://github.com/oobabooga/text-generation-webui/tree/main/extensions/openai#setup--installation)
-    - [FastChat](https://github.com/lm-sys/FastChat/blob/main/docs/openai_api.md)
-    - [LocalAI](https://localai.io/basics/getting_started/)
-    - [llama-cpp-python](https://github.com/abetlen/llama-cpp-python#web-server)
     """
 
     api_key: str = Field(
