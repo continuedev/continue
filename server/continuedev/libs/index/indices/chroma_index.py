@@ -1,20 +1,25 @@
 import asyncio
+import json
 import os
 import re
-from functools import cached_property
 import sqlite3
-from typing import AsyncGenerator, Dict, List, Literal
+from functools import cached_property
+from typing import Any, AsyncGenerator, Dict, List, Literal, Optional
+
 import chromadb
+
+# from chromadb.api import ClientAPI
 from chromadb.config import Settings
 from chromadb.utils import embedding_functions
-from .base import CodebaseIndex
 from dotenv import load_dotenv
 from openai.error import RateLimitError
 from pydantic import BaseModel
 
-from ..chunkers.chunk import Chunk
 from ...util.logging import logger
-from ...util.paths import getIndexFolderPath
+from ...util.paths import getEmbeddingsPathForBranch, getIndexFolderPath
+from ..chunkers.chunk import Chunk
+from ..git import GitProject
+from .base import CodebaseIndex
 
 load_dotenv()
 
@@ -31,20 +36,23 @@ class CodebaseIndexMetadata(BaseModel):
 
 
 class ChromaCodebaseIndex(CodebaseIndex):
-    client: chromadb.ClientAPI
-    openai_api_key: str = None
-    api_base: str = None
-    api_version: str = None
-    api_type: str = None
-    organization_id: str = None
+    directory: str
+    client: Any
+    openai_api_key: Optional[str] = None
+    api_base: Optional[str] = None
+    api_version: Optional[str] = None
+    api_type: Optional[str] = None
+    organization_id: Optional[str] = None
+    git_project: GitProject
 
     def __init__(
         self,
-        openai_api_key: str = None,
-        api_base: str = None,
-        api_version: str = None,
-        api_type: str = None,
-        organization_id: str = None,
+        directory: str,
+        openai_api_key: Optional[str] = None,
+        api_base: Optional[str] = None,
+        api_version: Optional[str] = None,
+        api_type: Optional[str] = None,
+        organization_id: Optional[str] = None,
     ):
         self.openai_api_key = openai_api_key
         self.api_base = api_base
@@ -110,7 +118,7 @@ class ChromaCodebaseIndex(CodebaseIndex):
         name = re.sub("[^a-z0-9._-]", "a", name)
 
         # Replace consecutive dots with a single dot
-        name = re.sub("\.\.+", ".", name)
+        name = re.sub("\\.\\.+", ".", name)
 
         return name
 
@@ -121,7 +129,7 @@ class ChromaCodebaseIndex(CodebaseIndex):
         if os.path.exists(self.chroma_dir):
             return collection
 
-        kwargs = {
+        kwargs: Dict[str, Any] = {
             "name": self.convert_to_valid_chroma_collection(
                 f"chroma-{self.embeddings_type}"
             ),

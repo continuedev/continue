@@ -8,20 +8,15 @@ keywords: [talk, embeddings, codebase, experimental]
 
 Continue indexes your codebase so that when you input a message using Command+Enter, it can automatically pull in the most relevant context from throughout your workspace. This is done via a combination of embeddings-based retrieval and keyword search. By default, all embeddings are calculated locally with `all-MiniLM-L6-v2` and stored locally in `~/.continue/embeddings`.
 
-The codebase retrieval feature allows the following customization options by editing `config.py` as follows:
+The codebase retrieval feature allows the following customization options by editing `config.json` as follows:
 
-```python
-from continuedev.core.config import RetrievalSettings
-
-...
-
-config = ContinueConfig(
-    ...
-    retrieval_settings=RetrievalSettings(
-        n_retrieve=100,
+```json title="~/.continue/config.json"
+{
+    "retrieval_settings": {
+        "n_retrieve": 100,
         ...
-    )
-)
+    }
+}
 ```
 
 ### `n_retrieve`

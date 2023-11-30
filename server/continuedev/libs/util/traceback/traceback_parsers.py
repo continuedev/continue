@@ -1,3 +1,5 @@
+from typing import Optional
+
 from boltons import tbutils
 
 from ....models.main import Traceback
@@ -5,7 +7,7 @@ from ....models.main import Traceback
 PYTHON_TRACEBACK_PREFIX = "Traceback (most recent call last):"
 
 
-def get_python_traceback(output: str) -> str:
+def get_python_traceback(output: str) -> Optional[str]:
     if PYTHON_TRACEBACK_PREFIX in output:
         tb_string = output.split(PYTHON_TRACEBACK_PREFIX)[-1]
 
@@ -24,7 +26,7 @@ def get_python_traceback(output: str) -> str:
         return None
 
 
-def get_javascript_traceback(output: str) -> str:
+def get_javascript_traceback(output: str) -> Optional[str]:
     lines = output.splitlines()
     first_line = None
     for i in range(len(lines) - 1):

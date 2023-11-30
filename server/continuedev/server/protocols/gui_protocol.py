@@ -1,6 +1,6 @@
-from ...models.websockets import WebsocketsMessage
-from ...core.main import SessionUpdate
 from abc import ABC, abstractmethod
+
+from ...core.main import ContextItem, SessionUpdate
 
 
 class AbstractGUIProtocolServer(ABC):
@@ -11,5 +11,5 @@ class AbstractGUIProtocolServer(ABC):
         ...
 
     @abstractmethod
-    async def handle_json(self, msg: WebsocketsMessage):
-        """Handle a json message"""
+    async def add_context_item(self, item: ContextItem):
+        ...

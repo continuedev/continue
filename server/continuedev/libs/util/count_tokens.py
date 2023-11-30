@@ -1,7 +1,7 @@
 import json
 import os
 import sys
-from typing import Dict, List, Optional, Union
+from typing import List, Optional, Union
 
 from ...core.main import ChatMessage
 from .templating import render_templated_string
@@ -14,7 +14,7 @@ aliases = {
     "ggml": "gpt-3.5-turbo",
     "claude-2": "gpt-3.5-turbo",
 }
-DEFAULT_MAX_TOKENS = 600
+DEFAULT_MAX_TOKENS = 1000
 DEFAULT_ARGS = {
     "max_tokens": DEFAULT_MAX_TOKENS,
     "temperature": 0.5,
@@ -45,7 +45,7 @@ def encoding_for_model(model_name: str):
 
     try:
         if getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"):
-            tiktoken_cache = os.path.join(sys._MEIPASS, "tiktoken_cache")
+            tiktoken_cache = os.path.join(sys._MEIPASS, "tiktoken_cache")  # type: ignore
             if os.path.exists(tiktoken_cache):
                 os.environ["TIKTOKEN_CACHE_DIR"] = tiktoken_cache
 
@@ -206,12 +206,12 @@ def prune_chat_history(
 TOKEN_BUFFER_FOR_SAFETY = 100
 
 
-def flatten_messages(msgs: List[Dict]) -> List[Dict]:
-    # If there are multiple adjacent messages with same "role", combine them
+def flatten_messages(msgs: List[ChatMessage]) -> List[ChatMessage]:
+    """If there are multiple adjacent messages with same "role", combine them"""
     flattened = []
     for msg in msgs:
-        if len(flattened) > 0 and flattened[-1]["role"] == msg["role"]:
-            flattened[-1]["content"] += "\n\n" + msg["content"]
+        if len(flattened) > 0 and flattened[-1].role == msg.role:
+            flattened[-1].content += "\n\n" + (msg.content or "")
         else:
             flattened.append(msg)
 
@@ -226,7 +226,7 @@ def compile_chat_messages(
     prompt: Union[str, None] = None,
     functions: Union[List, None] = None,
     system_message: Union[str, None] = None,
-) -> List[Dict]:
+) -> List[ChatMessage]:
     """
     The total number of tokens is system_message + sum(msgs) + functions + prompt after it is converted to a message
     """
@@ -260,23 +260,21 @@ def compile_chat_messages(
             f"max_tokens ({max_tokens}) is too close to context_length ({context_length}), which doesn't leave room for chat history. This would cause incoherent responses. Try increasing the context_length parameter of the model in your config file."
         )
 
-    msgs_copy = prune_chat_history(
+    history = prune_chat_history(
         model_name,
         msgs_copy,
         context_length,
         function_tokens + max_tokens + TOKEN_BUFFER_FOR_SAFETY,
     )
 
-    history = [msg.to_dict(with_functions=functions is not None) for msg in msgs_copy]
-
     # Move system message back to start
     if (
         system_message is not None
         and len(history) >= 2
-        and history[-2]["role"] == "system"
+        and history[-2].role == "system"
     ):
-        system_message_dict = history.pop(-2)
-        history.insert(0, system_message_dict)
+        moved_system_message = history.pop(-2)
+        history.insert(0, moved_system_message)
 
     history = flatten_messages(history)
 
@@ -286,5 +284,5 @@ def compile_chat_messages(
 def format_chat_messages(messages: List[ChatMessage]) -> str:
     formatted = ""
     for msg in messages:
-        formatted += f"<{msg['role'].capitalize()}>\n{msg['content']}\n\n"
+        formatted += f"<{msg.role.capitalize()}>\n{msg.content or ''}\n\n"
     return formatted

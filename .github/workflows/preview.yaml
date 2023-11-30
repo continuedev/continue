@@ -6,10 +6,16 @@ on:
       - preview
 
 jobs:
-  pypi-deployment:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
+  pytest:
+    strategy:
+      matrix:
+        include:
+          - os: windows-latest
+          - os: ubuntu-latest
+          - os: macos-latest
+
+    runs-on: ${{ matrix.os }}
+
     steps:
       - name: Check out code
         uses: actions/checkout@v2
@@ -27,26 +33,11 @@ jobs:
       - name: Install project dependencies
         run: cd server && poetry install
 
-      - name: Configure Poetry Token
-        run: cd server && poetry config pypi-token.pypi ${{ secrets.PYPI_API_TOKEN }}
-
-      - name: Bump the version
-        run: cd server && poetry version patch
-
-      - name: Build and publish the package
-        run: cd server && poetry publish --build
-
-      - name: Commit changes
-        run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-          git commit -am "ci: 🏷 Update PyPI version [skip ci]"
-
-      - name: Push changes
-        uses: ad-m/github-push-action@master
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          branch: ${{ github.ref }}
+      - name: Run tests
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: cd server && poetry run pytest
 
   build:
     strategy:
@@ -56,10 +47,6 @@ jobs:
             platform: win32
             arch: x64
             npm_config_arch: x64
-          - os: windows-latest
-            platform: win32
-            arch: ia32
-            npm_config_arch: ia32
           - os: windows-latest
             platform: win32
             arch: arm64
@@ -272,7 +259,9 @@ jobs:
 
   publish:
     runs-on: ubuntu-latest
-    needs: build
+    needs:
+      - build
+      - pytest
     permissions:
       contents: write
     steps:
@@ -295,7 +284,7 @@ jobs:
       - name: Publish to VS Code Marketplace
         run: |
           cd extensions/vscode
-          npx vsce publish --pre-release --packagePath ../../alpine-x64/*.vsix ../../darwin-arm64/*.vsix ../../darwin-x64/*.vsix ../../linux-arm64/*.vsix ../../linux-armhf/*.vsix ../../linux-x64/*.vsix ../../win32-ia32/*.vsix ../../win32-x64/*.vsix ../../win32-arm64/*.vsix
+          npx vsce publish --pre-release --packagePath ../../alpine-x64/*.vsix ../../darwin-arm64/*.vsix ../../darwin-x64/*.vsix ../../linux-arm64/*.vsix ../../linux-armhf/*.vsix ../../linux-x64/*.vsix ../../win32-x64/*.vsix ../../win32-arm64/*.vsix
         env:
           VSCE_PAT: ${{ secrets.VSCE_TOKEN }}
 
@@ -303,7 +292,7 @@ jobs:
       - name: Publish (Open VSX Registry)
         run: |
           cd extensions/vscode
-          npx ovsx publish --pre-release -p ${{ secrets.VSX_REGISTRY_TOKEN }} --packagePath ../../alpine-x64/*.vsix ../../darwin-arm64/*.vsix ../../darwin-x64/*.vsix ../../linux-arm64/*.vsix ../../linux-armhf/*.vsix ../../linux-x64/*.vsix ../../win32-ia32/*.vsix ../../win32-x64/*.vsix ../../win32-arm64/*.vsix
+          npx ovsx publish --pre-release -p ${{ secrets.VSX_REGISTRY_TOKEN }} --packagePath ../../alpine-x64/*.vsix ../../darwin-arm64/*.vsix ../../darwin-x64/*.vsix ../../linux-arm64/*.vsix ../../linux-armhf/*.vsix ../../linux-x64/*.vsix ../../win32-x64/*.vsix ../../win32-arm64/*.vsix
 
       # 4. Update the package.json version and push changes
       - name: Update version in package.json
@@ -322,44 +311,3 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           branch: ${{ github.ref }}
-
-      # 5. Download binaries and upload to S3
-      - name: Download Linux build
-        uses: actions/download-artifact@v2
-        with:
-          name: LinuxBinary
-          path: exe/linux
-
-      - name: Download macOS build
-        uses: actions/download-artifact@v2
-        with:
-          name: macOSBinary
-          path: exe/mac
-
-      - name: Download Windows build
-        uses: actions/download-artifact@v2
-        with:
-          name: WindowsBinary
-          path: exe/windows
-
-      - name: Upload binaries to S3 (s3.continue.dev)
-        uses: jakejarvis/s3-sync-action@master
-        with:
-          args: --acl public-read --follow-symlinks
-        env:
-          AWS_S3_BUCKET: s3.continue.dev
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_REGION: "us-west-1"
-          SOURCE_DIR: "exe"
-
-      - name: Upload binaries to S3 (continue-server-binaries)
-        uses: jakejarvis/s3-sync-action@master
-        with:
-          args: --acl public-read --follow-symlinks
-        env:
-          AWS_S3_BUCKET: continue-server-binaries
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_REGION: "us-west-1"
-          SOURCE_DIR: "exe"

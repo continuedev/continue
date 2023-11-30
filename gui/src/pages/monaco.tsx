@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import Editor, { DiffEditor } from "@monaco-editor/react";
-import { postToIde } from "../vscode";
+import { postToIde } from "../util/ide";
 import { v4 } from "uuid";
 import { secondaryDark } from "../components";
 import HeaderButtonWithText from "../components/HeaderButtonWithText";

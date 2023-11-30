@@ -1,6 +1,5 @@
 import threading
-from typing import Any, Dict, List, Union
-from pydantic import BaseModel
+from typing import Any, Dict, List, Optional, Union
 
 import redbaron
 
@@ -98,7 +97,7 @@ def escape_string(string: str) -> str:
     return string.replace('"', '\\"').replace("'", "\\'")
 
 
-def display_val(v: Any, k: str = None):
+def display_val(v: Any, k: Optional[str] = None):
     if k == "template_messages":
         return v
     elif isinstance(v, str):
@@ -128,12 +127,12 @@ def display_llm_class(llm, new: bool = False, overrides: Dict[str, str] = {}):
 def create_obj_node(
     class_name: str, args: Dict[str, str], tabs: int = 1
 ) -> redbaron.RedBaron:
-    args = [f"{key}={value}" for key, value in args.items()]
+    args_list = [f"{key}={value}" for key, value in args.items()]
     t = "\t" * tabs
     new_line = "\n\t" + t
     sep = "," + new_line
 
-    return redbaron.RedBaron(f"{class_name}({new_line}{sep.join(args)}\n{t})")[0]
+    return redbaron.RedBaron(f"{class_name}({new_line}{sep.join(args_list)}\n{t})")[0]
 
 
 def create_string_node(string: str) -> redbaron.RedBaron:

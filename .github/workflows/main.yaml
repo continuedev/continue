@@ -6,6 +6,39 @@ on:
       - main
 
 jobs:
+  pytest:
+    strategy:
+      matrix:
+        include:
+          - os: windows-latest
+          - os: ubuntu-latest
+          - os: macos-latest
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10.8"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install poetry
+
+      - name: Install project dependencies
+        run: cd server && poetry install
+
+      - name: Run tests
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: cd server && poetry run pytest
+
   pypi-deployment:
     runs-on: ubuntu-latest
     permissions:
@@ -58,10 +91,6 @@ jobs:
             npm_config_arch: x64
           - os: windows-latest
             platform: win32
-            arch: ia32
-            npm_config_arch: ia32
-          - os: windows-latest
-            platform: win32
             arch: arm64
             npm_config_arch: arm
           - os: ubuntu-latest
@@ -99,10 +128,9 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Install dependencies
+      - name: Install Pyinstaller
         run: |
-          python -m pip install --upgrade pip
-          pip install poetry
+          pip install pyinstaller
 
       - name: Install Dependencies
         run: |
@@ -243,7 +271,9 @@ jobs:
 
   publish:
     runs-on: ubuntu-latest
-    needs: build
+    needs:
+      - build
+      - pytest
     permissions:
       contents: write
     steps:
@@ -266,7 +296,7 @@ jobs:
       - name: Publish (VS Code Marketplace)
         run: |
           cd extensions/vscode
-          npx vsce publish --packagePath ../../alpine-x64/*.vsix ../../darwin-arm64/*.vsix ../../darwin-x64/*.vsix ../../linux-arm64/*.vsix ../../linux-armhf/*.vsix ../../linux-x64/*.vsix ../../win32-ia32/*.vsix ../../win32-x64/*.vsix ../../win32-arm64/*.vsix
+          npx vsce publish --packagePath ../../alpine-x64/*.vsix ../../darwin-arm64/*.vsix ../../darwin-x64/*.vsix ../../linux-arm64/*.vsix ../../linux-armhf/*.vsix ../../linux-x64/*.vsix ../../win32-x64/*.vsix ../../win32-arm64/*.vsix
         env:
           VSCE_PAT: ${{ secrets.VSCE_TOKEN }}
 
@@ -274,20 +304,20 @@ jobs:
       - name: Publish (Open VSX Registry)
         run: |
           cd extensions/vscode
-          npx ovsx publish -p ${{ secrets.VSX_REGISTRY_TOKEN }} --packagePath ../../alpine-x64/*.vsix ../../darwin-arm64/*.vsix ../../darwin-x64/*.vsix ../../linux-arm64/*.vsix ../../linux-armhf/*.vsix ../../linux-x64/*.vsix ../../win32-ia32/*.vsix ../../win32-x64/*.vsix ../../win32-arm64/*.vsix
+          npx ovsx publish -p ${{ secrets.VSX_REGISTRY_TOKEN }} --packagePath ../../alpine-x64/*.vsix ../../darwin-arm64/*.vsix ../../darwin-x64/*.vsix ../../linux-arm64/*.vsix ../../linux-armhf/*.vsix ../../linux-x64/*.vsix ../../win32-x64/*.vsix ../../win32-arm64/*.vsix
 
       # 3.5 Update the changelog
-      - name: Batch a new patch version
-        uses: miniscruff/changie-action@v2
-        with:
-          version: latest
-          args: batch patch
+      # - name: Batch a new patch version
+      #   uses: miniscruff/changie-action@v2
+      #   with:
+      #     version: latest
+      #     args: batch patch
 
-      - name: Merge changelog
-        uses: miniscruff/changie-action@v2
-        with:
-          version: latest
-          args: merge
+      # - name: Merge changelog
+      #   uses: miniscruff/changie-action@v2
+      #   with:
+      #     version: latest
+      #     args: merge
 
       # 4. Update the package.json version and push changes
       - name: Update version in package.json

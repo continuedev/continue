@@ -7,10 +7,7 @@ import { acceptDiffCommand, rejectDiffCommand } from "./diffs";
 import { debugPanelWebview, getSidebarContent } from "./debugPanel";
 import { ideProtocolClient } from "./activation/activate";
 
-let focusedOnContinueInput = false;
-
 function addHighlightedCodeToContext(edit: boolean) {
-  focusedOnContinueInput = !focusedOnContinueInput;
   const editor = vscode.window.activeTextEditor;
   if (editor) {
     const selection = editor.selection;
@@ -41,7 +38,17 @@ function addHighlightedCodeToContext(edit: boolean) {
 }
 
 async function addEntireFileToContext(filepath: vscode.Uri, edit: boolean) {
-  focusedOnContinueInput = !focusedOnContinueInput;
+  // If a directory, add all files in the directory
+  const stat = await vscode.workspace.fs.stat(filepath);
+  if (stat.type === vscode.FileType.Directory) {
+    const files = await vscode.workspace.fs.readDirectory(filepath);
+    for (const [filename, type] of files) {
+      if (type === vscode.FileType.File) {
+        addEntireFileToContext(vscode.Uri.joinPath(filepath, filename), edit);
+      }
+    }
+    return;
+  }
 
   // Get the contents of the file
   const contents = (await vscode.workspace.fs.readFile(filepath)).toString();
@@ -66,10 +73,6 @@ async function addEntireFileToContext(filepath: vscode.Uri, edit: boolean) {
     edit,
   });
 }
-
-export const setFocusedOnContinueInput = (value: boolean) => {
-  focusedOnContinueInput = value;
-};
 
 // Copy everything over from extension.ts
 const commandsMap: { [command: string]: (...args: any) => any } = {
@@ -98,7 +101,6 @@ const commandsMap: { [command: string]: (...args: any) => any } = {
     debugPanelWebview?.postMessage({
       type: "focusContinueInputWithEdit",
     });
-    focusedOnContinueInput = true;
   },
   "continue.toggleAuxiliaryBar": () => {
     vscode.commands.executeCommand("workbench.action.toggleAuxiliaryBar");
@@ -185,17 +187,49 @@ const commandsMap: { [command: string]: (...args: any) => any } = {
   "continue.sendToTerminal": (text: string) => {
     ideProtocolClient.runCommand(text);
   },
-  "continue.openFullScreen": () => {
+  "continue.toggleFullScreen": () => {
+    // Check if full screen is already open by checking open tabs
+    const tabs = vscode.window.tabGroups.all.flatMap(
+      (tabGroup) => tabGroup.tabs
+    );
+
+    const fullScreenTab = tabs.find(
+      (tab) => (tab.input as any).viewType?.endsWith("continue.continueGUIView")
+    );
+
+    // Check if the active editor is the Continue GUI View
+    if (fullScreenTab && fullScreenTab.isActive) {
+      vscode.commands.executeCommand("workbench.action.closeActiveEditor");
+      vscode.commands.executeCommand("continue.focusContinueInput");
+      return;
+    }
+
+    if (fullScreenTab) {
+      // Focus the tab
+      const openOptions = {
+        preserveFocus: true,
+        preview: fullScreenTab.isPreview,
+        viewColumn: fullScreenTab.group.viewColumn,
+      };
+
+      vscode.commands.executeCommand(
+        "vscode.open",
+        (fullScreenTab.input as any).uri,
+        openOptions
+      );
+      return;
+    }
+
     // Close the sidebars
-    vscode.commands.executeCommand("workbench.action.closeSidebar");
+    // vscode.commands.executeCommand("workbench.action.closeSidebar");
     vscode.commands.executeCommand("workbench.action.closeAuxiliaryBar");
-    vscode.commands.executeCommand("workbench.action.toggleZenMode");
+    // vscode.commands.executeCommand("workbench.action.toggleZenMode");
     const panel = vscode.window.createWebviewPanel(
       "continue.continueGUIView",
       "Continue",
       vscode.ViewColumn.One
     );
-    panel.webview.html = getSidebarContent(panel);
+    panel.webview.html = getSidebarContent(panel, undefined, undefined, true);
   },
   "continue.selectFilesAsContext": (
     firstUri: vscode.Uri,

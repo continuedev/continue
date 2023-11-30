@@ -53,13 +53,13 @@ either a string or a list of ChatMessages.
 If a string is returned, it will be assumed that the chat history should be ignored
 """
 PromptTemplate = Union[
-    str, Callable[[ChatMessage, Dict[str, str]], Union[str, List[ChatMessage]]]
+    str, Callable[[List[ChatMessage], Dict[str, str]], Union[str, List[ChatMessage]]]
 ]
 
 
 def render_prompt_template(
     template: PromptTemplate, history: List[ChatMessage], other_data: Dict[str, str]
-) -> str:
+) -> Union[str, List[ChatMessage]]:
     """
     Render a prompt template.
     """

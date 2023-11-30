@@ -32,33 +32,50 @@ export type DisallowedSteps = string[];
  */
 export type AllowAnonymousTelemetry = boolean;
 /**
- * Configuration for the models used by Continue. Read more about how to configure models in the documentation.
- */
-export type Models = Models1;
-/**
- * A title that will identify this model in the model selection dropdown
+ * The title you wish to give your model.
  */
 export type Title = string;
 /**
- * The unique ID of the user.
+ * The provider of the model. This is used to determine the type of model, and how to interact with it.
  */
-export type UniqueId = string;
+export type Provider =
+  | "openai"
+  | "openai-free-trial"
+  | "openai-aiohttp"
+  | "anthropic"
+  | "together"
+  | "ollama"
+  | "huggingface-tgi"
+  | "huggingface-inference-api"
+  | "llama.cpp"
+  | "replicate"
+  | "text-gen-webui"
+  | "google-palm"
+  | "lmstudio";
 /**
- * The name of the model to be used (e.g. gpt-4, codellama)
+ * The name of the model. Used to autodetect prompt template.
  */
 export type Model = string;
 /**
- * A system message that will always be followed by the LLM
+ * OpenAI, Anthropic, Together, or other API key
  */
-export type SystemMessage1 = string;
+export type ApiKey = string;
+/**
+ * The base URL of the LLM API.
+ */
+export type ApiBase = string;
 /**
  * The maximum context length of the LLM in tokens, as counted by count_tokens.
  */
 export type ContextLength = number;
 /**
- * Tokens that will stop the completion.
+ * The chat template used to format messages. This is auto-detected for most models, but can be overridden here.
  */
-export type StopTokens = string[];
+export type Template = "llama2" | "alpaca" | "zephyr" | "phind" | "anthropic" | "chatml" | "deepseek";
+/**
+ * Options for the completion endpoint. Read more about the completion options in the documentation.
+ */
+export type CompletionOptions = BaseCompletionOptions;
 /**
  * The temperature of the completion.
  */
@@ -80,6 +97,22 @@ export type PresencePenalty = number;
  */
 export type FrequencyPenalty = number;
 /**
+ * The stop tokens of the completion.
+ */
+export type Stop = string[];
+/**
+ * The maximum number of tokens to generate.
+ */
+export type MaxTokens = number;
+/**
+ * A system message that will always be followed by the LLM
+ */
+export type SystemMessage1 = string;
+/**
+ * Options for the HTTP request to the LLM.
+ */
+export type RequestOptions = RequestOptions1;
+/**
  * Set the timeout for each request to the LLM. If you are running a local LLM that takes a while to respond, you might want to set this to avoid timeouts.
  */
 export type Timeout = number;
@@ -95,17 +128,35 @@ export type CaBundlePath = string;
  * Proxy URL to use when making the HTTP request
  */
 export type Proxy = string;
+export type Models = ModelDescription[];
 /**
- * The API key for the LLM provider.
+ * Roles for models. Each entry should be the title of a model in the models array.
  */
-export type ApiKey = string;
-export type Saved = LLM[];
-export type Temperature1 = number;
+export type ModelRoles = ModelRoles1;
+/**
+ * The default model. If other model roles are not set, they will fall back to default.
+ */
+export type Default = string;
+/**
+ * The model to use for chat. If not set, will fall back to default.
+ */
+export type Chat = string;
+/**
+ * The model to use for editing. If not set, will fall back to default.
+ */
+export type Edit = string;
+/**
+ * The model to use for summarization. If not set, will fall back to default.
+ */
+export type Summarize = string;
+/**
+ * A system message that will always be followed by the LLM
+ */
 export type SystemMessage2 = string;
 /**
- * The temperature parameter for sampling from the LLM. Higher temperatures will result in more random output, while lower temperatures will result in more predictable output. This value ranges from 0 to 1.
+ * Options for the completion endpoint. Read more about the completion options in the documentation.
  */
-export type Temperature2 = number;
+export type CompletionOptions1 = BaseCompletionOptions;
 export type Name3 = string;
 export type Prompt = string;
 export type Description1 = string;
@@ -115,6 +166,19 @@ export type Description1 = string;
 export type CustomCommands = CustomCommand[];
 export type Name4 = string;
 export type Description2 = string;
+export type Step1 =
+  | unknown
+  | (
+      | "AnswerQuestionChroma"
+      | "GenerateShellCommandStep"
+      | "EditHighlightedCodeStep"
+      | "ShareSessionStep"
+      | "CommentCodeStep"
+      | "ClearHistoryStep"
+      | "StackOverflowStep"
+      | "OpenConfigStep"
+    )
+  | string;
 /**
  * An array of slash commands that let you map custom Steps to a shortcut.
  */
@@ -123,10 +187,6 @@ export type SlashCommands = SlashCommand[];
  * The step that will be run when a traceback is detected (when you use the shortcut cmd+shift+R)
  */
 export type OnTraceback = Step;
-/**
- * A system message that will always be followed by the LLM
- */
-export type SystemMessage3 = string;
 /**
  * A Policy object that can be used to override the default behavior of Continue, for example in order to build custom agents that take multiple steps at a time.
  */
@@ -171,7 +231,7 @@ export type ContextProviders = ContextProvider[];
  */
 export type UserToken = string;
 /**
- * The URL of the server where development data is sent. No data is sent unless a valid user token is provided.
+ * The URL of the server where development data is sent. No data is sent unless you have explicitly set the `user_token` property to a valid token that we have shared.
  */
 export type DataServerUrl = string;
 /**
@@ -213,7 +273,7 @@ export type OpenaiApiKey = string;
 /**
  * OpenAI API base URL
  */
-export type ApiBase = string;
+export type ApiBase1 = string;
 /**
  * OpenAI API type
  */
@@ -235,11 +295,12 @@ export interface ContinueConfig1 {
   disallowed_steps?: DisallowedSteps;
   allow_anonymous_telemetry?: AllowAnonymousTelemetry;
   models?: Models;
-  temperature?: Temperature2;
+  model_roles?: ModelRoles;
+  system_message?: SystemMessage2;
+  completion_options?: CompletionOptions1;
   custom_commands?: CustomCommands;
   slash_commands?: SlashCommands;
   on_traceback?: OnTraceback;
-  system_message?: SystemMessage3;
   policy_override?: PolicyOverride;
   context_providers?: ContextProviders;
   user_token?: UserToken;
@@ -263,7 +324,7 @@ export interface ChatMessage {
   role: Role;
   content?: Content;
   name?: Name1;
-  summary: Summary;
+  summary?: Summary;
   function_call?: FunctionCall;
   [k: string]: unknown;
 }
@@ -272,38 +333,35 @@ export interface FunctionCall {
   arguments: Arguments;
   [k: string]: unknown;
 }
-/**
- * Main class that holds the current model configuration
- */
-export interface Models1 {
-  default: LLM;
-  summarize?: LLM;
-  edit?: LLM;
-  chat?: LLM;
-  saved?: Saved;
-  temperature?: Temperature1;
-  system_message?: SystemMessage2;
+export interface ModelDescription {
+  title: Title;
+  provider: Provider;
+  model: Model;
+  api_key?: ApiKey;
+  api_base?: ApiBase;
+  context_length?: ContextLength;
+  template?: Template;
+  completion_options?: CompletionOptions;
+  system_message?: SystemMessage1;
+  request_options?: RequestOptions;
   [k: string]: unknown;
 }
-export interface LLM {
-  title?: Title;
-  unique_id?: UniqueId;
-  model: Model;
-  system_message?: SystemMessage1;
-  context_length?: ContextLength;
-  stop_tokens?: StopTokens;
+export interface BaseCompletionOptions {
   temperature?: Temperature;
   top_p?: TopP;
   top_k?: TopK;
   presence_penalty?: PresencePenalty;
   frequency_penalty?: FrequencyPenalty;
+  stop?: Stop;
+  max_tokens?: MaxTokens;
+  [k: string]: unknown;
+}
+export interface RequestOptions1 {
   timeout?: Timeout;
   verify_ssl?: VerifySsl;
   ca_bundle_path?: CaBundlePath;
   proxy?: Proxy;
   headers?: Headers;
-  prompt_templates?: PromptTemplates;
-  api_key?: ApiKey;
   [k: string]: unknown;
 }
 /**
@@ -312,10 +370,11 @@ export interface LLM {
 export interface Headers {
   [k: string]: string;
 }
-/**
- * A dictionary of prompt templates that can be used to customize the behavior of the LLM in certain situations. For example, set the "edit" key in order to change the prompt that is used for the /edit slash command. Each value in the dictionary is a string templated in mustache syntax, and filled in at runtime with the variables specific to the situation. See the documentation for more information.
- */
-export interface PromptTemplates {
+export interface ModelRoles1 {
+  default: Default;
+  chat?: Chat;
+  edit?: Edit;
+  summarize?: Summarize;
   [k: string]: unknown;
 }
 export interface CustomCommand {
@@ -329,9 +388,6 @@ export interface SlashCommand {
   description: Description2;
   step: Step1;
   params?: Params;
-  [k: string]: unknown;
-}
-export interface Step1 {
   [k: string]: unknown;
 }
 export interface Params {
@@ -398,7 +454,7 @@ export interface RetrievalSettings1 {
   rerank_group_size?: RerankGroupSize;
   ignore_files?: IgnoreFiles;
   openai_api_key?: OpenaiApiKey;
-  api_base?: ApiBase;
+  api_base?: ApiBase1;
   api_type?: ApiType;
   api_version?: ApiVersion;
   organization_id?: OrganizationId;

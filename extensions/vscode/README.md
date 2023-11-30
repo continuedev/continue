@@ -68,6 +68,10 @@ The Continue VS Code extension is currently in beta. It will attempt to start th
 
 > [Troubleshooting Continue](https://continue.dev/docs/troubleshooting)
 
+## Continue Server
+
+The Continue server is a Python server that runs locally on your computer allowing complete privacy. It handles indexing the codebase, constructing prompts, storing and loading configuration, and more. To allow quick startup times, the server will run on your computer in the background, even while not using Continue. If you'd like to stop the server yourself, the process runs on port 65432, and also depends on an instance of Meilisearch running on port 7700.
+
 ## License
 
 [Apache 2.0 © 2023 Continue Dev, Inc.](./LICENSE)

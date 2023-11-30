@@ -1,17 +1,16 @@
 # This is a separate server from server/main.py
 import asyncio
 import os
-import traceback
-from typing import (
-    Any,
-    Callable,
-    Coroutine,
-    Dict,
-    List,
-    Optional,
-)
-from ...models.main import Position
+from typing import Any, Callable, Coroutine, Dict, List, Optional
+
+import socketio
+from pydantic import BaseModel
+
 from ...libs.util.create_async_task import create_async_task
+from ...libs.util.devdata import dev_data_logger
+from ...libs.util.errors import format_exc
+from ...libs.util.logging import logger
+from ...libs.util.telemetry import posthog_logger
 from ...models.filesystem import (
     FileSystem,
     RangeInFile,
@@ -31,17 +30,10 @@ from ...models.filesystem_edit import (
     RenameFile,
     SequentialFileSystemEdit,
 )
+from ...models.main import Position, Range
 from ...models.websockets import WebsocketsMessage
 from ..websockets_messenger import SocketIOMessenger
-from ...libs.util.logging import logger
-from ...libs.util.telemetry import posthog_logger
-from ...libs.util.devdata import dev_data_logger
-
-from pydantic import BaseModel
-
-
-from .ide_protocol import AbstractIdeProtocolServer
-import socketio
+from .ide_protocol import AbstractIdeProtocolServer, WindowInfo
 
 # region: Types
 
@@ -126,13 +118,6 @@ class FoldingRangeResponse(BaseModel):
 # endregion
 
 
-class WindowInfo(BaseModel):
-    window_id: str
-    workspace_directory: str
-    unique_id: str
-    ide_info: Dict[str, Any]
-
-
 class cached_property_no_none:
     def __init__(self, func):
         self.func = func
@@ -199,7 +184,7 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
             # self.messenger.post(msg)
             pass
         elif msg.message_type == "workspaceDirectory":
-            self.workspace_directory = data["workspaceDirectory"]
+            self.window_info.workspace_directory = data["workspaceDirectory"]
         elif msg.message_type == "uniqueId":
             self.unique_id = data["uniqueId"]
         elif msg.message_type == "ide":
@@ -266,7 +251,7 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
         ).output
 
     def on_error(self, e: Exception) -> Coroutine:
-        err_msg = "\n".join(traceback.format_exception(e, e, e.__traceback__))
+        err_msg = format_exc(e)
         e_title = e.__str__() or e.__repr__()
         return self.showMessage(f"Error in Continue server: {e_title}\n {err_msg}")
 
@@ -309,27 +294,27 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
         else:
             callback(*args, **kwargs)
 
-    def subscribeToTelemetryEnabled(self, callback: Callable[[bool], None]):
+    def subscribeToTelemetryEnabled(self, callback: Callable[[bool], Any]):
         self._telemetry_enabled_callbacks.append(callback)
 
-    def subscribeToDebugTerminal(self, callback: Callable[[str], None]):
+    def subscribeToDebugTerminal(self, callback: Callable[[str], Any]):
         self._debug_terminal_callbacks.append(callback)
 
     def subscribeToHighlightedCode(
-        self, callback: Callable[[List[RangeInFileWithContents], bool], None]
+        self, callback: Callable[[List[RangeInFileWithContents], bool], Any]
     ):
         self._highlighted_code_callbacks.append(callback)
 
-    def subscribeToFilesCreated(self, callback: Callable[[List[str]], None]):
+    def subscribeToFilesCreated(self, callback: Callable[[List[str]], Any]):
         self._files_created_callbacks.append(callback)
 
-    def subscribeToFilesDeleted(self, callback: Callable[[List[str]], None]):
+    def subscribeToFilesDeleted(self, callback: Callable[[List[str]], Any]):
         self._files_deleted_callbacks.append(callback)
 
-    def subscribeToFilesRenamed(self, callback: Callable[[List[str], List[str]], None]):
+    def subscribeToFilesRenamed(self, callback: Callable[[List[str], List[str]], Any]):
         self._files_renamed_callbacks.append(callback)
 
-    def subscribeToFileSaved(self, callback: Callable[[str, str], None]):
+    def subscribeToFileSaved(self, callback: Callable[[str, str], Any]):
         self._file_saved_callbacks.append(callback)
 
     def onTelemetryEnabledChanged(self, enabled: bool):
@@ -389,7 +374,7 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
         )
         return resp.contents
 
-    async def fileExists(self, filepath: str) -> str:
+    async def fileExists(self, filepath: str) -> bool:
         """Check whether file exists"""
         resp = await self.messenger.send_and_receive(
             {"filepath": filepath}, FileExistsResponse, "fileExists"
@@ -504,9 +489,9 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
 
     async def document_symbol(self, filepath: str):
         return await self.messenger.send_and_receive(
-            "textDocument/documentSymbol",
+            {"uri": filepath},
             DocumentSymbolResponse,
-            textDocument={"uri": filepath},
+            "textDocument/documentSymbol",
         )
 
     async def find_references(
@@ -534,10 +519,11 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
 
         max_start_position = Position(line=0, character=0)
         max_range = None
-        for r in ranges:
-            if r.range.contains(rif.range.start):
-                if r.range.start > max_start_position:
-                    max_start_position = r.range.start
+        for r in ranges.ranges:
+            range = Range(**r)
+            if range.contains(rif.range.start):
+                if range.start > max_start_position:
+                    max_start_position = range.start
                     max_range = r
 
         return max_range

@@ -1,16 +1,16 @@
 import asyncio
-from typing import List, Literal, Optional
+from typing import AsyncGenerator, List, Literal, Optional
 
 import certifi
-from ..util.count_tokens import CONTEXT_LENGTH_FOR_MODEL
-from ..util.logging import logger
-from .prompts.chat import template_alpaca_messages
 import openai
 from openai.error import RateLimitError
 from pydantic import Field, validator
 
 from ...core.main import ChatMessage
+from ..util.count_tokens import CONTEXT_LENGTH_FOR_MODEL
+from ..util.logging import logger
 from .base import LLM
+from .prompts.chat import template_alpaca_messages
 
 CHAT_MODELS = {
     "gpt-3.5-turbo",
@@ -18,7 +18,7 @@ CHAT_MODELS = {
     "gpt-4",
     "gpt-3.5-turbo-0613",
     "gpt-4-32k",
-    "gpt-4-1106-preview"
+    "gpt-4-1106-preview",
 }
 NON_CHAT_MODELS = {
     "gpt-3.5-turbo-instruct",
@@ -41,21 +41,18 @@ class OpenAI(LLM):
     """
     The OpenAI class can be used to access OpenAI models like gpt-4 and gpt-3.5-turbo.
 
-    If you are locally serving a model that uses an OpenAI-compatible server, you can simply change the `api_base` in the `OpenAI` class like this:
+    If you are locally serving a model that uses an OpenAI-compatible server, you can simply change the `api_base` like this:
 
-    ```python title="~/.continue/config.py"
-    from continuedev.libs.llm.openai import OpenAI
-
-    config = ContinueConfig(
-        ...
-        models=Models(
-            default=OpenAI(
-                api_key="EMPTY",
-                model="<MODEL_NAME>",
-                api_base="http://localhost:8000", # change to your server
-            )
-        )
-    )
+    ```json title="~/.continue/config.json"
+    {
+        "models": [{
+            "title": "OpenAI-compatible server",
+            "provider": "openai",
+            "model": "MODEL_NAME",
+            "api_key": "EMPTY",
+            "api_base": "http://localhost:8000"
+        }]
+    }
     ```
 
     Options for serving models locally with an OpenAI-compatible server include:
@@ -71,33 +68,32 @@ class OpenAI(LLM):
         description="OpenAI API key",
     )
 
-    proxy: Optional[str] = Field(None, description="Proxy URL to use for requests.")
-
-    api_base: Optional[str] = Field(None, description="OpenAI API base URL.")
+    api_base: Optional[str] = Field(default=None, description="OpenAI API base URL.")
 
     api_type: Optional[Literal["azure", "openai"]] = Field(
-        None, description="OpenAI API type."
+        default=None, description="OpenAI API type."
     )
 
     api_version: Optional[str] = Field(
-        None, description="OpenAI API version. For use with Azure OpenAI Service."
-    )
-
-    use_legacy_completions_endpoint: bool = Field(
-        False,
-        description="Manually specify to use the legacy completions endpoint instead of chat completions.",
+        default=None,
+        description="OpenAI API version. For use with Azure OpenAI Service.",
     )
 
     engine: Optional[str] = Field(
-        None, description="OpenAI engine. For use with Azure OpenAI Service."
+        default=None, description="OpenAI engine. For use with Azure OpenAI Service."
+    )
+
+    use_legacy_completions_endpoint: bool = Field(
+        default=False,
+        description="Manually specify to use the legacy completions endpoint instead of chat completions.",
     )
 
     @validator("context_length")
     def context_length_for_model(cls, v, values):
         return CONTEXT_LENGTH_FOR_MODEL.get(values["model"], 4096)
 
-    async def start(self, unique_id: Optional[str] = None):
-        await super().start(unique_id=unique_id)
+    def start(self, unique_id: Optional[str] = None):
+        super().start(unique_id=unique_id)
 
         if self.context_length is None:
             self.context_length = CONTEXT_LENGTH_FOR_MODEL.get(self.model, 4096)
@@ -110,13 +106,16 @@ class OpenAI(LLM):
         if self.api_version is not None:
             openai.api_version = self.api_version
 
-        if self.verify_ssl is not None and self.verify_ssl is False:
+        if (
+            self.request_options.verify_ssl is not None
+            and self.request_options.verify_ssl is False
+        ):
             openai.verify_ssl_certs = False
 
-        if self.proxy is not None:
-            openai.proxy = self.proxy
+        if self.request_options.proxy is not None:
+            openai.proxy = self.request_options.proxy
 
-        openai.ca_bundle_path = self.ca_bundle_path or certifi.where()
+        openai.ca_bundle_path = self.request_options.ca_bundle_path or certifi.where()
 
         session = self.create_client_session()
         openai.aiosession.set(session)
@@ -142,18 +141,20 @@ class OpenAI(LLM):
             async for chunk in await openai.ChatCompletion.acreate(
                 messages=[{"role": "user", "content": prompt}],
                 **args,
-                headers=self.headers,
+                headers=self.request_options.headers,
             ):
                 if len(chunk.choices) > 0 and "content" in chunk.choices[0].delta:
                     yield chunk.choices[0].delta.content
         else:
             async for chunk in await openai.Completion.acreate(
-                prompt=prompt, **args, headers=self.headers
+                prompt=prompt, **args, headers=self.request_options.headers
             ):
                 if len(chunk.choices) > 0:
                     yield chunk.choices[0].text
 
-    async def _stream_chat(self, messages: List[ChatMessage], options):
+    async def _stream_chat(
+        self, messages: List[ChatMessage], options
+    ) -> AsyncGenerator[ChatMessage, None]:
         args = self.collect_args(options)
 
         if (
@@ -161,10 +162,10 @@ class OpenAI(LLM):
             and not self.use_legacy_completions_endpoint
         ):
             async for chunk in await openai.ChatCompletion.acreate(
-                messages=messages,
+                messages=[msg.to_dict() for msg in messages],
                 stream=True,
                 **args,
-                headers=self.headers,
+                headers=self.request_options.headers,
             ):
                 if not hasattr(chunk, "choices") or len(chunk.choices) == 0:
                     continue
@@ -176,20 +177,17 @@ class OpenAI(LLM):
                     else:
                         await asyncio.sleep(0.01)
 
-                yield delta
+                yield ChatMessage(role="assistant", content=delta.get("content", ""))
 
         else:
             async for chunk in await openai.Completion.acreate(
                 prompt=template_alpaca_messages(messages),
                 stream=True,
                 **args,
-                headers=self.headers,
+                headers=self.request_options.headers,
             ):
                 if len(chunk.choices) > 0:
-                    yield {
-                        "role": "assistant",
-                        "content": chunk.choices[0].text,
-                    }
+                    ChatMessage(role="assistant", content=chunk.choices[0].text)
 
     async def _complete(self, prompt: str, options):
         args = self.collect_args(options)
@@ -204,7 +202,7 @@ class OpenAI(LLM):
                     resp = await openai.ChatCompletion.acreate(
                         messages=[{"role": "user", "content": prompt}],
                         **args,
-                        headers=self.headers,
+                        headers=self.request_options.headers,
                     )
                     return resp.choices[0].message.content
                 except RateLimitError as e:
@@ -217,7 +215,7 @@ class OpenAI(LLM):
             return (
                 (
                     await openai.Completion.acreate(
-                        prompt=prompt, **args, headers=self.headers
+                        prompt=prompt, **args, headers=self.request_options.headers
                     )
                 )
                 .choices[0]

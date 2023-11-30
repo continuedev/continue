@@ -92,15 +92,15 @@ class ConfigPyCodeLensProvider implements vscode.CodeLensProvider {
 
     if (
       !document.uri.fsPath.endsWith(".continue/config.py") &&
-      !document.uri.fsPath.endsWith(".continue\\config.py")
+      !document.uri.fsPath.endsWith(".continue\\config.py") &&
+      !document.uri.fsPath.endsWith(".continue/config.json") &&
+      !document.uri.fsPath.endsWith(".continue\\config.json")
     ) {
       return codeLenses;
     }
 
     const lines = document.getText().split(os.EOL);
-    const lineOfModels = lines.findIndex((line) =>
-      line.includes("models=Models(")
-    );
+    let lineOfModels = lines.findIndex((line) => line.includes('"models": ['));
 
     if (lineOfModels >= 0) {
       const range = new vscode.Range(lineOfModels, 0, lineOfModels + 1, 0);

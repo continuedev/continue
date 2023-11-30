@@ -1,13 +1,12 @@
 import asyncio
 import json
-import traceback
 from typing import List
 
-import aiohttp
 from pydantic import validator
-from ..util.count_tokens import CONTEXT_LENGTH_FOR_MODEL
 
 from ...core.main import ChatMessage
+from ..util.count_tokens import CONTEXT_LENGTH_FOR_MODEL
+from ..util.errors import format_exc
 from ..util.telemetry import posthog_logger
 from .base import LLM
 
@@ -19,11 +18,11 @@ class ProxyServer(LLM):
     class Config:
         arbitrary_types_allowed = True
 
-    async def start(
+    def start(
         self,
         **kwargs,
     ):
-        await super().start(**kwargs)
+        super().start(**kwargs)
         self.context_length = CONTEXT_LENGTH_FOR_MODEL[self.model]
 
     def get_headers(self):
@@ -41,7 +40,7 @@ class ProxyServer(LLM):
                 f"{SERVER_URL}/complete",
                 json={"messages": [{"role": "user", "content": prompt}], **args},
                 headers=self.get_headers(),
-                proxy=self.proxy,
+                proxy=self.request_options.proxy,
             ) as resp:
                 resp_text = await resp.text()
                 if resp.status != 200:
@@ -54,9 +53,9 @@ class ProxyServer(LLM):
         async with self.create_client_session() as session:
             async with session.post(
                 f"{SERVER_URL}/stream_chat",
-                json={"messages": messages, **args},
+                json={"messages": [msg.to_dict() for msg in messages], **args},
                 headers=self.get_headers(),
-                proxy=self.proxy,
+                proxy=self.request_options.proxy,
             ) as resp:
                 if resp.status != 200:
                     raise Exception(await resp.text())
@@ -70,7 +69,10 @@ class ProxyServer(LLM):
                             for chunk in chunks:
                                 if chunk.strip() != "":
                                     loaded_chunk = json.loads(chunk)
-                                    yield loaded_chunk
+                                    yield ChatMessage(
+                                        role="assistant",
+                                        content=loaded_chunk.get("content", ""),
+                                    )
 
                                     if self.model == "gpt-4":
                                         await asyncio.sleep(0.03)
@@ -82,11 +84,7 @@ class ProxyServer(LLM):
                                 "proxy_server_parse_error",
                                 {
                                     "error_title": "Proxy server stream_chat parsing failed",
-                                    "error_message": "\n".join(
-                                        traceback.format_exception(
-                                            e, e, e.__traceback__
-                                        )
-                                    ),
+                                    "error_message": format_exc(e),
                                 },
                             )
                     else:
@@ -100,7 +98,7 @@ class ProxyServer(LLM):
                 f"{SERVER_URL}/stream_complete",
                 json={"messages": [{"role": "user", "content": prompt}], **args},
                 headers=self.get_headers(),
-                proxy=self.proxy,
+                proxy=self.request_options.proxy,
             ) as resp:
                 if resp.status != 200:
                     raise Exception(await resp.text())

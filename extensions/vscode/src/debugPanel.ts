@@ -1,7 +1,6 @@
 import * as vscode from "vscode";
 import { getContinueServerUrl } from "./bridge";
 import { getExtensionUri, getNonce, getUniqueId } from "./util/vscode";
-import { setFocusedOnContinueInput } from "./commands";
 import { ideProtocolClient, windowId } from "./activation/activate";
 import * as io from "socket.io-client";
 import { FileEdit } from "../schema/FileEdit";
@@ -12,7 +11,8 @@ export let debugPanelWebview: vscode.Webview | undefined;
 export function getSidebarContent(
   panel: vscode.WebviewPanel | vscode.WebviewView,
   page: string | undefined = undefined,
-  edits: FileEdit[] | undefined = undefined
+  edits: FileEdit[] | undefined = undefined,
+  isFullScreen: boolean = false
 ): string {
   debugPanelWebview = panel.webview;
   panel.onDidDispose(() => {
@@ -186,10 +186,13 @@ export function getSidebarContent(
         break;
       }
       case "focusEditor": {
-        setFocusedOnContinueInput(false);
         vscode.commands.executeCommand(
           "workbench.action.focusActiveEditorGroup"
         );
+        break;
+      }
+      case "toggleFullScreen": {
+        vscode.commands.executeCommand("continue.toggleFullScreen");
         break;
       }
       case "withProgress": {
@@ -238,7 +241,7 @@ export function getSidebarContent(
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300&display=swap" rel="stylesheet">
         <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
-        
+
         <title>Continue</title>
       </head>
       <body>
@@ -255,9 +258,10 @@ export function getSidebarContent(
             (folder) => folder.uri.fsPath
           ) || []
         )}</script>
+        <script>window.isFullScreen = ${isFullScreen}</script>
 
-        ${edits && `<script>window.edits = ${JSON.stringify(edits)}</script>`}
-        ${page && `<script>window.location.pathname = "${page}"</script>`}
+        ${edits ? `<script>window.edits = ${JSON.stringify(edits)}</script>` : ''}
+        ${page ? `<script>window.location.pathname = "${page}"</script>` : ''}
       </body>
     </html>`;
 }

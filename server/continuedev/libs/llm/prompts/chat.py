@@ -1,27 +1,29 @@
 from textwrap import dedent
-from typing import Dict, List
+from typing import List
 
 from anthropic import AI_PROMPT, HUMAN_PROMPT
 
+from ....core.main import ChatMessage
 
-def anthropic_template_messages(messages: List[Dict[str, str]]) -> str:
+
+def anthropic_template_messages(messages: List[ChatMessage]) -> str:
     prompt = ""
 
     # Anthropic prompt must start with a Human turn
     if (
         len(messages) > 0
-        and messages[0]["role"] != "user"
-        and messages[0]["role"] != "system"
+        and messages[0].role != "user"
+        and messages[0].role != "system"
     ):
         prompt += f"{HUMAN_PROMPT} Hello."
     for msg in messages:
-        prompt += f"{HUMAN_PROMPT if (msg['role'] == 'user' or msg['role'] == 'system') else AI_PROMPT} {msg['content']} "
+        prompt += f"{HUMAN_PROMPT if (msg.role == 'user' or msg.role == 'system') else AI_PROMPT} {msg.content} "
 
     prompt += AI_PROMPT
     return prompt
 
 
-def zephyr_template_messages(msgs: List[Dict[str, str]]) -> str:
+def zephyr_template_messages(msgs: List[ChatMessage]) -> str:
     """ "
     <|system|>
     </s>
@@ -31,65 +33,85 @@ def zephyr_template_messages(msgs: List[Dict[str, str]]) -> str:
     """
     prompt = ""
 
-    if msgs[0]["role"] == "system":
-        prompt += f"<|system|>{msgs[0]['content']}</s>\n"
+    if msgs[0].role == "system":
+        prompt += f"<|system|>{msgs[0].content}</s>\n"
         msgs.pop(0)
     else:
         prompt += "<|system|> </s>\n"
 
     for msg in msgs:
-        prompt += "<|user|>\n" if msg["role"] == "user" else "<|assistant|>\n"
-        prompt += f"{msg['content']}</s>\n"
+        prompt += "<|user|>\n" if msg.role == "user" else "<|assistant|>\n"
+        prompt += f"{msg.content}</s>\n"
 
     prompt += "<|assistant|>\n"
 
     return prompt
 
 
-def chatml_template_messages(messages: List[Dict[str, str]]) -> str:
+def chatml_template_messages(messages: List[ChatMessage]) -> str:
     prompt = ""
 
     for msg in messages:
-        prompt += f"<|im_start|>{msg['role']}\n{msg['content']}<|im_end|>\n"
+        prompt += f"<|im_start|>{msg.role}\n{msg.content}<|im_end|>\n"
 
     prompt += "<|im_start|>assistant\n"
     return prompt
 
 
-def template_alpaca_messages(msgs: List[Dict[str, str]]) -> str:
+def template_alpaca_messages(msgs: List[ChatMessage]) -> str:
     prompt = ""
 
-    if msgs[0]["role"] == "system":
-        prompt += f"{msgs[0]['content']}\n\n"
+    if msgs[0].role == "system":
+        prompt += f"{msgs[0].content}\n\n"
         msgs.pop(0)
 
     for msg in msgs:
-        prompt += "### Instruction:\n" if msg["role"] == "user" else "### Response:\n"
-        prompt += f"{msg['content']}\n\n"
+        prompt += "### Instruction:\n" if msg.role == "user" else "### Response:\n"
+        prompt += f"{msg.content}\n\n"
 
     prompt += "### Response:\n"
 
     return prompt
 
 
-def phind_template_messages(msgs: List[Dict[str, str]]) -> str:
+def deepseek_template_messages(msgs: List[ChatMessage]) -> str:
+    prompt = ""
+    system = None
+    prompt += "You are an AI programming assistant, utilizing the DeepSeek Coder model, developed by DeepSeek Company, and you only answer questions related to computer science. For politically sensitive questions, security and privacy issues, and other non-computer science questions, you will refuse to answer.\n"
+    if msgs[0].role == "system":
+        system = msgs.pop(0).content
+
+    for i in range(len(msgs)):
+        msg = msgs[i]
+        prompt += "### Instruction:\n" if msg.role == "user" else "### Response:\n"
+
+        if system and msg.role == "user" and i == len(msgs) - 1:
+            prompt += system + "\n"
+
+        prompt += f"{msg.content}"
+        prompt += "\n" if msg.role == "user" else "<|EOT|>\n"
+
+    return prompt + "### Response:\n"
+
+
+def phind_template_messages(msgs: List[ChatMessage]) -> str:
     prompt = ""
 
-    if msgs[0]["role"] == "system":
-        prompt += f"### System Prompt\n{msgs[0]['content']}\n\n"
+    if msgs[0].role == "system":
+        prompt += f"### System Prompt\n{msgs[0].content}\n\n"
         msgs.pop(0)
 
     for msg in msgs:
-        prompt += "### User Message\n" if msg["role"] == "user" else "### Assistant\n"
-        prompt += f"{msg['content']}\n"
+        prompt += "### User Message\n" if msg.role == "user" else "### Assistant\n"
+        prompt += f"{msg.content}\n"
 
     prompt += "### Assistant\n"
 
     return prompt
 
 
-def raw_input_template(msgs: List[Dict[str, str]]) -> str:
-    return msgs[-1]["content"]
+def raw_input_template(msgs: List[ChatMessage]) -> str:
+    return msgs[-1].content
 
 
 SQL_CODER_DEFAULT_SCHEMA = """\
@@ -135,9 +157,9 @@ CREATE TABLE product_suppliers (
 
 
 def _sqlcoder_template_messages(
-    msgs: List[Dict[str, str]], schema: str = SQL_CODER_DEFAULT_SCHEMA
+    msgs: List[ChatMessage], schema: str = SQL_CODER_DEFAULT_SCHEMA
 ) -> str:
-    question = msgs[-1]["content"]
+    question = msgs[-1].content
     return f"""\
 Your task is to convert a question into a SQL query, given a Postgres database schema.
 Adhere to these rules:
@@ -167,19 +189,19 @@ def sqlcoder_template_messages(schema: str = SQL_CODER_DEFAULT_SCHEMA):
     return fn
 
 
-def llama2_template_messages(msgs: List[Dict[str, str]]) -> str:
+def llama2_template_messages(msgs: List[ChatMessage]) -> str:
     if len(msgs) == 0:
         return ""
 
-    if msgs[0]["role"] == "assistant":
+    if msgs[0].role == "assistant":
         # These models aren't trained to handle assistant message coming first,
         # and typically these are just introduction messages from Continue
         msgs.pop(0)
 
     prompt = ""
-    has_system = msgs[0]["role"] == "system"
+    has_system = msgs[0].role == "system"
 
-    if has_system and msgs[0]["content"].strip() == "":
+    if has_system and msgs[0].content.strip() == "":
         has_system = False
         msgs = msgs[1:]
 
@@ -187,39 +209,39 @@ def llama2_template_messages(msgs: List[Dict[str, str]]) -> str:
         system_message = dedent(
             f"""\
                 <<SYS>>
-                {msgs[0]["content"]}
+                {msgs[0].content}
                 <</SYS>>
                 
                 """
         )
         if len(msgs) > 1:
-            prompt += f"[INST] {system_message}{msgs[1]['content']} [/INST]"
+            prompt += f"[INST] {system_message}{msgs[1].content} [/INST]"
         else:
             prompt += f"[INST] {system_message} [/INST]"
-            return
+            return prompt
 
     for i in range(2 if has_system else 0, len(msgs)):
-        if msgs[i]["role"] == "user":
-            prompt += f"[INST] {msgs[i]['content']} [/INST]"
+        if msgs[i].role == "user":
+            prompt += f"[INST] {msgs[i].content} [/INST]"
         else:
-            prompt += msgs[i]["content"] + " "
+            prompt += msgs[i].content + " "
 
     return prompt
 
 
-def code_llama_template_messages(msgs: List[Dict[str, str]]) -> str:
-    return f"[INST] {msgs[-1]['content']}\n[/INST]"
+def code_llama_template_messages(msgs: List[ChatMessage]) -> str:
+    return f"[INST] {msgs[-1].content}\n[/INST]"
 
 
-def extra_space_template_messages(msgs: List[Dict[str, str]]) -> str:
-    return f" {msgs[-1]['content']}"
+def extra_space_template_messages(msgs: List[ChatMessage]) -> str:
+    return f" {msgs[-1].content}"
 
 
-def code_llama_python_template_messages(msgs: List[Dict[str, str]]) -> str:
+def code_llama_python_template_messages(msgs: List[ChatMessage]) -> str:
     return dedent(
         f"""\
         [INST]
-        You are an expert Python programmer and personal assistant, here is your task: {msgs[-1]['content']}
+        You are an expert Python programmer and personal assistant, here is your task: {msgs[-1].content}
         Your answer should start with a [PYTHON] tag and end with a [/PYTHON] tag.
         [/INST]"""
     )

@@ -110,6 +110,11 @@ const vscodeShortcuts: KeyboardShortcutProps[] = [
     windows: "Tab",
     description: "Toggle between context items",
   },
+  {
+    mac: "⌘ K ⌘ M",
+    windows: "⌃ K ⌃ M",
+    description: "Toggle Full Screen",
+  },
 ];
 
 const jetbrainsShortcuts: KeyboardShortcutProps[] = [

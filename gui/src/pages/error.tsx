@@ -2,7 +2,7 @@ import { useDispatch } from "react-redux";
 import { useNavigate, useRouteError } from "react-router-dom";
 import { newSession } from "../redux/slices/sessionStateReducer";
 import useContinueGUIProtocol from "../hooks/useContinueClient";
-import ContinueButton from "../components/ContinueButton";
+import ContinueButton from "../components/mainInput/ContinueButton";
 import { vscBackground } from "../components";
 
 export default function ErrorPage() {

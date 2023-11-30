@@ -1,12 +1,12 @@
 import asyncio
 from typing import AsyncGenerator
+
+from .chunkers.chunk_directory import local_stream_chunk_directory
+
 from ...core.config import ContinueConfig
-from ...server.protocols.ide_protocol import AbstractIdeProtocolServer
-from ...libs.index.chunkers.chunk_directory import (
-    local_stream_chunk_directory,
-)
-from ...libs.index.indices.meilisearch_index import MeilisearchCodebaseIndex
 from ...libs.index.indices.chroma_index import MAX_CHUNK_SIZE, ChromaCodebaseIndex
+from ...libs.index.indices.meilisearch_index import MeilisearchCodebaseIndex
+from ...server.protocols.ide_protocol import AbstractIdeProtocolServer
 
 
 async def build_index(

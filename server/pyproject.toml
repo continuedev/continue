@@ -1,9 +1,10 @@
 [tool.poetry]
 name = "continuedev"
-version = "0.1.90"
+version = "0.1.99"
 description = ""
 authors = ["Nate Sesti <sestinj@gmail.com>"]
 readme = "README.md"
+license = "Apache-2.0"
 
 [tool.poetry.dependencies]
 python = "^3.8.1"

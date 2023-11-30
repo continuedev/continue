@@ -30,7 +30,9 @@ class FileEdit(AtomicFileSystemEdit):
 
     def with_mapped_paths(self, orig_root: str, copy_root: str) -> "FileSystemEdit":
         return FileEdit(
-            map_path(self.filepath, orig_root, copy_root), self.range, self.replacement
+            filepath=map_path(self.filepath, orig_root, copy_root),
+            range=self.range,
+            replacement=self.replacement,
         )
 
     @staticmethod
@@ -69,7 +71,7 @@ class AddFile(AtomicFileSystemEdit):
 
     def with_mapped_paths(self, orig_root: str, copy_root: str) -> "FileSystemEdit":
         return AddFile(
-            self, map_path(self.filepath, orig_root, copy_root), self.content
+            filepath=map_path(self.filepath, orig_root, copy_root), content=self.content
         )
 
 
@@ -77,7 +79,7 @@ class DeleteFile(AtomicFileSystemEdit):
     filepath: str
 
     def with_mapped_paths(self, orig_root: str, copy_root: str) -> "FileSystemEdit":
-        return DeleteFile(map_path(self.filepath, orig_root, copy_root))
+        return DeleteFile(filepath=map_path(self.filepath, orig_root, copy_root))
 
 
 class RenameFile(AtomicFileSystemEdit):
@@ -86,8 +88,8 @@ class RenameFile(AtomicFileSystemEdit):
 
     def with_mapped_paths(self, orig_root: str, copy_root: str) -> "FileSystemEdit":
         return RenameFile(
-            map_path(self.filepath, orig_root, copy_root),
-            map_path(self.new_filepath, orig_root, copy_root),
+            filepath=map_path(self.filepath, orig_root, copy_root),
+            new_filepath=map_path(self.new_filepath, orig_root, copy_root),
         )
 
 
@@ -95,14 +97,14 @@ class AddDirectory(AtomicFileSystemEdit):
     path: str
 
     def with_mapped_paths(self, orig_root: str, copy_root: str) -> "FileSystemEdit":
-        return AddDirectory(map_path(self.path, orig_root, copy_root))
+        return AddDirectory(path=map_path(self.path, orig_root, copy_root))
 
 
 class DeleteDirectory(AtomicFileSystemEdit):
     path: str
 
     def with_mapped_paths(self, orig_root: str, copy_root: str) -> "FileSystemEdit":
-        return DeleteDirectory(map_path(self.path, orig_root, copy_root))
+        return DeleteDirectory(path=map_path(self.path, orig_root, copy_root))
 
 
 class RenameDirectory(AtomicFileSystemEdit):
@@ -111,8 +113,8 @@ class RenameDirectory(AtomicFileSystemEdit):
 
     def with_mapped_paths(self, orig_root: str, copy_root: str) -> "FileSystemEdit":
         return RenameDirectory(
-            map_path(self.filepath, orig_root, copy_root),
-            map_path(self.new_path, orig_root, copy_root),
+            path=map_path(self.path, orig_root, copy_root),
+            new_path=map_path(self.new_path, orig_root, copy_root),
         )
 
 
@@ -120,7 +122,7 @@ class DeleteDirectoryRecursive(FileSystemEdit):
     path: str
 
     def with_mapped_paths(self, orig_root: str, copy_root: str) -> "FileSystemEdit":
-        return DeleteDirectoryRecursive(map_path(self.path, orig_root, copy_root))
+        return DeleteDirectoryRecursive(path=map_path(self.path, orig_root, copy_root))
 
     def next_edit(self) -> Generator[FileSystemEdit, None, None]:
         yield DeleteDirectory(path=self.path)
@@ -137,7 +139,7 @@ class SequentialFileSystemEdit(FileSystemEdit):
 
     def with_mapped_paths(self, orig_root: str, copy_root: str) -> "FileSystemEdit":
         return SequentialFileSystemEdit(
-            [edit.with_mapped_paths(orig_root, copy_root) for edit in self.edits]
+            edits=[edit.with_mapped_paths(orig_root, copy_root) for edit in self.edits]
         )
 
     def next_edit(self) -> Generator["FileSystemEdit", None, None]:

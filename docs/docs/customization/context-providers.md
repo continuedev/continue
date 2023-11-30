@@ -16,88 +16,67 @@ When you enter your next input, Continue will see the full contents of each of t
 
 ## Built-in Context Providers
 
-To use any of the built-in context providers, open `~/.continue/config.py` (can do this with the '/config' slash command). For each context provider, you will
-
-1. Import the context provider at the top of the file
-2. Add it to the `context_providers` list in the `ContinueConfig` object
-
-Setup instructions are below for each (showing the import and config object). You can also see examples by opening `~/.continue/config.py`.
+To use any of the built-in context providers, open `~/.continue/config.json` (can do this with the '/config' slash command) and add it to the `context_providers` list.
 
 ### GitHub
 
 Type '@issue' to reference the title and contents of a GitHub issue.
 
-```python
-from continuedev.plugins.context_providers.github import GitHubIssuesContextProvider
-```
-
-```python
-GitHubIssuesContextProvider(
-    repo_name="continuedev/continue",  # change to whichever repo you want to use
-    auth_token="<my_github_auth_token>",
-)
+```json
+{
+  "name": "github",
+  "params": {
+    // Change to whichever repo you want to use
+    "repo_name": "continuedev/continue",
+    "auth_token": "<my_github_auth_token>"
+  }
+}
 ```
 
 ### Codebase Search
 
 Type '@search' to reference the results of codebase search, just like the results you would get from VS Code search.
 
-```python
-from continuedev.plugins.context_providers.search import SearchContextProvider
-```
-
-```python
-SearchContextProvider() # No arguments necessary
+```json
+{ "name": "search" }
 ```
 
 ### URLs
 
 Type '@url' to reference the contents of a URL. You can either reference preset URLs, or reference one dynamically by typing '@url https://example.com'. The text contents of the page will be fetched and used as context.
 
-```python
-from continuedev.plugins.context_providers.url import URLContextProvider
-```
-
-```python
-URLContextProvider(preset_urls=["https://continue.dev/docs/customization"])
+```json
+{
+  "name": "url",
+  "params": { "preset_urls": ["https://continue.dev/docs/customization"] }
+}
 ```
 
 ### Git Diff
 
 Type '@diff' to reference all of the changes you've made to your current branch. This is useful if you want to summarize what you've done or ask for a general review of your work before committing.
 
-```python
-from continuedev.plugins.context_providers.diff import DiffContextProvider
-```
-
-```python
-DiffContextProvider()
+```json
+{ "name": "diff" }
 ```
 
 ### File Tree
 
 Type '@tree' to reference the contents of your current workspace. The LLM will be able to see the nested directory structure of your project.
 
-```python
-from continuedev.plugins.context_providers.filetree import FileTreeContextProvider
-```
-
-```python
-FileTreeContextProvider()
+```json
+{ "name": "tree" }
 ```
 
 ### Google
 
 Type '@google' to reference the results of a Google search. For example, type "@google python tutorial" if you want to search and discuss ways of learning Python.
 
-```python
-from continuedev.plugins.context_providers.google import GoogleContextProvider
-```
-
-```python
-GoogleContextProvider(
-    serper_api_key="<your serper.dev api key>"
-)
+```json
+{
+  "name": "google",
+  "params": { "serper_api_key": "<your serper.dev api key>" }
+}
 ```
 
 Note: You can get an API key for free at [serper.dev](https://serper.dev).
@@ -106,12 +85,8 @@ Note: You can get an API key for free at [serper.dev](https://serper.dev).
 
 Type '@terminal' to reference the contents of your IDE's terminal.
 
-```python
-from continuedev.plugins.context_providers.terminal import TerminalContextProvider
-```
-
-```python
-TerminalContextProvider()
+```json
+{ "name": "terminal" }
 ```
 
 ### Requesting Context Providers
@@ -156,16 +131,13 @@ class GitHubIssuesContextProvider(ContextProvider):
 
 It can then be set in the `ContinueConfig` like so:
 
-```python
-config = ContinueConfig(
-    ...
-    context_providers=[
-        GitHubIssuesContextProvider(
+```python title="~/.continue/config.py"
+def modify_config(config: ContinueConfig) -> ContinueConfig:
+    config.context_providers.append(GitHubIssuesContextProvider(
             repo_name="my-github-username-or-org/my-github-repo",
             auth_token="my-github-auth-token"
-        )
-    ]
-)
+    ))
+    return config
 ```
 
 This example is a situation where you request all of the data (issues in this case) beforehand, and store them in the ContextProvider.

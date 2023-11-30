@@ -1,11 +1,13 @@
 # These steps are depended upon by ContinueSDK
 import difflib
 import subprocess
-from textwrap import dedent
 import time
-from typing import Coroutine, List, Optional, Union
+from textwrap import dedent
+from typing import Any, AsyncGenerator, Dict, List, Optional, Union
 
-from ..libs.llm.base import LLM, PromptTemplate
+from pydantic import Field
+
+from ..libs.llm.base import LLM
 from ..libs.llm.openai_free_trial import OpenAIFreeTrial
 from ..libs.util.count_tokens import DEFAULT_MAX_TOKENS
 from ..libs.util.devdata import dev_data_logger
@@ -16,14 +18,11 @@ from ..libs.util.strings import (
 from ..libs.util.telemetry import posthog_logger
 from ..libs.util.templating import render_prompt_template
 from ..models.filesystem import FileSystem, RangeInFile, RangeInFileWithContents
-from ..models.filesystem_edit import (
-    EditDiff,
-    FileEditWithFullContents,
-    FileSystemEdit,
-)
-
+from ..models.filesystem_edit import EditDiff, FileEditWithFullContents, FileSystemEdit
+from .abstract_sdk import AbstractContinueSDK
 from .main import (
     ChatMessage,
+    ContextItem,
     ContinueCustomException,
     DeltaStep,
     SessionUpdate,
@@ -33,16 +32,15 @@ from .main import (
 from .observation import TextObservation, UserInputObservation
 
 
-class ContinueSDK:
-    pass
-
-
 class Models:
-    pass
+    default: LLM
+    summarize: LLM = Field(default=None)
+    edit: LLM = Field(default=None)
+    chat: LLM = Field(default=None)
 
 
 class ReversibleStep(Step):
-    async def reverse(self, sdk: ContinueSDK):
+    async def reverse(self, sdk: AbstractContinueSDK):
         raise NotImplementedError
 
 
@@ -50,10 +48,10 @@ class MessageStep(Step):
     name: str = "Message"
     message: str
 
-    async def describe(self, models: Models) -> Coroutine[str, None, None]:
+    async def describe(self, models: Models):
         return self.message
 
-    async def run(self, sdk: ContinueSDK):
+    async def run(self, sdk: AbstractContinueSDK):
         yield TextObservation(text=self.message)
 
 
@@ -73,10 +71,10 @@ class DisplayErrorStep(Step):
     class Config:
         arbitrary_types_allowed = True
 
-    async def describe(self, models: Models) -> Coroutine[str, None, None]:
+    async def describe(self, models: Models):
         return self.message
 
-    async def run(self, sdk: ContinueSDK):
+    async def run(self, sdk: AbstractContinueSDK):
         raise ContinueCustomException(message=self.message, title=self.title)
 
 
@@ -86,12 +84,12 @@ class FileSystemEditStep(ReversibleStep):
 
     hide: bool = True
 
-    async def run(self, sdk: "ContinueSDK"):
+    async def run(self, sdk: "AbstractContinueSDK"):
         self._diff = await sdk.ide.applyFileSystemEdit(self.edit)
 
-    async def reverse(self, sdk: "ContinueSDK"):
-        await sdk.ide.applyFileSystemEdit(self._diff.backward)
-        # Where and when should file saves happen?
+    async def reverse(self, sdk: "AbstractContinueSDK"):
+        if self._diff:
+            await sdk.ide.applyFileSystemEdit(self._diff.backward)
 
 
 def output_contains_error(output: str) -> bool:
@@ -109,7 +107,7 @@ class ShellCommandsStep(Step):
 
     _err_text: Union[str, None] = None
 
-    async def describe(self, models: Models) -> Coroutine[str, None, None]:
+    async def describe(self, models: Models) -> str:
         if self._err_text is not None:
             return f"Error when running shell commands:\n```\n{self._err_text}\n```"
 
@@ -118,7 +116,7 @@ class ShellCommandsStep(Step):
             f"{cmds_str}\n\nSummarize what was done in these shell commands, using markdown bullet points:"
         )
 
-    async def run(self, sdk: ContinueSDK):
+    async def run(self, sdk: AbstractContinueSDK):
         process = subprocess.Popen(
             "/bin/bash",
             stdin=subprocess.PIPE,
@@ -127,7 +125,8 @@ class ShellCommandsStep(Step):
         )
 
         stdin_input = "\n".join(self.cmds)
-        out, err = process.communicate(stdin_input.encode())
+        out, err_bytes = process.communicate(stdin_input.encode())
+        err = err_bytes.decode()
 
         # If it fails, return the error
         if err is not None and err != "":
@@ -185,7 +184,7 @@ class DefaultModelEditCodeStep(Step):
 
     summary_prompt: str = "Please briefly explain the changes made to the code above. Give no more than 2-3 sentences, and use markdown bullet points:"
 
-    async def describe(self, models: Models) -> Coroutine[str, None, None]:
+    async def describe(self, models: Models):
         name = await models.summarize.complete(
             f"Write a very short title to describe this requested change (no quotes): '{self.user_input}'. This is the title:"
         )
@@ -196,7 +195,7 @@ class DefaultModelEditCodeStep(Step):
         else:
             return None
 
-    def on_stop(self, sdk: ContinueSDK):
+    def on_stop(self, sdk: AbstractContinueSDK):
         index = len(sdk.history)
         for i in range(index - 1, -1, -1):
             yield SessionUpdate(index=i, update=SetStep(hide=True))
@@ -204,13 +203,14 @@ class DefaultModelEditCodeStep(Step):
                 break
 
     async def get_prompt_parts(
-        self, rif: RangeInFileWithContents, sdk: ContinueSDK, full_file_contents: str
+        self,
+        rif: RangeInFileWithContents,
+        sdk: AbstractContinueSDK,
+        full_file_contents: str,
     ):
         # We don't know here all of the functions being passed in.
         # We care because if this prompt itself goes over the limit, then the entire message will have to be cut from the completion.
         # Overflow won't happen, but prune_chat_messages in count_tokens.py will cut out this whole thing, instead of us cutting out only as many lines as we need.
-        if self.model is not None:
-            await sdk.start_model(self.model)
 
         model_to_use = self.model or sdk.models.edit
         max_tokens = int(model_to_use.context_length / 2)
@@ -245,7 +245,6 @@ class DefaultModelEditCodeStep(Step):
         ):
             if total_tokens > model_to_use.context_length:
                 model_to_use = OpenAIFreeTrial(model="gpt-3.5-turbo-0613")
-                await sdk.start_model(model_to_use)
 
         # Remove tokens from the end first, and then the start to clear space
         # This part finds the start and end lines
@@ -305,7 +304,11 @@ class DefaultModelEditCodeStep(Step):
         return file_prefix, rif.contents, file_suffix, model_to_use, max_tokens
 
     def compile_prompt(
-        self, file_prefix: str, contents: str, file_suffix: str, sdk: ContinueSDK
+        self,
+        file_prefix: str,
+        contents: str,
+        file_suffix: str,
+        sdk: AbstractContinueSDK,
     ) -> str:
         if contents.strip() == "":
             # Separate prompt for insertion at the cursor, the other tends to cause it to repeat whole file
@@ -378,7 +381,9 @@ Please output the code to be inserted at the cursor in order to fulfill the user
             or "<code_to_edit>" in line
         )
 
-    async def stream_rif(self, rif: RangeInFileWithContents, sdk: ContinueSDK):
+    async def stream_rif(
+        self, rif: RangeInFileWithContents, sdk: AbstractContinueSDK
+    ) -> AsyncGenerator[SetStep, None]:
         await sdk.ide.saveFile(rif.filepath)
         full_file_contents = await sdk.ide.readFile(rif.filepath)
 
@@ -396,7 +401,7 @@ Please output the code to be inserted at the cursor in order to fulfill the user
         lines_to_display = []
 
         async def sendDiffUpdate(
-            lines: List[str], sdk: ContinueSDK, final: bool = False
+            lines: List[str], sdk: AbstractContinueSDK, final: bool = False
         ):
             nonlocal full_file_contents_lines, rif, lines_to_display
 
@@ -591,10 +596,13 @@ Please output the code to be inserted at the cursor in order to fulfill the user
                     "user_input": self.user_input,
                     "file_prefix": file_prefix,
                     "file_suffix": file_suffix,
+                    "system_message": model_to_use.system_message
+                    or sdk.config.system_message
+                    or "",
                     "context_items": "\n\n".join(
                         list(
                             map(
-                                lambda x: x.content,
+                                lambda x: x.content or "",
                                 await sdk.get_context_item_chat_messages(),
                             )
                         )
@@ -612,12 +620,12 @@ Please output the code to be inserted at the cursor in order to fulfill the user
             else:
                 messages = rendered
 
-            params = {"prompt": rendered}
+            params: Dict[str, Any] = {"prompt": rendered}
             if template.__class__.__name__ == "PromptTemplate":
-                params.update(template.dict(exclude={"prompt"}))
+                params.update(template.dict(exclude={"prompt"}))  # type: ignore
 
             params.update(
-                {"max_tokens": min(max_tokens, model_to_use.context_length // 2)}
+                {"max_tokens": min(max_tokens, model_to_use.context_length // 2, 4096)}
             )
             generator = model_to_use.stream_complete(**params)
 
@@ -626,11 +634,10 @@ Please output the code to be inserted at the cursor in order to fulfill the user
             async def gen():
                 async for chunk in model_to_use.stream_chat(
                     messages,
-                    temperature=sdk.config.temperature,
-                    max_tokens=min(max_tokens, model_to_use.context_length // 2),
+                    temperature=sdk.config.completion_options.temperature,
+                    max_tokens=min(max_tokens, model_to_use.context_length // 2, 4096),
                 ):
-                    if "content" in chunk:
-                        yield chunk["content"]
+                    yield chunk.content
 
             generator = gen()
 
@@ -646,8 +653,9 @@ Please output the code to be inserted at the cursor in order to fulfill the user
         try:
             last_task_time = time.time()
             async for chunk in generator:
-                if sdk.stopped:
-                    return
+                yield SetStep(
+                    hide=False
+                )  # Doing this so that there are breakpoints for cancellation
 
                 # Stop early if it is repeating the file_suffix or the step was deleted
                 if repeating_file_suffix:
@@ -742,7 +750,7 @@ Please output the code to be inserted at the cursor in order to fulfill the user
         self._new_contents = completion
         self._prompt_and_completion += prompt + completion
 
-    async def run(self, sdk: ContinueSDK):
+    async def run(self, sdk: AbstractContinueSDK):
         rif_with_contents = []
         for range_in_file in map(
             lambda x: RangeInFile(
@@ -763,7 +771,8 @@ Please output the code to be inserted at the cursor in order to fulfill the user
 
         for rif in rif_with_contents:
             await sdk.ide.setSuggestionsLocked(rif.filepath, True)
-            await self.stream_rif(rif, sdk)
+            async for update in self.stream_rif(rif, sdk):
+                yield update
             await sdk.ide.setSuggestionsLocked(rif.filepath, False)
 
         changes = "\n".join(
@@ -809,10 +818,10 @@ class EditFileStep(Step):
     hide: bool = True
     model: Optional[LLM] = None
 
-    async def describe(self, models: Models) -> Coroutine[str, None, None]:
+    async def describe(self, models: Models):
         return "Editing file: " + self.filepath
 
-    async def run(self, sdk: ContinueSDK):
+    async def run(self, sdk: AbstractContinueSDK):
         file_contents = await sdk.ide.readFile(self.filepath)
         await sdk.run_step(
             DefaultModelEditCodeStep(
@@ -831,7 +840,7 @@ class ManualEditStep(ReversibleStep):
 
     hide: bool = True
 
-    async def describe(self, models: Models) -> Coroutine[str, None, None]:
+    async def describe(self, models: Models):
         return "Manual edit step"
         # TODO - only handling FileEdit here, but need all other types of FileSystemEdits
         # Also requires the merge_file_edit function
@@ -854,30 +863,29 @@ class ManualEditStep(ReversibleStep):
             diffs.append(diff)
         return cls(edit_diff=EditDiff.from_sequence(diffs))
 
-    async def run(self, sdk: ContinueSDK):
+    async def run(self, sdk: AbstractContinueSDK):
         ...
 
-    async def reverse(self, sdk: ContinueSDK):
+    async def reverse(self, sdk: AbstractContinueSDK):
         await sdk.ide.applyFileSystemEdit(self.edit_diff.backward)
 
 
 class UserInputStep(Step):
     user_input: str
+    context_items: List[ContextItem] = []
     name: str = "User Input"
     hide: bool = False
 
     manage_own_chat_context: bool = True
 
-    async def describe(self, models: Models) -> Coroutine[str, None, None]:
+    async def describe(self, models: Models):
         if self.description is not None:
             return self.description
         return self.user_input
 
-    async def run(
-        self, sdk: ContinueSDK
-    ) -> Coroutine[UserInputObservation, None, None]:
+    async def run(self, sdk: AbstractContinueSDK):
         self.chat_context.append(
             ChatMessage(role="user", content=self.user_input, summary=self.user_input)
         )
         self.description = self.user_input
-        return UserInputObservation(user_input=self.user_input)
+        yield UserInputObservation(user_input=self.user_input)

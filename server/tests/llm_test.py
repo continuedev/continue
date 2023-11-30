@@ -11,19 +11,17 @@ from continuedev.libs.llm.openai import OpenAI
 from continuedev.libs.llm.together import TogetherLLM
 from continuedev.libs.util.count_tokens import DEFAULT_ARGS
 from dotenv import load_dotenv
-from util.prompts import tokyo_test_pair
+
+from .util.prompts import tokyo_test_pair
 
 load_dotenv()
 
 
-SPEND_MONEY = True
+SPEND_MONEY = False
 
 
-def start_model(model):
-    def write_log(msg: str):
-        pass
-
-    asyncio.run(model.start(write_log=write_log, unique_id="test_unique_id"))
+def start_model(model: LLM):
+    model.start(unique_id="test_unique_id")
 
 
 def async_test(func):
@@ -39,14 +37,14 @@ class TestBaseLLM:
     context_length = 4096
     system_message = "test_system_message"
 
-    def setup_class(cls):
-        cls.llm = LLM(
-            model=cls.model,
-            context_length=cls.context_length,
-            system_message=cls.system_message,
+    def setup_class(self):
+        self.llm = LLM(
+            model=self.model,
+            context_length=self.context_length,
+            system_message=self.system_message,
         )
 
-        start_model(cls.llm)
+        start_model(self.llm)
 
     def test_llm_is_instance(self):
         assert isinstance(self.llm, LLM)
@@ -84,11 +82,9 @@ class TestBaseLLM:
             ],
             temperature=0.0,
         ):
-            assert isinstance(chunk, dict)
-            if "content" in chunk:
-                completion += chunk["content"]
-            if "role" in chunk:
-                role = chunk["role"]
+            assert isinstance(chunk, ChatMessage)
+            completion += chunk.content
+            role = chunk.role
 
         assert role == "assistant"
         assert completion.strip().lower() == tokyo_test_pair[1]
@@ -110,16 +106,16 @@ class TestBaseLLM:
 
 
 class TestOpenAI(TestBaseLLM):
-    def setup_class(cls):
-        super().setup_class(cls)
-        cls.llm = OpenAI(
-            model=cls.model,
-            context_length=cls.context_length,
-            system_message=cls.system_message,
+    def setup_class(self):
+        super().setup_class(self)  # type: ignore
+        self.llm = OpenAI(
+            model=self.model,
+            context_length=self.context_length,
+            system_message=self.system_message,
             api_key=os.environ["OPENAI_API_KEY"],
             # api_base=f"http://localhost:{port}",
         )
-        start_model(cls.llm)
+        start_model(self.llm)
         # cls.server = start_openai(port=port)
 
     # def teardown_class(cls):
@@ -136,33 +132,33 @@ class TestOpenAI(TestBaseLLM):
 
 
 class TestGGML(TestBaseLLM):
-    def setup_class(cls):
-        super().setup_class(cls)
-        cls.llm = GGML(
+    def setup_class(self):
+        super().setup_class(self)  # type: ignore
+        self.llm = GGML(
             model="gpt-3.5-turbo",
-            context_length=cls.context_length,
-            system_message=cls.system_message,
-            server_url="https://api.openai.com",
+            context_length=self.context_length,
+            system_message=self.system_message,
+            api_base="https://api.openai.com",
             api_key=os.environ["OPENAI_API_KEY"],
         )
-        start_model(cls.llm)
+        start_model(self.llm)
 
 
 @pytest.mark.skipif(True, reason="Together is not working")
 class TestTogetherLLM(TestBaseLLM):
-    def setup_class(cls):
-        super().setup_class(cls)
-        cls.llm = TogetherLLM(
+    def setup_class(self):
+        super().setup_class(self)  # type: ignore
+        self.llm = TogetherLLM(
             api_key=os.environ["TOGETHER_API_KEY"],
         )
-        start_model(cls.llm)
+        start_model(self.llm)
 
 
 class TestAnthropicLLM(TestBaseLLM):
-    def setup_class(cls):
-        super().setup_class(cls)
-        cls.llm = AnthropicLLM(api_key=os.environ["ANTHROPIC_API_KEY"])
-        start_model(cls.llm)
+    def setup_class(self):
+        super().setup_class(self)  # type: ignore
+        self.llm = AnthropicLLM(api_key=os.environ["ANTHROPIC_API_KEY"])
+        start_model(self.llm)
 
     def test_llm_collect_args(self):
         options = CompletionOptions(model=self.model)

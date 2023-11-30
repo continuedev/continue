@@ -1,6 +1,6 @@
 from textwrap import dedent
 
-from ...core.main import SetStep, Step
+from ...core.main import Step
 from ...core.sdk import ContinueSDK
 from ...libs.util.paths import getConfigFilePath
 
@@ -15,4 +15,4 @@ class OpenConfigStep(Step):
         )
 
     async def run(self, sdk: ContinueSDK):
-        await sdk.ide.setFileOpen(getConfigFilePath())
+        await sdk.ide.setFileOpen(getConfigFilePath(json=True))

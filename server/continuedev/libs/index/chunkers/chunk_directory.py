@@ -72,9 +72,11 @@ async def stream_file_contents(
 
 
 async def stream_chunk_directory(
-    ide: AbstractIdeProtocolServer, max_chunk_size: int
+    ide: AbstractIdeProtocolServer, max_chunk_size: int, ignore_files: List[str] = []
 ) -> AsyncGenerator[Tuple[Optional[Chunk], float], None]:
-    async for file, contents, progress in stream_file_contents(ide):
+    async for file, contents, progress in stream_file_contents(
+        ide, ignore_files=ignore_files
+    ):
         if contents is None:
             yield (None, progress)
             continue

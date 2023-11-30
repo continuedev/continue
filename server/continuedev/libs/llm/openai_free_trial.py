@@ -1,9 +1,10 @@
 from typing import List, Optional
-from ..util.count_tokens import CONTEXT_LENGTH_FOR_MODEL
 
-from pydantic import validator
+from pydantic import Field, validator
 
 from ...core.main import ChatMessage
+from ...models.llm import RequestOptions
+from ..util.count_tokens import CONTEXT_LENGTH_FOR_MODEL
 from .base import LLM
 from .openai import OpenAI
 from .proxy_server import ProxyServer
@@ -16,54 +17,66 @@ class OpenAIFreeTrial(LLM):
     Once you are using Continue regularly though, you will need to add an OpenAI API key that has access to GPT-4 by following these steps:
 
     1. Copy your API key from https://platform.openai.com/account/api-keys
-    2. Open `~/.continue/config.py`. You can do this by using the '/config' command in Continue
+    2. Open `~/.continue/config.json`. You can do this by using the '/config' command in Continue
     3. Change the default LLMs to look like this:
 
-    ```python title="~/.continue/config.py"
-    API_KEY = "<API_KEY>"
-    config = ContinueConfig(
-        ...
-        models=Models(
-            default=OpenAIFreeTrial(model="gpt-4", api_key=API_KEY),
-            summarize=OpenAIFreeTrial(model="gpt-3.5-turbo", api_key=API_KEY)
-        )
-    )
+    ```json title="~/.continue/config.json"
+    {
+        "models": [
+            {
+                "title": "GPT-4",
+                "provider": "openai",
+                "model": "gpt-4",
+                "api_key": "YOUR_API_KEY"
+            },
+            {
+                "title": "GPT-3.5-Turbo",
+                "provider": "openai",
+                "model": "gpt-3.5-turbo",
+                "api_key": "YOUR_API_KEY"
+            }
+        ],
+        "model_roles": {
+            "default": "GPT-4",
+            "summarize": "GPT-3.5-Turbo"
+        }
+    }
     ```
-
-    The `OpenAIFreeTrial` class will automatically switch to using your API key instead of ours. If you'd like to explicitly use one or the other, you can use the `ProxyServer` or `OpenAI` classes instead.
-
-    These classes support any models available through the OpenAI API, assuming your API key has access, including "gpt-4", "gpt-3.5-turbo", "gpt-3.5-turbo-16k", and "gpt-4-32k".
     """
 
-    api_key: Optional[str] = None
+    llm: LLM = Field(default=None, description="The LLM to use for completion.")
 
-    llm: Optional[LLM] = None
+    @validator("llm", pre=True, always=True)
+    def set_llm(cls, llm, values):
+        api_key = values.get("api_key")
+        if api_key is None or api_key.strip() == "":
+            return ProxyServer(
+                model=values["model"],
+                request_options=RequestOptions(
+                    timeout=values["request_options"].timeout,
+                    verify_ssl=values["request_options"].verify_ssl,
+                ),
+            )
+        else:
+            return OpenAI(
+                api_key=api_key,
+                model=values["model"],
+                request_options=RequestOptions(
+                    timeout=values["request_options"].timeout,
+                    verify_ssl=values["request_options"].verify_ssl,
+                ),
+            )
 
     @validator("context_length", pre=True, always=True)
     def context_length_for_model(cls, v, values):
         return CONTEXT_LENGTH_FOR_MODEL.get(values["model"], 4096)
 
     def update_llm_properties(self):
-        if self.llm is not None:
-            self.llm.system_message = self.system_message
+        self.llm.system_message = self.system_message
 
-    async def start(self, unique_id: Optional[str] = None):
-        await super().start(unique_id=unique_id)
-        if self.api_key is None or self.api_key.strip() == "":
-            self.llm = ProxyServer(
-                model=self.model,
-                verify_ssl=self.verify_ssl,
-                ca_bundle_path=self.ca_bundle_path,
-            )
-        else:
-            self.llm = OpenAI(
-                api_key=self.api_key,
-                model=self.model,
-                verify_ssl=self.verify_ssl,
-                ca_bundle_path=self.ca_bundle_path,
-            )
-
-        await self.llm.start(unique_id=unique_id)
+    def start(self, unique_id: Optional[str] = None):
+        super().start(unique_id=unique_id)
+        self.llm.start(unique_id=unique_id)
 
     async def stop(self):
         await self.llm.stop()

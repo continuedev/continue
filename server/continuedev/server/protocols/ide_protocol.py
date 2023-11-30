@@ -1,20 +1,27 @@
 from abc import ABC, abstractmethod
-from typing import Callable, Dict, List, Optional, Union
-
-from ...models.main import Position
-
-from ...models.websockets import WebsocketsMessage
+from typing import Any, Callable, Dict, List, Optional, Union
 
 from fastapi import WebSocket
+from pydantic import BaseModel
 
 from ...models.filesystem import RangeInFile, RangeInFileWithContents
 from ...models.filesystem_edit import EditDiff, FileEdit, FileSystemEdit
+from ...models.main import Position
+from ...models.websockets import WebsocketsMessage
+
+
+class WindowInfo(BaseModel):
+    window_id: str
+    workspace_directory: str
+    unique_id: str
+    ide_info: Dict[str, Any]
 
 
 class AbstractIdeProtocolServer(ABC):
     websocket: WebSocket
     session_id: Union[str, None]
-    ide_info: Optional[Dict] = None
+    ide_info: Optional[Dict[str, str]] = None
+    window_info: WindowInfo
 
     @abstractmethod
     async def handle_json(self, msg: WebsocketsMessage):
@@ -85,7 +92,7 @@ class AbstractIdeProtocolServer(ABC):
         """Get a user secret"""
 
     @abstractmethod
-    async def highlightCode(self, range_in_file: RangeInFile, color: str):
+    async def highlightCode(self, range_in_file: RangeInFile, color: str = "#00ff0022"):
         """Highlight code"""
 
     @abstractmethod
@@ -143,7 +150,7 @@ class AbstractIdeProtocolServer(ABC):
         """List directory contents"""
 
     @abstractmethod
-    async def fileExists(self, filepath: str) -> str:
+    async def fileExists(self, filepath: str) -> bool:
         """Check if a file exists"""
 
     @abstractmethod

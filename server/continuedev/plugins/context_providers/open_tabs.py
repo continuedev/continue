@@ -1,5 +1,5 @@
 import os
-from typing import Any, Coroutine, List
+from typing import List
 
 from ...core.context import ContextProvider
 from ...core.main import ChatMessage, ContextItem, ContextItemDescription, ContextItemId
@@ -23,9 +23,7 @@ class OpenTabsContextProvider(ContextProvider):
             ),
         )
 
-    async def get_chat_message(
-        self, item: ContextItem
-    ) -> Coroutine[Any, Any, List[ChatMessage]]:
+    async def get_chat_message(self, item: ContextItem) -> ChatMessage:
         msg = await super().get_chat_message(item)
         msg.content = await self.get_contents()
         msg.summary = msg.content[-1000:]
@@ -40,6 +38,8 @@ class OpenTabsContextProvider(ContextProvider):
         for file in open_files:
             contents += f"{os.path.basename(file)}\n```\n"
             contents += await self.ide.readFile(file) + "\n```\n\n"
+
+        return contents
 
     async def get_item(self, id: ContextItemId, query: str) -> ContextItem:
         if not id.provider_title == self.title:
