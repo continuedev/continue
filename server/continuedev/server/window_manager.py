@@ -70,12 +70,6 @@ class Window:
 
     async def reload_config(self):
         self.config = self.load_config()
-        if self.ide is not None:
-            await self.config.models.start(
-                self.ide.window_info.unique_id,
-                self.config.system_message,
-                self.config.completion_options.temperature,
-            )
 
     async def display_config_error(self):
         if self._error_loading_config is not None:
@@ -135,13 +129,6 @@ class Window:
                         await self.gui.send_indexing_progress(progress)
 
         create_async_task(index(), on_error=self.on_error)
-
-        # Start models
-        await self.config.models.start(
-            self.ide.window_info.unique_id,
-            self.config.system_message,
-            self.config.completion_options.temperature,
-        )
 
         # When the config is loaded, setup posthog logger
         posthog_logger.setup(

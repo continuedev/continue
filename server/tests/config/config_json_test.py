@@ -67,7 +67,15 @@ def test_load_old_config(config_filename):
         validate_continue_config(config)
 
         if config_filename == "config_2.py":
-            model = config.models.default
+            model = next(
+                (
+                    model
+                    for model in config.models
+                    if model.title == config.model_roles.default
+                ),
+                None,
+            )
+            assert model is not None
             assert model.completion_options.temperature == 0.1
             assert model.completion_options.top_p == 0.75
             assert model.completion_options.top_k == 40

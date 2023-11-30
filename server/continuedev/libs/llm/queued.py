@@ -33,9 +33,9 @@ class QueuedLLM(LLM):
     def dict(self, **kwargs):
         return self.llm.dict(**kwargs)
 
-    async def start(self, *args, **kwargs):
-        await super().start(*args, **kwargs)
-        await self.llm.start(*args, **kwargs)
+    def start(self, *args, **kwargs):
+        super().start(*args, **kwargs)
+        self.llm.start(*args, **kwargs)
         self._lock = asyncio.Lock()
         self.model = self.llm.model
         self.template_messages = self.llm.template_messages

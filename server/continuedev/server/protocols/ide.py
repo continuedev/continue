@@ -33,7 +33,7 @@ from ...models.filesystem_edit import (
 from ...models.main import Position, Range
 from ...models.websockets import WebsocketsMessage
 from ..websockets_messenger import SocketIOMessenger
-from .ide_protocol import AbstractIdeProtocolServer
+from .ide_protocol import AbstractIdeProtocolServer, WindowInfo
 
 # region: Types
 
@@ -116,13 +116,6 @@ class FoldingRangeResponse(BaseModel):
 
 
 # endregion
-
-
-class WindowInfo(BaseModel):
-    window_id: str
-    workspace_directory: str
-    unique_id: str
-    ide_info: Dict[str, Any]
 
 
 class cached_property_no_none:

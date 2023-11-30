@@ -35,8 +35,8 @@ class AnthropicLLM(LLM):
     class Config:
         arbitrary_types_allowed = True
 
-    async def start(self, *args, **kwargs):
-        await super().start(*args, **kwargs)
+    def start(self, *args, **kwargs):
+        super().start(*args, **kwargs)
 
         if self.model == "claude-2":
             self.context_length = 100_000

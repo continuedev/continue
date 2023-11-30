@@ -1,6 +1,7 @@
 import json
 from typing import Any, Dict, Optional
 
+import requests
 from pydantic import Field, validator
 
 from ...core.main import ContinueCustomException
@@ -61,19 +62,16 @@ class Ollama(LLM):
             "codeup-13b": "codeup:13b",
         }.get(self.model, self.model)
 
-    async def start(self, *args, **kwargs):
-        await super().start(*args, **kwargs)
+    def start(self, *args, **kwargs):
+        super().start(*args, **kwargs)
         try:
-            async with self.create_client_session() as session:
-                async with session.post(
-                    f"{self.api_base}/api/generate",
-                    proxy=self.request_options.proxy,
-                    json={
-                        "prompt": "",
-                        "model": self.get_model_name(),
-                    },
-                ) as _:
-                    pass
+            requests.post(
+                f"{self.api_base}/api/generate",
+                json={
+                    "prompt": "",
+                    "model": self.get_model_name(),
+                },
+            )
         except Exception as e:
             logger.warning(f"Error pre-loading Ollama model: {e}")
 

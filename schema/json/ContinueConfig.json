@@ -177,28 +177,48 @@
         }
       }
     },
-    "LLM": {
-      "title": "LLM",
+    "ModelDescription": {
+      "title": "ModelDescription",
       "type": "object",
       "properties": {
         "title": {
           "title": "Title",
-          "description": "A title that will identify this model in the model selection dropdown",
+          "description": "The title you wish to give your model.",
           "type": "string"
         },
-        "unique_id": {
-          "title": "Unique Id",
-          "description": "The unique ID of the user.",
+        "provider": {
+          "title": "Provider",
+          "description": "The provider of the model. This is used to determine the type of model, and how to interact with it.",
+          "enum": [
+            "openai",
+            "openai-free-trial",
+            "openai-aiohttp",
+            "anthropic",
+            "together",
+            "ollama",
+            "huggingface-tgi",
+            "huggingface-inference-api",
+            "llama.cpp",
+            "replicate",
+            "text-gen-webui",
+            "google-palm",
+            "lmstudio"
+          ],
           "type": "string"
         },
         "model": {
           "title": "Model",
-          "description": "The name of the model to be used (e.g. gpt-4, codellama)",
+          "description": "The name of the model. Used to autodetect prompt template.",
           "type": "string"
         },
-        "system_message": {
-          "title": "System Message",
-          "description": "A system message that will always be followed by the LLM",
+        "api_key": {
+          "title": "Api Key",
+          "description": "OpenAI, Anthropic, Together, or other API key",
+          "type": "string"
+        },
+        "api_base": {
+          "title": "Api Base",
+          "description": "The base URL of the LLM API.",
           "type": "string"
         },
         "context_length": {
@@ -206,6 +226,20 @@
           "description": "The maximum context length of the LLM in tokens, as counted by count_tokens.",
           "default": 2048,
           "type": "integer"
+        },
+        "template": {
+          "title": "Template",
+          "description": "The chat template used to format messages. This is auto-detected for most models, but can be overridden here.",
+          "enum": [
+            "llama2",
+            "alpaca",
+            "zephyr",
+            "phind",
+            "anthropic",
+            "chatml",
+            "deepseek"
+          ],
+          "type": "string"
         },
         "completion_options": {
           "title": "Completion Options",
@@ -225,6 +259,11 @@
             }
           ]
         },
+        "system_message": {
+          "title": "System Message",
+          "description": "A system message that will always be followed by the LLM",
+          "type": "string"
+        },
         "request_options": {
           "title": "Request Options",
           "description": "Options for the HTTP request to the LLM.",
@@ -240,59 +279,36 @@
               "$ref": "#/definitions/RequestOptions"
             }
           ]
-        },
-        "prompt_templates": {
-          "title": "Prompt Templates",
-          "description": "A dictionary of prompt templates that can be used to customize the behavior of the LLM in certain situations. For example, set the \"edit\" key in order to change the prompt that is used for the /edit slash command. Each value in the dictionary is a string templated in mustache syntax, and filled in at runtime with the variables specific to the situation. See the documentation for more information.",
-          "default": {},
-          "type": "object"
-        },
-        "api_key": {
-          "title": "Api Key",
-          "description": "The API key for the LLM provider.",
-          "type": "string"
-        },
-        "api_base": {
-          "title": "Api Base",
-          "description": "The base URL of the LLM API.",
-          "type": "string"
         }
       },
       "required": [
+        "title",
+        "provider",
         "model"
       ]
     },
-    "Models": {
-      "title": "Models",
-      "description": "Main class that holds the current model configuration",
+    "ModelRoles": {
+      "title": "ModelRoles",
       "type": "object",
       "properties": {
         "default": {
-          "$ref": "#/definitions/LLM"
-        },
-        "summarize": {
-          "$ref": "#/definitions/LLM"
-        },
-        "edit": {
-          "$ref": "#/definitions/LLM"
+          "title": "Default",
+          "description": "The default model. If other model roles are not set, they will fall back to default.",
+          "type": "string"
         },
         "chat": {
-          "$ref": "#/definitions/LLM"
+          "title": "Chat",
+          "description": "The model to use for chat. If not set, will fall back to default.",
+          "type": "string"
         },
-        "saved": {
-          "title": "Saved",
-          "default": [],
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/LLM"
-          }
+        "edit": {
+          "title": "Edit",
+          "description": "The model to use for editing. If not set, will fall back to default.",
+          "type": "string"
         },
-        "temperature": {
-          "title": "Temperature",
-          "type": "number"
-        },
-        "system_message": {
-          "title": "System Message",
+        "summarize": {
+          "title": "Summarize",
+          "description": "The model to use for summarization. If not set, will fall back to default.",
           "type": "string"
         }
       },
@@ -591,231 +607,51 @@
         },
         "models": {
           "title": "Models",
-          "description": "Configuration for the models used by Continue. Read more about how to configure models in the documentation.",
+          "default": [
+            {
+              "title": "GPT-4 (trial)",
+              "provider": "openai-free-trial",
+              "model": "gpt-4",
+              "api_key": "",
+              "api_base": null,
+              "context_length": 2048,
+              "template": null,
+              "completion_options": {
+                "temperature": null,
+                "top_p": null,
+                "top_k": null,
+                "presence_penalty": null,
+                "frequency_penalty": null,
+                "stop": null,
+                "max_tokens": 1023
+              },
+              "system_message": null,
+              "request_options": {
+                "timeout": 300,
+                "verify_ssl": null,
+                "ca_bundle_path": null,
+                "proxy": null,
+                "headers": null
+              }
+            }
+          ],
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ModelDescription"
+          }
+        },
+        "model_roles": {
+          "title": "Model Roles",
+          "description": "Roles for models. Each entry should be the title of a model in the models array.",
           "default": {
-            "default": {
-              "title": null,
-              "model": "gpt-4",
-              "system_message": null,
-              "context_length": 8192,
-              "completion_options": {
-                "temperature": null,
-                "top_p": null,
-                "top_k": null,
-                "presence_penalty": null,
-                "frequency_penalty": null,
-                "stop": null,
-                "max_tokens": 1023
-              },
-              "request_options": {
-                "timeout": 300,
-                "verify_ssl": null,
-                "ca_bundle_path": null,
-                "proxy": null,
-                "headers": null
-              },
-              "prompt_templates": {},
-              "template_messages": null,
-              "api_key": null,
-              "api_base": null,
-              "llm": {
-                "title": null,
-                "model": "gpt-4",
-                "system_message": null,
-                "context_length": 2048,
-                "completion_options": {
-                  "temperature": null,
-                  "top_p": null,
-                  "top_k": null,
-                  "presence_penalty": null,
-                  "frequency_penalty": null,
-                  "stop": null,
-                  "max_tokens": 1023
-                },
-                "request_options": {
-                  "timeout": 300,
-                  "verify_ssl": null,
-                  "ca_bundle_path": null,
-                  "proxy": null,
-                  "headers": null
-                },
-                "prompt_templates": {},
-                "template_messages": null,
-                "api_key": null,
-                "api_base": null,
-                "class_name": "ProxyServer"
-              },
-              "class_name": "OpenAIFreeTrial"
-            },
-            "summarize": {
-              "title": null,
-              "model": "gpt-3.5-turbo",
-              "system_message": null,
-              "context_length": 4096,
-              "completion_options": {
-                "temperature": null,
-                "top_p": null,
-                "top_k": null,
-                "presence_penalty": null,
-                "frequency_penalty": null,
-                "stop": null,
-                "max_tokens": 1023
-              },
-              "request_options": {
-                "timeout": 300,
-                "verify_ssl": null,
-                "ca_bundle_path": null,
-                "proxy": null,
-                "headers": null
-              },
-              "prompt_templates": {},
-              "template_messages": null,
-              "api_key": null,
-              "api_base": null,
-              "llm": {
-                "title": null,
-                "model": "gpt-3.5-turbo",
-                "system_message": null,
-                "context_length": 2048,
-                "completion_options": {
-                  "temperature": null,
-                  "top_p": null,
-                  "top_k": null,
-                  "presence_penalty": null,
-                  "frequency_penalty": null,
-                  "stop": null,
-                  "max_tokens": 1023
-                },
-                "request_options": {
-                  "timeout": 300,
-                  "verify_ssl": null,
-                  "ca_bundle_path": null,
-                  "proxy": null,
-                  "headers": null
-                },
-                "prompt_templates": {},
-                "template_messages": null,
-                "api_key": null,
-                "api_base": null,
-                "class_name": "ProxyServer"
-              },
-              "class_name": "OpenAIFreeTrial"
-            },
-            "edit": {
-              "title": null,
-              "model": "gpt-4",
-              "system_message": null,
-              "context_length": 8192,
-              "completion_options": {
-                "temperature": null,
-                "top_p": null,
-                "top_k": null,
-                "presence_penalty": null,
-                "frequency_penalty": null,
-                "stop": null,
-                "max_tokens": 1023
-              },
-              "request_options": {
-                "timeout": 300,
-                "verify_ssl": null,
-                "ca_bundle_path": null,
-                "proxy": null,
-                "headers": null
-              },
-              "prompt_templates": {},
-              "template_messages": null,
-              "api_key": null,
-              "api_base": null,
-              "llm": {
-                "title": null,
-                "model": "gpt-4",
-                "system_message": null,
-                "context_length": 2048,
-                "completion_options": {
-                  "temperature": null,
-                  "top_p": null,
-                  "top_k": null,
-                  "presence_penalty": null,
-                  "frequency_penalty": null,
-                  "stop": null,
-                  "max_tokens": 1023
-                },
-                "request_options": {
-                  "timeout": 300,
-                  "verify_ssl": null,
-                  "ca_bundle_path": null,
-                  "proxy": null,
-                  "headers": null
-                },
-                "prompt_templates": {},
-                "template_messages": null,
-                "api_key": null,
-                "api_base": null,
-                "class_name": "ProxyServer"
-              },
-              "class_name": "OpenAIFreeTrial"
-            },
-            "chat": {
-              "title": null,
-              "model": "gpt-4",
-              "system_message": null,
-              "context_length": 8192,
-              "completion_options": {
-                "temperature": null,
-                "top_p": null,
-                "top_k": null,
-                "presence_penalty": null,
-                "frequency_penalty": null,
-                "stop": null,
-                "max_tokens": 1023
-              },
-              "request_options": {
-                "timeout": 300,
-                "verify_ssl": null,
-                "ca_bundle_path": null,
-                "proxy": null,
-                "headers": null
-              },
-              "prompt_templates": {},
-              "template_messages": null,
-              "api_key": null,
-              "api_base": null,
-              "llm": {
-                "title": null,
-                "model": "gpt-4",
-                "system_message": null,
-                "context_length": 2048,
-                "completion_options": {
-                  "temperature": null,
-                  "top_p": null,
-                  "top_k": null,
-                  "presence_penalty": null,
-                  "frequency_penalty": null,
-                  "stop": null,
-                  "max_tokens": 1023
-                },
-                "request_options": {
-                  "timeout": 300,
-                  "verify_ssl": null,
-                  "ca_bundle_path": null,
-                  "proxy": null,
-                  "headers": null
-                },
-                "prompt_templates": {},
-                "template_messages": null,
-                "api_key": null,
-                "api_base": null,
-                "class_name": "ProxyServer"
-              },
-              "class_name": "OpenAIFreeTrial"
-            },
-            "saved": [],
-            "temperature": null,
-            "system_message": null
+            "default": "GPT-4 (trial)",
+            "chat": null,
+            "edit": null,
+            "summarize": null
           },
           "allOf": [
             {
-              "$ref": "#/definitions/Models"
+              "$ref": "#/definitions/ModelRoles"
             }
           ]
         },

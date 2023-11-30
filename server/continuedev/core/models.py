@@ -70,9 +70,9 @@ class Models(BaseModel):
     """Main class that holds the current model configuration"""
 
     default: LLM
-    summarize: LLM = Field(default=None)
-    edit: LLM = Field(default=None)
-    chat: LLM = Field(default=None)
+    summarize: LLM
+    edit: LLM
+    chat: LLM
 
     saved: List[LLM] = []
 
@@ -108,7 +108,7 @@ class Models(BaseModel):
         for model in self.all_models:
             model.set_main_config_params(system_msg, temperature)
 
-    async def start(
+    def start(
         self,
         unique_id: str,
         system_message: Optional[str],
@@ -117,11 +117,9 @@ class Models(BaseModel):
         """Start each of the LLMs, or fall back to default"""
         for role in ALL_MODEL_ROLES:
             model: LLM = getattr(self, role)
-            if model is None:
-                setattr(self, role, self.default)
-            else:
-                await model.start(unique_id)
-                model.write_log = self.write_log
+
+            model.start(unique_id)
+            model.write_log = self.write_log
 
         self.set_main_config_params(system_message, temperature)
 

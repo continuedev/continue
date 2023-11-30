@@ -74,7 +74,12 @@ class ContinueSDK(AbstractContinueSDK):
         self.ide = ide
         self.gui = gui
         self.config = config
-        self.models = config.models
+        self.models = config.construct_models()
+        self.models.start(
+            self.ide.window_info.unique_id,
+            self.config.system_message,
+            self.config.completion_options.temperature,
+        )
         self.__autopilot = autopilot
 
     @property

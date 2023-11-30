@@ -202,7 +202,10 @@
         }
       },
       "required": [
-        "default"
+        "default",
+        "summarize",
+        "edit",
+        "chat"
       ]
     }
   }
