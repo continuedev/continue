@@ -114,7 +114,7 @@ class Ollama(LLM):
                 elif resp.status != 200:
                     raise ContinueCustomException(
                         f"Ollama returned an error: {await resp.text()}",
-                        "Invalid request to Ollama",
+                        f"Ollama returned an error: {await resp.text()}",
                     )
                 async for line in resp.content.iter_any():
                     if line:
