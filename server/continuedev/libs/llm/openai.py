@@ -1,7 +1,9 @@
 import asyncio
+from contextlib import asynccontextmanager
 from typing import AsyncGenerator, List, Literal, Optional
 
-import certifi
+import httpx
+import litellm
 from litellm import acompletion
 from pydantic import Field, validator
 
@@ -95,53 +97,60 @@ class OpenAI(LLM):
         if self.context_length is None:
             self.context_length = CONTEXT_LENGTH_FOR_MODEL.get(self.model, 4096)
 
-        # openai.api_key = self.api_key
-        # if self.api_type is not None:
-        #     openai.api_type = self.api_type
-        # if self.api_base is not None:
-        #     openai.api_base = self.api_base
-        # if self.api_version is not None:
-        #     openai.api_version = self.api_version
-
-        # if (
-        #     self.request_options.verify_ssl is not None
-        #     and self.request_options.verify_ssl is False
-        # ):
-        #     openai.verify_ssl_certs = False
-
-        # if self.request_options.proxy is not None:
-        #     openai.proxy = self.request_options.proxy
-
-        # openai.ca_bundle_path = self.request_options.ca_bundle_path or certifi.where()
-
-        # session = self.create_client_session()
-        # openai.aiosession.set(session)
-
     def collect_args(self, options):
         args = super().collect_args(options)
-        if self.engine is not None:
-            args["engine"] = self.engine
+        if self.api_type == "azure":
+            assert self.engine is not None, "engine must be specified for Azure API"
+            args["model"] = f"azure/{self.engine}"
+            args["api_version"] = self.api_version
+
+        args["api_key"] = self.api_key
+        args["api_base"] = self.api_base
 
         if not args["model"].endswith("0613") and "functions" in args:
             del args["functions"]
 
         return args
 
+    def httpx_client(self) -> httpx.AsyncClient:
+        args = {}
+        if timeout := self.request_options.timeout:
+            args["timeout"] = httpx.Timeout(timeout)
+
+        if verify_ssl := self.request_options.verify_ssl:
+            args["verify"] = verify_ssl
+
+        if ca_bundle_path := self.request_options.ca_bundle_path:
+            args["cert"] = ca_bundle_path
+
+        if proxy := self.request_options.proxy:
+            args["proxies"] = {"https": proxy, "http": proxy}
+
+        if headers := self.request_options.headers:
+            args["headers"] = headers
+
+        return httpx.AsyncClient(**args)
+
+    @asynccontextmanager
+    async def httpx_client_context(self):
+        client = self.httpx_client()
+        litellm.aclient_session = client
+        try:
+            yield
+        finally:
+            await client.aclose()
+
     async def _stream_complete(self, prompt, options):
         args = self.collect_args(options)
-        args["stream"] = True
 
-        resp = await acompletion(
-            messages=[{"content": prompt, "role": "user"}],
-            **args,
-            api_base=self.api_base,
-            api_version=self.api_version,
-            # engine=self.engine,
-            api_key=self.api_key,
-            custom_llm_provider="azure" if self.api_type == "azure" else None,
-        )
-        async for chunk in resp:
-            return chunk
+        async with self.httpx_client_context():
+            resp = await acompletion(
+                messages=[{"content": prompt, "role": "user"}],
+                **args,
+                stream=True,
+            )
+            async for chunk in resp:
+                return chunk
 
     async def _stream_chat(
         self, messages: List[ChatMessage], options
@@ -158,37 +167,34 @@ class OpenAI(LLM):
         #     api_key=self.api_key,
         #     custom_llm_provider="azure" if self.api_type == "azure" else None,
         # )
-        resp = await acompletion(
-            messages=[msg.to_dict() for msg in messages],
-            **args,
-            stream=True,
-            api_key=self.api_key,
-        )
-        async for chunk in resp:
-            if len(chunk.choices) == 0:
-                continue  # :)
 
-            if self.api_type == "azure":
-                if self.model == "gpt-4":
-                    await asyncio.sleep(0.03)
-                else:
-                    await asyncio.sleep(0.01)
-
-            yield ChatMessage(
-                role="assistant", content=chunk.choices[0].delta.content or ""
+        async with self.httpx_client_context():
+            resp = await acompletion(
+                messages=[msg.to_dict() for msg in messages],
+                **args,
+                stream=True,
             )
+            async for chunk in resp:
+                if len(chunk.choices) == 0:
+                    continue  # :)
+
+                if self.api_type == "azure":
+                    if self.model == "gpt-4":
+                        await asyncio.sleep(0.03)
+                    else:
+                        await asyncio.sleep(0.01)
+
+                yield ChatMessage(
+                    role="assistant", content=chunk.choices[0].delta.content or ""
+                )
 
     async def _complete(self, prompt: str, options):
         args = self.collect_args(options)
 
-        resp = await acompletion(
-            messages=[{"content": prompt, "role": "user"}],
-            **args,
-            # api_base=self.api_base,
-            # api_version=self.api_version,
-            # engine=self.engine,
-            api_key=self.api_key,
-            # custom_llm_provider="azure" if self.api_type == "azure" else None,
-        )
+        async with self.httpx_client_context():
+            resp = await acompletion(
+                messages=[{"content": prompt, "role": "user"}],
+                **args,
+            )
 
-        return resp.choices[0].message.content
+            return resp.choices[0].message.content
