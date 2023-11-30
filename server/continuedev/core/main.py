@@ -340,7 +340,7 @@ class Step(ContinueBaseModel):
         return "Running step: " + self.name
 
     def on_stop(self, sdk: ContinueSDK) -> Optional[StepGenerator]:
-        pass
+        return None
 
     def dict(self, *args, **kwargs):
         d = super().dict(*args, **kwargs)

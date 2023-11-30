@@ -76,13 +76,18 @@ def template_alpaca_messages(msgs: List[ChatMessage]) -> str:
 
 def deepseek_template_messages(msgs: List[ChatMessage]) -> str:
     prompt = ""
+    system = None
+    prompt += "You are an AI programming assistant, utilizing the DeepSeek Coder model, developed by DeepSeek Company, and you only answer questions related to computer science. For politically sensitive questions, security and privacy issues, and other non-computer science questions, you will refuse to answer.\n"
     if msgs[0].role == "system":
-        prompt += f"{msgs.pop(0).content}\n"
-    else:
-        prompt += "You are an AI programming assistant, utilizing the DeepSeek Coder model, developed by DeepSeek Company, and you only answer questions related to computer science. For politically sensitive questions, security and privacy issues, and other non-computer science questions, you will refuse to answer.\n"
+        system = msgs.pop(0).content
 
-    for msg in msgs:
+    for i in range(len(msgs)):
+        msg = msgs[i]
         prompt += "### Instruction:\n" if msg.role == "user" else "### Response:\n"
+
+        if system and msg.role == "user" and i == len(msgs) - 1:
+            prompt += system + "\n"
+
         prompt += f"{msg.content}"
         prompt += "\n" if msg.role == "user" else "<|EOT|>\n"
 

@@ -84,7 +84,13 @@ class HighlightedCodeContextProvider(ContextProvider):
             filepath=item.description.description,
             range=Range.from_shorthand(int(lines[0]) - 1, 0, int(lines[1]), 0),
         )
-        contents = await ide.readRangeInFile(rif)
+        # Temporary fix because reading the range in the file returns the raw JSON of the notebook
+        # , but we have the actual contents from when it was originally highlighted
+        if item.description.description.endswith(".ipynb"):
+            contents = item.content
+        else:
+            contents = await ide.readRangeInFile(rif)
+
         return rif.with_contents(contents)
 
     async def get_chat_message(self, item: ContextItem) -> ChatMessage:

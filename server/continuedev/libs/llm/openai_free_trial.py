@@ -74,9 +74,9 @@ class OpenAIFreeTrial(LLM):
     def update_llm_properties(self):
         self.llm.system_message = self.system_message
 
-    async def start(self, unique_id: Optional[str] = None):
-        await super().start(unique_id=unique_id)
-        await self.llm.start(unique_id=unique_id)
+    def start(self, unique_id: Optional[str] = None):
+        super().start(unique_id=unique_id)
+        self.llm.start(unique_id=unique_id)
 
     async def stop(self):
         await self.llm.stop()

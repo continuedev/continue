@@ -4,7 +4,7 @@ from typing import List, Optional, Union
 
 from pydantic import BaseModel, Field
 
-from ...core.main import ContinueCustomException, SetStep, Step
+from ...core.main import ContextItem, ContinueCustomException, SetStep, Step
 from ...core.sdk import ContinueSDK, Models
 from ...core.steps import DefaultModelEditCodeStep
 from ...libs.llm.base import LLM
@@ -371,6 +371,7 @@ class EditHighlightedCodeStep(Step):
 
 class UserInputStep(Step):
     user_input: str
+    context_items: List[ContextItem] = []
 
 
 class SolveTracebackStep(Step):

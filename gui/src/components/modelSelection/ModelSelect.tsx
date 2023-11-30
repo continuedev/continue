@@ -20,6 +20,7 @@ import { useNavigate } from "react-router-dom";
 import { Listbox, Transition } from "@headlessui/react";
 import ReactDOM from "react-dom";
 import HeaderButtonWithText from "../HeaderButtonWithText";
+import { defaultModelSelector } from "../../redux/selectors/configSelectors";
 
 const GridDiv = styled.div`
   display: grid;
@@ -157,7 +158,7 @@ function ListBoxOption({ option, idx }: { option: Option; idx: number }) {
     >
       <div className="flex items-center justify-between gap-3 h-5 relative">
         <span>{option.title}</span>
-        {idx > 0 && hovered && (
+        {hovered && (
           <HeaderButtonWithText
             text="Delete"
             onClick={(e) => {
@@ -195,51 +196,33 @@ interface Option {
 
 function ModelSelect(props: {}) {
   const client = useContext(GUIClientContext);
-  const defaultModel = useSelector(
-    (state: RootStore) => (state.serverState.config as any)?.models?.default
-  );
-  const savedModels = useSelector(
-    (state: RootStore) => (state.serverState.config as any)?.models?.saved
+  const defaultModel = useSelector(defaultModelSelector);
+  const allModels = useSelector(
+    (state: RootStore) => state.serverState.config.models
   );
 
   const navigate = useNavigate();
 
   const DEFAULT_OPTION = {
-    value: JSON.stringify({
-      t: "default",
-      idx: -1,
-    }),
+    value: "GPT-4",
     title: "GPT-4",
   };
   const [options, setOptions] = useState<Option[]>([DEFAULT_OPTION]);
 
   useEffect(() => {
-    if (!defaultModel && !savedModels) {
+    if (!allModels) {
       setOptions([DEFAULT_OPTION]);
       return;
     }
-    const newOptions: Option[] = [];
-    if (defaultModel) {
-      newOptions.push({
-        value: JSON.stringify({
-          t: "default",
-          idx: -1,
-        }),
-        title: modelSelectTitle(defaultModel),
-      });
-    }
-
-    savedModels?.forEach((model: any, idx: number) => {
-      newOptions.push({
-        value: JSON.stringify({
-          t: "saved",
-          idx,
-        }),
-        title: modelSelectTitle(model),
-      });
-    });
-    setOptions(newOptions);
-  }, [defaultModel, savedModels]);
+    setOptions(
+      allModels.map((model) => {
+        return {
+          value: model.title,
+          title: modelSelectTitle(model),
+        };
+      })
+    );
+  }, [allModels]);
 
   const topDiv = document.getElementById("model-select-top-div");
 
@@ -247,17 +230,12 @@ function ModelSelect(props: {}) {
     <>
       <GridDiv>
         <StyledListbox
-          value={JSON.stringify({
-            t: "default",
-            idx: -1,
-          })}
+          value={"GPT-4"}
           onChange={(val: string) => {
-            const value = JSON.parse(val);
-            if (value.t === "saved") {
-              client?.setModelForRoleFromIndex("*", value.idx);
-            }
+            if (val === defaultModel.title) return;
+            client?.setModelForRoleFromTitle("*", val);
           }}
-          defaultValue={"0"}
+          defaultValue={"GPT-4"}
         >
           <div className="relative">
             <StyledListboxButton>

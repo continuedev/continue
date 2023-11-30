@@ -89,8 +89,8 @@ class OpenAI(LLM):
     def context_length_for_model(cls, v, values):
         return CONTEXT_LENGTH_FOR_MODEL.get(values["model"], 4096)
 
-    async def start(self, unique_id: Optional[str] = None):
-        await super().start(unique_id=unique_id)
+    def start(self, unique_id: Optional[str] = None):
+        super().start(unique_id=unique_id)
 
         if self.context_length is None:
             self.context_length = CONTEXT_LENGTH_FOR_MODEL.get(self.model, 4096)

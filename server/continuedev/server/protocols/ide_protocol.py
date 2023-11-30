@@ -1,7 +1,8 @@
 from abc import ABC, abstractmethod
-from typing import Callable, Dict, List, Optional, Union
+from typing import Any, Callable, Dict, List, Optional, Union
 
 from fastapi import WebSocket
+from pydantic import BaseModel
 
 from ...models.filesystem import RangeInFile, RangeInFileWithContents
 from ...models.filesystem_edit import EditDiff, FileEdit, FileSystemEdit
@@ -9,10 +10,18 @@ from ...models.main import Position
 from ...models.websockets import WebsocketsMessage
 
 
+class WindowInfo(BaseModel):
+    window_id: str
+    workspace_directory: str
+    unique_id: str
+    ide_info: Dict[str, Any]
+
+
 class AbstractIdeProtocolServer(ABC):
     websocket: WebSocket
     session_id: Union[str, None]
     ide_info: Optional[Dict[str, str]] = None
+    window_info: WindowInfo
 
     @abstractmethod
     async def handle_json(self, msg: WebsocketsMessage):

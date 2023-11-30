@@ -75,7 +75,6 @@ const TEST_CONTEXT_ITEMS: ContextItem[] = [
 
 export interface SessionFullState {
   history: StepDescription[];
-  contextItemsAtIndex: { [index: number]: ContextItem[] };
   context_items: ContextItem[];
   active: boolean;
   title: string;
@@ -89,7 +88,6 @@ export const sessionStateSlice = createSlice({
     context_items: [],
     active: false,
     title: "New Session",
-    contextItemsAtIndex: {},
     session_id: v4(),
   },
   reducers: {
@@ -223,15 +221,21 @@ export const sessionStateSlice = createSlice({
       state: SessionFullState,
       { payload }: { payload: { item: ContextItem; index: number } }
     ) => {
-      return {
-        ...state,
-        contextItemsAtIndex: {
-          ...state.contextItemsAtIndex,
-          [payload.index]: [
-            ...(state.contextItemsAtIndex[payload.index] ?? []),
+      let history = [...state.history];
+      history[payload.index] = {
+        ...history[payload.index],
+        params: {
+          ...history[payload.index].params,
+          context_items: [
+            ...((history[payload.index].params?.context_items as any) || []),
             payload.item,
           ],
         },
+      };
+
+      return {
+        ...state,
+        history,
       };
     },
     addHighlightedCode: (
@@ -327,19 +331,31 @@ export const sessionStateSlice = createSlice({
       } else {
         return {
           ...state,
-          contextItemsAtIndex: {
-            ...state.contextItemsAtIndex,
-            [payload.index]: (
-              state.contextItemsAtIndex[payload.index] ?? []
-            ).filter(
-              (item) =>
-                !ids.includes(
-                  `${item.description.id.provider_title}-${item.description.id.item_id}`
-                )
-            ),
-          },
+          history: state.history.map((step, i) => {
+            if (i === payload.index) {
+              return {
+                ...step,
+                params: {
+                  ...step.params,
+                  context_items: (step.params?.context_items as any).filter(
+                    (item: ContextItem) =>
+                      !ids.includes(
+                        `${item.description.id.provider_title}-${item.description.id.item_id}`
+                      )
+                  ),
+                },
+              };
+            }
+            return step;
+          }),
         };
       }
+    },
+    clearContextItems: (state: SessionFullState) => {
+      return {
+        ...state,
+        context_items: [],
+      };
     },
     setEditingAtIds: (
       state: SessionFullState,
@@ -362,17 +378,25 @@ export const sessionStateSlice = createSlice({
       } else {
         return {
           ...state,
-          contextItemsAtIndex: {
-            ...state.contextItemsAtIndex,
-            [payload.index]: (
-              state.contextItemsAtIndex[payload.index] ?? []
-            ).map((item) => {
+          history: state.history.map((step, i) => {
+            if (i === payload.index) {
               return {
-                ...item,
-                editing: ids.includes(item.description.id.item_id),
+                ...step,
+                params: {
+                  ...step.params,
+                  context_items: (step.params?.context_items as any).map(
+                    (item: ContextItem) => {
+                      return {
+                        ...item,
+                        editing: ids.includes(item.description.id.item_id),
+                      };
+                    }
+                  ),
+                },
               };
-            }),
-          },
+            }
+            return step;
+          }),
         };
       }
     },
@@ -391,5 +415,6 @@ export const {
   deleteContextWithIds,
   setTitle,
   setEditingAtIds,
+  clearContextItems,
 } = sessionStateSlice.actions;
 export default sessionStateSlice.reducer;

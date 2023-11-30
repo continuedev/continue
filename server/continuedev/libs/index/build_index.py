@@ -61,7 +61,10 @@ async def build_index(
     chroma_task = asyncio.create_task(chroma_task())
     meilisearch_task = asyncio.create_task(meilisearch_task())
 
-    async for chunk, progress in stream_chunk_directory(ide, MAX_CHUNK_SIZE):
+    ignore_files = settings.ignore_files if settings else []
+    async for chunk, progress in stream_chunk_directory(
+        ide, MAX_CHUNK_SIZE, ignore_files=ignore_files
+    ):
         if chunk is not None:
             buffers[0].append(chunk)
             buffers[1].append(chunk)

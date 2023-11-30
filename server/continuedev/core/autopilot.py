@@ -320,14 +320,14 @@ class Autopilot:
                 )
             )
 
-        logger_id = self.config.models.add_logger(add_log)
+        logger_id = self.sdk.models.add_logger(add_log)
 
         if step is not None:
             await self.run_step(step)
         while next_step := self.policy.next(self.sdk.config, self.session_state):  # type: ignore (stub type)
             await self.run_step(next_step)
 
-        self.config.models.remove_logger(logger_id)
+        self.sdk.models.remove_logger(logger_id)
 
     async def get_session_title(self) -> str:
         if self.sdk.config.disable_summaries:

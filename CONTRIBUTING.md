@@ -81,6 +81,10 @@ VSCode is assumed for development as Continue is primarily a VSCode tool at the 
       2. Search for a method `sendHighlightedCode` and set a breakpoint in it, it is invoked on every selection change on the extension side
    2. _In Host VSCode_: Select part of the `example.ts` file, your breakpoint should be hit. If you hit play at this point (or F5) you should see the original breakpoint hit again - congratulations, you debugged an end to end interaction from the extension to the server!
 
+### Formatting
+
+Continue uses the [Black Formatter](https://marketplace.visualstudio.com/items?itemName=ms-python.black-formatter) for Python and [Prettier](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode) for JavaScript/TypeScript. Please install these extensions in VSCode and enable "Format on Save" in your settings.
+
 ### Writing Steps
 
 A Step can be used as a custom slash command, or called otherwise in a `Policy`. See the [steps README](./server/continuedev/plugins/steps/README.md) to learn how to write a Step.

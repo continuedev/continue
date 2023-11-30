@@ -18,11 +18,11 @@ class ProxyServer(LLM):
     class Config:
         arbitrary_types_allowed = True
 
-    async def start(
+    def start(
         self,
         **kwargs,
     ):
-        await super().start(**kwargs)
+        super().start(**kwargs)
         self.context_length = CONTEXT_LENGTH_FOR_MODEL[self.model]
 
     def get_headers(self):

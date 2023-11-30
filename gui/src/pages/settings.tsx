@@ -17,7 +17,8 @@ import { ArrowLeftIcon } from "@heroicons/react/24/outline";
 import Loader from "../components/loaders/Loader";
 import InfoHover from "../components/InfoHover";
 import { FormProvider, useForm } from "react-hook-form";
-import { getFontSize } from "../util";
+import { getFontSize, getPlatform } from "../util";
+import { postToIde } from "../util/ide";
 
 const Hr = styled.hr`
   border: 0.5px solid ${lightGray};
@@ -78,6 +79,19 @@ const Slider = styled.input.attrs({ type: "range" })`
     border: none;
   }
 `;
+
+const ConfigJsonButton = styled(Button)`
+  padding: 2px 4px;
+  margin-left: auto;
+  margin-right: 4px;
+  background-color: transparent;
+  color: white;
+  border: 1px solid ${lightGray};
+  &:hover {
+    background-color: ${lightGray};
+  }
+`;
+
 const ALL_MODEL_ROLES = ["default", "summarize", "edit", "chat"];
 
 function Settings() {
@@ -139,6 +153,18 @@ function Settings() {
             className="inline-block ml-4 cursor-pointer"
           />
           <h3 className="text-lg font-bold m-2 inline-block">Settings</h3>
+          <ConfigJsonButton
+            onClick={() => {
+              postToIde("showFile", {
+                filepath:
+                  getPlatform() == "windows"
+                    ? "~\\.continue\\config.json"
+                    : "~/.continue/config.json",
+              });
+            }}
+          >
+            Open config.json
+          </ConfigJsonButton>
         </div>
         <form onSubmit={formMethods.handleSubmit(onSubmit)}>
           {config ? (

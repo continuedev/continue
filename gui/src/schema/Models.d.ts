@@ -95,9 +95,9 @@ export type SystemMessage1 = string;
  */
 export interface Models1 {
   default: LLM;
-  summarize?: LLM;
-  edit?: LLM;
-  chat?: LLM;
+  summarize: LLM;
+  edit: LLM;
+  chat: LLM;
   saved?: Saved;
   temperature?: Temperature1;
   system_message?: SystemMessage1;
