@@ -49,6 +49,7 @@ import { useNavigate } from "react-router-dom";
 import { setTakenActionTrue } from "../redux/slices/miscSlice";
 import {
   addContextItemAtIndex,
+  clearContextItems,
   deleteAtIndex,
   newSession,
   setActive,
@@ -305,7 +306,10 @@ function GUI(props: GUIProps) {
           observations: [],
           logs: [],
           step_type: "UserInputStep",
-          params: { user_input: input },
+          params: {
+            user_input: input,
+            context_items: sessionState.context_items,
+          },
           hide: false,
           depth: 0,
         },
@@ -314,14 +318,6 @@ function GUI(props: GUIProps) {
         history: newHistory,
         context_items: sessionState.context_items,
       };
-      for (let contextItem of sessionState.context_items) {
-        dispatch(
-          addContextItemAtIndex({
-            item: contextItem,
-            index: newHistory.length - 1,
-          })
-        );
-      }
       client.runFromState(state);
       newHistory.push({
         name: "Generating Response...",
@@ -335,6 +331,15 @@ function GUI(props: GUIProps) {
       });
       dispatch(setHistory(newHistory));
       dispatch(setActive(true));
+      for (let contextItem of sessionState.context_items) {
+        dispatch(
+          addContextItemAtIndex({
+            item: contextItem,
+            index: newHistory.length - 1,
+          })
+        );
+      }
+      dispatch(clearContextItems());
 
       // Increment localstorage counter for popup
       const counter = localStorage.getItem("mainTextEntryCounter");
@@ -742,7 +747,10 @@ function GUI(props: GUIProps) {
                                   observations: [],
                                   logs: [],
                                   step_type: "UserInputStep",
-                                  params: { user_input: value },
+                                  params: {
+                                    user_input: value,
+                                    context_items: sessionState.context_items,
+                                  },
                                   hide: false,
                                   depth: 0,
                                 },
@@ -753,6 +761,7 @@ function GUI(props: GUIProps) {
                                 history: newHistory,
                                 context_items: sessionState.context_items,
                               };
+                              dispatch(clearContextItems());
 
                               client.runFromState(state);
                             }

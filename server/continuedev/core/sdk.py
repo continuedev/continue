@@ -74,7 +74,12 @@ class ContinueSDK(AbstractContinueSDK):
         self.ide = ide
         self.gui = gui
         self.config = config
-        self.models = config.models
+        self.models = config.construct_models()
+        self.models.start(
+            self.ide.window_info.unique_id,
+            self.config.system_message,
+            self.config.completion_options.temperature,
+        )
         self.__autopilot = autopilot
 
     @property
@@ -215,27 +220,28 @@ class ContinueSDK(AbstractContinueSDK):
         raise ContinueCustomException(message, title, with_step)
 
     async def get_chat_context(self) -> List[ChatMessage]:
-        history_context = list(
-            map(
-                lambda step: ChatMessage(
-                    role="user" if step.step_type == "UserInputStep" else "assistant",
+        msgs = []
+
+        for step in filter(lambda x: x.hide is False, self.history):
+            role = "assistant"
+            if step.step_type == "UserInputStep":
+                role = "user"
+                msgs.extend(
+                    await self.__autopilot.context_manager.get_chat_messages(
+                        [ContextItem(**itm) for itm in step.params["context_items"]]
+                    )
+                )
+
+            msgs.append(
+                ChatMessage(
+                    role=role,
                     name=step.step_type,
                     content=step.description or f"Ran function {step.name}",
                     summary=f"Called function {step.name}",
-                ),
-                filter(lambda x: x.hide is False, self.history[:-1]),
+                )
             )
-        )
 
-        context_messages: List[
-            ChatMessage
-        ] = await self.__autopilot.context_manager.get_chat_messages(self.context_items)
-
-        # Insert at the end, but don't insert after latest user message or function call
-        for msg in context_messages:
-            history_context.insert(-1, msg)
-
-        return history_context
+        return msgs
 
     async def get_context_item_chat_messages(
         self, exclude: Optional[str] = None

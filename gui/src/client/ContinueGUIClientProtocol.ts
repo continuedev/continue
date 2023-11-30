@@ -221,8 +221,8 @@ class ContinueGUIClientProtocol extends AbstractContinueGUIClientProtocol {
     this.messenger?.send("add_model_for_role", { role, model });
   }
 
-  setModelForRoleFromIndex(role: string, index: number): void {
-    this.messenger?.send("set_model_for_role_from_index", { role, index });
+  setModelForRoleFromTitle(role: string, title: string): void {
+    this.messenger?.send("set_model_for_role_from_title", { role, title });
   }
 
   saveContextGroup(title: string, contextItems: ContextItem[]): void {

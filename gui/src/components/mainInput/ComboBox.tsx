@@ -71,6 +71,7 @@ import {
 } from "../../redux/slices/sessionStateReducer";
 import RingLoader from "../loaders/RingLoader";
 import CodeSnippetPreview from "../markdown/CodeSnippetPreview";
+import { contextLengthSelector } from "../../redux/selectors/configSelectors";
 
 const SEARCH_INDEX_NAME = "continue_context_items";
 
@@ -372,7 +373,8 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
   );
   const selectedContextItems = useSelector((state: RootStore) => {
     if (typeof props.index !== "undefined") {
-      return state.sessionState.contextItemsAtIndex[props.index] || [];
+      return (state.sessionState.history[props.index].params["context_items"] ||
+        []) as ContextItem[];
     } else {
       return state.sessionState.context_items || [];
     }
@@ -802,10 +804,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
   const [contextLengthFillPercentage, setContextLengthFillPercentage] =
     useState<number>(0);
 
-  const contextLength = useSelector(
-    (store: RootStore) =>
-      store.serverState.config.models?.default?.context_length || 4096
-  );
+  const contextLength = useSelector(contextLengthSelector);
 
   useEffect(() => {
     let tokenEstimate = selectedContextItems.reduce((acc, item) => {

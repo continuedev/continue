@@ -1,5 +1,6 @@
 import * as vscode from "vscode";
 import { machineIdSync } from "node-machine-id";
+import * as path from "path";
 
 export function translate(range: vscode.Range, lines: number): vscode.Range {
   return new vscode.Range(
@@ -74,6 +75,12 @@ export function openEditorAndRevealRange(
   viewColumn?: vscode.ViewColumn
 ): Promise<vscode.TextEditor> {
   return new Promise((resolve, _) => {
+    if (editorFilename.startsWith("~")) {
+      editorFilename = path.join(
+        process.env.HOME || process.env.USERPROFILE || "",
+        editorFilename.slice(1)
+      );
+    }
     vscode.workspace.openTextDocument(editorFilename).then(async (doc) => {
       try {
         // An error is thrown mysteriously if you open two documents in parallel, hence this

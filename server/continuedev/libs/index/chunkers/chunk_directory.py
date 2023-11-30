@@ -4,9 +4,8 @@ from typing import AsyncGenerator, Callable, List, Optional, Tuple
 
 from ....server.protocols.ide_protocol import AbstractIdeProtocolServer
 from ...util.filter_files import DEFAULT_IGNORE_PATTERNS, should_filter_path
-from .chunk import Chunk
 from . import chunk_document
-
+from .chunk import Chunk
 
 FILE_IGNORE_PATTERNS = [
     # File Names
@@ -150,9 +149,11 @@ async def stream_file_contents(
 
 
 async def stream_chunk_directory(
-    ide: AbstractIdeProtocolServer, max_chunk_size: int
+    ide: AbstractIdeProtocolServer, max_chunk_size: int, ignore_files: List[str] = []
 ) -> AsyncGenerator[Tuple[Optional[Chunk], float], None]:
-    async for file, contents, progress in stream_file_contents(ide):
+    async for file, contents, progress in stream_file_contents(
+        ide, ignore_files=ignore_files
+    ):
         if contents is None:
             yield (None, progress)
             continue
