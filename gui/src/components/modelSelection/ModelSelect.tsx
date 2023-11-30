@@ -232,7 +232,7 @@ function ModelSelect(props: {}) {
         <StyledListbox
           value={"GPT-4"}
           onChange={(val: string) => {
-            if (val === defaultModel.title) return;
+            if (val === defaultModel?.title) return;
             client?.setModelForRoleFromTitle("*", val);
           }}
           defaultValue={"GPT-4"}

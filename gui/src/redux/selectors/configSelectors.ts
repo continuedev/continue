@@ -14,5 +14,7 @@ export const contextLengthSelector = (state: RootStore) => {
 
 export const defaultModelSelector = (state: RootStore) => {
   const title = state.serverState.config.model_roles?.default;
-  return state.serverState.config.models.find((model) => model.title === title);
+  return state.serverState.config.models?.find(
+    (model) => model.title === title
+  );
 };
