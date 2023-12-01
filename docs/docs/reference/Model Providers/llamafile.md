@@ -6,11 +6,13 @@ A [llamafile](https://github.com/Mozilla-Ocho/llamafile#readme) is a self-contai
 
 ```json title="~/.continue/config.json"
 {
-    "models": [{
-        "title": "Llamafile",
-        "provider": "llamafile",
-        "model": "mistral-7b",
-    }]
+  "models": [
+    {
+      "title": "Llamafile",
+      "provider": "llamafile",
+      "model": "mistral-7b"
+    }
+  ]
 }
 ```
 
@@ -20,7 +22,6 @@ A [llamafile](https://github.com/Mozilla-Ocho/llamafile#readme) is a self-contai
 
 <ClassPropertyRef name='llama_cpp_args' details='{&quot;title&quot;: &quot;Llama Cpp Args&quot;, &quot;description&quot;: &quot;A list of additional arguments to pass to llama.cpp. See [here](https://github.com/ggerganov/llama.cpp/tree/master/examples/server#api-endpoints) for the complete catalog of options.&quot;, &quot;default&quot;: {&quot;stop&quot;: [&quot;[INST]&quot;]}, &quot;type&quot;: &quot;object&quot;}' required={false} default="{&#x27;stop&#x27;: [&#x27;[INST]&#x27;]}"/>
 <ClassPropertyRef name='llamafile_command' details='{&quot;title&quot;: &quot;Llamafile Command&quot;, &quot;type&quot;: &quot;string&quot;}' required={false} default=""/>
-
 
 ### Inherited Properties
 

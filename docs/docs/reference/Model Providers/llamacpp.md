@@ -12,12 +12,14 @@ After it's up and running, change `~/.continue/config.json` to look like this:
 
 ```json title="~/.continue/config.json"
 {
-    "models": [{
-        "title": "Llama CPP",
-        "provider": "llama.cpp",
-        "model": "MODEL_NAME",
-        "api_base": "http://localhost:8080"
-    }]
+  "models": [
+    {
+      "title": "Llama CPP",
+      "provider": "llama.cpp",
+      "model": "MODEL_NAME",
+      "api_base": "http://localhost:8080"
+    }
+  ]
 }
 ```
 
@@ -26,7 +28,6 @@ After it's up and running, change `~/.continue/config.json` to look like this:
 ## Properties
 
 <ClassPropertyRef name='llama_cpp_args' details='{&quot;title&quot;: &quot;Llama Cpp Args&quot;, &quot;description&quot;: &quot;A list of additional arguments to pass to llama.cpp. See [here](https://github.com/ggerganov/llama.cpp/tree/master/examples/server#api-endpoints) for the complete catalog of options.&quot;, &quot;default&quot;: {&quot;stop&quot;: [&quot;[INST]&quot;]}, &quot;type&quot;: &quot;object&quot;}' required={false} default="{&#x27;stop&#x27;: [&#x27;[INST]&#x27;]}"/>
-
 
 ### Inherited Properties
 

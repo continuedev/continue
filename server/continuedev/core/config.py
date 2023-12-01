@@ -17,6 +17,7 @@ from .config_utils.context import CONTEXT_PROVIDER_NAME_TO_CLASS, ContextProvide
 from .config_utils.shared import (
     MODEL_CLASS_TO_MODEL_PROVIDER,
     MODEL_PROVIDER_TO_MODEL_CLASS,
+    STEP_NAMES,
     ModelProvider,
     StepName,
     TemplateType,
@@ -50,7 +51,11 @@ class SlashCommand(BaseModel):
     def step_is_string(cls, v):
         if isinstance(v, str):
             return v
-        elif isinstance(v, object) and v.__class__.__name__ == "ModelMetaclass":
+        elif (
+            isinstance(v, object)
+            and v.__class__.__name__ == "ModelMetaclass"
+            and v.__class__.__name__ in STEP_NAMES
+        ):
             return str(v).split(".")[-1].split("'")[0]
         else:
             return v
@@ -458,6 +463,9 @@ class ContinueConfig(BaseModel):
 
                 serialized_config = json.loads(contents)
 
+            except json.JSONDecodeError as e:
+                raise e
+
             except ValueError as e:
                 logger.warning(f"Found empty config.json at {filepath}: {e}")
                 with open(filepath, "w") as f:
@@ -633,8 +641,12 @@ class ContinueConfig(BaseModel):
         # Allow extra fields to be passed through
         kwargs = {**model.dict(exclude_none=True)}
         kwargs["completion_options"] = options
-        kwargs["template_messages"] = autodetect_template_function(model.model)
-        kwargs["prompt_templates"] = autodetect_prompt_templates(model.model)
+        kwargs["template_messages"] = autodetect_template_function(
+            model.model, model.template
+        )
+        kwargs["prompt_templates"] = autodetect_prompt_templates(
+            model.model, model.template
+        )
 
         return model_class(**kwargs)
 
