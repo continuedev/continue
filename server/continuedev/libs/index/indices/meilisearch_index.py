@@ -1,31 +1,47 @@
 import asyncio
 from functools import cached_property
+from typing import Any, AsyncGenerator, Dict, List, Tuple, Union
+
 from meilisearch_python_async import Client
 from meilisearch_python_async.index import Index
-from ....server.meilisearch_server import get_meilisearch_url
-from .base import CodebaseIndex
-from ..chunkers import Chunk
-from typing import Any, AsyncGenerator, Dict, List
 
-from ....server.meilisearch_server import remove_meilisearch_disallowed_chars
+from ....server.meilisearch_server import (
+    get_meilisearch_url,
+    remove_meilisearch_disallowed_chars,
+)
 from ...util.logging import logger
+from ..chunkers import Chunk
+from ..chunkers.chunk_directory import IndexAction
+from .base import CodebaseIndex
 
 
 class MeilisearchCodebaseIndex(CodebaseIndex):
-    directory: str
+    """
+    The documents have the following structure:
+    - document_id field is the hash of the document
+    - actual id is document_id + :: + chunk index
+    - tags is a list of each (directory + branch) the chunk is indexed for, then we can query for all chunks with a given label
 
-    def __init__(self, directory: str):
-        self.directory = directory
+    There is only a single index because it allows us to share between sub-directories
+    """
+
+    tag: str
+
+    def __init__(self, tag: str):
+        self.tag = tag
 
     @cached_property
     def index_name(self) -> str:
-        return remove_meilisearch_disallowed_chars(self.directory)
+        return remove_meilisearch_disallowed_chars("continue_codebase_index")
 
-    def chunk_to_meilisearch_document(self, chunk: Chunk, index: int) -> Dict[str, Any]:
+    def chunk_to_meilisearch_document(
+        self, chunk: Chunk, index: int, tags: List[str]
+    ) -> Dict[str, Any]:
         return {
             "id": str(index),
             "content": chunk.content,
             "document_id": chunk.document_id,
+            "tags": tags,
             **chunk.other_metadata,
             "metadata": {
                 "start_line": chunk.start_line,
@@ -40,6 +56,7 @@ class MeilisearchCodebaseIndex(CodebaseIndex):
         del other_metadata["metadata"]
         del other_metadata["document_id"]
         del other_metadata["id"]
+        del other_metadata["tags"]
 
         return Chunk(
             content=document["content"],
@@ -53,12 +70,39 @@ class MeilisearchCodebaseIndex(CodebaseIndex):
     async def add_chunks(self, chunks: List[Chunk], index: Index, offset: int):
         await index.add_documents(
             [
-                self.chunk_to_meilisearch_document(chunk, j + offset)
+                self.chunk_to_meilisearch_document(chunk, j + offset, [self.tag])
                 for j, chunk in enumerate(chunks)
             ]
         )
 
-    async def build(self, chunks: AsyncGenerator[Chunk, None]):
+    async def delete_chunks(self, document_ids: List[str], index: Index):
+        documents = await index.get_documents(
+            filter=f'document_id IN [{",".join(document_ids)}]'
+        )
+        ids = [document["id"] for document in documents]
+        await index.delete_documents(ids)
+
+    async def get_docs_for_digest(self, digest: str, index: Index):
+        """Given the hash of a document, give all of the ids of the chunks stored in the index"""
+        return await index.get_documents(filter=f'document_id="{digest}"')
+
+    async def remove_label(self, digest: str, label: str, index: Index):
+        documents = await self.get_docs_for_digest(digest, index)
+        for document in documents:
+            document["tags"].remove(label)
+
+        await index.update_documents(documents)
+
+    async def add_label(self, digest: str, label: str, index: Index):
+        documents = await self.get_docs_for_digest(digest, index)
+        for document in documents:
+            document["tags"].append(label)
+
+        await index.update_documents(documents)
+
+    async def build(
+        self, chunks: AsyncGenerator[Tuple[IndexAction, Union[str, Chunk]], None]
+    ):
         """Builds the index, yielding progress as a float between 0 and 1"""
         async with Client(get_meilisearch_url()) as search_client:
             try:
@@ -72,20 +116,27 @@ class MeilisearchCodebaseIndex(CodebaseIndex):
                 i = 0
                 GROUP_SIZE = 100
                 group = []
-                async for chunk in chunks:
-                    if len(group) < GROUP_SIZE:
-                        group.append(chunk)
-                        continue
+                async for action, chunk in chunks:
+                    if action == "compute":
+                        if len(group) < GROUP_SIZE:
+                            group.append(chunk)
+                            continue
 
-                    await self.add_chunks(
-                        group,
-                        index,
-                        i,
-                    )
+                        await self.add_chunks(
+                            group,
+                            index,
+                            i,
+                        )
 
-                    i += GROUP_SIZE
-                    group = []
-                    await asyncio.sleep(0.1)
+                        i += GROUP_SIZE
+                        group = []
+                        await asyncio.sleep(0.1)
+                    elif action == "delete":
+                        await self.delete_chunks([chunk.document_id], index)
+                    elif action == "add_label":
+                        await self.add_label(chunk, self.tag, index)
+                    elif action == "remove_label":
+                        await self.remove_label(chunk, self.tag, index)
 
                 if len(group) > 0:
                     await self.add_chunks(group, index, i)
@@ -97,7 +148,7 @@ class MeilisearchCodebaseIndex(CodebaseIndex):
         async with Client(get_meilisearch_url()) as search_client:
             try:
                 results = await search_client.index(self.index_name).search(
-                    query, limit=n
+                    query, limit=n, filter=f'tags IN ["{self.tag}"]'
                 )
 
                 return [

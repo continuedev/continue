@@ -4,7 +4,7 @@ import os
 import re
 import sqlite3
 from functools import cached_property
-from typing import Any, AsyncGenerator, Dict, List, Literal, Optional
+from typing import Any, AsyncGenerator, Dict, List, Literal, Optional, Tuple, Union
 
 import chromadb
 
@@ -15,8 +15,10 @@ from dotenv import load_dotenv
 from openai.error import RateLimitError
 from pydantic import BaseModel
 
+from ..chunkers.chunk_directory import IndexAction
+
 from ...util.logging import logger
-from ...util.paths import getEmbeddingsPathForBranch, getIndexFolderPath
+from ...util.paths import getIndexFolderPath
 from ..chunkers.chunk import Chunk
 from ..git import GitProject
 from .base import CodebaseIndex
@@ -36,7 +38,7 @@ class CodebaseIndexMetadata(BaseModel):
 
 
 class ChromaCodebaseIndex(CodebaseIndex):
-    directory: str
+    tag: str
     client: Any
     openai_api_key: Optional[str] = None
     api_base: Optional[str] = None
@@ -47,13 +49,14 @@ class ChromaCodebaseIndex(CodebaseIndex):
 
     def __init__(
         self,
-        directory: str,
+        tag: str,
         openai_api_key: Optional[str] = None,
         api_base: Optional[str] = None,
         api_version: Optional[str] = None,
         api_type: Optional[str] = None,
         organization_id: Optional[str] = None,
     ):
+        self.tag = tag
         self.openai_api_key = openai_api_key
         self.api_base = api_base
         self.api_version = api_version
@@ -88,16 +91,9 @@ class ChromaCodebaseIndex(CodebaseIndex):
     def index_name(self) -> str:
         return self.embeddings_type
 
-    @cached_property
-    def metadata_path(self) -> str:
-        return os.path.join(self.index_dir, "metadata.json")
-
     def exists(self):
         """Check whether the codebase index has already been built and saved on disk"""
-        return os.path.exists(self.metadata_path)
-
-    def get_metadata(self) -> CodebaseIndexMetadata:
-        return CodebaseIndexMetadata.parse_file(self.metadata_path)
+        return os.path.exists(self.chroma_dir)
 
     def convert_to_valid_chroma_collection(self, name: str) -> str:
         # https://docs.trychroma.com/usage-guide#creating-inspecting-and-deleting-collections
@@ -157,6 +153,9 @@ class ChromaCodebaseIndex(CodebaseIndex):
 
         for chunk in chunks:
             documents.append(chunk.content)
+            metadata = {**chunk.metadata}
+            metadata["document_id"] = chunk.document_id  # Need to be able to filter by document_id (hash)
+            metadata[self.tag] = 1  # This is how we filter by tag
             metadatas.append(chunk.metadata)
             ids.append(chunk.id)
 
@@ -187,23 +186,46 @@ class ChromaCodebaseIndex(CodebaseIndex):
                 logger.debug(f"SQL error: {e}")
                 collection = None
 
+    def delete_chunks(self, digest: str):
+        # Delete the chunks from the vector database
+        result = self.collection.get(where={"document_id": digest})
+        ids = result["ids"]
+
+        if len(ids) > 0:
+            self.collection.delete(ids=ids)
+
+    def add_label(self, digest: str):
+        ids = self.collection.get(where={"document_id": digest})["ids"]
+        self.collection.update(ids=ids, metadatas=[{self.tag: 1}] * len(ids))
+
+    def remove_label(self, digest: str):
+        ids = self.collection.get(where={"document_id": digest})["ids"]
+        self.collection.update(ids=ids, metadatas=[{self.tag: 0}] * len(ids))
+
     async def build(
         self,
-        chunks: AsyncGenerator[Chunk, None],
+        chunks: AsyncGenerator[Tuple[IndexAction, Union[str, Chunk]], None],
     ):
         """Create a new index for the current branch."""
 
         group = []
         group_size = 100
-        async for chunk in chunks:
-            if chunk.content.strip() == "":
-                continue
+        async for action, chunk in chunks:
+            if action == "compute":
+                if chunk.content.strip() == "":
+                    continue
 
-            if len(group) < group_size:
-                group.append(chunk)
-                continue
+                if len(group) < group_size:
+                    group.append(chunk)
+                    continue
 
-            await self.add_chunks([chunk])
+                await self.add_chunks([chunk])
+            elif action == "delete":
+                self.delete_chunks([chunk])
+            elif action == "add_label":
+                self.add_label(chunk)
+            elif action == "remove_label":
+                self.remove_label(chunk)
 
         if len(group) > 0:
             await self.add_chunks(group)
@@ -214,7 +236,7 @@ class ChromaCodebaseIndex(CodebaseIndex):
             logger.warning(f"No index found for the codebase at {self.index_dir}")
             return []
 
-        results = self.collection.query(query_texts=[query], n_results=n)
+        results = self.collection.query(query_texts=[query], n_results=n, where={self.tag: {"$ne": 0}})
 
         chunks = []
         ids = results["ids"][0]

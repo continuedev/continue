@@ -1,27 +1,30 @@
 import asyncio
 from typing import AsyncGenerator
 
-from .chunkers.chunk_directory import local_stream_chunk_directory
-
 from ...core.config import ContinueConfig
 from ...libs.index.indices.chroma_index import MAX_CHUNK_SIZE, ChromaCodebaseIndex
 from ...libs.index.indices.meilisearch_index import MeilisearchCodebaseIndex
 from ...server.protocols.ide_protocol import AbstractIdeProtocolServer
+from .chunkers.chunk_directory import (
+    local_stream_chunk_directory,
+    stream_chunk_directory,
+)
 
 
 async def build_index(
     ide: AbstractIdeProtocolServer, config: ContinueConfig
 ) -> AsyncGenerator[float, None]:
+    tag = await ide.getTag()
     settings = config.retrieval_settings
     chroma_index = ChromaCodebaseIndex(
-        ide.workspace_directory,
+        tag,
         openai_api_key=settings.openai_api_key,
         api_base=settings.api_base,
         api_type=settings.api_type,
         api_version=settings.api_version,
         organization_id=settings.organization_id,
     )
-    meilisearch_index = MeilisearchCodebaseIndex(ide.workspace_directory)
+    meilisearch_index = MeilisearchCodebaseIndex(tag)
 
     n = 2
     done = False
@@ -48,13 +51,23 @@ async def build_index(
         meilisearch_index.build(generator_for_meilisearch())
     )
 
-    for chunk, progress in local_stream_chunk_directory(
-        ide.workspace_directory, MAX_CHUNK_SIZE
-    ):
-        if chunk is not None:
-            buffers[0].append(chunk)
-            buffers[1].append(chunk)
-        yield progress
+    # TODO: How do we know whether Continue server is running on the same machine as the IDE?
+    if ide.window_info.ide_info["remote_name"] in ["ssh-remote", "wsl"]:
+        # Use the old method if workspace is remote OR if Continue server is not running on the same machine as the IDE
+        async for chunk, progress in stream_chunk_directory(ide, MAX_CHUNK_SIZE):
+            if chunk is not None:
+                buffers[0].append(("compute", chunk))
+                buffers[1].append(("compute", chunk))
+            yield progress
+
+    else:
+        # If on same machine, can access files directly
+        for action, chunk, progress in local_stream_chunk_directory(
+            ide.workspace_directory, MAX_CHUNK_SIZE
+        ):
+            buffers[0].append((action, chunk))
+            buffers[1].append((action, chunk))
+            yield progress
 
     done = True
     while not chroma_task.done() or not meilisearch_task.done():

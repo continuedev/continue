@@ -14,7 +14,9 @@ class WindowInfo(BaseModel):
     window_id: str
     workspace_directory: str
     unique_id: str
+
     ide_info: Dict[str, Any]
+    """name, version, remote_name"""
 
 
 class AbstractIdeProtocolServer(ABC):
@@ -70,6 +72,10 @@ class AbstractIdeProtocolServer(ABC):
     @abstractmethod
     async def readFile(self, filepath: str) -> str:
         """Read a file"""
+
+    @abstractmethod
+    async def getTag(self) -> str:
+        """Get the current tag (directory::branch)"""
 
     @abstractmethod
     async def readRangeInFile(self, range_in_file: RangeInFile) -> str:

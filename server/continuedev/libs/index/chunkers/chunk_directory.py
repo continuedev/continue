@@ -1,13 +1,12 @@
 import asyncio
 import os
-from typing import AsyncGenerator, Callable, Generator, List, Optional, Tuple
+from typing import AsyncGenerator, Callable, Generator, List, Literal, Optional, Tuple, Union
 
 from continuedev.continuedev import sync_results
 
 from ....server.protocols.ide_protocol import AbstractIdeProtocolServer
 from . import chunk_document
 from .chunk import Chunk
-from .fast_index import stream_files_to_update
 from .ignore import should_ignore_file_factory
 
 MAX_SIZE_IN_CHARS = 50_000
@@ -83,13 +82,19 @@ async def stream_chunk_directory(
         for chunk in chunk_document(file, contents, max_chunk_size):
             yield (chunk, progress)
 
+IndexAction = Literal["compute", "delete", "add_label", "remove_label"]
 
 def local_stream_chunk_directory(
     workspace_dir: str, max_chunk_size: int, branch: str
-) -> Generator[Tuple[Optional[Chunk], float], None, None]:
+) -> Generator[Tuple[IndexAction, Union[str, Chunk], float], None, None]:
+    """Stream Tuples of (action, chunk, progress). the chunk is a Chunk if 'compute' action, otherwise it is the digest string. the assumption in this case is to delete/update all chunks for the document id (digest)."""
     (compute, delete, add_label, remove_label) = sync_results(workspace_dir, branch)
 
+    progress = 1
+    total = len(compute) + len(delete) + len(add_label) + len(remove_label) + 1
+
     for filepath, digest in compute:
+
         # Ignore if the file is too large (cutoff is 10MB)
         if os.path.getsize(filepath) > 10_000_000:
             continue
@@ -104,25 +109,18 @@ def local_stream_chunk_directory(
             continue
 
         for chunk in chunk_document(filepath, contents, max_chunk_size, digest):
-            yield (chunk, 0.0)
-
-    for (add_filepath, add_digest), (del_filepath, del_digest) in sync_results(
-        workspace_dir, branch
-    ):
-        # Ignore if the file is too large (cutoff is 10MB)
-        if os.path.getsize(filepath) > 10_000_000:
-            continue
-
-        try:
-            contents = open(filepath, "r").read()
-        except Exception as e:
-            print(e, filepath)
-            continue
-
-        if contents.strip() == "":
-            continue
-
-        # TODO: How to estimate progress, or is stream_files_to_update fast
-        # enough to do all at once?
-        for chunk in chunk_document(filepath, contents, max_chunk_size, digest):
-            yield (chunk, 0.0)
+            yield ("compute", chunk, progress / total)
+        
+        progress += 1
+        
+    for filepath, digest in delete:
+        yield ("delete", digest, progress / total)
+        progress += 1
+    
+    for filepath, digest in add_label:
+        yield ("add_label", digest, progress / total)
+        progress += 1
+    
+    for filepath, digest in remove_label:
+        yield ("remove_label", digest, progress / total)
+        progress += 1

@@ -357,6 +357,16 @@ class IdeProtocolClient {
           ranges: await this.foldingRanges(data.filepath),
         });
         break;
+      case "getBranch":
+        respond({
+          branch: await this.getBranch(),
+        });
+        break;
+      case "getDiff":
+        respond({
+          diff: await this.getDiff(),
+        });
+        break;
       default:
         throw Error("Unknown message type:" + messageType);
     }
@@ -724,6 +734,52 @@ class IdeProtocolClient {
         });
       });
     });
+  }
+
+  async getRepo(): Promise<any> {
+    // Use the native git extension to get the branch name
+    const extension = vscode.extensions.getExtension("vscode.git");
+    if (
+      typeof extension === "undefined" ||
+      !extension.isActive ||
+      typeof vscode.workspace.workspaceFolders === "undefined"
+    ) {
+      return "NONE";
+    }
+
+    const git = extension.exports.getAPI(1);
+    let repo = git.getRepository(vscode.workspace.workspaceFolders[0].uri);
+    if (!repo) {
+      await new Promise((resolve, reject) => {
+        extension.exports.b.onDidChangeState((s: any) => {
+          resolve(null);
+        });
+
+        setTimeout(() => {
+          resolve(null);
+        }, 2000);
+      });
+
+      let repo = git.getRepository(vscode.workspace.workspaceFolders[0].uri);
+      return repo;
+    }
+    return repo;
+  }
+
+  async getBranch(): Promise<string> {
+    const repo = await this.getRepo();
+
+    return repo.state.HEAD.name;
+  }
+
+  async getDiff(): Promise<string> {
+    const repo = await this.getRepo();
+
+    if (!repo) {
+      return "";
+    }
+
+    return repo.getDiff().join("\n");
   }
 
   getHighlightedCode(): RangeInFile[] {

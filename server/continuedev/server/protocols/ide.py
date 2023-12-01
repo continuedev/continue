@@ -114,6 +114,11 @@ class DocumentSymbolResponse(BaseModel):
 class FoldingRangeResponse(BaseModel):
     ranges: List[Dict[str, Any]]
 
+class GetBranchResponse(BaseModel):
+    branch: str
+
+class GetDiffResponse(BaseModel):
+    diff: str
 
 # endregion
 
@@ -180,6 +185,8 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
             "getTerminalContents",
             "listDirectoryContents",
             "fileExists",
+            "getBranch",
+            "getDiff"
         ]:
             # self.messenger.post(msg)
             pass
@@ -391,6 +398,24 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
         except Exception as e:
             logger.debug(f"Error getting user secret: {e}")
             return ""
+        
+    async def getTag(self) -> str:
+        """The 'tag' is the directory and the current branch"""
+        return self.workspace_directory + "::" + await self.getBranch()
+        
+    async def getBranch(self) -> str:
+        """Get the current branch"""
+        resp = await self.messenger.send_and_receive(
+            {}, GetBranchResponse, "getBranch"
+        )
+        return resp.branch
+    
+    async def getDiff(self) -> str:
+        """Get the current git diff"""
+        resp = await self.messenger.send_and_receive(
+            {}, GetDiffResponse, "getDiff"
+        )
+        return resp.diff
 
     async def saveFile(self, filepath: str):
         """Save a file"""
