@@ -25,7 +25,7 @@ const sidebars = {
       collapsed: true,
       items: [
         "model-setup/select-provider",
-        "model-setup/select-llm",
+        "model-setup/select-model",
         "model-setup/configuration",
       ],
     },

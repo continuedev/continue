@@ -1,5 +1,5 @@
 ---
-title: Select a model provider
+title: Select a provider
 description: Swap out different LLM providers
 keywords: [openai, anthropic, PaLM, ollama, ggml]
 ---
@@ -8,7 +8,7 @@ keywords: [openai, anthropic, PaLM, ollama, ggml]
 
 Continue makes it easy to swap out different LLM providers. You can either click the "+" button next to the model dropdown to configure in the GUI or manually add them to your `config.json`. Once you've done this, you will be able to switch between them in the model selection dropdown.
 
-**In addition to selecting a model provider, you will need to figure out [what LLM to use](./select-llm.md).**
+**In addition to selecting a model provider, you will need to figure out [what LLM to use](./select-model.md).**
 
 ## Local
 

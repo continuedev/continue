@@ -12,5 +12,5 @@ Continue can be run even on an air-gapped computer if you use a local model. You
 2. In VS Code settings, search "continue" and check the box that says "Manually Running Server". This will stop Continue from trying to kill and redownload the server binary.
 3. Follow instructions to [run Continue manually](./manually-run-continue.md).
 4. Open `~/.continue/config.json` and set `"allow_anonymous_telemetry": false`. This will stop Continue from attempting requests to PostHog.
-5. Also in `config.json`, set the default model to a local model. You can read about the available options [here](../customization/models.md).
+5. Also in `config.json`, set the default model to a local model. You can read about the available options [here](../model-setup/select-model.md).
 6. Restart VS Code to ensure that the changes to `config.json` take effect.
