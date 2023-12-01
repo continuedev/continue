@@ -1,10 +1,9 @@
 import asyncio
 from typing import List
-from ...llm.base import LLM
 
-import openai
-from ..chunkers.chunk import Chunk
+from ...llm.base import LLM
 from ...util.logging import logger
+from ..chunkers.chunk import Chunk
 
 PROMPT = """
 You are an expert software developer responsible for helping detect whether the retrieved snippet of code is relevant to the query. For a given input, you need to output a single word: "Yes" or "No" indicating the retrieved snippet is relevant to the query.
@@ -50,18 +49,19 @@ async def single_token_reranker(chunk: Chunk, user_input: str, model: LLM) -> fl
     )
 
     if False:
+        return 0.5
         # TODO: Continuous ranking with logits
         # openai.api_key = openai_api_key
-        response = openai.Completion.create(
-            model="gpt-3.5-turbo",
-            prompt=compiled_prompt,
-            max_tokens=1,
-            temperature=0.0,
-            stop=["```"],
-            logit_bias={3363: 1, 1400: 1},
-            logprobs=1,
-        )
-        return response["choices"][0]["logprobs"]["token_logprobs"][0]
+        # response = openai.Completion.create(
+        #     model="gpt-3.5-turbo",
+        #     prompt=compiled_prompt,
+        #     max_tokens=1,
+        #     temperature=0.0,
+        #     stop=["```"],
+        #     logit_bias={3363: 1, 1400: 1},
+        #     logprobs=1,
+        # )
+        # return response["choices"][0]["logprobs"]["token_logprobs"][0]
     else:
         try:
             completion = await model.complete(

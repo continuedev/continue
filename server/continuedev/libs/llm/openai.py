@@ -1,16 +1,15 @@
 import asyncio
+from contextlib import asynccontextmanager
 from typing import AsyncGenerator, List, Literal, Optional
 
-import certifi
-import openai
-from openai.error import RateLimitError
+import httpx
+import litellm
+from litellm import acompletion
 from pydantic import Field, validator
 
 from ...core.main import ChatMessage
 from ..util.count_tokens import CONTEXT_LENGTH_FOR_MODEL
-from ..util.logging import logger
 from .base import LLM
-from .prompts.chat import template_alpaca_messages
 
 CHAT_MODELS = {
     "gpt-3.5-turbo",
@@ -122,126 +121,104 @@ class OpenAI(LLM):
         if self.context_length is None:
             self.context_length = CONTEXT_LENGTH_FOR_MODEL.get(self.model, 4096)
 
-        openai.api_key = self.api_key
-        if self.api_type is not None:
-            openai.api_type = self.api_type
-        if self.api_base is not None:
-            openai.api_base = self.api_base
-        if self.api_version is not None:
-            openai.api_version = self.api_version
-
-        if (
-            self.request_options.verify_ssl is not None
-            and self.request_options.verify_ssl is False
-        ):
-            openai.verify_ssl_certs = False
-
-        if self.request_options.proxy is not None:
-            openai.proxy = self.request_options.proxy
-
-        openai.ca_bundle_path = self.request_options.ca_bundle_path or certifi.where()
-
-        session = self.create_client_session()
-        openai.aiosession.set(session)
-
     def collect_args(self, options):
         args = super().collect_args(options)
-        if self.engine is not None:
-            args["engine"] = self.engine
+        if self.api_type == "azure":
+            assert self.engine is not None, "engine must be specified for Azure API"
+            args["model"] = f"azure/{self.engine}"
+            args["api_version"] = self.api_version
+
+        args["api_key"] = self.api_key
+        args["api_base"] = self.api_base
 
         if not args["model"].endswith("0613") and "functions" in args:
             del args["functions"]
 
         return args
 
+    def httpx_client(self) -> httpx.AsyncClient:
+        args = {}
+        if timeout := self.request_options.timeout:
+            args["timeout"] = httpx.Timeout(timeout)
+
+        if verify_ssl := self.request_options.verify_ssl:
+            args["verify"] = verify_ssl
+
+        if ca_bundle_path := self.request_options.ca_bundle_path:
+            args["cert"] = ca_bundle_path
+
+        if proxy := self.request_options.proxy:
+            args["proxies"] = {"https": proxy, "http": proxy}
+
+        if headers := self.request_options.headers:
+            args["headers"] = headers
+
+        return httpx.AsyncClient(**args)
+
+    @asynccontextmanager
+    async def httpx_client_context(self):
+        client = self.httpx_client()
+        litellm.aclient_session = client
+        try:
+            yield
+        finally:
+            await client.aclose()
+
     async def _stream_complete(self, prompt, options):
         args = self.collect_args(options)
-        args["stream"] = True
 
-        if (
-            args["model"] not in NON_CHAT_MODELS
-            and not self.use_legacy_completions_endpoint
-        ):
-            async for chunk in await openai.ChatCompletion.acreate(
-                messages=[{"role": "user", "content": prompt}],
+        async with self.httpx_client_context():
+            resp = await acompletion(
+                messages=[{"content": prompt, "role": "user"}],
                 **args,
-                headers=self.request_options.headers,
-            ):
-                if len(chunk.choices) > 0 and "content" in chunk.choices[0].delta:
-                    yield chunk.choices[0].delta.content
-        else:
-            async for chunk in await openai.Completion.acreate(
-                prompt=prompt, **args, headers=self.request_options.headers
-            ):
-                if len(chunk.choices) > 0:
-                    yield chunk.choices[0].text
+                stream=True,
+            )
+            async for chunk in resp:
+                yield chunk.choices[0].delta.content
 
     async def _stream_chat(
         self, messages: List[ChatMessage], options
     ) -> AsyncGenerator[ChatMessage, None]:
         args = self.collect_args(options)
+        # and not self.use_legacy_completions_endpoint
+        # headers=self.request_options.headers,
+        # resp = await acompletion(
+        #     messages=[msg.to_dict() for msg in messages],
+        #     **args,
+        #     api_base=self.api_base,
+        #     api_version=self.api_version,
+        #     # engine=self.engine,
+        #     api_key=self.api_key,
+        #     custom_llm_provider="azure" if self.api_type == "azure" else None,
+        # )
 
-        if (
-            args["model"] not in NON_CHAT_MODELS
-            and not self.use_legacy_completions_endpoint
-        ):
-            async for chunk in await openai.ChatCompletion.acreate(
+        async with self.httpx_client_context():
+            resp = await acompletion(
                 messages=[msg.to_dict() for msg in messages],
-                stream=True,
                 **args,
-                headers=self.request_options.headers,
-            ):
-                if not hasattr(chunk, "choices") or len(chunk.choices) == 0:
-                    continue
+                stream=True,
+            )
+            async for chunk in resp:
+                if len(chunk.choices) == 0:
+                    continue  # :)
 
-                delta = chunk.choices[0].delta
                 if self.api_type == "azure":
                     if self.model == "gpt-4":
                         await asyncio.sleep(0.03)
                     else:
                         await asyncio.sleep(0.01)
 
-                yield ChatMessage(role="assistant", content=delta.get("content", ""))
-
-        else:
-            async for chunk in await openai.Completion.acreate(
-                prompt=template_alpaca_messages(messages),
-                stream=True,
-                **args,
-                headers=self.request_options.headers,
-            ):
-                if len(chunk.choices) > 0:
-                    ChatMessage(role="assistant", content=chunk.choices[0].text)
+                yield ChatMessage(
+                    role="assistant", content=chunk.choices[0].delta.content or ""
+                )
 
     async def _complete(self, prompt: str, options):
         args = self.collect_args(options)
 
-        if (
-            args["model"] not in NON_CHAT_MODELS
-            and not self.use_legacy_completions_endpoint
-        ):
-            wait_time = 0.2
-            while True:
-                try:
-                    resp = await openai.ChatCompletion.acreate(
-                        messages=[{"role": "user", "content": prompt}],
-                        **args,
-                        headers=self.request_options.headers,
-                    )
-                    return resp.choices[0].message.content
-                except RateLimitError as e:
-                    logger.debug(f"Rate limit exceeded, waiting {wait_time} seconds")
-                    await asyncio.sleep(wait_time)
-                    wait_time *= 2
-                    if wait_time > 2**10:
-                        raise e
-        else:
-            return (
-                (
-                    await openai.Completion.acreate(
-                        prompt=prompt, **args, headers=self.request_options.headers
-                    )
-                )
-                .choices[0]
-                .text
+        async with self.httpx_client_context():
+            resp = await acompletion(
+                messages=[{"content": prompt, "role": "user"}],
+                **args,
             )
+
+            return resp.choices[0].message.content
