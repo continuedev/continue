@@ -11,6 +11,7 @@ import {
   lightGray,
   secondaryDark,
   vscBackground,
+  vscForeground,
 } from "../components";
 import styled from "styled-components";
 import { ArrowLeftIcon } from "@heroicons/react/24/outline";
@@ -85,7 +86,7 @@ const ConfigJsonButton = styled(Button)`
   margin-left: auto;
   margin-right: 4px;
   background-color: transparent;
-  color: white;
+  color: ${vscForeground};
   border: 1px solid ${lightGray};
   &:hover {
     background-color: ${lightGray};
