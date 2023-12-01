@@ -118,9 +118,7 @@ class Models(BaseModel):
         temperature: Optional[float],
     ):
         """Start each of the LLMs, or fall back to default"""
-        for role in ALL_MODEL_ROLES:
-            model: LLM = getattr(self, role)
-
+        for model in self.saved + self.all_models:
             model.start(unique_id)
             model.write_log = self.write_log
 

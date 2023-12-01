@@ -160,7 +160,10 @@ class AnswerQuestionChroma(Step):
         model = sdk.models.chat.model
         # if model == "gpt-4":
         #     model = "gpt-4-32k"  # Not publicly available yet?
-        if model == "gpt-3.5-turbo":
+        if (
+            model == "gpt-3.5-turbo"
+            and not sdk.models.chat.__class__.__name__ == "OpenAIFreeTrial"
+        ):
             model = "gpt-3.5-turbo-16k"
 
         await sdk.run_step(
