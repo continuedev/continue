@@ -1,7 +1,7 @@
 import uuid
 from typing import Any, Callable, Dict, List, Optional, Type
 
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, validator
 
 from ..libs.llm.anthropic import AnthropicLLM
 from ..libs.llm.base import LLM
@@ -10,6 +10,7 @@ from ..libs.llm.google_palm_api import GooglePaLMAPI
 from ..libs.llm.hf_inference_api import HuggingFaceInferenceAPI
 from ..libs.llm.hf_tgi import HuggingFaceTGI
 from ..libs.llm.llamacpp import LlamaCpp
+from ..libs.llm.llamafile import Llamafile
 from ..libs.llm.lmstudio import LMStudio
 from ..libs.llm.ollama import Ollama
 from ..libs.llm.openai import OpenAI
@@ -46,6 +47,7 @@ MODEL_CLASSES: Dict[str, Type[LLM]] = {
         GooglePaLMAPI,
         TextGenWebUI,
         LMStudio,
+        Llamafile,
     ]
 }
 
@@ -63,6 +65,7 @@ MODEL_MODULE_NAMES = {
     "GooglePaLMAPI": "google_palm_api",
     "TextGenWebUI": "text_gen_webui",
     "LMStudio": "lmstudio",
+    "Llamafile": "llamafile",
 }
 
 

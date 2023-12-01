@@ -118,6 +118,7 @@ ModelProvider = Literal[
     "text-gen-webui",
     "google-palm",
     "lmstudio",
+    "llamafile",
 ]
 
 MODEL_PROVIDER_TO_MODEL_CLASS = {
@@ -134,6 +135,7 @@ MODEL_PROVIDER_TO_MODEL_CLASS = {
     "text-gen-webui": "TextGenWebUI",
     "google-palm": "GooglePaLMAPI",
     "lmstudio": "LMStudio",
+    "llamafile": "Llamafile",
 }
 
 MODEL_CLASS_TO_MODEL_PROVIDER: Dict[str, ModelProvider] = {
@@ -149,6 +151,7 @@ MODEL_CLASS_TO_MODEL_PROVIDER: Dict[str, ModelProvider] = {
     "TextGenWebUI": "text-gen-webui",
     "GooglePaLMAPI": "google-palm",
     "LMStudio": "lmstudio",
+    "Llamafile": "llamafile",
 }
 
 MODELS = [
