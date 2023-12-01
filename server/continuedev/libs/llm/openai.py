@@ -174,7 +174,7 @@ class OpenAI(LLM):
                 stream=True,
             )
             async for chunk in resp:
-                return chunk
+                yield chunk.choices[0].delta.content
 
     async def _stream_chat(
         self, messages: List[ChatMessage], options
