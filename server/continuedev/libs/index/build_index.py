@@ -15,6 +15,7 @@ async def build_index(
     ide: AbstractIdeProtocolServer, config: ContinueConfig
 ) -> AsyncGenerator[float, None]:
     tag = await ide.getTag()
+    branch = await ide.getBranch()
     settings = config.retrieval_settings
     chroma_index = ChromaCodebaseIndex(
         tag,
@@ -52,7 +53,7 @@ async def build_index(
     )
 
     # TODO: How do we know whether Continue server is running on the same machine as the IDE?
-    if ide.window_info.ide_info["remote_name"] in ["ssh-remote", "wsl"]:
+    if ide.window_info.ide_info.get("remote_name", None) in ["ssh-remote", "wsl"]:
         # Use the old method if workspace is remote OR if Continue server is not running on the same machine as the IDE
         async for chunk, progress in stream_chunk_directory(ide, MAX_CHUNK_SIZE):
             if chunk is not None:
@@ -63,7 +64,7 @@ async def build_index(
     else:
         # If on same machine, can access files directly
         for action, chunk, progress in local_stream_chunk_directory(
-            ide.workspace_directory, MAX_CHUNK_SIZE
+            ide.workspace_directory, MAX_CHUNK_SIZE, branch
         ):
             buffers[0].append((action, chunk))
             buffers[1].append((action, chunk))

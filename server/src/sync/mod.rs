@@ -3,7 +3,7 @@ use homedir::get_my_home;
 use merkle::{build_walk, compute_tree_for_dir, diff, hash_string, ObjectHash};
 use std::{
     collections::HashMap,
-    fs::{File, OpenOptions},
+    fs::{self, File, OpenOptions},
     io::{Read, Seek, SeekFrom, Write},
     path::{Path, PathBuf},
     time::{SystemTime, UNIX_EPOCH},
@@ -33,7 +33,6 @@ fn path_for_tag(dir: &Path, branch: Option<&str>) -> PathBuf {
     } else {
         path.push("main");
     }
-    path.push("merkle_tree");
     return path;
 }
 
@@ -321,7 +320,14 @@ pub fn sync(
     ),
     Box<dyn std::error::Error>,
 > {
-    let tree_path = path_for_tag(dir, branch);
+    // Make sure that the tag directory exists
+    // Create the directory and all its parent directories if they don't exist
+    if let Some(parent) = path_for_tag(dir, branch).parent() {
+        fs::create_dir_all(parent).unwrap();
+    }
+
+    let mut tree_path = path_for_tag(dir, branch);
+    tree_path.push("merkle_tree");
     let old_tree: Tree = match Tree::load(&tree_path) {
         Ok(tree) => tree,
         Err(_) => Tree::empty(),

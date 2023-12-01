@@ -78,6 +78,10 @@ class AbstractIdeProtocolServer(ABC):
         """Get the current tag (directory::branch)"""
 
     @abstractmethod
+    async def getBranch(self) -> str:
+        """Get the current branch"""
+
+    @abstractmethod
     async def readRangeInFile(self, range_in_file: RangeInFile) -> str:
         """Read a range in a file"""
 

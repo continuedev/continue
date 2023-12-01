@@ -751,13 +751,13 @@ class IdeProtocolClient {
     let repo = git.getRepository(vscode.workspace.workspaceFolders[0].uri);
     if (!repo) {
       await new Promise((resolve, reject) => {
-        extension.exports.b.onDidChangeState((s: any) => {
-          resolve(null);
-        });
-
-        setTimeout(() => {
+        const timeout = setTimeout(() => {
           resolve(null);
         }, 2000);
+        extension.exports.b.onDidChangeState((s: any) => {
+          clearTimeout(timeout);
+          resolve(null);
+        });
       });
 
       let repo = git.getRepository(vscode.workspace.workspaceFolders[0].uri);

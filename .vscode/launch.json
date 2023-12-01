@@ -71,7 +71,10 @@
       ],
       "justMyCode": false,
       "subProcess": false,
-      "timeout": 10000
+      "timeout": 10000,
+      "env": {
+        "RUST_BACKTRACE": "1"
+      }
       // Does it need a build task?
       // What about a watch task? - type errors?
     },
