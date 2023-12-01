@@ -1,8 +1,8 @@
 import json
 from typing import Any, AsyncGenerator, Dict, List, Literal, Optional, Union, cast
 
-from pydantic import BaseModel, Field, validator
-from pydantic.schema import schema
+from pydantic import field_validator, ConfigDict, BaseModel, Field, field_validator
+from pydantic.json_schema import model_json_schema
 
 from ..models.main import ContinueBaseModel
 from .observation import Observation
@@ -23,7 +23,8 @@ class ChatMessage(ContinueBaseModel):
     summary: str = Field(default=None, title="Summary")
     function_call: Optional[FunctionCall] = None
 
-    @validator("summary", pre=True, always=True)
+
+    @field_validator("summary")
     def summary_is_content(cls, summary, values):
         if summary is None:
             return values.get("content", "")
@@ -84,7 +85,7 @@ unincluded_parameters = [
 
 def step_to_json_schema(step) -> Dict[str, Any]:
     pydantic_class = step.__class__
-    schema_data = schema([pydantic_class])
+    schema_data = model_json_schema([pydantic_class])
     resolved_schema = cast(Dict[str, Any], resolve_refs(schema_data))
     parameters = resolved_schema["definitions"][pydantic_class.__name__]
     for parameter in unincluded_parameters:
@@ -168,9 +169,9 @@ class SessionUpdate(BaseModel):
     index: int
     update: "UpdateStep"
     stop: Optional[bool] = None
-
-    class Config:
-        smart_union = True
+    # TODO[pydantic]: The following keys were removed: `smart_union`.
+    # Check https://docs.pydantic.dev/dev-v2/migration/#changes-to-config for more information.
+    model_config = ConfigDict()
 
     def dict(self, *args, **kwargs):
         d = super().dict(*args, **kwargs)
@@ -201,7 +202,8 @@ class ContextItemId(BaseModel):
     provider_title: str
     item_id: str
 
-    @validator("provider_title", "item_id")
+    @field_validator("provider_title", "item_id")
+    @classmethod
     def must_be_valid_id(cls, v):
         import re
 
@@ -247,7 +249,8 @@ class ContextItem(BaseModel):
     description: ContextItemDescription
     content: str
 
-    @validator("content", pre=True)
+    @field_validator("content", mode="before")
+    @classmethod
     def content_must_be_string(cls, v):
         if v is None:
             return ""
@@ -265,11 +268,9 @@ class SessionInfo(ContinueBaseModel):
 
 
 class ContinueConfig(ContinueBaseModel):
-    system_message: Optional[str]
-    temperature: Optional[float]
-
-    class Config:
-        extra = "allow"
+    system_message: Optional[str] = None
+    temperature: Optional[float] = None
+    model_config = ConfigDict(extra="allow")
 
     def dict(self, **kwargs):
         original_dict = super().dict(**kwargs)
@@ -323,16 +324,18 @@ class Step(ContinueBaseModel):
 
     class_name: str = "Step"
 
-    @validator("class_name", pre=True, always=True)
+
+    @field_validator("class_name")
     def class_name_is_class_name(cls, class_name):
         return cls.__name__
 
     system_message: Union[str, None] = None
     chat_context: List[ChatMessage] = []
     manage_own_chat_context: bool = False
-
-    class Config:
-        copy_on_model_validation = False
+    # TODO[pydantic]: The following keys were removed: `copy_on_model_validation`.
+    # Check https://docs.pydantic.dev/dev-v2/migration/#changes-to-config for more information.
+    # P2MN: https://github.com/pydantic/pydantic/discussions/7225 There appears to be no replacement for this
+    model_config = ConfigDict()
 
     async def describe(self, models: Models) -> str:
         if self.description is not None:
@@ -348,7 +351,8 @@ class Step(ContinueBaseModel):
         d["description"] = self.description or ""
         return d
 
-    @validator("name", pre=True, always=True)
+
+    @field_validator("name")
     def name_is_class_name(cls, name):
         if name is None:
             return cls.__name__

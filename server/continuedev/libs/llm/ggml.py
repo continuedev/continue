@@ -1,7 +1,7 @@
 import json
 from typing import Any, AsyncGenerator, Coroutine, List, Literal, Optional
 
-from pydantic import Field, validator
+from pydantic import ConfigDict, Field, field_validator
 
 from ...core.main import ChatMessage, ContinueCustomException
 from ..util.logging import logger
@@ -34,7 +34,8 @@ class GGML(LLM):
         description="URL of the OpenAI-compatible server where the model is being served",
     )
 
-    @validator("api_base", pre=True, always=True)
+
+    @field_validator("api_base")
     def set_api_base(cls, api_base):
         return api_base or "http://localhost:8000"
 
@@ -62,9 +63,7 @@ class GGML(LLM):
     completions_endpoint: str = Field(
         default="completions", description="The endpoint to call for chat completions"
     )
-
-    class Config:
-        arbitrary_types_allowed = True
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
     def get_headers(self):
         headers = {

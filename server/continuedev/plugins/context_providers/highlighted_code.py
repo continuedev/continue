@@ -1,7 +1,7 @@
 import os
 from typing import Dict, List, Optional
 
-from pydantic import BaseModel
+from pydantic import ConfigDict, BaseModel
 
 from ...core.context import (
     ContextItem,
@@ -34,9 +34,7 @@ class HighlightedCodeContextProvider(ContextProvider):
     dynamic = True
 
     ide: AbstractIdeProtocolServer
-
-    class Config:
-        arbitrary_types_allowed = True
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
     highlighted_ranges: List[HighlightedRangeContextItem] = []
     adding_highlighted_code: bool = True

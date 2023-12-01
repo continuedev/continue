@@ -1,6 +1,6 @@
 from typing import List, Optional
 
-from pydantic import Field, validator
+from pydantic import Field, field_validator
 
 from ...core.main import ChatMessage
 from ...models.llm import RequestOptions
@@ -46,7 +46,8 @@ class OpenAIFreeTrial(LLM):
 
     llm: LLM = Field(default=None, description="The LLM to use for completion.")
 
-    @validator("llm", pre=True, always=True)
+
+    @field_validator("llm")
     def set_llm(cls, llm, values):
         api_key = values.get("api_key")
         if api_key is None or api_key.strip() == "":
@@ -67,7 +68,8 @@ class OpenAIFreeTrial(LLM):
                 ),
             )
 
-    @validator("context_length", pre=True, always=True)
+
+    @field_validator("context_length")
     def context_length_for_model(cls, v, values):
         return CONTEXT_LENGTH_FOR_MODEL.get(values["model"], 4096)
 

@@ -1,7 +1,7 @@
 import json
 from typing import Any, Dict, Optional
 
-from pydantic import Field, validator
+from pydantic import Field, field_validator
 
 from continuedev.models.llm import CompletionOptions
 
@@ -34,7 +34,8 @@ class TogetherLLM(LLM):
         description="The base URL for your Together API instance",
     )
 
-    @validator("api_base", pre=True, always=True)
+
+    @field_validator("api_base")
     def set_api_base(cls, api_base):
         return api_base or "https://api.together.xyz"
 

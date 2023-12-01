@@ -4,7 +4,7 @@ import os
 from contextlib import contextmanager
 from typing import Any, Callable, Dict, List, Optional, Tuple, Type, Union, cast
 
-from pydantic import BaseModel, Field, validator
+from pydantic import ConfigDict, BaseModel, Field, field_validator
 
 from ..libs.constants.default_config import default_config_json
 from ..libs.llm.base import LLM
@@ -43,7 +43,7 @@ class SlashCommand(BaseModel):
     params: Optional[Dict] = {}
 
     # Allow step class for the migration
-    @validator("step", pre=True, always=True)
+    @field_validator("step")
     def step_is_string(cls, v):
         if isinstance(v, str):
             return v
@@ -101,8 +101,7 @@ class RetrievalSettings(BaseModel):
 
 
 class ModelDescription(BaseModel):
-    class Config:
-        extra = "allow"
+    model_config = ConfigDict(extra="allow")
 
     title: str = Field(
         default=...,

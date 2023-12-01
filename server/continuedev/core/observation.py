@@ -1,4 +1,4 @@
-from pydantic import BaseModel, validator
+from pydantic import BaseModel, field_validator
 
 from ..models.main import Traceback
 
@@ -29,7 +29,8 @@ class DictObservation(Observation):
 class TextObservation(Observation):
     text: str
 
-    @validator("text", pre=True, always=True)
+
+    @field_validator("text")
     def text_not_none(cls, v):
         if v is None:
             return ""

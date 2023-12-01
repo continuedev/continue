@@ -5,7 +5,7 @@ import time
 from textwrap import dedent
 from typing import Any, AsyncGenerator, Dict, List, Optional, Union
 
-from pydantic import Field
+from pydantic import ConfigDict, Field
 
 from ..libs.llm.base import LLM
 from ..libs.llm.openai_free_trial import OpenAIFreeTrial
@@ -67,9 +67,7 @@ class DisplayErrorStep(Step):
             return DisplayErrorStep(title=e.title, message=e.message, name=e.title)
 
         return DisplayErrorStep(message=str(e))
-
-    class Config:
-        arbitrary_types_allowed = True
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
     async def describe(self, models: Models):
         return self.message

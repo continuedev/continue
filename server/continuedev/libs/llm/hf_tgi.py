@@ -1,7 +1,7 @@
 import json
 from typing import Any, Optional
 
-from pydantic import Field, validator
+from pydantic import ConfigDict, Field, field_validator
 
 from ..util.count_tokens import DEFAULT_MAX_TOKENS
 from .base import LLM, CompletionOptions
@@ -13,12 +13,11 @@ class HuggingFaceTGI(LLM):
         "http://localhost:8080", description="URL of your TGI server"
     )
 
-    @validator("api_base", pre=True, always=True)
+
+    @field_validator("api_base")
     def set_api_base(cls, api_base):
         return api_base or "http://localhost:8080"
-
-    class Config:
-        arbitrary_types_allowed = True
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
     def collect_args(self, options: CompletionOptions) -> Any:
         args = super().collect_args(options)

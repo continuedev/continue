@@ -5,7 +5,7 @@ from typing import Any, AsyncGenerator, Callable, Coroutine, Dict, List, Optiona
 
 import aiohttp
 import certifi
-from pydantic import Field
+from pydantic import ConfigDict, Field
 
 from ...core.main import ChatMessage
 from ...models.llm import BaseCompletionOptions, CompletionOptions, RequestOptions
@@ -77,31 +77,10 @@ class LLM(ContinueBaseModel):
     api_base: Optional[str] = Field(
         default=None, description="The base URL of the LLM API."
     )
-
-    class Config:
-        arbitrary_types_allowed = True
-        extra = "allow"
-        fields = {
-            "title": {
-                "description": "A title that will identify this model in the model selection dropdown"
-            },
-            "system_message": {
-                "description": "A system message that will always be followed by the LLM"
-            },
-            "context_length": {
-                "description": "The maximum context length of the LLM in tokens, as counted by count_tokens."
-            },
-            "unique_id": {"description": "The unique ID of the user."},
-            "model": {
-                "description": "The name of the model to be used (e.g. gpt-4, codellama)"
-            },
-            "prompt_templates": {
-                "description": 'A dictionary of prompt templates that can be used to customize the behavior of the LLM in certain situations. For example, set the "edit" key in order to change the prompt that is used for the /edit slash command. Each value in the dictionary is a string templated in mustache syntax, and filled in at runtime with the variables specific to the situation OR an instance of the PromptTemplate class if you want to control other parameters. See the documentation for more information.'
-            },
-            "template_messages": {
-                "description": "A function that takes a list of messages and returns a prompt. This ensures that models like llama2, which are trained on specific chat formats, will always receive input in that format."
-            },
-        }
+    # TODO[pydantic]: The following keys were removed: `fields`.
+    # Check https://docs.pydantic.dev/dev-v2/migration/#changes-to-config for more information.
+    # remove the 'fields' key and move its content to field definitions
+    model_config = ConfigDict(arbitrary_types_allowed=True, extra="allow")
 
     def dict(self, **kwargs):
         original_dict = super().dict(**kwargs)

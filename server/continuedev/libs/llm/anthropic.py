@@ -4,6 +4,7 @@ from anthropic import AI_PROMPT, HUMAN_PROMPT, AsyncAnthropic
 
 from .base import LLM, CompletionOptions
 from .prompts.chat import anthropic_template_messages
+from pydantic import ConfigDict
 
 
 class AnthropicLLM(LLM):
@@ -31,9 +32,7 @@ class AnthropicLLM(LLM):
     model: str = "claude-2"
 
     template_messages: Callable = anthropic_template_messages
-
-    class Config:
-        arbitrary_types_allowed = True
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
     def start(self, *args, **kwargs):
         super().start(*args, **kwargs)

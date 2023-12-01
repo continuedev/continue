@@ -1,7 +1,7 @@
 import json
 from typing import Any, Dict, Optional
 
-from pydantic import Field, validator
+from pydantic import ConfigDict, Field, field_validator
 
 from .base import LLM
 
@@ -33,7 +33,8 @@ class LlamaCpp(LLM):
         "http://localhost:8080", description="URL of the server"
     )
 
-    @validator("api_base", pre=True, always=True)
+
+    @field_validator("api_base")
     def set_api_base(cls, api_base):
         return api_base or "http://localhost:8080"
 
@@ -41,9 +42,7 @@ class LlamaCpp(LLM):
         {"stop": ["[INST]"]},
         description="A list of additional arguments to pass to llama.cpp. See [here](https://github.com/ggerganov/llama.cpp/tree/master/examples/server#api-endpoints) for the complete catalog of options.",
     )
-
-    class Config:
-        arbitrary_types_allowed = True
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
     def collect_args(self, options) -> Any:
         args = super().collect_args(options)

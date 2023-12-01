@@ -2,7 +2,7 @@ import os
 import uuid
 from typing import List, Optional
 
-from pydantic import BaseModel
+from pydantic import ConfigDict, BaseModel
 
 from ...core.context import ContextProvider
 from ...core.main import ContextItem, ContextItemDescription, ContextItemId
@@ -14,21 +14,19 @@ class EmbeddingResult(BaseModel):
 
 
 class EmbeddingsProvider(ContextProvider):
-    title = "embed"
+    title: str = "embed"
 
-    display_title = "Embeddings Search"
-    description = "Search the codebase using embeddings"
-    dynamic = True
-    requires_query = True
+    display_title: str= "Embeddings Search"
+    description: str = "Search the codebase using embeddings"
+    dynamic: bool = True
+    requires_query: bool = True
 
     workspace_directory: str
 
     EMBEDDINGS_CONTEXT_ITEM_ID = "embeddings"
 
     index_manager: Optional[ChromaIndexManager] = None
-
-    class Config:
-        arbitrary_types_allowed = True
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
     @property
     def index(self):

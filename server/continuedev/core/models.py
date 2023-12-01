@@ -1,7 +1,7 @@
 import uuid
 from typing import Any, Callable, Dict, List, Optional, Type
 
-from pydantic import BaseModel, validator
+from pydantic import BaseModel, field_validator
 
 from ..libs.llm.anthropic import AnthropicLLM
 from ..libs.llm.base import LLM
@@ -82,12 +82,11 @@ class Models(BaseModel):
     temperature: Optional[float] = None
     system_message: Optional[str] = None
 
-    @validator(
+
+    @field_validator(
         "summarize",
         "edit",
-        "chat",
-        pre=True,
-        always=True,
+        "chat"
     )
     def roles_not_none(cls, v, values):
         if v is None:

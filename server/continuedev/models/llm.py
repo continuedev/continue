@@ -1,6 +1,6 @@
 from typing import Any, Dict, List, Optional
 
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator
 
 from .main import ContinueBaseModel
 
@@ -28,10 +28,8 @@ class RequestOptions(BaseModel):
 
 
 class BaseCompletionOptions(ContinueBaseModel):
-    @validator(
-        "*",
-        pre=True,
-        always=True,
+    @field_validator(
+        "*"
     )
     def ignore_none_and_set_default(cls, value, field):
         return value if value is not None else field.default
@@ -63,10 +61,8 @@ class BaseCompletionOptions(ContinueBaseModel):
 class CompletionOptions(BaseCompletionOptions):
     """Options for the completion."""
 
-    @validator(
-        "*",
-        pre=True,
-        always=True,
+    @field_validator(
+        "*"
     )
     def ignore_none_and_set_default(cls, value, field):
         return value if value is not None else field.default
