@@ -60,6 +60,14 @@ class SlashCommand(BaseModel):
         else:
             return v
 
+    def dict(self, *args, **kwargs):
+        d = super().dict(*args, **kwargs)
+        if isinstance(d["step"], str):
+            d["step"] = d["step"].split(".")[-1]
+        else:
+            d["step"] = d["step"].__name__
+        return d
+
     def slash_command_description(self) -> SlashCommandDescription:
         return SlashCommandDescription(
             name=self.name,
