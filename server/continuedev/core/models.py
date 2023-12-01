@@ -1,5 +1,5 @@
 import uuid
-from typing import Any, Callable, Dict, List, Optional, Type
+from typing import Any, Callable, Dict, List, Optional, Type, Union
 
 from pydantic import BaseModel, validator
 
@@ -72,12 +72,12 @@ MODEL_MODULE_NAMES = {
 class Models(BaseModel):
     """Main class that holds the current model configuration"""
 
-    default: LLM
-    summarize: LLM
-    edit: LLM
-    chat: LLM
+    default: Union[Any, LLM]
+    summarize: Union[Any, LLM]
+    edit: Union[Any, LLM]
+    chat: Union[Any, LLM]
 
-    saved: List[LLM] = []
+    saved: List[Union[Any, LLM]] = []
 
     temperature: Optional[float] = None
     system_message: Optional[str] = None

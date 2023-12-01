@@ -99,7 +99,7 @@ class HighlightedCodeContextProvider(ContextProvider):
         )
         return ChatMessage(
             role="user",
-            content=f"Code in this file is highlighted ({item.description.name}):\n```\n{rif.contents}\n```",
+            content=f"```{item.description.name}\n{rif.contents}\n```",
             summary=f"Code in this file is highlighted: {item.description.name}",
         )
 

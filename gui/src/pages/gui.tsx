@@ -428,7 +428,7 @@ function GUI(props: GUIProps) {
         client?.stopSession();
         persistSession();
         dispatch(newSession());
-        mainTextInputRef.current?.focus();
+        mainTextInputRef.current?.focus?.();
       }
     };
 
@@ -737,7 +737,7 @@ function GUI(props: GUIProps) {
                           value={step.description as string}
                           active={active && isLastUserInput(index)}
                           onEnter={(e, value) => {
-                            if (value) {
+                            if (value && client) {
                               client?.stopSession();
                               const newHistory = [
                                 ...sessionState.history.slice(0, index),
