@@ -60,6 +60,9 @@ class Ollama(LLM):
             "wizardcoder-34b": "wizardcoder:34b-python",
             "zephyr-7b": "zephyr:7b",
             "codeup-13b": "codeup:13b",
+            "deepseek-1b": "deepseek-coder:1.3b",
+            "deepseek-7b": "deepseek-coder:6.7b",
+            "deepseek-33b": "deepseek-coder:33b",
         }.get(self.model, self.model)
 
     def start(self, *args, **kwargs):

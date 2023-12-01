@@ -24,42 +24,35 @@ PROMPT = """Use the above code to answer the following question. You should not 
 
 
 async def get_faster_model(sdk: ContinueSDK) -> Optional[LLM]:
-    def get_model_description() -> Optional[ModelDescription]:
-        # First, check for GPT-3/3.5
-        models = sdk.config.models
-        if gpt3_model := next(filter(lambda m: "gpt-3" in m.model, models), None):
-            return gpt3_model
+    # First, check for GPT-3/3.5
+    models: List[LLM] = sdk.config.models
+    if gpt3_model := next(filter(lambda m: "gpt-3" in m.model, models), None):
+        return gpt3_model
 
-        # Then, check for OpenAIFreeTrial
-        if openai_free_trial_model := next(
-            filter(lambda m: m.__class__.__name__ == "OpenAIFreeTrial", models), None
-        ):
-            new_model = openai_free_trial_model.copy()
-            new_model.model = "gpt-3.5-turbo"
-            return new_model
+    # Then, check for OpenAIFreeTrial
+    if openai_free_trial_model := next(
+        filter(lambda m: m.__class__.__name__ == "OpenAIFreeTrial", models), None
+    ):
+        new_model = openai_free_trial_model.copy()
+        new_model.model = "gpt-3.5-turbo"
+        return new_model
 
-        # Then, check for an API Key
-        if openai_model := next(
-            filter(
-                lambda m: hasattr(m, "api_key")
-                and m.api_key is not None
-                and m.api_key.startswith("sk-"),
-                models,
-            ),
-            None,
-        ):
-            new_model = openai_model.copy()
-            new_model.model = "gpt-3.5-turbo"
-            return new_model
+    # Then, check for an API Key
+    if openai_model := next(
+        filter(
+            lambda m: hasattr(m, "api_key")
+            and m.api_key is not None
+            and m.api_key.startswith("sk-"),
+            models,
+        ),
+        None,
+    ):
+        new_model = openai_model.copy()
+        new_model.model = "gpt-3.5-turbo"
+        return new_model
 
-        # Return None, so re-ranking probably shouldn't happen
-        return None
-
-    if desc := get_model_description():
-        llm = sdk.config.create_llm(desc)
-        llm.start(sdk.ide.window_info.unique_id)
-    else:
-        return None
+    # Return None, so re-ranking probably shouldn't happen
+    return None
 
 
 class AnswerQuestionChroma(Step):
@@ -167,7 +160,10 @@ class AnswerQuestionChroma(Step):
         model = sdk.models.chat.model
         # if model == "gpt-4":
         #     model = "gpt-4-32k"  # Not publicly available yet?
-        if model == "gpt-3.5-turbo":
+        if (
+            model == "gpt-3.5-turbo"
+            and not sdk.models.chat.__class__.__name__ == "OpenAIFreeTrial"
+        ):
             model = "gpt-3.5-turbo-16k"
 
         await sdk.run_step(

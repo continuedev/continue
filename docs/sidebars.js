@@ -20,12 +20,22 @@ const sidebars = {
     "how-continue-works",
     {
       type: "category",
+      label: "🌉 Model setup",
+      collapsible: true,
+      collapsed: true,
+      items: [
+        "model-setup/select-provider",
+        "model-setup/select-model",
+        "model-setup/configuration",
+      ],
+    },
+    {
+      type: "category",
       label: "🎨 Customization",
       collapsible: true,
       collapsed: true,
       items: [
         "customization/overview",
-        "customization/models",
         "customization/context-providers",
         "customization/slash-commands",
         "customization/other-configuration",
