@@ -491,6 +491,17 @@ export const PROVIDER_INFO: { [key: string]: ModelInfo } = {
       { ...apiBaseInput, defaultValue: "http://localhost:11434" },
     ],
   },
+  llamafile: {
+    title: "llamafile",
+    provider: "llamafile",
+    icon: "llamafile.png",
+    description:
+      "llamafiles are a self-contained binary to run an open-source LLM",
+    longDescription: `To get started with llamafiles, find and download a binary on their [GitHub repo](https://github.com/Mozilla-Ocho/llamafile#binary-instructions). Then run it with the following command:\n\n\`\`\`shell\nchmod +x ./llamafile\n./llamafile\n\`\`\``,
+    tags: [ModelProviderTag["Local"], ModelProviderTag["Open-Source"]],
+    packages: osModels,
+    collectInputFor: [...completionParamsInputs],
+  },
   together: {
     title: "TogetherAI",
     provider: "together",
