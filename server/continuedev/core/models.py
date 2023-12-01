@@ -1,7 +1,7 @@
 import uuid
-from typing import Any, Callable, Dict, List, Optional, Type
+from typing import Any, Callable, Dict, List, Optional, Type, Union
 
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, validator
 
 from ..libs.llm.anthropic import AnthropicLLM
 from ..libs.llm.base import LLM
@@ -10,6 +10,7 @@ from ..libs.llm.google_palm_api import GooglePaLMAPI
 from ..libs.llm.hf_inference_api import HuggingFaceInferenceAPI
 from ..libs.llm.hf_tgi import HuggingFaceTGI
 from ..libs.llm.llamacpp import LlamaCpp
+from ..libs.llm.llamafile import Llamafile
 from ..libs.llm.lmstudio import LMStudio
 from ..libs.llm.ollama import Ollama
 from ..libs.llm.openai import OpenAI
@@ -46,6 +47,7 @@ MODEL_CLASSES: Dict[str, Type[LLM]] = {
         GooglePaLMAPI,
         TextGenWebUI,
         LMStudio,
+        Llamafile,
     ]
 }
 
@@ -63,18 +65,19 @@ MODEL_MODULE_NAMES = {
     "GooglePaLMAPI": "google_palm_api",
     "TextGenWebUI": "text_gen_webui",
     "LMStudio": "lmstudio",
+    "Llamafile": "llamafile",
 }
 
 
 class Models(BaseModel):
     """Main class that holds the current model configuration"""
 
-    default: LLM
-    summarize: LLM
-    edit: LLM
-    chat: LLM
+    default: Union[Any, LLM]
+    summarize: Union[Any, LLM]
+    edit: Union[Any, LLM]
+    chat: Union[Any, LLM]
 
-    saved: List[LLM] = []
+    saved: List[Union[Any, LLM]] = []
 
     temperature: Optional[float] = None
     system_message: Optional[str] = None
@@ -115,9 +118,7 @@ class Models(BaseModel):
         temperature: Optional[float],
     ):
         """Start each of the LLMs, or fall back to default"""
-        for role in ALL_MODEL_ROLES:
-            model: LLM = getattr(self, role)
-
+        for model in self.saved + self.all_models:
             model.start(unique_id)
             model.write_log = self.write_log
 

@@ -32,46 +32,25 @@ export type DisallowedSteps = string[];
  */
 export type AllowAnonymousTelemetry = boolean;
 /**
- * The title you wish to give your model.
+ * A title that will identify this model in the model selection dropdown
  */
 export type Title = string;
 /**
- * The provider of the model. This is used to determine the type of model, and how to interact with it.
+ * The unique ID of the user.
  */
-export type Provider =
-  | "openai"
-  | "openai-free-trial"
-  | "openai-aiohttp"
-  | "anthropic"
-  | "together"
-  | "ollama"
-  | "huggingface-tgi"
-  | "huggingface-inference-api"
-  | "llama.cpp"
-  | "replicate"
-  | "text-gen-webui"
-  | "google-palm"
-  | "lmstudio";
+export type UniqueId = string;
 /**
- * The name of the model. Used to autodetect prompt template.
+ * The name of the model to be used (e.g. gpt-4, codellama)
  */
 export type Model = string;
 /**
- * OpenAI, Anthropic, Together, or other API key
+ * A system message that will always be followed by the LLM
  */
-export type ApiKey = string;
-/**
- * The base URL of the LLM API.
- */
-export type ApiBase = string;
+export type SystemMessage1 = string;
 /**
  * The maximum context length of the LLM in tokens, as counted by count_tokens.
  */
 export type ContextLength = number;
-/**
- * The chat template used to format messages. This is auto-detected for most models, but can be overridden here.
- */
-export type Template = "llama2" | "alpaca" | "zephyr" | "phind" | "anthropic" | "chatml" | "deepseek";
 /**
  * Options for the completion endpoint. Read more about the completion options in the documentation.
  */
@@ -105,10 +84,6 @@ export type Stop = string[];
  */
 export type MaxTokens = number;
 /**
- * A system message that will always be followed by the LLM
- */
-export type SystemMessage1 = string;
-/**
  * Options for the HTTP request to the LLM.
  */
 export type RequestOptions = RequestOptions1;
@@ -128,7 +103,15 @@ export type CaBundlePath = string;
  * Proxy URL to use when making the HTTP request
  */
 export type Proxy = string;
-export type Models = ModelDescription[];
+/**
+ * The API key for the LLM provider.
+ */
+export type ApiKey = string;
+/**
+ * The base URL of the LLM API.
+ */
+export type ApiBase = string;
+export type Models = LLM[];
 /**
  * Roles for models. Each entry should be the title of a model in the models array.
  */
@@ -333,17 +316,17 @@ export interface FunctionCall {
   arguments: Arguments;
   [k: string]: unknown;
 }
-export interface ModelDescription {
-  title: Title;
-  provider: Provider;
+export interface LLM {
+  title?: Title;
+  unique_id?: UniqueId;
   model: Model;
+  system_message?: SystemMessage1;
+  context_length?: ContextLength;
+  completion_options?: CompletionOptions;
+  request_options?: RequestOptions;
+  prompt_templates?: PromptTemplates;
   api_key?: ApiKey;
   api_base?: ApiBase;
-  context_length?: ContextLength;
-  template?: Template;
-  completion_options?: CompletionOptions;
-  system_message?: SystemMessage1;
-  request_options?: RequestOptions;
   [k: string]: unknown;
 }
 export interface BaseCompletionOptions {
@@ -369,6 +352,12 @@ export interface RequestOptions1 {
  */
 export interface Headers {
   [k: string]: string;
+}
+/**
+ * A dictionary of prompt templates that can be used to customize the behavior of the LLM in certain situations. For example, set the "edit" key in order to change the prompt that is used for the /edit slash command. Each value in the dictionary is a string templated in mustache syntax, and filled in at runtime with the variables specific to the situation. See the documentation for more information.
+ */
+export interface PromptTemplates {
+  [k: string]: unknown;
 }
 export interface ModelRoles1 {
   default: Default;

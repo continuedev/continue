@@ -1,6 +1,6 @@
 import os
 import re
-from typing import Awaitable, Callable, Optional
+from typing import Any, Awaitable, Callable, Optional
 
 from ..constants.default_config import default_config
 from ..constants.main import (
@@ -41,6 +41,12 @@ def markMigrated(migration_id: str):
 async def migrate(migration_id: str, migrate_func: Callable[[], Awaitable]):
     if not hasMigrated(migration_id):
         await migrate_func()
+        markMigrated(migration_id)
+
+
+def sync_migrate(migration_id: str, migrate_func: Callable[[], Any]):
+    if not hasMigrated(migration_id):
+        migrate_func()
         markMigrated(migration_id)
 
 

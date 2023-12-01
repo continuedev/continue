@@ -1,32 +1,10 @@
 ---
-title: Models
-description: Swap out different LLM providers
-keywords: [openai, anthropic, PaLM, ollama, ggml]
+title: Configuration
+description: Configure your LLM and model provider
+keywords: [configure, llm, provider]
 ---
 
-# Models
-
-Continue makes it easy to swap out different LLM providers. You can either click the "+" button next to the model dropdown to configure in the UI or manually add them to your `config.json`. Once you've done this, you will be able to switch between them with the model selection dropdown.
-
-Commercial Models
-
-- [OpenAIFreeTrial](../reference/Models/openaifreetrial.md) (default) - Use gpt-4 or gpt-3.5-turbo free with our API key, or with your API key. gpt-4 is probably the most capable model of all options.
-- [OpenAI](../reference/Models/openai.md) - Use any OpenAI model with your own key. Can also change the base URL if you have a server that uses the OpenAI API format, including using the Azure OpenAI service, LocalAI, etc.
-- [AnthropicLLM](../reference/Models/anthropicllm.md) - Use claude-2 with your Anthropic API key. Claude 2 is also highly capable, and has a 100,000 token context window.
-- [GooglePaLMAPI](../reference/Models/googlepalmapi.md) - Try out the `chat-bison-001` model, which is currently in public preview, after creating an API key in [Google MakerSuite](https://makersuite.google.com/u/2/app/apikey)
-
-Local Models
-
-- [Ollama](../reference/Models/ollama.md) - If you are on Mac or Linux, Ollama is the simplest way to run open-source models like Code Llama.
-- [OpenAI](../reference/Models/openai.md) - If you have access to an OpenAI-compatible server (e.g. llama-cpp-python, LocalAI, FastChat, TextGenWebUI, etc.), you can use the `OpenAI` class and just change the base URL.
-- [GGML](../reference/Models/ggml.md) - An alternative way to connect to OpenAI-compatible servers. Will use `aiohttp` directly instead of the `openai` Python package.
-- [LlamaCpp](../reference/Models/llamacpp.md) - Build llama.cpp from source and use its built-in API server.
-
-Open-Source Models (not local)
-
-- [TogetherLLM](../reference/Models/togetherllm.md) - Use any model from the [Together Models list](https://docs.together.ai/docs/inference-models) with your Together API key.
-- [ReplicateLLM](../reference/Models/replicatellm.md) - Use any open-source model from the [Replicate Streaming List](https://replicate.com/collections/streaming-language-models) with your Replicate API key.
-- [HuggingFaceInferenceAPI](../reference/Models/huggingfaceinferenceapi.md) - Use any open-source model from the [Hugging Face Inference API](https://huggingface.co/inference-api) with your Hugging Face token.
+# Configuration
 
 ## Change the default LLM
 
@@ -97,7 +75,7 @@ If by chance the provider has the exact same API interface as OpenAI, the `OpenA
 
 Most open-source models expect a specific chat format, for example llama2 and codellama expect the input to look like `"[INST] How do I write bubble sort in Rust? [/INST]"`. Continue will automatically attempt to detect the correct prompt format based on the `model`value that you provide, but if you are receiving nonsense responses, you can use the`template`property to explicitly set the format that you expect. The options are:`["llama2", "alpaca", "zephyr", "phind", "anthropic", "chatml"]`.
 
-If you want to create an entirely new chat template, this can be done in [config.py](./code-config.md) by defining a function and adding it to the `template_messages` property of your `LLM`. Here is an example of `template_messages` for the Alpaca/Vicuna format:
+If you want to create an entirely new chat template, this can be done in [config.py](../customization/code-config.md) by defining a function and adding it to the `template_messages` property of your `LLM`. Here is an example of `template_messages` for the Alpaca/Vicuna format:
 
 ```python
 def template_alpaca_messages(msgs: List[Dict[str, str]]) -> str:
@@ -120,7 +98,7 @@ It can then be used like this:
 
 ```python title="~/.continue/config.py"
 def modify_config(config: ContinueConfig) -> ContinueConfig:
-    config.models[0].template_messages = template_alpaca_messages
+    config.models.default.template_messages = template_alpaca_messages
     return config
 ```
 
@@ -150,7 +128,7 @@ It can then be used like this in `config.py`:
 
 ```python title="~/.continue/config.py"
 def modify_config(config: ContinueConfig) -> ContinueConfig:
-    config.models[0].prompt_templates["edit"] = "<INSERT_TEMPLATE_HERE>"
+    config.models.edit.prompt_templates["edit"] = "<INSERT_TEMPLATE_HERE>"
     return config
 ```
 

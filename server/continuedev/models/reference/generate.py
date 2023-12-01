@@ -17,6 +17,7 @@ LLM_MODULES = [
     ("openai_free_trial", "OpenAIFreeTrial"),
     ("google_palm_api", "GooglePaLMAPI"),
     ("queued", "QueuedLLM"),
+    ("llamafile", "Llamafile"),
 ]
 
 CONTEXT_PROVIDER_MODULES = [

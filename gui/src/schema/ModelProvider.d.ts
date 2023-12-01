@@ -18,4 +18,5 @@ export type ModelProvider =
   | "replicate"
   | "text-gen-webui"
   | "google-palm"
-  | "lmstudio";
+  | "lmstudio"
+  | "llamafile";

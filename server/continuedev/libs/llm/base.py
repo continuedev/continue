@@ -5,8 +5,12 @@ from typing import Any, AsyncGenerator, Callable, Coroutine, Dict, List, Optiona
 
 import aiohttp
 import certifi
-from pydantic import Field
+from pydantic import Field, validator
 
+from ...core.config_utils.shared import (
+    autodetect_prompt_templates,
+    autodetect_template_function,
+)
 from ...core.main import ChatMessage
 from ...models.llm import BaseCompletionOptions, CompletionOptions, RequestOptions
 from ...models.main import ContinueBaseModel
@@ -58,7 +62,7 @@ class LLM(ContinueBaseModel):
     )
 
     prompt_templates: dict = Field(
-        default={},
+        default=None,
         description='A dictionary of prompt templates that can be used to customize the behavior of the LLM in certain situations. For example, set the "edit" key in order to change the prompt that is used for the /edit slash command. Each value in the dictionary is a string templated in mustache syntax, and filled in at runtime with the variables specific to the situation. See the documentation for more information.',
     )
 
@@ -102,6 +106,14 @@ class LLM(ContinueBaseModel):
                 "description": "A function that takes a list of messages and returns a prompt. This ensures that models like llama2, which are trained on specific chat formats, will always receive input in that format."
             },
         }
+
+    @validator("template_messages", pre=True, always=True)
+    def set_template_messages(cls, template_messages, values):
+        return template_messages or autodetect_template_function(values["model"])
+
+    @validator("prompt_templates", pre=True, always=True)
+    def set_prompt_templates(cls, prompt_templates, values):
+        return prompt_templates or autodetect_prompt_templates(values["model"])
 
     def dict(self, **kwargs):
         original_dict = super().dict(**kwargs)

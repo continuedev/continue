@@ -177,48 +177,28 @@
         }
       }
     },
-    "ModelDescription": {
-      "title": "ModelDescription",
+    "LLM": {
+      "title": "LLM",
       "type": "object",
       "properties": {
         "title": {
           "title": "Title",
-          "description": "The title you wish to give your model.",
+          "description": "A title that will identify this model in the model selection dropdown",
           "type": "string"
         },
-        "provider": {
-          "title": "Provider",
-          "description": "The provider of the model. This is used to determine the type of model, and how to interact with it.",
-          "enum": [
-            "openai",
-            "openai-free-trial",
-            "openai-aiohttp",
-            "anthropic",
-            "together",
-            "ollama",
-            "huggingface-tgi",
-            "huggingface-inference-api",
-            "llama.cpp",
-            "replicate",
-            "text-gen-webui",
-            "google-palm",
-            "lmstudio"
-          ],
+        "unique_id": {
+          "title": "Unique Id",
+          "description": "The unique ID of the user.",
           "type": "string"
         },
         "model": {
           "title": "Model",
-          "description": "The name of the model. Used to autodetect prompt template.",
+          "description": "The name of the model to be used (e.g. gpt-4, codellama)",
           "type": "string"
         },
-        "api_key": {
-          "title": "Api Key",
-          "description": "OpenAI, Anthropic, Together, or other API key",
-          "type": "string"
-        },
-        "api_base": {
-          "title": "Api Base",
-          "description": "The base URL of the LLM API.",
+        "system_message": {
+          "title": "System Message",
+          "description": "A system message that will always be followed by the LLM",
           "type": "string"
         },
         "context_length": {
@@ -226,20 +206,6 @@
           "description": "The maximum context length of the LLM in tokens, as counted by count_tokens.",
           "default": 2048,
           "type": "integer"
-        },
-        "template": {
-          "title": "Template",
-          "description": "The chat template used to format messages. This is auto-detected for most models, but can be overridden here.",
-          "enum": [
-            "llama2",
-            "alpaca",
-            "zephyr",
-            "phind",
-            "anthropic",
-            "chatml",
-            "deepseek"
-          ],
-          "type": "string"
         },
         "completion_options": {
           "title": "Completion Options",
@@ -259,11 +225,6 @@
             }
           ]
         },
-        "system_message": {
-          "title": "System Message",
-          "description": "A system message that will always be followed by the LLM",
-          "type": "string"
-        },
         "request_options": {
           "title": "Request Options",
           "description": "Options for the HTTP request to the LLM.",
@@ -279,11 +240,24 @@
               "$ref": "#/definitions/RequestOptions"
             }
           ]
+        },
+        "prompt_templates": {
+          "title": "Prompt Templates",
+          "description": "A dictionary of prompt templates that can be used to customize the behavior of the LLM in certain situations. For example, set the \"edit\" key in order to change the prompt that is used for the /edit slash command. Each value in the dictionary is a string templated in mustache syntax, and filled in at runtime with the variables specific to the situation. See the documentation for more information.",
+          "type": "object"
+        },
+        "api_key": {
+          "title": "Api Key",
+          "description": "The API key for the LLM provider.",
+          "type": "string"
+        },
+        "api_base": {
+          "title": "Api Base",
+          "description": "The base URL of the LLM API.",
+          "type": "string"
         }
       },
       "required": [
-        "title",
-        "provider",
         "model"
       ]
     },
@@ -610,12 +584,9 @@
           "default": [
             {
               "title": "GPT-4 (trial)",
-              "provider": "openai-free-trial",
               "model": "gpt-4",
-              "api_key": "",
-              "api_base": null,
-              "context_length": 2048,
-              "template": null,
+              "system_message": null,
+              "context_length": 8192,
               "completion_options": {
                 "temperature": null,
                 "top_p": null,
@@ -625,19 +596,50 @@
                 "stop": null,
                 "max_tokens": 1023
               },
-              "system_message": null,
               "request_options": {
                 "timeout": 300,
                 "verify_ssl": null,
                 "ca_bundle_path": null,
                 "proxy": null,
                 "headers": null
-              }
+              },
+              "prompt_templates": {},
+              "template_messages": null,
+              "api_key": "",
+              "api_base": null,
+              "llm": {
+                "title": null,
+                "model": "gpt-4",
+                "system_message": null,
+                "context_length": 2048,
+                "completion_options": {
+                  "temperature": null,
+                  "top_p": null,
+                  "top_k": null,
+                  "presence_penalty": null,
+                  "frequency_penalty": null,
+                  "stop": null,
+                  "max_tokens": 1023
+                },
+                "request_options": {
+                  "timeout": 300,
+                  "verify_ssl": null,
+                  "ca_bundle_path": null,
+                  "proxy": null,
+                  "headers": null
+                },
+                "prompt_templates": {},
+                "template_messages": null,
+                "api_key": null,
+                "api_base": null,
+                "class_name": "ProxyServer"
+              },
+              "class_name": "OpenAIFreeTrial"
             }
           ],
           "type": "array",
           "items": {
-            "$ref": "#/definitions/ModelDescription"
+            "$ref": "#/definitions/LLM"
           }
         },
         "model_roles": {

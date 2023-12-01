@@ -149,7 +149,6 @@
         "prompt_templates": {
           "title": "Prompt Templates",
           "description": "A dictionary of prompt templates that can be used to customize the behavior of the LLM in certain situations. For example, set the \"edit\" key in order to change the prompt that is used for the /edit slash command. Each value in the dictionary is a string templated in mustache syntax, and filled in at runtime with the variables specific to the situation. See the documentation for more information.",
-          "default": {},
           "type": "object"
         },
         "api_key": {
@@ -173,23 +172,52 @@
       "type": "object",
       "properties": {
         "default": {
-          "$ref": "#/definitions/LLM"
+          "title": "Default",
+          "anyOf": [
+            {},
+            {
+              "$ref": "#/definitions/LLM"
+            }
+          ]
         },
         "summarize": {
-          "$ref": "#/definitions/LLM"
+          "title": "Summarize",
+          "anyOf": [
+            {},
+            {
+              "$ref": "#/definitions/LLM"
+            }
+          ]
         },
         "edit": {
-          "$ref": "#/definitions/LLM"
+          "title": "Edit",
+          "anyOf": [
+            {},
+            {
+              "$ref": "#/definitions/LLM"
+            }
+          ]
         },
         "chat": {
-          "$ref": "#/definitions/LLM"
+          "title": "Chat",
+          "anyOf": [
+            {},
+            {
+              "$ref": "#/definitions/LLM"
+            }
+          ]
         },
         "saved": {
           "title": "Saved",
           "default": [],
           "type": "array",
           "items": {
-            "$ref": "#/definitions/LLM"
+            "anyOf": [
+              {},
+              {
+                "$ref": "#/definitions/LLM"
+              }
+            ]
           }
         },
         "temperature": {
@@ -200,13 +228,7 @@
           "title": "System Message",
           "type": "string"
         }
-      },
-      "required": [
-        "default",
-        "summarize",
-        "edit",
-        "chat"
-      ]
+      }
     }
   }
 }
