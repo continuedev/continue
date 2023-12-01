@@ -233,7 +233,7 @@ function ModelSelect(props: {}) {
           value={"GPT-4"}
           onChange={(val: string) => {
             if (val === defaultModel?.title) return;
-            client?.setModelForRoleFromTitle("*", val);
+            client?.setModelForRoleFromTitle("default", val);
           }}
           defaultValue={"GPT-4"}
         >

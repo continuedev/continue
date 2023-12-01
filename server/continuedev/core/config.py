@@ -8,18 +8,21 @@ from pydantic import BaseModel, Field, validator
 
 from ..libs.constants.default_config import default_config_json
 from ..libs.llm.base import LLM
+from ..libs.llm.openai_free_trial import OpenAIFreeTrial
 from ..libs.util.logging import logger
-from ..libs.util.paths import getConfigFilePath, getGlobalFolderPath
+from ..libs.util.paths import getConfigFilePath, getGlobalFolderPath, sync_migrate
 from ..libs.util.telemetry import posthog_logger
 from ..models.llm import BaseCompletionOptions, RequestOptions
 from .config_utils.context import CONTEXT_PROVIDER_NAME_TO_CLASS, ContextProviderName
 from .config_utils.shared import (
+    MODEL_CLASS_TO_MODEL_PROVIDER,
     MODEL_PROVIDER_TO_MODEL_CLASS,
     ModelProvider,
     StepName,
     TemplateType,
     autodetect_prompt_templates,
     autodetect_template_function,
+    autodetect_template_type,
 )
 from .context import ContextProvider
 from .main import ContextProviderDescription, Policy, SlashCommandDescription, Step
@@ -273,6 +276,12 @@ class SerializedContinueConfig(BaseModel):
             else:
                 config.model_roles.__setattr__(role, title)
 
+                def migrate_func():
+                    if role == "default" and config.model_roles.chat is not None:
+                        config.model_roles.chat = None
+
+                sync_migrate("select_default_model_001", migrate_func)
+
     @staticmethod
     def add_model(model: ModelDescription):
         with SerializedContinueConfig.edit_config() as config:
@@ -314,11 +323,10 @@ class ContinueConfig(BaseModel):
         default=True,
         description="If this field is set to True, we will collect anonymous telemetry as described in the documentation page on telemetry. If set to False, we will not collect any data.",
     )
-    models: List[ModelDescription] = Field(
+    models: List[LLM] = Field(
         default=[
-            ModelDescription(
+            OpenAIFreeTrial(
                 title="GPT-4 (trial)",
-                provider="openai-free-trial",
                 model="gpt-4",
                 api_key="",
             )
@@ -393,7 +401,10 @@ class ContinueConfig(BaseModel):
             allow_anonymous_telemetry=config.allow_anonymous_telemetry
             if config.allow_anonymous_telemetry is not None
             else True,
-            models=config.models,
+            models=[
+                ContinueConfig.create_llm(config.completion_options, model)
+                for model in config.models
+            ],
             model_roles=config.model_roles,
             system_message=config.system_message,
             completion_options=config.completion_options,
@@ -583,7 +594,9 @@ class ContinueConfig(BaseModel):
         return SerializedContinueConfig(
             disallowed_steps=self.disallowed_steps,
             allow_anonymous_telemetry=self.allow_anonymous_telemetry,
-            models=self.models,
+            models=[
+                ContinueConfig.model_description_from(model) for model in self.models
+            ],
             model_roles=self.model_roles,
             system_message=self.system_message,
             completion_options=self.completion_options,
@@ -604,28 +617,46 @@ class ContinueConfig(BaseModel):
             retrieval_settings=self.retrieval_settings,
         )
 
-    def create_llm(self, model: ModelDescription) -> LLM:
+    @staticmethod
+    def create_llm(
+        completion_options: BaseCompletionOptions, model: ModelDescription
+    ) -> LLM:
         model_class = MODEL_CLASSES[MODEL_PROVIDER_TO_MODEL_CLASS[model.provider]]
-        completion_options = self.completion_options.dict(
-            exclude_none=True, exclude_defaults=True
-        )
-        completion_options.update(
+        options = completion_options.dict(exclude_none=True, exclude_defaults=True)
+        options.update(
             model.completion_options.dict(exclude_none=True, exclude_defaults=True)
         )
 
-        if "max_tokens" not in completion_options:
-            completion_options["max_tokens"] = min(2048, model.context_length // 2)
+        if "max_tokens" not in options:
+            options["max_tokens"] = min(2048, model.context_length // 2)
 
         # Allow extra fields to be passed through
         kwargs = {**model.dict(exclude_none=True)}
-        kwargs["completion_options"] = completion_options
+        kwargs["completion_options"] = options
         kwargs["template_messages"] = autodetect_template_function(model.model)
         kwargs["prompt_templates"] = autodetect_prompt_templates(model.model)
 
         return model_class(**kwargs)
 
+    @staticmethod
+    def model_description_from(llm: LLM) -> ModelDescription:
+        return ModelDescription(
+            title=llm.title or "LLM",
+            provider=MODEL_CLASS_TO_MODEL_PROVIDER.get(
+                llm.__class__.__name__, "custom"  # type: ignore
+            ),
+            model=llm.model,
+            api_key=llm.api_key,
+            api_base=llm.api_base,
+            context_length=llm.context_length,
+            template=autodetect_template_type(llm.model),
+            completion_options=llm.completion_options,
+            system_message=llm.system_message,
+            request_options=llm.request_options,
+        )
+
     def construct_models(self) -> Models:
-        def model_with_title(title: Optional[str], fallback: ModelDescription):
+        def model_with_title(title: Optional[str], fallback: LLM):
             return next(filter(lambda x: x.title == title, self.models), fallback)
 
         default = model_with_title(self.model_roles.default, self.models[0])
@@ -640,11 +671,10 @@ class ContinueConfig(BaseModel):
             not in [default.title, chat.title, edit.title, summarize.title]
         ]
 
-        models = Models(
-            default=self.create_llm(default),
-            chat=self.create_llm(chat),
-            edit=self.create_llm(edit),
-            summarize=self.create_llm(summarize),
-            saved=[self.create_llm(model) for model in saved],
+        return Models(
+            default=default,
+            chat=chat,
+            edit=edit,
+            summarize=summarize,
+            saved=saved,
         )
-        return models
