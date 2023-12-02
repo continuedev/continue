@@ -1,9 +1,10 @@
+use homedir::get_my_home;
 use ignore::{Walk, WalkBuilder};
 use serde::{Deserialize, Serialize};
 use sha1::{Digest, Sha1};
 use std::{
     io::{self, Read, Result, Write},
-    path::Path,
+    path::{Path, PathBuf},
 };
 
 pub type ObjectHash = [u8; 20];
@@ -87,36 +88,36 @@ impl Object {
     }
 
     /// Return a tuple of (paths to add, paths to remove)
-    fn diff(&self, other: &Object) -> (Vec<ObjDescription>, Vec<ObjDescription>) {
+    fn diff(&self, new_obj: &Object) -> (Vec<ObjDescription>, Vec<ObjDescription>) {
         let mut add: Vec<ObjDescription> = Vec::new();
         let mut remove: Vec<ObjDescription> = Vec::new();
 
-        if self.hash() == other.hash() {
+        if self.hash() == new_obj.hash() {
             return (add, remove);
         }
 
-        match (self, other) {
-            (Object::Tree(self_tree), Object::Tree(other_tree)) => {
+        match (self, new_obj) {
+            (Object::Tree(old_tree), Object::Tree(new_tree)) => {
                 // This is where you recurse like below
-                let (child_add, child_remove) = self_tree.diff_children(other_tree);
-                add.push(other_tree.descr());
-                remove.push(self_tree.descr());
+                let (child_add, child_remove) = old_tree.diff_children(new_tree);
+                add.push(new_tree.descr());
+                remove.push(old_tree.descr());
                 add.extend(child_add);
                 remove.extend(child_remove);
             }
-            (Object::Blob(self_blob), Object::Blob(other_blob)) => {
-                add.push(self_blob.descr());
-                remove.push(other_blob.descr());
+            (Object::Blob(old_blob), Object::Blob(new_blob)) => {
+                add.push(new_blob.descr());
+                remove.push(old_blob.descr());
             }
-            (Object::Blob(self_blob), Object::Tree(other_tree)) => {
+            (Object::Blob(old_blob), Object::Tree(new_tree)) => {
                 // Remove blob, add entire new tree
-                remove.push(self_blob.descr());
-                add.extend(other_tree.all_obj_descriptions());
+                remove.push(old_blob.descr());
+                add.extend(new_tree.all_obj_descriptions());
             }
-            (Object::Tree(self_tree), Object::Blob(other_blob)) => {
+            (Object::Tree(old_tree), Object::Blob(new_blob)) => {
                 // Remove entire old tree, add blob
-                remove.extend(self_tree.all_obj_descriptions());
-                add.push(other_blob.descr());
+                remove.extend(old_tree.all_obj_descriptions());
+                add.push(new_blob.descr());
             }
         }
 
@@ -297,7 +298,7 @@ impl Tree {
 
     /// Return a list of paths that have changed and the type of change (0 = add, 1 = update, 2 = remove)
     /// other is considered the "new" tree
-    fn diff_children(&self, other: &Tree) -> (Vec<ObjDescription>, Vec<ObjDescription>) {
+    fn diff_children(&self, new_tree: &Tree) -> (Vec<ObjDescription>, Vec<ObjDescription>) {
         let mut add = Vec::new();
         let mut remove = Vec::new();
 
@@ -310,7 +311,7 @@ impl Tree {
             .map(|child| (child.path().clone(), child))
             .collect();
 
-        for child in &other.children {
+        for child in &new_tree.children {
             if let Some(old_child) = old_path_to_object.remove(child.path()) {
                 // If the same path name exists in old children
                 let (child_add, child_remove) = old_child.diff(child);
@@ -343,11 +344,83 @@ impl Tree {
     }
 }
 
+const GLOBAL_IGNORE_PATTERNS: &[&str] = &[
+    "**/.DS_Store",
+    "**/package-lock.json",
+    "**/yarn.lock",
+    "*.log",
+    "*.ttf",
+    "*.png",
+    "*.jpg",
+    "*.jpeg",
+    "*.gif",
+    "*.mp4",
+    "*.svg",
+    "*.ico",
+    "*.pdf",
+    "*.zip",
+    "*.gz",
+    "*.tar",
+    "*.tgz",
+    "*.rar",
+    "*.7z",
+    "*.exe",
+    "*.dll",
+    "*.obj",
+    "*.o",
+    "*.a",
+    "*.lib",
+    "*.so",
+    "*.dylib",
+    "*.ncb",
+    "*.sdf",
+    "*.woff",
+    "*.woff2",
+    "*.eot",
+    "*.cur",
+    "*.avi",
+    "*.mpg",
+    "*.mpeg",
+    "*.mov",
+    "*.mp3",
+    "*.mp4",
+    "*.mkv",
+    "*.mkv",
+    "*.webm",
+    "*.jar",
+];
+
+fn global_ignore_path() -> PathBuf {
+    let mut path = get_my_home().unwrap().unwrap();
+    path.push(".continue");
+    path.push("index");
+    path.push(".globalcontinueignore");
+    return path;
+}
+
+fn create_global_ignore_file() -> PathBuf {
+    // Because you have to pass a real filepath to the ignore crate, you can't just pass a string
+    let path = global_ignore_path();
+
+    if !path.exists() {
+        let mut file = std::fs::File::create(path).unwrap();
+        for pattern in GLOBAL_IGNORE_PATTERNS {
+            file.write_all(pattern.as_bytes()).unwrap();
+            file.write_all("\n".as_bytes()).unwrap();
+        }
+    }
+
+    return global_ignore_path();
+}
+
 pub fn build_walk(dir: &Path) -> Walk {
+    let path = create_global_ignore_file();
     // Make sure it sorts alphabetically by default
-    return WalkBuilder::new(dir)
-        .add_custom_ignore_filename(".continueignore")
-        .build();
+    let mut binding = WalkBuilder::new(dir);
+    let builder = binding.add_custom_ignore_filename(".continueignore");
+
+    builder.add_ignore(path);
+    return builder.build();
 }
 
 fn sha1_hash(content: &str) -> ObjectHash {
@@ -497,39 +570,8 @@ pub fn compute_tree_for_dir(dir: &Path, parent: Option<ObjectHash>) -> Result<Tr
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::fs::{self, File};
-    use std::io::Write;
-    use tempfile::{tempdir, Builder};
-
-    struct TempDirBuilder {
-        files: Vec<(String, String)>,
-    }
-
-    impl TempDirBuilder {
-        fn new() -> TempDirBuilder {
-            return TempDirBuilder { files: Vec::new() };
-        }
-
-        fn add(&mut self, path: &str, content: &str) -> &mut TempDirBuilder {
-            self.files.push((path.to_string(), content.to_string()));
-            return self;
-        }
-
-        fn create(&self) -> tempfile::TempDir {
-            let temp_dir = tempdir().expect("Failed to create temp dir");
-
-            for (path, content) in &self.files {
-                let file_path = temp_dir.path().join(path);
-                if let Some(dir) = file_path.parent() {
-                    fs::create_dir_all(dir).expect("Failed to create directory");
-                }
-                let mut file = File::create(&file_path).expect("Failed to create test file");
-                writeln!(file, "{}", content).expect("Failed to write to test file");
-            }
-
-            return temp_dir;
-        }
-    }
+    use crate::utils::TempDirBuilder;
+    use std::fs::{self};
 
     #[test]
     fn test_compute_tree_for_temp_dir() {

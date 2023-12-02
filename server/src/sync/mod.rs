@@ -408,6 +408,7 @@ pub fn sync(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::utils::TempDirBuilder;
     use std::fs::remove_file;
 
     #[test]
@@ -495,5 +496,58 @@ mod tests {
         println!("Second sync took {:?}", ti.elapsed());
         assert_eq!(results.0.len(), 0);
         assert_eq!(results.1.len(), 0);
+    }
+
+    #[test]
+    fn test_sync_v3() {
+        // Create temp directory
+        let temp_dir = TempDirBuilder::new()
+            .add("dir1/file1.txt", "File 1")
+            .add("dir1/file2.txt", "File 2")
+            .add("dir2/file3.txt", "File 3")
+            .add("dir2/subdir/continue.py", "[continue for i in range(10)]")
+            .add("__init__.py", "a = 5")
+            .create();
+
+        // Sync once
+        sync(temp_dir.path(), Some("BRANCH")).expect("Sync failed.");
+
+        // Make changes
+        let mut file = File::create(temp_dir.path().join("dir1/file1.txt")).unwrap();
+        file.write_all("File 1 changed".as_bytes()).unwrap();
+        let mut file = File::create(temp_dir.path().join("dir2/file3.txt")).unwrap();
+        file.write_all("File 3 changed".as_bytes()).unwrap();
+
+        // Sync again
+        let results = sync(temp_dir.path(), Some("BRANCH")).expect("Sync failed.");
+
+        // Check results
+        assert_eq!(results.0.len(), 2);
+        assert_eq!(results.1.len(), 2);
+        assert_eq!(results.2.len(), 0);
+        assert_eq!(results.3.len(), 0);
+
+        // Start a new branch
+
+        // Sync again
+        let results = sync(temp_dir.path(), Some("BRANCH2")).expect("Sync failed.");
+
+        // Check results
+        assert_eq!(results.0.len(), 0);
+        assert_eq!(results.1.len(), 0);
+        assert_eq!(results.2.len(), 5);
+        assert_eq!(results.3.len(), 0);
+
+        // Delete a file in this new branch
+        remove_file(temp_dir.path().join("dir1/file2.txt")).unwrap();
+
+        // Sync again
+        let results = sync(temp_dir.path(), Some("BRANCH2")).expect("Sync failed.");
+
+        // Check results
+        assert_eq!(results.0.len(), 0);
+        assert_eq!(results.1.len(), 0);
+        assert_eq!(results.2.len(), 0);
+        assert_eq!(results.3.len(), 1);
     }
 }
