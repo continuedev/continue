@@ -90,6 +90,10 @@ jobs:
         run: |
           pip install pyinstaller
 
+      - name: Install Maturin
+        run: |
+          pip install maturin
+
       - name: Install Dependencies
         run: |
           pip install -r server/requirements.txt
@@ -123,6 +127,11 @@ jobs:
       #     cd pysqlite3
       #     python setup.py build_static build
       #   if: matrix.os == 'ubuntu-latest'
+
+      - name: Build the Rust library
+        run: |
+          cd server
+          maturin develop
 
       - name: Install tiktoken vocab file
         # Done to avoid extra network request to download the vocab file
