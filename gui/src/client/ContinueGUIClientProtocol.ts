@@ -140,9 +140,9 @@ class ContinueGUIClientProtocol extends AbstractContinueGUIClientProtocol {
     return this.messenger?.sendAndReceive("get_config", {});
   }
 
-  onAddContextItem(callback: (item: ContextItem) => void) {
-    this.messenger?.onMessageType("add_context_item", (data: ContextItem) => {
-      callback(data);
+  onAddContextItem(callback: (item: ContextItem, index: number) => void) {
+    this.messenger?.onMessageType("add_context_item_at_index", (data: any) => {
+      callback(data.item, data.index);
     });
   }
 

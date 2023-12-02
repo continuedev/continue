@@ -6,48 +6,6 @@ import { PersistedSessionInfo } from "../../schema/PersistedSessionInfo";
 import { v4 } from "uuid";
 import { ContextItemId } from "../../schema/ContextItemId";
 
-const TEST_TIMELINE = [
-  {
-    description: "Hi, please write bubble sort in python",
-    name: "User Input",
-  },
-  {
-    description: `\`\`\`python
-def bubble_sort(arr):
-  n = len(arr)
-  for i in range(n):
-      for j in range(0, n - i - 1):
-          if arr[j] > arr[j + 1]:
-              arr[j], arr[j + 1] = arr[j + 1], arr[j]
-              return arr
-\`\`\``,
-    name: "Bubble Sort in Python",
-  },
-  {
-    description: "Now write it in Rust",
-    name: "User Input",
-  },
-  {
-    description: "Hello! This is a test...\n\n1, 2, 3, testing...",
-    name: "Testing",
-  },
-  {
-    description: `Sure, here's bubble sort written in rust: \n\`\`\`rust
-fn bubble_sort<T: Ord>(values: &mut[T]) {
-  let len = values.len();
-  for i in 0..len {
-      for j in 0..(len - i - 1) {
-          if values[j] > values[j + 1] {
-              values.swap(j, j + 1);
-          }
-      }
-  }
-}
-\`\`\`\nIs there anything else I can answer?`,
-    name: "Rust Bubble Sort",
-  },
-];
-
 const TEST_CONTEXT_ITEMS: ContextItem[] = [
   {
     content: "def add(a, b):\n  return a + b",
@@ -70,6 +28,57 @@ const TEST_CONTEXT_ITEMS: ContextItem[] = [
         provider_title: "file",
       },
     },
+  },
+];
+
+const TEST_TIMELINE = [
+  {
+    description: "Hi, please write bubble sort in python",
+    name: "User Input",
+    params: { context_items: TEST_CONTEXT_ITEMS },
+    hide: false,
+    depth: 0,
+  },
+  {
+    description: `\`\`\`python
+def bubble_sort(arr):
+  n = len(arr)
+  for i in range(n):
+      for j in range(0, n - i - 1):
+          if arr[j] > arr[j + 1]:
+              arr[j], arr[j + 1] = arr[j + 1], arr[j]
+              return arr
+\`\`\``,
+    name: "Bubble Sort in Python",
+    params: {},
+    hide: false,
+    depth: 0,
+  },
+  {
+    description: "Now write it in Rust",
+    name: "User Input",
+    params: {},
+  },
+  {
+    description: "Hello! This is a test...\n\n1, 2, 3, testing...",
+    name: "Testing",
+    hide: false,
+  },
+  {
+    description: `Sure, here's bubble sort written in rust: \n\`\`\`rust
+fn bubble_sort<T: Ord>(values: &mut[T]) {
+  let len = values.len();
+  for i in 0..len {
+      for j in 0..(len - i - 1) {
+          if values[j] > values[j + 1] {
+              values.swap(j, j + 1);
+          }
+      }
+  }
+}
+\`\`\`\nIs there anything else I can answer?`,
+    name: "Rust Bubble Sort",
+    depth: 0,
   },
 ];
 

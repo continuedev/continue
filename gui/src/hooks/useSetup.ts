@@ -1,8 +1,8 @@
 import { Dispatch } from "@reduxjs/toolkit";
 import ContinueGUIClientProtocol from "../client/ContinueGUIClientProtocol";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import {
-  addContextItem,
+  addContextItemAtIndex,
   addHighlightedCode,
   processSessionUpdate,
   setActive,
@@ -69,8 +69,8 @@ function useSetup(
       dispatch(setIndexingProgress(progress));
     });
 
-    client.onAddContextItem((item) => {
-      dispatch(addContextItem(item));
+    client.onAddContextItem((item, index) => {
+      dispatch(addContextItemAtIndex({ item, index }));
     });
 
     client.onConfigUpdate((config) => {

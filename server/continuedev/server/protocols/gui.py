@@ -159,8 +159,10 @@ class GUIProtocolServer(AbstractGUIProtocolServer):
             {}, SessionState, "get_session_state"
         )
 
-    async def add_context_item(self, item: ContextItem):
-        await self.messenger.send("add_context_item", item.dict())
+    async def add_context_item_at_index(self, item: ContextItem, index: int):
+        await self.messenger.send(
+            "add_context_item_at_index", {"item": item.dict(), "index": index}
+        )
 
     async def send_config_update(self):
         if config := self.get_config():

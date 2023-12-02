@@ -11,5 +11,5 @@ class AbstractGUIProtocolServer(ABC):
         ...
 
     @abstractmethod
-    async def add_context_item(self, item: ContextItem):
+    async def add_context_item_at_index(self, item: ContextItem, index: int):
         ...

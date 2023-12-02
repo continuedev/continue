@@ -207,8 +207,26 @@ class ContinueSDK(AbstractContinueSDK):
         )
 
     async def add_context_item(self, item: ContextItem):
-        self.__autopilot.session_state.context_items.append(item)
-        await self.gui.add_context_item(item)
+        index = len(self.__autopilot.session_state.history) - 1
+        while index > 0:
+            if (
+                self.__autopilot.session_state.history[index].step_type
+                == "UserInputStep"
+            ):
+                break
+            index -= 1
+
+        await self.add_context_item_at_index(item, index)
+
+    async def add_context_item_at_index(self, item: ContextItem, index: int):
+        context_items = self.__autopilot.session_state.history[index].params.get(
+            "context_items", []
+        )
+        context_items.append(item.dict())
+        self.__autopilot.session_state.history[index].params[
+            "context_items"
+        ] = context_items
+        await self.gui.add_context_item_at_index(item, index)
 
     def set_loading_message(self, message: str):
         # self.__autopilot.set_loading_message(message)

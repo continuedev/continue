@@ -892,6 +892,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
               onClick={(e) => {
                 setShowContextToggleOn((prev) => !prev);
               }}
+              tabIndex={0}
               id="toggle-context-div"
             >
               {showContextToggleOn ? (
