@@ -137,7 +137,7 @@ class MeilisearchCodebaseIndex(CodebaseIndex):
                         group = []
                         await asyncio.sleep(0.1)
                     elif action == "delete":
-                        await self.delete_chunks([chunk.digest], index)
+                        await self.delete_chunks([chunk], index)
                     elif action == "add_label":
                         await self.add_label(chunk, self.tag, index)
                     elif action == "remove_label":

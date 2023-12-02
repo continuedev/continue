@@ -467,6 +467,14 @@ mod tests {
     }
 
     #[test]
+    fn test_on_vscode_extension() {
+        let results = sync(
+            Path::new("/Users/natesesti/Desktop/continue/extensions/vscode"),
+            Some("nate/pyO3"),
+        );
+    }
+
+    #[test]
     fn test_double_sync() {
         let ti = std::time::Instant::now();
         let results = sync(
