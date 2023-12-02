@@ -18,6 +18,18 @@ from ...libs.llm.prompts.edit import (
     zephyr_edit_prompt,
 )
 
+STEP_NAMES = [
+    "AnswerQuestionChroma",
+    "GenerateShellCommandStep",
+    "EditHighlightedCodeStep",
+    "ShareSessionStep",
+    "CommentCodeStep",
+    "ClearHistoryStep",
+    "StackOverflowStep",
+    "OpenConfigStep",
+    "GenerateShellCommandStep",
+]
+
 StepName = Literal[
     "AnswerQuestionChroma",
     "GenerateShellCommandStep",
@@ -64,8 +76,10 @@ def autodetect_template_type(model: str) -> Optional[TemplateType]:
     return "chatml"
 
 
-def autodetect_template_function(model: str):
-    if template_type := autodetect_template_type(model):
+def autodetect_template_function(
+    model: str, explicit_template: Optional[TemplateType] = None
+):
+    if template_type := explicit_template or autodetect_template_type(model):
         mapping: Dict[TemplateType, Any] = {
             "llama2": llama2_template_messages,
             "alpaca": template_alpaca_messages,
@@ -79,8 +93,10 @@ def autodetect_template_function(model: str):
     return None
 
 
-def autodetect_prompt_templates(model: str):
-    template_type = autodetect_template_type(model)
+def autodetect_prompt_templates(
+    model: str, explicit_template: Optional[TemplateType] = None
+):
+    template_type = explicit_template or autodetect_template_type(model)
 
     templates = {}
 

@@ -40,7 +40,7 @@ class LlamaCpp(LLM):
 
     llama_cpp_args: Dict[str, Any] = Field(
         {"stop": ["[INST]"]},
-        description="A list of additional arguments to pass to llama.cpp. See [here](https://github.com/ggerganov/llama.cpp/tree/master/examples/server#api-endpoints) for the complete catalog of options.",
+        description="A list of additional arguments to pass to llama.cpp. See https://github.com/ggerganov/llama.cpp/tree/master/examples/server#api-endpoints for the complete catalog of options.",
     )
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
