@@ -13,11 +13,11 @@ from .util import remove_meilisearch_disallowed_chars, remove_prefix
 class SearchContextProvider(ContextProvider):
     """Type '@search' to reference the results of codebase search, just like the results you would get from VS Code search."""
 
-    title = "search"
-    display_title = "Search"
-    description = "Search workspace for exact matches"
-    dynamic = True
-    requires_query = True
+    title: str = "search"
+    display_title: str = "Search"
+    description: str = "Search workspace for exact matches"
+    dynamic: bool = True
+    requires_query: bool = True
 
     _SEARCH_CONTEXT_ITEM_ID = "search"
 

@@ -28,10 +28,10 @@ class HighlightedCodeContextProvider(ContextProvider):
     When you hit enter on an option, the context provider will add that item to the autopilot's list of context (which is all stored in the ContextManager object).
     """
 
-    title = "code"
-    display_title = "Highlighted Code"
-    description = "Highlight code"
-    dynamic = True
+    title: str = "code"
+    display_title: str = "Highlighted Code"
+    description: str = "Highlight code"
+    dynamic: bool = True
 
     ide: AbstractIdeProtocolServer
     model_config = ConfigDict(arbitrary_types_allowed=True)

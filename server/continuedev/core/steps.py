@@ -137,7 +137,7 @@ class DefaultModelEditCodeStep(Step):
     model: Optional[LLM] = None
     range_in_files: List[RangeInFile]
     name: str = "Editing Code"
-    hide = False
+    hide: bool = False
     description: str = ""
     _prompt: str = dedent(
         """\

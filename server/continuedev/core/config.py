@@ -24,6 +24,7 @@ from .config_utils.shared import (
 from .context import ContextProvider
 from .main import ContextProviderDescription, Policy, SlashCommandDescription, Step
 from .models import MODEL_CLASSES, Models
+from typing import Iterator
 
 
 class StepWithParams(BaseModel):
@@ -240,10 +241,22 @@ class SerializedContinueConfig(BaseModel):
     @staticmethod
     @contextmanager
     def edit_config():
-        config = SerializedContinueConfig.parse_file(CONFIG_JSON_PATH)
+        # Read the JSON file and parse it into a dictionary
+        with open(CONFIG_JSON_PATH, 'r', encoding='utf-8') as file:
+            data = json.load(file)
+        
+        # Create an instance of SerializedContinueConfig from the dictionary
+        config = SerializedContinueConfig(**data)
+        
+        # Yield the config object for editing within the with-block
         yield config
-        with open(CONFIG_JSON_PATH, "w") as f:
-            f.write(config.json(exclude_none=True, exclude_defaults=True, indent=2))
+        
+        # After editing, write the serialized config back to the JSON file
+        with open(CONFIG_JSON_PATH, "w", encoding='utf-8') as file:
+            # Serialize the Pydantic model instance (`dict` method creates a serializable output)
+            json.dump(config.dict(), file, indent=4)
+
+
 
     @staticmethod
     def set_temperature(temperature: float):

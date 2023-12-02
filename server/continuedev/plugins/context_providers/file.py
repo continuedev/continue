@@ -26,12 +26,12 @@ class FileContextProvider(ContextProvider):
     The FileContextProvider is a ContextProvider that allows you to search files in the open workspace.
     """
 
-    title = "file"
+    title: str = "file"
     ignore_patterns: List[str] = DEFAULT_IGNORE_PATTERNS
 
-    display_title = "Files"
-    description = "Type to search the workspace"
-    dynamic = False
+    display_title: str = "Files"
+    description: str = "Type to search the workspace"
+    dynamic: bool = False
 
     async def start(self, *args):
         await super().start(*args)

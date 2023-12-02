@@ -12,11 +12,11 @@ from .util import remove_meilisearch_disallowed_chars, remove_prefix
 class URLContextProvider(ContextProvider):
     """Type '@url' to reference the contents of a URL. You can either reference preset URLs, or reference one dynamically by typing '@url https://example.com'. The text contents of the page will be fetched and used as context."""
 
-    title = "url"
-    display_title = "URL"
-    description = "Reference the contents of a webpage"
-    dynamic = True
-    requires_query = True
+    title: str = "url"
+    display_title: str = "URL"
+    description: str = "Reference the contents of a webpage"
+    dynamic: bool = True
+    requires_query: bool = True
 
     # Allows users to provide a list of preset urls
     preset_urls: List[str] = Field(
