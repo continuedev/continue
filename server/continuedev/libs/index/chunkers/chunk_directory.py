@@ -1,6 +1,16 @@
 import asyncio
+import hashlib
 import os
-from typing import AsyncGenerator, Callable, Generator, List, Literal, Optional, Tuple, Union
+from typing import (
+    AsyncGenerator,
+    Callable,
+    Generator,
+    List,
+    Literal,
+    Optional,
+    Tuple,
+    Union,
+)
 
 from continuedev.continuedev import sync_results
 
@@ -79,10 +89,15 @@ async def stream_chunk_directory(
         if contents is None:
             yield (None, progress)
             continue
-        for chunk in chunk_document(file, contents, max_chunk_size):
+
+        for chunk in chunk_document(
+            file, contents, max_chunk_size, hashlib.sha1(contents.encode()).hexdigest()
+        ):
             yield (chunk, progress)
 
+
 IndexAction = Literal["compute", "delete", "add_label", "remove_label"]
+
 
 def local_stream_chunk_directory(
     workspace_dir: str, max_chunk_size: int, branch: str
@@ -94,7 +109,6 @@ def local_stream_chunk_directory(
     total = len(compute) + len(delete) + len(add_label) + len(remove_label) + 1
 
     for filepath, digest in compute:
-
         # Ignore if the file is too large (cutoff is 10MB)
         if os.path.getsize(filepath) > 10_000_000:
             continue
@@ -110,17 +124,17 @@ def local_stream_chunk_directory(
 
         for chunk in chunk_document(filepath, contents, max_chunk_size, digest):
             yield ("compute", chunk, progress / total)
-        
+
         progress += 1
-        
+
     for filepath, digest in delete:
         yield ("delete", digest, progress / total)
         progress += 1
-    
+
     for filepath, digest in add_label:
         yield ("add_label", digest, progress / total)
         progress += 1
-    
+
     for filepath, digest in remove_label:
         yield ("remove_label", digest, progress / total)
         progress += 1

@@ -54,6 +54,7 @@ class IdeProtocolClient {
         name: "vscode",
         version: vscode.version,
         remote_name: vscode.env.remoteName,
+        server_url: serverUrl,
       },
     };
 

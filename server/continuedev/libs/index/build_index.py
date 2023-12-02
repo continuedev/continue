@@ -52,8 +52,10 @@ async def build_index(
         meilisearch_index.build(generator_for_meilisearch())
     )
 
-    # TODO: How do we know whether Continue server is running on the same machine as the IDE?
-    if ide.window_info.ide_info.get("remote_name", None) in ["ssh-remote", "wsl"]:
+    server_url = ide.window_info.ide_info.get("server_url", "http://localhost:65432")
+    if ide.window_info.ide_info.get("remote_name", None) in ["ssh-remote", "wsl"] or (
+        "localhost" not in server_url and "127.0.0.1" not in server_url
+    ):
         # Use the old method if workspace is remote OR if Continue server is not running on the same machine as the IDE
         async for chunk, progress in stream_chunk_directory(ide, MAX_CHUNK_SIZE):
             if chunk is not None:
