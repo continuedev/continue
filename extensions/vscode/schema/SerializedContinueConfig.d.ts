@@ -89,6 +89,10 @@ export type Stop = string[];
  */
 export type MaxTokens = number;
 /**
+ * The session_id of the UI.
+ */
+export type SessionId = string;
+/**
  * A system message that will always be followed by the LLM
  */
 export type SystemMessage = string;
@@ -271,6 +275,7 @@ export interface BaseCompletionOptions {
   frequency_penalty?: FrequencyPenalty;
   stop?: Stop;
   max_tokens?: MaxTokens;
+  session_id?: SessionId;
   [k: string]: unknown;
 }
 export interface RequestOptions1 {

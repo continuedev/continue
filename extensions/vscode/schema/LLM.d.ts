@@ -59,6 +59,10 @@ export type Stop = string[];
  */
 export type MaxTokens = number;
 /**
+ * The session_id of the UI.
+ */
+export type SessionId = string;
+/**
  * Options for the HTTP request to the LLM.
  */
 export type RequestOptions = RequestOptions1;
@@ -108,6 +112,7 @@ export interface BaseCompletionOptions {
   frequency_penalty?: FrequencyPenalty;
   stop?: Stop;
   max_tokens?: MaxTokens;
+  session_id?: SessionId;
   [k: string]: unknown;
 }
 export interface RequestOptions1 {

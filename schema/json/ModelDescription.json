@@ -44,6 +44,11 @@
           "description": "The maximum number of tokens to generate.",
           "default": 1023,
           "type": "integer"
+        },
+        "session_id": {
+          "title": "Session Id",
+          "description": "The session_id of the UI.",
+          "type": "string"
         }
       }
     },
@@ -97,8 +102,8 @@
           "enum": [
             "openai",
             "openai-free-trial",
-            "openai-aiohttp",
             "openai-agent",
+            "openai-aiohttp",
             "anthropic",
             "together",
             "ollama",
@@ -157,7 +162,8 @@
             "presence_penalty": null,
             "frequency_penalty": null,
             "stop": null,
-            "max_tokens": 1023
+            "max_tokens": 1023,
+            "session_id": null
           },
           "allOf": [
             {
