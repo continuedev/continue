@@ -90,17 +90,17 @@ jobs:
           python-version: "3.11"
 
       - name: Create virtual environment
-        run: python -m venv venv
+        run: python -m venv .venv
 
       - name: Activate virtual environment (non-Windows)
         run: |
-          . venv/bin/activate
+          . .venv/bin/activate
           echo PATH=$PATH >> $GITHUB_ENV
         if: matrix.os != 'windows-latest'
 
       - name: Activate virtual environment (Windows)
         run: |
-          venv\Scripts\activate.bat
+          .venv\Scripts\activate.bat
           echo PATH=$PATH >> $GITHUB_ENV
         if: matrix.os == 'windows-latest'
 
