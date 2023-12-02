@@ -86,6 +86,12 @@ jobs:
         with:
           python-version: "3.11"
 
+      - name: Create virtual environment
+        run: python -m venv venv
+
+      - name: Activate virtual environment
+        run: source venv/bin/activate
+
       - name: Install Pyinstaller
         run: |
           pip install pyinstaller
