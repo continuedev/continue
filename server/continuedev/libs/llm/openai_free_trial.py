@@ -71,7 +71,8 @@ class OpenAIFreeTrial(LLM):
 
     @field_validator("context_length")
     def context_length_for_model(cls, v, values):
-        return CONTEXT_LENGTH_FOR_MODEL.get(values["model"], 4096)
+        mod1 = values.data["model"]
+        return CONTEXT_LENGTH_FOR_MODEL.get(mod1, 4096)
 
     def update_llm_properties(self):
         self.llm.system_message = self.system_message

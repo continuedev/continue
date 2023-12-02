@@ -13,7 +13,7 @@ class RequestOptions(BaseModel):
     verify_ssl: Optional[bool] = Field(
         default=None, description="Whether to verify SSL certificates for requests."
     )
-    ca_bundle_path: str = Field(
+    ca_bundle_path: Optional[str] = Field(
         default=None,
         description="Path to a custom CA bundle to use when making the HTTP request",
     )
@@ -32,7 +32,11 @@ class BaseCompletionOptions(ContinueBaseModel):
         "*"
     )
     def ignore_none_and_set_default(cls, value, field):
-        return value if value is not None else field.default
+        defa = field.data.get('default', None)
+        if defa is not None:
+            print(f'found default for {field.field_name}: {defa}')
+
+        return value if value is not None else defa
 
     temperature: Optional[float] = Field(
         default=None, description="The temperature of the completion."

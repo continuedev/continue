@@ -66,7 +66,7 @@
       "module": "server.continuedev.__main__",
       "args": [
         "--port",
-        "8002"
+        "8001"
         // "--meilisearch-url", "http://localhost:7701"
       ],
       "justMyCode": false,
