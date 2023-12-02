@@ -94,7 +94,7 @@ jobs:
 
       - name: Activate virtual environment (non-Windows)
         run: |
-          . .venv/bin/activate
+          . venv/bin/activate
           echo PATH=$PATH >> $GITHUB_ENV
         if: matrix.os != 'windows-latest'
 
