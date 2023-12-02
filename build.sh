@@ -14,6 +14,7 @@ python3 -m venv env
 # 3. Install the required packages
 pip install -r server/requirements.txt || exit 1
 pip install pyinstaller || exit 1
+pip install maturin || exit 1
 
 # 4. Detect M1 architecture or allow manual override
 USE_ARCH="intel"
@@ -33,6 +34,11 @@ else
         USE_ARCH="intel"
     fi
 fi
+
+# 4.25. Build the Rust library
+cd server
+maturin develop
+cd ..
 
 # 4.5. Make .tiktoken_cache directory, used to package with tiktoken vocab file
 mkdir .tiktoken_cache
