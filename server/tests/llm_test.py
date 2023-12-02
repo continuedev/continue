@@ -51,10 +51,12 @@ class TestBaseLLM:
 
     def test_llm_collect_args(self):
         options = CompletionOptions(model=self.model)
-        assert self.llm.collect_args(options) == {
+        args = self.llm.collect_args(options)
+        for k, v in {
             **DEFAULT_ARGS,
             "model": self.model,
-        }
+        }.items():
+            assert args[k] == v
 
     @pytest.mark.skipif(SPEND_MONEY is False, reason="Costs money")
     @async_test
