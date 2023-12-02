@@ -116,7 +116,7 @@ class MeilisearchCodebaseIndex(CodebaseIndex):
                 #     ["attribute", "words", "typo", "proximity", "sort", "exactness"]
                 # )
                 await index.update_searchable_attributes(["content", "document_id"])
-                await index.update_filterable_attributes(["tags"])
+                await index.update_filterable_attributes(["tags", "document_id"])
 
                 i = 0
                 GROUP_SIZE = 100

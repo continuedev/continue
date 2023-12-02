@@ -163,6 +163,12 @@ class Window:
 
                 await self.display_config_error()
 
+            elif filepath.endswith(".gitignore") or filepath.endswith(
+                ".continueignore"
+            ):
+                # Update the index
+                await index()
+
         self.ide.subscribeToFileSaved(onFileSavedCallback)
 
         async def onDebugCallback(terminal_contents: str):

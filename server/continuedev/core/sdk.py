@@ -241,6 +241,13 @@ class ContinueSDK(AbstractContinueSDK):
                 )
             )
 
+        ctx_msgs = await self.__autopilot.context_manager.get_chat_messages(
+            self.context_items
+        )
+        for ctx_msg in ctx_msgs:
+            # Add as second-to-last message
+            msgs.insert(-1, ctx_msg)
+
         return msgs
 
     async def get_context_item_chat_messages(

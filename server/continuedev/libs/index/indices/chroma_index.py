@@ -217,13 +217,14 @@ class ChromaCodebaseIndex(CodebaseIndex):
                 if chunk.content.strip() == "":
                     continue
 
+                group.append(chunk)
                 if len(group) < group_size:
-                    group.append(chunk)
                     continue
 
-                await self.add_chunks([chunk])
+                await self.add_chunks(group)
+                group = []
             elif action == "delete":
-                self.delete_chunks([chunk])
+                self.delete_chunks(chunk)
             elif action == "add_label":
                 self.add_label(chunk)
             elif action == "remove_label":
