@@ -93,11 +93,15 @@ jobs:
         run: python -m venv venv
 
       - name: Activate virtual environment (non-Windows)
-        run: source venv/bin/activate
+        run: |
+          . .venv/bin/activate
+          echo PATH=$PATH >> $GITHUB_ENV
         if: matrix.os != 'windows-latest'
 
       - name: Activate virtual environment (Windows)
-        run: venv\Scripts\activate.bat
+        run: |
+          venv\Scripts\activate.bat
+          echo PATH=$PATH >> $GITHUB_ENV
         if: matrix.os == 'windows-latest'
 
       - name: Install Pyinstaller
