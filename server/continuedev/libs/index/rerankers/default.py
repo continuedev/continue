@@ -128,9 +128,9 @@ async def default_reranker_parallel(
     # Determine which documents were repeated, these are probably important
     counts_per_document = {}
     for chunk in chunks:
-        if chunk.document_id not in counts_per_document:
-            counts_per_document[chunk.document_id] = 0
-        counts_per_document[chunk.document_id] += 1
+        if chunk.digest not in counts_per_document:
+            counts_per_document[chunk.digest] = 0
+        counts_per_document[chunk.digest] += 1
 
     repeated_documents = set(
         filter(lambda x: counts_per_document[x] > 1, counts_per_document)
@@ -140,7 +140,7 @@ async def default_reranker_parallel(
         [
             chunk.id
             for chunk in chunks
-            if chunk.id not in remove or chunk.document_id in repeated_documents
+            if chunk.id not in remove or chunk.digest in repeated_documents
         ]
     )
 

@@ -753,7 +753,7 @@ class IdeProtocolClient {
       await new Promise((resolve, reject) => {
         const timeout = setTimeout(() => {
           resolve(null);
-        }, 2000);
+        }, 5000);
         extension.exports.b.onDidChangeState((s: any) => {
           clearTimeout(timeout);
           resolve(null);
@@ -769,7 +769,7 @@ class IdeProtocolClient {
   async getBranch(): Promise<string> {
     const repo = await this.getRepo();
 
-    return repo.state.HEAD.name;
+    return repo.state.HEAD?.name || "NONE";
   }
 
   async getDiff(): Promise<string> {

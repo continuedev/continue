@@ -45,7 +45,7 @@ Relevant:
 
 async def single_token_reranker(chunk: Chunk, user_input: str, model: LLM) -> float:
     compiled_prompt = PROMPT.format(
-        query=user_input, document=chunk.content, document_id=chunk.document_id
+        query=user_input, document=chunk.content, document_id=chunk.digest
     )
 
     if False:

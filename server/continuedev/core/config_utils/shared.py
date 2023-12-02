@@ -49,7 +49,7 @@ TemplateType = Literal[
 
 def autodetect_template_type(model: str) -> Optional[TemplateType]:
     lower = model.lower()
-    if "gpt" in lower or "chat-bison" in lower:
+    if "gpt" in lower or "chat-bison" in lower or "pplx" in lower:
         return None
 
     if "phind" in lower:

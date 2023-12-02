@@ -40,8 +40,8 @@ class MeilisearchCodebaseIndex(CodebaseIndex):
         return {
             "id": str(index),
             "content": chunk.content,
-            "document_id": chunk.document_id,
-            "tags": tags,
+            "document_id": chunk.digest,
+            "tags": [],
             **chunk.other_metadata,
             "metadata": {
                 "start_line": chunk.start_line,
@@ -57,21 +57,25 @@ class MeilisearchCodebaseIndex(CodebaseIndex):
         del other_metadata["document_id"]
         del other_metadata["id"]
         del other_metadata["tags"]
+        del other_metadata["filepath"]
 
         return Chunk(
             content=document["content"],
             start_line=document["metadata"]["start_line"],
             end_line=document["metadata"]["end_line"],
             index=document["metadata"]["index"],
-            document_id=document["document_id"],
+            digest=document["document_id"],
+            filepath=document["filepath"],
             other_metadata=other_metadata,
         )
 
     async def add_chunks(self, chunks: List[Chunk], index: Index, offset: int):
         await index.add_documents(
             [
-                self.chunk_to_meilisearch_document(chunk, j + offset, [self.tag])
-                for j, chunk in enumerate(chunks)
+                self.chunk_to_meilisearch_document(
+                    chunk, int(chunk.digest, 16), [self.tag]
+                )
+                for chunk in chunks
             ]
         )
 
@@ -112,6 +116,7 @@ class MeilisearchCodebaseIndex(CodebaseIndex):
                 #     ["attribute", "words", "typo", "proximity", "sort", "exactness"]
                 # )
                 await index.update_searchable_attributes(["content", "document_id"])
+                await index.update_filterable_attributes(["tags"])
 
                 i = 0
                 GROUP_SIZE = 100
@@ -132,7 +137,7 @@ class MeilisearchCodebaseIndex(CodebaseIndex):
                         group = []
                         await asyncio.sleep(0.1)
                     elif action == "delete":
-                        await self.delete_chunks([chunk.document_id], index)
+                        await self.delete_chunks([chunk.digest], index)
                     elif action == "add_label":
                         await self.add_label(chunk, self.tag, index)
                     elif action == "remove_label":

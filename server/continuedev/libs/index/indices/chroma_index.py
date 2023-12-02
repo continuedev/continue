@@ -15,11 +15,10 @@ from dotenv import load_dotenv
 from openai import RateLimitError
 from pydantic import BaseModel
 
-from ..chunkers.chunk_directory import IndexAction
-
 from ...util.logging import logger
 from ...util.paths import getIndexFolderPath
 from ..chunkers.chunk import Chunk
+from ..chunkers.chunk_directory import IndexAction
 from ..git import GitProject
 from .base import CodebaseIndex
 
@@ -122,7 +121,7 @@ class ChromaCodebaseIndex(CodebaseIndex):
     def collection(self):
         global collection
 
-        if os.path.exists(self.chroma_dir):
+        if os.path.exists(self.chroma_dir) and collection is not None:
             return collection
 
         kwargs: Dict[str, Any] = {
@@ -154,9 +153,12 @@ class ChromaCodebaseIndex(CodebaseIndex):
         for chunk in chunks:
             documents.append(chunk.content)
             metadata = {**chunk.metadata}
-            metadata["document_id"] = chunk.document_id  # Need to be able to filter by document_id (hash)
+            metadata["filepath"] = chunk.filepath
+            metadata[
+                "document_id"
+            ] = chunk.digest  # Need to be able to filter by document_id (hash)
             metadata[self.tag] = 1  # This is how we filter by tag
-            metadatas.append(chunk.metadata)
+            metadatas.append(metadata)
             ids.append(chunk.id)
 
         # Embed the chunks and place into vector database
@@ -236,7 +238,9 @@ class ChromaCodebaseIndex(CodebaseIndex):
             logger.warning(f"No index found for the codebase at {self.index_dir}")
             return []
 
-        results = self.collection.query(query_texts=[query], n_results=n, where={self.tag: {"$ne": 0}})
+        results = self.collection.query(
+            query_texts=[query], n_results=n, where={self.tag: {"$ne": 0}}
+        )
 
         chunks = []
         ids = results["ids"][0]
@@ -249,14 +253,16 @@ class ChromaCodebaseIndex(CodebaseIndex):
             end_line = other_metadata.pop("end_line")
             index = other_metadata.pop("index")
             document_id = other_metadata.pop("document_id")
+            filepath = other_metadata.pop("filepath")
             chunks.append(
                 Chunk(
                     content=documents[i],
                     start_line=start_line,
                     end_line=end_line,
                     other_metadata=other_metadata,
-                    document_id=document_id,
+                    digest=document_id,
                     index=index,
+                    filepath=filepath,
                 )
             )
         return chunks

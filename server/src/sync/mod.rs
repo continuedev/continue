@@ -322,7 +322,8 @@ pub fn sync(
 > {
     // Make sure that the tag directory exists
     // Create the directory and all its parent directories if they don't exist
-    if let Some(parent) = path_for_tag(dir, branch).parent() {
+    fs::create_dir_all(path_for_tag(dir, branch)).unwrap();
+    if let Some(parent) = IndexCache::rev_tags_path([0; ITEM_SIZE]).parent() {
         fs::create_dir_all(parent).unwrap();
     }
 

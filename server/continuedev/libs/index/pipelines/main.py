@@ -1,13 +1,12 @@
 from typing import List, Optional
 
+from ....core.sdk import ContinueSDK
+from ..chunkers.chunk import Chunk
 from ..hyde import code_hyde
-
+from ..indices.chroma_index import ChromaCodebaseIndex
+from ..indices.meilisearch_index import MeilisearchCodebaseIndex
 from ..rerankers.default import default_reranker_parallel
 from ..rerankers.single_token import single_token_reranker_parallel
-from ..indices.meilisearch_index import MeilisearchCodebaseIndex
-from ....core.sdk import ContinueSDK
-from ..indices.chroma_index import ChromaCodebaseIndex
-from ..chunkers.chunk import Chunk
 
 
 async def retrieval_step(
@@ -18,9 +17,8 @@ async def retrieval_step(
     use_reranking: bool = True,
     openai_api_key: Optional[str] = None,
 ) -> List[Chunk]:
-    chroma_index = ChromaCodebaseIndex(
-        sdk.ide.workspace_directory, openai_api_key=openai_api_key
-    )
+    tag = await sdk.ide.getTag()
+    chroma_index = ChromaCodebaseIndex(tag, openai_api_key=openai_api_key)
     meilisearch_index = MeilisearchCodebaseIndex(sdk.ide.workspace_directory)
 
     print(f"Scanning {n_retrieve} files...")

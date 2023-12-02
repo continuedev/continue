@@ -73,9 +73,8 @@ class AnswerQuestionChroma(Step):
         faster_model = await get_faster_model(sdk)
         use_reranking = settings.use_reranking and faster_model is not None
 
-        chroma_index = ChromaCodebaseIndex(
-            sdk.ide.workspace_directory, openai_api_key=settings.openai_api_key
-        )
+        tag = await sdk.ide.getTag()
+        chroma_index = ChromaCodebaseIndex(tag, openai_api_key=settings.openai_api_key)
         meilisearch_index = MeilisearchCodebaseIndex(sdk.ide.workspace_directory)
 
         yield SetStep(hide=False, description="Scanning codebase...")
@@ -140,11 +139,11 @@ class AnswerQuestionChroma(Step):
             ctx_item = ContextItem(
                 content=chunk.content,
                 description=ContextItemDescription(
-                    name=f"{os.path.basename(chunk.document_id)} ({chunk.start_line}-{chunk.end_line})",
-                    description=chunk.document_id,
+                    name=f"{os.path.basename(chunk.filepath)} ({chunk.start_line}-{chunk.end_line})",
+                    description=chunk.filepath,
                     id=ContextItemId(
                         provider_title="file",
-                        item_id=remove_meilisearch_disallowed_chars(chunk.document_id),
+                        item_id=remove_meilisearch_disallowed_chars(chunk.filepath),
                     ),
                 ),
             )  # Should be 'code' not file! And eventually should be able to embed all context providers automatically!
@@ -184,7 +183,7 @@ class EditFileChroma(Step):
     hide: bool = True
 
     async def run(self, sdk: ContinueSDK):
-        index = ChromaCodebaseIndex(sdk.ide.workspace_directory)
+        index = ChromaCodebaseIndex(await sdk.ide.getTag())
         results = index.query_codebase_index(self.user_input)
 
         resource_name = list(results.source_nodes[0].node.relationships.values())[0]

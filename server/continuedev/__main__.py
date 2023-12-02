@@ -91,11 +91,9 @@ def main(
 
 def print_chunk(chunk: Chunk):
     # A nice colored representation of the piece of the file
-    language = ext_to_lang(chunk.document_id.split(".")[-1])
+    language = ext_to_lang(chunk.digest.split(".")[-1])
     console.print(
-        Markdown(
-            f"\n**{chunk.document_id}**\n\n```{language}\n{chunk.content}\n```\n---\n"
-        )
+        Markdown(f"\n**{chunk.digest}**\n\n```{language}\n{chunk.content}\n```\n---\n")
     )
 
 

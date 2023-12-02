@@ -9,24 +9,26 @@ class ChunkWithoutID(ContinueBaseModel):
     end_line: int
     other_metadata: Metadata = {}
 
-    def with_id(self, document_id: str, index: int):
+    def with_id(self, digest: str, index: int, filepath: str):
         return Chunk(
             content=self.content,
             start_line=self.start_line,
             end_line=self.end_line,
             other_metadata=self.other_metadata,
-            document_id=document_id,
+            digest=digest,
             index=index,
+            filepath=filepath,
         )
 
 
 class Chunk(ChunkWithoutID):
-    document_id: str
+    digest: str
     index: int  # The index of the chunk in the document
+    filepath: str
 
     @property
     def id(self):
-        return f"{self.document_id}::{self.index}"
+        return f"{self.digest}::{self.index}"
 
     @property
     def metadata(self):

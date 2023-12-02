@@ -174,6 +174,9 @@ class OpenAI(LLM):
                 stream=True,
             )
             async for chunk in resp:
+                if chunk.choices[0].delta.content is None:
+                    continue
+
                 yield chunk.choices[0].delta.content
 
     async def _stream_chat(
