@@ -33,6 +33,9 @@ jobs:
       - name: Install project dependencies
         run: cd server && poetry install
 
+      - name: Maturin develop
+        run: cd server && poetry run maturin develop
+
       - name: Run tests
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
@@ -89,8 +92,13 @@ jobs:
       - name: Create virtual environment
         run: python -m venv venv
 
-      - name: Activate virtual environment
+      - name: Activate virtual environment (non-Windows)
         run: source venv/bin/activate
+        if: matrix.os != 'windows-latest'
+
+      - name: Activate virtual environment (Windows)
+        run: venv\Scripts\activate.bat
+        if: matrix.os == 'windows-latest'
 
       - name: Install Pyinstaller
         run: |
