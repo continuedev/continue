@@ -8,7 +8,7 @@ keywords: [introduction, intro, continue, autopilot, chatgpt]
 
 ![continue-cover-logo](/img/continue-cover-logo.png)
 
-**Continue is an open-source autopilot for (https://marketplace.visualstudio.com/items?itemName=Continue.continue) and [JetBrains](https://plugins.jetbrains.com/plugin/22707-continue-extension)—the easiest way to code with any LLM**
+**Continue is an open-source autopilot for [VS Code](https://marketplace.visualstudio.com/items?itemName=Continue.continue) and [JetBrains](https://plugins.jetbrains.com/plugin/22707-continue-extension)—the easiest way to code with any LLM**
 
 You determine when Large Language Models (LLMs) like [GPT-4](https://openai.com/research/gpt-4) and [Code Llama](https://about.fb.com/news/2023/08/code-llama-ai-for-coding/) should act as an autopilot, helping you complete software development tasks. You highlight some code and then use natural language instructions (and optional slash commands like `/edit`) to tell the LLM what to do.
 
