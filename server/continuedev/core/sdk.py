@@ -79,6 +79,7 @@ class ContinueSDK(AbstractContinueSDK):
             self.ide.window_info.unique_id,
             self.config.system_message,
             self.config.completion_options.temperature,
+            self.config.llm_request_hook,
         )
         self.__autopilot = autopilot
 

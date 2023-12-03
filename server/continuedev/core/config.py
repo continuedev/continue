@@ -402,6 +402,17 @@ class ContinueConfig(BaseModel):
         default=RetrievalSettings(),
         description="Settings for the retrieval system. Read more about the retrieval system in the documentation.",
     )
+    llm_request_hook: Optional[Callable[[str, str], Any]] = Field(
+        default=None,
+        description="A function that will be called before every request to the LLM. It will be passed the model used (str) and the exact prompt that is sent to the LLM (str).",
+    )
+
+    def dict(self, *args, **kwargs):
+        original_dict = super().dict(*args, **kwargs)
+        if "llm_request_hook" in original_dict:
+            del original_dict["llm_request_hook"]
+
+        return original_dict
 
     @staticmethod
     def from_serialized_config(config: SerializedContinueConfig) -> "ContinueConfig":

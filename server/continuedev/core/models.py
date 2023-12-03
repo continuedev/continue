@@ -116,11 +116,13 @@ class Models(BaseModel):
         unique_id: str,
         system_message: Optional[str],
         temperature: Optional[float],
+        llm_request_hook: Optional[Callable[[str, str], Any]] = None,
     ):
         """Start each of the LLMs, or fall back to default"""
         for model in self.saved + self.all_models:
             model.start(unique_id)
             model.write_log = self.write_log
+            model.llm_request_hook = llm_request_hook
 
         self.set_main_config_params(system_message, temperature)
 

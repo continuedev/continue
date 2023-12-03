@@ -74,6 +74,10 @@ class LLM(ContinueBaseModel):
         default=None,
         description="A function that is called upon every prompt and completion, by default to log to the file which can be viewed by clicking on the magnifying glass.",
     )
+    llm_request_hook: Optional[Callable[[str, str], Any]] = Field(
+        default=None,
+        description="A function that will be called before every request to the LLM. It will be passed the model used (str) and the exact prompt that is sent to the LLM (str).",
+    )
 
     api_key: Optional[str] = Field(
         default=None, description="The API key for the LLM provider."
@@ -283,8 +287,11 @@ Settings:
         if not raw:
             prompt = self.template_prompt_like_messages(prompt)
 
-        if log and self.write_log:
-            await self.write_log(self.compile_log_message(prompt, options))
+        if log:
+            if self.write_log:
+                await self.write_log(self.compile_log_message(prompt, options))
+            if self.llm_request_hook:
+                self.llm_request_hook(options.model, prompt)
 
         completion = ""
         async for chunk in self._stream_complete(prompt=prompt, options=options):
@@ -333,8 +340,11 @@ Settings:
         if not raw:
             prompt = self.template_prompt_like_messages(prompt)
 
-        if log and self.write_log:
-            await self.write_log(self.compile_log_message(prompt, options))
+        if log:
+            if self.write_log:
+                await self.write_log(self.compile_log_message(prompt, options))
+            if self.llm_request_hook:
+                self.llm_request_hook(options.model, prompt)
 
         completion = await self._complete(prompt=prompt, options=options)
 
@@ -382,8 +392,11 @@ Settings:
         else:
             prompt = format_chat_messages(messages)
 
-        if log and self.write_log:
-            await self.write_log(self.compile_log_message(prompt, options))
+        if log:
+            if self.write_log:
+                await self.write_log(self.compile_log_message(prompt, options))
+            if self.llm_request_hook:
+                self.llm_request_hook(options.model, prompt)
 
         completion = ""
 
