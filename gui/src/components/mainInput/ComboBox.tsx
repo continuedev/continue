@@ -39,6 +39,7 @@ import {
   SparklesIcon,
   TrashIcon,
   XMarkIcon,
+  ExclamationCircleIcon,
 } from "@heroicons/react/24/outline";
 import { postToIde } from "../../util/ide";
 import { GUIClientContext } from "../../App";
@@ -91,6 +92,7 @@ const ICONS_FOR_DROPDOWN: { [key: string]: any } = {
   "/cmd": CommandLineIcon,
   "/codebase": SparklesIcon,
   "/so": GlobeAltIcon,
+  "/issue": ExclamationCircleIcon,
 };
 
 function DropdownIcon(props: { provider: string; className?: string }) {

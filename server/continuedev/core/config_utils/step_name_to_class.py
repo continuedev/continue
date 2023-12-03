@@ -2,6 +2,7 @@ from ...plugins.steps.clear_history import ClearHistoryStep
 from ...plugins.steps.cmd import GenerateShellCommandStep
 from ...plugins.steps.codebase import AnswerQuestionChroma
 from ...plugins.steps.comment_code import CommentCodeStep
+from ...plugins.steps.draft_issue import DraftIssueStep
 from ...plugins.steps.main import EditHighlightedCodeStep
 from ...plugins.steps.on_traceback import DefaultOnTracebackStep
 from ...plugins.steps.open_config import OpenConfigStep
@@ -18,4 +19,5 @@ step_name_to_step_class = {
     "GenerateShellCommandStep": GenerateShellCommandStep,
     "ShareSessionStep": ShareSessionStep,
     "StackOverflowStep": StackOverflowStep,
+    "DraftIssueStep": DraftIssueStep,
 }

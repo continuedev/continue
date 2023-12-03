@@ -28,6 +28,7 @@ STEP_NAMES = [
     "StackOverflowStep",
     "OpenConfigStep",
     "GenerateShellCommandStep",
+    "DraftIssueStep",
 ]
 
 StepName = Literal[
@@ -40,6 +41,7 @@ StepName = Literal[
     "StackOverflowStep",
     "OpenConfigStep",
     "GenerateShellCommandStep",
+    "DraftIssueStep",
 ]
 
 TemplateType = Literal[
