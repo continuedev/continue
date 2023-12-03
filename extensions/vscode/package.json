@@ -181,12 +181,6 @@
       }
     ],
     "menus": {
-      "terminal/context": [
-        {
-          "command": "continue.debugTerminal",
-          "group": "1_debug@1"
-        }
-      ],
       "webview/context": [
         {
           "command": "continue.shareSession",
