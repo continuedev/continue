@@ -3,8 +3,8 @@ from typing import AsyncGenerator, List, Literal, Optional
 
 import certifi
 import openai
-from openai.error import RateLimitError
-from pydantic import Field, validator
+from openai import RateLimitError
+from pydantic import Field, field_validator
 
 from ...core.main import ChatMessage
 from ..util.count_tokens import CONTEXT_LENGTH_FOR_MODEL
@@ -112,9 +112,10 @@ class OpenAI(LLM):
         description="Manually specify to use the legacy completions endpoint instead of chat completions.",
     )
 
-    @validator("context_length")
-    def context_length_for_model(cls, v, values):
-        return CONTEXT_LENGTH_FOR_MODEL.get(values["model"], 4096)
+
+    @field_validator("context_length")
+    def context_length_for_model(cls, v, val_info):
+        return CONTEXT_LENGTH_FOR_MODEL.get(val_info.data["model"], 4096)
 
     def start(self, unique_id: Optional[str] = None):
         super().start(unique_id=unique_id)

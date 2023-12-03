@@ -2,9 +2,9 @@ import importlib.util
 import json
 import os
 from contextlib import contextmanager
-from typing import Any, Callable, Dict, List, Optional, Tuple, Type, Union, cast
+from typing import Annotated, Any, Callable, Dict, List, Optional, Tuple, Type, Union, cast
 
-from pydantic import BaseModel, Field, validator
+from pydantic import ConfigDict, BaseModel, Field, field_validator
 
 from ..libs.constants.default_config import default_config_json
 from ..libs.llm.base import LLM
@@ -28,6 +28,7 @@ from .config_utils.shared import (
 from .context import ContextProvider
 from .main import ContextProviderDescription, Policy, SlashCommandDescription, Step
 from .models import MODEL_CLASSES, Models
+from typing import Iterator
 
 
 class StepWithParams(BaseModel):
@@ -43,11 +44,11 @@ class ContextProviderWithParams(BaseModel):
 class SlashCommand(BaseModel):
     name: str
     description: str
-    step: Union[Type[Step], StepName, str]
+    step: Annotated[Union[Type[Step], StepName], Field()] = Field(default=None, validate_default=True)
     params: Optional[Dict] = {}
 
     # Allow step class for the migration
-    @validator("step", pre=True, always=True)
+    @field_validator("step")
     def step_is_string(cls, v):
         if isinstance(v, str):
             return v
@@ -257,10 +258,22 @@ class SerializedContinueConfig(BaseModel):
     @staticmethod
     @contextmanager
     def edit_config():
-        config = SerializedContinueConfig.parse_file(CONFIG_JSON_PATH)
+        # Read the JSON file and parse it into a dictionary
+        with open(CONFIG_JSON_PATH, 'r', encoding='utf-8') as file:
+            data = json.load(file)
+        
+        # Create an instance of SerializedContinueConfig from the dictionary
+        config = SerializedContinueConfig(**data)
+        
+        # Yield the config object for editing within the with-block
         yield config
-        with open(CONFIG_JSON_PATH, "w") as f:
-            f.write(config.json(exclude_none=True, exclude_defaults=True, indent=2))
+        
+        # After editing, write the serialized config back to the JSON file
+        with open(CONFIG_JSON_PATH, "w", encoding='utf-8') as file:
+            # Serialize the Pydantic model instance (`dict` method creates a serializable output)
+            json.dump(config.dict(), file, indent=4)
+
+
 
     @staticmethod
     def set_temperature(temperature: float):

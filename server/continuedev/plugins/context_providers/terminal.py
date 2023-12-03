@@ -9,10 +9,10 @@ from ...core.main import ChatMessage, ContextItem, ContextItemDescription, Conte
 class TerminalContextProvider(ContextProvider):
     """Type '@terminal' to reference the contents of your IDE's terminal."""
 
-    title = "terminal"
-    display_title = "Terminal"
-    description = "Reference the contents of the terminal"
-    dynamic = True
+    title: str = "terminal"
+    display_title: str = "Terminal"
+    description: str = "Reference the contents of the terminal"
+    dynamic: bool = True
 
     get_last_n_commands: int = Field(
         3, description="The number of previous commands to reference"

@@ -7,7 +7,7 @@ from ...libs.util.paths import getConfigFilePath
 
 class OpenConfigStep(Step):
     name: str = "Open config"
-    hide = True
+    hide: bool = True
 
     async def describe(self, models):
         return dedent(

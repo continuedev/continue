@@ -8,10 +8,10 @@ from ...core.main import ChatMessage, ContextItem, ContextItemDescription, Conte
 class OpenTabsContextProvider(ContextProvider):
     """Type '@open' to reference the open tabs in the IDE."""
 
-    title = "open"
-    display_title = "Open Tabs"
-    description = "Open tabs in the IDE"
-    dynamic = True
+    title: str = "open"
+    display_title: str = "Open Tabs"
+    description: str = "Open tabs in the IDE"
+    dynamic: bool = True
 
     def _open_tabs_context_item(self, content: str = ""):
         return ContextItem(

@@ -6,7 +6,7 @@ from typing import Dict, List, Optional
 
 from fastapi import FastAPI
 from fastapi.responses import StreamingResponse
-from pydantic import BaseModel
+from pydantic import ConfigDict, BaseModel
 
 openai = FastAPI()
 
@@ -15,9 +15,7 @@ class CompletionBody(BaseModel):
     prompt: str
     max_tokens: Optional[int] = 60
     stream: Optional[bool] = False
-
-    class Config:
-        extra = "allow"
+    model_config = ConfigDict(extra="allow")
 
 
 @openai.post("/completions")
@@ -70,9 +68,7 @@ class ChatBody(BaseModel):
     messages: List[Dict[str, str]]
     max_tokens: Optional[int] = None
     stream: Optional[bool] = False
-
-    class Config:
-        extra = "allow"
+    model_config = ConfigDict(extra="allow")
 
 
 @openai.post("/v1/chat/completions")

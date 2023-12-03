@@ -2,12 +2,14 @@ from abc import ABC
 from functools import total_ordering
 from typing import List, Tuple, Union
 
-from pydantic import BaseModel, root_validator
+from pydantic import model_validator, ConfigDict, BaseModel
 
 
 class ContinueBaseModel(BaseModel):
-    class Config:
-        underscore_attrs_are_private = True
+    # TODO[pydantic]: The following keys were removed: `underscore_attrs_are_private`.
+    # Check https://docs.pydantic.dev/dev-v2/migration/#changes-to-config for more information.
+    # underscore_attrs_are_private — the Pydantic V2 behavior is now the same as if this was always set to True in Pydantic V1.
+    model_config = ConfigDict()
 
 
 @total_ordering
@@ -183,7 +185,8 @@ class Range(BaseModel):
 
 
 class AbstractModel(ABC, BaseModel):
-    @root_validator(pre=True)
+    @model_validator(mode="before")
+    @classmethod
     def check_is_subclass(cls, values):
         if not issubclass(cls, AbstractModel):
             raise TypeError(
@@ -195,7 +198,7 @@ class TracebackFrame(BaseModel):
     filepath: str
     lineno: int
     function: str
-    code: Union[str, None]
+    code: Union[str, None] = None
 
     def __eq__(self, other):
         return (
@@ -209,7 +212,7 @@ class Traceback(BaseModel):
     frames: List[TracebackFrame]
     message: str
     error_type: str
-    full_traceback: Union[str, None]
+    full_traceback: Union[str, None] = None
 
     @classmethod
     def from_tbutil_parsed_exc(cls, tbutil_parsed_exc):

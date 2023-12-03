@@ -1,7 +1,7 @@
 from typing import Optional
 
 from huggingface_hub import InferenceClient
-from pydantic import Field
+from pydantic import ConfigDict, Field
 
 from .base import LLM, CompletionOptions
 
@@ -31,9 +31,7 @@ class HuggingFaceInferenceAPI(LLM):
     api_base: Optional[str] = Field(
         None, description="Your Hugging Face Inference API endpoint URL"
     )
-
-    class Config:
-        arbitrary_types_allowed = True
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
     def collect_args(self, options: CompletionOptions):
         options.stop = None

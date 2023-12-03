@@ -36,10 +36,10 @@ def split_path(path: str, with_root=None) -> List[str]:
 class FileTreeContextProvider(ContextProvider):
     """Type '@tree' to reference the contents of your current workspace. The LLM will be able to see the nested directory structure of your project."""
 
-    title = "tree"
-    display_title = "File Tree"
-    description = "Add a formatted file tree of this directory to the context"
-    dynamic = True
+    title :str = "tree"
+    display_title :str = "File Tree"
+    description :str = "Add a formatted file tree of this directory to the context"
+    dynamic :bool = True
 
     workspace_dir: str = Field(None, description="The workspace directory to display")
 

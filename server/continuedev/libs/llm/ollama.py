@@ -1,8 +1,8 @@
 import json
-from typing import Any, Dict, Optional
+from typing import Annotated, Any, Dict, Optional
 
 import requests
-from pydantic import Field, validator
+from pydantic import ConfigDict, Field, field_validator
 
 from ...core.main import ContinueCustomException
 from ..util.logging import logger
@@ -25,16 +25,15 @@ class Ollama(LLM):
     """
 
     model: str = "llama2"
-    api_base: Optional[str] = Field(
-        "http://localhost:11434", description="URL of the Ollama server"
+    api_base: Optional[Annotated[str, Field()]] = Field (
+        "http://localhost:11434", description="URL of the Ollama server", validate_default=True
     )
 
-    @validator("api_base", pre=True, always=True)
+
+    @field_validator("api_base")
     def set_api_base(cls, api_base):
         return api_base or "http://localhost:11434"
-
-    class Config:
-        arbitrary_types_allowed = True
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
     def collect_args(self, options: CompletionOptions) -> Dict[str, Any]:
         return {

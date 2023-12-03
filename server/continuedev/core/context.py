@@ -4,7 +4,7 @@ from abc import abstractmethod
 from typing import Any, Awaitable, Callable, List, Optional
 
 from meilisearch_python_async import Client
-from pydantic import BaseModel, Field
+from pydantic import ConfigDict, BaseModel, Field
 
 from ..libs.util.create_async_task import create_async_task
 from ..libs.util.devdata import dev_data_logger
@@ -79,10 +79,7 @@ class ContextProvider(BaseModel):
     selected_items: List[ContextItem] = Field(
         [], description="List of selected items in the ContextProvider"
     )
-
-    class Config:
-        arbitrary_types_allowed = True
-        exclude = {"ide", "delete_documents", "update_documents"}
+    model_config = ConfigDict(arbitrary_types_allowed=True, exclude={"ide", "delete_documents", "update_documents"})
 
     def get_description(self) -> ContextProviderDescription:
         return ContextProviderDescription(
