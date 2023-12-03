@@ -5,6 +5,7 @@ from typing import Any, AsyncGenerator, Callable, Coroutine, Dict, List, Optiona
 
 import aiohttp
 import certifi
+
 from pydantic import Field
 
 from ...core.main import ChatMessage
@@ -306,12 +307,19 @@ Settings:
         log: bool = True,
     ) -> str:
         """Yield completion response, either streamed or not."""
+
+
+        from continuedev.libs.llm.openai_agent import OpenAIAgent
+        if isinstance(self, OpenAIAgent):
+            assistant_id=assistant_id or self.assistant_id
+        
+
         options = CompletionOptions(
             model=model or self.model,
             temperature=temperature or self.completion_options.temperature,
             top_p=top_p or self.completion_options.top_p,
             top_k=top_k or self.completion_options.top_k,
-            assistant_id=assistant_id or self.assistant_id,
+            assistant_id=assistant_id,
             presence_penalty=presence_penalty
             or self.completion_options.presence_penalty,
             frequency_penalty=frequency_penalty
@@ -348,7 +356,7 @@ Settings:
         temperature: Optional[float] = None,
         top_p: Optional[float] = None,
         top_k: Optional[int] = None,
-        assistant_id: str=None,
+        assistant_id: Optional[str]=None,
         presence_penalty: Optional[float] = None,
         frequency_penalty: Optional[float] = None,
         stop: Optional[List[str]] = None,
@@ -358,12 +366,17 @@ Settings:
         session_id: Optional[str] = None,
     ) -> AsyncGenerator[ChatMessage, None]:
         """Yield completion response, either streamed or not."""
+
+        from continuedev.libs.llm.openai_agent import OpenAIAgent
+        if isinstance(self, OpenAIAgent):
+            assistant_id=assistant_id or self.assistant_id
+        
         options = CompletionOptions(
             model=model or self.model,
             temperature=temperature or self.completion_options.temperature,
             top_p=top_p or self.completion_options.top_p,
             top_k=top_k or self.completion_options.top_k,               
-            assistant_id=assistant_id or self.assistant_id,
+            assistant_id=assistant_id,
             presence_penalty=presence_penalty
             or self.completion_options.presence_penalty,
             frequency_penalty=frequency_penalty
