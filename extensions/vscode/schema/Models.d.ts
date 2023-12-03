@@ -90,7 +90,7 @@ export type ApiKey = string;
  * The base URL of the LLM API.
  */
 export type ApiBase = string;
-export type Saved = LLM[];
+export type Saved = (unknown | LLM)[];
 export type Temperature1 = number;
 export type SystemMessage1 = string;
 
@@ -98,10 +98,10 @@ export type SystemMessage1 = string;
  * Main class that holds the current model configuration
  */
 export interface Models1 {
-  default: LLM;
-  summarize?: LLM;
-  edit?: LLM;
-  chat?: LLM;
+  default?: unknown;
+  summarize?: unknown;
+  edit?: unknown;
+  chat?: unknown;
   saved?: Saved;
   temperature?: Temperature1;
   system_message?: SystemMessage1;

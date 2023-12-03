@@ -1,6 +1,6 @@
-from typing import List, Optional
+from typing import Annotated, List, Optional
 
-from pydantic import Field, validator
+from pydantic import Field, field_validator
 
 from ...core.main import ChatMessage
 from ...models.llm import RequestOptions
@@ -44,39 +44,40 @@ class OpenAIFreeTrial(LLM):
     ```
     """
 
-    llm: LLM = Field(default=None, description="The LLM to use for completion.")
+    llm: Optional[Annotated[LLM, Field()]] =Field(default=None, description="The LLM to use for completion.", validate_default=True)
 
-    @validator("llm", pre=True, always=True)
-    def set_llm(cls, llm, values):
-        api_key = values.get("api_key")
+    @field_validator("llm")
+    def set_llm(cls, llm, val_info):
+        api_key = val_info.data.get("api_key")
         if api_key is None or api_key.strip() == "":
             return ProxyServer(
-                model=values["model"],
+                model=val_info.data["model"],
                 request_options=RequestOptions(
-                    timeout=values["request_options"].timeout,
-                    verify_ssl=values["request_options"].verify_ssl,
+                    timeout=val_info.data["request_options"].timeout,
+                    verify_ssl=val_info.data["request_options"].verify_ssl,
                 ),
             )
         else:
             return OpenAI(
                 api_key=api_key,
-                model=values["model"],
+                model=val_info.data["model"],
                 request_options=RequestOptions(
-                    timeout=values["request_options"].timeout,
-                    verify_ssl=values["request_options"].verify_ssl,
+                    timeout=val_info.data["request_options"].timeout,
+                    verify_ssl=val_info.data["request_options"].verify_ssl,
                 ),
             )
 
-    @validator("context_length", pre=True, always=True)
-    def context_length_for_model(cls, v, values):
-        return CONTEXT_LENGTH_FOR_MODEL.get(values["model"], 4096)
+
+    @field_validator("context_length")
+    def context_length_for_model(cls, v, val_info):        
+        return CONTEXT_LENGTH_FOR_MODEL.get(val_info.data["model"], 4096)
 
     def update_llm_properties(self):
         self.llm.system_message = self.system_message
 
-    async def start(self, unique_id: Optional[str] = None):
-        await super().start(unique_id=unique_id)
-        await self.llm.start(unique_id=unique_id)
+    def start(self, unique_id: Optional[str] = None):
+        super().start(unique_id=unique_id)
+        self.llm.start(unique_id=unique_id)
 
     async def stop(self):
         await self.llm.stop()

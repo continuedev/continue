@@ -3,9 +3,9 @@ import difflib
 import subprocess
 import time
 from textwrap import dedent
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, AsyncGenerator, Dict, List, Optional, Union
 
-from pydantic import Field
+from pydantic import ConfigDict, Field
 
 from ..libs.llm.base import LLM
 from ..libs.llm.openai_free_trial import OpenAIFreeTrial
@@ -20,7 +20,15 @@ from ..libs.util.templating import render_prompt_template
 from ..models.filesystem import FileSystem, RangeInFile, RangeInFileWithContents
 from ..models.filesystem_edit import EditDiff, FileEditWithFullContents, FileSystemEdit
 from .abstract_sdk import AbstractContinueSDK
-from .main import ChatMessage, ContinueCustomException, SessionUpdate, SetStep, Step
+from .main import (
+    ChatMessage,
+    ContextItem,
+    ContinueCustomException,
+    DeltaStep,
+    SessionUpdate,
+    SetStep,
+    Step,
+)
 from .observation import TextObservation, UserInputObservation
 
 
@@ -59,9 +67,7 @@ class DisplayErrorStep(Step):
             return DisplayErrorStep(title=e.title, message=e.message, name=e.title)
 
         return DisplayErrorStep(message=str(e))
-
-    class Config:
-        arbitrary_types_allowed = True
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
     async def describe(self, models: Models):
         return self.message
@@ -131,7 +137,7 @@ class DefaultModelEditCodeStep(Step):
     model: Optional[LLM] = None
     range_in_files: List[RangeInFile]
     name: str = "Editing Code"
-    hide = False
+    hide: bool = False
     description: str = ""
     _prompt: str = dedent(
         """\
@@ -373,7 +379,9 @@ Please output the code to be inserted at the cursor in order to fulfill the user
             or "<code_to_edit>" in line
         )
 
-    async def stream_rif(self, rif: RangeInFileWithContents, sdk: AbstractContinueSDK):
+    async def stream_rif(
+        self, rif: RangeInFileWithContents, sdk: AbstractContinueSDK
+    ) -> AsyncGenerator[SetStep, None]:
         await sdk.ide.saveFile(rif.filepath)
         full_file_contents = await sdk.ide.readFile(rif.filepath)
 
@@ -615,7 +623,7 @@ Please output the code to be inserted at the cursor in order to fulfill the user
                 params.update(template.dict(exclude={"prompt"}))  # type: ignore
 
             params.update(
-                {"max_tokens": min(max_tokens, model_to_use.context_length // 2)}
+                {"max_tokens": min(max_tokens, model_to_use.context_length // 2, 4096)}
             )
             generator = model_to_use.stream_complete(**params)
 
@@ -625,7 +633,7 @@ Please output the code to be inserted at the cursor in order to fulfill the user
                 async for chunk in model_to_use.stream_chat(
                     messages,
                     temperature=sdk.config.completion_options.temperature,
-                    max_tokens=min(max_tokens, model_to_use.context_length // 2),
+                    max_tokens=min(max_tokens, model_to_use.context_length // 2, 4096),
                 ):
                     yield chunk.content
 
@@ -643,6 +651,10 @@ Please output the code to be inserted at the cursor in order to fulfill the user
         try:
             last_task_time = time.time()
             async for chunk in generator:
+                yield SetStep(
+                    hide=False
+                )  # Doing this so that there are breakpoints for cancellation
+
                 # Stop early if it is repeating the file_suffix or the step was deleted
                 if repeating_file_suffix:
                     break
@@ -757,7 +769,8 @@ Please output the code to be inserted at the cursor in order to fulfill the user
 
         for rif in rif_with_contents:
             await sdk.ide.setSuggestionsLocked(rif.filepath, True)
-            await self.stream_rif(rif, sdk)
+            async for update in self.stream_rif(rif, sdk):
+                yield update
             await sdk.ide.setSuggestionsLocked(rif.filepath, False)
 
         changes = "\n".join(
@@ -857,6 +870,7 @@ class ManualEditStep(ReversibleStep):
 
 class UserInputStep(Step):
     user_input: str
+    context_items: List[ContextItem] = []
     name: str = "User Input"
     hide: bool = False
 

@@ -25,9 +25,9 @@ async def get_headless_autopilot(
     ide = LocalIdeProtocol(workspace_directory=directory)
     context_manager = ContextManager()
     # await context_manager.start(context_providers=context_providers, ide=ide)
-    await _config.models.start(
-        "HEADLESS", _config.system_message, _config.completion_options.temperature
-    )
+    # await _config.models.start(
+    #     "HEADLESS", _config.system_message, _config.completion_options.temperature
+    # )
 
     return Autopilot(
         session_state=state or SessionState.from_empty(),

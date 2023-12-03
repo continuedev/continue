@@ -1,7 +1,8 @@
 import json
-from typing import Any, Dict, Optional
+from typing import Annotated, Any, Dict, Optional
 
-from pydantic import Field, validator
+import requests
+from pydantic import ConfigDict, Field, field_validator
 
 from ...core.main import ContinueCustomException
 from ..util.logging import logger
@@ -24,16 +25,15 @@ class Ollama(LLM):
     """
 
     model: str = "llama2"
-    api_base: Optional[str] = Field(
-        "http://localhost:11434", description="URL of the Ollama server"
+    api_base: Optional[Annotated[str, Field()]] = Field (
+        "http://localhost:11434", description="URL of the Ollama server", validate_default=True
     )
 
-    @validator("api_base", pre=True, always=True)
+
+    @field_validator("api_base")
     def set_api_base(cls, api_base):
         return api_base or "http://localhost:11434"
-
-    class Config:
-        arbitrary_types_allowed = True
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
     def collect_args(self, options: CompletionOptions) -> Dict[str, Any]:
         return {
@@ -59,21 +59,21 @@ class Ollama(LLM):
             "wizardcoder-34b": "wizardcoder:34b-python",
             "zephyr-7b": "zephyr:7b",
             "codeup-13b": "codeup:13b",
+            "deepseek-1b": "deepseek-coder:1.3b",
+            "deepseek-7b": "deepseek-coder:6.7b",
+            "deepseek-33b": "deepseek-coder:33b",
         }.get(self.model, self.model)
 
-    async def start(self, *args, **kwargs):
-        await super().start(*args, **kwargs)
+    def start(self, *args, **kwargs):
+        super().start(*args, **kwargs)
         try:
-            async with self.create_client_session() as session:
-                async with session.post(
-                    f"{self.api_base}/api/generate",
-                    proxy=self.request_options.proxy,
-                    json={
-                        "prompt": "",
-                        "model": self.get_model_name(),
-                    },
-                ) as _:
-                    pass
+            requests.post(
+                f"{self.api_base}/api/generate",
+                json={
+                    "prompt": "",
+                    "model": self.get_model_name(),
+                },
+            )
         except Exception as e:
             logger.warning(f"Error pre-loading Ollama model: {e}")
 
@@ -116,7 +116,7 @@ class Ollama(LLM):
                 elif resp.status != 200:
                     raise ContinueCustomException(
                         f"Ollama returned an error: {await resp.text()}",
-                        "Invalid request to Ollama",
+                        f"Ollama returned an error: {await resp.text()}",
                     )
                 async for line in resp.content.iter_any():
                     if line:

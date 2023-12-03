@@ -2,30 +2,33 @@ import importlib.util
 import json
 import os
 from contextlib import contextmanager
-from typing import Any, Callable, Dict, List, Optional, Tuple, Type, Union, cast
+from typing import Annotated, Any, Callable, Dict, List, Optional, Tuple, Type, Union, cast
 
-from pydantic import BaseModel, Field, validator
+from pydantic import ConfigDict, BaseModel, Field, field_validator
 
 from ..libs.constants.default_config import default_config_json
 from ..libs.llm.base import LLM
 from ..libs.llm.openai_free_trial import OpenAIFreeTrial
 from ..libs.util.logging import logger
-from ..libs.util.paths import getConfigFilePath, getGlobalFolderPath
+from ..libs.util.paths import getConfigFilePath, getGlobalFolderPath, sync_migrate
 from ..libs.util.telemetry import posthog_logger
 from ..models.llm import BaseCompletionOptions, RequestOptions
 from .config_utils.context import CONTEXT_PROVIDER_NAME_TO_CLASS, ContextProviderName
 from .config_utils.shared import (
     MODEL_CLASS_TO_MODEL_PROVIDER,
     MODEL_PROVIDER_TO_MODEL_CLASS,
+    STEP_NAMES,
     ModelProvider,
     StepName,
     TemplateType,
     autodetect_prompt_templates,
     autodetect_template_function,
+    autodetect_template_type,
 )
 from .context import ContextProvider
 from .main import ContextProviderDescription, Policy, SlashCommandDescription, Step
 from .models import MODEL_CLASSES, Models
+from typing import Iterator
 
 
 class StepWithParams(BaseModel):
@@ -41,18 +44,30 @@ class ContextProviderWithParams(BaseModel):
 class SlashCommand(BaseModel):
     name: str
     description: str
-    step: Union[Type[Step], StepName, str]
+    step: Annotated[Union[Type[Step], StepName], Field()] = Field(default=None, validate_default=True)
     params: Optional[Dict] = {}
 
     # Allow step class for the migration
-    @validator("step", pre=True, always=True)
+    @field_validator("step")
     def step_is_string(cls, v):
         if isinstance(v, str):
             return v
-        elif isinstance(v, object) and v.__class__.__name__ == "ModelMetaclass":
+        elif (
+            isinstance(v, object)
+            and v.__class__.__name__ == "ModelMetaclass"
+            and v.__class__.__name__ in STEP_NAMES
+        ):
             return str(v).split(".")[-1].split("'")[0]
         else:
             return v
+
+    def dict(self, *args, **kwargs):
+        d = super().dict(*args, **kwargs)
+        if isinstance(d["step"], str):
+            d["step"] = d["step"].split(".")[-1]
+        else:
+            d["step"] = d["step"].__name__
+        return d
 
     def slash_command_description(self) -> SlashCommandDescription:
         return SlashCommandDescription(
@@ -243,10 +258,22 @@ class SerializedContinueConfig(BaseModel):
     @staticmethod
     @contextmanager
     def edit_config():
-        config = SerializedContinueConfig.parse_file(CONFIG_JSON_PATH)
+        # Read the JSON file and parse it into a dictionary
+        with open(CONFIG_JSON_PATH, 'r', encoding='utf-8') as file:
+            data = json.load(file)
+        
+        # Create an instance of SerializedContinueConfig from the dictionary
+        config = SerializedContinueConfig(**data)
+        
+        # Yield the config object for editing within the with-block
         yield config
-        with open(CONFIG_JSON_PATH, "w") as f:
-            f.write(config.json(exclude_none=True, exclude_defaults=True, indent=2))
+        
+        # After editing, write the serialized config back to the JSON file
+        with open(CONFIG_JSON_PATH, "w", encoding='utf-8') as file:
+            # Serialize the Pydantic model instance (`dict` method creates a serializable output)
+            json.dump(config.dict(), file, indent=4)
+
+
 
     @staticmethod
     def set_temperature(temperature: float):
@@ -275,6 +302,12 @@ class SerializedContinueConfig(BaseModel):
             else:
                 config.model_roles.__setattr__(role, title)
 
+                def migrate_func():
+                    if role == "default" and config.model_roles.chat is not None:
+                        config.model_roles.chat = None
+
+                sync_migrate("select_default_model_001", migrate_func)
+
     @staticmethod
     def add_model(model: ModelDescription):
         with SerializedContinueConfig.edit_config() as config:
@@ -298,50 +331,6 @@ class SerializedContinueConfig(BaseModel):
             if config.model_roles.summarize == title:
                 config.model_roles.summarize = None
 
-    def construct_models(self) -> Models:
-        def model_with_title(title: Optional[str], fallback: ModelDescription):
-            return next(filter(lambda x: x.title == title, self.models), fallback)
-
-        default = model_with_title(self.model_roles.default, self.models[0])
-        chat = model_with_title(self.model_roles.chat, default)
-        edit = model_with_title(self.model_roles.edit, default)
-        summarize = model_with_title(self.model_roles.summarize, default)
-
-        saved = [
-            model_with_title(model.title, default)
-            for model in self.models
-            if model.title
-            not in [default.title, chat.title, edit.title, summarize.title]
-        ]
-
-        def create_llm(model: ModelDescription) -> LLM:
-            model_class = MODEL_CLASSES[MODEL_PROVIDER_TO_MODEL_CLASS[model.provider]]
-            completion_options = self.completion_options.dict(
-                exclude_none=True, exclude_defaults=True
-            )
-            completion_options.update(
-                model.completion_options.dict(exclude_none=True, exclude_defaults=True)
-            )
-
-            if "max_tokens" not in completion_options:
-                completion_options["max_tokens"] = min(2048, model.context_length // 2)
-
-            # Allow extra fields to be passed through
-            kwargs = {**model.dict(exclude_none=True)}
-            kwargs["completion_options"] = completion_options
-            kwargs["template_messages"] = autodetect_template_function(model.model)
-            kwargs["prompt_templates"] = autodetect_prompt_templates(model.model)
-
-            return model_class(**kwargs)
-
-        return Models(
-            default=create_llm(default),
-            chat=create_llm(chat),
-            edit=create_llm(edit),
-            summarize=create_llm(summarize),
-            saved=[create_llm(model) for model in saved],
-        )
-
 
 class ContinueConfig(BaseModel):
     """
@@ -360,12 +349,18 @@ class ContinueConfig(BaseModel):
         default=True,
         description="If this field is set to True, we will collect anonymous telemetry as described in the documentation page on telemetry. If set to False, we will not collect any data.",
     )
-    models: Models = Field(
-        default=Models(
-            default=OpenAIFreeTrial(model="gpt-4"),
-            summarize=OpenAIFreeTrial(model="gpt-3.5-turbo"),
-        ),
-        description="Configuration for the models used by Continue. Read more about how to configure models in the documentation.",
+    models: List[LLM] = Field(
+        default=[
+            OpenAIFreeTrial(
+                title="GPT-4 (trial)",
+                model="gpt-4",
+                api_key="",
+            )
+        ]
+    )
+    model_roles: ModelRoles = Field(
+        default=ModelRoles(default="GPT-4 (trial)"),
+        description="Roles for models. Each entry should be the title of a model in the models array.",
     )
     system_message: Optional[str] = Field(
         default=None,
@@ -432,7 +427,11 @@ class ContinueConfig(BaseModel):
             allow_anonymous_telemetry=config.allow_anonymous_telemetry
             if config.allow_anonymous_telemetry is not None
             else True,
-            models=config.construct_models(),
+            models=[
+                ContinueConfig.create_llm(config.completion_options, model)
+                for model in config.models
+            ],
+            model_roles=config.model_roles,
             system_message=config.system_message,
             completion_options=config.completion_options,
             custom_commands=config.custom_commands,
@@ -484,6 +483,9 @@ class ContinueConfig(BaseModel):
                     raise ValueError("Empty config file")
 
                 serialized_config = json.loads(contents)
+
+            except json.JSONDecodeError as e:
+                raise e
 
             except ValueError as e:
                 logger.warning(f"Found empty config.json at {filepath}: {e}")
@@ -611,76 +613,6 @@ class ContinueConfig(BaseModel):
 
     def to_serialized_continue_config(self) -> SerializedContinueConfig:
         # For migration purposes
-        pre_models = self.models.saved + [
-            self.models.default,
-            self.models.chat,
-            self.models.edit,
-            self.models.summarize,
-        ]
-        seen = set()
-        models: List[LLM] = []
-        for model in pre_models:
-            if model is None or (model.title, model.model) in seen:
-                # Remove duplicate models
-                continue  # : )
-
-            seen.add((model.title, model.model))
-            models.append(model)
-
-        completion_options_keys = [
-            "temperature",
-            "top_p",
-            "top_k",
-            "max_tokens",
-            "presence_penalty",
-            "frequency_penalty",
-        ]
-        request_options_keys = [
-            "timeout",
-            "verify_ssl",
-            "ca_bundle_path",
-            "proxy",
-            "headers",
-        ]
-        for model in models:
-            for key in completion_options_keys:
-                if hasattr(model, key):
-                    setattr(model.completion_options, key, getattr(model, key))
-                    delattr(model, key)
-
-            for key in request_options_keys:
-                if hasattr(model, key):
-                    setattr(model.request_options, key, getattr(model, key))
-                    delattr(model, key)
-
-        for key in completion_options_keys:
-            if hasattr(self, key):
-                setattr(self.completion_options, key, getattr(self, key))
-                delattr(self, key)
-
-        BACKUP_TITLE = "LLM"
-
-        serialized_models = [
-            ModelDescription(
-                title=model.title or BACKUP_TITLE,
-                provider=MODEL_CLASS_TO_MODEL_PROVIDER[model.__class__.__name__],
-                api_base=model.api_base,
-                model=model.model,
-                completion_options=model.completion_options,
-                api_key=model.api_key,
-                context_length=model.context_length,
-                system_message=model.system_message,
-            )
-            for model in models
-            if model is not None
-        ]
-
-        model_roles = ModelRoles(
-            default=self.models.default.title or BACKUP_TITLE,
-            chat=(self.models.chat or self.models.default).title,
-            edit=(self.models.edit or self.models.default).title,
-            summarize=(self.models.summarize or self.models.default).title,
-        )
 
         slash_commands = []
         for slash_command in self.slash_commands or []:
@@ -691,8 +623,10 @@ class ContinueConfig(BaseModel):
         return SerializedContinueConfig(
             disallowed_steps=self.disallowed_steps,
             allow_anonymous_telemetry=self.allow_anonymous_telemetry,
-            models=serialized_models,
-            model_roles=model_roles,
+            models=[
+                ContinueConfig.model_description_from(model) for model in self.models
+            ],
+            model_roles=self.model_roles,
             system_message=self.system_message,
             completion_options=self.completion_options,
             custom_commands=self.custom_commands,
@@ -710,4 +644,70 @@ class ContinueConfig(BaseModel):
             disable_summaries=self.disable_summaries,
             disable_indexing=self.disable_indexing,
             retrieval_settings=self.retrieval_settings,
+        )
+
+    @staticmethod
+    def create_llm(
+        completion_options: BaseCompletionOptions, model: ModelDescription
+    ) -> LLM:
+        model_class = MODEL_CLASSES[MODEL_PROVIDER_TO_MODEL_CLASS[model.provider]]
+        options = completion_options.dict(exclude_none=True, exclude_defaults=True)
+        options.update(
+            model.completion_options.dict(exclude_none=True, exclude_defaults=True)
+        )
+
+        if "max_tokens" not in options:
+            options["max_tokens"] = min(2048, model.context_length // 2)
+
+        # Allow extra fields to be passed through
+        kwargs = {**model.dict(exclude_none=True)}
+        kwargs["completion_options"] = options
+        kwargs["template_messages"] = autodetect_template_function(
+            model.model, model.template
+        )
+        kwargs["prompt_templates"] = autodetect_prompt_templates(
+            model.model, model.template
+        )
+
+        return model_class(**kwargs)
+
+    @staticmethod
+    def model_description_from(llm: LLM) -> ModelDescription:
+        return ModelDescription(
+            title=llm.title or "LLM",
+            provider=MODEL_CLASS_TO_MODEL_PROVIDER.get(
+                llm.__class__.__name__, "custom"  # type: ignore
+            ),
+            model=llm.model,
+            api_key=llm.api_key,
+            api_base=llm.api_base,
+            context_length=llm.context_length,
+            template=autodetect_template_type(llm.model),
+            completion_options=llm.completion_options,
+            system_message=llm.system_message,
+            request_options=llm.request_options,
+        )
+
+    def construct_models(self) -> Models:
+        def model_with_title(title: Optional[str], fallback: LLM):
+            return next(filter(lambda x: x.title == title, self.models), fallback)
+
+        default = model_with_title(self.model_roles.default, self.models[0])
+        chat = model_with_title(self.model_roles.chat, default)
+        edit = model_with_title(self.model_roles.edit, default)
+        summarize = model_with_title(self.model_roles.summarize, default)
+
+        saved = [
+            model_with_title(model.title, default)
+            for model in self.models
+            if model.title
+            not in [default.title, chat.title, edit.title, summarize.title]
+        ]
+
+        return Models(
+            default=default,
+            chat=chat,
+            edit=edit,
+            summarize=summarize,
+            saved=saved,
         )

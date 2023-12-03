@@ -1,7 +1,7 @@
 import json
-from typing import Any, AsyncGenerator, Coroutine, List, Literal, Optional
+from typing import Annotated, Any, AsyncGenerator, Coroutine, List, Literal, Optional
 
-from pydantic import Field, validator
+from pydantic import ConfigDict, Field, field_validator
 
 from ...core.main import ChatMessage, ContinueCustomException
 from ..util.logging import logger
@@ -12,6 +12,8 @@ from .openai import CHAT_MODELS
 class GGML(LLM):
     """
     See our [5 minute quickstart](https://github.com/continuedev/ggml-server-example) to run any model locally with ggml. While these models don't yet perform as well, they are free, entirely private, and run offline.
+
+    You can also use this class for [LM Studio](https://lmstudio.ai).
 
     Once the model is running on localhost:8000, change `~/.continue/config.json` to look like this:
 
@@ -27,12 +29,14 @@ class GGML(LLM):
     ```
     """
 
-    api_base: Optional[str] = Field(
+    api_base: Optional[Annotated[str, Field()]] = Field(
         "http://localhost:8000",
         description="URL of the OpenAI-compatible server where the model is being served",
+        validate_default=True
     )
 
-    @validator("api_base", pre=True, always=True)
+
+    @field_validator("api_base")
     def set_api_base(cls, api_base):
         return api_base or "http://localhost:8000"
 
@@ -53,8 +57,14 @@ class GGML(LLM):
         default=None, description="OpenAI engine. For use with Azure OpenAI Service."
     )
 
-    class Config:
-        arbitrary_types_allowed = True
+    chat_endpoint: str = Field(
+        default="chat/completions", description="The endpoint to call for chat completions"
+    )
+    
+    completions_endpoint: str = Field(
+        default="completions", description="The endpoint to call for chat completions"
+    )
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
     def get_headers(self):
         headers = {
@@ -86,7 +96,7 @@ class GGML(LLM):
 
         async with self.create_client_session() as client_session:
             async with client_session.post(
-                self.get_full_server_url(endpoint="completions"),
+                self.get_full_server_url(endpoint=self.completions_endpoint),
                 json={
                     "prompt": prompt,
                     "stream": True,
@@ -131,7 +141,7 @@ class GGML(LLM):
         async def generator() -> AsyncGenerator[Any, None]:
             async with self.create_client_session() as client_session:
                 async with client_session.post(
-                    self.get_full_server_url(endpoint="chat/completions"),
+                    self.get_full_server_url(endpoint=self.chat_endpoint),
                     json={
                         "messages": [msg.to_dict() for msg in messages],
                         "stream": True,
@@ -196,7 +206,7 @@ class GGML(LLM):
 
         async with self.create_client_session() as client_session:
             async with client_session.post(
-                self.get_full_server_url(endpoint="completions"),
+                self.get_full_server_url(endpoint=self.completions_endpoint),
                 json={
                     "prompt": prompt,
                     **args,

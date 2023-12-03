@@ -32,10 +32,6 @@ export type DisallowedSteps = string[];
  */
 export type AllowAnonymousTelemetry = boolean;
 /**
- * Configuration for the models used by Continue. Read more about how to configure models in the documentation.
- */
-export type Models = Models1;
-/**
  * A title that will identify this model in the model selection dropdown
  */
 export type Title = string;
@@ -119,13 +115,31 @@ export type ApiKey = string;
  * The base URL of the LLM API.
  */
 export type ApiBase = string;
-export type Saved = LLM[];
-export type Temperature1 = number;
-export type SystemMessage2 = string;
+export type Models = LLM[];
+/**
+ * Roles for models. Each entry should be the title of a model in the models array.
+ */
+export type ModelRoles = ModelRoles1;
+/**
+ * The default model. If other model roles are not set, they will fall back to default.
+ */
+export type Default = string;
+/**
+ * The model to use for chat. If not set, will fall back to default.
+ */
+export type Chat = string;
+/**
+ * The model to use for editing. If not set, will fall back to default.
+ */
+export type Edit = string;
+/**
+ * The model to use for summarization. If not set, will fall back to default.
+ */
+export type Summarize = string;
 /**
  * A system message that will always be followed by the LLM
  */
-export type SystemMessage3 = string;
+export type SystemMessage2 = string;
 /**
  * Options for the completion endpoint. Read more about the completion options in the documentation.
  */
@@ -268,7 +282,8 @@ export interface ContinueConfig1 {
   disallowed_steps?: DisallowedSteps;
   allow_anonymous_telemetry?: AllowAnonymousTelemetry;
   models?: Models;
-  system_message?: SystemMessage3;
+  model_roles?: ModelRoles;
+  system_message?: SystemMessage2;
   completion_options?: CompletionOptions1;
   custom_commands?: CustomCommands;
   slash_commands?: SlashCommands;
@@ -303,19 +318,6 @@ export interface ChatMessage {
 export interface FunctionCall {
   name: Name2;
   arguments: Arguments;
-  [k: string]: unknown;
-}
-/**
- * Main class that holds the current model configuration
- */
-export interface Models1 {
-  default: LLM;
-  summarize?: LLM;
-  edit?: LLM;
-  chat?: LLM;
-  saved?: Saved;
-  temperature?: Temperature1;
-  system_message?: SystemMessage2;
   [k: string]: unknown;
 }
 export interface LLM {
@@ -360,6 +362,13 @@ export interface Headers {
  * A dictionary of prompt templates that can be used to customize the behavior of the LLM in certain situations. For example, set the "edit" key in order to change the prompt that is used for the /edit slash command. Each value in the dictionary is a string templated in mustache syntax, and filled in at runtime with the variables specific to the situation. See the documentation for more information.
  */
 export interface PromptTemplates {
+  [k: string]: unknown;
+}
+export interface ModelRoles1 {
+  default: Default;
+  chat?: Chat;
+  edit?: Edit;
+  summarize?: Summarize;
   [k: string]: unknown;
 }
 export interface CustomCommand {

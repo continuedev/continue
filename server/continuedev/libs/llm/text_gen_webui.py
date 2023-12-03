@@ -2,7 +2,7 @@ import json
 from typing import Any, AsyncGenerator, List, Optional
 
 import websockets
-from pydantic import Field
+from pydantic import ConfigDict, Field
 
 from ...core.main import ChatMessage
 from .base import LLM
@@ -31,9 +31,7 @@ class TextGenWebUI(LLM):
         "http://localhost:5005",
         description="URL of your TextGenWebUI streaming server (separate from main server URL)",
     )
-
-    class Config:
-        arbitrary_types_allowed = True
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
     def collect_args(self, options) -> Any:
         args = super().collect_args(options)

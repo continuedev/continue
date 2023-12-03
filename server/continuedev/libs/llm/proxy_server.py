@@ -2,7 +2,7 @@ import asyncio
 import json
 from typing import List
 
-from pydantic import validator
+from pydantic import ConfigDict, field_validator
 
 from ...core.main import ChatMessage
 from ..util.count_tokens import CONTEXT_LENGTH_FOR_MODEL
@@ -15,22 +15,22 @@ SERVER_URL = "https://proxy-server-l6vsfbzhba-uw.a.run.app"
 
 
 class ProxyServer(LLM):
-    class Config:
-        arbitrary_types_allowed = True
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
-    async def start(
+    def start(
         self,
         **kwargs,
     ):
-        await super().start(**kwargs)
+        super().start(**kwargs)
         self.context_length = CONTEXT_LENGTH_FOR_MODEL[self.model]
 
     def get_headers(self):
         return {"unique_id": self.unique_id}
 
-    @validator("context_length")
-    def context_length_for_model(cls, v, values):
-        return CONTEXT_LENGTH_FOR_MODEL.get(values["model"], 4096)
+
+    @field_validator("context_length")
+    def context_length_for_model(cls, v, val_info):
+        return CONTEXT_LENGTH_FOR_MODEL.get(val_info.data["model"], 4096)
 
     async def _complete(self, prompt: str, options):
         args = self.collect_args(options)

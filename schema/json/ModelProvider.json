@@ -14,7 +14,8 @@
     "replicate",
     "text-gen-webui",
     "google-palm",
-    "lmstudio"
+    "lmstudio",
+    "llamafile"
   ],
   "type": "string"
 }

@@ -1,7 +1,7 @@
 import uuid
-from typing import Any, Callable, Dict, List, Optional, Type
+from typing import Annotated, Any, Callable, Dict, List, Optional, Type, Union
 
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator
 
 from ..libs.llm.anthropic import AnthropicLLM
 from ..libs.llm.base import LLM
@@ -10,6 +10,7 @@ from ..libs.llm.google_palm_api import GooglePaLMAPI
 from ..libs.llm.hf_inference_api import HuggingFaceInferenceAPI
 from ..libs.llm.hf_tgi import HuggingFaceTGI
 from ..libs.llm.llamacpp import LlamaCpp
+from ..libs.llm.llamafile import Llamafile
 from ..libs.llm.lmstudio import LMStudio
 from ..libs.llm.ollama import Ollama
 from ..libs.llm.openai import OpenAI
@@ -46,6 +47,7 @@ MODEL_CLASSES: Dict[str, Type[LLM]] = {
         GooglePaLMAPI,
         TextGenWebUI,
         LMStudio,
+        Llamafile,
         OpenAIAgent
     ]
 }
@@ -64,6 +66,7 @@ MODEL_MODULE_NAMES = {
     "GooglePaLMAPI": "google_palm_api",
     "TextGenWebUI": "text_gen_webui",
     "LMStudio": "lmstudio",
+    "Llamafile": "llamafile",
     "OpenAIAgent": "openai_agent", 
 }
 
@@ -71,26 +74,26 @@ MODEL_MODULE_NAMES = {
 class Models(BaseModel):
     """Main class that holds the current model configuration"""
 
-    default: LLM
-    summarize: LLM = Field(default=None)
-    edit: LLM = Field(default=None)
-    chat: LLM = Field(default=None)
+    default: Union[Any, LLM]
+    summarize: Union[Any, LLM]
+    summarize: Annotated[Union[Any, LLM], Field()] =Field(validate_default=True)
+    edit: Annotated[Union[Any, LLM], Field()] =Field(validate_default=True)
+    chat: Annotated[Union[Any, LLM], Field()] =Field(validate_default=True)
 
-    saved: List[LLM] = []
+    saved: List[Union[Any, LLM]] = []
 
     temperature: Optional[float] = None
     system_message: Optional[str] = None
 
-    @validator(
+
+    @field_validator(
         "summarize",
         "edit",
-        "chat",
-        pre=True,
-        always=True,
+        "chat"
     )
-    def roles_not_none(cls, v, values):
+    def roles_not_none(cls, v, val_info):
         if v is None:
-            return values["default"]
+            return cls.model_fields[val_info.field_name].default
         return v
 
     def dict(self, **kwargs):
@@ -110,7 +113,7 @@ class Models(BaseModel):
         for model in self.all_models:
             model.set_main_config_params(system_msg, temperature)
 
-    async def start(
+    def start(
         self,
         unique_id: str,
         system_message: Optional[str],
@@ -119,11 +122,9 @@ class Models(BaseModel):
         """Start each of the LLMs, or fall back to default"""
         for role in ALL_MODEL_ROLES:
             model: LLM = getattr(self, role)
-            if model is None:
-                setattr(self, role, self.default)
-            else:
-                await model.start(unique_id)
-                model.write_log = self.write_log
+
+            model.start(unique_id)
+            model.write_log = self.write_log
 
         self.set_main_config_params(system_message, temperature)
 

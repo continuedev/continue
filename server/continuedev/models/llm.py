@@ -1,6 +1,6 @@
 from typing import Any, Dict, List, Optional
 
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator
 
 from .main import ContinueBaseModel
 
@@ -13,7 +13,7 @@ class RequestOptions(BaseModel):
     verify_ssl: Optional[bool] = Field(
         default=None, description="Whether to verify SSL certificates for requests."
     )
-    ca_bundle_path: str = Field(
+    ca_bundle_path: Optional[str] = Field(
         default=None,
         description="Path to a custom CA bundle to use when making the HTTP request",
     )
@@ -28,13 +28,11 @@ class RequestOptions(BaseModel):
 
 
 class BaseCompletionOptions(ContinueBaseModel):
-    @validator(
-        "*",
-        pre=True,
-        always=True,
+    @field_validator(
+        "*"
     )
-    def ignore_none_and_set_default(cls, value, field):
-        return value if value is not None else field.default
+    def ignore_none_and_set_default(cls, value, val_info):
+        return value if value is not None else cls.model_fields[val_info.field_name].default
 
     temperature: Optional[float] = Field(
         default=None, description="The temperature of the completion."
@@ -67,13 +65,11 @@ class BaseCompletionOptions(ContinueBaseModel):
 class CompletionOptions(BaseCompletionOptions):
     """Options for the completion."""
 
-    @validator(
-        "*",
-        pre=True,
-        always=True,
+    @field_validator(
+        "*"
     )
-    def ignore_none_and_set_default(cls, value, field):
-        return value if value is not None else field.default
+    def ignore_none_and_set_default(cls, value, val_info):
+        return value if value is not None else cls.model_fields[val_info.field_name].default
 
     model: str = Field(default=None, description="The model name")
     functions: Optional[List[Any]] = Field(

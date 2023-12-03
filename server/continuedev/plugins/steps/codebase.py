@@ -2,7 +2,7 @@ import asyncio
 import os
 from typing import List, Optional, Union
 
-from ...core.config import RetrievalSettings
+from ...core.config import ModelDescription, RetrievalSettings
 from ...core.main import (
     ContextItem,
     ContextItemDescription,
@@ -25,7 +25,7 @@ PROMPT = """Use the above code to answer the following question. You should not 
 
 async def get_faster_model(sdk: ContinueSDK) -> Optional[LLM]:
     # First, check for GPT-3/3.5
-    models = sdk.config.models.all_models
+    models: List[LLM] = sdk.config.models
     if gpt3_model := next(filter(lambda m: "gpt-3" in m.model, models), None):
         return gpt3_model
 
@@ -35,7 +35,6 @@ async def get_faster_model(sdk: ContinueSDK) -> Optional[LLM]:
     ):
         new_model = openai_free_trial_model.copy()
         new_model.model = "gpt-3.5-turbo"
-        await new_model.start(sdk.ide.window_info.unique_id)
         return new_model
 
     # Then, check for an API Key
@@ -50,7 +49,6 @@ async def get_faster_model(sdk: ContinueSDK) -> Optional[LLM]:
     ):
         new_model = openai_model.copy()
         new_model.model = "gpt-3.5-turbo"
-        await new_model.start(sdk.ide.window_info.unique_id)
         return new_model
 
     # Return None, so re-ranking probably shouldn't happen

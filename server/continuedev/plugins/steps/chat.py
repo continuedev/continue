@@ -27,6 +27,8 @@ class SimpleChatStep(Step):
     messages: Optional[List[ChatMessage]] = None
     prompt: Optional[str] = None
 
+    hide: bool = True
+
     completion_options: Optional[CompletionOptions] = None
 
     async def run(self, sdk: ContinueSDK):
@@ -54,7 +56,7 @@ class SimpleChatStep(Step):
         session_id = sdk.get_session_id()
         generator = sdk.models.chat.stream_chat(messages, session_id=session_id, **kwargs)
 
-        yield SetStep(description="")
+        yield SetStep(description="", hide=False)
         async for chunk in generator:
             if chunk.content != "":
                 yield chunk.content

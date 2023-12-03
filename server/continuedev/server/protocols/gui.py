@@ -55,7 +55,7 @@ class GUIProtocolServer(AbstractGUIProtocolServer):
     async def handle_json(self, msg: WebsocketsMessage):
         data = msg.data
         if msg.message_type == "run_from_state":
-            await self.run_from_state(SessionState.parse_obj(data["state"]))
+            await self.run_from_state(SessionState.model_validate(data["state"]))
         elif msg.message_type == "stop_session":
             await self.stop_session()
         elif msg.message_type == "get_context_item":
@@ -89,23 +89,20 @@ class GUIProtocolServer(AbstractGUIProtocolServer):
                 data["role"], ModelDescription(**data["model"])
             )
             await self.open_config()
-        elif msg.message_type == "set_model_for_role_from_index":
-            await self.set_model_for_role_from_index(data["role"], data["index"])
+        elif msg.message_type == "set_model_for_role_from_title":
+            await self.set_model_for_role_from_title(data["role"], data["title"])
         elif msg.message_type == "delete_model_at_index":
             await self.delete_model_at_index(data["index"])
 
-    async def set_model_for_role_from_index(self, role: str, index: int):
-        if config := self.get_config():
-            models = config.models
-            if title := models.saved[index].title:
-                SerializedContinueConfig.set_model_for_role(title, role)
-                await self.reload_config()
-                await self.send_config_update()
+    async def set_model_for_role_from_title(self, role: str, title: str):
+        SerializedContinueConfig.set_model_for_role(title, role)
+        await self.reload_config()
+        await self.send_config_update()
 
     async def delete_model_at_index(self, index: int):
         if config := self.get_config():
             models = config.models
-            if title := models.saved[index].title:
+            if title := models[index].title:
                 SerializedContinueConfig.delete_model(title)
                 await self.reload_config()
                 await self.send_config_update()

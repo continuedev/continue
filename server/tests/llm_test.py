@@ -21,7 +21,7 @@ SPEND_MONEY = False
 
 
 def start_model(model: LLM):
-    asyncio.run(model.start(unique_id="test_unique_id"))
+    model.start(unique_id="test_unique_id")
 
 
 def async_test(func):

@@ -27,7 +27,8 @@ export type Provider =
   | "replicate"
   | "text-gen-webui"
   | "google-palm"
-  | "lmstudio";
+  | "lmstudio"
+  | "llamafile";
 /**
  * The name of the model. Used to autodetect prompt template.
  */

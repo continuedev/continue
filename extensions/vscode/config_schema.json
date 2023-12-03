@@ -107,7 +107,8 @@
             "replicate",
             "text-gen-webui",
             "google-palm",
-            "lmstudio"
+            "lmstudio",
+            "llamafile"
           ],
           "type": "string"
         },
@@ -461,7 +462,8 @@
                   "huggingface-tgi",
                   "huggingface-inference-api",
                   "llama.cpp",
-                  "text-gen-webui"
+                  "text-gen-webui",
+                  "llamafile"
                 ]
               }
             },
@@ -515,7 +517,10 @@
                   "wizardcoder-13b",
                   "wizardcoder-34b",
                   "zephyr-7b",
-                  "codeup-13b"
+                  "codeup-13b",
+                  "deepseek-1b",
+                  "deepseek-7b",
+                  "deepseek-33b"
                 ]
               }
             }
@@ -547,6 +552,23 @@
             "properties": {
               "use_legacy_completions_endpoint": {
                 "type": "boolean"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "provider": {
+                "const": "llamafile"
+              }
+            },
+            "required": ["provider"]
+          },
+          "then": {
+            "properties": {
+              "llamafile_command": {
+                "type": "string"
               }
             }
           }
