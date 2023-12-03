@@ -1,5 +1,5 @@
 import json
-from typing import Any, Dict, Optional
+from typing import Annotated, Any, Dict, Optional
 
 import requests
 from pydantic import ConfigDict, Field, field_validator
@@ -25,8 +25,8 @@ class Ollama(LLM):
     """
 
     model: str = "llama2"
-    api_base: Optional[str] = Field(
-        "http://localhost:11434", description="URL of the Ollama server"
+    api_base: Optional[Annotated[str, Field()]] = Field (
+        "http://localhost:11434", description="URL of the Ollama server", validate_default=True
     )
 
 

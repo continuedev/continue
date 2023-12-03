@@ -1,5 +1,5 @@
 import json
-from typing import Any, AsyncGenerator, Dict, List, Literal, Optional, Union, cast
+from typing import Annotated, Any, AsyncGenerator, Dict, List, Literal, Optional, Union, cast
 
 from pydantic import field_validator, ConfigDict, BaseModel, Field, field_validator
 from pydantic.json_schema import model_json_schema
@@ -20,14 +20,14 @@ class ChatMessage(ContinueBaseModel):
     content: str = ""
     name: Optional[str] = None
     # A summary for pruning chat context to fit context window. Often the Step name.
-    summary: str = Field(default=None, title="Summary")
+    summary: Annotated[str, Field()] = Field(default=None, title="Summary", validate_default=True)
     function_call: Optional[FunctionCall] = None
 
 
     @field_validator("summary")
-    def summary_is_content(cls, summary, values):
+    def summary_is_content(cls, summary, val_info):
         if summary is None:
-            return values.get("content", "")
+            return val_info.data.get("content", "")
         return summary
 
     def to_dict(self, with_functions: bool = False) -> Dict[str, str]:
@@ -143,18 +143,18 @@ class DeltaStep(BaseModel):
 
 
 class StepDescription(BaseModel):
-    step_type: str
-    name: str
-    description: str
+    step_type:  Optional[str] = None
+    name:  Optional[str] = None
+    description:  Optional[str] = None
 
-    params: Dict[str, Any]
+    params: Optional[Dict[str, Any]]
 
-    hide: bool
-    depth: int
+    hide: Optional[bool] = None
+    depth: Optional[int] = None
 
     error: Optional[ContinueError] = None
-    observations: List[Observation] = []
-    logs: List[str] = []
+    observations:  Optional[List[Observation]] = []
+    logs: Optional[List[str]] = []
 
     def update(self, update: "UpdateStep"):
         if isinstance(update, DeltaStep):
@@ -318,11 +318,12 @@ class Policy(ContinueBaseModel):
 
 
 class Step(ContinueBaseModel):
-    name: str = Field(default=None, title="Name")
+    name: Optional[Annotated[str, Field()]] =Field(default=None, title="Name", validate_default=True)
+
     hide: bool = False
     description: str = ""
 
-    class_name: str = "Step"
+    class_name: Annotated[str, Field()] = Field(default="Step", validate_default=True)
 
 
     @field_validator("class_name")

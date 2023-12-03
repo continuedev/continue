@@ -31,12 +31,8 @@ class BaseCompletionOptions(ContinueBaseModel):
     @field_validator(
         "*"
     )
-    def ignore_none_and_set_default(cls, value, field):
-        defa = field.data.get('default', None)
-        if defa is not None:
-            print(f'found default for {field.field_name}: {defa}')
-
-        return value if value is not None else defa
+    def ignore_none_and_set_default(cls, value, val_info):
+        return value if value is not None else cls.model_fields[val_info.field_name].default
 
     temperature: Optional[float] = Field(
         default=None, description="The temperature of the completion."
@@ -68,8 +64,8 @@ class CompletionOptions(BaseCompletionOptions):
     @field_validator(
         "*"
     )
-    def ignore_none_and_set_default(cls, value, field):
-        return value if value is not None else field.default
+    def ignore_none_and_set_default(cls, value, val_info):
+        return value if value is not None else cls.model_fields[val_info.field_name].default
 
     model: str = Field(default=None, description="The model name")
     functions: Optional[List[Any]] = Field(

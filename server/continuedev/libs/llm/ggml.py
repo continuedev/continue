@@ -1,5 +1,5 @@
 import json
-from typing import Any, AsyncGenerator, Coroutine, List, Literal, Optional
+from typing import Annotated, Any, AsyncGenerator, Coroutine, List, Literal, Optional
 
 from pydantic import ConfigDict, Field, field_validator
 
@@ -29,9 +29,10 @@ class GGML(LLM):
     ```
     """
 
-    api_base: Optional[str] = Field(
+    api_base: Optional[Annotated[str, Field()]] = Field(
         "http://localhost:8000",
         description="URL of the OpenAI-compatible server where the model is being served",
+        validate_default=True
     )
 
 

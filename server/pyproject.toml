@@ -43,6 +43,7 @@ pathspec = "^0.11.2"
 tqdm = "^4.66.1"
 html2text = "^2020.1.16"
 aiohttp = "^3.8.6"
+PyGithu = "^2.1.1"
 
 [tool.poetry.scripts]
 typegen = "continuedev.models.generate_json_schema:main"

@@ -2,7 +2,7 @@ import importlib.util
 import json
 import os
 from contextlib import contextmanager
-from typing import Any, Callable, Dict, List, Optional, Tuple, Type, Union, cast
+from typing import Annotated, Any, Callable, Dict, List, Optional, Tuple, Type, Union, cast
 
 from pydantic import ConfigDict, BaseModel, Field, field_validator
 
@@ -44,7 +44,7 @@ class ContextProviderWithParams(BaseModel):
 class SlashCommand(BaseModel):
     name: str
     description: str
-    step: Union[Type[Step], StepName, str]
+    step: Annotated[Union[Type[Step], StepName], Field()] = Field(default=None, validate_default=True)
     params: Optional[Dict] = {}
 
     # Allow step class for the migration
@@ -118,7 +118,8 @@ class RetrievalSettings(BaseModel):
 
 
 class ModelDescription(BaseModel):
-    model_config = ConfigDict(extra="allow")
+    class Config:
+        extra = "allow"
 
     title: str = Field(
         default=...,

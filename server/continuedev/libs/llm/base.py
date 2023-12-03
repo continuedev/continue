@@ -1,7 +1,7 @@
 import os
 import ssl
 from time import time
-from typing import Any, AsyncGenerator, Callable, Coroutine, Dict, List, Optional
+from typing import Any, AsyncGenerator, Callable, Coroutine, Dict, List, Optional, Annotated
 
 import aiohttp
 import certifi
@@ -25,7 +25,7 @@ from ..util.count_tokens import (
 from ..util.devdata import dev_data_logger
 from ..util.logging import logger
 from ..util.telemetry import posthog_logger
-
+from pydantic.functional_validators import field_validator
 
 class LLM(ContinueBaseModel):
     title: Optional[str] = Field(
@@ -46,9 +46,10 @@ class LLM(ContinueBaseModel):
         description="A system message that will always be followed by the LLM",
     )
 
-    context_length: int = Field(
+    context_length: Optional[Annotated[int, Field()]] =Field(
         default=2048,
         description="The maximum context length of the LLM in tokens, as counted by count_tokens.",
+        validate_default=True
     )
 
     completion_options: BaseCompletionOptions = Field(
@@ -61,14 +62,17 @@ class LLM(ContinueBaseModel):
         description="Options for the HTTP request to the LLM.",
     )
 
-    prompt_templates: dict = Field(
+    prompt_templates: Optional[Annotated[dict, Field()]] = Field(
         default=None,
         description='A dictionary of prompt templates that can be used to customize the behavior of the LLM in certain situations. For example, set the "edit" key in order to change the prompt that is used for the /edit slash command. Each value in the dictionary is a string templated in mustache syntax, and filled in at runtime with the variables specific to the situation. See the documentation for more information.',
+        validate_default=True,
     )
 
+    # TODO does this need an Annotated ???
     template_messages: Optional[Callable[[List[ChatMessage]], str]] = Field(
         default=None,
         description="A function that takes a list of messages and returns a prompt. This ensures that models like llama2, which are trained on specific chat formats, will always receive input in that format.",
+        validate_default=True
     )
     write_log: Optional[Callable[[str], Coroutine]] = Field(
         default=None,
@@ -88,35 +92,36 @@ class LLM(ContinueBaseModel):
     class Config:
         arbitrary_types_allowed = True
         extra = "allow"
-        fields = {
-            "title": {
-                "description": "A title that will identify this model in the model selection dropdown"
-            },
-            "system_message": {
-                "description": "A system message that will always be followed by the LLM"
-            },
-            "context_length": {
-                "description": "The maximum context length of the LLM in tokens, as counted by count_tokens."
-            },
-            "unique_id": {"description": "The unique ID of the user."},
-            "model": {
-                "description": "The name of the model to be used (e.g. gpt-4, codellama)"
-            },
-            "prompt_templates": {
-                "description": 'A dictionary of prompt templates that can be used to customize the behavior of the LLM in certain situations. For example, set the "edit" key in order to change the prompt that is used for the /edit slash command. Each value in the dictionary is a string templated in mustache syntax, and filled in at runtime with the variables specific to the situation OR an instance of the PromptTemplate class if you want to control other parameters. See the documentation for more information.'
-            },
-            "template_messages": {
-                "description": "A function that takes a list of messages and returns a prompt. This ensures that models like llama2, which are trained on specific chat formats, will always receive input in that format."
-            },
-        }
+        # TODO Pydantic V2 no longer supports fields it should be done inline
+        # fields = {
+        #     "title": {
+        #         "description": "A title that will identify this model in the model selection dropdown"
+        #     },
+        #     "system_message": {
+        #         "description": "A system message that will always be followed by the LLM"
+        #     },
+        #     "context_length": {
+        #         "description": "The maximum context length of the LLM in tokens, as counted by count_tokens."
+        #     },
+        #     "unique_id": {"description": "The unique ID of the user."},
+        #     "model": {
+        #         "description": "The name of the model to be used (e.g. gpt-4, codellama)"
+        #     },
+        #     "prompt_templates": {
+        #         "description": 'A dictionary of prompt templates that can be used to customize the behavior of the LLM in certain situations. For example, set the "edit" key in order to change the prompt that is used for the /edit slash command. Each value in the dictionary is a string templated in mustache syntax, and filled in at runtime with the variables specific to the situation OR an instance of the PromptTemplate class if you want to control other parameters. See the documentation for more information.'
+        #     },
+        #     "template_messages": {
+        #         "description": "A function that takes a list of messages and returns a prompt. This ensures that models like llama2, which are trained on specific chat formats, will always receive input in that format."
+        #     },
+        # }
 
-    @validator("template_messages", pre=True, always=True)
-    def set_template_messages(cls, template_messages, values):
-        return template_messages or autodetect_template_function(values["model"])
+    @field_validator("template_messages")
+    def set_template_messages(cls, template_messages, val_info):
+        return template_messages or autodetect_template_function(val_info.data["model"])
 
-    @validator("prompt_templates", pre=True, always=True)
-    def set_prompt_templates(cls, prompt_templates, values):
-        return prompt_templates or autodetect_prompt_templates(values["model"])
+    @field_validator("prompt_templates")
+    def set_prompt_templates(cls, prompt_templates, val_info):
+        return prompt_templates or autodetect_prompt_templates(val_info.data["model"])
 
     def dict(self, **kwargs):
         original_dict = super().dict(**kwargs)

@@ -1,5 +1,5 @@
 import json
-from typing import Any, Optional
+from typing import Annotated, Any, Optional
 
 from pydantic import ConfigDict, Field, field_validator
 
@@ -9,8 +9,8 @@ from .base import LLM, CompletionOptions
 
 class HuggingFaceTGI(LLM):
     model: str = "huggingface-tgi"
-    api_base: Optional[str] = Field(
-        "http://localhost:8080", description="URL of your TGI server"
+    api_base: Optional[Annotated[str, Field()]] = Field (
+        "http://localhost:8080", description="URL of your TGI server", validate_default=True
     )
 
 

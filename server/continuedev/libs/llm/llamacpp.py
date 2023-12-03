@@ -1,5 +1,5 @@
 import json
-from typing import Any, Dict, Optional
+from typing import Annotated, Any, Dict, Optional
 
 from pydantic import ConfigDict, Field, field_validator
 
@@ -29,8 +29,8 @@ class LlamaCpp(LLM):
     """
 
     model: str = "llamacpp"
-    api_base: Optional[str] = Field(
-        "http://localhost:8080", description="URL of the server"
+    api_base: Optional[Annotated[str, Field()]] = Field (
+        "http://localhost:8080", description="URL of the server", validate_default=True
     )
 
 

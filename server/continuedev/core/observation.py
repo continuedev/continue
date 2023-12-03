@@ -1,4 +1,5 @@
-from pydantic import BaseModel, field_validator
+from typing import Annotated, Optional
+from pydantic import BaseModel, Field, field_validator
 
 from ..models.main import Traceback
 
@@ -26,9 +27,8 @@ class DictObservation(Observation):
         return self.values[key]
 
 
-class TextObservation(Observation):
-    text: str
-
+class TextObservation(Observation):    
+    text: Annotated[str, Field()] =Field(validate_default=True)
 
     @field_validator("text")
     def text_not_none(cls, v):

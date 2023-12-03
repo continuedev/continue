@@ -55,7 +55,7 @@ class GUIProtocolServer(AbstractGUIProtocolServer):
     async def handle_json(self, msg: WebsocketsMessage):
         data = msg.data
         if msg.message_type == "run_from_state":
-            await self.run_from_state(SessionState.parse_obj(data["state"]))
+            await self.run_from_state(SessionState.model_validate(data["state"]))
         elif msg.message_type == "stop_session":
             await self.stop_session()
         elif msg.message_type == "get_context_item":

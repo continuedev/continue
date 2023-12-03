@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import Annotated, List, Optional
 
 from pydantic import Field, field_validator
 
@@ -44,35 +44,33 @@ class OpenAIFreeTrial(LLM):
     ```
     """
 
-    llm: LLM = Field(default=None, description="The LLM to use for completion.")
-
+    llm: Optional[Annotated[LLM, Field()]] =Field(default=None, description="The LLM to use for completion.", validate_default=True)
 
     @field_validator("llm")
-    def set_llm(cls, llm, values):
-        api_key = values.get("api_key")
+    def set_llm(cls, llm, val_info):
+        api_key = val_info.data.get("api_key")
         if api_key is None or api_key.strip() == "":
             return ProxyServer(
-                model=values["model"],
+                model=val_info.data["model"],
                 request_options=RequestOptions(
-                    timeout=values["request_options"].timeout,
-                    verify_ssl=values["request_options"].verify_ssl,
+                    timeout=val_info.data["request_options"].timeout,
+                    verify_ssl=val_info.data["request_options"].verify_ssl,
                 ),
             )
         else:
             return OpenAI(
                 api_key=api_key,
-                model=values["model"],
+                model=val_info.data["model"],
                 request_options=RequestOptions(
-                    timeout=values["request_options"].timeout,
-                    verify_ssl=values["request_options"].verify_ssl,
+                    timeout=val_info.data["request_options"].timeout,
+                    verify_ssl=val_info.data["request_options"].verify_ssl,
                 ),
             )
 
 
     @field_validator("context_length")
-    def context_length_for_model(cls, v, values):
-        mod1 = values.data["model"]
-        return CONTEXT_LENGTH_FOR_MODEL.get(mod1, 4096)
+    def context_length_for_model(cls, v, val_info):        
+        return CONTEXT_LENGTH_FOR_MODEL.get(val_info.data["model"], 4096)
 
     def update_llm_properties(self):
         self.llm.system_message = self.system_message

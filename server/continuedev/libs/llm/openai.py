@@ -114,8 +114,8 @@ class OpenAI(LLM):
 
 
     @field_validator("context_length")
-    def context_length_for_model(cls, v, values):
-        return CONTEXT_LENGTH_FOR_MODEL.get(values["model"], 4096)
+    def context_length_for_model(cls, v, val_info):
+        return CONTEXT_LENGTH_FOR_MODEL.get(val_info.data["model"], 4096)
 
     def start(self, unique_id: Optional[str] = None):
         super().start(unique_id=unique_id)

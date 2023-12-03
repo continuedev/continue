@@ -1,5 +1,5 @@
 import json
-from typing import Any, Dict, Optional
+from typing import Annotated, Any, Dict, Optional
 
 from pydantic import Field, field_validator
 
@@ -29,11 +29,11 @@ class TogetherLLM(LLM):
     api_key: str = Field(..., description="Together API key")
 
     model: str = "togethercomputer/RedPajama-INCITE-7B-Instruct"
-    api_base: Optional[str] = Field(
+    api_base: Optional[Annotated[str, Field()]] = Field (
         "https://api.together.xyz",
         description="The base URL for your Together API instance",
+        validate_default=True
     )
-
 
     @field_validator("api_base")
     def set_api_base(cls, api_base):
