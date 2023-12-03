@@ -39,11 +39,6 @@ default_config_json = """\
       "step": "EditHighlightedCodeStep"
     },
     {
-      "name": "config",
-      "description": "Customize Continue",
-      "step": "OpenConfigStep"
-    },
-    {
       "name": "comment",
       "description": "Write comments for the highlighted code",
       "step": "CommentCodeStep"

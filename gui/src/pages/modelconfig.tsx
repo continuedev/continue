@@ -229,7 +229,7 @@ function ModelConfig() {
                     });
                   }
 
-                  client?.addModelForRole("*", {
+                  client?.addModelForRole("default", {
                     ...pkg.params,
                     ...modelInfo.params,
                     ..._.merge(
@@ -262,7 +262,7 @@ function ModelConfig() {
                     : parseFloat(formMethods.watch(d.key));
               }
 
-              client?.addModelForRole("*", {
+              client?.addModelForRole("default", {
                 ...modelInfo.packages[0]?.params,
                 ...modelInfo.params,
                 ...formParams,
@@ -270,7 +270,7 @@ function ModelConfig() {
               navigate("/");
             }}
           >
-            <h3 className="text-center my-2">Configure Model in config.py</h3>
+            <h3 className="text-center my-2">Configure Model in config.json</h3>
           </CustomModelButton>
         </GridDiv>
       </div>
