@@ -1,14 +1,12 @@
 > 🎁 **New! [Try out the new JetBrains extension (Alpha)](https://plugins.jetbrains.com/plugin/22707-continue-extension)**
 
-> Interested in a 1-on-1, 15 minute introduction to Continue? Fill out [this form](https://forms.gle/H6U6rGDX55oWSWjC8) and we'll get in touch!
-
 ![Continue logo](media/c_d.png)
 
 <h1 align="center">Continue</h1>
 
 <div align="center">
 
-**[Continue](https://continue.dev/docs) is the open-source autopilot for software development—an IDE extension that brings the power of ChatGPT to [VS Code](https://marketplace.visualstudio.com/items?itemName=Continue.continue) and [JetBrains](https://plugins.jetbrains.com/plugin/22707-continue-extension)**
+**[Continue](https://continue.dev/docs) is an open-source autopilot for [VS Code](https://marketplace.visualstudio.com/items?itemName=Continue.continue) and [JetBrains](https://plugins.jetbrains.com/plugin/22707-continue-extension)—the easiest way to code with any LLM**
 
 </div>
 
