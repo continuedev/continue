@@ -1,0 +1,5 @@
+project: extensions/vscode
+kind: Changed
+body: Context items are now kept around as a part of past messages, instead of staying
+  at the main input
+time: 2023-12-04T12:04:29.985942-08:00
