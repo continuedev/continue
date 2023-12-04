@@ -38,6 +38,7 @@ from .main import (
     StepDescription,
     UpdateStep,
 )
+from .models import Models
 from .observation import Observation
 from .sdk import ContinueSDK
 
@@ -82,12 +83,14 @@ class Autopilot:
         gui: AbstractGUIProtocolServer,
         config: ContinueConfig,
         context_manager: ContextManager,
+        models: Models,
     ):
         self.session_state = session_state
         self.ide = ide
         self.gui = gui
         self.config = config
         self.context_manager = context_manager
+        self.models = models
 
     @property
     def policy(self) -> Policy:
@@ -95,7 +98,7 @@ class Autopilot:
 
     @property
     def sdk(self) -> ContinueSDK:
-        return ContinueSDK(self.config, self.ide, self.gui, self)  # type: ignore because of circular import
+        return ContinueSDK(self.config, self.ide, self.gui, self, self.models)  # type: ignore because of circular import
 
     class Config:
         arbitrary_types_allowed = True

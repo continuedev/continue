@@ -1,9 +1,9 @@
 import asyncio
 import socket
 import subprocess
-from typing import Any, AsyncGenerator, Coroutine, List, Optional
+from typing import List, Optional
 
-from continuedev.core.main import ChatMessage
+from continuedev.core.main import ChatMessage, ContinueCustomException
 from continuedev.models.llm import CompletionOptions
 
 from .llamacpp import LlamaCpp
@@ -45,7 +45,9 @@ class Llamafile(LlamaCpp):
 
     llamafile_command: Optional[str] = None
 
-    def check_and_start(self) -> bool:
+    llamafile_process: Optional[subprocess.Popen] = None
+
+    def check_and_start(self, should_raise: bool) -> bool:
         # Try to start the llamafile if it's not already started on port 8080
         if not self.llamafile_command:
             return False
@@ -53,14 +55,28 @@ class Llamafile(LlamaCpp):
         port = int((self.api_base or ":8080").split(":")[-1])
 
         if not test_port(port):
-            subprocess.Popen(
-                self.llamafile_command.split(" "),
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.STDOUT,
-                close_fds=True,
-                start_new_session=True,
-                shell=True,
-            )
+            if should_raise and self.llamafile_process:
+                # If already tried to start and it isn't started, raise an exception
+                _, err = self.llamafile_process.communicate()
+                err = err.decode("utf-8") if err else ""
+                err_string = f"Error starting llamafile\n\n{err}"
+                raise ContinueCustomException(err_string, err_string)
+
+            import threading
+
+            def process_run():
+                p = subprocess.Popen(
+                    self.llamafile_command.split(" "),
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    close_fds=True,
+                    start_new_session=True,
+                    shell=True,
+                )
+                self.llamafile_process = p
+
+            t = threading.Thread(target=process_run)
+            t.start()
 
             return True
 
@@ -68,26 +84,33 @@ class Llamafile(LlamaCpp):
 
     def start(self, unique_id: str | None = None):
         super().start(unique_id)
-        self.check_and_start()
+        self.check_and_start(False)
+
+    def dict(self, **kwargs):
+        d = super().dict(**kwargs)
+        if "llamafile_process" in d:
+            del d["llamafile_process"]
+
+        return d
 
     async def _stream_chat(
         self, messages: List[ChatMessage], options: CompletionOptions
     ):
-        if self.check_and_start():
+        if self.check_and_start(True):
             await asyncio.sleep(STARTUP_DELAY)
 
         async for message in super()._stream_chat(messages, options):
             yield message
 
     async def _stream_complete(self, prompt, options):
-        if self.check_and_start():
+        if self.check_and_start(True):
             await asyncio.sleep(STARTUP_DELAY)
 
         async for message in super()._stream_complete(prompt, options):
             yield message
 
     async def _complete(self, prompt: str, options: CompletionOptions):
-        if self.check_and_start():
+        if self.check_and_start(True):
             await asyncio.sleep(STARTUP_DELAY)
 
         return await super()._complete(prompt, options)

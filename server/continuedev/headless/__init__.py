@@ -29,10 +29,19 @@ async def get_headless_autopilot(
     #     "HEADLESS", _config.system_message, _config.completion_options.temperature
     # )
 
+    models = _config.construct_models()
+    models.start(
+        ide.window_info.unique_id,
+        _config.system_message,
+        _config.completion_options.temperature,
+        _config.llm_request_hook,
+    )
+
     return Autopilot(
         session_state=state or SessionState.from_empty(),
         ide=ide,
         gui=CommandLineGUI(),
         config=_config,
         context_manager=context_manager,
+        models=models,
     )

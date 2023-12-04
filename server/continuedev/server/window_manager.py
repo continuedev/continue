@@ -7,6 +7,7 @@ from ..core.autopilot import Autopilot
 from ..core.config import ContinueConfig, SerializedContinueConfig
 from ..core.context import ContextManager
 from ..core.main import SessionState
+from ..core.models import Models
 from ..libs.constants.default_config import default_config_json
 from ..libs.index.build_index import build_index
 from ..libs.util.create_async_task import create_async_task
@@ -27,6 +28,7 @@ class Window:
     gui: Optional[GUIProtocolServer] = None
     config: ContinueConfig
     context_manager: ContextManager = ContextManager()
+    models: Models
 
     _error_loading_config: Optional[str] = None
     _last_valid_config: Optional[ContinueConfig] = None
@@ -48,7 +50,7 @@ class Window:
             )
 
     def __init__(self, config: Optional[ContinueConfig] = None) -> None:
-        self.config = config or self.load_config() or ContinueConfig()
+        self.reload_config()
 
     def get_autopilot(self, session_state: SessionState) -> Optional[Autopilot]:
         if self.ide is None or self.gui is None or self.config is None:
@@ -60,6 +62,7 @@ class Window:
             gui=self.gui,
             config=self.config,
             context_manager=self.context_manager,
+            models=self.models,
         )
 
     def get_config(self) -> Optional[ContinueConfig]:
@@ -68,8 +71,15 @@ class Window:
     def is_closed(self) -> bool:
         return self.ide is None and self.gui is None
 
-    async def reload_config(self):
+    def reload_config(self):
         self.config = self.load_config()
+        self.models = self.config.construct_models()
+        self.models.start(
+            "None" if self.ide is None else self.ide.window_info.unique_id,
+            self.config.system_message,
+            self.config.completion_options.temperature,
+            self.config.llm_request_hook,
+        )
 
     async def display_config_error(self):
         if self._error_loading_config is not None:
@@ -157,7 +167,7 @@ class Window:
                 or filepath.endswith(".continue/config.json")
                 or filepath.endswith(".continue\\config.json")
             ):
-                await self.reload_config()
+                self.reload_config()
                 if self.gui is not None:
                     await self.gui.send_config_update()
 

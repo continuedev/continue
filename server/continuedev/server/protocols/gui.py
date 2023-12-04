@@ -41,7 +41,7 @@ class GUIProtocolServer(AbstractGUIProtocolServer):
         get_autopilot: Callable[[SessionState], Optional[Autopilot]],
         get_context_item: Callable[[str, str], Awaitable[Optional[ContextItem]]],
         get_config: Callable[[], Optional[ContinueConfig]],
-        reload_config: AsyncFunc,
+        reload_config: Callable,
         open_config: Callable[[], Awaitable[None]],
     ):
         self.window_id = window_id
@@ -78,11 +78,11 @@ class GUIProtocolServer(AbstractGUIProtocolServer):
             posthog_logger.capture_event(
                 "set_system_message", {"system_message": sys_message}
             )
-            await self.reload_config()
+            self.reload_config()
             await self.send_config_update()
         elif msg.message_type == "set_temperature":
             SerializedContinueConfig.set_temperature(float(data["temperature"]))
-            await self.reload_config()
+            self.reload_config()
             await self.send_config_update()
         elif msg.message_type == "add_model_for_role":
             await self.add_model_for_role(
@@ -96,7 +96,7 @@ class GUIProtocolServer(AbstractGUIProtocolServer):
 
     async def set_model_for_role_from_title(self, role: str, title: str):
         SerializedContinueConfig.set_model_for_role(title, role)
-        await self.reload_config()
+        self.reload_config()
         await self.send_config_update()
 
     async def delete_model_at_index(self, index: int):
@@ -104,13 +104,13 @@ class GUIProtocolServer(AbstractGUIProtocolServer):
             models = config.models
             if title := models[index].title:
                 SerializedContinueConfig.delete_model(title)
-                await self.reload_config()
+                self.reload_config()
                 await self.send_config_update()
 
     async def add_model_for_role(self, role: str, model: ModelDescription):
         SerializedContinueConfig.add_model(model)
         SerializedContinueConfig.set_model_for_role(model.title, role)
-        await self.reload_config()
+        self.reload_config()
         await self.send_config_update()
 
     _running_autopilots: Dict[str, Autopilot] = {}
