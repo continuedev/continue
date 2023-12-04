@@ -228,7 +228,10 @@ class ContinueSDK(AbstractContinueSDK):
                 role = "user"
                 msgs.extend(
                     await self.__autopilot.context_manager.get_chat_messages(
-                        [ContextItem(**itm) for itm in step.params["context_items"]]
+                        [
+                            ContextItem(**itm)
+                            for itm in step.params.get("context_items", [])
+                        ]
                     )
                 )
 
