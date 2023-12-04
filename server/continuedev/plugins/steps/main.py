@@ -39,7 +39,7 @@ class RunPolicyUntilDoneStep(Step):
 
 class FasterEditHighlightedCodeStep(Step):
     user_input: str
-    hide = True
+    hide: bool = True
     _completion: str = "Edit Code"
     _edit_diffs: Union[List[EditDiff], None] = None
     _prompt: str = dedent(
@@ -177,7 +177,7 @@ class FasterEditHighlightedCodeStep(Step):
 class StarCoderEditHighlightedCodeStep(Step):
     user_input: str
     name: str = "Editing Code"
-    hide = False
+    hide: bool = False
     _prompt: str = "<commit_before>{code}<commit_msg>{user_request}<commit_after>"
 
     _prompt_and_completion: str = ""
@@ -240,7 +240,7 @@ class StarCoderEditHighlightedCodeStep(Step):
 
 
 class EditAlreadyEditedRangeStep(Step):
-    hide = True
+    hide: bool = True
     model: Optional[LLM] = None
     range_in_file: RangeInFile
 
@@ -298,7 +298,7 @@ class EditHighlightedCodeStep(Step):
         description="The natural language request describing how to edit the code",
     )
     model: Optional[LLM] = None
-    hide = True
+    hide: bool = True
     description: str = "Change the contents of the currently highlighted code or open file. You should call this function if the user asks seems to be asking for a code change."
 
     summary_prompt: Optional[str] = None

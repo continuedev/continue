@@ -18,6 +18,7 @@ LLM_MODULES = [
     ("google_palm_api", "GooglePaLMAPI"),
     ("queued", "QueuedLLM"),
     ("llamafile", "Llamafile"),
+    ("openai_agent", "OpenAI_Agent"),
 ]
 
 CONTEXT_PROVIDER_MODULES = [

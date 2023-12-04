@@ -139,6 +139,11 @@
           "description": "The maximum number of tokens to generate.",
           "default": 1023,
           "type": "integer"
+        },
+        "session_id": {
+          "title": "Session Id",
+          "description": "The session_id of the UI.",
+          "type": "string"
         }
       }
     },
@@ -217,7 +222,8 @@
             "presence_penalty": null,
             "frequency_penalty": null,
             "stop": null,
-            "max_tokens": 1023
+            "max_tokens": 1023,
+            "session_id": null
           },
           "allOf": [
             {
@@ -594,7 +600,8 @@
                 "presence_penalty": null,
                 "frequency_penalty": null,
                 "stop": null,
-                "max_tokens": 1023
+                "max_tokens": 1023,
+                "session_id": null
               },
               "request_options": {
                 "timeout": 300,
@@ -619,7 +626,8 @@
                   "presence_penalty": null,
                   "frequency_penalty": null,
                   "stop": null,
-                  "max_tokens": 1023
+                  "max_tokens": 1023,
+                  "session_id": null
                 },
                 "request_options": {
                   "timeout": 300,
@@ -672,7 +680,8 @@
             "presence_penalty": null,
             "frequency_penalty": null,
             "stop": null,
-            "max_tokens": 1023
+            "max_tokens": 1023,
+            "session_id": null
           },
           "allOf": [
             {

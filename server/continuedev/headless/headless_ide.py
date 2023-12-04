@@ -31,11 +31,13 @@ class LocalIdeProtocol(AbstractIdeProtocolServer):
     workspace_directory: str = os.getcwd()
     unique_id: str = get_mac_address()
 
-    filesystem: FileSystem = RealFileSystem()
+    filesystem: FileSystem
 
     def __init__(self, workspace_directory: Optional[str] = None):
         if workspace_directory:
             self.workspace_directory = workspace_directory
+        # Instantiate the RealFileSystem here with required arguments
+        self.filesystem = RealFileSystem(workspace_directory=self.workspace_directory)
 
     async def handle_json(self, data: Any):
         """Handle a json message"""

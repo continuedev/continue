@@ -14,7 +14,7 @@ class TemplateRecipe(Step):
     name: str
 
     # A title for the recipe, to be displayed in the GUI
-    title = "Template Recipe"
+    title: str = "Template Recipe"
 
     # A description of what the recipe accomplished, to be displayed in the GUI
     async def describe(self, models: Models) -> Coroutine[str, None, None]:

@@ -12,3 +12,4 @@ from .queued import QueuedLLM  # noqa: F401
 from .replicate import ReplicateLLM  # noqa: F401
 from .text_gen_webui import TextGenWebUI  # noqa: F401
 from .together import TogetherLLM  # noqa: F401
+from .openai_agent import OpenAIAgent  # noqa: F401

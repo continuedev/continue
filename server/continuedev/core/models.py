@@ -1,7 +1,7 @@
 import uuid
-from typing import Any, Callable, Dict, List, Optional, Type, Union
+from typing import Annotated, Any, Callable, Dict, List, Optional, Type, Union
 
-from pydantic import BaseModel, validator
+from pydantic import BaseModel, Field, field_validator
 
 from ..libs.llm.anthropic import AnthropicLLM
 from ..libs.llm.base import LLM
@@ -18,7 +18,7 @@ from ..libs.llm.openai_free_trial import OpenAIFreeTrial
 from ..libs.llm.replicate import ReplicateLLM
 from ..libs.llm.text_gen_webui import TextGenWebUI
 from ..libs.llm.together import TogetherLLM
-
+from ..libs.llm.openai_agent import OpenAIAgent
 
 class ContinueSDK(BaseModel):
     pass
@@ -48,6 +48,7 @@ MODEL_CLASSES: Dict[str, Type[LLM]] = {
         TextGenWebUI,
         LMStudio,
         Llamafile,
+        OpenAIAgent
     ]
 }
 
@@ -66,6 +67,7 @@ MODEL_MODULE_NAMES = {
     "TextGenWebUI": "text_gen_webui",
     "LMStudio": "lmstudio",
     "Llamafile": "llamafile",
+    "OpenAIAgent": "openai_agent", 
 }
 
 
@@ -74,24 +76,24 @@ class Models(BaseModel):
 
     default: Union[Any, LLM]
     summarize: Union[Any, LLM]
-    edit: Union[Any, LLM]
-    chat: Union[Any, LLM]
+    summarize: Annotated[Union[Any, LLM], Field()] =Field(validate_default=True)
+    edit: Annotated[Union[Any, LLM], Field()] =Field(validate_default=True)
+    chat: Annotated[Union[Any, LLM], Field()] =Field(validate_default=True)
 
     saved: List[Union[Any, LLM]] = []
 
     temperature: Optional[float] = None
     system_message: Optional[str] = None
 
-    @validator(
+
+    @field_validator(
         "summarize",
         "edit",
-        "chat",
-        pre=True,
-        always=True,
+        "chat"
     )
-    def roles_not_none(cls, v, values):
+    def roles_not_none(cls, v, val_info):
         if v is None:
-            return values["default"]
+            return cls.model_fields[val_info.field_name].default
         return v
 
     def dict(self, **kwargs):

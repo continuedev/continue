@@ -1,7 +1,10 @@
 import html
 from typing import List, Optional
 
-from ...core.main import ChatMessage, SetStep, Step
+from continuedev.plugins.steps.openai_run_func import OpenAIRunFunction
+
+# absolute import needed so instanceof works
+from continuedev.core.main import ChatMessage, SetStep, Step
 from ...core.sdk import ContinueSDK
 from ...libs.llm.base import CompletionOptions
 from ...libs.util.devdata import dev_data_logger
@@ -50,7 +53,8 @@ class SimpleChatStep(Step):
             messages[-1].content = self.prompt
 
         kwargs = self.completion_options.dict() if self.completion_options else {}
-        generator = sdk.models.chat.stream_chat(messages, **kwargs)
+        session_id = sdk.get_session_id()
+        generator = sdk.models.chat.stream_chat(messages, session_id=session_id, **kwargs)
 
         yield SetStep(description="", hide=False)
         async for chunk in generator:
@@ -63,6 +67,8 @@ class SimpleChatStep(Step):
                     self.description = self.description[:-end_size] + html.unescape(
                         self.description[-end_size:]
                     )
+            elif isinstance(chunk, OpenAIRunFunction):
+                await chunk.run(sdk=sdk)
 
         if sdk.config.disable_summaries:
             self.name = ""
@@ -75,6 +81,7 @@ class SimpleChatStep(Step):
                             f'"{self.description}"\n\nPlease write a short title summarizing the message quoted above. Use no more than 10 words:',
                             max_tokens=20,
                             log=False,
+                            session_id = sdk.get_session_id()
                         )
                     ),
                     200,

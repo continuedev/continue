@@ -219,6 +219,10 @@ class ContinueSDK(AbstractContinueSDK):
     ):
         raise ContinueCustomException(message, title, with_step)
 
+    def get_session_id(self) -> str:
+        return self.__autopilot.session_state.session_id
+
+     
     async def get_chat_context(self) -> List[ChatMessage]:
         msgs = []
 

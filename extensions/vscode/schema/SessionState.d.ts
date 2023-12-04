@@ -24,6 +24,7 @@ export type Content = string;
 export type Editing = boolean;
 export type Editable = boolean;
 export type ContextItems = ContextItem[];
+export type SessionId = string;
 
 /**
  * Full session history and important state needed for autopilot to Continue
@@ -31,6 +32,7 @@ export type ContextItems = ContextItem[];
 export interface SessionState1 {
   history: History;
   context_items: ContextItems;
+  session_id?: SessionId;
   [k: string]: unknown;
 }
 export interface StepDescription {

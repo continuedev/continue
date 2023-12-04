@@ -3,8 +3,8 @@ from typing import AsyncGenerator, List, Literal, Optional
 
 import certifi
 import openai
-from openai.error import RateLimitError
-from pydantic import Field, validator
+from openai import RateLimitError
+from pydantic import Field, field_validator
 
 from ...core.main import ChatMessage
 from ..util.count_tokens import CONTEXT_LENGTH_FOR_MODEL
@@ -17,6 +17,7 @@ CHAT_MODELS = {
     "gpt-3.5-turbo-16k",
     "gpt-4",
     "gpt-3.5-turbo-0613",
+    "gpt-3.5-turbo-1106",
     "gpt-4-32k",
     "gpt-4-1106-preview",
 }
@@ -112,9 +113,10 @@ class OpenAI(LLM):
         description="Manually specify to use the legacy completions endpoint instead of chat completions.",
     )
 
-    @validator("context_length")
-    def context_length_for_model(cls, v, values):
-        return CONTEXT_LENGTH_FOR_MODEL.get(values["model"], 4096)
+
+    @field_validator("context_length")
+    def context_length_for_model(cls, v, val_info):
+        return CONTEXT_LENGTH_FOR_MODEL.get(val_info.data["model"], 4096)
 
     def start(self, unique_id: Optional[str] = None):
         super().start(unique_id=unique_id)
@@ -142,7 +144,7 @@ class OpenAI(LLM):
         openai.ca_bundle_path = self.request_options.ca_bundle_path or certifi.where()
 
         session = self.create_client_session()
-        openai.aiosession.set(session)
+        #openai.aiosession.set(session)
 
     def collect_args(self, options):
         args = super().collect_args(options)

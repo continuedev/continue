@@ -317,6 +317,7 @@ function GUI(props: GUIProps) {
       const state = {
         history: newHistory,
         context_items: sessionState.context_items,
+        session_id: sessionState.session_id
       };
       client.runFromState(state);
       newHistory.push({
