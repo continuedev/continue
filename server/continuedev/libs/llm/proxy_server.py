@@ -26,7 +26,7 @@ class ProxyServer(LLM):
         self.context_length = CONTEXT_LENGTH_FOR_MODEL[self.model]
 
     def get_headers(self):
-        return {"unique_id": self.unique_id}
+        return {"unique_id": self.unique_id or "None"}
 
     @validator("context_length")
     def context_length_for_model(cls, v, values):
