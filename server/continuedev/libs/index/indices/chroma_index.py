@@ -1,5 +1,4 @@
 import asyncio
-import json
 import os
 import re
 import sqlite3
@@ -34,6 +33,9 @@ collection: chromadb.Collection = None
 class CodebaseIndexMetadata(BaseModel):
     commit: str
     chunks: Dict[str, int]
+
+
+GROUP_SIZE = 5
 
 
 class ChromaCodebaseIndex(CodebaseIndex):
@@ -167,15 +169,14 @@ class ChromaCodebaseIndex(CodebaseIndex):
         wait_time = 4.0
         while i < len(ids):
             try:
-                if i > 0:
-                    await asyncio.sleep(0.05)
+                await asyncio.sleep(0.05)
 
                 self.collection.upsert(
-                    documents=documents[i : i + 100],
-                    metadatas=metadatas[i : i + 100],
-                    ids=ids[i : i + 100],
+                    documents=documents[i : i + GROUP_SIZE],
+                    metadatas=metadatas[i : i + GROUP_SIZE],
+                    ids=ids[i : i + GROUP_SIZE],
                 )
-                i += 100
+                i += GROUP_SIZE
 
             except RateLimitError as e:
                 logger.debug(f"Rate limit exceeded, waiting {wait_time} seconds")
@@ -211,14 +212,13 @@ class ChromaCodebaseIndex(CodebaseIndex):
         """Create a new index for the current branch."""
 
         group = []
-        group_size = 100
         async for action, chunk in chunks:
             if action == "compute":
                 if chunk.content.strip() == "":
                     continue
 
                 group.append(chunk)
-                if len(group) < group_size:
+                if len(group) < GROUP_SIZE:
                     continue
 
                 await self.add_chunks(group)
