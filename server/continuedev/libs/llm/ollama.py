@@ -26,12 +26,12 @@ class Ollama(LLM):
 
     model: str = "llama2"
     api_base: Optional[str] = Field(
-        "http://localhost:11434", description="URL of the Ollama server"
+        "http://127.0.0.1:11434", description="URL of the Ollama server"
     )
 
     @validator("api_base", pre=True, always=True)
     def set_api_base(cls, api_base):
-        return api_base or "http://localhost:11434"
+        return api_base or "http://127.0.0.1:11434"
 
     class Config:
         arbitrary_types_allowed = True

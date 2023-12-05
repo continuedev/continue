@@ -25,10 +25,10 @@ class TextGenWebUI(LLM):
 
     model: str = "text-gen-webui"
     api_base: Optional[str] = Field(
-        "http://localhost:5000", description="URL of your TextGenWebUI server"
+        "http://127.0.0.1:5000", description="URL of your TextGenWebUI server"
     )
     streaming_url: Optional[str] = Field(
-        "http://localhost:5005",
+        "http://127.0.0.1:5005",
         description="URL of your TextGenWebUI streaming server (separate from main server URL)",
     )
 

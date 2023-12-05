@@ -1080,6 +1080,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
                   setShowContextItemsIfNotMain(true);
                 }
               }}
+              id="snippets-selected-div"
               style={{
                 color: lightGray,
                 backgroundColor: vscBackground,
@@ -1206,6 +1207,9 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
                   topRef.current?.contains(e.relatedTarget as Node) ||
                   document
                     .getElementById("toggle-context-div")
+                    ?.contains(e.relatedTarget as Node) ||
+                  document
+                    .getElementById("snippets-selected-div")
                     ?.contains(e.relatedTarget as Node)
                 ) {
                   return;

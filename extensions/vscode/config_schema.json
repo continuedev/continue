@@ -640,7 +640,8 @@
             "CommentCodeStep",
             "ClearHistoryStep",
             "StackOverflowStep",
-            "OpenConfigStep"
+            "OpenConfigStep",
+            "DraftIssueStep"
           ],
           "type": "string"
         },

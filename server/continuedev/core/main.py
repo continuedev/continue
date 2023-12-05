@@ -163,6 +163,20 @@ class StepDescription(BaseModel):
             for key, value in update.dict(exclude_none=True).items():
                 setattr(self, key, value)
 
+    @staticmethod
+    def from_empty() -> "StepDescription":
+        return StepDescription(
+            step_type="EmptyStep",
+            name="",
+            description="",
+            params={},
+            hide=True,
+            depth=0,
+            error=None,
+            observations=[],
+            logs=[],
+        )
+
 
 class SessionUpdate(BaseModel):
     index: int
@@ -295,6 +309,21 @@ class SessionState(ContinueBaseModel):
     @staticmethod
     def from_empty():
         return SessionState(history=[], context_items=[])
+
+    @classmethod
+    def parse_obj(cls, obj: Any):
+        # Safety net against the client sending malformed data
+        valid_steps = []
+        for step in obj["history"]:
+            try:
+                StepDescription.parse_obj(step)
+                valid_steps.append(step)
+            except Exception:
+                valid_steps.append(StepDescription.from_empty())
+
+        obj["history"] = valid_steps
+
+        return super().parse_obj(obj)
 
 
 class ContinueSDK:

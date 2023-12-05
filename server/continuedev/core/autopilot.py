@@ -248,8 +248,8 @@ class Autopilot:
                 index=index,
                 update=SetStep(
                     error=ContinueError(
-                        title=continue_custom_exception.title,
-                        message=continue_custom_exception.message,
+                        title=continue_custom_exception.title or "Error",
+                        message=continue_custom_exception.message or "Error",
                     ),
                     hide=False,
                 ),

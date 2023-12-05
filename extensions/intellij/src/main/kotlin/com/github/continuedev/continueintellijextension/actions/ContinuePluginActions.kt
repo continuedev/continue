@@ -227,3 +227,17 @@ class NewContinueSessionAction : AnAction() {
         continuePluginService.dispatchCustomEvent("message", mutableMapOf("type" to "focusContinueInputWithNewSession"))
     }
 }
+
+class ViewHistoryAction : AnAction() {
+    override fun actionPerformed(e: AnActionEvent) {
+        val project = e.project
+        if (project != null) {
+            val toolWindowManager = ToolWindowManager.getInstance(project)
+            val toolWindow = toolWindowManager.getToolWindow("Continue")
+        }
+
+        val continuePluginService = pluginServiceFromActionEvent(e) ?: return
+
+        continuePluginService.dispatchCustomEvent("message", mutableMapOf("type" to "viewHistory"))
+    }
+}

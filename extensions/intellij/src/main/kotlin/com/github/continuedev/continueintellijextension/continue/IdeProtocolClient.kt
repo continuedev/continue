@@ -285,7 +285,7 @@ class IdeProtocolClient (
                     version = ideVersion,
                     remote_name = remoteName ?: ""
                 ),
-                "server_url": getContinueServerUrl()
+                "server_url" to getContinueServerUrl()
         )
 
         val requestUrl = "${getContinueServerUrl()}/?window_info=${

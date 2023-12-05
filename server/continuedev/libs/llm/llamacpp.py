@@ -30,12 +30,12 @@ class LlamaCpp(LLM):
 
     model: str = "llamacpp"
     api_base: Optional[str] = Field(
-        "http://localhost:8080", description="URL of the server"
+        "http://127.0.0.1:8080", description="URL of the server"
     )
 
     @validator("api_base", pre=True, always=True)
     def set_api_base(cls, api_base):
-        return api_base or "http://localhost:8080"
+        return api_base or "http://127.0.0.1:8080"
 
     llama_cpp_args: Dict[str, Any] = Field(
         {"stop": ["[INST]"]},

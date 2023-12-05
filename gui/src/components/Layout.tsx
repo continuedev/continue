@@ -177,7 +177,7 @@ const Layout = () => {
     return () => {
       window.removeEventListener("message", handler);
     };
-  }, []);
+  }, [location, navigate]);
 
   return (
     <LayoutTopDiv>

@@ -1,10 +1,5 @@
 package com.github.continuedev.continueintellijextension.toolWindow
 
-import com.intellij.openapi.diagnostic.thisLogger
-import com.intellij.ui.components.JBPanel
-import com.intellij.ui.content.ContentFactory
-import com.intellij.ui.jcef.JBCefJSQuery
-import javax.swing.*
 import com.github.continuedev.continueintellijextension.activities.getContinueServerUrl
 import com.github.continuedev.continueintellijextension.`continue`.Position
 import com.github.continuedev.continueintellijextension.`continue`.Range
@@ -12,10 +7,13 @@ import com.github.continuedev.continueintellijextension.`continue`.RangeInFile
 import com.github.continuedev.continueintellijextension.`continue`.getMachineUniqueID
 import com.github.continuedev.continueintellijextension.factories.CustomSchemeHandlerFactory
 import com.github.continuedev.continueintellijextension.services.ContinuePluginService
-import com.github.continuedev.continueintellijextension.utils.runJsInWebview
 import com.google.gson.Gson
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
+import com.intellij.openapi.actionSystem.ActionGroup
+import com.intellij.openapi.actionSystem.ActionManager
+import com.intellij.openapi.actionSystem.ActionToolbar
+import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.editor.colors.EditorColorsManager
 import com.intellij.openapi.project.DumbAware
@@ -23,16 +21,18 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Disposer
 import com.intellij.openapi.wm.ToolWindow
 import com.intellij.openapi.wm.ToolWindowFactory
+import com.intellij.ui.content.ContentFactory
 import com.intellij.ui.jcef.*
 import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.cef.CefApp
 import org.cef.browser.CefBrowser
 import org.cef.handler.CefLoadHandlerAdapter
-import javax.swing.JComponent
+import java.awt.BorderLayout
+import javax.swing.*
 import kotlin.math.max
 import kotlin.math.min
+
 
 const val JS_QUERY_POOL_SIZE = "200"
 
@@ -41,6 +41,16 @@ class ContinuePluginToolWindowFactory : ToolWindowFactory, DumbAware {
         val continueToolWindow = ContinuePluginWindow(toolWindow, project)
         val content = ContentFactory.getInstance().createContent(continueToolWindow.content, null, false)
         toolWindow.contentManager.addContent(content)
+        val titleActions = mutableListOf<AnAction>()
+        createTitleActions(titleActions)
+        toolWindow.setTitleActions(titleActions)
+    }
+
+    private fun createTitleActions(titleActions: MutableList<in AnAction>) {
+        val action = ActionManager.getInstance().getAction("ContinueSidebarActionsGroup")
+        if (action != null) {
+            titleActions.add(action)
+        }
     }
 
     override fun shouldBeAvailable(project: Project) = true

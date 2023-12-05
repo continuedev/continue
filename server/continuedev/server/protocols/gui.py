@@ -27,7 +27,7 @@ class GUIProtocolServer(AbstractGUIProtocolServer):
     window_id: str
     messenger: SocketIOMessenger
 
-    get_autopilot: Callable[[SessionState], Optional[Autopilot]]
+    get_autopilot: Callable[[SessionState, "GUIProtocolServer"], Optional[Autopilot]]
     get_context_item: Callable[[str, str], Awaitable[Optional[ContextItem]]]
     get_config: Callable[[], Optional[ContinueConfig]]
     reload_config: AsyncFunc
@@ -38,7 +38,9 @@ class GUIProtocolServer(AbstractGUIProtocolServer):
         window_id: str,
         sio: socketio.AsyncServer,
         sid: str,
-        get_autopilot: Callable[[SessionState], Optional[Autopilot]],
+        get_autopilot: Callable[
+            [SessionState, "GUIProtocolServer"], Optional[Autopilot]
+        ],
         get_context_item: Callable[[str, str], Awaitable[Optional[ContextItem]]],
         get_config: Callable[[], Optional[ContinueConfig]],
         reload_config: Callable,
@@ -63,9 +65,15 @@ class GUIProtocolServer(AbstractGUIProtocolServer):
                 return ctx_item.dict()
             return None
         elif msg.message_type == "get_session_title":
-            return await self.get_session_title(
-                [StepDescription(**step) for step in data["history"]]
-            )
+            # guard against malformed data from the client
+            valid_steps = []
+            for step in data["history"]:
+                try:
+                    valid_steps.append(StepDescription(**step))
+                except Exception:
+                    valid_steps.append(StepDescription.from_empty())
+
+            return await self.get_session_title(valid_steps)
         elif msg.message_type == "get_config":
             if config := self.get_config():
                 return config.dict()
@@ -116,7 +124,7 @@ class GUIProtocolServer(AbstractGUIProtocolServer):
     _running_autopilots: Dict[str, Autopilot] = {}
 
     async def run_from_state(self, state: SessionState, step: Optional[Step] = None):
-        if autopilot := self.get_autopilot(state):
+        if autopilot := self.get_autopilot(state, self):
             if step is not None or len(state.history) > 0:
                 step_to_log = step or state.history[-1]
                 posthog_logger.capture_event(
@@ -170,7 +178,7 @@ class GUIProtocolServer(AbstractGUIProtocolServer):
 
     async def get_session_title(self, history: List[StepDescription]) -> str:
         if autopilot := self.get_autopilot(
-            SessionState(history=history, context_items=[])
+            SessionState(history=history, context_items=[]), self
         ):
             return await autopilot.get_session_title()
         else:

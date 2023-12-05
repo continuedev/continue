@@ -30,13 +30,13 @@ class GGML(LLM):
     """
 
     api_base: Optional[str] = Field(
-        "http://localhost:8000",
+        "http://127.0.0.1:8000",
         description="URL of the OpenAI-compatible server where the model is being served",
     )
 
     @validator("api_base", pre=True, always=True)
     def set_api_base(cls, api_base):
-        return api_base or "http://localhost:8000"
+        return api_base or "http://127.0.0.1:8000"
 
     model: str = Field(
         "ggml", description="The name of the model to use (optional for the GGML class)"
@@ -56,9 +56,10 @@ class GGML(LLM):
     )
 
     chat_endpoint: str = Field(
-        default="chat/completions", description="The endpoint to call for chat completions"
+        default="chat/completions",
+        description="The endpoint to call for chat completions",
     )
-    
+
     completions_endpoint: str = Field(
         default="completions", description="The endpoint to call for chat completions"
     )

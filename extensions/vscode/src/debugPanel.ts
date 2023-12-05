@@ -14,24 +14,26 @@ export function getSidebarContent(
   edits: FileEdit[] | undefined = undefined,
   isFullScreen: boolean = false
 ): string {
-  debugPanelWebview = panel.webview;
-  panel.onDidDispose(() => {
-    debugPanelWebview = undefined;
-  });
+  if (!isFullScreen) {
+    debugPanelWebview = panel.webview;
+    panel.onDidDispose(() => {
+      debugPanelWebview = undefined;
+    });
+  }
 
   let extensionUri = getExtensionUri();
   let scriptUri: string;
   let styleMainUri: string;
-  let vscMediaUrl: string = debugPanelWebview
+  let vscMediaUrl: string = panel.webview
     .asWebviewUri(vscode.Uri.joinPath(extensionUri, "gui"))
     .toString();
 
   const isProduction = true; // context?.extensionMode === vscode.ExtensionMode.Development;
   if (isProduction) {
-    scriptUri = debugPanelWebview
+    scriptUri = panel.webview
       .asWebviewUri(vscode.Uri.joinPath(extensionUri, "gui/assets/index.js"))
       .toString();
-    styleMainUri = debugPanelWebview
+    styleMainUri = panel.webview
       .asWebviewUri(vscode.Uri.joinPath(extensionUri, "gui/assets/index.css"))
       .toString();
   } else {

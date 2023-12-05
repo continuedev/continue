@@ -203,7 +203,7 @@ def prune_chat_history(
 
 
 # In case we've missed weird edge cases
-TOKEN_BUFFER_FOR_SAFETY = 100
+TOKEN_BUFFER_FOR_SAFETY = 350
 
 
 def flatten_messages(msgs: List[ChatMessage]) -> List[ChatMessage]:

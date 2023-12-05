@@ -52,7 +52,12 @@ class Window:
     def __init__(self, config: Optional[ContinueConfig] = None) -> None:
         self.reload_config()
 
-    def get_autopilot(self, session_state: SessionState) -> Optional[Autopilot]:
+    def get_autopilot(
+        self, session_state: SessionState, gui: GUIProtocolServer
+    ) -> Optional[Autopilot]:
+        if self.gui is None:
+            self.gui = gui
+
         if self.ide is None or self.gui is None or self.config is None:
             return None
 

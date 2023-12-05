@@ -4,7 +4,7 @@
     <name>Continue</name>
     <vendor>continue-dev</vendor>
     <depends>com.intellij.modules.platform</depends>
-    <idea-version since-build="223.0" until-build="233.*"/>
+    <idea-version since-build="223.0"/>
 
     <extensions defaultExtensionNs="com.intellij">
         <toolWindow id="Continue" anchor="right" icon="/tool-window-icon.png"
@@ -80,6 +80,7 @@
         <action id="continue.newContinueSession"
                 class="com.github.continuedev.continueintellijextension.actions.NewContinueSessionAction"
                 text="Start New Continue Session"
+                icon="AllIcons.General.Add"
                 description="Start New Continue Session">
             <keyboard-shortcut keymap="$default"
                                first-keystroke="alt ctrl N"/>
@@ -87,6 +88,12 @@
                                first-keystroke="alt meta N"/>
         </action>
 
+        <action id="continue.viewHistory"
+                class="com.github.continuedev.continueintellijextension.actions.ViewHistoryAction"
+                text="View History"
+                icon="AllIcons.Vcs.History"
+                description="View History">
+        </action>
         <action id="continue.focusContinueInput"
                 class="com.github.continuedev.continueintellijextension.actions.FocusContinueInputAction"
                 text="Add selected code to context"
@@ -97,6 +104,11 @@
                                first-keystroke="meta J"/>
             <add-to-group group-id="EditorPopupMenu"/>
         </action>
+
+        <group id="ContinueSidebarActionsGroup">
+            <reference ref="continue.newContinueSession"/>
+            <reference ref="continue.viewHistory"/>
+        </group>
 
     </actions>
 
