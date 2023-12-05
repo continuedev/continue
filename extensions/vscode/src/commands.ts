@@ -187,6 +187,16 @@ const commandsMap: { [command: string]: (...args: any) => any } = {
   "continue.sendToTerminal": (text: string) => {
     ideProtocolClient.runCommand(text);
   },
+  "continue.newSession": () => {
+    debugPanelWebview?.postMessage({
+      type: "newSession",
+    });
+  },
+  "continue.viewHistory": () => {
+    debugPanelWebview?.postMessage({
+      type: "viewHistory",
+    });
+  },
   "continue.toggleFullScreen": () => {
     // Check if full screen is already open by checking open tabs
     const tabs = vscode.window.tabGroups.all.flatMap(

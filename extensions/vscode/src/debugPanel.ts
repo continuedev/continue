@@ -260,8 +260,12 @@ export function getSidebarContent(
         )}</script>
         <script>window.isFullScreen = ${isFullScreen}</script>
 
-        ${edits ? `<script>window.edits = ${JSON.stringify(edits)}</script>` : ''}
-        ${page ? `<script>window.location.pathname = "${page}"</script>` : ''}
+        ${
+          edits
+            ? `<script>window.edits = ${JSON.stringify(edits)}</script>`
+            : ""
+        }
+        ${page ? `<script>window.location.pathname = "${page}"</script>` : ""}
       </body>
     </html>`;
 }

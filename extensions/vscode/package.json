@@ -118,7 +118,8 @@
       {
         "command": "continue.toggleFullScreen",
         "category": "Continue",
-        "title": "Toggle Full Screen"
+        "title": "Toggle Full Screen",
+        "icon": "$(fullscreen)"
       },
       {
         "command": "continue.shareSession",
@@ -129,6 +130,18 @@
         "command": "continue.selectFilesAsContext",
         "category": "Continue",
         "title": "Continue: Select Files as Context"
+      },
+      {
+        "command": "continue.newSession",
+        "category": "Continue",
+        "title": "New Session",
+        "icon": "$(add)"
+      },
+      {
+        "command": "continue.viewHistory",
+        "category": "Continue",
+        "title": "View History",
+        "icon": "$(history)"
       }
     ],
     "keybindings": [
@@ -209,6 +222,30 @@
         {
           "command": "continue.selectFilesAsContext",
           "group": "1_debug@1"
+        }
+      ],
+      "view/title": [
+        {
+          "command": "continue.newSession",
+          "group": "navigation@1",
+          "when": "view == continue.continueGUIView"
+        },
+        {
+          "command": "continue.toggleFullScreen",
+          "group": "navigation@1",
+          "when": "view == continue.continueGUIView"
+        },
+        {
+          "command": "continue.viewHistory",
+          "group": "navigation@1",
+          "when": "view == continue.continueGUIView"
+        }
+      ],
+      "editor/title": [
+        {
+          "command": "continue.toggleFullScreen",
+          "group": "navigation@1",
+          "when": "activeWebviewPanelId == continue.continueGUIView"
         }
       ]
     },

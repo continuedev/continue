@@ -21,6 +21,7 @@ import { Listbox, Transition } from "@headlessui/react";
 import ReactDOM from "react-dom";
 import HeaderButtonWithText from "../HeaderButtonWithText";
 import { defaultModelSelector } from "../../redux/selectors/configSelectors";
+import { getMetaKeyLabel } from "../../util";
 
 const GridDiv = styled.div`
   display: grid;
@@ -226,6 +227,23 @@ function ModelSelect(props: {}) {
 
   const topDiv = document.getElementById("model-select-top-div");
 
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "'" && event.metaKey) {
+        const currentIndex = options.findIndex(
+          (option) => option.value === defaultModel?.title
+        );
+        const nextIndex = (currentIndex + 1) % options.length;
+        client?.setModelForRoleFromTitle("default", options[nextIndex].value);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [options, defaultModel]);
+
   return (
     <>
       <GridDiv>
@@ -259,6 +277,9 @@ function ModelSelect(props: {}) {
                     {options.map((option, idx) => (
                       <ListBoxOption option={option} idx={idx} />
                     ))}
+                    <i className="text-xs ml-2" style={{ color: lightGray }}>
+                      {getMetaKeyLabel()}' to toggle
+                    </i>
                   </StyledListboxOptions>
                 </Transition>,
                 topDiv

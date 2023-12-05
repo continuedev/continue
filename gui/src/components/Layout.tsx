@@ -164,6 +164,13 @@ const Layout = () => {
         navigate("/models");
       } else if (event.data.type === "openSettings") {
         navigate("/settings");
+      } else if (event.data.type === "viewHistory") {
+        // Toggle the history page / main page
+        if (location.pathname === "/history") {
+          navigate("/");
+        } else {
+          navigate("/history");
+        }
       }
     };
     window.addEventListener("message", handler);

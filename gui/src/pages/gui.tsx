@@ -440,6 +440,21 @@ function GUI(props: GUIProps) {
   }, [client, persistSession, mainTextInputRef]);
 
   useEffect(() => {
+    const handler = (event: any) => {
+      if (event.data.type === "newSession") {
+        client?.stopSession();
+        persistSession();
+        dispatch(newSession());
+        mainTextInputRef.current?.focus?.();
+      }
+    };
+    window.addEventListener("message", handler);
+    return () => {
+      window.removeEventListener("message", handler);
+    };
+  }, []);
+
+  useEffect(() => {
     const eventListener = (event: any) => {
       if (event.data.type === "userInput") {
         sendInput(event.data.input);
@@ -576,72 +591,74 @@ function GUI(props: GUIProps) {
         }
       }}
     >
-      <GUIHeaderDiv>
-        <TitleTextInput
-          onClick={(e) => {
-            // Select all text
-            (e.target as any).setSelectionRange(
-              0,
-              (e.target as any).value.length
-            );
-          }}
-          value={sessionTitleInput}
-          onChange={(e) => setSessionTitleInput(e.target.value)}
-          onBlur={(e) => {
-            if (
-              e.target.value === sessionTitle ||
-              (typeof sessionTitle === "undefined" &&
-                e.target.value === "New Session")
-            )
-              return;
-            dispatch(setTitle(e.target.value));
-          }}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              e.preventDefault();
-              (e.target as any).blur();
-            } else if (e.key === "Escape") {
-              setSessionTitleInput(sessionTitle || "New Session");
-              (e.target as any).blur();
-            }
-          }}
-        />
-        <div className="flex gap-2">
-          {localStorage.getItem("ide") === "vscode" && (
+      {localStorage.getItem("ide") === "jetbrains" && (
+        <GUIHeaderDiv>
+          <TitleTextInput
+            onClick={(e) => {
+              // Select all text
+              (e.target as any).setSelectionRange(
+                0,
+                (e.target as any).value.length
+              );
+            }}
+            value={sessionTitleInput}
+            onChange={(e) => setSessionTitleInput(e.target.value)}
+            onBlur={(e) => {
+              if (
+                e.target.value === sessionTitle ||
+                (typeof sessionTitle === "undefined" &&
+                  e.target.value === "New Session")
+              )
+                return;
+              dispatch(setTitle(e.target.value));
+            }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                (e.target as any).blur();
+              } else if (e.key === "Escape") {
+                setSessionTitleInput(sessionTitle || "New Session");
+                (e.target as any).blur();
+              }
+            }}
+          />
+          <div className="flex gap-2">
+            {localStorage.getItem("ide") === "vscode" && (
+              <HeaderButtonWithText
+                onClick={() => {
+                  postToIde("toggleFullScreen", {});
+                }}
+                text={`Toggle Full Screen (${getMetaKeyLabel()}K ${getMetaKeyLabel()}M)`}
+              >
+                {(window as any).isFullScreen ? (
+                  <ArrowsPointingInIcon width="1.4em" height="1.4em" />
+                ) : (
+                  <ArrowsPointingOutIcon width="1.4em" height="1.4em" />
+                )}
+              </HeaderButtonWithText>
+            )}
             <HeaderButtonWithText
               onClick={() => {
-                postToIde("toggleFullScreen", {});
+                client?.stopSession();
+                client?.persistSession(sessionState, workspacePaths[0] || "");
+                dispatch(newSession());
               }}
-              text={`Toggle Full Screen (${getMetaKeyLabel()}K ${getMetaKeyLabel()}M)`}
+              text={`New Session (⌥${getMetaKeyLabel()}N)`}
             >
-              {(window as any).isFullScreen ? (
-                <ArrowsPointingInIcon width="1.4em" height="1.4em" />
-              ) : (
-                <ArrowsPointingOutIcon width="1.4em" height="1.4em" />
-              )}
+              <PlusIcon width="1.4em" height="1.4em" />
             </HeaderButtonWithText>
-          )}
-          <HeaderButtonWithText
-            onClick={() => {
-              client?.stopSession();
-              client?.persistSession(sessionState, workspacePaths[0] || "");
-              dispatch(newSession());
-            }}
-            text={`New Session (⌥${getMetaKeyLabel()}N)`}
-          >
-            <PlusIcon width="1.4em" height="1.4em" />
-          </HeaderButtonWithText>
 
-          <HeaderButtonWithText
-            onClick={() => {
-              navigate("/history");
-            }}
-            text="History"
-          >
-            <FolderIcon width="1.4em" height="1.4em" />
-          </HeaderButtonWithText>
-        </div>
-      </GUIHeaderDiv>
+            <HeaderButtonWithText
+              onClick={() => {
+                navigate("/history");
+              }}
+              text="History"
+            >
+              <FolderIcon width="1.4em" height="1.4em" />
+            </HeaderButtonWithText>
+          </div>
+        </GUIHeaderDiv>
+      )}
       {takenAction && showLoading && typeof client === "undefined" && (
         <>
           <RingLoader size={32} />
@@ -713,7 +730,6 @@ function GUI(props: GUIProps) {
           </div>
         </>
       )}
-      <br />
 
       <div className="max-w-3xl m-auto">
         <StepsDiv>
