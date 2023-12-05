@@ -165,22 +165,24 @@ async def start_meilisearch(url: Optional[str] = None):
             stdout=subprocess.DEVNULL,
             stderr=subprocess.STDOUT,
             close_fds=True,
-            start_new_session=True,
+            # start_new_session=True,
             shell=True,
         )
 
-    logger.info(f"Meilisearch started at {meilisearch_url}")
+        logger.info(f"Meilisearch started at {meilisearch_url}")
 
 
-def stop_meilisearch():
+def stop_meilisearch() -> bool:
     """
-    Stops the MeiliSearch server.
+    If we have the meilisearch process in memory, stop it. Return whether we had it.
     """
     global meilisearch_process
     if meilisearch_process is not None:
         meilisearch_process.terminate()
         meilisearch_process.wait()
         meilisearch_process = None
+        return True
+    return False
 
 
 def kill_proc(port):
@@ -201,8 +203,12 @@ def kill_proc(port):
 
 
 async def restart_meilisearch():
-    stop_meilisearch()
-    kill_proc(7700)
+    if not stop_meilisearch():
+        # This actually shouldn't happen because Meilisearch gets stopped when the server is stopped
+        logger.warning(
+            "Meilisearch was started by previous Continue server, but not stopped"
+        )
+        kill_proc(7700)
     await start_meilisearch(url=global_config.meilisearch_url)
 
 

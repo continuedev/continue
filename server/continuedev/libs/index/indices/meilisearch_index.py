@@ -80,9 +80,12 @@ class MeilisearchCodebaseIndex(CodebaseIndex):
         )
 
     async def delete_chunks(self, document_ids: List[str], index: Index):
-        documents = await index.get_documents(
-            filter=f'document_id IN [{",".join(document_ids)}]'
-        )
+        documents = (
+            await index.get_documents(
+                filter=f'document_id IN [{",".join(document_ids)}]'
+            )
+        ).results
+
         ids = [document["id"] for document in documents]
         await index.delete_documents(ids)
 
@@ -91,14 +94,14 @@ class MeilisearchCodebaseIndex(CodebaseIndex):
         return await index.get_documents(filter=f'document_id="{digest}"')
 
     async def remove_label(self, digest: str, label: str, index: Index):
-        documents = await self.get_docs_for_digest(digest, index)
+        documents = (await self.get_docs_for_digest(digest, index)).results
         for document in documents:
             document["tags"].remove(label)
 
         await index.update_documents(documents)
 
     async def add_label(self, digest: str, label: str, index: Index):
-        documents = await self.get_docs_for_digest(digest, index)
+        documents = (await self.get_docs_for_digest(digest, index)).results
         for document in documents:
             document["tags"].append(label)
 

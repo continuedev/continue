@@ -70,12 +70,17 @@ class ContinueSDK(AbstractContinueSDK):
         ide: AbstractIdeProtocolServer,
         gui: AbstractGUIProtocolServer,
         autopilot: Autopilot,
-        models: Models,
     ):
         self.ide = ide
         self.gui = gui
         self.config = config
-        self.models = models
+        self.models = config.construct_models()
+        self.models.start(
+            self.ide.window_info.unique_id,
+            self.config.system_message,
+            self.config.completion_options.temperature,
+            self.config.llm_request_hook,
+        )
         self.__autopilot = autopilot
 
     @property
@@ -242,10 +247,7 @@ class ContinueSDK(AbstractContinueSDK):
                 role = "user"
                 msgs.extend(
                     await self.__autopilot.context_manager.get_chat_messages(
-                        [
-                            ContextItem(**itm)
-                            for itm in step.params.get("context_items", [])
-                        ]
+                        [ContextItem(**itm) for itm in step.params["context_items"]]
                     )
                 )
 

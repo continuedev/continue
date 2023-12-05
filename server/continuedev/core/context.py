@@ -432,6 +432,9 @@ class ContextManager:
                     logger.warning(
                         "Meilisearch did not restart in less than 20 seconds. Stopping polling."
                     )
+                except Exception as e:
+                    logger.warning(f"Error restarting meilisearch: {e}")
+
                 await self.load_index(workspace_dir, False)
 
     async def get_context_item(self, id: str, query: str) -> Optional[ContextItem]:
