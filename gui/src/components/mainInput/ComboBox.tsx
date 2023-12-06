@@ -267,7 +267,7 @@ const NewSessionButton = styled.div`
   font-size: 12px;
 
   border-radius: ${defaultBorderRadius};
-  padding: 2px 6px;
+  padding: 2px 8px;
   color: ${lightGray};
 
   &:hover {
