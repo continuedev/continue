@@ -33,6 +33,9 @@ jobs:
       - name: Install project dependencies
         run: cd server && poetry install
 
+      - name: Maturin develop
+        run: cd server && poetry run maturin develop
+
       - name: Run tests
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
@@ -216,13 +219,37 @@ jobs:
         with:
           python-version: "3.11"
 
+      - name: Create virtual environment
+        run: python -m venv .venv
+
+      - name: Activate virtual environment (non-Windows)
+        run: |
+          . .venv/bin/activate
+          echo PATH=$PATH >> $GITHUB_ENV
+        if: matrix.os != 'windows-latest'
+
+      - name: Activate virtual environment (Windows)
+        run: |
+          .venv\Scripts\activate.bat
+          echo PATH=$PATH >> $GITHUB_ENV
+        if: matrix.os == 'windows-latest'
+
       - name: Install Pyinstaller
         run: |
           pip install pyinstaller
 
+      - name: Install Maturin
+        run: |
+          pip install maturin
+
       - name: Install Dependencies
         run: |
           pip install -r server/requirements.txt
+
+      - name: Build the Rust library
+        run: |
+          cd server
+          maturin develop
 
       - name: Install tiktoken vocab file
         # Done to avoid extra network request to download the vocab file
