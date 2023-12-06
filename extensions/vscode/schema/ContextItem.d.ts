@@ -5,7 +5,6 @@
  * and run json-schema-to-typescript to regenerate this file.
  */
 
-export type ContextItem = ContextItem1;
 export type Name = string;
 export type Description = string;
 export type ProviderTitle = string;
@@ -17,7 +16,7 @@ export type Editable = boolean;
 /**
  * A ContextItem is a single item that is stored in the ContextManager.
  */
-export interface ContextItem1 {
+export interface ContextItem {
   description: ContextItemDescription;
   content: Content;
   editing?: Editing;

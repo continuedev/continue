@@ -3,7 +3,7 @@ import os
 from pydantic import schema_json_of
 
 from ..core.config import ContinueConfig, ModelDescription, SerializedContinueConfig
-from ..core.config_utils.shared import ModelName, ModelProvider
+from ..core.config_utils.shared import ModelName, ModelNameWrapper, ModelProvider
 from ..core.context import ContextItem, ContextItemId
 from ..core.main import (
     ContextProviderDescription,
@@ -33,12 +33,12 @@ MODELS_TO_GENERATE = (
         ContextProviderDescription,
     ]
     + [SerializedContinueConfig, ModelDescription]
-    + [ModelProvider, ModelName]
+    + [ModelNameWrapper]
     + [ContinueConfig]
     + [ContextItem, ContextItemId]
     + [Models]
     + [LLM]
-    + [PersistedSessionInfo]
+    + [PersistedSessionInfo]    
 )
 
 RENAMES = {"ExampleClass": "RenamedName"}
@@ -52,6 +52,10 @@ def clear_schemas():
             os.remove(os.path.join(SCHEMA_DIR, filename))
 
 
+from pydantic import TypeAdapter
+from typing import List
+import json
+
 def main():
     clear_schemas()
     for model in MODELS_TO_GENERATE:
@@ -60,18 +64,18 @@ def main():
             title = "ModelProvider"
         elif model == ModelName:
             title = "ModelName"
-        try:
-            json = schema_json_of(model, indent=2, title=title)
+        try:               
+            with open(f"{SCHEMA_DIR}/{title}.json", "w") as f:
+                f.write(json.dumps(model.model_json_schema(), indent=2))
+
         except Exception as e:
             import traceback
 
-            print(f"Failed to generate json schema for {title}: {e}")
+            print(f"Failed to generate json schema for model={model} name={__name__} title={title}: {e}")
             traceback.print_exc()
             continue  # pun intended
 
-        with open(f"{SCHEMA_DIR}/{title}.json", "w") as f:
-            f.write(json)
-
+        
 
 if __name__ == "__main__":
     main()

@@ -1,10 +1,28 @@
 {
-  "title": "FileEditWithFullContents",
-  "$ref": "#/definitions/continuedev__models__filesystem_edit__FileEditWithFullContents",
-  "definitions": {
+  "$defs": {
+    "FileEdit": {
+      "properties": {
+        "filepath": {
+          "title": "Filepath",
+          "type": "string"
+        },
+        "range": {
+          "$ref": "#/$defs/Range"
+        },
+        "replacement": {
+          "title": "Replacement",
+          "type": "string"
+        }
+      },
+      "required": [
+        "filepath",
+        "range",
+        "replacement"
+      ],
+      "title": "FileEdit",
+      "type": "object"
+    },
     "Position": {
-      "title": "Position",
-      "type": "object",
       "properties": {
         "line": {
           "title": "Line",
@@ -18,63 +36,41 @@
       "required": [
         "line",
         "character"
-      ]
+      ],
+      "title": "Position",
+      "type": "object"
     },
     "Range": {
-      "title": "Range",
       "description": "A range in a file. 0-indexed.",
-      "type": "object",
       "properties": {
         "start": {
-          "$ref": "#/definitions/Position"
+          "$ref": "#/$defs/Position"
         },
         "end": {
-          "$ref": "#/definitions/Position"
+          "$ref": "#/$defs/Position"
         }
       },
       "required": [
         "start",
         "end"
-      ]
-    },
-    "FileEdit": {
-      "title": "FileEdit",
-      "type": "object",
-      "properties": {
-        "filepath": {
-          "title": "Filepath",
-          "type": "string"
-        },
-        "range": {
-          "$ref": "#/definitions/Range"
-        },
-        "replacement": {
-          "title": "Replacement",
-          "type": "string"
-        }
-      },
-      "required": [
-        "filepath",
-        "range",
-        "replacement"
-      ]
-    },
-    "continuedev__models__filesystem_edit__FileEditWithFullContents": {
-      "title": "FileEditWithFullContents",
-      "type": "object",
-      "properties": {
-        "fileEdit": {
-          "$ref": "#/definitions/FileEdit"
-        },
-        "fileContents": {
-          "title": "Filecontents",
-          "type": "string"
-        }
-      },
-      "required": [
-        "fileEdit",
-        "fileContents"
-      ]
+      ],
+      "title": "Range",
+      "type": "object"
     }
-  }
+  },
+  "properties": {
+    "fileEdit": {
+      "$ref": "#/$defs/FileEdit"
+    },
+    "fileContents": {
+      "title": "Filecontents",
+      "type": "string"
+    }
+  },
+  "required": [
+    "fileEdit",
+    "fileContents"
+  ],
+  "title": "FileEditWithFullContents",
+  "type": "object"
 }

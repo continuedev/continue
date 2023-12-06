@@ -1,120 +1,164 @@
 {
-  "title": "Models",
-  "$ref": "#/definitions/continuedev__core__models__Models",
-  "definitions": {
+  "$defs": {
     "BaseCompletionOptions": {
-      "title": "BaseCompletionOptions",
-      "type": "object",
       "properties": {
         "temperature": {
-          "title": "Temperature",
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
           "description": "The temperature of the completion.",
-          "type": "number"
+          "title": "Temperature"
         },
         "top_p": {
-          "title": "Top P",
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
           "description": "The top_p of the completion.",
-          "type": "number"
+          "title": "Top P"
         },
         "top_k": {
-          "title": "Top K",
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
           "description": "The top_k of the completion.",
-          "type": "integer"
+          "title": "Top K"
         },
         "presence_penalty": {
-          "title": "Presence Penalty",
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
           "description": "The presence penalty Aof the completion.",
-          "type": "number"
+          "title": "Presence Penalty"
         },
         "frequency_penalty": {
-          "title": "Frequency Penalty",
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
           "description": "The frequency penalty of the completion.",
-          "type": "number"
+          "title": "Frequency Penalty"
         },
         "stop": {
-          "title": "Stop",
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
           "description": "The stop tokens of the completion.",
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
+          "title": "Stop"
         },
         "max_tokens": {
-          "title": "Max Tokens",
-          "description": "The maximum number of tokens to generate.",
           "default": 1023,
+          "description": "The maximum number of tokens to generate.",
+          "title": "Max Tokens",
           "type": "integer"
         }
-      }
-    },
-    "RequestOptions": {
-      "title": "RequestOptions",
-      "type": "object",
-      "properties": {
-        "timeout": {
-          "title": "Timeout",
-          "description": "Set the timeout for each request to the LLM. If you are running a local LLM that takes a while to respond, you might want to set this to avoid timeouts.",
-          "default": 300,
-          "type": "integer"
-        },
-        "verify_ssl": {
-          "title": "Verify Ssl",
-          "description": "Whether to verify SSL certificates for requests.",
-          "type": "boolean"
-        },
-        "ca_bundle_path": {
-          "title": "Ca Bundle Path",
-          "description": "Path to a custom CA bundle to use when making the HTTP request",
-          "type": "string"
-        },
-        "proxy": {
-          "title": "Proxy",
-          "description": "Proxy URL to use when making the HTTP request",
-          "type": "string"
-        },
-        "headers": {
-          "title": "Headers",
-          "description": "Headers to use when making the HTTP request",
-          "type": "object",
-          "additionalProperties": {
-            "type": "string"
-          }
-        }
-      }
+      },
+      "title": "BaseCompletionOptions",
+      "type": "object"
     },
     "LLM": {
-      "title": "LLM",
-      "type": "object",
+      "additionalProperties": true,
       "properties": {
         "title": {
-          "title": "Title",
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
           "description": "A title that will identify this model in the model selection dropdown",
-          "type": "string"
+          "title": "Title"
         },
         "unique_id": {
-          "title": "Unique Id",
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
           "description": "The unique ID of the user.",
-          "type": "string"
+          "title": "Unique Id"
         },
         "model": {
-          "title": "Model",
           "description": "The name of the model to be used (e.g. gpt-4, codellama)",
+          "title": "Model",
           "type": "string"
         },
         "system_message": {
-          "title": "System Message",
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
           "description": "A system message that will always be followed by the LLM",
-          "type": "string"
+          "title": "System Message"
         },
         "context_length": {
-          "title": "Context Length",
-          "description": "The maximum context length of the LLM in tokens, as counted by count_tokens.",
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
           "default": 2048,
-          "type": "integer"
+          "description": "The maximum context length of the LLM in tokens, as counted by count_tokens.",
+          "title": "Context Length"
         },
         "completion_options": {
-          "title": "Completion Options",
-          "description": "Options for the completion endpoint. Read more about the completion options in the documentation.",
+          "allOf": [
+            {
+              "$ref": "#/$defs/BaseCompletionOptions"
+            }
+          ],
           "default": {
             "temperature": null,
             "top_p": null,
@@ -124,15 +168,14 @@
             "stop": null,
             "max_tokens": 1023
           },
-          "allOf": [
-            {
-              "$ref": "#/definitions/BaseCompletionOptions"
-            }
-          ]
+          "description": "Options for the completion endpoint. Read more about the completion options in the documentation."
         },
         "request_options": {
-          "title": "Request Options",
-          "description": "Options for the HTTP request to the LLM.",
+          "allOf": [
+            {
+              "$ref": "#/$defs/RequestOptions"
+            }
+          ],
           "default": {
             "timeout": 300,
             "verify_ssl": null,
@@ -140,95 +183,216 @@
             "proxy": null,
             "headers": null
           },
-          "allOf": [
-            {
-              "$ref": "#/definitions/RequestOptions"
-            }
-          ]
+          "description": "Options for the HTTP request to the LLM."
         },
         "prompt_templates": {
-          "title": "Prompt Templates",
+          "default": null,
           "description": "A dictionary of prompt templates that can be used to customize the behavior of the LLM in certain situations. For example, set the \"edit\" key in order to change the prompt that is used for the /edit slash command. Each value in the dictionary is a string templated in mustache syntax, and filled in at runtime with the variables specific to the situation. See the documentation for more information.",
-          "type": "object"
+          "title": "Prompt Templates",
+          "type": "string"
+        },
+        "template_messages": {
+          "default": null,
+          "description": "A function that takes a list of messages and returns a prompt. This ensures that models like llama2, which are trained on specific chat formats, will always receive input in that format.",
+          "title": "Template Messages",
+          "type": "string"
+        },
+        "write_log": {
+          "default": null,
+          "description": "A function that is called upon every prompt and completion, by default to log to the file which can be viewed by clicking on the magnifying glass.",
+          "title": "Write Log",
+          "type": "string"
         },
         "api_key": {
-          "title": "Api Key",
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
           "description": "The API key for the LLM provider.",
-          "type": "string"
+          "title": "Api Key"
         },
         "api_base": {
-          "title": "Api Base",
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
           "description": "The base URL of the LLM API.",
-          "type": "string"
+          "title": "Api Base"
         }
       },
       "required": [
         "model"
-      ]
+      ],
+      "title": "LLM",
+      "type": "object"
     },
-    "continuedev__core__models__Models": {
-      "title": "Models",
-      "description": "Main class that holds the current model configuration",
-      "type": "object",
+    "RequestOptions": {
       "properties": {
-        "default": {
-          "title": "Default",
+        "timeout": {
           "anyOf": [
-            {},
             {
-              "$ref": "#/definitions/LLM"
+              "type": "integer"
+            },
+            {
+              "type": "null"
             }
-          ]
+          ],
+          "default": 300,
+          "description": "Set the timeout for each request to the LLM. If you are running a local LLM that takes a while to respond, you might want to set this to avoid timeouts.",
+          "title": "Timeout"
         },
-        "summarize": {
-          "title": "Summarize",
+        "verify_ssl": {
           "anyOf": [
-            {},
             {
-              "$ref": "#/definitions/LLM"
+              "type": "boolean"
+            },
+            {
+              "type": "null"
             }
-          ]
+          ],
+          "default": null,
+          "description": "Whether to verify SSL certificates for requests.",
+          "title": "Verify Ssl"
         },
-        "edit": {
-          "title": "Edit",
+        "ca_bundle_path": {
           "anyOf": [
-            {},
             {
-              "$ref": "#/definitions/LLM"
+              "type": "string"
+            },
+            {
+              "type": "null"
             }
-          ]
+          ],
+          "default": null,
+          "description": "Path to a custom CA bundle to use when making the HTTP request",
+          "title": "Ca Bundle Path"
         },
-        "chat": {
-          "title": "Chat",
+        "proxy": {
           "anyOf": [
-            {},
             {
-              "$ref": "#/definitions/LLM"
+              "type": "string"
+            },
+            {
+              "type": "null"
             }
-          ]
+          ],
+          "default": null,
+          "description": "Proxy URL to use when making the HTTP request",
+          "title": "Proxy"
         },
-        "saved": {
-          "title": "Saved",
-          "default": [],
-          "type": "array",
-          "items": {
-            "anyOf": [
-              {},
-              {
-                "$ref": "#/definitions/LLM"
-              }
-            ]
+        "headers": {
+          "anyOf": [
+            {
+              "additionalProperties": {
+                "type": "string"
+              },
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Headers to use when making the HTTP request",
+          "title": "Headers"
+        }
+      },
+      "title": "RequestOptions",
+      "type": "object"
+    }
+  },
+  "description": "Main class that holds the current model configuration",
+  "properties": {
+    "default": {
+      "anyOf": [
+        {},
+        {
+          "$ref": "#/$defs/LLM"
+        }
+      ],
+      "title": "Default"
+    },
+    "summarize": {
+      "anyOf": [
+        {},
+        {
+          "$ref": "#/$defs/LLM"
+        }
+      ],
+      "title": "Summarize"
+    },
+    "edit": {
+      "anyOf": [
+        {},
+        {
+          "$ref": "#/$defs/LLM"
+        }
+      ],
+      "title": "Edit"
+    },
+    "chat": {
+      "anyOf": [
+        {},
+        {
+          "$ref": "#/$defs/LLM"
+        }
+      ],
+      "title": "Chat"
+    },
+    "saved": {
+      "default": [],
+      "items": {
+        "anyOf": [
+          {},
+          {
+            "$ref": "#/$defs/LLM"
           }
-        },
-        "temperature": {
-          "title": "Temperature",
+        ]
+      },
+      "title": "Saved",
+      "type": "array"
+    },
+    "temperature": {
+      "anyOf": [
+        {
           "type": "number"
         },
-        "system_message": {
-          "title": "System Message",
-          "type": "string"
+        {
+          "type": "null"
         }
-      }
+      ],
+      "default": null,
+      "title": "Temperature"
+    },
+    "system_message": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "System Message"
     }
-  }
+  },
+  "required": [
+    "default",
+    "summarize",
+    "edit",
+    "chat"
+  ],
+  "title": "Models",
+  "type": "object"
 }

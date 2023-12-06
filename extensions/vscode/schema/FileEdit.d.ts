@@ -5,13 +5,12 @@
  * and run json-schema-to-typescript to regenerate this file.
  */
 
-export type FileEdit = FileEdit1;
 export type Filepath = string;
 export type Line = number;
 export type Character = number;
 export type Replacement = string;
 
-export interface FileEdit1 {
+export interface FileEdit {
   filepath: Filepath;
   range: Range;
   replacement: Replacement;

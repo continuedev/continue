@@ -1,24 +1,18 @@
 {
-  "title": "SlashCommandDescription",
-  "$ref": "#/definitions/continuedev__core__main__SlashCommandDescription",
-  "definitions": {
-    "continuedev__core__main__SlashCommandDescription": {
-      "title": "SlashCommandDescription",
-      "type": "object",
-      "properties": {
-        "name": {
-          "title": "Name",
-          "type": "string"
-        },
-        "description": {
-          "title": "Description",
-          "type": "string"
-        }
-      },
-      "required": [
-        "name",
-        "description"
-      ]
+  "properties": {
+    "name": {
+      "title": "Name",
+      "type": "string"
+    },
+    "description": {
+      "title": "Description",
+      "type": "string"
     }
-  }
+  },
+  "required": [
+    "name",
+    "description"
+  ],
+  "title": "SlashCommandDescription",
+  "type": "object"
 }

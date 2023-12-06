@@ -5,11 +5,10 @@
  * and run json-schema-to-typescript to regenerate this file.
  */
 
-export type SlashCommandDescription = SlashCommandDescription1;
 export type Name = string;
 export type Description = string;
 
-export interface SlashCommandDescription1 {
+export interface SlashCommandDescription {
   name: Name;
   description: Description;
   [k: string]: unknown;

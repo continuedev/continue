@@ -5,7 +5,7 @@ from typing import Any, AsyncGenerator, Callable, Coroutine, Dict, List, Optiona
 
 import aiohttp
 import certifi
-from pydantic import ConfigDict, Field
+from pydantic import Field, WithJsonSchema
 
 from ...core.config_utils.shared import (
     autodetect_prompt_templates,
@@ -62,19 +62,20 @@ class LLM(ContinueBaseModel):
         description="Options for the HTTP request to the LLM.",
     )
 
-    prompt_templates: Optional[Annotated[dict, Field()]] = Field(
+    prompt_templates:  Annotated[Optional[Annotated[dict, Field()]], WithJsonSchema({'type': 'string'}, mode='validation')] = Field(
         default=None,
         description='A dictionary of prompt templates that can be used to customize the behavior of the LLM in certain situations. For example, set the "edit" key in order to change the prompt that is used for the /edit slash command. Each value in the dictionary is a string templated in mustache syntax, and filled in at runtime with the variables specific to the situation. See the documentation for more information.',
         validate_default=True,
     )
 
-    # TODO does this need an Annotated ???
-    template_messages: Optional[Callable[[List[ChatMessage]], str]] = Field(
+    template_messages:  Annotated[Optional[Callable[[List[ChatMessage]], str]], WithJsonSchema({'type': 'string'}, mode='validation')] = Field(
         default=None,
         description="A function that takes a list of messages and returns a prompt. This ensures that models like llama2, which are trained on specific chat formats, will always receive input in that format.",
         validate_default=True
     )
-    write_log: Optional[Callable[[str], Coroutine]] = Field(
+    write_log:  Annotated[Optional[Callable[[str], Coroutine]],
+                           WithJsonSchema({'type': 'string'}, mode='validation'),] = Field(
+
         default=None,
         description="A function that is called upon every prompt and completion, by default to log to the file which can be viewed by clicking on the magnifying glass.",
     )

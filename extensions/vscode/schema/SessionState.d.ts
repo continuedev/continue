@@ -5,16 +5,18 @@
  * and run json-schema-to-typescript to regenerate this file.
  */
 
-export type SessionState = SessionState1;
-export type StepType = string;
-export type Name = string;
-export type Description = string;
-export type Hide = boolean;
-export type Depth = number;
+export type StepType = string | null;
+export type Name = string | null;
+export type Description = string | null;
+export type Params = {
+  [k: string]: unknown;
+} | null;
+export type Hide = boolean | null;
+export type Depth = number | null;
 export type Title = string;
 export type Message = string;
-export type Observations = Observation[];
-export type Logs = string[];
+export type Observations = Observation[] | null;
+export type Logs = string[] | null;
 export type History = StepDescription[];
 export type Name1 = string;
 export type Description1 = string;
@@ -28,24 +30,21 @@ export type ContextItems = ContextItem[];
 /**
  * Full session history and important state needed for autopilot to Continue
  */
-export interface SessionState1 {
+export interface SessionState {
   history: History;
   context_items: ContextItems;
   [k: string]: unknown;
 }
 export interface StepDescription {
-  step_type: StepType;
-  name: Name;
-  description: Description;
+  step_type?: StepType;
+  name?: Name;
+  description?: Description;
   params: Params;
-  hide: Hide;
-  depth: Depth;
-  error?: ContinueError;
+  hide?: Hide;
+  depth?: Depth;
+  error?: ContinueError | null;
   observations?: Observations;
   logs?: Logs;
-  [k: string]: unknown;
-}
-export interface Params {
   [k: string]: unknown;
 }
 export interface ContinueError {

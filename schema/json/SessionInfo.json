@@ -1,33 +1,35 @@
 {
-  "title": "SessionInfo",
-  "$ref": "#/definitions/continuedev__core__main__SessionInfo",
-  "definitions": {
-    "continuedev__core__main__SessionInfo": {
-      "title": "SessionInfo",
-      "type": "object",
-      "properties": {
-        "session_id": {
-          "title": "Session Id",
+  "properties": {
+    "session_id": {
+      "title": "Session Id",
+      "type": "string"
+    },
+    "title": {
+      "title": "Title",
+      "type": "string"
+    },
+    "date_created": {
+      "title": "Date Created",
+      "type": "string"
+    },
+    "workspace_directory": {
+      "anyOf": [
+        {
           "type": "string"
         },
-        "title": {
-          "title": "Title",
-          "type": "string"
-        },
-        "date_created": {
-          "title": "Date Created",
-          "type": "string"
-        },
-        "workspace_directory": {
-          "title": "Workspace Directory",
-          "type": "string"
+        {
+          "type": "null"
         }
-      },
-      "required": [
-        "session_id",
-        "title",
-        "date_created"
-      ]
+      ],
+      "default": null,
+      "title": "Workspace Directory"
     }
-  }
+  },
+  "required": [
+    "session_id",
+    "title",
+    "date_created"
+  ],
+  "title": "SessionInfo",
+  "type": "object"
 }

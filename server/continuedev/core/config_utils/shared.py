@@ -1,5 +1,7 @@
 from typing import Any, Dict, Literal, Optional
 
+from pydantic import BaseModel
+
 from ...libs.llm.prompts.chat import (
     anthropic_template_messages,
     chatml_template_messages,
@@ -229,3 +231,6 @@ ModelName = Literal[
     # Google PaLM
     "chat-bison-001",
 ]
+# Pydantic 2.0 doesn't support Literals so we need to wrap this inside a class
+class ModelNameWrapper(BaseModel):
+    model_name: ModelName

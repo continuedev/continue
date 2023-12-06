@@ -5,13 +5,12 @@
  * and run json-schema-to-typescript to regenerate this file.
  */
 
-export type SessionInfo = SessionInfo1;
 export type SessionId = string;
 export type Title = string;
 export type DateCreated = string;
-export type WorkspaceDirectory = string;
+export type WorkspaceDirectory = string | null;
 
-export interface SessionInfo1 {
+export interface SessionInfo {
   session_id: SessionId;
   title: Title;
   date_created: DateCreated;

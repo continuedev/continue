@@ -5,15 +5,14 @@
  * and run json-schema-to-typescript to regenerate this file.
  */
 
-export type Models = Models1;
 /**
  * A title that will identify this model in the model selection dropdown
  */
-export type Title = string;
+export type Title = string | null;
 /**
  * The unique ID of the user.
  */
-export type UniqueId = string;
+export type UniqueId = string | null;
 /**
  * The name of the model to be used (e.g. gpt-4, codellama)
  */
@@ -21,83 +20,93 @@ export type Model = string;
 /**
  * A system message that will always be followed by the LLM
  */
-export type SystemMessage = string;
+export type SystemMessage = string | null;
 /**
  * The maximum context length of the LLM in tokens, as counted by count_tokens.
  */
-export type ContextLength = number;
-/**
- * Options for the completion endpoint. Read more about the completion options in the documentation.
- */
-export type CompletionOptions = BaseCompletionOptions;
+export type ContextLength = number | null;
 /**
  * The temperature of the completion.
  */
-export type Temperature = number;
+export type Temperature = number | null;
 /**
  * The top_p of the completion.
  */
-export type TopP = number;
+export type TopP = number | null;
 /**
  * The top_k of the completion.
  */
-export type TopK = number;
+export type TopK = number | null;
 /**
  * The presence penalty Aof the completion.
  */
-export type PresencePenalty = number;
+export type PresencePenalty = number | null;
 /**
  * The frequency penalty of the completion.
  */
-export type FrequencyPenalty = number;
+export type FrequencyPenalty = number | null;
 /**
  * The stop tokens of the completion.
  */
-export type Stop = string[];
+export type Stop = string[] | null;
 /**
  * The maximum number of tokens to generate.
  */
 export type MaxTokens = number;
 /**
- * Options for the HTTP request to the LLM.
- */
-export type RequestOptions = RequestOptions1;
-/**
  * Set the timeout for each request to the LLM. If you are running a local LLM that takes a while to respond, you might want to set this to avoid timeouts.
  */
-export type Timeout = number;
+export type Timeout = number | null;
 /**
  * Whether to verify SSL certificates for requests.
  */
-export type VerifySsl = boolean;
+export type VerifySsl = boolean | null;
 /**
  * Path to a custom CA bundle to use when making the HTTP request
  */
-export type CaBundlePath = string;
+export type CaBundlePath = string | null;
 /**
  * Proxy URL to use when making the HTTP request
  */
-export type Proxy = string;
+export type Proxy = string | null;
+/**
+ * Headers to use when making the HTTP request
+ */
+export type Headers = {
+  [k: string]: string;
+} | null;
+/**
+ * A dictionary of prompt templates that can be used to customize the behavior of the LLM in certain situations. For example, set the "edit" key in order to change the prompt that is used for the /edit slash command. Each value in the dictionary is a string templated in mustache syntax, and filled in at runtime with the variables specific to the situation. See the documentation for more information.
+ */
+export type PromptTemplates = string;
+/**
+ * A function that takes a list of messages and returns a prompt. This ensures that models like llama2, which are trained on specific chat formats, will always receive input in that format.
+ */
+export type TemplateMessages = string;
+/**
+ * A function that is called upon every prompt and completion, by default to log to the file which can be viewed by clicking on the magnifying glass.
+ */
+export type WriteLog = string;
 /**
  * The API key for the LLM provider.
  */
-export type ApiKey = string;
+export type ApiKey = string | null;
 /**
  * The base URL of the LLM API.
  */
-export type ApiBase = string;
+export type ApiBase = string | null;
 export type Saved = (unknown | LLM)[];
-export type Temperature1 = number;
-export type SystemMessage1 = string;
+export type Temperature1 = number | null;
+export type SystemMessage1 = string | null;
 
 /**
  * Main class that holds the current model configuration
  */
-export interface Models1 {
-  default?: unknown;
-  summarize?: unknown;
-  edit?: unknown;
-  chat?: unknown;
+export interface Models {
+  default: unknown;
+  summarize: unknown;
+  edit: unknown;
+  chat: unknown;
   saved?: Saved;
   temperature?: Temperature1;
   system_message?: SystemMessage1;
@@ -109,9 +118,17 @@ export interface LLM {
   model: Model;
   system_message?: SystemMessage;
   context_length?: ContextLength;
-  completion_options?: CompletionOptions;
+  /**
+   * Options for the completion endpoint. Read more about the completion options in the documentation.
+   */
+  completion_options?: BaseCompletionOptions;
+  /**
+   * Options for the HTTP request to the LLM.
+   */
   request_options?: RequestOptions;
   prompt_templates?: PromptTemplates;
+  template_messages?: TemplateMessages;
+  write_log?: WriteLog;
   api_key?: ApiKey;
   api_base?: ApiBase;
   [k: string]: unknown;
@@ -126,23 +143,11 @@ export interface BaseCompletionOptions {
   max_tokens?: MaxTokens;
   [k: string]: unknown;
 }
-export interface RequestOptions1 {
+export interface RequestOptions {
   timeout?: Timeout;
   verify_ssl?: VerifySsl;
   ca_bundle_path?: CaBundlePath;
   proxy?: Proxy;
   headers?: Headers;
-  [k: string]: unknown;
-}
-/**
- * Headers to use when making the HTTP request
- */
-export interface Headers {
-  [k: string]: string;
-}
-/**
- * A dictionary of prompt templates that can be used to customize the behavior of the LLM in certain situations. For example, set the "edit" key in order to change the prompt that is used for the /edit slash command. Each value in the dictionary is a string templated in mustache syntax, and filled in at runtime with the variables specific to the situation. See the documentation for more information.
- */
-export interface PromptTemplates {
   [k: string]: unknown;
 }

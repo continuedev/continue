@@ -68,21 +68,25 @@ MODEL_MODULE_NAMES = {
     "Llamafile": "llamafile",
 }
 
+from typing import Callable, Union
+
+from pydantic import BaseModel, Field, WithJsonSchema
+from typing_extensions import Annotated
+from pydantic import BaseModel
+
 
 class Models(BaseModel):
     """Main class that holds the current model configuration"""
 
-    default: Union[Any, LLM]
-    summarize: Union[Any, LLM]
-    summarize: Annotated[Union[Any, LLM], Field()] =Field(validate_default=True)
-    edit: Annotated[Union[Any, LLM], Field()] =Field(validate_default=True)
-    chat: Annotated[Union[Any, LLM], Field()] =Field(validate_default=True)
-
-    saved: List[Union[Any, LLM]] = []
+    default: Annotated[Union[Any, LLM], WithJsonSchema({'type': 'string'}, mode='serialization')]
+    summarize: Annotated[Union[Any, LLM], Field(), WithJsonSchema({'type': 'string'}, mode='serialization')] =Field(validate_default=True)
+    edit: Annotated[Union[Any, LLM], Field(), WithJsonSchema({'type': 'string'}, mode='serialization')] =Field(validate_default=True)
+    chat: Annotated[Union[Any, LLM], Field(), WithJsonSchema({'type': 'string'}, mode='serialization')] =Field(validate_default=True)
+    saved: Annotated[List[Union[Any, LLM]], WithJsonSchema({'type': 'string'}, mode='serialization')] = []
 
     temperature: Optional[float] = None
     system_message: Optional[str] = None
-
+    
 
     @field_validator(
         "summarize",

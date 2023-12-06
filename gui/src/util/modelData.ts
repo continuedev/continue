@@ -3,8 +3,8 @@ This is the data that populates the model selection page.
 */
 
 import _ from "lodash";
-import { ModelProvider } from "../schema/ModelProvider";
-import { ModelName } from "../schema/ModelName";
+import { Provider } from "../schema/ModelDescription";
+import { ModelName } from "../schema/ModelNameWrapper";
 
 export function updatedObj(old: any, pathToValue: { [key: string]: any }) {
   const newObject = _.cloneDeep(old);
@@ -127,7 +127,7 @@ const apiBaseInput: InputDescriptor = {
 
 export interface ModelInfo {
   title: string;
-  provider: ModelProvider;
+  provider: Provider;
   description: string;
   longDescription?: string;
   icon?: string;

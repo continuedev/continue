@@ -5,11 +5,10 @@
  * and run json-schema-to-typescript to regenerate this file.
  */
 
-export type ContinueError = ContinueError1;
 export type Title = string;
 export type Message = string;
 
-export interface ContinueError1 {
+export interface ContinueError {
   title: Title;
   message: Message;
   [k: string]: unknown;
