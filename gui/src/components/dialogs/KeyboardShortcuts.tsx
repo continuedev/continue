@@ -96,11 +96,6 @@ const vscodeShortcuts: KeyboardShortcutProps[] = [
     description: "Debug Terminal",
   },
   {
-    mac: "⌥ ⌘ N",
-    windows: "⌥ ⌃ N",
-    description: "New Session",
-  },
-  {
     mac: "⌘ ⌫",
     windows: "⌃ ⌫",
     description: "Stop Active Step",
@@ -147,11 +142,6 @@ const jetbrainsShortcuts: KeyboardShortcutProps[] = [
     mac: "⌥ ⌘ J",
     windows: "⌥ ⌃ J",
     description: "Toggle Auxiliary Bar",
-  },
-  {
-    mac: "⌥ ⌘ N",
-    windows: "⌥ ⌃ N",
-    description: "New Session",
   },
   {
     mac: "⌘ ⌫",

@@ -51,7 +51,6 @@ import {
   getMarkdownLanguageTagForFile,
   getMetaKeyLabel,
   getPlatform,
-  isMetaEquivalentKeyPressed,
 } from "../../util";
 import StyledMarkdownPreview from "../markdown/StyledMarkdownPreview";
 import { setTakenActionTrue } from "../../redux/slices/miscSlice";
@@ -213,12 +212,17 @@ const InputToolbar = styled.div`
   right: 12px;
   bottom: 4px;
   width: calc(100% - 28px);
+  background-color: ${secondaryDark};
 
   align-items: center;
   z-index: 100;
   font-size: 10px;
 
   cursor: text;
+
+  & > * {
+    flex: 0 0 auto;
+  }
 `;
 
 const EnterButton = styled.div<{ offFocus: boolean }>`
@@ -251,7 +255,24 @@ const StopButton = styled.div`
   padding: 4px 8px;
   color: ${lightGray};
 
+  cursor: pointer;
+`;
+
+const NewSessionButton = styled.div`
+  width: fit-content;
+  margin-right: auto;
+  margin-left: 8px;
+  margin-top: 4px;
+
+  font-size: 12px;
+
+  border-radius: ${defaultBorderRadius};
+  padding: 2px 6px;
+  color: ${lightGray};
+
   &:hover {
+    background-color: ${lightGray}33;
+    color: ${vscForeground};
   }
 
   cursor: pointer;
@@ -744,9 +765,20 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
     const handler = (event: any) => {
       if (event.data.type === "focusContinueInput") {
         inputRef.current!.focus();
+        console.log(sessionState.history.length, "OHPOI");
+        if (sessionState.history.length > 0) {
+          client?.stopSession();
+          persistSession();
+          dispatch(newSession());
+        }
         dispatch(setTakenActionTrue(null));
       } else if (event.data.type === "focusContinueInputWithEdit") {
         inputRef.current!.focus();
+        if (sessionState.history.length > 0) {
+          client?.stopSession();
+          persistSession();
+          dispatch(newSession());
+        }
 
         if (!inputRef.current?.value.startsWith("/edit")) {
           downshiftProps.setInputValue("/edit ");
@@ -763,7 +795,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
     return () => {
       window.removeEventListener("message", handler);
     };
-  }, [inputRef.current, props.isMainInput]);
+  }, [inputRef.current, props.isMainInput, sessionState.history.length]);
 
   const deleteButtonDivRef = React.useRef<HTMLDivElement>(null);
   const stickyDropdownHeaderDiv = React.useRef<HTMLDivElement>(null);
@@ -928,7 +960,10 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
           }}
         >
           {downshiftProps.inputValue?.startsWith("/edit") && (
-            <span className="float-right">Inserting at cursor</span>
+            <>
+              <span className="float-right">Inserting at cursor</span>
+              <br />
+            </>
           )}
         </div>
       )}
@@ -1672,12 +1707,24 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
           </div>
         </Ul>
       </div>
-      {props.isMainInput && (
-        <>
-          <br />
-          <br />
-        </>
-      )}
+      {props.isMainInput &&
+        (active ? (
+          <>
+            <br />
+            <br />
+          </>
+        ) : sessionState.history.length > 0 ? (
+          <NewSessionButton
+            onClick={() => {
+              client?.stopSession();
+              persistSession();
+              dispatch(newSession());
+            }}
+            className="mr-auto"
+          >
+            New Session ({getMetaKeyLabel()} M)
+          </NewSessionButton>
+        ) : null)}
     </div>
   );
 });

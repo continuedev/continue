@@ -118,7 +118,7 @@
       {
         "command": "continue.toggleFullScreen",
         "category": "Continue",
-        "title": "Toggle Full Screen",
+        "title": "Toggle Full Screen (⌘ K ⌘ M)",
         "icon": "$(fullscreen)"
       },
       {
@@ -134,7 +134,7 @@
       {
         "command": "continue.newSession",
         "category": "Continue",
-        "title": "New Session",
+        "title": "New Session (⌘ M)",
         "icon": "$(add)"
       },
       {
