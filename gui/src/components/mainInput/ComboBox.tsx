@@ -243,21 +243,6 @@ const EnterButton = styled.div<{ offFocus: boolean }>`
   cursor: pointer;
 `;
 
-const StopButton = styled.div`
-  width: fit-content;
-  margin-right: auto;
-  margin-left: auto;
-
-  font-size: 12px;
-
-  border: 0.5px solid ${lightGray};
-  border-radius: ${defaultBorderRadius};
-  padding: 4px 8px;
-  color: ${lightGray};
-
-  cursor: pointer;
-`;
-
 const NewSessionButton = styled.div`
   width: fit-content;
   margin-right: auto;
@@ -938,16 +923,6 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
         backgroundColor: vscBackground,
       }}
     >
-      {active && props.isMainInput && (
-        <StopButton
-          onClick={() => {
-            client?.stopSession();
-            dispatch(setActive(false));
-          }}
-        >
-          ⌘ ⌫ Cancel
-        </StopButton>
-      )}
       {selectedContextItems.length === 0 && props.isMainInput && (
         <div
           style={{

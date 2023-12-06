@@ -67,23 +67,23 @@ const TopGuiDiv = styled.div`
   &::-webkit-scrollbar {
     display: none;
   }
+
+  height: 100%;
 `;
 
-const TitleTextInput = styled(Input)`
-  border: none;
-  outline: none;
+const StopButton = styled.div`
+  width: fit-content;
+  margin-right: auto;
+  margin-left: auto;
 
-  font-size: 16px;
-  font-weight: bold;
-  margin: 0;
-  margin-right: 8px;
-  padding-top: 6px;
-  padding-bottom: 6px;
-  background-color: transparent;
+  font-size: 12px;
 
-  &:focus {
-    outline: none;
-  }
+  border: 0.5px solid ${lightGray};
+  border-radius: ${defaultBorderRadius};
+  padding: 4px 8px;
+  color: ${lightGray};
+
+  cursor: pointer;
 `;
 
 const StepsDiv = styled.div`
@@ -103,29 +103,6 @@ const StepsDiv = styled.div`
     z-index: 0;
     bottom: 12px;
   }
-`;
-
-const UserInputQueueItem = styled.div`
-  border-radius: ${defaultBorderRadius};
-  color: gray;
-  padding: 8px;
-  margin: 8px;
-  text-align: center;
-`;
-
-const GUIHeaderDiv = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 4px;
-  padding-left: 8px;
-  padding-right: 8px;
-  border-bottom: 0.5px solid ${lightGray};
-  position: sticky;
-  top: 0;
-  z-index: 100;
-  background-color: transparent;
-  backdrop-filter: blur(12px);
 `;
 
 function fallbackRender({ error, resetErrorBoundary }) {
@@ -421,23 +398,6 @@ function GUI(props: GUIProps) {
   const persistSession = useCallback(() => {
     client?.persistSession(sessionState, workspacePaths[0] || "");
   }, [client, sessionState, workspacePaths]);
-
-  useEffect(() => {
-    const handleKeyDown = (event: any) => {
-      if (event.metaKey && event.altKey && event.code === "KeyN") {
-        client?.stopSession();
-        persistSession();
-        dispatch(newSession());
-        mainTextInputRef.current?.focus?.();
-      }
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
-
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [client, persistSession, mainTextInputRef]);
 
   useEffect(() => {
     const handler = (event: any) => {
@@ -824,19 +784,30 @@ function GUI(props: GUIProps) {
         </StepsDiv>
 
         <div ref={aboveComboBoxDivRef} />
-        <ComboBox
-          isMainInput={true}
-          ref={mainTextInputRef}
-          onEnter={(e, _) => {
-            onMainTextInput(e);
-            e?.stopPropagation();
-            e?.preventDefault();
-          }}
-          onInputValueChange={() => {}}
-          onToggleAddContext={() => {
-            client?.toggleAddingHighlightedCode();
-          }}
-        />
+        {active ? (
+          <StopButton
+            onClick={() => {
+              client?.stopSession();
+              dispatch(setActive(false));
+            }}
+          >
+            ⌘ ⌫ Cancel
+          </StopButton>
+        ) : (
+          <ComboBox
+            isMainInput={true}
+            ref={mainTextInputRef}
+            onEnter={(e, _) => {
+              onMainTextInput(e);
+              e?.stopPropagation();
+              e?.preventDefault();
+            }}
+            onInputValueChange={() => {}}
+            onToggleAddContext={() => {
+              client?.toggleAddingHighlightedCode();
+            }}
+          />
+        )}
       </div>
     </TopGuiDiv>
   );
