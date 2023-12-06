@@ -5,7 +5,6 @@
  * and run json-schema-to-typescript to regenerate this file.
  */
 
-export type RangeInFileWithContents = RangeInFileWithContents1;
 export type Filepath = string;
 export type Line = number;
 export type Character = number;
@@ -14,7 +13,7 @@ export type Contents = string;
 /**
  * A range in a file with the contents of the range.
  */
-export interface RangeInFileWithContents1 {
+export interface RangeInFileWithContents {
   filepath: Filepath;
   range: Range;
   contents: Contents;

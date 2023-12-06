@@ -1,10 +1,6 @@
 {
-  "title": "Traceback",
-  "$ref": "#/definitions/continuedev__models__main__Traceback",
-  "definitions": {
+  "$defs": {
     "TracebackFrame": {
-      "title": "TracebackFrame",
-      "type": "object",
       "properties": {
         "filepath": {
           "title": "Filepath",
@@ -19,45 +15,61 @@
           "type": "string"
         },
         "code": {
-          "title": "Code",
-          "type": "string"
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Code"
         }
       },
       "required": [
         "filepath",
         "lineno",
         "function"
-      ]
-    },
-    "continuedev__models__main__Traceback": {
-      "title": "Traceback",
-      "type": "object",
-      "properties": {
-        "frames": {
-          "title": "Frames",
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/TracebackFrame"
-          }
-        },
-        "message": {
-          "title": "Message",
-          "type": "string"
-        },
-        "error_type": {
-          "title": "Error Type",
-          "type": "string"
-        },
-        "full_traceback": {
-          "title": "Full Traceback",
-          "type": "string"
-        }
-      },
-      "required": [
-        "frames",
-        "message",
-        "error_type"
-      ]
+      ],
+      "title": "TracebackFrame",
+      "type": "object"
     }
-  }
+  },
+  "properties": {
+    "frames": {
+      "items": {
+        "$ref": "#/$defs/TracebackFrame"
+      },
+      "title": "Frames",
+      "type": "array"
+    },
+    "message": {
+      "title": "Message",
+      "type": "string"
+    },
+    "error_type": {
+      "title": "Error Type",
+      "type": "string"
+    },
+    "full_traceback": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Full Traceback"
+    }
+  },
+  "required": [
+    "frames",
+    "message",
+    "error_type"
+  ],
+  "title": "Traceback",
+  "type": "object"
 }

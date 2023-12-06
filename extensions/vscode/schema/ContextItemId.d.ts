@@ -5,14 +5,13 @@
  * and run json-schema-to-typescript to regenerate this file.
  */
 
-export type ContextItemId = ContextItemId1;
 export type ProviderTitle = string;
 export type ItemId = string;
 
 /**
  * A ContextItemId is a unique identifier for a ContextItem.
  */
-export interface ContextItemId1 {
+export interface ContextItemId {
   provider_title: ProviderTitle;
   item_id: ItemId;
   [k: string]: unknown;

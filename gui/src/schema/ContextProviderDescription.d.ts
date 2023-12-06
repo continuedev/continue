@@ -5,14 +5,13 @@
  * and run json-schema-to-typescript to regenerate this file.
  */
 
-export type ContextProviderDescription = ContextProviderDescription1;
 export type Title = string;
 export type DisplayTitle = string;
 export type Description = string;
 export type Dynamic = boolean;
 export type RequiresQuery = boolean;
 
-export interface ContextProviderDescription1 {
+export interface ContextProviderDescription {
   title: Title;
   display_title: DisplayTitle;
   description: Description;

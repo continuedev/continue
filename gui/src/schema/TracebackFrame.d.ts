@@ -5,13 +5,12 @@
  * and run json-schema-to-typescript to regenerate this file.
  */
 
-export type TracebackFrame = TracebackFrame1;
 export type Filepath = string;
 export type Lineno = number;
 export type Function = string;
-export type Code = string;
+export type Code = string | null;
 
-export interface TracebackFrame1 {
+export interface TracebackFrame {
   filepath: Filepath;
   lineno: Lineno;
   function: Function;

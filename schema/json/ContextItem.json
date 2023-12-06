@@ -1,11 +1,30 @@
 {
-  "title": "ContextItem",
-  "$ref": "#/definitions/continuedev__core__main__ContextItem",
-  "definitions": {
+  "$defs": {
+    "ContextItemDescription": {
+      "description": "A ContextItemDescription is a description of a ContextItem that is displayed to the user when they type '@'.\n\nThe id can be used to retrieve the ContextItem from the ContextManager.",
+      "properties": {
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "description": {
+          "title": "Description",
+          "type": "string"
+        },
+        "id": {
+          "$ref": "#/$defs/ContextItemId"
+        }
+      },
+      "required": [
+        "name",
+        "description",
+        "id"
+      ],
+      "title": "ContextItemDescription",
+      "type": "object"
+    },
     "ContextItemId": {
-      "title": "ContextItemId",
       "description": "A ContextItemId is a unique identifier for a ContextItem.",
-      "type": "object",
       "properties": {
         "provider_title": {
           "title": "Provider Title",
@@ -19,58 +38,35 @@
       "required": [
         "provider_title",
         "item_id"
-      ]
-    },
-    "ContextItemDescription": {
-      "title": "ContextItemDescription",
-      "description": "A ContextItemDescription is a description of a ContextItem that is displayed to the user when they type '@'.\n\nThe id can be used to retrieve the ContextItem from the ContextManager.",
-      "type": "object",
-      "properties": {
-        "name": {
-          "title": "Name",
-          "type": "string"
-        },
-        "description": {
-          "title": "Description",
-          "type": "string"
-        },
-        "id": {
-          "$ref": "#/definitions/ContextItemId"
-        }
-      },
-      "required": [
-        "name",
-        "description",
-        "id"
-      ]
-    },
-    "continuedev__core__main__ContextItem": {
-      "title": "ContextItem",
-      "description": "A ContextItem is a single item that is stored in the ContextManager.",
-      "type": "object",
-      "properties": {
-        "description": {
-          "$ref": "#/definitions/ContextItemDescription"
-        },
-        "content": {
-          "title": "Content",
-          "type": "string"
-        },
-        "editing": {
-          "title": "Editing",
-          "default": false,
-          "type": "boolean"
-        },
-        "editable": {
-          "title": "Editable",
-          "default": false,
-          "type": "boolean"
-        }
-      },
-      "required": [
-        "description",
-        "content"
-      ]
+      ],
+      "title": "ContextItemId",
+      "type": "object"
     }
-  }
+  },
+  "description": "A ContextItem is a single item that is stored in the ContextManager.",
+  "properties": {
+    "description": {
+      "$ref": "#/$defs/ContextItemDescription"
+    },
+    "content": {
+      "title": "Content",
+      "type": "string"
+    },
+    "editing": {
+      "default": false,
+      "title": "Editing",
+      "type": "boolean"
+    },
+    "editable": {
+      "default": false,
+      "title": "Editable",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "description",
+    "content"
+  ],
+  "title": "ContextItem",
+  "type": "object"
 }

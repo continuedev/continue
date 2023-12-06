@@ -1,48 +1,92 @@
 {
-  "title": "ModelDescription",
-  "$ref": "#/definitions/continuedev__core__config__ModelDescription",
-  "definitions": {
+  "$defs": {
     "BaseCompletionOptions": {
-      "title": "BaseCompletionOptions",
-      "type": "object",
       "properties": {
         "temperature": {
-          "title": "Temperature",
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
           "description": "The temperature of the completion.",
-          "type": "number"
+          "title": "Temperature"
         },
         "top_p": {
-          "title": "Top P",
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
           "description": "The top_p of the completion.",
-          "type": "number"
+          "title": "Top P"
         },
         "top_k": {
-          "title": "Top K",
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
           "description": "The top_k of the completion.",
-          "type": "integer"
+          "title": "Top K"
         },
         "presence_penalty": {
-          "title": "Presence Penalty",
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
           "description": "The presence penalty Aof the completion.",
-          "type": "number"
+          "title": "Presence Penalty"
         },
         "frequency_penalty": {
-          "title": "Frequency Penalty",
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
           "description": "The frequency penalty of the completion.",
-          "type": "number"
+          "title": "Frequency Penalty"
         },
         "stop": {
-          "title": "Stop",
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
           "description": "The stop tokens of the completion.",
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
+          "title": "Stop"
         },
         "max_tokens": {
-          "title": "Max Tokens",
-          "description": "The maximum number of tokens to generate.",
           "default": 1023,
+          "description": "The maximum number of tokens to generate.",
+          "title": "Max Tokens",
           "type": "integer"
         },
         "session_id": {
@@ -50,98 +94,153 @@
           "description": "The session_id of the UI.",
           "type": "string"
         }
-      }
+      },
+      "title": "BaseCompletionOptions",
+      "type": "object"
     },
     "RequestOptions": {
-      "title": "RequestOptions",
-      "type": "object",
       "properties": {
         "timeout": {
-          "title": "Timeout",
-          "description": "Set the timeout for each request to the LLM. If you are running a local LLM that takes a while to respond, you might want to set this to avoid timeouts.",
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
           "default": 300,
-          "type": "integer"
+          "description": "Set the timeout for each request to the LLM. If you are running a local LLM that takes a while to respond, you might want to set this to avoid timeouts.",
+          "title": "Timeout"
         },
         "verify_ssl": {
-          "title": "Verify Ssl",
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
           "description": "Whether to verify SSL certificates for requests.",
-          "type": "boolean"
+          "title": "Verify Ssl"
         },
         "ca_bundle_path": {
-          "title": "Ca Bundle Path",
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
           "description": "Path to a custom CA bundle to use when making the HTTP request",
-          "type": "string"
+          "title": "Ca Bundle Path"
         },
         "proxy": {
-          "title": "Proxy",
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
           "description": "Proxy URL to use when making the HTTP request",
-          "type": "string"
+          "title": "Proxy"
         },
         "headers": {
-          "title": "Headers",
-          "description": "Headers to use when making the HTTP request",
-          "type": "object",
-          "additionalProperties": {
-            "type": "string"
-          }
-        }
-      }
-    },
-    "continuedev__core__config__ModelDescription": {
-      "title": "ModelDescription",
-      "type": "object",
-      "properties": {
-        "title": {
-          "title": "Title",
-          "description": "The title you wish to give your model.",
-          "type": "string"
-        },
-        "provider": {
-          "title": "Provider",
-          "description": "The provider of the model. This is used to determine the type of model, and how to interact with it.",
-          "enum": [
-            "openai",
-            "openai-free-trial",
-            "openai-agent",
-            "openai-aiohttp",
-            "anthropic",
-            "together",
-            "ollama",
-            "huggingface-tgi",
-            "huggingface-inference-api",
-            "llama.cpp",
-            "replicate",
-            "text-gen-webui",
-            "google-palm",
-            "lmstudio",
-            "llamafile"
+          "anyOf": [
+            {
+              "additionalProperties": {
+                "type": "string"
+              },
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
           ],
+          "default": null,
+          "description": "Headers to use when making the HTTP request",
+          "title": "Headers"
+        }
+      },
+      "title": "RequestOptions",
+      "type": "object"
+    }
+  },
+  "additionalProperties": true,
+  "properties": {
+    "title": {
+      "description": "The title you wish to give your model.",
+      "title": "Title",
+      "type": "string"
+    },
+    "provider": {
+      "description": "The provider of the model. This is used to determine the type of model, and how to interact with it.",
+      "enum": [
+        "openai",
+        "openai-free-trial",
+        "openai-aiohttp",
+        "anthropic",
+        "together",
+        "ollama",
+        "huggingface-tgi",
+        "huggingface-inference-api",
+        "llama.cpp",
+        "replicate",
+        "text-gen-webui",
+        "google-palm",
+        "lmstudio",
+        "llamafile"
+      ],
+      "title": "Provider",
+      "type": "string"
+    },
+    "model": {
+      "description": "The name of the model. Used to autodetect prompt template.",
+      "title": "Model",
+      "type": "string"
+    },
+    "api_key": {
+      "anyOf": [
+        {
           "type": "string"
         },
-        "model": {
-          "title": "Model",
-          "description": "The name of the model. Used to autodetect prompt template.",
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "OpenAI, Anthropic, Together, or other API key",
+      "title": "Api Key"
+    },
+    "api_base": {
+      "anyOf": [
+        {
           "type": "string"
         },
-        "api_key": {
-          "title": "Api Key",
-          "description": "OpenAI, Anthropic, Together, or other API key",
-          "type": "string"
-        },
-        "api_base": {
-          "title": "Api Base",
-          "description": "The base URL of the LLM API.",
-          "type": "string"
-        },
-        "context_length": {
-          "title": "Context Length",
-          "description": "The maximum context length of the LLM in tokens, as counted by count_tokens.",
-          "default": 2048,
-          "type": "integer"
-        },
-        "template": {
-          "title": "Template",
-          "description": "The chat template used to format messages. This is auto-detected for most models, but can be overridden here.",
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "The base URL of the LLM API.",
+      "title": "Api Base"
+    },
+    "context_length": {
+      "default": 2048,
+      "description": "The maximum context length of the LLM in tokens, as counted by count_tokens.",
+      "title": "Context Length",
+      "type": "integer"
+    },
+    "template": {
+      "anyOf": [
+        {
           "enum": [
             "llama2",
             "alpaca",
@@ -153,52 +252,65 @@
           ],
           "type": "string"
         },
-        "completion_options": {
-          "title": "Completion Options",
-          "description": "Options for the completion endpoint. Read more about the completion options in the documentation.",
-          "default": {
-            "temperature": null,
-            "top_p": null,
-            "top_k": null,
-            "presence_penalty": null,
-            "frequency_penalty": null,
-            "stop": null,
-            "max_tokens": 1023,
-            "session_id": null
-          },
-          "allOf": [
-            {
-              "$ref": "#/definitions/BaseCompletionOptions"
-            }
-          ]
-        },
-        "system_message": {
-          "title": "System Message",
-          "description": "A system message that will always be followed by the LLM",
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "The chat template used to format messages. This is auto-detected for most models, but can be overridden here.",
+      "title": "Template"
+    },
+    "completion_options": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/BaseCompletionOptions"
+        }
+      ],
+      "default": {
+        "temperature": null,
+        "top_p": null,
+        "top_k": null,
+        "presence_penalty": null,
+        "frequency_penalty": null,
+        "stop": null,
+        "max_tokens": 1023
+      },
+      "description": "Options for the completion endpoint. Read more about the completion options in the documentation."
+    },
+    "system_message": {
+      "anyOf": [
+        {
           "type": "string"
         },
-        "request_options": {
-          "title": "Request Options",
-          "description": "Options for the HTTP request to the LLM.",
-          "default": {
-            "timeout": 300,
-            "verify_ssl": null,
-            "ca_bundle_path": null,
-            "proxy": null,
-            "headers": null
-          },
-          "allOf": [
-            {
-              "$ref": "#/definitions/RequestOptions"
-            }
-          ]
+        {
+          "type": "null"
         }
+      ],
+      "default": null,
+      "description": "A system message that will always be followed by the LLM",
+      "title": "System Message"
+    },
+    "request_options": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/RequestOptions"
+        }
+      ],
+      "default": {
+        "timeout": 300,
+        "verify_ssl": null,
+        "ca_bundle_path": null,
+        "proxy": null,
+        "headers": null
       },
-      "required": [
-        "title",
-        "provider",
-        "model"
-      ]
+      "description": "Options for the HTTP request to the LLM."
     }
-  }
+  },
+  "required": [
+    "title",
+    "provider",
+    "model"
+  ],
+  "title": "ModelDescription",
+  "type": "object"
 }

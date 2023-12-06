@@ -56,7 +56,7 @@
       "type": "python",
       "request": "launch",
       "module": "continuedev.models.generate_json_schema",
-      "justMyCode": true,
+      "justMyCode": false,
       "cwd": "${workspaceFolder}/server"
     },
     {

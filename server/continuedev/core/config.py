@@ -4,7 +4,7 @@ import os
 from contextlib import contextmanager
 from typing import Annotated, Any, Callable, Dict, List, Optional, Tuple, Type, Union, cast
 
-from pydantic import ConfigDict, BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, WithJsonSchema, field_validator
 
 from ..libs.constants.default_config import default_config_json
 from ..libs.llm.base import LLM
@@ -44,7 +44,7 @@ class ContextProviderWithParams(BaseModel):
 class SlashCommand(BaseModel):
     name: str
     description: str
-    step: Annotated[Union[Type[Step], StepName], Field()] = Field(default=None, validate_default=True)
+    step: Annotated[Union[Type[Step], StepName], Field(), WithJsonSchema({'type': 'string'}, mode='validation')] = Field(default=None, validate_default=True)
     params: Optional[Dict] = {}
 
     # Allow step class for the migration
@@ -331,7 +331,8 @@ class SerializedContinueConfig(BaseModel):
             if config.model_roles.summarize == title:
                 config.model_roles.summarize = None
 
-
+from pydantic.json_schema import  JsonSchemaValue
+from pydantic_core import PydanticOmit, core_schema
 class ContinueConfig(BaseModel):
     """
     Continue can be deeply customized by editing the `ContinueConfig` object in `~/.continue/config.py` (`%userprofile%\\.continue\\config.py` for Windows) on your machine. This class is instantiated from the config file for every new session.

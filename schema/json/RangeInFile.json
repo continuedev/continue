@@ -1,10 +1,6 @@
 {
-  "title": "RangeInFile",
-  "$ref": "#/definitions/continuedev__models__filesystem__RangeInFile",
-  "definitions": {
+  "$defs": {
     "Position": {
-      "title": "Position",
-      "type": "object",
       "properties": {
         "line": {
           "title": "Line",
@@ -18,41 +14,41 @@
       "required": [
         "line",
         "character"
-      ]
+      ],
+      "title": "Position",
+      "type": "object"
     },
     "Range": {
-      "title": "Range",
       "description": "A range in a file. 0-indexed.",
-      "type": "object",
       "properties": {
         "start": {
-          "$ref": "#/definitions/Position"
+          "$ref": "#/$defs/Position"
         },
         "end": {
-          "$ref": "#/definitions/Position"
+          "$ref": "#/$defs/Position"
         }
       },
       "required": [
         "start",
         "end"
-      ]
-    },
-    "continuedev__models__filesystem__RangeInFile": {
-      "title": "RangeInFile",
-      "type": "object",
-      "properties": {
-        "filepath": {
-          "title": "Filepath",
-          "type": "string"
-        },
-        "range": {
-          "$ref": "#/definitions/Range"
-        }
-      },
-      "required": [
-        "filepath",
-        "range"
-      ]
+      ],
+      "title": "Range",
+      "type": "object"
     }
-  }
+  },
+  "properties": {
+    "filepath": {
+      "title": "Filepath",
+      "type": "string"
+    },
+    "range": {
+      "$ref": "#/$defs/Range"
+    }
+  },
+  "required": [
+    "filepath",
+    "range"
+  ],
+  "title": "RangeInFile",
+  "type": "object"
 }

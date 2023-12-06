@@ -30,3 +30,8 @@ export type ModelName =
   | "deepseek-33b"
   | "claude-2"
   | "chat-bison-001";
+
+export interface ModelNameWrapper {
+  model_name: ModelName;
+  [k: string]: unknown;
+}

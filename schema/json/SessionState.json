@@ -1,38 +1,36 @@
 {
-  "title": "SessionState",
-  "$ref": "#/definitions/continuedev__core__main__SessionState",
-  "definitions": {
-    "ContinueError": {
-      "title": "ContinueError",
-      "type": "object",
+  "$defs": {
+    "ContextItem": {
+      "description": "A ContextItem is a single item that is stored in the ContextManager.",
       "properties": {
-        "title": {
-          "title": "Title",
+        "description": {
+          "$ref": "#/$defs/ContextItemDescription"
+        },
+        "content": {
+          "title": "Content",
           "type": "string"
         },
-        "message": {
-          "title": "Message",
-          "type": "string"
+        "editing": {
+          "default": false,
+          "title": "Editing",
+          "type": "boolean"
+        },
+        "editable": {
+          "default": false,
+          "title": "Editable",
+          "type": "boolean"
         }
       },
       "required": [
-        "title",
-        "message"
-      ]
+        "description",
+        "content"
+      ],
+      "title": "ContextItem",
+      "type": "object"
     },
-    "Observation": {
-      "title": "Observation",
-      "type": "object",
-      "properties": {}
-    },
-    "StepDescription": {
-      "title": "StepDescription",
-      "type": "object",
+    "ContextItemDescription": {
+      "description": "A ContextItemDescription is a description of a ContextItem that is displayed to the user when they type '@'.\n\nThe id can be used to retrieve the ContextItem from the ContextManager.",
       "properties": {
-        "step_type": {
-          "title": "Step Type",
-          "type": "string"
-        },
         "name": {
           "title": "Name",
           "type": "string"
@@ -41,51 +39,20 @@
           "title": "Description",
           "type": "string"
         },
-        "params": {
-          "title": "Params",
-          "type": "object"
-        },
-        "hide": {
-          "title": "Hide",
-          "type": "boolean"
-        },
-        "depth": {
-          "title": "Depth",
-          "type": "integer"
-        },
-        "error": {
-          "$ref": "#/definitions/ContinueError"
-        },
-        "observations": {
-          "title": "Observations",
-          "default": [],
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/Observation"
-          }
-        },
-        "logs": {
-          "title": "Logs",
-          "default": [],
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
+        "id": {
+          "$ref": "#/$defs/ContextItemId"
         }
       },
       "required": [
-        "step_type",
         "name",
         "description",
-        "params",
-        "hide",
-        "depth"
-      ]
+        "id"
+      ],
+      "title": "ContextItemDescription",
+      "type": "object"
     },
     "ContextItemId": {
-      "title": "ContextItemId",
       "description": "A ContextItemId is a unique identifier for a ContextItem.",
-      "type": "object",
       "properties": {
         "provider_title": {
           "title": "Provider Title",
@@ -99,87 +66,176 @@
       "required": [
         "provider_title",
         "item_id"
-      ]
+      ],
+      "title": "ContextItemId",
+      "type": "object"
     },
-    "ContextItemDescription": {
-      "title": "ContextItemDescription",
-      "description": "A ContextItemDescription is a description of a ContextItem that is displayed to the user when they type '@'.\n\nThe id can be used to retrieve the ContextItem from the ContextManager.",
-      "type": "object",
+    "ContinueError": {
       "properties": {
+        "title": {
+          "title": "Title",
+          "type": "string"
+        },
+        "message": {
+          "title": "Message",
+          "type": "string"
+        }
+      },
+      "required": [
+        "title",
+        "message"
+      ],
+      "title": "ContinueError",
+      "type": "object"
+    },
+    "Observation": {
+      "properties": {},
+      "title": "Observation",
+      "type": "object"
+    },
+    "StepDescription": {
+      "properties": {
+        "step_type": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Step Type"
+        },
         "name": {
-          "title": "Name",
-          "type": "string"
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Name"
         },
         "description": {
-          "title": "Description",
-          "type": "string"
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Description"
         },
-        "id": {
-          "$ref": "#/definitions/ContextItemId"
+        "params": {
+          "anyOf": [
+            {
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Params"
+        },
+        "hide": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Hide"
+        },
+        "depth": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Depth"
+        },
+        "error": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ContinueError"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "observations": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/Observation"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": [],
+          "title": "Observations"
+        },
+        "logs": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": [],
+          "title": "Logs"
         }
       },
       "required": [
-        "name",
-        "description",
-        "id"
-      ]
-    },
-    "ContextItem": {
-      "title": "ContextItem",
-      "description": "A ContextItem is a single item that is stored in the ContextManager.",
-      "type": "object",
-      "properties": {
-        "description": {
-          "$ref": "#/definitions/ContextItemDescription"
-        },
-        "content": {
-          "title": "Content",
-          "type": "string"
-        },
-        "editing": {
-          "title": "Editing",
-          "default": false,
-          "type": "boolean"
-        },
-        "editable": {
-          "title": "Editable",
-          "default": false,
-          "type": "boolean"
-        }
-      },
-      "required": [
-        "description",
-        "content"
-      ]
-    },
-    "continuedev__core__main__SessionState": {
-      "title": "SessionState",
-      "description": "Full session history and important state needed for autopilot to Continue",
-      "type": "object",
-      "properties": {
-        "history": {
-          "title": "History",
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/StepDescription"
-          }
-        },
-        "context_items": {
-          "title": "Context Items",
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/ContextItem"
-          }
-        },
-        "session_id": {
-          "title": "Session Id",
-          "type": "string"
-        }
-      },
-      "required": [
-        "history",
-        "context_items"
-      ]
+        "params"
+      ],
+      "title": "StepDescription",
+      "type": "object"
     }
-  }
+  },
+  "description": "Full session history and important state needed for autopilot to Continue",
+  "properties": {
+    "history": {
+      "items": {
+        "$ref": "#/$defs/StepDescription"
+      },
+      "title": "History",
+      "type": "array"
+    },
+    "context_items": {
+      "items": {
+        "$ref": "#/$defs/ContextItem"
+      },
+      "title": "Context Items",
+      "type": "array"
+    }
+  },
+  "required": [
+    "history",
+    "context_items"
+  ],
+  "title": "SessionState",
+  "type": "object"
 }
