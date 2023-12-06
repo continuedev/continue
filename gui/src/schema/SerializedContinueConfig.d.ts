@@ -136,18 +136,7 @@ export type SystemMessage1 = string | null;
 export type SlashCommands = SlashCommand[] | null;
 export type Name = string;
 export type Description = string;
-export type Step =
-  | unknown
-  | (
-      | "AnswerQuestionChroma"
-      | "GenerateShellCommandStep"
-      | "EditHighlightedCodeStep"
-      | "ShareSessionStep"
-      | "CommentCodeStep"
-      | "ClearHistoryStep"
-      | "StackOverflowStep"
-      | "OpenConfigStep"
-    );
+export type Step = string;
 export type Params = {
   [k: string]: unknown;
 } | null;

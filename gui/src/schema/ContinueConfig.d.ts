@@ -154,18 +154,7 @@ export type Description1 = string;
 export type SlashCommands = SlashCommand[] | null;
 export type Name4 = string;
 export type Description2 = string;
-export type Step1 =
-  | unknown
-  | (
-      | "AnswerQuestionChroma"
-      | "GenerateShellCommandStep"
-      | "EditHighlightedCodeStep"
-      | "ShareSessionStep"
-      | "CommentCodeStep"
-      | "ClearHistoryStep"
-      | "StackOverflowStep"
-      | "OpenConfigStep"
-    );
+export type Step1 = string;
 export type Params = {
   [k: string]: unknown;
 } | null;

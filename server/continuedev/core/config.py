@@ -44,7 +44,7 @@ class ContextProviderWithParams(BaseModel):
 class SlashCommand(BaseModel):
     name: str
     description: str
-    step: Annotated[Union[Type[Step], StepName], Field(), WithJsonSchema({'type': 'string'}, mode='serialization')] = Field(default=None, validate_default=True)
+    step: Annotated[Union[Type[Step], StepName], Field(), WithJsonSchema({'type': 'string'}, mode='validation')] = Field(default=None, validate_default=True)
     params: Optional[Dict] = {}
 
     # Allow step class for the migration

@@ -24,7 +24,7 @@ redbaron==0.9.2
 python-lsp-server[websockets]==1.8.0
 huggingface-hub==0.16.4
 typer==0.9.0
-chromadb==0.4.18
+chromadb==0.4.13
 fastapi==0.104.1
 tree-sitter==0.20.2
 tree-sitter-languages==1.7.0
@@ -34,4 +34,4 @@ pathspec==0.11.2
 tqdm==4.66.1
 html2text==2020.1.16
 aiohttp==3.8.6
-hnswlib==0.8.0
+chroma-hnswlib==0.7.1

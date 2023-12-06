@@ -78,11 +78,11 @@ from pydantic import BaseModel
 class Models(BaseModel):
     """Main class that holds the current model configuration"""
 
-    default: Annotated[Union[Any, LLM], WithJsonSchema({'type': 'string'}, mode='serialization')]
-    summarize: Annotated[Union[Any, LLM], Field(), WithJsonSchema({'type': 'string'}, mode='serialization')] =Field(validate_default=True)
-    edit: Annotated[Union[Any, LLM], Field(), WithJsonSchema({'type': 'string'}, mode='serialization')] =Field(validate_default=True)
-    chat: Annotated[Union[Any, LLM], Field(), WithJsonSchema({'type': 'string'}, mode='serialization')] =Field(validate_default=True)
-    saved: Annotated[List[Union[Any, LLM]], WithJsonSchema({'type': 'string'}, mode='serialization')] = []
+    default: Annotated[Union[Any, LLM], WithJsonSchema({'type': 'string'}, mode='validation')]
+    summarize: Annotated[Union[Any, LLM], Field(), WithJsonSchema({'type': 'string'}, mode='validation')] =Field(validate_default=True)
+    edit: Annotated[Union[Any, LLM], Field(), WithJsonSchema({'type': 'string'}, mode='validation')] =Field(validate_default=True)
+    chat: Annotated[Union[Any, LLM], Field(), WithJsonSchema({'type': 'string'}, mode='validation')] =Field(validate_default=True)
+    saved: Annotated[List[Union[Any, LLM]], WithJsonSchema({'type': 'string'}, mode='validation')] = []
 
     temperature: Optional[float] = None
     system_message: Optional[str] = None

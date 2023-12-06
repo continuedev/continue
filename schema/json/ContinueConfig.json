@@ -725,24 +725,9 @@
           "type": "string"
         },
         "step": {
-          "anyOf": [
-            {},
-            {
-              "enum": [
-                "AnswerQuestionChroma",
-                "GenerateShellCommandStep",
-                "EditHighlightedCodeStep",
-                "ShareSessionStep",
-                "CommentCodeStep",
-                "ClearHistoryStep",
-                "StackOverflowStep",
-                "OpenConfigStep"
-              ],
-              "type": "string"
-            }
-          ],
           "default": null,
-          "title": "Step"
+          "title": "Step",
+          "type": "string"
         },
         "params": {
           "anyOf": [
