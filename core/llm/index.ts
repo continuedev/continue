@@ -1,4 +1,4 @@
-import { CONTEXT_LENGTH_FOR_MODEL } from "./constants";
+import { CONTEXT_LENGTH_FOR_MODEL, DEFAULT_ARGS } from "./constants";
 import {
   compileChatMessages,
   countTokens,
@@ -6,14 +6,14 @@ import {
 } from "./countTokens";
 import { CompletionOptions, RequestOptions, ChatMessage } from "./types";
 
-interface ILLM {
+interface LLMOptions {
   title?: string;
-  uniqueId?: string;
-  model: string;
+  uniqueId: string;
+  model?: string;
   systemMessage?: string;
-  contextLength: number;
-  completionOptions: CompletionOptions;
-  requestOptions: RequestOptions;
+  contextLength?: number;
+  completionOptions?: CompletionOptions;
+  requestOptions?: RequestOptions;
   promptTemplates?: Record<string, string>;
   templateMessages?: (messages: ChatMessage[]) => string;
   writeLog?: (str: string) => Promise<void>;
@@ -37,9 +37,9 @@ interface LLMFullCompletionOptions {
   maxTokens?: number;
 }
 
-abstract class AbstractLLM implements ILLM {
+export abstract class LLM implements LLMOptions {
   title?: string;
-  uniqueId?: string;
+  uniqueId: string;
   model: string;
   systemMessage?: string;
   contextLength: number;
@@ -52,7 +52,7 @@ abstract class AbstractLLM implements ILLM {
   apiKey?: string;
   apiBase?: string;
 
-  constructor(options: ILLM) {
+  constructor(options: LLMOptions) {
     this.title = options.title;
     this.uniqueId = options.uniqueId;
     this.model = options.model;
@@ -251,7 +251,7 @@ abstract class AbstractLLM implements ILLM {
         completionOptions
       )) {
         completion += chunk;
-        yield chunk;
+        yield { role: "assistant", content: chunk, summary: chunk };
       }
     } else {
       for await (const chunk of this._streamChat(messages, completionOptions)) {
@@ -263,11 +263,14 @@ abstract class AbstractLLM implements ILLM {
     this._logTokensGenerated(completionOptions.model, completion);
   }
 
-  private async *_streamComplete(prompt: string, options: CompletionOptions) {
+  protected async *_streamComplete(
+    prompt: string,
+    options: CompletionOptions
+  ): AsyncGenerator<string> {
     throw new Error("Not implemented");
   }
 
-  private async *_streamChat(
+  protected async *_streamChat(
     messages: ChatMessage[],
     options: CompletionOptions
   ): AsyncGenerator<ChatMessage> {
@@ -285,7 +288,7 @@ abstract class AbstractLLM implements ILLM {
     }
   }
 
-  private async _complete(prompt: string, options: CompletionOptions) {
+  protected async _complete(prompt: string, options: CompletionOptions) {
     let completion = "";
     for await (const chunk of this._streamComplete(prompt, options)) {
       completion += chunk;
@@ -295,5 +298,13 @@ abstract class AbstractLLM implements ILLM {
 
   countTokens(text: string): number {
     return countTokens(text, this.model);
+  }
+
+  protected collectArgs(options: CompletionOptions): any {
+    return {
+      ...DEFAULT_ARGS,
+      // model: this.model,
+      ...options,
+    };
   }
 }

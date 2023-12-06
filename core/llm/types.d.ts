@@ -27,4 +27,27 @@ interface ChatMessage {
   summary: string;
 }
 
-export { CompletionOptions, RequestOptions, ChatMessage, ChatMessageRole };
+interface ContextItem {
+  content: string;
+  name: string;
+  description: string;
+  providerTitle: string;
+  itemId: string;
+}
+
+interface ChatHistoryItem {
+  message: ChatMessage;
+  contextItems: ContextItem[];
+}
+
+type ChatHistory = ChatHistoryItem[];
+
+export {
+  CompletionOptions,
+  RequestOptions,
+  ChatMessage,
+  ChatMessageRole,
+  ChatHistory,
+  ChatHistoryItem,
+  ContextItem,
+};

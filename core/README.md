@@ -22,6 +22,10 @@ Reasons to avoid Python
 
 TODO:
 
+Little stuff:
+
+- create_client_session -> createAxiosConfig from requestOptions
+
 Imports
 
 - tiktoken

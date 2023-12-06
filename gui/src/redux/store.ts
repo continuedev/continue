@@ -3,16 +3,19 @@ import configReducer from "./slices/configSlice";
 import miscReducer from "./slices/miscSlice";
 import uiStateReducer from "./slices/uiStateSlice";
 import serverStateReducer from "./slices/serverStateReducer";
+import stateReducer from "./slices/stateSlice";
 import sessionStateReducer, {
   SessionFullState,
 } from "./slices/sessionStateReducer";
 import { ContinueConfig } from "../schema/ContinueConfig";
-import { ContextItem } from "../schema/ContextItem";
+// import { ContextItem } from "../schema/ContextItem";
+import { ContextItem } from "../../../core/llm/types";
 import { ContextProviderDescription } from "../schema/ContextProviderDescription";
 import { SlashCommandDescription } from "../schema/SlashCommandDescription";
 
 import storage from "redux-persist/lib/storage";
 import { persistReducer, persistStore, createTransform } from "redux-persist";
+import { ChatHistory } from "../../../core/llm/types";
 
 export interface ChatMessage {
   role: "system" | "user" | "assistant";
@@ -20,6 +23,12 @@ export interface ChatMessage {
 }
 
 export interface RootStore {
+  state: {
+    history: ChatHistory;
+    contextItems: ContextItem[];
+    active: boolean;
+  };
+
   config: {
     vscMachineId: string | undefined;
   };
@@ -39,7 +48,7 @@ export interface RootStore {
   serverState: {
     meilisearchUrl: string | undefined;
     slashCommands: SlashCommandDescription[];
-    selectedContextItems: ContextItem[];
+    selectedContextItems: any[];
     config: ContinueConfig;
     contextProviders: ContextProviderDescription[];
     savedContextGroups: any[]; // TODO: Context groups
@@ -48,6 +57,7 @@ export interface RootStore {
 }
 
 const rootReducer = combineReducers({
+  state: stateReducer,
   config: configReducer,
   misc: miscReducer,
   uiState: uiStateReducer,
