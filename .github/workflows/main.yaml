@@ -132,7 +132,6 @@ jobs:
   release:
     name: Release
     runs-on: ubuntu-latest
-    if: "startsWith(github.ref, 'refs/tags/')"
     needs: [linux, windows, macos, sdist]
     permissions:
       contents: write

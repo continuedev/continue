@@ -31,7 +31,9 @@ class GooglePaLMAPI(LLM):
         api_url = f"https://generativelanguage.googleapis.com/v1beta2/models/{self.model}:generateMessage?key={self.api_key}"
         body = {"prompt": {"messages": [{"content": prompt}]}}
         response = requests.post(api_url, json=body)
-        yield response.json()["candidates"][0]["content"]
+        data = response.json()
+        if "candidates" in data:
+            yield data["candidates"][0]["content"]
 
     async def _stream_chat(self, messages: List[ChatMessage], options):
         msg_lst = []
@@ -41,6 +43,8 @@ class GooglePaLMAPI(LLM):
         api_url = f"https://generativelanguage.googleapis.com/v1beta2/models/{self.model}:generateMessage?key={self.api_key}"
         body = {"prompt": {"messages": msg_lst}}
         response = requests.post(api_url, json=body)
-        yield ChatMessage(
-            role="assistant", content=response.json()["candidates"][0]["content"]
-        )
+        data = response.json()
+        if "candidates" in data:
+            yield ChatMessage(
+                role="assistant", content=data["candidates"][0]["content"]
+            )
