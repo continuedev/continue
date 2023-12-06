@@ -38,7 +38,6 @@ import {
   PlusIcon,
   SparklesIcon,
   TrashIcon,
-  XMarkIcon,
   ExclamationCircleIcon,
 } from "@heroicons/react/24/outline";
 import { postToIde } from "../../util/ide";
@@ -47,13 +46,11 @@ import { MeiliSearch } from "meilisearch";
 import { setBottomMessage } from "../../redux/slices/uiStateSlice";
 import { useDispatch, useSelector } from "react-redux";
 import { RootStore } from "../../redux/store";
-import ContinueButton from "./ContinueButton";
 import {
   getFontSize,
   getMarkdownLanguageTagForFile,
   getMetaKeyLabel,
   getPlatform,
-  isMetaEquivalentKeyPressed,
 } from "../../util";
 import StyledMarkdownPreview from "../markdown/StyledMarkdownPreview";
 import { setTakenActionTrue } from "../../redux/slices/miscSlice";
@@ -204,6 +201,66 @@ const MainTextInput = styled.textarea<{
   &::placeholder {
     color: ${lightGray}cc;
   }
+
+  position: relative;
+`;
+
+const InputToolbar = styled.div`
+  position: absolute;
+  display: flex;
+  gap: 4px;
+  right: 12px;
+  bottom: 4px;
+  width: calc(100% - 28px);
+  background-color: ${secondaryDark};
+
+  align-items: center;
+  z-index: 100;
+  font-size: 10px;
+
+  cursor: text;
+
+  & > * {
+    flex: 0 0 auto;
+  }
+`;
+
+const EnterButton = styled.div<{ offFocus: boolean }>`
+  padding: 2px 4px;
+  display: flex;
+  align-items: center;
+
+  background-color: ${(props) =>
+    props.offFocus ? undefined : lightGray + "33"};
+  border-radius: ${defaultBorderRadius};
+  color: #fff8;
+
+  &:hover {
+    background-color: #cf313199;
+    color: white;
+  }
+
+  cursor: pointer;
+`;
+
+const NewSessionButton = styled.div`
+  width: fit-content;
+  margin-right: auto;
+  margin-left: 8px;
+  margin-top: 4px;
+
+  font-size: 12px;
+
+  border-radius: ${defaultBorderRadius};
+  padding: 2px 8px;
+  color: ${lightGray};
+
+  &:hover {
+    background-color: ${lightGray}33;
+    color: ${vscForeground};
+  }
+
+  cursor: pointer;
 `;
 
 const DeleteButtonDiv = styled.div`
@@ -693,9 +750,20 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
     const handler = (event: any) => {
       if (event.data.type === "focusContinueInput") {
         inputRef.current!.focus();
+        console.log(sessionState.history.length, "OHPOI");
+        if (sessionState.history.length > 0) {
+          client?.stopSession();
+          persistSession();
+          dispatch(newSession());
+        }
         dispatch(setTakenActionTrue(null));
       } else if (event.data.type === "focusContinueInputWithEdit") {
         inputRef.current!.focus();
+        if (sessionState.history.length > 0) {
+          client?.stopSession();
+          persistSession();
+          dispatch(newSession());
+        }
 
         if (!inputRef.current?.value.startsWith("/edit")) {
           downshiftProps.setInputValue("/edit ");
@@ -712,7 +780,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
     return () => {
       window.removeEventListener("message", handler);
     };
-  }, [inputRef.current, props.isMainInput]);
+  }, [inputRef.current, props.isMainInput, sessionState.history.length]);
 
   const deleteButtonDivRef = React.useRef<HTMLDivElement>(null);
   const stickyDropdownHeaderDiv = React.useRef<HTMLDivElement>(null);
@@ -866,17 +934,11 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
             width: "calc(100% - 24px)",
           }}
         >
-          <span
-            onClick={() => {
-              downshiftProps.setInputValue("@");
-              inputRef.current?.focus();
-            }}
-            className="hover:underline cursor-pointer"
-          >
-            + Add Context
-          </span>
           {downshiftProps.inputValue?.startsWith("/edit") && (
-            <span className="float-right">Inserting at cursor</span>
+            <>
+              <span className="float-right">Inserting at cursor</span>
+              <br />
+            </>
           )}
         </div>
       )}
@@ -1360,6 +1422,72 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
               ref: inputRef,
             })}
           />
+
+          {(inputFocused || props.isMainInput) && (
+            <InputToolbar>
+              <span
+                style={{
+                  color: lightGray,
+                }}
+                onClick={() => {
+                  downshiftProps.setInputValue("@");
+                  inputRef.current?.focus();
+                }}
+                className="hover:underline cursor-pointer mr-auto"
+              >
+                + Add Context
+              </span>
+              <span
+                style={{
+                  color: downshiftProps.inputValue?.startsWith("/codebase")
+                    ? "#fff8"
+                    : lightGray,
+                  backgroundColor: downshiftProps.inputValue?.startsWith(
+                    "/codebase"
+                  )
+                    ? lightGray + "33"
+                    : undefined,
+                  borderRadius: defaultBorderRadius,
+                  padding: "2px 4px",
+                }}
+                onClick={() => {
+                  const inputValue = downshiftProps.inputValue;
+                  if (inputValue?.startsWith("/codebase")) {
+                    downshiftProps.setInputValue(
+                      inputValue.replace("/codebase ", "")
+                    );
+                  } else {
+                    downshiftProps.setInputValue("/codebase " + inputValue);
+                  }
+                  inputRef.current?.focus();
+                }}
+                className={"hover:underline cursor-pointer float-right"}
+              >
+                {downshiftProps.inputValue?.startsWith("/codebase")
+                  ? "Using codebase"
+                  : `${getMetaKeyLabel()} ⏎ Use codebase`}
+              </span>
+
+              <EnterButton
+                offFocus={downshiftProps.inputValue?.startsWith("/codebase")}
+                // disabled={
+                //   !active &&
+                //   (!(inputRef.current as any)?.value ||
+                //     typeof client === "undefined")
+                // }
+                onClick={() => {
+                  if (active) {
+                    client?.stopSession();
+                    dispatch(setActive(false));
+                  } else {
+                    props.onEnter?.(undefined);
+                  }
+                }}
+              >
+                ⏎ Enter
+              </EnterButton>
+            </InputToolbar>
+          )}
           {props.isMainInput || (
             <DeleteButtonDiv ref={deleteButtonDivRef}>
               {isHovered && (
@@ -1394,7 +1522,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
                         <ArrowUpLeftIcon width="1.3em" height="1.3em" />
                       </HeaderButtonWithText>
                     )}
-                    <HeaderButtonWithText
+                    {/* <HeaderButtonWithText
                       onClick={(e) => {
                         e.stopPropagation();
                         if (props.active && props.groupIndices) {
@@ -1411,7 +1539,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
                         // <StopCircleIcon width="1.4em" height="1.4em" />
                         <XMarkIcon width="1.4em" height="1.4em" />
                       )}
-                    </HeaderButtonWithText>
+                    </HeaderButtonWithText> */}
                   </>
                 </div>
               )}
@@ -1554,59 +1682,24 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
           </div>
         </Ul>
       </div>
-
-      {props.isMainInput && (
-        <>
-          <div
-            style={{
-              color: lightGray,
-              fontSize: "10px",
-              backgroundColor: vscBackground,
-              width: "calc(100% - 16px)",
-              height: "0",
-              marginTop: "4px",
-            }}
-          >
-            <span
-              onClick={() => {
-                const inputValue = downshiftProps.inputValue;
-                if (inputValue?.startsWith("/codebase")) {
-                  downshiftProps.setInputValue(
-                    inputValue.replace("/codebase ", "")
-                  );
-                } else {
-                  downshiftProps.setInputValue("/codebase " + inputValue);
-                }
-                inputRef.current?.focus();
-              }}
-              className={"hover:underline cursor-pointer float-right"}
-            >
-              {downshiftProps.inputValue?.startsWith("/codebase")
-                ? "Using codebase"
-                : `${getMetaKeyLabel()} ⏎ Use codebase`}
-            </span>
-          </div>
-          <br />
-        </>
-      )}
-
-      {props.isMainInput && (
-        <ContinueButton
-          disabled={
-            !active &&
-            (!(inputRef.current as any)?.value || typeof client === "undefined")
-          }
-          onClick={() => {
-            if (active) {
+      {props.isMainInput &&
+        (active ? (
+          <>
+            <br />
+            <br />
+          </>
+        ) : sessionState.history.length > 0 ? (
+          <NewSessionButton
+            onClick={() => {
               client?.stopSession();
-              dispatch(setActive(false));
-            } else {
-              props.onEnter?.(undefined);
-            }
-          }}
-          showStop={active}
-        />
-      )}
+              persistSession();
+              dispatch(newSession());
+            }}
+            className="mr-auto"
+          >
+            New Session ({getMetaKeyLabel()} M)
+          </NewSessionButton>
+        ) : null)}
     </div>
   );
 });

@@ -97,10 +97,10 @@ const commandsMap: { [command: string]: (...args: any) => any } = {
   },
   "continue.focusContinueInputWithEdit": async () => {
     vscode.commands.executeCommand("continue.continueGUIView.focus");
-    addHighlightedCodeToContext(true);
     debugPanelWebview?.postMessage({
       type: "focusContinueInputWithEdit",
     });
+    addHighlightedCodeToContext(true);
   },
   "continue.toggleAuxiliaryBar": () => {
     vscode.commands.executeCommand("workbench.action.toggleAuxiliaryBar");
