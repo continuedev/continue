@@ -26,7 +26,7 @@ export type Content = string;
 export type Editing = boolean;
 export type Editable = boolean;
 export type ContextItems = ContextItem[];
-export type SessionId = string;
+export type SessionId = string | null;
 
 /**
  * Full session history and important state needed for autopilot to Continue

@@ -88,6 +88,12 @@
           "description": "The maximum number of tokens to generate.",
           "title": "Max Tokens",
           "type": "integer"
+        },
+        "session_id": {
+          "default": null,
+          "description": "The session_id of the UI.",
+          "title": "Session Id",
+          "type": "string"
         }
       },
       "title": "BaseCompletionOptions",
@@ -393,7 +399,8 @@
             "presence_penalty": null,
             "frequency_penalty": null,
             "stop": null,
-            "max_tokens": 1023
+            "max_tokens": 1023,
+            "session_id": null
           },
           "description": "Options for the completion endpoint. Read more about the completion options in the documentation."
         },
@@ -853,6 +860,7 @@
             "frequency_penalty": null,
             "max_tokens": 1023,
             "presence_penalty": null,
+            "session_id": null,
             "stop": null,
             "temperature": null,
             "top_k": null,
@@ -877,6 +885,7 @@
               "frequency_penalty": null,
               "max_tokens": 1023,
               "presence_penalty": null,
+              "session_id": null,
               "stop": null,
               "temperature": null,
               "top_k": null,
@@ -946,7 +955,8 @@
         "presence_penalty": null,
         "frequency_penalty": null,
         "stop": null,
-        "max_tokens": 1023
+        "max_tokens": 1023,
+        "session_id": null
       },
       "description": "Options for the completion endpoint. Read more about the completion options in the documentation."
     },

@@ -90,8 +90,9 @@
           "type": "integer"
         },
         "session_id": {
-          "title": "Session Id",
+          "default": null,
           "description": "The session_id of the UI.",
+          "title": "Session Id",
           "type": "string"
         }
       },
@@ -162,6 +163,7 @@
           "enum": [
             "openai",
             "openai-free-trial",
+            "openai-agent",
             "openai-aiohttp",
             "anthropic",
             "together",
@@ -617,6 +619,7 @@
             "frequency_penalty": null,
             "max_tokens": 1023,
             "presence_penalty": null,
+            "session_id": null,
             "stop": null,
             "temperature": null,
             "top_k": null,
@@ -678,7 +681,8 @@
         "presence_penalty": null,
         "frequency_penalty": null,
         "stop": null,
-        "max_tokens": 1023
+        "max_tokens": 1023,
+        "session_id": null
       },
       "description": "Default options for completion. These will be overriden by any options set for a specific model."
     },

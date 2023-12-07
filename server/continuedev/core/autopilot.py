@@ -6,6 +6,7 @@ from aiohttp import ClientPayloadError
 from continuedev.plugins.steps.openai_run_func import OpenAIRunFunction
 import openai
 import inspect
+import traceback
 
 from ..libs.llm.prompts.chat import template_alpaca_messages
 from ..libs.util.devdata import dev_data_logger
@@ -232,6 +233,10 @@ class Autopilot:
                 )
 
         except Exception as e:
+            stack_trace = traceback.format_exc()
+            # Log the stack trace
+            logger.error("An error occurred:\n" + stack_trace)
+
             continue_custom_exception = self.handle_error(e, step)
 
             yield SessionUpdate(index=index, update=SetStep(hide=False))

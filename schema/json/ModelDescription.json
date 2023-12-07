@@ -90,8 +90,9 @@
           "type": "integer"
         },
         "session_id": {
-          "title": "Session Id",
+          "default": null,
           "description": "The session_id of the UI.",
+          "title": "Session Id",
           "type": "string"
         }
       },
@@ -185,6 +186,7 @@
       "enum": [
         "openai",
         "openai-free-trial",
+        "openai-agent",
         "openai-aiohttp",
         "anthropic",
         "together",
@@ -273,7 +275,8 @@
         "presence_penalty": null,
         "frequency_penalty": null,
         "stop": null,
-        "max_tokens": 1023
+        "max_tokens": 1023,
+        "session_id": null
       },
       "description": "Options for the completion endpoint. Read more about the completion options in the documentation."
     },
