@@ -1,5 +1,4 @@
 import { Dispatch } from "@reduxjs/toolkit";
-import ContinueGUIClientProtocol from "../client/ContinueGUIClientProtocol";
 import { useEffect, useState } from "react";
 import {
   addContextItemAtIndex,
@@ -20,10 +19,7 @@ import {
 } from "../redux/slices/serverStateReducer";
 import { setVscMachineId } from "../redux/slices/configSlice";
 
-function useSetup(
-  client: ContinueGUIClientProtocol | undefined,
-  dispatch: Dispatch<any>
-) {
+function useSetup(dispatch: Dispatch<any>) {
   const serverUrl = (window as any).serverUrl;
   const active = useSelector((store: RootStore) => store.sessionState.active);
   const title = useSelector((store: RootStore) => store.sessionState.title);
@@ -38,59 +34,6 @@ function useSetup(
     // Tell JetBrains the webview is ready
     postToIde("onLoad", {});
   }, []);
-
-  useEffect(() => {
-    (async () => {
-      if (
-        client &&
-        !requestedTitle &&
-        !active &&
-        title === "New Session" &&
-        history &&
-        history.filter((step) => !step?.hide).length >= 2
-      ) {
-        setRequestedTitle(true);
-        const title = await client.getSessionTitle(history);
-        dispatch(setTitle(title));
-      }
-    })();
-  }, [active, history, title, client, requestedTitle]);
-
-  // Setup requiring client
-  useEffect(() => {
-    if (!client) return;
-
-    // Listen for updates to the session state
-    client.onSessionUpdate((update) => {
-      dispatch(processSessionUpdate(update));
-    });
-
-    client.onIndexingProgress((progress) => {
-      dispatch(setIndexingProgress(progress));
-    });
-
-    client.onAddContextItem((item, index) => {
-      dispatch(addContextItemAtIndex({ item, index }));
-    });
-
-    client.onConfigUpdate((config) => {
-      dispatch(setConfig(config));
-    });
-
-    fetch(`${serverUrl}/slash_commands`).then(async (resp) => {
-      if (resp.status !== 200) return;
-      const sc = await resp.json();
-      dispatch(setSlashCommands(sc));
-    });
-    fetch(`${serverUrl}/context_providers`).then(async (resp) => {
-      if (resp.status !== 200) return;
-      const cp = await resp.json();
-      dispatch(setContextProviders(cp));
-    });
-    client.getConfig().then((config) => {
-      dispatch(setConfig(config));
-    });
-  }, [client]);
 
   // IDE event listeners
   useEffect(() => {
@@ -118,13 +61,12 @@ function useSetup(
           dispatch(setServerStatusMessage(event.data.message));
           break;
         case "stopSession":
-          client?.stopSession();
           break;
       }
     };
     window.addEventListener("message", eventListener);
     return () => window.removeEventListener("message", eventListener);
-  }, [client]);
+  }, []);
 
   // Save theme colors to local storage
   useEffect(() => {

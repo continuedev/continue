@@ -22,6 +22,16 @@
   ],
   "configurations": [
     {
+      "type": "node",
+      "request": "launch",
+      "name": "Jest All",
+      "program": "${workspaceFolder}/core/node_modules/.bin/jest",
+      "args": ["--runInBand"],
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen",
+      "disableOptimisticBPs": true
+    },
+    {
       "type": "chrome",
       "request": "attach",
       "name": "Vite",
@@ -32,8 +42,8 @@
       },
       "port": 9222,
       // "runtimeArgs": ["--remote-debugging-port=9222"],
-      "sourceMaps": true,
-      "preLaunchTask": "gui:dev"
+      "sourceMaps": true
+      // "preLaunchTask": "gui:dev"
     },
     {
       "name": "Pytest",

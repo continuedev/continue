@@ -4,7 +4,7 @@ declare const vscode: any;
 
 function _postToIde(type: string, data: any) {
   if (typeof vscode === "undefined") {
-    if (localStorage.getItem("ide") === "jetbrains" || true) {
+    if (localStorage.getItem("ide") === "jetbrains") {
       if ((window as any).postIntellijMessage === undefined) {
         console.log(
           "Unable to send message: postIntellijMessage is undefined. ",

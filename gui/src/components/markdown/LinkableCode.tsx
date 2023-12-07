@@ -44,9 +44,9 @@ function LinkableCode(props: any) {
     // Check if matches any context item's filepath
     let link = false;
     for (let contextItem of contextItems) {
-      if (contextItem.description.description.endsWith(filename)) {
+      if (contextItem.description.endsWith(filename)) {
         link = true;
-        setFilepath(contextItem.description.description);
+        setFilepath(contextItem.description);
         break;
       }
     }

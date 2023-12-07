@@ -47,16 +47,6 @@ import FTCDialog from "../components/dialogs/FTCDialog";
 import HeaderButtonWithText from "../components/HeaderButtonWithText";
 import { useNavigate } from "react-router-dom";
 import { setTakenActionTrue } from "../redux/slices/miscSlice";
-import {
-  addContextItemAtIndex,
-  clearContextItems,
-  deleteAtIndex,
-  newSession,
-  setActive,
-  setHistory,
-  setTitle,
-} from "../redux/slices/sessionStateReducer";
-import { StepDescription } from "../schema/SessionState";
 import FreeTrial from "../../../core/llm/llms/FreeTrial";
 import { constructMessages } from "../../../core/llm/constructMessages";
 import {
@@ -64,7 +54,13 @@ import {
   ChatHistoryItem,
   ChatMessage,
 } from "../../../core/llm/types";
-import { streamUpdate, submitMessage } from "../redux/slices/stateSlice";
+import {
+  resubmitAtIndex,
+  streamUpdate,
+  submitMessage,
+  newSession,
+  setInactive,
+} from "../redux/slices/stateSlice";
 
 const TopGuiDiv = styled.div`
   overflow-y: scroll;
@@ -243,7 +239,7 @@ function GUI(props: GUIProps) {
         !e.shiftKey
       ) {
         client?.stopSession();
-        dispatch(setActive(false));
+        dispatch(setInactive());
       } else if (e.key === "Escape") {
         dispatch(setBottomMessage(undefined));
       }
@@ -283,7 +279,6 @@ function GUI(props: GUIProps) {
       const message: ChatMessage = {
         role: "user",
         content: input,
-        summary: input,
       };
       const historyItem: ChatHistoryItem = {
         message,
@@ -413,8 +408,9 @@ function GUI(props: GUIProps) {
   }, [sendInput]);
 
   const onMainTextInput = (event?: any) => {
+    console.log("onMainTextInput");
     dispatch(setTakenActionTrue(null));
-    if (mainTextInputRef.current && client) {
+    if (mainTextInputRef.current) {
       let input = (mainTextInputRef.current as any).inputValue;
 
       if (input.trim() === "") return;
@@ -443,18 +439,15 @@ function GUI(props: GUIProps) {
   const isLastUserInput = useCallback(
     (index: number): boolean => {
       let foundLaterUserInput = false;
-      for (let i = index + 1; i < sessionState.history.length; i++) {
-        if (
-          sessionState.history[i].name === "User Input" &&
-          sessionState.history[i].hide === false
-        ) {
+      for (let i = index + 1; i < state.history.length; i++) {
+        if (state.history[i].message.role === "user") {
           foundLaterUserInput = true;
           break;
         }
       }
       return !foundLaterUserInput;
     },
-    [sessionState.history]
+    [state.history]
   );
 
   const getStepsInUserInputGroup = useCallback(
@@ -490,34 +483,6 @@ function GUI(props: GUIProps) {
       return stepsInUserInputGroup;
     },
     [sessionState.history]
-  );
-
-  const onToggleAtIndex = useCallback(
-    (index: number) => {
-      // Check if all steps after the User Input are closed
-      const groupIndices = getStepsInUserInputGroup(index);
-      const userInputIndex = groupIndices[0];
-      setStepsOpen((prev) => {
-        const nextStepsOpen = [...prev];
-        nextStepsOpen[index] = !nextStepsOpen[index];
-        const allStepsAfterUserInputAreClosed = !groupIndices.some(
-          (i, j) => j > 0 && nextStepsOpen[i]
-        );
-        if (allStepsAfterUserInputAreClosed) {
-          nextStepsOpen[userInputIndex] = false;
-        } else {
-          const allStepsAfterUserInputAreOpen = !groupIndices.some(
-            (i, j) => j > 0 && !nextStepsOpen[i]
-          );
-          if (allStepsAfterUserInputAreOpen) {
-            nextStepsOpen[userInputIndex] = true;
-          }
-        }
-
-        return nextStepsOpen;
-      });
-    },
-    [getStepsInUserInputGroup]
   );
 
   useEffect(() => {
@@ -557,53 +522,13 @@ function GUI(props: GUIProps) {
                       value={item.message.content}
                       active={active && isLastUserInput(index)}
                       onEnter={(e, value) => {
-                        if (value && client) {
-                          client?.stopSession();
-                          const newHistory = [
-                            ...sessionState.history.slice(0, index),
-                            {
-                              name: "User Input",
-                              description: value,
-                              observations: [],
-                              logs: [],
-                              step_type: "UserInputStep",
-                              params: {
-                                user_input: value,
-                                context_items: sessionState.context_items,
-                              },
-                              hide: false,
-                              depth: 0,
-                            },
-                          ];
-                          dispatch(setHistory(newHistory));
-                          dispatch(setActive(true));
-                          const state = {
-                            history: newHistory,
-                            context_items: sessionState.context_items,
-                          };
-                          dispatch(clearContextItems());
+                        if (value) {
+                          dispatch(resubmitAtIndex({ index, content: value }));
 
-                          client.runFromState(state);
+                          // TODO: Call the LLM
                         }
                         e?.stopPropagation();
                         e?.preventDefault();
-                      }}
-                      groupIndices={getStepsInUserInputGroup(index)}
-                      onToggle={(isOpen: boolean) => {
-                        // Collapse all steps in the section
-                        setStepsOpen((prev) => {
-                          const nextStepsOpen = [...prev];
-                          getStepsInUserInputGroup(index).forEach((i) => {
-                            nextStepsOpen[i] = isOpen;
-                          });
-                          return nextStepsOpen;
-                        });
-                      }}
-                      onToggleAll={(isOpen: boolean) => {
-                        // Collapse _all_ steps
-                        setStepsOpen((prev) => {
-                          return prev.map((_) => isOpen);
-                        });
                       }}
                       isToggleOpen={
                         typeof stepsOpen[index] === "undefined"
@@ -611,12 +536,6 @@ function GUI(props: GUIProps) {
                           : stepsOpen[index]!
                       }
                       index={index}
-                      onDelete={() => {
-                        // Delete the input and all steps until the next user input
-                        getStepsInUserInputGroup(index).forEach((i) => {
-                          dispatch(deleteAtIndex(i));
-                        });
-                      }}
                     />
                   ) : (
                     <TimelineItem
@@ -641,15 +560,13 @@ function GUI(props: GUIProps) {
                             : true
                           : stepsOpen[index]!
                       }
-                      onToggle={() => onToggleAtIndex(index)}
+                      onToggle={() => {}}
                     >
                       {false ? ( // Most of these falses were previously (step.error)
                         <ErrorStepContainer
-                          onClose={() => onToggleAtIndex(index)}
+                          onClose={() => {}}
                           error={undefined}
-                          onDelete={() => {
-                            dispatch(deleteAtIndex(index));
-                          }}
+                          onDelete={() => {}}
                         />
                       ) : (
                         <StepContainer
@@ -672,9 +589,7 @@ function GUI(props: GUIProps) {
                           onRetry={() => {
                             client?.retryAtIndex(index);
                           }}
-                          onDelete={() => {
-                            dispatch(deleteAtIndex(index));
-                          }}
+                          onDelete={() => {}}
                           noUserInputParent={
                             getStepsInUserInputGroup(index).length === 0
                           }
@@ -694,13 +609,14 @@ function GUI(props: GUIProps) {
           <StopButton
             onClick={() => {
               client?.stopSession();
-              dispatch(setActive(false));
+              dispatch(setInactive());
             }}
           >
             ⌘ ⌫ Cancel
           </StopButton>
         ) : (
           <ComboBox
+            active={false}
             isMainInput={true}
             ref={mainTextInputRef}
             onEnter={(e, _) => {

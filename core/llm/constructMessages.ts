@@ -7,9 +7,7 @@ export function constructMessages(history: ChatHistory): ChatMessage[] {
     for (const ctxItem of historyItem.contextItems) {
       msgs.push({
         role: historyItem.message.role,
-        name: ctxItem.name,
         content: ctxItem.content,
-        summary: ctxItem.description,
       });
     }
     msgs.push(historyItem.message);

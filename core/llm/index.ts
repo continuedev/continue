@@ -6,6 +6,15 @@ import {
 } from "./countTokens";
 import { CompletionOptions, RequestOptions, ChatMessage } from "./types";
 
+async function streamToString(stream: any) {
+  let decoder = new TextDecoder("utf-8");
+  let result = "";
+  for await (const chunk of stream) {
+    result += decoder.decode(chunk);
+  }
+  return result;
+}
+
 interface LLMOptions {
   title?: string;
   uniqueId: string;
@@ -58,7 +67,10 @@ export abstract class LLM implements LLMOptions {
     this.model = options.model;
     this.systemMessage = options.systemMessage;
     this.contextLength = options.contextLength;
-    this.completionOptions = options.completionOptions;
+    this.completionOptions = {
+      ...options.completionOptions,
+      model: options.model || "gpt-4",
+    };
     this.requestOptions = options.requestOptions;
     this.promptTemplates = options.promptTemplates;
     this.templateMessages = options.templateMessages;
@@ -102,13 +114,11 @@ export abstract class LLM implements LLMOptions {
       return prompt;
     }
 
-    const msgs: ChatMessage[] = [
-      { role: "user", content: prompt, summary: prompt },
-    ];
+    const msgs: ChatMessage[] = [{ role: "user", content: prompt }];
 
     const systemMessage = this._getSystemMessage();
     if (systemMessage) {
-      msgs.unshift({ role: "system", content: systemMessage, summary: "" });
+      msgs.unshift({ role: "system", content: systemMessage });
     }
 
     return this.templateMessages(msgs);
@@ -245,19 +255,27 @@ export abstract class LLM implements LLMOptions {
 
     let completion = "";
 
-    if (this.templateMessages) {
-      for await (const chunk of this._streamComplete(
-        prompt,
-        completionOptions
-      )) {
-        completion += chunk;
-        yield { role: "assistant", content: chunk, summary: chunk };
+    try {
+      if (this.templateMessages) {
+        for await (const chunk of this._streamComplete(
+          prompt,
+          completionOptions
+        )) {
+          completion += chunk;
+          yield { role: "assistant", content: chunk };
+        }
+      } else {
+        for await (const chunk of this._streamChat(
+          messages,
+          completionOptions
+        )) {
+          completion += chunk.content;
+          yield chunk;
+        }
       }
-    } else {
-      for await (const chunk of this._streamChat(messages, completionOptions)) {
-        completion += chunk.content;
-        yield chunk;
-      }
+    } catch (error) {
+      console.log(error);
+      throw error;
     }
 
     this._logTokensGenerated(completionOptions.model, completion);
@@ -276,7 +294,7 @@ export abstract class LLM implements LLMOptions {
   ): AsyncGenerator<ChatMessage> {
     if (!this.templateMessages) {
       throw new Error(
-        "You must either implement template_messages or _stream_chat"
+        "You must either implement templateMessages or _streamChat"
       );
     }
 
@@ -284,7 +302,7 @@ export abstract class LLM implements LLMOptions {
       this.templateMessages(messages),
       options
     )) {
-      yield { role: "assistant", content: chunk, summary: chunk };
+      yield { role: "assistant", content: chunk };
     }
   }
 

@@ -1,5 +1,6 @@
 import { createSlice } from "@reduxjs/toolkit";
 import { RootStore } from "../store";
+import { ContextItemId } from "../../../../core/llm/types";
 
 const initialState: RootStore["state"] = {
   history: [],
@@ -13,31 +14,56 @@ export const stateSlice = createSlice({
   reducers: {
     addContextItemAtIndex: (state, action) => {
       if (action.payload.index < state.history.length) {
-        state.history[action.payload.index].contextItems.push(
-          action.payload.contextItem
-        );
+        return {
+          ...state,
+          history: state.history.map((historyItem, i) => {
+            if (i === action.payload.index) {
+              return {
+                ...historyItem,
+                contextItems: [
+                  ...historyItem.contextItems,
+                  action.payload.contextItem,
+                ],
+              };
+            }
+            return historyItem;
+          }),
+        };
       }
     },
     appendMessage: (state, action) => {
-      state.history.push(action.payload);
+      return {
+        ...state,
+        history: [...state.history, action.payload],
+      };
     },
     addContextItem: (state, action) => {
-      state.contextItems.push(action.payload);
+      return {
+        ...state,
+        contextItems: [...state.contextItems, action.payload],
+      };
+    },
+    resubmitAtIndex: (state, action) => {
+      if (action.payload.index < state.history.length) {
+        state.history[action.payload.index].message.content =
+          action.payload.content;
+        state.history[action.payload.index].message.summary =
+          action.payload.summary;
+
+        // Cut off history after the resubmitted message
+        state.history = state.history.slice(0, action.payload.index + 1);
+        state.contextItems = [];
+      }
     },
     submitMessage: (state, action) => {
       state.history.push({
-        message: {
-          role: "user",
-          content: action.payload,
-          summary: action.payload,
-        },
+        message: action.payload,
         contextItems: state.contextItems,
       });
       state.history.push({
         message: {
           role: "assistant",
           content: "",
-          summary: "",
         },
         contextItems: [],
       });
@@ -53,6 +79,45 @@ export const stateSlice = createSlice({
           action.payload;
       }
     },
+    newSession: (state) => {
+      state.history = [];
+      state.contextItems = [];
+      state.active = false;
+    },
+    deleteContextWithIds: (
+      state,
+      {
+        payload,
+      }: { payload: { ids: ContextItemId[]; index: number | undefined } }
+    ) => {
+      const ids = payload.ids.map((id) => `${id.providerTitle}-${id.itemId}`);
+      if (typeof payload.index === "undefined") {
+        return {
+          ...state,
+          contextItems: state.contextItems.filter(
+            (item) =>
+              !ids.includes(`${item.id.providerTitle}-${item.id.itemId}`)
+          ),
+        };
+      } else {
+        return {
+          ...state,
+          history: state.history.map((historyItem, i) => {
+            if (i === payload.index) {
+              return {
+                ...historyItem,
+
+                contextItems: historyItem.contextItems.filter(
+                  (item) =>
+                    !ids.includes(`${item.id.providerTitle}-${item.id.itemId}`)
+                ),
+              };
+            }
+            return historyItem;
+          }),
+        };
+      }
+    },
   },
 });
 
@@ -63,5 +128,8 @@ export const {
   submitMessage,
   setInactive,
   streamUpdate,
+  newSession,
+  deleteContextWithIds,
+  resubmitAtIndex,
 } = stateSlice.actions;
 export default stateSlice.reducer;

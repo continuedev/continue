@@ -59,17 +59,18 @@ import {
   handleKeyDownJetBrainsMac,
 } from "../../util/jetbrains";
 import FileIcon from "../FileIcon";
-import { ContextItem } from "../../schema/ContextItem";
+import RingLoader from "../loaders/RingLoader";
+import CodeSnippetPreview from "../markdown/CodeSnippetPreview";
+import { contextLengthSelector } from "../../redux/selectors/configSelectors";
+import { getContextItem } from "../../../../core/context";
 import {
   addContextItem,
   addContextItemAtIndex,
   deleteContextWithIds,
   newSession,
-  setActive,
-} from "../../redux/slices/sessionStateReducer";
-import RingLoader from "../loaders/RingLoader";
-import CodeSnippetPreview from "../markdown/CodeSnippetPreview";
-import { contextLengthSelector } from "../../redux/selectors/configSelectors";
+  setInactive,
+} from "../../redux/slices/stateSlice";
+import { ContextItem } from "../../../../core/llm/types";
 
 const SEARCH_INDEX_NAME = "continue_context_items";
 
@@ -364,9 +365,6 @@ interface ComboBoxProps {
   isMainInput: boolean;
   value?: string;
   active?: boolean;
-  groupIndices?: number[];
-  onToggle?: (arg0: boolean) => void;
-  onToggleAll?: (arg0: boolean) => void;
   isToggleOpen?: boolean;
   index?: number;
   onDelete?: () => void;
@@ -421,21 +419,21 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
     any | undefined
   >(undefined);
 
-  const availableSlashCommands = useSelector(
-    (state: RootStore) =>
-      state.serverState.slashCommands?.map((cmd) => {
-        return {
-          name: `/${cmd.name}`,
-          description: cmd.description,
-        };
-      }) || []
-  );
+  const availableSlashCommands = [];
+  // useSelector(
+  //   (state: RootStore) =>
+  //   state.serverState.slashCommands?.map((cmd) => {
+  //     return {
+  //       name: `/${cmd.name}`,
+  //       description: cmd.description,
+  //     };
+  //   }) || []
+  // );
   const selectedContextItems = useSelector((state: RootStore) => {
     if (typeof props.index !== "undefined") {
-      return (state.sessionState.history[props.index].params["context_items"] ||
-        []) as ContextItem[];
+      return state.state.history[props.index].contextItems;
     } else {
-      return state.sessionState.context_items || [];
+      return state.state.contextItems;
     }
   });
 
@@ -483,7 +481,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
       const timeout = setTimeout(() => {
         setWaitingForContextItem(true);
       }, 0.1);
-      const contextItem = await client?.getContextItem(id, query);
+      const contextItem = await getContextItem(id, query);
       clearTimeout(timeout);
       setWaitingForContextItem(false);
       if (!contextItem) return;
@@ -981,7 +979,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
             onClick={() => {
               dispatch(
                 deleteContextWithIds({
-                  ids: selectedContextItems.map((item) => item.description.id),
+                  ids: selectedContextItems.map((item) => item.id),
                   index: props.index,
                 })
               );
@@ -993,9 +991,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
               if (e.key === "Backspace") {
                 dispatch(
                   deleteContextWithIds({
-                    ids: selectedContextItems.map(
-                      (item) => item.description.id
-                    ),
+                    ids: selectedContextItems.map((item) => item.id),
                     index: props.index,
                   })
                 );
@@ -1014,7 +1010,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
                   <PillButton
                     inputIndex={props.index}
                     areMultipleItems={selectedContextItems.length > 1}
-                    key={`${item.description.id.item_id}${idx}`}
+                    key={`${item.id.itemId}${idx}`}
                     item={item}
                     editing={
                       item.editing &&
@@ -1028,21 +1024,18 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
                     onDelete={() => {
                       dispatch(
                         deleteContextWithIds({
-                          ids: [item.description.id],
+                          ids: [item.id],
                           index: props.index,
                         })
                       );
                       inputRef.current?.focus();
                       if (
-                        (item.description.id.item_id ===
-                          focusedContextItem?.description.id.item_id &&
-                          focusedContextItem?.description.id.provider_name ===
-                            item.description.id.provider_name) ||
-                        (item.description.id.item_id ===
-                          previewingContextItem?.description.id.item_id &&
-                          previewingContextItem?.description.id
-                            .provider_name ===
-                            item.description.id.provider_name)
+                        (item.id.itemId === focusedContextItem?.id.itemId &&
+                          focusedContextItem?.id.providerTitle ===
+                            item.id.providerTitle) ||
+                        (item.id.itemId === previewingContextItem?.id.itemId &&
+                          previewingContextItem?.id.providerTitle ===
+                            item.id.providerTitle)
                       ) {
                         setPreviewingContextItem(undefined);
                         setFocusedContextItem(undefined);
@@ -1050,10 +1043,9 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
                     }}
                     onClick={(e) => {
                       if (
-                        item.description.id.item_id ===
-                          focusedContextItem?.description.id.item_id &&
-                        focusedContextItem?.description.id.provider_name ===
-                          item.description.id.provider_name
+                        item.id.itemId === focusedContextItem?.id.itemId &&
+                        focusedContextItem?.id.providerTitle ===
+                          item.id.providerTitle
                       ) {
                         setFocusedContextItem(undefined);
                       } else {
@@ -1067,10 +1059,8 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
                       setPreviewingContextItem((prev) => {
                         if (!prev) return item;
                         if (
-                          prev.description.id.item_id ===
-                            item.description.id.item_id &&
-                          prev.description.id.provider_name ===
-                            item.description.id.provider_name
+                          prev.id.itemId === item.id.itemId &&
+                          prev.id.providerTitle === item.id.providerTitle
                         ) {
                           return undefined;
                         } else {
@@ -1079,16 +1069,14 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
                       });
                     }}
                     previewing={
-                      item.description.id.item_id ===
-                        previewingContextItem?.description.id.item_id &&
-                      previewingContextItem?.description.id.provider_name ===
-                        item.description.id.provider_name
+                      item.id.itemId === previewingContextItem?.id.itemId &&
+                      previewingContextItem?.id.providerTitle ===
+                        item.id.providerTitle
                     }
                     focusing={
-                      item.description.id.item_id ===
-                        focusedContextItem?.description.id.item_id &&
-                      focusedContextItem?.description.id.provider_name ===
-                        item.description.id.provider_name
+                      item.id.itemId === focusedContextItem?.id.itemId &&
+                      focusedContextItem?.id.providerTitle ===
+                        item.id.providerTitle
                     }
                     prefixInputWithEdit={(should) => {
                       if (
@@ -1184,7 +1172,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
         <pre className="m-0">
           <StyledMarkdownPreview
             source={`\`\`\`${getMarkdownLanguageTagForFile(
-              previewingContextItem.description.description
+              previewingContextItem.description
             )}\n${previewingContextItem.content}\n\`\`\``}
             maxHeight={200}
           />
@@ -1198,7 +1186,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
             onClick={() => {
               dispatch(
                 deleteContextWithIds({
-                  ids: selectedContextItems.map((item) => item.description.id),
+                  ids: selectedContextItems.map((item) => item.id),
                   index: props.index,
                 })
               );
@@ -1228,7 +1216,8 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
         ref={divRef}
       >
         <GradientBorder
-          loading={props.active || false}
+          // loading={props.active}
+          loading={false}
           isFirst={false}
           isLast={false}
           borderColor={props.active ? undefined : vscBackground}
@@ -1478,7 +1467,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
                 onClick={() => {
                   if (active) {
                     client?.stopSession();
-                    dispatch(setActive(false));
+                    dispatch(setInactive());
                   } else {
                     props.onEnter?.(undefined);
                   }
@@ -1493,7 +1482,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
               {isHovered && (
                 <div className="flex">
                   <>
-                    {timeline
+                    {/* {timeline
                       .filter(
                         (h, i: number) =>
                           props.groupIndices?.includes(i) && h.logs
@@ -1521,7 +1510,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
                       >
                         <ArrowUpLeftIcon width="1.3em" height="1.3em" />
                       </HeaderButtonWithText>
-                    )}
+                    )} */}
                     {/* <HeaderButtonWithText
                       onClick={(e) => {
                         e.stopPropagation();

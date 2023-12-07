@@ -2,7 +2,6 @@ import { SessionFullState } from "../redux/slices/sessionStateReducer";
 import { ContextItem } from "../schema/ContextItem";
 import { ContextItemId } from "../schema/ContextItemId";
 import { ContinueConfig } from "../schema/ContinueConfig";
-import { PersistedSessionInfo } from "../schema/PersistedSessionInfo";
 import { ModelDescription } from "../schema/SerializedContinueConfig";
 import { SessionState, StepDescription } from "../schema/SessionState";
 import { SessionUpdate } from "../schema/SessionUpdate";
@@ -249,23 +248,22 @@ class ContinueGUIClientProtocol extends AbstractContinueGUIClientProtocol {
     workspaceDirectory: string
   ) {
     // Save current session
-    const persistedSessionInfo: PersistedSessionInfo = {
-      session_state: {
-        history: currentSession.history,
-        context_items: currentSession.context_items,
-      },
-      title: currentSession.title,
-      workspace_directory: workspaceDirectory,
-      session_id: currentSession.session_id,
-    };
-
-    await fetch(`${this.serverUrl}/sessions/save`, {
-      method: "POST",
-      body: JSON.stringify(persistedSessionInfo),
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
+    // const persistedSessionInfo: PersistedSessionInfo = {
+    //   session_state: {
+    //     history: currentSession.history,
+    //     context_items: [],
+    //   },
+    //   title: currentSession.title,
+    //   workspace_directory: workspaceDirectory,
+    //   session_id: currentSession.session_id,
+    // };
+    // await fetch(`${this.serverUrl}/sessions/save`, {
+    //   method: "POST",
+    //   body: JSON.stringify(persistedSessionInfo),
+    //   headers: {
+    //     "Content-Type": "application/json",
+    //   },
+    // });
   }
 
   async deleteSession(session_id: string) {

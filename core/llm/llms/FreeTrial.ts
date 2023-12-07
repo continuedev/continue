@@ -1,13 +1,15 @@
 import { LLM } from "..";
 import { ChatMessage, CompletionOptions } from "../types";
-import axios from "axios";
 
-// const SERVER_URL = "http://127.0.0.1:8080"
+// const SERVER_URL = "http://localhost:8080";
 const SERVER_URL = "https://proxy-server-l6vsfbzhba-uw.a.run.app";
 
 class FreeTrial extends LLM {
   private _getHeaders() {
-    return { uniqueId: this.uniqueId || "None" };
+    return {
+      uniqueId: this.uniqueId || "None",
+      "Content-Type": "application/json",
+    };
   }
 
   protected async _complete(
@@ -16,23 +18,17 @@ class FreeTrial extends LLM {
   ): Promise<string> {
     const args = this.collectArgs(options);
 
-    const response = await axios.post(
-      `${SERVER_URL}/complete`,
-      {
+    const response = await fetch(`${SERVER_URL}/complete`, {
+      method: "POST",
+      headers: this._getHeaders(),
+      body: JSON.stringify({
         messages: [{ role: "user", content: prompt }],
         ...args,
-      },
-      {
-        headers: this._getHeaders(),
-        //   proxy: this.requestOptions.proxy,
-      }
-    );
+      }),
+      //   proxy: this.requestOptions.proxy,
+    });
 
-    if (response.status != 200) {
-      throw new Error(response.data);
-    }
-
-    return response.data;
+    return await response.json();
   }
 
   protected async *_streamComplete(
@@ -41,70 +37,71 @@ class FreeTrial extends LLM {
   ): AsyncGenerator<string> {
     const args = this.collectArgs(options);
 
-    const response = await axios.post(
-      `${SERVER_URL}/stream_complete`,
-      {
+    const response = await fetch(`${SERVER_URL}/stream_complete`, {
+      method: "POST",
+      headers: this._getHeaders(),
+      body: JSON.stringify({
         messages: [{ role: "user", content: prompt }],
         ...args,
-      },
-      {
-        headers: this._getHeaders(),
-        responseType: "stream",
-        //   proxy: this.requestOptions.proxy,
+      }),
+    });
+
+    const reader = response.body.getReader();
+    let decoder = new TextDecoder("utf-8");
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) {
+        break;
       }
-    );
-
-    if (response.status != 200) {
-      throw new Error(await streamToString(response.data));
-    }
-
-    for await (const chunk of response.data) {
-      if (chunk) {
-        let decodedChunk = chunk.toString("utf-8");
+      if (value) {
+        let decodedChunk = decoder.decode(value);
         yield decodedChunk;
       }
     }
   }
-}
 
-async function* streamChat(messages: ChatMessage[], options: any) {
-  const args = this.collectArgs(options);
+  protected async *_streamChat(
+    messages: ChatMessage[],
+    options: CompletionOptions
+  ): AsyncGenerator<ChatMessage> {
+    const args = this.collectArgs(options);
 
-  const response = await axios.post(
-    `${SERVER_URL}/stream_chat`,
-    {
-      messages,
-      ...args,
-    },
-    {
-      headers: this.getHeaders(),
-      // proxy: requestOptions.proxy,
-      responseType: "stream",
-    }
-  );
+    const response = await fetch(`${SERVER_URL}/stream_chat`, {
+      method: "POST",
+      headers: this._getHeaders(),
+      body: JSON.stringify({
+        messages,
+        ...args,
+      }),
+    });
 
-  if (response.status !== 200) {
-    throw new Error(await streamToString(response.data));
-  }
+    const reader = response.body.getReader();
+    let decoder = new TextDecoder("utf-8");
 
-  for await (const chunk of response.data) {
-    if (chunk) {
-      const jsonChunk = chunk.toString("utf-8");
-      const chunks = jsonChunk.split("\n");
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) {
+        break;
+      }
+      if (value) {
+        let decodedChunk = decoder.decode(value);
+        const chunks = decodedChunk.split("\n");
 
-      for (const chunk of chunks) {
-        if (chunk.trim() !== "") {
-          const loadedChunk = JSON.parse(chunk);
+        for (const chunk of chunks) {
+          if (chunk.trim() !== "") {
+            const loadedChunk = JSON.parse(chunk);
 
-          yield {
-            role: "assistant",
-            content: loadedChunk.content || "",
-          };
+            yield {
+              role: "assistant",
+              content: loadedChunk.content || "",
+            };
 
-          if (this.model === "gpt-4") {
-            await delay(0.03);
-          } else {
-            await delay(0.01);
+            if (this.model === "gpt-4") {
+              await delay(0.03);
+            } else {
+              await delay(0.01);
+            }
           }
         }
       }
@@ -114,15 +111,6 @@ async function* streamChat(messages: ChatMessage[], options: any) {
 
 async function delay(seconds: number) {
   return new Promise((resolve) => setTimeout(resolve, seconds * 1000));
-}
-
-async function streamToString(stream: any) {
-  let decoder = new TextDecoder("utf-8");
-  let result = "";
-  for await (const chunk of stream) {
-    result += decoder.decode(chunk);
-  }
-  return result;
 }
 
 export default FreeTrial;

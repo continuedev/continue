@@ -3,7 +3,6 @@ import History from "./pages/history";
 import Help from "./pages/help";
 import Layout from "./components/Layout";
 import { createContext } from "react";
-import useContinueGUIProtocol from "./hooks/useContinueClient";
 import ContinueGUIClientProtocol from "./client/ContinueGUIClientProtocol";
 import { useDispatch } from "react-redux";
 import { RouterProvider, createMemoryRouter } from "react-router-dom";
@@ -71,15 +70,14 @@ export const GUIClientContext = createContext<
 >(undefined);
 
 function App() {
-  const client = useContinueGUIProtocol(false);
   const dispatch = useDispatch();
 
-  useSetup(client, dispatch);
+  useSetup(dispatch);
 
   return (
-    <GUIClientContext.Provider value={client}>
-      <RouterProvider router={router} />
-    </GUIClientContext.Provider>
+    // <GUIClientContext.Provider>
+    <RouterProvider router={router} />
+    // </GUIClientContext.Provider>
   );
 }
 

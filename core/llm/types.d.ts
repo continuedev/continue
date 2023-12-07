@@ -23,16 +23,20 @@ type ChatMessageRole = "user" | "assistant" | "system";
 interface ChatMessage {
   role: ChatMessageRole;
   content: string;
-  name?: string;
-  summary: string;
+}
+
+interface ContextItemId {
+  providerTitle: string;
+  itemId: string;
 }
 
 interface ContextItem {
   content: string;
   name: string;
   description: string;
-  providerTitle: string;
-  itemId: string;
+  id: ContextItemId;
+  editing?: boolean;
+  editable?: boolean;
 }
 
 interface ChatHistoryItem {
@@ -50,4 +54,5 @@ export {
   ChatHistory,
   ChatHistoryItem,
   ContextItem,
+  ContextItemId,
 };

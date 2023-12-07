@@ -72,6 +72,10 @@ function pruneRawPromptFromTop(
   return pruneStringFromTop(modelName, maxTokens, prompt);
 }
 
+function summarize(message: string): string {
+  return message.substring(0, 100) + "...";
+}
+
 function pruneChatHistory(
   modelName: string,
   chatHistory: ChatMessage[],
@@ -118,8 +122,8 @@ function pruneChatHistory(
   while (totalTokens > contextLength && i < chatHistory.length - 5) {
     const message = chatHistory[0];
     totalTokens -= countTokens(message.content, modelName);
-    totalTokens += countTokens(message.summary, modelName);
-    message.content = message.summary;
+    totalTokens += countTokens(summarize(message.content), modelName);
+    message.content = summarize(message.content);
     i++;
   }
 
@@ -142,8 +146,8 @@ function pruneChatHistory(
   ) {
     const message = chatHistory[i];
     totalTokens -= countTokens(message.content, modelName);
-    totalTokens += countTokens(message.summary, modelName);
-    message.content = message.summary;
+    totalTokens += countTokens(summarize(message.content), modelName);
+    message.content = summarize(message.content);
     i++;
   }
 
@@ -183,7 +187,6 @@ function compileChatMessages(
     const promptMsg: ChatMessage = {
       role: "user",
       content: prompt,
-      summary: prompt,
     };
     msgsCopy.push(promptMsg);
   }
@@ -193,7 +196,6 @@ function compileChatMessages(
     const systemChatMsg: ChatMessage = {
       role: "system",
       content: renderedSystemMessage,
-      summary: renderedSystemMessage,
     };
     // Insert as second to last
     // Later moved to top, but want second-priority to last user message

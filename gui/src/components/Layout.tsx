@@ -22,6 +22,7 @@ import ModelSelect from "./modelSelection/ModelSelect";
 import ProgressBar from "./loaders/ProgressBar";
 import { getFontSize } from "../util";
 import IndexingProgressBar from "./loaders/IndexingProgressBar";
+import { newSession } from "../redux/slices/stateSlice";
 
 // #region Styled Components
 const FOOTER_HEIGHT = "1.8em";
@@ -148,6 +149,8 @@ const Layout = () => {
             navigator.clipboard.writeText(selection);
           }, 100);
         }
+      } else if (event.metaKey && event.code === "KeyN") {
+        dispatch(newSession());
       }
     };
 

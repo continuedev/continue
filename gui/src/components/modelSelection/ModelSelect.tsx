@@ -275,7 +275,7 @@ function ModelSelect(props: {}) {
                 >
                   <StyledListboxOptions>
                     {options.map((option, idx) => (
-                      <ListBoxOption option={option} idx={idx} />
+                      <ListBoxOption option={option} idx={idx} key={idx} />
                     ))}
                     <i className="text-xs ml-2" style={{ color: lightGray }}>
                       {getMetaKeyLabel()}' to toggle

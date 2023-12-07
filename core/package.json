@@ -4,11 +4,13 @@
   "description": "The Continue Core contains functionality that can be shared across web, VS Code, or Node.js server. It is written in TypeScript and contains much of the functionality that was previously inside of the legacy Continue Python Server.",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "jest"
   },
   "author": "Nate Sesti and Ty Dunn",
   "license": "Apache-2.0",
-  "dependencies": {
-    "axios": "^1.6.2"
+  "devDependencies": {
+    "@types/jest": "^29.5.11",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.1.1"
   }
 }

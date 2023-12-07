@@ -1,32 +1,30 @@
 import { createSlice } from "@reduxjs/toolkit";
 import { StepDescription } from "../../schema/SessionState";
 import { SessionUpdate } from "../../schema/SessionUpdate";
-import { ContextItem } from "../../schema/ContextItem";
+import { ContextItem } from "../../../../core/llm/types";
 import { PersistedSessionInfo } from "../../schema/PersistedSessionInfo";
 import { v4 } from "uuid";
-import { ContextItemId } from "../../schema/ContextItemId";
+import { ContextItemId } from "../../../../core/llm/types";
 
 const TEST_CONTEXT_ITEMS: ContextItem[] = [
   {
     content: "def add(a, b):\n  return a + b",
-    description: {
-      description: "test.py",
-      name: "test.py",
-      id: {
-        item_id: "test.py",
-        provider_title: "file",
-      },
+    description: "test.py",
+    name: "test.py",
+
+    id: {
+      itemId: "test.py",
+      providerTitle: "file",
     },
   },
   {
     content: "function add(a, b) {\n  return a + b\n}",
-    description: {
-      description: "test.js",
-      name: "test.js",
-      id: {
-        item_id: "test.js",
-        provider_title: "file",
-      },
+
+    description: "test.js",
+    name: "test.js",
+    id: {
+      itemId: "test.js",
+      providerTitle: "file",
     },
   },
 ];
@@ -265,13 +263,10 @@ export const sessionStateSlice = createSlice({
       // Merge if there is overlap
       for (let i = 0; i < contextItems.length; i++) {
         const item = contextItems[i];
-        if (
-          item.description.description ===
-          payload.rangeInFileWithContents.filepath
-        ) {
+        if (item.description === payload.rangeInFileWithContents.filepath) {
           let newStart = payload.rangeInFileWithContents.range.start.line;
           let newEnd = payload.rangeInFileWithContents.range.end.line;
-          let [oldStart, oldEnd] = item.description.name
+          let [oldStart, oldEnd] = item.name
             .split("(")[1]
             .split(")")[0]
             .split("-")
@@ -289,10 +284,7 @@ export const sessionStateSlice = createSlice({
 
           contextItems[i] = {
             ...item,
-            description: {
-              ...item.description,
-              name: `${base} (${startLine + 1}-${endLine + 1})`,
-            },
+            name: `${base} (${startLine + 1}-${endLine + 1})`,
             content: payload.rangeInFileWithContents.contents,
             editing: true,
             editable: true,
@@ -305,13 +297,11 @@ export const sessionStateSlice = createSlice({
         payload.rangeInFileWithContents.range.start.line + 1
       }-${payload.rangeInFileWithContents.range.end.line + 1})`;
       contextItems.push({
-        description: {
-          name: `${base} ${lineNums}`,
-          description: payload.rangeInFileWithContents.filepath,
-          id: {
-            provider_title: "code",
-            item_id: v4(),
-          },
+        name: `${base} ${lineNums}`,
+        description: payload.rangeInFileWithContents.filepath,
+        id: {
+          providerTitle: "code",
+          itemId: v4(),
         },
         content: payload.rangeInFileWithContents.contents,
         editing: true,
@@ -326,15 +316,13 @@ export const sessionStateSlice = createSlice({
         payload,
       }: { payload: { ids: ContextItemId[]; index: number | undefined } }
     ) => {
-      const ids = payload.ids.map((id) => `${id.provider_title}-${id.item_id}`);
+      const ids = payload.ids.map((id) => `${id.providerTitle}-${id.itemId}`);
       if (typeof payload.index === "undefined") {
         return {
           ...state,
           context_items: state.context_items.filter(
             (item) =>
-              !ids.includes(
-                `${item.description.id.provider_title}-${item.description.id.item_id}`
-              )
+              !ids.includes(`${item.id.providerTitle}-${item.id.itemId}`)
           ),
         };
       } else {
@@ -349,7 +337,7 @@ export const sessionStateSlice = createSlice({
                   context_items: (step.params?.context_items as any).filter(
                     (item: ContextItem) =>
                       !ids.includes(
-                        `${item.description.id.provider_title}-${item.description.id.item_id}`
+                        `${item.id.providerTitle}-${item.id.itemId}`
                       )
                   ),
                 },
@@ -372,7 +360,7 @@ export const sessionStateSlice = createSlice({
         payload,
       }: { payload: { ids: ContextItemId[]; index: number | undefined } }
     ) => {
-      const ids = payload.ids.map((id) => id.item_id);
+      const ids = payload.ids.map((id) => id.itemId);
 
       if (typeof payload.index === "undefined") {
         return {
@@ -380,7 +368,7 @@ export const sessionStateSlice = createSlice({
           context_items: state.context_items.map((item) => {
             return {
               ...item,
-              editing: ids.includes(item.description.id.item_id),
+              editing: ids.includes(item.id.itemId),
             };
           }),
         };
@@ -397,7 +385,7 @@ export const sessionStateSlice = createSlice({
                     (item: ContextItem) => {
                       return {
                         ...item,
-                        editing: ids.includes(item.description.id.item_id),
+                        editing: ids.includes(item.id.itemId),
                       };
                     }
                   ),
