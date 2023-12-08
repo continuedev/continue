@@ -8,7 +8,7 @@ class Together extends LLM {
     apiBase: "https://api.together.xyz",
   };
 
-  private static MODEL_IDS = {
+  private static MODEL_IDS: { [name: string]: string } = {
     "codellama-7b": "togethercomputer/CodeLlama-7b-Instruct",
     "codellama-13b": "togethercomputer/CodeLlama-13b-Instruct",
     "codellama-34b": "togethercomputer/CodeLlama-34b-Instruct",
@@ -49,7 +49,10 @@ class Together extends LLM {
       }),
     });
 
-    const reader = response.body.getReader();
+    const reader = response.body?.getReader();
+    if (!reader) {
+      return "";
+    }
     let result = await reader.read();
     let jsonChunk = new TextDecoder().decode(result.value);
 

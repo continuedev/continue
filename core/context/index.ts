@@ -17,7 +17,7 @@ export abstract class ContextProvider {
   static description: ContextProviderDescription;
 
   // Maybe just include the chat message in here. Should never have to go back to the context provider once you have the information.
-  abstract getContextItem(query: string): Promise<ContextItem[]>;
+  abstract getContextItems(query: string): Promise<ContextItem[]>;
 
   abstract load(): Promise<void>;
 }

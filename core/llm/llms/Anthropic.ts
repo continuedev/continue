@@ -7,11 +7,12 @@ import { CompletionOptions } from "../types";
 
 class Anthropic extends LLM {
   static providerName: ModelProvider = "anthropic";
-  static defaultOptions: LLMOptions = {
+  static defaultOptions: Partial<LLMOptions> = {
     model: "claude-2",
     templateMessages: anthropicTemplateMessages,
     completionOptions: {
       maxTokens: 100_000,
+      model: "claude-2",
     },
   };
 

@@ -37,9 +37,9 @@ class LlamaCpp extends LLM {
       }),
     });
 
-    const reader = resp.body.getReader();
+    const reader = resp.body?.getReader();
     let result = "";
-    while (true) {
+    while (true && reader) {
       const { done, value } = await reader.read();
       if (done) break;
       const chunk = new TextDecoder().decode(value);

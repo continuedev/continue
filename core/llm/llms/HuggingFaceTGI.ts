@@ -37,10 +37,10 @@ class HuggingFaceTGI extends LLM {
       body: JSON.stringify({ inputs: prompt, parameters: args }),
     });
 
-    const reader = response.body.getReader();
+    const reader = response.body?.getReader();
     let chunk = "";
 
-    while (true) {
+    while (true && reader) {
       const { done, value } = await reader.read();
 
       if (done) {

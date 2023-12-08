@@ -11,7 +11,7 @@ class GitHubIssuesContextProvider extends ContextProvider {
     requiresQuery: false,
   };
 
-  async getContextItem(query: string): Promise<ContextItem[]> {
+  async getContextItems(query: string): Promise<ContextItem[]> {
     return [];
   }
   async load(): Promise<void> {}

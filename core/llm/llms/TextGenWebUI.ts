@@ -9,7 +9,7 @@ class TextGenWebUI extends LLM {
   };
 
   private _convertArgs(options: CompletionOptions, prompt: string) {
-    const finalOptions = {
+    const finalOptions: any = {
       prompt,
       ...options,
       max_new_tokens: options.maxTokens,
@@ -60,7 +60,10 @@ class TextGenWebUI extends LLM {
 
     while (!isDone) {
       while (messageQueue.length > 0) {
-        yield messageQueue.shift();
+        const nextMessage = messageQueue.shift();
+        if (nextMessage) {
+          yield nextMessage;
+        }
       }
       await new Promise((resolve) => setTimeout(resolve, 0)); // Don't block the event loop
     }

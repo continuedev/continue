@@ -48,10 +48,10 @@ class FreeTrial extends LLM {
       }),
     });
 
-    const reader = response.body.getReader();
+    const reader = response.body?.getReader();
     let decoder = new TextDecoder("utf-8");
 
-    while (true) {
+    while (true && reader) {
       const { done, value } = await reader.read();
       if (done) {
         break;
@@ -78,10 +78,10 @@ class FreeTrial extends LLM {
       }),
     });
 
-    const reader = response.body.getReader();
+    const reader = response.body?.getReader();
     let decoder = new TextDecoder("utf-8");
 
-    while (true) {
+    while (true && reader) {
       const { done, value } = await reader.read();
       if (done) {
         break;

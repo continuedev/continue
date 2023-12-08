@@ -40,12 +40,12 @@ class FileTreeContextProvider extends ContextProvider {
     requiresQuery: false,
   };
 
-  async getContextItem(query: string): Promise<ContextItem[]> {
+  async getContextItems(query: string): Promise<ContextItem[]> {
     const workspaceDir = await new ExtensionIde().getWorkspaceDir();
     const contents = await new ExtensionIde().listWorkspaceContents();
 
     const tree: Directory = {
-      name: splitPath(workspaceDir).pop(),
+      name: splitPath(workspaceDir).pop() || "",
       files: [],
       directories: [],
     };

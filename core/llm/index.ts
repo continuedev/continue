@@ -165,7 +165,7 @@ export abstract class LLM implements LLMOptions {
   title?: string;
   systemMessage?: string;
   contextLength: number;
-  completionOptions?: CompletionOptions;
+  completionOptions: CompletionOptions;
   requestOptions?: RequestOptions;
   promptTemplates?: Record<string, string>;
   templateMessages?: (messages: ChatMessage[]) => string;
@@ -188,10 +188,11 @@ export abstract class LLM implements LLMOptions {
     this.uniqueId = options.uniqueId || "None";
     this.model = options.model;
     this.systemMessage = options.systemMessage;
-    this.contextLength = options.contextLength;
+    this.contextLength = options.contextLength || 4096;
     this.completionOptions = {
       ...options.completionOptions,
       model: options.model || "gpt-4",
+      maxTokens: options.completionOptions?.maxTokens || 1024,
     };
     this.requestOptions = options.requestOptions;
     this.promptTemplates = {
@@ -217,7 +218,7 @@ export abstract class LLM implements LLMOptions {
       options.model !== this.model &&
       options.model in CONTEXT_LENGTH_FOR_MODEL
     ) {
-      contextLength = CONTEXT_LENGTH_FOR_MODEL[options.model];
+      contextLength = CONTEXT_LENGTH_FOR_MODEL[options.model] || 4096;
     }
 
     return compileChatMessages(
@@ -278,7 +279,6 @@ export abstract class LLM implements LLMOptions {
     delete options.raw;
 
     const completionOptions: CompletionOptions = {
-      model: this.model,
       ...this.completionOptions,
       ...options,
     };

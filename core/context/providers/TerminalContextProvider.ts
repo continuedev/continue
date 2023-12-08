@@ -11,7 +11,7 @@ class TerminalContextProvider extends ContextProvider {
     requiresQuery: false,
   };
 
-  async getContextItem(query: string): Promise<ContextItem[]> {
+  async getContextItems(query: string): Promise<ContextItem[]> {
     return [await new ExtensionIde().getTerminalContents()];
   }
   async load(): Promise<void> {}

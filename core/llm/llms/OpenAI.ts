@@ -47,7 +47,7 @@ class OpenAI extends LLM {
       stream: false,
     });
 
-    return response.choices[0].message.content;
+    return response.choices[0].message.content || "";
   }
 
   protected async *_streamComplete(

@@ -4,7 +4,7 @@ const DEFAULT_ARGS = {
   temperature: 0.5,
 };
 
-const CONTEXT_LENGTH_FOR_MODEL = {
+const CONTEXT_LENGTH_FOR_MODEL: { [name: string]: number } = {
   "gpt-3.5-turbo": 4096,
   "gpt-3.5-turbo-0613": 4096,
   "gpt-3.5-turbo-16k": 16_384,

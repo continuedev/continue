@@ -4,7 +4,9 @@ import { ChatMessage, CompletionOptions } from "../types";
 import ReplicateClient from "replicate";
 
 class Replicate extends LLM {
-  private static MODEL_IDS = {
+  private static MODEL_IDS: {
+    [name: string]: `${string}/${string}:${string}`;
+  } = {
     "codellama-7b":
       "meta/codellama-7b-instruct:6527b83e01e41412db37de5110a8670e3701ee95872697481a355e05ce12af0e",
     "codellama-13b":
@@ -31,7 +33,7 @@ class Replicate extends LLM {
     prompt: string
   ): [`${string}/${string}:${string}`, { input: any }] {
     return [
-      Replicate.MODEL_IDS[options.model] || options.model,
+      Replicate.MODEL_IDS[options.model] || (options.model as any),
       {
         input: { prompt, message: prompt },
       },
@@ -50,7 +52,7 @@ class Replicate extends LLM {
     const [model, args] = this._convertArgs(options, prompt);
     const response = await this._replicate.run(model, args);
 
-    return response[0];
+    return (response as any)[0];
   }
 
   protected async *_streamComplete(

@@ -61,10 +61,10 @@ class Ollama extends LLM {
       body: JSON.stringify(this._convertArgs(options, prompt)),
     });
 
-    const reader = response.body.getReader();
+    const reader = response.body?.getReader();
 
     let buffer = "";
-    while (true) {
+    while (true && reader) {
       const { done, value } = await reader.read();
       if (done) break;
       // Append the received chunk to the buffer

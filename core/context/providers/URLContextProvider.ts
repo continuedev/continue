@@ -10,7 +10,7 @@ class URLContextProvider extends ContextProvider {
     requiresQuery: true,
   };
 
-  async getContextItem(query: string): Promise<ContextItem[]> {
+  async getContextItems(query: string): Promise<ContextItem[]> {
     let url = query.trim();
     if (!url.startsWith("http")) {
       url = "https://" + url;

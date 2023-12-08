@@ -1,13 +1,13 @@
 interface CompletionOptions {
-  model?: string;
+  model: string;
 
+  maxTokens: number;
   temperature?: number;
   topP?: number;
   topK?: number;
   presencePenalty?: number;
   frequencyPenalty?: number;
   stop?: string[];
-  maxTokens: number;
 }
 
 type ChatMessageRole = "user" | "assistant" | "system";

@@ -1,4 +1,4 @@
-import { SerializedContinueConfig } from "../types";
+import { SerializedContinueConfig } from "../config";
 
 interface IDE {
   getSerializedConfig(): Promise<SerializedContinueConfig>;
