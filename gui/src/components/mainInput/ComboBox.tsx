@@ -62,7 +62,6 @@ import FileIcon from "../FileIcon";
 import RingLoader from "../loaders/RingLoader";
 import CodeSnippetPreview from "../markdown/CodeSnippetPreview";
 import { contextLengthSelector } from "../../redux/selectors/configSelectors";
-import { getContextItem } from "../../../../core/context";
 import {
   addContextItem,
   addContextItemAtIndex,
@@ -71,6 +70,7 @@ import {
   setInactive,
 } from "../../redux/slices/stateSlice";
 import { ContextItem } from "../../../../core/llm/types";
+import useContextProviders from "../../hooks/useContextProviders";
 
 const SEARCH_INDEX_NAME = "continue_context_items";
 
@@ -476,6 +476,8 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
 
   const [prevInputValue, setPrevInputValue] = useState("");
 
+  const { getContextItem } = useContextProviders();
+
   const selectContextItem = useCallback(
     async (id: string, query: string) => {
       const timeout = setTimeout(() => {
@@ -493,7 +495,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
         );
       }
     },
-    [client, props.index]
+    [client, props.index, getContextItem]
   );
 
   const onInputValueChangeCallback = useCallback(

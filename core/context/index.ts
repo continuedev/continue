@@ -1,16 +1,23 @@
 import { ContextItem } from "../llm/types";
 
-// TODO:
+export interface ContextProviderDescription {
+  title: string;
+  displayTitle: string;
+  description: string;
+  dynamic: boolean;
+  requiresQuery: boolean;
+}
 
-export async function getContextItem(id: string, query: string) {
-  const item: ContextItem = {
-    id: {
-      providerTitle: "TODO",
-      itemId: id,
-    },
-    name: "TODO",
-    description: "TODO",
-    content: query,
-  };
-  return item;
+export abstract class ContextProvider {
+  options: Object;
+  constructor(options: Object) {
+    this.options = options;
+  }
+
+  static description: ContextProviderDescription;
+
+  // Maybe just include the chat message in here. Should never have to go back to the context provider once you have the information.
+  abstract getContextItem(query: string): Promise<ContextItem[]>;
+
+  abstract load(): Promise<void>;
 }

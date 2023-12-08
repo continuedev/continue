@@ -4,6 +4,7 @@ import { getExtensionUri, getNonce, getUniqueId } from "./util/vscode";
 import { ideProtocolClient, windowId } from "./activation/activate";
 import * as io from "socket.io-client";
 import { FileEdit } from "../schema/FileEdit";
+import VsCodeIde from "./ideProtocol";
 
 let sockets: { [url: string]: io.Socket | undefined } = {};
 
@@ -226,6 +227,51 @@ export function getSidebarContent(
           }
         );
 
+        break;
+      }
+      case "getDiff": {
+        new VsCodeIde().getDiff().then((diff) => {
+          panel.webview.postMessage({
+            type: "getDiff",
+            diff,
+          });
+        });
+        break;
+      }
+      case "getSerializedConfig": {
+        new VsCodeIde().getSerializedConfig().then((config) => {
+          panel.webview.postMessage({
+            type: "getSerializedConfig",
+            config,
+          });
+        });
+        break;
+      }
+      case "getTerminalContents": {
+        new VsCodeIde().getTerminalContents().then((terminalContents) => {
+          panel.webview.postMessage({
+            type: "getTerminalContents",
+            terminalContents,
+          });
+        });
+        break;
+      }
+      case "listWorkspaceContents": {
+        new VsCodeIde().listWorkspaceContents().then((workspaceContents) => {
+          panel.webview.postMessage({
+            type: "listWorkspaceContents",
+            workspaceContents,
+          });
+        });
+        break;
+      }
+      case "getWorkspaceDir": {
+        new VsCodeIde().getWorkspaceDir().then((workspaceDir) => {
+          panel.webview.postMessage({
+            type: "getWorkspaceDir",
+            workspaceDir,
+          });
+        });
         break;
       }
     }

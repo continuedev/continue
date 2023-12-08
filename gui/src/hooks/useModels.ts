@@ -21,50 +21,29 @@ import { LLM } from "../../../core/llm";
 
 function modelDescriptionToLLM(desc: ModelDescription): LLM {
   let cls: typeof LLM;
-  switch (desc.provider) {
-    case "openai-free-trial":
-      cls = FreeTrial;
-      break;
-    case "anthropic":
-      cls = Anthropic;
-      break;
-    case "google-palm":
-      cls = GooglePalm;
-      break;
-    case "lmstudio":
-      cls = LMStudio;
-      break;
-    case "llamafile":
-      cls = Llamafile;
-      break;
-    case "ollama":
-      cls = Ollama;
-      break;
-    case "replicate":
-      cls = Replicate;
-      break;
-    case "text-gen-webui":
-      cls = TextGenWebUI;
-      break;
-    case "together":
-      cls = Together;
-      break;
-    case "huggingface-tgi":
-      cls = HuggingFaceTGI;
-      break;
-    case "huggingface-inference-api":
-      cls = HuggingFaceInferenceAPI;
-      break;
-    case "llama.cpp":
-      cls = LlamaCpp;
-      break;
-    case "openai-aiohttp":
-    case "openai":
-      cls = OpenAI;
-      break;
-    default:
-      throw new Error(`Unknown provider ${desc.provider}`);
+  const providerClasses = {
+    "openai-free-trial": FreeTrial,
+    anthropic: Anthropic,
+    "google-palm": GooglePalm,
+    lmstudio: LMStudio,
+    llamafile: Llamafile,
+    ollama: Ollama,
+    replicate: Replicate,
+    "text-gen-webui": TextGenWebUI,
+    together: Together,
+    "huggingface-tgi": HuggingFaceTGI,
+    "huggingface-inference-api": HuggingFaceInferenceAPI,
+    "llama.cpp": LlamaCpp,
+    "openai-aiohttp": OpenAI,
+    openai: OpenAI,
+  };
+
+  cls = providerClasses[desc.provider];
+
+  if (!cls) {
+    throw new Error(`Unknown provider ${desc.provider}`);
   }
+
   return new (cls as any)({ ...desc, uniqueId: "None" });
 }
 

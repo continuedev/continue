@@ -133,6 +133,7 @@ interface SerializedContinueConfig {
   completionOptions?: BaseCompletionOptions;
   slashCommands?: SlashCommand[];
   customCommands?: CustomCommand[];
+  contextProviders?: ContextProviderWithParams[];
 }
 export {
   StepName,
