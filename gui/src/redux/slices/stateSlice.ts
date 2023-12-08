@@ -16,7 +16,7 @@ export const stateSlice = createSlice({
     setConfig: (state, action) => {
       state.config = action.payload;
     },
-    addContextItemAtIndex: (state, action) => {
+    addContextItemsAtIndex: (state, action) => {
       if (action.payload.index < state.history.length) {
         return {
           ...state,
@@ -26,7 +26,7 @@ export const stateSlice = createSlice({
                 ...historyItem,
                 contextItems: [
                   ...historyItem.contextItems,
-                  action.payload.contextItem,
+                  ...action.payload.contextItems,
                 ],
               };
             }
@@ -41,10 +41,10 @@ export const stateSlice = createSlice({
         history: [...state.history, action.payload],
       };
     },
-    addContextItem: (state, action) => {
+    addContextItems: (state, action) => {
       return {
         ...state,
-        contextItems: [...state.contextItems, action.payload],
+        contextItems: [...state.contextItems, ...action.payload],
       };
     },
     resubmitAtIndex: (state, action) => {
@@ -124,9 +124,9 @@ export const stateSlice = createSlice({
 });
 
 export const {
-  addContextItemAtIndex,
+  addContextItemsAtIndex,
   appendMessage,
-  addContextItem,
+  addContextItems,
   submitMessage,
   setInactive,
   streamUpdate,

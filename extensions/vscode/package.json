@@ -334,6 +334,7 @@
     "@nestjs/common": "^8.4.7",
     "@openapitools/openapi-generator-cli": "^2.5.2",
     "@types/glob": "^8.0.0",
+    "@types/jest": "^29.5.11",
     "@types/mocha": "^10.0.1",
     "@types/node": "16.x",
     "@types/node-fetch": "^2.6.2",

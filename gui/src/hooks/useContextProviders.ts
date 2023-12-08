@@ -46,18 +46,18 @@ function useContextProviders() {
     setProviderDescriptions(descriptionsList);
   }, [providerConfig]);
 
-  async function getContextItem(
+  async function getContextItems(
     name: string,
     query: string
-  ): Promise<ContextItem> {
+  ): Promise<ContextItem[]> {
     const provider = providers[name];
     if (!provider) {
       throw new Error(`Unknown provider ${name}`);
     }
-    return await provider.getContextItem(query);
+    return await provider.getContextItems(query);
   }
 
-  return { providerDescriptions, getContextItem };
+  return { providerDescriptions, getContextItems };
 }
 
 export default useContextProviders;

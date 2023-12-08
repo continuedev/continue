@@ -63,8 +63,8 @@ import RingLoader from "../loaders/RingLoader";
 import CodeSnippetPreview from "../markdown/CodeSnippetPreview";
 import { contextLengthSelector } from "../../redux/selectors/configSelectors";
 import {
-  addContextItem,
-  addContextItemAtIndex,
+  addContextItems,
+  addContextItemsAtIndex,
   deleteContextWithIds,
   newSession,
   setInactive,
@@ -476,26 +476,23 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
 
   const [prevInputValue, setPrevInputValue] = useState("");
 
-  const { getContextItem } = useContextProviders();
+  const { getContextItems } = useContextProviders();
 
   const selectContextItem = useCallback(
     async (id: string, query: string) => {
       const timeout = setTimeout(() => {
         setWaitingForContextItem(true);
       }, 0.1);
-      const contextItem = await getContextItem(id, query);
+      const contextItems = await getContextItems(id, query);
       clearTimeout(timeout);
       setWaitingForContextItem(false);
-      if (!contextItem) return;
       if (props.isMainInput) {
-        dispatch(addContextItem(contextItem));
+        dispatch(addContextItems(contextItems));
       } else if (typeof props.index !== "undefined") {
-        dispatch(
-          addContextItemAtIndex({ item: contextItem, index: props.index })
-        );
+        dispatch(addContextItemsAtIndex({ contextItems, index: props.index }));
       }
     },
-    [client, props.index, getContextItem]
+    [client, props.index, getContextItems]
   );
 
   const onInputValueChangeCallback = useCallback(
