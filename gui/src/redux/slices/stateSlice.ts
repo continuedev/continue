@@ -1,17 +1,21 @@
 import { createSlice } from "@reduxjs/toolkit";
 import { RootStore } from "../store";
 import { ContextItemId } from "../../../../core/llm/types";
-
+import defaultConfig from "../../../../core/config/default";
 const initialState: RootStore["state"] = {
   history: [],
   contextItems: [],
   active: false,
+  config: defaultConfig,
 };
 
 export const stateSlice = createSlice({
   name: "state",
   initialState,
   reducers: {
+    setConfig: (state, action) => {
+      state.config = action.payload;
+    },
     addContextItemAtIndex: (state, action) => {
       if (action.payload.index < state.history.length) {
         return {

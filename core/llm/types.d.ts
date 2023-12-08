@@ -1,5 +1,5 @@
 interface CompletionOptions {
-  model: string;
+  model?: string;
 
   temperature?: number;
   topP?: number;

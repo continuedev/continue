@@ -61,6 +61,7 @@ import {
   newSession,
   setInactive,
 } from "../redux/slices/stateSlice";
+import useModels from "../hooks/useModels";
 
 const TopGuiDiv = styled.div`
   overflow-y: scroll;
@@ -145,12 +146,7 @@ function GUI(props: GUIProps) {
   const sessionState = useSelector((state: RootStore) => state.sessionState);
   const workspacePaths = (window as any).workspacePaths || [];
 
-  const defaultModel = useSelector(
-    (state: RootStore) => (state.serverState.config as any).models?.default
-  );
-  const serverStatusMessage = useSelector(
-    (state: RootStore) => state.misc.serverStatusMessage
-  );
+  const { defaultModel } = useModels();
 
   const sessionTitle = useSelector(
     (state: RootStore) => state.sessionState.title
@@ -256,8 +252,8 @@ function GUI(props: GUIProps) {
   const sendInput = useCallback(
     (input: string) => {
       if (
-        defaultModel?.class_name === "OpenAIFreeTrial" &&
-        defaultModel?.api_key === "" &&
+        defaultModel.providerName === "openai-free-trial" &&
+        defaultModel?.apiKey === "" &&
         (!input.startsWith("/") || input.startsWith("/edit"))
       ) {
         const ftc = localStorage.getItem("ftc");
@@ -288,9 +284,8 @@ function GUI(props: GUIProps) {
       const messages = constructMessages([...state.history, historyItem]);
       dispatch(submitMessage(message));
 
-      const llm = new FreeTrial({ uniqueId: "None" });
       (async () => {
-        for await (const update of llm.streamChat(messages)) {
+        for await (const update of defaultModel.streamChat(messages)) {
           dispatch(streamUpdate(update.content));
         }
       })();

@@ -81,41 +81,40 @@ interface CustomCommand {
   prompt: string;
   description: string;
 }
-
 interface RetrievalSettings {
-  n_retrieve?: number;
-  n_final?: number;
-  use_reranking: boolean;
-  rerank_group_size: number;
-  ignore_files: string[];
-  openai_api_key?: string;
-  api_base?: string;
-  api_type?: string;
-  api_version?: string;
-  organization_id?: string;
+  nRetrieve?: number;
+  nFinal?: number;
+  useReranking: boolean;
+  rerankGroupSize: number;
+  ignoreFiles: string[];
+  openaiApiKey?: string;
+  apiBase?: string;
+  apiType?: string;
+  apiVersion?: string;
+  organizationId?: string;
 }
 
 interface BaseCompletionOptions {
   temperature?: number;
-  top_p?: number;
-  top_k?: number;
-  presence_penalty?: number;
-  frequency_penalty?: number;
+  topP?: number;
+  topK?: number;
+  presencePenalty?: number;
+  frequencyPenalty?: number;
   stop?: string[];
-  max_tokens: number;
+  maxTokens: number;
 }
 
 interface ModelDescription {
   title: string;
   provider: ModelProvider;
   model: string;
-  api_key?: string;
-  api_base?: string;
-  context_length: number;
+  apiKey?: string;
+  apiBase?: string;
+  contextLength?: number;
   template?: TemplateType;
-  completion_options: BaseCompletionOptions;
-  system_message?: string;
-  request_options: RequestOptions;
+  completionOptions?: BaseCompletionOptions;
+  systemMessage?: string;
+  requestOptions?: RequestOptions;
 }
 
 interface ModelRoles {
@@ -126,12 +125,28 @@ interface ModelRoles {
 }
 
 interface SerializedContinueConfig {
-  disallowed_steps?: string[];
-  allow_anonymous_telemetry?: boolean;
+  disallowedSteps?: string[];
+  allowAnonymousTelemetry?: boolean;
   models: ModelDescription[];
-  model_roles: ModelRoles;
-  system_message?: string;
-  completion_options: BaseCompletionOptions;
-  slash_commands?: SlashCommand[];
-  custom_commands?: CustomCommand[];
+  modelRoles: ModelRoles;
+  systemMessage?: string;
+  completionOptions?: BaseCompletionOptions;
+  slashCommands?: SlashCommand[];
+  customCommands?: CustomCommand[];
 }
+export {
+  StepName,
+  ContextProviderName,
+  TemplateType,
+  ModelProvider,
+  RequestOptions,
+  StepWithParams,
+  ContextProviderWithParams,
+  SlashCommand,
+  CustomCommand,
+  RetrievalSettings,
+  BaseCompletionOptions,
+  ModelDescription,
+  ModelRoles,
+  SerializedContinueConfig,
+};

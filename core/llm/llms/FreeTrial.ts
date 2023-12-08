@@ -1,10 +1,13 @@
 import { LLM } from "..";
+import { ModelProvider } from "../../config";
 import { ChatMessage, CompletionOptions } from "../types";
 
 // const SERVER_URL = "http://localhost:8080";
 const SERVER_URL = "https://proxy-server-l6vsfbzhba-uw.a.run.app";
 
 class FreeTrial extends LLM {
+  static providerName: ModelProvider = "openai-free-trial";
+
   private _getHeaders() {
     return {
       uniqueId: this.uniqueId || "None",

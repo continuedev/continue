@@ -1,10 +1,11 @@
+import { ModelProvider, RequestOptions } from "../config";
 import { CONTEXT_LENGTH_FOR_MODEL, DEFAULT_ARGS } from "./constants";
 import {
   compileChatMessages,
   countTokens,
   pruneRawPromptFromTop,
 } from "./countTokens";
-import { CompletionOptions, RequestOptions, ChatMessage } from "./types";
+import { CompletionOptions, ChatMessage } from "./types";
 
 async function streamToString(stream: any) {
   let decoder = new TextDecoder("utf-8");
@@ -47,13 +48,19 @@ interface LLMFullCompletionOptions {
 }
 
 export abstract class LLM implements LLMOptions {
+  static providerName: ModelProvider;
+
+  get providerName(): ModelProvider {
+    return (this.constructor as typeof LLM).providerName;
+  }
+
   title?: string;
   uniqueId: string;
   model: string;
   systemMessage?: string;
   contextLength: number;
-  completionOptions: CompletionOptions;
-  requestOptions: RequestOptions;
+  completionOptions?: CompletionOptions;
+  requestOptions?: RequestOptions;
   promptTemplates?: Record<string, string>;
   templateMessages?: (messages: ChatMessage[]) => string;
   writeLog?: (str: string) => Promise<void>;

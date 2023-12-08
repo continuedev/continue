@@ -1,31 +1,23 @@
 import { Dispatch } from "@reduxjs/toolkit";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import {
-  addContextItemAtIndex,
   addHighlightedCode,
-  processSessionUpdate,
   setActive,
-  setTitle,
 } from "../redux/slices/sessionStateReducer";
 import { setServerStatusMessage } from "../redux/slices/miscSlice";
 import { postToIde } from "../util/ide";
-import { useSelector } from "react-redux";
-import { RootStore } from "../redux/store";
-import {
-  setConfig,
-  setContextProviders,
-  setIndexingProgress,
-  setSlashCommands,
-} from "../redux/slices/serverStateReducer";
+
 import { setVscMachineId } from "../redux/slices/configSlice";
+import { ExtensionIde } from "../../../core/ide/index";
+import { setConfig } from "../redux/slices/serverStateReducer";
 
 function useSetup(dispatch: Dispatch<any>) {
-  const serverUrl = (window as any).serverUrl;
-  const active = useSelector((store: RootStore) => store.sessionState.active);
-  const title = useSelector((store: RootStore) => store.sessionState.title);
-  const history = useSelector((store: RootStore) => store.sessionState.history);
-
-  const [requestedTitle, setRequestedTitle] = useState(false);
+  // Load config from the IDE
+  useEffect(() => {
+    new ExtensionIde().getSerializedConfig().then((config) => {
+      dispatch(setConfig(config));
+    });
+  }, []);
 
   useEffect(() => {
     // Override persisted state

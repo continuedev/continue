@@ -16,6 +16,7 @@ import { SlashCommandDescription } from "../schema/SlashCommandDescription";
 import storage from "redux-persist/lib/storage";
 import { persistReducer, persistStore, createTransform } from "redux-persist";
 import { ChatHistory } from "../../../core/llm/types";
+import { SerializedContinueConfig } from "../../../core/config";
 
 export interface ChatMessage {
   role: "system" | "user" | "assistant";
@@ -27,6 +28,7 @@ export interface RootStore {
     history: ChatHistory;
     contextItems: ContextItem[];
     active: boolean;
+    config: SerializedContinueConfig;
   };
 
   config: {
