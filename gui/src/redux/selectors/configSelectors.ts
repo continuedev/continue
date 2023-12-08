@@ -8,6 +8,7 @@ export const contextLengthSelector = (state: RootStore) => {
       "gpt-3.5-turbo-16k": 16384,
       "gpt-4-32k": 32768,
       "claude-2": 16384,
+      "gpt-4-1106-preview": 128_000,
     }[state.serverState.config.model_roles?.default] || 4096
   );
 };

@@ -14,3 +14,6 @@ poetry install
 
 echo "Running type generation..."
 poetry run typegen
+
+echo "Building Rust extension..."
+poetry run maturin develop

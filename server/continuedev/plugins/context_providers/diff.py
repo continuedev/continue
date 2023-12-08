@@ -54,7 +54,7 @@ class DiffContextProvider(ContextProvider):
         )
         diff = result.stdout
         error = result.stderr
-        if error.strip() != "":
+        if error is not None and error.strip() != "":
             if error.startswith("warning: Not a git repository"):
                 raise ContinueCustomException(
                     title="Not a git repository",
@@ -65,7 +65,7 @@ class DiffContextProvider(ContextProvider):
                 message=f"Error running git diff:\n\n{error}",
             )
 
-        if diff.strip() == "":
+        if diff is None or diff.strip() == "":
             diff = "No changes"
 
         ctx_item = self.BASE_CONTEXT_ITEM.copy()

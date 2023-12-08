@@ -20,9 +20,9 @@ If you are trying to use it for a new task and don’t have a sense of how much 
 
 1. Highlight the code section(s) that you don’t understand and type "tell me how this code works" in the input box
 2. If the explanation seems reasonable, then, while still highlighting the code section(s), type "how would you change this code to [INSERT TASK]?"
-3. If this explanation is also pretty good, then, while still highlighting the code section(s), type `/edit [INSERT TASK]`
-4. If it does not work on first attempt, click `reject` on its suggestions and try again—often it will make a different suggestion each time
-5. If it is not giving you what you want after another attempt, click `reject` and try again with more specific / clear instructions, articulating exactly what you want it to do and not to do
+3. If this explanation is also pretty good, then, while still highlighting the code section(s), type `/edit [INSERT TASK]`. If you like the suggested diff, use `cmd+shift+enter` to accept the changes.
+4. If it does not work on first attempt, use `cmd+shift+backspace` to reject the changes and try again—often it will make a different suggestion each time
+5. If it is not giving you what you want after another attempt, reject and try again with more specific / clear instructions, articulating exactly what you want it to do and not to do
 6. If this still does not work, then you likely need to break down the task into smaller sub-tasks and ask the LLM to do each of those one at a time or just do it yourself manually
 
 Remember: You are responsible for all code that you ship, whether it was written by you or by an LLM that you directed. This means it is crucial that you review what the LLM writes. To make this easier, we provide natural language descriptions of the actions the LLM took in the Continue GUI.
