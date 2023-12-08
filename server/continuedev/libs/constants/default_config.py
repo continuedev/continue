@@ -29,8 +29,7 @@ default_config_json = """\
     }
   ],
   "model_roles": {
-    "default": "GPT-4",
-    "summarize": "GPT-3.5-Turbo"
+    "default": "GPT-4"
   },
   "slash_commands": [
     {

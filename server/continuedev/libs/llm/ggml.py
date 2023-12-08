@@ -108,7 +108,7 @@ class GGML(LLM):
             ) as resp:
                 if resp.status != 200:
                     raise Exception(
-                        f"Error calling /chat/completions endpoint: {resp.status}"
+                        f"Error calling /completions endpoint: {resp.status}"
                     )
 
                 async for line in resp.content.iter_any():

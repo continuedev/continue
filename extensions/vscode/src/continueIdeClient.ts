@@ -770,7 +770,7 @@ class IdeProtocolClient {
   async getBranch(): Promise<string> {
     const repo = await this.getRepo();
 
-    return repo.state.HEAD?.name || "NONE";
+    return repo?.state?.HEAD?.name || "NONE";
   }
 
   async getDiff(): Promise<string> {
