@@ -10,14 +10,6 @@ interface CompletionOptions {
   maxTokens: number;
 }
 
-interface RequestOptions {
-  timeout?: number;
-  verifySsl?: boolean;
-  caBundlePath: string;
-  proxy?: string;
-  headers?: Record<string, string>;
-}
-
 type ChatMessageRole = "user" | "assistant" | "system";
 
 interface ChatMessage {
@@ -48,7 +40,6 @@ type ChatHistory = ChatHistoryItem[];
 
 export {
   CompletionOptions,
-  RequestOptions,
   ChatMessage,
   ChatMessageRole,
   ChatHistory,

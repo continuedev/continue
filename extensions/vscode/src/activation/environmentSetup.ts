@@ -55,6 +55,11 @@ export function getContinueGlobalPath(): string {
   return continuePath;
 }
 
+export function getConfigJsonPath(): string {
+  // TODO: Create if it doesn't exist
+  return path.join(getContinueGlobalPath(), "config.json");
+}
+
 function serverPath(): string {
   const sPath = path.join(getContinueGlobalPath(), "server");
   if (!fs.existsSync(sPath)) {

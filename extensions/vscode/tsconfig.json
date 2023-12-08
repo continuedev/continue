@@ -3,16 +3,9 @@
     "module": "commonjs",
     "target": "ES2020",
     "outDir": "out/tsc/src",
-    "lib": [
-      "ES2020",
-      "dom",
-      "es6",
-      "es5",
-      "dom.iterable",
-      "scripthost"
-    ],
+    "lib": ["ES2020", "dom", "es6", "es5", "dom.iterable", "scripthost"],
     "sourceMap": true,
-    "rootDir": "src",
+    "rootDir": "../../",
     "strict": true /* enable all strict type-checking options */,
     /* Additional Checks */
     // "noImplicitReturns": true, /* Report error when not all code paths in function return a value. */
@@ -21,7 +14,5 @@
     "esModuleInterop": true /* Enables emit interoperability between CommonJS and ES Modules via creation of namespace objects for all imports. Implies 'allowSyntheticDefaultImports'. */,
     "resolveJsonModule": true /* Enable importing .json files */
   },
-  "include": [
-    "src/**/*",
-  ]
+  "include": ["src/**/*", "../../core/**/*"]
 }
