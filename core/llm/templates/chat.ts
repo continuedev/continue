@@ -1,5 +1,50 @@
 import { ChatMessage } from "../types";
 
+function llama2TemplateMessages(msgs: ChatMessage[]): string {
+  if (msgs.length === 0) {
+    return "";
+  }
+
+  if (msgs[0].role === "assistant") {
+    // These models aren't trained to handle assistant message coming first,
+    // and typically these are just introduction messages from Continue
+    msgs.shift();
+  }
+
+  let prompt = "";
+  let hasSystem = msgs[0].role === "system";
+
+  if (hasSystem && msgs[0].content.trim() === "") {
+    hasSystem = false;
+    msgs = msgs.slice(1);
+  }
+
+  if (hasSystem) {
+    const systemMessage = `
+          <<SYS>>
+          ${msgs[0].content}
+          <</SYS>>
+
+      `;
+    if (msgs.length > 1) {
+      prompt += `[INST] ${systemMessage}${msgs[1].content} [/INST]`;
+    } else {
+      prompt += `[INST] ${systemMessage} [/INST]`;
+      return prompt;
+    }
+  }
+
+  for (let i = hasSystem ? 2 : 0; i < msgs.length; i++) {
+    if (msgs[i].role === "user") {
+      prompt += `[INST] ${msgs[i].content} [/INST]`;
+    } else {
+      prompt += msgs[i].content + " ";
+    }
+  }
+
+  return prompt;
+}
+
 function anthropicTemplateMessages(messages: ChatMessage[]): string {
   const HUMAN_PROMPT = "\n\nHuman:";
   const AI_PROMPT = "\n\nAssistant:";
@@ -115,6 +160,7 @@ function phindTemplateMessages(msgs: ChatMessage[]): string {
 }
 
 export {
+  llama2TemplateMessages,
   anthropicTemplateMessages,
   zephyrTemplateMessages,
   chatmlTemplateMessages,

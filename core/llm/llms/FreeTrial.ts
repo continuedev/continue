@@ -28,7 +28,6 @@ class FreeTrial extends LLM {
         messages: [{ role: "user", content: prompt }],
         ...args,
       }),
-      //   proxy: this.requestOptions.proxy,
     });
 
     return await response.json();

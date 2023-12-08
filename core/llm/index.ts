@@ -1,25 +1,129 @@
-import { ModelProvider, RequestOptions } from "../config";
+import { ModelProvider, RequestOptions, TemplateType } from "../config";
 import { CONTEXT_LENGTH_FOR_MODEL, DEFAULT_ARGS } from "./constants";
 import {
   compileChatMessages,
   countTokens,
   pruneRawPromptFromTop,
 } from "./countTokens";
+import {
+  anthropicTemplateMessages,
+  chatmlTemplateMessages,
+  deepseekTemplateMessages,
+  llama2TemplateMessages,
+  phindTemplateMessages,
+  templateAlpacaMessages,
+  zephyrTemplateMessages,
+} from "./templates/chat";
+import {
+  alpacaEditPrompt,
+  codellamaEditPrompt,
+  deepseekEditPrompt,
+  phindEditPrompt,
+  simplestEditPrompt,
+  zephyrEditPrompt,
+} from "./templates/edit";
 import { CompletionOptions, ChatMessage } from "./types";
 
-async function streamToString(stream: any) {
-  let decoder = new TextDecoder("utf-8");
-  let result = "";
-  for await (const chunk of stream) {
-    result += decoder.decode(chunk);
+function autodetectTemplateType(model: string): TemplateType | undefined {
+  const lower = model.toLowerCase();
+
+  if (
+    lower.includes("gpt") ||
+    lower.includes("chat-bison") ||
+    lower.includes("pplx")
+  ) {
+    return undefined;
   }
-  return result;
+
+  if (lower.includes("phind")) {
+    return "phind";
+  }
+
+  if (lower.includes("llama")) {
+    return "llama2";
+  }
+
+  if (lower.includes("zephyr")) {
+    return "zephyr";
+  }
+
+  if (lower.includes("claude")) {
+    return "anthropic";
+  }
+
+  if (lower.includes("alpaca") || lower.includes("wizard")) {
+    return "alpaca";
+  }
+
+  if (lower.includes("mistral")) {
+    return "llama2";
+  }
+
+  if (lower.includes("deepseek")) {
+    return "deepseek";
+  }
+
+  return "chatml";
 }
 
-interface LLMOptions {
+function autodetectTemplateFunction(
+  model: string,
+  explicitTemplate: TemplateType | undefined = undefined
+) {
+  const templateType = explicitTemplate || autodetectTemplateType(model);
+
+  if (templateType) {
+    const mapping: Record<TemplateType, any> = {
+      llama2: llama2TemplateMessages,
+      alpaca: templateAlpacaMessages,
+      phind: phindTemplateMessages,
+      zephyr: zephyrTemplateMessages,
+      anthropic: anthropicTemplateMessages,
+      chatml: chatmlTemplateMessages,
+      deepseek: deepseekTemplateMessages,
+    };
+
+    return mapping[templateType];
+  }
+
+  return null;
+}
+
+function autodetectPromptTemplates(
+  model: string,
+  explicitTemplate: TemplateType | undefined = undefined
+) {
+  const templateType = explicitTemplate || autodetectTemplateType(model);
+  const templates: Record<string, any> = {};
+
+  let editTemplate = null;
+
+  if (templateType === "phind") {
+    editTemplate = phindEditPrompt;
+  } else if (templateType === "zephyr") {
+    editTemplate = zephyrEditPrompt;
+  } else if (templateType === "llama2") {
+    editTemplate = codellamaEditPrompt;
+  } else if (templateType === "alpaca") {
+    editTemplate = alpacaEditPrompt;
+  } else if (templateType === "deepseek") {
+    editTemplate = deepseekEditPrompt;
+  } else if (templateType !== null) {
+    editTemplate = simplestEditPrompt;
+  }
+
+  if (editTemplate !== null) {
+    templates["edit"] = editTemplate;
+  }
+
+  return templates;
+}
+
+export interface LLMOptions {
+  model: string;
+
   title?: string;
-  uniqueId: string;
-  model?: string;
+  uniqueId?: string;
   systemMessage?: string;
   contextLength?: number;
   completionOptions?: CompletionOptions;
@@ -49,14 +153,16 @@ interface LLMFullCompletionOptions {
 
 export abstract class LLM implements LLMOptions {
   static providerName: ModelProvider;
+  static defaultOptions: Partial<LLMOptions>;
 
   get providerName(): ModelProvider {
     return (this.constructor as typeof LLM).providerName;
   }
 
-  title?: string;
   uniqueId: string;
   model: string;
+
+  title?: string;
   systemMessage?: string;
   contextLength: number;
   completionOptions?: CompletionOptions;
@@ -69,8 +175,17 @@ export abstract class LLM implements LLMOptions {
   apiBase?: string;
 
   constructor(options: LLMOptions) {
+    // Set default options
+    options = {
+      title: (this.constructor as typeof LLM).providerName,
+      ...(this.constructor as typeof LLM).defaultOptions,
+      ...options,
+    };
+
+    const templateType = autodetectTemplateType(options.model);
+
     this.title = options.title;
-    this.uniqueId = options.uniqueId;
+    this.uniqueId = options.uniqueId || "None";
     this.model = options.model;
     this.systemMessage = options.systemMessage;
     this.contextLength = options.contextLength;
@@ -79,8 +194,13 @@ export abstract class LLM implements LLMOptions {
       model: options.model || "gpt-4",
     };
     this.requestOptions = options.requestOptions;
-    this.promptTemplates = options.promptTemplates;
-    this.templateMessages = options.templateMessages;
+    this.promptTemplates = {
+      ...options.promptTemplates,
+      ...autodetectPromptTemplates(options.model, templateType),
+    };
+    this.templateMessages =
+      options.templateMessages ||
+      autodetectTemplateFunction(options.model, templateType);
     this.writeLog = options.writeLog;
     this.llmRequestHook = options.llmRequestHook;
     this.apiKey = options.apiKey;
@@ -158,6 +278,7 @@ export abstract class LLM implements LLMOptions {
     delete options.raw;
 
     const completionOptions: CompletionOptions = {
+      model: this.model,
       ...this.completionOptions,
       ...options,
     };
