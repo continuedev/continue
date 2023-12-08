@@ -1,8 +1,8 @@
-import { IDE } from "../../../core/ide/types";
+import { IDE } from "core/ide/types";
 import * as fs from "fs";
 import { getConfigJsonPath } from "./activation/environmentSetup";
 import { ideProtocolClient } from "./activation/activate";
-import { SerializedContinueConfig } from "../../../core/config";
+import { SerializedContinueConfig } from "core/config/index";
 
 class VsCodeIde implements IDE {
   async getSerializedConfig(): Promise<SerializedContinueConfig> {

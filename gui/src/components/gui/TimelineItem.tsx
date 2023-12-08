@@ -4,7 +4,7 @@ import styled from "styled-components";
 import { ChatBubbleOvalLeftIcon } from "@heroicons/react/24/outline";
 import { getFontSize } from "../../util";
 import { StepDescription } from "../../schema/SessionState";
-import { ChatHistoryItem } from "../../../../core/llm/types";
+import { ChatHistoryItem } from "core/llm/types";
 
 const CollapseButton = styled.div`
   background-color: ${vscBackground};

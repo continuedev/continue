@@ -15,9 +15,9 @@ import {
   HuggingFaceInferenceAPI,
   LlamaCpp,
   OpenAI,
-} from "../../../core/llm/llms";
-import { ModelDescription } from "../../../core/config";
-import { LLM } from "../../../core/llm";
+} from "core/llm/llms";
+import { ModelDescription } from "core/config";
+import { LLM } from "core/llm";
 
 function modelDescriptionToLLM(desc: ModelDescription): LLM {
   let cls: typeof LLM;

@@ -334,7 +334,6 @@
     "@nestjs/common": "^8.4.7",
     "@openapitools/openapi-generator-cli": "^2.5.2",
     "@types/glob": "^8.0.0",
-    "@types/jest": "^29.5.11",
     "@types/mocha": "^10.0.1",
     "@types/node": "16.x",
     "@types/node-fetch": "^2.6.2",
@@ -351,7 +350,6 @@
     "json-schema-to-typescript": "^12.0.0",
     "mocha": "^10.1.0",
     "ovsx": "^0.8.3",
-    "ts-jest": "^29.1.1",
     "typescript": "^4.9.3",
     "vite": "^4.3.9",
     "vsce": "^2.15.0"
@@ -360,6 +358,7 @@
     "@electron/rebuild": "^3.2.10",
     "@reduxjs/toolkit": "^1.9.3",
     "axios": "^1.2.5",
+    "core": "file:../../core",
     "downshift": "^7.6.0",
     "fkill": "^8.1.0",
     "highlight.js": "^11.7.0",

@@ -4,7 +4,7 @@ import styled from "styled-components";
 import { getFontSize, getMarkdownLanguageTagForFile } from "../../util";
 import FileIcon from "../FileIcon";
 import HeaderButtonWithText from "../HeaderButtonWithText";
-import { ContextItem } from "../../../../core/llm/types";
+import { ContextItem } from "core/llm/types";
 import { postToIde } from "../../util/ide";
 import {
   ArrowUpLeftIcon,

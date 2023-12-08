@@ -19,7 +19,7 @@ import { StepDescription } from "../../schema/SessionState";
 import { useSelector } from "react-redux";
 import { RootStore } from "../../redux/store";
 import { GUIClientContext } from "../../App";
-import { ChatHistoryItem } from "../../../../core/llm/types";
+import { ChatHistoryItem } from "core/llm/types";
 
 interface StepContainerProps {
   item: ChatHistoryItem;

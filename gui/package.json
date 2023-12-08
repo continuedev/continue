@@ -14,6 +14,7 @@
     "@reduxjs/toolkit": "^1.9.3",
     "@types/vscode-webview": "^1.57.1",
     "@uiw/react-markdown-preview": "^4.1.13",
+    "core": "file:../core",
     "dompurify": "^3.0.6",
     "downshift": "^7.6.0",
     "lodash": "^4.17.21",

@@ -9,14 +9,14 @@ import sessionStateReducer, {
 } from "./slices/sessionStateReducer";
 import { ContinueConfig } from "../schema/ContinueConfig";
 // import { ContextItem } from "../schema/ContextItem";
-import { ContextItem } from "../../../core/llm/types";
+import { ContextItem } from "core/llm/types";
 import { ContextProviderDescription } from "../schema/ContextProviderDescription";
 import { SlashCommandDescription } from "../schema/SlashCommandDescription";
 
 import storage from "redux-persist/lib/storage";
 import { persistReducer, persistStore, createTransform } from "redux-persist";
-import { ChatHistory } from "../../../core/llm/types";
-import { SerializedContinueConfig } from "../../../core/config";
+import { ChatHistory } from "core/llm/types";
+import { SerializedContinueConfig } from "core/config";
 
 export interface ChatMessage {
   role: "system" | "user" | "assistant";

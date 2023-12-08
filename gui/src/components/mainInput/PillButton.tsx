@@ -16,7 +16,7 @@ import { GUIClientContext } from "../../App";
 import { getFontSize } from "../../util";
 import HeaderButtonWithText from "../HeaderButtonWithText";
 import FileIcon from "../FileIcon";
-import { ContextItem } from "../../../../core/llm/types";
+import { ContextItem } from "core/llm/types";
 import { postToIde } from "../../util/ide";
 import { useDispatch, useSelector } from "react-redux";
 import { setEditingAtIds } from "../../redux/slices/sessionStateReducer";

@@ -8,7 +8,7 @@ import { setServerStatusMessage } from "../redux/slices/miscSlice";
 import { postToIde } from "../util/ide";
 
 import { setVscMachineId } from "../redux/slices/configSlice";
-import { ExtensionIde } from "../../../core/ide/index";
+import { ExtensionIde } from "core/ide/index";
 import { setConfig } from "../redux/slices/serverStateReducer";
 
 function useSetup(dispatch: Dispatch<any>) {

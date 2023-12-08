@@ -47,13 +47,9 @@ import FTCDialog from "../components/dialogs/FTCDialog";
 import HeaderButtonWithText from "../components/HeaderButtonWithText";
 import { useNavigate } from "react-router-dom";
 import { setTakenActionTrue } from "../redux/slices/miscSlice";
-import FreeTrial from "../../../core/llm/llms/FreeTrial";
-import { constructMessages } from "../../../core/llm/constructMessages";
-import {
-  ChatHistory,
-  ChatHistoryItem,
-  ChatMessage,
-} from "../../../core/llm/types";
+import FreeTrial from "core/llm/llms/FreeTrial";
+import { constructMessages } from "core/llm/constructMessages";
+import { ChatHistory, ChatHistoryItem, ChatMessage } from "core/llm/types";
 import {
   resubmitAtIndex,
   streamUpdate,

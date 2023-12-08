@@ -69,7 +69,7 @@ import {
   newSession,
   setInactive,
 } from "../../redux/slices/stateSlice";
-import { ContextItem } from "../../../../core/llm/types";
+import { ContextItem } from "core/llm/types";
 import useContextProviders from "../../hooks/useContextProviders";
 
 const SEARCH_INDEX_NAME = "continue_context_items";

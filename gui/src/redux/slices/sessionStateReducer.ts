@@ -1,10 +1,10 @@
 import { createSlice } from "@reduxjs/toolkit";
 import { StepDescription } from "../../schema/SessionState";
 import { SessionUpdate } from "../../schema/SessionUpdate";
-import { ContextItem } from "../../../../core/llm/types";
+import { ContextItem } from "core/llm/types";
 import { PersistedSessionInfo } from "../../schema/PersistedSessionInfo";
 import { v4 } from "uuid";
-import { ContextItemId } from "../../../../core/llm/types";
+import { ContextItemId } from "core/llm/types";
 
 const TEST_CONTEXT_ITEMS: ContextItem[] = [
   {

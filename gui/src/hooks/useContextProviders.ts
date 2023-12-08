@@ -1,13 +1,10 @@
 import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { RootStore } from "../redux/store";
-import { ContextProviderName } from "../../../core/config";
-import {
-  ContextProvider,
-  ContextProviderDescription,
-} from "../../../core/context";
-import Providers from "../../../core/context/providers";
-import { ContextItem } from "../../../core/llm/types";
+import { ContextProviderName } from "core/config";
+import { ContextProvider, ContextProviderDescription } from "core/context";
+import Providers from "core/context/providers";
+import { ContextItem } from "core/llm/types";
 
 function providerNameToProvider(
   name: ContextProviderName

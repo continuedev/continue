@@ -1,7 +1,7 @@
 import { createSlice } from "@reduxjs/toolkit";
 import { RootStore } from "../store";
-import { ContextItemId } from "../../../../core/llm/types";
-import defaultConfig from "../../../../core/config/default";
+import { ContextItemId } from "core/llm/types";
+import defaultConfig from "core/config/default";
 const initialState: RootStore["state"] = {
   history: [],
   contextItems: [],
