@@ -47,8 +47,6 @@ export const stateSlice = createSlice({
       if (action.payload.index < state.history.length) {
         state.history[action.payload.index].message.content =
           action.payload.content;
-        state.history[action.payload.index].message.summary =
-          action.payload.summary;
 
         // Cut off history after the resubmitted message
         state.history = state.history.slice(0, action.payload.index + 1);

@@ -16,6 +16,7 @@ import { getExtensionUri } from "../util/vscode";
 import path from "path";
 import { setupInlineTips } from "./inlineTips";
 import { v4 } from "uuid";
+import { loadTsConfig } from "../loadConfig";
 
 export let extensionContext: vscode.ExtensionContext | undefined = undefined;
 export let ideProtocolClient: IdeProtocolClient;
@@ -105,6 +106,8 @@ function showRefactorMigrationMessage() {
 }
 
 export async function activateExtension(context: vscode.ExtensionContext) {
+  loadTsConfig();
+
   extensionContext = context;
 
   console.log("Using Continue version: ", getExtensionVersion());
