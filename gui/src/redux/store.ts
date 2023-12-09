@@ -1,18 +1,17 @@
 import { combineReducers, configureStore } from "@reduxjs/toolkit";
-import configReducer from "./slices/configSlice";
-import miscReducer from "./slices/miscSlice";
-import uiStateReducer from "./slices/uiStateSlice";
-import serverStateReducer from "./slices/serverStateReducer";
-import stateReducer from "./slices/stateSlice";
-import { ContinueConfig } from "../schema/ContinueConfig";
 import { ContextItem } from "core/llm/types";
 import { ContextProviderDescription } from "../schema/ContextProviderDescription";
 import { SlashCommandDescription } from "../schema/SlashCommandDescription";
+import configReducer from "./slices/configSlice";
+import miscReducer from "./slices/miscSlice";
+import serverStateReducer from "./slices/serverStateReducer";
+import stateReducer from "./slices/stateSlice";
+import uiStateReducer from "./slices/uiStateSlice";
 
-import storage from "redux-persist/lib/storage";
-import { persistReducer, persistStore, createTransform } from "redux-persist";
+import { ContinueConfig } from "core/config";
 import { ChatHistory } from "core/llm/types";
-import { SerializedContinueConfig } from "core/config";
+import { createTransform } from "redux-persist";
+import storage from "redux-persist/lib/storage";
 
 export interface ChatMessage {
   role: "system" | "user" | "assistant";
@@ -24,9 +23,10 @@ export interface RootStore {
     history: ChatHistory;
     contextItems: ContextItem[];
     active: boolean;
-    config: SerializedContinueConfig;
+    config: ContinueConfig;
     title: string;
     sessionId: string;
+    defaultModelTitle: string;
   };
 
   config: {

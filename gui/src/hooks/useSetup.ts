@@ -3,8 +3,8 @@ import { useEffect } from "react";
 import { setServerStatusMessage } from "../redux/slices/miscSlice";
 import { postToIde } from "../util/ide";
 
-import { setVscMachineId } from "../redux/slices/configSlice";
 import { ExtensionIde } from "core/ide/index";
+import { setVscMachineId } from "../redux/slices/configSlice";
 import { setConfig } from "../redux/slices/serverStateReducer";
 import { addHighlightedCode, setInactive } from "../redux/slices/stateSlice";
 

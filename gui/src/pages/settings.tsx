@@ -129,8 +129,8 @@ function Settings() {
   useEffect(() => {
     if (!config) return;
 
-    formMethods.setValue("system_message", config.system_message);
-    formMethods.setValue("temperature", config.completion_options?.temperature);
+    formMethods.setValue("system_message", config.systemMessage);
+    formMethods.setValue("temperature", config.completionOptions?.temperature);
   }, [config]);
 
   return (
@@ -202,7 +202,7 @@ function Settings() {
               <div className="text-center" style={{ marginTop: "-25px" }}>
                 <p className="text-sm text-gray-500">
                   {(formMethods.watch("temperature") as number | undefined) ||
-                    config.completion_options?.temperature ||
+                    config.completionOptions?.temperature ||
                     "-"}
                 </p>
               </div>

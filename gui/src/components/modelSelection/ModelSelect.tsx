@@ -17,7 +17,7 @@ import {
   vscBackground,
   vscForeground,
 } from "..";
-import { defaultModelSelector } from "../../redux/selectors/configSelectors";
+import { defaultModelSelector } from "../../redux/selectors/modelSelectors";
 import { RootStore } from "../../redux/store";
 import { getMetaKeyLabel } from "../../util";
 import HeaderButtonWithText from "../HeaderButtonWithText";

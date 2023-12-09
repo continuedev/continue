@@ -1,19 +1,29 @@
+import { ContextProvider } from "..";
+import { ContextProviderName } from "../../config";
 import DiffContextProvider from "./DiffContextProvider";
-import GitHubIssuesContextProvider from "./GitHubIssuesContextProvider";
-import TerminalContextProvider from "./TerminalContextProvider";
-// import OpenTabsContextProvider from "./OpenTabsContextProvider";
-import GoogleContextProvider from "./GoogleContextProvider";
-// import SearchContextProvider from "./SearchContextProvider";
-import URLContextProvider from "./URLContextProvider";
 import FileTreeContextProvider from "./FileTreeContextProvider";
+import GitHubIssuesContextProvider from "./GitHubIssuesContextProvider";
+import GoogleContextProvider from "./GoogleContextProvider";
+import TerminalContextProvider from "./TerminalContextProvider";
+import URLContextProvider from "./URLContextProvider";
 
-export default {
-  diff: DiffContextProvider,
-  github: GitHubIssuesContextProvider,
-  terminal: TerminalContextProvider,
-  // open: OpenTabsContextProvider, TODO
-  google: GoogleContextProvider,
-  // search: SearchContextProvider, TODO
-  url: URLContextProvider,
-  tree: FileTreeContextProvider,
-};
+const Providers: (typeof ContextProvider)[] = [
+  DiffContextProvider,
+  FileTreeContextProvider,
+  GitHubIssuesContextProvider,
+  GoogleContextProvider,
+  TerminalContextProvider,
+  URLContextProvider,
+];
+
+export function contextProviderClassFromName(
+  name: ContextProviderName
+): typeof ContextProvider {
+  const cls = Providers.find((cls) => cls.description.title === name);
+
+  if (!cls) {
+    throw new Error(`Unknown provider ${name}`);
+  }
+
+  return cls;
+}

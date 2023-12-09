@@ -1,5 +1,5 @@
-import { SlashCommand } from ".";
-import { removeQuotesAndEscapes } from "../util";
+import { SlashCommand } from "..";
+import { removeQuotesAndEscapes } from "../../util";
 
 `
 cmd = await sdk.models.default.complete(

@@ -5,7 +5,7 @@ import { ChatMessage, CompletionOptions } from "../types";
 class GooglePalm extends LLM {
   static providerName: ModelProvider = "google-palm";
 
-  static defaultOptions: LLMOptions = {
+  static defaultOptions: Partial<LLMOptions> = {
     model: "chat-bison-001",
   };
 

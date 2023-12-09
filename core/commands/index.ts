@@ -1,8 +1,8 @@
-import { CustomCommand } from "../config";
+import { CustomCommand, SlashCommandDescription } from "../config";
 import { IDE } from "../ide/types";
 import { LLM } from "../llm";
 import { ChatMessage, ContextItem } from "../llm/types";
-
+import SlashCommands from "./slash";
 export interface ContinueSDK {
   ide: IDE;
   llm: LLM;
@@ -43,4 +43,8 @@ export function slashFromCustomCommand(
       }
     },
   };
+}
+
+export function slashCommandFromDescription(desc: SlashCommandDescription) {
+  return SlashCommands.find((cmd) => cmd.name === desc.name);
 }

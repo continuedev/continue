@@ -1,4 +1,7 @@
 import { createSlice } from "@reduxjs/toolkit";
+import { SerializedContinueConfig } from "core/config";
+import { loadSerializedConfig } from "core/config/load";
+import FreeTrial from "core/llm/llms/FreeTrial";
 import { RootStore } from "../store";
 
 const TEST_SLASH_COMMANDS = [
@@ -21,8 +24,10 @@ const initialState: RootStore["serverState"] = {
   slashCommands: [],
   selectedContextItems: [],
   config: {
-    system_message: "",
-    temperature: 0.5,
+    models: [
+      new FreeTrial({ model: "gpt-4" }),
+      new FreeTrial({ model: "gpt-3.5-turbo" }),
+    ],
   },
   contextProviders: [],
   savedContextGroups: [],
@@ -49,10 +54,11 @@ export const serverStateSlice = createSlice({
         contextProviders: action.payload,
       };
     },
-    setConfig: (state, action) => {
+    setConfig: (state, { payload }: { payload: SerializedContinueConfig }) => {
+      const config = loadSerializedConfig(payload);
       return {
         ...state,
-        config: action.payload,
+        config,
       };
     },
     setIndexingProgress: (state, { payload }: { payload: number }) => {

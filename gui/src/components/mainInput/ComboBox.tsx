@@ -41,7 +41,7 @@ import {
 } from "..";
 import useContextProviders from "../../hooks/useContextProviders";
 import useHistory from "../../hooks/useHistory";
-import { contextLengthSelector } from "../../redux/selectors/configSelectors";
+import { contextLengthSelector } from "../../redux/selectors/modelSelectors";
 import { setTakenActionTrue } from "../../redux/slices/miscSlice";
 import {
   addContextItems,
@@ -337,7 +337,7 @@ const Li = styled.li<{
   background-color: ${({ highlighted }) =>
     highlighted ? buttonColor + "66" : "transparent"};
   ${({ selected }) => selected && "font-weight: bold;"}
-  padding: 0.5rem 0.5rem;
+  padding: 0.5rem 0.25rem;
   display: flex;
   flex-direction: row;
   align-items: center;
@@ -416,16 +416,15 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
     any | undefined
   >(undefined);
 
-  const availableSlashCommands = [];
-  // useSelector(
-  //   (state: RootStore) =>
-  //   state.serverState.slashCommands?.map((cmd) => {
-  //     return {
-  //       name: `/${cmd.name}`,
-  //       description: cmd.description,
-  //     };
-  //   }) || []
-  // );
+  const availableSlashCommands = useSelector(
+    (state: RootStore) =>
+      state.state.config.slashCommands?.map((cmd) => {
+        return {
+          name: `/${cmd.name}`,
+          description: cmd.description,
+        };
+      }) || []
+  );
   const selectedContextItems = useSelector((state: RootStore) => {
     if (typeof props.index !== "undefined") {
       return state.state.history[props.index].contextItems;

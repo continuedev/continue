@@ -1,9 +1,10 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { RootStore } from "../store";
-import { ContextItem, ContextItemId } from "core/llm/types";
 import defaultConfig from "core/config/default";
-import { v4 } from "uuid";
+import { loadSerializedConfig } from "core/config/load";
+import { ContextItem, ContextItemId } from "core/llm/types";
 import { PersistedSessionInfo } from "core/types";
+import { v4 } from "uuid";
+import { RootStore } from "../store";
 
 const TEST_CONTEXT_ITEMS: ContextItem[] = [
   {
@@ -83,9 +84,10 @@ const initialState: RootStore["state"] = {
   history: [],
   contextItems: [],
   active: false,
-  config: defaultConfig,
+  config: loadSerializedConfig(defaultConfig),
   title: "New Session",
   sessionId: v4(),
+  defaultModelTitle: "GPT-4",
 };
 
 export const stateSlice = createSlice({
@@ -324,6 +326,16 @@ export const stateSlice = createSlice({
         };
       }
     },
+    setDefaultModel: (state, action) => {
+      const model = state.config.models.find(
+        (model) => model.title === action.payload
+      );
+      if (!model) return;
+      return {
+        ...state,
+        defaultModelTitle: action.payload,
+      };
+    },
   },
 });
 
@@ -339,5 +351,6 @@ export const {
   resubmitAtIndex,
   addHighlightedCode,
   setEditingAtIds,
+  setDefaultModel,
 } = stateSlice.actions;
 export default stateSlice.reducer;

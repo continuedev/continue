@@ -29,14 +29,13 @@ import ErrorStepContainer from "../components/gui/ErrorStepContainer";
 import StepContainer from "../components/gui/StepContainer";
 import TimelineItem from "../components/gui/TimelineItem";
 import ComboBox from "../components/mainInput/ComboBox";
+import useChatHandler from "../hooks/useChatHandler";
 import useHistory from "../hooks/useHistory";
-import useModels from "../hooks/useModels";
-import { setTakenActionTrue } from "../redux/slices/miscSlice";
+import { defaultModelSelector } from "../redux/selectors/modelSelectors";
 import {
   newSession,
   resubmitAtIndex,
   setInactive,
-  streamUpdate,
   submitMessage,
 } from "../redux/slices/stateSlice";
 import {
@@ -129,9 +128,8 @@ function GUI(props: GUIProps) {
 
   // #region Selectors
   const sessionState = useSelector((state: RootStore) => state.state);
-  const workspacePaths = (window as any).workspacePaths || [];
 
-  const { defaultModel } = useModels();
+  const defaultModel = useSelector(defaultModelSelector);
 
   const sessionTitle = useSelector((state: RootStore) => state.state.title);
   const active = useSelector((state: RootStore) => state.state.active);
@@ -162,7 +160,6 @@ function GUI(props: GUIProps) {
   const bottomMessage = useSelector(
     (state: RootStore) => state.uiState.bottomMessage
   );
-  const takenAction = useSelector((state: RootStore) => state.misc.takenAction);
   useEffect(() => {
     if (!aboveComboBoxDivRef.current) return;
     dispatch(
@@ -231,6 +228,8 @@ function GUI(props: GUIProps) {
 
   // #endregion
 
+  const { streamResponse } = useChatHandler(dispatch);
+
   const sendInput = useCallback(
     (input: string) => {
       if (
@@ -265,13 +264,7 @@ function GUI(props: GUIProps) {
 
       const messages = constructMessages([...state.history, historyItem]);
       dispatch(submitMessage(message));
-
-      (async () => {
-        for await (const update of defaultModel.streamChat(messages)) {
-          dispatch(streamUpdate(update.content));
-        }
-        dispatch(setInactive());
-      })();
+      streamResponse(messages);
 
       // Increment localstorage counter for popup
       const counter = localStorage.getItem("mainTextEntryCounter");
@@ -347,7 +340,13 @@ function GUI(props: GUIProps) {
         localStorage.setItem("mainTextEntryCounter", "1");
       }
     },
-    [sessionState.history, sessionState.contextItems, defaultModel, state]
+    [
+      sessionState.history,
+      sessionState.contextItems,
+      defaultModel,
+      state,
+      streamResponse,
+    ]
   );
 
   const { saveSession } = useHistory();
@@ -377,8 +376,6 @@ function GUI(props: GUIProps) {
   }, [sendInput]);
 
   const onMainTextInput = (event?: any) => {
-    console.log("onMainTextInput");
-    dispatch(setTakenActionTrue(null));
     if (mainTextInputRef.current) {
       let input = (mainTextInputRef.current as any).inputValue;
 

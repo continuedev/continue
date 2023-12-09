@@ -4,6 +4,10 @@ These are the types for the JSON config file, config.json.
 
 **/
 
+import { SlashCommand } from "../commands/index";
+import { ContextProvider } from "../context";
+import { LLM } from "../llm";
+
 type StepName =
   | "AnswerQuestionChroma"
   | "GenerateShellCommandStep"
@@ -69,7 +73,7 @@ interface ContextProviderWithParams {
   params: { [key: string]: any };
 }
 
-interface SlashCommand {
+interface SlashCommandDescription {
   name: string;
   description: string;
   step: StepName | string;
@@ -131,23 +135,38 @@ interface SerializedContinueConfig {
   modelRoles: ModelRoles;
   systemMessage?: string;
   completionOptions?: BaseCompletionOptions;
-  slashCommands?: SlashCommand[];
+  slashCommands?: SlashCommandDescription[];
   customCommands?: CustomCommand[];
   contextProviders?: ContextProviderWithParams[];
+  retrievalSettings?: RetrievalSettings;
+  disableIndexing?: boolean;
 }
+
+interface ContinueConfig {
+  allowAnonymousTelemetry?: boolean;
+  models: LLM[];
+  systemMessage?: string;
+  completionOptions?: BaseCompletionOptions;
+  slashCommands?: SlashCommand[];
+  contextProviders?: ContextProvider[];
+  retrievalSettings?: RetrievalSettings;
+  disableIndexing?: boolean;
+}
+
 export {
-  StepName,
-  ContextProviderName,
-  TemplateType,
-  ModelProvider,
-  RequestOptions,
-  StepWithParams,
-  ContextProviderWithParams,
-  SlashCommand,
-  CustomCommand,
-  RetrievalSettings,
   BaseCompletionOptions,
+  ContextProviderName,
+  ContextProviderWithParams,
+  ContinueConfig,
+  CustomCommand,
   ModelDescription,
+  ModelProvider,
   ModelRoles,
+  RequestOptions,
+  RetrievalSettings,
   SerializedContinueConfig,
+  SlashCommandDescription,
+  StepName,
+  StepWithParams,
+  TemplateType,
 };

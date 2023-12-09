@@ -1,22 +1,10 @@
+import { ContextProviderName } from "core/config";
+import { ContextProvider, ContextProviderDescription } from "core/context";
+import { contextProviderClassFromName } from "core/context/providers";
+import { ContextItem } from "core/llm/types";
 import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { RootStore } from "../redux/store";
-import { ContextProviderName } from "core/config";
-import { ContextProvider, ContextProviderDescription } from "core/context";
-import Providers from "core/context/providers";
-import { ContextItem } from "core/llm/types";
-
-function providerNameToProvider(
-  name: ContextProviderName
-): typeof ContextProvider {
-  const cls = Providers[name];
-
-  if (!cls) {
-    throw new Error(`Unknown provider ${name}`);
-  }
-
-  return cls;
-}
 
 function useContextProviders() {
   const [providers, setProviders] = useState<{
@@ -34,7 +22,9 @@ function useContextProviders() {
     let providersList = [];
     let descriptionsList = [];
     for (const [name, options] of Object.entries(providerConfig)) {
-      const provider = providerNameToProvider(name as ContextProviderName);
+      const provider = contextProviderClassFromName(
+        name as ContextProviderName
+      );
       providersList.push((provider as any)(options));
       descriptionsList.push(provider.description);
     }

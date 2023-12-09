@@ -1,6 +1,6 @@
-import { ContinueSDK, SlashCommand } from ".";
-import { ChatMessage } from "../llm/types";
-import { removeQuotesAndEscapes } from "../util";
+import { SlashCommand } from "..";
+import { ChatMessage } from "../../llm/types";
+import { removeQuotesAndEscapes } from "../../util";
 
 const PROMPT = (
   input: string,

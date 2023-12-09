@@ -22,7 +22,7 @@ import {
   simplestEditPrompt,
   zephyrEditPrompt,
 } from "./templates/edit";
-import { CompletionOptions, ChatMessage } from "./types";
+import { ChatMessage, CompletionOptions } from "./types";
 
 function autodetectTemplateType(model: string): TemplateType | undefined {
   const lower = model.toLowerCase();
@@ -153,7 +153,7 @@ interface LLMFullCompletionOptions {
 
 export abstract class LLM implements LLMOptions {
   static providerName: ModelProvider;
-  static defaultOptions: Partial<LLMOptions>;
+  static defaultOptions: Partial<LLMOptions> | undefined;
 
   get providerName(): ModelProvider {
     return (this.constructor as typeof LLM).providerName;
