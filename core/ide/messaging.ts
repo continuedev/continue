@@ -1,4 +1,9 @@
-import "vscode-webview";
+// import "vscode-webview";
+import { v4 as uuidv4 } from "uuid";
+
+interface vscode {
+  postMessage(message: any): vscode;
+}
 
 declare const vscode: any;
 
@@ -42,16 +47,19 @@ export function postToIde(type: string, data: any, attempt: number = 0) {
   }
 }
 
-export async function ideRequest(type: string, data: any): Promise<any> {
-  // TODO: Use UUID
+export async function ideRequest(type: string, message: any): Promise<any> {
+  // message, messageId, and type are passed back and forth
+  const messageId = uuidv4();
+
   return new Promise((resolve) => {
     const handler = (event: any) => {
-      if (event.data.type === type) {
+      if (event.data.messageId === messageId) {
         window.removeEventListener("message", handler);
-        resolve(event.data);
+        resolve(event.data.message);
       }
     };
     window.addEventListener("message", handler);
-    postToIde(type, data);
+
+    postToIde(type, { message, messageId });
   });
 }

@@ -27,13 +27,11 @@ STEP_NAMES = [
     "ClearHistoryStep",
     "StackOverflowStep",
     "OpenConfigStep",
-    "GenerateShellCommandStep",
     "DraftIssueStep",
 ]
 
 StepName = Literal[
     "AnswerQuestionChroma",
-    "GenerateShellCommandStep",
     "EditHighlightedCodeStep",
     "ShareSessionStep",
     "CommentCodeStep",

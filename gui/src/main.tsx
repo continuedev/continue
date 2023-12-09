@@ -11,11 +11,11 @@ import CustomPostHogProvider from "./hooks/CustomPostHogProvider";
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
   <React.StrictMode>
     <Provider store={store}>
-      <PersistGate loading={null} persistor={persistor}>
-        <CustomPostHogProvider>
-          <App />
-        </CustomPostHogProvider>
-      </PersistGate>
+      {/* <PersistGate loading={null} persistor={persistor}> */}
+      <CustomPostHogProvider>
+        <App />
+      </CustomPostHogProvider>
+      {/* </PersistGate> */}
     </Provider>
   </React.StrictMode>
 );

@@ -10,6 +10,7 @@
   "license": "Apache-2.0",
   "devDependencies": {
     "@types/jest": "^29.5.11",
+    "@types/uuid": "^9.0.7",
     "jest": "^29.7.0",
     "ts-jest": "^29.1.1"
   },
@@ -17,6 +18,7 @@
     "@anthropic-ai/sdk": "^0.10.2",
     "dotenv": "^16.3.1",
     "openai": "^4.20.1",
-    "replicate": "^0.23.0"
+    "replicate": "^0.23.0",
+    "uuid": "^9.0.1"
   }
 }

@@ -55,6 +55,22 @@ export function getContinueGlobalPath(): string {
   return continuePath;
 }
 
+export function getSessionsFolderPath(): string {
+  const sessionsPath = path.join(getContinueGlobalPath(), "sessions");
+  if (!fs.existsSync(sessionsPath)) {
+    fs.mkdirSync(sessionsPath);
+  }
+  return sessionsPath;
+}
+
+export function getSessionFilePath(sessionId: string): string {
+  return path.join(getSessionsFolderPath(), `${sessionId}.json`);
+}
+
+export function getSessionsListPath(): string {
+  return path.join(getSessionsFolderPath(), "sessions.json");
+}
+
 export function getConfigJsonPath(): string {
   // TODO: Create if it doesn't exist
   return path.join(getContinueGlobalPath(), "config.json");

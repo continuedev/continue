@@ -98,6 +98,14 @@ export function getSidebarContent(
   }
 
   panel.webview.onDidReceiveMessage(async (data) => {
+    const ide = new VsCodeIde();
+    const respond = (message: any) => {
+      panel.webview.postMessage({
+        type: data.type,
+        messageId: data.messageId,
+        message: message || {},
+      });
+    };
     switch (data.type) {
       case "websocketForwardingOpen": {
         let url = data.url;
@@ -230,48 +238,43 @@ export function getSidebarContent(
         break;
       }
       case "getDiff": {
-        new VsCodeIde().getDiff().then((diff) => {
-          panel.webview.postMessage({
-            type: "getDiff",
-            diff,
-          });
-        });
+        respond(await ide.getDiff());
         break;
       }
       case "getSerializedConfig": {
-        new VsCodeIde().getSerializedConfig().then((config) => {
-          panel.webview.postMessage({
-            type: "getSerializedConfig",
-            config,
-          });
-        });
+        respond(await ide.getSerializedConfig());
         break;
       }
       case "getTerminalContents": {
-        new VsCodeIde().getTerminalContents().then((terminalContents) => {
-          panel.webview.postMessage({
-            type: "getTerminalContents",
-            terminalContents,
-          });
-        });
+        respond(await ide.getTerminalContents());
         break;
       }
       case "listWorkspaceContents": {
-        new VsCodeIde().listWorkspaceContents().then((workspaceContents) => {
-          panel.webview.postMessage({
-            type: "listWorkspaceContents",
-            workspaceContents,
-          });
-        });
+        respond(await ide.listWorkspaceContents());
         break;
       }
       case "getWorkspaceDir": {
-        new VsCodeIde().getWorkspaceDir().then((workspaceDir) => {
-          panel.webview.postMessage({
-            type: "getWorkspaceDir",
-            workspaceDir,
-          });
-        });
+        respond(await ide.getWorkspaceDir());
+        break;
+      }
+      case "writeFile": {
+        respond(await ide.writeFile(data.path, data.contents));
+        break;
+      }
+      case "showVirtualFile": {
+        respond(await ide.showVirtualFile(data.title, data.contents));
+        break;
+      }
+      case "getContinueDir": {
+        respond(await ide.getContinueDir());
+        break;
+      }
+      case "openFile": {
+        respond(await ide.openFile(data.path));
+        break;
+      }
+      case "runCommand": {
+        respond(await ide.runCommand(data.command));
         break;
       }
     }

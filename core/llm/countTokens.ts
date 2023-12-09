@@ -40,6 +40,27 @@ function countChatMessageTokens(
   return countTokens(chatMessage.content, modelName) + TOKENS_PER_MESSAGE;
 }
 
+function pruneStringFromBottom(
+  modelName: string,
+  maxTokens: number,
+  prompt: string
+): string {
+  // TODO: Tiktoken
+  //   const encoding = encodingForModel(modelName);
+
+  //   if (encoding === null) {
+  const desiredLengthInChars = maxTokens * 2;
+  return prompt.slice(0, desiredLengthInChars);
+  //   }
+
+  //   const tokens = encoding.encode(prompt, { disallowedSpecial: [] });
+  //   if (tokens.length <= maxTokens) {
+  //     return prompt;
+  //   }
+
+  //   return encoding.decode(tokens.slice(-maxTokens));
+}
+
 function pruneStringFromTop(
   modelName: string,
   maxTokens: number,
@@ -236,4 +257,9 @@ function compileChatMessages(
   return flattenedHistory;
 }
 
-export { compileChatMessages, pruneRawPromptFromTop, countTokens };
+export {
+  compileChatMessages,
+  pruneRawPromptFromTop,
+  countTokens,
+  pruneStringFromBottom,
+};
