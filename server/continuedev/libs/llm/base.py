@@ -68,7 +68,7 @@ class LLM(ContinueBaseModel):
         validate_default=True,
     )
 
-    template_messages:  Annotated[Optional[Callable[[List[ChatMessage]], str]], WithJsonSchema({'type': 'string'}, mode='validation')] = Field(
+    template_messages:  Annotated[Optional[Callable[[List[ChatMessage]], str]], WithJsonSchema({'type': 'string'}, mode='serialization')] = Field(
         default=None,
         description="A function that takes a list of messages and returns a prompt. This ensures that models like llama2, which are trained on specific chat formats, will always receive input in that format.",
         validate_default=True
@@ -125,7 +125,7 @@ class LLM(ContinueBaseModel):
         return prompt_templates or autodetect_prompt_templates(val_info.data["model"])
 
     def dict(self, **kwargs):
-        original_dict = super().dict(**kwargs)
+        original_dict = super().model_dump(**kwargs)
         original_dict.pop("write_log")
         if self.template_messages is not None:
             original_dict["template_messages"] = self.template_messages.__name__

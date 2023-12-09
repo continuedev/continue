@@ -1,7 +1,7 @@
 import json
 from typing import Annotated, Any, AsyncGenerator, Dict, List, Literal, Optional, Union, cast
 
-from pydantic import field_validator, ConfigDict, BaseModel, Field, field_validator
+from pydantic import field_validator, ConfigDict, BaseModel, Field, field_validator, validator
 from pydantic.json_schema import model_json_schema
 
 from ..models.main import ContinueBaseModel
@@ -127,7 +127,7 @@ class SetStep(BaseModel):
 
     def dict(self, *args, **kwargs):
         kwargs["exclude_none"] = True
-        return super().dict(*args, **kwargs)
+        return super().model_dump(*args, **kwargs)
 
 
 class DeltaStep(BaseModel):
@@ -139,7 +139,7 @@ class DeltaStep(BaseModel):
 
     def dict(self, *args, **kwargs):
         kwargs["exclude_none"] = True
-        return super().dict(*args, **kwargs)
+        return super().model_dump(*args, **kwargs)
 
 
 class StepDescription(BaseModel):
@@ -167,22 +167,26 @@ class StepDescription(BaseModel):
 
 class SessionUpdate(BaseModel):
     index: int
+
+    # NOTE [pydantic]: with Pydantic Unions don't use relative imports (i.e. `from .main import DeltaStep`) otherwise it will fail to match throwing:
+    #   Input should be a valid dictionary or instance of DeltaStep ....
+    # The string class names will differ e.g.:
+    # <class 'continuedev.core.main.DeltaStep'> != <class 'server.continuedev.core.main.DeltaStep'>
     update: "UpdateStep"
     stop: Optional[bool] = None
-    # TODO[pydantic]: The following keys were removed: `smart_union`.
+    # NOTE [pydantic]: The following keys were removed: `smart_union`.
     # Check https://docs.pydantic.dev/dev-v2/migration/#changes-to-config for more information.
-    model_config = ConfigDict()
-
+   
     def dict(self, *args, **kwargs):
-        d = super().dict(*args, **kwargs)
+        d = super().model_dump(*args, **kwargs)
         # Because the front-end doesn't see the Model type
         d["delta"] = isinstance(self.update, DeltaStep)
         return d
 
 
 UpdateStep = Union[DeltaStep, SetStep, SessionUpdate]
+SessionUpdate.model_rebuild()
 
-SessionUpdate.update_forward_refs()
 
 StepGenerator = AsyncGenerator[Union[str, UpdateStep, Observation], None]
 AutopilotGeneratorOutput = Union[SessionUpdate, StepDescription]
@@ -273,7 +277,7 @@ class ContinueConfig(ContinueBaseModel):
     model_config = ConfigDict(extra="allow")
 
     def dict(self, **kwargs):
-        original_dict = super().dict(**kwargs)
+        original_dict = super().model_dump(**kwargs)
         original_dict.pop("policy", None)
         return original_dict
 
@@ -291,6 +295,7 @@ class SessionState(ContinueBaseModel):
 
     history: List[StepDescription]
     context_items: List[ContextItem]
+    session_id: Optional[str] = None
     # future: List = []
 
     @staticmethod
@@ -347,7 +352,7 @@ class Step(ContinueBaseModel):
         return None
 
     def dict(self, *args, **kwargs):
-        d = super().dict(*args, **kwargs)
+        d = super().model_dump(*args, **kwargs)
         # Make sure description is always a string
         d["description"] = self.description or ""
         return d

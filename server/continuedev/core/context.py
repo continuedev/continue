@@ -91,7 +91,7 @@ class ContextProvider(BaseModel):
         )
 
     def dict(self, *args, **kwargs):
-        original_dict = super().dict(*args, **kwargs)
+        original_dict = super().model_dump(*args, **kwargs)
         original_dict.pop("ide", None)
         original_dict.pop("delete_documents", None)
         original_dict.pop("update_documents", None)

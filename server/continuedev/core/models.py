@@ -99,7 +99,7 @@ class Models(BaseModel):
         return v
 
     def dict(self, **kwargs):
-        original_dict = super().dict(**kwargs)
+        original_dict = super().model_dump(**kwargs)
         return original_dict
 
     @property

@@ -230,6 +230,18 @@
       },
       "title": "Context Items",
       "type": "array"
+    },
+    "session_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Session Id"
     }
   },
   "required": [

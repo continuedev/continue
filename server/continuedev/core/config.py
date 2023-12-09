@@ -44,7 +44,7 @@ class ContextProviderWithParams(BaseModel):
 class SlashCommand(BaseModel):
     name: str
     description: str
-    step: Annotated[Union[Type[Step], StepName], Field(), WithJsonSchema({'type': 'string'}, mode='validation')] = Field(default=None, validate_default=True)
+    step: Annotated[Union[Type[Step], StepName], Field(), WithJsonSchema({'type': 'string'}, mode='serialization')] = Field(default=None, validate_default=True)
     params: Optional[Dict] = {}
 
     # Allow step class for the migration
@@ -62,7 +62,7 @@ class SlashCommand(BaseModel):
             return v
 
     def dict(self, *args, **kwargs):
-        d = super().dict(*args, **kwargs)
+        d = super().model_dump(*args, **kwargs)
         if isinstance(d["step"], str):
             d["step"] = d["step"].split(".")[-1]
         else:
