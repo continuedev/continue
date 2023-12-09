@@ -90,10 +90,30 @@
           "type": "integer"
         },
         "session_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
           "default": null,
           "description": "The session_id of the UI.",
-          "title": "Session Id",
-          "type": "string"
+          "title": "Session Id"
+        },
+        "assistant_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "The assistant_id of the UI.",
+          "title": "Assistant Id"
         }
       },
       "title": "BaseCompletionOptions",
@@ -276,7 +296,8 @@
         "frequency_penalty": null,
         "stop": null,
         "max_tokens": 1023,
-        "session_id": null
+        "session_id": null,
+        "assistant_id": null
       },
       "description": "Options for the completion endpoint. Read more about the completion options in the documentation."
     },

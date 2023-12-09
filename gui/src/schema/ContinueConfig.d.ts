@@ -81,7 +81,11 @@ export type MaxTokens = number;
 /**
  * The session_id of the UI.
  */
-export type SessionId = string;
+export type SessionId = string | null;
+/**
+ * The assistant_id of the UI.
+ */
+export type AssistantId = string | null;
 /**
  * Set the timeout for each request to the LLM. If you are running a local LLM that takes a while to respond, you might want to set this to avoid timeouts.
  */
@@ -158,7 +162,18 @@ export type Description1 = string;
 export type SlashCommands = SlashCommand[] | null;
 export type Name4 = string;
 export type Description2 = string;
-export type Step1 = string;
+export type Step1 =
+  | unknown
+  | (
+      | "AnswerQuestionChroma"
+      | "GenerateShellCommandStep"
+      | "EditHighlightedCodeStep"
+      | "ShareSessionStep"
+      | "CommentCodeStep"
+      | "ClearHistoryStep"
+      | "StackOverflowStep"
+      | "OpenConfigStep"
+    );
 export type Params = {
   [k: string]: unknown;
 } | null;
@@ -353,6 +368,7 @@ export interface BaseCompletionOptions {
   stop?: Stop;
   max_tokens?: MaxTokens;
   session_id?: SessionId;
+  assistant_id?: AssistantId;
   [k: string]: unknown;
 }
 export interface RequestOptions {

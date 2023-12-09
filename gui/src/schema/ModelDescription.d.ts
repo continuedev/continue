@@ -79,7 +79,11 @@ export type MaxTokens = number;
 /**
  * The session_id of the UI.
  */
-export type SessionId = string;
+export type SessionId = string | null;
+/**
+ * The assistant_id of the UI.
+ */
+export type AssistantId = string | null;
 /**
  * A system message that will always be followed by the LLM
  */
@@ -135,6 +139,7 @@ export interface BaseCompletionOptions {
   stop?: Stop;
   max_tokens?: MaxTokens;
   session_id?: SessionId;
+  assistant_id?: AssistantId;
   [k: string]: unknown;
 }
 export interface RequestOptions {

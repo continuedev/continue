@@ -90,10 +90,30 @@
           "type": "integer"
         },
         "session_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
           "default": null,
           "description": "The session_id of the UI.",
-          "title": "Session Id",
-          "type": "string"
+          "title": "Session Id"
+        },
+        "assistant_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "The assistant_id of the UI.",
+          "title": "Assistant Id"
         }
       },
       "title": "BaseCompletionOptions",
@@ -400,7 +420,8 @@
             "frequency_penalty": null,
             "stop": null,
             "max_tokens": 1023,
-            "session_id": null
+            "session_id": null,
+            "assistant_id": null
           },
           "description": "Options for the completion endpoint. Read more about the completion options in the documentation."
         },
@@ -732,9 +753,24 @@
           "type": "string"
         },
         "step": {
+          "anyOf": [
+            {},
+            {
+              "enum": [
+                "AnswerQuestionChroma",
+                "GenerateShellCommandStep",
+                "EditHighlightedCodeStep",
+                "ShareSessionStep",
+                "CommentCodeStep",
+                "ClearHistoryStep",
+                "StackOverflowStep",
+                "OpenConfigStep"
+              ],
+              "type": "string"
+            }
+          ],
           "default": null,
-          "title": "Step",
-          "type": "string"
+          "title": "Step"
         },
         "params": {
           "anyOf": [
@@ -857,6 +893,7 @@
           "system_message": null,
           "context_length": 8192,
           "completion_options": {
+            "assistant_id": null,
             "frequency_penalty": null,
             "max_tokens": 1023,
             "presence_penalty": null,
@@ -882,6 +919,7 @@
             "api_base": null,
             "api_key": null,
             "completion_options": {
+              "assistant_id": null,
               "frequency_penalty": null,
               "max_tokens": 1023,
               "presence_penalty": null,
@@ -956,7 +994,8 @@
         "frequency_penalty": null,
         "stop": null,
         "max_tokens": 1023,
-        "session_id": null
+        "session_id": null,
+        "assistant_id": null
       },
       "description": "Options for the completion endpoint. Read more about the completion options in the documentation."
     },

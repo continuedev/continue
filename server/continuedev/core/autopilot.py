@@ -19,7 +19,8 @@ from ..server.protocols.gui_protocol import AbstractGUIProtocolServer
 from ..server.protocols.ide_protocol import AbstractIdeProtocolServer
 from .config import ContinueConfig
 from .context import ContextManager
-from .main import (
+
+from continuedev.core.main import (
     AutopilotGenerator,
     AutopilotGeneratorOutput,
     Context,

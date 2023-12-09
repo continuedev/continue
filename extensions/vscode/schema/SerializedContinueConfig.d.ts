@@ -87,7 +87,11 @@ export type MaxTokens = number;
 /**
  * The session_id of the UI.
  */
-export type SessionId = string;
+export type SessionId = string | null;
+/**
+ * The assistant_id of the UI.
+ */
+export type AssistantId = string | null;
 /**
  * A system message that will always be followed by the LLM
  */
@@ -141,7 +145,18 @@ export type SystemMessage1 = string | null;
 export type SlashCommands = SlashCommand[] | null;
 export type Name = string;
 export type Description = string;
-export type Step = string;
+export type Step =
+  | unknown
+  | (
+      | "AnswerQuestionChroma"
+      | "GenerateShellCommandStep"
+      | "EditHighlightedCodeStep"
+      | "ShareSessionStep"
+      | "CommentCodeStep"
+      | "ClearHistoryStep"
+      | "StackOverflowStep"
+      | "OpenConfigStep"
+    );
 export type Params = {
   [k: string]: unknown;
 } | null;
@@ -268,6 +283,7 @@ export interface BaseCompletionOptions {
   stop?: Stop;
   max_tokens?: MaxTokens;
   session_id?: SessionId;
+  assistant_id?: AssistantId;
   [k: string]: unknown;
 }
 export interface RequestOptions {

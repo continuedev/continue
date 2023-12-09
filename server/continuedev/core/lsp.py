@@ -308,7 +308,7 @@ class ContinueLSPClient(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
     def dict(self, **kwargs):
-        original_dict = super().dict(**kwargs)
+        original_dict = super().model_dump(**kwargs)
         original_dict.pop("lsp_client", None)
         return original_dict
 

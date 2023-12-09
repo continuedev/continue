@@ -56,11 +56,14 @@ class BaseCompletionOptions(ContinueBaseModel):
         default=1023,
         description="The maximum number of tokens to generate.",
     )
-    session_id: str = Field(
+    session_id: Optional[str] = Field(
         default=None,
         description="The session_id of the UI.",
     )
-
+    assistant_id: Optional[str] = Field(
+        default=None,
+        description="The assistant_id of the UI.",
+    )
 
 class CompletionOptions(BaseCompletionOptions):
     """Options for the completion."""

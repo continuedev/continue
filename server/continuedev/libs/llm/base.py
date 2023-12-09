@@ -125,7 +125,7 @@ class LLM(ContinueBaseModel):
         return prompt_templates or autodetect_prompt_templates(val_info.data["model"])
 
     def dict(self, **kwargs):
-        original_dict = super().dict(**kwargs)
+        original_dict = super().model_dump(**kwargs)
         original_dict.pop("write_log")
         if self.template_messages is not None:
             original_dict["template_messages"] = self.template_messages.__name__
@@ -327,7 +327,6 @@ Settings:
         log: bool = True,
     ) -> str:
         """Yield completion response, either streamed or not."""
-
 
         from continuedev.libs.llm.openai_agent import OpenAIAgent
         if isinstance(self, OpenAIAgent):

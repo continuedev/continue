@@ -23,7 +23,7 @@ from .proxy_server import ProxyServer
 
 
 logger = getLogger('OpenAIAgent')
-
+_assitant_2_id: dict = {}
 
 class OpenAIAgent(LLM):
     """
@@ -65,13 +65,14 @@ class OpenAIAgent(LLM):
 
     _conn: Optional[sqlite3.connect] = None
     _session_2_thread_map: dict = {}
+
     
     @validator("context_length")
     def context_length_for_model(cls, v, values):
         return CONTEXT_LENGTH_FOR_MODEL.get(values["model"], 128000)
 
-    async def start(self, unique_id: Optional[str] = None):
-        await super().start(unique_id=unique_id)        
+    def start(self, unique_id: Optional[str] = None):
+        super().start(unique_id=unique_id)        
         self._client = OpenAI(api_key=self.api_key)
         self._name = f'agt_{unique_id[-6:]}'
 
@@ -174,8 +175,15 @@ class OpenAIAgent(LLM):
 
     def retrieve_or_create_assistant(self):
         try:
-            self._assistant = self._client.beta.assistants.retrieve(self.assistant_id)
-            logger.info(f'{self._name}: LOADING existing assistant={self._assistant.id} name={self._assistant.name}')
+            self._assistant=_assitant_2_id.get(self.assistant_id)
+            if self._assistant is None:
+                self._assistant = self._client.beta.assistants.retrieve(self.assistant_id)
+                logger.info(f'{self._name}: LOADING existing assistant={self._assistant.id} name={self._assistant.name}')
+                _assitant_2_id[self.assistant_id]=self._assistant
+
+            else : 
+                logger.info(f'{self._name}: CACHED existing assistant={self._assistant.id} name={self._assistant.name}')
+                return
         except OpenAIError:
             try:
                 # create a standard name

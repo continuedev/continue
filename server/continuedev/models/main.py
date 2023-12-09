@@ -6,9 +6,7 @@ from pydantic import model_validator, ConfigDict, BaseModel
 
 
 class ContinueBaseModel(BaseModel):
-    # TODO[pydantic]: The following keys were removed: `underscore_attrs_are_private`.
-    # Check https://docs.pydantic.dev/dev-v2/migration/#changes-to-config for more information.
-    # underscore_attrs_are_private — the Pydantic V2 behavior is now the same as if this was always set to True in Pydantic V1.
+    # NOTE [Pydantic] underscore_attrs_are_private — the Pydantic V2 behavior is now the same as if this was always set to True in Pydantic V1.
     model_config = ConfigDict()
 
 
