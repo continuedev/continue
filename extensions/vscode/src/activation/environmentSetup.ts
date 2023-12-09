@@ -1,17 +1,16 @@
-import { getExtensionUri, getUniqueId } from "../util/vscode";
-import { promisify } from "util";
-import { exec as execCb } from "child_process";
-import { spawn } from "child_process";
-import * as path from "path";
-import * as fs from "fs";
-import { getContinueServerUrl } from "../bridge";
-import fetch from "node-fetch";
-import * as vscode from "vscode";
-import * as os from "os";
+import { exec as execCb, spawn } from "child_process";
 import fkill from "fkill";
+import * as fs from "fs";
+import fetch from "node-fetch";
+import * as os from "os";
+import * as path from "path";
 import { finished } from "stream/promises";
-import request = require("request");
+import { promisify } from "util";
+import * as vscode from "vscode";
+import { getContinueServerUrl } from "../bridge";
 import { capture } from "../extension";
+import { getExtensionUri, getUniqueId } from "../util/vscode";
+import request = require("request");
 
 const exec = promisify(execCb);
 

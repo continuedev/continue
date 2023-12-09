@@ -1,9 +1,9 @@
+import { PersistedSessionInfo, SessionInfo } from "core/types";
+import * as fs from "fs";
 import {
   getSessionFilePath,
   getSessionsListPath,
 } from "./activation/environmentSetup";
-import * as fs from "fs";
-import { PersistedSessionInfo, SessionInfo } from "core/types";
 
 class HistoryManager {
   list(): PersistedSessionInfo[] {
@@ -12,7 +12,10 @@ class HistoryManager {
       return [];
     }
     const content = fs.readFileSync(filepath, "utf8");
-    const sessions = JSON.parse(content);
+    const sessions = JSON.parse(content).filter((session: any) => {
+      // Filter out old format
+      return typeof session.session_id !== "string";
+    });
     return sessions;
   }
 
@@ -113,3 +116,7 @@ class HistoryManager {
     }
   }
 }
+
+const historyManager = new HistoryManager();
+
+export default historyManager;

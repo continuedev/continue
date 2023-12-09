@@ -3,6 +3,7 @@ import * as vscode from "vscode";
 import { FileEdit } from "../schema/FileEdit";
 import { ideProtocolClient, windowId } from "./activation/activate";
 import { getContinueServerUrl } from "./bridge";
+import historyManager from "./history";
 import VsCodeIde from "./ideProtocol";
 import { getExtensionUri, getNonce, getUniqueId } from "./util/vscode";
 
@@ -233,6 +234,8 @@ export function getSidebarContent(
 
         break;
       }
+
+      // IDE
       case "getDiff": {
         respond(await ide.getDiff());
         break;
@@ -271,6 +274,25 @@ export function getSidebarContent(
       }
       case "runCommand": {
         respond(await ide.runCommand(data.command));
+        break;
+      }
+      // History
+      case "history": {
+        respond(historyManager.list());
+        break;
+      }
+      case "saveSession": {
+        historyManager.save(data.message);
+        respond({});
+        break;
+      }
+      case "deleteSession": {
+        historyManager.delete(data.message);
+        respond({});
+        break;
+      }
+      case "loadSession": {
+        respond(historyManager.load(data.message));
         break;
       }
     }

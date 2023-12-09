@@ -8,7 +8,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { defaultBorderRadius, secondaryDark, vscForeground } from ".";
-import { newSession } from "../redux/slices/stateSlice";
+import useHistory from "../hooks/useHistory";
 import {
   setBottomMessage,
   setBottomMessageCloseTimeout,
@@ -152,20 +152,7 @@ const Layout = () => {
     };
   }, [timeline]);
 
-  useEffect(() => {
-    // Override the VS Code shortcut so that highlighted but unfocused code isn't added
-    const handleKeyDown = (event: any) => {
-      if (event.metaKey && event.code === "KeyM") {
-        dispatch(newSession());
-      }
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
-
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-    };
-  }, []);
+  const { saveSession } = useHistory();
 
   useEffect(() => {
     const handler = (event: any) => {

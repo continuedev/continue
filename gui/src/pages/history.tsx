@@ -66,7 +66,7 @@ function TableRow({
   const workspacePaths = (window as any).workspacePaths || [""];
   const [hovered, setHovered] = useState(false);
 
-  const { saveSession, deleteSession } = useHistory();
+  const { saveSession, deleteSession, loadSession } = useHistory();
 
   return (
     <td
@@ -79,14 +79,10 @@ function TableRow({
             // Save current session
             saveSession();
 
-            // Load new session
-            const response = await fetch(
-              `${apiUrl}/sessions/${session.sessionId}`
+            console.log(session);
+            const json: PersistedSessionInfo = await loadSession(
+              session.sessionId
             );
-            if (!response.ok) {
-              throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            const json: PersistedSessionInfo = await response.json();
             dispatch(newSession(json));
             navigate("/");
           }}

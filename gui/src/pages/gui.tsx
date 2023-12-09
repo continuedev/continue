@@ -364,7 +364,7 @@ function GUI(props: GUIProps) {
     return () => {
       window.removeEventListener("message", handler);
     };
-  }, []);
+  }, [saveSession]);
 
   useEffect(() => {
     const eventListener = (event: any) => {
