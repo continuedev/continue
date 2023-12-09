@@ -1,6 +1,6 @@
 import { useDispatch } from "react-redux";
 import { useNavigate, useRouteError } from "react-router-dom";
-import { newSession } from "../redux/slices/sessionStateReducer";
+import { newSession } from "../redux/slices/stateSlice";
 import ContinueButton from "../components/mainInput/ContinueButton";
 import { vscBackground } from "../components";
 

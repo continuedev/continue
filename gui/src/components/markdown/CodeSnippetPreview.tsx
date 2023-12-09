@@ -12,7 +12,7 @@ import {
   ChevronUpIcon,
   TrashIcon,
 } from "@heroicons/react/24/outline";
-import { deleteContextWithIds } from "../../redux/slices/sessionStateReducer";
+import { deleteContextWithIds } from "../../redux/slices/stateSlice";
 import { useDispatch } from "react-redux";
 import StyledMarkdownPreview from "./StyledMarkdownPreview";
 

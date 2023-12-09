@@ -1,9 +1,9 @@
-import React, { useContext, useEffect } from "react";
-import { GUIClientContext } from "../App";
+import { ArrowLeftIcon } from "@heroicons/react/24/outline";
+import { useEffect } from "react";
+import { FormProvider, useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
-import { RootStore } from "../redux/store";
 import { useNavigate } from "react-router-dom";
-import { ContinueConfig } from "../schema/ContinueConfig";
+import styled from "styled-components";
 import {
   Button,
   NumberInput,
@@ -13,11 +13,10 @@ import {
   vscBackground,
   vscForeground,
 } from "../components";
-import styled from "styled-components";
-import { ArrowLeftIcon } from "@heroicons/react/24/outline";
-import Loader from "../components/loaders/Loader";
 import InfoHover from "../components/InfoHover";
-import { FormProvider, useForm } from "react-hook-form";
+import Loader from "../components/loaders/Loader";
+import { RootStore } from "../redux/store";
+import { ContinueConfig } from "../schema/ContinueConfig";
 import { getFontSize, getPlatform } from "../util";
 import { postToIde } from "../util/ide";
 
@@ -100,22 +99,19 @@ function Settings() {
   const onSubmit = (data: ContinueConfig) => console.log(data);
 
   const navigate = useNavigate();
-  const client = useContext(GUIClientContext);
   const config = useSelector((state: RootStore) => state.serverState.config);
   const dispatch = useDispatch();
 
   const submitChanges = () => {
-    if (!client) return;
-
-    const systemMessage = formMethods.watch("system_message") as
-      | string
-      | undefined;
-    const temperature = formMethods.watch("temperature") as number | undefined;
-    // const models = formMethods.watch("models");
-
-    client.setSystemMessage(systemMessage || "");
-    if (temperature) client.setTemperature(temperature);
-
+    // TODO
+    // if (!client) return;
+    // const systemMessage = formMethods.watch("system_message") as
+    //   | string
+    //   | undefined;
+    // const temperature = formMethods.watch("temperature") as number | undefined;
+    // // const models = formMethods.watch("models");
+    // client.setSystemMessage(systemMessage || "");
+    // if (temperature) client.setTemperature(temperature);
     // if (models) {
     //   for (const role of ALL_MODEL_ROLES) {
     //     if (models[role]) {

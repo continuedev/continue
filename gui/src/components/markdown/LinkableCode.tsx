@@ -1,7 +1,7 @@
-import React, { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
+import { useSelector } from "react-redux";
 import styled from "styled-components";
 import { defaultBorderRadius, secondaryDark } from "..";
-import { useDispatch, useSelector } from "react-redux";
 import { RootStore } from "../../redux/store";
 import { postToIde } from "../../util/ide";
 
@@ -19,7 +19,7 @@ const StyledCode = styled.code<{ link: boolean }>`
 
 function LinkableCode(props: any) {
   const contextItems = useSelector(
-    (store: RootStore) => store.sessionState.context_items
+    (store: RootStore) => store.state.contextItems
   );
 
   const [linkingDone, setLinkingDone] = useState(false);

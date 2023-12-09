@@ -1,28 +1,26 @@
+import {
+  Cog6ToothIcon,
+  QuestionMarkCircleIcon,
+  SparklesIcon,
+} from "@heroicons/react/24/outline";
+import { useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { defaultBorderRadius, secondaryDark, vscForeground } from ".";
-import { Outlet } from "react-router-dom";
-import TextDialog from "./dialogs";
-import { useContext, useEffect } from "react";
-import { GUIClientContext } from "../App";
-import { useDispatch, useSelector } from "react-redux";
-import { RootStore } from "../redux/store";
+import { newSession } from "../redux/slices/stateSlice";
 import {
   setBottomMessage,
   setBottomMessageCloseTimeout,
   setShowDialog,
 } from "../redux/slices/uiStateSlice";
-import {
-  SparklesIcon,
-  Cog6ToothIcon,
-  QuestionMarkCircleIcon,
-} from "@heroicons/react/24/outline";
-import HeaderButtonWithText from "./HeaderButtonWithText";
-import { useNavigate, useLocation } from "react-router-dom";
-import ModelSelect from "./modelSelection/ModelSelect";
-import ProgressBar from "./loaders/ProgressBar";
+import { RootStore } from "../redux/store";
 import { getFontSize } from "../util";
+import HeaderButtonWithText from "./HeaderButtonWithText";
+import TextDialog from "./dialogs";
 import IndexingProgressBar from "./loaders/IndexingProgressBar";
-import { newSession } from "../redux/slices/stateSlice";
+import ProgressBar from "./loaders/ProgressBar";
+import ModelSelect from "./modelSelection/ModelSelect";
 
 // #region Styled Components
 const FOOTER_HEIGHT = "1.8em";
@@ -100,7 +98,6 @@ const DropdownPortalDiv = styled.div`
 const Layout = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const client = useContext(GUIClientContext);
   const dispatch = useDispatch();
   const dialogMessage = useSelector(
     (state: RootStore) => state.uiState.dialogMessage
@@ -124,11 +121,7 @@ const Layout = () => {
     (state: RootStore) => state.uiState.displayBottomMessageOnBottom
   );
 
-  const timeline = useSelector(
-    (state: RootStore) => state.sessionState.history
-  );
-  const workspacePaths = (window as any).workspacePaths || [];
-  const sessionState = useSelector((state: RootStore) => state.sessionState);
+  const timeline = useSelector((state: RootStore) => state.state.history);
 
   // #endregion
 
@@ -149,7 +142,20 @@ const Layout = () => {
             navigator.clipboard.writeText(selection);
           }, 100);
         }
-      } else if (event.metaKey && event.code === "KeyN") {
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [timeline]);
+
+  useEffect(() => {
+    // Override the VS Code shortcut so that highlighted but unfocused code isn't added
+    const handleKeyDown = (event: any) => {
+      if (event.metaKey && event.code === "KeyM") {
         dispatch(newSession());
       }
     };
@@ -159,7 +165,7 @@ const Layout = () => {
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [client, timeline]);
+  }, []);
 
   useEffect(() => {
     const handler = (event: any) => {

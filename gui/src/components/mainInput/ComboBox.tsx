@@ -1,33 +1,13 @@
-import React, {
-  useCallback,
-  useContext,
-  useEffect,
-  useImperativeHandle,
-  useLayoutEffect,
-  useState,
-} from "react";
-import { useCombobox } from "downshift";
-import styled, { keyframes } from "styled-components";
-import {
-  buttonColor,
-  defaultBorderRadius,
-  lightGray,
-  secondaryDark,
-  vscBackground,
-  vscForeground,
-} from "..";
-import PillButton from "./PillButton";
-import HeaderButtonWithText from "../HeaderButtonWithText";
 import {
   ArrowLeftIcon,
   ArrowRightIcon,
-  ArrowUpLeftIcon,
   ArrowUpOnSquareIcon,
   BeakerIcon,
   ChevronDownIcon,
   ChevronRightIcon,
   Cog6ToothIcon,
   CommandLineIcon,
+  ExclamationCircleIcon,
   ExclamationTriangleIcon,
   FolderIcon,
   FolderOpenIcon,
@@ -38,30 +18,31 @@ import {
   PlusIcon,
   SparklesIcon,
   TrashIcon,
-  ExclamationCircleIcon,
 } from "@heroicons/react/24/outline";
-import { postToIde } from "../../util/ide";
-import { GUIClientContext } from "../../App";
+import { ContextItem } from "core/llm/types";
+import { useCombobox } from "downshift";
 import { MeiliSearch } from "meilisearch";
-import { setBottomMessage } from "../../redux/slices/uiStateSlice";
+import React, {
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useLayoutEffect,
+  useState,
+} from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { RootStore } from "../../redux/store";
+import styled, { keyframes } from "styled-components";
 import {
-  getFontSize,
-  getMarkdownLanguageTagForFile,
-  getMetaKeyLabel,
-  getPlatform,
-} from "../../util";
-import StyledMarkdownPreview from "../markdown/StyledMarkdownPreview";
-import { setTakenActionTrue } from "../../redux/slices/miscSlice";
-import {
-  handleKeyDownJetBrains,
-  handleKeyDownJetBrainsMac,
-} from "../../util/jetbrains";
-import FileIcon from "../FileIcon";
-import RingLoader from "../loaders/RingLoader";
-import CodeSnippetPreview from "../markdown/CodeSnippetPreview";
+  buttonColor,
+  defaultBorderRadius,
+  lightGray,
+  secondaryDark,
+  vscBackground,
+  vscForeground,
+} from "..";
+import useContextProviders from "../../hooks/useContextProviders";
+import useHistory from "../../hooks/useHistory";
 import { contextLengthSelector } from "../../redux/selectors/configSelectors";
+import { setTakenActionTrue } from "../../redux/slices/miscSlice";
 import {
   addContextItems,
   addContextItemsAtIndex,
@@ -69,8 +50,25 @@ import {
   newSession,
   setInactive,
 } from "../../redux/slices/stateSlice";
-import { ContextItem } from "core/llm/types";
-import useContextProviders from "../../hooks/useContextProviders";
+import { setBottomMessage } from "../../redux/slices/uiStateSlice";
+import { RootStore } from "../../redux/store";
+import {
+  getFontSize,
+  getMarkdownLanguageTagForFile,
+  getMetaKeyLabel,
+  getPlatform,
+} from "../../util";
+import { postToIde } from "../../util/ide";
+import {
+  handleKeyDownJetBrains,
+  handleKeyDownJetBrainsMac,
+} from "../../util/jetbrains";
+import FileIcon from "../FileIcon";
+import HeaderButtonWithText from "../HeaderButtonWithText";
+import RingLoader from "../loaders/RingLoader";
+import CodeSnippetPreview from "../markdown/CodeSnippetPreview";
+import StyledMarkdownPreview from "../markdown/StyledMarkdownPreview";
+import PillButton from "./PillButton";
 
 const SEARCH_INDEX_NAME = "continue_context_items";
 
@@ -387,10 +385,9 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
     setSearchClient(client);
   }, [meilisearchUrl]);
 
-  const client = useContext(GUIClientContext);
   const dispatch = useDispatch();
   const workspacePaths = (window as any).workspacePaths || [];
-  const sessionState = useSelector((state: RootStore) => state.sessionState);
+  const state = useSelector((state: RootStore) => state.state);
 
   const [history, setHistory] = React.useState<string[]>([]);
   // The position of the current command you are typing now, so the one that will be appended to history once you press enter
@@ -437,10 +434,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
     }
   });
 
-  const timeline = useSelector(
-    (state: RootStore) => state.sessionState.history
-  );
-  const active = useSelector((state: RootStore) => state.sessionState.active);
+  const active = useSelector((state: RootStore) => state.state.active);
 
   useEffect(() => {
     if (!currentlyInContextQuery) {
@@ -492,7 +486,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
         dispatch(addContextItemsAtIndex({ contextItems, index: props.index }));
       }
     },
-    [client, props.index, getContextItems]
+    [props.index, getContextItems]
   );
 
   const onInputValueChangeCallback = useCallback(
@@ -733,9 +727,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
     };
   }, []);
 
-  const persistSession = () => {
-    client?.persistSession(sessionState, workspacePaths[0] || "");
-  };
+  const { saveSession } = useHistory();
 
   useEffect(() => {
     if (!inputRef.current || !props.isMainInput) {
@@ -747,18 +739,15 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
     const handler = (event: any) => {
       if (event.data.type === "focusContinueInput") {
         inputRef.current!.focus();
-        console.log(sessionState.history.length, "OHPOI");
-        if (sessionState.history.length > 0) {
-          client?.stopSession();
-          persistSession();
+        if (state.history.length > 0) {
+          saveSession();
           dispatch(newSession());
         }
         dispatch(setTakenActionTrue(null));
       } else if (event.data.type === "focusContinueInputWithEdit") {
         inputRef.current!.focus();
-        if (sessionState.history.length > 0) {
-          client?.stopSession();
-          persistSession();
+        if (state.history.length > 0) {
+          saveSession();
           dispatch(newSession());
         }
 
@@ -767,8 +756,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
         }
         dispatch(setTakenActionTrue(null));
       } else if (event.data.type === "focusContinueInputWithNewSession") {
-        client?.stopSession();
-        persistSession();
+        saveSession();
         dispatch(newSession());
         dispatch(setTakenActionTrue(null));
       }
@@ -777,7 +765,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
     return () => {
       window.removeEventListener("message", handler);
     };
-  }, [inputRef.current, props.isMainInput, sessionState.history.length]);
+  }, [inputRef.current, props.isMainInput, state.history.length]);
 
   const deleteButtonDivRef = React.useRef<HTMLDivElement>(null);
   const stickyDropdownHeaderDiv = React.useRef<HTMLDivElement>(null);
@@ -1215,8 +1203,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
         ref={divRef}
       >
         <GradientBorder
-          // loading={props.active}
-          loading={false}
+          loading={props.active}
           isFirst={false}
           isLast={false}
           borderColor={props.active ? undefined : vscBackground}
@@ -1465,7 +1452,6 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
                 // }
                 onClick={() => {
                   if (active) {
-                    client?.stopSession();
                     dispatch(setInactive());
                   } else {
                     props.onEnter?.(undefined);
@@ -1676,11 +1662,10 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
             <br />
             <br />
           </>
-        ) : sessionState.history.length > 0 ? (
+        ) : state.history.length > 0 ? (
           <NewSessionButton
             onClick={() => {
-              client?.stopSession();
-              persistSession();
+              saveSession();
               dispatch(newSession());
             }}
             className="mr-auto"

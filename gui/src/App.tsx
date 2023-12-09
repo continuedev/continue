@@ -2,8 +2,6 @@ import GUI from "./pages/gui";
 import History from "./pages/history";
 import Help from "./pages/help";
 import Layout from "./components/Layout";
-import { createContext } from "react";
-import ContinueGUIClientProtocol from "./client/ContinueGUIClientProtocol";
 import { useDispatch } from "react-redux";
 import { RouterProvider, createMemoryRouter } from "react-router-dom";
 import ErrorPage from "./pages/error";
@@ -65,20 +63,12 @@ const router = createMemoryRouter([
   },
 ]);
 
-export const GUIClientContext = createContext<
-  ContinueGUIClientProtocol | undefined
->(undefined);
-
 function App() {
   const dispatch = useDispatch();
 
   useSetup(dispatch);
 
-  return (
-    // <GUIClientContext.Provider>
-    <RouterProvider router={router} />
-    // </GUIClientContext.Provider>
-  );
+  return <RouterProvider router={router} />;
 }
 
 export default App;

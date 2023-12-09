@@ -4,11 +4,7 @@ import miscReducer from "./slices/miscSlice";
 import uiStateReducer from "./slices/uiStateSlice";
 import serverStateReducer from "./slices/serverStateReducer";
 import stateReducer from "./slices/stateSlice";
-import sessionStateReducer, {
-  SessionFullState,
-} from "./slices/sessionStateReducer";
 import { ContinueConfig } from "../schema/ContinueConfig";
-// import { ContextItem } from "../schema/ContextItem";
 import { ContextItem } from "core/llm/types";
 import { ContextProviderDescription } from "../schema/ContextProviderDescription";
 import { SlashCommandDescription } from "../schema/SlashCommandDescription";
@@ -29,6 +25,8 @@ export interface RootStore {
     contextItems: ContextItem[];
     active: boolean;
     config: SerializedContinueConfig;
+    title: string;
+    sessionId: string;
   };
 
   config: {
@@ -46,7 +44,6 @@ export interface RootStore {
     dialogMessage: string | JSX.Element;
     dialogEntryOn: boolean;
   };
-  sessionState: SessionFullState;
   serverState: {
     meilisearchUrl: string | undefined;
     slashCommands: SlashCommandDescription[];
@@ -63,7 +60,6 @@ const rootReducer = combineReducers({
   config: configReducer,
   misc: miscReducer,
   uiState: uiStateReducer,
-  sessionState: sessionStateReducer,
   serverState: serverStateReducer,
 });
 

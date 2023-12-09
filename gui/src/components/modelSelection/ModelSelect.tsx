@@ -1,3 +1,13 @@
+import { Listbox, Transition } from "@headlessui/react";
+import {
+  ChevronUpDownIcon,
+  PlusIcon,
+  TrashIcon,
+} from "@heroicons/react/24/outline";
+import { Fragment, useEffect, useState } from "react";
+import ReactDOM from "react-dom";
+import { useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import {
   buttonColor,
@@ -7,21 +17,10 @@ import {
   vscBackground,
   vscForeground,
 } from "..";
-import React, { Fragment, useContext, useEffect, useState } from "react";
-import { GUIClientContext } from "../../App";
-import { RootStore } from "../../redux/store";
-import { useSelector } from "react-redux";
-import {
-  ChevronUpDownIcon,
-  PlusIcon,
-  TrashIcon,
-} from "@heroicons/react/24/outline";
-import { useNavigate } from "react-router-dom";
-import { Listbox, Transition } from "@headlessui/react";
-import ReactDOM from "react-dom";
-import HeaderButtonWithText from "../HeaderButtonWithText";
 import { defaultModelSelector } from "../../redux/selectors/configSelectors";
+import { RootStore } from "../../redux/store";
 import { getMetaKeyLabel } from "../../util";
+import HeaderButtonWithText from "../HeaderButtonWithText";
 
 const GridDiv = styled.div`
   display: grid;
@@ -136,7 +135,6 @@ const StyledListboxOption = styled(Listbox.Option)<{ selected: boolean }>`
 `;
 
 function ListBoxOption({ option, idx }: { option: Option; idx: number }) {
-  const client = useContext(GUIClientContext);
   const [hovered, setHovered] = useState(false);
 
   return (
@@ -163,7 +161,8 @@ function ListBoxOption({ option, idx }: { option: Option; idx: number }) {
           <HeaderButtonWithText
             text="Delete"
             onClick={(e) => {
-              client?.deleteModelAtIndex(idx - 1); // -1 because 0 is default, not in saved array
+              // TODO
+              // client?.deleteModelAtIndex(idx - 1); // -1 because 0 is default, not in saved array
               e.stopPropagation();
               e.preventDefault();
             }}
@@ -196,7 +195,6 @@ interface Option {
 }
 
 function ModelSelect(props: {}) {
-  const client = useContext(GUIClientContext);
   const defaultModel = useSelector(defaultModelSelector);
   const allModels = useSelector(
     (state: RootStore) => state.serverState.config.models
@@ -234,7 +232,8 @@ function ModelSelect(props: {}) {
           (option) => option.value === defaultModel?.title
         );
         const nextIndex = (currentIndex + 1) % options.length;
-        client?.setModelForRoleFromTitle("default", options[nextIndex].value);
+        // TODO
+        // client?.setModelForRoleFromTitle("default", options[nextIndex].value);
       }
     };
 
@@ -251,7 +250,8 @@ function ModelSelect(props: {}) {
           value={"GPT-4"}
           onChange={(val: string) => {
             if (val === defaultModel?.title) return;
-            client?.setModelForRoleFromTitle("default", val);
+            // TODO
+            // client?.setModelForRoleFromTitle("default", val);
           }}
           defaultValue={"GPT-4"}
         >

@@ -1,4 +1,11 @@
-import { useCallback, useContext, useEffect, useRef, useState } from "react";
+import {
+  ExclamationTriangleIcon,
+  PaintBrushIcon,
+  TrashIcon,
+} from "@heroicons/react/24/outline";
+import { ContextItem } from "core/llm/types";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import styled from "styled-components";
 import {
   StyledTooltip,
@@ -7,20 +14,12 @@ import {
   secondaryDark,
   vscForeground,
 } from "..";
-import {
-  TrashIcon,
-  PaintBrushIcon,
-  ExclamationTriangleIcon,
-} from "@heroicons/react/24/outline";
-import { GUIClientContext } from "../../App";
-import { getFontSize } from "../../util";
-import HeaderButtonWithText from "../HeaderButtonWithText";
-import FileIcon from "../FileIcon";
-import { ContextItem } from "core/llm/types";
-import { postToIde } from "../../util/ide";
-import { useDispatch, useSelector } from "react-redux";
-import { setEditingAtIds } from "../../redux/slices/sessionStateReducer";
+import { setEditingAtIds } from "../../redux/slices/stateSlice";
 import { RootStore } from "../../redux/store";
+import { getFontSize } from "../../util";
+import { postToIde } from "../../util/ide";
+import FileIcon from "../FileIcon";
+import HeaderButtonWithText from "../HeaderButtonWithText";
 
 const Button = styled.button<{ fontSize?: number }>`
   border: none;
@@ -145,7 +144,6 @@ const ClickableInsidePillButton = styled(HeaderButtonWithText)<{
 
 const PillButton = (props: PillButtonProps) => {
   const [isHovered, setIsHovered] = useState(false);
-  const client = useContext(GUIClientContext);
   const dispatch = useDispatch();
 
   const [warning, setWarning] = useState<string | undefined>(undefined);
@@ -179,7 +177,7 @@ const PillButton = (props: PillButtonProps) => {
   const buttonRef = useRef<HTMLButtonElement>(null);
 
   const selectedContextItems = useSelector(
-    (store: RootStore) => store.sessionState.context_items
+    (store: RootStore) => store.state.contextItems
   );
 
   return (

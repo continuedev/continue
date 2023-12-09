@@ -1,26 +1,23 @@
-import React, { useCallback, useContext, useEffect, useState } from "react";
-import ModelCard from "../components/modelSelection/ModelCard";
-import styled from "styled-components";
 import { ArrowLeftIcon } from "@heroicons/react/24/outline";
+import { useCallback, useEffect, useState } from "react";
+import { FormProvider, useForm } from "react-hook-form";
+import { useDispatch } from "react-redux";
+import { useNavigate, useParams } from "react-router-dom";
+import styled from "styled-components";
 import {
   Input,
   defaultBorderRadius,
   lightGray,
   vscBackground,
 } from "../components";
-import { useNavigate } from "react-router-dom";
-import { useDispatch } from "react-redux";
-import { GUIClientContext } from "../App";
-import { useParams } from "react-router-dom";
+import StyledMarkdownPreview from "../components/markdown/StyledMarkdownPreview";
+import ModelCard from "../components/modelSelection/ModelCard";
 import {
-  PROVIDER_INFO,
   MODEL_PROVIDER_TAG_COLORS,
   ModelInfo,
+  PROVIDER_INFO,
   updatedObj,
 } from "../util/modelData";
-import StyledMarkdownPreview from "../components/markdown/StyledMarkdownPreview";
-import { FormProvider, useForm } from "react-hook-form";
-import _ from "lodash";
 
 const GridDiv = styled.div`
   display: grid;
@@ -67,7 +64,6 @@ function ModelConfig() {
     }
   }, [modelName]);
 
-  const client = useContext(GUIClientContext);
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const vscMediaUrl = (window as any).vscMediaUrl;
@@ -229,21 +225,22 @@ function ModelConfig() {
                     });
                   }
 
-                  client?.addModelForRole("default", {
-                    ...pkg.params,
-                    ...modelInfo.params,
-                    ..._.merge(
-                      {},
-                      ...(pkg.dimensions?.map((dimension, i) => {
-                        if (!dimensionChoices?.[i]) return {};
-                        return {
-                          ...dimension.options[dimensionChoices[i]],
-                        };
-                      }) || [])
-                    ),
-                    ...formParams,
-                    provider: modelInfo.provider,
-                  });
+                  // TODO
+                  // client?.addModelForRole("default", {
+                  //   ...pkg.params,
+                  //   ...modelInfo.params,
+                  //   ..._.merge(
+                  //     {},
+                  //     ...(pkg.dimensions?.map((dimension, i) => {
+                  //       if (!dimensionChoices?.[i]) return {};
+                  //       return {
+                  //         ...dimension.options[dimensionChoices[i]],
+                  //       };
+                  //     }) || [])
+                  //   ),
+                  //   ...formParams,
+                  //   provider: modelInfo.provider,
+                  // });
                   navigate("/");
                 }}
               />
@@ -262,11 +259,12 @@ function ModelConfig() {
                     : parseFloat(formMethods.watch(d.key));
               }
 
-              client?.addModelForRole("default", {
-                ...modelInfo.packages[0]?.params,
-                ...modelInfo.params,
-                ...formParams,
-              });
+              // TODO
+              // client?.addModelForRole("default", {
+              //   ...modelInfo.packages[0]?.params,
+              //   ...modelInfo.params,
+              //   ...formParams,
+              // });
               navigate("/");
             }}
           >

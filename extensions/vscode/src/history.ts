@@ -1,24 +1,9 @@
 import {
-  getContinueGlobalPath,
   getSessionFilePath,
   getSessionsListPath,
 } from "./activation/environmentSetup";
-import { ChatHistory } from "core/llm/types";
 import * as fs from "fs";
-
-export interface PersistedSessionInfo {
-  history: ChatHistory;
-  title: string;
-  workspaceDirectory: string;
-  sessionId: string;
-}
-
-export interface SessionInfo {
-  sessionId: string;
-  title: string;
-  dateCreated: string;
-  workspaceDirectory: string;
-}
+import { PersistedSessionInfo, SessionInfo } from "core/types";
 
 class HistoryManager {
   list(): PersistedSessionInfo[] {

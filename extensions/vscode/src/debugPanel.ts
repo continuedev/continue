@@ -1,10 +1,10 @@
-import * as vscode from "vscode";
-import { getContinueServerUrl } from "./bridge";
-import { getExtensionUri, getNonce, getUniqueId } from "./util/vscode";
-import { ideProtocolClient, windowId } from "./activation/activate";
 import * as io from "socket.io-client";
+import * as vscode from "vscode";
 import { FileEdit } from "../schema/FileEdit";
+import { ideProtocolClient, windowId } from "./activation/activate";
+import { getContinueServerUrl } from "./bridge";
 import VsCodeIde from "./ideProtocol";
+import { getExtensionUri, getNonce, getUniqueId } from "./util/vscode";
 
 let sockets: { [url: string]: io.Socket | undefined } = {};
 
@@ -181,10 +181,6 @@ export function getSidebarContent(
           },
           "#00ff0022"
         );
-        break;
-      }
-      case "showVirtualFile": {
-        ideProtocolClient.showVirtualFile(data.name, data.content);
         break;
       }
       case "toggleDevTools": {

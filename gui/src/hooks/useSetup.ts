@@ -1,15 +1,12 @@
 import { Dispatch } from "@reduxjs/toolkit";
 import { useEffect } from "react";
-import {
-  addHighlightedCode,
-  setActive,
-} from "../redux/slices/sessionStateReducer";
 import { setServerStatusMessage } from "../redux/slices/miscSlice";
 import { postToIde } from "../util/ide";
 
 import { setVscMachineId } from "../redux/slices/configSlice";
 import { ExtensionIde } from "core/ide/index";
 import { setConfig } from "../redux/slices/serverStateReducer";
+import { addHighlightedCode, setInactive } from "../redux/slices/stateSlice";
 
 function useSetup(dispatch: Dispatch<any>) {
   // Load config from the IDE
@@ -21,7 +18,7 @@ function useSetup(dispatch: Dispatch<any>) {
 
   useEffect(() => {
     // Override persisted state
-    dispatch(setActive(false));
+    dispatch(setInactive());
 
     // Tell JetBrains the webview is ready
     postToIde("onLoad", {});

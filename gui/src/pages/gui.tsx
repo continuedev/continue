@@ -1,29 +1,44 @@
+import {
+  ChatBubbleOvalLeftIcon,
+  CodeBracketSquareIcon,
+  ExclamationTriangleIcon,
+} from "@heroicons/react/24/outline";
+import { constructMessages } from "core/llm/constructMessages";
+import { ChatHistoryItem, ChatMessage } from "core/llm/types";
+import { usePostHog } from "posthog-js/react";
+import {
+  Fragment,
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
+import { ErrorBoundary } from "react-error-boundary";
+import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import {
   Button,
-  Input,
   defaultBorderRadius,
   lightGray,
   vscBackground,
 } from "../components";
-import { ErrorBoundary } from "react-error-boundary";
-import {
-  useEffect,
-  useRef,
-  useState,
-  useContext,
-  useLayoutEffect,
-  useCallback,
-  Fragment,
-} from "react";
+import FTCDialog from "../components/dialogs/FTCDialog";
+import ErrorStepContainer from "../components/gui/ErrorStepContainer";
 import StepContainer from "../components/gui/StepContainer";
-import { GUIClientContext } from "../App";
+import TimelineItem from "../components/gui/TimelineItem";
 import ComboBox from "../components/mainInput/ComboBox";
-import { usePostHog } from "posthog-js/react";
-import { useDispatch, useSelector } from "react-redux";
-import { RootStore } from "../redux/store";
-import { postToIde } from "../util/ide";
-import { getMetaKeyLabel, isMetaEquivalentKeyPressed } from "../util";
+import useHistory from "../hooks/useHistory";
+import useModels from "../hooks/useModels";
+import { setTakenActionTrue } from "../redux/slices/miscSlice";
+import {
+  newSession,
+  resubmitAtIndex,
+  setInactive,
+  streamUpdate,
+  submitMessage,
+} from "../redux/slices/stateSlice";
 import {
   setBottomMessage,
   setDialogEntryOn,
@@ -31,33 +46,8 @@ import {
   setDisplayBottomMessageOnBottom,
   setShowDialog,
 } from "../redux/slices/uiStateSlice";
-import RingLoader from "../components/loaders/RingLoader";
-import TimelineItem from "../components/gui/TimelineItem";
-import ErrorStepContainer from "../components/gui/ErrorStepContainer";
-import {
-  ArrowsPointingInIcon,
-  ArrowsPointingOutIcon,
-  ChatBubbleOvalLeftIcon,
-  CodeBracketSquareIcon,
-  ExclamationTriangleIcon,
-  FolderIcon,
-  PlusIcon,
-} from "@heroicons/react/24/outline";
-import FTCDialog from "../components/dialogs/FTCDialog";
-import HeaderButtonWithText from "../components/HeaderButtonWithText";
-import { useNavigate } from "react-router-dom";
-import { setTakenActionTrue } from "../redux/slices/miscSlice";
-import FreeTrial from "core/llm/llms/FreeTrial";
-import { constructMessages } from "core/llm/constructMessages";
-import { ChatHistory, ChatHistoryItem, ChatMessage } from "core/llm/types";
-import {
-  resubmitAtIndex,
-  streamUpdate,
-  submitMessage,
-  newSession,
-  setInactive,
-} from "../redux/slices/stateSlice";
-import useModels from "../hooks/useModels";
+import { RootStore } from "../redux/store";
+import { isMetaEquivalentKeyPressed } from "../util";
 
 const TopGuiDiv = styled.div`
   overflow-y: scroll;
@@ -131,7 +121,6 @@ interface GUIProps {
 
 function GUI(props: GUIProps) {
   // #region Hooks
-  const client = useContext(GUIClientContext);
   const posthog = usePostHog();
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -139,15 +128,13 @@ function GUI(props: GUIProps) {
   // #endregion
 
   // #region Selectors
-  const sessionState = useSelector((state: RootStore) => state.sessionState);
+  const sessionState = useSelector((state: RootStore) => state.state);
   const workspacePaths = (window as any).workspacePaths || [];
 
   const { defaultModel } = useModels();
 
-  const sessionTitle = useSelector(
-    (state: RootStore) => state.sessionState.title
-  );
-  const active = useSelector((state: RootStore) => state.sessionState.active);
+  const sessionTitle = useSelector((state: RootStore) => state.state.title);
+  const active = useSelector((state: RootStore) => state.state.active);
 
   // #endregion
 
@@ -230,7 +217,6 @@ function GUI(props: GUIProps) {
         isMetaEquivalentKeyPressed(e) &&
         !e.shiftKey
       ) {
-        client?.stopSession();
         dispatch(setInactive());
       } else if (e.key === "Escape") {
         dispatch(setBottomMessage(undefined));
@@ -241,7 +227,7 @@ function GUI(props: GUIProps) {
     return () => {
       window.removeEventListener("keydown", listener);
     };
-  }, [client, active]);
+  }, [active]);
 
   // #endregion
 
@@ -284,6 +270,7 @@ function GUI(props: GUIProps) {
         for await (const update of defaultModel.streamChat(messages)) {
           dispatch(streamUpdate(update.content));
         }
+        dispatch(setInactive());
       })();
 
       // Increment localstorage counter for popup
@@ -360,24 +347,15 @@ function GUI(props: GUIProps) {
         localStorage.setItem("mainTextEntryCounter", "1");
       }
     },
-    [
-      client,
-      sessionState.history,
-      sessionState.context_items,
-      defaultModel,
-      state,
-    ]
+    [sessionState.history, sessionState.contextItems, defaultModel, state]
   );
 
-  const persistSession = useCallback(() => {
-    client?.persistSession(sessionState, workspacePaths[0] || "");
-  }, [client, sessionState, workspacePaths]);
+  const { saveSession } = useHistory();
 
   useEffect(() => {
     const handler = (event: any) => {
       if (event.data.type === "newSession") {
-        client?.stopSession();
-        persistSession();
+        saveSession();
         dispatch(newSession());
         mainTextInputRef.current?.focus?.();
       }
@@ -422,11 +400,6 @@ function GUI(props: GUIProps) {
     }
   };
 
-  const onStepUserInput = (input: string, index: number) => {
-    if (!client) return;
-    client.sendStepUserInput(input, index);
-  };
-
   const isLastUserInput = useCallback(
     (index: number): boolean => {
       let foundLaterUserInput = false;
@@ -439,41 +412,6 @@ function GUI(props: GUIProps) {
       return !foundLaterUserInput;
     },
     [state.history]
-  );
-
-  const getStepsInUserInputGroup = useCallback(
-    (index: number): number[] => {
-      // index is the index in the entire timeline, hidden steps included
-      const stepsInUserInputGroup: number[] = [];
-
-      // First find the closest above UserInputStep
-      let userInputIndex = -1;
-      for (let i = index; i >= 0; i--) {
-        if (
-          typeof sessionState.history[i] !== "undefined" &&
-          sessionState.history[i].name === "User Input" &&
-          sessionState.history[i].hide === false
-        ) {
-          stepsInUserInputGroup.push(i);
-          userInputIndex = i;
-          break;
-        }
-      }
-      if (stepsInUserInputGroup.length === 0) return [];
-
-      for (let i = userInputIndex + 1; i < sessionState.history.length; i++) {
-        if (
-          typeof sessionState.history[i] !== "undefined" &&
-          sessionState.history[i].name === "User Input" &&
-          sessionState.history[i].hide === false
-        ) {
-          break;
-        }
-        stepsInUserInputGroup.push(i);
-      }
-      return stepsInUserInputGroup;
-    },
-    [sessionState.history]
   );
 
   useEffect(() => {
@@ -503,7 +441,6 @@ function GUI(props: GUIProps) {
                 <ErrorBoundary
                   FallbackComponent={fallbackRender}
                   onReset={() => {
-                    client?.stopSession();
                     dispatch(newSession());
                   }}
                 >
@@ -570,20 +507,11 @@ function GUI(props: GUIProps) {
                               : stepsOpen[index]!
                           }
                           key={index}
-                          onUserInput={(input: string) => {
-                            onStepUserInput(input, index);
-                          }}
+                          onUserInput={(input: string) => {}}
                           item={item}
-                          onReverse={() => {
-                            client?.reverseToIndex(index);
-                          }}
-                          onRetry={() => {
-                            client?.retryAtIndex(index);
-                          }}
+                          onReverse={() => {}}
+                          onRetry={() => {}}
                           onDelete={() => {}}
-                          noUserInputParent={
-                            getStepsInUserInputGroup(index).length === 0
-                          }
                         />
                       )}
                     </TimelineItem>
@@ -599,7 +527,6 @@ function GUI(props: GUIProps) {
         {active ? (
           <StopButton
             onClick={() => {
-              client?.stopSession();
               dispatch(setInactive());
             }}
           >
@@ -616,9 +543,7 @@ function GUI(props: GUIProps) {
               e?.preventDefault();
             }}
             onInputValueChange={() => {}}
-            onToggleAddContext={() => {
-              client?.toggleAddingHighlightedCode();
-            }}
+            onToggleAddContext={() => {}}
           />
         )}
       </div>
