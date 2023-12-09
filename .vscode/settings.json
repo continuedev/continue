@@ -6,6 +6,5 @@
   "python.testing.pytestArgs": ["server"],
   "python.testing.unittestEnabled": false,
   "python.testing.pytestEnabled": true,
-  "search.useIgnoreFiles": false,
-  "cmake.configureOnOpen": false
+  "python.terminal.activateEnvironment": true
 }
