@@ -18,9 +18,109 @@
       "title": "ContinueError",
       "type": "object"
     },
+    "DeltaStep": {
+      "properties": {
+        "name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Name"
+        },
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Description"
+        },
+        "observations": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/Observation"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Observations"
+        },
+        "logs": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Logs"
+        }
+      },
+      "title": "DeltaStep",
+      "type": "object"
+    },
     "Observation": {
       "properties": {},
       "title": "Observation",
+      "type": "object"
+    },
+    "SessionUpdate": {
+      "properties": {
+        "index": {
+          "title": "Index",
+          "type": "integer"
+        },
+        "update": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/DeltaStep"
+            },
+            {
+              "$ref": "#/$defs/SetStep"
+            },
+            {
+              "$ref": "#/$defs/SessionUpdate"
+            }
+          ],
+          "title": "Update"
+        },
+        "stop": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Stop"
+        }
+      },
+      "required": [
+        "index",
+        "update"
+      ],
+      "title": "SessionUpdate",
       "type": "object"
     },
     "SetStep": {
@@ -143,31 +243,9 @@
       "type": "object"
     }
   },
-  "properties": {
-    "index": {
-      "title": "Index",
-      "type": "integer"
-    },
-    "update": {
-      "$ref": "#/$defs/SetStep"
-    },
-    "stop": {
-      "anyOf": [
-        {
-          "type": "boolean"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "default": null,
-      "title": "Stop"
+  "allOf": [
+    {
+      "$ref": "#/$defs/SessionUpdate"
     }
-  },
-  "required": [
-    "index",
-    "update"
-  ],
-  "title": "SessionUpdate",
-  "type": "object"
+  ]
 }
