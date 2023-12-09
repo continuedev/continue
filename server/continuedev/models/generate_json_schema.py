@@ -65,7 +65,7 @@ def main():
         elif model == ModelName:
             title = "ModelName"
         try:
-            print(f"generating schema {title}")               
+            print(f"generating schema {title} - {model}")      
             with open(f"{SCHEMA_DIR}/{title}.json", "w") as f:
                 f.write(json.dumps(model.model_json_schema(), indent=2))
 

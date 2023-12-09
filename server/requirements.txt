@@ -34,4 +34,3 @@ pathspec==0.11.2
 tqdm==4.66.1
 html2text==2020.1.16
 aiohttp==3.8.6
-chroma-hnswlib==0.7.1
