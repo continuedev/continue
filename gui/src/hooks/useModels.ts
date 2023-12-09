@@ -51,7 +51,9 @@ function useModels() {
   const [defaultModel, setDefaultModel] = useState<LLM>(
     new FreeTrial({ uniqueId: "None", model: "gpt-3.5-turbo" })
   );
-  const models = useSelector((store: RootStore) => store.state.config.models);
+  const models = useSelector(
+    (store: RootStore) => store.state.config?.models || []
+  );
   const defaultTitle = useSelector(
     (store: RootStore) => store.state.config.modelRoles.default
   );

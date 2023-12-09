@@ -27,7 +27,7 @@ function useContextProviders() {
   >([]);
 
   const providerConfig = useSelector(
-    (store: RootStore) => store.state.config.contextProviders
+    (store: RootStore) => store.state.config.contextProviders || []
   );
 
   useEffect(() => {
