@@ -14,20 +14,18 @@ app.use((req, res, next) => {
 
   // Proxy the request
   const { origin, ...headers } = req.headers;
-  const proxy = http.request(
-    req.headers["x-continue-url"] as string,
-    {
-      method: req.method,
-      headers: headers,
-    },
-    (response) => {
-      // Pipe the response stream directly to the client
-      response.pipe(res);
-    }
-  );
+  const proxy = http.request(req.headers["x-continue-url"] as string, {
+    method: req.method,
+    headers: headers,
+  });
+
+  proxy.on("response", (response) => {
+    response.pipe(res);
+  });
 
   // Pipe the request stream directly to the proxy
   req.pipe(proxy);
+  proxy.end();
 });
 
 // http-middleware-proxy
