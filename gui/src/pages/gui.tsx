@@ -3,8 +3,6 @@ import {
   CodeBracketSquareIcon,
   ExclamationTriangleIcon,
 } from "@heroicons/react/24/outline";
-import { constructMessages } from "core/llm/constructMessages";
-import { ChatHistoryItem, ChatMessage } from "core/llm/types";
 import { usePostHog } from "posthog-js/react";
 import {
   Fragment,
@@ -36,7 +34,6 @@ import {
   newSession,
   resubmitAtIndex,
   setInactive,
-  submitMessage,
 } from "../redux/slices/stateSlice";
 import {
   setBottomMessage,
@@ -253,18 +250,7 @@ function GUI(props: GUIProps) {
         }
       }
 
-      const message: ChatMessage = {
-        role: "user",
-        content: input,
-      };
-      const historyItem: ChatHistoryItem = {
-        message,
-        contextItems: state.contextItems,
-      };
-
-      const messages = constructMessages([...state.history, historyItem]);
-      dispatch(submitMessage(message));
-      streamResponse(messages);
+      streamResponse(input);
 
       // Increment localstorage counter for popup
       const counter = localStorage.getItem("mainTextEntryCounter");
@@ -449,8 +435,7 @@ function GUI(props: GUIProps) {
                       onEnter={(e, value) => {
                         if (value) {
                           dispatch(resubmitAtIndex({ index, content: value }));
-
-                          // TODO: Call the LLM
+                          streamResponse(value, index);
                         }
                         e?.stopPropagation();
                         e?.preventDefault();

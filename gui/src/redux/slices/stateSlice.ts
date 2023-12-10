@@ -1,7 +1,7 @@
 import { createSlice } from "@reduxjs/toolkit";
 import defaultConfig from "core/config/default";
 import { loadSerializedConfig } from "core/config/load";
-import { ContextItem, ContextItemId } from "core/llm/types";
+import { ChatMessage, ContextItem, ContextItemId } from "core/llm/types";
 import { PersistedSessionInfo } from "core/types";
 import { v4 } from "uuid";
 import { RootStore } from "../store";
@@ -137,13 +137,24 @@ export const stateSlice = createSlice({
           action.payload.content;
 
         // Cut off history after the resubmitted message
-        state.history = state.history.slice(0, action.payload.index + 1);
+        state.history = [
+          ...state.history.slice(0, action.payload.index + 1),
+          {
+            message: {
+              role: "assistant",
+              content: "",
+            },
+            contextItems: [],
+          },
+        ];
+
         state.contextItems = [];
+        state.active = true;
       }
     },
-    submitMessage: (state, action) => {
+    submitMessage: (state, { payload }: { payload: ChatMessage }) => {
       state.history.push({
-        message: action.payload,
+        message: payload,
         contextItems: state.contextItems,
       });
       state.history.push({

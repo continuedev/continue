@@ -2,13 +2,17 @@ import { Dispatch } from "@reduxjs/toolkit";
 
 import { SlashCommand } from "core/commands";
 import { ExtensionIde } from "core/ide";
-import { ChatMessage } from "core/llm/types";
+import { constructMessages } from "core/llm/constructMessages";
+import { ChatHistory, ChatHistoryItem, ChatMessage } from "core/llm/types";
+import { useEffect, useRef } from "react";
 import { useSelector } from "react-redux";
 import { defaultModelSelector } from "../redux/selectors/modelSelectors";
 import {
   addContextItems,
+  resubmitAtIndex,
   setInactive,
   streamUpdate,
+  submitMessage,
 } from "../redux/slices/stateSlice";
 import { RootStore } from "../redux/store";
 
@@ -19,11 +23,29 @@ function useChatHandler(dispatch: Dispatch) {
     (store: RootStore) => store.state.config.slashCommands || []
   );
 
-  const active = useSelector((store: RootStore) => store.state.active);
+  const contextItems = useSelector(
+    (store: RootStore) => store.state.contextItems
+  );
+  const history = useSelector((store: RootStore) => store.state.history);
 
-  function getSlashCommandForInput(
+  const active = useSelector((store: RootStore) => store.state.active);
+  const activeRef = useRef(active);
+  useEffect(() => {
+    activeRef.current = active;
+  }, [active]);
+
+  async function _streamNormalInput(messages: ChatMessage[]) {
+    for await (const update of defaultModel.streamChat(messages)) {
+      if (!activeRef.current) {
+        break;
+      }
+      dispatch(streamUpdate(update.content));
+    }
+  }
+
+  const getSlashCommandForInput = (
     input: string
-  ): [SlashCommand, string] | undefined {
+  ): [SlashCommand, string] | undefined => {
     let slashCommand: SlashCommand | undefined;
     let slashCommandName: string | undefined;
     if (input.startsWith("/")) {
@@ -38,17 +60,7 @@ function useChatHandler(dispatch: Dispatch) {
 
     // Convert to actual slash command object with runnable function
     return [slashCommand, input];
-  }
-
-  async function _streamNormalInput(messages: ChatMessage[]) {
-    for await (const update of defaultModel.streamChat(messages)) {
-      if (!active) {
-        break;
-      }
-      dispatch(streamUpdate(update.content));
-    }
-  }
-
+  };
   async function _streamSlashCommand(
     messages: ChatMessage[],
     slashCommand: SlashCommand,
@@ -73,19 +85,35 @@ function useChatHandler(dispatch: Dispatch) {
     }
   }
 
-  async function streamResponse(messages: ChatMessage[]) {
-    if (messages.length === 0) {
-      return;
+  async function streamResponse(input: string, index?: number) {
+    const message: ChatMessage = {
+      role: "user",
+      content: input,
+    };
+    const historyItem: ChatHistoryItem = {
+      message,
+      contextItems,
+    };
+
+    let newHistory: ChatHistory = [];
+    if (typeof index === "number") {
+      newHistory = [...history.slice(0, index), historyItem];
+      dispatch(resubmitAtIndex({ index, content: input }));
+    } else {
+      newHistory = [...history, historyItem];
+      dispatch(submitMessage(message));
     }
 
-    // Determine if the input is a slash command
-    const input = messages[-1].content;
-    let [slashCommand, commandInput] = getSlashCommandForInput(input);
+    const messages = constructMessages(newHistory);
 
-    if (slashCommand) {
-      await _streamSlashCommand(messages, slashCommand, commandInput);
-    } else {
+    // Determine if the input is a slash command
+    let commandAndInput = getSlashCommandForInput(input);
+
+    if (!commandAndInput) {
       await _streamNormalInput(messages);
+    } else {
+      const [slashCommand, commandInput] = commandAndInput;
+      await _streamSlashCommand(messages, slashCommand, commandInput);
     }
     dispatch(setInactive());
   }

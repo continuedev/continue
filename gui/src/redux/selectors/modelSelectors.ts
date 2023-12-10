@@ -2,7 +2,7 @@ import { RootStore } from "../store";
 
 export const defaultModelSelector = (state: RootStore) => {
   const title = state.state.defaultModelTitle;
-  return state.serverState.config.models.find((model) => model.title === title);
+  return state.state.config.models.find((model) => model.title === title);
 };
 
 export const contextLengthSelector = (state: RootStore) => {

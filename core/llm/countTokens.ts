@@ -110,7 +110,7 @@ function pruneChatHistory(
     }, 0);
 
   // 0. Prune any messages that take up more than 1/3 of the context length
-  const longestMessages = chatHistory.sort(
+  const longestMessages = chatHistory.toSorted(
     (a, b) => b.content.length - a.content.length
   );
   const longerThanOneThird = longestMessages.filter(
@@ -259,7 +259,7 @@ function compileChatMessages(
 
 export {
   compileChatMessages,
-  pruneRawPromptFromTop,
   countTokens,
+  pruneRawPromptFromTop,
   pruneStringFromBottom,
 };
