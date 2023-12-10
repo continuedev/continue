@@ -12,6 +12,11 @@ app.use((req, res, next) => {
     return next();
   }
 
+  if (!req.headers["x-continue-url"]) {
+    // Just let the request through
+    return next();
+  }
+
   // Proxy the request
   const { origin, ...headers } = req.headers;
   const proxy = http.request(req.headers["x-continue-url"] as string, {
