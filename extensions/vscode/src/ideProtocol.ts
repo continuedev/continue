@@ -11,10 +11,18 @@ import {
 class VsCodeIde implements IDE {
   async getSerializedConfig(): Promise<SerializedContinueConfig> {
     const configPath = getConfigJsonPath();
-    const config = JSON.parse(fs.readFileSync(configPath, "utf8"));
+    let contents = fs.readFileSync(configPath, "utf8");
+    const config = JSON.parse(contents) as SerializedContinueConfig;
     config.allowAnonymousTelemetry =
       config.allowAnonymousTelemetry &&
       vscode.workspace.getConfiguration("continue").get("telemetryEnabled");
+
+    // Migrate to camelCase - replace all instances of "snake_case" with "camelCase"
+    contents = contents.replace(/(_\w)/g, function (m) {
+      return m[1].toUpperCase();
+    });
+    fs.writeFileSync(configPath, contents, "utf8");
+
     return config;
   }
 
