@@ -4,44 +4,9 @@ on:
   push:
     branches:
       - preview
+      - FREEDOM
 
 jobs:
-  pytest:
-    strategy:
-      matrix:
-        include:
-          - os: windows-latest
-          - os: ubuntu-latest
-          - os: macos-latest
-
-    runs-on: ${{ matrix.os }}
-
-    steps:
-      - name: Check out code
-        uses: actions/checkout@v2
-
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: "3.10.8"
-
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install poetry
-
-      - name: Install project dependencies
-        run: cd server && poetry install
-
-      - name: Maturin develop
-        run: cd server && poetry run maturin develop
-
-      - name: Run tests
-        env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-        run: cd server && poetry run pytest
-
   build:
     strategy:
       matrix:
@@ -80,123 +45,9 @@ jobs:
             npm_config_arch: arm64
     runs-on: ${{ matrix.os }}
     steps:
-      # 1. Build the Pyinstaller binary
+      # 1. Check-out repository
       - name: Check-out repository
         uses: actions/checkout@v3
-
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: "3.11"
-
-      - name: Create virtual environment
-        run: python -m venv .venv
-
-      - name: Activate virtual environment (non-Windows)
-        run: |
-          . .venv/bin/activate
-          echo PATH=$PATH >> $GITHUB_ENV
-        if: matrix.os != 'windows-latest'
-
-      - name: Activate virtual environment (Windows)
-        run: |
-          .venv\Scripts\activate.bat
-          echo PATH=$PATH >> $GITHUB_ENV
-        if: matrix.os == 'windows-latest'
-
-      - name: Install Pyinstaller
-        run: |
-          pip install pyinstaller
-
-      - name: Install Maturin
-        run: |
-          pip install maturin
-
-      - name: Install Dependencies
-        run: |
-          pip install -r server/requirements.txt
-
-      # - name: Install newer sqlite on linux
-      #   run: pip install pysqlite3-binary
-      #   if: matrix.os == 'ubuntu-latest'
-
-      # Download the latest release of SQLite source code and build the source
-      # amalgamation files (sqlite3.c and sqlite3.h).
-
-      # - name: Git clone pysqlite3
-      #   run: git clone https://github.com/coleifer/pysqlite3
-      #   if: matrix.os == 'ubuntu-latest'
-
-      # - name: Install newer sqlite3 on linux
-      #   run: |
-      #     wget https://www.sqlite.org/src/tarball/sqlite.tar.gz?r=release \
-      #     -O sqlite.tar.gz
-      #     tar xzf sqlite.tar.gz
-      #     cd sqlite/
-      #     ./configure
-      #     make sqlite3.c
-      #   if: matrix.os == 'ubuntu-latest'
-
-      # Copy the sqlite3 amalgamation files into the root of the pysqlite3 checkout
-      # and run build_static + build:
-      # - name: Copy and static build
-      #   run: |
-      #     cp sqlite/sqlite3.[ch] pysqlite3/
-      #     cd pysqlite3
-      #     python setup.py build_static build
-      #   if: matrix.os == 'ubuntu-latest'
-
-      - name: Build the Rust library
-        run: |
-          cd server
-          maturin develop
-
-      - name: Install tiktoken vocab file
-        # Done to avoid extra network request to download the vocab file
-        run: |
-          mkdir .tiktoken_cache
-          curl -o .tiktoken_cache/9b5ad71b2ce5302211f9c61530b329a4922fc6a4 https://s3.us-west-1.amazonaws.com/s3.continue.dev/tiktoken/9b5ad71b2ce5302211f9c61530b329a4922fc6a4
-
-      - name: Build PyInstaller Executable
-        run: pyinstaller continue_server.spec
-
-      # 1.5 Place the binary in extensions/vscode/exe directory
-      - name: Make sure extensions/vscode/exe directory exists
-        run: |
-          mkdir -p extensions/vscode/exe
-
-      - name: Copy binary to extension (non-Windows)
-        run: |
-          cp dist/continue_server extensions/vscode/exe/continue_server
-        if: matrix.os != 'windows-latest'
-
-      - name: Copy binary to extension (Windows)
-        run: |
-          cp dist/continue_server.exe extensions/vscode/exe/continue_server.exe
-        if: matrix.os == 'windows-latest'
-
-      # 1.8 Set permissions and upload binary
-      - name: Set permissions
-        run: |
-          chmod 777 extensions/vscode/exe/continue_server
-
-      - uses: actions/upload-artifact@v2
-        if: matrix.os == 'macos-latest' && matrix.arch == 'x64'
-        with:
-          name: macOSBinary
-          path: extensions/vscode/exe/continue_server
-
-      - uses: actions/upload-artifact@v2
-        if: matrix.os == 'ubuntu-latest' && matrix.arch == 'x64' && matrix.platform == 'linux'
-        with:
-          name: LinuxBinary
-          path: extensions/vscode/exe/continue_server
-
-      - uses: actions/upload-artifact@v2
-        if: matrix.os == 'windows-latest' && matrix.arch == 'x64'
-        with:
-          name: WindowsBinary
-          path: extensions/vscode/exe/continue_server.exe
 
       # 2. Install npm dependencies
       - name: Use Node.js 19.0.0
@@ -220,11 +71,6 @@ jobs:
         run: |
           cd extensions/vscode
           npm ci
-
-      - name: Add a copy of continuedev to the extension
-        run: |
-          cd extensions/vscode
-          cp -r ../../server/continuedev continuedev
 
       - name: Install gui Dependencies
         run: |
@@ -251,19 +97,6 @@ jobs:
           cd extensions/vscode
           npm run test
         if: matrix.os != 'ubuntu-latest'
-
-      # 3.5 If on Apple Silicon, download the binary from S3 bucket
-      - name: Remove existing binary
-        if: matrix.os == 'macos-latest' && matrix.arch == 'arm64'
-        run: rm extensions/vscode/exe/continue_server
-
-      - name: Download Apple Silicon Binary
-        if: matrix.os == 'macos-latest' && matrix.arch == 'arm64'
-        run: curl -o extensions/vscode/exe/continue_server https://continue-server-binaries.s3.us-west-1.amazonaws.com/apple-silicon-preview/continue_server
-
-      - name: Set permissions
-        run: |
-          chmod -R 777 extensions/vscode/exe/continue_server
 
       # 4. Package the extension
       - shell: pwsh
