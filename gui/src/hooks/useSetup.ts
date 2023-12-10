@@ -5,8 +5,11 @@ import { postToIde } from "../util/ide";
 
 import { ExtensionIde } from "core/ide/index";
 import { setVscMachineId } from "../redux/slices/configSlice";
-import { setConfig } from "../redux/slices/serverStateReducer";
-import { addHighlightedCode, setInactive } from "../redux/slices/stateSlice";
+import {
+  addHighlightedCode,
+  setConfig,
+  setInactive,
+} from "../redux/slices/stateSlice";
 
 function useSetup(dispatch: Dispatch<any>) {
   // Load config from the IDE

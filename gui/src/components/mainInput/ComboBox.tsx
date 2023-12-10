@@ -189,6 +189,9 @@ const MainTextInput = styled.textarea<{
     ${(props) =>
       props.inQueryForDynamicProvider ? buttonColor : "transparent"};
 
+  outline: 0.5px solid
+    ${(props) => (props.inQueryForDynamicProvider ? buttonColor : lightGray)};
+
   &:focus {
     outline: 0.5px solid
       ${(props) => (props.inQueryForDynamicProvider ? buttonColor : lightGray)};

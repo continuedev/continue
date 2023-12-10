@@ -1,4 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
+import { SerializedContinueConfig } from "core/config";
 import defaultConfig from "core/config/default";
 import { loadSerializedConfig } from "core/config/load";
 import { ChatMessage, ContextItem, ContextItemId } from "core/llm/types";
@@ -94,10 +95,11 @@ export const stateSlice = createSlice({
   name: "state",
   initialState,
   reducers: {
-    setConfig: (state, action) => {
+    setConfig: (state, { payload }: { payload: SerializedContinueConfig }) => {
+      const config = loadSerializedConfig(payload);
       return {
         ...state,
-        config: action.payload,
+        config,
       };
     },
     addContextItemsAtIndex: (state, action) => {
@@ -363,5 +365,6 @@ export const {
   addHighlightedCode,
   setEditingAtIds,
   setDefaultModel,
+  setConfig,
 } = stateSlice.actions;
 export default stateSlice.reducer;

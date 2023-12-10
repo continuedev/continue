@@ -14,7 +14,9 @@ function loadSerializedConfig(
 ): ContinueConfig {
   const models: LLM[] = [];
   for (const desc of initial.models) {
-    models.push(llmFromDescription(desc, initial.completionOptions));
+    const llm = llmFromDescription(desc, initial.completionOptions);
+    if (!llm) continue;
+    models.push(llm);
   }
 
   const slashCommands: SlashCommand[] = [];
@@ -31,6 +33,10 @@ function loadSerializedConfig(
   const contextProviders: ContextProvider[] = [];
   for (const provider of initial.contextProviders || []) {
     const cls = contextProviderClassFromName(provider.name) as any;
+    if (!cls) {
+      console.warn(`Unknown context provider ${provider.name}`);
+      continue;
+    }
     contextProviders.push(new cls(provider.params));
   }
 

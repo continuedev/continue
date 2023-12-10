@@ -110,14 +110,16 @@ function pruneChatHistory(
     }, 0);
 
   // 0. Prune any messages that take up more than 1/3 of the context length
-  const longestMessages = chatHistory.toSorted(
-    (a, b) => b.content.length - a.content.length
-  );
+  const longestMessages = [...chatHistory];
+  longestMessages.sort((a, b) => b.content.length - a.content.length);
+
   const longerThanOneThird = longestMessages.filter(
-    (message) => countTokens(message.content, modelName) > contextLength / 3
+    (message: ChatMessage) =>
+      countTokens(message.content, modelName) > contextLength / 3
   );
   const distanceFromThird = longerThanOneThird.map(
-    (message) => countTokens(message.content, modelName) - contextLength / 3
+    (message: ChatMessage) =>
+      countTokens(message.content, modelName) - contextLength / 3
   );
 
   for (let i = 0; i < longerThanOneThird.length; i++) {

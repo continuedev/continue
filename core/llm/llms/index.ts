@@ -33,11 +33,11 @@ const LLMs = [
 export function llmFromDescription(
   desc: ModelDescription,
   completionOptions?: BaseCompletionOptions
-): LLM {
+): LLM | undefined {
   const cls = LLMs.find((llm) => llm.providerName === desc.provider);
 
   if (!cls) {
-    throw new Error(`Unknown provider ${desc.provider}`);
+    return undefined;
   }
 
   const finalCompletionOptions = {

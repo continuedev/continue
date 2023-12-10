@@ -25,6 +25,7 @@ function useContextProviders() {
       const provider = contextProviderClassFromName(
         name as ContextProviderName
       );
+      if (!provider) continue;
       providersList.push((provider as any)(options));
       descriptionsList.push(provider.description);
     }

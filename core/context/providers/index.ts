@@ -18,11 +18,11 @@ const Providers: (typeof ContextProvider)[] = [
 
 export function contextProviderClassFromName(
   name: ContextProviderName
-): typeof ContextProvider {
+): typeof ContextProvider | undefined {
   const cls = Providers.find((cls) => cls.description.title === name);
 
   if (!cls) {
-    throw new Error(`Unknown provider ${name}`);
+    return undefined;
   }
 
   return cls;
