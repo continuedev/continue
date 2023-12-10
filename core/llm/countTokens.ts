@@ -1,16 +1,31 @@
+import {
+  encodingForModel as _encodingForModel,
+  Tiktoken,
+  TiktokenModel,
+} from "js-tiktoken";
 import { TOKEN_BUFFER_FOR_SAFETY } from "./constants";
 import { ChatMessage } from "./types";
 
-// TODO: tiktoken and chevron and posthog
+// TODO: chevron and posthog
 
 function renderTemplatedString(template: string): string {
   // TODO
   return template;
 }
 
+function encodingForModel(modelName: string): Tiktoken {
+  let encoding: Tiktoken;
+  try {
+    encoding = _encodingForModel(modelName as TiktokenModel);
+  } catch (e) {
+    encoding = _encodingForModel("gpt-4");
+  }
+  return encoding;
+}
+
 function countTokens(content: string, modelName: string): number {
-  // TODO
-  return 0;
+  const encoding = encodingForModel(modelName);
+  return encoding.encode(content, "all", []).length;
 }
 
 function flattenMessages(msgs: ChatMessage[]): ChatMessage[] {
@@ -45,20 +60,14 @@ function pruneStringFromBottom(
   maxTokens: number,
   prompt: string
 ): string {
-  // TODO: Tiktoken
-  //   const encoding = encodingForModel(modelName);
+  const encoding = encodingForModel(modelName);
 
-  //   if (encoding === null) {
-  const desiredLengthInChars = maxTokens * 2;
-  return prompt.slice(0, desiredLengthInChars);
-  //   }
+  const tokens = encoding.encode(prompt, "all", []);
+  if (tokens.length <= maxTokens) {
+    return prompt;
+  }
 
-  //   const tokens = encoding.encode(prompt, { disallowedSpecial: [] });
-  //   if (tokens.length <= maxTokens) {
-  //     return prompt;
-  //   }
-
-  //   return encoding.decode(tokens.slice(-maxTokens));
+  return encoding.decode(tokens.slice(-maxTokens));
 }
 
 function pruneStringFromTop(
@@ -66,20 +75,14 @@ function pruneStringFromTop(
   maxTokens: number,
   prompt: string
 ): string {
-  // TODO: Tiktoken
-  //   const encoding = encodingForModel(modelName);
+  const encoding = encodingForModel(modelName);
 
-  //   if (encoding === null) {
-  const desiredLengthInChars = maxTokens * 2;
-  return prompt.slice(-desiredLengthInChars);
-  //   }
+  const tokens = encoding.encode(prompt, "all", []);
+  if (tokens.length <= maxTokens) {
+    return prompt;
+  }
 
-  //   const tokens = encoding.encode(prompt, { disallowedSpecial: [] });
-  //   if (tokens.length <= maxTokens) {
-  //     return prompt;
-  //   }
-
-  //   return encoding.decode(tokens.slice(-maxTokens));
+  return encoding.decode(tokens.slice(-maxTokens));
 }
 
 function pruneRawPromptFromTop(

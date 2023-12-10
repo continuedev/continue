@@ -17,6 +17,7 @@
   "dependencies": {
     "@anthropic-ai/sdk": "^0.10.2",
     "dotenv": "^16.3.1",
+    "js-tiktoken": "^1.0.8",
     "openai": "^4.20.1",
     "replicate": "^0.23.0",
     "uuid": "^9.0.1"
