@@ -262,7 +262,7 @@ export function getSidebarContent(
         break;
       }
       case "writeFile": {
-        respond(await ide.writeFile(data.path, data.contents));
+        respond(await ide.writeFile(data.message.path, data.message.contents));
         break;
       }
       case "showVirtualFile": {
@@ -274,11 +274,11 @@ export function getSidebarContent(
         break;
       }
       case "openFile": {
-        respond(await ide.openFile(data.path));
+        respond(await ide.openFile(data.message.path));
         break;
       }
       case "runCommand": {
-        respond(await ide.runCommand(data.command));
+        respond(await ide.runCommand(data.message.command));
         break;
       }
       // History
