@@ -6,7 +6,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { Fragment, useEffect, useState } from "react";
 import ReactDOM from "react-dom";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import {
@@ -18,6 +18,7 @@ import {
   vscForeground,
 } from "..";
 import { defaultModelSelector } from "../../redux/selectors/modelSelectors";
+import { setDefaultModel } from "../../redux/slices/stateSlice";
 import { RootStore } from "../../redux/store";
 import { getMetaKeyLabel } from "../../util";
 import HeaderButtonWithText from "../HeaderButtonWithText";
@@ -195,26 +196,20 @@ interface Option {
 }
 
 function ModelSelect(props: {}) {
+  const dispatch = useDispatch();
   const defaultModel = useSelector(defaultModelSelector);
   const allModels = useSelector(
-    (state: RootStore) => state.serverState.config.models
+    (state: RootStore) => state.state.config.models
   );
 
   const navigate = useNavigate();
 
-  const DEFAULT_OPTION = {
-    value: "GPT-4",
-    title: "GPT-4",
-  };
-  const [options, setOptions] = useState<Option[]>([DEFAULT_OPTION]);
+  const [options, setOptions] = useState<Option[]>([]);
 
   useEffect(() => {
-    if (!allModels) {
-      setOptions([DEFAULT_OPTION]);
-      return;
-    }
     setOptions(
       allModels.map((model) => {
+        console.log(modelSelectTitle(model));
         return {
           value: model.title,
           title: modelSelectTitle(model),
@@ -232,8 +227,7 @@ function ModelSelect(props: {}) {
           (option) => option.value === defaultModel?.title
         );
         const nextIndex = (currentIndex + 1) % options.length;
-        // TODO
-        // client?.setModelForRoleFromTitle("default", options[nextIndex].value);
+        dispatch(setDefaultModel(options[nextIndex].value));
       }
     };
 
@@ -250,6 +244,7 @@ function ModelSelect(props: {}) {
           value={"GPT-4"}
           onChange={(val: string) => {
             if (val === defaultModel?.title) return;
+            dispatch(setDefaultModel(val));
             // TODO
             // client?.setModelForRoleFromTitle("default", val);
           }}
@@ -257,7 +252,7 @@ function ModelSelect(props: {}) {
         >
           <div className="relative">
             <StyledListboxButton>
-              <div>{modelSelectTitle(defaultModel) || "GPT-4"}</div>
+              <div>{modelSelectTitle(defaultModel)}</div>
               <div className="pointer-events-none flex items-center">
                 <ChevronUpDownIcon
                   className="h-5 w-5 text-gray-400"

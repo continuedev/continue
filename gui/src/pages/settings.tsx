@@ -99,7 +99,7 @@ function Settings() {
   const onSubmit = (data: ContinueConfig) => console.log(data);
 
   const navigate = useNavigate();
-  const config = useSelector((state: RootStore) => state.serverState.config);
+  const config = useSelector((state: RootStore) => state.state.config);
   const dispatch = useDispatch();
 
   const submitChanges = () => {

@@ -2,6 +2,7 @@ import * as io from "socket.io-client";
 import * as vscode from "vscode";
 import { FileEdit } from "../schema/FileEdit";
 import { ideProtocolClient, windowId } from "./activation/activate";
+import { getConfigJsonPath } from "./activation/environmentSetup";
 import { getContinueServerUrl } from "./bridge";
 import historyManager from "./history";
 import VsCodeIde from "./ideProtocol";
@@ -148,6 +149,10 @@ export function getSidebarContent(
       }
       case "showFile": {
         ideProtocolClient.openFile(data.filepath);
+        break;
+      }
+      case "openConfigJson": {
+        ideProtocolClient.openFile(getConfigJsonPath());
         break;
       }
       case "readRangeInFile": {

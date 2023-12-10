@@ -443,7 +443,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
   }, [currentlyInContextQuery]);
 
   const contextProviders = useSelector(
-    (state: RootStore) => state.serverState.contextProviders
+    (state: RootStore) => state.state.config.contextProviders
   ) as any[];
 
   const goBackToContextProviders = () => {

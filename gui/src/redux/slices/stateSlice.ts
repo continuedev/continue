@@ -337,14 +337,14 @@ export const stateSlice = createSlice({
         };
       }
     },
-    setDefaultModel: (state, action) => {
+    setDefaultModel: (state, { payload }: { payload: string }) => {
       const model = state.config.models.find(
-        (model) => model.title === action.payload
+        (model) => model.title === payload
       );
       if (!model) return;
       return {
         ...state,
-        defaultModelTitle: action.payload,
+        defaultModelTitle: payload,
       };
     },
   },

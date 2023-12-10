@@ -3,12 +3,14 @@ import {
   QuestionMarkCircleIcon,
   SparklesIcon,
 } from "@heroicons/react/24/outline";
+import { postToIde } from "core/ide/messaging";
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { defaultBorderRadius, secondaryDark, vscForeground } from ".";
 import useHistory from "../hooks/useHistory";
+import { defaultModelSelector } from "../redux/selectors/modelSelectors";
 import {
   setBottomMessage,
   setBottomMessageCloseTimeout,
@@ -109,9 +111,7 @@ const Layout = () => {
     (state: RootStore) => state.serverState.indexingProgress
   );
 
-  const defaultModel = useSelector(
-    (state: RootStore) => (state.serverState.config as any).models?.default
-  );
+  const defaultModel = useSelector(defaultModelSelector);
   // #region Selectors
 
   const bottomMessage = useSelector(
@@ -159,7 +159,8 @@ const Layout = () => {
       if (event.data.type === "addModel") {
         navigate("/models");
       } else if (event.data.type === "openSettings") {
-        navigate("/settings");
+        // navigate("/settings");
+        postToIde("openConfigJson", {});
       } else if (event.data.type === "viewHistory") {
         // Toggle the history page / main page
         if (location.pathname === "/history") {
@@ -231,8 +232,8 @@ const Layout = () => {
                 )}
               <ModelSelect />
               {indexingProgress >= 1 && // Would take up too much space together with indexing progress
-                defaultModel?.class_name === "OpenAIFreeTrial" &&
-                defaultModel?.api_key === "" &&
+                defaultModel?.providerName === "openai-free-trial" &&
+                defaultModel?.apiKey === "" &&
                 (location.pathname === "/settings" ||
                   parseInt(localStorage.getItem("ftc") || "0") >= 125) && (
                   <ProgressBar
@@ -258,7 +259,8 @@ const Layout = () => {
             </HeaderButtonWithText>
             <HeaderButtonWithText
               onClick={() => {
-                navigate("/settings");
+                // navigate("/settings");
+                postToIde("openConfigJson", {});
               }}
               text="Settings"
             >
