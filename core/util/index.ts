@@ -22,3 +22,17 @@ export function removeQuotesAndEscapes(output: string): string {
 
   return output;
 }
+
+export function proxyFetch(url: string, init?: RequestInit): Promise<Response> {
+  if (!(window as any)._fetch) {
+    throw new Error("Proxy fetch not initialized");
+  }
+
+  const headers = new Headers(init?.headers);
+  headers.append("x-continue-url", url);
+
+  return (window as any)._fetch("http://localhost:65433", {
+    ...init,
+    headers,
+  });
+}

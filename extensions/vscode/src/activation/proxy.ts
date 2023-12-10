@@ -1,6 +1,7 @@
 import cors from "cors";
 import express from "express";
 import http from "http";
+import https from "https";
 
 const PROXY_PORT = 65433;
 const app = express();
@@ -19,7 +20,10 @@ app.use((req, res, next) => {
 
   // Proxy the request
   const { origin, ...headers } = req.headers;
-  const proxy = http.request(req.headers["x-continue-url"] as string, {
+  const url = req.headers["x-continue-url"] as string;
+  const protocolString = url.split("://")[0];
+  const protocol = protocolString === "https" ? https : http;
+  const proxy = protocol.request(url, {
     method: req.method,
     headers: headers,
   });
@@ -28,9 +32,12 @@ app.use((req, res, next) => {
     response.pipe(res);
   });
 
-  // Pipe the request stream directly to the proxy
+  proxy.on("error", (error) => {
+    console.error(error);
+    res.sendStatus(500);
+  });
+
   req.pipe(proxy);
-  proxy.end();
 });
 
 // http-middleware-proxy

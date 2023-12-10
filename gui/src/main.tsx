@@ -5,7 +5,11 @@ import App from "./App";
 import "./index.css";
 import { store } from "./redux/store";
 
+import { proxyFetch } from "core/util";
 import CustomPostHogProvider from "./hooks/CustomPostHogProvider";
+
+(window as any)._fetch = window.fetch;
+window.fetch = proxyFetch;
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
   <React.StrictMode>

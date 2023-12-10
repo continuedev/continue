@@ -53,14 +53,6 @@ class Ollama extends LLM {
     prompt: string,
     options: CompletionOptions
   ): AsyncGenerator<string> {
-    // const response = await fetch(`http://localhost:65433`, {
-    //   method: "POST",
-    //   headers: {
-    //     "Content-Type": "application/json",
-    //     "x-continue-url": `${this.apiBase}/api/generate`,
-    //   },
-    //   body: JSON.stringify(this._convertArgs(options, prompt)),
-    // });
     const response = await fetch(`${this.apiBase}/api/generate`, {
       method: "POST",
       headers: {

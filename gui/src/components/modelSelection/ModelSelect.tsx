@@ -209,7 +209,6 @@ function ModelSelect(props: {}) {
   useEffect(() => {
     setOptions(
       allModels.map((model) => {
-        console.log(modelSelectTitle(model));
         return {
           value: model.title,
           title: modelSelectTitle(model),

@@ -78,7 +78,6 @@ function TableRow({
             // Save current session
             saveSession();
 
-            console.log(session);
             const json: PersistedSessionInfo = await loadSession(
               session.sessionId
             );
