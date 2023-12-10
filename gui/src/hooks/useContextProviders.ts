@@ -1,51 +1,24 @@
-import { ContextProviderName } from "core/config";
-import { ContextProvider, ContextProviderDescription } from "core/context";
-import { contextProviderClassFromName } from "core/context/providers";
 import { ContextItem } from "core/llm/types";
-import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { RootStore } from "../redux/store";
 
 function useContextProviders() {
-  const [providers, setProviders] = useState<{
-    [name: string]: ContextProvider;
-  }>({});
-  const [providerDescriptions, setProviderDescriptions] = useState<
-    ContextProviderDescription[]
-  >([]);
-
-  const providerConfig = useSelector(
-    (store: RootStore) => store.state.config.contextProviders || []
+  const contextProviders = useSelector(
+    (state: RootStore) => state.state.config.contextProviders || []
   );
-
-  useEffect(() => {
-    let providersList = [];
-    let descriptionsList = [];
-    for (const [name, options] of Object.entries(providerConfig)) {
-      const provider = contextProviderClassFromName(
-        name as ContextProviderName
-      );
-      if (!provider) continue;
-      providersList.push((provider as any)(options));
-      descriptionsList.push(provider.description);
-    }
-
-    setProviders(providers);
-    setProviderDescriptions(descriptionsList);
-  }, [providerConfig]);
 
   async function getContextItems(
     name: string,
     query: string
   ): Promise<ContextItem[]> {
-    const provider = providers[name];
+    const provider = contextProviders.find((p) => p.description.title === name);
     if (!provider) {
       throw new Error(`Unknown provider ${name}`);
     }
     return await provider.getContextItems(query);
   }
 
-  return { providerDescriptions, getContextItems };
+  return { getContextItems };
 }
 
 export default useContextProviders;

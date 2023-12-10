@@ -1,28 +1,26 @@
+import * as io from "socket.io-client";
+import { v4 } from "uuid";
+import * as vscode from "vscode";
+import { FileEdit } from "../schema/FileEdit";
+import { FileEditWithFullContents } from "../schema/FileEditWithFullContents";
+import { RangeInFile } from "../schema/RangeInFile";
+import { windowId } from "./activation/activate";
+import { debugPanelWebview, getSidebarContent } from "./debugPanel";
+import { diffManager } from "./diffs";
 import {
-  editorSuggestionsLocked,
-  showSuggestion as showSuggestionInEditor,
   SuggestionRanges,
+  acceptSuggestionCommand,
+  editorSuggestionsLocked,
+  rejectSuggestionCommand,
+  showSuggestion as showSuggestionInEditor,
 } from "./suggestions";
 import {
   getUniqueId,
   openEditorAndRevealRange,
   uriFromFilePath,
 } from "./util/vscode";
-import { FileEdit } from "../schema/FileEdit";
-import { RangeInFile } from "../schema/RangeInFile";
-import * as vscode from "vscode";
-import {
-  acceptSuggestionCommand,
-  rejectSuggestionCommand,
-} from "./suggestions";
-import { FileEditWithFullContents } from "../schema/FileEditWithFullContents";
-import { diffManager } from "./diffs";
 const os = require("os");
 const path = require("path");
-import { v4 } from "uuid";
-import { windowId } from "./activation/activate";
-import * as io from "socket.io-client";
-import { debugPanelWebview, getSidebarContent } from "./debugPanel";
 
 const continueVirtualDocumentScheme = "continue";
 
@@ -322,7 +320,7 @@ class IdeProtocolClient {
         }
         break;
       case "showVirtualFile":
-        this.showVirtualFile(data.name, data.contents);
+        this.showVirtualFile(data.name, data.content);
         break;
       case "setSuggestionsLocked":
         this.setSuggestionsLocked(data.filepath, data.locked);
@@ -780,7 +778,7 @@ class IdeProtocolClient {
       return "";
     }
 
-    return repo.getDiff().join("\n");
+    return (await repo.getDiff()).join("\n");
   }
 
   getHighlightedCode(): RangeInFile[] {

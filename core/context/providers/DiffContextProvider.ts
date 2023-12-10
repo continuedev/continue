@@ -1,3 +1,4 @@
+import { v4 } from "uuid";
 import { ContextProvider, ContextProviderDescription } from "..";
 import { ExtensionIde } from "../../ide";
 import { ContextItem } from "../../llm/types";
@@ -12,7 +13,18 @@ class DiffContextProvider extends ContextProvider {
   };
 
   async getContextItems(query: string): Promise<ContextItem[]> {
-    return [await new ExtensionIde().getDiff()];
+    const diff = await new ExtensionIde().getDiff();
+    return [
+      {
+        description: "The current git diff",
+        content: diff,
+        name: "Git Diff",
+        id: {
+          providerTitle: "diff",
+          itemId: v4(),
+        },
+      },
+    ];
   }
   async load(): Promise<void> {}
 }

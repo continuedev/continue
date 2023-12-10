@@ -40,7 +40,7 @@ export class ExtensionIde implements IDE {
   }
 
   async showVirtualFile(title: string, contents: string): Promise<void> {
-    await r("showVirtualFile", { title, contents });
+    await r("showVirtualFile", { name: title, content: contents });
   }
 
   async openFile(path: string): Promise<void> {

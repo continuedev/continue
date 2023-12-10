@@ -1,3 +1,4 @@
+import { v4 } from "uuid";
 import { ContextProvider, ContextProviderDescription } from "..";
 import { ExtensionIde } from "../../ide";
 import { ContextItem } from "../../llm/types";
@@ -12,7 +13,18 @@ class TerminalContextProvider extends ContextProvider {
   };
 
   async getContextItems(query: string): Promise<ContextItem[]> {
-    return [await new ExtensionIde().getTerminalContents()];
+    const content = await new ExtensionIde().getTerminalContents();
+    return [
+      {
+        description: "The contents of the terminal",
+        content,
+        name: "Terminal",
+        id: {
+          providerTitle: "terminal",
+          itemId: v4(),
+        },
+      },
+    ];
   }
   async load(): Promise<void> {}
 }

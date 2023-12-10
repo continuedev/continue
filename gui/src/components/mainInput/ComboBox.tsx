@@ -340,7 +340,7 @@ const Li = styled.li<{
   background-color: ${({ highlighted }) =>
     highlighted ? buttonColor + "66" : "transparent"};
   ${({ selected }) => selected && "font-weight: bold;"}
-  padding: 0.5rem 0.25rem;
+  padding: 0.35rem 0.5rem;
   display: flex;
   flex-direction: row;
   align-items: center;
@@ -352,7 +352,7 @@ const Li = styled.li<{
 // #endregion
 
 interface ComboBoxItem {
-  name: string;
+  title: string;
   description: string;
   id?: string;
   content?: string;
@@ -423,7 +423,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
     (state: RootStore) =>
       state.state.config.slashCommands?.map((cmd) => {
         return {
-          name: `/${cmd.name}`,
+          title: `/${cmd.name}`,
           description: cmd.description,
         };
       }) || []
@@ -446,8 +446,8 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
   }, [currentlyInContextQuery]);
 
   const contextProviders = useSelector(
-    (state: RootStore) => state.state.config.contextProviders
-  ) as any[];
+    (store: RootStore) => store.state.config.contextProviders
+  );
 
   const goBackToContextProviders = () => {
     setCurrentlyInContextQuery(false);
@@ -461,9 +461,9 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
       setItems(
         contextProviders
           ?.map((provider) => ({
-            name: provider.display_title,
-            description: provider.description,
-            id: provider.title,
+            title: provider.description.displayTitle,
+            description: provider.description.description,
+            id: provider.description.title,
           }))
           .sort((c, _) => (c.id === "file" ? -1 : 1)) || []
       );
@@ -504,7 +504,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
       // Hacky way of stopping bug where first context provider title is injected into input
       if (
         prevInputValue === "" &&
-        contextProviders?.some((p) => p.display_title === inputValue)
+        contextProviders?.some((p) => p.description.displayTitle === inputValue)
       ) {
         downshiftProps.setInputValue("");
         setPrevInputValue("");
@@ -545,20 +545,21 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
               contextProviders
                 ?.filter(
                   (provider) =>
-                    `@${provider.title}`
+                    `@${provider.description.title}`
                       .toLowerCase()
                       .startsWith(inputValue.toLowerCase()) ||
-                    `@${provider.display_title}`
+                    `@${provider.description.displayTitle}`
                       .toLowerCase()
                       .startsWith(inputValue.toLowerCase())
                 )
                 .map((provider) => ({
-                  name: provider.display_title,
-                  description: provider.description,
-                  id: provider.title,
+                  name: provider.description.displayTitle,
+                  description: provider.description.description,
+                  id: provider.description.title,
+                  title: provider.description.displayTitle,
                 }))
                 .sort((c, _) => (c.id === "file" ? -1 : 1)) || [];
-            setItems(filteredItems);
+            setItems(filteredItems.map((item) => item));
             setCurrentlyInContextQuery(true);
           }
           return;
@@ -574,7 +575,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
       // Handle slash commands
       setItems(
         availableSlashCommands?.filter((slashCommand) => {
-          const sc = slashCommand.name.toLowerCase();
+          const sc = slashCommand.title.toLowerCase();
           const iv = inputValue.toLowerCase();
           return sc.startsWith(iv) && sc !== iv;
         }) || []
@@ -610,7 +611,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
       return (
         res?.hits.map((hit) => {
           return {
-            name: hit.name,
+            title: hit.name,
             description: hit.description,
             id: hit.id,
             content: hit.content,
@@ -627,7 +628,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
     onInputValueChange: onInputValueChangeCallback,
     items,
     itemToString(item) {
-      return item ? item.name : "";
+      return item ? item.title : "";
     },
   });
 
@@ -775,9 +776,9 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
   const selectContextItemFromDropdown = useCallback(
     (event: any) => {
       const newItem = items[downshiftProps.highlightedIndex];
-      const newProviderName = newItem?.name;
+      const newProviderName = newItem?.title;
       const newProvider = contextProviders.find(
-        (provider) => provider.display_title === newProviderName
+        (provider) => provider.description.displayTitle === newProviderName
       );
 
       if (!newProvider) {
@@ -798,14 +799,17 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
         (event.nativeEvent as any).preventDownshiftDefault = true;
         event.preventDefault();
         return;
-      } else if (newProvider.dynamic && newProvider.requires_query) {
+      } else if (
+        newProvider.description.dynamic &&
+        newProvider.description.requiresQuery
+      ) {
         // This is a dynamic context provider that requires a query, like URL / Search
         setInQueryForContextProvider(newProvider);
-        downshiftProps.setInputValue(`@${newProvider.title} `);
+        downshiftProps.setInputValue(`@${newProvider.description.title} `);
         (event.nativeEvent as any).preventDownshiftDefault = true;
         event.preventDefault();
         return;
-      } else if (newProvider.dynamic) {
+      } else if (newProvider.description.dynamic) {
         // This is a normal dynamic context provider like Diff or Terminal
         if (!newItem.id) return;
 
@@ -817,11 +821,11 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
         selectContextItem(newItem.id, query);
         if (downshiftProps.inputValue.includes("@")) {
           const selectedNestedContextProvider = contextProviders.find(
-            (provider) => provider.title === newItem.id
+            (provider) => provider.description.title === newItem.id
           );
           if (
             !nestedContextProvider &&
-            !selectedNestedContextProvider?.dynamic
+            !selectedNestedContextProvider?.description.dynamic
           ) {
             downshiftProps.setInputValue(`@${newItem.id} `);
             setNestedContextProvider(selectedNestedContextProvider);
@@ -841,12 +845,13 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
       }
 
       setNestedContextProvider(newProvider);
-      downshiftProps.setInputValue(`@${newProvider.title} `);
+      downshiftProps.setInputValue(`@${newProvider.description.title} `);
       (event.nativeEvent as any).preventDownshiftDefault = true;
       event.preventDefault();
-      getFilteredContextItemsForProvider(newProvider.title, "").then((items) =>
-        setItems(items)
-      );
+      getFilteredContextItemsForProvider(
+        newProvider.description.title,
+        ""
+      ).then((items) => setItems(items));
     },
     [
       items,
@@ -1300,9 +1305,9 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
                   event.key === "Tab" &&
                   downshiftProps.isOpen &&
                   items.length > 0 &&
-                  items[downshiftProps.highlightedIndex]?.name.startsWith("/")
+                  items[downshiftProps.highlightedIndex]?.title.startsWith("/")
                 ) {
-                  downshiftProps.setInputValue(items[0].name);
+                  downshiftProps.setInputValue(items[0].title);
                   event.preventDefault();
                 } else if (event.key === "Tab") {
                   (event.nativeEvent as any).preventDownshiftDefault = true;
@@ -1584,7 +1589,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
                     borderTop:
                       index === 0 ? "none" : `0.5px solid ${lightGray}`,
                   }}
-                  key={`${item.name}${index}`}
+                  key={`${item.title}${index}`}
                   {...downshiftProps.getItemProps({ item, index })}
                   highlighted={downshiftProps.highlightedIndex === index}
                   selected={downshiftProps.selectedItem === item}
@@ -1601,12 +1606,12 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
                         <FileIcon
                           height="20px"
                           width="20px"
-                          filename={item.name}
+                          filename={item.title}
                         ></FileIcon>
                       )}
-                      <DropdownIcon provider={item.name} className="mr-2" />
+                      <DropdownIcon provider={item.title} className="mr-2" />
                       <DropdownIcon provider={item.id} className="mr-2" />
-                      {item.name}
+                      {item.title}
                       {"  "}
                     </div>
                     <span
@@ -1622,9 +1627,13 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
                   </span>
                   {contextProviders
                     ?.filter(
-                      (provider) => !provider.dynamic || provider.requires_query
+                      (provider) =>
+                        !provider.description.dynamic ||
+                        provider.description.requiresQuery
                     )
-                    .find((provider) => provider.title === item.id) && (
+                    .find(
+                      (provider) => provider.description.title === item.id
+                    ) && (
                     <ArrowRightIcon
                       width="1.2em"
                       height="1.2em"

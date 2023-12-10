@@ -266,7 +266,7 @@ export function getSidebarContent(
         break;
       }
       case "showVirtualFile": {
-        respond(await ide.showVirtualFile(data.title, data.contents));
+        respond(await ide.showVirtualFile(data.name, data.content));
         break;
       }
       case "getContinueDir": {
