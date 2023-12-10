@@ -1,8 +1,5 @@
-import * as io from "socket.io-client";
-import { v4 } from "uuid";
 import * as vscode from "vscode";
 import { FileEdit } from "../schema/FileEdit";
-import { FileEditWithFullContents } from "../schema/FileEditWithFullContents";
 import { RangeInFile } from "../schema/RangeInFile";
 import { windowId } from "./activation/activate";
 import { debugPanelWebview, getSidebarContent } from "./debugPanel";
@@ -27,23 +24,8 @@ const continueVirtualDocumentScheme = "continue";
 class IdeProtocolClient {
   private readonly context: vscode.ExtensionContext;
 
-  private _makingEdit = 0;
-
-  private _serverUrl: string;
-  private socket: io.Socket;
-
-  private send(messageType: string, messageId: string, data: object) {
-    const payload = JSON.stringify({
-      message_type: messageType,
-      data,
-      message_id: messageId,
-    });
-    this.socket.send(payload);
-  }
-
   constructor(serverUrl: string, context: vscode.ExtensionContext) {
     this.context = context;
-    this._serverUrl = serverUrl;
     const windowInfo = {
       window_id: windowId,
       workspace_directory: this.getWorkspaceDirectory(),
@@ -56,100 +38,16 @@ class IdeProtocolClient {
       },
     };
 
-    const requestUrl = `${this._serverUrl}?window_info=${encodeURIComponent(
-      JSON.stringify(windowInfo)
-    )}`;
-    console.log("Connecting to Continue server at: ", requestUrl);
-    this.socket = io.io(requestUrl, {
-      path: "/ide/socket.io",
-      transports: ["websocket", "polling", "flashsocket"],
-    });
-
-    this.socket.on("message", (message, callback) => {
-      const {
-        message_type: messageType,
-        data,
-        message_id: messageId,
-      } = message;
-      this.handleMessage(messageType, data, messageId, callback).catch(
-        (err) => {
-          console.log("Error handling message: ", err);
-          vscode.window
-            .showErrorMessage(
-              `Error handling message (${messageType}) from Continue server: ` +
-                err,
-              "View Logs"
-            )
-            .then((selection) => {
-              if (selection === "View Logs") {
-                vscode.commands.executeCommand("continue.viewLogs");
-              }
-            });
-        }
-      );
-    });
-
-    // Listen for new file creation
-    vscode.workspace.onDidCreateFiles((event) => {
-      const filepaths = event.files.map((file) => file.fsPath);
-      this.send("filesCreated", v4(), { filepaths });
-    });
-
-    // Listen for file deletion
-    vscode.workspace.onDidDeleteFiles((event) => {
-      const filepaths = event.files.map((file) => file.fsPath);
-      this.send("filesDeleted", v4(), { filepaths });
-    });
-
-    // Listen for file renaming
-    vscode.workspace.onDidRenameFiles((event) => {
-      const oldFilepaths = event.files.map((file) => file.oldUri.fsPath);
-      const newFilepaths = event.files.map((file) => file.newUri.fsPath);
-      this.send("filesRenamed", v4(), {
-        old_filepaths: oldFilepaths,
-        new_filepaths: newFilepaths,
-      });
-    });
-
     // Listen for file saving
     vscode.workspace.onDidSaveTextDocument((event) => {
       const filepath = event.uri.fsPath;
       const contents = event.getText();
-      this.send("fileSaved", v4(), { filepath, contents });
+      const config = JSON.parse(contents);
+      debugPanelWebview?.postMessage({
+        type: "configUpdate",
+        config,
+      });
     });
-
-    // Setup listeners for any selection changes in open editors
-    // vscode.window.onDidChangeTextEditorSelection((event) => {
-    //   if (!this.editorIsCode(event.textEditor)) {
-    //     return;
-    //   }
-    //   if (this._highlightDebounce) {
-    //     clearTimeout(this._highlightDebounce);
-    //   }
-    //   this._highlightDebounce = setTimeout(() => {
-    //     const highlightedCode = event.textEditor.selections
-    //       .filter((s) => !s.isEmpty)
-    //       .map((selection) => {
-    //         const range = new vscode.Range(selection.start, selection.end);
-    //         const contents = event.textEditor.document.getText(range);
-    //         return {
-    //           filepath: event.textEditor.document.uri.fsPath,
-    //           contents,
-    //           range: {
-    //             start: {
-    //               line: selection.start.line,
-    //               character: selection.start.character,
-    //             },
-    //             end: {
-    //               line: selection.end.line,
-    //               character: selection.end.character,
-    //             },
-    //           },
-    //         };
-    //       });
-    //     this.sendHighlightedCode(highlightedCode);
-    //   }, 100);
-    // });
 
     // Register a content provider for the readonly virtual documents
     const documentContentProvider = new (class
@@ -169,207 +67,9 @@ class IdeProtocolClient {
         documentContentProvider
       )
     );
-
-    // Listen for changes to settings.json
-    vscode.workspace.onDidChangeConfiguration((event) => {
-      if (event.affectsConfiguration("continue")) {
-        vscode.window
-          .showInformationMessage(
-            "Please reload VS Code for changes to Continue settings to take effect.",
-            "Reload"
-          )
-          .then((selection) => {
-            if (selection === "Reload") {
-              vscode.commands.executeCommand("workbench.action.reloadWindow");
-            }
-          });
-
-        const telemetryEnabled = vscode.workspace
-          .getConfiguration("continue")
-          .get<boolean>("telemetryEnabled");
-        if (
-          typeof telemetryEnabled !== "undefined" &&
-          telemetryEnabled !== null
-        ) {
-          this.setTelemetryEnabled(telemetryEnabled);
-        }
-      }
-    });
   }
 
   visibleMessages: Set<string> = new Set();
-
-  async handleMessage(
-    messageType: string,
-    data: any,
-    messageId: string,
-    callback: (data: any) => void
-  ) {
-    const respond = (responseData: any) => {
-      if (typeof callback === "undefined") {
-        console.log("callback is undefined");
-        return;
-      }
-      callback({
-        message_type: messageType,
-        data: responseData,
-        message_id: messageId,
-      });
-    };
-    switch (messageType) {
-      case "highlightedCode":
-        respond({
-          highlightedCode: this.getHighlightedCode(),
-        });
-        break;
-      case "workspaceDirectory":
-        respond({
-          workspaceDirectory: this.getWorkspaceDirectory(),
-        });
-        break;
-      case "uniqueId":
-        respond({
-          uniqueId: this.getUniqueId(),
-        });
-        break;
-      case "ide":
-        respond({
-          name: "vscode",
-          version: vscode.version,
-          remoteName: vscode.env.remoteName,
-        });
-        break;
-      case "fileExists":
-        respond({
-          exists: await this.fileExists(data.filepath),
-        });
-        break;
-      case "getUserSecret":
-        respond({
-          value: await this.getUserSecret(data.key),
-        });
-        break;
-      case "openFiles":
-        respond({
-          openFiles: this.getOpenFiles(),
-        });
-        break;
-      case "visibleFiles":
-        respond({
-          visibleFiles: this.getVisibleFiles(),
-        });
-        break;
-      case "readFile":
-        respond({
-          contents: await this.readFile(data.filepath),
-        });
-        break;
-      case "getTerminalContents":
-        respond({
-          contents: await this.getTerminalContents(data.commands),
-        });
-        break;
-      case "listDirectoryContents":
-        let contents: string[] = [];
-        try {
-          contents = await this.getDirectoryContents(
-            data.directory,
-            data.recursive || false
-          );
-        } catch (e) {
-          console.log("Error listing directory contents: ", e);
-          contents = [];
-        }
-        respond({
-          contents,
-        });
-        break;
-      case "editFile":
-        const fileEdit = await this.editFile(data.edit);
-        respond({
-          fileEdit,
-        });
-        break;
-      case "highlightCode":
-        this.highlightCode(data.rangeInFile, data.color);
-        break;
-      case "runCommand":
-        respond({
-          output: await this.runCommand(data.command),
-        });
-        break;
-      case "saveFile":
-        this.saveFile(data.filepath);
-        break;
-      case "setFileOpen":
-        this.openFile(data.filepath);
-        // TODO: Close file if False
-        break;
-      case "showMessage":
-        if (!this.visibleMessages.has(data.message)) {
-          this.visibleMessages.add(data.message);
-          vscode.window
-            .showInformationMessage(data.message, "Copy Traceback", "View Logs")
-            .then((selection) => {
-              if (selection === "View Logs") {
-                vscode.commands.executeCommand("continue.viewLogs");
-              } else if (selection === "Copy Traceback") {
-                vscode.env.clipboard.writeText(data.message);
-              }
-            });
-        }
-        break;
-      case "showVirtualFile":
-        this.showVirtualFile(data.name, data.content);
-        break;
-      case "setSuggestionsLocked":
-        this.setSuggestionsLocked(data.filepath, data.locked);
-        break;
-      case "showSuggestion":
-        this.showSuggestion(data.edit);
-        break;
-      case "showDiff":
-        await this.showDiff(data.filepath, data.replacement, data.step_index);
-        break;
-      case "showMultiFileEdit":
-        this.showMultiFileEdit(data.edits);
-        break;
-      case "getSessionId":
-      case "connected":
-        break;
-      case "textDocument/definition":
-        respond({
-          locations: await this.gotoDefinition(data.filepath, data.position),
-        });
-        break;
-      case "textDocument/documentSymbol":
-        respond({ symbols: await this.documentSymbol(data.filepath) });
-        break;
-      case "textDocument/references":
-        const locations = await this.references(data.filepath, data.position);
-        respond({
-          locations,
-        });
-        break;
-      case "textDocument/foldingRange":
-        respond({
-          ranges: await this.foldingRanges(data.filepath),
-        });
-        break;
-      case "getBranch":
-        respond({
-          branch: await this.getBranch(),
-        });
-        break;
-      case "getDiff":
-        respond({
-          diff: await this.getDiff(),
-        });
-        break;
-      default:
-        throw Error("Unknown message type:" + messageType);
-    }
-  }
 
   async gotoDefinition(
     filepath: string,
@@ -476,10 +176,6 @@ class IdeProtocolClient {
       ),
       edit.replacement
     );
-  }
-
-  async setTelemetryEnabled(enabled: boolean) {
-    this.send("setTelemetryEnabled", v4(), { enabled });
   }
 
   async showDiff(filepath: string, replacement: string, step_index: number) {
@@ -709,32 +405,6 @@ class IdeProtocolClient {
     return terminalContents;
   }
 
-  editFile(edit: FileEdit): Promise<FileEditWithFullContents> {
-    return new Promise((resolve, reject) => {
-      openEditorAndRevealRange(
-        edit.filepath,
-        undefined,
-        vscode.ViewColumn.One
-      ).then((editor) => {
-        const range = new vscode.Range(
-          edit.range.start.line,
-          edit.range.start.character,
-          edit.range.end.line,
-          edit.range.end.character
-        );
-
-        editor.edit((editBuilder) => {
-          this._makingEdit += 2; // editBuilder.replace takes 2 edits: delete and insert
-          editBuilder.replace(range, edit.replacement);
-          resolve({
-            fileEdit: edit,
-            fileContents: editor.document.getText(),
-          });
-        });
-      });
-    });
-  }
-
   async getRepo(): Promise<any> {
     // Use the native git extension to get the branch name
     const extension = vscode.extensions.getExtension("vscode.git");
@@ -819,38 +489,11 @@ class IdeProtocolClient {
     }
   }
 
-  sendCommandOutput(output: string) {
-    this.send("commandOutput", v4(), { output });
-  }
-
-  sendHighlightedCode(
-    highlightedCode: (RangeInFile & { contents: string })[],
-    edit?: boolean
-  ) {
-    this.send("highlightedCodePush", v4(), {
-      highlightedCode,
-      edit,
-    });
-  }
-
-  sendAcceptRejectSuggestion(accepted: boolean) {
-    this.send("acceptRejectSuggestion", v4(), { accepted });
-  }
-
-  sendAcceptRejectDiff(accepted: boolean, stepIndex: number) {
-    this.send("acceptRejectDiff", v4(), { accepted, stepIndex });
-  }
-
   sendMainUserInput(input: string) {
     debugPanelWebview?.postMessage({
       type: "userInput",
       input,
     });
-  }
-
-  async debugTerminal() {
-    const contents = (await this.getTerminalContents()).trim();
-    this.send("debugTerminal", v4(), { contents });
   }
 }
 

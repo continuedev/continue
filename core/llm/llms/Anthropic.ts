@@ -1,7 +1,7 @@
-import { LLM, LLMOptions } from "..";
-import { ModelProvider } from "../../config";
 import AnthropicClient from "@anthropic-ai/sdk";
 import { CompletionCreateParamsBase } from "@anthropic-ai/sdk/resources/completions";
+import { LLM, LLMOptions } from "..";
+import { ModelProvider } from "../../config";
 import { anthropicTemplateMessages } from "../templates/chat";
 import { CompletionOptions } from "../types";
 
@@ -10,9 +10,10 @@ class Anthropic extends LLM {
   static defaultOptions: Partial<LLMOptions> = {
     model: "claude-2",
     templateMessages: anthropicTemplateMessages,
+    contextLength: 100_000,
     completionOptions: {
-      maxTokens: 100_000,
       model: "claude-2",
+      maxTokens: 4096,
     },
   };
 

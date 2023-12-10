@@ -1,11 +1,11 @@
-import * as vscode from "vscode";
-import * as path from "path";
-import * as os from "os";
 import * as fs from "fs";
+import * as os from "os";
+import * as path from "path";
+import * as vscode from "vscode";
 
-import { acceptDiffCommand, rejectDiffCommand } from "./diffs";
-import { debugPanelWebview, getSidebarContent } from "./debugPanel";
 import { ideProtocolClient } from "./activation/activate";
+import { debugPanelWebview, getSidebarContent } from "./debugPanel";
+import { acceptDiffCommand, rejectDiffCommand } from "./diffs";
 
 function addHighlightedCodeToContext(edit: boolean) {
   const editor = vscode.window.activeTextEditor;
@@ -135,7 +135,7 @@ const commandsMap: { [command: string]: (...args: any) => any } = {
   },
   "continue.debugTerminal": async () => {
     vscode.commands.executeCommand("continue.continueGUIView.focus");
-    await ideProtocolClient.debugTerminal();
+    // TODO
   },
   "continue.hideInlineTip": () => {
     vscode.workspace

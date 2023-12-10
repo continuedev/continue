@@ -5,7 +5,6 @@ import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { lightGray, secondaryDark, vscBackground } from "../components";
-import CheckDiv from "../components/CheckDiv";
 import HeaderButtonWithText from "../components/HeaderButtonWithText";
 import useHistory from "../hooks/useHistory";
 import { newSession } from "../redux/slices/stateSlice";
@@ -204,7 +203,7 @@ function History() {
           />
           <h3 className="text-lg font-bold m-2 inline-block">History</h3>
         </div>
-        {workspacePaths && workspacePaths.length > 0 && (
+        {/* {workspacePaths && workspacePaths.length > 0 && (
           <CheckDiv
             checked={filteringByWorkspace}
             onClick={() => setFilteringByWorkspace((prev) => !prev)}
@@ -212,7 +211,7 @@ function History() {
               workspacePaths[workspacePaths.length - 1]
             )}/`}
           />
-        )}
+        )} */}
       </div>
 
       {sessions.filter((session) => {

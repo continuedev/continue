@@ -54,6 +54,9 @@ function useSetup(dispatch: Dispatch<any>) {
           break;
         case "stopSession":
           break;
+        case "configUpdate":
+          dispatch(setConfig(event.data.config));
+          break;
       }
     };
     window.addEventListener("message", eventListener);

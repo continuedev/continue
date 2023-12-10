@@ -1,17 +1,20 @@
+import { SerializedContinueConfig } from "core/config/index";
 import { IDE } from "core/ide/types";
 import * as fs from "fs";
+import * as vscode from "vscode";
+import { ideProtocolClient } from "./activation/activate";
 import {
   getConfigJsonPath,
   getContinueGlobalPath,
 } from "./activation/environmentSetup";
-import { ideProtocolClient } from "./activation/activate";
-import { SerializedContinueConfig } from "core/config/index";
-import * as vscode from "vscode";
 
 class VsCodeIde implements IDE {
   async getSerializedConfig(): Promise<SerializedContinueConfig> {
     const configPath = getConfigJsonPath();
     const config = JSON.parse(fs.readFileSync(configPath, "utf8"));
+    config.allowAnonymousTelemetry =
+      config.allowAnonymousTelemetry &&
+      vscode.workspace.getConfiguration("continue").get("telemetryEnabled");
     return config;
   }
 

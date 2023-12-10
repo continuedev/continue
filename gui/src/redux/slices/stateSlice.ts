@@ -97,9 +97,15 @@ export const stateSlice = createSlice({
   reducers: {
     setConfig: (state, { payload }: { payload: SerializedContinueConfig }) => {
       const config = loadSerializedConfig(payload);
+      const defaultModelTitle = config.models.find(
+        (model) => model.title === state.defaultModelTitle
+      )
+        ? state.defaultModelTitle
+        : config.models[0].title;
       return {
         ...state,
         config,
+        defaultModelTitle,
       };
     },
     addContextItemsAtIndex: (state, action) => {
