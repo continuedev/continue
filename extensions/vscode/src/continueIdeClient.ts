@@ -24,7 +24,7 @@ const continueVirtualDocumentScheme = "continue";
 class IdeProtocolClient {
   private readonly context: vscode.ExtensionContext;
 
-  constructor(serverUrl: string, context: vscode.ExtensionContext) {
+  constructor(context: vscode.ExtensionContext) {
     this.context = context;
     const windowInfo = {
       window_id: windowId,
@@ -34,7 +34,6 @@ class IdeProtocolClient {
         name: "vscode",
         version: vscode.version,
         remote_name: vscode.env.remoteName,
-        server_url: serverUrl,
       },
     };
 

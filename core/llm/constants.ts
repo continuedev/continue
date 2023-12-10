@@ -17,10 +17,12 @@ const CONTEXT_LENGTH_FOR_MODEL: { [name: string]: number } = {
 };
 
 const TOKEN_BUFFER_FOR_SAFETY = 350;
+const PROXY_URL = "http://localhost:65433";
 
 export {
-  DEFAULT_MAX_TOKENS,
-  DEFAULT_ARGS,
   CONTEXT_LENGTH_FOR_MODEL,
+  DEFAULT_ARGS,
+  DEFAULT_MAX_TOKENS,
+  PROXY_URL,
   TOKEN_BUFFER_FOR_SAFETY,
 };

@@ -18,7 +18,6 @@ function useHistory() {
   }
 
   async function saveSession() {
-    console.log("HIStory", state);
     if (state.history.length === 0) return;
     const sessionInfo: PersistedSessionInfo = {
       history: state.history,

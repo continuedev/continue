@@ -48,6 +48,12 @@ export function getSidebarContent(
     enableScripts: true,
     localResourceRoots: [vscode.Uri.joinPath(extensionUri, "gui")],
     enableCommandUris: true,
+    portMapping: [
+      {
+        webviewPort: 65433,
+        extensionHostPort: 65433,
+      },
+    ],
   };
 
   const nonce = getNonce();

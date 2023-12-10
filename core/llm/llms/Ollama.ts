@@ -1,6 +1,6 @@
 import { LLM, LLMOptions } from "..";
 import { ModelProvider } from "../../config";
-import { ChatMessage, CompletionOptions } from "../types";
+import { CompletionOptions } from "../types";
 
 class Ollama extends LLM {
   static providerName: ModelProvider = "ollama";
