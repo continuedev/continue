@@ -1,6 +1,5 @@
+import { FileEdit, RangeInFile } from "core/types";
 import * as vscode from "vscode";
-import { FileEdit } from "../schema/FileEdit";
-import { RangeInFile } from "../schema/RangeInFile";
 import { windowId } from "./activation/activate";
 import { debugPanelWebview, getSidebarContent } from "./debugPanel";
 import { diffManager } from "./diffs";

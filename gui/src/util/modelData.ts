@@ -2,9 +2,8 @@
 This is the data that populates the model selection page.
 */
 
+import { ModelName, ModelProvider } from "core/config";
 import _ from "lodash";
-import { ModelProvider } from "../schema/ModelProvider";
-import { ModelName } from "../schema/ModelName";
 
 export function updatedObj(old: any, pathToValue: { [key: string]: any }) {
   const newObject = _.cloneDeep(old);

@@ -1,7 +1,7 @@
+import { FileEdit } from "core/types";
 import { getConfigJsonPath } from "core/util/paths";
 import * as io from "socket.io-client";
 import * as vscode from "vscode";
-import { FileEdit } from "../schema/FileEdit";
 import { ideProtocolClient, windowId } from "./activation/activate";
 import { getContinueServerUrl } from "./bridge";
 import historyManager from "./history";

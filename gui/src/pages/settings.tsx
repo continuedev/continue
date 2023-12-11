@@ -1,4 +1,5 @@
 import { ArrowLeftIcon } from "@heroicons/react/24/outline";
+import { ContinueConfig } from "core/config";
 import { useEffect } from "react";
 import { FormProvider, useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
@@ -16,7 +17,6 @@ import {
 import InfoHover from "../components/InfoHover";
 import Loader from "../components/loaders/Loader";
 import { RootStore } from "../redux/store";
-import { ContinueConfig } from "../schema/ContinueConfig";
 import { getFontSize, getPlatform } from "../util";
 import { postToIde } from "../util/ide";
 
@@ -129,8 +129,11 @@ function Settings() {
   useEffect(() => {
     if (!config) return;
 
-    formMethods.setValue("system_message", config.systemMessage);
-    formMethods.setValue("temperature", config.completionOptions?.temperature);
+    formMethods.setValue("systemMessage", config.systemMessage);
+    formMethods.setValue(
+      "completionOptions.temperature",
+      config.completionOptions?.temperature
+    );
   }, [config]);
 
   return (
@@ -176,7 +179,7 @@ function Settings() {
               </h3>
               <TextArea
                 placeholder="Enter a system message (e.g. 'Always respond in German')"
-                {...formMethods.register("system_message")}
+                {...formMethods.register("systemMessage")}
               />
 
               <Hr />
@@ -195,13 +198,15 @@ function Settings() {
                   min="0"
                   max="1"
                   step="0.01"
-                  {...formMethods.register("temperature")}
+                  {...formMethods.register("completionOptions.temperature")}
                 />
                 <p>1</p>
               </div>
               <div className="text-center" style={{ marginTop: "-25px" }}>
                 <p className="text-sm text-gray-500">
-                  {(formMethods.watch("temperature") as number | undefined) ||
+                  {(formMethods.watch("completionOptions.temperature") as
+                    | number
+                    | undefined) ||
                     config.completionOptions?.temperature ||
                     "-"}
                 </p>

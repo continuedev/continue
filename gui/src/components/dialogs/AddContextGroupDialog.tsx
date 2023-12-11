@@ -1,10 +1,10 @@
+import { ContextItem } from "core/llm/types";
 import { useDispatch } from "react-redux";
 import { Button, Input } from "..";
 import {
   setDialogMessage,
   setShowDialog,
 } from "../../redux/slices/uiStateSlice";
-import { ContextItem } from "../../schema/ContextItem";
 
 function AddContextGroupDialog({
   selectedContextItems,

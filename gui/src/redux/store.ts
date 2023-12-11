@@ -1,7 +1,7 @@
 import { combineReducers, configureStore } from "@reduxjs/toolkit";
+import { SlashCommandDescription } from "core/config";
+import { ContextProviderDescription } from "core/context";
 import { ContextItem } from "core/llm/types";
-import { ContextProviderDescription } from "../schema/ContextProviderDescription";
-import { SlashCommandDescription } from "../schema/SlashCommandDescription";
 import configReducer from "./slices/configSlice";
 import miscReducer from "./slices/miscSlice";
 import serverStateReducer from "./slices/serverStateReducer";
