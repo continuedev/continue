@@ -1,89 +1,74 @@
-// import { LLM } from "..";
-// import Anthropic from "../llms/Anthropic";
-// import FreeTrial from "../llms/FreeTrial";
-// import * as dotenv from "dotenv";
-// import { CompletionOptions } from "../types";
-// import OpenAI from "../llms/OpenAI";
-// import Replicate from "../llms/Replicate";
-// import LMStudio from "../llms/LMStudio";
-// import Ollama from "../llms/Ollama";
-// import {
-//   HuggingFaceInferenceAPI,
-//   HuggingFaceTGI,
-//   LlamaCpp,
-//   TextGenWebUI,
-//   Together,
-// } from "../llms";
+import * as dotenv from "dotenv";
+import { LLM } from "..";
+import Anthropic from "../llms/Anthropic";
+import { CompletionOptions } from "../types";
 
-// jest.setTimeout(100_000);
+jest.setTimeout(100_000);
 
-// dotenv.config();
+dotenv.config();
 
-// const COMPLETION_OPTIONS: Partial<CompletionOptions> = {
-//   temperature: 0.5,
-//   topP: 1,
-//   topK: 40,
-//   presencePenalty: 0,
-//   frequencyPenalty: 0,
-//   stop: ["\n"],
-//   maxTokens: 5,
-// };
+const COMPLETION_OPTIONS: Partial<CompletionOptions> = {
+  temperature: 0.5,
+  topP: 1,
+  topK: 40,
+  presencePenalty: 0,
+  frequencyPenalty: 0,
+  stop: ["\n"],
+  maxTokens: 5,
+};
 
-// function testLLM(llm: LLM) {
-//   beforeAll(() => {
-//     llm.completionOptions = { ...llm.completionOptions, ...COMPLETION_OPTIONS };
-//   });
+function testLLM(llm: LLM) {
+  beforeAll(() => {
+    llm.completionOptions = { ...llm.completionOptions, ...COMPLETION_OPTIONS };
+  });
 
-//   describe(llm.providerName, () => {
-//     test("Stream Chat works", async () => {
-//       let total = "";
-//       for await (const chunk of llm.streamChat([
-//         { role: "user", content: "Hello" },
-//       ])) {
-//         total += chunk.content;
-//       }
+  describe(llm.providerName, () => {
+    test("Stream Chat works", async () => {
+      let total = "";
+      for await (const chunk of llm.streamChat([
+        { role: "user", content: "Hello" },
+      ])) {
+        total += chunk.content;
+      }
 
-//       expect(total.length).toBeGreaterThan(0);
-//       console.log(total);
-//       return;
-//     });
+      expect(total.length).toBeGreaterThan(0);
+      console.log(total);
+      return;
+    });
 
-//     test("Stream Complete works", async () => {
-//       let total = "";
-//       for await (const chunk of llm.streamComplete("Hello")) {
-//         total += chunk;
-//       }
+    test("Stream Complete works", async () => {
+      let total = "";
+      for await (const chunk of llm.streamComplete("Hello")) {
+        total += chunk;
+      }
 
-//       expect(total.length).toBeGreaterThan(0);
-//       console.log(total);
-//       return;
-//     });
+      expect(total.length).toBeGreaterThan(0);
+      console.log(total);
+      return;
+    });
 
-//     test("Complete works", async () => {
-//       const completion = await llm.complete("Hello");
+    test("Complete works", async () => {
+      const completion = await llm.complete("Hello");
 
-//       expect(completion.length).toBeGreaterThan(0);
-//       console.log(completion);
-//       return;
-//     });
-//   });
-// }
+      expect(completion.length).toBeGreaterThan(0);
+      console.log(completion);
+      return;
+    });
+  });
+}
 
 describe("LLM", () => {
-  test("works", () => {
-    expect(true).toBe(true);
-  });
   // testLLM(
   //   new FreeTrial({
   //     model: "gpt-3.5-turbo",
   //   })
   // );
-  // testLLM(
-  //   new Anthropic({
-  //     model: "claude-2",
-  //     apiKey: process.env.ANTHROPIC_API_KEY,
-  //   })
-  // );
+  testLLM(
+    new Anthropic({
+      model: "claude-2",
+      apiKey: process.env.ANTHROPIC_API_KEY,
+    })
+  );
   // testLLM(
   //   new OpenAI({ apiKey: process.env.OPENAI_API_KEY, model: "gpt-3.5-turbo" })
   // );

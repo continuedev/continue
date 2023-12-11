@@ -1,4 +1,4 @@
-import { devDataPath } from "core/util/environmentSetup";
+import { devDataPath } from "core/util/paths";
 import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";

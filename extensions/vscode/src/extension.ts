@@ -2,8 +2,8 @@
  * This is the entry point for the extension.
  */
 
-import { getExtensionVersion } from "core/util/environmentSetup";
 import * as vscode from "vscode";
+import { getExtensionVersion } from "./util/util";
 import { getUniqueId } from "./util/vscode";
 
 let client: any = undefined;

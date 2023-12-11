@@ -1,8 +1,5 @@
 import { PersistedSessionInfo, SessionInfo } from "core/types";
-import {
-  getSessionFilePath,
-  getSessionsListPath,
-} from "core/util/environmentSetup";
+import { getSessionFilePath, getSessionsListPath } from "core/util/paths";
 import * as fs from "fs";
 
 class HistoryManager {

@@ -336,6 +336,7 @@
     "@typescript-eslint/eslint-plugin": "^5.45.0",
     "@typescript-eslint/parser": "^5.45.0",
     "@vscode/test-electron": "^2.2.0",
+    "@vscode/vsce": "^2.22.0",
     "esbuild": "^0.17.19",
     "eslint": "^8.28.0",
     "glob": "^8.0.3",
