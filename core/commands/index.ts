@@ -10,6 +10,7 @@ export interface ContinueSDK {
   history: ChatMessage[];
   input: string;
   options?: any;
+  contextItems: ContextItem[];
 }
 
 export interface SlashCommand {

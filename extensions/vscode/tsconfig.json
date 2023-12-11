@@ -14,5 +14,5 @@
     "esModuleInterop": true /* Enables emit interoperability between CommonJS and ES Modules via creation of namespace objects for all imports. Implies 'allowSyntheticDefaultImports'. */,
     "resolveJsonModule": true /* Enable importing .json files */
   },
-  "include": ["src/**/*"]
+  "include": ["src/**/*", "../../core/**/*.ts"]
 }

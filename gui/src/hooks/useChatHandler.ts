@@ -77,6 +77,7 @@ function useChatHandler(dispatch: Dispatch) {
       addContextItem: (item) => {
         dispatch(addContextItems([item]));
       },
+      contextItems,
       options: {}, // TODO: pass options to slash command
     };
 

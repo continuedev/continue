@@ -1,12 +1,9 @@
 import { SerializedContinueConfig } from "core/config/index";
 import { IDE } from "core/ide/types";
+import { getConfigJsonPath, getContinueGlobalPath } from "core/util/paths";
 import * as fs from "fs";
 import * as vscode from "vscode";
 import { ideProtocolClient } from "./activation/activate";
-import {
-  getConfigJsonPath,
-  getContinueGlobalPath,
-} from "./activation/environmentSetup";
 
 class VsCodeIde implements IDE {
   async getSerializedConfig(): Promise<SerializedContinueConfig> {
@@ -66,6 +63,20 @@ class VsCodeIde implements IDE {
 
   async runCommand(command: string): Promise<void> {
     await ideProtocolClient.runCommand(command);
+  }
+
+  async saveFile(filepath: string): Promise<void> {
+    await ideProtocolClient.saveFile(filepath);
+  }
+  async readFile(filepath: string): Promise<string> {
+    return await ideProtocolClient.readFile(filepath);
+  }
+  async showDiff(
+    filepath: string,
+    newContents: string,
+    stepIndex: number
+  ): Promise<void> {
+    await ideProtocolClient.showDiff(filepath, newContents, stepIndex);
   }
 }
 

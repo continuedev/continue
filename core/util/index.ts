@@ -1,3 +1,6 @@
+import Mustache from "mustache";
+import { ChatMessage } from "../llm/types";
+
 export function removeQuotesAndEscapes(output: string): string {
   output = output.trim();
 
@@ -65,4 +68,31 @@ export function dedentAndGetCommonWhitespace(s: string): [string, string] {
   }
 
   return [lines.map((x) => x.replace(lcp, "")).join("\n"), lcp];
+}
+
+type PromptTemplate =
+  | string
+  | ((
+      history: ChatMessage[],
+      otherData: Record<string, string>
+    ) => string | ChatMessage[]);
+
+export function renderPromptTemplate(
+  template: PromptTemplate,
+  history: ChatMessage[],
+  otherData: Record<string, string>
+): string | ChatMessage[] {
+  if (typeof template === "string") {
+    let data: any = {
+      history: history,
+      ...otherData,
+    };
+    if (history.length > 0 && history[0].role == "system") {
+      data["system_message"] = history.shift()!.content;
+    }
+
+    return Mustache.render(template, data);
+  } else {
+    return template(history, otherData);
+  }
 }

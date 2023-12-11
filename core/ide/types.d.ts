@@ -11,6 +11,13 @@ interface IDE {
   getContinueDir(): Promise<string>;
   openFile(path: string): Promise<void>;
   runCommand(command: string): Promise<void>;
+  saveFile(filepath: string): Promise<void>;
+  readFile(filepath: string): Promise<string>;
+  showDiff(
+    filepath: string,
+    newContents: string,
+    stepIndex: number
+  ): Promise<void>;
 }
 
 export { IDE };

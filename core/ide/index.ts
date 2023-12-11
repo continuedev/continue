@@ -50,4 +50,18 @@ export class ExtensionIde implements IDE {
   async runCommand(command: string): Promise<void> {
     await r("runCommand", { command });
   }
+
+  async saveFile(filepath: string): Promise<void> {
+    await r("saveFile", { filepath });
+  }
+  async readFile(filepath: string): Promise<string> {
+    return await r("readFile", { filepath });
+  }
+  async showDiff(
+    filepath: string,
+    newContents: string,
+    stepIndex: number
+  ): Promise<void> {
+    await r("showDiff", { filepath, newContents, stepIndex });
+  }
 }

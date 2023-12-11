@@ -1,6 +1,16 @@
 import { SlashCommand } from "..";
 import { LLM } from "../../llm";
-import { dedentAndGetCommonWhitespace } from "../../util";
+import { ContextItem } from "../../llm/types";
+import { dedentAndGetCommonWhitespace, renderPromptTemplate } from "../../util";
+
+interface RangeInFileWithContents {
+  filepath: string;
+  range: {
+    start: { line: number; character: number };
+    end: { line: number; character: number };
+  };
+  contents: string;
+}
 
 const PROMPT = `Take the file prefix and suffix into account, but only rewrite the code_to_edit as specified in the user_request. The code you write in modified_code_to_edit will replace the code between the code_to_edit tags. Do NOT preface your answer or write anything other than code. The </modified_code_to_edit> tag should be written to indicate the end of the modified code section. Do not ever use nested tags.
 
@@ -120,9 +130,8 @@ async function getPromptParts(
       fileSuffix = "\n" + fileSuffix;
       rif.contents = rif.contents.substring(0, rif.contents.length - 1);
     }
-
-    return { filePrefix, fileSuffix, contents: rif.contents, maxTokens };
   }
+  return { filePrefix, fileSuffix, contents: rif.contents, maxTokens };
 }
 
 function compilePrompt(
@@ -198,16 +207,56 @@ function lineToBeIgnored(line: string, isFirstLine: boolean = false): boolean {
   );
 }
 
+function contextItemToRangeInFileWithContents(
+  item: ContextItem
+): RangeInFileWithContents {
+  const lines = item.name.split("(")[1].split(")")[0].split("-");
+
+  const rif: RangeInFileWithContents = {
+    filepath: item.description,
+    range: {
+      start: {
+        line: parseInt(lines[0]) - 1,
+        character: 0,
+      },
+      end: {
+        line: parseInt(lines[1]),
+        character: 0,
+      },
+    },
+    contents: item.content,
+  };
+
+  return rif;
+}
+
 const EditSlashCommand: SlashCommand = {
   name: "edit",
   description: "Edit highlighted code",
-  run: async function* ({ ide, llm, input, history }) {
+  run: async function* ({ ide, llm, input, history, contextItems }) {
+    const contextItemToEdit = contextItems.find(
+      (item: ContextItem) => item.editing && item.id.providerTitle === "file"
+    );
+    if (!contextItemToEdit) {
+      yield "Highlight the code that you want to edit first";
+      return;
+    }
+    const rif: RangeInFileWithContents =
+      contextItemToRangeInFileWithContents(contextItemToEdit);
+
     await ide.saveFile(rif.filepath);
     let fullFileContents = await ide.readFile(rif.filepath);
 
-    const { filePrefix, contents, fileSuffix, maxTokens } =
-      await getPromptParts(rif, fullFileContents, llm, input);
-    const [contents, commonWhitespace] = dedentAndGetCommonWhitespace(contents);
+    let { filePrefix, contents, fileSuffix, maxTokens } = await getPromptParts(
+      rif,
+      fullFileContents,
+      llm,
+      input
+    );
+    const [dedentedContents, commonWhitespace] =
+      dedentAndGetCommonWhitespace(contents);
+    contents = dedentedContents;
+
     let prompt = compilePrompt(filePrefix, contents, fileSuffix, input);
     let fullFileContentsLines = fullFileContents.split("\n");
 
@@ -381,173 +430,171 @@ const EditSlashCommand: SlashCommand = {
       currentBlockLines.push(line);
     }
 
+    let messages = history;
     let linesOfPrefixCopied = 0;
-let lines = [];
-let unfinishedLine = "";
-let completionLinesCovered = 0;
-let repeatingFileSuffix = false;
-let lineBelowHighlightedRange = fileSuffix.trim().split("\n")[0];
+    let lines = [];
+    let unfinishedLine = "";
+    let completionLinesCovered = 0;
+    let repeatingFileSuffix = false;
+    let lineBelowHighlightedRange = fileSuffix.trim().split("\n")[0];
 
-// Use custom templates defined by the model
-const template = llm.promptTemplates?.["edit"];
-if (template) {
-    let rendered = renderPromptTemplate(
-        typeof template === 'string' ? template : template.prompt,
+    // Use custom templates defined by the model
+    const template = llm.promptTemplates?.["edit"];
+    let generator: AsyncGenerator<string>;
+    if (template) {
+      let rendered = renderPromptTemplate(
+        template,
+        // typeof template === 'string' ? template : template.prompt,
         messages.slice(0, messages.length - 1),
         {
-            "codeToEdit": rif.contents,
-            "userInput": input,
-            "filePrefix": filePrefix,
-            "fileSuffix": fileSuffix,
-            "systemMessage": llm.systemMessage
-                || "",
-            // "contextItems": (await sdk.getContextItemChatMessages()).map(x => x.content || "").join("\n\n"),
-        },
-    );
-    if (typeof rendered === 'string') {
+          codeToEdit: rif.contents,
+          userInput: input,
+          filePrefix: filePrefix,
+          fileSuffix: fileSuffix,
+          systemMessage: llm.systemMessage || "",
+          // "contextItems": (await sdk.getContextItemChatMessages()).map(x => x.content || "").join("\n\n"),
+        }
+      );
+      if (typeof rendered === "string") {
         messages = [
-            {
-                role: "user",
-                content: rendered,
-
-            }
+          {
+            role: "user",
+            content: rendered,
+          },
         ];
-    } else {
+      } else {
         messages = rendered;
+      }
+
+      generator = llm.streamComplete(rendered as string, {
+        maxTokens: Math.min(maxTokens, Math.floor(llm.contextLength / 2), 4096),
+      });
+    } else {
+      async function* gen() {
+        for await (let chunk of llm.streamChat(messages, {
+          temperature: 0.5, // TODO
+          maxTokens: Math.min(
+            maxTokens,
+            Math.floor(llm.contextLength / 2),
+            4096
+          ),
+        })) {
+          yield chunk.content;
+        }
+      }
+
+      generator = gen();
     }
 
-    let params: {[k: string]: any} = {"prompt": rendered};
-    if (template.constructor.name === "PromptTemplate") {
-        params = {...params, ...template.dict({exclude: {"prompt"}})};  // type: ignore
+    for await (const chunk of generator) {
+      yield chunk;
     }
 
-    params = {
-        ...params,
-        {"maxTokens": Math.min(maxTokens, Math.floor(llm.contextLength / 2), 4096)}
-    };
-    let generator = llm.streamComplete(params);
+    // try {
+    //     let lastTaskTime = Date.now();
+    //     for await (let chunk of generator) {
+    //         yield new SetStep(
+    //             false
+    //         );  // Doing this so that there are breakpoints for cancellation
 
-} else {
+    //         // Stop early if it is repeating the fileSuffix or the step was deleted
+    //         if (repeatingFileSuffix) {
+    //             break;
+    //         }
 
-    async function* gen() {
-        for await (let chunk of llm.streamChat(
-            messages,
-            sdk.config.completionOptions.temperature,
-            Math.min(maxTokens, Math.floor(modelToUse.contextLength / 2), 4096),
-        )) {
-            yield chunk.content;
-        }
-    }
+    //         // Accumulate lines
+    //         let chunkLines = chunk.split("\n");
+    //         chunkLines[0] = unfinishedLine + chunkLines[0];
+    //         if (chunk.endsWith("\n")) {
+    //             unfinishedLine = "";
+    //             chunkLines.pop();  // because this will be an empty string
+    //         } else {
+    //             unfinishedLine = chunkLines.pop();
+    //         }
 
-    let generator = gen();
-}
+    //         // Deal with newly accumulated lines
+    //         for (let i = 0; i < chunkLines.length; i++) {
+    //             // Trailing whitespace doesn't matter
+    //             chunkLines[i] = chunkLines[i].trimEnd();
+    //             chunkLines[i] = commonWhitespace + chunkLines[i];
 
+    //             // Lines that should signify the end of generation
+    //             if (this.isEndLine(chunkLines[i])) {
+    //                 break;
+    //             }
+    //             // Lines that should be ignored, like the <> tags
+    //             else if (this.lineToBeIgnored(
+    //                 chunkLines[i], completionLinesCovered === 0
+    //             )) {
+    //                 continue;  // noice
+    //             }
+    //             // Check if we are currently just copying the prefix
+    //             else if (
+    //                 (linesOfPrefixCopied > 0 || completionLinesCovered === 0)
+    //                 && linesOfPrefixCopied < filePrefix.splitlines().length
+    //                 && chunkLines[i]
+    //                 === fullFileContentsLines[linesOfPrefixCopied]
+    //             ) {
+    //                 // This is a sketchy way of stopping it from repeating the filePrefix. Is a bug if output happens to have a matching line
+    //                 linesOfPrefixCopied += 1;
+    //                 continue;  // also nice
+    //             }
+    //             // Because really short lines might be expected to be repeated, this is only a !heuristic!
+    //             // Stop when it starts copying the fileSuffix
+    //             else if (
+    //                 chunkLines[i].trim() === lineBelowHighlightedRange.trim()
+    //                 && chunkLines[i].trim().length > 4
+    //                 && !(
+    //                     originalLinesBelowPreviousBlocks.length > 0
+    //                     && chunkLines[i].trim()
+    //                     === originalLinesBelowPreviousBlocks[0].trim()
+    //                 )
+    //             ) {
+    //                 repeatingFileSuffix = true;
+    //                 break;
+    //             }
 
+    //             lines.push(chunkLines[i]);
+    //             completionLinesCovered += 1;
+    //             currentLineInFile += 1
 
-try {
-    let lastTaskTime = Date.now();
-    for await (let chunk of generator) {
-        yield new SetStep(
-            false
-        );  // Doing this so that there are breakpoints for cancellation
+    //         }
 
-        // Stop early if it is repeating the fileSuffix or the step was deleted
-        if (repeatingFileSuffix) {
-            break;
-        }
+    //         // Debounce the diff updates, last in only out for each period
+    //         if (lastTaskTime === null || Date.now() - lastTaskTime > 150) {
+    //             lastTaskTime = Date.now();
+    //             await sendDiffUpdate(
+    //                 lines
+    //                 .concat(
+    //                     [unfinishedLine.startsWith("<")
+    //                         ? commonWhitespace
+    //                         : (commonWhitespace + unfinishedLine)]
+    //                 ),
+    //                 sdk,
+    //             );
+    //         }
 
-        // Accumulate lines
-        let chunkLines = chunk.split("\n");
-        chunkLines[0] = unfinishedLine + chunkLines[0];
-        if (chunk.endsWith("\n")) {
-            unfinishedLine = "";
-            chunkLines.pop();  // because this will be an empty string
-        } else {
-            unfinishedLine = chunkLines.pop();
-        }
+    //     } finally {
+    //         await generator.return();
+    //     }
 
-        // Deal with newly accumulated lines
-        for (let i = 0; i < chunkLines.length; i++) {
-            // Trailing whitespace doesn't matter
-            chunkLines[i] = chunkLines[i].trimEnd();
-            chunkLines[i] = commonWhitespace + chunkLines[i];
+    //     // Add the unfinished line
+    //     if (
+    //         unfinishedLine !== ""
+    //         && !this.lineToBeIgnored(
+    //             unfinishedLine, completionLinesCovered === 0
+    //         )
+    //         && !this.isEndLine(unfinishedLine)
+    //     ) {
+    //         unfinishedLine = commonWhitespace + unfinishedLine;
+    //         lines.push(unfinishedLine);
+    //         await handleGeneratedLine(unfinishedLine);
+    //         completionLinesCovered += 1;
+    //         currentLineInFile += 1;
+    //     }
 
-            // Lines that should signify the end of generation
-            if (this.isEndLine(chunkLines[i])) {
-                break;
-            }
-            // Lines that should be ignored, like the <> tags
-            else if (this.lineToBeIgnored(
-                chunkLines[i], completionLinesCovered === 0
-            )) {
-                continue;  // noice
-            }
-            // Check if we are currently just copying the prefix
-            else if (
-                (linesOfPrefixCopied > 0 || completionLinesCovered === 0)
-                && linesOfPrefixCopied < filePrefix.splitlines().length
-                && chunkLines[i]
-                === fullFileContentsLines[linesOfPrefixCopied]
-            ) {
-                // This is a sketchy way of stopping it from repeating the filePrefix. Is a bug if output happens to have a matching line
-                linesOfPrefixCopied += 1;
-                continue;  // also nice
-            }
-            // Because really short lines might be expected to be repeated, this is only a !heuristic!
-            // Stop when it starts copying the fileSuffix
-            else if (
-                chunkLines[i].trim() === lineBelowHighlightedRange.trim()
-                && chunkLines[i].trim().length > 4
-                && !(
-                    originalLinesBelowPreviousBlocks.length > 0
-                    && chunkLines[i].trim()
-                    === originalLinesBelowPreviousBlocks[0].trim()
-                )
-            ) {
-                repeatingFileSuffix = true;
-                break;
-            }
-
-            lines.push(chunkLines[i]);
-            completionLinesCovered += 1;
-            currentLineInFile += 1
-
-        }
-
-        // Debounce the diff updates, last in only out for each period
-        if (lastTaskTime === null || Date.now() - lastTaskTime > 150) {
-            lastTaskTime = Date.now();
-            await sendDiffUpdate(
-                lines
-                .concat(
-                    [unfinishedLine.startsWith("<")
-                        ? commonWhitespace
-                        : (commonWhitespace + unfinishedLine)]
-                ),
-                sdk,
-            );
-        }
-
-    } finally {
-        await generator.return();
-    }
-
-    // Add the unfinished line
-    if (
-        unfinishedLine !== ""
-        && !this.lineToBeIgnored(
-            unfinishedLine, completionLinesCovered === 0
-        )
-        && !this.isEndLine(unfinishedLine)
-    ) {
-        unfinishedLine = commonWhitespace + unfinishedLine;
-        lines.push(unfinishedLine);
-        await handleGeneratedLine(unfinishedLine);
-        completionLinesCovered += 1;
-        currentLineInFile += 1;
-    }
-
-    await sendDiffUpdate(lines, sdk, true);
+    //     await sendDiffUpdate(lines, sdk, true);
+    //   },
   },
 };
 

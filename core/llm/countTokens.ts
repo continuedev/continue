@@ -6,8 +6,6 @@ import {
 import { TOKEN_BUFFER_FOR_SAFETY } from "./constants";
 import { ChatMessage } from "./types";
 
-// TODO: chevron and posthog
-
 function renderTemplatedString(template: string): string {
   // TODO
   return template;

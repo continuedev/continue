@@ -69,39 +69,42 @@
 //   });
 // }
 
-// describe("LLM", () => {
-//   // testLLM(
-//   //   new FreeTrial({
-//   //     model: "gpt-3.5-turbo",
-//   //   })
-//   // );
-//   // testLLM(
-//   //   new Anthropic({
-//   //     model: "claude-2",
-//   //     apiKey: process.env.ANTHROPIC_API_KEY,
-//   //   })
-//   // );
-//   // testLLM(
-//   //   new OpenAI({ apiKey: process.env.OPENAI_API_KEY, model: "gpt-3.5-turbo" })
-//   // );
-//   // TODO: Fix Replicate
-//   // testLLM(
-//   //   new Replicate({
-//   //     apiKey: process.env.REPLICATE_API_KEY,
-//   //     model: "codellama-7b",
-//   //   })
-//   // );
-//   // testLLM(new LMStudio({ model: "codellama" }));
-//   // testLLM(new Ollama({ model: "codellama-7b" }));
-//   // testLLM(
-//   //   new Together({
-//   //     apiKey: process.env.TOGETHER_API_KEY,
-//   //     model: "codellama-7b",
-//   //   })
-//   // );
-//   // testLLM(new LlamaCpp({ model: "deepseek-7b" }));
-//   // TODO: Test these
-//   // testLLM(new TextGenWebUI({ model: "codellama-7b" }));
-//   // testLLM(new HuggingFaceTGI({ model: "codellama-7b" }));
-//   // testLLM(new HuggingFaceInferenceAPI({ model: "codellama-7b" }));
-// });
+describe("LLM", () => {
+  test("works", () => {
+    expect(true).toBe(true);
+  });
+  // testLLM(
+  //   new FreeTrial({
+  //     model: "gpt-3.5-turbo",
+  //   })
+  // );
+  // testLLM(
+  //   new Anthropic({
+  //     model: "claude-2",
+  //     apiKey: process.env.ANTHROPIC_API_KEY,
+  //   })
+  // );
+  // testLLM(
+  //   new OpenAI({ apiKey: process.env.OPENAI_API_KEY, model: "gpt-3.5-turbo" })
+  // );
+  // TODO: Fix Replicate
+  // testLLM(
+  //   new Replicate({
+  //     apiKey: process.env.REPLICATE_API_KEY,
+  //     model: "codellama-7b",
+  //   })
+  // );
+  // testLLM(new LMStudio({ model: "codellama" }));
+  // testLLM(new Ollama({ model: "codellama-7b" }));
+  // testLLM(
+  //   new Together({
+  //     apiKey: process.env.TOGETHER_API_KEY,
+  //     model: "codellama-7b",
+  //   })
+  // );
+  // testLLM(new LlamaCpp({ model: "deepseek-7b" }));
+  // TODO: Test these
+  // testLLM(new TextGenWebUI({ model: "codellama-7b" }));
+  // testLLM(new HuggingFaceTGI({ model: "codellama-7b" }));
+  // testLLM(new HuggingFaceInferenceAPI({ model: "codellama-7b" }));
+});

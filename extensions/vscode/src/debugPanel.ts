@@ -1,8 +1,8 @@
+import { getConfigJsonPath } from "core/util/paths";
 import * as io from "socket.io-client";
 import * as vscode from "vscode";
 import { FileEdit } from "../schema/FileEdit";
 import { ideProtocolClient, windowId } from "./activation/activate";
-import { getConfigJsonPath } from "./activation/environmentSetup";
 import { getContinueServerUrl } from "./bridge";
 import historyManager from "./history";
 import VsCodeIde from "./ideProtocol";
@@ -304,6 +304,24 @@ export function getSidebarContent(
       }
       case "loadSession": {
         respond(historyManager.load(data.message));
+        break;
+      }
+      case "saveFile": {
+        respond(await ide.saveFile(data.message.filepath));
+        break;
+      }
+      case "readFile": {
+        respond(await ide.readFile(data.message.filepath));
+        break;
+      }
+      case "showDiff": {
+        respond(
+          await ide.showDiff(
+            data.message.filepath,
+            data.message.newContents,
+            data.message.stepIndex
+          )
+        );
         break;
       }
     }

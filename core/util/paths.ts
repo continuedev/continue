@@ -1,7 +1,6 @@
 import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
-import * as vscode from "vscode";
 
 export function getContinueGlobalPath(): string {
   // This is ~/.continue on mac/linux
@@ -39,9 +38,4 @@ export function devDataPath(): string {
     fs.mkdirSync(sPath);
   }
   return sPath;
-}
-
-export function getExtensionVersion() {
-  const extension = vscode.extensions.getExtension("continue.continue");
-  return extension?.packageJSON.version || "";
 }
