@@ -52,7 +52,8 @@ function useSetup(dispatch: Dispatch<any>) {
         case "serverStatus":
           dispatch(setServerStatusMessage(event.data.message));
           break;
-        case "stopSession":
+        case "setInactive":
+          dispatch(setInactive());
           break;
         case "configUpdate":
           dispatch(setConfig(event.data.config));

@@ -16,7 +16,7 @@ export interface ContinueSDK {
 export interface SlashCommand {
   name: string;
   description: string;
-  run: (sdk: ContinueSDK) => AsyncGenerator<string>;
+  run: (sdk: ContinueSDK) => AsyncGenerator<string | undefined>;
 }
 
 export function slashFromCustomCommand(

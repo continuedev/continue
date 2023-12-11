@@ -1606,6 +1606,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
                         textAlign: "right",
                       }}
                       hidden={downshiftProps.highlightedIndex !== index}
+                      className="whitespace-nowrap overflow-hidden overflow-ellipsis ml-2"
                     >
                       {item.description}
                     </span>

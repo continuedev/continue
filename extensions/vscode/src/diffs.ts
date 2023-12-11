@@ -296,7 +296,7 @@ class DiffManager {
     }
 
     // Stop the step at step_index in case it is still streaming
-    debugPanelWebview?.postMessage({ type: "stopSession" });
+    debugPanelWebview?.postMessage({ type: "setInactive" });
 
     vscode.workspace.textDocuments
       .find((doc) => doc.uri.fsPath === newFilepath)

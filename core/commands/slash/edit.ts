@@ -497,6 +497,9 @@ const EditSlashCommand: SlashCommand = {
         break;
       }
 
+      // Allow stopping breakpoints
+      yield undefined;
+
       // Accumulate lines
       let chunkLines = chunk.split("\n");
       chunkLines[0] = unfinishedLine + chunkLines[0];

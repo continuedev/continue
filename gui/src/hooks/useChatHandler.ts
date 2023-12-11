@@ -64,6 +64,7 @@ function useChatHandler(dispatch: Dispatch) {
     // Convert to actual slash command object with runnable function
     return [slashCommand, input];
   };
+
   async function _streamSlashCommand(
     messages: ChatMessage[],
     slashCommand: SlashCommand,
@@ -81,11 +82,15 @@ function useChatHandler(dispatch: Dispatch) {
       options: {}, // TODO: pass options to slash command
     };
 
+    // TODO: if the model returned fast enough it would immediately break
+    // Ideally you aren't trusting that results of dispatch show up before the first yield
     for await (const update of slashCommand.run(sdk)) {
-      if (!active) {
+      if (!activeRef.current) {
         break;
       }
-      dispatch(streamUpdate(update));
+      if (typeof update === "string") {
+        dispatch(streamUpdate(update));
+      }
     }
   }
 
