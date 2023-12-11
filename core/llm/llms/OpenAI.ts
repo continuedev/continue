@@ -1,7 +1,7 @@
-import { LLM, LLMOptions } from "..";
-import { ModelProvider } from "../../config";
 import OpenAIClient from "openai";
 import { ChatCompletionCreateParamsBase } from "openai/resources/chat/completions";
+import { LLM, LLMOptions } from "..";
+import { ModelProvider } from "../../config";
 import { ChatMessage, CompletionOptions } from "../types";
 class OpenAI extends LLM {
   static providerName: ModelProvider = "openai";

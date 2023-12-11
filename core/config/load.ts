@@ -6,6 +6,7 @@ import {
 } from "../commands";
 import { ContextProvider } from "../context";
 import { contextProviderClassFromName } from "../context/providers";
+import FileContextProvider from "../context/providers/FileContextProvider";
 import { LLM } from "../llm";
 import { llmFromDescription } from "../llm/llms";
 
@@ -30,7 +31,7 @@ function loadSerializedConfig(
     slashCommands.push(slashFromCustomCommand(command));
   }
 
-  const contextProviders: ContextProvider[] = [];
+  const contextProviders: ContextProvider[] = [new FileContextProvider({})];
   for (const provider of initial.contextProviders || []) {
     const cls = contextProviderClassFromName(provider.name) as any;
     if (!cls) {

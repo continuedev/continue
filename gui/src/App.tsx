@@ -1,17 +1,20 @@
-import GUI from "./pages/gui";
-import History from "./pages/history";
-import Help from "./pages/help";
-import Layout from "./components/Layout";
+import { createContext, useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import { RouterProvider, createMemoryRouter } from "react-router-dom";
-import ErrorPage from "./pages/error";
-import SettingsPage from "./pages/settings";
-import Models from "./pages/models";
-import HelpPage from "./pages/help";
-import ModelConfig from "./pages/modelconfig";
+import Layout from "./components/Layout";
 import useSetup from "./hooks/useSetup";
-import MonacoPage from "./pages/monaco";
+import ErrorPage from "./pages/error";
+import GUI from "./pages/gui";
+import { default as Help, default as HelpPage } from "./pages/help";
+import History from "./pages/history";
 import MigrationPage from "./pages/migration";
+import ModelConfig from "./pages/modelconfig";
+import Models from "./pages/models";
+import MonacoPage from "./pages/monaco";
+import SettingsPage from "./pages/settings";
+
+import { ExtensionIde } from "core/ide";
+import MiniSearch from "minisearch";
 
 const router = createMemoryRouter([
   {
@@ -63,12 +66,43 @@ const router = createMemoryRouter([
   },
 ]);
 
+const miniSearch = new MiniSearch({
+  fields: ["id", "basename"],
+  storeFields: ["id", "basename"],
+});
+export const SearchContext = createContext<[MiniSearch, MiniSearchResult[]]>([
+  miniSearch,
+  [],
+]);
+
+export interface MiniSearchResult {
+  id: string;
+  basename: string;
+}
+
 function App() {
   const dispatch = useDispatch();
 
   useSetup(dispatch);
 
-  return <RouterProvider router={router} />;
+  const [firstResults, setFirstResults] = useState<MiniSearchResult[]>([]);
+
+  useEffect(() => {
+    (async () => {
+      const files = await new ExtensionIde().listWorkspaceContents();
+      const results = files.map((filepath) => {
+        return { id: filepath, basename: filepath.split(/[\\/]/).pop() };
+      });
+      miniSearch.addAll(results);
+      setFirstResults(results);
+    })();
+  }, []);
+
+  return (
+    <SearchContext.Provider value={[miniSearch, firstResults]}>
+      <RouterProvider router={router} />;
+    </SearchContext.Provider>
+  );
 }
 
 export default App;

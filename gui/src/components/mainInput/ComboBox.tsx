@@ -21,9 +21,9 @@ import {
 } from "@heroicons/react/24/outline";
 import { ContextItem } from "core/llm/types";
 import { useCombobox } from "downshift";
-import { MeiliSearch } from "meilisearch";
 import React, {
   useCallback,
+  useContext,
   useEffect,
   useImperativeHandle,
   useLayoutEffect,
@@ -39,6 +39,7 @@ import {
   vscBackground,
   vscForeground,
 } from "..";
+import { SearchContext } from "../../App";
 import useContextProviders from "../../hooks/useContextProviders";
 import useHistory from "../../hooks/useHistory";
 import { contextLengthSelector } from "../../redux/selectors/modelSelectors";
@@ -372,21 +373,7 @@ interface ComboBoxProps {
 }
 
 const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
-  const meilisearchUrl = useSelector(
-    (state: RootStore) =>
-      state.serverState.meilisearchUrl || "http://127.0.0.1:7700"
-  );
-
-  const [searchClient, setSearchClient] = useState<MeiliSearch | undefined>(
-    undefined
-  );
-
-  useEffect(() => {
-    const client = new MeiliSearch({
-      host: meilisearchUrl,
-    });
-    setSearchClient(client);
-  }, [meilisearchUrl]);
+  const [miniSearch, firstResults] = useContext(SearchContext);
 
   const dispatch = useDispatch();
   const workspacePaths = (window as any).workspacePaths || [];
@@ -597,25 +584,23 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
     provider: string,
     query: string
   ) => {
-    // Only return context items from the current workspace - the index is currently shared between all sessions
-    const workspaceFilter =
-      workspacePaths && workspacePaths.length > 0
-        ? `workspace_dir IN [ ${workspacePaths
-            .map((path) => `"${path}"`)
-            .join(", ")} ] AND provider_name = '${provider}'`
-        : undefined;
     try {
-      const res = await searchClient?.index(SEARCH_INDEX_NAME).search(query, {
-        filter: workspaceFilter,
+      let res: any = miniSearch.search(query.trim() === "" ? "/" : query, {
+        prefix: true,
+        fuzzy: 3,
       });
+      if (res.length === 0) {
+        res = firstResults;
+      }
       return (
-        res?.hits.map((hit) => {
-          return {
-            title: hit.name,
-            description: hit.description,
+        res?.map((hit) => {
+          const item: ComboBoxItem = {
+            title: hit.basename,
+            description: hit.basename,
             id: hit.id,
-            content: hit.content,
+            content: hit.id,
           };
+          return item;
         }) || []
       );
     } catch (e) {
@@ -784,7 +769,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
       if (!newProvider) {
         if (nestedContextProvider && newItem.id) {
           // Tell server the context item was selected
-          selectContextItem(newItem.id, "");
+          selectContextItem("file", newItem.id);
 
           // Clear the input
           downshiftProps.setInputValue("");
@@ -828,7 +813,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
             !selectedNestedContextProvider?.description.dynamic
           ) {
             downshiftProps.setInputValue(`@${newItem.id} `);
-            setNestedContextProvider(selectedNestedContextProvider);
+            setNestedContextProvider(selectedNestedContextProvider.description);
           } else {
             downshiftProps.setInputValue("");
           }
@@ -844,7 +829,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
         return;
       }
 
-      setNestedContextProvider(newProvider);
+      setNestedContextProvider(newProvider.description);
       downshiftProps.setInputValue(`@${newProvider.description.title} `);
       (event.nativeEvent as any).preventDownshiftDefault = true;
       event.preventDefault();
@@ -1569,7 +1554,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
                   inputRef.current?.focus();
                 }}
               />
-              {nestedContextProvider.display_title} -{" "}
+              {nestedContextProvider.displayTitle} -{" "}
               {nestedContextProvider.description}
             </div>
           )}
