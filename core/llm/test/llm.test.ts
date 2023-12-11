@@ -1,6 +1,6 @@
 import * as dotenv from "dotenv";
 import { LLM } from "..";
-import Anthropic from "../llms/Anthropic";
+import Together from "../llms/Together";
 import { CompletionOptions } from "../types";
 
 jest.setTimeout(100_000);
@@ -13,8 +13,8 @@ const COMPLETION_OPTIONS: Partial<CompletionOptions> = {
   topK: 40,
   presencePenalty: 0,
   frequencyPenalty: 0,
-  stop: ["\n"],
-  maxTokens: 5,
+  // stop: ["\n"],
+  // maxTokens: 5,
 };
 
 function testLLM(llm: LLM) {
@@ -63,12 +63,12 @@ describe("LLM", () => {
   //     model: "gpt-3.5-turbo",
   //   })
   // );
-  testLLM(
-    new Anthropic({
-      model: "claude-2",
-      apiKey: process.env.ANTHROPIC_API_KEY,
-    })
-  );
+  // testLLM(
+  //   new Anthropic({
+  //     model: "claude-2",
+  //     apiKey: process.env.ANTHROPIC_API_KEY,
+  //   })
+  // );
   // testLLM(
   //   new OpenAI({ apiKey: process.env.OPENAI_API_KEY, model: "gpt-3.5-turbo" })
   // );
@@ -79,15 +79,16 @@ describe("LLM", () => {
   //     model: "codellama-7b",
   //   })
   // );
-  // testLLM(new LMStudio({ model: "codellama" }));
+  // testLLM(new LMStudio({ model: "codellama-7b" }));
   // testLLM(new Ollama({ model: "codellama-7b" }));
-  // testLLM(
-  //   new Together({
-  //     apiKey: process.env.TOGETHER_API_KEY,
-  //     model: "codellama-7b",
-  //   })
-  // );
+  testLLM(
+    new Together({
+      apiKey: process.env.TOGETHER_API_KEY,
+      model: "codellama-7b",
+    })
+  );
   // testLLM(new LlamaCpp({ model: "deepseek-7b" }));
+  // testLLM(new Llamafile({ model: "mistral-7b" }));
   // TODO: Test these
   // testLLM(new TextGenWebUI({ model: "codellama-7b" }));
   // testLLM(new HuggingFaceTGI({ model: "codellama-7b" }));

@@ -38,15 +38,22 @@ class LlamaCpp extends LLM {
     });
 
     const reader = resp.body?.getReader();
-    let result = "";
+    let buffer = "";
     while (true && reader) {
       const { done, value } = await reader.read();
       if (done) break;
       const chunk = new TextDecoder().decode(value);
-      result += chunk;
+      buffer += chunk;
+
+      const lines = buffer.split("\n");
+      buffer = lines.pop() ?? "";
+      for (const line of lines) {
+        if (line.trim() === "") continue;
+        yield JSON.parse(line.substring(6))["content"];
+      }
     }
 
-    const lines = result.split("\n");
+    const lines = buffer.split("\n");
     for (const line of lines) {
       if (line.trim() === "") continue;
       yield JSON.parse(line.substring(6))["content"];

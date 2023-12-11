@@ -3,23 +3,7 @@
   // Hover to view descriptions of existing attributes.
   // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
   "version": "0.2.0",
-  "compounds": [
-    {
-      "name": "Server + Extension (VSCode)",
-      "stopAll": true,
-      "configurations": ["Server", "Extension (VSCode)"]
-    },
-    {
-      "name": "Server + Tests (VSCode)",
-      "stopAll": true,
-      "configurations": ["Server", "Tests (VSCode)"]
-    },
-    {
-      "name": "Server + React App",
-      "stopAll": true,
-      "configurations": ["Server", "Vite"]
-    }
-  ],
+  "compounds": [],
   "configurations": [
     {
       "type": "node",
@@ -44,76 +28,6 @@
       // "runtimeArgs": ["--remote-debugging-port=9222"],
       "sourceMaps": true
       // "preLaunchTask": "gui:dev"
-    },
-    {
-      "name": "Pytest",
-      "type": "python",
-      "request": "launch",
-      "program": "server/tests/llm_test.py",
-      "console": "integratedTerminal",
-      "justMyCode": true,
-      "subProcess": true
-    },
-    {
-      "name": "Reference",
-      "type": "python",
-      "request": "launch",
-      "module": "server.continuedev.models.reference.generate",
-      "justMyCode": true
-    },
-    {
-      "name": "Schema",
-      "type": "python",
-      "request": "launch",
-      "module": "continuedev.models.generate_json_schema",
-      "justMyCode": true,
-      "cwd": "${workspaceFolder}/server"
-    },
-    {
-      "name": "Server",
-      "type": "python",
-      "request": "launch",
-      "module": "server.continuedev.__main__",
-      "args": [
-        "--port",
-        "8001"
-        // "--meilisearch-url", "http://localhost:7701"
-      ],
-      "justMyCode": false,
-      "subProcess": false,
-      "timeout": 10000,
-      "env": {
-        "RUST_BACKTRACE": "full"
-      }
-      // Does it need a build task?
-      // What about a watch task? - type errors?
-    },
-    {
-      "name": "Headless",
-      "type": "python",
-      "request": "launch",
-      "module": "server.continuedev.headless",
-      "args": ["--config", "server/continuedev/config.py"],
-      "justMyCode": false,
-      "subProcess": false
-    },
-    {
-      "name": "Index",
-      "type": "python",
-      "request": "launch",
-      "module": "server.continuedev",
-      "args": ["index", "server/continuedev"],
-      "justMyCode": false,
-      "subProcess": false
-    },
-    {
-      "name": "Query",
-      "type": "python",
-      "request": "launch",
-      "module": "server.continuedev",
-      "args": ["search", "--directory", "server/continuedev", "Ollama"],
-      "justMyCode": false,
-      "subProcess": false
     },
     {
       "name": "Extension (VSCode)",

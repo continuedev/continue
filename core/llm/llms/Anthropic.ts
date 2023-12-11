@@ -97,7 +97,9 @@ class Anthropic extends LLM {
       for (const line of lines) {
         if (line.startsWith("data: ")) {
           const result = JSON.parse(line.slice(6));
-          yield result.completion;
+          if (result.completion) {
+            yield result.completion;
+          }
         }
       }
     }

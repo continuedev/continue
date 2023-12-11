@@ -1,6 +1,6 @@
 import { LLM, LLMOptions } from "..";
 import { ModelProvider } from "../../config";
-import { ChatMessage, CompletionOptions } from "../types";
+import { CompletionOptions } from "../types";
 
 class Together extends LLM {
   static providerName: ModelProvider = "together";
@@ -25,9 +25,13 @@ class Together extends LLM {
 
   private _convertArgs(options: CompletionOptions, prompt: string) {
     const finalOptions = {
-      ...options,
       prompt,
       model: this._getModelName(options.model),
+      temperature: options.temperature,
+      top_p: options.topP,
+      top_k: options.topK,
+      max_tokens: options.maxTokens,
+      repetition_penalty: options.frequencyPenalty,
     };
 
     return finalOptions;
@@ -53,10 +57,11 @@ class Together extends LLM {
     if (!reader) {
       return "";
     }
-    let result = await reader.read();
-    let jsonChunk = new TextDecoder().decode(result.value);
-
+    let result: any = { done: false };
+    let jsonChunk = "";
     while (!result.done) {
+      result = await reader.read();
+      jsonChunk = new TextDecoder().decode(result.value);
       if (result.value) {
         if (
           jsonChunk.startsWith(": ping - ") ||
@@ -70,12 +75,13 @@ class Together extends LLM {
         const chunks = jsonChunk.split("\n");
         for (const chunk of chunks) {
           if (chunk.trim() !== "") {
-            let parsedChunk;
-            if (chunk.startsWith("data: ")) {
-              parsedChunk = JSON.parse(chunk.slice(6));
-            } else {
-              parsedChunk = JSON.parse(chunk);
+            let strippedChunk = chunk.startsWith("data: ")
+              ? chunk.slice(6)
+              : chunk;
+            if (strippedChunk === "[DONE]") {
+              continue;
             }
+            let parsedChunk = JSON.parse(strippedChunk);
 
             if ("error" in parsedChunk) {
               throw new Error(parsedChunk.error);
@@ -85,9 +91,6 @@ class Together extends LLM {
           }
         }
       }
-
-      result = await reader.read();
-      jsonChunk = new TextDecoder().decode(result.value);
     }
   }
 }

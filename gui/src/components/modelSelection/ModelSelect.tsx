@@ -222,10 +222,12 @@ function ModelSelect(props: {}) {
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "'" && event.metaKey) {
+        const direction = event.shiftKey ? -1 : 1;
         const currentIndex = options.findIndex(
           (option) => option.value === defaultModel?.title
         );
-        const nextIndex = (currentIndex + 1) % options.length;
+        let nextIndex = (currentIndex + 1 * direction) % options.length;
+        if (nextIndex < 0) nextIndex = options.length - 1;
         dispatch(setDefaultModel(options[nextIndex].value));
       }
     };
