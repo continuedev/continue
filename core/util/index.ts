@@ -36,3 +36,33 @@ export function proxyFetch(url: string, init?: RequestInit): Promise<Response> {
     headers,
   });
 }
+
+export function dedentAndGetCommonWhitespace(s: string): [string, string] {
+  let lines = s.split("\n");
+  if (lines.length === 0) {
+    return ["", ""];
+  }
+
+  // Longest common whitespace prefix
+  let lcp = lines[0].split(lines[0].trim())[0];
+  // Iterate through the lines
+  for (let i = 1; i < lines.length; i++) {
+    // Empty lines are wildcards
+    if (lines[i].trim() === "") {
+      continue; // hey that's us!
+    }
+    // Iterate through the leading whitespace characters of the current line
+    for (let j = 0; j < lcp.length; j++) {
+      // If it doesn't have the same whitespace as lcp, then update lcp
+      if (j >= lines[i].length || lcp[j] != lines[i][j]) {
+        lcp = lcp.slice(0, j);
+        if (lcp === "") {
+          return [s, ""];
+        }
+        break;
+      }
+    }
+  }
+
+  return [lines.map((x) => x.replace(lcp, "")).join("\n"), lcp];
+}

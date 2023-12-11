@@ -1,22 +1,6 @@
 import { SlashCommand } from "..";
 import { removeQuotesAndEscapes } from "../../util";
 
-`
-cmd = await sdk.models.default.complete(
-    dedent(
-        f"""\
-       """
-    )
-)
-
-cmd = remove_quotes_and_escapes(cmd.strip()).replace("\n", "").replace("\r", "")
-
-await sdk.ide.runCommand(cmd)
-
-yield SetStep(description=f"Generated shell command: {cmd}")
-
-`;
-
 const GenerateTerminalCommand: SlashCommand = {
   name: "cmd",
   description: "Generate a shell command",
