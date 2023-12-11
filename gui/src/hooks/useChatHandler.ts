@@ -4,6 +4,7 @@ import { SlashCommand } from "core/commands";
 import { ExtensionIde } from "core/ide";
 import { constructMessages } from "core/llm/constructMessages";
 import { ChatHistory, ChatHistoryItem, ChatMessage } from "core/llm/types";
+import { usePostHog } from "posthog-js/react";
 import { useEffect, useRef } from "react";
 import { useSelector } from "react-redux";
 import { defaultModelSelector } from "../redux/selectors/modelSelectors";
@@ -17,6 +18,8 @@ import {
 import { RootStore } from "../redux/store";
 
 function useChatHandler(dispatch: Dispatch) {
+  const posthog = usePostHog();
+
   const defaultModel = useSelector(defaultModelSelector);
 
   const slashCommands = useSelector(
@@ -86,6 +89,16 @@ function useChatHandler(dispatch: Dispatch) {
   }
 
   async function streamResponse(input: string, index?: number) {
+    posthog.capture("step run", {
+      step_name: "User Input",
+      params: {
+        user_input: input,
+      },
+    });
+    posthog.capture("userInput", {
+      input,
+    });
+
     const message: ChatMessage = {
       role: "user",
       content: input,
