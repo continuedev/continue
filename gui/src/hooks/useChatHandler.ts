@@ -90,16 +90,6 @@ function useChatHandler(dispatch: Dispatch) {
   }
 
   async function streamResponse(input: string, index?: number) {
-    posthog.capture("step run", {
-      step_name: "User Input",
-      params: {
-        user_input: input,
-      },
-    });
-    posthog.capture("userInput", {
-      input,
-    });
-
     const message: ChatMessage = {
       role: "user",
       content: input,
@@ -117,6 +107,16 @@ function useChatHandler(dispatch: Dispatch) {
       newHistory = [...history, historyItem];
       dispatch(submitMessage(message));
     }
+
+    posthog.capture("step run", {
+      step_name: "User Input",
+      params: {
+        user_input: input,
+      },
+    });
+    posthog.capture("userInput", {
+      input,
+    });
 
     const messages = constructMessages(newHistory);
 

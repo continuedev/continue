@@ -1449,8 +1449,8 @@ core-util-is@1.0.2:
   resolved "file:../../core"
   dependencies:
     dotenv "^16.3.1"
+    handlebars "^4.7.8"
     js-tiktoken "^1.0.8"
-    mustache "^4.2.0"
     openai "^4.20.1"
     replicate "^0.23.0"
     uuid "^9.0.1"

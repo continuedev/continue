@@ -108,7 +108,7 @@ function autodetectPromptTemplates(
     editTemplate = alpacaEditPrompt;
   } else if (templateType === "deepseek") {
     editTemplate = deepseekEditPrompt;
-  } else if (templateType !== null) {
+  } else if (templateType) {
     editTemplate = simplestEditPrompt;
   }
 

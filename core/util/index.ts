@@ -1,4 +1,4 @@
-import Mustache from "mustache";
+import Handlebars from "handlebars";
 import { ChatMessage } from "../llm/types";
 
 export function removeQuotesAndEscapes(output: string): string {
@@ -42,7 +42,7 @@ export function proxyFetch(url: string, init?: RequestInit): Promise<Response> {
 
 export function dedentAndGetCommonWhitespace(s: string): [string, string] {
   let lines = s.split("\n");
-  if (lines.length === 0) {
+  if (lines.length === 0 || (lines[0].trim() === "" && lines.length === 1)) {
     return ["", ""];
   }
 
@@ -91,7 +91,8 @@ export function renderPromptTemplate(
       data["system_message"] = history.shift()!.content;
     }
 
-    return Mustache.render(template, data);
+    const compiledTemplate = Handlebars.compile(template);
+    return compiledTemplate(data);
   } else {
     return template(history, otherData);
   }

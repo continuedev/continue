@@ -47,7 +47,7 @@ Raise an error if the key already exists.
 Main task:
 `;
 
-async function getPromptParts(
+export async function getPromptParts(
   rif: RangeInFileWithContents,
   fullFileContents: string,
   model: LLM,
@@ -207,7 +207,7 @@ function lineToBeIgnored(line: string, isFirstLine: boolean = false): boolean {
   );
 }
 
-function contextItemToRangeInFileWithContents(
+export function contextItemToRangeInFileWithContents(
   item: ContextItem
 ): RangeInFileWithContents {
   const lines = item.name.split("(")[1].split(")")[0].split("-");
@@ -235,12 +235,14 @@ const EditSlashCommand: SlashCommand = {
   description: "Edit highlighted code",
   run: async function* ({ ide, llm, input, history, contextItems }) {
     const contextItemToEdit = contextItems.find(
-      (item: ContextItem) => item.editing && item.id.providerTitle === "file"
+      (item: ContextItem) => item.editing && item.id.providerTitle === "code"
     );
+
     if (!contextItemToEdit) {
       yield "Highlight the code that you want to edit first";
       return;
     }
+
     const rif: RangeInFileWithContents =
       contextItemToRangeInFileWithContents(contextItemToEdit);
 
@@ -431,9 +433,11 @@ const EditSlashCommand: SlashCommand = {
     }
 
     let messages = history;
+    messages.push({ role: "user", content: prompt });
+
     let linesOfPrefixCopied = 0;
     let lines = [];
-    let unfinishedLine = "";
+    let unfinishedLine: string = "";
     let completionLinesCovered = 0;
     let repeatingFileSuffix = false;
     let lineBelowHighlightedRange = fileSuffix.trim().split("\n")[0];
@@ -486,115 +490,93 @@ const EditSlashCommand: SlashCommand = {
       generator = gen();
     }
 
-    for await (const chunk of generator) {
-      yield chunk;
+    let lastTaskTime = Date.now();
+    for await (let chunk of generator) {
+      // Stop early if it is repeating the fileSuffix or the step was deleted
+      if (repeatingFileSuffix) {
+        break;
+      }
+
+      // Accumulate lines
+      let chunkLines = chunk.split("\n");
+      chunkLines[0] = unfinishedLine + chunkLines[0];
+      if (chunk.endsWith("\n")) {
+        unfinishedLine = "";
+        chunkLines.pop(); // because this will be an empty string
+      } else {
+        unfinishedLine = chunkLines.pop() || "";
+      }
+
+      // Deal with newly accumulated lines
+      for (let i = 0; i < chunkLines.length; i++) {
+        // Trailing whitespace doesn't matter
+        chunkLines[i] = chunkLines[i].trimEnd();
+        chunkLines[i] = commonWhitespace + chunkLines[i];
+
+        // Lines that should signify the end of generation
+        if (isEndLine(chunkLines[i])) {
+          break;
+        }
+        // Lines that should be ignored, like the <> tags
+        else if (lineToBeIgnored(chunkLines[i], completionLinesCovered === 0)) {
+          continue; // noice
+        }
+        // Check if we are currently just copying the prefix
+        else if (
+          (linesOfPrefixCopied > 0 || completionLinesCovered === 0) &&
+          linesOfPrefixCopied < filePrefix.split("\n").length &&
+          chunkLines[i] === fullFileContentsLines[linesOfPrefixCopied]
+        ) {
+          // This is a sketchy way of stopping it from repeating the filePrefix. Is a bug if output happens to have a matching line
+          linesOfPrefixCopied += 1;
+          continue; // also nice
+        }
+        // Because really short lines might be expected to be repeated, this is only a !heuristic!
+        // Stop when it starts copying the fileSuffix
+        else if (
+          chunkLines[i].trim() === lineBelowHighlightedRange.trim() &&
+          chunkLines[i].trim().length > 4 &&
+          !(
+            originalLinesBelowPreviousBlocks.length > 0 &&
+            chunkLines[i].trim() === originalLinesBelowPreviousBlocks[0].trim()
+          )
+        ) {
+          repeatingFileSuffix = true;
+          break;
+        }
+
+        lines.push(chunkLines[i]);
+        completionLinesCovered += 1;
+        currentLineInFile += 1;
+      }
+
+      // Debounce the diff updates, last in only out for each period
+      if (lastTaskTime === null || Date.now() - lastTaskTime > 150) {
+        lastTaskTime = Date.now();
+        await sendDiffUpdate(
+          lines.concat([
+            unfinishedLine?.startsWith("<")
+              ? commonWhitespace
+              : commonWhitespace + unfinishedLine,
+          ])
+        );
+      }
     }
 
-    // try {
-    //     let lastTaskTime = Date.now();
-    //     for await (let chunk of generator) {
-    //         yield new SetStep(
-    //             false
-    //         );  // Doing this so that there are breakpoints for cancellation
+    // Add the unfinished line
+    if (
+      unfinishedLine !== "" &&
+      !lineToBeIgnored(unfinishedLine, completionLinesCovered === 0) &&
+      !isEndLine(unfinishedLine)
+    ) {
+      unfinishedLine = commonWhitespace + unfinishedLine;
+      lines.push(unfinishedLine);
+      await handleGeneratedLine(unfinishedLine);
+      completionLinesCovered += 1;
+      currentLineInFile += 1;
+    }
 
-    //         // Stop early if it is repeating the fileSuffix or the step was deleted
-    //         if (repeatingFileSuffix) {
-    //             break;
-    //         }
-
-    //         // Accumulate lines
-    //         let chunkLines = chunk.split("\n");
-    //         chunkLines[0] = unfinishedLine + chunkLines[0];
-    //         if (chunk.endsWith("\n")) {
-    //             unfinishedLine = "";
-    //             chunkLines.pop();  // because this will be an empty string
-    //         } else {
-    //             unfinishedLine = chunkLines.pop();
-    //         }
-
-    //         // Deal with newly accumulated lines
-    //         for (let i = 0; i < chunkLines.length; i++) {
-    //             // Trailing whitespace doesn't matter
-    //             chunkLines[i] = chunkLines[i].trimEnd();
-    //             chunkLines[i] = commonWhitespace + chunkLines[i];
-
-    //             // Lines that should signify the end of generation
-    //             if (this.isEndLine(chunkLines[i])) {
-    //                 break;
-    //             }
-    //             // Lines that should be ignored, like the <> tags
-    //             else if (this.lineToBeIgnored(
-    //                 chunkLines[i], completionLinesCovered === 0
-    //             )) {
-    //                 continue;  // noice
-    //             }
-    //             // Check if we are currently just copying the prefix
-    //             else if (
-    //                 (linesOfPrefixCopied > 0 || completionLinesCovered === 0)
-    //                 && linesOfPrefixCopied < filePrefix.splitlines().length
-    //                 && chunkLines[i]
-    //                 === fullFileContentsLines[linesOfPrefixCopied]
-    //             ) {
-    //                 // This is a sketchy way of stopping it from repeating the filePrefix. Is a bug if output happens to have a matching line
-    //                 linesOfPrefixCopied += 1;
-    //                 continue;  // also nice
-    //             }
-    //             // Because really short lines might be expected to be repeated, this is only a !heuristic!
-    //             // Stop when it starts copying the fileSuffix
-    //             else if (
-    //                 chunkLines[i].trim() === lineBelowHighlightedRange.trim()
-    //                 && chunkLines[i].trim().length > 4
-    //                 && !(
-    //                     originalLinesBelowPreviousBlocks.length > 0
-    //                     && chunkLines[i].trim()
-    //                     === originalLinesBelowPreviousBlocks[0].trim()
-    //                 )
-    //             ) {
-    //                 repeatingFileSuffix = true;
-    //                 break;
-    //             }
-
-    //             lines.push(chunkLines[i]);
-    //             completionLinesCovered += 1;
-    //             currentLineInFile += 1
-
-    //         }
-
-    //         // Debounce the diff updates, last in only out for each period
-    //         if (lastTaskTime === null || Date.now() - lastTaskTime > 150) {
-    //             lastTaskTime = Date.now();
-    //             await sendDiffUpdate(
-    //                 lines
-    //                 .concat(
-    //                     [unfinishedLine.startsWith("<")
-    //                         ? commonWhitespace
-    //                         : (commonWhitespace + unfinishedLine)]
-    //                 ),
-    //                 sdk,
-    //             );
-    //         }
-
-    //     } finally {
-    //         await generator.return();
-    //     }
-
-    //     // Add the unfinished line
-    //     if (
-    //         unfinishedLine !== ""
-    //         && !this.lineToBeIgnored(
-    //             unfinishedLine, completionLinesCovered === 0
-    //         )
-    //         && !this.isEndLine(unfinishedLine)
-    //     ) {
-    //         unfinishedLine = commonWhitespace + unfinishedLine;
-    //         lines.push(unfinishedLine);
-    //         await handleGeneratedLine(unfinishedLine);
-    //         completionLinesCovered += 1;
-    //         currentLineInFile += 1;
-    //     }
-
-    //     await sendDiffUpdate(lines, sdk, true);
-    //   },
+    await sendDiffUpdate(lines, true);
   },
 };
 

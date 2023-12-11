@@ -311,7 +311,6 @@
     "esbuild-watch": "npm run esbuild-base -- --sourcemap --watch",
     "tsc": "tsc -p ./",
     "tsc-watch": "tsc -watch -p ./",
-    "typegen": "node scripts/typegen.js",
     "rebuild": "electron-rebuild -v 19.1.8 node-pty",
     "lint": "eslint src --ext ts",
     "build-test": "tsc && node esbuild.test.mjs",
