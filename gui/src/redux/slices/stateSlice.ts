@@ -108,6 +108,9 @@ export const stateSlice = createSlice({
         defaultModelTitle,
       };
     },
+    addLogs: (state, { payload }: { payload: [string, string][] }) => {
+      state.history[state.history.length - 1].promptLogs.push(...payload);
+    },
     addContextItemsAtIndex: (state, action) => {
       if (action.payload.index < state.history.length) {
         return {
@@ -372,5 +375,6 @@ export const {
   setEditingAtIds,
   setDefaultModel,
   setConfig,
+  addLogs,
 } = stateSlice.actions;
 export default stateSlice.reducer;

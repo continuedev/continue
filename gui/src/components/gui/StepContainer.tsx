@@ -14,6 +14,7 @@ import {
 } from "..";
 import { RootStore } from "../../redux/store";
 import { getFontSize } from "../../util";
+import { logDevData } from "../../util/ide";
 import StyledMarkdownPreview from "../markdown/StyledMarkdownPreview";
 
 interface StepContainerProps {
@@ -79,15 +80,12 @@ function StepContainer(props: StepContainerProps) {
   const [feedback, setFeedback] = useState<boolean | undefined>(undefined);
 
   const sendFeedback = (feedback: boolean) => {
-    // TODO: Feedback
-    // setFeedback(feedback);
-    // console.log(sessionHistory, props.index);
-    // const logs = sessionHistory[props.index].logs;
-    // if (!logs || logs.length < 1) return;
-    // const prompt = logs[0].split("#########\n")[1];
-    // const completion = props.item.message.content;
-    // console.log(prompt, completion, client);
-    // client?.sendPromptCompletionFeedback("chat", prompt, completion, feedback);
+    setFeedback(feedback);
+    if (props.item.promptLogs?.length) {
+      for (const [prompt, completion] of props.item.promptLogs) {
+        logDevData("chat", { prompt, completion, feedback });
+      }
+    }
   };
 
   return (

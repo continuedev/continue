@@ -1,5 +1,6 @@
 import { FileEdit } from "core/types";
-import { getConfigJsonPath } from "core/util/paths";
+import { getConfigJsonPath, getDevDataFilePath } from "core/util/paths";
+import { writeFileSync } from "fs";
 import * as io from "socket.io-client";
 import * as vscode from "vscode";
 import { ideProtocolClient, windowId } from "./activation/activate";
@@ -327,6 +328,12 @@ export function getSidebarContent(
       // Other
       case "errorPopup": {
         vscode.window.showErrorMessage(data.message);
+        break;
+      }
+      case "logDevData": {
+        const filepath: string = getDevDataFilePath(data.message.tableName);
+        const jsonLine = JSON.stringify(data.message.data);
+        writeFileSync(filepath, `${jsonLine}\n`, { flag: "a" });
         break;
       }
     }

@@ -10,6 +10,7 @@ import { useSelector } from "react-redux";
 import { defaultModelSelector } from "../redux/selectors/modelSelectors";
 import {
   addContextItems,
+  addLogs,
   resubmitAtIndex,
   setInactive,
   streamUpdate,
@@ -134,12 +135,25 @@ function useChatHandler(dispatch: Dispatch) {
       // Determine if the input is a slash command
       let commandAndInput = getSlashCommandForInput(input);
 
+      const logs = [];
+      const writeLog = async (log: string) => {
+        logs.push(log);
+      };
+      defaultModel.writeLog = writeLog;
       if (!commandAndInput) {
         await _streamNormalInput(messages);
       } else {
         const [slashCommand, commandInput] = commandAndInput;
         await _streamSlashCommand(messages, slashCommand, commandInput);
       }
+
+      defaultModel.writeLog = undefined;
+      const pairedLogs = [];
+      for (let i = 0; i < logs.length; i += 2) {
+        pairedLogs.push([logs[i], logs[i + 1]]);
+      }
+      dispatch(addLogs(pairedLogs));
+
       dispatch(setInactive());
     } catch (e) {
       errorPopup(e.message);

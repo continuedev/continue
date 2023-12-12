@@ -65,3 +65,7 @@ export async function withProgress(title: string, fn: () => Promise<any>) {
 export function errorPopup(message: string) {
   postToIde("errorPopup", { message });
 }
+
+export function logDevData(tableName: string, data: any) {
+  postToIde("logDevData", { tableName, data });
+}

@@ -34,16 +34,17 @@ interface ContextItem {
 interface ChatHistoryItem {
   message: ChatMessage;
   contextItems: ContextItem[];
+  promptLogs?: [string, string][]; // [prompt, completion]
 }
 
 type ChatHistory = ChatHistoryItem[];
 
 export {
-  CompletionOptions,
-  ChatMessage,
-  ChatMessageRole,
   ChatHistory,
   ChatHistoryItem,
+  ChatMessage,
+  ChatMessageRole,
+  CompletionOptions,
   ContextItem,
   ContextItemId,
 };
