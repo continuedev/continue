@@ -1,6 +1,7 @@
 import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
+import defaultConfig from "../config/default";
 
 export function getContinueGlobalPath(): string {
   // This is ~/.continue on mac/linux
@@ -28,8 +29,11 @@ export function getSessionsListPath(): string {
 }
 
 export function getConfigJsonPath(): string {
-  // TODO: Create if it doesn't exist
-  return path.join(getContinueGlobalPath(), "config.json");
+  const p = path.join(getContinueGlobalPath(), "config.json");
+  if (!fs.existsSync(p)) {
+    fs.writeFileSync(p, JSON.stringify(defaultConfig, null, 2));
+  }
+  return p;
 }
 
 export function devDataPath(): string {

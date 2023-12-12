@@ -1,6 +1,6 @@
 import { FileEdit } from "core/types";
 import { getConfigJsonPath, getDevDataFilePath } from "core/util/paths";
-import { writeFileSync } from "fs";
+import { readFileSync, writeFileSync } from "fs";
 import * as io from "socket.io-client";
 import * as vscode from "vscode";
 import { ideProtocolClient, windowId } from "./activation/activate";
@@ -331,9 +331,37 @@ export function getSidebarContent(
         break;
       }
       case "logDevData": {
-        const filepath: string = getDevDataFilePath(data.message.tableName);
-        const jsonLine = JSON.stringify(data.message.data);
+        const filepath: string = getDevDataFilePath(data.tableName);
+        const jsonLine = JSON.stringify(data.data);
         writeFileSync(filepath, `${jsonLine}\n`, { flag: "a" });
+        break;
+      }
+      case "addModel": {
+        const model = data.model;
+        const config = readFileSync(getConfigJsonPath(), "utf8");
+        const configJson = JSON.parse(config);
+        configJson.models.push(model);
+        writeFileSync(
+          getConfigJsonPath(),
+          JSON.stringify(
+            configJson,
+            (key, value) => {
+              return value === null ? undefined : value;
+            },
+            2
+          )
+        );
+        ideProtocolClient.configUpdate(configJson);
+        break;
+      }
+      case "deleteModel": {
+        const config = readFileSync(getConfigJsonPath(), "utf8");
+        const configJson = JSON.parse(config);
+        configJson.models = configJson.models.filter(
+          (m: any) => m.title !== data.title
+        );
+        writeFileSync(getConfigJsonPath(), JSON.stringify(configJson, null, 2));
+        ideProtocolClient.configUpdate(configJson);
         break;
       }
     }
@@ -376,9 +404,6 @@ export function getSidebarContent(
             : ""
         }
         ${page ? `<script>window.location.pathname = "${page}"</script>` : ""}
-
-
-        ${false ? `<iframe src="http://localhost:65433/sw"></iframe>` : null}
       </body>
     </html>`;
 }

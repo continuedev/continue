@@ -16,7 +16,7 @@
     "noEmit": true,
     "jsx": "react-jsx",
     "noEmitOnError": false,
-    "types": ["jest"]
+    "types": ["jest", "node"]
   },
   "include": ["./**/*.ts"]
 }

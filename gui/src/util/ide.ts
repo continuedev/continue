@@ -69,3 +69,11 @@ export function errorPopup(message: string) {
 export function logDevData(tableName: string, data: any) {
   postToIde("logDevData", { tableName, data });
 }
+
+export function addModel(model: any) {
+  postToIde("addModel", { model });
+}
+
+export function deleteModel(title: any) {
+  postToIde("deleteModel", { title });
+}

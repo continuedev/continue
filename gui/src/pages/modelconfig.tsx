@@ -1,4 +1,5 @@
 import { ArrowLeftIcon } from "@heroicons/react/24/outline";
+import _ from "lodash";
 import { useCallback, useEffect, useState } from "react";
 import { FormProvider, useForm } from "react-hook-form";
 import { useDispatch } from "react-redux";
@@ -12,6 +13,8 @@ import {
 } from "../components";
 import StyledMarkdownPreview from "../components/markdown/StyledMarkdownPreview";
 import ModelCard from "../components/modelSelection/ModelCard";
+import { setDefaultModel } from "../redux/slices/stateSlice";
+import { addModel } from "../util/ide";
 import {
   MODEL_PROVIDER_TAG_COLORS,
   ModelInfo,
@@ -225,22 +228,23 @@ function ModelConfig() {
                     });
                   }
 
-                  // TODO
-                  // client?.addModelForRole("default", {
-                  //   ...pkg.params,
-                  //   ...modelInfo.params,
-                  //   ..._.merge(
-                  //     {},
-                  //     ...(pkg.dimensions?.map((dimension, i) => {
-                  //       if (!dimensionChoices?.[i]) return {};
-                  //       return {
-                  //         ...dimension.options[dimensionChoices[i]],
-                  //       };
-                  //     }) || [])
-                  //   ),
-                  //   ...formParams,
-                  //   provider: modelInfo.provider,
-                  // });
+                  const model = {
+                    ...pkg.params,
+                    ...modelInfo.params,
+                    ..._.merge(
+                      {},
+                      ...(pkg.dimensions?.map((dimension, i) => {
+                        if (!dimensionChoices?.[i]) return {};
+                        return {
+                          ...dimension.options[dimensionChoices[i]],
+                        };
+                      }) || [])
+                    ),
+                    ...formParams,
+                    provider: modelInfo.provider,
+                  };
+                  addModel(model);
+                  dispatch(setDefaultModel(model.title));
                   navigate("/");
                 }}
               />
@@ -259,12 +263,13 @@ function ModelConfig() {
                     : parseFloat(formMethods.watch(d.key));
               }
 
-              // TODO
-              // client?.addModelForRole("default", {
-              //   ...modelInfo.packages[0]?.params,
-              //   ...modelInfo.params,
-              //   ...formParams,
-              // });
+              const model = {
+                ...modelInfo.packages[0]?.params,
+                ...modelInfo.params,
+                ...formParams,
+              };
+              addModel(model);
+              dispatch(setDefaultModel(model.title));
               navigate("/");
             }}
           >

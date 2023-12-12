@@ -21,6 +21,7 @@ import { defaultModelSelector } from "../../redux/selectors/modelSelectors";
 import { setDefaultModel } from "../../redux/slices/stateSlice";
 import { RootStore } from "../../redux/store";
 import { getMetaKeyLabel } from "../../util";
+import { deleteModel } from "../../util/ide";
 import HeaderButtonWithText from "../HeaderButtonWithText";
 
 const GridDiv = styled.div`
@@ -162,8 +163,7 @@ function ListBoxOption({ option, idx }: { option: Option; idx: number }) {
           <HeaderButtonWithText
             text="Delete"
             onClick={(e) => {
-              // TODO
-              // client?.deleteModelAtIndex(idx - 1); // -1 because 0 is default, not in saved array
+              deleteModel(option.title);
               e.stopPropagation();
               e.preventDefault();
             }}
@@ -173,7 +173,6 @@ function ListBoxOption({ option, idx }: { option: Option; idx: number }) {
             <TrashIcon width="1.2em" height="1.2em" />
           </HeaderButtonWithText>
         )}
-        {idx === 0 && <TrashIcon width="1.6em" height="1.6em" opacity={0.0} />}
       </div>
     </StyledListboxOption>
   );

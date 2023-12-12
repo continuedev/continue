@@ -1,11 +1,15 @@
 import { ArrowLeftIcon } from "@heroicons/react/24/outline";
+import _ from "lodash";
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { lightGray, vscBackground } from "../components";
 import ModelCard from "../components/modelSelection/ModelCard";
 
+import { useDispatch } from "react-redux";
 import Toggle from "../components/modelSelection/Toggle";
+import { setDefaultModel } from "../redux/slices/stateSlice";
+import { addModel } from "../util/ide";
 import { MODEL_INFO, PROVIDER_INFO } from "../util/modelData";
 
 const GridDiv = styled.div`
@@ -19,6 +23,7 @@ const GridDiv = styled.div`
 
 function Models() {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   const [providersSelected, setProvidersSelected] = React.useState(true);
 
@@ -75,20 +80,21 @@ function Models() {
               dimensions={pkg.dimensions}
               providerOptions={pkg.providerOptions}
               onClick={(e, dimensionChoices, selectedProvider) => {
-                // TODO
-                // client?.addModelForRole("*", {
-                //   ...pkg.params,
-                //   ..._.merge(
-                //     {},
-                //     ...(pkg.dimensions?.map((dimension, i) => {
-                //       if (!dimensionChoices?.[i]) return {};
-                //       return {
-                //         ...dimension.options[dimensionChoices[i]],
-                //       };
-                //     }) || [])
-                //   ),
-                //   provider: PROVIDER_INFO[selectedProvider].provider,
-                // });
+                const model = {
+                  ...pkg.params,
+                  ..._.merge(
+                    {},
+                    ...(pkg.dimensions?.map((dimension, i) => {
+                      if (!dimensionChoices?.[i]) return {};
+                      return {
+                        ...dimension.options[dimensionChoices[i]],
+                      };
+                    }) || [])
+                  ),
+                  provider: PROVIDER_INFO[selectedProvider].provider,
+                };
+                addModel(model);
+                dispatch(setDefaultModel(model.title));
                 navigate("/");
               }}
             />

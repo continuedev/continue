@@ -3,7 +3,9 @@ import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { Button, Input } from "..";
+import { setDefaultModel } from "../../redux/slices/stateSlice";
 import { setShowDialog } from "../../redux/slices/uiStateSlice";
+import { addModel } from "../../util/ide";
 
 const GridDiv = styled.div`
   display: grid;
@@ -53,14 +55,14 @@ function FTCDialog() {
         <Button
           disabled={!apiKey}
           onClick={() => {
-            // TODO: Edit the config to add this model.
-            // client?.addModelForRole("*", {
-            //   model: "gpt-4",
-            //   api_key: apiKey,
-            //   title: "GPT-4",
-            //   provider: "openai",
-            // });
+            addModel({
+              model: "gpt-4",
+              api_key: apiKey,
+              title: "GPT-4",
+              provider: "openai",
+            });
             dispatch(setShowDialog(false));
+            dispatch(setDefaultModel("GPT-4"));
           }}
         >
           Use my API key

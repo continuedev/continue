@@ -41,10 +41,7 @@ class IdeProtocolClient {
       const filepath = event.uri.fsPath;
       const contents = event.getText();
       const config = JSON.parse(contents);
-      debugPanelWebview?.postMessage({
-        type: "configUpdate",
-        config,
-      });
+      this.configUpdate(config);
     });
 
     // Register a content provider for the readonly virtual documents
@@ -68,6 +65,13 @@ class IdeProtocolClient {
   }
 
   visibleMessages: Set<string> = new Set();
+
+  configUpdate(config: any) {
+    debugPanelWebview?.postMessage({
+      type: "configUpdate",
+      config,
+    });
+  }
 
   async gotoDefinition(
     filepath: string,
