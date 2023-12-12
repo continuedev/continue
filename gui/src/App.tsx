@@ -100,7 +100,7 @@ function App() {
 
   return (
     <SearchContext.Provider value={[miniSearch, firstResults]}>
-      <RouterProvider router={router} />;
+      <RouterProvider router={router} />
     </SearchContext.Provider>
   );
 }

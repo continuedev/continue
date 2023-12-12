@@ -431,7 +431,7 @@ function GUI(props: GUIProps) {
                     <ComboBox
                       isMainInput={false}
                       value={item.message.content}
-                      active={active && isLastUserInput(index)}
+                      isLastUserInput={isLastUserInput(index)}
                       onEnter={(e, value) => {
                         if (value) {
                           dispatch(resubmitAtIndex({ index, content: value }));
@@ -516,7 +516,7 @@ function GUI(props: GUIProps) {
           </StopButton>
         ) : (
           <ComboBox
-            active={false}
+            isLastUserInput={false}
             isMainInput={true}
             ref={mainTextInputRef}
             onEnter={(e, _) => {

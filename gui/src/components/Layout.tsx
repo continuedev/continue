@@ -8,7 +8,12 @@ import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import styled from "styled-components";
-import { defaultBorderRadius, secondaryDark, vscForeground } from ".";
+import {
+  defaultBorderRadius,
+  secondaryDark,
+  vscBackground,
+  vscForeground,
+} from ".";
 import useHistory from "../hooks/useHistory";
 import { defaultModelSelector } from "../redux/selectors/modelSelectors";
 import {
@@ -32,6 +37,7 @@ const LayoutTopDiv = styled.div`
   border-radius: ${defaultBorderRadius};
   scrollbar-base-color: transparent;
   scrollbar-width: thin;
+  background-color: ${vscBackground};
 
   & * {
     ::-webkit-scrollbar {

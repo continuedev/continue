@@ -71,8 +71,6 @@ import CodeSnippetPreview from "../markdown/CodeSnippetPreview";
 import StyledMarkdownPreview from "../markdown/StyledMarkdownPreview";
 import PillButton from "./PillButton";
 
-const SEARCH_INDEX_NAME = "continue_context_items";
-
 const ICONS_FOR_DROPDOWN: { [key: string]: any } = {
   file: FolderIcon,
   terminal: CommandLineIcon,
@@ -365,8 +363,8 @@ interface ComboBoxProps {
   onToggleAddContext?: () => void;
 
   isMainInput: boolean;
+  isLastUserInput: boolean;
   value?: string;
-  active?: boolean;
   isToggleOpen?: boolean;
   index?: number;
   onDelete?: () => void;
@@ -1141,8 +1139,8 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
               width: "fit-content",
             }}
           >
-            {props.active ? "Using" : "Used"} {selectedContextItems.length}{" "}
-            context item
+            {active ? "Using" : "Used"} {selectedContextItems.length} context
+            item
             {selectedContextItems.length === 1 ? "" : "s"}
           </div>
         )
@@ -1195,10 +1193,10 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
         ref={divRef}
       >
         <GradientBorder
-          loading={props.active}
+          loading={active}
           isFirst={false}
           isLast={false}
-          borderColor={props.active ? undefined : vscBackground}
+          borderColor={active ? undefined : vscBackground}
           borderRadius={defaultBorderRadius}
         >
           <MainTextInput

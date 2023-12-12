@@ -110,6 +110,7 @@ function useChatHandler(dispatch: Dispatch) {
       dispatch(resubmitAtIndex({ index, content: input }));
     } else {
       newHistory = [...history, historyItem];
+      console.log("Submitting message");
       dispatch(submitMessage(message));
     }
 
