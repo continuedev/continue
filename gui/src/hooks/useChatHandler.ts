@@ -16,6 +16,7 @@ import {
   submitMessage,
 } from "../redux/slices/stateSlice";
 import { RootStore } from "../redux/store";
+import { errorPopup } from "../util/ide";
 
 function useChatHandler(dispatch: Dispatch) {
   const posthog = usePostHog();
@@ -95,48 +96,54 @@ function useChatHandler(dispatch: Dispatch) {
   }
 
   async function streamResponse(input: string, index?: number) {
-    const message: ChatMessage = {
-      role: "user",
-      content: input,
-    };
-    const historyItem: ChatHistoryItem = {
-      message,
-      contextItems:
-        typeof index === "number" ? history[index].contextItems : contextItems,
-    };
+    try {
+      const message: ChatMessage = {
+        role: "user",
+        content: input,
+      };
+      const historyItem: ChatHistoryItem = {
+        message,
+        contextItems:
+          typeof index === "number"
+            ? history[index].contextItems
+            : contextItems,
+      };
 
-    let newHistory: ChatHistory = [];
-    if (typeof index === "number") {
-      newHistory = [...history.slice(0, index), historyItem];
-      dispatch(resubmitAtIndex({ index, content: input }));
-    } else {
-      newHistory = [...history, historyItem];
-      console.log("Submitting message");
-      dispatch(submitMessage(message));
+      let newHistory: ChatHistory = [];
+      if (typeof index === "number") {
+        newHistory = [...history.slice(0, index), historyItem];
+        dispatch(resubmitAtIndex({ index, content: input }));
+      } else {
+        newHistory = [...history, historyItem];
+        console.log("Submitting message");
+        dispatch(submitMessage(message));
+      }
+
+      posthog.capture("step run", {
+        step_name: "User Input",
+        params: {
+          user_input: input,
+        },
+      });
+      posthog.capture("userInput", {
+        input,
+      });
+
+      const messages = constructMessages(newHistory);
+
+      // Determine if the input is a slash command
+      let commandAndInput = getSlashCommandForInput(input);
+
+      if (!commandAndInput) {
+        await _streamNormalInput(messages);
+      } else {
+        const [slashCommand, commandInput] = commandAndInput;
+        await _streamSlashCommand(messages, slashCommand, commandInput);
+      }
+      dispatch(setInactive());
+    } catch (e) {
+      errorPopup(e.message);
     }
-
-    posthog.capture("step run", {
-      step_name: "User Input",
-      params: {
-        user_input: input,
-      },
-    });
-    posthog.capture("userInput", {
-      input,
-    });
-
-    const messages = constructMessages(newHistory);
-
-    // Determine if the input is a slash command
-    let commandAndInput = getSlashCommandForInput(input);
-
-    if (!commandAndInput) {
-      await _streamNormalInput(messages);
-    } else {
-      const [slashCommand, commandInput] = commandAndInput;
-      await _streamSlashCommand(messages, slashCommand, commandInput);
-    }
-    dispatch(setInactive());
   }
 
   return { streamResponse };

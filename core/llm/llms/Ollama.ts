@@ -64,24 +64,26 @@ class Ollama extends LLM {
     const reader = response.body?.getReader();
 
     let buffer = "";
-    while (true && reader) {
+    while (reader) {
       const { done, value } = await reader.read();
+
       if (done) break;
       // Append the received chunk to the buffer
       buffer += new TextDecoder().decode(value);
       // Split the buffer into individual JSON chunks
       const chunks = buffer.split("\n");
-      for (let i = 0; i < chunks.length - 1; i++) {
+      for (let i = 0; i < chunks.length; i++) {
         const chunk = chunks[i];
         if (chunk.trim() !== "") {
           try {
             const j = JSON.parse(chunk);
             if ("response" in j) {
               yield j["response"];
+            } else if ("error" in j) {
+              throw new Error(j["error"]);
             }
           } catch (e) {
-            console.log(`Error parsing Ollama response: ${e} ${chunk}`);
-            continue;
+            throw new Error(`Error parsing Ollama response: ${e} ${chunk}`);
           }
         }
       }

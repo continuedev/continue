@@ -324,6 +324,11 @@ export function getSidebarContent(
         );
         break;
       }
+      // Other
+      case "errorPopup": {
+        vscode.window.showErrorMessage(data.message);
+        break;
+      }
     }
   });
 
