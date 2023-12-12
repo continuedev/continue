@@ -70,12 +70,16 @@ jobs:
       - name: Install extension Dependencies
         run: |
           cd extensions/vscode
-          npm i -g cargo-cp-artifact
           npm ci
 
       - name: Install gui Dependencies
         run: |
           cd gui
+          npm ci --legacy-peer-deps
+
+      - name: Install Core Dependencies
+        run: |
+          cd core
           npm ci --legacy-peer-deps
 
       # 3. Run tests for the extension
