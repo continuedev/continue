@@ -1220,7 +1220,11 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
             }
             fontSize={getFontSize()}
             disabled={props.disabled}
-            placeholder={`Ask a question, '/' for slash commands, '@' to add context`}
+            placeholder={
+              props.isMainInput
+                ? `Ask a question, '/' for slash commands, '@' to add context`
+                : `Ask a follow-up`
+            }
             {...getInputProps({
               onCompositionStart: () => setIsComposing(true),
               onCompositionEnd: () => setIsComposing(false),
@@ -1429,8 +1433,8 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
                 className={"hover:underline cursor-pointer float-right"}
               >
                 {downshiftProps.inputValue?.startsWith("/codebase")
-                  ? "Using codebase"
-                  : `${getMetaKeyLabel()} ⏎ Use codebase`}
+                  ? "Using Codebase"
+                  : `${getMetaKeyLabel()} ⏎ Use Codebase`}
               </span>
 
               <EnterButton
@@ -1448,7 +1452,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
                   }
                 }}
               >
-                ⏎ Enter
+                ⏎ Return
               </EnterButton>
             </InputToolbar>
           )}

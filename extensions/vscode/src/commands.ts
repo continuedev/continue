@@ -134,8 +134,12 @@ const commandsMap: { [command: string]: (...args: any) => any } = {
     await vscode.window.showTextDocument(uri);
   },
   "continue.debugTerminal": async () => {
+    const terminalContents = await ideProtocolClient.getTerminalContents(2);
     vscode.commands.executeCommand("continue.continueGUIView.focus");
-    // TODO
+    debugPanelWebview?.postMessage({
+      type: "submitMessage",
+      message: `I got the following error, can you please help explain how to fix it?\n\n${terminalContents}`,
+    });
   },
   "continue.hideInlineTip": () => {
     vscode.workspace

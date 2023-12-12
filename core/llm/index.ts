@@ -269,7 +269,13 @@ export abstract class LLM implements LLMOptions {
   }
 
   private _logTokensGenerated(model: string, completion: string) {
-    // TODO: PostHog
+    let tokens = this.countTokens(completion);
+    // TODO
+    // posthogLogger.captureEvent("tokens_generated", {
+    //   model: model,
+    //   tokens: tokens,
+    //   model_class: this.constructor.name,
+    // });
   }
 
   private _parseCompletionOptions(options: LLMFullCompletionOptions) {

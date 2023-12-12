@@ -10,6 +10,7 @@ import {
   setConfig,
   setInactive,
 } from "../redux/slices/stateSlice";
+import useChatHandler from "./useChatHandler";
 
 function useSetup(dispatch: Dispatch<any>) {
   // Load config from the IDE
@@ -26,6 +27,8 @@ function useSetup(dispatch: Dispatch<any>) {
     // Tell JetBrains the webview is ready
     postToIde("onLoad", {});
   }, []);
+
+  const { streamResponse } = useChatHandler(dispatch);
 
   // IDE event listeners
   useEffect(() => {
@@ -57,6 +60,9 @@ function useSetup(dispatch: Dispatch<any>) {
           break;
         case "configUpdate":
           dispatch(setConfig(event.data.config));
+          break;
+        case "submitMessage":
+          streamResponse(event.data.message);
           break;
       }
     };
