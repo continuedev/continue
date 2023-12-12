@@ -109,7 +109,11 @@ export const stateSlice = createSlice({
       };
     },
     addLogs: (state, { payload }: { payload: [string, string][] }) => {
-      state.history[state.history.length - 1].promptLogs.push(...payload);
+      if (state.history[state.history.length - 1].promptLogs) {
+        state.history[state.history.length - 1].promptLogs.push(...payload);
+      } else {
+        state.history[state.history.length - 1].promptLogs = payload;
+      }
     },
     addContextItemsAtIndex: (state, action) => {
       if (action.payload.index < state.history.length) {

@@ -1,4 +1,6 @@
 import { FileEdit, RangeInFile } from "core/types";
+import { getConfigJsonPath } from "core/util/paths";
+import { readFileSync } from "fs";
 import * as vscode from "vscode";
 import { windowId } from "./activation/activate";
 import { debugPanelWebview, getSidebarContent } from "./debugPanel";
@@ -39,9 +41,15 @@ class IdeProtocolClient {
     // Listen for file saving
     vscode.workspace.onDidSaveTextDocument((event) => {
       const filepath = event.uri.fsPath;
-      const contents = event.getText();
-      const config = JSON.parse(contents);
-      this.configUpdate(config);
+
+      if (
+        filepath.endsWith(".continue/config.json") ||
+        filepath.endsWith(".continue\\config.json")
+      ) {
+        const config = readFileSync(getConfigJsonPath(), "utf8");
+        const configJson = JSON.parse(config);
+        this.configUpdate(configJson);
+      }
     });
 
     // Register a content provider for the readonly virtual documents

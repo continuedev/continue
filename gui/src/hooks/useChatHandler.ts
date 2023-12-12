@@ -156,6 +156,7 @@ function useChatHandler(dispatch: Dispatch) {
 
       dispatch(setInactive());
     } catch (e) {
+      console.log("Continue: error streaming response: ", e);
       errorPopup(e.message);
     }
   }
