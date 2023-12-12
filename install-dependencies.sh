@@ -2,13 +2,7 @@
 # This is used in a task in .vscode/tasks.json
 # Start developing with:
 # - Run Task -> Install Dependencies
-# - Debug -> Server + Extension
-
-# Server
-echo "Installing server dependencies..."
-pushd server || exit
-./install-dependencies.sh
-popd || exit
+# - Debug -> Extension
 
 # VSCode Extension (will also package GUI)
 echo "Installing VSCode extension dependencies..."

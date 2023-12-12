@@ -11,22 +11,22 @@
           "description": "The temperature of the completion.",
           "type": "number"
         },
-        "top_p": {
+        "topP": {
           "title": "Top P",
-          "description": "The top_p of the completion.",
+          "description": "The topP of the completion.",
           "type": "number"
         },
-        "top_k": {
+        "topK": {
           "title": "Top K",
-          "description": "The top_k of the completion.",
+          "description": "The topK of the completion.",
           "type": "integer"
         },
-        "presence_penalty": {
+        "presencePenalty": {
           "title": "Presence Penalty",
           "description": "The presence penalty Aof the completion.",
           "type": "number"
         },
-        "frequency_penalty": {
+        "frequencePenalty": {
           "title": "Frequency Penalty",
           "description": "The frequency penalty of the completion.",
           "type": "number"
@@ -39,7 +39,7 @@
             "type": "string"
           }
         },
-        "max_tokens": {
+        "maxTokens": {
           "title": "Max Tokens",
           "description": "The maximum number of tokens to generate.",
           "default": 600,
@@ -57,12 +57,12 @@
           "default": 300,
           "type": "integer"
         },
-        "verify_ssl": {
+        "verifySsl": {
           "title": "Verify Ssl",
           "description": "Whether to verify SSL certificates for requests.",
           "type": "boolean"
         },
-        "ca_bundle_path": {
+        "caBundlePath": {
           "title": "Ca Bundle Path",
           "description": "Path to a custom CA bundle to use when making the HTTP request",
           "type": "string"
@@ -117,19 +117,19 @@
           "description": "The name of the model. Used to autodetect prompt template.",
           "type": "string"
         },
-        "api_key": {
+        "apiKey": {
           "title": "Api Key",
           "description": "OpenAI, Anthropic, Together, or other API key",
           "type": "string"
         },
-        "api_base": {
+        "apiBase": {
           "title": "Api Base",
           "description": "The base URL of the LLM API.",
           "type": "string"
         },
-        "context_length": {
+        "contextLength": {
           "title": "Context Length",
-          "description": "The maximum context length of the LLM in tokens, as counted by count_tokens.",
+          "description": "The maximum context length of the LLM in tokens, as counted by countTokens.",
           "default": 2048,
           "type": "integer"
         },
@@ -147,17 +147,17 @@
           ],
           "type": "string"
         },
-        "completion_options": {
+        "completionOptions": {
           "title": "Completion Options",
           "description": "Options for the completion endpoint. Read more about the completion options in the documentation.",
           "default": {
             "temperature": null,
-            "top_p": null,
-            "top_k": null,
-            "presence_penalty": null,
-            "frequency_penalty": null,
+            "topP": null,
+            "topK": null,
+            "presencePenalty": null,
+            "frequencyPenalty": null,
             "stop": null,
-            "max_tokens": 600
+            "maxTokens": 600
           },
           "allOf": [
             {
@@ -165,18 +165,18 @@
             }
           ]
         },
-        "system_message": {
+        "systemMessage": {
           "title": "System Message",
           "description": "A system message that will always be followed by the LLM",
           "type": "string"
         },
-        "request_options": {
+        "requestOptions": {
           "title": "Request Options",
           "description": "Options for the HTTP request to the LLM.",
           "default": {
             "timeout": 300,
-            "verify_ssl": null,
-            "ca_bundle_path": null,
+            "verifySsl": null,
+            "caBundlePath": null,
             "proxy": null,
             "headers": null
           },
@@ -247,7 +247,7 @@
             "required": ["provider"]
           },
           "then": {
-            "required": ["api_key"]
+            "required": ["apiKey"]
           }
         },
         {
@@ -259,7 +259,7 @@
             }
           },
           "then": {
-            "required": ["api_base"]
+            "required": ["apiBase"]
           },
           "required": ["provider"]
         },
@@ -277,10 +277,10 @@
               "engine": {
                 "type": "string"
               },
-              "api_type": {
+              "apiType": {
                 "type": "string"
               },
-              "api_version": {
+              "apiVersion": {
                 "type": "string"
               }
             }
@@ -356,7 +356,7 @@
               "provider": {
                 "enum": ["openai", "openai-aiohttp"]
               },
-              "api_type": {
+              "apiType": {
                 "not": {
                   "const": "azure"
                 }
@@ -528,14 +528,14 @@
         {
           "if": {
             "properties": {
-              "api_type": {
+              "apiType": {
                 "const": "azure"
               }
             },
-            "required": ["api_type"]
+            "required": ["apiType"]
           },
           "then": {
-            "required": ["engine", "api_version", "api_base"]
+            "required": ["engine", "apiVersion", "apiBase"]
           }
         },
         {
@@ -549,7 +549,7 @@
           },
           "then": {
             "properties": {
-              "use_legacy_completions_endpoint": {
+              "useLegacyCompletionsEndpoint": {
                 "type": "boolean"
               }
             }
@@ -566,7 +566,7 @@
           },
           "then": {
             "properties": {
-              "llamafile_command": {
+              "llamafileCommand": {
                 "type": "string"
               }
             }
@@ -583,7 +583,7 @@
           },
           "then": {
             "properties": {
-              "streaming_url": {
+              "streamingUrl": {
                 "type": "string"
               }
             }
@@ -701,31 +701,31 @@
       "title": "RetrievalSettings",
       "type": "object",
       "properties": {
-        "n_retrieve": {
+        "nRetrieve": {
           "title": "N Retrieve",
           "description": "Number of results to initially retrieve from vector database",
           "default": 50,
           "type": "integer"
         },
-        "n_final": {
+        "nFinal": {
           "title": "N Final",
           "description": "Final number of results to use after re-ranking",
           "default": 10,
           "type": "integer"
         },
-        "use_reranking": {
+        "useReranking": {
           "title": "Use Reranking",
-          "description": "Whether to use re-ranking, which will allow initial selection of n_retrieve results, then will use an LLM to select the top n_final results",
+          "description": "Whether to use re-ranking, which will allow initial selection of nRetrieve results, then will use an LLM to select the top nFinal results",
           "default": true,
           "type": "boolean"
         },
-        "rerank_group_size": {
+        "rerankGroupSize": {
           "title": "Rerank Group Size",
           "description": "Number of results to group together when re-ranking. Each group will be processed in parallel.",
           "default": 5,
           "type": "integer"
         },
-        "ignore_files": {
+        "ignoreFiles": {
           "title": "Ignore Files",
           "description": "Files to ignore when indexing the codebase. You can use glob patterns, such as **/*.py. This is useful for directories that contain generated code, or other directories that are not relevant to the codebase.",
           "default": [],
@@ -734,27 +734,27 @@
             "type": "string"
           }
         },
-        "openai_api_key": {
+        "openaiApiKey": {
           "title": "Openai Api Key",
           "description": "OpenAI API key",
           "type": "string"
         },
-        "api_base": {
+        "apiBase": {
           "title": "Api Base",
           "description": "OpenAI API base URL",
           "type": "string"
         },
-        "api_type": {
+        "apiType": {
           "title": "Api Type",
           "description": "OpenAI API type",
           "type": "string"
         },
-        "api_version": {
+        "apiVersion": {
           "title": "Api Version",
           "description": "OpenAI API version",
           "type": "string"
         },
-        "organization_id": {
+        "organizationId": {
           "title": "Organization Id",
           "description": "OpenAI organization ID",
           "type": "string"
@@ -765,7 +765,7 @@
       "title": "SerializedContinueConfig",
       "type": "object",
       "properties": {
-        "disallowed_steps": {
+        "disallowedSteps": {
           "title": "Disallowed Steps",
           "description": "Steps that are not allowed to be run, and will be skipped if attempted",
           "default": [],
@@ -774,7 +774,7 @@
             "type": "string"
           }
         },
-        "allow_anonymous_telemetry": {
+        "allowAnonymousTelemetry": {
           "title": "Allow Anonymous Telemetry",
           "description": "If this field is set to True, we will collect anonymous telemetry as described in the documentation page on telemetry. If set to False, we will not collect any data.",
           "default": true,
@@ -787,7 +787,7 @@
               "title": "GPT-4 (trial)",
               "provider": "openai-free-trial",
               "model": "gpt-4",
-              "api_key": ""
+              "apiKey": ""
             }
           ],
           "type": "array",
@@ -795,7 +795,7 @@
             "$ref": "#/definitions/ModelDescription"
           }
         },
-        "model_roles": {
+        "modelRoles": {
           "title": "Model Roles",
           "description": "Roles for models. Each entry should be the title of a model in the models array.",
           "default": {
@@ -810,22 +810,22 @@
             }
           ]
         },
-        "system_message": {
+        "systemMessage": {
           "title": "System Message",
           "description": "A system message that will always be followed by the LLM",
           "type": "string"
         },
-        "completion_options": {
+        "completionOptions": {
           "title": "Completion Options",
           "description": "Default options for completion. These will be overriden by any options set for a specific model.",
           "default": {
             "temperature": null,
-            "top_p": null,
-            "top_k": null,
-            "presence_penalty": null,
-            "frequency_penalty": null,
+            "topP": null,
+            "topK": null,
+            "presencePenalty": null,
+            "frequencyPenalty": null,
             "stop": null,
-            "max_tokens": 600
+            "maxTokens": 600
           },
           "allOf": [
             {
@@ -833,7 +833,7 @@
             }
           ]
         },
-        "slash_commands": {
+        "slashCommands": {
           "title": "Slash Commands",
           "description": "An array of slash commands that let you map custom Steps to a shortcut.",
           "default": [],
@@ -842,7 +842,7 @@
             "$ref": "#/definitions/SlashCommand"
           }
         },
-        "custom_commands": {
+        "customCommands": {
           "title": "Custom Commands",
           "description": "An array of custom commands that allow you to reuse prompts. Each has name, description, and prompt properties. When you enter /<name> in the text input, it will act as a shortcut to the prompt.",
           "default": [
@@ -857,7 +857,7 @@
             "$ref": "#/definitions/CustomCommand"
           }
         },
-        "context_providers": {
+        "contextProviders": {
           "title": "Context Providers",
           "description": "A list of ContextProvider objects that can be used to provide context to the LLM by typing '@'. Read more about ContextProviders in the documentation.",
           "default": [],
@@ -866,43 +866,43 @@
             "$ref": "#/definitions/ContextProviderWithParams"
           }
         },
-        "user_token": {
+        "userToken": {
           "title": "User Token",
           "description": "An optional token to identify the user.",
           "type": "string"
         },
-        "data_server_url": {
+        "dataServerUrl": {
           "title": "Data Server Url",
           "description": "The URL of the server where development data is sent. No data is sent unless a valid user token is provided.",
           "default": "https://us-west1-autodebug.cloudfunctions.net",
           "type": "string"
         },
-        "disable_summaries": {
+        "disableSummaries": {
           "title": "Disable Summaries",
           "description": "If set to `True`, Continue will not generate summaries for each Step. This can be useful if you want to save on compute.",
           "default": false,
           "type": "boolean"
         },
-        "disable_indexing": {
+        "disableIndexing": {
           "title": "Disable Indexing",
           "description": "If set to `True`, Continue will not index the codebase. This is mainly used for debugging purposes.",
           "default": false,
           "type": "boolean"
         },
-        "retrieval_settings": {
+        "retrievalSettings": {
           "title": "Retrieval Settings",
           "description": "Settings for the retrieval system. Read more about the retrieval system in the documentation.",
           "default": {
-            "n_retrieve": 50,
-            "n_final": 10,
-            "use_reranking": true,
-            "rerank_group_size": 5,
-            "ignore_files": [],
-            "openai_api_key": null,
-            "api_base": null,
-            "api_type": null,
-            "api_version": null,
-            "organization_id": null
+            "nRetrieve": 50,
+            "nFinal": 10,
+            "useReranking": true,
+            "rerankGroupSize": 5,
+            "ignoreFiles": [],
+            "openaiApiKey": null,
+            "apiBase": null,
+            "apiType": null,
+            "apiVersion": null,
+            "organizationId": null
           },
           "allOf": [
             {

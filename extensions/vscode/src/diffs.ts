@@ -1,12 +1,12 @@
+import { devDataPath } from "core/util/paths";
+import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
-import * as fs from "fs";
 import * as vscode from "vscode";
-import { extensionContext, ideProtocolClient } from "./activation/activate";
-import { getMetaKeyLabel, getPlatform } from "./util/util";
-import { devDataPath } from "./activation/environmentSetup";
-import { uriFromFilePath } from "./util/vscode";
+import { extensionContext } from "./activation/activate";
 import { debugPanelWebview } from "./debugPanel";
+import { getMetaKeyLabel, getPlatform } from "./util/util";
+import { uriFromFilePath } from "./util/vscode";
 
 interface DiffInfo {
   originalFilepath: string;
@@ -275,8 +275,6 @@ class DiffManager {
       });
 
     await recordAcceptReject(true, diffInfo);
-
-    ideProtocolClient.sendAcceptRejectDiff(true, diffInfo.step_index);
   }
 
   async rejectDiff(newFilepath?: string) {
@@ -298,7 +296,7 @@ class DiffManager {
     }
 
     // Stop the step at step_index in case it is still streaming
-    debugPanelWebview?.postMessage({ type: "stopSession" });
+    debugPanelWebview?.postMessage({ type: "setInactive" });
 
     vscode.workspace.textDocuments
       .find((doc) => doc.uri.fsPath === newFilepath)
@@ -308,8 +306,6 @@ class DiffManager {
       });
 
     await recordAcceptReject(false, diffInfo);
-
-    ideProtocolClient.sendAcceptRejectDiff(false, diffInfo.step_index);
   }
 }
 

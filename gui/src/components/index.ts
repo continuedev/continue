@@ -4,13 +4,13 @@ import { getFontSize } from "../util";
 
 export const defaultBorderRadius = "5px";
 export const lightGray = "#646464";
-export const vscBackgroundTransparent = "#1e1e1ede";
 export const buttonColor = "#1bbe84";
 export const buttonColorHover = "#1bbe84a8";
 
 export const secondaryDark =
   "var(--vscode-list-hoverBackground, rgb(45 45 45))";
-export const vscBackground = "var(--vscode-editor-background, rgb(30 30 30))";
+// export const vscBackground = "var(--vscode-editor-background, rgb(30 30 30))";
+export const vscBackground = "var(--vscode-sideBar-background, rgb(30 30 30))";
 export const vscForeground = "var(--vscode-editor-foreground, #fff)";
 
 if (typeof document !== "undefined") {

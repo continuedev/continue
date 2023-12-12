@@ -1,9 +1,10 @@
-import React, { useContext, useEffect } from "react";
-import { GUIClientContext } from "../App";
+import { ArrowLeftIcon } from "@heroicons/react/24/outline";
+import { ContinueConfig } from "core/config";
+import { useEffect } from "react";
+import { FormProvider, useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
-import { RootStore } from "../redux/store";
 import { useNavigate } from "react-router-dom";
-import { ContinueConfig } from "../schema/ContinueConfig";
+import styled from "styled-components";
 import {
   Button,
   NumberInput,
@@ -13,11 +14,9 @@ import {
   vscBackground,
   vscForeground,
 } from "../components";
-import styled from "styled-components";
-import { ArrowLeftIcon } from "@heroicons/react/24/outline";
-import Loader from "../components/loaders/Loader";
 import InfoHover from "../components/InfoHover";
-import { FormProvider, useForm } from "react-hook-form";
+import Loader from "../components/loaders/Loader";
+import { RootStore } from "../redux/store";
 import { getFontSize, getPlatform } from "../util";
 import { postToIde } from "../util/ide";
 
@@ -100,22 +99,19 @@ function Settings() {
   const onSubmit = (data: ContinueConfig) => console.log(data);
 
   const navigate = useNavigate();
-  const client = useContext(GUIClientContext);
-  const config = useSelector((state: RootStore) => state.serverState.config);
+  const config = useSelector((state: RootStore) => state.state.config);
   const dispatch = useDispatch();
 
   const submitChanges = () => {
-    if (!client) return;
-
-    const systemMessage = formMethods.watch("system_message") as
-      | string
-      | undefined;
-    const temperature = formMethods.watch("temperature") as number | undefined;
-    // const models = formMethods.watch("models");
-
-    client.setSystemMessage(systemMessage || "");
-    if (temperature) client.setTemperature(temperature);
-
+    // TODO
+    // if (!client) return;
+    // const systemMessage = formMethods.watch("system_message") as
+    //   | string
+    //   | undefined;
+    // const temperature = formMethods.watch("temperature") as number | undefined;
+    // // const models = formMethods.watch("models");
+    // client.setSystemMessage(systemMessage || "");
+    // if (temperature) client.setTemperature(temperature);
     // if (models) {
     //   for (const role of ALL_MODEL_ROLES) {
     //     if (models[role]) {
@@ -133,8 +129,11 @@ function Settings() {
   useEffect(() => {
     if (!config) return;
 
-    formMethods.setValue("system_message", config.system_message);
-    formMethods.setValue("temperature", config.completion_options?.temperature);
+    formMethods.setValue("systemMessage", config.systemMessage);
+    formMethods.setValue(
+      "completionOptions.temperature",
+      config.completionOptions?.temperature
+    );
   }, [config]);
 
   return (
@@ -180,7 +179,7 @@ function Settings() {
               </h3>
               <TextArea
                 placeholder="Enter a system message (e.g. 'Always respond in German')"
-                {...formMethods.register("system_message")}
+                {...formMethods.register("systemMessage")}
               />
 
               <Hr />
@@ -199,14 +198,16 @@ function Settings() {
                   min="0"
                   max="1"
                   step="0.01"
-                  {...formMethods.register("temperature")}
+                  {...formMethods.register("completionOptions.temperature")}
                 />
                 <p>1</p>
               </div>
               <div className="text-center" style={{ marginTop: "-25px" }}>
                 <p className="text-sm text-gray-500">
-                  {(formMethods.watch("temperature") as number | undefined) ||
-                    config.completion_options?.temperature ||
+                  {(formMethods.watch("completionOptions.temperature") as
+                    | number
+                    | undefined) ||
+                    config.completionOptions?.temperature ||
                     "-"}
                 </p>
               </div>

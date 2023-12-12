@@ -52,16 +52,6 @@
     "configuration": {
       "title": "Continue",
       "properties": {
-        "continue.serverUrl": {
-          "type": "string",
-          "default": "http://localhost:65432",
-          "description": "The URL of the Continue server if you are running Continue manually. NOTE: This is NOT the URL of the LLM server. If you want to use an LLM hosted at a custom URL, please see https://continue.dev/docs/customization#change-the-default-llm and complete configuration in `~/.continue/config.py`, which you can access by using the '/config' slash command."
-        },
-        "continue.manuallyRunningServer": {
-          "type": "boolean",
-          "default": false,
-          "description": "If you are manually running the Continue server, you should update the Server URL and check this box. This will stop Continue from attempting to remove your server and download a new version."
-        },
         "continue.telemetryEnabled": {
           "type": "boolean",
           "default": true,
@@ -134,7 +124,7 @@
       {
         "command": "continue.newSession",
         "category": "Continue",
-        "title": "New Session",
+        "title": "New Session (⌘ M)",
         "icon": "$(add)"
       },
       {
@@ -321,7 +311,6 @@
     "esbuild-watch": "npm run esbuild-base -- --sourcemap --watch",
     "tsc": "tsc -p ./",
     "tsc-watch": "tsc -watch -p ./",
-    "typegen": "node scripts/typegen.js",
     "rebuild": "electron-rebuild -v 19.1.8 node-pty",
     "lint": "eslint src --ext ts",
     "build-test": "tsc && node esbuild.test.mjs",
@@ -333,6 +322,8 @@
   "devDependencies": {
     "@nestjs/common": "^8.4.7",
     "@openapitools/openapi-generator-cli": "^2.5.2",
+    "@types/cors": "^2.8.17",
+    "@types/express": "^4.17.21",
     "@types/glob": "^8.0.0",
     "@types/mocha": "^10.0.1",
     "@types/node": "16.x",
@@ -344,13 +335,13 @@
     "@typescript-eslint/eslint-plugin": "^5.45.0",
     "@typescript-eslint/parser": "^5.45.0",
     "@vscode/test-electron": "^2.2.0",
+    "@vscode/vsce": "^2.22.0",
     "esbuild": "^0.17.19",
     "eslint": "^8.28.0",
     "glob": "^8.0.3",
     "json-schema-to-typescript": "^12.0.0",
     "mocha": "^10.1.0",
     "ovsx": "^0.8.3",
-    "ts-jest": "^29.1.1",
     "typescript": "^4.9.3",
     "vite": "^4.3.9",
     "vsce": "^2.15.0"
@@ -359,10 +350,15 @@
     "@electron/rebuild": "^3.2.10",
     "@reduxjs/toolkit": "^1.9.3",
     "axios": "^1.2.5",
+    "core": "file:../../core",
+    "cors": "^2.8.5",
     "downshift": "^7.6.0",
+    "express": "^4.18.2",
     "fkill": "^8.1.0",
     "highlight.js": "^11.7.0",
     "highlightable": "^1.3.0-beta.0",
+    "http-proxy": "^1.18.1",
+    "http-proxy-middleware": "^2.0.6",
     "ncp": "^2.0.0",
     "node-machine-id": "^1.1.12",
     "posthog-node": "^3.1.2",
@@ -372,6 +368,7 @@
     "socket.io-client": "^4.7.2",
     "strip-ansi": "^7.1.0",
     "tailwindcss": "^3.3.2",
+    "ts-node": "^10.9.1",
     "uuidv4": "^6.2.13",
     "vscode-languageclient": "^8.0.2",
     "ws": "^8.13.0"

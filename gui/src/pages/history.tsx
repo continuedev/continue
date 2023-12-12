@@ -1,17 +1,14 @@
-import React, { Fragment, useContext, useEffect, useState } from "react";
-import { SessionInfo } from "../schema/SessionInfo";
-import { GUIClientContext } from "../App";
-import { useDispatch, useSelector } from "react-redux";
-import { RootStore } from "../redux/store";
-import { useNavigate } from "react-router-dom";
-import { lightGray, secondaryDark, vscBackground } from "../components";
-import styled from "styled-components";
 import { ArrowLeftIcon, TrashIcon } from "@heroicons/react/24/outline";
-import CheckDiv from "../components/CheckDiv";
-import { getFontSize } from "../util";
-import { newSession } from "../redux/slices/sessionStateReducer";
-import { PersistedSessionInfo } from "../schema/PersistedSessionInfo";
+import { PersistedSessionInfo, SessionInfo } from "core/types";
+import React, { Fragment, useEffect, useState } from "react";
+import { useDispatch } from "react-redux";
+import { useNavigate } from "react-router-dom";
+import styled from "styled-components";
+import { lightGray, secondaryDark, vscBackground } from "../components";
 import HeaderButtonWithText from "../components/HeaderButtonWithText";
+import useHistory from "../hooks/useHistory";
+import { newSession } from "../redux/slices/stateSlice";
+import { getFontSize } from "../util";
 
 const Tr = styled.tr`
   &:hover {
@@ -64,11 +61,11 @@ function TableRow({
 }) {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const client = useContext(GUIClientContext);
   const apiUrl = (window as any).serverUrl;
-  const currentSession = useSelector((state: RootStore) => state.sessionState);
   const workspacePaths = (window as any).workspacePaths || [""];
   const [hovered, setHovered] = useState(false);
+
+  const { saveSession, deleteSession, loadSession } = useHistory();
 
   return (
     <td
@@ -79,17 +76,11 @@ function TableRow({
         <TdDiv
           onClick={async () => {
             // Save current session
-            client?.persistSession(currentSession, workspacePaths[0]);
+            saveSession();
 
-            // Load new session
-            const response = await fetch(
-              `${apiUrl}/sessions/${session.session_id}`
+            const json: PersistedSessionInfo = await loadSession(
+              session.sessionId
             );
-            if (!response.ok) {
-              throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            const json: PersistedSessionInfo = await response.json();
-            client?.stopSession();
             dispatch(newSession(json));
             navigate("/");
           }}
@@ -105,7 +96,7 @@ function TableRow({
               hour12: true,
             })}
             {" | "}
-            {lastPartOfPath(session.workspace_directory || "")}/
+            {lastPartOfPath(session.workspaceDirectory || "")}/
           </div>
         </TdDiv>
 
@@ -114,8 +105,8 @@ function TableRow({
             className="mr-2"
             text="Delete"
             onClick={async () => {
-              client?.deleteSession(session.session_id);
-              onDelete(session.session_id);
+              deleteSession(session.sessionId);
+              onDelete(session.sessionId);
             }}
           >
             <TrashIcon width="1.3em" height="1.3em" />
@@ -137,13 +128,12 @@ function History() {
   const [filteredAndSortedSessions, setFilteredAndSortedSessions] = useState<
     SessionInfo[]
   >([]);
-  const client = useContext(GUIClientContext);
   const apiUrl = (window as any).serverUrl;
   const workspacePaths = (window as any).workspacePaths || [];
 
   const deleteSessionInUI = async (sessionId: string) => {
     setSessions((prev) =>
-      prev.filter((session) => session.session_id !== sessionId)
+      prev.filter((session) => session.sessionId !== sessionId)
     );
   };
 
@@ -151,20 +141,15 @@ function History() {
   const stickyHistoryHeaderRef = React.useRef<HTMLDivElement>(null);
   const [headerHeight, setHeaderHeight] = useState(0);
 
+  const { getHistory } = useHistory();
+
   useEffect(() => {
     const fetchSessions = async () => {
-      if (!apiUrl) {
-        return;
-      }
-      const response = await fetch(`${apiUrl}/sessions/list`);
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      const json = await response.json();
-      setSessions(json);
+      const sessions = await getHistory();
+      setSessions(sessions);
     };
     fetchSessions();
-  }, [client]);
+  }, []);
 
   useEffect(() => {
     setFilteredAndSortedSessions(
@@ -173,22 +158,22 @@ function History() {
           if (
             !filteringByWorkspace ||
             typeof workspacePaths === "undefined" ||
-            typeof session.workspace_directory === "undefined"
+            typeof session.workspaceDirectory === "undefined"
           ) {
             return true;
           }
-          return workspacePaths.includes(session.workspace_directory);
+          return workspacePaths.includes(session.workspaceDirectory);
         })
         .sort(
           (a, b) =>
-            parseDate(b.date_created).getTime() -
-            parseDate(a.date_created).getTime()
+            parseDate(b.dateCreated).getTime() -
+            parseDate(a.dateCreated).getTime()
         )
     );
   }, [filteringByWorkspace, sessions]);
 
   useEffect(() => {
-      setHeaderHeight(stickyHistoryHeaderRef.current?.clientHeight || 100);
+    setHeaderHeight(stickyHistoryHeaderRef.current?.clientHeight || 100);
   }, [stickyHistoryHeaderRef.current]);
 
   const yesterday = new Date(Date.now() - 1000 * 60 * 60 * 24);
@@ -198,7 +183,11 @@ function History() {
 
   return (
     <div className="overflow-y-scroll" style={{ fontSize: getFontSize() }}>
-      <div ref={stickyHistoryHeaderRef} className="sticky top-0" style={{ backgroundColor: vscBackground }}>
+      <div
+        ref={stickyHistoryHeaderRef}
+        className="sticky top-0"
+        style={{ backgroundColor: vscBackground }}
+      >
         <div
           className="items-center flex m-0 p-0"
           style={{
@@ -213,7 +202,7 @@ function History() {
           />
           <h3 className="text-lg font-bold m-2 inline-block">History</h3>
         </div>
-        {workspacePaths && workspacePaths.length > 0 && (
+        {/* {workspacePaths && workspacePaths.length > 0 && (
           <CheckDiv
             checked={filteringByWorkspace}
             onClick={() => setFilteringByWorkspace((prev) => !prev)}
@@ -221,18 +210,18 @@ function History() {
               workspacePaths[workspacePaths.length - 1]
             )}/`}
           />
-        )}
+        )} */}
       </div>
 
       {sessions.filter((session) => {
         if (
           !filteringByWorkspace ||
           typeof workspacePaths === "undefined" ||
-          typeof session.workspace_directory === "undefined"
+          typeof session.workspaceDirectory === "undefined"
         ) {
           return true;
         }
-        return workspacePaths.includes(session.workspace_directory);
+        return workspacePaths.includes(session.workspaceDirectory);
       }).length === 0 && (
         <div className="text-center m-4">
           No past sessions found. To start a new session, either click the "+"
@@ -246,30 +235,36 @@ function History() {
             {filteredAndSortedSessions.map((session, index) => {
               const prevDate =
                 index > 0
-                  ? parseDate(filteredAndSortedSessions[index - 1].date_created)
+                  ? parseDate(filteredAndSortedSessions[index - 1].dateCreated)
                   : earlier;
-              const date = parseDate(session.date_created);
+              const date = parseDate(session.dateCreated);
               return (
                 <Fragment key={index}>
                   {index === 0 && date > yesterday && (
-                    <SectionHeader style={{ top: `${headerHeight}px` }}>Today</SectionHeader>
+                    <SectionHeader style={{ top: `${headerHeight}px` }}>
+                      Today
+                    </SectionHeader>
                   )}
                   {date < yesterday &&
                     date > lastWeek &&
                     prevDate > yesterday && (
-                    <SectionHeader style={{ top: `${headerHeight}px` }}>This Week</SectionHeader>
+                      <SectionHeader style={{ top: `${headerHeight}px` }}>
+                        This Week
+                      </SectionHeader>
                     )}
                   {date < lastWeek &&
                     date > lastMonth &&
                     prevDate > lastWeek && (
-                    <SectionHeader style={{ top: `${headerHeight}px` }}>This Month</SectionHeader>
+                      <SectionHeader style={{ top: `${headerHeight}px` }}>
+                        This Month
+                      </SectionHeader>
                     )}
 
                   <Tr key={index}>
                     <TableRow
                       session={session}
                       date={date}
-                      onDelete={() => deleteSessionInUI(session.session_id)}
+                      onDelete={() => deleteSessionInUI(session.sessionId)}
                     ></TableRow>
                   </Tr>
                 </Fragment>

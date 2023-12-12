@@ -1,14 +1,16 @@
-import React, { useContext } from "react";
-import ModelCard from "../components/modelSelection/ModelCard";
-import styled from "styled-components";
 import { ArrowLeftIcon } from "@heroicons/react/24/outline";
-import { lightGray, vscBackground } from "../components";
-import { useNavigate } from "react-router-dom";
-import { useDispatch } from "react-redux";
-import { GUIClientContext } from "../App";
-import { MODEL_INFO, PROVIDER_INFO } from "../util/modelData";
-import Toggle from "../components/modelSelection/Toggle";
 import _ from "lodash";
+import React from "react";
+import { useNavigate } from "react-router-dom";
+import styled from "styled-components";
+import { lightGray, vscBackground } from "../components";
+import ModelCard from "../components/modelSelection/ModelCard";
+
+import { useDispatch } from "react-redux";
+import Toggle from "../components/modelSelection/Toggle";
+import { setDefaultModel } from "../redux/slices/stateSlice";
+import { addModel } from "../util/ide";
+import { MODEL_INFO, PROVIDER_INFO } from "../util/modelData";
 
 const GridDiv = styled.div`
   display: grid;
@@ -21,7 +23,7 @@ const GridDiv = styled.div`
 
 function Models() {
   const navigate = useNavigate();
-  const client = useContext(GUIClientContext);
+  const dispatch = useDispatch();
 
   const [providersSelected, setProvidersSelected] = React.useState(true);
 
@@ -78,7 +80,7 @@ function Models() {
               dimensions={pkg.dimensions}
               providerOptions={pkg.providerOptions}
               onClick={(e, dimensionChoices, selectedProvider) => {
-                client?.addModelForRole("*", {
+                const model = {
                   ...pkg.params,
                   ..._.merge(
                     {},
@@ -90,7 +92,9 @@ function Models() {
                     }) || [])
                   ),
                   provider: PROVIDER_INFO[selectedProvider].provider,
-                });
+                };
+                addModel(model);
+                dispatch(setDefaultModel(model.title));
                 navigate("/");
               }}
             />

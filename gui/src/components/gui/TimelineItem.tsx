@@ -1,9 +1,8 @@
-import React from "react";
-import { lightGray, vscBackground } from "..";
-import styled from "styled-components";
 import { ChatBubbleOvalLeftIcon } from "@heroicons/react/24/outline";
+import { ChatHistoryItem } from "core/llm/types";
+import styled from "styled-components";
+import { lightGray, vscBackground } from "..";
 import { getFontSize } from "../../util";
-import { StepDescription } from "../../schema/SessionState";
 
 const CollapseButton = styled.div`
   background-color: ${vscBackground};
@@ -28,7 +27,7 @@ const CollapsedDiv = styled.div<{ fontSize?: number }>`
 `;
 
 interface TimelineItemProps {
-  step: StepDescription;
+  item: ChatHistoryItem;
   open: boolean;
   onToggle: () => void;
   children: any;
@@ -50,7 +49,8 @@ function TimelineItem(props: TimelineItemProps) {
         )}
       </CollapseButton>
       <span style={{ color: lightGray }}>
-        {props.step.error ? props.step.error.title : props.step.name}
+        {props.item.message.role} Message
+        {/* {props.step.error ? props.step.error.title : props.step.name} */}
       </span>
     </CollapsedDiv>
   );

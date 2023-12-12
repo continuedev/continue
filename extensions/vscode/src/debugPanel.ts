@@ -1,9 +1,13 @@
-import * as vscode from "vscode";
-import { getContinueServerUrl } from "./bridge";
-import { getExtensionUri, getNonce, getUniqueId } from "./util/vscode";
-import { ideProtocolClient, windowId } from "./activation/activate";
+import { FileEdit } from "core/types";
+import { getConfigJsonPath, getDevDataFilePath } from "core/util/paths";
+import { readFileSync, writeFileSync } from "fs";
 import * as io from "socket.io-client";
-import { FileEdit } from "../schema/FileEdit";
+import * as vscode from "vscode";
+import { ideProtocolClient, windowId } from "./activation/activate";
+import { getContinueServerUrl } from "./bridge";
+import historyManager from "./history";
+import VsCodeIde from "./ideProtocol";
+import { getExtensionUri, getNonce, getUniqueId } from "./util/vscode";
 
 let sockets: { [url: string]: io.Socket | undefined } = {};
 
@@ -45,6 +49,12 @@ export function getSidebarContent(
     enableScripts: true,
     localResourceRoots: [vscode.Uri.joinPath(extensionUri, "gui")],
     enableCommandUris: true,
+    portMapping: [
+      {
+        webviewPort: 65433,
+        extensionHostPort: 65433,
+      },
+    ],
   };
 
   const nonce = getNonce();
@@ -97,6 +107,14 @@ export function getSidebarContent(
   }
 
   panel.webview.onDidReceiveMessage(async (data) => {
+    const ide = new VsCodeIde();
+    const respond = (message: any) => {
+      panel.webview.postMessage({
+        type: data.type,
+        messageId: data.messageId,
+        message: message || {},
+      });
+    };
     switch (data.type) {
       case "websocketForwardingOpen": {
         let url = data.url;
@@ -140,6 +158,10 @@ export function getSidebarContent(
         ideProtocolClient.openFile(data.filepath);
         break;
       }
+      case "openConfigJson": {
+        ideProtocolClient.openFile(getConfigJsonPath());
+        break;
+      }
       case "readRangeInFile": {
         vscode.workspace.openTextDocument(data.filepath).then((document) => {
           let start = new vscode.Position(0, 0);
@@ -172,10 +194,6 @@ export function getSidebarContent(
           },
           "#00ff0022"
         );
-        break;
-      }
-      case "showVirtualFile": {
-        ideProtocolClient.showVirtualFile(data.name, data.content);
         break;
       }
       case "toggleDevTools": {
@@ -226,6 +244,124 @@ export function getSidebarContent(
           }
         );
 
+        break;
+      }
+
+      // IDE
+      case "getDiff": {
+        respond(await ide.getDiff());
+        break;
+      }
+      case "getSerializedConfig": {
+        respond(await ide.getSerializedConfig());
+        break;
+      }
+      case "getTerminalContents": {
+        respond(await ide.getTerminalContents());
+        break;
+      }
+      case "listWorkspaceContents": {
+        respond(await ide.listWorkspaceContents());
+        break;
+      }
+      case "getWorkspaceDir": {
+        respond(await ide.getWorkspaceDir());
+        break;
+      }
+      case "writeFile": {
+        respond(await ide.writeFile(data.message.path, data.message.contents));
+        break;
+      }
+      case "showVirtualFile": {
+        respond(await ide.showVirtualFile(data.name, data.content));
+        break;
+      }
+      case "getContinueDir": {
+        respond(await ide.getContinueDir());
+        break;
+      }
+      case "openFile": {
+        respond(await ide.openFile(data.message.path));
+        break;
+      }
+      case "runCommand": {
+        respond(await ide.runCommand(data.message.command));
+        break;
+      }
+      // History
+      case "history": {
+        respond(historyManager.list());
+        break;
+      }
+      case "saveSession": {
+        historyManager.save(data.message);
+        respond({});
+        break;
+      }
+      case "deleteSession": {
+        historyManager.delete(data.message);
+        respond({});
+        break;
+      }
+      case "loadSession": {
+        respond(historyManager.load(data.message));
+        break;
+      }
+      case "saveFile": {
+        respond(await ide.saveFile(data.message.filepath));
+        break;
+      }
+      case "readFile": {
+        respond(await ide.readFile(data.message.filepath));
+        break;
+      }
+      case "showDiff": {
+        respond(
+          await ide.showDiff(
+            data.message.filepath,
+            data.message.newContents,
+            data.message.stepIndex
+          )
+        );
+        break;
+      }
+      // Other
+      case "errorPopup": {
+        vscode.window.showErrorMessage(data.message);
+        break;
+      }
+      case "logDevData": {
+        const filepath: string = getDevDataFilePath(data.tableName);
+        const jsonLine = JSON.stringify(data.data);
+        writeFileSync(filepath, `${jsonLine}\n`, { flag: "a" });
+        break;
+      }
+      case "addModel": {
+        const model = data.model;
+        const config = readFileSync(getConfigJsonPath(), "utf8");
+        const configJson = JSON.parse(config);
+        configJson.models.push(model);
+        writeFileSync(
+          getConfigJsonPath(),
+          JSON.stringify(
+            configJson,
+            (key, value) => {
+              return value === null ? undefined : value;
+            },
+            2
+          )
+        );
+        ideProtocolClient.configUpdate(configJson);
+        break;
+      }
+      case "deleteModel": {
+        const config = readFileSync(getConfigJsonPath(), "utf8");
+        const configJson = JSON.parse(config);
+        configJson.models = configJson.models.filter(
+          (m: any) => m.title !== data.title
+        );
+        writeFileSync(getConfigJsonPath(), JSON.stringify(configJson, null, 2));
+        ideProtocolClient.configUpdate(configJson);
         break;
       }
     }

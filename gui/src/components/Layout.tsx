@@ -1,27 +1,33 @@
-import styled from "styled-components";
-import { defaultBorderRadius, secondaryDark, vscForeground } from ".";
-import { Outlet } from "react-router-dom";
-import TextDialog from "./dialogs";
-import { useContext, useEffect } from "react";
-import { GUIClientContext } from "../App";
+import {
+  Cog6ToothIcon,
+  QuestionMarkCircleIcon,
+  SparklesIcon,
+} from "@heroicons/react/24/outline";
+import { postToIde } from "core/ide/messaging";
+import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { RootStore } from "../redux/store";
+import { Outlet, useLocation, useNavigate } from "react-router-dom";
+import styled from "styled-components";
+import {
+  defaultBorderRadius,
+  secondaryDark,
+  vscBackground,
+  vscForeground,
+} from ".";
+import useHistory from "../hooks/useHistory";
+import { defaultModelSelector } from "../redux/selectors/modelSelectors";
 import {
   setBottomMessage,
   setBottomMessageCloseTimeout,
   setShowDialog,
 } from "../redux/slices/uiStateSlice";
-import {
-  SparklesIcon,
-  Cog6ToothIcon,
-  QuestionMarkCircleIcon,
-} from "@heroicons/react/24/outline";
-import HeaderButtonWithText from "./HeaderButtonWithText";
-import { useNavigate, useLocation } from "react-router-dom";
-import ModelSelect from "./modelSelection/ModelSelect";
-import ProgressBar from "./loaders/ProgressBar";
+import { RootStore } from "../redux/store";
 import { getFontSize } from "../util";
+import HeaderButtonWithText from "./HeaderButtonWithText";
+import TextDialog from "./dialogs";
 import IndexingProgressBar from "./loaders/IndexingProgressBar";
+import ProgressBar from "./loaders/ProgressBar";
+import ModelSelect from "./modelSelection/ModelSelect";
 
 // #region Styled Components
 const FOOTER_HEIGHT = "1.8em";
@@ -31,6 +37,7 @@ const LayoutTopDiv = styled.div`
   border-radius: ${defaultBorderRadius};
   scrollbar-base-color: transparent;
   scrollbar-width: thin;
+  background-color: ${vscBackground};
 
   & * {
     ::-webkit-scrollbar {
@@ -99,7 +106,6 @@ const DropdownPortalDiv = styled.div`
 const Layout = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const client = useContext(GUIClientContext);
   const dispatch = useDispatch();
   const dialogMessage = useSelector(
     (state: RootStore) => state.uiState.dialogMessage
@@ -111,9 +117,7 @@ const Layout = () => {
     (state: RootStore) => state.serverState.indexingProgress
   );
 
-  const defaultModel = useSelector(
-    (state: RootStore) => (state.serverState.config as any).models?.default
-  );
+  const defaultModel = useSelector(defaultModelSelector);
   // #region Selectors
 
   const bottomMessage = useSelector(
@@ -123,20 +127,9 @@ const Layout = () => {
     (state: RootStore) => state.uiState.displayBottomMessageOnBottom
   );
 
-  const timeline = useSelector(
-    (state: RootStore) => state.sessionState.history
-  );
-  const workspacePaths = (window as any).workspacePaths || [];
-  const sessionState = useSelector((state: RootStore) => state.sessionState);
+  const timeline = useSelector((state: RootStore) => state.state.history);
 
   // #endregion
-
-  useEffect(() => {
-    if (localStorage.getItem("migrationMessageSeen") !== "true") {
-      localStorage.setItem("migrationMessageSeen", "true");
-      navigate("/migration");
-    }
-  }, []);
 
   useEffect(() => {
     const handleKeyDown = (event: any) => {
@@ -156,14 +149,17 @@ const Layout = () => {
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [client, timeline]);
+  }, [timeline]);
+
+  const { saveSession } = useHistory();
 
   useEffect(() => {
     const handler = (event: any) => {
       if (event.data.type === "addModel") {
         navigate("/models");
       } else if (event.data.type === "openSettings") {
-        navigate("/settings");
+        // navigate("/settings");
+        postToIde("openConfigJson", {});
       } else if (event.data.type === "viewHistory") {
         // Toggle the history page / main page
         if (location.pathname === "/history") {
@@ -235,8 +231,8 @@ const Layout = () => {
                 )}
               <ModelSelect />
               {indexingProgress >= 1 && // Would take up too much space together with indexing progress
-                defaultModel?.class_name === "OpenAIFreeTrial" &&
-                defaultModel?.api_key === "" &&
+                defaultModel?.providerName === "openai-free-trial" &&
+                defaultModel?.apiKey === "" &&
                 (location.pathname === "/settings" ||
                   parseInt(localStorage.getItem("ftc") || "0") >= 125) && (
                   <ProgressBar
@@ -262,7 +258,8 @@ const Layout = () => {
             </HeaderButtonWithText>
             <HeaderButtonWithText
               onClick={() => {
-                navigate("/settings");
+                // navigate("/settings");
+                postToIde("openConfigJson", {});
               }}
               text="Settings"
             >
