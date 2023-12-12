@@ -121,7 +121,6 @@ jobs:
     runs-on: ubuntu-latest
     needs:
       - build
-      - pytest
     permissions:
       contents: write
     steps:
