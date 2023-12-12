@@ -28,7 +28,6 @@
     "js-tiktoken": "^1.0.8",
     "openai": "^4.20.1",
     "replicate": "^0.23.0",
-    "uuid": "^9.0.1",
-    "cargo-cp-artifact": "^0.1"
+    "uuid": "^9.0.1"
   }
 }

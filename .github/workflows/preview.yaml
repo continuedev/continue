@@ -70,6 +70,7 @@ jobs:
       - name: Install extension Dependencies
         run: |
           cd extensions/vscode
+          npm i -g cargo-cp-artifact
           npm ci
 
       - name: Install gui Dependencies
