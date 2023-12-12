@@ -61,11 +61,21 @@ jobs:
           path: extensions/vscode/node_modules
           key: ${{ runner.os }}-node-${{ hashFiles('extensions/vscode/package-lock.json') }}
 
+      - name: Cache core node_modules
+        uses: actions/cache@v2
+        with:
+          path: core/node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('core/package-lock.json') }}
+
       - name: Cache gui node_modules
         uses: actions/cache@v2
         with:
           path: gui/node_modules
           key: ${{ runner.os }}-node-${{ hashFiles('gui/package-lock.json') }}
+
+      - name: Install global Dependencies
+        run: |
+          npm install -g cargo-cp-artifact
 
       - name: Install extension Dependencies
         run: |
