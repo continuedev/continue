@@ -366,7 +366,7 @@ export function getSidebarContent(
         ${page ? `<script>window.location.pathname = "${page}"</script>` : ""}
 
 
-        ${false && `<iframe src="http://localhost:65433/sw"></iframe>`}
+        ${false ? `<iframe src="http://localhost:65433/sw"></iframe>` : null}
       </body>
     </html>`;
 }

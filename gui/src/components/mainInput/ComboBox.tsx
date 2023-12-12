@@ -585,7 +585,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
     try {
       let res: any = miniSearch.search(query.trim() === "" ? "/" : query, {
         prefix: true,
-        fuzzy: 3,
+        fuzzy: 1,
       });
       if (res.length === 0) {
         res = firstResults;
@@ -1193,10 +1193,12 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
         ref={divRef}
       >
         <GradientBorder
-          loading={active}
+          loading={active && props.isLastUserInput}
           isFirst={false}
           isLast={false}
-          borderColor={active ? undefined : vscBackground}
+          borderColor={
+            active && props.isLastUserInput ? undefined : vscBackground
+          }
           borderRadius={defaultBorderRadius}
         >
           <MainTextInput
@@ -1221,7 +1223,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
             fontSize={getFontSize()}
             disabled={props.disabled}
             placeholder={
-              props.isMainInput
+              history.length === 0
                 ? `Ask a question, '/' for slash commands, '@' to add context`
                 : `Ask a follow-up`
             }
@@ -1452,7 +1454,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
                   }
                 }}
               >
-                ⏎ Return
+                ⏎ Enter
               </EnterButton>
             </InputToolbar>
           )}

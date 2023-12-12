@@ -101,7 +101,8 @@ function useChatHandler(dispatch: Dispatch) {
     };
     const historyItem: ChatHistoryItem = {
       message,
-      contextItems,
+      contextItems:
+        typeof index === "number" ? history[index].contextItems : contextItems,
     };
 
     let newHistory: ChatHistory = [];
