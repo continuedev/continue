@@ -1,3 +1,4 @@
+import defaultConfig from "core/config/default";
 import { SerializedContinueConfig } from "core/config/index";
 import { IDE } from "core/ide/types";
 import {
@@ -12,25 +13,43 @@ import { ideProtocolClient } from "./activation/activate";
 
 class VsCodeIde implements IDE {
   async getSerializedConfig(): Promise<SerializedContinueConfig> {
-    const configPath = getConfigJsonPath();
-    let contents = fs.readFileSync(configPath, "utf8");
-    const config = JSON.parse(contents) as SerializedContinueConfig;
-    config.allowAnonymousTelemetry =
-      config.allowAnonymousTelemetry &&
-      vscode.workspace.getConfiguration("continue").get("telemetryEnabled");
+    try {
+      const configPath = getConfigJsonPath();
+      let contents = fs.readFileSync(configPath, "utf8");
+      const config = JSON.parse(contents) as SerializedContinueConfig;
+      config.allowAnonymousTelemetry =
+        config.allowAnonymousTelemetry &&
+        vscode.workspace.getConfiguration("continue").get("telemetryEnabled");
 
-    // Migrate to camelCase - replace all instances of "snake_case" with "camelCase"
-    migrate("camelCaseConfig", () => {
-      contents = contents
-        .replace(/(_\w)/g, function (m) {
-          return m[1].toUpperCase();
-        })
-        .replace("openai-aiohttp", "openai");
+      // Migrate to camelCase - replace all instances of "snake_case" with "camelCase"
+      migrate("camelCaseConfig", () => {
+        contents = contents
+          .replace(/(_\w)/g, function (m) {
+            return m[1].toUpperCase();
+          })
+          .replace("openai-aiohttp", "openai");
 
-      fs.writeFileSync(configPath, contents, "utf8");
-    });
+        fs.writeFileSync(configPath, contents, "utf8");
+      });
 
-    return config;
+      return config;
+    } catch (e) {
+      vscode.window
+        .showErrorMessage(
+          "Error loading config.json. Please check your config.json file: " + e,
+          "Open config.json"
+        )
+        .then((selection) => {
+          if (selection === "Open config.json") {
+            vscode.workspace
+              .openTextDocument(getConfigJsonPath())
+              .then((doc) => {
+                vscode.window.showTextDocument(doc);
+              });
+          }
+        });
+      return defaultConfig;
+    }
   }
 
   async getConfigJsUrl(): Promise<string | undefined> {

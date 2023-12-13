@@ -336,7 +336,13 @@ export function getSidebarContent(
       }
       // Other
       case "errorPopup": {
-        vscode.window.showErrorMessage(data.message);
+        vscode.window
+          .showErrorMessage(data.message, "Show Logs")
+          .then((selection) => {
+            if (selection === "Show Logs") {
+              vscode.commands.executeCommand("workbench.action.toggleDevTools");
+            }
+          });
         break;
       }
       case "logDevData": {
