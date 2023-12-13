@@ -1,4 +1,5 @@
 import GenerateTerminalCommand from "./cmd";
+import CommentSlashCommand from "./comment";
 import DraftIssueCommand from "./draftIssue";
 import EditSlashCommand from "./edit";
 import ShareSlashCommand from "./share";
@@ -10,4 +11,5 @@ export default [
   StackOverflowSlashCommand,
   GenerateTerminalCommand,
   EditSlashCommand,
+  CommentSlashCommand,
 ];

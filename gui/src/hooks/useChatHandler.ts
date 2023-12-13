@@ -81,7 +81,7 @@ function useChatHandler(dispatch: Dispatch) {
         dispatch(addContextItems([item]));
       },
       contextItems,
-      options: {}, // TODO: pass options to slash command
+      params: slashCommand.params,
     };
 
     // TODO: if the model returned fast enough it would immediately break

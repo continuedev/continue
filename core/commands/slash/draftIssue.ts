@@ -24,8 +24,8 @@ Body:\n\n`;
 const DraftIssueCommand: SlashCommand = {
   name: "issue",
   description: "Draft a GitHub issue",
-  run: async function* ({ input, llm, history, options }) {
-    if (options?.repositoryUrl === undefined) {
+  run: async function* ({ input, llm, history, params }) {
+    if (params?.repositoryUrl === undefined) {
       yield "This command requires a repository URL to be set in the config file.";
       return;
     }
@@ -48,7 +48,7 @@ const DraftIssueCommand: SlashCommand = {
     }
 
     // const url = f"{self.repository_url}/issues/new?title={quote(title)}&body={quote(body)}"
-    const url = `${options.repositoryUrl}/issues/new?title={encodeURIComponent(title)}&body={encodeURIComponent(body)}`;
+    const url = `${params.repositoryUrl}/issues/new?title={encodeURIComponent(title)}&body={encodeURIComponent(body)}`;
     yield `\n\n[Link to draft of issue](${url})`;
   },
 };

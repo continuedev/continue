@@ -9,13 +9,14 @@ export interface ContinueSDK {
   addContextItem: (item: ContextItem) => void;
   history: ChatMessage[];
   input: string;
-  options?: any;
+  params?: any;
   contextItems: ContextItem[];
 }
 
 export interface SlashCommand {
   name: string;
   description: string;
+  params?: { [key: string]: any };
   run: (sdk: ContinueSDK) => AsyncGenerator<string | undefined>;
 }
 
@@ -46,6 +47,15 @@ export function slashFromCustomCommand(
   };
 }
 
-export function slashCommandFromDescription(desc: SlashCommandDescription) {
-  return SlashCommands.find((cmd) => cmd.name === desc.name);
+export function slashCommandFromDescription(
+  desc: SlashCommandDescription
+): SlashCommand | undefined {
+  const cmd = SlashCommands.find((cmd) => cmd.name === desc.name);
+  if (!cmd) {
+    return undefined;
+  }
+  return {
+    ...cmd,
+    params: desc.params,
+  };
 }
