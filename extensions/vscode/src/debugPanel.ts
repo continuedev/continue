@@ -1,5 +1,10 @@
+import { ModelDescription } from "core/config";
 import { FileEdit } from "core/types";
-import { getConfigJsonPath, getDevDataFilePath } from "core/util/paths";
+import {
+  editConfigJson,
+  getConfigJsonPath,
+  getDevDataFilePath,
+} from "core/util/paths";
 import { readFileSync, writeFileSync } from "fs";
 import * as io from "socket.io-client";
 import * as vscode from "vscode";
@@ -355,12 +360,26 @@ export function getSidebarContent(
         break;
       }
       case "deleteModel": {
-        const config = readFileSync(getConfigJsonPath(), "utf8");
-        const configJson = JSON.parse(config);
-        configJson.models = configJson.models.filter(
-          (m: any) => m.title !== data.title
-        );
-        writeFileSync(getConfigJsonPath(), JSON.stringify(configJson, null, 2));
+        const configJson = editConfigJson((config) => {
+          config.models = config.models.filter(
+            (m: any) => m.title !== data.title
+          );
+          return config;
+        });
+        ideProtocolClient.configUpdate(configJson);
+        break;
+      }
+      case "addOpenAIKey": {
+        const configJson = editConfigJson((config) => {
+          config.models = config.models.map((m: ModelDescription) => {
+            if (m.provider === "openai-free-trial") {
+              m.apiKey = data.key;
+              m.provider = "openai";
+            }
+            return m;
+          });
+          return config;
+        });
         ideProtocolClient.configUpdate(configJson);
         break;
       }

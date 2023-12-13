@@ -1,6 +1,7 @@
 import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
+import { SerializedContinueConfig } from "../config";
 import defaultConfig from "../config/default";
 
 export function getContinueGlobalPath(): string {
@@ -46,4 +47,14 @@ export function devDataPath(): string {
 
 export function getDevDataFilePath(fileName: string): string {
   return path.join(devDataPath(), fileName);
+}
+
+export function editConfigJson(
+  callback: (config: SerializedContinueConfig) => SerializedContinueConfig
+) {
+  const config = fs.readFileSync(getConfigJsonPath(), "utf8");
+  let configJson = JSON.parse(config);
+  configJson = callback(configJson);
+  fs.writeFileSync(getConfigJsonPath(), JSON.stringify(configJson, null, 2));
+  return configJson;
 }

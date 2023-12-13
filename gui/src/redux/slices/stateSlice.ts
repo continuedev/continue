@@ -115,6 +115,12 @@ export const stateSlice = createSlice({
         state.history[state.history.length - 1].promptLogs = payload;
       }
     },
+    setActive: (state) => {
+      return {
+        ...state,
+        active: true,
+      };
+    },
     addContextItemsAtIndex: (state, action) => {
       if (action.payload.index < state.history.length) {
         return {
@@ -380,5 +386,6 @@ export const {
   setDefaultModel,
   setConfig,
   addLogs,
+  setActive,
 } = stateSlice.actions;
 export default stateSlice.reducer;

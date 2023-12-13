@@ -77,3 +77,7 @@ export function addModel(model: any) {
 export function deleteModel(title: any) {
   postToIde("deleteModel", { title });
 }
+
+export function addOpenAIKey(key: string) {
+  postToIde("addOpenAIKey", { key });
+}

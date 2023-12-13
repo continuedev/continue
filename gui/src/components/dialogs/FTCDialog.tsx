@@ -5,7 +5,7 @@ import styled from "styled-components";
 import { Button, Input } from "..";
 import { setDefaultModel } from "../../redux/slices/stateSlice";
 import { setShowDialog } from "../../redux/slices/uiStateSlice";
-import { addModel } from "../../util/ide";
+import { addOpenAIKey } from "../../util/ide";
 
 const GridDiv = styled.div`
   display: grid;
@@ -55,12 +55,7 @@ function FTCDialog() {
         <Button
           disabled={!apiKey}
           onClick={() => {
-            addModel({
-              model: "gpt-4",
-              api_key: apiKey,
-              title: "GPT-4",
-              provider: "openai",
-            });
+            addOpenAIKey(apiKey);
             dispatch(setShowDialog(false));
             dispatch(setDefaultModel("GPT-4"));
           }}

@@ -120,6 +120,9 @@ function useChatHandler(dispatch: Dispatch) {
         dispatch(submitMessage(message));
       }
 
+      // TODO: hacky way to allow rerender
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
       posthog.capture("step run", {
         step_name: "User Input",
         params: {

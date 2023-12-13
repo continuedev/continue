@@ -216,7 +216,7 @@ const InputToolbar = styled.div`
   background-color: ${secondaryDark};
 
   align-items: center;
-  z-index: 100;
+  z-index: 50;
   font-size: 10px;
 
   cursor: text;
@@ -613,6 +613,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
     itemToString(item) {
       return item ? item.title : "";
     },
+    initialInputValue: props.value || undefined,
   });
 
   const [waitingForContextItem, setWaitingForContextItem] = useState(false);
