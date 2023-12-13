@@ -185,16 +185,13 @@ const MainTextInput = styled.textarea<{
   color: ${vscForeground};
   z-index: 1;
   border: 0.5px solid
-    ${(props) =>
-      props.inQueryForDynamicProvider ? buttonColor : "transparent"};
-
-  outline: 0.5px solid
     ${(props) => (props.inQueryForDynamicProvider ? buttonColor : lightGray)};
+  outline: none;
 
   &:focus {
-    outline: 0.5px solid
+    border: 0.5px solid
       ${(props) => (props.inQueryForDynamicProvider ? buttonColor : lightGray)};
-    border: 0.5px solid transparent;
+    outline: none;
     background-color: ${(props) =>
       props.inQueryForDynamicProvider ? `${buttonColor}22` : secondaryDark};
   }
@@ -1435,9 +1432,9 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
                 }}
                 className={"hover:underline cursor-pointer float-right"}
               >
-                {downshiftProps.inputValue?.startsWith("/codebase")
+                {/* {downshiftProps.inputValue?.startsWith("/codebase")
                   ? "Using Codebase"
-                  : `${getMetaKeyLabel()} ⏎ Use Codebase`}
+                  : `${getMetaKeyLabel()} ⏎ Use Codebase`} */}
               </span>
 
               <EnterButton

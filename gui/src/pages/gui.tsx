@@ -43,7 +43,7 @@ import {
   setShowDialog,
 } from "../redux/slices/uiStateSlice";
 import { RootStore } from "../redux/store";
-import { isMetaEquivalentKeyPressed } from "../util";
+import { getMetaKeyLabel, isMetaEquivalentKeyPressed } from "../util";
 
 const TopGuiDiv = styled.div`
   overflow-y: scroll;
@@ -374,9 +374,9 @@ function GUI(props: GUIProps) {
       }
 
       // cmd+enter to /codebase
-      if (event && isMetaEquivalentKeyPressed(event)) {
-        input = `/codebase ${input}`;
-      }
+      // if (event && isMetaEquivalentKeyPressed(event)) {
+      //   input = `/codebase ${input}`;
+      // }
       (mainTextInputRef.current as any).setInputValue("");
 
       sendInput(input);
@@ -512,7 +512,7 @@ function GUI(props: GUIProps) {
               dispatch(setInactive());
             }}
           >
-            ⌘ ⌫ Cancel
+            {getMetaKeyLabel()} ⌫ Cancel
           </StopButton>
         ) : (
           <ComboBox

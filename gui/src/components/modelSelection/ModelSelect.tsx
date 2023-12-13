@@ -20,7 +20,7 @@ import {
 import { defaultModelSelector } from "../../redux/selectors/modelSelectors";
 import { setDefaultModel } from "../../redux/slices/stateSlice";
 import { RootStore } from "../../redux/store";
-import { getMetaKeyLabel } from "../../util";
+import { getMetaKeyLabel, isMetaEquivalentKeyPressed } from "../../util";
 import { deleteModel } from "../../util/ide";
 import HeaderButtonWithText from "../HeaderButtonWithText";
 
@@ -220,7 +220,7 @@ function ModelSelect(props: {}) {
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "'" && event.metaKey) {
+      if (event.key === "'" && isMetaEquivalentKeyPressed(event)) {
         const direction = event.shiftKey ? -1 : 1;
         const currentIndex = options.findIndex(
           (option) => option.value === defaultModel?.title
