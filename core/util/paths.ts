@@ -37,6 +37,51 @@ export function getConfigJsonPath(): string {
   return p;
 }
 
+export function getConfigTsPath(): string {
+  // Do not create automatically
+  return path.join(getContinueGlobalPath(), "config.ts");
+}
+
+export function getConfigJsPath(): string {
+  // Do not create automatically
+  return path.join(getContinueGlobalPath(), "config.js");
+}
+
+export function getTsConfigPath(): string {
+  const tsConfigPath = path.join(getContinueGlobalPath(), "tsconfig.json");
+  if (!fs.existsSync(tsConfigPath)) {
+    fs.writeFileSync(
+      tsConfigPath,
+      JSON.stringify(
+        {
+          compilerOptions: {
+            target: "ESNext",
+            useDefineForClassFields: true,
+            lib: ["DOM", "DOM.Iterable", "ESNext"],
+            allowJs: false,
+            skipLibCheck: true,
+            esModuleInterop: false,
+            allowSyntheticDefaultImports: true,
+            strict: true,
+            forceConsistentCasingInFileNames: true,
+            module: "AMD",
+            moduleResolution: "Node",
+            resolveJsonModule: true,
+            noEmit: false,
+            jsx: "react-jsx",
+            noEmitOnError: false,
+            outFile: "./config.js",
+          },
+          include: ["./config.ts"],
+        },
+        null,
+        2
+      )
+    );
+  }
+  return tsConfigPath;
+}
+
 export function devDataPath(): string {
   const sPath = path.join(getContinueGlobalPath(), "dev_data");
   if (!fs.existsSync(sPath)) {

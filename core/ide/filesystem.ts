@@ -1,6 +1,10 @@
 import * as fs from "fs";
 import { SerializedContinueConfig } from "../config";
-import { getConfigJsonPath, getContinueGlobalPath } from "../util/paths";
+import {
+  getConfigJsonPath,
+  getConfigTsPath,
+  getContinueGlobalPath,
+} from "../util/paths";
 import { IDE } from "./types";
 
 class FileSystemIde implements IDE {
@@ -8,6 +12,14 @@ class FileSystemIde implements IDE {
     const configPath = getConfigJsonPath();
     let contents = fs.readFileSync(configPath, "utf8");
     return JSON.parse(contents) as SerializedContinueConfig;
+  }
+
+  async getConfigJsUrl(): Promise<string | undefined> {
+    if (!fs.existsSync(getConfigTsPath())) {
+      return undefined;
+    }
+
+    throw new Error("Not implemented");
   }
 
   getDiff(): Promise<string> {

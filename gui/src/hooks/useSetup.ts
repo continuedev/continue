@@ -1,8 +1,9 @@
 import { Dispatch } from "@reduxjs/toolkit";
 import { useEffect } from "react";
 import { setServerStatusMessage } from "../redux/slices/miscSlice";
-import { postToIde } from "../util/ide";
+import { errorPopup, postToIde } from "../util/ide";
 
+import { loadSerializedConfig } from "core/config/load";
 import { ExtensionIde } from "core/ide/index";
 import { setVscMachineId } from "../redux/slices/configSlice";
 import {
@@ -13,11 +14,37 @@ import {
 import useChatHandler from "./useChatHandler";
 
 function useSetup(dispatch: Dispatch<any>) {
+  const loadConfig = async () => {
+    try {
+      const ide = new ExtensionIde();
+      let config = loadSerializedConfig(await ide.getSerializedConfig());
+      // const configJsUrl = await ide.getConfigJsUrl();
+      // if (configJsUrl) {
+      //   try {
+      //     // Try config.ts first
+      //     const module = await import(configJsUrl);
+      //     if (!module.config) {
+      //       throw new Error("config.ts does not export a config object");
+      //     }
+      //     console.log("Loaded config.ts", module.config);
+      //     config = module.modifyConfig(config);
+      //   } catch (e) {
+      //     console.log("Error loading config.ts: ", e);
+      //     errorPopup(e.message);
+      //   }
+      // }
+      console.log("Loaded config.json", config);
+      // Fall back to config.json
+      dispatch(setConfig(config));
+    } catch (e) {
+      console.log("Error loading config.json: ", e);
+      errorPopup(e.message);
+    }
+  };
+
   // Load config from the IDE
   useEffect(() => {
-    new ExtensionIde().getSerializedConfig().then((config) => {
-      dispatch(setConfig(config));
-    });
+    loadConfig();
   }, []);
 
   useEffect(() => {
@@ -59,7 +86,7 @@ function useSetup(dispatch: Dispatch<any>) {
           dispatch(setInactive());
           break;
         case "configUpdate":
-          dispatch(setConfig(event.data.config));
+          loadConfig();
           break;
         case "submitMessage":
           streamResponse(event.data.message);

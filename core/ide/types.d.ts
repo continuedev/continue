@@ -2,6 +2,7 @@ import { SerializedContinueConfig } from "../config";
 
 interface IDE {
   getSerializedConfig(): Promise<SerializedContinueConfig>;
+  getConfigJsUrl(): Promise<string | undefined>;
   getDiff(): Promise<string>;
   getTerminalContents(): Promise<string>;
   listWorkspaceContents(): Promise<string[]>;

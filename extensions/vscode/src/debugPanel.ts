@@ -261,6 +261,10 @@ export function getSidebarContent(
         respond(await ide.getSerializedConfig());
         break;
       }
+      case "getConfigJsUrl": {
+        respond(await ide.getConfigJsUrl());
+        break;
+      }
       case "getTerminalContents": {
         respond(await ide.getTerminalContents());
         break;

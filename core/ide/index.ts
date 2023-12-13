@@ -8,6 +8,10 @@ export class ExtensionIde implements IDE {
     return await r("getSerializedConfig");
   }
 
+  async getConfigJsUrl(): Promise<string | undefined> {
+    return await r("getConfigJsUrl");
+  }
+
   async getDiff() {
     return await r("getDiff");
   }
