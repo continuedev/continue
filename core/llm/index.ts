@@ -134,6 +134,11 @@ export interface LLMOptions {
   llmRequestHook?: (model: string, prompt: string) => any;
   apiKey?: string;
   apiBase?: string;
+
+  // Azure options
+  engine?: string;
+  apiVersion?: string;
+  apiType?: string;
 }
 
 interface LLMFullCompletionOptions {
@@ -174,6 +179,10 @@ export abstract class LLM implements LLMOptions {
   apiKey?: string;
   apiBase?: string;
 
+  engine?: string;
+  apiVersion?: string;
+  apiType?: string;
+
   constructor(options: LLMOptions) {
     // Set default options
     options = {
@@ -206,6 +215,10 @@ export abstract class LLM implements LLMOptions {
     this.llmRequestHook = options.llmRequestHook;
     this.apiKey = options.apiKey;
     this.apiBase = options.apiBase;
+
+    this.engine = options.engine;
+    this.apiVersion = options.apiVersion;
+    this.apiType = options.apiType;
   }
 
   private _compileChatMessages(

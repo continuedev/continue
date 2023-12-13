@@ -1,24 +1,12 @@
-import OpenAIClient from "openai";
 import { ChatCompletionCreateParamsBase } from "openai/resources/chat/completions";
 import { LLM, LLMOptions } from "..";
 import { ModelProvider } from "../../config";
 import { ChatMessage, CompletionOptions } from "../types";
 class OpenAI extends LLM {
   static providerName: ModelProvider = "openai";
-
-  private _openai: OpenAIClient;
-
-  constructor(options: LLMOptions) {
-    super(options);
-
-    this._openai = new OpenAIClient({
-      apiKey: this.apiKey,
-      baseURL: this.apiBase,
-      timeout: this.requestOptions?.timeout,
-      defaultHeaders: this.requestOptions?.headers,
-      dangerouslyAllowBrowser: true,
-    });
-  }
+  static defaultOptions: Partial<LLMOptions> = {
+    apiBase: "https://api.openai.com",
+  };
 
   protected _convertArgs(
     options: any,
@@ -42,27 +30,34 @@ class OpenAI extends LLM {
     prompt: string,
     options: CompletionOptions
   ): Promise<string> {
-    const response = await this._openai.chat.completions.create({
-      ...this._convertArgs(options, [{ role: "user", content: prompt }]),
-      stream: false,
-    });
+    let completion = "";
+    for await (const chunk of this._streamChat(
+      [{ role: "user", content: prompt }],
+      options
+    )) {
+      completion += chunk.content;
+    }
 
-    return response.choices[0].message.content || "";
+    return completion;
   }
 
   protected async *_streamComplete(
     prompt: string,
     options: CompletionOptions
   ): AsyncGenerator<string> {
-    const response = await this._openai.chat.completions.create({
-      ...this._convertArgs(options, [{ role: "user", content: prompt }]),
-      stream: true,
-    });
+    for await (const chunk of this._streamChat(
+      [{ role: "user", content: prompt }],
+      options
+    )) {
+      yield chunk.content;
+    }
+  }
 
-    for await (const message of response) {
-      if (message.choices[0].delta.content) {
-        yield message.choices[0].delta.content;
-      }
+  private _getChatUrl() {
+    if (this.apiType === "azure") {
+      return `${this.apiBase}/openai/deployments/${this.engine}/chat/completions?api-version=${this.apiVersion}`;
+    } else {
+      return this.apiBase + "/v1/chat/completions";
     }
   }
 
@@ -70,14 +65,56 @@ class OpenAI extends LLM {
     messages: ChatMessage[],
     options: CompletionOptions
   ): AsyncGenerator<ChatMessage> {
-    const response = await this._openai.chat.completions.create({
-      ...this._convertArgs(options, messages),
-      stream: true,
+    const response = await fetch(this._getChatUrl(), {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${this.apiKey}`,
+        "api-key": this.apiKey || "", // For Azure
+      },
+      body: JSON.stringify({
+        ...this._convertArgs(options, messages),
+        stream: true,
+      }),
     });
 
-    for await (const message of response) {
-      if (message.choices[0].delta.content) {
-        yield { role: "assistant", content: message.choices[0].delta.content };
+    // Receive as SSE
+    if (response.body === null) {
+      return;
+    }
+    let buffer = "";
+    const reader = response.body.getReader();
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) {
+        break;
+      }
+      buffer += new TextDecoder("utf-8").decode(value);
+      let position;
+      while ((position = buffer.indexOf("\n")) >= 0) {
+        const line = buffer.slice(0, position);
+        buffer = buffer.slice(position + 1);
+        if (line.startsWith("data: ") && !line.startsWith("data: [DONE]")) {
+          const result = JSON.parse(line.slice(6));
+          if (result.choices?.[0]?.delta?.content) {
+            yield result.choices[0].delta;
+          }
+        }
+      }
+    }
+    if (buffer.length > 0) {
+      if (buffer.startsWith("data: ") && !buffer.startsWith("data: [DONE]")) {
+        const result = JSON.parse(buffer.slice(6));
+        if (result.choices?.[0]?.delta?.content) {
+          yield result.choices[0].delta;
+        }
+      } else {
+        try {
+          const result = JSON.parse(buffer);
+          if (result.error) {
+            throw new Error(result.error);
+          }
+        } catch (e) {}
       }
     }
   }

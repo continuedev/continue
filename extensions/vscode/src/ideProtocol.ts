@@ -1,6 +1,10 @@
 import { SerializedContinueConfig } from "core/config/index";
 import { IDE } from "core/ide/types";
-import { getConfigJsonPath, getContinueGlobalPath } from "core/util/paths";
+import {
+  getConfigJsonPath,
+  getContinueGlobalPath,
+  migrate,
+} from "core/util/paths";
 import * as fs from "fs";
 import * as vscode from "vscode";
 import { ideProtocolClient } from "./activation/activate";
@@ -15,10 +19,15 @@ class VsCodeIde implements IDE {
       vscode.workspace.getConfiguration("continue").get("telemetryEnabled");
 
     // Migrate to camelCase - replace all instances of "snake_case" with "camelCase"
-    contents = contents.replace(/(_\w)/g, function (m) {
-      return m[1].toUpperCase();
+    migrate("camelCaseConfig", () => {
+      contents = contents
+        .replace(/(_\w)/g, function (m) {
+          return m[1].toUpperCase();
+        })
+        .replace("openai-aiohttp", "openai");
+
+      fs.writeFileSync(configPath, contents, "utf8");
     });
-    fs.writeFileSync(configPath, contents, "utf8");
 
     return config;
   }

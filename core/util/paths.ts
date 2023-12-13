@@ -46,7 +46,7 @@ export function devDataPath(): string {
 }
 
 export function getDevDataFilePath(fileName: string): string {
-  return path.join(devDataPath(), fileName);
+  return path.join(devDataPath(), fileName + ".jsonl");
 }
 
 export function editConfigJson(
@@ -57,4 +57,21 @@ export function editConfigJson(
   configJson = callback(configJson);
   fs.writeFileSync(getConfigJsonPath(), JSON.stringify(configJson, null, 2));
   return configJson;
+}
+
+function getMigrationsFolderPath(): string {
+  const migrationsPath = path.join(getContinueGlobalPath(), ".migrations");
+  if (!fs.existsSync(migrationsPath)) {
+    fs.mkdirSync(migrationsPath);
+  }
+  return migrationsPath;
+}
+
+export function migrate(id: string, callback: () => void) {
+  const migrationsPath = getMigrationsFolderPath();
+  const migrationPath = path.join(migrationsPath, id);
+  if (!fs.existsSync(migrationPath)) {
+    fs.writeFileSync(migrationPath, "");
+    callback();
+  }
 }
