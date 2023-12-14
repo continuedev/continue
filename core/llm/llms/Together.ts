@@ -42,7 +42,7 @@ class Together extends LLM {
     prompt: string,
     options: CompletionOptions
   ): AsyncGenerator<string> {
-    const response = await fetch(`${this.apiBase}/inference`, {
+    const response = await this.fetch(`${this.apiBase}/inference`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

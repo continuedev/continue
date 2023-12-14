@@ -49,7 +49,7 @@ class GooglePalm extends LLM {
         };
       }),
     };
-    const response = await fetch(apiURL, {
+    const response = await this.fetch(apiURL, {
       method: "POST",
       body: JSON.stringify(body),
     });
@@ -73,7 +73,7 @@ class GooglePalm extends LLM {
 
     const apiURL = `https://generativelanguage.googleapis.com/v1beta2/models/${options.model}:generateMessage?key=${this.apiKey}`;
     const body = { prompt: { messages: msgList } };
-    const response = await fetch(apiURL, {
+    const response = await this.fetch(apiURL, {
       method: "POST",
       body: JSON.stringify(body),
     });

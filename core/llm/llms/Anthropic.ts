@@ -46,7 +46,7 @@ class Anthropic extends LLM {
     prompt: string,
     options: CompletionOptions
   ): Promise<string> {
-    const response = await fetch(this.apiBase + "/complete", {
+    const response = await this.fetch(this.apiBase + "/complete", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -67,7 +67,7 @@ class Anthropic extends LLM {
     prompt: string,
     options: CompletionOptions
   ): AsyncGenerator<string> {
-    const response = await fetch(this.apiBase + "/complete", {
+    const response = await this.fetch(this.apiBase + "/complete", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

@@ -43,7 +43,7 @@ class Gemini extends LLM {
         stopSequences: options.stop,
       },
     };
-    const response = await fetch(apiUrl, {
+    const response = await this.fetch(apiUrl, {
       method: "POST",
       body: JSON.stringify(body),
       headers: {

@@ -21,7 +21,7 @@ class FreeTrial extends LLM {
   ): Promise<string> {
     const args = this.collectArgs(options);
 
-    const response = await fetch(`${SERVER_URL}/complete`, {
+    const response = await this.fetch(`${SERVER_URL}/complete`, {
       method: "POST",
       headers: this._getHeaders(),
       body: JSON.stringify({
@@ -39,7 +39,7 @@ class FreeTrial extends LLM {
   ): AsyncGenerator<string> {
     const args = this.collectArgs(options);
 
-    const response = await fetch(`${SERVER_URL}/stream_complete`, {
+    const response = await this.fetch(`${SERVER_URL}/stream_complete`, {
       method: "POST",
       headers: this._getHeaders(),
       body: JSON.stringify({
@@ -69,7 +69,7 @@ class FreeTrial extends LLM {
   ): AsyncGenerator<ChatMessage> {
     const args = this.collectArgs(options);
 
-    const response = await fetch(`${SERVER_URL}/stream_chat`, {
+    const response = await this.fetch(`${SERVER_URL}/stream_chat`, {
       method: "POST",
       headers: this._getHeaders(),
       body: JSON.stringify({

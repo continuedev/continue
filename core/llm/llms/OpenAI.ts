@@ -65,7 +65,7 @@ class OpenAI extends LLM {
     messages: ChatMessage[],
     options: CompletionOptions
   ): AsyncGenerator<ChatMessage> {
-    const response = await fetch(this._getChatUrl(), {
+    const response = await this.fetch(this._getChatUrl(), {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

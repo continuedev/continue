@@ -222,6 +222,9 @@ export abstract class LLM implements LLMOptions {
     this.llmRequestHook = options.llmRequestHook;
     this.apiKey = options.apiKey;
     this.apiBase = options.apiBase;
+    if (this.apiBase?.endsWith("/")) {
+      this.apiBase = this.apiBase.slice(0, -1);
+    }
 
     this.engine = options.engine;
     this.apiVersion = options.apiVersion;
@@ -298,6 +301,20 @@ export abstract class LLM implements LLMOptions {
     //   tokens: tokens,
     //   model_class: this.constructor.name,
     // });
+  }
+
+  protected fetch(url: string, init?: RequestInit): Promise<Response> {
+    const headers = new Headers(init?.headers);
+    for (const [key, value] of Object.entries(
+      this.requestOptions?.headers || {}
+    )) {
+      headers.append(key, value as string);
+    }
+
+    return fetch(url, {
+      ...init,
+      headers,
+    });
   }
 
   private _parseCompletionOptions(options: LLMFullCompletionOptions) {

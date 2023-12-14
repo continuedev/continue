@@ -1,6 +1,6 @@
 import { LLM, LLMOptions } from "..";
 import { ModelProvider } from "../../config";
-import { ChatMessage, CompletionOptions } from "../types";
+import { CompletionOptions } from "../types";
 
 class HuggingFaceTGI extends LLM {
   static providerName: ModelProvider = "huggingface-tgi";
@@ -29,7 +29,7 @@ class HuggingFaceTGI extends LLM {
   ): AsyncGenerator<string> {
     const args = this._convertArgs(options, prompt);
 
-    const response = await fetch(`${this.apiBase}/generate_stream`, {
+    const response = await this.fetch(`${this.apiBase}/generate_stream`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

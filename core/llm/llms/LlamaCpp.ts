@@ -27,7 +27,7 @@ class LlamaCpp extends LLM {
       ...this.requestOptions?.headers,
     };
 
-    const resp = await fetch(`${this.apiBase}/completion`, {
+    const resp = await this.fetch(`${this.apiBase}/completion`, {
       method: "POST",
       headers,
       body: JSON.stringify({
@@ -49,7 +49,11 @@ class LlamaCpp extends LLM {
       buffer = lines.pop() ?? "";
       for (const line of lines) {
         if (line.trim() === "") continue;
-        yield JSON.parse(line.substring(6))["content"];
+        const data = JSON.parse(line.substring(6));
+        if ("error" in data) {
+          throw new Error(data.error);
+        }
+        yield data.content;
       }
     }
 
