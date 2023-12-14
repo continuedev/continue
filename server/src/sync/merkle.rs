@@ -248,7 +248,7 @@ impl Tree {
     pub fn persist(&self, filepath: &Path) {
         if let Some(dir) = filepath.parent() {
             std::fs::create_dir_all(dir)
-                .expect(format!("Failed to create dir {}", dir.display()).as_str());
+                .unwrap_or_else(|_| panic!("Failed to create dir {}", dir.display()));
         }
         let mut file = std::fs::File::create(filepath).unwrap();
         file.write_all(self.json_for_obj().as_bytes()).unwrap();
