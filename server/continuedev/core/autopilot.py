@@ -98,7 +98,7 @@ class Autopilot:
 
     @property
     def sdk(self) -> ContinueSDK:
-        return ContinueSDK(self.config, self.ide, self.gui, self, self.models)  # type: ignore because of circular import
+        return ContinueSDK(self.config, self.ide, self.gui, self, self.models)
 
     class Config:
         arbitrary_types_allowed = True
@@ -218,11 +218,11 @@ class Autopilot:
         # Try to run step and handle errors
         try:
             if inspect.iscoroutinefunction(step.run):
-                await step.run(self.sdk)  # type: ignore (stub type)
+                await step.run(self.sdk)
             elif inspect.isasyncgenfunction(step.run):
-                async for update in step.run(self.sdk):  # type: ignore (stub type)
+                async for update in step.run(self.sdk):
                     if self.stopped:
-                        if on_stop_generator := step.on_stop(self.sdk):  # type: ignore (stub type)
+                        if on_stop_generator := step.on_stop(self.sdk):
                             for update in on_stop_generator:  # type: ignore
                                 if handled := handle_step_update(update):
                                     yield handled
@@ -327,7 +327,7 @@ class Autopilot:
 
         if step is not None:
             await self.run_step(step)
-        while next_step := self.policy.next(self.sdk.config, self.session_state):  # type: ignore (stub type)
+        while next_step := self.policy.next(self.sdk.config, self.session_state):
             await self.run_step(next_step)
 
         self.sdk.models.remove_logger(logger_id)
