@@ -59,14 +59,14 @@ mod tests {
             ("dir3", None, ""),
         ];
 
-        for (dir, file, contents) in dir_structure.iter() {
+        for (dir, file, contents) in &dir_structure {
             let dir_path = temp_path.join(dir);
             fs::create_dir(&dir_path)?;
 
             if let Some(file_name) = file {
                 let file_path = dir_path.join(file_name);
                 let mut file = File::create(file_path)?;
-                writeln!(file, "{}", contents)?;
+                writeln!(file, "{contents}")?;
             }
         }
 
@@ -74,7 +74,7 @@ mod tests {
         let gitignores = local_find_gitignores(temp_path)?;
 
         // Verify that the returned HashMap contains the correct paths and contents
-        for (dir, file, contents) in dir_structure.iter() {
+        for (dir, file, contents) in &dir_structure {
             if let Some(file_name) = file {
                 let file_path = temp_path.join(dir).join(file_name);
                 assert!(gitignores.contains_key(&file_path));
@@ -93,7 +93,7 @@ mod tests {
         // Get the current directory
         let current_dir = std::env::current_dir()?;
         let parent_dir = current_dir.parent().unwrap();
-        let gitignores = local_find_gitignores(&parent_dir)?;
+        let gitignores = local_find_gitignores(parent_dir)?;
 
         // Verify that the returned HashMap contains the correct paths and contents
         let top_level_gitignore = parent_dir.join(".gitignore");
