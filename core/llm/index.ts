@@ -30,7 +30,8 @@ function autodetectTemplateType(model: string): TemplateType | undefined {
   if (
     lower.includes("gpt") ||
     lower.includes("chat-bison") ||
-    lower.includes("pplx")
+    lower.includes("pplx") ||
+    lower.includes("gemini")
   ) {
     return undefined;
   }
@@ -139,6 +140,10 @@ export interface LLMOptions {
   engine?: string;
   apiVersion?: string;
   apiType?: string;
+
+  // GCP Options
+  region?: string;
+  projectId?: string;
 }
 
 interface LLMFullCompletionOptions {
@@ -182,6 +187,8 @@ export abstract class LLM implements LLMOptions {
   engine?: string;
   apiVersion?: string;
   apiType?: string;
+  region?: string;
+  projectId?: string;
 
   constructor(options: LLMOptions) {
     // Set default options
@@ -219,6 +226,8 @@ export abstract class LLM implements LLMOptions {
     this.engine = options.engine;
     this.apiVersion = options.apiVersion;
     this.apiType = options.apiType;
+    this.region = options.region;
+    this.projectId = options.projectId;
   }
 
   private _compileChatMessages(

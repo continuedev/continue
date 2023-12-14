@@ -2,7 +2,9 @@ import { LLM, LLMOptions } from "..";
 import { BaseCompletionOptions, ModelDescription } from "../../config";
 import Anthropic from "./Anthropic";
 import FreeTrial from "./FreeTrial";
+import Gemini from "./Gemini";
 import GooglePalm from "./GooglePalm";
+import GooglePalmProxy from "./GooglePalmProxy";
 import HuggingFaceInferenceAPI from "./HuggingFaceInferenceAPI";
 import HuggingFaceTGI from "./HuggingFaceTGI";
 import LMStudio from "./LMStudio";
@@ -17,6 +19,7 @@ import Together from "./Together";
 const LLMs = [
   Anthropic,
   FreeTrial,
+  GooglePalmProxy, // TODO: Hacky fix for now bc of proxy details
   GooglePalm,
   Llamafile,
   Ollama,
@@ -28,6 +31,7 @@ const LLMs = [
   LlamaCpp,
   OpenAI,
   LMStudio,
+  Gemini,
 ];
 
 export function llmFromDescription(

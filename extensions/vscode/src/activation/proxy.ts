@@ -54,7 +54,10 @@ app.use((req, res, next) => {
 // });
 
 export function startProxy() {
-  app.listen(PROXY_PORT, () => {
+  const server = app.listen(PROXY_PORT, () => {
     console.log(`Proxy server is running on port ${PROXY_PORT}`);
+  });
+  server.on("error", (e) => {
+    console.log("Proxy server already running on 65433: ", e.message);
   });
 }

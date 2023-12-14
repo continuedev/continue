@@ -52,8 +52,11 @@ type ModelProvider =
   | "replicate"
   | "text-gen-webui"
   | "google-palm"
+  | "google-palm-real"
   | "lmstudio"
-  | "llamafile";
+  | "llamafile"
+  | "gemini"
+  | "mistral";
 
 export type ModelName =
   // OpenAI
@@ -65,6 +68,7 @@ export type ModelName =
   | "gpt-4-1106-preview"
   // Open Source
   | "mistral-7b"
+  | "mistral-8x7b"
   | "llama2-7b"
   | "llama2-13b"
   | "codellama-7b"
@@ -82,7 +86,9 @@ export type ModelName =
   // Anthropic
   | "claude-2"
   // Google PaLM
-  | "chat-bison-001";
+  | "chat-bison-001"
+  // Gemini
+  | "gemini-pro";
 
 interface RequestOptions {
   timeout?: number;

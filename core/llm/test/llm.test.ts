@@ -1,61 +1,61 @@
-// // import * as dotenv from "dotenv";
-// // import { LLM } from "..";
-// // import Together from "../llms/Together";
-// // import { CompletionOptions } from "../types";
+// import * as dotenv from "dotenv";
+// import { LLM } from "..";
+// import GooglePalm from "../llms/GooglePalm";
+// import { CompletionOptions } from "../types";
 
-// // jest.setTimeout(100_000);
+// jest.setTimeout(100_000);
 
-// // dotenv.config();
+// dotenv.config();
 
-// // const COMPLETION_OPTIONS: Partial<CompletionOptions> = {
-// //   temperature: 0.5,
-// //   topP: 1,
-// //   topK: 40,
-// //   presencePenalty: 0,
-// //   frequencyPenalty: 0,
-// //   // stop: ["\n"],
-// //   // maxTokens: 5,
-// // };
+// const COMPLETION_OPTIONS: Partial<CompletionOptions> = {
+//   temperature: 0.5,
+//   topP: 1,
+//   topK: 40,
+//   presencePenalty: 0,
+//   frequencyPenalty: 0,
+//   // stop: ["\n"],
+//   // maxTokens: 5,
+// };
 
-// // function testLLM(llm: LLM) {
-// //   beforeAll(() => {
-// //     llm.completionOptions = { ...llm.completionOptions, ...COMPLETION_OPTIONS };
-// //   });
+// function testLLM(llm: LLM) {
+//   beforeAll(() => {
+//     llm.completionOptions = { ...llm.completionOptions, ...COMPLETION_OPTIONS };
+//   });
 
-// //   describe(llm.providerName, () => {
-// //     test("Stream Chat works", async () => {
-// //       let total = "";
-// //       for await (const chunk of llm.streamChat([
-// //         { role: "user", content: "Hello" },
-// //       ])) {
-// //         total += chunk.content;
-// //       }
+//   describe(llm.providerName, () => {
+//     test("Stream Chat works", async () => {
+//       let total = "";
+//       for await (const chunk of llm.streamChat([
+//         { role: "user", content: "Hello" },
+//       ])) {
+//         total += chunk.content;
+//       }
 
-// //       expect(total.length).toBeGreaterThan(0);
-// //       console.log(total);
-// //       return;
-// //     });
+//       expect(total.length).toBeGreaterThan(0);
+//       console.log(total);
+//       return;
+//     });
 
-// //     test("Stream Complete works", async () => {
-// //       let total = "";
-// //       for await (const chunk of llm.streamComplete("Hello")) {
-// //         total += chunk;
-// //       }
+//     test("Stream Complete works", async () => {
+//       let total = "";
+//       for await (const chunk of llm.streamComplete("Hello")) {
+//         total += chunk;
+//       }
 
-// //       expect(total.length).toBeGreaterThan(0);
-// //       console.log(total);
-// //       return;
-// //     });
+//       expect(total.length).toBeGreaterThan(0);
+//       console.log(total);
+//       return;
+//     });
 
-// //     test("Complete works", async () => {
-// //       const completion = await llm.complete("Hello");
+//     test("Complete works", async () => {
+//       const completion = await llm.complete("Hello");
 
-// //       expect(completion.length).toBeGreaterThan(0);
-// //       console.log(completion);
-// //       return;
-// //     });
-// //   });
-// // }
+//       expect(completion.length).toBeGreaterThan(0);
+//       console.log(completion);
+//       return;
+//     });
+//   });
+// }
 
 // describe("LLM", () => {
 //   //   // testLLM(
@@ -93,7 +93,14 @@
 //   //   // testLLM(new TextGenWebUI({ model: "codellama-7b" }));
 //   //   // testLLM(new HuggingFaceTGI({ model: "codellama-7b" }));
 //   //   // testLLM(new HuggingFaceInferenceAPI({ model: "codellama-7b" }));
-//   test.skip("works", () => {
-//     expect(true).toBe(true);
-//   });
+//   testLLM(
+//     new GooglePalm({
+//       model: "gemini-pro",
+//       //   model: "chat-bison-001",
+//       apiKey: process.env.GOOGLE_PALM_API_KEY,
+//     })
+//   );
+//   //   testLLM(
+//   //     new Gemini({ model: "gemini-pro", apiKey: process.env.GOOGLE_PALM_API_KEY })
+//   //   );
 // });

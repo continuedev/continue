@@ -3,33 +3,66 @@ import { ModelProvider } from "../../config";
 import { ChatMessage, CompletionOptions } from "../types";
 
 class GooglePalm extends LLM {
-  static providerName: ModelProvider = "google-palm";
+  static providerName: ModelProvider = "google-palm-real";
 
   static defaultOptions: Partial<LLMOptions> = {
     model: "chat-bison-001",
   };
 
-  private _convertArgs(options: CompletionOptions, prompt: string) {
-    const finalOptions = {};
-
-    return finalOptions;
-  }
-
   protected async *_streamComplete(
     prompt: string,
     options: CompletionOptions
   ): AsyncGenerator<string> {
-    const apiURL = `https://generativelanguage.googleapis.com/v1beta2/models/${options.model}:generateMessage?key=${this.apiKey}`;
-    const body = { prompt: { messages: [{ content: prompt }] } };
+    for await (const message of this._streamChat(
+      [{ content: prompt, role: "user" }],
+      options
+    )) {
+      yield message.content;
+    }
+  }
+
+  protected async *_streamChat(
+    messages: ChatMessage[],
+    options: CompletionOptions
+  ): AsyncGenerator<ChatMessage> {
+    if (options.model.includes("gemini")) {
+      for await (const message of this.streamChatGemini(messages, options)) {
+        yield message;
+      }
+    } else {
+      for await (const message of this.streamChatBison(messages, options)) {
+        yield message;
+      }
+    }
+  }
+
+  private async *streamChatGemini(
+    messages: ChatMessage[],
+    options: CompletionOptions
+  ): AsyncGenerator<ChatMessage> {
+    const apiURL = `https://generativelanguage.googleapis.com/v1beta/models/${options.model}:generateMessage?key=${this.apiKey}`;
+    const body = {
+      contents: messages.map((msg) => {
+        return {
+          role: msg.role === "assistant" ? "ASSISTANT" : "USER",
+          parts: [{ text: msg.content }],
+        };
+      }),
+    };
     const response = await fetch(apiURL, {
       method: "POST",
       body: JSON.stringify(body),
     });
     const data = await response.json();
-    return data.candidates[0].content;
+    if (data.error) {
+      throw new Error(data.error.message);
+    }
+    yield {
+      role: "assistant",
+      content: data.candidates?.[0]?.content?.parts?.[0]?.text || "",
+    };
   }
-
-  protected async *_streamChat(
+  private async *streamChatBison(
     messages: ChatMessage[],
     options: CompletionOptions
   ): AsyncGenerator<ChatMessage> {
@@ -45,7 +78,7 @@ class GooglePalm extends LLM {
       body: JSON.stringify(body),
     });
     const data = await response.json();
-    return { role: "assistant", content: data.candidates[0].content };
+    yield { role: "assistant", content: data.candidates[0].content };
   }
 }
 

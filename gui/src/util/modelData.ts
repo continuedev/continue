@@ -285,8 +285,36 @@ const mistral: ModelPackage = {
     model: "mistral-7b",
     contextLength: 2048,
   },
+  dimensions: [
+    {
+      name: "Parameter Count",
+      description: "The number of parameters in the model",
+      options: {
+        "7b": {
+          model: "wizardcoder-7b",
+          title: "WizardCoder-7b",
+        },
+        "8x7b (MoE)": {
+          model: "mistral-8x7b",
+          title: "Mixtral",
+        },
+      },
+    },
+  ],
   icon: "mistral.png",
   providerOptions: ["ollama", "lmstudio", "together", "llamacpp", "replicate"],
+};
+
+const gemini: ModelPackage = {
+  title: "Gemini",
+  description: "A highly capable model created by Google DeepMind",
+  params: {
+    title: "Gemini Pro",
+    model: "gemini-pro",
+    contextLength: 32_000,
+  },
+  icon: "gemini.png",
+  providerOptions: ["palm"],
 };
 
 const zephyr: ModelPackage = {
@@ -417,6 +445,7 @@ export const MODEL_INFO: ModelPackage[] = [
   chatBison,
   zephyr,
   deepseek,
+  gemini,
 ];
 
 export const PROVIDER_INFO: { [key: string]: ModelInfo } = {
@@ -617,7 +646,7 @@ After it's up and running, you can start using Continue.`,
     provider: "google-palm",
     description:
       "Try out the Google PaLM API, which is currently in public preview, using an API key from Google Makersuite",
-    longDescription: `To get started with Google Makersuite, obtain your API key from [here](https://developers.generativeai.google/products/makersuite) and paste it below.
+    longDescription: `To get started with Google Makersuite, obtain your API key from [here](https://makersuite.google.com) and paste it below.
 > Note: Google's PaLM language models do not support streaming, so the response will appear all at once after a few seconds.`,
     icon: "google-palm.png",
     tags: [ModelProviderTag["Requires API Key"]],
@@ -640,6 +669,7 @@ After it's up and running, you can start using Continue.`,
           contextLength: 8000,
         },
       },
+      gemini,
     ],
   },
   "openai-aiohttp": {

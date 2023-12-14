@@ -185,6 +185,21 @@
               "$ref": "#/definitions/RequestOptions"
             }
           ]
+        },
+        "apiType": {
+          "title": "Api Type",
+          "description": "OpenAI API type, either `openai` or `azure`",
+          "enum": ["openai", "azure"]
+        },
+        "apiVersion": {
+          "title": "Api Version",
+          "description": "Azure OpenAI API version (e.g. 2023-07-01-preview)",
+          "type": "string"
+        },
+        "engine": {
+          "title": "Engine",
+          "description": "Azure OpenAI engine",
+          "type": "string"
         }
       },
       "required": ["title", "provider", "model"],
@@ -211,6 +226,7 @@
                   "gpt-4-32k",
                   "gpt-4-1106-preview",
                   "mistral-7b",
+                  "mistral-8x7b",
                   "llama2-7b",
                   "llama2-13b",
                   "codellama-7b",
@@ -224,7 +240,8 @@
                   "codeup-13b",
                   "deepseek-1b",
                   "deepseek-7b",
-                  "deepseek-33b"
+                  "deepseek-33b",
+                  "gemini-pro"
                 ]
               }
             }
@@ -375,6 +392,7 @@
                   "gpt-4-32k",
                   "gpt-4-1106-preview",
                   "mistral-7b",
+                  "mistral-8x7b",
                   "llama2-7b",
                   "llama2-13b",
                   "codellama-7b",
@@ -423,7 +441,7 @@
           "then": {
             "properties": {
               "model": {
-                "enum": ["chat-bison-001"]
+                "enum": ["chat-bison-001", "gemini-pro"]
               }
             }
           }
@@ -442,6 +460,7 @@
               "model": {
                 "enum": [
                   "mistral-7b",
+                  "mistral-8x7b",
                   "llama2-7b",
                   "llama2-13b",
                   "codellama-7b",
@@ -473,6 +492,7 @@
               "model": {
                 "enum": [
                   "mistral-7b",
+                  "mistral-8x7b",
                   "llama2-7b",
                   "llama2-13b",
                   "codellama-7b",
