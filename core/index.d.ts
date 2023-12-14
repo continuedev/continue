@@ -335,7 +335,7 @@ export type ModelName =
 export interface RequestOptions {
   timeout?: number;
   verifySsl?: boolean;
-  caBundlePath: string;
+  caBundlePath?: string;
   proxy?: string;
   headers?: Record<string, string>;
 }
@@ -417,6 +417,7 @@ export interface SerializedContinueConfig {
   contextProviders?: ContextProviderWithParams[];
   retrievalSettings?: RetrievalSettings;
   disableIndexing?: boolean;
+  userToken?: string;
 }
 
 export interface Config {
@@ -441,6 +442,8 @@ export interface Config {
   retrievalSettings?: RetrievalSettings;
   /** If set to true, Continue will not index your codebase for retrieval */
   disableIndexing?: boolean;
+  /** An optional token to identify a user. Not used by Continue unless you write custom coniguration that requires such a token */
+  userToken?: string;
 }
 
 export interface ContinueConfig {
@@ -452,4 +455,5 @@ export interface ContinueConfig {
   contextProviders?: IContextProvider[];
   retrievalSettings?: RetrievalSettings;
   disableIndexing?: boolean;
+  userToken?: string;
 }

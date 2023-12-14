@@ -60,14 +60,22 @@ class VsCodeIde implements IDE {
       return undefined;
     }
 
-    const result = await esbuild.build({
-      entryPoints: [getConfigTsPath()],
-      bundle: true,
-      platform: "browser",
-      format: "esm",
-      outfile: getConfigJsPath(),
-      external: ["fetch"],
-    });
+    try {
+      const result = await esbuild.build({
+        entryPoints: [getConfigTsPath()],
+        bundle: true,
+        platform: "browser",
+        format: "esm",
+        outfile: getConfigJsPath(),
+        external: ["fetch"],
+      });
+    } catch (e) {
+      console.log(e);
+      vscode.window.showErrorMessage(
+        "Build error. Please check your config.ts file: " + e
+      );
+      return undefined;
+    }
 
     const configJsString = fs.readFileSync(getConfigJsPath(), "utf8");
 

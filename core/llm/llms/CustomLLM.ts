@@ -44,10 +44,17 @@ class CustomLLMClass extends BaseLLM {
       )) {
         yield content;
       }
-    } else {
-      for await (const content of super._streamComplete(prompt, options)) {
+    } else if (this.customStreamChat) {
+      for await (const content of this.customStreamChat(
+        [{ role: "user", content: prompt }],
+        options
+      )) {
         yield content;
       }
+    } else {
+      throw new Error(
+        "Either streamCompletion or streamChat must be defined in a custom LLM in config.ts"
+      );
     }
   }
 }

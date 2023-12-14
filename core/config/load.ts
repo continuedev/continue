@@ -35,14 +35,9 @@ function serializedToIntermediateConfig(
   }
 
   const config: Config = {
-    allowAnonymousTelemetry: initial.allowAnonymousTelemetry,
-    models: initial.models,
-    systemMessage: initial.systemMessage,
-    completionOptions: initial.completionOptions,
+    ...initial,
     slashCommands,
     contextProviders: initial.contextProviders || [],
-    retrievalSettings: initial.retrievalSettings,
-    disableIndexing: initial.disableIndexing,
   };
 
   return config;
