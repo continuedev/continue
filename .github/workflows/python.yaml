@@ -1,0 +1,38 @@
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+defaults:
+  run:
+    working-directory: ./server
+
+jobs:
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.12"
+      - uses: snok/install-poetry@v1
+      - name: Install dependencies
+        run: poetry install --only lint
+      - name: Run Ruff
+        run: poetry run ruff check --output-format=github .
+
+  # test:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - name: Install Python
+  #       uses: actions/setup-python@v4
+  #       with:
+  #         python-version: "3.12"
+  #     - uses: snok/install-poetry@v1
+  #     - run: poetry run python -m pip install --upgrade pip setuptools
+  #     - name: Install dependencies
+  #       run: poetry install
+  #     - run: poetry run pytest
