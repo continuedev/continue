@@ -164,6 +164,7 @@ declare global {
     contextLength?: number;
     completionOptions?: CompletionOptions;
     requestOptions?: RequestOptions;
+    template?: TemplateType;
     promptTemplates?: Record<string, string>;
     templateMessages?: (messages: ChatMessage[]) => string;
     writeLog?: (str: string) => Promise<void>;
@@ -459,7 +460,6 @@ declare global {
     disableIndexing?: boolean;
     userToken?: string;
   }
-  
 }
 
 export {};

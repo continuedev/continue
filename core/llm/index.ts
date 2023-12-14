@@ -144,6 +144,7 @@ export abstract class BaseLLM implements ILLM {
   contextLength: number;
   completionOptions: CompletionOptions;
   requestOptions?: RequestOptions;
+  template?: TemplateType;
   promptTemplates?: Record<string, string>;
   templateMessages?: (messages: ChatMessage[]) => string;
   writeLog?: (str: string) => Promise<void>;
@@ -165,7 +166,8 @@ export abstract class BaseLLM implements ILLM {
       ...options,
     };
 
-    const templateType = autodetectTemplateType(options.model);
+    const templateType =
+      options.template || autodetectTemplateType(options.model);
 
     this.title = options.title;
     this.uniqueId = options.uniqueId || "None";

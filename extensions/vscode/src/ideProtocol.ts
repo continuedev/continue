@@ -12,7 +12,7 @@ import * as vscode from "vscode";
 import { ideProtocolClient } from "./activation/activate";
 
 import { IDE, SerializedContinueConfig } from "core";
-import esbuild from "esbuild";
+// import esbuild from "esbuild";
 
 class VsCodeIde implements IDE {
   async getSerializedConfig(): Promise<SerializedContinueConfig> {
@@ -61,14 +61,14 @@ class VsCodeIde implements IDE {
     }
 
     try {
-      const result = await esbuild.build({
-        entryPoints: [getConfigTsPath()],
-        bundle: true,
-        platform: "browser",
-        format: "esm",
-        outfile: getConfigJsPath(),
-        external: ["fetch"],
-      });
+      // const result = await esbuild.build({
+      //   entryPoints: [getConfigTsPath()],
+      //   bundle: true,
+      //   platform: "browser",
+      //   format: "esm",
+      //   outfile: getConfigJsPath(),
+      //   external: ["fetch"],
+      // });
     } catch (e) {
       console.log(e);
       vscode.window.showErrorMessage(
