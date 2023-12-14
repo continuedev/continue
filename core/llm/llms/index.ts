@@ -1,5 +1,5 @@
-import { LLM, LLMOptions } from "..";
-import { BaseCompletionOptions, ModelDescription } from "../../config";
+import { BaseLLM } from "..";
+import { BaseCompletionOptions, LLMOptions, ModelDescription } from "../..";
 import Anthropic from "./Anthropic";
 import FreeTrial from "./FreeTrial";
 import Gemini from "./Gemini";
@@ -37,7 +37,7 @@ const LLMs = [
 export function llmFromDescription(
   desc: ModelDescription,
   completionOptions?: BaseCompletionOptions
-): LLM | undefined {
+): BaseLLM | undefined {
   const cls = LLMs.find((llm) => llm.providerName === desc.provider);
 
   if (!cls) {

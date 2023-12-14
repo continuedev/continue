@@ -1,8 +1,7 @@
-import { LLM, LLMOptions } from "..";
-import { ModelProvider } from "../../config";
-import { CompletionOptions } from "../types";
+import { BaseLLM } from "..";
+import { CompletionOptions, LLMOptions, ModelProvider } from "../..";
 
-class Together extends LLM {
+class Together extends BaseLLM {
   static providerName: ModelProvider = "together";
   static defaultOptions: Partial<LLMOptions> = {
     apiBase: "https://api.together.xyz",

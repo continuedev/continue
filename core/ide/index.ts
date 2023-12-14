@@ -1,10 +1,10 @@
+import { IDE, SerializedContinueConfig } from "../index";
 import { ideRequest } from "./messaging";
-import { IDE } from "./types";
 async function r(messageType: string, options: any = {}) {
   return await ideRequest(messageType, options);
 }
 export class ExtensionIde implements IDE {
-  async getSerializedConfig() {
+  async getSerializedConfig(): Promise<SerializedContinueConfig> {
     return await r("getSerializedConfig");
   }
 

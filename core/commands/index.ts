@@ -1,24 +1,5 @@
-import { CustomCommand, SlashCommandDescription } from "../config";
-import { IDE } from "../ide/types";
-import { LLM } from "../llm";
-import { ChatMessage, ContextItem } from "../llm/types";
+import { CustomCommand, SlashCommand, SlashCommandDescription } from "..";
 import SlashCommands from "./slash";
-export interface ContinueSDK {
-  ide: IDE;
-  llm: LLM;
-  addContextItem: (item: ContextItem) => void;
-  history: ChatMessage[];
-  input: string;
-  params?: any;
-  contextItems: ContextItem[];
-}
-
-export interface SlashCommand {
-  name: string;
-  description: string;
-  params?: { [key: string]: any };
-  run: (sdk: ContinueSDK) => AsyncGenerator<string | undefined>;
-}
 
 export function slashFromCustomCommand(
   customCommand: CustomCommand

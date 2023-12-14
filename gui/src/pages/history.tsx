@@ -1,5 +1,5 @@
 import { ArrowLeftIcon, TrashIcon } from "@heroicons/react/24/outline";
-import { PersistedSessionInfo, SessionInfo } from "core/types";
+import { PersistedSessionInfo, SessionInfo } from "core";
 import React, { Fragment, useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";

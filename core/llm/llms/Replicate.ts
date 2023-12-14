@@ -1,9 +1,13 @@
-import { LLM, LLMOptions } from "..";
-import { ModelProvider } from "../../config";
-import { ChatMessage, CompletionOptions } from "../types";
 import ReplicateClient from "replicate";
+import { BaseLLM } from "..";
+import {
+  ChatMessage,
+  CompletionOptions,
+  LLMOptions,
+  ModelProvider,
+} from "../..";
 
-class Replicate extends LLM {
+class Replicate extends BaseLLM {
   private static MODEL_IDS: {
     [name: string]: `${string}/${string}:${string}`;
   } = {

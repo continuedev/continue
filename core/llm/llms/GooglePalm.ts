@@ -1,8 +1,12 @@
-import { LLM, LLMOptions } from "..";
-import { ModelProvider } from "../../config";
-import { ChatMessage, CompletionOptions } from "../types";
+import { BaseLLM } from "..";
+import {
+  ChatMessage,
+  CompletionOptions,
+  LLMOptions,
+  ModelProvider,
+} from "../..";
 
-class GooglePalm extends LLM {
+class GooglePalm extends BaseLLM {
   static providerName: ModelProvider = "google-palm-real";
 
   static defaultOptions: Partial<LLMOptions> = {

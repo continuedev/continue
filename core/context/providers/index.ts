@@ -1,5 +1,5 @@
-import { ContextProvider } from "..";
-import { ContextProviderName } from "../../config";
+import { BaseContextProvider } from "..";
+import { ContextProviderName } from "../..";
 import DiffContextProvider from "./DiffContextProvider";
 import FileTreeContextProvider from "./FileTreeContextProvider";
 import GitHubIssuesContextProvider from "./GitHubIssuesContextProvider";
@@ -7,7 +7,7 @@ import GoogleContextProvider from "./GoogleContextProvider";
 import TerminalContextProvider from "./TerminalContextProvider";
 import URLContextProvider from "./URLContextProvider";
 
-const Providers: (typeof ContextProvider)[] = [
+const Providers: (typeof BaseContextProvider)[] = [
   DiffContextProvider,
   FileTreeContextProvider,
   GitHubIssuesContextProvider,
@@ -18,7 +18,7 @@ const Providers: (typeof ContextProvider)[] = [
 
 export function contextProviderClassFromName(
   name: ContextProviderName
-): typeof ContextProvider | undefined {
+): typeof BaseContextProvider | undefined {
   const cls = Providers.find((cls) => cls.description.title === name);
 
   if (!cls) {

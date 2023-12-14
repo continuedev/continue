@@ -1,4 +1,4 @@
-import { FileEdit, RangeInFile } from "core/types";
+import { FileEdit, RangeInFile } from "core";
 import { getConfigJsonPath } from "core/util/paths";
 import { readFileSync } from "fs";
 import * as vscode from "vscode";
@@ -44,7 +44,9 @@ class IdeProtocolClient {
 
       if (
         filepath.endsWith(".continue/config.json") ||
-        filepath.endsWith(".continue\\config.json")
+        filepath.endsWith(".continue\\config.json") ||
+        filepath.endsWith(".continue/config.ts") ||
+        filepath.endsWith(".continue\\config.ts")
       ) {
         const config = readFileSync(getConfigJsonPath(), "utf8");
         const configJson = JSON.parse(config);

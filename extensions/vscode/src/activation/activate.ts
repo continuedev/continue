@@ -99,15 +99,6 @@ function showRefactorMigrationMessage() {
 
 export async function activateExtension(context: vscode.ExtensionContext) {
   extensionContext = context;
-  try {
-    console.log(
-      "In workspace: ",
-      vscode.workspace.workspaceFolders?.[0].uri.fsPath
-    );
-  } catch (e) {
-    console.log("Error getting workspace folder: ", e);
-  }
-  console.log("Window ID: ", windowId);
 
   // Register commands and providers
   registerAllCodeLensProviders(context);

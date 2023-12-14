@@ -1,25 +1,28 @@
-import { ContinueConfig, SerializedContinueConfig } from ".";
 import {
+  Config,
+  ContextProviderWithParams,
+  ContinueConfig,
+  CustomContextProvider,
+  CustomLLM,
+  IContextProvider,
+  ModelDescription,
+  SerializedContinueConfig,
   SlashCommand,
+} from "..";
+import {
   slashCommandFromDescription,
   slashFromCustomCommand,
 } from "../commands";
-import { ContextProvider } from "../context";
 import { contextProviderClassFromName } from "../context/providers";
+import CustomContextProviderClass from "../context/providers/CustomContextProvider";
 import FileContextProvider from "../context/providers/FileContextProvider";
-import { LLM } from "../llm";
+import { BaseLLM } from "../llm";
 import { llmFromDescription } from "../llm/llms";
+import CustomLLMClass from "../llm/llms/CustomLLM";
 
-function loadSerializedConfig(
+function serializedToIntermediateConfig(
   initial: SerializedContinueConfig
-): ContinueConfig {
-  const models: LLM[] = [];
-  for (const desc of initial.models) {
-    const llm = llmFromDescription(desc, initial.completionOptions);
-    if (!llm) continue;
-    models.push(llm);
-  }
-
+): Config {
   const slashCommands: SlashCommand[] = [];
   for (const command of initial.slashCommands || []) {
     const newCommand = slashCommandFromDescription(command);
@@ -31,23 +34,13 @@ function loadSerializedConfig(
     slashCommands.push(slashFromCustomCommand(command));
   }
 
-  const contextProviders: ContextProvider[] = [new FileContextProvider({})];
-  for (const provider of initial.contextProviders || []) {
-    const cls = contextProviderClassFromName(provider.name) as any;
-    if (!cls) {
-      console.warn(`Unknown context provider ${provider.name}`);
-      continue;
-    }
-    contextProviders.push(new cls(provider.params));
-  }
-
-  const config: ContinueConfig = {
+  const config: Config = {
     allowAnonymousTelemetry: initial.allowAnonymousTelemetry,
-    models,
+    models: initial.models,
     systemMessage: initial.systemMessage,
     completionOptions: initial.completionOptions,
     slashCommands,
-    contextProviders,
+    contextProviders: initial.contextProviders || [],
     retrievalSettings: initial.retrievalSettings,
     disableIndexing: initial.disableIndexing,
   };
@@ -55,4 +48,51 @@ function loadSerializedConfig(
   return config;
 }
 
-export { loadSerializedConfig };
+function isModelDescription(
+  llm: ModelDescription | CustomLLM
+): llm is ModelDescription {
+  return (llm as ModelDescription).title !== undefined;
+}
+
+function isContextProviderWithParams(
+  contextProvider: CustomContextProvider | ContextProviderWithParams
+): contextProvider is ContextProviderWithParams {
+  return (contextProvider as ContextProviderWithParams).name !== undefined;
+}
+
+/** Only difference between intermediate and final configs is the `models` array */
+function intermediateToFinalConfig(config: Config): ContinueConfig {
+  const models: BaseLLM[] = [];
+  for (const desc of config.models) {
+    let llm: BaseLLM | undefined;
+    if (isModelDescription(desc)) {
+      llm = llmFromDescription(desc, config.completionOptions);
+    } else {
+      llm = new CustomLLMClass(desc);
+    }
+    if (!llm) continue;
+    models.push(llm);
+  }
+
+  const contextProviders: IContextProvider[] = [new FileContextProvider({})];
+  for (const provider of config.contextProviders || []) {
+    if (isContextProviderWithParams(provider)) {
+      const cls = contextProviderClassFromName(provider.name) as any;
+      if (!cls) {
+        console.warn(`Unknown context provider ${provider.name}`);
+        continue;
+      }
+      contextProviders.push(new cls(provider.params));
+    } else {
+      contextProviders.push(new CustomContextProviderClass(provider));
+    }
+  }
+
+  return {
+    ...config,
+    contextProviders,
+    models,
+  };
+}
+
+export { intermediateToFinalConfig, serializedToIntermediateConfig };

@@ -1,4 +1,4 @@
-import { ChatHistory, ChatMessage } from "./types";
+import { ChatHistory, ChatMessage } from "..";
 
 export function constructMessages(history: ChatHistory): ChatMessage[] {
   const msgs: ChatMessage[] = [];

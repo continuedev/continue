@@ -3,7 +3,7 @@ import {
   PaintBrushIcon,
   TrashIcon,
 } from "@heroicons/react/24/outline";
-import { ContextItem } from "core/llm/types";
+import { ContextItem } from "core";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import styled from "styled-components";

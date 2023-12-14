@@ -1,4 +1,4 @@
-import { SlashCommand } from "..";
+import { SlashCommand } from "../..";
 import { removeQuotesAndEscapes } from "../../util";
 
 const GenerateTerminalCommand: SlashCommand = {

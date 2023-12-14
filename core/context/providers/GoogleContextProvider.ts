@@ -1,8 +1,7 @@
-import { ContextProvider, ContextProviderDescription } from "..";
-import { ExtensionIde } from "../../ide";
-import { ContextItem } from "../../llm/types";
+import { BaseContextProvider } from "..";
+import { ContextItem, ContextProviderDescription } from "../..";
 
-class GoogleContextProvider extends ContextProvider {
+class GoogleContextProvider extends BaseContextProvider {
   static description: ContextProviderDescription = {
     title: "google",
     displayTitle: "Google",

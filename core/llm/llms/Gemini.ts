@@ -1,8 +1,12 @@
-import { LLM, LLMOptions } from "..";
-import { ModelProvider } from "../../config";
-import { ChatMessage, CompletionOptions } from "../types";
+import { BaseLLM } from "..";
+import {
+  ChatMessage,
+  CompletionOptions,
+  LLMOptions,
+  ModelProvider,
+} from "../..";
 
-class Gemini extends LLM {
+class Gemini extends BaseLLM {
   static providerName: ModelProvider = "gemini";
 
   static defaultOptions: Partial<LLMOptions> = {

@@ -1,4 +1,4 @@
-import { SerializedContinueConfig } from ".";
+import { SerializedContinueConfig } from "..";
 
 const defaultConfig: SerializedContinueConfig = {
   models: [

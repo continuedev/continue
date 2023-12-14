@@ -1,7 +1,7 @@
-import { ContextProvider, ContextProviderDescription } from "..";
-import { ContextItem } from "../../llm/types";
+import { BaseContextProvider } from "..";
+import { ContextItem, ContextProviderDescription } from "../..";
 
-class URLContextProvider extends ContextProvider {
+class URLContextProvider extends BaseContextProvider {
   static description: ContextProviderDescription = {
     title: "url",
     displayTitle: "URL",

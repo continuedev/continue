@@ -1,4 +1,4 @@
-import { ChatMessage } from "../types";
+import { ChatMessage } from "../..";
 
 function llama2TemplateMessages(msgs: ChatMessage[]): string {
   if (msgs.length === 0) {
@@ -160,11 +160,11 @@ function phindTemplateMessages(msgs: ChatMessage[]): string {
 }
 
 export {
-  llama2TemplateMessages,
   anthropicTemplateMessages,
-  zephyrTemplateMessages,
   chatmlTemplateMessages,
-  templateAlpacaMessages,
   deepseekTemplateMessages,
+  llama2TemplateMessages,
   phindTemplateMessages,
+  templateAlpacaMessages,
+  zephyrTemplateMessages,
 };

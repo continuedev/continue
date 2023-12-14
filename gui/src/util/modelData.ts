@@ -2,7 +2,7 @@
 This is the data that populates the model selection page.
 */
 
-import { ModelName, ModelProvider } from "core/config";
+import { ModelName, ModelProvider } from "core";
 import _ from "lodash";
 
 export function updatedObj(old: any, pathToValue: { [key: string]: any }) {

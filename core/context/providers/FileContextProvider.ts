@@ -1,8 +1,8 @@
-import { ContextProvider, ContextProviderDescription } from "..";
+import { BaseContextProvider } from "..";
+import { ContextItem, ContextProviderDescription } from "../..";
 import { ExtensionIde } from "../../ide";
-import { ContextItem } from "../../llm/types";
 
-class FileContextProvider extends ContextProvider {
+class FileContextProvider extends BaseContextProvider {
   static description: ContextProviderDescription = {
     title: "file",
     displayTitle: "Files",

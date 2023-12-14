@@ -1,15 +1,8 @@
-import { ContextItem } from "../llm/types";
+import { ContextItem, ContextProviderDescription, IContextProvider } from "..";
 
-export interface ContextProviderDescription {
-  title: string;
-  displayTitle: string;
-  description: string;
-  dynamic: boolean;
-  requiresQuery: boolean;
-}
-
-export abstract class ContextProvider {
+export abstract class BaseContextProvider implements IContextProvider {
   options: Object;
+
   constructor(options: Object) {
     this.options = options;
   }

@@ -1,9 +1,13 @@
-import { LLM, LLMOptions } from "..";
-import { ModelProvider } from "../../config";
+import { BaseLLM } from "..";
+import {
+  ChatMessage,
+  CompletionOptions,
+  LLMOptions,
+  ModelProvider,
+} from "../..";
 import { ideRequest } from "../../ide/messaging";
-import { ChatMessage, CompletionOptions } from "../types";
 
-class GooglePalmProxy extends LLM {
+class GooglePalmProxy extends BaseLLM {
   static providerName: ModelProvider = "google-palm";
   static defaultOptions: Partial<LLMOptions> = {
     model: "chat-bison-001",

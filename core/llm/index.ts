@@ -1,4 +1,13 @@
-import { ModelProvider, RequestOptions, TemplateType } from "../config";
+import {
+  ChatMessage,
+  CompletionOptions,
+  ILLM,
+  LLMFullCompletionOptions,
+  LLMOptions,
+  ModelProvider,
+  RequestOptions,
+  TemplateType,
+} from "..";
 import { CONTEXT_LENGTH_FOR_MODEL, DEFAULT_ARGS } from "./constants";
 import {
   compileChatMessages,
@@ -22,7 +31,6 @@ import {
   simplestEditPrompt,
   zephyrEditPrompt,
 } from "./templates/edit";
-import { ChatMessage, CompletionOptions } from "./types";
 
 function autodetectTemplateType(model: string): TemplateType | undefined {
   const lower = model.toLowerCase();
@@ -120,53 +128,12 @@ function autodetectPromptTemplates(
   return templates;
 }
 
-export interface LLMOptions {
-  model: string;
-
-  title?: string;
-  uniqueId?: string;
-  systemMessage?: string;
-  contextLength?: number;
-  completionOptions?: CompletionOptions;
-  requestOptions?: RequestOptions;
-  promptTemplates?: Record<string, string>;
-  templateMessages?: (messages: ChatMessage[]) => string;
-  writeLog?: (str: string) => Promise<void>;
-  llmRequestHook?: (model: string, prompt: string) => any;
-  apiKey?: string;
-  apiBase?: string;
-
-  // Azure options
-  engine?: string;
-  apiVersion?: string;
-  apiType?: string;
-
-  // GCP Options
-  region?: string;
-  projectId?: string;
-}
-
-interface LLMFullCompletionOptions {
-  raw?: boolean;
-  log?: boolean;
-
-  model?: string;
-
-  temperature?: number;
-  topP?: number;
-  topK?: number;
-  presencePenalty?: number;
-  frequencyPenalty?: number;
-  stop?: string[];
-  maxTokens?: number;
-}
-
-export abstract class LLM implements LLMOptions {
+export abstract class BaseLLM implements ILLM {
   static providerName: ModelProvider;
-  static defaultOptions: Partial<LLMOptions> | undefined;
+  static defaultOptions: Partial<LLMOptions> | undefined = undefined;
 
   get providerName(): ModelProvider {
-    return (this.constructor as typeof LLM).providerName;
+    return (this.constructor as typeof BaseLLM).providerName;
   }
 
   uniqueId: string;
@@ -193,8 +160,8 @@ export abstract class LLM implements LLMOptions {
   constructor(options: LLMOptions) {
     // Set default options
     options = {
-      title: (this.constructor as typeof LLM).providerName,
-      ...(this.constructor as typeof LLM).defaultOptions,
+      title: (this.constructor as typeof BaseLLM).providerName,
+      ...(this.constructor as typeof BaseLLM).defaultOptions,
       ...options,
     };
 

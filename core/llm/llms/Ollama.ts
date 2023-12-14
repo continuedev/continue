@@ -1,8 +1,7 @@
-import { LLM, LLMOptions } from "..";
-import { ModelProvider } from "../../config";
-import { CompletionOptions } from "../types";
+import { BaseLLM } from "..";
+import { CompletionOptions, LLMOptions, ModelProvider } from "../..";
 
-class Ollama extends LLM {
+class Ollama extends BaseLLM {
   static providerName: ModelProvider = "ollama";
   static defaultOptions: Partial<LLMOptions> = {
     apiBase: "http://localhost:11434",

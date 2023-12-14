@@ -1,9 +1,9 @@
 import { v4 } from "uuid";
-import { ContextProvider, ContextProviderDescription } from "..";
+import { BaseContextProvider } from "..";
+import { ContextItem, ContextProviderDescription } from "../..";
 import { ExtensionIde } from "../../ide";
-import { ContextItem } from "../../llm/types";
 
-class TerminalContextProvider extends ContextProvider {
+class TerminalContextProvider extends BaseContextProvider {
   static description: ContextProviderDescription = {
     title: "terminal",
     displayTitle: "Terminal",

@@ -1,15 +1,17 @@
 import { combineReducers, configureStore } from "@reduxjs/toolkit";
-import { SlashCommandDescription } from "core/config";
-import { ContextProviderDescription } from "core/context";
-import { ContextItem } from "core/llm/types";
 import configReducer from "./slices/configSlice";
 import miscReducer from "./slices/miscSlice";
 import serverStateReducer from "./slices/serverStateReducer";
 import stateReducer from "./slices/stateSlice";
 import uiStateReducer from "./slices/uiStateSlice";
 
-import { ContinueConfig } from "core/config";
-import { ChatHistory } from "core/llm/types";
+import {
+  ChatHistory,
+  ContextItem,
+  ContextProviderDescription,
+  ContinueConfig,
+  SlashCommandDescription,
+} from "core";
 import { createTransform } from "redux-persist";
 import storage from "redux-persist/lib/storage";
 

@@ -1,5 +1,5 @@
+import { PersistedSessionInfo, SessionInfo } from "core";
 import { ideRequest } from "core/ide/messaging";
-import { PersistedSessionInfo, SessionInfo } from "core/types";
 import { useSelector } from "react-redux";
 import { RootStore } from "../redux/store";
 

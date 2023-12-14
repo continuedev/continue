@@ -1,6 +1,6 @@
-import { ContextProvider, ContextProviderDescription } from "..";
+import { BaseContextProvider } from "..";
+import { ContextItem, ContextProviderDescription } from "../..";
 import { ExtensionIde } from "../../ide";
-import { ContextItem } from "../../llm/types";
 
 interface Directory {
   name: string;
@@ -31,7 +31,7 @@ function formatFileTree(tree: Directory, indentation: string = ""): string {
   return result;
 }
 
-class FileTreeContextProvider extends ContextProvider {
+class FileTreeContextProvider extends BaseContextProvider {
   static description: ContextProviderDescription = {
     title: "tree",
     displayTitle: "File Tree",

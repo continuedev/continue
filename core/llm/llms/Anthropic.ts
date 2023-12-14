@@ -1,11 +1,10 @@
 // import AnthropicClient from "@anthropic-ai/sdk";
 // import { CompletionCreateParamsBase } from "@anthropic-ai/sdk/resources/completions";
-import { LLM, LLMOptions } from "..";
-import { ModelProvider } from "../../config";
+import { BaseLLM } from "..";
+import { CompletionOptions, LLMOptions, ModelProvider } from "../..";
 import { anthropicTemplateMessages } from "../templates/chat";
-import { CompletionOptions } from "../types";
 
-class Anthropic extends LLM {
+class Anthropic extends BaseLLM {
   static providerName: ModelProvider = "anthropic";
   static defaultOptions: Partial<LLMOptions> = {
     model: "claude-2",

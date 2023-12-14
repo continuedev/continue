@@ -1,9 +1,16 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { ContinueConfig } from "core/config";
+import {
+  ChatMessage,
+  ContextItem,
+  ContextItemId,
+  ContinueConfig,
+  PersistedSessionInfo,
+} from "core";
 import defaultConfig from "core/config/default";
-import { loadSerializedConfig } from "core/config/load";
-import { ChatMessage, ContextItem, ContextItemId } from "core/llm/types";
-import { PersistedSessionInfo } from "core/types";
+import {
+  intermediateToFinalConfig,
+  serializedToIntermediateConfig,
+} from "core/config/load";
 import { v4 } from "uuid";
 import { RootStore } from "../store";
 
@@ -85,7 +92,9 @@ const initialState: RootStore["state"] = {
   history: [],
   contextItems: [],
   active: false,
-  config: loadSerializedConfig(defaultConfig),
+  config: intermediateToFinalConfig(
+    serializedToIntermediateConfig(defaultConfig)
+  ),
   title: "New Session",
   sessionId: v4(),
   defaultModelTitle: "GPT-4",

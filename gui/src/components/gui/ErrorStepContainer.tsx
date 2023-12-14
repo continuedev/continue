@@ -1,5 +1,5 @@
 import { MinusCircleIcon, XMarkIcon } from "@heroicons/react/24/outline";
-import { ContinueError } from "core/types";
+import { ContinueError } from "core";
 import styled from "styled-components";
 import { defaultBorderRadius, vscBackground } from "..";
 import HeaderButtonWithText from "../HeaderButtonWithText";

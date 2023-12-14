@@ -1,9 +1,8 @@
 import { Dispatch } from "@reduxjs/toolkit";
 
-import { SlashCommand } from "core/commands";
+import { ChatHistory, ChatHistoryItem, ChatMessage, SlashCommand } from "core";
 import { ExtensionIde } from "core/ide";
 import { constructMessages } from "core/llm/constructMessages";
-import { ChatHistory, ChatHistoryItem, ChatMessage } from "core/llm/types";
 import { usePostHog } from "posthog-js/react";
 import { useEffect, useRef } from "react";
 import { useSelector } from "react-redux";

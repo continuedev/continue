@@ -1,4 +1,4 @@
-import { PersistedSessionInfo, SessionInfo } from "core/types";
+import { PersistedSessionInfo, SessionInfo } from "core";
 import { getSessionFilePath, getSessionsListPath } from "core/util/paths";
 import * as fs from "fs";
 

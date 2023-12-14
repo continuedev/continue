@@ -1,11 +1,10 @@
 import * as fs from "fs";
-import { SerializedContinueConfig } from "../config";
+import { IDE, SerializedContinueConfig } from "..";
 import {
   getConfigJsonPath,
   getConfigTsPath,
   getContinueGlobalPath,
 } from "../util/paths";
-import { IDE } from "./types";
 
 class FileSystemIde implements IDE {
   async getSerializedConfig(): Promise<SerializedContinueConfig> {

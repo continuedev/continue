@@ -1,6 +1,4 @@
-import { SlashCommand } from "..";
-import { LLM } from "../../llm";
-import { ContextItem } from "../../llm/types";
+import { ContextItem, ILLM, SlashCommand } from "../..";
 import { dedentAndGetCommonWhitespace, renderPromptTemplate } from "../../util";
 
 interface RangeInFileWithContents {
@@ -50,7 +48,7 @@ Main task:
 export async function getPromptParts(
   rif: RangeInFileWithContents,
   fullFileContents: string,
-  model: LLM,
+  model: ILLM,
   input: string
 ) {
   let maxTokens = Math.floor(model.contextLength / 2);

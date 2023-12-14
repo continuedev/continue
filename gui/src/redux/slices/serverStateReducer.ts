@@ -1,6 +1,4 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { SerializedContinueConfig } from "core/config";
-import { loadSerializedConfig } from "core/config/load";
 import FreeTrial from "core/llm/llms/FreeTrial";
 import { RootStore } from "../store";
 
@@ -54,13 +52,6 @@ export const serverStateSlice = createSlice({
         contextProviders: action.payload,
       };
     },
-    setConfig: (state, { payload }: { payload: SerializedContinueConfig }) => {
-      const config = loadSerializedConfig(payload);
-      return {
-        ...state,
-        config,
-      };
-    },
     setIndexingProgress: (state, { payload }: { payload: number }) => {
       return {
         ...state,
@@ -70,10 +61,6 @@ export const serverStateSlice = createSlice({
   },
 });
 
-export const {
-  setContextProviders,
-  setSlashCommands,
-  setConfig,
-  setIndexingProgress,
-} = serverStateSlice.actions;
+export const { setContextProviders, setSlashCommands, setIndexingProgress } =
+  serverStateSlice.actions;
 export default serverStateSlice.reducer;

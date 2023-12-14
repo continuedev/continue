@@ -1,5 +1,4 @@
-import { SlashCommand } from "..";
-import { ChatMessage } from "../../llm/types";
+import { ChatMessage, SlashCommand } from "../..";
 import { removeQuotesAndEscapes } from "../../util";
 
 const PROMPT = (

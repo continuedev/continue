@@ -1,7 +1,7 @@
 import defaultConfig from "core/config/default";
-import { SerializedContinueConfig } from "core/config/index";
-import { IDE } from "core/ide/types";
+
 import {
+  getConfigJsPath,
   getConfigJsonPath,
   getConfigTsPath,
   getContinueGlobalPath,
@@ -10,6 +10,9 @@ import {
 import * as fs from "fs";
 import * as vscode from "vscode";
 import { ideProtocolClient } from "./activation/activate";
+
+import { IDE, SerializedContinueConfig } from "core";
+import esbuild from "esbuild";
 
 class VsCodeIde implements IDE {
   async getSerializedConfig(): Promise<SerializedContinueConfig> {
@@ -57,18 +60,19 @@ class VsCodeIde implements IDE {
       return undefined;
     }
 
-    // const result = await esbuild.build({
-    //   entryPoints: [getConfigTsPath()],
-    //   bundle: true,
-    //   platform: "browser",
-    //   outfile: getConfigJsPath(),
-    //   external: ["esbuild"],
-    // });
+    const result = await esbuild.build({
+      entryPoints: [getConfigTsPath()],
+      bundle: true,
+      platform: "browser",
+      format: "esm",
+      outfile: getConfigJsPath(),
+      external: ["fetch"],
+    });
 
-    // const configJsString = fs.readFileSync(getConfigJsPath(), "utf8");
+    const configJsString = fs.readFileSync(getConfigJsPath(), "utf8");
 
-    // var dataUrl = "data:text/javascript;base64," + btoa(configJsString);
-    // return dataUrl;
+    var dataUrl = "data:text/javascript;base64," + btoa(configJsString);
+    return dataUrl;
 
     // try {
     //   // Use tsc to compile config.ts to config.js. Spawn a child process to do this

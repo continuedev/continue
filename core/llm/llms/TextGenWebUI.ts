@@ -1,8 +1,7 @@
-import { LLM, LLMOptions } from "..";
-import { ModelProvider } from "../../config";
-import { ChatMessage, CompletionOptions } from "../types";
+import { BaseLLM } from "..";
+import { CompletionOptions, LLMOptions, ModelProvider } from "../..";
 
-class TextGenWebUI extends LLM {
+class TextGenWebUI extends BaseLLM {
   static providerName: ModelProvider = "text-gen-webui";
   static defaultOptions: Partial<LLMOptions> = {
     apiBase: "http://localhost:5000",

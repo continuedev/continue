@@ -1,8 +1,7 @@
-import { LLM, LLMOptions } from "..";
-import { ModelProvider } from "../../config";
-import { CompletionOptions } from "../types";
+import { BaseLLM } from "..";
+import { CompletionOptions, LLMOptions, ModelProvider } from "../..";
 
-class HuggingFaceTGI extends LLM {
+class HuggingFaceTGI extends BaseLLM {
   static providerName: ModelProvider = "huggingface-tgi";
   static defaultOptions: Partial<LLMOptions> = {
     apiBase: "http://localhost:8080",

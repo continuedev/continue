@@ -1,8 +1,7 @@
-import { ContextProvider, ContextProviderDescription } from "..";
-import { ExtensionIde } from "../../ide";
-import { ContextItem } from "../../llm/types";
+import { BaseContextProvider } from "..";
+import { ContextItem, ContextProviderDescription } from "../..";
 
-class GitHubIssuesContextProvider extends ContextProvider {
+class GitHubIssuesContextProvider extends BaseContextProvider {
   static description: ContextProviderDescription = {
     title: "github",
     displayTitle: "GitHub Issues",

@@ -19,7 +19,7 @@ import {
   SparklesIcon,
   TrashIcon,
 } from "@heroicons/react/24/outline";
-import { ContextItem } from "core/llm/types";
+import { ContextItem } from "core";
 import { useCombobox } from "downshift";
 import React, {
   useCallback,

@@ -3,8 +3,8 @@ import {
   Tiktoken,
   TiktokenModel,
 } from "js-tiktoken";
+import { ChatMessage } from "..";
 import { TOKEN_BUFFER_FOR_SAFETY } from "./constants";
-import { ChatMessage } from "./types";
 
 function renderTemplatedString(template: string): string {
   // TODO

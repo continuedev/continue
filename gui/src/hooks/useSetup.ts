@@ -3,7 +3,10 @@ import { useEffect } from "react";
 import { setServerStatusMessage } from "../redux/slices/miscSlice";
 import { errorPopup, postToIde } from "../util/ide";
 
-import { loadSerializedConfig } from "core/config/load";
+import {
+  intermediateToFinalConfig,
+  serializedToIntermediateConfig,
+} from "core/config/load";
 import { ExtensionIde } from "core/ide/index";
 import { setVscMachineId } from "../redux/slices/configSlice";
 import {
@@ -17,25 +20,28 @@ function useSetup(dispatch: Dispatch<any>) {
   const loadConfig = async () => {
     try {
       const ide = new ExtensionIde();
-      let config = loadSerializedConfig(await ide.getSerializedConfig());
-      // const configJsUrl = await ide.getConfigJsUrl();
-      // if (configJsUrl) {
-      //   try {
-      //     // Try config.ts first
-      //     const module = await import(configJsUrl);
-      //     if (!module.config) {
-      //       throw new Error("config.ts does not export a config object");
-      //     }
-      //     console.log("Loaded config.ts", module.config);
-      //     config = module.modifyConfig(config);
-      //   } catch (e) {
-      //     console.log("Error loading config.ts: ", e);
-      //     errorPopup(e.message);
-      //   }
-      // }
-      console.log("Loaded config.json", config);
+      let serialized = await ide.getSerializedConfig();
+      let intermediate = serializedToIntermediateConfig(serialized);
+
+      const configJsUrl = await ide.getConfigJsUrl();
+      if (configJsUrl) {
+        try {
+          // Try config.ts first
+          const module = await import(configJsUrl);
+          if (!module.modifyConfig) {
+            throw new Error(
+              "config.ts does not export a modifyConfig function."
+            );
+          }
+          intermediate = module.modifyConfig(intermediate);
+        } catch (e) {
+          console.log("Error loading config.ts: ", e);
+          errorPopup(e.message);
+        }
+      }
+      const finalConfig = intermediateToFinalConfig(intermediate);
       // Fall back to config.json
-      dispatch(setConfig(config));
+      dispatch(setConfig(finalConfig));
     } catch (e) {
       console.log("Error loading config.json: ", e);
       errorPopup(e.message);

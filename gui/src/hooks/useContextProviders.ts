@@ -1,4 +1,4 @@
-import { ContextItem } from "core/llm/types";
+import { ContextItem } from "core";
 import { useSelector } from "react-redux";
 import { RootStore } from "../redux/store";
 import { errorPopup } from "../util/ide";

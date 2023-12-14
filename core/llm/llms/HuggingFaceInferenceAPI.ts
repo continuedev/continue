@@ -1,8 +1,7 @@
-import { LLM } from "..";
-import { ModelProvider } from "../../config";
-import { ChatMessage, CompletionOptions } from "../types";
+import { BaseLLM } from "..";
+import { ChatMessage, CompletionOptions, ModelProvider } from "../..";
 
-class HuggingFaceInferenceAPI extends LLM {
+class HuggingFaceInferenceAPI extends BaseLLM {
   static providerName: ModelProvider = "huggingface-inference-api";
 
   private _convertArgs(options: CompletionOptions, prompt: string) {

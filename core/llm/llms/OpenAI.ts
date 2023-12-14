@@ -1,8 +1,13 @@
 import { ChatCompletionCreateParamsBase } from "openai/resources/chat/completions";
-import { LLM, LLMOptions } from "..";
-import { ModelProvider } from "../../config";
-import { ChatMessage, CompletionOptions } from "../types";
-class OpenAI extends LLM {
+import { BaseLLM } from "..";
+import {
+  ChatMessage,
+  CompletionOptions,
+  LLMOptions,
+  ModelProvider,
+} from "../..";
+
+class OpenAI extends BaseLLM {
   static providerName: ModelProvider = "openai";
   static defaultOptions: Partial<LLMOptions> = {
     apiBase: "https://api.openai.com",

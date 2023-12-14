@@ -1,5 +1,4 @@
-import { LLMOptions } from "..";
-import { ModelProvider } from "../../config";
+import { LLMOptions, ModelProvider } from "../..";
 import OpenAI from "./OpenAI";
 
 class Mistral extends OpenAI {

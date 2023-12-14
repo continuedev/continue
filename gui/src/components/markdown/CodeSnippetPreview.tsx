@@ -1,19 +1,18 @@
-import React from "react";
-import { defaultBorderRadius, lightGray, secondaryDark } from "..";
-import styled from "styled-components";
-import { getFontSize, getMarkdownLanguageTagForFile } from "../../util";
-import FileIcon from "../FileIcon";
-import HeaderButtonWithText from "../HeaderButtonWithText";
-import { ContextItem } from "core/llm/types";
-import { postToIde } from "../../util/ide";
 import {
-  ArrowUpLeftIcon,
   ChevronDownIcon,
   ChevronUpIcon,
   TrashIcon,
 } from "@heroicons/react/24/outline";
-import { deleteContextWithIds } from "../../redux/slices/stateSlice";
+import { ContextItem } from "core";
+import React from "react";
 import { useDispatch } from "react-redux";
+import styled from "styled-components";
+import { defaultBorderRadius, lightGray, secondaryDark } from "..";
+import { deleteContextWithIds } from "../../redux/slices/stateSlice";
+import { getFontSize, getMarkdownLanguageTagForFile } from "../../util";
+import { postToIde } from "../../util/ide";
+import FileIcon from "../FileIcon";
+import HeaderButtonWithText from "../HeaderButtonWithText";
 import StyledMarkdownPreview from "./StyledMarkdownPreview";
 
 const PreviewMarkdownDiv = styled.div<{ scroll: boolean }>`

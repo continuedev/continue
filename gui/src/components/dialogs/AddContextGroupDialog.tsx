@@ -1,4 +1,4 @@
-import { ContextItem } from "core/llm/types";
+import { ContextItem } from "core";
 import { useDispatch } from "react-redux";
 import { Button, Input } from "..";
 import {

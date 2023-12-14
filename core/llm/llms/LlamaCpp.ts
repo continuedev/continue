@@ -1,8 +1,7 @@
-import { LLM, LLMOptions } from "..";
-import { ModelProvider } from "../../config";
-import { CompletionOptions } from "../types";
+import { BaseLLM } from "..";
+import { CompletionOptions, LLMOptions, ModelProvider } from "../..";
 
-class LlamaCpp extends LLM {
+class LlamaCpp extends BaseLLM {
   static providerName: ModelProvider = "llama.cpp";
   static defaultOptions: Partial<LLMOptions> = {
     apiBase: "http://127.0.0.1:8080",

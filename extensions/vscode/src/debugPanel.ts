@@ -1,6 +1,5 @@
-import { ModelDescription } from "core/config";
+import { FileEdit, ModelDescription } from "core";
 import { llmFromDescription } from "core/llm/llms";
-import { FileEdit } from "core/types";
 import {
   editConfigJson,
   getConfigJsonPath,

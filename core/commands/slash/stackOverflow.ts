@@ -1,6 +1,5 @@
-import { SlashCommand } from "..";
+import { ChatMessageRole, SlashCommand } from "../..";
 import { pruneStringFromBottom } from "../../llm/countTokens";
-import { ChatMessageRole } from "../../llm/types";
 
 const SERVER_URL = "https://proxy-server-l6vsfbzhba-uw.a.run.app";
 const PROMPT = (

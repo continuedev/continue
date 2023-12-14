@@ -2,7 +2,7 @@ import {
   HandThumbDownIcon,
   HandThumbUpIcon,
 } from "@heroicons/react/24/outline";
-import { ChatHistoryItem } from "core/llm/types";
+import { ChatHistoryItem } from "core";
 import { useEffect, useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import styled from "styled-components";

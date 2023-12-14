@@ -1,4 +1,4 @@
-import { SlashCommand } from "..";
+import { SlashCommand } from "../..";
 
 const ShareSlashCommand: SlashCommand = {
   name: "share",

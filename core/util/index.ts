@@ -1,5 +1,5 @@
 import Handlebars from "handlebars";
-import { ChatMessage } from "../llm/types";
+import { ChatMessage } from "..";
 
 export function removeQuotesAndEscapes(output: string): string {
   output = output.trim();
