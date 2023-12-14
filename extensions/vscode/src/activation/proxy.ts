@@ -58,6 +58,6 @@ export function startProxy() {
     console.log(`Proxy server is running on port ${PROXY_PORT}`);
   });
   server.on("error", (e) => {
-    console.log("Proxy server already running on 65433: ", e.message);
+    console.log("Proxy server already running on port 65433");
   });
 }

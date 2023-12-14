@@ -77,6 +77,9 @@ class VsCodeIde implements IDE {
       return undefined;
     }
 
+    if (!fs.existsSync(getConfigJsPath())) {
+      return undefined;
+    }
     const configJsString = fs.readFileSync(getConfigJsPath(), "utf8");
 
     var dataUrl = "data:text/javascript;base64," + btoa(configJsString);

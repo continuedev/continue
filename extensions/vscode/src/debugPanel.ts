@@ -117,7 +117,7 @@ export function getSidebarContent(
       panel.webview.postMessage({
         type: data.type,
         messageId: data.messageId,
-        message: message || {},
+        message: message,
       });
     };
     switch (data.type) {
