@@ -3,6 +3,7 @@ import * as os from "os";
 import * as path from "path";
 import { SerializedContinueConfig } from "..";
 import defaultConfig from "../config/default";
+import Types from "../config/types";
 
 export function getContinueGlobalPath(): string {
   // This is ~/.continue on mac/linux
@@ -38,8 +39,27 @@ export function getConfigJsonPath(): string {
 }
 
 export function getConfigTsPath(): string {
-  // Do not create automatically
-  return path.join(getContinueGlobalPath(), "config.ts");
+  const p = path.join(getContinueGlobalPath(), "config.ts");
+  if (!fs.existsSync(p)) {
+    fs.writeFileSync(
+      p,
+      `export function modifyConfig(config: Config): Config {
+  return config;
+}`
+    );
+  }
+
+  const node_modules_path = path.join(getContinueGlobalPath(), "node_modules");
+  if (!fs.existsSync(node_modules_path)) {
+    fs.mkdirSync(node_modules_path);
+    fs.mkdirSync(path.join(node_modules_path, "@types"));
+    fs.mkdirSync(path.join(node_modules_path, "@types/core"));
+  }
+  fs.writeFileSync(
+    path.join(node_modules_path, "@types/core", "index.d.ts"),
+    Types
+  );
+  return p;
 }
 
 export function getConfigJsPath(): string {
@@ -64,11 +84,9 @@ export function getTsConfigPath(): string {
             allowSyntheticDefaultImports: true,
             strict: true,
             forceConsistentCasingInFileNames: true,
-            module: "AMD",
+            module: "System",
             moduleResolution: "Node",
-            resolveJsonModule: true,
             noEmit: false,
-            jsx: "react-jsx",
             noEmitOnError: false,
             outFile: "./config.js",
           },
