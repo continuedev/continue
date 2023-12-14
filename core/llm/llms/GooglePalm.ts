@@ -48,7 +48,7 @@ class GooglePalm extends BaseLLM {
     const body = {
       contents: messages.map((msg) => {
         return {
-          role: msg.role === "assistant" ? "ASSISTANT" : "USER",
+          role: msg.role === "assistant" ? "model" : "user",
           parts: [{ text: msg.content }],
         };
       }),
@@ -60,6 +60,8 @@ class GooglePalm extends BaseLLM {
     const data = await response.json();
     if (data.error) {
       throw new Error(data.error.message);
+    } else if (data.candidates[0].finishReason === "OTHER") {
+      throw new Error("Google PaLM API returned empty response");
     }
     yield {
       role: "assistant",

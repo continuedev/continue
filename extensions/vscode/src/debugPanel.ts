@@ -394,29 +394,34 @@ export function getSidebarContent(
         break;
       }
       case "googlePalmCompletion": {
-        const sConfig = await ide.getSerializedConfig();
-        const modelDesc = sConfig.models.find(
-          (m) =>
-            m.provider === "google-palm" && m.title === data.message.modelTitle
-        );
-        if (!modelDesc) {
-          return "";
+        try {
+          const sConfig = await ide.getSerializedConfig();
+          const modelDesc = sConfig.models.find(
+            (m) =>
+              m.provider === "google-palm" &&
+              m.title === data.message.modelTitle
+          );
+          if (!modelDesc) {
+            return "";
+          }
+          const model = llmFromDescription({
+            ...modelDesc,
+            provider: "google-palm-real",
+          });
+          if (!model) {
+            return "";
+          }
+          let completion = "";
+          for await (const update of model.streamChat(
+            data.message.messages,
+            data.message.options
+          )) {
+            completion += update.content;
+          }
+          respond(completion);
+        } catch (e) {
+          vscode.window.showErrorMessage(`Google PaLM failed with error: ${e}`);
         }
-        const model = llmFromDescription({
-          ...modelDesc,
-          provider: "google-palm-real",
-        });
-        if (!model) {
-          return "";
-        }
-        let completion = "";
-        for await (const update of model.streamChat(
-          data.message.messages,
-          data.message.options
-        )) {
-          completion += update.content;
-        }
-        respond(completion);
         break;
       }
     }
