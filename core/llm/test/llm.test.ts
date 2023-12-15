@@ -2,7 +2,7 @@
 
 // import { BaseLLM } from "..";
 // import { CompletionOptions } from "../..";
-// import GooglePalm from "../llms/GooglePalm";
+// import Mistral from "../llms/Mistral";
 
 // jest.setTimeout(100_000);
 
@@ -27,7 +27,7 @@
 //     test("Stream Chat works", async () => {
 //       let total = "";
 //       for await (const chunk of llm.streamChat([
-//         { role: "user", content: "Hello" },
+//         { role: "user", content: "Tell a story" },
 //       ])) {
 //         total += chunk.content;
 //       }
@@ -94,14 +94,17 @@
 //   //   // testLLM(new TextGenWebUI({ model: "codellama-7b" }));
 //   //   // testLLM(new HuggingFaceTGI({ model: "codellama-7b" }));
 //   //   // testLLM(new HuggingFaceInferenceAPI({ model: "codellama-7b" }));
-//   testLLM(
-//     new GooglePalm({
-//       model: "gemini-pro",
-//       //   model: "chat-bison-001",
-//       apiKey: process.env.GOOGLE_PALM_API_KEY,
-//     })
-//   );
+//   //   testLLM(
+//   //     new GooglePalm({
+//   //       model: "gemini-pro",
+//   //       //   model: "chat-bison-001",
+//   //       apiKey: process.env.GOOGLE_PALM_API_KEY,
+//   //     })
+//   //   );
 //   //   testLLM(
 //   //     new Gemini({ model: "gemini-pro", apiKey: process.env.GOOGLE_PALM_API_KEY })
 //   //   );
+//   testLLM(
+//     new Mistral({ apiKey: process.env.MISTRAL_API_KEY, model: "mistral-small" })
+//   );
 // });

@@ -10,6 +10,7 @@ import HuggingFaceTGI from "./HuggingFaceTGI";
 import LMStudio from "./LMStudio";
 import LlamaCpp from "./LlamaCpp";
 import Llamafile from "./Llamafile";
+import Mistral from "./Mistral";
 import Ollama from "./Ollama";
 import OpenAI from "./OpenAI";
 import Replicate from "./Replicate";
@@ -32,6 +33,7 @@ const LLMs = [
   OpenAI,
   LMStudio,
   Gemini,
+  Mistral,
 ];
 
 export function llmFromDescription(
