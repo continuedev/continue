@@ -661,7 +661,8 @@
             "ClearHistoryStep",
             "StackOverflowStep",
             "OpenConfigStep",
-            "DraftIssueStep"
+            "DraftIssueStep",
+            "HttpSlashCommand"
           ],
           "type": "string"
         },
