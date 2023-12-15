@@ -306,7 +306,7 @@ const mistral: ModelPackage = {
 };
 
 const gemini: ModelPackage = {
-  title: "Gemini",
+  title: "Gemini Pro",
   description: "A highly capable model created by Google DeepMind",
   params: {
     title: "Gemini Pro",
@@ -435,6 +435,7 @@ export const MODEL_INFO: ModelPackage[] = [
   gpt4,
   gpt35turbo,
   gpt4turbo,
+  gemini,
   claude2,
   mistral,
   codeLlamaInstruct,
@@ -445,7 +446,6 @@ export const MODEL_INFO: ModelPackage[] = [
   chatBison,
   zephyr,
   deepseek,
-  gemini,
 ];
 
 export const PROVIDER_INFO: { [key: string]: ModelInfo } = {
@@ -645,7 +645,7 @@ After it's up and running, you can start using Continue.`,
     title: "Google PaLM API",
     provider: "google-palm",
     description:
-      "Try out the Google PaLM API, which is currently in public preview, using an API key from Google Makersuite",
+      "Try out the Google PaLM API, which is currently in public preview, using an API key from Google Makersuite. Includes the Gemini Pro model",
     longDescription: `To get started with Google Makersuite, obtain your API key from [here](https://makersuite.google.com) and paste it below.
 > Note: Google's PaLM language models do not support streaming, so the response will appear all at once after a few seconds.`,
     icon: "google-palm.png",
@@ -660,6 +660,7 @@ After it's up and running, you can start using Continue.`,
       },
     ],
     packages: [
+      gemini,
       {
         title: "chat-bison-001",
         description:
@@ -669,7 +670,6 @@ After it's up and running, you can start using Continue.`,
           contextLength: 8000,
         },
       },
-      gemini,
     ],
   },
   "openai-aiohttp": {
