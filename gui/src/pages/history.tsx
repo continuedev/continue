@@ -24,7 +24,7 @@ const Tr = styled.tr`
 const parseDate = (date: string): Date => {
   let dateObj = new Date(date);
   if (isNaN(dateObj.getTime())) {
-    dateObj = new Date(parseInt(date) * 1000);
+    dateObj = new Date(parseInt(date));
   }
   return dateObj;
 };
