@@ -6,6 +6,7 @@ name = "continuedev"
 # these are good defaults:
 version = "0.1.0"
 edition = "2021"
+license = "Apache-2.0"
 
 [lib]
 # The name of the native library. This is the name which will be used in Python to import the
