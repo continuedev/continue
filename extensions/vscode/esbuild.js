@@ -19,7 +19,8 @@ const fs = require("fs");
   });
 
   // Return instead of copying if on ARM Mac
-  if (process.platform === "darwin" && process.arch === "arm64") {
+  // This is an env var created in the GH Action
+  if (process.env.target === "darwin-arm64") {
     return;
   }
 
