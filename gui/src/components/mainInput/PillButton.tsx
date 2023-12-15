@@ -244,7 +244,7 @@ const PillButton = (props: PillButtonProps) => {
           }}
         >
           <span className={(isHovered ? "underline" : "") + " flex"}>
-            {["file", "code"].includes(props.item.id.providerTitle) && (
+            {["file", "code", "open"].includes(props.item.id.providerTitle) && (
               <FileIcon
                 height="16px"
                 width="16px"
