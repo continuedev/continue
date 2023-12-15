@@ -312,6 +312,7 @@ const gemini: ModelPackage = {
     title: "Gemini Pro",
     model: "gemini-pro",
     contextLength: 32_000,
+    apiKey: "<API_KEY>",
   },
   icon: "gemini.png",
   providerOptions: ["palm"],
