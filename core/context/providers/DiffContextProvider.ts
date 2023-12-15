@@ -1,4 +1,3 @@
-import { v4 } from "uuid";
 import { BaseContextProvider } from "..";
 import { ContextItem, ContextProviderDescription } from "../..";
 import { ExtensionIde } from "../../ide";
@@ -19,10 +18,6 @@ class DiffContextProvider extends BaseContextProvider {
         description: "The current git diff",
         content: diff,
         name: "Git Diff",
-        id: {
-          providerTitle: "diff",
-          itemId: v4(),
-        },
       },
     ];
   }

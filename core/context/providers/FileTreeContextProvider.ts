@@ -74,10 +74,6 @@ class FileTreeContextProvider extends BaseContextProvider {
         content: formatFileTree(tree),
         name: "File Tree",
         description: "File Tree",
-        id: {
-          providerTitle: "tree",
-          itemId: workspaceDir,
-        },
       },
     ];
   }

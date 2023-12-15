@@ -19,7 +19,7 @@ import {
   SparklesIcon,
   TrashIcon,
 } from "@heroicons/react/24/outline";
-import { ContextItem } from "core";
+import { ContextItemWithId } from "core";
 import { useCombobox } from "downshift";
 import React, {
   useCallback,
@@ -864,11 +864,11 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
   const [showContextToggleOn, setShowContextToggleOn] = useState(false);
 
   const [previewingContextItem, setPreviewingContextItem] = useState<
-    ContextItem | undefined
+    ContextItemWithId | undefined
   >(undefined);
 
   const [focusedContextItem, setFocusedContextItem] = useState<
-    ContextItem | undefined
+    ContextItemWithId | undefined
   >(undefined);
 
   const topRef = React.useRef<HTMLDivElement>(null);

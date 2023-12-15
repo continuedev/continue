@@ -1,4 +1,4 @@
-import { ContextItem, ILLM, SlashCommand } from "../..";
+import { ContextItemWithId, ILLM, SlashCommand } from "../..";
 import { dedentAndGetCommonWhitespace, renderPromptTemplate } from "../../util";
 
 interface RangeInFileWithContents {
@@ -206,7 +206,7 @@ function lineToBeIgnored(line: string, isFirstLine: boolean = false): boolean {
 }
 
 export function contextItemToRangeInFileWithContents(
-  item: ContextItem
+  item: ContextItemWithId
 ): RangeInFileWithContents {
   const lines = item.name.split("(")[1].split(")")[0].split("-");
 
@@ -233,7 +233,8 @@ const EditSlashCommand: SlashCommand = {
   description: "Edit highlighted code",
   run: async function* ({ ide, llm, input, history, contextItems }) {
     const contextItemToEdit = contextItems.find(
-      (item: ContextItem) => item.editing && item.id.providerTitle === "code"
+      (item: ContextItemWithId) =>
+        item.editing && item.id.providerTitle === "code"
     );
 
     if (!contextItemToEdit) {

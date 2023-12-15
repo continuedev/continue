@@ -51,10 +51,6 @@ class GoogleContextProvider extends BaseContextProvider {
         content,
         name: "Google Search",
         description: "Google Search",
-        id: {
-          providerTitle: "google",
-          itemId: query,
-        },
       },
     ];
   }

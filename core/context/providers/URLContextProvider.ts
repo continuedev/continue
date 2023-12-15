@@ -29,10 +29,6 @@ class URLContextProvider extends BaseContextProvider {
         content,
         name: title,
         description: title,
-        id: {
-          providerTitle: "url",
-          itemId: query,
-        },
       },
     ];
   }

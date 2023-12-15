@@ -1,9 +1,9 @@
 import { ContextItem, ContextProviderDescription, IContextProvider } from "..";
 
 export abstract class BaseContextProvider implements IContextProvider {
-  options: Object;
+  options: { [key: string]: any };
 
-  constructor(options: Object) {
+  constructor(options: { [key: string]: any }) {
     this.options = options;
   }
 

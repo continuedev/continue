@@ -1,4 +1,3 @@
-import { v4 } from "uuid";
 import { BaseContextProvider } from "..";
 import { ContextItem, ContextProviderDescription } from "../..";
 import { ExtensionIde } from "../../ide";
@@ -21,11 +20,6 @@ class OpenFilesContextProvider extends BaseContextProvider {
           description: filepath,
           content: await ide.readFile(filepath),
           name: (filepath.split("/").pop() || "").split("\\").pop() || "",
-          // TODO: id can be determined outside of this function
-          id: {
-            providerTitle: "open",
-            itemId: v4(),
-          },
         };
       })
     );

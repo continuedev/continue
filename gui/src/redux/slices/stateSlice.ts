@@ -1,8 +1,8 @@
 import { createSlice } from "@reduxjs/toolkit";
 import {
   ChatMessage,
-  ContextItem,
   ContextItemId,
+  ContextItemWithId,
   ContinueConfig,
   PersistedSessionInfo,
 } from "core";
@@ -14,7 +14,7 @@ import {
 import { v4 } from "uuid";
 import { RootStore } from "../store";
 
-const TEST_CONTEXT_ITEMS: ContextItem[] = [
+const TEST_CONTEXT_ITEMS: ContextItemWithId[] = [
   {
     content: "def add(a, b):\n  return a + b",
     description: "test.py",

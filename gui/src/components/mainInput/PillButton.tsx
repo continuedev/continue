@@ -3,7 +3,7 @@ import {
   PaintBrushIcon,
   TrashIcon,
 } from "@heroicons/react/24/outline";
-import { ContextItem } from "core";
+import { ContextItemWithId } from "core";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import styled from "styled-components";
@@ -77,7 +77,7 @@ const CircleDiv = styled.div`
 
 interface PillButtonProps {
   onHover?: (arg0: boolean) => void;
-  item: ContextItem;
+  item: ContextItemWithId;
   editing: boolean;
   editingAny: boolean;
   index: number;

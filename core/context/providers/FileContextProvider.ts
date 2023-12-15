@@ -20,10 +20,6 @@ class FileContextProvider extends BaseContextProvider {
         name: query.split(/[\\/]/).pop() || query,
         description: query,
         content,
-        id: {
-          providerTitle: FileContextProvider.description.title,
-          itemId: query,
-        },
       },
     ];
   }

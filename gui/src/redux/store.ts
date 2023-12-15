@@ -7,7 +7,7 @@ import uiStateReducer from "./slices/uiStateSlice";
 
 import {
   ChatHistory,
-  ContextItem,
+  ContextItemWithId,
   ContextProviderDescription,
   ContinueConfig,
   SlashCommandDescription,
@@ -23,7 +23,7 @@ export interface ChatMessage {
 export interface RootStore {
   state: {
     history: ChatHistory;
-    contextItems: ContextItem[];
+    contextItems: ContextItemWithId[];
     active: boolean;
     config: ContinueConfig;
     title: string;

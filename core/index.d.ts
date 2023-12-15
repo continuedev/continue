@@ -124,6 +124,14 @@ export interface ContextItem {
   content: string;
   name: string;
   description: string;
+  editing?: boolean;
+  editable?: boolean;
+}
+
+export interface ContextItemWithId {
+  content: string;
+  name: string;
+  description: string;
   id: ContextItemId;
   editing?: boolean;
   editable?: boolean;
@@ -131,7 +139,7 @@ export interface ContextItem {
 
 export interface ChatHistoryItem {
   message: ChatMessage;
-  contextItems: ContextItem[];
+  contextItems: ContextItemWithId[];
   promptLogs?: [string, string][]; // [prompt, completion]
 }
 
@@ -236,11 +244,11 @@ export interface IDE {
 export interface ContinueSDK {
   ide: IDE;
   llm: ILLM;
-  addContextItem: (item: ContextItem) => void;
+  addContextItem: (item: ContextItemWithId) => void;
   history: ChatMessage[];
   input: string;
   params?: any;
-  contextItems: ContextItem[];
+  contextItems: ContextItemWithId[];
 }
 
 export interface SlashCommand {
@@ -272,7 +280,8 @@ type ContextProviderName =
   | "google"
   | "search"
   | "url"
-  | "tree";
+  | "tree"
+  | "http";
 
 type TemplateType =
   | "llama2"

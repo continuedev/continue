@@ -3,7 +3,7 @@ import {
   ChevronUpIcon,
   TrashIcon,
 } from "@heroicons/react/24/outline";
-import { ContextItem } from "core";
+import { ContextItemWithId } from "core";
 import React from "react";
 import { useDispatch } from "react-redux";
 import styled from "styled-components";
@@ -43,7 +43,7 @@ const PreviewMarkdownHeader = styled.p`
 `;
 
 interface CodeSnippetPreviewProps {
-  item: ContextItem;
+  item: ContextItemWithId;
   index: number;
 }
 

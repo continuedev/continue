@@ -705,7 +705,8 @@
             "open",
             "google",
             "search",
-            "url"
+            "url",
+            "http"
           ],
           "type": "string"
         },

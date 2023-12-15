@@ -1,4 +1,3 @@
-import { v4 } from "uuid";
 import { BaseContextProvider } from "..";
 import { ContextItem, ContextProviderDescription } from "../..";
 import { ExtensionIde } from "../../ide";
@@ -19,10 +18,6 @@ class TerminalContextProvider extends BaseContextProvider {
         description: "The contents of the terminal",
         content,
         name: "Terminal",
-        id: {
-          providerTitle: "terminal",
-          itemId: v4(),
-        },
       },
     ];
   }

@@ -1,4 +1,4 @@
-import { ContextItem } from "core";
+import { ContextItemWithId } from "core";
 import { useDispatch } from "react-redux";
 import { Button, Input } from "..";
 import {
@@ -9,7 +9,7 @@ import {
 function AddContextGroupDialog({
   selectedContextItems,
 }: {
-  selectedContextItems: ContextItem[];
+  selectedContextItems: ContextItemWithId[];
 }) {
   const dispatch = useDispatch();
 
