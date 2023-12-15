@@ -97,7 +97,6 @@
           "enum": [
             "openai",
             "openai-free-trial",
-            "openai-aiohttp",
             "anthropic",
             "together",
             "ollama",
@@ -284,7 +283,7 @@
           "if": {
             "properties": {
               "provider": {
-                "enum": ["openai", "openai-aiohttp"]
+                "enum": ["openai"]
               }
             },
             "required": ["provider"]
@@ -371,7 +370,7 @@
           "if": {
             "properties": {
               "provider": {
-                "enum": ["openai", "openai-aiohttp"]
+                "enum": ["openai"]
               },
               "apiType": {
                 "not": {

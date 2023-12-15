@@ -620,27 +620,6 @@ After it's up and running, you can start using Continue.`,
     packages: [...osModels, deepseek],
     collectInputFor: [...completionParamsInputs],
   },
-  textgenwebui: {
-    title: "text-generation-webui",
-    provider: "text-gen-webui",
-    description: "A popular open-source front-end for serving LLMs locally",
-    longDescription: `text-generation-webui is a comprehensive, open-source language model UI and local server. You can also set it up with an [OpenAI-compatible server extension](https://github.com/oobabooga/text-generation-webui/tree/main/extensions/openai#an-openedai-api-openai-like), but this model provider is made to interface with the built-in server, which has a different format. To setup the text-generation-webui server, take the following steps:
-
-1. Clone the repository: \`git clone https://github.com/oobabooga/text-generation-webui/tree/main\`
-2. Change into the directory: \`cd text-generation-webui\`
-3. Run the one-click installer script for your operating system, using the --api flag:
-    - Mac: \`sh start_macos.sh --api\`
-    - Linux: \`sh start_linux.sh --api\`
-    - Windows: \`. start_windows.bat --api\`
-    - WSL: \`. start_wsl.bat --api\`
-4. Find a model to run and download its weights into the folder \`text-generation-webui/models\`. The best place to find models is [The Bloke on HuggingFace](https://huggingface.co/TheBloke)
-5. Navigate to [the UI](http://127.0.0.1:7860), click the "Model" tab, and load the model you've downloaded
-6. Once the model is loaded, you can start using Continue`,
-    icon: undefined,
-    tags: [ModelProviderTag.Local, ModelProviderTag["Open-Source"]],
-    packages: [...osModels, deepseek],
-    collectInputFor: [...completionParamsInputs],
-  },
   palm: {
     title: "Google PaLM API",
     provider: "google-palm",
@@ -674,7 +653,7 @@ After it's up and running, you can start using Continue.`,
   },
   "openai-aiohttp": {
     title: "Other OpenAI-compatible API",
-    provider: "openai-aiohttp",
+    provider: "openai",
     description:
       "If you are using any other OpenAI-compatible API, for example text-gen-webui, FastChat, LocalAI, or llama-cpp-python, you can simply enter your server URL",
     longDescription: `If you are using any other OpenAI-compatible API, you can simply enter your server URL. If you still need to set up your model server, you can follow a guide below:
