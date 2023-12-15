@@ -2,7 +2,6 @@ import cors from "cors";
 import express from "express";
 import http from "http";
 import https from "https";
-import * as vscode from "vscode";
 
 const PROXY_PORT = 65433;
 const app = express();
@@ -55,16 +54,6 @@ app.use((req, res, next) => {
 // });
 
 export function startProxy() {
-  const proxyServerUrl = vscode.workspace
-    .getConfiguration("continue")
-    .get("proxyServerUrl");
-  if (
-    proxyServerUrl !== "http://localhost:65433" &&
-    proxyServerUrl !== "http://127.0.0.1:65433"
-  ) {
-    return;
-  }
-
   const server = app.listen(PROXY_PORT, () => {
     console.log(`Proxy server is running on port ${PROXY_PORT}`);
   });
