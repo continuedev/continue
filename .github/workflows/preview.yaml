@@ -109,15 +109,13 @@ jobs:
 
       - name: Unzip node_modules for esbuild on Apple Silicon
         if: matrix.os == 'macos-latest' && matrix.arch == 'arm64'
-        run: unzip extensions/vscode/out/node_modules.zip
+        run: |
+          cd extensions/vscode/out
+          unzip node_modules.zip
 
       - name: Remove node_modules.zip for esbuild on Apple Silicon
         if: matrix.os == 'macos-latest' && matrix.arch == 'arm64'
         run: rm extensions/vscode/out/node_modules.zip
-
-      - name: Verify that node_modules was downloaded
-        if: matrix.os == 'macos-latest' && matrix.arch == 'arm64'
-        run: ls extensions/vscode/out
 
       # 3. Run tests for the extension
 
