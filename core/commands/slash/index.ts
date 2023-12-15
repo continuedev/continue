@@ -1,5 +1,6 @@
 import GenerateTerminalCommand from "./cmd";
 import CommentSlashCommand from "./comment";
+import CommitMessageCommand from "./commit";
 import DraftIssueCommand from "./draftIssue";
 import EditSlashCommand from "./edit";
 import HttpSlashCommand from "./http";
@@ -14,4 +15,5 @@ export default [
   EditSlashCommand,
   CommentSlashCommand,
   HttpSlashCommand,
+  CommitMessageCommand,
 ];

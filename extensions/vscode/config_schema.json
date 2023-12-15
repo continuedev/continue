@@ -661,7 +661,8 @@
             "StackOverflowStep",
             "OpenConfigStep",
             "DraftIssueStep",
-            "HttpSlashCommand"
+            "HttpSlashCommand",
+            "CommitMessageStep"
           ],
           "type": "string"
         },
