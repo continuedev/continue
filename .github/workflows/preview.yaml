@@ -91,11 +91,25 @@ jobs:
           cd core
           npm ci --legacy-peer-deps
 
-      # 3. Run tests for the extension
+      # 2.5. Pre package and download anything that needs to be built on Apple Silicon
       - name: Prepare the extension
         run: |
           cd extensions/vscode
           npm run prepackage
+
+      - name: Download node_modules for esbuild on Apple Silicon
+      if: matrix.os == 'macos-latest' && matrix.arch == 'arm64'
+      run: curl -o extensions/vscode/out/node_modules https://continue-server-binaries.s3.us-west-1.amazonaws.com/node_modules.zip
+
+      - name: Unzip node_modules for esbuild on Apple Silicon
+      if: matrix.os == 'macos-latest' && matrix.arch == 'arm64'
+      run: unzip extensions/vscode/out/node_modules
+
+      - name: Remove node_modules.zip for esbuild on Apple Silicon
+      if: matrix.os == 'macos-latest' && matrix.arch == 'arm64'
+      run: rm extensions/vscode/out/node_modules.zip
+      
+      # 3. Run tests for the extension
 
       # - name: Install Xvfb for Linux and run tests
       #   run: |
