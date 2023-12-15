@@ -461,6 +461,9 @@ export function getSidebarContent(
           ) || []
         )}</script>
         <script>window.isFullScreen = ${isFullScreen}</script>
+        <script>window.proxyServerUrl = "${vscode.workspace
+          .getConfiguration("continue")
+          .get("proxyServerUrl")}"</script>
 
         ${
           edits

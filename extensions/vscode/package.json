@@ -61,6 +61,11 @@
           "type": "boolean",
           "default": true,
           "description": "Show inline suggestion to use the Continue keyboard shortcuts."
+        },
+        "continue.proxyServerUrl": {
+          "type": "string",
+          "default": "http://localhost:65433",
+          "description": "An optional proxy server URL through which you can route all Continue requests. Do not change this unless you have set up your own server to proxy requests."
         }
       }
     },

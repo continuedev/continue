@@ -31,10 +31,13 @@ export function proxyFetch(url: string, init?: RequestInit): Promise<Response> {
     throw new Error("Proxy fetch not initialized");
   }
 
+  const proxyServerUrl =
+    (window as any).proxyServerUrl || "http://localhost:65433";
+
   const headers = new Headers(init?.headers);
   headers.append("x-continue-url", url);
 
-  return (window as any)._fetch("http://localhost:65433", {
+  return (window as any)._fetch(proxyServerUrl, {
     ...init,
     headers,
   });
