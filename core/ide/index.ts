@@ -20,12 +20,12 @@ export class ExtensionIde implements IDE {
     return await r("getTerminalContents");
   }
 
-  async listWorkspaceContents(): Promise<string[]> {
+  async listWorkspaceContents(directory?: string): Promise<string[]> {
     return await r("listWorkspaceContents");
   }
 
-  async getWorkspaceDir(): Promise<string> {
-    return await r("getWorkspaceDir");
+  async getWorkspaceDirs(): Promise<string[]> {
+    return await r("getWorkspaceDirs");
   }
 
   _continueDir: string | null = null;

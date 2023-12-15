@@ -41,37 +41,45 @@ class FileTreeContextProvider extends BaseContextProvider {
   };
 
   async getContextItems(query: string): Promise<ContextItem[]> {
-    const workspaceDir = await new ExtensionIde().getWorkspaceDir();
-    const contents = await new ExtensionIde().listWorkspaceContents();
+    const workspaceDirs = await new ExtensionIde().getWorkspaceDirs();
+    let trees = [];
 
-    const tree: Directory = {
-      name: splitPath(workspaceDir).pop() || "",
-      files: [],
-      directories: [],
-    };
+    for (let workspaceDir of workspaceDirs) {
+      const contents = await new ExtensionIde().listWorkspaceContents(
+        workspaceDir
+      );
 
-    for (let file of contents) {
-      const parts = splitPath(file, workspaceDir);
+      const subDirTree: Directory = {
+        name: splitPath(workspaceDir).pop() || "",
+        files: [],
+        directories: [],
+      };
 
-      let currentTree = tree;
-      for (let part of parts.slice(0, -1)) {
-        if (!currentTree.directories.some((d) => d.name === part)) {
-          currentTree.directories.push({
-            name: part,
-            files: [],
-            directories: [],
-          });
+      for (let file of contents) {
+        const parts = splitPath(file, workspaceDir);
+
+        let currentTree = subDirTree;
+        for (let part of parts.slice(0, -1)) {
+          if (!currentTree.directories.some((d) => d.name === part)) {
+            currentTree.directories.push({
+              name: part,
+              files: [],
+              directories: [],
+            });
+          }
+
+          currentTree = currentTree.directories.find((d) => d.name === part)!;
         }
 
-        currentTree = currentTree.directories.find((d) => d.name === part)!;
-      }
+        currentTree.files.push(parts.pop()!);
 
-      currentTree.files.push(parts.pop()!);
+        trees.push(formatFileTree(subDirTree));
+      }
     }
 
     return [
       {
-        content: formatFileTree(tree),
+        content: trees.join("\n\n"),
         name: "File Tree",
         description: "File Tree",
       },

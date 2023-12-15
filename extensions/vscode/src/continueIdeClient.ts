@@ -2,7 +2,6 @@ import { FileEdit, RangeInFile } from "core";
 import { getConfigJsonPath } from "core/util/paths";
 import { readFileSync } from "fs";
 import * as vscode from "vscode";
-import { windowId } from "./activation/activate";
 import { debugPanelWebview, getSidebarContent } from "./debugPanel";
 import { diffManager } from "./diffs";
 import {
@@ -27,16 +26,6 @@ class IdeProtocolClient {
 
   constructor(context: vscode.ExtensionContext) {
     this.context = context;
-    const windowInfo = {
-      window_id: windowId,
-      workspace_directory: this.getWorkspaceDirectory(),
-      unique_id: this.getUniqueId(),
-      ide_info: {
-        name: "vscode",
-        version: vscode.version,
-        remote_name: vscode.env.remoteName,
-      },
-    };
 
     // Listen for file saving
     vscode.workspace.onDidSaveTextDocument((event) => {
@@ -120,12 +109,11 @@ class IdeProtocolClient {
     );
   }
 
-  getWorkspaceDirectory() {
-    if (!vscode.workspace.workspaceFolders) {
-      // Return the home directory
-      return os.homedir();
-    }
-    return vscode.workspace.workspaceFolders[0].uri.fsPath;
+  getWorkspaceDirectories(): string[] {
+    return (
+      vscode.workspace.workspaceFolders?.map((folder) => folder.uri.fsPath) ||
+      []
+    );
   }
 
   getUniqueId() {

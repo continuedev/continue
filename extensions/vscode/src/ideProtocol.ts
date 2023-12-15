@@ -131,15 +131,21 @@ class VsCodeIde implements IDE {
     return await ideProtocolClient.getTerminalContents(2);
   }
 
-  async listWorkspaceContents(): Promise<string[]> {
-    return await ideProtocolClient.getDirectoryContents(
-      ideProtocolClient.getWorkspaceDirectory(),
-      true
-    );
+  async listWorkspaceContents(directory?: string): Promise<string[]> {
+    if (directory) {
+      return await ideProtocolClient.getDirectoryContents(directory, true);
+    } else {
+      const contents = await Promise.all(
+        ideProtocolClient
+          .getWorkspaceDirectories()
+          .map((dir) => ideProtocolClient.getDirectoryContents(dir, true))
+      );
+      return contents.flat();
+    }
   }
 
-  async getWorkspaceDir(): Promise<string> {
-    return ideProtocolClient.getWorkspaceDirectory();
+  async getWorkspaceDirs(): Promise<string[]> {
+    return ideProtocolClient.getWorkspaceDirectories();
   }
 
   async getContinueDir(): Promise<string> {

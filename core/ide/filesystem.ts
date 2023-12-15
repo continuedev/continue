@@ -37,13 +37,13 @@ class FileSystemIde implements IDE {
       });
     });
   }
-  getWorkspaceDir(): Promise<string> {
+  getWorkspaceDirs(): Promise<string[]> {
     return new Promise((resolve, reject) => {
       fs.mkdtemp("/tmp/continue", (err, folder) => {
         if (err) {
           reject(err);
         }
-        resolve(folder);
+        resolve([folder]);
       });
     });
   }

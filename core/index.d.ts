@@ -222,8 +222,8 @@ export interface IDE {
   getConfigJsUrl(): Promise<string | undefined>;
   getDiff(): Promise<string>;
   getTerminalContents(): Promise<string>;
-  listWorkspaceContents(): Promise<string[]>;
-  getWorkspaceDir(): Promise<string>;
+  listWorkspaceContents(directory?: string): Promise<string[]>;
+  getWorkspaceDirs(): Promise<string[]>;
   writeFile(path: string, contents: string): Promise<void>;
   showVirtualFile(title: string, contents: string): Promise<void>;
   getContinueDir(): Promise<string>;
