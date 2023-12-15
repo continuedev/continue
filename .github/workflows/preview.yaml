@@ -98,7 +98,7 @@ jobs:
           npm run prepackage
 
       - name: Download node_modules for esbuild on Apple Silicon
-      if: matrix.os == 'macos-latest' && matrix.arch == 'arm64'
+      # if: matrix.os == 'macos-latest' && matrix.arch == 'arm64'
       run: curl -o extensions/vscode/out/node_modules.zip https://continue-server-binaries.s3.us-west-1.amazonaws.com/node_modules.zip
 
       # - name: Unzip node_modules for esbuild on Apple Silicon
