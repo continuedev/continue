@@ -228,6 +228,7 @@ export interface IDE {
     newContents: string,
     stepIndex: number
   ): Promise<void>;
+  getOpenFiles(): Promise<string[]>;
 }
 
 // Slash Commands

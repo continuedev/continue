@@ -334,6 +334,10 @@ export function getSidebarContent(
         );
         break;
       }
+      case "getOpenFiles": {
+        respond(await ide.getOpenFiles());
+        break;
+      }
       // Other
       case "errorPopup": {
         vscode.window

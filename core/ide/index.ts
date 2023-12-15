@@ -68,4 +68,8 @@ export class ExtensionIde implements IDE {
   ): Promise<void> {
     await r("showDiff", { filepath, newContents, stepIndex });
   }
+
+  getOpenFiles(): Promise<string[]> {
+    return r("getOpenFiles");
+  }
 }

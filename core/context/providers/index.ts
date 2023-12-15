@@ -4,6 +4,7 @@ import DiffContextProvider from "./DiffContextProvider";
 import FileTreeContextProvider from "./FileTreeContextProvider";
 import GitHubIssuesContextProvider from "./GitHubIssuesContextProvider";
 import GoogleContextProvider from "./GoogleContextProvider";
+import OpenFilesContextProvider from "./OpenFilesContextProvider";
 import TerminalContextProvider from "./TerminalContextProvider";
 import URLContextProvider from "./URLContextProvider";
 
@@ -14,6 +15,7 @@ const Providers: (typeof BaseContextProvider)[] = [
   GoogleContextProvider,
   TerminalContextProvider,
   URLContextProvider,
+  OpenFilesContextProvider,
 ];
 
 export function contextProviderClassFromName(

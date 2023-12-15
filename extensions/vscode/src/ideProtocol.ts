@@ -178,6 +178,10 @@ class VsCodeIde implements IDE {
   ): Promise<void> {
     await ideProtocolClient.showDiff(filepath, newContents, stepIndex);
   }
+
+  async getOpenFiles(): Promise<string[]> {
+    return await ideProtocolClient.getOpenFiles();
+  }
 }
 
 export default VsCodeIde;

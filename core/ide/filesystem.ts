@@ -89,6 +89,10 @@ class FileSystemIde implements IDE {
   ): Promise<void> {
     return Promise.resolve();
   }
+
+  getOpenFiles(): Promise<string[]> {
+    return Promise.resolve([]);
+  }
 }
 
 export default FileSystemIde;
