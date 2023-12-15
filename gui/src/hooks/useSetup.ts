@@ -1,5 +1,5 @@
 import { Dispatch } from "@reduxjs/toolkit";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { setServerStatusMessage } from "../redux/slices/miscSlice";
 import { errorPopup, postToIde } from "../util/ide";
 
@@ -14,6 +14,7 @@ import {
   setConfig,
   setInactive,
 } from "../redux/slices/stateSlice";
+import { isMetaEquivalentKeyPressed } from "../util";
 import useChatHandler from "./useChatHandler";
 
 function useSetup(dispatch: Dispatch<any>) {
@@ -63,6 +64,26 @@ function useSetup(dispatch: Dispatch<any>) {
 
   const { streamResponse } = useChatHandler(dispatch);
 
+  // This is a mechanism for overriding the IDE keyboard shortcut when inside of the webview
+  const [ignoreHighlightedCode, setIgnoreHighlightedCode] = useState(false);
+
+  useEffect(() => {
+    const handleKeyDown = (event: any) => {
+      if (isMetaEquivalentKeyPressed(event) && event.code === "KeyM") {
+        setIgnoreHighlightedCode(true);
+        setTimeout(() => {
+          setIgnoreHighlightedCode(false);
+        }, 100);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, []);
+
   // IDE event listeners
   useEffect(() => {
     const eventListener = (event: any) => {
@@ -78,6 +99,10 @@ function useSetup(dispatch: Dispatch<any>) {
 
           break;
         case "highlightedCode":
+          if (ignoreHighlightedCode) {
+            setIgnoreHighlightedCode(false);
+            break;
+          }
           dispatch(
             addHighlightedCode({
               rangeInFileWithContents: event.data.rangeInFileWithContents,
@@ -101,7 +126,7 @@ function useSetup(dispatch: Dispatch<any>) {
     };
     window.addEventListener("message", eventListener);
     return () => window.removeEventListener("message", eventListener);
-  }, []);
+  }, [ignoreHighlightedCode]);
 
   // Save theme colors to local storage
   useEffect(() => {

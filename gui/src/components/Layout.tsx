@@ -22,7 +22,7 @@ import {
   setShowDialog,
 } from "../redux/slices/uiStateSlice";
 import { RootStore } from "../redux/store";
-import { getFontSize } from "../util";
+import { getFontSize, isMetaEquivalentKeyPressed } from "../util";
 import HeaderButtonWithText from "./HeaderButtonWithText";
 import TextDialog from "./dialogs";
 import IndexingProgressBar from "./loaders/IndexingProgressBar";
@@ -133,7 +133,7 @@ const Layout = () => {
 
   useEffect(() => {
     const handleKeyDown = (event: any) => {
-      if ((event.metaKey || event.ctrlKey) && event.code === "KeyC") {
+      if (isMetaEquivalentKeyPressed(event) && event.code === "KeyC") {
         const selection = window.getSelection()?.toString();
         if (selection) {
           // Copy to clipboard
