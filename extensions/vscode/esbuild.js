@@ -18,8 +18,6 @@ const fs = require("fs");
     },
   });
 
-  console.log("Extension bundled!");
-
   fs.mkdirSync("out/node_modules", { recursive: true });
 
   ncp.ncp("node_modules/esbuild", "out/node_modules/esbuild", function (err) {
@@ -32,6 +30,5 @@ const fs = require("fs");
     if (err) {
       return console.error(err);
     }
-    console.log("Node modules copied!");
   });
 })();

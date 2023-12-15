@@ -5,7 +5,7 @@ import {
   LLMOptions,
   ModelProvider,
 } from "../..";
-import { ideRequest } from "../../ide/messaging";
+import { ideStreamRequest } from "../../ide/messaging";
 
 class GooglePalmProxy extends BaseLLM {
   static providerName: ModelProvider = "google-palm";
@@ -29,12 +29,13 @@ class GooglePalmProxy extends BaseLLM {
     messages: ChatMessage[],
     options: CompletionOptions
   ): AsyncGenerator<ChatMessage> {
-    const response = await ideRequest("googlePalmCompletion", {
+    for await (const content of ideStreamRequest("googlePalmCompletion", {
       modelTitle: this.title,
       options,
       messages,
-    });
-    yield { role: "user", content: response };
+    })) {
+      yield { role: "user", content };
+    }
   }
 }
 

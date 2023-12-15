@@ -63,3 +63,45 @@ export async function ideRequest(type: string, message: any): Promise<any> {
     postToIde(type, { message, messageId });
   });
 }
+
+export async function* ideStreamRequest(
+  type: string,
+  message: any
+): AsyncGenerator<string> {
+  const messageId = uuidv4();
+
+  postToIde(type, { message, messageId });
+
+  let buffer = "";
+  let done = false;
+
+  let staleTimeout = setTimeout(() => {
+    console.warn("Stream request timed out.");
+    done = true;
+  }, 5000);
+
+  const handler = (event: any) => {
+    if (event.data.messageId === messageId) {
+      if (event.data.message.done) {
+        window.removeEventListener("message", handler);
+        done = true;
+      } else {
+        buffer += event.data.message.content;
+      }
+      clearTimeout(staleTimeout);
+      staleTimeout = setTimeout(() => {
+        console.warn("Stream request timed out.");
+        done = true;
+      }, 5000);
+    }
+  };
+  window.addEventListener("message", handler);
+
+  while (!done) {
+    if (buffer.length) {
+      yield buffer;
+      buffer = "";
+    }
+    await new Promise((resolve) => setTimeout(resolve, 50));
+  }
+}

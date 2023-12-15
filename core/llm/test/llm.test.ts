@@ -1,7 +1,8 @@
 // import * as dotenv from "dotenv";
-// import { LLM } from "..";
+
+// import { BaseLLM } from "..";
+// import { CompletionOptions } from "../..";
 // import GooglePalm from "../llms/GooglePalm";
-// import { CompletionOptions } from "../types";
 
 // jest.setTimeout(100_000);
 
@@ -17,7 +18,7 @@
 //   // maxTokens: 5,
 // };
 
-// function testLLM(llm: LLM) {
+// function testLLM(llm: BaseLLM) {
 //   beforeAll(() => {
 //     llm.completionOptions = { ...llm.completionOptions, ...COMPLETION_OPTIONS };
 //   });
@@ -36,24 +37,24 @@
 //       return;
 //     });
 
-//     test("Stream Complete works", async () => {
-//       let total = "";
-//       for await (const chunk of llm.streamComplete("Hello")) {
-//         total += chunk;
-//       }
+//     // test("Stream Complete works", async () => {
+//     //   let total = "";
+//     //   for await (const chunk of llm.streamComplete("Hello")) {
+//     //     total += chunk;
+//     //   }
 
-//       expect(total.length).toBeGreaterThan(0);
-//       console.log(total);
-//       return;
-//     });
+//     //   expect(total.length).toBeGreaterThan(0);
+//     //   console.log(total);
+//     //   return;
+//     // });
 
-//     test("Complete works", async () => {
-//       const completion = await llm.complete("Hello");
+//     // test("Complete works", async () => {
+//     //   const completion = await llm.complete("Hello");
 
-//       expect(completion.length).toBeGreaterThan(0);
-//       console.log(completion);
-//       return;
-//     });
+//     //   expect(completion.length).toBeGreaterThan(0);
+//     //   console.log(completion);
+//     //   return;
+//     // });
 //   });
 // }
 

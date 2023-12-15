@@ -411,14 +411,14 @@ export function getSidebarContent(
           if (!model) {
             return "";
           }
-          let completion = "";
+
           for await (const update of model.streamChat(
             data.message.messages,
             data.message.options
           )) {
-            completion += update.content;
+            respond({ content: update.content });
           }
-          respond(completion);
+          respond({ done: true });
         } catch (e) {
           vscode.window.showErrorMessage(`Google PaLM failed with error: ${e}`);
         }
