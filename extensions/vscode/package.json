@@ -300,7 +300,7 @@
     ]
   },
   "scripts": {
-    "esbuild-base": "node esbuild.mjs",
+    "esbuild-base": "node esbuild.js",
     "vscode:prepublish": "npm run esbuild-base -- --minify",
     "esbuild": "npm run esbuild-base -- --sourcemap",
     "esbuild-watch": "npm run esbuild-base -- --sourcemap --watch",
