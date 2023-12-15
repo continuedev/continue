@@ -115,6 +115,10 @@ jobs:
         if: matrix.os == 'macos-latest' && matrix.arch == 'arm64'
         run: rm extensions/vscode/out/node_modules.zip
 
+      - name: Verify that node_modules was downloaded
+        if: matrix.os == 'macos-latest' && matrix.arch == 'arm64'
+        run: ls extensions/vscode/out
+
       # 3. Run tests for the extension
 
       # - name: Install Xvfb for Linux and run tests
