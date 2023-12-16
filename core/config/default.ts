@@ -47,6 +47,14 @@ const defaultConfig: SerializedContinueConfig = {
       description: "Write unit tests for highlighted code",
     },
   ],
+  contextProviders: [
+    { name: "diff", params: {} },
+    {
+      name: "open",
+      params: {},
+    },
+    { name: "terminal", params: {} },
+  ],
 };
 
 export default defaultConfig;

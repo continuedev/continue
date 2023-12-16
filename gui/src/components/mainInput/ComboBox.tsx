@@ -578,7 +578,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
     query: string
   ) => {
     try {
-      let res: any = miniSearch.search(query.trim() === "" ? "/" : query, {
+      let res: any[] = miniSearch.search(query.trim() === "" ? "/" : query, {
         prefix: true,
         fuzzy: 1,
       });
@@ -586,7 +586,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
         res = firstResults;
       }
       return (
-        res?.map((hit) => {
+        res?.slice(0, 20).map((hit) => {
           const item: ComboBoxItem = {
             title: hit.basename,
             description: hit.basename,
@@ -1150,26 +1150,6 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
       )}
       {showContextToggleOn && selectedContextItems.length > 0 && (
         <div>
-          <HeaderButtonWithText
-            className="mr-4 ml-auto -mt-2"
-            text="Delete All"
-            onClick={() => {
-              dispatch(
-                deleteContextWithIds({
-                  ids: selectedContextItems.map((item) => item.id),
-                  index: props.index,
-                })
-              );
-              inputRef.current?.focus();
-              setPreviewingContextItem(undefined);
-              setFocusedContextItem(undefined);
-            }}
-          >
-            <div className="flex items-center">
-              <TrashIcon width="1.2em" height="1.2em" />
-              Delete All
-            </div>
-          </HeaderButtonWithText>
           {selectedContextItems.map((item) => (
             <CodeSnippetPreview
               index={props.index}
@@ -1290,7 +1270,6 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
                   items[downshiftProps.highlightedIndex]?.title.startsWith("/")
                 ) {
                   downshiftProps.setInputValue(items[0].title);
-                  event.preventDefault();
                 } else if (event.key === "Tab") {
                   (event.nativeEvent as any).preventDownshiftDefault = true;
                 } else if (
