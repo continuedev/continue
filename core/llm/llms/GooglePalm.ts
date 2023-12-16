@@ -52,6 +52,14 @@ class GooglePalm extends BaseLLM {
           parts: [{ text: msg.content }],
         };
       }),
+      generationConfig: {
+        temperature: options.temperature,
+        topP: options.topP,
+        topK: options.topK,
+        candidateCount: 1,
+        maxOutputTokens: options.maxTokens,
+        stopSequences: options.stop,
+      },
     };
     const response = await this.fetch(apiURL, {
       method: "POST",
