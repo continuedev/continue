@@ -1,5 +1,6 @@
 import { BaseLLM } from "..";
 import { CompletionOptions, LLMOptions, ModelProvider } from "../..";
+import { streamSse } from "../stream";
 
 class Together extends BaseLLM {
   static providerName: ModelProvider = "together";
@@ -53,43 +54,9 @@ class Together extends BaseLLM {
       }),
     });
 
-    const reader = response.body?.getReader();
-    if (!reader) {
-      return "";
-    }
-    let result: any = { done: false };
-    let jsonChunk = "";
-    while (!result.done) {
-      result = await reader.read();
-      jsonChunk = new TextDecoder().decode(result.value);
-      if (result.value) {
-        if (
-          jsonChunk.startsWith(": ping - ") ||
-          jsonChunk.startsWith("data: [DONE]")
-        ) {
-          result = await reader.read();
-          jsonChunk = new TextDecoder().decode(result.value);
-          continue;
-        }
-
-        const chunks = jsonChunk.split("\n");
-        for (const chunk of chunks) {
-          if (chunk.trim() !== "") {
-            let strippedChunk = chunk.startsWith("data: ")
-              ? chunk.slice(6)
-              : chunk;
-            if (strippedChunk === "[DONE]") {
-              continue;
-            }
-            let parsedChunk = JSON.parse(strippedChunk);
-
-            if ("error" in parsedChunk) {
-              throw new Error(parsedChunk.error);
-            } else if ("choices" in parsedChunk) {
-              yield parsedChunk.choices[0].text;
-            }
-          }
-        }
+    for await (const value of streamSse(response)) {
+      if (value.choices) {
+        yield value.choices[0].text;
       }
     }
   }

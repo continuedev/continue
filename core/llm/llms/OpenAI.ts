@@ -6,7 +6,7 @@ import {
   LLMOptions,
   ModelProvider,
 } from "../..";
-import { streamResponse } from "../stream";
+import { streamSse } from "../stream";
 
 class OpenAI extends BaseLLM {
   static providerName: ModelProvider = "openai";
@@ -84,34 +84,9 @@ class OpenAI extends BaseLLM {
       }),
     });
 
-    let buffer = "";
-    for await (const value of streamResponse(response)) {
-      buffer += value;
-      let position;
-      while ((position = buffer.indexOf("\n")) >= 0) {
-        const line = buffer.slice(0, position);
-        buffer = buffer.slice(position + 1);
-        if (line.startsWith("data: ") && !line.startsWith("data: [DONE]")) {
-          const result = JSON.parse(line.slice(6));
-          if (result.choices?.[0]?.delta?.content) {
-            yield result.choices[0].delta;
-          }
-        }
-      }
-    }
-    if (buffer.length > 0) {
-      if (buffer.startsWith("data: ") && !buffer.startsWith("data: [DONE]")) {
-        const result = JSON.parse(buffer.slice(6));
-        if (result.choices?.[0]?.delta?.content) {
-          yield result.choices[0].delta;
-        }
-      } else {
-        try {
-          const result = JSON.parse(buffer);
-          if (result.error) {
-            throw new Error(result.error);
-          }
-        } catch (e) {}
+    for await (const value of streamSse(response)) {
+      if (value.choices?.[0]?.delta?.content) {
+        yield value.choices[0].delta;
       }
     }
   }

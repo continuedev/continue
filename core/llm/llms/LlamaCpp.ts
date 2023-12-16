@@ -1,6 +1,6 @@
 import { BaseLLM } from "..";
 import { CompletionOptions, LLMOptions, ModelProvider } from "../..";
-import { streamResponse } from "../stream";
+import { streamSse } from "../stream";
 
 class LlamaCpp extends BaseLLM {
   static providerName: ModelProvider = "llama.cpp";
@@ -37,26 +37,10 @@ class LlamaCpp extends BaseLLM {
       }),
     });
 
-    let buffer = "";
-    for await (const chunk of streamResponse(resp)) {
-      buffer += chunk;
-
-      const lines = buffer.split("\n");
-      buffer = lines.pop() ?? "";
-      for (const line of lines) {
-        if (line.trim() === "") continue;
-        const data = JSON.parse(line.substring(6));
-        if ("error" in data) {
-          throw new Error(data.error);
-        }
-        yield data.content;
+    for await (const value of streamSse(resp)) {
+      if (value.content) {
+        yield value.content;
       }
-    }
-
-    const lines = buffer.split("\n");
-    for (const line of lines) {
-      if (line.trim() === "") continue;
-      yield JSON.parse(line.substring(6))["content"];
     }
   }
 }

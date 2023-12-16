@@ -1,4 +1,6 @@
-export async function* streamResponse(response: Response): AsyncGenerator<any> {
+export async function* streamResponse(
+  response: Response
+): AsyncGenerator<string> {
   if (response.status !== 200) {
     throw new Error(await response.text());
   }
@@ -17,6 +19,60 @@ export async function* streamResponse(response: Response): AsyncGenerator<any> {
 
     if (value) {
       yield decoder.decode(value);
+    }
+  }
+}
+
+function parseDataLine(line: string): any {
+  const json = line.startsWith("data: ")
+    ? line.slice("data: ".length)
+    : line.slice("data:".length);
+
+  try {
+    const data = JSON.parse(json);
+    if (data.error) {
+      throw new Error(`Error streaming response: ${data.error}`);
+    }
+
+    return data;
+  } catch (e) {
+    throw new Error(`Malformed JSON sent from server: ${json}`);
+  }
+}
+
+function parseSseLine(line: string): { done: boolean; data: any } {
+  if (line.startsWith("data: [DONE]")) {
+    return { done: true, data: undefined };
+  } else if (line.startsWith("data:")) {
+    return { done: false, data: parseDataLine(line) };
+  } else if (line.startsWith(": ping")) {
+    return { done: true, data: undefined };
+  }
+  throw new Error(`Invalid data sent from server: ${line}`);
+}
+
+export async function* streamSse(response: Response): AsyncGenerator<any> {
+  let buffer = "";
+  for await (const value of streamResponse(response)) {
+    buffer += value;
+
+    let position;
+    while ((position = buffer.indexOf("\n")) >= 0) {
+      const line = buffer.slice(0, position);
+      buffer = buffer.slice(position + 1);
+
+      const { done, data } = parseSseLine(line);
+      if (done) {
+        break;
+      }
+      yield data;
+    }
+  }
+
+  if (buffer.length > 0) {
+    const { done, data } = parseSseLine(buffer);
+    if (!done) {
+      yield data;
     }
   }
 }

@@ -1,6 +1,6 @@
 import { BaseLLM } from "..";
 import { CompletionOptions, LLMOptions, ModelProvider } from "../..";
-import { streamResponse } from "../stream";
+import { streamSse } from "../stream";
 
 class HuggingFaceTGI extends BaseLLM {
   static providerName: ModelProvider = "huggingface-tgi";
@@ -37,44 +37,8 @@ class HuggingFaceTGI extends BaseLLM {
       body: JSON.stringify({ inputs: prompt, parameters: args }),
     });
 
-    let chunk = "";
-
-    for await (const value of streamResponse(response)) {
-      chunk += value;
-
-      const lines = chunk.split("\n");
-
-      for (let i = 0; i < lines.length - 1; i++) {
-        let processedChunk = lines[i];
-        if (processedChunk.startsWith("data: ")) {
-          processedChunk = processedChunk.slice("data: ".length);
-        } else if (processedChunk.startsWith("data:")) {
-          processedChunk = processedChunk.slice("data:".length);
-        }
-
-        if (processedChunk.trim() === "") {
-          continue;
-        }
-
-        try {
-          const jsonChunk = JSON.parse(processedChunk);
-          yield jsonChunk.token.text;
-        } catch (e) {
-          console.log(`Error parsing JSON: ${e}`);
-          continue;
-        }
-      }
-
-      chunk = lines[lines.length - 1];
-    }
-
-    if (chunk.trim() !== "") {
-      try {
-        const jsonChunk = JSON.parse(chunk);
-        yield jsonChunk.token.text;
-      } catch (e) {
-        console.log(`Error parsing JSON: ${e}`);
-      }
+    for await (const value of streamSse(response)) {
+      yield value.token.text;
     }
   }
 }

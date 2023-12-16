@@ -1,6 +1,6 @@
 import { BaseLLM } from "..";
 import { CompletionOptions, LLMOptions, ModelProvider } from "../..";
-import { streamResponse } from "../stream";
+import { streamSse } from "../stream";
 import { anthropicTemplateMessages } from "../templates/chat";
 
 class Anthropic extends BaseLLM {
@@ -73,18 +73,9 @@ class Anthropic extends BaseLLM {
       }),
     });
 
-    let chunk = "";
-    for await (const value of streamResponse(response)) {
-      chunk += value;
-      const lines = chunk.split("\n");
-      chunk = lines.pop() as string;
-      for (const line of lines) {
-        if (line.startsWith("data: ")) {
-          const result = JSON.parse(line.slice(6));
-          if (result.completion) {
-            yield result.completion;
-          }
-        }
+    for await (const value of streamSse(response)) {
+      if (value.completion) {
+        yield value.completion;
       }
     }
   }
