@@ -8,7 +8,7 @@ import {
 import { streamResponse } from "../stream";
 
 class GooglePalm extends BaseLLM {
-  static providerName: ModelProvider = "google-palm-real";
+  static providerName: ModelProvider = "google-palm";
 
   static defaultOptions: Partial<LLMOptions> = {
     model: "chat-bison-001",

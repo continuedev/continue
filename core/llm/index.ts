@@ -9,6 +9,7 @@ import {
   RequestOptions,
   TemplateType,
 } from "..";
+import { ideRequest, ideStreamRequest } from "../ide/messaging";
 import { CONTEXT_LENGTH_FOR_MODEL, DEFAULT_ARGS } from "./constants";
 import {
   compileChatMessages,
@@ -159,7 +160,11 @@ export abstract class BaseLLM implements ILLM {
   region?: string;
   projectId?: string;
 
+  private _llmOptions: LLMOptions;
+
   constructor(options: LLMOptions) {
+    this._llmOptions = options;
+
     // Set default options
     options = {
       title: (this.constructor as typeof BaseLLM).providerName,
@@ -337,7 +342,10 @@ export abstract class BaseLLM implements ILLM {
     }
 
     let completion = "";
-    for await (const chunk of this._streamComplete(prompt, completionOptions)) {
+    for await (const chunk of this._ideOrDirectStreamComplete(
+      prompt,
+      completionOptions
+    )) {
       completion += chunk;
       yield chunk;
     }
@@ -369,7 +377,10 @@ export abstract class BaseLLM implements ILLM {
       }
     }
 
-    const completion = await this._complete(prompt, completionOptions);
+    const completion = await this._ideOrDirectComplete(
+      prompt,
+      completionOptions
+    );
 
     this._logTokensGenerated(completionOptions.model, completion);
     return completion;
@@ -408,7 +419,7 @@ export abstract class BaseLLM implements ILLM {
 
     try {
       if (this.templateMessages) {
-        for await (const chunk of this._streamComplete(
+        for await (const chunk of this._ideOrDirectStreamComplete(
           prompt,
           completionOptions
         )) {
@@ -416,7 +427,7 @@ export abstract class BaseLLM implements ILLM {
           yield { role: "assistant", content: chunk };
         }
       } else {
-        for await (const chunk of this._streamChat(
+        for await (const chunk of this._ideOrDirectStreamChat(
           messages,
           completionOptions
         )) {
@@ -475,5 +486,65 @@ export abstract class BaseLLM implements ILLM {
       // model: this.model,
       ...options,
     };
+  }
+
+  private _shouldRequestDirectly() {
+    return (window as any)?.ide !== "vscode";
+  }
+
+  private async *_ideOrDirectStreamComplete(
+    prompt: string,
+    options: CompletionOptions
+  ): AsyncGenerator<string> {
+    if (this._shouldRequestDirectly()) {
+      for await (const content of this._streamComplete(prompt, options)) {
+        yield content;
+      }
+    } else {
+      for await (const content of ideStreamRequest("llmStreamComplete", {
+        prompt,
+        provider: this.providerName,
+        llmOptions: this._llmOptions,
+        completionOptions: options,
+      })) {
+        yield content;
+      }
+    }
+  }
+  private async *_ideOrDirectStreamChat(
+    messages: ChatMessage[],
+    options: CompletionOptions
+  ): AsyncGenerator<ChatMessage> {
+    if (this._shouldRequestDirectly()) {
+      for await (const content of this._streamChat(messages, options)) {
+        yield content;
+      }
+    } else {
+      for await (const content of ideStreamRequest("llmStreamChat", {
+        messages,
+        provider: this.providerName,
+        llmOptions: this._llmOptions,
+        completionOptions: options,
+      })) {
+        yield { role: "user", content };
+      }
+    }
+  }
+  private async _ideOrDirectComplete(
+    prompt: string,
+    options: CompletionOptions
+  ): Promise<string> {
+    if (this._shouldRequestDirectly()) {
+      return await this._complete(prompt, options);
+    } else {
+      return (
+        await ideRequest("llmComplete", {
+          prompt,
+          provider: this.providerName,
+          llmOptions: this._llmOptions,
+          completionOptions: options,
+        })
+      ).content;
+    }
   }
 }

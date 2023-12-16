@@ -309,7 +309,6 @@ type ModelProvider =
   | "replicate"
   | "text-gen-webui"
   | "google-palm"
-  | "google-palm-real"
   | "lmstudio"
   | "llamafile"
   | "gemini"

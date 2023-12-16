@@ -1,10 +1,14 @@
 import { BaseLLM } from "..";
-import { BaseCompletionOptions, LLMOptions, ModelDescription } from "../..";
+import {
+  BaseCompletionOptions,
+  ILLM,
+  LLMOptions,
+  ModelDescription,
+} from "../..";
 import Anthropic from "./Anthropic";
 import FreeTrial from "./FreeTrial";
 import Gemini from "./Gemini";
 import GooglePalm from "./GooglePalm";
-import GooglePalmProxy from "./GooglePalmProxy";
 import HuggingFaceInferenceAPI from "./HuggingFaceInferenceAPI";
 import HuggingFaceTGI from "./HuggingFaceTGI";
 import LMStudio from "./LMStudio";
@@ -20,7 +24,6 @@ import Together from "./Together";
 const LLMs = [
   Anthropic,
   FreeTrial,
-  GooglePalmProxy, // TODO: Hacky fix for now bc of proxy details
   GooglePalm,
   Llamafile,
   Ollama,
@@ -64,4 +67,17 @@ export function llmFromDescription(
   };
 
   return new cls(options);
+}
+
+export function llmFromProviderAndOptions(
+  providerName: string,
+  llmOptions: LLMOptions
+): ILLM {
+  const cls = LLMs.find((llm) => llm.providerName === providerName);
+
+  if (!cls) {
+    throw new Error(`Unknown LLM provider type "${providerName}"`);
+  }
+
+  return new cls(llmOptions);
 }
