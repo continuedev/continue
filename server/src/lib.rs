@@ -2,6 +2,7 @@ use pyo3::{exceptions, prelude::*};
 use std::path::Path;
 mod gitignore;
 mod sync;
+#[cfg(test)]
 mod utils;
 
 #[pyfunction]
