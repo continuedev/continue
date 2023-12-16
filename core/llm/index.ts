@@ -489,6 +489,9 @@ export abstract class BaseLLM implements ILLM {
   }
 
   private _shouldRequestDirectly() {
+    if (typeof window === "undefined") {
+      return true;
+    }
     return (window as any)?.ide !== "vscode";
   }
 
