@@ -83,6 +83,10 @@ class OpenAI extends BaseLLM {
       }),
     });
 
+    if (response.status !== 200) {
+      throw new Error(await response.text());
+    }
+
     // Receive as SSE
     if (response.body === null) {
       return;

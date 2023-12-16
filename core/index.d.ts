@@ -34,6 +34,11 @@ export interface ILLM extends LLMOptions {
     options?: LLMFullCompletionOptions
   ): AsyncGenerator<ChatMessage>;
 
+  chat(
+    messages: ChatMessage[],
+    options?: LLMFullCompletionOptions
+  ): Promise<ChatMessage>;
+
   countTokens(text: string): number;
 }
 

@@ -37,8 +37,10 @@ const SectionHeader = styled.tr`
   width: 100%;
   font-weight: bold;
   text-align: center;
+  align-items: center;
   margin: 0;
   position: sticky;
+  height: 1.5em;
 `;
 
 const TdDiv = styled.div`
@@ -65,7 +67,7 @@ function TableRow({
   const workspacePaths = (window as any).workspacePaths || [""];
   const [hovered, setHovered] = useState(false);
 
-  const { saveSession, deleteSession, loadSession } = useHistory();
+  const { saveSession, deleteSession, loadSession } = useHistory(dispatch);
 
   return (
     <td
@@ -141,7 +143,8 @@ function History() {
   const stickyHistoryHeaderRef = React.useRef<HTMLDivElement>(null);
   const [headerHeight, setHeaderHeight] = useState(0);
 
-  const { getHistory } = useHistory();
+  const dispatch = useDispatch();
+  const { getHistory } = useHistory(dispatch);
 
   useEffect(() => {
     const fetchSessions = async () => {
@@ -241,21 +244,21 @@ function History() {
               return (
                 <Fragment key={index}>
                   {index === 0 && date > yesterday && (
-                    <SectionHeader style={{ top: `${headerHeight}px` }}>
+                    <SectionHeader style={{ top: `${headerHeight - 1}px` }}>
                       Today
                     </SectionHeader>
                   )}
                   {date < yesterday &&
                     date > lastWeek &&
                     prevDate > yesterday && (
-                      <SectionHeader style={{ top: `${headerHeight}px` }}>
+                      <SectionHeader style={{ top: `${headerHeight - 1}px` }}>
                         This Week
                       </SectionHeader>
                     )}
                   {date < lastWeek &&
                     date > lastMonth &&
                     prevDate > lastWeek && (
-                      <SectionHeader style={{ top: `${headerHeight}px` }}>
+                      <SectionHeader style={{ top: `${headerHeight - 1}px` }}>
                         This Month
                       </SectionHeader>
                     )}

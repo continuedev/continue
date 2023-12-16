@@ -335,13 +335,12 @@ function GUI(props: GUIProps) {
     ]
   );
 
-  const { saveSession } = useHistory();
+  const { saveSession } = useHistory(dispatch);
 
   useEffect(() => {
     const handler = (event: any) => {
       if (event.data.type === "newSession") {
         saveSession();
-        dispatch(newSession());
         mainTextInputRef.current?.focus?.();
       }
     };
@@ -408,128 +407,137 @@ function GUI(props: GUIProps) {
   );
 
   return (
-    <TopGuiDiv
-      ref={topGuiDivRef}
-      onKeyDown={(e) => {
-        if (e.key === "Enter" && e.ctrlKey) {
-          onMainTextInput();
-        }
-      }}
-    >
-      <div className="max-w-3xl m-auto">
-        <StepsDiv>
-          {state.history.map((item, index: number) => {
-            return (
-              <Fragment key={index}>
-                <ErrorBoundary
-                  FallbackComponent={fallbackRender}
-                  onReset={() => {
-                    dispatch(newSession());
-                  }}
-                >
-                  {item.message.role === "user" ? (
-                    <ComboBox
-                      isMainInput={false}
-                      value={item.message.content}
-                      isLastUserInput={isLastUserInput(index)}
-                      onEnter={(e, value) => {
-                        if (value) {
-                          dispatch(resubmitAtIndex({ index, content: value }));
-                          streamResponse(value, index);
+    <>
+      <TopGuiDiv
+        ref={topGuiDivRef}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" && e.ctrlKey) {
+            onMainTextInput();
+          }
+        }}
+      >
+        <div className="max-w-3xl m-auto">
+          <StepsDiv>
+            {state.history.map((item, index: number) => {
+              return (
+                <Fragment key={index}>
+                  <ErrorBoundary
+                    FallbackComponent={fallbackRender}
+                    onReset={() => {
+                      dispatch(newSession());
+                    }}
+                  >
+                    {item.message.role === "user" ? (
+                      <ComboBox
+                        isMainInput={false}
+                        value={item.message.content}
+                        isLastUserInput={isLastUserInput(index)}
+                        onEnter={(e, value) => {
+                          if (value) {
+                            dispatch(
+                              resubmitAtIndex({ index, content: value })
+                            );
+                            streamResponse(value, index);
+                          }
+                          e?.stopPropagation();
+                          e?.preventDefault();
+                        }}
+                        isToggleOpen={
+                          typeof stepsOpen[index] === "undefined"
+                            ? true
+                            : stepsOpen[index]!
                         }
-                        e?.stopPropagation();
-                        e?.preventDefault();
-                      }}
-                      isToggleOpen={
-                        typeof stepsOpen[index] === "undefined"
-                          ? true
-                          : stepsOpen[index]!
-                      }
-                      index={index}
-                    />
-                  ) : (
-                    <TimelineItem
-                      item={item}
-                      iconElement={
-                        false ? (
-                          <CodeBracketSquareIcon width="16px" height="16px" />
-                        ) : false ? (
-                          <ExclamationTriangleIcon
-                            width="16px"
-                            height="16px"
-                            color="red"
+                        index={index}
+                      />
+                    ) : (
+                      <TimelineItem
+                        item={item}
+                        iconElement={
+                          false ? (
+                            <CodeBracketSquareIcon width="16px" height="16px" />
+                          ) : false ? (
+                            <ExclamationTriangleIcon
+                              width="16px"
+                              height="16px"
+                              color="red"
+                            />
+                          ) : (
+                            <ChatBubbleOvalLeftIcon
+                              width="16px"
+                              height="16px"
+                            />
+                          )
+                        }
+                        open={
+                          typeof stepsOpen[index] === "undefined"
+                            ? false
+                              ? false
+                              : true
+                            : stepsOpen[index]!
+                        }
+                        onToggle={() => {}}
+                      >
+                        {false ? ( // Most of these falses were previously (step.error)
+                          <ErrorStepContainer
+                            onClose={() => {}}
+                            error={undefined}
+                            onDelete={() => {}}
                           />
                         ) : (
-                          <ChatBubbleOvalLeftIcon width="16px" height="16px" />
-                        )
-                      }
-                      open={
-                        typeof stepsOpen[index] === "undefined"
-                          ? false
-                            ? false
-                            : true
-                          : stepsOpen[index]!
-                      }
-                      onToggle={() => {}}
-                    >
-                      {false ? ( // Most of these falses were previously (step.error)
-                        <ErrorStepContainer
-                          onClose={() => {}}
-                          error={undefined}
-                          onDelete={() => {}}
-                        />
-                      ) : (
-                        <StepContainer
-                          index={index}
-                          isLast={index === sessionState.history.length - 1}
-                          isFirst={index === 0}
-                          open={
-                            typeof stepsOpen[index] === "undefined"
-                              ? true
-                              : stepsOpen[index]!
-                          }
-                          key={index}
-                          onUserInput={(input: string) => {}}
-                          item={item}
-                          onReverse={() => {}}
-                          onRetry={() => {}}
-                          onDelete={() => {}}
-                        />
-                      )}
-                    </TimelineItem>
-                  )}
-                  {/* <div className="h-2"></div> */}
-                </ErrorBoundary>
-              </Fragment>
-            );
-          })}
-        </StepsDiv>
+                          <StepContainer
+                            index={index}
+                            isLast={index === sessionState.history.length - 1}
+                            isFirst={index === 0}
+                            open={
+                              typeof stepsOpen[index] === "undefined"
+                                ? true
+                                : stepsOpen[index]!
+                            }
+                            key={index}
+                            onUserInput={(input: string) => {}}
+                            item={item}
+                            onReverse={() => {}}
+                            onRetry={() => {}}
+                            onDelete={() => {}}
+                          />
+                        )}
+                      </TimelineItem>
+                    )}
+                    {/* <div className="h-2"></div> */}
+                  </ErrorBoundary>
+                </Fragment>
+              );
+            })}
+          </StepsDiv>
 
-        <div ref={aboveComboBoxDivRef} />
-        {active ? (
-          <StopButton
-            onClick={() => {
-              dispatch(setInactive());
-            }}
-          >
-            {getMetaKeyLabel()} ⌫ Cancel
-          </StopButton>
-        ) : (
-          <ComboBox
-            isLastUserInput={false}
-            isMainInput={true}
-            ref={mainTextInputRef}
-            onEnter={(e, _) => {
-              onMainTextInput(e);
-              e?.stopPropagation();
-              e?.preventDefault();
-            }}
-            onInputValueChange={() => {}}
-            onToggleAddContext={() => {}}
-          />
-        )}
-      </div>
-    </TopGuiDiv>
+          <div ref={aboveComboBoxDivRef} />
+          {active || (
+            <ComboBox
+              isLastUserInput={false}
+              isMainInput={true}
+              ref={mainTextInputRef}
+              onEnter={(e, _) => {
+                onMainTextInput(e);
+                e?.stopPropagation();
+                e?.preventDefault();
+              }}
+              onInputValueChange={() => {}}
+              onToggleAddContext={() => {}}
+            />
+          )}
+        </div>
+      </TopGuiDiv>
+      {active && (
+        <StopButton
+          className="mt-auto"
+          onClick={() => {
+            dispatch(setInactive());
+          }}
+        >
+          {getMetaKeyLabel()} ⌫ Cancel
+        </StopButton>
+      )}
+    </>
   );
 }
 

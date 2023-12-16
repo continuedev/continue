@@ -14,7 +14,6 @@ import {
   vscBackground,
   vscForeground,
 } from ".";
-import useHistory from "../hooks/useHistory";
 import { defaultModelSelector } from "../redux/selectors/modelSelectors";
 import {
   setBottomMessage,
@@ -150,8 +149,6 @@ const Layout = () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
   }, [timeline]);
-
-  const { saveSession } = useHistory();
 
   useEffect(() => {
     const handler = (event: any) => {

@@ -1,6 +1,9 @@
+import { Dispatch } from "@reduxjs/toolkit";
 import { PersistedSessionInfo, SessionInfo } from "core";
 import { ideRequest } from "core/ide/messaging";
 import { useSelector } from "react-redux";
+import { defaultModelSelector } from "../redux/selectors/modelSelectors";
+import { newSession } from "../redux/slices/stateSlice";
 import { RootStore } from "../redux/store";
 
 function truncateText(text: string, maxLength: number) {
@@ -10,8 +13,9 @@ function truncateText(text: string, maxLength: number) {
   return text;
 }
 
-function useHistory() {
+function useHistory(dispatch: Dispatch) {
   const state = useSelector((state: RootStore) => state.state);
+  const defaultModel = useSelector(defaultModelSelector);
 
   async function getHistory(): Promise<SessionInfo[]> {
     return await ideRequest("history", {});
@@ -19,13 +23,28 @@ function useHistory() {
 
   async function saveSession() {
     if (state.history.length === 0) return;
+
+    const stateCopy = { ...state };
+    dispatch(newSession());
+    await new Promise((resolve) => setTimeout(resolve, 10));
+
+    const { content: title } = await defaultModel.chat(
+      [
+        ...stateCopy.history.map((item) => item.message),
+        {
+          role: "user",
+          content:
+            "Give a maximum 40 character title to describe this conversation so far. The title should help me recall the conversation if I look for it later. DO NOT PUT QUOTES AROUND THE TITLE",
+        },
+      ],
+      { maxTokens: 20 }
+    );
+
     const sessionInfo: PersistedSessionInfo = {
-      history: state.history,
-      title:
-        state.title === "New Session"
-          ? truncateText(state.history[0].message.content, 50)
-          : state.title,
-      sessionId: state.sessionId,
+      history: stateCopy.history,
+      title,
+      // truncateText(stateCopy.history[0].message.content, 50)
+      sessionId: stateCopy.sessionId,
       workspaceDirectory: (window as any).workspacePaths?.[0] || "",
     };
     return await ideRequest("saveSession", sessionInfo);

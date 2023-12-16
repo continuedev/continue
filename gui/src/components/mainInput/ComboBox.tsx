@@ -48,7 +48,6 @@ import {
   addContextItems,
   addContextItemsAtIndex,
   deleteContextWithIds,
-  newSession,
   setInactive,
 } from "../../redux/slices/stateSlice";
 import { setBottomMessage } from "../../redux/slices/uiStateSlice";
@@ -371,7 +370,6 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
   const [miniSearch, firstResults] = useContext(SearchContext);
 
   const dispatch = useDispatch();
-  const workspacePaths = (window as any).workspacePaths || [];
   const state = useSelector((state: RootStore) => state.state);
 
   const [history, setHistory] = React.useState<string[]>([]);
@@ -711,7 +709,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
     };
   }, []);
 
-  const { saveSession } = useHistory();
+  const { saveSession } = useHistory(dispatch);
 
   useEffect(() => {
     if (!inputRef.current || !props.isMainInput) {
@@ -725,14 +723,12 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
         inputRef.current!.focus();
         if (state.history.length > 0) {
           saveSession();
-          dispatch(newSession());
         }
         dispatch(setTakenActionTrue(null));
       } else if (event.data.type === "focusContinueInputWithEdit") {
         inputRef.current!.focus();
         if (state.history.length > 0) {
           saveSession();
-          dispatch(newSession());
         }
 
         if (!inputRef.current?.value.startsWith("/edit")) {
@@ -741,7 +737,6 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
         dispatch(setTakenActionTrue(null));
       } else if (event.data.type === "focusContinueInputWithNewSession") {
         saveSession();
-        dispatch(newSession());
         dispatch(setTakenActionTrue(null));
       }
     };
@@ -1221,7 +1216,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
             fontSize={getFontSize()}
             disabled={props.disabled}
             placeholder={
-              history.length === 0
+              state.history.length === 0
                 ? `Ask a question, '/' for slash commands, '@' to add context`
                 : `Ask a follow-up`
             }
@@ -1665,7 +1660,6 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
           <NewSessionButton
             onClick={() => {
               saveSession();
-              dispatch(newSession());
             }}
             className="mr-auto"
           >

@@ -142,6 +142,7 @@ function useChatHandler(dispatch: Dispatch) {
         logs.push(log);
       };
       defaultModel.writeLog = writeLog;
+
       if (!commandAndInput) {
         await _streamNormalInput(messages);
       } else {
@@ -149,17 +150,17 @@ function useChatHandler(dispatch: Dispatch) {
         await _streamSlashCommand(messages, slashCommand, commandInput);
       }
 
-      defaultModel.writeLog = undefined;
       const pairedLogs = [];
       for (let i = 0; i < logs.length; i += 2) {
         pairedLogs.push([logs[i], logs[i + 1]]);
       }
       dispatch(addLogs(pairedLogs));
-
-      dispatch(setInactive());
     } catch (e) {
       console.log("Continue: error streaming response: ", e);
       errorPopup(e.message);
+    } finally {
+      dispatch(setInactive());
+      defaultModel.writeLog = undefined;
     }
   }
 

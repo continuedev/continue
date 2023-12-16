@@ -77,6 +77,10 @@ class FreeTrial extends BaseLLM {
       }),
     });
 
+    if (response.status !== 200) {
+      throw new Error(await response.text());
+    }
+
     const reader = response.body?.getReader();
     let decoder = new TextDecoder("utf-8");
 

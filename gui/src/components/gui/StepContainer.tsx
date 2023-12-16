@@ -15,6 +15,7 @@ import {
 import { RootStore } from "../../redux/store";
 import { getFontSize } from "../../util";
 import { logDevData } from "../../util/ide";
+import HeaderButtonWithText from "../HeaderButtonWithText";
 import StyledMarkdownPreview from "../markdown/StyledMarkdownPreview";
 
 interface StepContainerProps {
@@ -108,32 +109,36 @@ function StepContainer(props: StepContainerProps) {
         {(isHovered || typeof feedback !== "undefined") && !active && (
           <div className="flex items-center gap-2 bottom-0 right-2 absolute">
             {feedback === false || (
-              <HandThumbUpIcon
-                className={
-                  "cursor-pointer hover:text-green-500" +
-                  (feedback === true ? " text-green-500" : "")
-                }
-                width="1.2em"
-                height="1.2em"
-                color={lightGray}
-                onClick={() => {
-                  sendFeedback(true);
-                }}
-              />
+              <HeaderButtonWithText text="Helpful">
+                <HandThumbUpIcon
+                  className={
+                    "cursor-pointer hover:text-green-500" +
+                    (feedback === true ? " text-green-500" : "")
+                  }
+                  width="1.2em"
+                  height="1.2em"
+                  color={lightGray}
+                  onClick={() => {
+                    sendFeedback(true);
+                  }}
+                />
+              </HeaderButtonWithText>
             )}
             {feedback === true || (
-              <HandThumbDownIcon
-                className={
-                  "cursor-pointer hover:text-red-500" +
-                  (feedback === false ? " text-red-500" : "")
-                }
-                width="1.2em"
-                height="1.2em"
-                color={lightGray}
-                onClick={() => {
-                  sendFeedback(false);
-                }}
-              />
+              <HeaderButtonWithText text="Unhelpful">
+                <HandThumbDownIcon
+                  className={
+                    "cursor-pointer hover:text-red-500" +
+                    (feedback === false ? " text-red-500" : "")
+                  }
+                  width="1.2em"
+                  height="1.2em"
+                  color={lightGray}
+                  onClick={() => {
+                    sendFeedback(false);
+                  }}
+                />
+              </HeaderButtonWithText>
             )}
           </div>
         )}

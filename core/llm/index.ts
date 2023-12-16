@@ -1,5 +1,6 @@
 import {
   ChatMessage,
+  ChatMessageRole,
   CompletionOptions,
   ILLM,
   LLMFullCompletionOptions,
@@ -372,6 +373,14 @@ export abstract class BaseLLM implements ILLM {
 
     this._logTokensGenerated(completionOptions.model, completion);
     return completion;
+  }
+
+  async chat(messages: ChatMessage[], options: LLMFullCompletionOptions = {}) {
+    let completion = "";
+    for await (const chunk of this.streamChat(messages, options)) {
+      completion += chunk.content;
+    }
+    return { role: "assistant" as ChatMessageRole, content: completion };
   }
 
   async *streamChat(
