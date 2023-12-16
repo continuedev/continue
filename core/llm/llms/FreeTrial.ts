@@ -1,5 +1,6 @@
 import { BaseLLM } from "..";
 import { ChatMessage, CompletionOptions, ModelProvider } from "../..";
+import { streamResponse } from "../stream";
 
 // const SERVER_URL = "http://localhost:8080";
 const SERVER_URL = "https://proxy-server-l6vsfbzhba-uw.a.run.app";
@@ -47,18 +48,8 @@ class FreeTrial extends BaseLLM {
       }),
     });
 
-    const reader = response.body?.getReader();
-    let decoder = new TextDecoder("utf-8");
-
-    while (true && reader) {
-      const { done, value } = await reader.read();
-      if (done) {
-        break;
-      }
-      if (value) {
-        let decodedChunk = decoder.decode(value);
-        yield decodedChunk;
-      }
+    for await (const value of streamResponse(response)) {
+      yield value;
     }
   }
 
@@ -77,36 +68,22 @@ class FreeTrial extends BaseLLM {
       }),
     });
 
-    if (response.status !== 200) {
-      throw new Error(await response.text());
-    }
+    for await (const value of streamResponse(response)) {
+      const chunks = value.split("\n");
 
-    const reader = response.body?.getReader();
-    let decoder = new TextDecoder("utf-8");
+      for (const chunk of chunks) {
+        if (chunk.trim() !== "") {
+          const loadedChunk = JSON.parse(chunk);
 
-    while (true && reader) {
-      const { done, value } = await reader.read();
-      if (done) {
-        break;
-      }
-      if (value) {
-        let decodedChunk = decoder.decode(value);
-        const chunks = decodedChunk.split("\n");
+          yield {
+            role: "assistant",
+            content: loadedChunk.content || "",
+          };
 
-        for (const chunk of chunks) {
-          if (chunk.trim() !== "") {
-            const loadedChunk = JSON.parse(chunk);
-
-            yield {
-              role: "assistant",
-              content: loadedChunk.content || "",
-            };
-
-            if (this.model === "gpt-4") {
-              await delay(0.03);
-            } else {
-              await delay(0.01);
-            }
+          if (this.model === "gpt-4") {
+            await delay(0.03);
+          } else {
+            await delay(0.01);
           }
         }
       }

@@ -1,5 +1,6 @@
 import { BaseLLM } from "..";
 import { CompletionOptions, LLMOptions, ModelProvider } from "../..";
+import { streamResponse } from "../stream";
 
 class HuggingFaceTGI extends BaseLLM {
   static providerName: ModelProvider = "huggingface-tgi";
@@ -36,17 +37,10 @@ class HuggingFaceTGI extends BaseLLM {
       body: JSON.stringify({ inputs: prompt, parameters: args }),
     });
 
-    const reader = response.body?.getReader();
     let chunk = "";
 
-    while (true && reader) {
-      const { done, value } = await reader.read();
-
-      if (done) {
-        break;
-      }
-
-      chunk += new TextDecoder().decode(value);
+    for await (const value of streamResponse(response)) {
+      chunk += value;
 
       const lines = chunk.split("\n");
 

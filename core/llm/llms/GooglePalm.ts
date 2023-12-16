@@ -5,6 +5,7 @@ import {
   LLMOptions,
   ModelProvider,
 } from "../..";
+import { streamResponse } from "../stream";
 
 class GooglePalm extends BaseLLM {
   static providerName: ModelProvider = "google-palm-real";
@@ -58,17 +59,8 @@ class GooglePalm extends BaseLLM {
       body: JSON.stringify(body),
     });
 
-    if (!response.body) {
-      throw new Error("No response body");
-    }
-    const reader = response.body.getReader();
     let buffer = "";
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) {
-        break;
-      }
-      let chunk = new TextDecoder().decode(value);
+    for await (const chunk of streamResponse(response)) {
       buffer += chunk;
       if (buffer.startsWith("[")) {
         buffer = buffer.slice(1);

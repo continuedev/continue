@@ -1,5 +1,6 @@
 import { BaseLLM } from "..";
 import { CompletionOptions, LLMOptions, ModelProvider } from "../..";
+import { streamResponse } from "../stream";
 
 class Ollama extends BaseLLM {
   static providerName: ModelProvider = "ollama";
@@ -60,15 +61,10 @@ class Ollama extends BaseLLM {
       body: JSON.stringify(this._convertArgs(options, prompt)),
     });
 
-    const reader = response.body?.getReader();
-
     let buffer = "";
-    while (reader) {
-      const { done, value } = await reader.read();
-
-      if (done) break;
+    for await (const value of streamResponse(response)) {
       // Append the received chunk to the buffer
-      buffer += new TextDecoder().decode(value);
+      buffer += value;
       // Split the buffer into individual JSON chunks
       const chunks = buffer.split("\n");
       for (let i = 0; i < chunks.length; i++) {

@@ -1,5 +1,6 @@
 import { BaseLLM } from "..";
 import { CompletionOptions, LLMOptions, ModelProvider } from "../..";
+import { streamResponse } from "../stream";
 
 class LlamaCpp extends BaseLLM {
   static providerName: ModelProvider = "llama.cpp";
@@ -36,12 +37,8 @@ class LlamaCpp extends BaseLLM {
       }),
     });
 
-    const reader = resp.body?.getReader();
     let buffer = "";
-    while (true && reader) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      const chunk = new TextDecoder().decode(value);
+    for await (const chunk of streamResponse(resp)) {
       buffer += chunk;
 
       const lines = buffer.split("\n");

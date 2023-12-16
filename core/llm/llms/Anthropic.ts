@@ -1,7 +1,6 @@
-// import AnthropicClient from "@anthropic-ai/sdk";
-// import { CompletionCreateParamsBase } from "@anthropic-ai/sdk/resources/completions";
 import { BaseLLM } from "..";
 import { CompletionOptions, LLMOptions, ModelProvider } from "../..";
+import { streamResponse } from "../stream";
 import { anthropicTemplateMessages } from "../templates/chat";
 
 class Anthropic extends BaseLLM {
@@ -17,14 +16,8 @@ class Anthropic extends BaseLLM {
     apiBase: "https://api.anthropic.com/v1",
   };
 
-  // private _anthropic: AnthropicClient;
-
   constructor(options: LLMOptions) {
     super(options);
-
-    // this._anthropic = new AnthropicClient({
-    //   apiKey: options.apiKey,
-    // });
   }
 
   private _convertArgs(options: CompletionOptions, prompt: string) {
@@ -79,18 +72,10 @@ class Anthropic extends BaseLLM {
         stream: true,
       }),
     });
-    // Receive as SSE
-    if (response.body === null) {
-      return;
-    }
-    const reader = response.body.getReader();
+
     let chunk = "";
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) {
-        break;
-      }
-      chunk += new TextDecoder("utf-8").decode(value);
+    for await (const value of streamResponse(response)) {
+      chunk += value;
       const lines = chunk.split("\n");
       chunk = lines.pop() as string;
       for (const line of lines) {

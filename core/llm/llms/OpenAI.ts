@@ -6,6 +6,7 @@ import {
   LLMOptions,
   ModelProvider,
 } from "../..";
+import { streamResponse } from "../stream";
 
 class OpenAI extends BaseLLM {
   static providerName: ModelProvider = "openai";
@@ -83,22 +84,9 @@ class OpenAI extends BaseLLM {
       }),
     });
 
-    if (response.status !== 200) {
-      throw new Error(await response.text());
-    }
-
-    // Receive as SSE
-    if (response.body === null) {
-      return;
-    }
     let buffer = "";
-    const reader = response.body.getReader();
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) {
-        break;
-      }
-      buffer += new TextDecoder("utf-8").decode(value);
+    for await (const value of streamResponse(response)) {
+      buffer += value;
       let position;
       while ((position = buffer.indexOf("\n")) >= 0) {
         const line = buffer.slice(0, position);

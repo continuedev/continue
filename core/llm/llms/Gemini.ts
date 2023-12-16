@@ -55,7 +55,6 @@ class Gemini extends BaseLLM {
         "Content-Type": "application/json; charset=utf-8",
       },
     });
-    console.log(await response.text(), "GEMINIIIIIIIIIII...");
     const data = await response.json();
     if (data[0]?.error) {
       throw new Error(data[0].error.message);
