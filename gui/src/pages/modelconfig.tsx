@@ -250,31 +250,6 @@ function ModelConfig() {
               />
             );
           })}
-
-          <CustomModelButton
-            disabled={disableModelCards()}
-            onClick={(e) => {
-              if (!modelInfo || disableModelCards()) return;
-              const formParams: any = {};
-              for (const d of modelInfo.collectInputFor || []) {
-                formParams[d.key] =
-                  d.inputType === "text"
-                    ? formMethods.watch(d.key)
-                    : parseFloat(formMethods.watch(d.key));
-              }
-
-              const model = {
-                ...modelInfo.packages[0]?.params,
-                ...modelInfo.params,
-                ...formParams,
-              };
-              addModel(model);
-              dispatch(setDefaultModel(model.title));
-              navigate("/");
-            }}
-          >
-            <h3 className="text-center my-2">Configure Model in config.json</h3>
-          </CustomModelButton>
         </GridDiv>
       </div>
     </FormProvider>

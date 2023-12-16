@@ -136,7 +136,15 @@ const StyledListboxOption = styled(Listbox.Option)<{ selected: boolean }>`
   }
 `;
 
-function ListBoxOption({ option, idx }: { option: Option; idx: number }) {
+function ListBoxOption({
+  option,
+  idx,
+  showDelete,
+}: {
+  option: Option;
+  idx: number;
+  showDelete?: boolean;
+}) {
   const [hovered, setHovered] = useState(false);
 
   return (
@@ -159,7 +167,7 @@ function ListBoxOption({ option, idx }: { option: Option; idx: number }) {
     >
       <div className="flex items-center justify-between gap-3 h-5 relative">
         <span>{option.title}</span>
-        {hovered && (
+        {hovered && showDelete && (
           <HeaderButtonWithText
             text="Delete"
             onClick={(e) => {
@@ -270,7 +278,12 @@ function ModelSelect(props: {}) {
                 >
                   <StyledListboxOptions>
                     {options.map((option, idx) => (
-                      <ListBoxOption option={option} idx={idx} key={idx} />
+                      <ListBoxOption
+                        option={option}
+                        idx={idx}
+                        key={idx}
+                        showDelete={options.length > 1}
+                      />
                     ))}
                     <i className="text-xs ml-2" style={{ color: lightGray }}>
                       {getMetaKeyLabel()}' to toggle

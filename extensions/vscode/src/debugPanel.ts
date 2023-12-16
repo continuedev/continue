@@ -371,6 +371,7 @@ export function getSidebarContent(
           )
         );
         ideProtocolClient.configUpdate(configJson);
+        ideProtocolClient.openFile(getConfigJsonPath());
         break;
       }
       case "deleteModel": {
