@@ -10,7 +10,7 @@ import {
 class OpenAI extends BaseLLM {
   static providerName: ModelProvider = "openai";
   static defaultOptions: Partial<LLMOptions> = {
-    apiBase: "https://api.openai.com",
+    apiBase: "https://api.openai.com/v1",
   };
 
   protected _convertArgs(
@@ -62,7 +62,7 @@ class OpenAI extends BaseLLM {
     if (this.apiType === "azure") {
       return `${this.apiBase}/openai/deployments/${this.engine}/chat/completions?api-version=${this.apiVersion}`;
     } else {
-      return this.apiBase + "/v1/chat/completions";
+      return this.apiBase + "/chat/completions";
     }
   }
 
