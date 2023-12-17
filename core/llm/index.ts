@@ -318,6 +318,18 @@ export abstract class BaseLLM implements ILLM {
     prompt: string,
     options: LLMFullCompletionOptions = {}
   ) {
+    if (!this._shouldRequestDirectly()) {
+      for await (const content of ideStreamRequest("llmStreamComplete", {
+        prompt,
+        provider: this.providerName,
+        llmOptions: this._llmOptions,
+        completionOptions: options,
+      })) {
+        yield content;
+      }
+      return;
+    }
+
     const { completionOptions, log, raw } =
       this._parseCompletionOptions(options);
 
@@ -342,10 +354,7 @@ export abstract class BaseLLM implements ILLM {
     }
 
     let completion = "";
-    for await (const chunk of this._ideOrDirectStreamComplete(
-      prompt,
-      completionOptions
-    )) {
+    for await (const chunk of this._streamComplete(prompt, completionOptions)) {
       completion += chunk;
       yield chunk;
     }
@@ -354,6 +363,17 @@ export abstract class BaseLLM implements ILLM {
   }
 
   async complete(prompt: string, options: LLMFullCompletionOptions = {}) {
+    if (!this._shouldRequestDirectly()) {
+      return (
+        await ideRequest("llmComplete", {
+          prompt,
+          provider: this.providerName,
+          llmOptions: this._llmOptions,
+          completionOptions: options,
+        })
+      ).content;
+    }
+
     const { completionOptions, log, raw } =
       this._parseCompletionOptions(options);
 
@@ -377,10 +397,7 @@ export abstract class BaseLLM implements ILLM {
       }
     }
 
-    const completion = await this._ideOrDirectComplete(
-      prompt,
-      completionOptions
-    );
+    const completion = await this._complete(prompt, completionOptions);
 
     this._logTokensGenerated(completionOptions.model, completion);
     return completion;
@@ -398,6 +415,17 @@ export abstract class BaseLLM implements ILLM {
     messages: ChatMessage[],
     options: LLMFullCompletionOptions = {}
   ): AsyncGenerator<ChatMessage> {
+    if (!this._shouldRequestDirectly()) {
+      for await (const content of ideStreamRequest("llmStreamChat", {
+        messages,
+        provider: this.providerName,
+        llmOptions: this._llmOptions,
+        completionOptions: options,
+      })) {
+        yield { role: "user", content };
+      }
+    }
+
     const { completionOptions, log, raw } =
       this._parseCompletionOptions(options);
 
@@ -419,7 +447,7 @@ export abstract class BaseLLM implements ILLM {
 
     try {
       if (this.templateMessages) {
-        for await (const chunk of this._ideOrDirectStreamComplete(
+        for await (const chunk of this._streamComplete(
           prompt,
           completionOptions
         )) {
@@ -427,7 +455,7 @@ export abstract class BaseLLM implements ILLM {
           yield { role: "assistant", content: chunk };
         }
       } else {
-        for await (const chunk of this._ideOrDirectStreamChat(
+        for await (const chunk of this._streamChat(
           messages,
           completionOptions
         )) {
@@ -493,61 +521,5 @@ export abstract class BaseLLM implements ILLM {
       return true;
     }
     return (window as any)?.ide !== "vscode";
-  }
-
-  private async *_ideOrDirectStreamComplete(
-    prompt: string,
-    options: CompletionOptions
-  ): AsyncGenerator<string> {
-    if (this._shouldRequestDirectly()) {
-      for await (const content of this._streamComplete(prompt, options)) {
-        yield content;
-      }
-    } else {
-      for await (const content of ideStreamRequest("llmStreamComplete", {
-        prompt,
-        provider: this.providerName,
-        llmOptions: this._llmOptions,
-        completionOptions: options,
-      })) {
-        yield content;
-      }
-    }
-  }
-  private async *_ideOrDirectStreamChat(
-    messages: ChatMessage[],
-    options: CompletionOptions
-  ): AsyncGenerator<ChatMessage> {
-    if (this._shouldRequestDirectly()) {
-      for await (const content of this._streamChat(messages, options)) {
-        yield content;
-      }
-    } else {
-      for await (const content of ideStreamRequest("llmStreamChat", {
-        messages,
-        provider: this.providerName,
-        llmOptions: this._llmOptions,
-        completionOptions: options,
-      })) {
-        yield { role: "user", content };
-      }
-    }
-  }
-  private async _ideOrDirectComplete(
-    prompt: string,
-    options: CompletionOptions
-  ): Promise<string> {
-    if (this._shouldRequestDirectly()) {
-      return await this._complete(prompt, options);
-    } else {
-      return (
-        await ideRequest("llmComplete", {
-          prompt,
-          provider: this.providerName,
-          llmOptions: this._llmOptions,
-          completionOptions: options,
-        })
-      ).content;
-    }
   }
 }

@@ -471,6 +471,7 @@ const EditSlashCommand: SlashCommand = {
 
       generator = llm.streamComplete(rendered as string, {
         maxTokens: Math.min(maxTokens, Math.floor(llm.contextLength / 2), 4096),
+        raw: true,
       });
     } else {
       async function* gen() {

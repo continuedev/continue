@@ -42,8 +42,7 @@ function useHistory(dispatch: Dispatch) {
 
     const sessionInfo: PersistedSessionInfo = {
       history: stateCopy.history,
-      title,
-      // truncateText(stateCopy.history[0].message.content, 50)
+      title: title || truncateText(stateCopy.history[0].message.content, 50),
       sessionId: stateCopy.sessionId,
       workspaceDirectory: (window as any).workspacePaths?.[0] || "",
     };

@@ -92,7 +92,7 @@ export async function* ideStreamRequest(
       staleTimeout = setTimeout(() => {
         console.warn("Stream request timed out.");
         done = true;
-      }, 5000);
+      }, 20_000);
     }
   };
   window.addEventListener("message", handler);
@@ -104,4 +104,6 @@ export async function* ideStreamRequest(
     }
     await new Promise((resolve) => setTimeout(resolve, 50));
   }
+
+  clearTimeout(staleTimeout);
 }
