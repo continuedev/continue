@@ -84,6 +84,7 @@ function autodetectTemplateFunction(
 
   if (templateType) {
     const mapping: Record<TemplateType, any> = {
+      none: null,
       llama2: llama2TemplateMessages,
       alpaca: templateAlpacaMessages,
       phind: phindTemplateMessages,

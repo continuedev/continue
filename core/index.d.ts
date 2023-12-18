@@ -289,6 +289,7 @@ type ContextProviderName =
   | "http";
 
 type TemplateType =
+  | "none"
   | "llama2"
   | "alpaca"
   | "zephyr"
