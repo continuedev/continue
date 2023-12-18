@@ -6,10 +6,8 @@ import com.intellij.openapi.components.State
 import com.intellij.openapi.components.Storage
 import com.intellij.openapi.options.Configurable
 import com.intellij.openapi.project.DumbAware
-import kotlinx.serialization.Serializable
 import java.awt.GridBagConstraints
 import java.awt.GridBagLayout
-import javax.annotation.Nullable
 import javax.swing.JCheckBox
 import javax.swing.JComponent
 import javax.swing.JLabel
@@ -18,9 +16,6 @@ import javax.swing.JTextField
 
 class ContinueSettingsComponent: DumbAware {
     val panel: JPanel = JPanel(GridBagLayout())
-    private val myTextField: JTextField = JTextField()
-    private val myCheckBox: JCheckBox =
-        JCheckBox("Manually Running Continue Server")
 
     init {
         val constraints = GridBagConstraints()
@@ -31,16 +26,6 @@ class ContinueSettingsComponent: DumbAware {
         constraints.gridx = 0
         constraints.gridy = GridBagConstraints.RELATIVE
 
-        val serverURLLabel = JLabel("Server URL")
-        panel.add(serverURLLabel, constraints)
-
-        panel.add(myTextField, constraints)
-
-        val runningServerLabel = JLabel("Manually Running Server")
-        panel.add(runningServerLabel, constraints)
-
-        panel.add(myCheckBox, constraints)
-
         // Add a "filler" component that takes up all remaining vertical space
         constraints.weighty = 1.0
         val filler = JPanel()
@@ -48,17 +33,6 @@ class ContinueSettingsComponent: DumbAware {
 
     }
 
-    var serverUrl: String?
-        get() = myTextField.text
-        set(newText) {
-            myTextField.text = newText
-        }
-
-    var manuallyRunningServer: Boolean
-        get() = myCheckBox.isSelected
-        set(value) {
-            myCheckBox.isSelected = value
-        }
 }
 
 @State(
@@ -68,8 +42,6 @@ class ContinueSettingsComponent: DumbAware {
 open class ContinueExtensionSettings : PersistentStateComponent<ContinueExtensionSettings.ContinueState> {
 
     class ContinueState {
-        var serverUrl: String = "http://localhost:65432"
-        var manuallyRunningServer: Boolean = false
         var shownWelcomeDialog: Boolean = false
     }
 
@@ -99,24 +71,17 @@ class ContinueExtensionConfigurable : Configurable {
 
     override fun isModified(): Boolean {
         val settings = ServiceManager.getService(ContinueExtensionSettings::class.java)
-        return mySettingsComponent!!.serverUrl != settings.continueState.serverUrl || mySettingsComponent!!.manuallyRunningServer != settings.continueState.manuallyRunningServer
+        return false;
     }
 
     override fun apply() {
         val settings =
             ServiceManager.getService(ContinueExtensionSettings::class.java)
-        settings.continueState.serverUrl =
-            mySettingsComponent?.serverUrl ?: "http://localhost:65432"
-        settings.continueState.manuallyRunningServer =
-            mySettingsComponent!!.manuallyRunningServer
     }
 
     override fun reset() {
         val settings =
             ServiceManager.getService(ContinueExtensionSettings::class.java)
-        mySettingsComponent!!.serverUrl = settings.continueState.serverUrl
-        mySettingsComponent!!.manuallyRunningServer =
-            settings.continueState.manuallyRunningServer
     }
 
     override fun disposeUIResources() {

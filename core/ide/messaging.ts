@@ -1,6 +1,5 @@
 // import "vscode-webview";
 import { v4 as uuidv4 } from "uuid";
-
 interface vscode {
   postMessage(message: any): vscode;
 }

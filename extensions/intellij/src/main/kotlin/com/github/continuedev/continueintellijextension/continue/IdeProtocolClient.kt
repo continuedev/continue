@@ -1,7 +1,9 @@
 package com.github.continuedev.continueintellijextension.`continue`
 
 import com.github.continuedev.continueintellijextension.*
-import com.github.continuedev.continueintellijextension.activities.getContinueServerUrl
+import com.github.continuedev.continueintellijextension.constants.getConfigJsPath
+import com.github.continuedev.continueintellijextension.constants.getConfigJsonPath
+import com.github.continuedev.continueintellijextension.constants.getContinueGlobalPath
 import com.github.continuedev.continueintellijextension.services.ContinuePluginService
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
@@ -16,7 +18,6 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.MessageType
 import com.intellij.openapi.ui.popup.Balloon
 import com.intellij.openapi.ui.popup.JBPopupFactory
-import com.intellij.openapi.util.Computable
 import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.openapi.vfs.VfsUtil
 import com.intellij.openapi.vfs.VirtualFile
@@ -24,19 +25,14 @@ import com.intellij.openapi.vfs.VirtualFileManager
 import com.intellij.openapi.wm.WindowManager
 import com.intellij.testFramework.LightVirtualFile
 import com.intellij.ui.awt.RelativePoint
-import io.socket.client.Ack
-import io.socket.client.IO
-import io.socket.client.Socket
-import io.socket.emitter.Emitter;
 import kotlinx.coroutines.*
 import okhttp3.*
 import java.io.File
 import java.io.FileInputStream
-import java.io.IOException
 import java.net.NetworkInterface
-import java.net.URI
-import java.net.URLEncoder
 import java.nio.charset.Charset
+import java.nio.file.Files
+import java.nio.file.Paths
 import java.util.*
 
 
@@ -45,23 +41,15 @@ fun uuid(): String {
 }
 
 
-data class WebSocketMessage<T>(val message_type: String, val message_id: String, val data: T)
-data class WorkspaceDirectory(val workspaceDirectory: String)
-data class UniqueId(val uniqueId: String)
-data class ReadFile(val contents: String)
-data class VisibleFiles(val visibleFiles: List<String>)
+data class IdeMessage<T>(val type: String, val messageId: String, val message: T)
 data class Position(val line: Int, val character: Int)
 data class Range(val start: Position, val end: Position)
 data class RangeInFile(val filepath: String, val range: Range)
-data class GetTerminalContents(val contents: String)
-data class ListDirectoryContents(val contents: List<String>)
 data class RangeInFileWithContents(val filepath: String, val range: Range, val contents: String)
 data class HighlightedCodeUpdate(val highlightedCode: List<RangeInFileWithContents>, val edit: Boolean)
-data class HighlightedCode(val highlightedCode: List<RangeInFile>)
 data class AcceptRejectDiff(val accepted: Boolean, val stepIndex: Int)
 data class DeleteAtIndex(val index: Int)
 data class MainUserInput(val input: String)
-data class IdeInfo(val name: String, val version: String?, val remoteName: String?)
 
 fun getMachineUniqueID(): String {
     val sb = StringBuilder()
@@ -92,62 +80,51 @@ class IdeProtocolClient (
     private val continuePluginService: ContinuePluginService,
     private val textSelectionStrategy: TextSelectionStrategy,
     private val coroutineScope: CoroutineScope,
-    private val workspacePath: String,
+    private val workspacePath: String?,
     private val project: Project
 ): DumbAware {
-    private var webSocket: WebSocket? = null
-
-    private var socket: Socket? = null
-
     val diffManager = DiffManager(project)
 
     init {
-        initWebSocket()
+        initIdeProtocol()
     }
 
-    private fun serializeMessage(data: Map<String, Any>): String {
-        val gson = Gson()
-        return gson.toJson(data)
-    }
-
-    private fun send(messageType: String, messageId: String, data: Any) {
-        val wsMessage = WebSocketMessage(
+    private fun send(messageType: String, data: Any?, messageId: String? = null) {
+        val id = messageId ?: uuid()
+        val message = IdeMessage(
                 messageType,
-                messageId,
+                id,
                 data
         )
-        socket?.send("message", Gson().toJson(wsMessage))
+        val json = Gson().toJson(message)
+        continuePluginService.dispatchCustomEvent(json)
     }
 
-    private fun handleWebsocketMessage(text: String, respond: (String, String, Any) -> Unit) {
+    fun handleWebsocketMessage(text: String) {
         coroutineScope.launch(Dispatchers.IO) {
             val parsedMessage: Map<String, Any> = Gson().fromJson(
                     text,
                     object : TypeToken<Map<String, Any>>() {}.type
             )
-            val messageType = parsedMessage["message_type"] as? String
-            val messageId = parsedMessage["message_id"] as? String
-            if (messageId == null) {
-
-                println("Received message without messageId: $text")
+            val messageType = parsedMessage["type"] as? String
+            if (messageType == null) {
+                println("Recieved message without type: $text")
                 return@launch
             }
             val data = parsedMessage["data"] as Map<*, *>
 
-//            fun respond(t: String, a: String, b: Any) {
-//
-//            }
+            fun respond(responseData: Any?) {
+                if (data["messageId"] == null) {
+                    println("Recieved message without messageId: $text")
+                    return
+                }
+                send(messageType, responseData, data["messageId"] as String);
+            }
 
             try {
                 when (messageType) {
-                    "workspaceDirectory" -> {
-                        respond("workspaceDirectory", messageId, WorkspaceDirectory(workspaceDirectory()))
-                    }
-
                     "uniqueId" -> respond(
-                        "uniqueId",
-                        messageId,
-                        UniqueId(uniqueId())
+                        mapOf("uniqueId" to uniqueId())
                     )
 
                     "ide" -> {
@@ -157,15 +134,15 @@ class IdeProtocolClient (
                         val sshClient = System.getenv("SSH_CLIENT")
                         val sshTty = System.getenv("SSH_TTY")
 
-                        var remoteName: String? = null
+                        var remoteName: String = "local"
                         if (sshClient != null || sshTty != null) {
                             remoteName = "ssh"
                         }
-                        respond(
-                            "ide",
-                            messageId,
-                            IdeInfo(ideName, ideVersion, remoteName)
-                        )
+                        respond(mapOf(
+                            "name" to ideName,
+                            "version" to ideVersion,
+                            "remoteName" to remoteName
+                        ))
                     }
 
                     "showDiff" -> {
@@ -177,37 +154,35 @@ class IdeProtocolClient (
                     }
 
                     "readFile" -> {
-                        val msg =
-                                ReadFile(readFile(data["filepath"] as String))
+                        val msg = readFile(data["filepath"] as String)
                         respond(
-                            "readFile",
-                            messageId,
-                            msg
+                            mapOf("contents" to msg)
                         )
                     }
 
                     "listDirectoryContents" -> {
                         respond(
-                            "listDirectoryContents",
-                            messageId,
-                            ListDirectoryContents(listDirectoryContents())
+                            mapOf("contents" to listDirectoryContents())
                         )
+                    }
+
+                    "listWorkspaceContents" -> {
+                        respond(listDirectoryContents())
+                    }
+
+                    "getWorkspaceDirs" -> {
+                        respond(workspaceDirectories())
                     }
 
                     "getTerminalContents" -> {
                         respond(
-                            "getTerminalContents",
-                            messageId,
-                            GetTerminalContents("Terminal cannot be accessed in JetBrains IDE")
+                            mapOf("contents" to "Terminal cannot be accessed in JetBrains IDE")
                         )
                     }
 
                     "visibleFiles" -> {
-                        val msg = VisibleFiles(visibleFiles())
                         respond(
-                            "visibleFiles",
-                            messageId,
-                            msg
+                            mapOf("visibleFiles" to visibleFiles())
                         )
                     }
 
@@ -242,12 +217,49 @@ class IdeProtocolClient (
                             val rif = RangeInFile(rifWithContents.filepath, rifWithContents.range)
                             rifs += rif
                         }
-                        respond(
-                            "highlightedCode",
-                            messageId,
-                            HighlightedCode(rifs)
-                        )
+                        respond(mapOf("highlightedCode" to rifs))
                     }
+
+
+                    // NEW //
+                    "getDiff" -> {
+                        respond("");
+                    }
+                    "getSerializedConfig" -> {
+                        val configPath = getConfigJsonPath()
+                        val config = File(configPath).readText()
+                        val mapType = object : TypeToken<Map<String, Any>>() {}.type
+                        val parsed: Map<String, Any> = Gson().fromJson(config, mapType)
+                        respond(parsed)
+                    }
+                    "getConfigJsUrl" -> {
+                        // Calculate a data URL for the config.js file
+                        val configJsPath = getConfigJsPath()
+                        val configJsContents = File(configJsPath).readText()
+                        val configJsDataUrl = "data:text/javascript;base64,${Base64.getEncoder().encodeToString(configJsContents.toByteArray())}"
+                        respond(configJsDataUrl)
+                    }
+                    "writeFile" -> {
+                        val msg = data["message"] as Map<String, String>;
+                        val file = File(msg["path"])
+                        file.writeText(msg["contents"] as String)
+                        respond(null);
+                    }
+                    "getContinueDir" -> {
+                        respond(getContinueGlobalPath())
+                    }
+                    "openFile" -> {
+                        setFileOpen((data["message"] as Map<String, Any>)["path"] as String)
+                        respond(null)
+                    }
+                    "runCommand" -> {
+                        respond(null)
+                        // Running commands not yet supported in JetBrains
+                    }
+                    "errorPopup" -> {
+                        showMessage(data["message"] as String)
+                    }
+
 
                     else -> {
                         println("Unknown messageType: $messageType")
@@ -259,7 +271,7 @@ class IdeProtocolClient (
         }
     }
 
-    private fun initWebSocket() {
+    private fun initIdeProtocol() {
         val applicationInfo = ApplicationInfo.getInstance()
         val ideName: String = applicationInfo.fullApplicationName
         val ideVersion = applicationInfo.fullVersion
@@ -277,76 +289,21 @@ class IdeProtocolClient (
         )
 
         val windowInfo = mapOf(
-                "window_id" to continuePluginService.windowId,
-                "workspace_directory" to workspaceDirectory(),
-                "unique_id" to uniqueId(),
-                "ide_info" to IDEInfo(
-                    name = ideName,
-                    version = ideVersion,
-                    remote_name = remoteName ?: ""
-                ),
-                "server_url" to getContinueServerUrl()
+            "window_id" to continuePluginService.windowId,
+            "unique_id" to uniqueId(),
+            "ide_info" to IDEInfo(
+                name = ideName,
+                version = ideVersion,
+                remote_name = remoteName ?: ""
+            ),
         )
-
-        val requestUrl = "${getContinueServerUrl()}/?window_info=${
-            URLEncoder.encode(
-                Gson().toJson(windowInfo), "UTF-8"
-        )}"
-
-        val uri: URI = URI.create(requestUrl)
-        val options: IO.Options = IO.Options.builder()
-                .setPath("/ide/socket.io")
-                .setTransports(arrayOf("websocket", "polling", "flashsocket"))
-                .build()
-
-        val socket: Socket = IO.socket(uri, options)
-
-        socket.on(Socket.EVENT_CONNECT) {
-            println("Connected to Continue IDE websocket")
-        }
-
-        socket.on(Socket.EVENT_DISCONNECT) {
-            println("Disconnected from Continue IDE websocket")
-        }
-
-        socket.on(Socket.EVENT_CONNECT_ERROR, { args ->
-            println("Error connecting to Continue IDE websocket")
-            println(args[0].toString())
-        })
-
-
-        socket.on("message") { args ->
-            val data = args[0].toString()
-            if (args.size == 1) {
-                println("Received message without ack: $data")
-                return@on
-            }
-            val ack = args[args.size - 1] as Ack
-            fun respond(messageType: String, messageId: String, data: Any) {
-                val wsMessage = WebSocketMessage(
-                        messageType,
-                        messageId,
-                        data
-                )
-                ack.call(Gson().toJson(wsMessage))
-            }
-            handleWebsocketMessage(data, ::respond)
-//                ack.call()
-        }
-
-        socket.connect()
-        this.socket = socket
     }
 
-
-    private fun sendMessage(messageType: String, message: Map<String, Any>) {
-        val sendData = mapOf("message_type" to messageType, "data" to message)
-        val jsonMessage = serializeMessage(sendData)
-        webSocket?.send(jsonMessage)
-    }
-
-    private fun workspaceDirectory(): String {
-        return this.workspacePath
+    private fun workspaceDirectories(): Array<String> {
+        if (this.workspacePath != null) {
+            return arrayOf(this.workspacePath)
+        }
+        return arrayOf<String>();
     }
 
     fun uniqueId(): String {
@@ -397,6 +354,10 @@ class IdeProtocolClient (
         }
     }
 
+    fun readRangeInFile(rangeInFile: RangeInFile): String {
+        return "TODO"
+    }
+
 
     private fun getHighlightedCode(): RangeInFileWithContents? {
         val result = ApplicationManager.getApplication().runReadAction<RangeInFileWithContents?> {
@@ -439,28 +400,28 @@ class IdeProtocolClient (
 //                edit
 //        ))
 
-        continuePluginService.dispatchCustomEvent("highlightedCode",
-            mapOf(
+        continuePluginService.dispatchCustomEvent(
+            Gson().toJson(mapOf(
                 "type" to "highlightedCode",
                 "rangeInFileWithContents" to rif,
                 "edit" to edit
-            ))
+            )))
     }
 
     fun sendMainUserInput(input: String) {
-        continuePluginService.dispatchCustomEvent("userInput",
-            mapOf(
+        val data = mapOf(
                 "type" to "userInput",
                 "input" to input,
-            ))
+        )
+        continuePluginService.dispatchCustomEvent(Gson().toJson(data))
     }
 
     fun sendAcceptRejectDiff(accepted: Boolean, stepIndex: Int) {
-        send("acceptRejectDiff", uuid(), AcceptRejectDiff(accepted, stepIndex))
+        send("acceptRejectDiff", AcceptRejectDiff(accepted, stepIndex), uuid())
     }
 
     fun deleteAtIndex(index: Int) {
-        send("deleteAtIndex", uuid(), DeleteAtIndex(index))
+        send("deleteAtIndex", DeleteAtIndex(index), uuid())
     }
 
     private val DEFAULT_IGNORE_DIRS = listOf(
@@ -491,20 +452,25 @@ class IdeProtocolClient (
 
 
     private fun listDirectoryContents(): List<String> {
-        val workspacePath = File(workspaceDirectory())
-        val workspaceDir = VirtualFileManager.getInstance().findFileByUrl("file://$workspacePath")
-
+        val dirs = workspaceDirectories()
         val contents = ArrayList<String>()
 
-        if (workspaceDir != null) {
-            VfsUtil.iterateChildrenRecursively(workspaceDir, null) { virtualFile: VirtualFile ->
-                if (!virtualFile.isDirectory) {
-                    val filePath = virtualFile.path
-                    if (!shouldIgnoreDirectory(filePath)) {
-                        contents.add(filePath)
+        for (dir in dirs) {
+            val workspacePath = File(dir)
+            val workspaceDir = VirtualFileManager.getInstance().findFileByUrl("file://$workspacePath")
+
+
+
+            if (workspaceDir != null) {
+                VfsUtil.iterateChildrenRecursively(workspaceDir, null) { virtualFile: VirtualFile ->
+                    if (!virtualFile.isDirectory) {
+                        val filePath = virtualFile.path
+                        if (!shouldIgnoreDirectory(filePath)) {
+                            contents.add(filePath)
+                        }
                     }
+                    true
                 }
-                true
             }
         }
 
