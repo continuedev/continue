@@ -348,7 +348,11 @@ export type ModelName =
   // Google PaLM
   | "chat-bison-001"
   // Gemini
-  | "gemini-pro";
+  | "gemini-pro"
+  // Mistral
+  | "mistral-tiny"
+  | "mistral-small"
+  | "mistral-medium";
 
 export interface RequestOptions {
   timeout?: number;

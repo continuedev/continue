@@ -24,6 +24,8 @@ declare global {
     region?: string;
     projectId?: string;
   
+    _fetch?: (input: any, init?: RequestInit) => Promise<any>;
+  
     complete(prompt: string, options?: LLMFullCompletionOptions): Promise<string>;
   
     streamComplete(
@@ -35,6 +37,11 @@ declare global {
       messages: ChatMessage[],
       options?: LLMFullCompletionOptions
     ): AsyncGenerator<ChatMessage>;
+  
+    chat(
+      messages: ChatMessage[],
+      options?: LLMFullCompletionOptions
+    ): Promise<ChatMessage>;
   
     countTokens(text: string): number;
   }
@@ -126,6 +133,14 @@ declare global {
     content: string;
     name: string;
     description: string;
+    editing?: boolean;
+    editable?: boolean;
+  }
+  
+  export interface ContextItemWithId {
+    content: string;
+    name: string;
+    description: string;
     id: ContextItemId;
     editing?: boolean;
     editable?: boolean;
@@ -133,7 +148,7 @@ declare global {
   
   export interface ChatHistoryItem {
     message: ChatMessage;
-    contextItems: ContextItem[];
+    contextItems: ContextItemWithId[];
     promptLogs?: [string, string][]; // [prompt, completion]
   }
   
@@ -193,11 +208,13 @@ declare global {
     options?: LLMOptions;
     streamCompletion?: (
       prompt: string,
-      options: CompletionOptions
+      options: CompletionOptions,
+      fetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>
     ) => AsyncGenerator<string>;
     streamChat?: (
       messages: ChatMessage[],
-      options: CompletionOptions
+      options: CompletionOptions,
+      fetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>
     ) => AsyncGenerator<string>;
   }
   
@@ -216,7 +233,7 @@ declare global {
     getConfigJsUrl(): Promise<string | undefined>;
     getDiff(): Promise<string>;
     getTerminalContents(): Promise<string>;
-    listWorkspaceContents(): Promise<string[]>;
+    listWorkspaceContents(directory?: string): Promise<string[]>;
     getWorkspaceDirs(): Promise<string[]>;
     writeFile(path: string, contents: string): Promise<void>;
     showVirtualFile(title: string, contents: string): Promise<void>;
@@ -230,6 +247,7 @@ declare global {
       newContents: string,
       stepIndex: number
     ): Promise<void>;
+    getOpenFiles(): Promise<string[]>;
   }
   
   // Slash Commands
@@ -237,11 +255,11 @@ declare global {
   export interface ContinueSDK {
     ide: IDE;
     llm: ILLM;
-    addContextItem: (item: ContextItem) => void;
+    addContextItem: (item: ContextItemWithId) => void;
     history: ChatMessage[];
     input: string;
     params?: any;
-    contextItems: ContextItem[];
+    contextItems: ContextItemWithId[];
   }
   
   export interface SlashCommand {
@@ -273,7 +291,8 @@ declare global {
     | "google"
     | "search"
     | "url"
-    | "tree";
+    | "tree"
+    | "http";
   
   type TemplateType =
     | "llama2"
@@ -331,7 +350,11 @@ declare global {
     // Google PaLM
     | "chat-bison-001"
     // Gemini
-    | "gemini-pro";
+    | "gemini-pro"
+    // Mistral
+    | "mistral-tiny"
+    | "mistral-small"
+    | "mistral-medium";
   
   export interface RequestOptions {
     timeout?: number;
@@ -458,6 +481,7 @@ declare global {
     disableIndexing?: boolean;
     userToken?: string;
   }
+  
 }
 
 export {};

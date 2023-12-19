@@ -107,7 +107,8 @@
             "text-gen-webui",
             "google-palm",
             "lmstudio",
-            "llamafile"
+            "llamafile",
+            "mistral"
           ],
           "type": "string"
         },
@@ -540,6 +541,23 @@
                   "deepseek-7b",
                   "deepseek-33b"
                 ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "provider": {
+                "enum": ["mistral"]
+              }
+            },
+            "required": ["provider"]
+          },
+          "then": {
+            "properties": {
+              "model": {
+                "enum": ["mistral-tiny", "mistral-small", "mistral-medium"]
               }
             }
           }

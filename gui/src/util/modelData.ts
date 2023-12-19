@@ -283,7 +283,7 @@ const mistral: ModelPackage = {
   params: {
     title: "Mistral",
     model: "mistral-7b",
-    contextLength: 2048,
+    contextLength: 4096,
   },
   dimensions: [
     {
@@ -303,6 +303,62 @@ const mistral: ModelPackage = {
   ],
   icon: "mistral.png",
   providerOptions: ["ollama", "lmstudio", "together", "llamacpp", "replicate"],
+};
+
+const mistralTiny: ModelPackage = {
+  title: "Mistral Tiny (7b)",
+  description: "An 7b parameter model created by Mistral AI",
+  params: {
+    title: "Mistral",
+    model: "mistral-tiny",
+    contextLength: 4096,
+  },
+  icon: "mistral.png",
+  providerOptions: [
+    "ollama",
+    "lmstudio",
+    "together",
+    "llamacpp",
+    "replicate",
+    "mistral",
+  ],
+};
+const mistralSmall: ModelPackage = {
+  title: "Mixtral (8x7b)",
+  description:
+    "An 8x7b parameter Mixture of Experts model created by Mistral AI (a.k.a Mistral Small)",
+  params: {
+    title: "Mixtral",
+    model: "mistral-small",
+    contextLength: 4096,
+  },
+  icon: "mistral.png",
+  providerOptions: [
+    "ollama",
+    "lmstudio",
+    "together",
+    "llamacpp",
+    "replicate",
+    "mistral",
+  ],
+};
+const mistralMedium: ModelPackage = {
+  title: "Mistral Medium",
+  description: "A highly capable model created by Mistral AI",
+  params: {
+    title: "Mistral Medium",
+    model: "mistral-medium",
+    contextLength: 4096,
+  },
+  icon: "mistral.png",
+  providerOptions: [
+    "ollama",
+    "lmstudio",
+    "together",
+    "llamacpp",
+    "replicate",
+    "mistral",
+  ],
 };
 
 const gemini: ModelPackage = {
@@ -519,6 +575,35 @@ export const PROVIDER_INFO: { [key: string]: ModelInfo } = {
       ...completionParamsInputs,
       { ...apiBaseInput, defaultValue: "http://localhost:11434" },
     ],
+  },
+  mistral: {
+    title: "Mistral API",
+    provider: "mistral",
+    description:
+      "The Mistral API provides hosted access to their models, including Mistral-7b, Mixtral, and the very capable mistral-medium",
+    icon: "mistral.png",
+    longDescription: `To get access to the Mistral API, obtain your API key from the [Mistral platform](https://docs.mistral.ai/)`,
+    tags: [
+      ModelProviderTag["Requires API Key"],
+      ModelProviderTag["Open-Source"],
+    ],
+    params: {
+      apiKey: "",
+    },
+    collectInputFor: [
+      {
+        inputType: CollectInputType.text,
+        key: "apiKey",
+        label: "API Key",
+        placeholder: "Enter your Mistral API key",
+        required: true,
+      },
+      ...completionParamsInputs,
+    ],
+    packages: [mistralTiny, mistralSmall, mistralMedium].map((p) => {
+      p.params.contextLength = 4096;
+      return p;
+    }),
   },
   llamafile: {
     title: "llamafile",
