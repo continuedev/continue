@@ -25,25 +25,6 @@ In `config.json`, you'll find the `models` property, a list of the models that y
 ]
 ```
 
-Also in `config.json` is the `model_roles` property. This is optional, but allows you to specify different models to be used for different tasks. The values of each role must match the `title` property of one of the models in `models`. The available roles are:
-
-- `edit` is used for generating code changes when using the '/edit' and '/comment' slash commands
-- `chat` is used for all chat responses
-- `summarize` is used for creating summaries. The model with this role will be used in the following scenarios:
-  - generating the Continue session title
-  - generating a summary of changes shown when you use the '/edit' slash command
-  - when the Continue session chat messages exceed the context length, they are summarized to avoid complete truncation
-- `default` is the fallback, used when the other model roles are not specified
-
-Here's an example the will use GPT-4 for all tasks except summarization, which will use GPT-3.5 Turbo:
-
-```json
-"model_roles": {
-    "default": "Smart Model",
-    "summarize": "Fast Model"
-}
-```
-
 Just by specifying the `model` and `provider` properties, we will automatically detect prompt templates and other important information, but if you're looking to do something beyond this basic setup, we'll explain a few other options below.
 
 ## Azure OpenAI Service
@@ -55,11 +36,11 @@ If you'd like to use OpenAI models but are concerned about privacy, you can use 
     "title": "Azure OpenAI",
     "provider": "openai",
     "model": "gpt-4",
-    "api_base": "https://my-azure-openai-instance.openai.azure.com/",
+    "apiBase": "https://my-azure-openai-instance.openai.azure.com/",
     "engine": "my-azure-openai-deployment",
-    "api_version": "2023-07-01-preview",
-    "api_type": "azure",
-    "api_key": "<MY_API_KEY>"
+    "apiVersion": "2023-07-01-preview",
+    "apiType": "azure",
+    "apiKey": "<MY_API_KEY>"
 }]
 ```
 
@@ -67,15 +48,15 @@ The easiest way to find this information is from the chat playground in the Azur
 
 ## Self-hosting an open-source model
 
-If you want to self-host on Colab, RunPod, HuggingFace, Haven, or another hosting provider, you will need to wire up a new LLM class. It only needs to implement 3 primary methods: `stream_complete`, `complete`, and `stream_chat`, and you can see examples in [`server/continuedev/libs/llm`](https://github.com/continuedev/continue/tree/main/server/continuedev/libs/llm).
+For many cases, either Continue will have a built-in provider or the API you use will be OpenAI-compatible, in which case you can use the "openai" provider and change the "baseUrl" to point to the server.
 
-If by chance the provider has the exact same API interface as OpenAI, the `OpenAI` class will work for you out of the box, after changing only the `api_base` parameter.
+However, if neither of these are the case, you will need to wire up a new LLM object. Learn how to do this [here](#defining-a-custom-llm-provider).
 
 ## Customizing the Chat Template
 
 Most open-source models expect a specific chat format, for example llama2 and codellama expect the input to look like `"[INST] How do I write bubble sort in Rust? [/INST]"`. Continue will automatically attempt to detect the correct prompt format based on the `model`value that you provide, but if you are receiving nonsense responses, you can use the`template`property to explicitly set the format that you expect. The options are:`["llama2", "alpaca", "zephyr", "phind", "anthropic", "chatml"]`.
 
-If you want to create an entirely new chat template, this can be done in [config.py](../customization/code-config.md) by defining a function and adding it to the `template_messages` property of your `LLM`. Here is an example of `template_messages` for the Alpaca/Vicuna format:
+If you want to create an entirely new chat template, this can be done in [config.ts](../customization/code-config.md) by defining a function and adding it to the `templateMessages` property of your `LLM`. Here is an example of `templateMessages` for the Alpaca/Vicuna format:
 
 ```python
 def template_alpaca_messages(msgs: List[Dict[str, str]]) -> str:
@@ -133,3 +114,28 @@ def modify_config(config: ContinueConfig) -> ContinueConfig:
 ```
 
 A few pre-made templates are available in [`continuedev.libs.llm.prompts.edit`](https://github.com/continuedev/continue/blob/main/server/continuedev/libs/llm/prompts/edit.py).
+
+## Defining a Custom LLM Provider
+
+If you are using an LLM API that isn't already [supported by Continue](./select-provider.md), and is not an OpenAI-compatible API, you'll need to define a `CustomLLM` object in `config.ts`. This object only requires one of (or both of) a `streamComplete` or `streamChat` function. Here is an example:
+
+```typescript title="~/.continue/config.ts"
+export function modifyConfig(config: Config): Config {
+  config.models.push({
+    options: {
+      title: "My Custom LLM",
+      model: "mistral-7b",
+    },
+    streamComplete: async function* (prompt, options) {
+      // Make the API call here
+
+      // Then yield each part of the completion as it is streamed
+      // This is a toy example that will count to 10
+      for (let i = 0; i < 10; i++) {
+        yield `- ${i}\n`;
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+      }
+    },
+  });
+}
+```

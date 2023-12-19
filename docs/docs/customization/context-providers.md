@@ -16,21 +16,30 @@ When you enter your next input, Continue will see the full contents of each of t
 
 ## Built-in Context Providers
 
-To use any of the built-in context providers, open `~/.continue/config.json` (can do this with the '/config' slash command) and add it to the `context_providers` list.
+To use any of the built-in context providers, open `~/.continue/config.json` (can do this with the '/config' slash command) and add it to the `contextProviders` list.
 
-### GitHub
+### Git Diff
 
-Type '@issue' to reference the title and contents of a GitHub issue.
+Type '@diff' to reference all of the changes you've made to your current branch. This is useful if you want to summarize what you've done or ask for a general review of your work before committing.
 
 ```json
-{
-  "name": "github",
-  "params": {
-    // Change to whichever repo you want to use
-    "repo_name": "continuedev/continue",
-    "auth_token": "<my_github_auth_token>"
-  }
-}
+{ "name": "diff" }
+```
+
+### Terminal
+
+Type '@terminal' to reference the contents of your IDE's terminal.
+
+```json
+{ "name": "terminal" }
+```
+
+### Open Files
+
+Type '@open' to reference the contents of all of your open files.
+
+```json
+{ "name": "open" }
 ```
 
 ### Codebase Search
@@ -48,16 +57,8 @@ Type '@url' to reference the contents of a URL. You can either reference preset 
 ```json
 {
   "name": "url",
-  "params": { "preset_urls": ["https://continue.dev/docs/customization"] }
+  "params": { "presetUrls": ["https://continue.dev/docs/customization"] }
 }
-```
-
-### Git Diff
-
-Type '@diff' to reference all of the changes you've made to your current branch. This is useful if you want to summarize what you've done or ask for a general review of your work before committing.
-
-```json
-{ "name": "diff" }
 ```
 
 ### File Tree
@@ -75,18 +76,25 @@ Type '@google' to reference the results of a Google search. For example, type "@
 ```json
 {
   "name": "google",
-  "params": { "serper_api_key": "<your serper.dev api key>" }
+  "params": { "serperApiKey": "<your serper.dev api key>" }
 }
 ```
 
 Note: You can get an API key for free at [serper.dev](https://serper.dev).
 
-### Terminal
+### GitHub
 
-Type '@terminal' to reference the contents of your IDE's terminal.
+Type '@issue' to reference the title and contents of a GitHub issue.
 
 ```json
-{ "name": "terminal" }
+{
+  "name": "github",
+  "params": {
+    // Change to whichever repo you want to use
+    "repoName": "continuedev/continue",
+    "authToken": "<my_github_auth_token>"
+  }
+}
 ```
 
 ### Requesting Context Providers

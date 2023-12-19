@@ -23,7 +23,7 @@ If you haven't already installed Continue, you can do that [here](https://market
       "title": "Code Llama",
       "provider": "together",
       "model": "togethercomputer/CodeLlama-13b-Instruct",
-      "api_key": "<API_KEY>"
+      "apiKey": "<API_KEY>"
     }
   ]
 }
@@ -59,7 +59,7 @@ If you haven't already installed Continue, you can do that [here](https://market
       "title": "Code Llama",
       "provider": "replicate",
       "model": "codellama-7b",
-      "api_key": "<API_KEY>"
+      "apiKey": "<API_KEY>"
     }
   ]
 }
@@ -78,7 +78,7 @@ If you haven't already installed Continue, you can do that [here](https://market
       "title": "Code Llama",
       "provider": "openai",
       "model": "codellama-7b",
-      "api_base": "http://localhost:8000/v1"
+      "apiBase": "http://localhost:8000/v1"
     }
   ]
 }
