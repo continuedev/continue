@@ -218,31 +218,7 @@
           "then": {
             "properties": {
               "model": {
-                "enum": [
-                  "gpt-3.5-turbo",
-                  "gpt-3.5-turbo-16k",
-                  "gpt-4",
-                  "gpt-3.5-turbo-0613",
-                  "gpt-4-32k",
-                  "gpt-4-1106-preview",
-                  "mistral-7b",
-                  "mistral-8x7b",
-                  "llama2-7b",
-                  "llama2-13b",
-                  "codellama-7b",
-                  "codellama-13b",
-                  "codellama-34b",
-                  "phind-codellama-34b",
-                  "wizardcoder-7b",
-                  "wizardcoder-13b",
-                  "wizardcoder-34b",
-                  "zephyr-7b",
-                  "codeup-13b",
-                  "deepseek-1b",
-                  "deepseek-7b",
-                  "deepseek-33b",
-                  "gemini-pro"
-                ]
+                "description": "Choose a provider first, then model options will be shown here."
               }
             }
           }
@@ -339,14 +315,20 @@
           "then": {
             "properties": {
               "model": {
-                "enum": [
-                  "codellama-7b",
-                  "codellama-13b",
-                  "codellama-34b",
-                  "llama2-7b",
-                  "llama2-13b"
+                "anyOf": [
+                  {
+                    "enum": [
+                      "codellama-7b",
+                      "codellama-13b",
+                      "codellama-34b",
+                      "llama2-7b",
+                      "llama2-13b"
+                    ]
+                  },
+                  { "type": "string" }
                 ]
-              }
+              },
+              "description": "Select a pre-defined option, or find an exact model ID from Replicate [here](https://replicate.com/collections/streaming-language-models)."
             }
           }
         },
@@ -384,29 +366,34 @@
           "then": {
             "properties": {
               "model": {
-                "enum": [
-                  "gpt-3.5-turbo",
-                  "gpt-3.5-turbo-16k",
-                  "gpt-4",
-                  "gpt-3.5-turbo-0613",
-                  "gpt-4-32k",
-                  "gpt-4-1106-preview",
-                  "mistral-7b",
-                  "mistral-8x7b",
-                  "llama2-7b",
-                  "llama2-13b",
-                  "codellama-7b",
-                  "codellama-13b",
-                  "codellama-34b",
-                  "phind-codellama-34b",
-                  "wizardcoder-7b",
-                  "wizardcoder-13b",
-                  "wizardcoder-34b",
-                  "zephyr-7b",
-                  "codeup-13b",
-                  "deepseek-1b",
-                  "deepseek-7b",
-                  "deepseek-33b"
+                "anyOf": [
+                  {
+                    "enum": [
+                      "gpt-3.5-turbo",
+                      "gpt-3.5-turbo-16k",
+                      "gpt-4",
+                      "gpt-3.5-turbo-0613",
+                      "gpt-4-32k",
+                      "gpt-4-1106-preview",
+                      "mistral-7b",
+                      "mistral-8x7b",
+                      "llama2-7b",
+                      "llama2-13b",
+                      "codellama-7b",
+                      "codellama-13b",
+                      "codellama-34b",
+                      "phind-codellama-34b",
+                      "wizardcoder-7b",
+                      "wizardcoder-13b",
+                      "wizardcoder-34b",
+                      "zephyr-7b",
+                      "codeup-13b",
+                      "deepseek-1b",
+                      "deepseek-7b",
+                      "deepseek-33b"
+                    ]
+                  },
+                  { "type": "string" }
                 ]
               }
             }
@@ -424,7 +411,10 @@
           "then": {
             "properties": {
               "model": {
-                "enum": ["claude-2"]
+                "anyOf": [
+                  { "enum": ["claude-2", "claude-instant-1"] },
+                  { "type": "string" }
+                ]
               }
             }
           }
@@ -458,16 +448,22 @@
           "then": {
             "properties": {
               "model": {
-                "enum": [
-                  "mistral-7b",
-                  "mistral-8x7b",
-                  "llama2-7b",
-                  "llama2-13b",
-                  "codellama-7b",
-                  "codellama-13b",
-                  "codellama-34b",
-                  "phind-codellama-34b"
-                ]
+                "anyOf": [
+                  {
+                    "enum": [
+                      "mistral-7b",
+                      "mistral-8x7b",
+                      "llama2-7b",
+                      "llama2-13b",
+                      "codellama-7b",
+                      "codellama-13b",
+                      "codellama-34b",
+                      "phind-codellama-34b"
+                    ]
+                  },
+                  { "type": "string" }
+                ],
+                "description": "Select a pre-defined option, or find an exact model string from Together AI [here](https://docs.together.ai/docs/inference-models)."
               }
             }
           }
@@ -490,23 +486,28 @@
           "then": {
             "properties": {
               "model": {
-                "enum": [
-                  "mistral-7b",
-                  "mistral-8x7b",
-                  "llama2-7b",
-                  "llama2-13b",
-                  "codellama-7b",
-                  "codellama-13b",
-                  "codellama-34b",
-                  "phind-codellama-34b",
-                  "wizardcoder-7b",
-                  "wizardcoder-13b",
-                  "wizardcoder-34b",
-                  "zephyr-7b",
-                  "codeup-13b",
-                  "deepseek-1b",
-                  "deepseek-7b",
-                  "deepseek-33b"
+                "anyOf": [
+                  {
+                    "enum": [
+                      "mistral-7b",
+                      "mistral-8x7b",
+                      "llama2-7b",
+                      "llama2-13b",
+                      "codellama-7b",
+                      "codellama-13b",
+                      "codellama-34b",
+                      "phind-codellama-34b",
+                      "wizardcoder-7b",
+                      "wizardcoder-13b",
+                      "wizardcoder-34b",
+                      "zephyr-7b",
+                      "codeup-13b",
+                      "deepseek-1b",
+                      "deepseek-7b",
+                      "deepseek-33b"
+                    ]
+                  },
+                  { "type": "string" }
                 ]
               }
             }
@@ -524,23 +525,29 @@
           "then": {
             "properties": {
               "model": {
-                "enum": [
-                  "mistral-7b",
-                  "llama2-7b",
-                  "llama2-13b",
-                  "codellama-7b",
-                  "codellama-13b",
-                  "codellama-34b",
-                  "phind-codellama-34b",
-                  "wizardcoder-7b",
-                  "wizardcoder-13b",
-                  "wizardcoder-34b",
-                  "zephyr-7b",
-                  "codeup-13b",
-                  "deepseek-1b",
-                  "deepseek-7b",
-                  "deepseek-33b"
-                ]
+                "anyOf": [
+                  {
+                    "enum": [
+                      "mistral-7b",
+                      "llama2-7b",
+                      "llama2-13b",
+                      "codellama-7b",
+                      "codellama-13b",
+                      "codellama-34b",
+                      "phind-codellama-34b",
+                      "wizardcoder-7b",
+                      "wizardcoder-13b",
+                      "wizardcoder-34b",
+                      "zephyr-7b",
+                      "codeup-13b",
+                      "deepseek-1b",
+                      "deepseek-7b",
+                      "deepseek-33b"
+                    ]
+                  },
+                  { "type": "string" }
+                ],
+                "description": "Select a pre-defined option, or find the exact model tag for an Ollama model [here](https://ollama.ai/library)."
               }
             }
           }
