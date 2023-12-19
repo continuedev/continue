@@ -11,7 +11,42 @@ import * as fs from "fs";
 import * as vscode from "vscode";
 import { ideProtocolClient } from "./activation/activate";
 
-import { IDE, SerializedContinueConfig } from "core";
+import { ContinueConfig, IDE, SerializedContinueConfig } from "core";
+import {
+  intermediateToFinalConfig,
+  serializedToIntermediateConfig,
+} from "core/config/load";
+
+async function buildConfigTs(browser: boolean) {
+  if (!fs.existsSync(getConfigTsPath())) {
+    return undefined;
+  }
+
+  try {
+    // Dynamic import esbuild so potentially disastrous errors can be caught
+    const esbuild = require("esbuild");
+
+    await esbuild.build({
+      entryPoints: [getConfigTsPath()],
+      bundle: true,
+      platform: browser ? "browser" : "node",
+      format: browser ? "esm" : "cjs",
+      outfile: getConfigJsPath(!browser),
+      external: ["fetch"],
+    });
+  } catch (e) {
+    console.log(e);
+    vscode.window.showErrorMessage(
+      "Build error. Please check your config.ts file: " + e
+    );
+    return undefined;
+  }
+
+  if (!fs.existsSync(getConfigJsPath(!browser))) {
+    return undefined;
+  }
+  return fs.readFileSync(getConfigJsPath(!browser), "utf8");
+}
 
 class VsCodeIde implements IDE {
   async getSerializedConfig(): Promise<SerializedContinueConfig> {
@@ -55,34 +90,11 @@ class VsCodeIde implements IDE {
   }
 
   async getConfigJsUrl(): Promise<string | undefined> {
-    if (!fs.existsSync(getConfigTsPath())) {
+    const configJsString = await buildConfigTs(true);
+
+    if (!configJsString) {
       return undefined;
     }
-
-    try {
-      // Dynamic import esbuild so potentially disastrous errors can be caught
-      const esbuild = require("esbuild");
-
-      await esbuild.build({
-        entryPoints: [getConfigTsPath()],
-        bundle: true,
-        platform: "browser",
-        format: "esm",
-        outfile: getConfigJsPath(),
-        external: ["fetch"],
-      });
-    } catch (e) {
-      console.log(e);
-      vscode.window.showErrorMessage(
-        "Build error. Please check your config.ts file: " + e
-      );
-      return undefined;
-    }
-
-    if (!fs.existsSync(getConfigJsPath())) {
-      return undefined;
-    }
-    const configJsString = fs.readFileSync(getConfigJsPath(), "utf8");
 
     var dataUrl = "data:text/javascript;base64," + btoa(configJsString);
     return dataUrl;
@@ -190,4 +202,27 @@ class VsCodeIde implements IDE {
   }
 }
 
-export default VsCodeIde;
+async function loadFullConfigNode(ide: IDE): Promise<ContinueConfig> {
+  let serialized = await ide.getSerializedConfig();
+  let intermediate = serializedToIntermediateConfig(serialized);
+
+  const configJsContents = await buildConfigTs(false);
+  if (configJsContents) {
+    try {
+      // Try config.ts first
+      const module = (await new Promise((resolve, reject) => {
+        import(getConfigJsPath(true)).then(resolve).catch(reject);
+      })) as any;
+      if (!module.modifyConfig) {
+        throw new Error("config.ts does not export a modifyConfig function.");
+      }
+      intermediate = module.modifyConfig(intermediate);
+    } catch (e) {
+      console.log("Error loading config.ts: ", e);
+    }
+  }
+  const finalConfig = intermediateToFinalConfig(intermediate);
+  return finalConfig;
+}
+
+export { VsCodeIde, buildConfigTs, loadFullConfigNode };

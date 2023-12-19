@@ -62,9 +62,9 @@ export function getConfigTsPath(): string {
   return p;
 }
 
-export function getConfigJsPath(): string {
+export function getConfigJsPath(node: boolean): string {
   // Do not create automatically
-  return path.join(getContinueGlobalPath(), "config.js");
+  return path.join(getContinueGlobalPath(), `config${node ? ".node" : ""}.js`);
 }
 
 export function getTsConfigPath(): string {

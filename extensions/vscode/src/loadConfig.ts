@@ -1,8 +1,7 @@
 import { ContinueConfig, IDE, ILLM } from "core";
-import { loadFullConfig } from "core/config/load";
 import https from "https";
 import fetch from "node-fetch";
-import VsCodeIde from "./ideProtocol";
+import { VsCodeIde, loadFullConfigNode } from "./ideProtocol";
 
 class VsCodeConfigHandler {
   savedConfig: ContinueConfig | undefined;
@@ -15,7 +14,7 @@ class VsCodeConfigHandler {
     if (this.savedConfig) {
       return this.savedConfig;
     }
-    this.savedConfig = await loadFullConfig(ide);
+    this.savedConfig = await loadFullConfigNode(ide);
     return this.savedConfig;
   }
 }

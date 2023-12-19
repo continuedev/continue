@@ -75,10 +75,7 @@ export async function* ideStreamRequest(
   let buffer = "";
   let done = false;
 
-  let staleTimeout = setTimeout(() => {
-    console.warn("Stream request timed out.");
-    done = true;
-  }, 5000);
+  let staleTimeout: any;
 
   const handler = (event: any) => {
     if (event.data.messageId === messageId) {

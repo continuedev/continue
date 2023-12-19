@@ -10,7 +10,7 @@ import * as vscode from "vscode";
 import { ideProtocolClient, windowId } from "./activation/activate";
 import { getContinueServerUrl } from "./bridge";
 import historyManager from "./history";
-import VsCodeIde from "./ideProtocol";
+import { VsCodeIde } from "./ideProtocol";
 import { llmFromTitle } from "./loadConfig";
 import { getExtensionUri, getNonce, getUniqueId } from "./util/vscode";
 
