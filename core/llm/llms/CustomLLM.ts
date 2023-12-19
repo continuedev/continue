@@ -4,12 +4,14 @@ import { ChatMessage, CompletionOptions, CustomLLM } from "../..";
 class CustomLLMClass extends BaseLLM {
   private customStreamCompletion?: (
     prompt: string,
-    options: CompletionOptions
+    options: CompletionOptions,
+    fetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>
   ) => AsyncGenerator<string>;
 
   private customStreamChat?: (
     messages: ChatMessage[],
-    options: CompletionOptions
+    options: CompletionOptions,
+    fetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>
   ) => AsyncGenerator<string>;
 
   constructor(custom: CustomLLM) {
@@ -23,7 +25,11 @@ class CustomLLMClass extends BaseLLM {
     options: CompletionOptions
   ): AsyncGenerator<ChatMessage> {
     if (this.customStreamChat) {
-      for await (const content of this.customStreamChat(messages, options)) {
+      for await (const content of this.customStreamChat(
+        messages,
+        options,
+        (...args) => this.fetch(...args)
+      )) {
         yield { role: "assistant", content };
       }
     } else {
@@ -40,14 +46,16 @@ class CustomLLMClass extends BaseLLM {
     if (this.customStreamCompletion) {
       for await (const content of this.customStreamCompletion(
         prompt,
-        options
+        options,
+        (...args) => this.fetch(...args)
       )) {
         yield content;
       }
     } else if (this.customStreamChat) {
       for await (const content of this.customStreamChat(
         [{ role: "user", content: prompt }],
-        options
+        options,
+        (...args) => this.fetch(...args)
       )) {
         yield content;
       }

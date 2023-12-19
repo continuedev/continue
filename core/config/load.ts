@@ -5,6 +5,7 @@ import {
   CustomContextProvider,
   CustomLLM,
   IContextProvider,
+  IDE,
   ModelDescription,
   SerializedContinueConfig,
   SlashCommand,
@@ -90,4 +91,29 @@ function intermediateToFinalConfig(config: Config): ContinueConfig {
   };
 }
 
-export { intermediateToFinalConfig, serializedToIntermediateConfig };
+async function loadFullConfig(ide: IDE): Promise<ContinueConfig> {
+  let serialized = await ide.getSerializedConfig();
+  let intermediate = serializedToIntermediateConfig(serialized);
+
+  const configJsUrl = await ide.getConfigJsUrl();
+  if (configJsUrl) {
+    try {
+      // Try config.ts first
+      const module = await import(configJsUrl);
+      if (!module.modifyConfig) {
+        throw new Error("config.ts does not export a modifyConfig function.");
+      }
+      intermediate = module.modifyConfig(intermediate);
+    } catch (e) {
+      console.log("Error loading config.ts: ", e);
+    }
+  }
+  const finalConfig = intermediateToFinalConfig(intermediate);
+  return finalConfig;
+}
+
+export {
+  intermediateToFinalConfig,
+  loadFullConfig,
+  serializedToIntermediateConfig,
+};

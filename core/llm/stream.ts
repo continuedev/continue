@@ -48,7 +48,7 @@ function parseSseLine(line: string): { done: boolean; data: any } {
   } else if (line.startsWith(": ping")) {
     return { done: true, data: undefined };
   }
-  throw new Error(`Invalid data sent from server: ${line}`);
+  return { done: false, data: undefined };
 }
 
 export async function* streamSse(response: Response): AsyncGenerator<any> {
@@ -65,13 +65,15 @@ export async function* streamSse(response: Response): AsyncGenerator<any> {
       if (done) {
         break;
       }
-      yield data;
+      if (data) {
+        yield data;
+      }
     }
   }
 
   if (buffer.length > 0) {
     const { done, data } = parseSseLine(buffer);
-    if (!done) {
+    if (!done && data) {
       yield data;
     }
   }

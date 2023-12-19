@@ -1,5 +1,4 @@
 import { FileEdit, ModelDescription } from "core";
-import { llmFromProviderAndOptions } from "core/llm/llms";
 import {
   editConfigJson,
   getConfigJsonPath,
@@ -12,6 +11,7 @@ import { ideProtocolClient, windowId } from "./activation/activate";
 import { getContinueServerUrl } from "./bridge";
 import historyManager from "./history";
 import VsCodeIde from "./ideProtocol";
+import { llmFromTitle } from "./loadConfig";
 import { getExtensionUri, getNonce, getUniqueId } from "./util/vscode";
 
 let sockets: { [url: string]: io.Socket | undefined } = {};
@@ -406,10 +406,7 @@ export function getSidebarContent(
           break;
         }
         case "llmStreamComplete": {
-          const model = llmFromProviderAndOptions(
-            data.message.provider,
-            data.message.llmOptions
-          );
+          const model = await llmFromTitle(data.message.title);
           for await (const update of model.streamComplete(
             data.message.prompt,
             data.message.completionOptions
@@ -420,10 +417,7 @@ export function getSidebarContent(
           break;
         }
         case "llmStreamChat": {
-          const model = llmFromProviderAndOptions(
-            data.message.provider,
-            data.message.llmOptions
-          );
+          const model = await llmFromTitle(data.message.title);
           for await (const update of model.streamChat(
             data.message.messages,
             data.message.completionOptions
@@ -434,10 +428,7 @@ export function getSidebarContent(
           break;
         }
         case "llmComplete": {
-          const model = llmFromProviderAndOptions(
-            data.message.provider,
-            data.message.llmOptions
-          );
+          const model = await llmFromTitle(data.message.title);
           const completion = await model.complete(
             data.message.prompt,
             data.message.completionOptions

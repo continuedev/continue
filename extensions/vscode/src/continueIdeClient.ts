@@ -4,6 +4,7 @@ import { readFileSync } from "fs";
 import * as vscode from "vscode";
 import { debugPanelWebview, getSidebarContent } from "./debugPanel";
 import { diffManager } from "./diffs";
+import { configHandler } from "./loadConfig";
 import {
   SuggestionRanges,
   acceptSuggestionCommand,
@@ -40,6 +41,7 @@ class IdeProtocolClient {
         const config = readFileSync(getConfigJsonPath(), "utf8");
         const configJson = JSON.parse(config);
         this.configUpdate(configJson);
+        configHandler.reloadConfig();
       }
     });
 

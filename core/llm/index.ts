@@ -278,7 +278,19 @@ export abstract class BaseLLM implements ILLM {
     // });
   }
 
-  protected fetch(url: string, init?: RequestInit): Promise<Response> {
+  _fetch?: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response> =
+    undefined;
+
+  protected fetch(
+    url: RequestInfo | URL,
+    init?: RequestInit
+  ): Promise<Response> {
+    if (this._fetch) {
+      // Custom Node.js fetch
+      return this._fetch(url, init);
+    }
+
+    // Most of the requestOptions aren't available in the browser
     const headers = new Headers(init?.headers);
     for (const [key, value] of Object.entries(
       this.requestOptions?.headers || {}
@@ -321,8 +333,7 @@ export abstract class BaseLLM implements ILLM {
     if (!this._shouldRequestDirectly()) {
       for await (const content of ideStreamRequest("llmStreamComplete", {
         prompt,
-        provider: this.providerName,
-        llmOptions: this._llmOptions,
+        title: this.title,
         completionOptions: options,
       })) {
         yield content;
@@ -367,8 +378,7 @@ export abstract class BaseLLM implements ILLM {
       return (
         await ideRequest("llmComplete", {
           prompt,
-          provider: this.providerName,
-          llmOptions: this._llmOptions,
+          title: this.title,
           completionOptions: options,
         })
       ).content;
@@ -418,12 +428,12 @@ export abstract class BaseLLM implements ILLM {
     if (!this._shouldRequestDirectly()) {
       for await (const content of ideStreamRequest("llmStreamChat", {
         messages,
-        provider: this.providerName,
-        llmOptions: this._llmOptions,
+        title: this.title,
         completionOptions: options,
       })) {
         yield { role: "user", content };
       }
+      return;
     }
 
     const { completionOptions, log, raw } =

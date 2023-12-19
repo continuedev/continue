@@ -26,7 +26,7 @@ function testLLM(llm: BaseLLM) {
     test("Stream Chat works", async () => {
       let total = "";
       for await (const chunk of llm.streamChat([
-        { role: "user", content: "Tell a story" },
+        { role: "user", content: "Hi" },
       ])) {
         total += chunk.content;
       }
@@ -36,73 +36,73 @@ function testLLM(llm: BaseLLM) {
       return;
     });
 
-    // test("Stream Complete works", async () => {
-    //   let total = "";
-    //   for await (const chunk of llm.streamComplete("Hello")) {
-    //     total += chunk;
-    //   }
+    test("Stream Complete works", async () => {
+      let total = "";
+      for await (const chunk of llm.streamComplete("Hi")) {
+        total += chunk;
+      }
 
-    //   expect(total.length).toBeGreaterThan(0);
-    //   console.log(total);
-    //   return;
-    // });
+      expect(total.length).toBeGreaterThan(0);
+      console.log(total);
+      return;
+    });
 
-    // test("Complete works", async () => {
-    //   const completion = await llm.complete("Hello");
+    test("Complete works", async () => {
+      const completion = await llm.complete("Hi");
 
-    //   expect(completion.length).toBeGreaterThan(0);
-    //   console.log(completion);
-    //   return;
-    // });
+      expect(completion.length).toBeGreaterThan(0);
+      console.log(completion);
+      return;
+    });
   });
 }
 
 describe("LLM", () => {
-  //   // testLLM(
-  //   //   new FreeTrial({
-  //   //     model: "gpt-3.5-turbo",
-  //   //   })
-  //   // );
-  //   // testLLM(
-  //   //   new Anthropic({
-  //   //     model: "claude-2",
-  //   //     apiKey: process.env.ANTHROPIC_API_KEY,
-  //   //   })
-  //   // );
-  //   // testLLM(
-  //   //   new OpenAI({ apiKey: process.env.OPENAI_API_KEY, model: "gpt-3.5-turbo" })
-  //   // );
-  //   // TODO: Fix Replicate
-  //   // testLLM(
-  //   //   new Replicate({
-  //   //     apiKey: process.env.REPLICATE_API_KEY,
-  //   //     model: "codellama-7b",
-  //   //   })
-  //   // );
-  //   // testLLM(new LMStudio({ model: "codellama-7b" }));
-  //   // testLLM(new Ollama({ model: "codellama-7b" }));
-  //   testLLM(
-  //     new Together({
-  //       apiKey: process.env.TOGETHER_API_KEY,
-  //       model: "codellama-7b",
-  //     })
-  //   );
-  //   // testLLM(new LlamaCpp({ model: "deepseek-7b" }));
-  //   // testLLM(new Llamafile({ model: "mistral-7b" }));
-  //   // TODO: Test these
-  //   // testLLM(new TextGenWebUI({ model: "codellama-7b" }));
-  //   // testLLM(new HuggingFaceTGI({ model: "codellama-7b" }));
-  //   // testLLM(new HuggingFaceInferenceAPI({ model: "codellama-7b" }));
-  //   testLLM(
-  //     new GooglePalm({
-  //       model: "gemini-pro",
-  //       //   model: "chat-bison-001",
-  //       apiKey: process.env.GOOGLE_PALM_API_KEY,
-  //     })
-  //   );
-  //   testLLM(
-  //     new Gemini({ model: "gemini-pro", apiKey: process.env.GOOGLE_PALM_API_KEY })
-  //   );
+  // testLLM(
+  //   new FreeTrial({
+  //     model: "gpt-3.5-turbo",
+  //   })
+  // );
+  // testLLM(
+  //   new Anthropic({
+  //     model: "claude-2",
+  //     apiKey: process.env.ANTHROPIC_API_KEY,
+  //   })
+  // );
+  // testLLM(
+  //   new OpenAI({ apiKey: process.env.OPENAI_API_KEY, model: "gpt-3.5-turbo" })
+  // );
+  // TODO: Fix Replicate
+  // testLLM(
+  //   new Replicate({
+  //     apiKey: process.env.REPLICATE_API_KEY,
+  //     model: "codellama-7b",
+  //   })
+  // );
+  // testLLM(new LMStudio({ model: "codellama-7b" }));
+  // testLLM(new Ollama({ model: "codellama-7b" }));
+  // testLLM(
+  //   new Together({
+  //     apiKey: process.env.TOGETHER_API_KEY,
+  //     model: "codellama-7b",
+  //   })
+  // );
+  // testLLM(new LlamaCpp({ model: "deepseek-7b" }));
+  // testLLM(new Llamafile({ model: "mistral-7b" }));
+  // TODO: Test these
+  // testLLM(new TextGenWebUI({ model: "codellama-7b" }));
+  // testLLM(new HuggingFaceTGI({ model: "codellama-7b" }));
+  // testLLM(new HuggingFaceInferenceAPI({ model: "codellama-7b" }));
+  // testLLM(
+  //   new GooglePalm({
+  //     model: "gemini-pro",
+  //     //   model: "chat-bison-001",
+  //     apiKey: process.env.GOOGLE_PALM_API_KEY,
+  //   })
+  // );
+  // testLLM(
+  //   new Gemini({ model: "gemini-pro", apiKey: process.env.GOOGLE_PALM_API_KEY })
+  // );
   // testLLM(
   //   new Mistral({ apiKey: process.env.MISTRAL_API_KEY, model: "mistral-small" })
   // );

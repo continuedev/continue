@@ -22,6 +22,8 @@ export interface ILLM extends LLMOptions {
   region?: string;
   projectId?: string;
 
+  _fetch?: (input: any, init?: RequestInit) => Promise<any>;
+
   complete(prompt: string, options?: LLMFullCompletionOptions): Promise<string>;
 
   streamComplete(
@@ -204,11 +206,13 @@ export interface CustomLLMWithOptionals {
   options?: LLMOptions;
   streamCompletion?: (
     prompt: string,
-    options: CompletionOptions
+    options: CompletionOptions,
+    fetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>
   ) => AsyncGenerator<string>;
   streamChat?: (
     messages: ChatMessage[],
-    options: CompletionOptions
+    options: CompletionOptions,
+    fetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>
   ) => AsyncGenerator<string>;
 }
 
