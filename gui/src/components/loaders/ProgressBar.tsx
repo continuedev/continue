@@ -1,4 +1,3 @@
-import React from "react";
 import styled from "styled-components";
 import { StyledTooltip, lightGray, vscForeground } from "..";
 
@@ -47,7 +46,7 @@ const ProgressBar = ({ completed, total }: ProgressBarProps) => {
   return (
     <>
       <a
-        href="https://continue.dev/docs/customization/models"
+        href="https://continue.dev/docs/reference/Model%20Providers/freetrial"
         className="no-underline ml-2"
       >
         <GridDiv data-tooltip-id="usage_progress_bar">
