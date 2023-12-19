@@ -210,9 +210,7 @@ async function loadFullConfigNode(ide: IDE): Promise<ContinueConfig> {
   if (configJsContents) {
     try {
       // Try config.ts first
-      const module = (await new Promise((resolve, reject) => {
-        import(getConfigJsPath(true)).then(resolve).catch(reject);
-      })) as any;
+      const module = await require(getConfigJsPath(true));
       if (!module.modifyConfig) {
         throw new Error("config.ts does not export a modifyConfig function.");
       }

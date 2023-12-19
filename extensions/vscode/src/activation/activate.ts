@@ -1,3 +1,4 @@
+import { getTsConfigPath } from "core/util/paths";
 import path from "path";
 import { v4 } from "uuid";
 import * as vscode from "vscode";
@@ -98,6 +99,9 @@ function showRefactorMigrationMessage() {
 }
 
 export async function activateExtension(context: vscode.ExtensionContext) {
+  // Add necessary files
+  getTsConfigPath();
+
   extensionContext = context;
 
   // Register commands and providers
