@@ -96,3 +96,45 @@ fun getConfigJsPath(): String {
     }
     return path.toString()
 }
+
+fun getSessionsDir(): String {
+    val path = Paths.get(getContinueGlobalPath(), "sessions")
+    if (Files.notExists(path)) {
+        Files.createDirectories(path)
+    }
+    return path.toString()
+}
+
+fun getSessionsListPath(): String {
+    val path = Paths.get(getSessionsDir(),  "sessions.json")
+    if (Files.notExists(path)) {
+        Files.createFile(path)
+        Files.writeString(path, "[]");
+    }
+    return path.toString()
+}
+
+fun getSessionFilePath(sessionId: String): String {
+    val path = Paths.get(getSessionsDir(),  "$sessionId.json")
+    if (Files.notExists(path)) {
+        Files.createFile(path)
+        Files.writeString(path, "{}");
+    }
+    return path.toString()
+}
+
+fun devDataPath(): String {
+    val path = Paths.get(getContinueGlobalPath(), "dev_data")
+    if (Files.notExists(path)) {
+        Files.createDirectories(path)
+    }
+    return path.toString()
+}
+
+fun getDevDataFilepath(filename: String): String {
+    val path = Paths.get(devDataPath(), filename)
+    if (Files.notExists(path)) {
+        Files.createFile(path)
+    }
+    return path.toString()
+}

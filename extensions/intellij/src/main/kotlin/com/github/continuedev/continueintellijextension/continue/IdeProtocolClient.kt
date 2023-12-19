@@ -4,8 +4,10 @@ import com.github.continuedev.continueintellijextension.*
 import com.github.continuedev.continueintellijextension.constants.getConfigJsPath
 import com.github.continuedev.continueintellijextension.constants.getConfigJsonPath
 import com.github.continuedev.continueintellijextension.constants.getContinueGlobalPath
+import com.github.continuedev.continueintellijextension.constants.getDevDataFilepath
 import com.github.continuedev.continueintellijextension.services.ContinuePluginService
 import com.google.gson.Gson
+import com.google.gson.JsonObject
 import com.google.gson.reflect.TypeToken
 import com.intellij.openapi.application.ApplicationInfo
 import com.intellij.openapi.application.ApplicationManager
@@ -26,9 +28,12 @@ import com.intellij.openapi.wm.WindowManager
 import com.intellij.testFramework.LightVirtualFile
 import com.intellij.ui.awt.RelativePoint
 import kotlinx.coroutines.*
+import net.minidev.json.JSONObject
 import okhttp3.*
 import java.io.File
 import java.io.FileInputStream
+import java.io.FileReader
+import java.io.FileWriter
 import java.net.NetworkInterface
 import java.nio.charset.Charset
 import java.nio.file.Files
@@ -120,6 +125,8 @@ class IdeProtocolClient (
                 }
                 send(messageType, responseData, data["messageId"] as String);
             }
+
+            val historyManager = HistoryManager()
 
             try {
                 when (messageType) {
@@ -260,6 +267,76 @@ class IdeProtocolClient (
                         showMessage(data["message"] as String)
                     }
 
+                    // History
+                    "history" -> {
+                        respond(historyManager.list());
+                    }
+                    "saveSession" -> {
+                        historyManager.save(data["message"] as PersistedSessionInfo);
+                        respond(null);
+                    }
+                    "deleteSession" -> {
+                        historyManager.delete(data["message"] as String);
+                        respond(null);
+                    }
+                    "loadSession" -> {
+                        respond(historyManager.load(data["message"] as String));
+                    }
+
+                    // Other
+                    "getOpenFiles" -> {
+                        respond(visibleFiles())
+                    }
+                    "logDevData" -> {
+                        val filename = data["tableName"] as String
+                        val jsonLine = data["data"] as String
+                        val filepath = getDevDataFilepath(filename)
+                        val contents = Gson().toJson(jsonLine) + "\n"
+                        File(filepath).appendText(contents)
+                    }
+                    "addModel" -> {
+                        val model = data["model"] as String
+                        val updatedConfig = editConfigJson {
+                            val models = it["models"] as MutableList<JsonObject>
+                            models.add(
+                                    Gson().fromJson(model, JsonObject::class.java)
+                            )
+                            it
+                        }
+
+                        configUpdate(updatedConfig)
+                        setFileOpen(getConfigJsonPath())
+                    }
+                    "deleteModel" -> {
+                        editConfigJson { config ->
+                            var models: MutableList<JsonObject> = config["models"] as MutableList<JsonObject>
+
+                            val model = data["model"] as String
+                            models = models.filter { it["title"].asString != model }.toMutableList()
+                            config.add("models", Gson().toJsonTree(models))
+                            config
+                        }
+                    }
+                    "addOpenAIKey" -> {
+                        val updatedConfig = editConfigJson { config ->
+                            val key = data["key"] as String
+                            var models = config["models"] as MutableList<JsonObject>
+                            models = models.map {
+                                if (it["provider"].asString == "openai-free-trial") {
+                                    it.add("apiKey", Gson().toJsonTree(key))
+                                    it.add("provider", Gson().toJsonTree("openai"))
+                                    it
+                                } else {
+                                    it
+                                }
+                            }.toMutableList()
+                            config.add("models", Gson().toJsonTree(models))
+                            config
+                        }
+                        configUpdate(updatedConfig)
+                    }
+
+
 
                     else -> {
                         println("Unknown messageType: $messageType")
@@ -269,6 +346,31 @@ class IdeProtocolClient (
                 showMessage("Error handling message of type $messageType: $error")
             }
         }
+    }
+
+    private fun configUpdate(config: JsonObject) {
+        val data = mapOf(
+            "type" to "configUpdate",
+            "config" to config
+        )
+        val json = Gson().toJson(data)
+        continuePluginService.dispatchCustomEvent(json)
+    }
+
+    private fun editConfigJson(callback: (config: JsonObject) -> JsonObject): JsonObject {
+        val gson = Gson()
+        val configJsonPath = getConfigJsonPath()
+        val reader = FileReader(configJsonPath)
+        val config: JsonObject = gson.fromJson(reader, JsonObject::class.java)
+        reader.close()
+
+        val editedConfig = callback(config)
+
+        val writer = FileWriter(configJsonPath)
+        gson.toJson(editedConfig, writer)
+        writer.close()
+
+        return editedConfig
     }
 
     private fun initIdeProtocol() {
