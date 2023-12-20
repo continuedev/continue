@@ -8,19 +8,8 @@ import java.io.FileReader
 import java.io.FileWriter
 import java.lang.reflect.Type
 
-data class PersistedSessionInfo(
-        var sessionId: String? = null,
-        var title: String? = null,
-        var workspaceDirectory: String? = null,
-        var dateCreated: String? = null,
-)
-
-data class SessionInfo(
-    var sessionId: String? = null,
-    var title: String? = null,
-    var workspaceDirectory: String? = null,
-    var dateCreated: String? = null,
-)
+typealias PersistedSessionInfo = MutableMap<String, Any>
+typealias SessionInfo = MutableMap<String, Any>
 class HistoryManager {
     private val gson = Gson()
 
@@ -36,7 +25,7 @@ class HistoryManager {
         val type: Type = object : TypeToken<List<PersistedSessionInfo>>() {}.type
         val sessions = gson.fromJson<List<PersistedSessionInfo>>(reader, type)
 
-        return sessions.filter { it.sessionId != null }
+        return sessions.filter { it["sessionId"] != null }
     }
 
     fun delete(sessionId: String) {
@@ -54,7 +43,7 @@ class HistoryManager {
         val type: Type = object : TypeToken<List<SessionInfo>>() {}.type
         var sessionsList = gson.fromJson<List<SessionInfo>>(sessionsListRaw, type)
 
-        sessionsList = sessionsList.filter { it.sessionId != sessionId }
+        sessionsList = sessionsList.filter { it["sessionId"] != sessionId }
 
         val writer = FileWriter(sessionsListFile)
         gson.toJson(sessionsList, writer)
@@ -70,13 +59,15 @@ class HistoryManager {
         }
 
         val reader = FileReader(file)
-        val session = gson.fromJson<PersistedSessionInfo>(reader, PersistedSessionInfo::class.java)
-        session.sessionId = sessionId
+        val text = reader.readText()
+        val type: Type = object : TypeToken<MutableMap<String, Any>>() {}.type
+        val session = gson.fromJson<MutableMap<String, Any>>(text, type)
+        session["sessionId"] = sessionId
         return session
     }
 
     fun save(session: PersistedSessionInfo) {
-        val writer = FileWriter(getSessionFilePath(session.sessionId ?: uuid()))
+        val writer = FileWriter(getSessionFilePath(session["sessionId"] as String? ?: uuid()))
         gson.toJson(session, writer)
         writer.close()
 
@@ -84,26 +75,26 @@ class HistoryManager {
         val rawSessionsList = FileReader(File(sessionsListFilePath))
 
         val type: Type = object : TypeToken<List<SessionInfo>>() {}.type
-        val sessionsList = gson.fromJson<List<SessionInfo>>(rawSessionsList, type).toMutableList()
+        val sessionsList = gson.fromJson<List<MutableMap<String, Any>>>(rawSessionsList, type).toMutableList()
 
         var found = false
         for (sessionInfo in sessionsList) {
-            if (sessionInfo.sessionId == session.sessionId) {
-                sessionInfo.title = session.title
-                sessionInfo.workspaceDirectory = session.workspaceDirectory
-                sessionInfo.dateCreated = System.currentTimeMillis().toString()
+            if (sessionInfo["sessionId"] == session["sessionId"]) {
+                sessionInfo["title"] = session["title"] as Any
+                sessionInfo["workspaceDirectory"] = session["workspaceDirectory"] as Any
+                sessionInfo["dateCreated"] = System.currentTimeMillis().toString()
                 found = true
                 break
             }
         }
 
         if (!found) {
-            val sessionInfo = SessionInfo(
-                    sessionId = session.sessionId,
-                    title = session.title,
-                    dateCreated = System.currentTimeMillis().toString(),
-                    workspaceDirectory = session.workspaceDirectory
-            )
+            val sessionInfo = mutableMapOf(
+                    "sessionId" to session["sessionId"],
+                    "title" to  session["title"],
+                    "dateCreated" to System.currentTimeMillis().toString(),
+                    "workspaceDirectory" to session["workspaceDirectory"]
+            ) as MutableMap<String, Any>
             sessionsList.add(sessionInfo)
         }
 

@@ -7,6 +7,7 @@ import com.github.continuedev.continueintellijextension.constants.getContinueGlo
 import com.github.continuedev.continueintellijextension.constants.getDevDataFilepath
 import com.github.continuedev.continueintellijextension.services.ContinuePluginService
 import com.google.gson.Gson
+import com.google.gson.GsonBuilder
 import com.google.gson.JsonObject
 import com.google.gson.reflect.TypeToken
 import com.intellij.openapi.application.ApplicationInfo
@@ -161,10 +162,8 @@ class IdeProtocolClient (
                     }
 
                     "readFile" -> {
-                        val msg = readFile(data["filepath"] as String)
-                        respond(
-                            mapOf("contents" to msg)
-                        )
+                        val msg = readFile((data["message"] as Map<String, String>)["filepath"] as String)
+                        respond(msg)
                     }
 
                     "listDirectoryContents" -> {
@@ -280,27 +279,27 @@ class IdeProtocolClient (
                         respond(null);
                     }
                     "loadSession" -> {
-                        respond(historyManager.load(data["message"] as String));
+                        val session = historyManager.load(data["message"] as String)
+                        respond(session)
                     }
 
                     // Other
                     "getOpenFiles" -> {
-                        respond(visibleFiles())
+                        val openFiles = visibleFiles()
+                        respond(openFiles)
                     }
                     "logDevData" -> {
                         val filename = data["tableName"] as String
-                        val jsonLine = data["data"] as String
+                        val jsonLine = data["data"]
                         val filepath = getDevDataFilepath(filename)
                         val contents = Gson().toJson(jsonLine) + "\n"
                         File(filepath).appendText(contents)
                     }
                     "addModel" -> {
-                        val model = data["model"] as String
+                        val model = data["model"] as Map<String, Any>
                         val updatedConfig = editConfigJson {
-                            val models = it["models"] as MutableList<JsonObject>
-                            models.add(
-                                    Gson().fromJson(model, JsonObject::class.java)
-                            )
+                            val models = it["models"] as MutableList<Map<String, Any>>
+                            models.add(model)
                             it
                         }
 
@@ -308,29 +307,30 @@ class IdeProtocolClient (
                         setFileOpen(getConfigJsonPath())
                     }
                     "deleteModel" -> {
-                        editConfigJson { config ->
-                            var models: MutableList<JsonObject> = config["models"] as MutableList<JsonObject>
+                        val configJson = editConfigJson { config ->
+                            var models: MutableList<Map<String, Any>> = config["models"] as MutableList<Map<String, Any>>
 
-                            val model = data["model"] as String
-                            models = models.filter { it["title"].asString != model }.toMutableList()
-                            config.add("models", Gson().toJsonTree(models))
+                            val model = data["title"] as String
+                            models = models.filter { it["title"] != model }.toMutableList()
+                            config["models"] = models
                             config
                         }
+                        configUpdate(configJson)
                     }
                     "addOpenAIKey" -> {
                         val updatedConfig = editConfigJson { config ->
                             val key = data["key"] as String
-                            var models = config["models"] as MutableList<JsonObject>
+                            var models = config["models"] as MutableList<MutableMap<String, Any>>
                             models = models.map {
-                                if (it["provider"].asString == "openai-free-trial") {
-                                    it.add("apiKey", Gson().toJsonTree(key))
-                                    it.add("provider", Gson().toJsonTree("openai"))
+                                if (it["provider"] == "openai-free-trial") {
+                                    it["apiKey"] = key
+                                    it["provider"] = "openai"
                                     it
                                 } else {
                                     it
                                 }
                             }.toMutableList()
-                            config.add("models", Gson().toJsonTree(models))
+                            config["models"] = models
                             config
                         }
                         configUpdate(updatedConfig)
@@ -348,7 +348,7 @@ class IdeProtocolClient (
         }
     }
 
-    private fun configUpdate(config: JsonObject) {
+    private fun configUpdate(config: Map<String, Any>) {
         val data = mapOf(
             "type" to "configUpdate",
             "config" to config
@@ -357,11 +357,14 @@ class IdeProtocolClient (
         continuePluginService.dispatchCustomEvent(json)
     }
 
-    private fun editConfigJson(callback: (config: JsonObject) -> JsonObject): JsonObject {
-        val gson = Gson()
+    private fun editConfigJson(callback: (config: MutableMap<String, Any>) -> Map<String, Any>): Map<String, Any> {
+        val gson = GsonBuilder().setPrettyPrinting().create()
         val configJsonPath = getConfigJsonPath()
         val reader = FileReader(configJsonPath)
-        val config: JsonObject = gson.fromJson(reader, JsonObject::class.java)
+        val config: MutableMap<String, Any> = gson.fromJson(
+                reader,
+                object : TypeToken<Map<String, Any>>() {}.type
+        )
         reader.close()
 
         val editedConfig = callback(config)

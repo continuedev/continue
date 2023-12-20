@@ -124,7 +124,7 @@ class ContinuePluginStartupActivity : StartupActivity, Disposable, DumbAware {
         val defaultStrategy = DefaultTextSelectionStrategy()
 
         coroutineScope.launch {
-            startProxyServer()
+//            startProxyServer()
 
             val settings =
                     ServiceManager.getService(ContinueExtensionSettings::class.java)
@@ -150,11 +150,11 @@ class ContinuePluginStartupActivity : StartupActivity, Disposable, DumbAware {
                 }
 
                 // Show the welcome dialog
-                withContext(Dispatchers.Main) {
-                    val dialog = WelcomeDialogWrapper(project)
-                    dialog.show()
-                }
-                settings.continueState.shownWelcomeDialog = true
+//                withContext(Dispatchers.Main) {
+//                    val dialog = WelcomeDialogWrapper(project)
+//                    dialog.show()
+//                }
+//                settings.continueState.shownWelcomeDialog = true
             }
 
             GlobalScope.async(Dispatchers.IO) {
