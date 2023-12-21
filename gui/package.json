@@ -21,7 +21,6 @@
     "lodash": "^4.17.21",
     "meilisearch": "^0.33.0",
     "minisearch": "^6.3.0",
-    "node-fetch": "^3.3.2",
     "posthog-js": "^1.58.0",
     "prismjs": "^1.29.0",
     "react": "^18.2.0",
