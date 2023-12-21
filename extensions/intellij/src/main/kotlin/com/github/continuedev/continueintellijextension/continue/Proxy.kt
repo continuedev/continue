@@ -1,113 +1,123 @@
 package com.github.continuedev.continueintellijextension.`continue`
 
-//import io.ktor.client.*
-//import io.ktor.client.statement.*
-//import io.ktor.server.application.*
-//import io.ktor.http.*
-//import io.ktor.http.content.*
-//import io.ktor.server.request.*
-//import io.ktor.server.response.*
-//import io.ktor.server.routing.*
-//import io.ktor.server.engine.*
-//import io.ktor.server.netty.*
-//import io.ktor.utils.io.*
-//import java.net.URL
-
-//fun main() {
-//    embeddedServer(Netty, port = 8080, module = Application::proxyServer).start(wait = true)
-//}
-//
-//fun Application.proxyServer() {
-//
-//    routing {
-//        route("/{...}") {
-//            handle {
-//                val originalRequest = call.request
-//                val continueUrl = originalRequest.headers["x-continue-url"] ?: return@handle call.respond(HttpStatusCode.BadRequest)
-//                val parsedUrl = URL(continueUrl)
-//                val client = HttpClient()
-//
-//                try {
-//                    val response: HttpResponse = client.request(continueUrl) {
-//                        method = HttpMethod.parse(originalRequest.httpMethod.value)
-//                        headers {
-//                            originalRequest.headers.forEach { key, values ->
-//                                if (key != HttpHeaders.Host && key != HttpHeaders.Origin) {
-//                                    appendAll(key, values)
-//                                }
-//                            }
-//                            append(HttpHeaders.Host, parsedUrl.host)
-//                        }
-//                    }
-//                    call.respond(response.status, response.readBytes())
-//                } catch (e: Exception) {
-//                    application.log.error("Proxy error", e)
-//                    call.respond(HttpStatusCode.InternalServerError)
-//                }
-//            }
-//        }
-//    }
-//}
 
 import io.ktor.server.application.*
-import io.ktor.client.*
-import io.ktor.client.request.*
 import io.ktor.http.*
-import io.ktor.http.content.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
-import io.ktor.util.*
-import io.ktor.utils.io.*
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
-import io.ktor.server.routing.*
-import kotlinx.coroutines.*
+import io.ktor.server.plugins.cors.routing.*
+import io.ktor.utils.io.jvm.javaio.*
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import org.apache.commons.io.IOUtils.byteArray
+import java.io.ByteArrayOutputStream
 import java.net.URL
 
-/**
- * Main entry point of the application. This application starts a webserver at port 8080 based on Netty.
- * It intercepts all the requests, reverse-proxying them to the wikipedia.
- *
- * In the case of HTML it is completely loaded in memory and preprocessed to change URLs to our own local domain.
- * In the case of other files, the file is streamed from the HTTP client to the HTTP server response.
- */
-//fun startProxyServer() {
-//    // Creates a Netty server
-//    try {
-//        val server = embeddedServer(Netty, port = 65433, module = Application::proxyServer)
-//        // Starts the server and waits for the engine to stop and exits.
-//        server.start(wait = true)
-//    } catch (e: Exception) {
-//        println(e)
-//    }
-//}
-
-
 fun startProxyServer() {
-    GlobalScope.launch {
-        embeddedServer(Netty, port = 65433, module = Application::proxyServer).start(wait = true)
+    embeddedServer(Netty, port = 65433, module = Application::proxyServer).start(wait = true)
+}
+
+fun Application.proxyServer() {
+    install(CORS) {
+        anyHost()
+        allowCredentials = true
+        allowNonSimpleContentTypes = true
+        allowSameOrigin = true
+        allowMethod(HttpMethod.Options)
+        allowMethod(HttpMethod.Get)
+        allowMethod(HttpMethod.Post)
+        allowMethod(HttpMethod.Put)
+        allowMethod(HttpMethod.Delete)
+        allowMethod(HttpMethod.Patch)
+        allowHeader(HttpHeaders.ContentType)
+        allowHeader(HttpHeaders.Authorization)
+        allowHeader(HttpHeaders.AccessControlAllowOrigin)
+        allowHeader("x-continue-url")
+
+        allowHeaders {
+            true
+        }
+
+        allowOrigins { origin ->
+           true
+        }
+    }
+
+    intercept(ApplicationCallPipeline.Call) {
+        val originalRequest = call.request
+
+        // Don't intercept CORS pre-flight requests
+        if (originalRequest.httpMethod == HttpMethod.Options) {
+            return@intercept;
+        }
+
+        val continueUrl = originalRequest.headers["x-continue-url"] ?: return@intercept call.respond(HttpStatusCode.OK)
+        val parsedUrl = URL(continueUrl)
+        val body = originalRequest.receiveChannel().toInputStream().use { inputStream ->
+            if (inputStream == null) {
+                return@use null;
+            }
+            val buffer = byteArray(4096) // size of the buffer can be adjusted as needed
+            val outputStream = ByteArrayOutputStream()
+            while (true) {
+                val bytesRead = inputStream.read(buffer)
+                if (bytesRead == -1) {
+                    break
+                }
+                outputStream.write(buffer, 0, bytesRead)
+            }
+            outputStream.toByteArray()
+        }
+
+        // Create OkHttpClient instance
+        val client = OkHttpClient()
+
+        val requestBody = body?.let { okhttp3.RequestBody.create(null, it) }
+        val headers = okhttp3.Headers.Builder()
+        for (header in originalRequest.headers.entries()) {
+            if (header.key != HttpHeaders.Host && header.key != HttpHeaders.Origin) {
+                headers.add(header.key, header.value.joinToString(","))
+            }
+        }
+        headers.add(HttpHeaders.Host, parsedUrl.host)
+
+        val requestBuilder = Request.Builder()
+                .url(continueUrl)
+                .method(originalRequest.httpMethod.value, requestBody)
+                .headers(headers.build())
+
+        val response = client.newCall(requestBuilder.build()).execute()
+
+        val ktorHeaders = Headers.build {
+            response.headers.forEach { h ->
+                appendAll(h.first, listOf(h.second))
+            }
+        }
+
+        // Read the response
+        call.respondOutputStream(ContentType.parse(response.header("Content-Type") ?: "text/plain"), HttpStatusCode(response.code, response.message)) {
+            response.body?.byteStream()?.use { inputStream ->
+                if (inputStream == null) {
+                    return@use;
+                }
+                val buffer = byteArray(4096) // size of the buffer can be adjusted as needed
+                while (true) {
+                    val bytesRead = inputStream.read(buffer)
+                    if (bytesRead == -1) {
+                        break
+                    }
+                    write(buffer, 0, bytesRead)
+                }
+            }
+        }
     }
 }
 
 
-@OptIn(InternalAPI::class)
-fun Application.proxyServer() {
-
-        routing {
-            route("/{...}") {
-                handle {
-                    call.respond("Hello")
-                }
-            }
-        }
-
-//    intercept(ApplicationCallPipeline.Call) {
-//
-//        val originalRequest = call.request
-//        val continueUrl = originalRequest.headers["x-continue-url"] ?: return@intercept call.respond(HttpStatusCode.BadRequest)
-//        val parsedUrl = URL(continueUrl)
+//        Trying to use ktor client, but dependency problems
 //        val client = HttpClient()
-//
 //        val response = client.request(continueUrl) {
 //            method = HttpMethod.parse(originalRequest.httpMethod.value)
 //            headers {
@@ -119,14 +129,23 @@ fun Application.proxyServer() {
 //                append(HttpHeaders.Host, parsedUrl.host)
 //            }
 //        }
-//
+
 //        call.respond(object : OutgoingContent.WriteChannelContent() {
-//            override val headers: Headers = response.headers;
-//            override val status: HttpStatusCode = response.status
+//            override val headers: Headers = ktorHeaders;
+//            override val status: HttpStatusCode = HttpStatusCode(response.code, response.message)
 //            override suspend fun writeTo(channel: ByteWriteChannel) {
-//                response.content.copyAndClose(channel)
+//                response.body?.byteStream().use { inputStream ->
+//                    if (inputStream == null) {
+//                        return;
+//                    }
+//                    val buffer = byteArray(4096) // size of the buffer can be adjusted as needed
+//                    while (true) {
+//                        val bytesRead = inputStream.read(buffer)
+//                        if (bytesRead == -1) {
+//                            break
+//                        }
+//                        channel.writeFully(buffer, 0, bytesRead)
+//                    }
+//                }
 //            }
 //        })
-//
-//    }
-}

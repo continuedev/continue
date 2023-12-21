@@ -30,7 +30,6 @@ import com.intellij.testFramework.LightVirtualFile
 import com.intellij.ui.awt.RelativePoint
 import kotlinx.coroutines.*
 import net.minidev.json.JSONObject
-import okhttp3.*
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileReader

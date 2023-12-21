@@ -124,8 +124,6 @@ class ContinuePluginStartupActivity : StartupActivity, Disposable, DumbAware {
         val defaultStrategy = DefaultTextSelectionStrategy()
 
         coroutineScope.launch {
-//            startProxyServer()
-
             val settings =
                     ServiceManager.getService(ContinueExtensionSettings::class.java)
             if (!settings.continueState.shownWelcomeDialog) {
@@ -187,8 +185,12 @@ class ContinuePluginStartupActivity : StartupActivity, Disposable, DumbAware {
                         this@ContinuePluginStartupActivity
                 )
 
+                try {
+                    startProxyServer()
+                } catch (e: Exception) {
+                    println(e)
+                }
             }
-
 
         }
     }
