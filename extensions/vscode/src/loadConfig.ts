@@ -1,7 +1,9 @@
 import { ContinueConfig, IDE, ILLM } from "core";
-import https from "https";
 import fetch from "node-fetch";
 import { VsCodeIde, loadFullConfigNode } from "./ideProtocol";
+const tls = require("tls");
+const fs = require("fs");
+const https = require("https");
 
 class VsCodeConfigHandler {
   savedConfig: ContinueConfig | undefined;
@@ -30,21 +32,35 @@ export async function llmFromTitle(title: string): Promise<ILLM> {
 
   if (llm.requestOptions) {
     // Since we know this is happening in Node.js, we can add requestOptions through a custom agent
-    llm._fetch = async (input: any, init?: any) => {
-      const agent = new https.Agent({
-        ca: llm.requestOptions?.caBundlePath,
-        // key: llm.requestOptions?.keyPath,
-        rejectUnauthorized: llm.requestOptions?.verifySsl,
-        timeout: llm.requestOptions?.timeout,
-      });
+    const ca = tls.rootCertificates;
+    const customCerts =
+      typeof llm.requestOptions?.caBundlePath === "string"
+        ? [llm.requestOptions?.caBundlePath]
+        : llm.requestOptions?.caBundlePath;
+    if (customCerts) {
+      ca.push(
+        ...customCerts.map((customCert) => fs.readFileSync(customCert, "utf8"))
+      );
+    }
+    const agent = new https.Agent({
+      ca,
+      // key: llm.requestOptions?.keyPath,
+      rejectUnauthorized: llm.requestOptions?.verifySsl,
+      timeout: llm.requestOptions?.timeout,
+    });
 
+    llm._fetch = (input, init?: any) => {
+      // const headers: { [key: string]: string } =
+      //   llm.requestOptions?.headers || {};
+      // for (const [key, value] of Object.entries(init?.headers || {})) {
+      //   headers[key] = value as string;
+      // }
+      // const body = init?.body === null ? undefined : init?.body;
       return fetch(input, {
         ...init,
-        agent,
-        headers: {
-          ...init?.headers,
-          ...llm.requestOptions?.headers,
-        },
+        // body,
+        // agent,
+        // headers,
       });
     };
   }

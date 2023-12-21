@@ -359,7 +359,7 @@ declare global {
   export interface RequestOptions {
     timeout?: number;
     verifySsl?: boolean;
-    caBundlePath?: string;
+    caBundlePath?: string | string[];
     proxy?: string;
     headers?: Record<string, string>;
   }

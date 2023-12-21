@@ -22,7 +22,7 @@ export interface ILLM extends LLMOptions {
   region?: string;
   projectId?: string;
 
-  _fetch?: (input: any, init?: RequestInit) => Promise<any>;
+  _fetch?: (input: any, init?: any) => Promise<any>;
 
   complete(prompt: string, options?: LLMFullCompletionOptions): Promise<string>;
 
@@ -357,9 +357,9 @@ export type ModelName =
 export interface RequestOptions {
   timeout?: number;
   verifySsl?: boolean;
-  caBundlePath?: string;
+  caBundlePath?: string | string[];
   proxy?: string;
-  headers?: Record<string, string>;
+  headers?: { [key: string]: string };
 }
 
 export interface StepWithParams {
