@@ -9,7 +9,13 @@ export async function* streamResponse(
     throw new Error(`No response body returned.`);
   }
 
-  const reader = response.body.getReader();
+  const stream =
+    response.headers.get("content-encoding") === "gzip"
+      ? // @ts-ignore
+        response.body.pipeThrough(new DecompressionStream("gzip"))
+      : response.body;
+
+  const reader = stream.getReader();
   const decoder = new TextDecoder("utf-8");
   while (true) {
     const { done, value } = await reader.read();
@@ -18,6 +24,7 @@ export async function* streamResponse(
     }
 
     if (value) {
+      // @ts-ignore
       yield decoder.decode(value);
     }
   }

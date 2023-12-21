@@ -81,3 +81,13 @@ export function deleteModel(title: any) {
 export function addOpenAIKey(key: string) {
   postToIde("addOpenAIKey", { key });
 }
+
+export function appendText(text: string) {
+  const div = document.createElement("div");
+  div.innerText = text;
+  document.body.appendChild(div);
+}
+
+export function isJetBrains() {
+  return localStorage.getItem("ide") === "jetbrains";
+}

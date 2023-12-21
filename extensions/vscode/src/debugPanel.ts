@@ -276,7 +276,7 @@ export function getSidebarContent(
           respond(await ide.listWorkspaceContents());
           break;
         }
-        case "getWorkspaceDir": {
+        case "getWorkspaceDirs": {
           respond(await ide.getWorkspaceDirs());
           break;
         }

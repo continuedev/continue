@@ -80,11 +80,11 @@ class FreeTrial extends BaseLLM {
             content: loadedChunk.content || "",
           };
 
-          if (this.model === "gpt-4") {
-            await delay(0.03);
-          } else {
-            await delay(0.01);
-          }
+          // if (this.model === "gpt-4") {
+          //   await delay(0.03);
+          // } else {
+          //   await delay(0.01);
+          // }
         }
       }
     }

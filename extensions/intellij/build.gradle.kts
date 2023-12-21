@@ -24,10 +24,31 @@ repositories {
 // Dependencies are managed with Gradle version catalog - read more: https://docs.gradle.org/current/userguide/platforms.html#sub:version-catalog
 dependencies {
 //    implementation(libs.annotations)
-    implementation("com.squareup.okhttp3:okhttp:4.9.1")
+    implementation("com.squareup.okhttp3:okhttp:4.9.1") {
+        exclude(group = "org.jetbrains.kotlin", module = "kotlin-stdlib")
+    }
     implementation("org.jetbrains.kotlin:kotlin-stdlib:1.4.32")
-    implementation ("io.socket:socket.io-client:2.1.0")
+    implementation("io.ktor:ktor-server-core:2.3.7"){
+        exclude(group = "org.slf4j", module = "slf4j-api")
+    }
+    implementation("io.ktor:ktor-server-netty:2.3.7") {
+        exclude(group = "org.slf4j", module = "slf4j-api")
+    }
+    implementation("io.ktor:ktor-server-cors:2.3.7"){
+        exclude(group = "org.slf4j", module = "slf4j-api")
+    }
+
+    // ktor client
+//    implementation("io.ktor:ktor-client-core:2.3.7")
+//    implementation("io.ktor:ktor-client-cio:2.3.7")
 }
+
+//configurations {
+//    all {
+//        exclude (group = "io.ktor", module = "ktor-client-core")
+//        exclude (group = "io.ktor", module = "ktor-client-cio")
+//    }
+//}
 
 // Set the JVM language level used to build the project. Use Java 11 for 2020.3+, and Java 17 for 2022.2+.
 kotlin {
