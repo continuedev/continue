@@ -157,7 +157,7 @@ function useChatHandler(dispatch: Dispatch) {
       dispatch(addLogs(pairedLogs));
     } catch (e) {
       console.log("Continue: error streaming response: ", e);
-      errorPopup(e.message);
+      errorPopup(`Error streaming response: ${e}`);
     } finally {
       dispatch(setInactive());
       defaultModel.writeLog = undefined;

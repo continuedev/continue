@@ -8,6 +8,7 @@ import io.ktor.server.response.*
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
 import io.ktor.server.plugins.cors.routing.*
+import io.ktor.util.Identity.decode
 import io.ktor.utils.io.jvm.javaio.*
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -22,19 +23,16 @@ fun startProxyServer() {
 fun Application.proxyServer() {
     install(CORS) {
         anyHost()
+
         allowCredentials = true
         allowNonSimpleContentTypes = true
-        allowSameOrigin = true
+
         allowMethod(HttpMethod.Options)
         allowMethod(HttpMethod.Get)
         allowMethod(HttpMethod.Post)
         allowMethod(HttpMethod.Put)
         allowMethod(HttpMethod.Delete)
         allowMethod(HttpMethod.Patch)
-        allowHeader(HttpHeaders.ContentType)
-        allowHeader(HttpHeaders.Authorization)
-        allowHeader(HttpHeaders.AccessControlAllowOrigin)
-        allowHeader("x-continue-url")
 
         allowHeaders {
             true
@@ -75,25 +73,27 @@ fun Application.proxyServer() {
         val client = OkHttpClient()
 
         val requestBody = body?.let { okhttp3.RequestBody.create(null, it) }
-        val headers = okhttp3.Headers.Builder()
+        val okhttpHeaders = okhttp3.Headers.Builder()
         for (header in originalRequest.headers.entries()) {
             if (header.key != HttpHeaders.Host && header.key != HttpHeaders.Origin) {
-                headers.add(header.key, header.value.joinToString(","))
+                okhttpHeaders.add(header.key, header.value.joinToString(","))
             }
         }
-        headers.add(HttpHeaders.Host, parsedUrl.host)
+        okhttpHeaders.add(HttpHeaders.Host, parsedUrl.host)
 
         val requestBuilder = Request.Builder()
                 .url(continueUrl)
                 .method(originalRequest.httpMethod.value, requestBody)
-                .headers(headers.build())
+                .headers(okhttpHeaders.build())
 
         val response = client.newCall(requestBuilder.build()).execute()
 
-        val ktorHeaders = Headers.build {
-            response.headers.forEach { h ->
-                appendAll(h.first, listOf(h.second))
+        // Set the response headers
+        response.headers.forEach { h ->
+            if (h.first.lowercase() == HttpHeaders.TransferEncoding.lowercase() || h.first.lowercase() == HttpHeaders.AccessControlAllowOrigin.lowercase()) {
+                return@forEach
             }
+            call.response.header(h.first, h.second)
         }
 
         call.respondOutputStream(ContentType.parse(response.header("Content-Type") ?: "text/plain"), HttpStatusCode(response.code, response.message)) {

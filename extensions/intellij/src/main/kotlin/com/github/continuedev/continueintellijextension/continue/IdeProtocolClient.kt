@@ -191,7 +191,9 @@ class IdeProtocolClient (
                         )
                     }
 
-                    "saveFile" -> saveFile(data["filepath"] as String)
+                    "saveFile" -> {
+                        saveFile((data["message"] as Map<String, String>)["filepath"] ?: throw Exception("No filepath provided"))
+                    }
                     "showVirtualFile" -> showVirtualFile(
                             data["name"] as String,
                             data["contents"] as String

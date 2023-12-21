@@ -1,7 +1,7 @@
 import { Dispatch } from "@reduxjs/toolkit";
 import { useEffect, useState } from "react";
 import { setServerStatusMessage } from "../redux/slices/miscSlice";
-import { errorPopup, postToIde } from "../util/ide";
+import { errorPopup, isJetBrains, postToIde } from "../util/ide";
 
 import {
   intermediateToFinalConfig,
@@ -69,7 +69,10 @@ function useSetup(dispatch: Dispatch<any>) {
 
   useEffect(() => {
     const handleKeyDown = (event: any) => {
-      if (isMetaEquivalentKeyPressed(event) && event.code === "KeyM") {
+      if (
+        isMetaEquivalentKeyPressed(event) &&
+        (isJetBrains() ? event.code === "KeyJ" : event.code === "KeyM")
+      ) {
         setIgnoreHighlightedCode(true);
         setTimeout(() => {
           setIgnoreHighlightedCode(false);
