@@ -1,9 +1,8 @@
 import { ContinueConfig, IDE, ILLM } from "core";
+import * as fs from "fs";
 import { Agent, fetch } from "undici";
 import { VsCodeIde, loadFullConfigNode } from "./ideProtocol";
 const tls = require("tls");
-const fs = require("fs");
-const https = require("https");
 
 class VsCodeConfigHandler {
   savedConfig: ContinueConfig | undefined;
@@ -32,7 +31,7 @@ export async function llmFromTitle(title: string): Promise<ILLM> {
 
   if (llm.requestOptions) {
     // Since we know this is happening in Node.js, we can add requestOptions through a custom agent
-    const ca = tls.rootCertificates;
+    const ca = [...tls.rootCertificates];
     const customCerts =
       typeof llm.requestOptions?.caBundlePath === "string"
         ? [llm.requestOptions?.caBundlePath]
@@ -47,7 +46,6 @@ export async function llmFromTitle(title: string): Promise<ILLM> {
       connect: {
         ca,
         rejectUnauthorized: llm.requestOptions?.verifySsl,
-        // key: llm.requestOptions?.keyPath,
         timeout: llm.requestOptions?.timeout,
       },
     });
