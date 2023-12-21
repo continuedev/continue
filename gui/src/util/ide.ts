@@ -87,3 +87,7 @@ export function appendText(text: string) {
   div.innerText = text;
   document.body.appendChild(div);
 }
+
+export function isJetBrains() {
+  return localStorage.getItem("ide") === "jetbrains";
+}

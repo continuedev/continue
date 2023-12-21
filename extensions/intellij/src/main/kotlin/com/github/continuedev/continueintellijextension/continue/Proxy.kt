@@ -96,7 +96,6 @@ fun Application.proxyServer() {
             }
         }
 
-        // Read the response
         call.respondOutputStream(ContentType.parse(response.header("Content-Type") ?: "text/plain"), HttpStatusCode(response.code, response.message)) {
             response.body?.byteStream()?.use { inputStream ->
                 if (inputStream == null) {
@@ -109,43 +108,9 @@ fun Application.proxyServer() {
                         break
                     }
                     write(buffer, 0, bytesRead)
+                    flush()
                 }
             }
         }
     }
 }
-
-
-//        Trying to use ktor client, but dependency problems
-//        val client = HttpClient()
-//        val response = client.request(continueUrl) {
-//            method = HttpMethod.parse(originalRequest.httpMethod.value)
-//            headers {
-//                originalRequest.headers.forEach { key, values ->
-//                    if (key != HttpHeaders.Host && key != HttpHeaders.Origin) {
-//                        appendAll(key, values)
-//                    }
-//                }
-//                append(HttpHeaders.Host, parsedUrl.host)
-//            }
-//        }
-
-//        call.respond(object : OutgoingContent.WriteChannelContent() {
-//            override val headers: Headers = ktorHeaders;
-//            override val status: HttpStatusCode = HttpStatusCode(response.code, response.message)
-//            override suspend fun writeTo(channel: ByteWriteChannel) {
-//                response.body?.byteStream().use { inputStream ->
-//                    if (inputStream == null) {
-//                        return;
-//                    }
-//                    val buffer = byteArray(4096) // size of the buffer can be adjusted as needed
-//                    while (true) {
-//                        val bytesRead = inputStream.read(buffer)
-//                        if (bytesRead == -1) {
-//                            break
-//                        }
-//                        channel.writeFully(buffer, 0, bytesRead)
-//                    }
-//                }
-//            }
-//        })

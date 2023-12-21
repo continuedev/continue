@@ -58,7 +58,7 @@ import {
   getMetaKeyLabel,
   getPlatform,
 } from "../../util";
-import { postToIde } from "../../util/ide";
+import { isJetBrains, postToIde } from "../../util/ide";
 import {
   handleKeyDownJetBrains,
   handleKeyDownJetBrainsMac,
@@ -1642,7 +1642,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
             }}
             className="mr-auto"
           >
-            New Session ({getMetaKeyLabel()} M)
+            New Session ({getMetaKeyLabel()} {isJetBrains() ? "J" : "M"})
           </NewSessionButton>
         ) : null)}
     </div>
