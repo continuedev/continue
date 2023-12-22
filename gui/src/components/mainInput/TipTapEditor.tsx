@@ -6,7 +6,7 @@ import Placeholder from "@tiptap/extension-placeholder";
 import Text from "@tiptap/extension-text";
 import { EditorContent, useEditor } from "@tiptap/react";
 import { IContextProvider } from "core";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import styled from "styled-components";
 import {
@@ -16,7 +16,9 @@ import {
   vscForeground,
 } from "..";
 import useHistory from "../../hooks/useHistory";
+import { setTakenActionTrue } from "../../redux/slices/miscSlice";
 import { RootStore } from "../../redux/store";
+import { postToIde } from "../../util/ide";
 import InputToolbar from "./InputToolbar";
 import "./TipTapEditor.css";
 import resolveEditorContent from "./collectInput";
@@ -100,6 +102,13 @@ function TipTapEditor(props: TipTapEditorProps) {
                   () => commands.liftEmptyBlock(),
                   () => commands.splitBlock(),
                 ]),
+              Escape: () =>
+                this.editor.commands.first(({ commands }) => [
+                  () => {
+                    postToIde("focusEditor", {});
+                    return true;
+                  },
+                ]),
             };
           },
         }).configure({
@@ -131,39 +140,39 @@ function TipTapEditor(props: TipTapEditorProps) {
 
   const [inputFocused, setInputFocused] = useState(false);
 
-  // useEffect(() => {
-  //   if (!editor) return;
+  useEffect(() => {
+    if (!editor) return;
 
-  //   if (props.isMainInput) {
-  //     editor.commands.focus();
-  //   }
-  //   const handler = (event: any) => {
-  //     if (event.data.type === "focusContinueInput") {
-  //       editor.commands.focus();
-  //       if (historyLength > 0) {
-  //         saveSession();
-  //       }
-  //       dispatch(setTakenActionTrue(null));
-  //     } else if (event.data.type === "focusContinueInputWithEdit") {
-  //       editor.commands.focus();
-  //       if (historyLength > 0) {
-  //         saveSession();
-  //       }
+    if (props.isMainInput) {
+      editor.commands.focus();
+    }
+    const handler = (event: any) => {
+      if (event.data.type === "focusContinueInput") {
+        editor.commands.focus();
+        if (historyLength > 0) {
+          saveSession();
+        }
+        dispatch(setTakenActionTrue(null));
+      } else if (event.data.type === "focusContinueInputWithEdit") {
+        editor.commands.focus();
+        if (historyLength > 0) {
+          saveSession();
+        }
 
-  //       if (!editor.getText().startsWith("/edit")) {
-  //         editor.commands.insertContentAt(0, "/edit ");
-  //       }
-  //       dispatch(setTakenActionTrue(null));
-  //     } else if (event.data.type === "focusContinueInputWithNewSession") {
-  //       saveSession();
-  //       dispatch(setTakenActionTrue(null));
-  //     }
-  //   };
-  //   window.addEventListener("message", handler);
-  //   return () => {
-  //     window.removeEventListener("message", handler);
-  //   };
-  // }, [editor, props.isMainInput, historyLength]);
+        if (!editor.getText().startsWith("/edit")) {
+          editor.commands.insertContentAt(0, "/edit ");
+        }
+        dispatch(setTakenActionTrue(null));
+      } else if (event.data.type === "focusContinueInputWithNewSession") {
+        saveSession();
+        dispatch(setTakenActionTrue(null));
+      }
+    };
+    window.addEventListener("message", handler);
+    return () => {
+      window.removeEventListener("message", handler);
+    };
+  }, [editor, props.isMainInput, historyLength]);
 
   return (
     <InputBoxDiv>

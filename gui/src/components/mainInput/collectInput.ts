@@ -28,11 +28,13 @@ async function resolveEditorContent(
 
   let contextItemsText = "";
   for (const item of contextItems) {
-    contextItemsText += `@${item.id} ${item.title}\n`;
-    contextItemsText += getContextItems(contextProviders, item, ""); // TODO: query for context providers
+    const resolvedItems = await getContextItems(contextProviders, item, ""); // TODO: query for context providers
+    for (const resolvedItem of resolvedItems) {
+      contextItemsText += `\`\`\`ref="${item}"${resolvedItem.content}\n\`\`\`\n`;
+    }
   }
 
-  return contextItemsText + "\n\n" + paragraphs.join("\n");
+  return contextItemsText + "\n" + paragraphs.join("\n");
 }
 
 function resolveParagraph(p: JSONContent) {
@@ -42,7 +44,7 @@ function resolveParagraph(p: JSONContent) {
     if (child.type === "text") {
       text += child.text;
     } else if (child.type === "mention") {
-      text += child.attrs.id;
+      text += `@${child.attrs.id}`;
       contextItems.push(child.attrs.id);
     } else if (child.type === "command") {
       text += child.attrs.id;
