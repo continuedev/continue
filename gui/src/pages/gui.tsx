@@ -27,6 +27,8 @@ import ErrorStepContainer from "../components/gui/ErrorStepContainer";
 import StepContainer from "../components/gui/StepContainer";
 import TimelineItem from "../components/gui/TimelineItem";
 import ComboBox from "../components/mainInput/ComboBox";
+import ContinueInputBox from "../components/mainInput/ContinueInputBox";
+import TipTapEditor from "../components/mainInput/TipTapEditor";
 import useChatHandler from "../hooks/useChatHandler";
 import useHistory from "../hooks/useHistory";
 import { defaultModelSelector } from "../redux/selectors/modelSelectors";
@@ -525,6 +527,12 @@ function GUI(props: GUIProps) {
               onToggleAddContext={() => {}}
             />
           )}
+          <br />
+          <br />
+          <ContinueInputBox isLastUserInput={false}></ContinueInputBox>
+          <br />
+          <br />
+          <TipTapEditor></TipTapEditor>
         </div>
       </TopGuiDiv>
       {active && (
