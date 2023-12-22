@@ -7,13 +7,13 @@ set -e
 echo "Installing Core extension dependencies..."
 pushd core
 npm install
-nmp link
+npm link
 popd
 
 echo "Installing GUI extension dependencies..."
 pushd gui
 npm install
-nmp link core
+npm link core
 popd
 # VSCode Extension (will also package GUI)
 echo "Installing VSCode extension dependencies..."
@@ -21,5 +21,5 @@ pushd extensions/vscode
 
 # This does way too many things inline but is the common denominator between many of the scripts
 npm install
-nmp link core
+npm link core
 npm run package
