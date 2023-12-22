@@ -54,6 +54,8 @@ Continue is continuously improving, but a feature isn't complete until it is ref
 
 VS Code is assumed for development as Continue is primarily a VS Code tool at the moment. Most of the setup and running is automated through VS Code tasks and launch configurations.
 
+Pre-requisite: you will need `cargo` the rust package manager installed ([get it on rust-lang.org](https://www.rust-lang.org/tools/install)).
+
 1. Clone and open in VS Code the Continue repo `https://github.com/continuedev/continue`
 
 2. Open VS Code command pallet (`cmd+shift+p`) and select `Tasks: Run Task` and then select `install-all-dependencies`
