@@ -26,9 +26,7 @@ import FTCDialog from "../components/dialogs/FTCDialog";
 import ErrorStepContainer from "../components/gui/ErrorStepContainer";
 import StepContainer from "../components/gui/StepContainer";
 import TimelineItem from "../components/gui/TimelineItem";
-import ComboBox from "../components/mainInput/ComboBox";
 import ContinueInputBox from "../components/mainInput/ContinueInputBox";
-import TipTapEditor from "../components/mainInput/TipTapEditor";
 import useChatHandler from "../hooks/useChatHandler";
 import useHistory from "../hooks/useHistory";
 import { defaultModelSelector } from "../redux/selectors/modelSelectors";
@@ -130,7 +128,6 @@ function GUI(props: GUIProps) {
 
   const defaultModel = useSelector(defaultModelSelector);
 
-  const sessionTitle = useSelector((state: RootStore) => state.state.title);
   const active = useSelector((state: RootStore) => state.state.active);
 
   // #endregion
@@ -147,10 +144,8 @@ function GUI(props: GUIProps) {
 
   // #endregion
 
-  // #region Refs
   const mainTextInputRef = useRef<HTMLInputElement>(null);
   const topGuiDivRef = useRef<HTMLDivElement>(null);
-  // #endregion
 
   // #region Effects
 
@@ -362,28 +357,6 @@ function GUI(props: GUIProps) {
     return () => window.removeEventListener("message", eventListener);
   }, [sendInput]);
 
-  const onMainTextInput = (event?: any) => {
-    if (mainTextInputRef.current) {
-      let input = (mainTextInputRef.current as any).inputValue;
-
-      if (input.trim() === "") return;
-
-      if (input.startsWith("#") && (input.length === 7 || input.length === 4)) {
-        localStorage.setItem("continueButtonColor", input);
-        (mainTextInputRef.current as any).setInputValue("");
-        return;
-      }
-
-      // cmd+enter to /codebase
-      // if (event && isMetaEquivalentKeyPressed(event)) {
-      //   input = `/codebase ${input}`;
-      // }
-      (mainTextInputRef.current as any).setInputValue("");
-
-      sendInput(input);
-    }
-  };
-
   const isLastUserInput = useCallback(
     (index: number): boolean => {
       let foundLaterUserInput = false;
@@ -398,26 +371,9 @@ function GUI(props: GUIProps) {
     [state.history]
   );
 
-  useEffect(() => {
-    if (sessionTitle) {
-      setSessionTitleInput(sessionTitle);
-    }
-  }, [sessionTitle]);
-
-  const [sessionTitleInput, setSessionTitleInput] = useState<string>(
-    sessionTitle || "New Session"
-  );
-
   return (
     <>
-      <TopGuiDiv
-        ref={topGuiDivRef}
-        onKeyDown={(e) => {
-          if (e.key === "Enter" && e.ctrlKey) {
-            onMainTextInput();
-          }
-        }}
-      >
+      <TopGuiDiv ref={topGuiDivRef}>
         <div className="max-w-3xl m-auto">
           <StepsDiv>
             {state.history.map((item, index: number) => {
@@ -430,27 +386,14 @@ function GUI(props: GUIProps) {
                     }}
                   >
                     {item.message.role === "user" ? (
-                      <ComboBox
-                        isMainInput={false}
-                        value={item.message.content}
-                        isLastUserInput={isLastUserInput(index)}
-                        onEnter={(e, value) => {
-                          if (value) {
-                            dispatch(
-                              resubmitAtIndex({ index, content: value })
-                            );
-                            streamResponse(value, index);
-                          }
-                          e?.stopPropagation();
-                          e?.preventDefault();
+                      <ContinueInputBox
+                        onEnter={(value) => {
+                          dispatch(resubmitAtIndex({ index, content: value }));
+                          streamResponse(value, index);
                         }}
-                        isToggleOpen={
-                          typeof stepsOpen[index] === "undefined"
-                            ? true
-                            : stepsOpen[index]!
-                        }
-                        index={index}
-                      />
+                        isLastUserInput={isLastUserInput(index)}
+                        isMainInput={false}
+                      ></ContinueInputBox>
                     ) : (
                       <TimelineItem
                         item={item}
@@ -505,7 +448,6 @@ function GUI(props: GUIProps) {
                         )}
                       </TimelineItem>
                     )}
-                    {/* <div className="h-2"></div> */}
                   </ErrorBoundary>
                 </Fragment>
               );
@@ -514,25 +456,12 @@ function GUI(props: GUIProps) {
 
           <div ref={aboveComboBoxDivRef} />
           {active || (
-            <ComboBox
+            <ContinueInputBox
+              onEnter={sendInput}
               isLastUserInput={false}
               isMainInput={true}
-              ref={mainTextInputRef}
-              onEnter={(e, _) => {
-                onMainTextInput(e);
-                e?.stopPropagation();
-                e?.preventDefault();
-              }}
-              onInputValueChange={() => {}}
-              onToggleAddContext={() => {}}
-            />
+            ></ContinueInputBox>
           )}
-          <br />
-          <br />
-          <ContinueInputBox isLastUserInput={false}></ContinueInputBox>
-          <br />
-          <br />
-          <TipTapEditor></TipTapEditor>
         </div>
       </TopGuiDiv>
       {active && (

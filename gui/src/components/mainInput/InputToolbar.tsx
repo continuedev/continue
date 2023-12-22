@@ -5,9 +5,9 @@ const StyledDiv = styled.div`
   position: absolute;
   display: flex;
   gap: 4px;
-  right: 12px;
+  right: 4px;
   bottom: 4px;
-  width: calc(100% - 28px);
+  width: calc(100% - 10px);
   background-color: ${secondaryDark};
 
   align-items: center;

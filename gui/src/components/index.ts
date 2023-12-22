@@ -11,6 +11,7 @@ export const secondaryDark = "var(--vscode-input-background, rgb(45 45 45))";
 // export const vscBackground = "var(--vscode-editor-background, rgb(30 30 30))";
 export const vscBackground = "var(--vscode-sideBar-background, rgb(30 30 30))";
 export const vscForeground = "var(--vscode-editor-foreground, #fff)";
+export const vscButtonBackground = "var(--vscode-button-background, #1bbe84)";
 
 if (typeof document !== "undefined") {
   const cachedForeground = localStorage.getItem("--vscode-editor-foreground");
