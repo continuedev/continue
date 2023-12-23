@@ -3,6 +3,7 @@ import {
   CodeBracketSquareIcon,
   ExclamationTriangleIcon,
 } from "@heroicons/react/24/outline";
+import { JSONContent } from "@tiptap/react";
 import { usePostHog } from "posthog-js/react";
 import {
   Fragment,
@@ -27,6 +28,7 @@ import ErrorStepContainer from "../components/gui/ErrorStepContainer";
 import StepContainer from "../components/gui/StepContainer";
 import TimelineItem from "../components/gui/TimelineItem";
 import ContinueInputBox from "../components/mainInput/ContinueInputBox";
+import resolveEditorContent from "../components/mainInput/collectInput";
 import useChatHandler from "../hooks/useChatHandler";
 import useHistory from "../hooks/useHistory";
 import { defaultModelSelector } from "../redux/selectors/modelSelectors";
@@ -129,6 +131,9 @@ function GUI(props: GUIProps) {
   const defaultModel = useSelector(defaultModelSelector);
 
   const active = useSelector((state: RootStore) => state.state.active);
+  const contextProviders = useSelector(
+    (state: RootStore) => state.state.config.contextProviders || []
+  );
 
   // #endregion
 
@@ -225,11 +230,10 @@ function GUI(props: GUIProps) {
   const { streamResponse } = useChatHandler(dispatch);
 
   const sendInput = useCallback(
-    (input: string) => {
+    (editorState: JSONContent) => {
       if (
         defaultModel.providerName === "openai-free-trial" &&
-        defaultModel?.apiKey === "" &&
-        (!input.startsWith("/") || input.startsWith("/edit"))
+        defaultModel?.apiKey === ""
       ) {
         const ftc = localStorage.getItem("ftc");
         if (ftc) {
@@ -247,7 +251,7 @@ function GUI(props: GUIProps) {
         }
       }
 
-      streamResponse(input);
+      streamResponse(editorState);
 
       // Increment localstorage counter for popup
       const counter = localStorage.getItem("mainTextEntryCounter");
@@ -387,12 +391,20 @@ function GUI(props: GUIProps) {
                   >
                     {item.message.role === "user" ? (
                       <ContinueInputBox
-                        onEnter={(value) => {
-                          dispatch(resubmitAtIndex({ index, content: value }));
-                          streamResponse(value, index);
+                        onEnter={async (editorState) => {
+                          const content = await resolveEditorContent(
+                            editorState,
+                            contextProviders
+                          );
+                          dispatch(
+                            resubmitAtIndex({ index, content, editorState })
+                          );
+                          streamResponse(editorState, index);
                         }}
                         isLastUserInput={isLastUserInput(index)}
                         isMainInput={false}
+                        editorState={item.editorState}
+                        content={item.message.content}
                       ></ContinueInputBox>
                     ) : (
                       <TimelineItem

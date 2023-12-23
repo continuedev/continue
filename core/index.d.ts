@@ -146,6 +146,7 @@ export interface ContextItemWithId {
 
 export interface ChatHistoryItem {
   message: ChatMessage;
+  editorState?: any;
   contextItems: ContextItemWithId[];
   promptLogs?: [string, string][]; // [prompt, completion]
 }

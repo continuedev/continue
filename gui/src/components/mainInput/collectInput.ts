@@ -1,4 +1,4 @@
-import { Editor, JSONContent } from "@tiptap/react";
+import { JSONContent } from "@tiptap/react";
 import { IContextProvider } from "core";
 import { getContextItems } from "../../hooks/useContextProviders";
 
@@ -10,13 +10,12 @@ import { getContextItems } from "../../hooks/useContextProviders";
  */
 
 async function resolveEditorContent(
-  editor: Editor,
+  editorState: JSONContent,
   contextProviders: IContextProvider[]
 ): Promise<string> {
-  const content = editor.getJSON();
   let paragraphs = [];
   let contextItems = [];
-  for (const p of content?.content) {
+  for (const p of editorState?.content) {
     if (p.type === "paragraph") {
       const [text, ctxItems] = resolveParagraph(p);
       paragraphs.push(text);

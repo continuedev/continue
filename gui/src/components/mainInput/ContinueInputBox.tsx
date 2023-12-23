@@ -1,3 +1,4 @@
+import { JSONContent } from "@tiptap/react";
 import { useSelector } from "react-redux";
 import styled, { keyframes } from "styled-components";
 import { defaultBorderRadius, vscBackground } from "..";
@@ -47,7 +48,10 @@ const GradientBorder = styled.div<{
 interface ContinueInputBoxProps {
   isLastUserInput: boolean;
   isMainInput?: boolean;
-  onEnter: (input: string) => void;
+  onEnter: (editorState: JSONContent) => void;
+
+  editorState?: JSONContent;
+  content?: string;
 }
 
 function ContinueInputBox(props: ContinueInputBoxProps) {
@@ -88,6 +92,8 @@ function ContinueInputBox(props: ContinueInputBoxProps) {
           borderRadius={defaultBorderRadius}
         >
           <TipTapEditor
+            editorState={props.editorState}
+            content={props.content}
             onEnter={props.onEnter}
             isMainInput={props.isMainInput}
             availableContextProviders={availableContextProviders}

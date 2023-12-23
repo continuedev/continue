@@ -1,4 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
+import { JSONContent } from "@tiptap/react";
 import {
   ChatMessage,
   ContextItemId,
@@ -149,26 +150,32 @@ export const stateSlice = createSlice({
         };
       }
     },
-    appendMessage: (state, action) => {
-      return {
-        ...state,
-        history: [...state.history, action.payload],
-      };
-    },
+
     addContextItems: (state, action) => {
       return {
         ...state,
         contextItems: [...state.contextItems, ...action.payload],
       };
     },
-    resubmitAtIndex: (state, action) => {
-      if (action.payload.index < state.history.length) {
-        state.history[action.payload.index].message.content =
-          action.payload.content;
+    resubmitAtIndex: (
+      state,
+      {
+        payload,
+      }: {
+        payload: {
+          index: number;
+          content: string;
+          editorState: JSONContent;
+        };
+      }
+    ) => {
+      if (payload.index < state.history.length) {
+        state.history[payload.index].message.content = payload.content;
+        state.history[payload.index].editorState = payload.editorState;
 
         // Cut off history after the resubmitted message
         state.history = [
-          ...state.history.slice(0, action.payload.index + 1),
+          ...state.history.slice(0, payload.index + 1),
           {
             message: {
               role: "assistant",
@@ -182,10 +189,21 @@ export const stateSlice = createSlice({
         state.active = true;
       }
     },
-    submitMessage: (state, { payload }: { payload: ChatMessage }) => {
+    submitMessage: (
+      state,
+      {
+        payload,
+      }: {
+        payload: {
+          message: ChatMessage;
+          editorState: JSONContent;
+        };
+      }
+    ) => {
       state.history.push({
-        message: payload,
+        message: payload.message,
         contextItems: state.contextItems,
+        editorState: payload.editorState,
       });
       state.history.push({
         message: {
@@ -382,7 +400,6 @@ export const stateSlice = createSlice({
 
 export const {
   addContextItemsAtIndex,
-  appendMessage,
   addContextItems,
   submitMessage,
   setInactive,

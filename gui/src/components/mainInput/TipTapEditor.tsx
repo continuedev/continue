@@ -4,7 +4,7 @@ import Mention from "@tiptap/extension-mention";
 import Paragraph from "@tiptap/extension-paragraph";
 import Placeholder from "@tiptap/extension-placeholder";
 import Text from "@tiptap/extension-text";
-import { EditorContent, useEditor } from "@tiptap/react";
+import { EditorContent, JSONContent, useEditor } from "@tiptap/react";
 import { IContextProvider } from "core";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -22,7 +22,6 @@ import { postToIde } from "../../util/ide";
 import { SlashCommand } from "./CommandsExtension";
 import InputToolbar from "./InputToolbar";
 import "./TipTapEditor.css";
-import resolveEditorContent from "./collectInput";
 import { getCommandSuggestion, getMentionSuggestion } from "./getSuggestion";
 import { ComboBoxItem } from "./types";
 
@@ -58,7 +57,10 @@ interface TipTapEditorProps {
   availableContextProviders: IContextProvider[];
   availableSlashCommands: ComboBoxItem[];
   isMainInput: boolean;
-  onEnter: (input: string) => void;
+  onEnter: (editorState: JSONContent) => void;
+
+  editorState?: JSONContent;
+  content?: string;
 }
 
 function TipTapEditor(props: TipTapEditorProps) {
@@ -137,15 +139,15 @@ function TipTapEditor(props: TipTapEditorProps) {
           },
         }),
       ],
-      content: "",
       editorProps: {
         attributes: {
           class: "outline-none -mt-1 overflow-hidden",
           style: "font-size: 14px;",
         },
       },
+      content: props.editorState || props.content || "",
     },
-    [props.availableContextProviders]
+    [props.availableContextProviders, historyLength]
   );
 
   const [inputFocused, setInputFocused] = useState(false);
@@ -204,7 +206,7 @@ function TipTapEditor(props: TipTapEditorProps) {
           }
         }}
         onEnter={async () => {
-          props.onEnter(await resolveEditorContent(editor, contextProviders));
+          props.onEnter(editor.getJSON());
         }}
       />
     </InputBoxDiv>
