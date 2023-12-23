@@ -19,10 +19,11 @@ import useHistory from "../../hooks/useHistory";
 import { setTakenActionTrue } from "../../redux/slices/miscSlice";
 import { RootStore } from "../../redux/store";
 import { postToIde } from "../../util/ide";
+import { SlashCommand } from "./CommandsExtension";
 import InputToolbar from "./InputToolbar";
 import "./TipTapEditor.css";
 import resolveEditorContent from "./collectInput";
-import getSuggestion from "./getMentionSuggestion";
+import { getCommandSuggestion, getMentionSuggestion } from "./getSuggestion";
 import { ComboBoxItem } from "./types";
 
 const InputBoxDiv = styled.div`
@@ -121,9 +122,18 @@ function TipTapEditor(props: TipTapEditorProps) {
           HTMLAttributes: {
             class: "mention",
           },
-          suggestion: getSuggestion(props.availableContextProviders),
+          suggestion: getMentionSuggestion(props.availableContextProviders),
           renderLabel: (props) => {
             return `@${props.node.attrs.label || props.node.attrs.id}`;
+          },
+        }),
+        SlashCommand.configure({
+          HTMLAttributes: {
+            class: "mention",
+          },
+          suggestion: getCommandSuggestion(props.availableSlashCommands),
+          renderLabel: (props) => {
+            return props.node.attrs.label;
           },
         }),
       ],
