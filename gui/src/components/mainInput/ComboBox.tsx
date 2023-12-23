@@ -1367,7 +1367,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
           />
 
           {(inputFocused || props.isMainInput) && (
-            <InputToolbar>
+            <InputToolbar onClick={() => inputRef.current?.focus()}>
               <span
                 style={{
                   color: lightGray,
