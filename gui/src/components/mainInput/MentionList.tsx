@@ -166,6 +166,13 @@ const MentionList = forwardRef((props: MentionListProps, ref) => {
         return true;
       }
 
+      if (event.key === " ") {
+        if (props.items.length === 1) {
+          enterHandler();
+          return true;
+        }
+      }
+
       return false;
     },
   }));

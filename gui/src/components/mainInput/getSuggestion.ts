@@ -146,9 +146,9 @@ export function getCommandSuggestion(availableSlashCommands: ComboBoxItem[]) {
   const items = ({ query }) => {
     return (
       availableSlashCommands?.filter((slashCommand) => {
-        const sc = slashCommand.title.toLowerCase();
+        const sc = slashCommand.title.substring(1).toLowerCase();
         const iv = query.toLowerCase();
-        return sc.startsWith(iv) && sc !== iv;
+        return sc.startsWith(iv);
       }) || []
     ).map((provider) => ({
       name: provider.title,

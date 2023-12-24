@@ -20,6 +20,9 @@ async function resolveEditorContent(
   for (const p of editorState?.content) {
     if (p.type === "paragraph") {
       const [text, ctxItems] = resolveParagraph(p);
+      if (text === "") {
+        continue;
+      }
       paragraphs.push(text);
       contextItems.push(...ctxItems);
     } else if (p.type === "codeBlock") {
@@ -47,7 +50,12 @@ async function resolveEditorContent(
     }
   }
 
-  const finalText = contextItemsText + "\n" + paragraphs.join("\n");
+  if (contextItemsText !== "") {
+    contextItemsText += "\n";
+  }
+
+  const finalText = contextItemsText + paragraphs.join("\n");
+  console.log(finalText, editorState?.content);
   return finalText;
 }
 
@@ -60,8 +68,8 @@ function resolveParagraph(p: JSONContent) {
     } else if (child.type === "mention") {
       text += `@${child.attrs.label}`;
       contextItems.push(child.attrs.id);
-    } else if (child.type === "command") {
-      text += child.attrs.id;
+    } else if (child.type === "slashcommand") {
+      text += child.attrs.label;
     } else {
       console.warn("Unexpected child type", child.type);
     }
