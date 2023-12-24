@@ -195,26 +195,24 @@ function TipTapEditor(props: TipTapEditorProps) {
 
   // IDE event listeners
   useEffect(() => {
-    if (props.isMainInput) {
-      editor?.commands.focus();
+    if (!props.isMainInput) {
+      return;
     }
     const handler = async (event: any) => {
       if (!editor) return;
-      if (event.data.type === "focusContinueInput") {
+
+      if (event.data.type === "userInput") {
+        const input = event.data.input;
+        editor.commands.insertContent(input);
+        props.onEnter(editor.getJSON());
+      } else if (event.data.type === "focusContinueInput") {
         editor.commands.focus();
         if (historyLength > 0) {
           saveSession();
         }
         dispatch(setTakenActionTrue(null));
-      } else if (event.data.type === "focusContinueInputWithEdit") {
+      } else if (event.data.type === "focusContinueInputWithoutClear") {
         editor.commands.focus();
-        if (historyLength > 0) {
-          saveSession();
-        }
-
-        if (!editor.getText().startsWith("/edit")) {
-          editor.commands.insertContentAt(0, "/edit ");
-        }
         dispatch(setTakenActionTrue(null));
       } else if (event.data.type === "focusContinueInputWithNewSession") {
         saveSession();

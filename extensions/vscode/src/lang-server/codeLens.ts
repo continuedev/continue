@@ -1,8 +1,8 @@
-import * as vscode from "vscode";
-import { editorToSuggestions, editorSuggestionsLocked } from "../suggestions";
-import * as path from "path";
 import * as os from "os";
+import * as path from "path";
+import * as vscode from "vscode";
 import { DIFF_DIRECTORY, diffManager } from "../diffs";
+import { editorSuggestionsLocked, editorToSuggestions } from "../suggestions";
 import { getMetaKeyLabel } from "../util/util";
 import { getExtensionUri } from "../util/vscode";
 class SuggestionsCodeLensProvider implements vscode.CodeLensProvider {
@@ -70,11 +70,11 @@ class DiffViewerCodeLensProvider implements vscode.CodeLensProvider {
           title: `Reject All ❌ (${getMetaKeyLabel()}⇧⌫)`,
           command: "continue.rejectDiff",
           arguments: [document.uri.fsPath],
-        }),
-        new vscode.CodeLens(range, {
-          title: `Further Edit ✏️ (${getMetaKeyLabel()}⇧M)`,
-          command: "continue.focusContinueInputWithEdit",
         })
+        // new vscode.CodeLens(range, {
+        //   title: `Further Edit ✏️ (${getMetaKeyLabel()}⇧M)`,
+        //   command: "continue.focusContinueInputWithEdit",
+        // })
       );
       return codeLenses;
     } else {
@@ -165,16 +165,7 @@ const actions: TutorialCodeLensItems[] = [
     ],
   },
   {
-    lineIncludes: "Step 2: Use the keyboard shortcut cmd/ctrl + shift + M",
-    commands: [
-      {
-        title: `Do it for me`,
-        command: "continue.focusContinueInputWithEdit",
-      },
-    ],
-  },
-  {
-    lineIncludes: "Step 3: Request an edit",
+    lineIncludes: 'Step 3: Type "/edit <your edit request>" and press Enter',
     commands: [
       {
         title: `"/edit make this more efficient"`,

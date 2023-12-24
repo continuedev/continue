@@ -20,6 +20,10 @@ async function resolveEditorContent(
       const [text, ctxItems] = resolveParagraph(p);
       paragraphs.push(text);
       contextItems.push(...ctxItems);
+    } else if (p.type === "codeBlock") {
+      paragraphs.push(
+        "```" + p.attrs.item.name + "\n" + p.attrs.item.content + "\n```"
+      );
     } else {
       console.warn("Unexpected content type", p.type);
     }
@@ -33,7 +37,9 @@ async function resolveEditorContent(
     }
   }
 
-  return contextItemsText + "\n" + paragraphs.join("\n");
+  const finalText = contextItemsText + "\n" + paragraphs.join("\n");
+  console.log(finalText);
+  return finalText;
 }
 
 function resolveParagraph(p: JSONContent) {

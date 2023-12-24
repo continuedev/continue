@@ -725,15 +725,8 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
           saveSession();
         }
         dispatch(setTakenActionTrue(null));
-      } else if (event.data.type === "focusContinueInputWithEdit") {
+      } else if (event.data.type === "focusContinueInputWithoutClear") {
         inputRef.current!.focus();
-        if (state.history.length > 0) {
-          saveSession();
-        }
-
-        if (!inputRef.current?.value.startsWith("/edit")) {
-          downshiftProps.setInputValue("/edit ");
-        }
         dispatch(setTakenActionTrue(null));
       } else if (event.data.type === "focusContinueInputWithNewSession") {
         saveSession();

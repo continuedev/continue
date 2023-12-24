@@ -96,9 +96,9 @@
         "title": "Add Highlighted Code to Context"
       },
       {
-        "command": "continue.focusContinueInputWithEdit",
+        "command": "continue.focusContinueInputWithoutClear",
         "category": "Continue",
-        "title": "Edit Highlighted Code"
+        "title": "Add Highlighted Code to Context"
       },
       {
         "command": "continue.debugTerminal",
@@ -141,7 +141,7 @@
         "key": "ctrl+m"
       },
       {
-        "command": "continue.focusContinueInputWithEdit",
+        "command": "continue.focusContinueInputWithoutClear",
         "mac": "cmd+shift+m",
         "key": "ctrl+shift+m"
       },
@@ -203,7 +203,7 @@
           "group": "Continue"
         },
         {
-          "command": "continue.focusContinueInputWithEdit",
+          "command": "continue.focusContinueInputWithoutClear",
           "group": "Continue",
           "when": "editorHasSelection"
         }

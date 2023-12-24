@@ -107,7 +107,10 @@ function StepContainer(props: StepContainerProps) {
           <StyledMarkdownPreview source={props.item.message.content} />
         </ContentDiv>
         {(isHovered || typeof feedback !== "undefined") && !active && (
-          <div className="flex items-center gap-2 right-2 absolute -bottom-3">
+          <div
+            className="flex items-center gap-2 right-2 absolute -bottom-3"
+            style={{ zIndex: 200 }}
+          >
             {feedback === false || (
               <HeaderButtonWithText text="Helpful">
                 <HandThumbUpIcon

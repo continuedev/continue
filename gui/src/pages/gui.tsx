@@ -351,16 +351,6 @@ function GUI(props: GUIProps) {
     };
   }, [saveSession]);
 
-  useEffect(() => {
-    const eventListener = (event: any) => {
-      if (event.data.type === "userInput") {
-        sendInput(event.data.input);
-      }
-    };
-    window.addEventListener("message", eventListener);
-    return () => window.removeEventListener("message", eventListener);
-  }, [sendInput]);
-
   const isLastUserInput = useCallback(
     (index: number): boolean => {
       let foundLaterUserInput = false;
