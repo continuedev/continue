@@ -4,9 +4,10 @@ import Mention from "@tiptap/extension-mention";
 import Paragraph from "@tiptap/extension-paragraph";
 import Placeholder from "@tiptap/extension-placeholder";
 import Text from "@tiptap/extension-text";
-import { EditorContent, JSONContent, useEditor } from "@tiptap/react";
+import { Editor, EditorContent, JSONContent, useEditor } from "@tiptap/react";
 import { ContextItemWithId, IContextProvider, RangeInFile } from "core";
-import { useContext, useEffect, useState } from "react";
+import { getBasename } from "core/util";
+import { useContext, useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import styled from "styled-components";
 import {
@@ -79,6 +80,33 @@ function TipTapEditor(props: TipTapEditorProps) {
 
   const { saveSession } = useHistory(dispatch);
 
+  const inSubmenu = useRef(false);
+
+  const enterSubmenu = async (editor: Editor) => {
+    const contents = editor.getText();
+    const indexOfAt = contents.lastIndexOf("@");
+    if (indexOfAt === -1) {
+      return;
+    }
+
+    editor.commands.deleteRange({
+      from: indexOfAt + 2,
+      to: contents.length + 1,
+    });
+    inSubmenu.current = true;
+
+    // to trigger refresh of suggestions
+    editor.commands.insertContent(" ");
+    editor.commands.deleteRange({
+      from: editor.state.selection.anchor - 1,
+      to: editor.state.selection.anchor,
+    });
+  };
+
+  const onClose = () => {
+    inSubmenu.current = false;
+  };
+
   const editor = useEditor(
     {
       extensions: [
@@ -109,13 +137,6 @@ function TipTapEditor(props: TipTapEditorProps) {
                   () => commands.liftEmptyBlock(),
                   () => commands.splitBlock(),
                 ]),
-              Escape: () =>
-                this.editor.commands.first(({ commands }) => [
-                  () => {
-                    postToIde("focusEditor", {});
-                    return true;
-                  },
-                ]),
             };
           },
         }).configure({
@@ -132,17 +153,9 @@ function TipTapEditor(props: TipTapEditorProps) {
             props.availableContextProviders,
             miniSearch,
             firstResults,
-            () => {
-              const contents = editor.getText();
-              const indexOfAt = contents.lastIndexOf("@");
-
-              editor.commands.deleteRange({
-                from: indexOfAt,
-                to: contents.length,
-              });
-
-              editor.commands.focus();
-            }
+            enterSubmenu,
+            onClose,
+            inSubmenu
           ),
           renderLabel: (props) => {
             return `@${props.node.attrs.label || props.node.attrs.id}`;
@@ -183,6 +196,8 @@ function TipTapEditor(props: TipTapEditorProps) {
         setTimeout(() => {
           setIgnoreHighlightedCode(false);
         }, 100);
+      } else if (event.key === "Escape") {
+        postToIde("focusEditor", {});
       }
     };
 
@@ -221,7 +236,7 @@ function TipTapEditor(props: TipTapEditorProps) {
         if (!ignoreHighlightedCode) {
           const rif: RangeInFile & { contents: string } =
             event.data.rangeInFileWithContents;
-          const basename = rif.filepath.split(/[\\/]/).pop();
+          const basename = getBasename(rif.filepath);
           const item: ContextItemWithId = {
             content: rif.contents,
             name: `${basename} (${rif.range.start.line + 1}-${

@@ -1,5 +1,7 @@
 import { JSONContent } from "@tiptap/react";
 import { IContextProvider } from "core";
+import { ExtensionIde } from "core/ide";
+import { getBasename } from "core/util";
 import { getContextItems } from "../../hooks/useContextProviders";
 
 /**
@@ -14,7 +16,7 @@ async function resolveEditorContent(
   contextProviders: IContextProvider[]
 ): Promise<string> {
   let paragraphs = [];
-  let contextItems = [];
+  let contextItems: string[] = [];
   for (const p of editorState?.content) {
     if (p.type === "paragraph") {
       const [text, ctxItems] = resolveParagraph(p);
@@ -30,15 +32,22 @@ async function resolveEditorContent(
   }
 
   let contextItemsText = "";
+  const ide = new ExtensionIde();
   for (const item of contextItems) {
-    const resolvedItems = await getContextItems(contextProviders, item, ""); // TODO: query for context providers
-    for (const resolvedItem of resolvedItems) {
-      contextItemsText += `\`\`\`ref="${item}"${resolvedItem.content}\n\`\`\`\n`;
+    if (item.startsWith("/") || item.startsWith("\\")) {
+      // This is a quick way to resolve @file references
+      const basename = getBasename(item);
+      const contents = await ide.readFile(item);
+      contextItemsText += `\`\`\`title="${basename}"\n${contents}\n\`\`\`\n`;
+    } else {
+      const resolvedItems = await getContextItems(contextProviders, item, ""); // TODO: query for context providers
+      for (const resolvedItem of resolvedItems) {
+        contextItemsText += `\`\`\`title="${item}"\n${resolvedItem.content}\n\`\`\`\n`;
+      }
     }
   }
 
   const finalText = contextItemsText + "\n" + paragraphs.join("\n");
-  console.log(finalText);
   return finalText;
 }
 
@@ -49,7 +58,7 @@ function resolveParagraph(p: JSONContent) {
     if (child.type === "text") {
       text += child.text;
     } else if (child.type === "mention") {
-      text += `@${child.attrs.id}`;
+      text += `@${child.attrs.label}`;
       contextItems.push(child.attrs.id);
     } else if (child.type === "command") {
       text += child.attrs.id;

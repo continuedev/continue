@@ -16,6 +16,7 @@ import {
   SparklesIcon,
   TrashIcon,
 } from "@heroicons/react/24/outline";
+import { Editor } from "@tiptap/react";
 import { forwardRef, useEffect, useImperativeHandle, useState } from "react";
 import styled from "styled-components";
 import {
@@ -101,7 +102,8 @@ interface MentionListProps {
   items: ComboBoxItem[];
   command: (item: ComboBoxItem) => void;
 
-  enterSubmenu?: () => void;
+  editor: Editor;
+  enterSubmenu?: (editor: Editor) => void;
 }
 
 const MentionList = forwardRef((props: MentionListProps, ref) => {
@@ -116,7 +118,7 @@ const MentionList = forwardRef((props: MentionListProps, ref) => {
 
     if (item.id === "file") {
       setSubMenuTitle("Files - Type to search");
-      props.enterSubmenu(); // TODO: how to pass this prop?
+      props.enterSubmenu(props.editor);
       return;
     }
 
@@ -158,13 +160,19 @@ const MentionList = forwardRef((props: MentionListProps, ref) => {
         return true;
       }
 
+      if (event.key === "Escape") {
+        event.preventDefault();
+        event.stopPropagation();
+        return true;
+      }
+
       return false;
     },
   }));
 
   return (
     <ItemsDiv>
-      {subMenuTitle && <ItemDiv>{subMenuTitle}</ItemDiv>}
+      {subMenuTitle && <ItemDiv className="mb-2">{subMenuTitle}</ItemDiv>}
       {props.items.length ? (
         props.items.map((item, index) => (
           <ItemDiv

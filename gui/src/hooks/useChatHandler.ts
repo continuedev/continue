@@ -7,7 +7,7 @@ import { constructMessages } from "core/llm/constructMessages";
 import { usePostHog } from "posthog-js/react";
 import { useEffect, useRef } from "react";
 import { useSelector } from "react-redux";
-import resolveEditorContent from "../components/mainInput/collectInput";
+import resolveEditorContent from "../components/mainInput/resolveInput";
 import { defaultModelSelector } from "../redux/selectors/modelSelectors";
 import {
   addContextItems,

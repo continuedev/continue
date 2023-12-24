@@ -28,7 +28,7 @@ import ErrorStepContainer from "../components/gui/ErrorStepContainer";
 import StepContainer from "../components/gui/StepContainer";
 import TimelineItem from "../components/gui/TimelineItem";
 import ContinueInputBox from "../components/mainInput/ContinueInputBox";
-import resolveEditorContent from "../components/mainInput/collectInput";
+import resolveEditorContent from "../components/mainInput/resolveInput";
 import useChatHandler from "../hooks/useChatHandler";
 import useHistory from "../hooks/useHistory";
 import { defaultModelSelector } from "../redux/selectors/modelSelectors";
@@ -38,7 +38,6 @@ import {
   setInactive,
 } from "../redux/slices/stateSlice";
 import {
-  setBottomMessage,
   setDialogEntryOn,
   setDialogMessage,
   setDisplayBottomMessageOnBottom,
@@ -214,8 +213,6 @@ function GUI(props: GUIProps) {
         !e.shiftKey
       ) {
         dispatch(setInactive());
-      } else if (e.key === "Escape") {
-        dispatch(setBottomMessage(undefined));
       }
     };
     window.addEventListener("keydown", listener);

@@ -1,13 +1,15 @@
-import { ReactRenderer } from "@tiptap/react";
+import { Editor, ReactRenderer } from "@tiptap/react";
 import { IContextProvider } from "core";
 import MiniSearch from "minisearch";
+import { MutableRefObject } from "react";
 import tippy from "tippy.js";
 import MentionList from "./MentionList";
 import { ComboBoxItem, ComboBoxItemType } from "./types";
 
 function getSuggestion(
   items: (props: { query: string }) => ComboBoxItem[],
-  enterSubmenu: () => void = () => {}
+  enterSubmenu: (editor: Editor) => void = (editor) => {},
+  onClose: () => void = () => {}
 ) {
   return {
     items,
@@ -40,7 +42,7 @@ function getSuggestion(
         },
 
         onUpdate(props) {
-          component.updateProps(props);
+          component.updateProps({ ...props, enterSubmenu });
 
           if (!props.clientRect) {
             return;
@@ -64,6 +66,7 @@ function getSuggestion(
         onExit() {
           popup[0]?.destroy();
           component.destroy();
+          onClose();
         },
       };
     },
@@ -101,11 +104,13 @@ export function getMentionSuggestion(
   availableContextProviders: IContextProvider[],
   miniSearch: MiniSearch,
   firstResults: any[],
-  enterSubmenu: () => void
+  enterSubmenu: (editor: Editor) => void,
+  onClose: () => void,
+  inSubmenu: MutableRefObject<boolean>
 ) {
   const items = ({ query }) => {
-    if (query.startsWith("file ")) {
-      return getFileItems(query.substring(5), miniSearch, firstResults);
+    if (inSubmenu.current) {
+      return getFileItems(query, miniSearch, firstResults);
     }
 
     const mainResults =
@@ -134,7 +139,7 @@ export function getMentionSuggestion(
     }
     return mainResults;
   };
-  return getSuggestion(items, enterSubmenu);
+  return getSuggestion(items, enterSubmenu, onClose);
 }
 
 export function getCommandSuggestion(availableSlashCommands: ComboBoxItem[]) {
