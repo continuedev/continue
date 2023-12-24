@@ -116,8 +116,8 @@ class ContinuePluginToolWindowFactory : ToolWindowFactory, DumbAware {
                             val secondaryDarkHex = String.format("#%02x%02x%02x", adjustedRed, adjustedGreen, adjustedBlue)
 
                             browser.executeJavaScriptAsync("document.body.style.setProperty(\"--vscode-editor-foreground\", \"$defaultForegroundHex\");")
-                            browser.executeJavaScriptAsync("document.body.style.setProperty(\"--vscode-editor-background\", \"$defaultBackgroundHex\");")
-                            browser.executeJavaScriptAsync("document.body.style.setProperty(\"--vscode-list-hoverBackground\", \"$secondaryDarkHex\");")
+                            browser.executeJavaScriptAsync("document.body.style.setProperty(\"--vscode-sideBar-background\", \"$defaultBackgroundHex\");")
+                            browser.executeJavaScriptAsync("document.body.style.setProperty(\"--vscode-input-background\", \"$secondaryDarkHex\");")
 
                             val jsonData = mutableMapOf(
                                     "type" to "onLoad",

@@ -165,14 +165,8 @@ class IdeProtocolClient (
                         respond(msg)
                     }
 
-                    "listDirectoryContents" -> {
-                        respond(
-                            mapOf("contents" to listDirectoryContents())
-                        )
-                    }
-
                     "listWorkspaceContents" -> {
-                        respond(listDirectoryContents())
+                        respond(listDirectoryContents(null))
                     }
 
                     "getWorkspaceDirs" -> {
@@ -405,13 +399,6 @@ class IdeProtocolClient (
         )
     }
 
-    private fun workspaceDirectories(): Array<String> {
-        if (this.workspacePath != null) {
-            return arrayOf(this.workspacePath)
-        }
-        return arrayOf<String>();
-    }
-
     fun uniqueId(): String {
         return getMachineUniqueID()
     }
@@ -535,6 +522,7 @@ class IdeProtocolClient (
             ".vscode",
             ".idea",
             ".vs",
+            "venv",
             ".venv",
             "env",
             ".env",
@@ -556,20 +544,33 @@ class IdeProtocolClient (
         }
     }
 
+    private fun workspaceDirectories(): Array<String> {
+        if (this.workspacePath != null) {
+            return arrayOf(this.workspacePath)
+        }
+        return arrayOf<String>();
+    }
 
-    private fun listDirectoryContents(): List<String> {
-        val dirs = workspaceDirectories()
+    private fun listDirectoryContents(directory: String?): List<String> {
+        val dirs: Array<String>;
+        if (directory != null) {
+            dirs = arrayOf(directory)
+        } else {
+            dirs = workspaceDirectories()
+        }
+
         val contents = ArrayList<String>()
-
         for (dir in dirs) {
             val workspacePath = File(dir)
             val workspaceDir = VirtualFileManager.getInstance().findFileByUrl("file://$workspacePath")
 
-
-
             if (workspaceDir != null) {
                 VfsUtil.iterateChildrenRecursively(workspaceDir, null) { virtualFile: VirtualFile ->
-                    if (!virtualFile.isDirectory) {
+                    if (virtualFile.isDirectory) {
+//                        if (shouldIgnoreDirectory(virtualFile.name)) {
+//
+//                        }
+                    } else {
                         val filePath = virtualFile.path
                         if (!shouldIgnoreDirectory(filePath)) {
                             contents.add(filePath)

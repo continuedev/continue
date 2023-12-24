@@ -37,18 +37,8 @@ dependencies {
     implementation("io.ktor:ktor-server-cors:2.3.7"){
         exclude(group = "org.slf4j", module = "slf4j-api")
     }
-
-    // ktor client
-//    implementation("io.ktor:ktor-client-core:2.3.7")
-//    implementation("io.ktor:ktor-client-cio:2.3.7")
 }
 
-//configurations {
-//    all {
-//        exclude (group = "io.ktor", module = "ktor-client-core")
-//        exclude (group = "io.ktor", module = "ktor-client-cio")
-//    }
-//}
 
 // Set the JVM language level used to build the project. Use Java 11 for 2020.3+, and Java 17 for 2022.2+.
 kotlin {
@@ -110,19 +100,19 @@ tasks {
                 subList(indexOf(start) + 1, indexOf(end)).joinToString("\n").let(::markdownToHTML)
             }
         }
-
-        val changelog = project.changelog // local variable for configuration cache compatibility
-        // Get the latest available change notes from the changelog file
-        changeNotes = properties("pluginVersion").map { pluginVersion ->
-            with(changelog) {
-                renderItem(
-                    (getOrNull(pluginVersion) ?: getUnreleased())
-                        .withHeader(false)
-                        .withEmptySections(false),
-                    Changelog.OutputType.HTML,
-                )
-            }
-        }
+//
+//        val changelog = project.changelog // local variable for configuration cache compatibility
+//        // Get the latest available change notes from the changelog file
+//        changeNotes = properties("pluginVersion").map { pluginVersion ->
+//            with(changelog) {
+//                renderItem(
+//                    (getOrNull(pluginVersion) ?: getUnreleased())
+//                        .withHeader(false)
+//                        .withEmptySections(false),
+//                    Changelog.OutputType.HTML,
+//                )
+//            }
+//        }
     }
 
     // Configure UI tests plugin
