@@ -5,8 +5,8 @@ import Paragraph from "@tiptap/extension-paragraph";
 import Placeholder from "@tiptap/extension-placeholder";
 import Text from "@tiptap/extension-text";
 import { EditorContent, JSONContent, useEditor } from "@tiptap/react";
-import { IContextProvider } from "core";
-import { useEffect, useState } from "react";
+import { ContextItemWithId, IContextProvider, RangeInFile } from "core";
+import { useContext, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import styled from "styled-components";
 import {
@@ -15,10 +15,13 @@ import {
   secondaryDark,
   vscForeground,
 } from "..";
+import { SearchContext } from "../../App";
 import useHistory from "../../hooks/useHistory";
 import { setTakenActionTrue } from "../../redux/slices/miscSlice";
 import { RootStore } from "../../redux/store";
-import { postToIde } from "../../util/ide";
+import { isMetaEquivalentKeyPressed } from "../../util";
+import { isJetBrains, postToIde } from "../../util/ide";
+import CodeBlockExtension from "./CodeBlockExtension";
 import { SlashCommand } from "./CommandsExtension";
 import InputToolbar from "./InputToolbar";
 import "./TipTapEditor.css";
@@ -34,7 +37,7 @@ const InputBoxDiv = styled.div`
   border-radius: ${defaultBorderRadius};
   margin: 0;
   height: auto;
-  width: 100%;
+  width: calc(100% - 18px);
   background-color: ${secondaryDark};
   color: ${vscForeground};
   z-index: 1;
@@ -66,13 +69,13 @@ interface TipTapEditorProps {
 function TipTapEditor(props: TipTapEditorProps) {
   const dispatch = useDispatch();
 
+  const [miniSearch, firstResults] = useContext(SearchContext);
+
   const historyLength = useSelector(
     (store: RootStore) => store.state.history.length
   );
 
-  const contextProviders = useSelector(
-    (state: RootStore) => state.state.config.contextProviders || []
-  );
+  const [inputFocused, setInputFocused] = useState(false);
 
   const { saveSession } = useHistory(dispatch);
 
@@ -93,10 +96,11 @@ function TipTapEditor(props: TipTapEditorProps) {
               // Enter: () =>
               //   this.editor.commands.first(({ commands }) => [
               //     () => {
-              //       props.onEnter(collectInput(editor));
+              //       props.onEnter(this.editor.getJSON());
               //       return true;
               //     },
               //   ]),
+              // Enter: () => true,
 
               "Shift-Enter": () =>
                 this.editor.commands.first(({ commands }) => [
@@ -124,7 +128,22 @@ function TipTapEditor(props: TipTapEditorProps) {
           HTMLAttributes: {
             class: "mention",
           },
-          suggestion: getMentionSuggestion(props.availableContextProviders),
+          suggestion: getMentionSuggestion(
+            props.availableContextProviders,
+            miniSearch,
+            firstResults,
+            () => {
+              const contents = editor.getText();
+              const indexOfAt = contents.lastIndexOf("@");
+
+              editor.commands.deleteRange({
+                from: indexOfAt,
+                to: contents.length,
+              });
+
+              editor.commands.focus();
+            }
+          ),
           renderLabel: (props) => {
             return `@${props.node.attrs.label || props.node.attrs.id}`;
           },
@@ -138,6 +157,7 @@ function TipTapEditor(props: TipTapEditorProps) {
             return props.node.attrs.label;
           },
         }),
+        CodeBlockExtension,
       ],
       editorProps: {
         attributes: {
@@ -147,18 +167,39 @@ function TipTapEditor(props: TipTapEditorProps) {
       },
       content: props.editorState || props.content || "",
     },
-    [props.availableContextProviders, historyLength]
+    [props.availableContextProviders, historyLength, miniSearch, firstResults]
   );
 
-  const [inputFocused, setInputFocused] = useState(false);
+  // This is a mechanism for overriding the IDE keyboard shortcut when inside of the webview
+  const [ignoreHighlightedCode, setIgnoreHighlightedCode] = useState(false);
 
   useEffect(() => {
-    if (!editor) return;
+    const handleKeyDown = (event: any) => {
+      if (
+        isMetaEquivalentKeyPressed(event) &&
+        (isJetBrains() ? event.code === "KeyJ" : event.code === "KeyM")
+      ) {
+        setIgnoreHighlightedCode(true);
+        setTimeout(() => {
+          setIgnoreHighlightedCode(false);
+        }, 100);
+      }
+    };
 
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, []);
+
+  // IDE event listeners
+  useEffect(() => {
     if (props.isMainInput) {
-      editor.commands.focus();
+      editor?.commands.focus();
     }
-    const handler = (event: any) => {
+    const handler = async (event: any) => {
+      if (!editor) return;
       if (event.data.type === "focusContinueInput") {
         editor.commands.focus();
         if (historyLength > 0) {
@@ -178,13 +219,39 @@ function TipTapEditor(props: TipTapEditorProps) {
       } else if (event.data.type === "focusContinueInputWithNewSession") {
         saveSession();
         dispatch(setTakenActionTrue(null));
+      } else if (event.data.type === "highlightedCode") {
+        if (!ignoreHighlightedCode) {
+          const rif: RangeInFile & { contents: string } =
+            event.data.rangeInFileWithContents;
+          const basename = rif.filepath.split(/[\\/]/).pop();
+          const item: ContextItemWithId = {
+            content: rif.contents,
+            name: `${basename} (${rif.range.start.line + 1}-${
+              rif.range.end.line + 1
+            })`,
+            description: rif.filepath,
+            id: {
+              providerTitle: "file",
+              itemId: rif.filepath,
+            },
+          };
+          editor.commands.insertContentAt(0, {
+            type: "codeBlock",
+            attrs: {
+              item,
+            },
+          });
+          await new Promise((resolve) => setTimeout(resolve, 100));
+          editor.commands.focus("end");
+        }
+        setIgnoreHighlightedCode(false);
       }
     };
     window.addEventListener("message", handler);
     return () => {
       window.removeEventListener("message", handler);
     };
-  }, [editor, props.isMainInput, historyLength]);
+  }, [editor, props.isMainInput, historyLength, ignoreHighlightedCode]);
 
   return (
     <InputBoxDiv>
@@ -193,9 +260,14 @@ function TipTapEditor(props: TipTapEditorProps) {
         onFocus={() => {
           setInputFocused(true);
         }}
-        onBlur={(e) => {
+        onBlur={() => {
           setInputFocused(false);
         }}
+        // onKeyDown={(e) => {
+        //   if (e.key === "Enter") {
+        //     props.onEnter(editor.getJSON());
+        //   }
+        // }}
       />
       <InputToolbar
         hidden={!(inputFocused || props.isMainInput)}

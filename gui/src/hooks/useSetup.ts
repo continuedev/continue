@@ -1,20 +1,16 @@
 import { Dispatch } from "@reduxjs/toolkit";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { setServerStatusMessage } from "../redux/slices/miscSlice";
-import { errorPopup, isJetBrains, postToIde } from "../util/ide";
+import { errorPopup, postToIde } from "../util/ide";
 
 import {
   intermediateToFinalConfig,
   serializedToIntermediateConfig,
 } from "core/config/load";
 import { ExtensionIde } from "core/ide/index";
+import { VSC_THEME_COLOR_VARS } from "../components";
 import { setVscMachineId } from "../redux/slices/configSlice";
-import {
-  addHighlightedCode,
-  setConfig,
-  setInactive,
-} from "../redux/slices/stateSlice";
-import { isMetaEquivalentKeyPressed } from "../util";
+import { setConfig, setInactive } from "../redux/slices/stateSlice";
 import useChatHandler from "./useChatHandler";
 
 function useSetup(dispatch: Dispatch<any>) {
@@ -64,29 +60,6 @@ function useSetup(dispatch: Dispatch<any>) {
 
   const { streamResponse } = useChatHandler(dispatch);
 
-  // This is a mechanism for overriding the IDE keyboard shortcut when inside of the webview
-  const [ignoreHighlightedCode, setIgnoreHighlightedCode] = useState(false);
-
-  useEffect(() => {
-    const handleKeyDown = (event: any) => {
-      if (
-        isMetaEquivalentKeyPressed(event) &&
-        (isJetBrains() ? event.code === "KeyJ" : event.code === "KeyM")
-      ) {
-        setIgnoreHighlightedCode(true);
-        setTimeout(() => {
-          setIgnoreHighlightedCode(false);
-        }, 100);
-      }
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
-
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-    };
-  }, []);
-
   // IDE event listeners
   useEffect(() => {
     const eventListener = (event: any) => {
@@ -100,18 +73,6 @@ function useSetup(dispatch: Dispatch<any>) {
           dispatch(setVscMachineId(event.data.vscMachineId));
           // dispatch(setVscMediaUrl(event.data.vscMediaUrl));
 
-          break;
-        case "highlightedCode":
-          if (ignoreHighlightedCode) {
-            setIgnoreHighlightedCode(false);
-            break;
-          }
-          dispatch(
-            addHighlightedCode({
-              rangeInFileWithContents: event.data.rangeInFileWithContents,
-              edit: event.data.edit,
-            })
-          );
           break;
         case "serverStatus":
           dispatch(setServerStatusMessage(event.data.message));
@@ -129,27 +90,17 @@ function useSetup(dispatch: Dispatch<any>) {
     };
     window.addEventListener("message", eventListener);
     return () => window.removeEventListener("message", eventListener);
-  }, [ignoreHighlightedCode]);
+  }, []);
 
   // Save theme colors to local storage
   useEffect(() => {
-    if (document.body.style.getPropertyValue("--vscode-editor-foreground")) {
-      localStorage.setItem(
-        "--vscode-editor-foreground",
-        document.body.style.getPropertyValue("--vscode-editor-foreground")
-      );
-    }
-    if (document.body.style.getPropertyValue("--vscode-editor-background")) {
-      localStorage.setItem(
-        "--vscode-editor-background",
-        document.body.style.getPropertyValue("--vscode-editor-background")
-      );
-    }
-    if (document.body.style.getPropertyValue("--vscode-list-hoverBackground")) {
-      localStorage.setItem(
-        "--vscode-list-hoverBackground",
-        document.body.style.getPropertyValue("--vscode-list-hoverBackground")
-      );
+    for (const colorVar of VSC_THEME_COLOR_VARS) {
+      if (document.body.style.getPropertyValue(colorVar)) {
+        localStorage.setItem(
+          colorVar,
+          document.body.style.getPropertyValue(colorVar)
+        );
+      }
     }
   }, []);
 }

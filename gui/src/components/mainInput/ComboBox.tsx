@@ -1151,10 +1151,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
       {showContextToggleOn && selectedContextItems.length > 0 && (
         <div>
           {selectedContextItems.map((item) => (
-            <CodeSnippetPreview
-              index={props.index}
-              item={item}
-            ></CodeSnippetPreview>
+            <CodeSnippetPreview item={item}></CodeSnippetPreview>
           ))}
         </div>
       )}

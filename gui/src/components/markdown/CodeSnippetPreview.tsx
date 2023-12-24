@@ -1,41 +1,43 @@
 import {
   ChevronDownIcon,
   ChevronUpIcon,
-  TrashIcon,
+  XMarkIcon,
 } from "@heroicons/react/24/outline";
 import { ContextItemWithId } from "core";
 import React from "react";
 import { useDispatch } from "react-redux";
 import styled from "styled-components";
-import { defaultBorderRadius, lightGray, secondaryDark } from "..";
-import { deleteContextWithIds } from "../../redux/slices/stateSlice";
+import { defaultBorderRadius, lightGray, vscEditorBackground } from "..";
 import { getFontSize, getMarkdownLanguageTagForFile } from "../../util";
 import { postToIde } from "../../util/ide";
 import FileIcon from "../FileIcon";
 import HeaderButtonWithText from "../HeaderButtonWithText";
 import StyledMarkdownPreview from "./StyledMarkdownPreview";
 
+const MAX_PREVIEW_HEIGHT = 160;
+
 const PreviewMarkdownDiv = styled.div<{ scroll: boolean }>`
-  padding: 0px;
-  background-color: ${secondaryDark};
+  background-color: ${vscEditorBackground};
   border-radius: ${defaultBorderRadius};
-  margin: 8px;
+  border: 0.5px solid ${lightGray};
+  margin-top: 4px;
+  margin-bottom: 4px;
   overflow: hidden;
   position: relative;
 
   & div {
-    background-color: ${secondaryDark};
+    background-color: ${vscEditorBackground};
   }
 
   & code {
-    overflow: ${(props) => (props.scroll ? "scroll" : "hidden")} !important;
+    overflow-y: ${(props) => (props.scroll ? "scroll" : "hidden")} !important;
   }
 `;
 
 const PreviewMarkdownHeader = styled.p`
   margin: 0;
-  padding: 4px 8px;
-  border-bottom: 1px solid ${lightGray};
+  padding: 2px 6px;
+  border-bottom: 0.5px solid ${lightGray};
   word-break: break-all;
   font-size: ${getFontSize()}px;
   display: flex;
@@ -44,7 +46,7 @@ const PreviewMarkdownHeader = styled.p`
 
 interface CodeSnippetPreviewProps {
   item: ContextItemWithId;
-  index: number;
+  onDelete?: () => void;
 }
 
 function CodeSnippetPreview(props: CodeSnippetPreviewProps) {
@@ -52,6 +54,8 @@ function CodeSnippetPreview(props: CodeSnippetPreviewProps) {
 
   const [scrollLocked, setScrollLocked] = React.useState(true);
   const [hovered, setHovered] = React.useState(false);
+
+  const codeBlockRef = React.useRef<HTMLPreElement>(null);
 
   return (
     <PreviewMarkdownDiv
@@ -93,31 +97,22 @@ function CodeSnippetPreview(props: CodeSnippetPreviewProps) {
           {props.item.name}
         </div>
         <div className="flex items-center">
-          <HeaderButtonWithText
-            text="Delete"
-            onClick={() => {
-              dispatch(
-                deleteContextWithIds({
-                  ids: [props.item.id],
-                  index: props.index,
-                })
-              );
-            }}
-          >
-            <TrashIcon width="1.2em" height="1.2em" />
+          <HeaderButtonWithText text="Delete" onClick={props.onDelete}>
+            <XMarkIcon width="1.2em" height="1.2em" />
           </HeaderButtonWithText>
         </div>
       </PreviewMarkdownHeader>
-      <pre className="m-0">
+      <pre className="m-0" ref={codeBlockRef}>
         <StyledMarkdownPreview
           source={`\`\`\`${getMarkdownLanguageTagForFile(
             props.item.description
           )}\n${props.item.content}\n\`\`\``}
-          maxHeight={200}
+          maxHeight={MAX_PREVIEW_HEIGHT}
+          showCodeBorder={false}
         />
       </pre>
 
-      {hovered && (
+      {hovered && codeBlockRef.current?.scrollHeight > MAX_PREVIEW_HEIGHT && (
         <HeaderButtonWithText
           className="bottom-1 right-1 absolute"
           text={scrollLocked ? "Scroll" : "Lock Scroll"}

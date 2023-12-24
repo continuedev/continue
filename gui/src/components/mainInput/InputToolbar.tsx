@@ -1,7 +1,7 @@
 import styled from "styled-components";
 import { defaultBorderRadius, lightGray, secondaryDark } from "..";
 
-const StyledDiv = styled.div`
+const StyledDiv = styled.div<{ hidden?: boolean }>`
   position: absolute;
   display: flex;
   gap: 4px;
@@ -9,6 +9,8 @@ const StyledDiv = styled.div`
   bottom: 4px;
   width: calc(100% - 10px);
   background-color: ${secondaryDark};
+
+  ${(props) => (props.hidden ? "display: none;" : "")}
 
   align-items: center;
   z-index: 50;

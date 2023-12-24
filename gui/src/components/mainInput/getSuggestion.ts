@@ -1,12 +1,17 @@
 import { ReactRenderer } from "@tiptap/react";
 import { IContextProvider } from "core";
+import MiniSearch from "minisearch";
 import tippy from "tippy.js";
 import MentionList from "./MentionList";
-import { ComboBoxItem } from "./types";
+import { ComboBoxItem, ComboBoxItemType } from "./types";
 
-function getSuggestion(items: (props: { query: string }) => ComboBoxItem[]) {
+function getSuggestion(
+  items: (props: { query: string }) => ComboBoxItem[],
+  enterSubmenu: () => void = () => {}
+) {
   return {
     items,
+    allowSpaces: true,
     render: () => {
       let component;
       let popup;
@@ -14,7 +19,7 @@ function getSuggestion(items: (props: { query: string }) => ComboBoxItem[]) {
       return {
         onStart: (props) => {
           component = new ReactRenderer(MentionList, {
-            props,
+            props: { ...props, enterSubmenu },
             editor: props.editor,
           });
 
@@ -65,11 +70,45 @@ function getSuggestion(items: (props: { query: string }) => ComboBoxItem[]) {
   };
 }
 
+function getFileItems(
+  query: string,
+  miniSearch: MiniSearch,
+  firstResults: any[]
+) {
+  let res: any[] = miniSearch.search(query.trim() === "" ? "/" : query, {
+    prefix: true,
+    fuzzy: 1,
+  });
+  if (res.length === 0) {
+    res = firstResults;
+  }
+  return (
+    res?.slice(0, 20).map((hit) => {
+      const item = {
+        title: hit.basename,
+        description: hit.basename,
+        id: hit.id,
+        content: hit.id,
+        label: hit.basename,
+        type: "file" as ComboBoxItemType,
+      };
+      return item;
+    }) || []
+  );
+}
+
 export function getMentionSuggestion(
-  availableContextProviders: IContextProvider[]
+  availableContextProviders: IContextProvider[],
+  miniSearch: MiniSearch,
+  firstResults: any[],
+  enterSubmenu: () => void
 ) {
   const items = ({ query }) => {
-    return (
+    if (query.startsWith("file ")) {
+      return getFileItems(query.substring(5), miniSearch, firstResults);
+    }
+
+    const mainResults =
       availableContextProviders
         ?.filter(
           (provider) =>
@@ -86,11 +125,16 @@ export function getMentionSuggestion(
           id: provider.description.title,
           title: provider.description.displayTitle,
           label: provider.description.displayTitle,
+          type: "contextProvider" as ComboBoxItemType,
         }))
-        .sort((c, _) => (c.id === "file" ? -1 : 1)) || []
-    );
+        .sort((c, _) => (c.id === "file" ? -1 : 1)) || [];
+
+    if (mainResults.length === 0) {
+      return getFileItems(query, miniSearch, firstResults);
+    }
+    return mainResults;
   };
-  return getSuggestion(items);
+  return getSuggestion(items, enterSubmenu);
 }
 
 export function getCommandSuggestion(availableSlashCommands: ComboBoxItem[]) {
@@ -107,6 +151,7 @@ export function getCommandSuggestion(availableSlashCommands: ComboBoxItem[]) {
       id: provider.title,
       title: provider.title,
       label: provider.title,
+      type: "slashCommand" as ComboBoxItemType,
     }));
   };
   return getSuggestion(items);

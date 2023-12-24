@@ -2,6 +2,7 @@ import {
   ArrowUpOnSquareIcon,
   AtSymbolIcon,
   BeakerIcon,
+  ChevronDoubleRightIcon,
   Cog6ToothIcon,
   CommandLineIcon,
   ExclamationCircleIcon,
@@ -24,7 +25,7 @@ import {
   vscForeground,
 } from "..";
 import FileIcon from "../FileIcon";
-import { ComboBoxItem } from "./types";
+import { ComboBoxItem, ComboBoxItemType } from "./types";
 
 const ICONS_FOR_DROPDOWN: { [key: string]: any } = {
   file: FolderIcon,
@@ -45,11 +46,21 @@ const ICONS_FOR_DROPDOWN: { [key: string]: any } = {
   "/issue": ExclamationCircleIcon,
 };
 
-function DropdownIcon(props: { provider: string; className?: string }) {
+function DropdownIcon(props: {
+  provider: string;
+  className?: string;
+  type: ComboBoxItemType;
+}) {
   const Icon = ICONS_FOR_DROPDOWN[props.provider];
   if (!Icon) {
-    return (
+    return props.type === "contextProvider" ? (
       <AtSymbolIcon className={props.className} height="1.2em" width="1.2em" />
+    ) : (
+      <ChevronDoubleRightIcon
+        className={props.className}
+        height="1.2em"
+        width="1.2em"
+      />
     );
   }
   return <Icon className={props.className} height="1.2em" width="1.2em" />;
@@ -89,14 +100,25 @@ const ItemDiv = styled.div`
 interface MentionListProps {
   items: ComboBoxItem[];
   command: (item: ComboBoxItem) => void;
-  subMenuTitle?: string;
+
+  enterSubmenu?: () => void;
 }
 
 const MentionList = forwardRef((props: MentionListProps, ref) => {
   const [selectedIndex, setSelectedIndex] = useState(0);
 
+  const [subMenuTitle, setSubMenuTitle] = useState<string | undefined>(
+    undefined
+  );
+
   const selectItem = (index) => {
     const item = props.items[index];
+
+    if (item.id === "file") {
+      setSubMenuTitle("Files - Type to search");
+      props.enterSubmenu(); // TODO: how to pass this prop?
+      return;
+    }
 
     if (item) {
       props.command(item);
@@ -142,6 +164,7 @@ const MentionList = forwardRef((props: MentionListProps, ref) => {
 
   return (
     <ItemsDiv>
+      {subMenuTitle && <ItemDiv>{subMenuTitle}</ItemDiv>}
       {props.items.length ? (
         props.items.map((item, index) => (
           <ItemDiv
@@ -153,15 +176,20 @@ const MentionList = forwardRef((props: MentionListProps, ref) => {
           >
             <span className="flex justify-between w-full items-center">
               <div className="flex items-center justify-center">
-                {props.subMenuTitle && (
+                {item.type === "file" && (
                   <FileIcon
                     height="20px"
                     width="20px"
                     filename={item.title}
                   ></FileIcon>
                 )}
-                {/* <DropdownIcon provider={item.title} className="mr-2" /> */}
-                <DropdownIcon provider={item.id} className="mr-2" />
+                {item.type !== "file" && (
+                  <DropdownIcon
+                    provider={item.id}
+                    type={item.type}
+                    className="mr-2"
+                  />
+                )}
                 {item.title}
                 {"  "}
               </div>

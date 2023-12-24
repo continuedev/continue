@@ -4,6 +4,7 @@ import styled, { keyframes } from "styled-components";
 import { defaultBorderRadius, vscBackground } from "..";
 import { RootStore } from "../../redux/store";
 import TipTapEditor from "./TipTapEditor";
+import { ComboBoxItemType } from "./types";
 
 const gradient = keyframes`
   0% {
@@ -62,6 +63,7 @@ function ContinueInputBox(props: ContinueInputBoxProps) {
         return {
           title: `/${cmd.name}`,
           description: cmd.description,
+          type: "slashCommand" as ComboBoxItemType,
         };
       }) || []
   );

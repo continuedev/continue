@@ -23,3 +23,7 @@
   height: 0;
   pointer-events: none;
 }
+
+.gap-cursor {
+  border-top: 1px solid white;
+}
