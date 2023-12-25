@@ -1,6 +1,5 @@
 import Document from "@tiptap/extension-document";
 import History from "@tiptap/extension-history";
-import Mention from "@tiptap/extension-mention";
 import Paragraph from "@tiptap/extension-paragraph";
 import Placeholder from "@tiptap/extension-placeholder";
 import Text from "@tiptap/extension-text";
@@ -25,6 +24,7 @@ import { isJetBrains, postToIde } from "../../util/ide";
 import CodeBlockExtension from "./CodeBlockExtension";
 import { SlashCommand } from "./CommandsExtension";
 import InputToolbar from "./InputToolbar";
+import { Mention } from "./MentionExtension";
 import "./TipTapEditor.css";
 import { getCommandSuggestion, getMentionSuggestion } from "./getSuggestion";
 import { ComboBoxItem } from "./types";

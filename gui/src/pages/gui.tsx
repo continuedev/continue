@@ -483,22 +483,22 @@ function GUI(props: GUIProps) {
               isMainInput={true}
             ></ContinueInputBox>
           )}
+          {active ? (
+            <>
+              <br />
+              <br />
+            </>
+          ) : state.history.length > 0 ? (
+            <NewSessionButton
+              onClick={() => {
+                saveSession();
+              }}
+              className="mr-auto"
+            >
+              New Session ({getMetaKeyLabel()} {isJetBrains() ? "J" : "M"})
+            </NewSessionButton>
+          ) : null}
         </div>
-        {active ? (
-          <>
-            <br />
-            <br />
-          </>
-        ) : state.history.length > 0 ? (
-          <NewSessionButton
-            onClick={() => {
-              saveSession();
-            }}
-            className="mr-auto"
-          >
-            New Session ({getMetaKeyLabel()} {isJetBrains() ? "J" : "M"})
-          </NewSessionButton>
-        ) : null}
       </TopGuiDiv>
       {active && (
         <StopButton

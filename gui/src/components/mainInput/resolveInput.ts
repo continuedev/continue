@@ -4,6 +4,12 @@ import { ExtensionIde } from "core/ide";
 import { getBasename } from "core/util";
 import { getContextItems } from "../../hooks/useContextProviders";
 
+interface MentionAttrs {
+  label: string;
+  id: string;
+  query?: string;
+}
+
 /**
  * This function converts the input from the editor to a string, resolving any context items
  * Context items are appended to the top of the prompt and then referenced within the input
@@ -16,7 +22,7 @@ async function resolveEditorContent(
   contextProviders: IContextProvider[]
 ): Promise<string> {
   let paragraphs = [];
-  let contextItems: string[] = [];
+  let contextItems: MentionAttrs[] = [];
   for (const p of editorState?.content) {
     if (p.type === "paragraph") {
       const [text, ctxItems] = resolveParagraph(p);
@@ -37,15 +43,19 @@ async function resolveEditorContent(
   let contextItemsText = "";
   const ide = new ExtensionIde();
   for (const item of contextItems) {
-    if (item.startsWith("/") || item.startsWith("\\")) {
+    if (item.id.startsWith("/") || item.id.startsWith("\\")) {
       // This is a quick way to resolve @file references
-      const basename = getBasename(item);
-      const contents = await ide.readFile(item);
+      const basename = getBasename(item.id);
+      const contents = await ide.readFile(item.id);
       contextItemsText += `\`\`\`title="${basename}"\n${contents}\n\`\`\`\n`;
     } else {
-      const resolvedItems = await getContextItems(contextProviders, item, ""); // TODO: query for context providers
+      const resolvedItems = await getContextItems(
+        contextProviders,
+        item.id,
+        item.query
+      );
       for (const resolvedItem of resolvedItems) {
-        contextItemsText += `\`\`\`title="${item}"\n${resolvedItem.content}\n\`\`\`\n`;
+        contextItemsText += `\`\`\`title="${item.label}"\n${resolvedItem.content}\n\`\`\`\n`;
       }
     }
   }
@@ -59,7 +69,7 @@ async function resolveEditorContent(
   return finalText;
 }
 
-function resolveParagraph(p: JSONContent) {
+function resolveParagraph(p: JSONContent): [string, MentionAttrs[]] {
   let text = "";
   const contextItems = [];
   for (const child of p.content || []) {
@@ -67,7 +77,7 @@ function resolveParagraph(p: JSONContent) {
       text += child.text;
     } else if (child.type === "mention") {
       text += `@${child.attrs.label}`;
-      contextItems.push(child.attrs.id);
+      contextItems.push(child.attrs);
     } else if (child.type === "slashcommand") {
       text += child.attrs.label;
     } else {

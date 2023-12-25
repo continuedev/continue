@@ -18,11 +18,18 @@ import {
   TrashIcon,
 } from "@heroicons/react/24/outline";
 import { Editor } from "@tiptap/react";
-import { forwardRef, useEffect, useImperativeHandle, useState } from "react";
+import {
+  forwardRef,
+  useEffect,
+  useImperativeHandle,
+  useRef,
+  useState,
+} from "react";
 import styled from "styled-components";
 import {
   buttonColor,
   defaultBorderRadius,
+  lightGray,
   secondaryDark,
   vscForeground,
 } from "..";
@@ -99,6 +106,24 @@ const ItemDiv = styled.div`
   }
 `;
 
+const QueryInput = styled.textarea`
+  background-color: #fff1;
+  border: 1px solid ${lightGray};
+  border-radius: ${defaultBorderRadius};
+
+  padding: 0.2rem 0.4rem;
+  width: 240px;
+
+  color: ${vscForeground};
+
+  &:focus {
+    outline: none;
+  }
+
+  font-family: inherit;
+  resize: none;
+`;
+
 interface MentionListProps {
   items: ComboBoxItem[];
   command: (item: ComboBoxItem) => void;
@@ -113,6 +138,17 @@ const MentionList = forwardRef((props: MentionListProps, ref) => {
   const [subMenuTitle, setSubMenuTitle] = useState<string | undefined>(
     undefined
   );
+  const [querySubmenuItem, setQuerySubmenuItem] = useState<
+    ComboBoxItem | undefined
+  >(undefined);
+
+  const queryInputRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    if (queryInputRef.current) {
+      queryInputRef.current.focus();
+    }
+  }, [querySubmenuItem]);
 
   const selectItem = (index) => {
     const item = props.items[index];
@@ -120,6 +156,12 @@ const MentionList = forwardRef((props: MentionListProps, ref) => {
     if (item.id === "file") {
       setSubMenuTitle("Files - Type to search");
       props.enterSubmenu(props.editor);
+      return;
+    }
+
+    if (item.contextProvider?.requiresQuery) {
+      setSubMenuTitle(item.description);
+      setQuerySubmenuItem(item);
       return;
     }
 
@@ -182,58 +224,86 @@ const MentionList = forwardRef((props: MentionListProps, ref) => {
 
   return (
     <ItemsDiv>
-      {subMenuTitle && <ItemDiv className="mb-2">{subMenuTitle}</ItemDiv>}
-      {props.items.length ? (
-        props.items.map((item, index) => (
-          <ItemDiv
-            as="button"
-            className={`item ${index === selectedIndex ? "is-selected" : ""}`}
-            key={index}
-            onClick={() => selectItem(index)}
-            onMouseEnter={() => setSelectedIndex(index)}
-          >
-            <span className="flex justify-between w-full items-center">
-              <div className="flex items-center justify-center">
-                {item.type === "file" && (
-                  <FileIcon
-                    height="20px"
-                    width="20px"
-                    filename={item.title}
-                  ></FileIcon>
-                )}
-                {item.type !== "file" && (
-                  <DropdownIcon
-                    provider={item.id}
-                    type={item.type}
-                    className="mr-2"
-                  />
-                )}
-                {item.title}
-                {"  "}
-              </div>
-              <span
-                style={{
-                  color: vscForeground,
-                  float: "right",
-                  textAlign: "right",
-                  opacity: index !== selectedIndex ? 0 : 1,
-                }}
-                className="whitespace-nowrap overflow-hidden overflow-ellipsis ml-2 flex items-center"
-              >
-                {item.description}
-                {item.id === "file" && (
-                  <ArrowRightIcon
-                    className="ml-2"
-                    width="1.2em"
-                    height="1.2em"
-                  />
-                )}
-              </span>
-            </span>
-          </ItemDiv>
-        ))
+      {querySubmenuItem ? (
+        <QueryInput
+          rows={1}
+          ref={queryInputRef}
+          placeholder={querySubmenuItem.description}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              if (e.shiftKey) {
+                queryInputRef.current.innerText += "\n";
+              } else {
+                props.command({
+                  ...querySubmenuItem,
+                  query: queryInputRef.current.value,
+                  label: `${querySubmenuItem.label}: ${queryInputRef.current.value}`,
+                });
+              }
+            } else if (e.key === "Escape") {
+              setQuerySubmenuItem(undefined);
+              setSubMenuTitle(undefined);
+            }
+          }}
+        />
       ) : (
-        <ItemDiv className="item">No result</ItemDiv>
+        <>
+          {subMenuTitle && <ItemDiv className="mb-2">{subMenuTitle}</ItemDiv>}
+          {props.items.length ? (
+            props.items.map((item, index) => (
+              <ItemDiv
+                as="button"
+                className={`item ${
+                  index === selectedIndex ? "is-selected" : ""
+                }`}
+                key={index}
+                onClick={() => selectItem(index)}
+                onMouseEnter={() => setSelectedIndex(index)}
+              >
+                <span className="flex justify-between w-full items-center">
+                  <div className="flex items-center justify-center">
+                    {item.type === "file" && (
+                      <FileIcon
+                        height="20px"
+                        width="20px"
+                        filename={item.title}
+                      ></FileIcon>
+                    )}
+                    {item.type !== "file" && (
+                      <DropdownIcon
+                        provider={item.id}
+                        type={item.type}
+                        className="mr-2"
+                      />
+                    )}
+                    {item.title}
+                    {"  "}
+                  </div>
+                  <span
+                    style={{
+                      color: vscForeground,
+                      float: "right",
+                      textAlign: "right",
+                      opacity: index !== selectedIndex ? 0 : 1,
+                    }}
+                    className="whitespace-nowrap overflow-hidden overflow-ellipsis ml-2 flex items-center"
+                  >
+                    {item.description}
+                    {item.id === "file" && (
+                      <ArrowRightIcon
+                        className="ml-2"
+                        width="1.2em"
+                        height="1.2em"
+                      />
+                    )}
+                  </span>
+                </span>
+              </ItemDiv>
+            ))
+          ) : (
+            <ItemDiv className="item">No result</ItemDiv>
+          )}
+        </>
       )}
     </ItemsDiv>
   );

@@ -1,4 +1,10 @@
-export type ComboBoxItemType = "contextProvider" | "slashCommand" | "file";
+import { ContextProviderDescription } from "core";
+
+export type ComboBoxItemType =
+  | "contextProvider"
+  | "slashCommand"
+  | "file"
+  | "query";
 
 export interface ComboBoxItem {
   title: string;
@@ -6,4 +12,7 @@ export interface ComboBoxItem {
   id?: string;
   content?: string;
   type: ComboBoxItemType;
+  contextProvider?: ContextProviderDescription;
+  query?: string;
+  label?: string;
 }

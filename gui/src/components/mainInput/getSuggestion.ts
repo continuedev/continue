@@ -80,7 +80,7 @@ function getFileItems(
   query: string,
   miniSearch: MiniSearch,
   firstResults: any[]
-) {
+): ComboBoxItem[] {
   let res: any[] = miniSearch.search(query.trim() === "" ? "/" : query, {
     prefix: true,
     fuzzy: 1,
@@ -135,6 +135,7 @@ export function getMentionSuggestion(
           title: provider.description.displayTitle,
           label: provider.description.displayTitle,
           type: "contextProvider" as ComboBoxItemType,
+          contextProvider: provider.description,
         }))
         .sort((c, _) => (c.id === "file" ? -1 : 1)) || [];
 
