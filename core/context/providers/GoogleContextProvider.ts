@@ -7,7 +7,7 @@ class GoogleContextProvider extends BaseContextProvider {
     displayTitle: "Google",
     description: "Attach the results of a Google search",
     dynamic: true,
-    requiresQuery: false,
+    requiresQuery: true,
   };
 
   private _serperApiKey: string;

@@ -90,9 +90,10 @@ function getFileItems(
   }
   return (
     res?.slice(0, 10).map((hit) => {
+      const lastTwoParts = hit.id.split(/[\\/]/).slice(-2).join("/");
       const item = {
         title: hit.basename,
-        description: hit.basename,
+        description: lastTwoParts,
         id: hit.id,
         content: hit.id,
         label: hit.basename,
