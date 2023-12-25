@@ -1,4 +1,5 @@
 import {
+  ArrowRightIcon,
   ArrowUpOnSquareIcon,
   AtSymbolIcon,
   BeakerIcon,
@@ -217,9 +218,16 @@ const MentionList = forwardRef((props: MentionListProps, ref) => {
                   textAlign: "right",
                   opacity: index !== selectedIndex ? 0 : 1,
                 }}
-                className="whitespace-nowrap overflow-hidden overflow-ellipsis ml-2"
+                className="whitespace-nowrap overflow-hidden overflow-ellipsis ml-2 flex items-center"
               >
                 {item.description}
+                {item.id === "file" && (
+                  <ArrowRightIcon
+                    className="ml-2"
+                    width="1.2em"
+                    height="1.2em"
+                  />
+                )}
               </span>
             </span>
           </ItemDiv>

@@ -47,12 +47,14 @@ interface InputToolbarProps {
   usingCodebase?: boolean;
   onAddContextItem?: () => void;
 
+  onClick?: () => void;
+
   hidden?: boolean;
 }
 
 function InputToolbar(props: InputToolbarProps) {
   return (
-    <StyledDiv hidden={props.hidden}>
+    <StyledDiv hidden={props.hidden} onClick={props.onClick} id="input-toolbar">
       <span
         style={{
           color: lightGray,

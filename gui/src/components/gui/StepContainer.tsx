@@ -90,7 +90,10 @@ function StepContainer(props: StepContainerProps) {
           isUserInput={isUserInput}
           fontSize={getFontSize()}
         >
-          <StyledMarkdownPreview source={props.item.message.content} />
+          <StyledMarkdownPreview
+            source={props.item.message.content}
+            showCodeBorder={true}
+          />
         </ContentDiv>
         {(isHovered || typeof feedback !== "undefined") && !active && (
           <div

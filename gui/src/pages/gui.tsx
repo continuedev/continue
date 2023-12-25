@@ -22,6 +22,7 @@ import {
   defaultBorderRadius,
   lightGray,
   vscBackground,
+  vscForeground,
 } from "../components";
 import FTCDialog from "../components/dialogs/FTCDialog";
 import ErrorStepContainer from "../components/gui/ErrorStepContainer";
@@ -45,6 +46,7 @@ import {
 } from "../redux/slices/uiStateSlice";
 import { RootStore } from "../redux/store";
 import { getMetaKeyLabel, isMetaEquivalentKeyPressed } from "../util";
+import { isJetBrains } from "../util/ide";
 
 const TopGuiDiv = styled.div`
   overflow-y: scroll;
@@ -91,6 +93,26 @@ const StepsDiv = styled.div`
     z-index: 0;
     bottom: 12px;
   }
+`;
+
+const NewSessionButton = styled.div`
+  width: fit-content;
+  margin-right: auto;
+  margin-left: 8px;
+  margin-top: 4px;
+
+  font-size: 12px;
+
+  border-radius: ${defaultBorderRadius};
+  padding: 2px 8px;
+  color: ${lightGray};
+
+  &:hover {
+    background-color: ${lightGray}33;
+    color: ${vscForeground};
+  }
+
+  cursor: pointer;
 `;
 
 function fallbackRender({ error, resetErrorBoundary }) {
@@ -462,6 +484,21 @@ function GUI(props: GUIProps) {
             ></ContinueInputBox>
           )}
         </div>
+        {active ? (
+          <>
+            <br />
+            <br />
+          </>
+        ) : state.history.length > 0 ? (
+          <NewSessionButton
+            onClick={() => {
+              saveSession();
+            }}
+            className="mr-auto"
+          >
+            New Session ({getMetaKeyLabel()} {isJetBrains() ? "J" : "M"})
+          </NewSessionButton>
+        ) : null}
       </TopGuiDiv>
       {active && (
         <StopButton
