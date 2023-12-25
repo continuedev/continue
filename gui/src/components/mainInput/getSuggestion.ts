@@ -9,7 +9,8 @@ import { ComboBoxItem, ComboBoxItemType } from "./types";
 function getSuggestion(
   items: (props: { query: string }) => ComboBoxItem[],
   enterSubmenu: (editor: Editor) => void = (editor) => {},
-  onClose: () => void = () => {}
+  onClose: () => void = () => {},
+  onOpen: () => void = () => {}
 ) {
   return {
     items,
@@ -39,6 +40,8 @@ function getSuggestion(
             trigger: "manual",
             placement: "bottom-start",
           });
+
+          onOpen();
         },
 
         onUpdate(props) {
@@ -86,7 +89,7 @@ function getFileItems(
     res = firstResults;
   }
   return (
-    res?.slice(0, 20).map((hit) => {
+    res?.slice(0, 10).map((hit) => {
       const item = {
         title: hit.basename,
         description: hit.basename,
@@ -106,6 +109,7 @@ export function getMentionSuggestion(
   firstResults: any[],
   enterSubmenu: (editor: Editor) => void,
   onClose: () => void,
+  onOpen: () => void,
   inSubmenu: MutableRefObject<boolean>
 ) {
   const items = ({ query }) => {
@@ -139,10 +143,14 @@ export function getMentionSuggestion(
     }
     return mainResults;
   };
-  return getSuggestion(items, enterSubmenu, onClose);
+  return getSuggestion(items, enterSubmenu, onClose, onOpen);
 }
 
-export function getCommandSuggestion(availableSlashCommands: ComboBoxItem[]) {
+export function getCommandSuggestion(
+  availableSlashCommands: ComboBoxItem[],
+  onClose: () => void,
+  onOpen: () => void
+) {
   const items = ({ query }) => {
     return (
       availableSlashCommands?.filter((slashCommand) => {
@@ -159,5 +167,5 @@ export function getCommandSuggestion(availableSlashCommands: ComboBoxItem[]) {
       type: "slashCommand" as ComboBoxItemType,
     }));
   };
-  return getSuggestion(items);
+  return getSuggestion(items, undefined, onClose, onOpen);
 }

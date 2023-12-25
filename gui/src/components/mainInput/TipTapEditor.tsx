@@ -81,6 +81,7 @@ function TipTapEditor(props: TipTapEditorProps) {
   const { saveSession } = useHistory(dispatch);
 
   const inSubmenu = useRef(false);
+  const inDropdown = useRef(false);
 
   const enterSubmenu = async (editor: Editor) => {
     const contents = editor.getText();
@@ -105,6 +106,11 @@ function TipTapEditor(props: TipTapEditorProps) {
 
   const onClose = () => {
     inSubmenu.current = false;
+    inDropdown.current = false;
+  };
+
+  const onOpen = () => {
+    inDropdown.current = true;
   };
 
   const editor = useEditor(
@@ -121,14 +127,19 @@ function TipTapEditor(props: TipTapEditorProps) {
         Paragraph.extend({
           addKeyboardShortcuts() {
             return {
-              // Enter: () =>
-              //   this.editor.commands.first(({ commands }) => [
-              //     () => {
-              //       props.onEnter(this.editor.getJSON());
-              //       return true;
-              //     },
-              //   ]),
-              // Enter: () => true,
+              Enter: () => {
+                if (inDropdown.current) {
+                  return false;
+                }
+
+                props.onEnter(this.editor.getJSON());
+                return true;
+              },
+
+              "Cmd-Enter": () => {
+                props.onEnter(this.editor.getJSON());
+                return true;
+              },
 
               "Shift-Enter": () =>
                 this.editor.commands.first(({ commands }) => [
@@ -155,6 +166,7 @@ function TipTapEditor(props: TipTapEditorProps) {
             firstResults,
             enterSubmenu,
             onClose,
+            onOpen,
             inSubmenu
           ),
           renderLabel: (props) => {
@@ -165,7 +177,11 @@ function TipTapEditor(props: TipTapEditorProps) {
           HTMLAttributes: {
             class: "mention",
           },
-          suggestion: getCommandSuggestion(props.availableSlashCommands),
+          suggestion: getCommandSuggestion(
+            props.availableSlashCommands,
+            onClose,
+            onOpen
+          ),
           renderLabel: (props) => {
             return props.node.attrs.label;
           },
@@ -180,7 +196,13 @@ function TipTapEditor(props: TipTapEditorProps) {
       },
       content: props.editorState || props.content || "",
     },
-    [props.availableContextProviders, historyLength, miniSearch, firstResults]
+    [
+      props.availableContextProviders,
+      historyLength,
+      miniSearch,
+      firstResults,
+      inDropdown,
+    ]
   );
 
   // This is a mechanism for overriding the IDE keyboard shortcut when inside of the webview
@@ -221,17 +243,18 @@ function TipTapEditor(props: TipTapEditorProps) {
         editor.commands.insertContent(input);
         props.onEnter(editor.getJSON());
       } else if (event.data.type === "focusContinueInput") {
-        editor.commands.focus();
         if (historyLength > 0) {
           saveSession();
         }
         dispatch(setTakenActionTrue(null));
+        editor.commands.focus("end");
       } else if (event.data.type === "focusContinueInputWithoutClear") {
-        editor.commands.focus();
+        editor.commands.focus("end");
         dispatch(setTakenActionTrue(null));
       } else if (event.data.type === "focusContinueInputWithNewSession") {
         saveSession();
         dispatch(setTakenActionTrue(null));
+        editor.commands.focus("end");
       } else if (event.data.type === "highlightedCode") {
         if (!ignoreHighlightedCode) {
           const rif: RangeInFile & { contents: string } =
@@ -276,11 +299,6 @@ function TipTapEditor(props: TipTapEditorProps) {
         onBlur={() => {
           setInputFocused(false);
         }}
-        // onKeyDown={(e) => {
-        //   if (e.key === "Enter") {
-        //     props.onEnter(editor.getJSON());
-        //   }
-        // }}
       />
       <InputToolbar
         hidden={!(inputFocused || props.isMainInput)}

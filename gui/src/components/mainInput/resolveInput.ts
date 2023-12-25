@@ -62,7 +62,7 @@ async function resolveEditorContent(
 function resolveParagraph(p: JSONContent) {
   let text = "";
   const contextItems = [];
-  for (const child of p.content) {
+  for (const child of p.content || []) {
     if (child.type === "text") {
       text += child.text;
     } else if (child.type === "mention") {
