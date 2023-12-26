@@ -54,12 +54,12 @@ def bubble_sort(x):
     return x
 
 
-"""Step 2: Use the keyboard shortcut [⌘ ⇧ J] to
-select the code and toggle the /edit slash command"""
+"""Step 2: Use the keyboard shortcut [⌘ J] to
+select the code"""
 
-"""Step 3: Request an edit and press enter"""
-# e.g.) optimize this function
-# e.g.) write comments
+"""Step 3: Type "/edit <your edit request>" and press Enter"""
+# e.g.) /edit optimize this function
+# e.g.) /edit write comments
 
 """Step 4: Use keyboard shortcuts to
 accept [⌘ ⇧ ⏎] or reject [⌘ ⇧ ⌫] the edit"""

@@ -1,5 +1,7 @@
 import { createSlice } from "@reduxjs/toolkit";
+import { JSONContent } from "@tiptap/react";
 import {
+  ChatHistory,
   ChatMessage,
   ContextItemId,
   ContextItemWithId,
@@ -37,16 +39,18 @@ const TEST_CONTEXT_ITEMS: ContextItemWithId[] = [
   },
 ];
 
-const TEST_TIMELINE = [
+const TEST_TIMELINE: ChatHistory = [
   {
-    description: "Hi, please write bubble sort in python",
-    name: "User Input",
-    params: { context_items: TEST_CONTEXT_ITEMS },
-    hide: false,
-    depth: 0,
+    message: {
+      role: "user",
+      content: "Hi, please write bubble sort in python",
+    },
+    contextItems: [],
   },
   {
-    description: `\`\`\`python
+    message: {
+      role: "assistant",
+      content: `\`\`\`python
 def bubble_sort(arr):
   n = len(arr)
   for i in range(n):
@@ -55,23 +59,17 @@ def bubble_sort(arr):
               arr[j], arr[j + 1] = arr[j + 1], arr[j]
               return arr
 \`\`\``,
-    name: "Bubble Sort in Python",
-    params: {},
-    hide: false,
-    depth: 0,
+    },
+    contextItems: [],
   },
   {
-    description: "Now write it in Rust",
-    name: "User Input",
-    params: {},
+    message: { role: "user", content: "Now write it in Rust" },
+    contextItems: [],
   },
   {
-    description: "Hello! This is a test...\n\n1, 2, 3, testing...",
-    name: "Testing",
-    hide: false,
-  },
-  {
-    description: `Sure, here's bubble sort written in rust: \n\`\`\`rust
+    message: {
+      role: "assistant",
+      content: `Sure, here's bubble sort written in rust: \n\`\`\`rust
 fn bubble_sort<T: Ord>(values: &mut[T]) {
   let len = values.len();
   for i in 0..len {
@@ -83,8 +81,8 @@ fn bubble_sort<T: Ord>(values: &mut[T]) {
   }
 }
 \`\`\`\nIs there anything else I can answer?`,
-    name: "Rust Bubble Sort",
-    depth: 0,
+    },
+    contextItems: [],
   },
 ];
 
@@ -149,26 +147,32 @@ export const stateSlice = createSlice({
         };
       }
     },
-    appendMessage: (state, action) => {
-      return {
-        ...state,
-        history: [...state.history, action.payload],
-      };
-    },
+
     addContextItems: (state, action) => {
       return {
         ...state,
         contextItems: [...state.contextItems, ...action.payload],
       };
     },
-    resubmitAtIndex: (state, action) => {
-      if (action.payload.index < state.history.length) {
-        state.history[action.payload.index].message.content =
-          action.payload.content;
+    resubmitAtIndex: (
+      state,
+      {
+        payload,
+      }: {
+        payload: {
+          index: number;
+          content: string;
+          editorState: JSONContent;
+        };
+      }
+    ) => {
+      if (payload.index < state.history.length) {
+        state.history[payload.index].message.content = payload.content;
+        state.history[payload.index].editorState = payload.editorState;
 
         // Cut off history after the resubmitted message
         state.history = [
-          ...state.history.slice(0, action.payload.index + 1),
+          ...state.history.slice(0, payload.index + 1),
           {
             message: {
               role: "assistant",
@@ -182,10 +186,21 @@ export const stateSlice = createSlice({
         state.active = true;
       }
     },
-    submitMessage: (state, { payload }: { payload: ChatMessage }) => {
+    submitMessage: (
+      state,
+      {
+        payload,
+      }: {
+        payload: {
+          message: ChatMessage;
+          editorState: JSONContent;
+        };
+      }
+    ) => {
       state.history.push({
-        message: payload,
+        message: payload.message,
         contextItems: state.contextItems,
+        editorState: payload.editorState,
       });
       state.history.push({
         message: {
@@ -382,7 +397,6 @@ export const stateSlice = createSlice({
 
 export const {
   addContextItemsAtIndex,
-  appendMessage,
   addContextItems,
   submitMessage,
   setInactive,

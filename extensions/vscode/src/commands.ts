@@ -95,10 +95,10 @@ const commandsMap: { [command: string]: (...args: any) => any } = {
     });
     addHighlightedCodeToContext(false);
   },
-  "continue.focusContinueInputWithEdit": async () => {
+  "continue.focusContinueInputWithoutClear": async () => {
     vscode.commands.executeCommand("continue.continueGUIView.focus");
     debugPanelWebview?.postMessage({
-      type: "focusContinueInputWithEdit",
+      type: "focusContinueInputWithoutClear",
     });
     addHighlightedCodeToContext(true);
   },
@@ -137,8 +137,8 @@ const commandsMap: { [command: string]: (...args: any) => any } = {
     const terminalContents = await ideProtocolClient.getTerminalContents(2);
     vscode.commands.executeCommand("continue.continueGUIView.focus");
     debugPanelWebview?.postMessage({
-      type: "submitMessage",
-      message: `I got the following error, can you please help explain how to fix it?\n\n${terminalContents}`,
+      type: "userInput",
+      input: `I got the following error, can you please help explain how to fix it?\n\n${terminalContents}`,
     });
   },
   "continue.hideInlineTip": () => {

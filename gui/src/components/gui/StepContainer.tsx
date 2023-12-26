@@ -3,7 +3,7 @@ import {
   HandThumbUpIcon,
 } from "@heroicons/react/24/outline";
 import { ChatHistoryItem } from "core";
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { useSelector } from "react-redux";
 import styled from "styled-components";
 import {
@@ -60,23 +60,9 @@ const ContentDiv = styled.div<{ isUserInput: boolean; fontSize?: number }>`
 
 function StepContainer(props: StepContainerProps) {
   const [isHovered, setIsHovered] = useState(false);
-  const naturalLanguageInputRef = useRef<HTMLTextAreaElement>(null);
-  const userInputRef = useRef<HTMLInputElement>(null);
   const isUserInput = props.item.message.role === "user";
   const sessionHistory = useSelector((store: RootStore) => store.state.history);
   const active = useSelector((store: RootStore) => store.state.active);
-
-  useEffect(() => {
-    if (userInputRef?.current) {
-      userInputRef.current.focus();
-    }
-  }, [userInputRef]);
-
-  useEffect(() => {
-    if (isHovered) {
-      naturalLanguageInputRef.current?.focus();
-    }
-  }, [isHovered]);
 
   const [feedback, setFeedback] = useState<boolean | undefined>(undefined);
 
@@ -104,10 +90,16 @@ function StepContainer(props: StepContainerProps) {
           isUserInput={isUserInput}
           fontSize={getFontSize()}
         >
-          <StyledMarkdownPreview source={props.item.message.content} />
+          <StyledMarkdownPreview
+            source={props.item.message.content}
+            showCodeBorder={true}
+          />
         </ContentDiv>
         {(isHovered || typeof feedback !== "undefined") && !active && (
-          <div className="flex items-center gap-2 right-2 absolute -bottom-3">
+          <div
+            className="flex items-center gap-2 right-2 absolute -bottom-3"
+            style={{ zIndex: 200 }}
+          >
             {feedback === false || (
               <HeaderButtonWithText text="Helpful">
                 <HandThumbUpIcon

@@ -1,12 +1,12 @@
+import MarkdownPreview from "@uiw/react-markdown-preview";
 import styled from "styled-components";
 import {
   defaultBorderRadius,
   lightGray,
-  secondaryDark,
   vscBackground,
+  vscEditorBackground,
   vscForeground,
 } from "..";
-import MarkdownPreview from "@uiw/react-markdown-preview";
 import { getFontSize } from "../../util";
 import LinkableCode from "./LinkableCode";
 
@@ -14,12 +14,12 @@ const StyledMarkdownPreviewComponent = styled(MarkdownPreview)<{
   light?: boolean;
   fontSize?: number;
   maxHeight?: number;
+  showBorder?: boolean;
 }>`
   pre {
     background-color: ${(props) =>
-      props.light ? vscBackground : secondaryDark};
+      props.light ? vscBackground : vscEditorBackground};
     border-radius: ${defaultBorderRadius};
-    /* border: 0.5px solid ${lightGray}; */
 
     max-width: calc(100vw - 24px);
   }
@@ -28,14 +28,23 @@ const StyledMarkdownPreviewComponent = styled(MarkdownPreview)<{
     color: #f78383;
     word-wrap: break-word;
     border-radius: ${defaultBorderRadius};
-    background-color: ${secondaryDark};
+    background-color: ${vscEditorBackground};
   }
 
   pre > code {
     background-color: ${(props) =>
-      props.light ? vscBackground : secondaryDark};
+      props.light ? vscBackground : vscEditorBackground};
     color: ${vscForeground};
-    padding: 12px;
+    padding: ${(props) => (props.showBorder ? "12px" : "0px 2px")};
+
+    border-radius: ${defaultBorderRadius};
+    ${(props) => {
+      if (props.showBorder) {
+        return `
+          border: 0.5px solid ${lightGray};
+        `;
+      }
+    }}
 
     ${(props) => {
       if (props.maxHeight) {
@@ -69,6 +78,7 @@ interface StyledMarkdownPreviewProps {
   source?: string;
   maxHeight?: number;
   className?: string;
+  showCodeBorder?: boolean;
 }
 
 function StyledMarkdownPreview(props: StyledMarkdownPreviewProps) {
@@ -93,6 +103,7 @@ function StyledMarkdownPreview(props: StyledMarkdownPreviewProps) {
       wrapperElement={{
         "data-color-mode": "dark",
       }}
+      showBorder={props.showCodeBorder}
     />
   );
 }

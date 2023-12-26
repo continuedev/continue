@@ -179,7 +179,7 @@ class FocusContinueInputWithEditAction : AnAction() {
 
         val continuePluginService = pluginServiceFromActionEvent(e) ?: return
         continuePluginService.continuePluginWindow?.content?.components?.get(0)?.requestFocus()
-        continuePluginService.dispatchCustomEvent(Gson().toJson(mutableMapOf("type" to "focusContinueInputWithEdit")))
+        continuePluginService.dispatchCustomEvent(Gson().toJson(mutableMapOf("type" to "focusContinueInputWithoutClear")))
 
         continuePluginService.ideProtocolClient?.sendHighlightedCode()
     }

@@ -1,0 +1,29 @@
+.mention {
+  background-color: #bfe2b6;
+  border-radius: 3px;
+  color: #000;
+  font-size: 0.9em;
+  padding: 0.05em 0.15em;
+  transition: background-color 0.2s ease-in-out;
+}
+
+.command-suggestion {
+  background-color: #bfe2b6;
+  border-radius: 3px;
+  color: #000;
+  font-size: 0.9em;
+  padding: 0.05em 0.15em;
+  transition: background-color 0.2s ease-in-out;
+}
+
+.tiptap p.is-editor-empty:first-child::before {
+  color: #646464; /* lightGray */
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+}
+
+.gap-cursor {
+  border-top: 1px solid white;
+}

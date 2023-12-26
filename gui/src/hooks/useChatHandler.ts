@@ -1,11 +1,13 @@
 import { Dispatch } from "@reduxjs/toolkit";
 
+import { JSONContent } from "@tiptap/react";
 import { ChatHistory, ChatHistoryItem, ChatMessage, SlashCommand } from "core";
 import { ExtensionIde } from "core/ide";
 import { constructMessages } from "core/llm/constructMessages";
 import { usePostHog } from "posthog-js/react";
 import { useEffect, useRef } from "react";
 import { useSelector } from "react-redux";
+import resolveEditorContent from "../components/mainInput/resolveInput";
 import { defaultModelSelector } from "../redux/selectors/modelSelectors";
 import {
   addContextItems,
@@ -31,7 +33,9 @@ function useChatHandler(dispatch: Dispatch) {
     (store: RootStore) => store.state.contextItems
   );
   const history = useSelector((store: RootStore) => store.state.history);
-
+  const contextProviders = useSelector(
+    (store: RootStore) => store.state.config.contextProviders || []
+  );
   const active = useSelector((store: RootStore) => store.state.active);
   const activeRef = useRef(active);
   useEffect(() => {
@@ -95,11 +99,13 @@ function useChatHandler(dispatch: Dispatch) {
     }
   }
 
-  async function streamResponse(input: string, index?: number) {
+  async function streamResponse(editorState: JSONContent, index?: number) {
+    const content = await resolveEditorContent(editorState, contextProviders);
+
     try {
       const message: ChatMessage = {
         role: "user",
-        content: input,
+        content,
       };
       const historyItem: ChatHistoryItem = {
         message,
@@ -107,16 +113,17 @@ function useChatHandler(dispatch: Dispatch) {
           typeof index === "number"
             ? history[index].contextItems
             : contextItems,
+        editorState,
       };
 
       let newHistory: ChatHistory = [];
       if (typeof index === "number") {
         newHistory = [...history.slice(0, index), historyItem];
-        dispatch(resubmitAtIndex({ index, content: input }));
+        dispatch(resubmitAtIndex({ index, content, editorState }));
       } else {
         newHistory = [...history, historyItem];
         console.log("Submitting message");
-        dispatch(submitMessage(message));
+        dispatch(submitMessage({ message, editorState }));
       }
 
       // TODO: hacky way to allow rerender
@@ -125,17 +132,17 @@ function useChatHandler(dispatch: Dispatch) {
       posthog.capture("step run", {
         step_name: "User Input",
         params: {
-          user_input: input,
+          user_input: content,
         },
       });
       posthog.capture("userInput", {
-        input,
+        input: content,
       });
 
       const messages = constructMessages(newHistory);
 
       // Determine if the input is a slash command
-      let commandAndInput = getSlashCommandForInput(input);
+      let commandAndInput = getSlashCommandForInput(content);
 
       const logs = [];
       const writeLog = async (log: string) => {

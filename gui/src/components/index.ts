@@ -2,39 +2,38 @@ import { Tooltip } from "react-tooltip";
 import styled, { keyframes } from "styled-components";
 import { getFontSize } from "../util";
 
+export const VSC_SECONDARY_DARK_VAR = "--vscode-input-background";
+export const VSC_BACKGROUND_VAR = "--vscode-sideBar-background";
+export const VSC_FOREGROUND_VAR = "--vscode-editor-foreground";
+export const VSC_BUTTON_BACKGROUND_VAR = "--vscode-button-background";
+export const VSC_EDITOR_BACKGROUND_VAR = "--vscode-editor-background";
+
+export const VSC_THEME_COLOR_VARS = [
+  VSC_SECONDARY_DARK_VAR,
+  VSC_BACKGROUND_VAR,
+  VSC_FOREGROUND_VAR,
+  VSC_BUTTON_BACKGROUND_VAR,
+  VSC_EDITOR_BACKGROUND_VAR,
+];
+
 export const defaultBorderRadius = "5px";
 export const lightGray = "#646464";
 export const buttonColor = "#1bbe84";
 export const buttonColorHover = "#1bbe84a8";
 
-export const secondaryDark = "var(--vscode-input-background, rgb(45 45 45))";
+export const secondaryDark = `var(${VSC_SECONDARY_DARK_VAR}, rgb(45 45 45))`;
 // export const vscBackground = "var(--vscode-editor-background, rgb(30 30 30))";
-export const vscBackground = "var(--vscode-sideBar-background, rgb(30 30 30))";
-export const vscForeground = "var(--vscode-editor-foreground, #fff)";
+export const vscBackground = `var(${VSC_BACKGROUND_VAR}, rgb(30 30 30))`;
+export const vscForeground = `var(${VSC_FOREGROUND_VAR}, #fff)`;
+export const vscButtonBackground = `var(${VSC_BUTTON_BACKGROUND_VAR}, #1bbe84)`;
+export const vscEditorBackground = `var(${VSC_EDITOR_BACKGROUND_VAR}, rgb(30 30 30))`;
 
 if (typeof document !== "undefined") {
-  const cachedForeground = localStorage.getItem("--vscode-editor-foreground");
-  const cachedBackground = localStorage.getItem("--vscode-editor-background");
-  const cachedSecondaryDark = localStorage.getItem(
-    "--vscode-list-hoverBackground"
-  );
-  if (cachedForeground) {
-    document.body.style.setProperty(
-      "--vscode-editor-foreground",
-      cachedForeground
-    );
-  }
-  if (cachedBackground) {
-    document.body.style.setProperty(
-      "--vscode-editor-background",
-      cachedBackground
-    );
-  }
-  if (cachedSecondaryDark) {
-    document.body.style.setProperty(
-      "--vscode-list-hoverBackground",
-      cachedSecondaryDark
-    );
+  for (const colorVar of VSC_THEME_COLOR_VARS) {
+    const cached = localStorage.getItem(colorVar);
+    if (cached) {
+      document.body.style.setProperty(colorVar, cached);
+    }
   }
 }
 
