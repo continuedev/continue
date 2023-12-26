@@ -1,6 +1,6 @@
 package com.github.continuedev.continueintellijextension.toolWindow
 
-import com.github.continuedev.continueintellijextension.activities.getContinueServerUrl
+import com.github.continuedev.continueintellijextension.constants.getConfigJsonPath
 import com.github.continuedev.continueintellijextension.`continue`.Position
 import com.github.continuedev.continueintellijextension.`continue`.Range
 import com.github.continuedev.continueintellijextension.`continue`.RangeInFile
@@ -10,9 +10,7 @@ import com.github.continuedev.continueintellijextension.services.ContinuePluginS
 import com.google.gson.Gson
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
-import com.intellij.openapi.actionSystem.ActionGroup
 import com.intellij.openapi.actionSystem.ActionManager
-import com.intellij.openapi.actionSystem.ActionToolbar
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.editor.colors.EditorColorsManager
@@ -28,7 +26,6 @@ import kotlinx.coroutines.launch
 import org.cef.CefApp
 import org.cef.browser.CefBrowser
 import org.cef.handler.CefLoadHandlerAdapter
-import java.awt.BorderLayout
 import javax.swing.*
 import kotlin.math.max
 import kotlin.math.min
@@ -86,6 +83,9 @@ class ContinuePluginToolWindowFactory : ToolWindowFactory, DumbAware {
                 val json: JsonObject = parser.parse(msg).asJsonObject
                 val type = json.get("type").asString
                 val data = json.get("data").asJsonObject
+
+                val ide = continuePluginService.ideProtocolClient;
+
                 when (type) {
                     "onLoad" -> {
                         GlobalScope.launch {
@@ -116,13 +116,12 @@ class ContinuePluginToolWindowFactory : ToolWindowFactory, DumbAware {
                             val secondaryDarkHex = String.format("#%02x%02x%02x", adjustedRed, adjustedGreen, adjustedBlue)
 
                             browser.executeJavaScriptAsync("document.body.style.setProperty(\"--vscode-editor-foreground\", \"$defaultForegroundHex\");")
-                            browser.executeJavaScriptAsync("document.body.style.setProperty(\"--vscode-editor-background\", \"$defaultBackgroundHex\");")
-                            browser.executeJavaScriptAsync("document.body.style.setProperty(\"--vscode-list-hoverBackground\", \"$secondaryDarkHex\");")
+                            browser.executeJavaScriptAsync("document.body.style.setProperty(\"--vscode-sideBar-background\", \"$defaultBackgroundHex\");")
+                            browser.executeJavaScriptAsync("document.body.style.setProperty(\"--vscode-input-background\", \"$secondaryDarkHex\");")
 
                             val jsonData = mutableMapOf(
                                     "type" to "onLoad",
                                     "windowId" to continuePluginService.windowId,
-                                    "serverUrl" to getContinueServerUrl(),
                                     "workspacePaths" to continuePluginService.worksapcePaths,
                                     "vscMachineId" to getMachineUniqueID(),
                                     "vscMediaUrl" to "http://continue",
@@ -133,7 +132,30 @@ class ContinuePluginToolWindowFactory : ToolWindowFactory, DumbAware {
 
                     }
                     "showLines" -> {
-                        continuePluginService.ideProtocolClient?.highlightCode(RangeInFile(
+                        ide?.highlightCode(RangeInFile(
+                                data.get("filepath").asString,
+                                Range(Position(
+                                        data.get("start").asInt,
+                                        0
+                                ), Position(
+                                        data.get("end").asInt,
+                                        0
+                                )),
+
+                        ),"#00ff0022")
+                    }
+                    "showVirtualFile" -> {
+                        ide?.showVirtualFile(data.get("name").asString, data.get("content").asString)
+                    }
+                    "showFile" -> {
+                        ide?.setFileOpen(data.get("filepath").asString)
+                    }
+                    "reloadWindow" -> {}
+                    "openConfigJson" -> {
+                        ide?.setFileOpen(getConfigJsonPath())
+                    }
+                    "readRangeInFile" -> {
+                        ide?.readRangeInFile(RangeInFile(
                                 data.get("filepath").asString,
                                 Range(Position(
                                         data.get("start").asInt,
@@ -142,16 +164,16 @@ class ContinuePluginToolWindowFactory : ToolWindowFactory, DumbAware {
                                         data.get("end").asInt + 1,
                                         0
                                 )),
+                        ))
+                    }
+                    "focusEditor" -> {}
 
-                        ),"#00ff0022")
+                    // IDE //
+                    else -> {
+                        if (msg != null) {
+                            ide?.handleWebsocketMessage(msg)
+                        }
                     }
-                    "showVirtualFile" -> {
-                        continuePluginService.ideProtocolClient?.showVirtualFile(data.get("name").asString, data.get("content").asString)
-                    }
-                    "showFile" -> {
-                        continuePluginService.ideProtocolClient?.setFileOpen(data.get("filepath").asString)
-                    }
-                    "reloadWindow" -> {}
                 }
 
 

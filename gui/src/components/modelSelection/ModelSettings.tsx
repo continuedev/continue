@@ -1,7 +1,7 @@
-import styled from "styled-components";
-import { Label, Select, Input, defaultBorderRadius, lightGray } from "..";
 import { useState } from "react";
 import { useFormContext } from "react-hook-form";
+import styled from "styled-components";
+import { Input, Label, Select, defaultBorderRadius, lightGray } from "..";
 import { getFontSize } from "../../util";
 
 const Div = styled.div<{ dashed: boolean }>`
@@ -11,25 +11,25 @@ const Div = styled.div<{ dashed: boolean }>`
   margin-bottom: 16px;
 `;
 
-type ModelOption = "api_key" | "model" | "context_length";
+type ModelOption = "apiKey" | "model" | "contextLength";
 
 const DefaultModelOptions: {
   [key: string]: { [key in ModelOption]?: string };
 } = {
   OpenAI: {
-    api_key: "",
+    apiKey: "",
     model: "gpt-4",
   },
   OpenAIFreeTrial: {
-    api_key: "",
+    apiKey: "",
     model: "gpt-4",
   },
   Anthropic: {
-    api_key: "",
+    apiKey: "",
     model: "claude-2",
   },
   default: {
-    api_key: "",
+    apiKey: "",
     model: "gpt-4",
   },
 };
@@ -47,14 +47,14 @@ function ModelSettings(props: { llm: any | undefined; role: string }) {
         <>
           <b>{props.role}</b>: <b> {props.llm?.class_name || "gpt-4"}</b>
           <form>
-            {typeof modelOptions.api_key !== undefined && (
+            {typeof modelOptions.apiKey !== undefined && (
               <>
                 <Label fontSize={getFontSize()}>API Key</Label>
                 <Input
                   type="text"
-                  defaultValue={props.llm.api_key}
+                  defaultValue={props.llm.apiKey}
                   placeholder="API Key"
-                  {...register(`models.${props.role}.api_key`)}
+                  {...register(`models.${props.role}.apiKey`)}
                 />
               </>
             )}

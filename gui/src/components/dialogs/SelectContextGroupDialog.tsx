@@ -1,13 +1,6 @@
-import { useDispatch, useSelector } from "react-redux";
-import { RootStore } from "../../redux/store";
-import { useContext } from "react";
-import { GUIClientContext } from "../../App";
 import { TrashIcon } from "@heroicons/react/24/outline";
-import HeaderButtonWithText from "../HeaderButtonWithText";
-import {
-  setDialogMessage,
-  setShowDialog,
-} from "../../redux/slices/uiStateSlice";
+import { useDispatch, useSelector } from "react-redux";
+import styled from "styled-components";
 import {
   Button,
   defaultBorderRadius,
@@ -15,7 +8,12 @@ import {
   vscBackground,
   vscForeground,
 } from "..";
-import styled from "styled-components";
+import {
+  setDialogMessage,
+  setShowDialog,
+} from "../../redux/slices/uiStateSlice";
+import { RootStore } from "../../redux/store";
+import HeaderButtonWithText from "../HeaderButtonWithText";
 
 const MiniPillSpan = styled.span`
   padding: 3px;
@@ -54,7 +52,6 @@ function SelectContextGroupDialog() {
   const savedContextGroups = useSelector(
     (state: RootStore) => state.serverState.savedContextGroups
   );
-  const client = useContext(GUIClientContext);
 
   return (
     <div className="p-4">
@@ -69,7 +66,8 @@ function SelectContextGroupDialog() {
                 onClick={() => {
                   dispatch(setDialogMessage(undefined));
                   dispatch(setShowDialog(false));
-                  client?.selectContextGroup(key);
+                  // TODO
+                  // client?.selectContextGroup(key);
                 }}
               >
                 <b>{key}: </b>
@@ -83,7 +81,8 @@ function SelectContextGroupDialog() {
                   text="Delete"
                   onClick={(e) => {
                     e.stopPropagation();
-                    client?.deleteContextGroup(key);
+                    // TODO
+                    // client?.deleteContextGroup(key);
                   }}
                 >
                   <TrashIcon width="1.4em" height="1.4em" />

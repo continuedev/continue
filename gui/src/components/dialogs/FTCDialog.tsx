@@ -1,10 +1,11 @@
-import React, { useContext } from "react";
+import React from "react";
+import { useDispatch } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { Button, Input } from "..";
-import { useNavigate } from "react-router-dom";
-import { GUIClientContext } from "../../App";
-import { useDispatch } from "react-redux";
+import { setDefaultModel } from "../../redux/slices/stateSlice";
 import { setShowDialog } from "../../redux/slices/uiStateSlice";
+import { addOpenAIKey } from "../../util/ide";
 
 const GridDiv = styled.div`
   display: grid;
@@ -16,7 +17,6 @@ const GridDiv = styled.div`
 function FTCDialog() {
   const navigate = useNavigate();
   const [apiKey, setApiKey] = React.useState("");
-  const client = useContext(GUIClientContext);
   const dispatch = useDispatch();
 
   return (
@@ -55,13 +55,9 @@ function FTCDialog() {
         <Button
           disabled={!apiKey}
           onClick={() => {
-            client?.addModelForRole("*", {
-              model: "gpt-4",
-              api_key: apiKey,
-              title: "GPT-4",
-              provider: "openai",
-            });
+            addOpenAIKey(apiKey);
             dispatch(setShowDialog(false));
+            dispatch(setDefaultModel("GPT-4"));
           }}
         >
           Use my API key

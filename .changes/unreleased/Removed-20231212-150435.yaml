@@ -1,0 +1,4 @@
+project: server
+kind: Removed
+body: No longer using Continue Python server
+time: 2023-12-12T15:04:35.735492-08:00

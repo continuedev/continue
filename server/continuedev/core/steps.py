@@ -183,24 +183,6 @@ class DefaultModelEditCodeStep(Step):
 
     summary_prompt: str = "Please briefly explain the changes made to the code above. Give no more than 2-3 sentences, and use markdown bullet points:"
 
-    async def describe(self, models: Models):
-        name = await models.summarize.complete(
-            f"Write a very short title to describe this requested change (no quotes): '{self.user_input}'. This is the title:"
-        )
-        self.name = remove_quotes_and_escapes(name)
-
-        if self._previous_contents.strip() == self._new_contents.strip():
-            return "No edits were made"
-        else:
-            return None
-
-    def on_stop(self, sdk: AbstractContinueSDK):
-        index = len(sdk.history)
-        for i in range(index - 1, -1, -1):
-            yield SessionUpdate(index=i, update=SetStep(hide=True))
-            if sdk.history[i].step_type == "UserInputStep":
-                break
-
     async def get_prompt_parts(
         self,
         rif: RangeInFileWithContents,

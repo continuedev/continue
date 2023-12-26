@@ -2,9 +2,8 @@
 This is the data that populates the model selection page.
 */
 
+import { ModelName, ModelProvider } from "core";
 import _ from "lodash";
-import { ModelProvider } from "../schema/ModelProvider";
-import { ModelName } from "../schema/ModelName";
 
 export function updatedObj(old: any, pathToValue: { [key: string]: any }) {
   const newObject = _.cloneDeep(old);
@@ -54,14 +53,14 @@ export interface InputDescriptor {
 
 const contextLengthInput: InputDescriptor = {
   inputType: CollectInputType.number,
-  key: "context_length",
+  key: "contextLength",
   label: "Context Length",
   defaultValue: 2048,
   required: false,
 };
 const temperatureInput: InputDescriptor = {
   inputType: CollectInputType.number,
-  key: "completion_options.temperature",
+  key: "completionOptions.temperature",
   label: "Temperature",
   defaultValue: undefined,
   required: false,
@@ -71,7 +70,7 @@ const temperatureInput: InputDescriptor = {
 };
 const topPInput: InputDescriptor = {
   inputType: CollectInputType.number,
-  key: "completion_options.top_p",
+  key: "completionOptions.topP",
   label: "Top-P",
   defaultValue: undefined,
   required: false,
@@ -81,7 +80,7 @@ const topPInput: InputDescriptor = {
 };
 const topKInput: InputDescriptor = {
   inputType: CollectInputType.number,
-  key: "completion_options.top_k",
+  key: "completionOptions.topK",
   label: "Top-K",
   defaultValue: undefined,
   required: false,
@@ -90,7 +89,7 @@ const topKInput: InputDescriptor = {
 };
 const presencePenaltyInput: InputDescriptor = {
   inputType: CollectInputType.number,
-  key: "completion_options.presence_penalty",
+  key: "completionOptions.presencePenalty",
   label: "Presence Penalty",
   defaultValue: undefined,
   required: false,
@@ -100,7 +99,7 @@ const presencePenaltyInput: InputDescriptor = {
 };
 const FrequencyPenaltyInput: InputDescriptor = {
   inputType: CollectInputType.number,
-  key: "completion_options.frequency_penalty",
+  key: "completionOptions.frequencyPenalty",
   label: "Frequency Penalty",
   defaultValue: undefined,
   required: false,
@@ -119,7 +118,7 @@ const completionParamsInputs = [
 
 const apiBaseInput: InputDescriptor = {
   inputType: CollectInputType.text,
-  key: "api_base",
+  key: "apiBase",
   label: "API Base",
   placeholder: "e.g. http://localhost:8080",
   required: false,
@@ -154,10 +153,10 @@ export interface ModelPackage {
   icon?: string;
   params: {
     model: ModelName;
-    template_messages?: string;
-    context_length: number;
-    stop_tokens?: string[];
-    prompt_templates?: any;
+    templateMessages?: string;
+    contextLength: number;
+    stopTokens?: string[];
+    promptTemplates?: any;
     replace?: [string, string][];
     [key: string]: any;
   };
@@ -173,7 +172,7 @@ const codeLlamaInstruct: ModelPackage = {
   params: {
     title: "CodeLlama-7b",
     model: "codellama-7b",
-    context_length: 2048,
+    contextLength: 2048,
   },
   icon: "meta.png",
   dimensions: [
@@ -206,7 +205,7 @@ const llama2Chat: ModelPackage = {
   params: {
     title: "Llama2-7b",
     model: "llama2-7b",
-    context_length: 2048,
+    contextLength: 2048,
   },
   icon: "meta.png",
   dimensions: [
@@ -240,7 +239,7 @@ const wizardCoder: ModelPackage = {
   params: {
     title: "WizardCoder-7b",
     model: "wizardcoder-7b",
-    context_length: 2048,
+    contextLength: 2048,
   },
   icon: "wizardlm.png",
   dimensions: [
@@ -272,7 +271,7 @@ const phindCodeLlama: ModelPackage = {
   params: {
     title: "Phind CodeLlama",
     model: "phind-codellama-34b",
-    context_length: 2048,
+    contextLength: 2048,
   },
   providerOptions: ["ollama", "lmstudio", "llamacpp", "replicate"],
 };
@@ -284,10 +283,95 @@ const mistral: ModelPackage = {
   params: {
     title: "Mistral",
     model: "mistral-7b",
-    context_length: 2048,
+    contextLength: 4096,
   },
+  dimensions: [
+    {
+      name: "Parameter Count",
+      description: "The number of parameters in the model",
+      options: {
+        "7b": {
+          model: "wizardcoder-7b",
+          title: "WizardCoder-7b",
+        },
+        "8x7b (MoE)": {
+          model: "mistral-8x7b",
+          title: "Mixtral",
+        },
+      },
+    },
+  ],
   icon: "mistral.png",
   providerOptions: ["ollama", "lmstudio", "together", "llamacpp", "replicate"],
+};
+
+const mistralTiny: ModelPackage = {
+  title: "Mistral Tiny (7b)",
+  description: "An 7b parameter model created by Mistral AI",
+  params: {
+    title: "Mistral",
+    model: "mistral-tiny",
+    contextLength: 4096,
+  },
+  icon: "mistral.png",
+  providerOptions: [
+    "ollama",
+    "lmstudio",
+    "together",
+    "llamacpp",
+    "replicate",
+    "mistral",
+  ],
+};
+const mistralSmall: ModelPackage = {
+  title: "Mixtral (8x7b)",
+  description:
+    "An 8x7b parameter Mixture of Experts model created by Mistral AI (a.k.a Mistral Small)",
+  params: {
+    title: "Mixtral",
+    model: "mistral-small",
+    contextLength: 4096,
+  },
+  icon: "mistral.png",
+  providerOptions: [
+    "ollama",
+    "lmstudio",
+    "together",
+    "llamacpp",
+    "replicate",
+    "mistral",
+  ],
+};
+const mistralMedium: ModelPackage = {
+  title: "Mistral Medium",
+  description: "A highly capable model created by Mistral AI",
+  params: {
+    title: "Mistral Medium",
+    model: "mistral-medium",
+    contextLength: 4096,
+  },
+  icon: "mistral.png",
+  providerOptions: [
+    "ollama",
+    "lmstudio",
+    "together",
+    "llamacpp",
+    "replicate",
+    "mistral",
+  ],
+};
+
+const gemini: ModelPackage = {
+  title: "Gemini Pro",
+  description: "A highly capable model created by Google DeepMind",
+  params: {
+    title: "Gemini Pro",
+    model: "gemini-pro",
+    contextLength: 32_000,
+    apiKey: "<API_KEY>",
+  },
+  icon: "gemini.png",
+  providerOptions: ["palm"],
 };
 
 const zephyr: ModelPackage = {
@@ -297,7 +381,7 @@ const zephyr: ModelPackage = {
   params: {
     title: "Zephyr",
     model: "zephyr-7b",
-    context_length: 2048,
+    contextLength: 2048,
   },
   icon: "mistral.png",
   providerOptions: ["ollama", "lmstudio", "llamacpp", "replicate"],
@@ -310,7 +394,7 @@ const deepseek: ModelPackage = {
   params: {
     title: "DeepSeek",
     model: "deepseek-7b",
-    context_length: 2048,
+    contextLength: 2048,
   },
   providerOptions: ["lmstudio", "llamacpp"],
 };
@@ -321,7 +405,7 @@ const codeup: ModelPackage = {
   params: {
     title: "CodeUp",
     model: "codeup-13b",
-    context_length: 2048,
+    contextLength: 2048,
   },
   providerOptions: ["ollama", "lmstudio", "llamacpp", "replicate"],
 };
@@ -342,9 +426,9 @@ const gpt4turbo: ModelPackage = {
     "A faster, cheaper version of GPT-4 with a longer context length",
   params: {
     model: "gpt-4-1106-preview",
-    context_length: 128_000,
+    contextLength: 128_000,
     title: "GPT-4 Turbo",
-    api_key: "",
+    apiKey: "",
   },
   providerOptions: ["openai", "freetrial"],
   icon: "openai.png",
@@ -355,8 +439,8 @@ const gpt4: ModelPackage = {
   description: "The most powerful model from OpenAI",
   params: {
     model: "gpt-4",
-    context_length: 8096,
-    api_key: "",
+    contextLength: 8096,
+    apiKey: "",
     title: "GPT-4",
   },
   providerOptions: ["openai", "freetrial"],
@@ -369,9 +453,9 @@ const gpt35turbo: ModelPackage = {
     "A faster, cheaper OpenAI model with slightly lower capabilities",
   params: {
     model: "gpt-3.5-turbo",
-    context_length: 8096,
+    contextLength: 8096,
     title: "GPT-3.5-Turbo",
-    api_key: "",
+    apiKey: "",
   },
   providerOptions: ["openai", "freetrial"],
   icon: "openai.png",
@@ -382,9 +466,9 @@ const claude2: ModelPackage = {
   description: "A highly capable model with a 100k context length",
   params: {
     model: "claude-2",
-    context_length: 100000,
+    contextLength: 100000,
     title: "Claude-2",
-    api_key: "",
+    apiKey: "",
   },
   providerOptions: ["anthropic"],
   icon: "anthropic.png",
@@ -396,8 +480,8 @@ const chatBison: ModelPackage = {
     "Google PaLM's chat-bison-001 model, fine-tuned for chatting about code",
   params: {
     model: "chat-bison-001",
-    context_length: 8000,
-    api_key: "",
+    contextLength: 8000,
+    apiKey: "",
     title: "Chat Bison",
   },
   providerOptions: ["palm"],
@@ -408,6 +492,7 @@ export const MODEL_INFO: ModelPackage[] = [
   gpt4,
   gpt35turbo,
   gpt4turbo,
+  gemini,
   claude2,
   mistral,
   codeLlamaInstruct,
@@ -433,7 +518,7 @@ export const PROVIDER_INFO: { [key: string]: ModelInfo } = {
     collectInputFor: [
       {
         inputType: CollectInputType.text,
-        key: "api_key",
+        key: "apiKey",
         label: "API Key",
         placeholder: "Enter your OpenAI API key",
         required: true,
@@ -453,7 +538,7 @@ export const PROVIDER_INFO: { [key: string]: ModelInfo } = {
     collectInputFor: [
       {
         inputType: CollectInputType.text,
-        key: "api_key",
+        key: "apiKey",
         label: "API Key",
         placeholder: "Enter your Anthropic API key",
         required: true,
@@ -470,7 +555,7 @@ export const PROVIDER_INFO: { [key: string]: ModelInfo } = {
         description: "A highly capable model with a 100k context length",
         params: {
           model: "claude-2",
-          context_length: 100000,
+          contextLength: 100000,
           title: "Claude-2",
         },
       },
@@ -490,6 +575,35 @@ export const PROVIDER_INFO: { [key: string]: ModelInfo } = {
       ...completionParamsInputs,
       { ...apiBaseInput, defaultValue: "http://localhost:11434" },
     ],
+  },
+  mistral: {
+    title: "Mistral API",
+    provider: "mistral",
+    description:
+      "The Mistral API provides hosted access to their models, including Mistral-7b, Mixtral, and the very capable mistral-medium",
+    icon: "mistral.png",
+    longDescription: `To get access to the Mistral API, obtain your API key from the [Mistral platform](https://docs.mistral.ai/)`,
+    tags: [
+      ModelProviderTag["Requires API Key"],
+      ModelProviderTag["Open-Source"],
+    ],
+    params: {
+      apiKey: "",
+    },
+    collectInputFor: [
+      {
+        inputType: CollectInputType.text,
+        key: "apiKey",
+        label: "API Key",
+        placeholder: "Enter your Mistral API key",
+        required: true,
+      },
+      ...completionParamsInputs,
+    ],
+    packages: [mistralTiny, mistralSmall, mistralMedium].map((p) => {
+      p.params.contextLength = 4096;
+      return p;
+    }),
   },
   llamafile: {
     title: "llamafile",
@@ -514,12 +628,12 @@ export const PROVIDER_INFO: { [key: string]: ModelInfo } = {
       ModelProviderTag["Open-Source"],
     ],
     params: {
-      api_key: "",
+      apiKey: "",
     },
     collectInputFor: [
       {
         inputType: CollectInputType.text,
-        key: "api_key",
+        key: "apiKey",
         label: "API Key",
         placeholder: "Enter your TogetherAI API key",
         required: true,
@@ -527,7 +641,7 @@ export const PROVIDER_INFO: { [key: string]: ModelInfo } = {
       ...completionParamsInputs,
     ],
     packages: [llama2Chat, codeLlamaInstruct, mistral].map((p) => {
-      p.params.context_length = 4096;
+      p.params.contextLength = 4096;
       return p;
     }),
   },
@@ -541,7 +655,7 @@ export const PROVIDER_INFO: { [key: string]: ModelInfo } = {
     icon: "lmstudio.png",
     tags: [ModelProviderTag["Local"], ModelProviderTag["Open-Source"]],
     params: {
-      server_url: "http://localhost:1234",
+      apiBase: "http://localhost:1234",
     },
     packages: [...osModels, deepseek],
     collectInputFor: [...completionParamsInputs],
@@ -552,12 +666,12 @@ export const PROVIDER_INFO: { [key: string]: ModelInfo } = {
     description: "Use the Replicate API to run open-source models",
     longDescription: `Replicate is a hosted service that makes it easy to run ML models. To get started with Replicate:\n1. Obtain an API key from [here](https://replicate.com)\n2. Paste below\n3. Select a model preset`,
     params: {
-      api_key: "",
+      apiKey: "",
     },
     collectInputFor: [
       {
         inputType: CollectInputType.text,
-        key: "api_key",
+        key: "apiKey",
         label: "API Key",
         placeholder: "Enter your Replicate API key",
         required: true,
@@ -592,60 +706,40 @@ After it's up and running, you can start using Continue.`,
     packages: [...osModels, deepseek],
     collectInputFor: [...completionParamsInputs],
   },
-  textgenwebui: {
-    title: "text-generation-webui",
-    provider: "text-gen-webui",
-    description: "A popular open-source front-end for serving LLMs locally",
-    longDescription: `text-generation-webui is a comprehensive, open-source language model UI and local server. You can also set it up with an [OpenAI-compatible server extension](https://github.com/oobabooga/text-generation-webui/tree/main/extensions/openai#an-openedai-api-openai-like), but this model provider is made to interface with the built-in server, which has a different format. To setup the text-generation-webui server, take the following steps:
-
-1. Clone the repository: \`git clone https://github.com/oobabooga/text-generation-webui/tree/main\`
-2. Change into the directory: \`cd text-generation-webui\`
-3. Run the one-click installer script for your operating system, using the --api flag:
-    - Mac: \`sh start_macos.sh --api\`
-    - Linux: \`sh start_linux.sh --api\`
-    - Windows: \`. start_windows.bat --api\`
-    - WSL: \`. start_wsl.bat --api\`
-4. Find a model to run and download its weights into the folder \`text-generation-webui/models\`. The best place to find models is [The Bloke on HuggingFace](https://huggingface.co/TheBloke)
-5. Navigate to [the UI](http://127.0.0.1:7860), click the "Model" tab, and load the model you've downloaded
-6. Once the model is loaded, you can start using Continue`,
-    icon: undefined,
-    tags: [ModelProviderTag.Local, ModelProviderTag["Open-Source"]],
-    packages: [...osModels, deepseek],
-    collectInputFor: [...completionParamsInputs],
-  },
   palm: {
     title: "Google PaLM API",
     provider: "google-palm",
     description:
-      "Try out the Google PaLM API, which is currently in public preview, using an API key from Google Makersuite",
-    longDescription: `To get started with Google Makersuite, obtain your API key from [here](https://developers.generativeai.google/products/makersuite) and paste it below.
+      "Try out the Google PaLM API, which is currently in public preview, using an API key from Google Makersuite. Includes the Gemini Pro model",
+    longDescription: `To get started with Google Makersuite, obtain your API key from [here](https://makersuite.google.com) and paste it below.
 > Note: Google's PaLM language models do not support streaming, so the response will appear all at once after a few seconds.`,
     icon: "google-palm.png",
     tags: [ModelProviderTag["Requires API Key"]],
     collectInputFor: [
       {
         inputType: CollectInputType.text,
-        key: "api_key",
+        key: "apiKey",
         label: "API Key",
         placeholder: "Enter your MakerSpace API key",
         required: true,
       },
     ],
     packages: [
+      gemini,
       {
         title: "chat-bison-001",
         description:
           "Google PaLM's chat-bison-001 model, fine-tuned for chatting about code",
         params: {
           model: "chat-bison-001",
-          context_length: 8000,
+          contextLength: 8000,
         },
       },
     ],
   },
   "openai-aiohttp": {
     title: "Other OpenAI-compatible API",
-    provider: "openai-aiohttp",
+    provider: "openai",
     description:
       "If you are using any other OpenAI-compatible API, for example text-gen-webui, FastChat, LocalAI, or llama-cpp-python, you can simply enter your server URL",
     longDescription: `If you are using any other OpenAI-compatible API, you can simply enter your server URL. If you still need to set up your model server, you can follow a guide below:
@@ -655,7 +749,7 @@ After it's up and running, you can start using Continue.`,
 - [llama-cpp-python](https://github.com/continuedev/ggml-server-example)
 - [FastChat](https://github.com/lm-sys/FastChat/blob/main/docs/openai_api.md)`,
     params: {
-      server_url: "",
+      apiBase: "",
     },
     collectInputFor: [
       {
@@ -674,7 +768,7 @@ After it's up and running, you can start using Continue.`,
     description:
       "New users can try out Continue for free using a proxy server that securely makes calls to OpenAI using our API key",
     longDescription:
-      'New users can try out Continue for free using a proxy server that securely makes calls to OpenAI using our API key. If you are ready to use your own API key or have used all 250 free uses, you can enter your API key in config.py where it says `api_key=""` or select another model provider.',
+      'New users can try out Continue for free using a proxy server that securely makes calls to OpenAI using our API key. If you are ready to use your own API key or have used all 250 free uses, you can enter your API key in config.py where it says `apiKey=""` or select another model provider.',
     icon: "openai.png",
     tags: [ModelProviderTag.Free],
     packages: [

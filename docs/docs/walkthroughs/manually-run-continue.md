@@ -4,6 +4,8 @@ description: How to run Continue manually
 keywords: [manual, firewall, vpn, air-gapped, self-host]
 ---
 
+> **NOTE**: Continue no longer uses a separate Python server. If you are having trouble setting up the server, we recommend switching to the latest extension version, where it will not be necessary (or compatible).
+
 # Manually Run Continue
 
 You might want to run Continue manually if

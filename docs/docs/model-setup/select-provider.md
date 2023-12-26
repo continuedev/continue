@@ -13,6 +13,7 @@ Continue makes it easy to swap out different LLM providers. You can either click
 ## Local
 
 You can run a model on your local computer using:
+
 - [Ollama](../reference/Model%20Providers/ollama.md)
 - [LM Studio](../reference/Model%20Providers/ggml.md)
 - [Llama.cpp](../reference/Model%20Providers/llamacpp.md)
@@ -26,18 +27,20 @@ Once you have it running, you will need to configure it in the GUI or manually a
 ## Cloud
 
 You can deploy a model in your [AWS](https://github.com/continuedev/deploy-os-code-llm#aws), [GCP](https://github.com/continuedev/deploy-os-code-llm#gcp), [Azure](https://github.com/continuedev/deploy-os-code-llm#azure), or [other clouds](https://github.com/continuedev/deploy-os-code-llm#others-2) using:
+
 - [HuggingFace TGI](https://github.com/continuedev/deploy-os-code-llm#tgi)
 - [vLLM](https://github.com/continuedev/deploy-os-code-llm#vllm)
 - [SkyPilot](https://github.com/continuedev/deploy-os-code-llm#skypilot)
 - [Anyscale Private Endpoints](https://github.com/continuedev/deploy-os-code-llm#anyscale-private-endpoints) (OpenAI compatible API)
 
-Once you have it deloyed, you will need to wire up a new LLM class and manually add it to your `config.json`. This requires you to implement the `stream_complete`, `complete`, and `stream_chat` methods. You can see examples in [`server/continuedev/libs/llm`](https://github.com/continuedev/continue/tree/main/server/continuedev/libs/llm). However, if the provider has the exact same API interface as OpenAI, the `OpenAI` class will work for you. You will just need to change the `api_base` parameter.
+If the API you use is OpenAI-compatible, you will be able to use the "openai" provider in `config.json` and change the `apiBase` to point to the server. Otherwise, you will need to wire up a new LLM object in `config.ts`. Learn how to do this [here](configuration.md#defining-a-custom-llm-provider)
 
 ## SaaS
 
 ### Open-source LLMs
 
 You can deploy open-source LLMs on a service using:
+
 - [Together](../reference/Model%20Providers/togetherllm.md)
 - [HuggingFace Inference Endpoints](../reference/Model%20Providers/huggingfaceinferenceapi.md)
 - [Anyscale Endpoints](../reference/Model%20Providers/openai.md) (OpenAI compatible API)
@@ -46,6 +49,7 @@ You can deploy open-source LLMs on a service using:
 ### Commercial LLMs
 
 You can use commercial LLMs via APIs using:
+
 - [OpenAI API](../reference/Model%20Providers/openai.md)
 - [Azure OpenAI Service](../reference/Model%20Providers/openai.md) (OpenAI compatible API)
 - [Anthrophic API](../reference/Model%20Providers/anthropicllm.md)

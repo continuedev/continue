@@ -16,21 +16,30 @@ When you enter your next input, Continue will see the full contents of each of t
 
 ## Built-in Context Providers
 
-To use any of the built-in context providers, open `~/.continue/config.json` (can do this with the '/config' slash command) and add it to the `context_providers` list.
+To use any of the built-in context providers, open `~/.continue/config.json` (can do this with the '/config' slash command) and add it to the `contextProviders` list.
 
-### GitHub
+### Git Diff
 
-Type '@issue' to reference the title and contents of a GitHub issue.
+Type '@diff' to reference all of the changes you've made to your current branch. This is useful if you want to summarize what you've done or ask for a general review of your work before committing.
 
 ```json
-{
-  "name": "github",
-  "params": {
-    // Change to whichever repo you want to use
-    "repo_name": "continuedev/continue",
-    "auth_token": "<my_github_auth_token>"
-  }
-}
+{ "name": "diff" }
+```
+
+### Terminal
+
+Type '@terminal' to reference the contents of your IDE's terminal.
+
+```json
+{ "name": "terminal" }
+```
+
+### Open Files
+
+Type '@open' to reference the contents of all of your open files.
+
+```json
+{ "name": "open" }
 ```
 
 ### Codebase Search
@@ -48,16 +57,8 @@ Type '@url' to reference the contents of a URL. You can either reference preset 
 ```json
 {
   "name": "url",
-  "params": { "preset_urls": ["https://continue.dev/docs/customization"] }
+  "params": { "presetUrls": ["https://continue.dev/docs/customization"] }
 }
-```
-
-### Git Diff
-
-Type '@diff' to reference all of the changes you've made to your current branch. This is useful if you want to summarize what you've done or ask for a general review of your work before committing.
-
-```json
-{ "name": "diff" }
 ```
 
 ### File Tree
@@ -75,18 +76,25 @@ Type '@google' to reference the results of a Google search. For example, type "@
 ```json
 {
   "name": "google",
-  "params": { "serper_api_key": "<your serper.dev api key>" }
+  "params": { "serperApiKey": "<your serper.dev api key>" }
 }
 ```
 
 Note: You can get an API key for free at [serper.dev](https://serper.dev).
 
-### Terminal
+### GitHub
 
-Type '@terminal' to reference the contents of your IDE's terminal.
+Type '@issue' to reference the title and contents of a GitHub issue.
 
 ```json
-{ "name": "terminal" }
+{
+  "name": "github",
+  "params": {
+    // Change to whichever repo you want to use
+    "repoName": "continuedev/continue",
+    "authToken": "<my_github_auth_token>"
+  }
+}
 ```
 
 ### Requesting Context Providers
@@ -97,68 +105,49 @@ Not seeing what you want? Create an issue [here](https://github.com/continuedev/
 
 ### Introductory Example
 
-As an example, here is the `GitHubIssuesContextProvider`, which lets you search all open GitHub Issues in a repo:
+To write your own context provider, you just have to implement the `CustomContextProvider`
+interface:
 
-```python
-class GitHubIssuesContextProvider(ContextProvider):
-    """
-    The GitHubIssuesContextProvider is a ContextProvider that allows you to search GitHub issues in a repo.
-    """
-
-    title = "issues"
-    repo_name: str
-    auth_token: str
-
-    async def provide_context_items(self) -> List[ContextItem]:
-        auth = Auth.Token(self.auth_token)
-        gh = Github(auth=auth)
-
-        repo = gh.get_repo(self.repo_name)
-        issues = repo.get_issues().get_page(0)
-
-        return [ContextItem(
-            content=issue.body,
-            description=ContextItemDescription(
-                name=f"Issue #{issue.number}",
-                description=issue.title,
-                id=ContextItemId(
-                    provider_title=self.title,
-                    item_id=issue.id
-                )
-            )
-        ) for issue in issues]
+```typescript
+interface CustomContextProvider {
+  title: string;
+  displayTitle?: string;
+  description?: string;
+  getContextItems(query: string): Promise<ContextItem[]>;
+}
 ```
 
-It can then be set in the `ContinueConfig` like so:
+As an example, let's say you have a set of internal documents that have been indexed in a vector database. You've set up a simple REST API that allows internal users to query and get back relevant snippets. This context provider will send the query to this server and return the results from the vector database.
 
-```python title="~/.continue/config.py"
-def modify_config(config: ContinueConfig) -> ContinueConfig:
-    config.context_providers.append(GitHubIssuesContextProvider(
-            repo_name="my-github-username-or-org/my-github-repo",
-            auth_token="my-github-auth-token"
-    ))
-    return config
+```typescript
+const RagContextProvider = {
+  title: "rag",
+  displayTitle: "RAG",
+  description:
+    "Retrieve snippets from our vector database of internal documents",
+
+  getContextItems: (query: string) => {
+    const response = await fetch("https://internal_rag_server.com/retrieve", {
+      method: "POST",
+      body: JSON.stringify({ query }),
+    });
+
+    const results = await response.json();
+
+    return results.map((result) => ({
+      title: result.title,
+      description: result.title,
+      contents: result.contents,
+    }));
+  },
+};
 ```
 
-This example is a situation where you request all of the data (issues in this case) beforehand, and store them in the ContextProvider.
+It can then be added in `config.ts` like so:
 
-### Dynamic Context Providers
-
-There are other scenarios where you might want to just get information on demand, for example by typing '@url https://continue.dev/docs/context-providers' and having the ContextProvider fetch the contents of that URL dynamically. For this case, you can implement the `DynamicContextProvider` class like this:
-
-```python
-from continuedev.plugins.context_providers.dynamic import DynamicContextProvider
-
-class ExampleDynamicProvider(DynamicProvider):
-    title = "example"
-    name = "Example"
-    description = "Example description"
-
-    async def get_content(self, query: str) -> str:
-        return f"Example content for '{query}'"
-
-    async def setup(self):
-        print("Example setup")
+```typescript title="~/.continue/config.ts"
+export function modifyConfig(config: Config): Config {
+  config.contextProviders.append(RagContextProvider);
+  return config;
+}
 ```
-
-The `setup` method optionally allows you to do any setup when Continue is first loaded. The `get_content` method takes the query (which would be 'https://continue.dev/docs/context-providers' in the example above) and returns the content that will be used as context.

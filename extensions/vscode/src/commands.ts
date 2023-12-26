@@ -1,11 +1,11 @@
-import * as vscode from "vscode";
-import * as path from "path";
-import * as os from "os";
 import * as fs from "fs";
+import * as os from "os";
+import * as path from "path";
+import * as vscode from "vscode";
 
-import { acceptDiffCommand, rejectDiffCommand } from "./diffs";
-import { debugPanelWebview, getSidebarContent } from "./debugPanel";
 import { ideProtocolClient } from "./activation/activate";
+import { debugPanelWebview, getSidebarContent } from "./debugPanel";
+import { acceptDiffCommand, rejectDiffCommand } from "./diffs";
 
 function addHighlightedCodeToContext(edit: boolean) {
   const editor = vscode.window.activeTextEditor;
@@ -97,10 +97,10 @@ const commandsMap: { [command: string]: (...args: any) => any } = {
   },
   "continue.focusContinueInputWithEdit": async () => {
     vscode.commands.executeCommand("continue.continueGUIView.focus");
-    addHighlightedCodeToContext(true);
     debugPanelWebview?.postMessage({
       type: "focusContinueInputWithEdit",
     });
+    addHighlightedCodeToContext(true);
   },
   "continue.toggleAuxiliaryBar": () => {
     vscode.commands.executeCommand("workbench.action.toggleAuxiliaryBar");
@@ -134,8 +134,12 @@ const commandsMap: { [command: string]: (...args: any) => any } = {
     await vscode.window.showTextDocument(uri);
   },
   "continue.debugTerminal": async () => {
+    const terminalContents = await ideProtocolClient.getTerminalContents(2);
     vscode.commands.executeCommand("continue.continueGUIView.focus");
-    await ideProtocolClient.debugTerminal();
+    debugPanelWebview?.postMessage({
+      type: "submitMessage",
+      message: `I got the following error, can you please help explain how to fix it?\n\n${terminalContents}`,
+    });
   },
   "continue.hideInlineTip": () => {
     vscode.workspace

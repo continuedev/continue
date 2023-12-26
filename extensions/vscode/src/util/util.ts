@@ -1,4 +1,5 @@
 const os = require("os");
+import * as vscode from "vscode";
 
 function charIsEscapedAtIndex(index: number, str: string): boolean {
   if (index === 0) return false;
@@ -89,4 +90,9 @@ export function getMetaKeyLabel() {
     default:
       return "⌘";
   }
+}
+
+export function getExtensionVersion() {
+  const extension = vscode.extensions.getExtension("continue.continue");
+  return extension?.packageJSON.version || "";
 }

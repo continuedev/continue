@@ -1,0 +1,4 @@
+project: extensions/vscode
+kind: Changed
+body: No more Python server - Continue runs entirely in Typescript
+time: 2023-12-12T15:05:28.44718-08:00

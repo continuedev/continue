@@ -115,7 +115,8 @@
         "cwd": "gui"
       },
       "args": ["run", "dev"],
-      "isBackground": true
+      "isBackground": true,
+      "problemMatcher": ["$tsc"]
     }
   ]
 }

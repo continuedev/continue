@@ -1,4 +1,11 @@
-import { useCallback, useContext, useEffect, useRef, useState } from "react";
+import {
+  ExclamationTriangleIcon,
+  PaintBrushIcon,
+  TrashIcon,
+} from "@heroicons/react/24/outline";
+import { ContextItemWithId } from "core";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import styled from "styled-components";
 import {
   StyledTooltip,
@@ -7,20 +14,12 @@ import {
   secondaryDark,
   vscForeground,
 } from "..";
-import {
-  TrashIcon,
-  PaintBrushIcon,
-  ExclamationTriangleIcon,
-} from "@heroicons/react/24/outline";
-import { GUIClientContext } from "../../App";
-import { getFontSize } from "../../util";
-import HeaderButtonWithText from "../HeaderButtonWithText";
-import FileIcon from "../FileIcon";
-import { ContextItem } from "../../schema/ContextItem";
-import { postToIde } from "../../util/ide";
-import { useDispatch, useSelector } from "react-redux";
-import { setEditingAtIds } from "../../redux/slices/sessionStateReducer";
+import { setEditingAtIds } from "../../redux/slices/stateSlice";
 import { RootStore } from "../../redux/store";
+import { getFontSize } from "../../util";
+import { postToIde } from "../../util/ide";
+import FileIcon from "../FileIcon";
+import HeaderButtonWithText from "../HeaderButtonWithText";
 
 const Button = styled.button<{ fontSize?: number }>`
   border: none;
@@ -78,7 +77,7 @@ const CircleDiv = styled.div`
 
 interface PillButtonProps {
   onHover?: (arg0: boolean) => void;
-  item: ContextItem;
+  item: ContextItemWithId;
   editing: boolean;
   editingAny: boolean;
   index: number;
@@ -145,7 +144,6 @@ const ClickableInsidePillButton = styled(HeaderButtonWithText)<{
 
 const PillButton = (props: PillButtonProps) => {
   const [isHovered, setIsHovered] = useState(false);
-  const client = useContext(GUIClientContext);
   const dispatch = useDispatch();
 
   const [warning, setWarning] = useState<string | undefined>(undefined);
@@ -162,7 +160,7 @@ const PillButton = (props: PillButtonProps) => {
     if (!props.editing) {
       dispatch(
         setEditingAtIds({
-          ids: [props.item.description.id],
+          ids: [props.item.id],
           index: props.inputIndex,
         })
       );
@@ -179,7 +177,7 @@ const PillButton = (props: PillButtonProps) => {
   const buttonRef = useRef<HTMLButtonElement>(null);
 
   const selectedContextItems = useSelector(
-    (store: RootStore) => store.sessionState.context_items
+    (store: RootStore) => store.state.contextItems
   );
 
   return (
@@ -215,23 +213,23 @@ const PillButton = (props: PillButtonProps) => {
           }}
           onClick={(e) => {
             props.onClick?.(e);
-            if (props.item.description.id.provider_title === "file") {
+            if (props.item.id.providerTitle === "file") {
               postToIde("showFile", {
-                filepath: props.item.description.description,
+                filepath: props.item.description,
               });
-            } else if (props.item.description.id.provider_title === "code") {
-              const lines = props.item.description.name
+            } else if (props.item.id.providerTitle === "code") {
+              const lines = props.item.name
                 .split("(")[1]
                 .split(")")[0]
                 .split("-");
               postToIde("showLines", {
-                filepath: props.item.description.description,
+                filepath: props.item.description,
                 start: parseInt(lines[0]) - 1,
                 end: parseInt(lines[1]) - 1,
               });
             } else {
               postToIde("showVirtualFile", {
-                name: props.item.description.name,
+                name: props.item.name,
                 content: props.item.content,
               });
             }
@@ -246,16 +244,14 @@ const PillButton = (props: PillButtonProps) => {
           }}
         >
           <span className={(isHovered ? "underline" : "") + " flex"}>
-            {["file", "code"].includes(
-              props.item.description.id.provider_title
-            ) && (
+            {["file", "code", "open"].includes(props.item.id.providerTitle) && (
               <FileIcon
                 height="16px"
                 width="16px"
-                filename={props.item.description.name.split(" ").at(0)}
+                filename={props.item.name.split(" ").at(0)}
               ></FileIcon>
             )}
-            {props.item.description.name}
+            {props.item.name}
           </span>
         </StyledButton>
         {(props.editingAny ||
@@ -263,7 +259,7 @@ const PillButton = (props: PillButtonProps) => {
           (props.editing && props.editingAny)) && (
           <>
             <ClickableInsidePillButton
-              data-tooltip-id={`circle-div-${props.item.description.name}`}
+              data-tooltip-id={`circle-div-${props.item.name}`}
               text={
                 props.editing ? "Editing this range" : "Edit this range (e)"
               }
@@ -274,7 +270,7 @@ const PillButton = (props: PillButtonProps) => {
             >
               <PaintBrushIcon width="1.4em" height="1.4em" />
             </ClickableInsidePillButton>
-            <StyledTooltip id={`circle-div-${props.item.description.name}`}>
+            <StyledTooltip id={`circle-div-${props.item.name}`}>
               Editing this range
             </StyledTooltip>
           </>
@@ -310,7 +306,7 @@ const PillButton = (props: PillButtonProps) => {
       {props.editing && warning && (
         <>
           <CircleDiv
-            data-tooltip-id={`circle-div-${props.item.description.name}`}
+            data-tooltip-id={`circle-div-${props.item.name}`}
             className="z-10"
           >
             <ExclamationTriangleIcon
@@ -319,7 +315,7 @@ const PillButton = (props: PillButtonProps) => {
               strokeWidth={2}
             />
           </CircleDiv>
-          <StyledTooltip id={`circle-div-${props.item.description.name}`}>
+          <StyledTooltip id={`circle-div-${props.item.name}`}>
             {warning}
           </StyledTooltip>
         </>

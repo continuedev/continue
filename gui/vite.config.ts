@@ -8,6 +8,7 @@ export default defineConfig({
   build: {
     // Change the output .js filename to not include a hash
     rollupOptions: {
+      // external: ["vscode-webview"],
       output: {
         entryFileNames: `assets/[name].js`,
         chunkFileNames: `assets/[name].js`,

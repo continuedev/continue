@@ -1,0 +1,4 @@
+project: extensions/intellij
+kind: Changed
+body: Intellij extension no longer relies on the Continue Python server
+time: 2023-12-21T13:25:47.435557-05:00

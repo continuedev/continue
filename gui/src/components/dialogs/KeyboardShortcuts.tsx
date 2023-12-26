@@ -1,11 +1,5 @@
-import React from "react";
 import styled from "styled-components";
-import {
-  defaultBorderRadius,
-  lightGray,
-  secondaryDark,
-  vscForeground,
-} from "..";
+import { defaultBorderRadius, lightGray, vscForeground } from "..";
 import { getPlatform } from "../../util";
 
 const GridDiv = styled.div`
@@ -96,11 +90,6 @@ const vscodeShortcuts: KeyboardShortcutProps[] = [
     description: "Debug Terminal",
   },
   {
-    mac: "⌥ ⌘ N",
-    windows: "⌥ ⌃ N",
-    description: "New Session",
-  },
-  {
     mac: "⌘ ⌫",
     windows: "⌃ ⌫",
     description: "Stop Active Step",
@@ -114,6 +103,11 @@ const vscodeShortcuts: KeyboardShortcutProps[] = [
     mac: "⌘ K ⌘ M",
     windows: "⌃ K ⌃ M",
     description: "Toggle Full Screen",
+  },
+  {
+    mac: "⌘ '",
+    windows: "⌃ '",
+    description: "Toggle Selected Model",
   },
 ];
 
@@ -149,11 +143,6 @@ const jetbrainsShortcuts: KeyboardShortcutProps[] = [
     description: "Toggle Auxiliary Bar",
   },
   {
-    mac: "⌥ ⌘ N",
-    windows: "⌥ ⌃ N",
-    description: "New Session",
-  },
-  {
     mac: "⌘ ⌫",
     windows: "⌃ ⌫",
     description: "Stop Active Step",
@@ -162,6 +151,11 @@ const jetbrainsShortcuts: KeyboardShortcutProps[] = [
     mac: "Tab",
     windows: "Tab",
     description: "Toggle between context items",
+  },
+  {
+    mac: "⌘ '",
+    windows: "⌃ '",
+    description: "Toggle Selected Model",
   },
 ];
 

@@ -1,19 +1,18 @@
-import React from "react";
-import { defaultBorderRadius, lightGray, secondaryDark } from "..";
-import styled from "styled-components";
-import { getFontSize, getMarkdownLanguageTagForFile } from "../../util";
-import FileIcon from "../FileIcon";
-import HeaderButtonWithText from "../HeaderButtonWithText";
-import { ContextItem } from "../../schema/ContextItem";
-import { postToIde } from "../../util/ide";
 import {
-  ArrowUpLeftIcon,
   ChevronDownIcon,
   ChevronUpIcon,
   TrashIcon,
 } from "@heroicons/react/24/outline";
-import { deleteContextWithIds } from "../../redux/slices/sessionStateReducer";
+import { ContextItemWithId } from "core";
+import React from "react";
 import { useDispatch } from "react-redux";
+import styled from "styled-components";
+import { defaultBorderRadius, lightGray, secondaryDark } from "..";
+import { deleteContextWithIds } from "../../redux/slices/stateSlice";
+import { getFontSize, getMarkdownLanguageTagForFile } from "../../util";
+import { postToIde } from "../../util/ide";
+import FileIcon from "../FileIcon";
+import HeaderButtonWithText from "../HeaderButtonWithText";
 import StyledMarkdownPreview from "./StyledMarkdownPreview";
 
 const PreviewMarkdownDiv = styled.div<{ scroll: boolean }>`
@@ -44,7 +43,7 @@ const PreviewMarkdownHeader = styled.p`
 `;
 
 interface CodeSnippetPreviewProps {
-  item: ContextItem;
+  item: ContextItemWithId;
   index: number;
 }
 
@@ -63,23 +62,23 @@ function CodeSnippetPreview(props: CodeSnippetPreviewProps) {
       <PreviewMarkdownHeader
         className="flex justify-between cursor-pointer"
         onClick={() => {
-          if (props.item.description.id.provider_title === "file") {
+          if (props.item.id.providerTitle === "file") {
             postToIde("showFile", {
-              filepath: props.item.description.description,
+              filepath: props.item.description,
             });
-          } else if (props.item.description.id.provider_title === "code") {
-            const lines = props.item.description.name
+          } else if (props.item.id.providerTitle === "code") {
+            const lines = props.item.name
               .split("(")[1]
               .split(")")[0]
               .split("-");
             postToIde("showLines", {
-              filepath: props.item.description.description,
+              filepath: props.item.description,
               start: parseInt(lines[0]) - 1,
               end: parseInt(lines[1]) - 1,
             });
           } else {
             postToIde("showVirtualFile", {
-              name: props.item.description.name,
+              name: props.item.name,
               content: props.item.content,
             });
           }
@@ -89,9 +88,9 @@ function CodeSnippetPreview(props: CodeSnippetPreviewProps) {
           <FileIcon
             height="20px"
             width="20px"
-            filename={props.item.description.name}
+            filename={props.item.name}
           ></FileIcon>
-          {props.item.description.name}
+          {props.item.name}
         </div>
         <div className="flex items-center">
           <HeaderButtonWithText
@@ -99,7 +98,7 @@ function CodeSnippetPreview(props: CodeSnippetPreviewProps) {
             onClick={() => {
               dispatch(
                 deleteContextWithIds({
-                  ids: [props.item.description.id],
+                  ids: [props.item.id],
                   index: props.index,
                 })
               );
@@ -112,7 +111,7 @@ function CodeSnippetPreview(props: CodeSnippetPreviewProps) {
       <pre className="m-0">
         <StyledMarkdownPreview
           source={`\`\`\`${getMarkdownLanguageTagForFile(
-            props.item.description.description
+            props.item.description
           )}\n${props.item.content}\n\`\`\``}
           maxHeight={200}
         />

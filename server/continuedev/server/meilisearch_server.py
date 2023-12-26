@@ -159,14 +159,15 @@ async def start_meilisearch(url: Optional[str] = None):
     if not await check_meilisearch_running() or not was_already_installed:
         logger.debug("Starting MeiliSearch...")
         binary_name = "meilisearch" if os.name == "nt" else "./meilisearch"
+        url_without_http = DEFAULT_MEILISEARCH_URL.split("//")[1]
         meilisearch_process = subprocess.Popen(
-            [binary_name, "--no-analytics"],
+            [binary_name, "--http-addr", f"{url_without_http}", "--no-analytics"],
             cwd=serverPath,
             stdout=subprocess.DEVNULL,
             stderr=subprocess.STDOUT,
             close_fds=True,
             # start_new_session=True,
-            shell=True,
+            shell=False,
         )
 
         logger.info(f"Meilisearch started at {meilisearch_url}")
