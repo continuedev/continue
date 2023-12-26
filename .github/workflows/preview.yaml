@@ -46,7 +46,7 @@ jobs:
     steps:
       # 1. Check-out repository
       - name: Check-out repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       # 2. Install npm dependencies
       - name: Use Node.js 19.0.0
@@ -162,7 +162,7 @@ jobs:
     steps:
       # 0. Setup git
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Set up Git
         run: |
