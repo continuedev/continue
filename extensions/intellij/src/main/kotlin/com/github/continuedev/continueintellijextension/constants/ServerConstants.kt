@@ -5,60 +5,55 @@ import java.nio.file.Paths
 
 const val DEFAULT_CONFIG = """
 {
-  models: [
+  "models": [
     {
-      title: "GPT-4",
-      provider: "openai-free-trial",
-      model: "gpt-4",
+      "title": "GPT-4",
+      "provider": "openai-free-trial",
+      "model": "gpt-4"
     },
     {
-      title: "GPT-3.5-Turbo",
-      provider: "openai-free-trial",
-      model: "gpt-3.5-turbo",
-    },
+      "title": "GPT-3.5-Turbo",
+      "provider": "openai-free-trial",
+      "model": "gpt-3.5-turbo"
+    }
   ],
-  modelRoles: {
-    default: "GPT-4",
-    summarize: "GPT-3.5-Turbo",
-  },
-  slashCommands: [
+  "slashCommands": [
     {
-      name: "edit",
-      description: "Edit highlighted code",
-      step: "EditHighlightedCodeStep",
+      "name": "edit",
+      "description": "Edit highlighted code",
+      "step": "EditHighlightedCodeStep"
     },
     {
-      name: "comment",
-      description: "Write comments for the highlighted code",
-      step: "CommentCodeStep",
+      "name": "comment",
+      "description": "Write comments for the highlighted code",
+      "step": "CommentCodeStep"
     },
     {
-      name: "share",
-      description: "Download and share this session",
-      step: "ShareSessionStep",
+      "name": "share",
+      "description": "Download and share this session",
+      "step": "ShareSessionStep"
     },
     {
-      name: "cmd",
-      description: "Generate a shell command",
-      step: "GenerateShellCommandStep",
-    },
+      "name": "cmd",
+      "description": "Generate a shell command",
+      "step": "GenerateShellCommandStep"
+    }
   ],
-  customCommands: [
+  "customCommands": [
     {
-      name: "test",
-      prompt:
-        "Write a comprehensive set of unit tests for the selected code. It should setup, run tests that check for correctness including important edge cases, and teardown. Ensure that the tests are complete and sophisticated. Give the tests just as chat output, don't edit any file.",
-      description: "Write unit tests for highlighted code",
-    },
+      "name": "test",
+      "prompt": "Write a comprehensive set of unit tests for the selected code. It should setup, run tests that check for correctness including important edge cases, and teardown. Ensure that the tests are complete and sophisticated. Give the tests just as chat output, don't edit any file.",
+      "description": "Write unit tests for highlighted code"
+    }
   ],
-  contextProviders: [
-    { name: "diff", params: {} },
+  "contextProviders": [
+    { "name": "diff", "params": {} },
     {
-      name: "open",
-      params: {},
+      "name": "open",
+      "params": {}
     },
-    { name: "terminal", params: {} },
-  ],
+    { "name": "terminal", "params": {} }
+  ]
 }
 """
 
