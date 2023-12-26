@@ -92,6 +92,7 @@ function autodetectTemplateFunction(
       anthropic: anthropicTemplateMessages,
       chatml: chatmlTemplateMessages,
       deepseek: deepseekTemplateMessages,
+      none: null,
     };
 
     return mapping[templateType];
@@ -262,9 +263,9 @@ export abstract class BaseLLM implements ILLM {
       .join("\n");
     return `Settings:
   ${settings}
-  
+
   ############################################
-  
+
   ${prompt}`;
   }
 
