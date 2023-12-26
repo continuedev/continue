@@ -66,12 +66,13 @@ export async function ideRequest(type: string, message: any): Promise<any> {
 export async function* ideStreamRequest(
   type: string,
   message: any
-): AsyncGenerator<string> {
+): AsyncGenerator<any> {
   const messageId = uuidv4();
 
   postToIde(type, { message, messageId });
 
   let buffer = "";
+  let index = 0;
   let done = false;
 
   let staleTimeout: any;
@@ -94,9 +95,10 @@ export async function* ideStreamRequest(
   window.addEventListener("message", handler);
 
   while (!done) {
-    if (buffer.length) {
-      yield buffer;
-      buffer = "";
+    if (buffer.length > index) {
+      const chunk = buffer.slice(index);
+      index = buffer.length;
+      yield chunk;
     }
     await new Promise((resolve) => setTimeout(resolve, 50));
   }
