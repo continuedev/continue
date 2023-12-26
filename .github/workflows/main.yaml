@@ -55,19 +55,19 @@ jobs:
           node-version: 19.0.0
 
       - name: Cache extension node_modules
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: extensions/vscode/node_modules
           key: ${{ runner.os }}-node-${{ hashFiles('extensions/vscode/package-lock.json') }}
 
       - name: Cache core node_modules
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: core/node_modules
           key: ${{ runner.os }}-node-${{ hashFiles('core/package-lock.json') }}
 
       - name: Cache gui node_modules
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: gui/node_modules
           key: ${{ runner.os }}-node-${{ hashFiles('gui/package-lock.json') }}
