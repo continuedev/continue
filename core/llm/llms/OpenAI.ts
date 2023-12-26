@@ -46,6 +46,13 @@ class OpenAI extends BaseLLM {
 
     return completion;
   }
+  private _getCompletionUrl() {
+    if (this.apiType === "azure") {
+      return `${this.apiBase}/openai/deployments/${this.engine}/completions?api-version=${this.apiVersion}`;
+    } else {
+      return this.apiBase + "/v1/completions";
+    }
+  }
 
   protected async *_streamComplete(
     prompt: string,
@@ -56,6 +63,39 @@ class OpenAI extends BaseLLM {
       options
     )) {
       yield chunk.content;
+    }
+  }
+
+  protected async *_legacystreamComplete(
+    prompt: string,
+    options: CompletionOptions
+  ): AsyncGenerator<string> {
+    const response = await this.fetch(this._getCompletionUrl(), {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${this.apiKey}`,
+        "api-key": this.apiKey || "", // For Azure
+      },
+      body: JSON.stringify({
+        ...{
+          prompt,
+          model: options.model,
+          max_tokens: options.maxTokens,
+          temperature: options.temperature,
+          top_p: options.topP,
+          frequency_penalty: options.frequencyPenalty,
+          presence_penalty: options.presencePenalty,
+          stop: options.stop,
+        },
+        stream: true,
+      }),
+    });
+
+    for await (const value of streamSse(response)) {
+      if (value.choices?.[0]?.text) {
+        yield value.choices[0].text;
+      }
     }
   }
 

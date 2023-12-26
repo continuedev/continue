@@ -135,7 +135,7 @@
         },
         "template": {
           "title": "Template",
-          "description": "The chat template used to format messages. This is auto-detected for most models, but can be overridden here.",
+          "description": "The chat template used to format messages. This is auto-detected for most models, but can be overridden here. Choose none if you are using vLLM or another server that automatically handles prompting.",
           "enum": [
             "llama2",
             "alpaca",
@@ -143,6 +143,7 @@
             "phind",
             "anthropic",
             "chatml",
+            "none",
             "deepseek"
           ],
           "type": "string"

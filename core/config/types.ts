@@ -301,6 +301,7 @@ declare global {
     | "phind"
     | "anthropic"
     | "chatml"
+    | "none"
     | "deepseek";
   
   type ModelProvider =
