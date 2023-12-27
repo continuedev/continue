@@ -715,7 +715,7 @@ const ComboBox = React.forwardRef((props: ComboBoxProps, ref) => {
     if (!inputRef.current || !props.isMainInput) {
       return;
     }
-    if (props.isMainInput) {
+    if (props.isMainInput && document.hasFocus()) {
       inputRef.current.focus();
     }
     const handler = (event: any) => {
