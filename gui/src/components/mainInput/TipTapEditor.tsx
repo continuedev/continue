@@ -222,7 +222,11 @@ function TipTapEditor(props: TipTapEditorProps) {
 
       // Search for slashcommand type
       for (const p of json.content) {
-        if (p.type !== "paragraph") {
+        if (
+          p.type !== "paragraph" ||
+          !p.content ||
+          typeof p.content === "string"
+        ) {
           continue;
         }
         for (const node of p.content) {

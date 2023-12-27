@@ -116,6 +116,10 @@ export const stateSlice = createSlice({
       };
     },
     addLogs: (state, { payload }: { payload: [string, string][] }) => {
+      if (state.history.length === 0) {
+        return;
+      }
+
       if (state.history[state.history.length - 1].promptLogs) {
         state.history[state.history.length - 1].promptLogs.push(...payload);
       } else {

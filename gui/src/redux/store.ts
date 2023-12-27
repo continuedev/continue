@@ -12,7 +12,9 @@ import {
   ContinueConfig,
   SlashCommandDescription,
 } from "core";
-import { createTransform } from "redux-persist";
+import { createTransform, persistReducer, persistStore } from "redux-persist";
+import { createFilter } from "redux-persist-transform-filter";
+import autoMergeLevel2 from "redux-persist/lib/stateReconciler/autoMergeLevel2";
 import storage from "redux-persist/lib/storage";
 
 export interface ChatMessage {
@@ -77,23 +79,34 @@ const windowIDTransform = (windowID) =>
     }
   );
 
+const saveSubsetFilters = [
+  createFilter("state", [
+    "history",
+    "contextItems",
+    "sessionId",
+    "defaultModelTitle",
+  ]),
+];
+
 const persistConfig = {
   key: "root",
   storage,
-  // transforms: [
-  //   windowIDTransform((window as any).windowId || "undefinedWindowId"),
-  // ],
+  transforms: [
+    ...saveSubsetFilters,
+    // windowIDTransform((window as any).windowId || "undefinedWindowId"),
+  ],
+  stateReconciler: autoMergeLevel2,
 };
 
-// const persistedReducer = persistReducer(persistConfig, rootReducer);
+const persistedReducer = persistReducer(persistConfig, rootReducer);
 
 export const store = configureStore({
-  // reducer: persistedReducer,
-  reducer: rootReducer,
+  reducer: persistedReducer,
+  // reducer: rootReducer,
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
       serializableCheck: false,
     }),
 });
 
-// export const persistor = persistStore(store);
+export const persistor = persistStore(store);
