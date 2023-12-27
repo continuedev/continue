@@ -159,11 +159,30 @@ function phindTemplateMessages(msgs: ChatMessage[]): string {
   return prompt;
 }
 
+/**
+ * OpenChat Template, used by CodeNinja
+ * GPT4 Correct User: Hello<|end_of_turn|>GPT4 Correct Assistant: Hi<|end_of_turn|>GPT4 Correct User: How are you today?<|end_of_turn|>GPT4 Correct Assistant:
+ */
+function openchatTemplateMessages(msgs: ChatMessage[]): string {
+  let prompt = "";
+
+  for (const msg of msgs) {
+    prompt +=
+      msg.role === "user" ? "GPT4 Correct User: " : "GPT4 Correct Assistant: ";
+    prompt += msg.content + "<|end_of_turn|>";
+  }
+
+  prompt += "GPT4 Correct Assistant: ";
+
+  return prompt;
+}
+
 export {
   anthropicTemplateMessages,
   chatmlTemplateMessages,
   deepseekTemplateMessages,
   llama2TemplateMessages,
+  openchatTemplateMessages,
   phindTemplateMessages,
   templateAlpacaMessages,
   zephyrTemplateMessages,

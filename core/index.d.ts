@@ -301,6 +301,7 @@ type TemplateType =
   | "anthropic"
   | "chatml"
   | "none"
+  | "openchat"
   | "deepseek";
 
 type ModelProvider =

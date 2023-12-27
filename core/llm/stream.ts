@@ -12,7 +12,8 @@ export async function* streamResponse(
   const stream =
     response.headers.get("content-encoding") === "gzip"
       ? // @ts-ignore
-        response.body.pipeThrough(new DecompressionStream("gzip"))
+        // response.body.pipeThrough(new DecompressionStream("gzip"))
+        response.body
       : response.body;
 
   const reader = stream.getReader();

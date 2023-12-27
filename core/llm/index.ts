@@ -21,6 +21,7 @@ import {
   chatmlTemplateMessages,
   deepseekTemplateMessages,
   llama2TemplateMessages,
+  openchatTemplateMessages,
   phindTemplateMessages,
   templateAlpacaMessages,
   zephyrTemplateMessages,
@@ -29,6 +30,7 @@ import {
   alpacaEditPrompt,
   codellamaEditPrompt,
   deepseekEditPrompt,
+  openchatEditPrompt,
   phindEditPrompt,
   simplestEditPrompt,
   zephyrEditPrompt,
@@ -74,6 +76,10 @@ function autodetectTemplateType(model: string): TemplateType | undefined {
     return "deepseek";
   }
 
+  if (lower.includes("ninja") || lower.includes("openchat")) {
+    return "openchat";
+  }
+
   return "chatml";
 }
 
@@ -92,6 +98,7 @@ function autodetectTemplateFunction(
       anthropic: anthropicTemplateMessages,
       chatml: chatmlTemplateMessages,
       deepseek: deepseekTemplateMessages,
+      openchat: openchatTemplateMessages,
       none: null,
     };
 
@@ -120,6 +127,8 @@ function autodetectPromptTemplates(
     editTemplate = alpacaEditPrompt;
   } else if (templateType === "deepseek") {
     editTemplate = deepseekEditPrompt;
+  } else if (templateType === "openchat") {
+    editTemplate = openchatEditPrompt;
   } else if (templateType) {
     editTemplate = simplestEditPrompt;
   }

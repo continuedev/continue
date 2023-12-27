@@ -144,7 +144,8 @@
             "anthropic",
             "chatml",
             "none",
-            "deepseek"
+            "deepseek",
+            "openchat"
           ],
           "type": "string"
         },
