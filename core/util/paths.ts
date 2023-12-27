@@ -27,7 +27,11 @@ export function getSessionFilePath(sessionId: string): string {
 }
 
 export function getSessionsListPath(): string {
-  return path.join(getSessionsFolderPath(), "sessions.json");
+  const filepath = path.join(getSessionsFolderPath(), "sessions.json");
+  if (!fs.existsSync(filepath)) {
+    fs.writeFileSync(filepath, JSON.stringify([]));
+  }
+  return filepath;
 }
 
 export function getConfigJsonPath(): string {

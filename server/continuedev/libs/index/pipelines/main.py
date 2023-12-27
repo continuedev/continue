@@ -5,7 +5,6 @@ from ..chunkers.chunk import Chunk
 from ..hyde import code_hyde
 from ..indices.chroma_index import ChromaCodebaseIndex
 from ..indices.meilisearch_index import MeilisearchCodebaseIndex
-from ..rerankers.default import default_reranker_parallel
 from ..rerankers.single_token import single_token_reranker_parallel
 
 
@@ -59,7 +58,7 @@ async def main_retrieval_pipeline(
     )
     # Rerank to select top results
     if use_reranking:
-        print(f"Selecting most important files...")
+        print("Selecting most important files...")
         chunks = await single_token_reranker_parallel(
             chunks,
             query,

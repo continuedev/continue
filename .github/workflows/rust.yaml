@@ -1,0 +1,69 @@
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+name: Rust Continuous integration
+
+defaults:
+  run:
+    working-directory: ./server
+
+jobs:
+
+  # test:
+  #   name: test
+  #   runs-on: ${{ matrix.os }}
+  #   strategy:
+  #     matrix:
+  #       os: [ubuntu-latest, macos-latest, windows-latest]
+  #       toolchain: [stable]
+  #       include:
+  #         - os: ubuntu-latest
+  #           toolchain: nightly
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - uses: dtolnay/rust-toolchain@master
+  #       with:
+  #         toolchain: ${{ matrix.toolchain }}
+  #     - run: cargo test --all-features
+
+  fmt:
+    name: format
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@nightly
+        with:
+          components: rustfmt
+      - run: cargo fmt --all --check
+
+  clippy:
+    name: lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: nightly-2023-12-10
+          components: clippy
+      - uses: actions-rs-plus/clippy-check@v2
+        with:
+          working-directory: server/
+          args: --all-features --all-targets
+
+  docs:
+    name: docs
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - run: cargo doc --no-deps
+
+  cargo-deny:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: EmbarkStudios/cargo-deny-action@v1
+        with:
+          arguments: --manifest-path server/Cargo.toml

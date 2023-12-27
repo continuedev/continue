@@ -24,7 +24,6 @@ from .main import (
     ChatMessage,
     ContextItem,
     ContinueCustomException,
-    DeltaStep,
     SessionUpdate,
     SetStep,
     Step,
