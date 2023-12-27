@@ -147,7 +147,30 @@ export const stateSlice = createSlice({
         };
       }
     },
-
+    setEditingContextItemAtIndex: (
+      state,
+      {
+        payload: { index, item },
+      }: {
+        payload: { index?: number; item: ContextItemWithId };
+      }
+    ) => {
+      if (index === undefined) {
+        if (state.contextItems[0]?.id.itemId === item.id.itemId) {
+          return {
+            ...state,
+            contextItems: [],
+          };
+        } else {
+          return {
+            ...state,
+            contextItems: [{ ...item, editing: true }],
+          };
+        }
+      } else {
+        // TODO
+      }
+    },
     addContextItems: (state, action) => {
       return {
         ...state,
@@ -410,5 +433,6 @@ export const {
   setConfig,
   addLogs,
   setActive,
+  setEditingContextItemAtIndex,
 } = stateSlice.actions;
 export default stateSlice.reducer;

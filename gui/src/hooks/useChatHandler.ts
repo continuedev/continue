@@ -30,7 +30,7 @@ function useChatHandler(dispatch: Dispatch) {
   );
 
   const contextItems = useSelector(
-    (store: RootStore) => store.state.contextItems
+    (state: RootStore) => state.state.contextItems
   );
   const history = useSelector((store: RootStore) => store.state.history);
   const contextProviders = useSelector(

@@ -17,7 +17,6 @@ import {
 } from "..";
 import { SearchContext } from "../../App";
 import useHistory from "../../hooks/useHistory";
-import { setTakenActionTrue } from "../../redux/slices/miscSlice";
 import { RootStore } from "../../redux/store";
 import { isMetaEquivalentKeyPressed } from "../../util";
 import { isJetBrains, postToIde } from "../../util/ide";
@@ -169,7 +168,7 @@ function TipTapEditor(props: TipTapEditorProps) {
             onOpen,
             inSubmenu
           ),
-          renderLabel: (props) => {
+          renderText: (props) => {
             return `@${props.node.attrs.label || props.node.attrs.id}`;
           },
         }),
@@ -182,7 +181,7 @@ function TipTapEditor(props: TipTapEditorProps) {
             onClose,
             onOpen
           ),
-          renderLabel: (props) => {
+          renderText: (props) => {
             return props.node.attrs.label;
           },
         }),
@@ -194,7 +193,7 @@ function TipTapEditor(props: TipTapEditorProps) {
           style: "font-size: 14px;",
         },
       },
-      content: props.editorState || props.content || "",
+      content: props.editorState || props.content,
     },
     [
       props.availableContextProviders,
@@ -246,14 +245,11 @@ function TipTapEditor(props: TipTapEditorProps) {
         if (historyLength > 0) {
           saveSession();
         }
-        dispatch(setTakenActionTrue(null));
         editor.commands.focus("end");
       } else if (event.data.type === "focusContinueInputWithoutClear") {
         editor.commands.focus("end");
-        dispatch(setTakenActionTrue(null));
       } else if (event.data.type === "focusContinueInputWithNewSession") {
         saveSession();
-        dispatch(setTakenActionTrue(null));
         editor.commands.focus("end");
       } else if (event.data.type === "highlightedCode") {
         if (!ignoreHighlightedCode) {
@@ -271,12 +267,25 @@ function TipTapEditor(props: TipTapEditorProps) {
               itemId: rif.filepath,
             },
           };
-          editor.commands.insertContentAt(0, {
-            type: "codeBlock",
-            attrs: {
-              item,
-            },
-          });
+
+          let index = 0;
+          for (const el of editor.getJSON().content) {
+            if (el.type === "codeBlock") {
+              index += 2;
+            } else {
+              break;
+            }
+          }
+          editor
+            .chain()
+            .insertContentAt(index, {
+              type: "codeBlock",
+              attrs: {
+                item,
+              },
+            })
+            .focus("end")
+            .run();
           await new Promise((resolve) => setTimeout(resolve, 100));
           editor.commands.focus("end");
         }

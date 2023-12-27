@@ -1,6 +1,7 @@
 import {
   ChevronDownIcon,
   ChevronUpIcon,
+  PaintBrushIcon,
   XMarkIcon,
 } from "@heroicons/react/24/outline";
 import { ContextItemWithId } from "core";
@@ -16,10 +17,13 @@ import StyledMarkdownPreview from "./StyledMarkdownPreview";
 
 const MAX_PREVIEW_HEIGHT = 160;
 
-const PreviewMarkdownDiv = styled.div<{ scroll: boolean }>`
+const PreviewMarkdownDiv = styled.div<{
+  scroll: boolean;
+  borderColor?: string;
+}>`
   background-color: ${vscEditorBackground};
   border-radius: ${defaultBorderRadius};
-  border: 0.5px solid ${lightGray};
+  border: 0.5px solid ${(props) => props.borderColor || lightGray};
   margin-top: 4px;
   margin-bottom: 4px;
   overflow: hidden;
@@ -47,7 +51,16 @@ const PreviewMarkdownHeader = styled.p`
 interface CodeSnippetPreviewProps {
   item: ContextItemWithId;
   onDelete?: () => void;
+  onEdit?: () => void;
+  borderColor?: string;
+  editing?: boolean;
 }
+
+const StyledHeaderButtonWithText = styled(HeaderButtonWithText)<{
+  color?: string;
+}>`
+  ${(props) => props.color && `background-color: ${props.color};`}
+`;
 
 function CodeSnippetPreview(props: CodeSnippetPreviewProps) {
   const dispatch = useDispatch();
@@ -62,6 +75,7 @@ function CodeSnippetPreview(props: CodeSnippetPreviewProps) {
       scroll={!scrollLocked}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
+      borderColor={props.borderColor}
     >
       <PreviewMarkdownHeader
         className="flex justify-between cursor-pointer"
@@ -97,7 +111,26 @@ function CodeSnippetPreview(props: CodeSnippetPreviewProps) {
           {props.item.name}
         </div>
         <div className="flex items-center">
-          <HeaderButtonWithText text="Delete" onClick={props.onDelete}>
+          {props.onEdit && (
+            <StyledHeaderButtonWithText
+              text="Edit"
+              onClick={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                props.onEdit();
+              }}
+              {...(props.editing && { color: "#f0f4" })}
+            >
+              <PaintBrushIcon width="1.2em" height="1.2em" />
+            </StyledHeaderButtonWithText>
+          )}
+          <HeaderButtonWithText
+            text="Delete"
+            onClick={(e) => {
+              e.stopPropagation();
+              props.onDelete();
+            }}
+          >
             <XMarkIcon width="1.2em" height="1.2em" />
           </HeaderButtonWithText>
         </div>

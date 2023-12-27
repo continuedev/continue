@@ -23,18 +23,24 @@ async function resolveEditorContent(
 ): Promise<string> {
   let paragraphs = [];
   let contextItems: MentionAttrs[] = [];
+  let slashCommand = undefined;
   for (const p of editorState?.content) {
     if (p.type === "paragraph") {
-      const [text, ctxItems] = resolveParagraph(p);
+      const [text, ctxItems, foundSlashCommand] = resolveParagraph(p);
+      if (foundSlashCommand && typeof slashCommand === "undefined") {
+        slashCommand = foundSlashCommand;
+      }
       if (text === "") {
         continue;
       }
       paragraphs.push(text);
       contextItems.push(...ctxItems);
     } else if (p.type === "codeBlock") {
-      paragraphs.push(
-        "```" + p.attrs.item.name + "\n" + p.attrs.item.content + "\n```"
-      );
+      if (!p.attrs.item.editing) {
+        paragraphs.push(
+          "```" + p.attrs.item.name + "\n" + p.attrs.item.content + "\n```"
+        );
+      }
     } else {
       console.warn("Unexpected content type", p.type);
     }
@@ -64,14 +70,18 @@ async function resolveEditorContent(
     contextItemsText += "\n";
   }
 
-  const finalText = contextItemsText + paragraphs.join("\n");
+  let finalText = contextItemsText + paragraphs.join("\n");
+  if (slashCommand) {
+    finalText = `${slashCommand} ${finalText}`;
+  }
   console.log(finalText, editorState?.content);
   return finalText;
 }
 
-function resolveParagraph(p: JSONContent): [string, MentionAttrs[]] {
+function resolveParagraph(p: JSONContent): [string, MentionAttrs[], string] {
   let text = "";
   const contextItems = [];
+  let slashCommand = undefined;
   for (const child of p.content || []) {
     if (child.type === "text") {
       text += child.text;
@@ -79,12 +89,16 @@ function resolveParagraph(p: JSONContent): [string, MentionAttrs[]] {
       text += `@${child.attrs.label}`;
       contextItems.push(child.attrs);
     } else if (child.type === "slashcommand") {
-      text += child.attrs.label;
+      if (typeof slashCommand === "undefined") {
+        slashCommand = child.attrs.id;
+      } else {
+        text += child.attrs.label;
+      }
     } else {
       console.warn("Unexpected child type", child.type);
     }
   }
-  return [text, contextItems];
+  return [text, contextItems, slashCommand];
 }
 
 export default resolveEditorContent;

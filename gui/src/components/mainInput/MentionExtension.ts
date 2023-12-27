@@ -5,11 +5,6 @@ import Suggestion, { SuggestionOptions } from "@tiptap/suggestion";
 
 export type MentionOptions = {
   HTMLAttributes: Record<string, any>;
-  /** @deprecated use renderText and renderHTML instead  */
-  renderLabel?: (props: {
-    options: MentionOptions;
-    node: ProseMirrorNode;
-  }) => string;
   renderText: (props: {
     options: MentionOptions;
     node: ProseMirrorNode;
@@ -143,9 +138,9 @@ export const Mention = Node.create<MentionOptions>({
   },
 
   renderHTML({ node, HTMLAttributes }) {
-    if (this.options.renderLabel !== undefined) {
+    if (this.options.renderText !== undefined) {
       console.warn(
-        "renderLabel is deprecated use renderText and renderHTML instead"
+        "renderText is deprecated use renderText and renderHTML instead"
       );
       return [
         "span",
@@ -154,7 +149,7 @@ export const Mention = Node.create<MentionOptions>({
           this.options.HTMLAttributes,
           HTMLAttributes
         ),
-        this.options.renderLabel({
+        this.options.renderText({
           options: this.options,
           node,
         }),
@@ -180,11 +175,11 @@ export const Mention = Node.create<MentionOptions>({
   },
 
   renderText({ node }) {
-    if (this.options.renderLabel !== undefined) {
+    if (this.options.renderText !== undefined) {
       console.warn(
-        "renderLabel is deprecated use renderText and renderHTML instead"
+        "renderText is deprecated use renderText and renderHTML instead"
       );
-      return this.options.renderLabel({
+      return this.options.renderText({
         options: this.options,
         node,
       });

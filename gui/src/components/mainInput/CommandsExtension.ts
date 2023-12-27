@@ -7,7 +7,7 @@ import Suggestion, { SuggestionOptions } from "@tiptap/suggestion";
 
 export type SlashCommandOptions = {
   HTMLAttributes: Record<string, any>;
-  renderLabel: (props: {
+  renderText: (props: {
     options: SlashCommandOptions;
     node: ProseMirrorNode;
   }) => string;
@@ -22,7 +22,7 @@ export const SlashCommand = Node.create<SlashCommandOptions>({
   addOptions() {
     return {
       HTMLAttributes: {},
-      renderLabel({ options, node }) {
+      renderText({ options, node }) {
         return `${options.suggestion.char}${node.attrs.label ?? node.attrs.id}`;
       },
       suggestion: {
@@ -123,7 +123,7 @@ export const SlashCommand = Node.create<SlashCommandOptions>({
         this.options.HTMLAttributes,
         HTMLAttributes
       ),
-      this.options.renderLabel({
+      this.options.renderText({
         options: this.options,
         node,
       }),
@@ -131,7 +131,7 @@ export const SlashCommand = Node.create<SlashCommandOptions>({
   },
 
   renderText({ node }) {
-    return this.options.renderLabel({
+    return this.options.renderText({
       options: this.options,
       node,
     });
