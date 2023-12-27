@@ -23,10 +23,16 @@ class VsCodeConfigHandler {
 export const configHandler = new VsCodeConfigHandler();
 
 export async function llmFromTitle(title: string): Promise<ILLM> {
-  const config = await configHandler.loadConfig(new VsCodeIde());
-  const llm = config.models.find((llm) => llm.title === title);
+  let config = await configHandler.loadConfig(new VsCodeIde());
+  let llm = config.models.find((llm) => llm.title === title);
   if (!llm) {
-    throw new Error(`Unknown model ${title}`);
+    // Try to reload config
+    configHandler.reloadConfig();
+    config = await configHandler.loadConfig(new VsCodeIde());
+    llm = config.models.find((llm) => llm.title === title);
+    if (!llm) {
+      throw new Error(`Unknown model ${title}`);
+    }
   }
 
   if (llm.requestOptions) {
@@ -52,7 +58,7 @@ export async function llmFromTitle(title: string): Promise<ILLM> {
 
     llm._fetch = (input, init) => {
       const headers: { [key: string]: string } =
-        llm.requestOptions?.headers || {};
+        llm!.requestOptions?.headers || {};
       for (const [key, value] of Object.entries(init?.headers || {})) {
         headers[key] = value as string;
       }
