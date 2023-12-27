@@ -18,6 +18,7 @@ import {
 import { SearchContext } from "../../App";
 import useHistory from "../../hooks/useHistory";
 import useUpdatingRef from "../../hooks/useUpdatingRef";
+import { setEditingContextItemAtIndex } from "../../redux/slices/stateSlice";
 import { RootStore } from "../../redux/store";
 import { isMetaEquivalentKeyPressed } from "../../util";
 import { isJetBrains, postToIde } from "../../util/ide";
@@ -206,6 +207,35 @@ function TipTapEditor(props: TipTapEditorProps) {
       },
     },
     content: props.editorState || props.content || "",
+    onUpdate: ({ editor, transaction }) => {
+      // If /edit is typed and no context items are selected, select the first
+
+      if (contextItems.length > 0) {
+        return;
+      }
+
+      const json = editor.getJSON();
+      let codeBlock = json.content?.find((el) => el.type === "codeBlock");
+      if (!codeBlock) {
+        return;
+      }
+
+      // Search for slashcommand type
+      for (const p of json.content) {
+        if (p.type !== "paragraph") {
+          continue;
+        }
+        for (const node of p.content) {
+          if (node.type === "slashcommand" && node.attrs.label === "/edit") {
+            // Update context items
+            dispatch(
+              setEditingContextItemAtIndex({ item: codeBlock.attrs.item })
+            );
+            return;
+          }
+        }
+      }
+    },
   });
 
   // This is a mechanism for overriding the IDE keyboard shortcut when inside of the webview
