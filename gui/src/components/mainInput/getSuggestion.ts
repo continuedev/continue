@@ -105,9 +105,9 @@ function getFileItems(
 }
 
 export function getMentionSuggestion(
-  availableContextProviders: IContextProvider[],
-  miniSearch: MiniSearch,
-  firstResults: any[],
+  availableContextProvidersRef: MutableRefObject<IContextProvider[]>,
+  miniSearchRef: MutableRefObject<MiniSearch>,
+  firstResultsRef: MutableRefObject<any[]>,
   enterSubmenu: (editor: Editor) => void,
   onClose: () => void,
   onOpen: () => void,
@@ -115,11 +115,15 @@ export function getMentionSuggestion(
 ) {
   const items = ({ query }) => {
     if (inSubmenu.current) {
-      return getFileItems(query, miniSearch, firstResults);
+      return getFileItems(
+        query,
+        miniSearchRef.current,
+        firstResultsRef.current
+      );
     }
 
     const mainResults =
-      availableContextProviders
+      availableContextProvidersRef.current
         ?.filter(
           (provider) =>
             provider.description.title
@@ -141,7 +145,11 @@ export function getMentionSuggestion(
         .sort((c, _) => (c.id === "file" ? -1 : 1)) || [];
 
     if (mainResults.length === 0) {
-      return getFileItems(query, miniSearch, firstResults);
+      return getFileItems(
+        query,
+        miniSearchRef.current,
+        firstResultsRef.current
+      );
     }
     return mainResults;
   };

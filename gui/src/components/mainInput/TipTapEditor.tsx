@@ -17,6 +17,7 @@ import {
 } from "..";
 import { SearchContext } from "../../App";
 import useHistory from "../../hooks/useHistory";
+import useUpdatingRef from "../../hooks/useUpdatingRef";
 import { RootStore } from "../../redux/store";
 import { isMetaEquivalentKeyPressed } from "../../util";
 import { isJetBrains, postToIde } from "../../util/ide";
@@ -79,8 +80,8 @@ function TipTapEditor(props: TipTapEditorProps) {
 
   const { saveSession } = useHistory(dispatch);
 
-  const inSubmenu = useRef(false);
-  const inDropdown = useRef(false);
+  const inSubmenuRef = useRef(false);
+  const inDropdownRef = useRef(false);
 
   const enterSubmenu = async (editor: Editor) => {
     const contents = editor.getText();
@@ -93,7 +94,7 @@ function TipTapEditor(props: TipTapEditorProps) {
       from: indexOfAt + 2,
       to: contents.length + 1,
     });
-    inSubmenu.current = true;
+    inSubmenuRef.current = true;
 
     // to trigger refresh of suggestions
     editor.commands.insertContent(" ");
@@ -104,105 +105,108 @@ function TipTapEditor(props: TipTapEditorProps) {
   };
 
   const onClose = () => {
-    inSubmenu.current = false;
-    inDropdown.current = false;
+    inSubmenuRef.current = false;
+    inDropdownRef.current = false;
   };
 
   const onOpen = () => {
-    inDropdown.current = true;
+    inDropdownRef.current = true;
   };
 
-  const editor = useEditor(
-    {
-      extensions: [
-        Document,
-        History,
-        Placeholder.configure({
-          placeholder:
-            historyLength === 0
-              ? "Ask a question, '/' for slash commands, '@' to add context"
-              : "Ask a follow-up",
-        }),
-        Paragraph.extend({
-          addKeyboardShortcuts() {
-            return {
-              Enter: () => {
-                if (inDropdown.current) {
-                  return false;
-                }
-
-                props.onEnter(this.editor.getJSON());
-                return true;
-              },
-
-              "Cmd-Enter": () => {
-                props.onEnter(this.editor.getJSON());
-                return true;
-              },
-
-              "Shift-Enter": () =>
-                this.editor.commands.first(({ commands }) => [
-                  () => commands.newlineInCode(),
-                  () => commands.createParagraphNear(),
-                  () => commands.liftEmptyBlock(),
-                  () => commands.splitBlock(),
-                ]),
-            };
-          },
-        }).configure({
-          HTMLAttributes: {
-            class: "my-1",
-          },
-        }),
-        Text,
-        Mention.configure({
-          HTMLAttributes: {
-            class: "mention",
-          },
-          suggestion: getMentionSuggestion(
-            props.availableContextProviders,
-            miniSearch,
-            firstResults,
-            enterSubmenu,
-            onClose,
-            onOpen,
-            inSubmenu
-          ),
-          renderText: (props) => {
-            return `@${props.node.attrs.label || props.node.attrs.id}`;
-          },
-        }),
-        SlashCommand.configure({
-          HTMLAttributes: {
-            class: "mention",
-          },
-          suggestion: getCommandSuggestion(
-            props.availableSlashCommands,
-            onClose,
-            onOpen
-          ),
-          renderText: (props) => {
-            return props.node.attrs.label;
-          },
-        }),
-        CodeBlockExtension,
-      ],
-      editorProps: {
-        attributes: {
-          class: "outline-none -mt-1 overflow-hidden",
-          style: "font-size: 14px;",
-        },
-      },
-      content: props.editorState || props.content,
-    },
-    [
-      props.availableContextProviders,
-      historyLength,
-      miniSearch,
-      firstResults,
-      inDropdown,
-    ]
+  const contextItems = useSelector(
+    (store: RootStore) => store.state.contextItems
   );
+
+  const miniSearchRef = useUpdatingRef(miniSearch);
+  const availableContextProvidersRef = useUpdatingRef(
+    props.availableContextProviders
+  );
+  const firstResultsRef = useUpdatingRef(firstResults);
+  const historyLengthRef = useUpdatingRef(historyLength);
+  const onEnterRef = useUpdatingRef(props.onEnter);
+
+  const editor = useEditor({
+    extensions: [
+      Document,
+      History,
+      Placeholder.configure({
+        placeholder: () =>
+          historyLengthRef.current === 0
+            ? "Ask a question, '/' for slash commands, '@' to add context"
+            : "Ask a follow-up",
+      }),
+      Paragraph.extend({
+        addKeyboardShortcuts() {
+          return {
+            Enter: () => {
+              if (inDropdownRef.current) {
+                return false;
+              }
+
+              onEnterRef.current(this.editor.getJSON());
+              return true;
+            },
+
+            "Cmd-Enter": () => {
+              onEnterRef.current(this.editor.getJSON());
+              return true;
+            },
+
+            "Shift-Enter": () =>
+              this.editor.commands.first(({ commands }) => [
+                () => commands.newlineInCode(),
+                () => commands.createParagraphNear(),
+                () => commands.liftEmptyBlock(),
+                () => commands.splitBlock(),
+              ]),
+          };
+        },
+      }).configure({
+        HTMLAttributes: {
+          class: "my-1",
+        },
+      }),
+      Text,
+      Mention.configure({
+        HTMLAttributes: {
+          class: "mention",
+        },
+        suggestion: getMentionSuggestion(
+          availableContextProvidersRef,
+          miniSearchRef,
+          firstResultsRef,
+          enterSubmenu,
+          onClose,
+          onOpen,
+          inSubmenuRef
+        ),
+        renderText: (props) => {
+          return `@${props.node.attrs.label || props.node.attrs.id}`;
+        },
+      }),
+      SlashCommand.configure({
+        HTMLAttributes: {
+          class: "mention",
+        },
+        suggestion: getCommandSuggestion(
+          props.availableSlashCommands,
+          onClose,
+          onOpen
+        ),
+        renderText: (props) => {
+          return props.node.attrs.label;
+        },
+      }),
+      CodeBlockExtension,
+    ],
+    editorProps: {
+      attributes: {
+        class: "outline-none -mt-1 overflow-hidden",
+        style: "font-size: 14px;",
+      },
+    },
+    content: props.editorState || props.content || "",
+  });
 
   // This is a mechanism for overriding the IDE keyboard shortcut when inside of the webview
   const [ignoreHighlightedCode, setIgnoreHighlightedCode] = useState(false);
@@ -240,7 +244,7 @@ function TipTapEditor(props: TipTapEditorProps) {
       if (event.data.type === "userInput") {
         const input = event.data.input;
         editor.commands.insertContent(input);
-        props.onEnter(editor.getJSON());
+        onEnterRef.current(editor.getJSON());
       } else if (event.data.type === "focusContinueInput") {
         if (historyLength > 0) {
           saveSession();
@@ -263,7 +267,7 @@ function TipTapEditor(props: TipTapEditorProps) {
             })`,
             description: rif.filepath,
             id: {
-              providerTitle: "file",
+              providerTitle: "code",
               itemId: rif.filepath,
             },
           };
@@ -321,7 +325,7 @@ function TipTapEditor(props: TipTapEditorProps) {
           }
         }}
         onEnter={() => {
-          props.onEnter(editor.getJSON());
+          onEnterRef.current(editor.getJSON());
         }}
         onClick={() => {
           editor.commands.focus("end");
