@@ -6,6 +6,7 @@ import {
   ModelDescription,
 } from "../..";
 import Anthropic from "./Anthropic";
+import Bedrock from "./Bedrock";
 import FreeTrial from "./FreeTrial";
 import Gemini from "./Gemini";
 import GooglePalm from "./GooglePalm";
@@ -37,6 +38,7 @@ const LLMs = [
   LMStudio,
   Gemini,
   Mistral,
+  Bedrock,
 ];
 
 export function llmFromDescription(

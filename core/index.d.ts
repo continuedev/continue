@@ -319,7 +319,8 @@ type ModelProvider =
   | "lmstudio"
   | "llamafile"
   | "gemini"
-  | "mistral";
+  | "mistral"
+  | "bedrock";
 
 export type ModelName =
   // OpenAI
