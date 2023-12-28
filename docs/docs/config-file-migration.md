@@ -14,7 +14,7 @@ If you need any help migrating, please reach out to us on Discord.
 
 ## Configuration as Code
 
-> Continue has moved to using Typescript configuration. To learn about this, please see [Configuration as Code](../customization/code-config.md).
+> Continue has moved to using Typescript configuration. To learn about this, please see [Configuration as Code](./customization/code-config.md).
 
 For configuration that requires code, we now provide a simpler interface that works alongside config.json. In the same folder, `~/.continue`, create a file named `config.py` (the same name as before) and add a function called `modify_config`. This function should take a [`ContinueConfig`](https://github.com/continuedev/continue/blob/main/server/continuedev/core/config.py) object as its only argument, and return a `ContinueConfig` object. This object is essentially the same as the one that was previously defined in `config.py`. This allows you to modify the initial configuration object defined in your `config.json`. Here's an example that cuts the temperature in half:
 

@@ -15,7 +15,7 @@ Continue makes it easy to swap out different LLM providers. You can either click
 You can run a model on your local computer using:
 
 - [Ollama](../reference/Model%20Providers/ollama.md)
-- [LM Studio](../reference/Model%20Providers/ggml.md)
+- [LM Studio](../reference/Model%20Providers/lmstudio.md)
 - [Llama.cpp](../reference/Model%20Providers/llamacpp.md)
 - [LocalAI](../reference/Model%20Providers/openai.md) (OpenAI compatible server)
 - [Text generation web UI](../reference/Model%20Providers/openai.md) (OpenAI compatible server)
@@ -54,4 +54,4 @@ You can use commercial LLMs via APIs using:
 - [Azure OpenAI Service](../reference/Model%20Providers/openai.md) (OpenAI compatible API)
 - [Anthrophic API](../reference/Model%20Providers/anthropicllm.md)
 - [Google PaLM API](../reference/Model%20Providers/googlepalmapi.md)
-- [OpenAI free trial](../reference/Model%20Providers/openaifreetrial.md)
+- [OpenAI free trial](../reference/Model%20Providers/freetrial.md)
