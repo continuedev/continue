@@ -1,6 +1,6 @@
 mod merkle;
 use homedir::get_my_home;
-use merkle::{build_walk, compute_tree_for_dir, diff, hash_string};
+use merkle::{compute_tree_for_dir, diff, hash_string};
 use std::{
     collections::HashMap,
     fs::{self, File, OpenOptions},
@@ -36,17 +36,17 @@ fn path_for_tag(dir: &Path, branch: Option<&str>) -> PathBuf {
     path
 }
 
-/// Stored in ~/.continue/index/.last_sync
-fn get_last_sync_time(dir: &Path, branch: Option<&str>) -> u64 {
-    // TODO: Error handle here
-    let path = path_for_tag(dir, branch).join(".last_sync");
+// /// Stored in ~/.continue/index/.last_sync
+// fn get_last_sync_time(dir: &Path, branch: Option<&str>) -> u64 {
+//     // TODO: Error handle here
+//     let path = path_for_tag(dir, branch).join(".last_sync");
 
-    let mut file = File::open(path).unwrap();
-    let mut contents = String::new();
-    file.read_to_string(&mut contents).unwrap();
+//     let mut file = File::open(path).unwrap();
+//     let mut contents = String::new();
+//     file.read_to_string(&mut contents).unwrap();
 
-    contents.parse::<u64>().unwrap()
-}
+//     contents.parse::<u64>().unwrap()
+// }
 
 fn write_sync_time(dir: &Path, branch: Option<&str>) {
     let path = path_for_tag(dir, branch).join(".last_sync");
@@ -59,25 +59,25 @@ fn write_sync_time(dir: &Path, branch: Option<&str>) {
     file.write_all(now.to_string().as_bytes()).unwrap();
 }
 
-/// Use stat to find files since last sync time
-pub fn get_modified_files(dir: &Path, branch: Option<&str>) -> Vec<PathBuf> {
-    let last_sync_time = get_last_sync_time(dir, branch);
+// /// Use stat to find files since last sync time
+// pub fn get_modified_files(dir: &Path, branch: Option<&str>) -> Vec<PathBuf> {
+//     let last_sync_time = get_last_sync_time(dir, branch);
 
-    build_walk(dir)
-        .filter_map(|entry| {
-            let entry = entry.unwrap();
-            let path = entry.path();
-            let metadata = path.metadata().unwrap();
-            let modified = metadata.modified().unwrap();
+//     build_walk(dir)
+//         .filter_map(|entry| {
+//             let entry = entry.unwrap();
+//             let path = entry.path();
+//             let metadata = path.metadata().unwrap();
+//             let modified = metadata.modified().unwrap();
 
-            if modified.duration_since(UNIX_EPOCH).unwrap().as_secs() > last_sync_time {
-                Some(path.to_path_buf())
-            } else {
-                None
-            }
-        })
-        .collect()
-}
+//             if modified.duration_since(UNIX_EPOCH).unwrap().as_secs() > last_sync_time {
+//                 Some(path.to_path_buf())
+//             } else {
+//                 None
+//             }
+//         })
+//         .collect()
+// }
 
 // Merkle trees are unique to directories, even if nested, but .index_cache is shared between all
 
@@ -288,9 +288,9 @@ impl IndexCache {
         self.global_cache.contains(hash)
     }
 
-    fn tag_contains(&mut self, hash: &[u8; ITEM_SIZE]) -> bool {
-        self.tag_cache.contains(hash)
-    }
+    // fn tag_contains(&mut self, hash: &[u8; ITEM_SIZE]) -> bool {
+    //     self.tag_cache.contains(hash)
+    // }
 
     fn get_rev_tags(hash: &[u8; ITEM_SIZE]) -> Vec<String> {
         let mut rev_tags = Self::read_rev_tags(*hash);

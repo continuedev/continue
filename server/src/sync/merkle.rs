@@ -174,11 +174,12 @@ impl Blob {
     }
 }
 
-enum DiffType {
-    Add,
-    Update,
-    Remove,
-}
+// enum DiffType {
+//     Add,
+//     Update,
+//     Remove,
+// }
+
 impl Tree {
     fn descr(&self) -> ObjDescription {
         ObjDescription {
@@ -263,9 +264,9 @@ impl Tree {
         Ok(Self::obj_from_jsonl(&mut lines, None))
     }
 
-    pub fn empty() -> Self {
-        Self::default()
-    }
+    // pub fn empty() -> Self {
+    //     Self::default()
+    // }
 
     fn set_childrens_parent(&mut self) {
         for child in &mut self.children {
