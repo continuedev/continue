@@ -3,6 +3,7 @@ import { Dispatch } from "@reduxjs/toolkit";
 import { JSONContent } from "@tiptap/react";
 import { ChatHistory, ChatHistoryItem, ChatMessage, SlashCommand } from "core";
 import { ExtensionIde } from "core/ide";
+import { ideStreamRequest } from "core/ide/messaging";
 import { constructMessages } from "core/llm/constructMessages";
 import { usePostHog } from "posthog-js/react";
 import { useEffect, useRef } from "react";
@@ -70,26 +71,51 @@ function useChatHandler(dispatch: Dispatch) {
     return [slashCommand, input];
   };
 
+  async function* _streamSlashCommandFromVsCode(
+    messages: ChatMessage[],
+    slashCommand: SlashCommand,
+    input: string
+  ): AsyncGenerator<string> {
+    const modelTitle = defaultModel.title;
+
+    for await (const update of ideStreamRequest("runNodeJsSlashCommand", {
+      input,
+      history: messages,
+      modelTitle,
+      slashCommandName: slashCommand.name,
+      contextItems,
+      params: slashCommand.params,
+    })) {
+      yield update;
+    }
+  }
+
   async function _streamSlashCommand(
     messages: ChatMessage[],
     slashCommand: SlashCommand,
     input: string
   ) {
-    const sdk = {
-      input,
-      history: messages,
-      ide: new ExtensionIde(),
-      llm: defaultModel,
-      addContextItem: (item) => {
-        dispatch(addContextItems([item]));
-      },
-      contextItems,
-      params: slashCommand.params,
-    };
+    let generator: AsyncGenerator<string>;
+    if (slashCommand.runInNodeJs) {
+      generator = _streamSlashCommandFromVsCode(messages, slashCommand, input);
+    } else {
+      const sdk = {
+        input,
+        history: messages,
+        ide: new ExtensionIde(),
+        llm: defaultModel,
+        addContextItem: (item) => {
+          dispatch(addContextItems([item]));
+        },
+        contextItems,
+        params: slashCommand.params,
+      };
+      generator = slashCommand.run(sdk);
+    }
 
     // TODO: if the model returned fast enough it would immediately break
     // Ideally you aren't trusting that results of dispatch show up before the first yield
-    for await (const update of slashCommand.run(sdk)) {
+    for await (const update of generator) {
       if (!activeRef.current) {
         break;
       }

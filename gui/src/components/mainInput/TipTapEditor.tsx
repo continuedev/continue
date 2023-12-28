@@ -125,6 +125,9 @@ function TipTapEditor(props: TipTapEditorProps) {
   const firstResultsRef = useUpdatingRef(firstResults);
   const historyLengthRef = useUpdatingRef(historyLength);
   const onEnterRef = useUpdatingRef(props.onEnter);
+  const availableSlashCommandsRef = useUpdatingRef(
+    props.availableSlashCommands
+  );
 
   const editor = useEditor({
     extensions: [
@@ -190,7 +193,7 @@ function TipTapEditor(props: TipTapEditorProps) {
           class: "mention",
         },
         suggestion: getCommandSuggestion(
-          props.availableSlashCommands,
+          availableSlashCommandsRef,
           onClose,
           onOpen
         ),

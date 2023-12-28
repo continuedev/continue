@@ -32,7 +32,7 @@ async function buildConfigTs(browser: boolean) {
       platform: browser ? "browser" : "node",
       format: browser ? "esm" : "cjs",
       outfile: getConfigJsPath(!browser),
-      external: ["fetch"],
+      external: ["fetch", "fs", "path", "os", "child_process"],
     });
   } catch (e) {
     console.log(e);

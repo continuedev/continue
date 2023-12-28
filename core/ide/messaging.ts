@@ -103,5 +103,11 @@ export async function* ideStreamRequest(
     await new Promise((resolve) => setTimeout(resolve, 50));
   }
 
+  if (buffer.length > index) {
+    const chunk = buffer.slice(index);
+    index = buffer.length;
+    yield chunk;
+  }
+
   clearTimeout(staleTimeout);
 }

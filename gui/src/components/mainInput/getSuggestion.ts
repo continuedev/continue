@@ -157,13 +157,13 @@ export function getMentionSuggestion(
 }
 
 export function getCommandSuggestion(
-  availableSlashCommands: ComboBoxItem[],
+  availableSlashCommandsRef: MutableRefObject<ComboBoxItem[]>,
   onClose: () => void,
   onOpen: () => void
 ) {
   const items = ({ query }) => {
     return (
-      availableSlashCommands?.filter((slashCommand) => {
+      availableSlashCommandsRef.current?.filter((slashCommand) => {
         const sc = slashCommand.title.substring(1).toLowerCase();
         const iv = query.toLowerCase();
         return sc.startsWith(iv);

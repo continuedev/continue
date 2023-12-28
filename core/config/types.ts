@@ -24,7 +24,7 @@ declare global {
     region?: string;
     projectId?: string;
   
-    _fetch?: (input: any, init?: RequestInit) => Promise<any>;
+    _fetch?: (input: any, init?: any) => Promise<any>;
   
     complete(prompt: string, options?: LLMFullCompletionOptions): Promise<string>;
   
@@ -148,6 +148,7 @@ declare global {
   
   export interface ChatHistoryItem {
     message: ChatMessage;
+    editorState?: any;
     contextItems: ContextItemWithId[];
     promptLogs?: [string, string][]; // [prompt, completion]
   }
@@ -267,6 +268,10 @@ declare global {
     description: string;
     params?: { [key: string]: any };
     run: (sdk: ContinueSDK) => AsyncGenerator<string | undefined>;
+  
+    // If true, this command will be run in NodeJs and have access to the filesystem and other Node-only APIs
+    // You must make sure to dynamically import any Node-only dependencies in your command so that it doesn't break in the browser
+    runInNodeJs?: boolean;
   }
   
   // Config
@@ -302,6 +307,7 @@ declare global {
     | "anthropic"
     | "chatml"
     | "none"
+    | "openchat"
     | "deepseek";
   
   type ModelProvider =
@@ -319,7 +325,8 @@ declare global {
     | "lmstudio"
     | "llamafile"
     | "gemini"
-    | "mistral";
+    | "mistral"
+    | "bedrock";
   
   export type ModelName =
     // OpenAI
@@ -362,7 +369,7 @@ declare global {
     verifySsl?: boolean;
     caBundlePath?: string | string[];
     proxy?: string;
-    headers?: Record<string, string>;
+    headers?: { [key: string]: string };
   }
   
   export interface StepWithParams {
@@ -482,6 +489,7 @@ declare global {
     disableIndexing?: boolean;
     userToken?: string;
   }
+  
   
 }
 

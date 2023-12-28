@@ -11,7 +11,7 @@ import { ideProtocolClient, windowId } from "./activation/activate";
 import { getContinueServerUrl } from "./bridge";
 import historyManager from "./history";
 import { VsCodeIde } from "./ideProtocol";
-import { llmFromTitle } from "./loadConfig";
+import { configHandler, llmFromTitle } from "./loadConfig";
 import { getExtensionUri, getNonce, getUniqueId } from "./util/vscode";
 
 let sockets: { [url: string]: io.Socket | undefined } = {};
@@ -434,6 +434,39 @@ export function getSidebarContent(
             data.message.completionOptions
           );
           respond({ content: completion });
+          break;
+        }
+        case "runNodeJsSlashCommand": {
+          const {
+            input,
+            history,
+            modelTitle,
+            slashCommandName,
+            contextItems,
+            params,
+          } = data.message;
+
+          const config = await configHandler.loadConfig(ide);
+          const llm = await llmFromTitle(modelTitle);
+          const slashCommand = config.slashCommands?.find(
+            (sc) => sc.name === slashCommandName
+          );
+          if (!slashCommand) {
+            throw new Error(`Unknown slash command ${slashCommandName}`);
+          }
+
+          for await (const update of slashCommand.run({
+            input,
+            history,
+            llm,
+            contextItems,
+            params,
+            ide,
+            addContextItem: () => {},
+          })) {
+            respond({ content: update });
+          }
+          respond({ done: true });
           break;
         }
       }
