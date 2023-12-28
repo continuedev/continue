@@ -26,7 +26,7 @@ export const secondaryDark = `var(${VSC_SECONDARY_DARK_VAR}, rgb(45 45 45))`;
 export const vscBackground = `var(${VSC_BACKGROUND_VAR}, rgb(30 30 30))`;
 export const vscForeground = `var(${VSC_FOREGROUND_VAR}, #fff)`;
 export const vscButtonBackground = `var(${VSC_BUTTON_BACKGROUND_VAR}, #1bbe84)`;
-export const vscEditorBackground = `var(${VSC_EDITOR_BACKGROUND_VAR}, rgb(30 30 30))`;
+export const vscEditorBackground = `var(${VSC_EDITOR_BACKGROUND_VAR}, ${VSC_BACKGROUND_VAR}, rgb(30 30 30))`;
 
 if (typeof document !== "undefined") {
   for (const colorVar of VSC_THEME_COLOR_VARS) {

@@ -163,7 +163,7 @@ class ToggleAuxiliaryBarAction : AnAction() {
     }
 }
 
-class FocusContinueInputWithEditAction : AnAction() {
+class FocusContinueInputWithoutClearAction : AnAction() {
     override fun actionPerformed(e: AnActionEvent) {
         val project = e.project
         if (project != null) {

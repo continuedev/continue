@@ -10,26 +10,28 @@ import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import com.google.gson.JsonObject
 import com.google.gson.reflect.TypeToken
+import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.ApplicationInfo
 import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.editor.SelectionModel
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.fileEditor.TextEditor
 import com.intellij.openapi.project.DumbAware
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.project.ProjectManagerListener
 import com.intellij.openapi.ui.MessageType
 import com.intellij.openapi.ui.popup.Balloon
 import com.intellij.openapi.ui.popup.JBPopupFactory
-import com.intellij.openapi.vfs.LocalFileSystem
-import com.intellij.openapi.vfs.VfsUtil
-import com.intellij.openapi.vfs.VirtualFile
-import com.intellij.openapi.vfs.VirtualFileManager
+import com.intellij.openapi.vfs.*
+import com.intellij.openapi.vfs.newvfs.events.VFileEvent
 import com.intellij.openapi.wm.WindowManager
 import com.intellij.testFramework.LightVirtualFile
 import com.intellij.ui.awt.RelativePoint
 import kotlinx.coroutines.*
 import net.minidev.json.JSONObject
+import org.jetbrains.annotations.NotNull
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileReader
@@ -81,6 +83,40 @@ fun getMachineUniqueID(): String {
     return "No MAC Address Found"
 }
 
+private fun readConfigJson(): Map<String, Any> {
+    val gson = GsonBuilder().setPrettyPrinting().create()
+    val configJsonPath = getConfigJsonPath()
+    val reader = FileReader(configJsonPath)
+    val config: Map<String, Any> = gson.fromJson(
+            reader,
+            object : TypeToken<Map<String, Any>>() {}.type
+    )
+    reader.close()
+    return config
+}
+
+class AsyncFileSaveListener : AsyncFileListener {
+    private val ideProtocolClient: IdeProtocolClient
+
+    constructor(ideProtocolClient: IdeProtocolClient) {
+        this.ideProtocolClient = ideProtocolClient
+    }
+    override fun prepareChange(events: MutableList<out VFileEvent>): AsyncFileListener.ChangeApplier? {
+        for (event in events) {
+            if (event.path.endsWith(".continue/config.json") || event.path.endsWith(".continue/config.ts") || event.path.endsWith(".continue\\config.json") || event.path.endsWith(".continue\\config.ts")) {
+                return object : AsyncFileListener.ChangeApplier {
+                    override fun afterVfsChange() {
+                        val config = readConfigJson()
+                        ideProtocolClient.configUpdate(config)
+                    }
+                }
+            }
+        }
+        return null
+    }
+
+}
+
 class IdeProtocolClient (
     private val continuePluginService: ContinuePluginService,
     private val textSelectionStrategy: TextSelectionStrategy,
@@ -92,6 +128,11 @@ class IdeProtocolClient (
 
     init {
         initIdeProtocol()
+
+        // Setup config.json / config.ts save listeners
+        VirtualFileManager.getInstance().addAsyncFileListener(AsyncFileSaveListener(this), object : Disposable {
+            override fun dispose() {}
+        })
     }
 
     private fun send(messageType: String, data: Any?, messageId: String? = null) {
@@ -343,7 +384,7 @@ class IdeProtocolClient (
         }
     }
 
-    private fun configUpdate(config: Map<String, Any>) {
+    fun configUpdate(config: Map<String, Any>) {
         val data = mapOf(
             "type" to "configUpdate",
             "config" to config

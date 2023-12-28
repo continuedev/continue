@@ -32,8 +32,7 @@ const StyledMarkdownPreviewComponent = styled(MarkdownPreview)<{
   }
 
   pre > code {
-    background-color: ${(props) =>
-      props.light ? vscBackground : vscEditorBackground};
+    background-color: ${vscEditorBackground};
     color: ${vscForeground};
     padding: ${(props) => (props.showBorder ? "12px" : "0px 2px")};
 
