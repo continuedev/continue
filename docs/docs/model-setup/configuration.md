@@ -54,33 +54,42 @@ However, if neither of these are the case, you will need to wire up a new LLM ob
 
 ## Customizing the Chat Template
 
-Most open-source models expect a specific chat format, for example llama2 and codellama expect the input to look like `"[INST] How do I write bubble sort in Rust? [/INST]"`. Continue will automatically attempt to detect the correct prompt format based on the `model`value that you provide, but if you are receiving nonsense responses, you can use the`template`property to explicitly set the format that you expect. The options are:`["llama2", "alpaca", "zephyr", "phind", "anthropic", "chatml"]`.
+Most open-source models expect a specific chat format, for example llama2 and codellama expect the input to look like `"[INST] How do I write bubble sort in Rust? [/INST]"`. Continue will automatically attempt to detect the correct prompt format based on the `model`value that you provide, but if you are receiving nonsense responses, you can use the`template`property to explicitly set the format that you expect. The options are:`["llama2", "alpaca", "zephyr", "phind", "anthropic", "chatml", "openchat", "none"]`.
 
 If you want to create an entirely new chat template, this can be done in [config.ts](../customization/code-config.md) by defining a function and adding it to the `templateMessages` property of your `LLM`. Here is an example of `templateMessages` for the Alpaca/Vicuna format:
 
-```python
-def template_alpaca_messages(msgs: List[Dict[str, str]]) -> str:
-    prompt = ""
+```typescript
+function templateAlpacaMessages(msgs: ChatMessage[]): string {
+    let prompt = ""
 
-    if msgs[0]["role"] == "system":
-        prompt += f"{msgs[0]['content']}\n"
+    if msgs[0].role === "system" {
+        prompt += `${msgs[0].content}\n`
         msgs.pop(0)
+    }
 
     prompt += "### Instruction:\n"
-    for msg in msgs:
-        prompt += f"{msg['content']}\n"
+    for (let msg of msgs){
+      prompt += `${msg.content}\n`
+    }
 
     prompt += "### Response:\n"
 
     return prompt
+}
 ```
 
 It can then be used like this:
 
-```python title="~/.continue/config.py"
-def modify_config(config: ContinueConfig) -> ContinueConfig:
-    config.models.default.template_messages = template_alpaca_messages
-    return config
+```typescript title="~/.continue/config.ts"
+function modifyConfig(config: Config): Config {
+  const model = config.models.find(
+    (model) => model.title === "My Alpaca Model"
+  );
+  if (model) {
+    model.templateMessages = templateAlpacaMessages;
+  }
+  return config;
+}
 ```
 
 This exact function and a few other default implementations are available in [`continuedev.libs.llm.prompts.chat`](https://github.com/continuedev/continue/blob/main/server/continuedev/libs/llm/prompts/chat.py).
@@ -89,28 +98,29 @@ This exact function and a few other default implementations are available in [`c
 
 You also have access to customize the prompt used in the '/edit' slash command. We already have a well-engineered prompt for GPT-4 and sensible defaults for less powerful open-source models, but you might wish to play with the prompt and try to find a more reliable alternative if you are for example getting English as well as code in your output.
 
-To customize the prompt, use the `prompt_templates` property of any `LLM`, which is a dictionary, and set the "edit" key to a template string with Mustache syntax. The 'file_prefix', 'file_suffix', 'code_to_edit', 'context_items', and 'user_input' variables are available in the template. Here is an example (the default for non-GPT-4 models):
+To customize the prompt, use the `promptTemplates` property of any `LLM`, which is a dictionary, and set the "edit" key to a template string with Mustache syntax. The 'filePrefix', 'fileSuffix', 'codeToEdit', 'contextItems', and 'userInput' variables are available in the template. Here is an example (the default for non-GPT-4 models):
 
-````python
-"""
+```typescript
+`
 [INST] Consider the following code:
-```
-{{{code_to_edit}}}
+\`\`\`
+{{{codeToEdit}}}
 
-```
+\`\`\`
 Edit the code to perfectly satisfy the following user request:
-{{{user_input}}}
+{{{userInput}}}
 Output nothing except for the code. No code block, no English explanation, no start/end tags.
 [/INST]
-"""
-````
+`;
+```
 
 It can then be used like this in `config.py`:
 
-```python title="~/.continue/config.py"
-def modify_config(config: ContinueConfig) -> ContinueConfig:
-    config.models.edit.prompt_templates["edit"] = "<INSERT_TEMPLATE_HERE>"
-    return config
+```typescript title="~/.continue/config.py"
+function modifyConfig(config: Config): Config {
+  config.models[0].promptTemplates["edit"] = "<INSERT_TEMPLATE_HERE>";
+  return config;
+}
 ```
 
 A few pre-made templates are available in [`continuedev.libs.llm.prompts.edit`](https://github.com/continuedev/continue/blob/main/server/continuedev/libs/llm/prompts/edit.py).
