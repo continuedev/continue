@@ -459,40 +459,26 @@ mod tests {
     #[test]
     fn test_sync() {
         let ti = std::time::Instant::now();
-        let results = sync(
-            Path::new("/Users/natesesti/Desktop/continue"),
-            Some("nate/pyO3"),
-        );
+        let results = sync(Path::new("../"), Some("nate/pyO3"));
         println!("Sync took {:?}", ti.elapsed());
         // Vast majority (90+%) of this time is spent in compute_tree_for_dir
     }
 
     #[test]
     fn test_on_vscode_extension() {
-        let results = sync(
-            Path::new("/Users/natesesti/Desktop/continue/extensions/vscode"),
-            Some("nate/pyO3"),
-        );
+        let results = sync(Path::new("../extensions/vscode"), Some("nate/pyO3"));
     }
 
     #[test]
     fn test_double_sync() {
         let ti = std::time::Instant::now();
-        let results = sync(
-            Path::new("/Users/natesesti/Desktop/continue"),
-            Some("nate/pyO3"),
-        )
-        .expect("Sync failed.");
+        let results = sync(Path::new("../"), Some("nate/pyO3")).expect("Sync failed.");
         println!("First sync took {:?}", ti.elapsed());
         assert!(results.0.len() > 0);
         assert!(results.1.len() > 0);
 
         let ti = std::time::Instant::now();
-        let results = sync(
-            Path::new("/Users/natesesti/Desktop/continue"),
-            Some("nate/pyO3"),
-        )
-        .expect("Sync failed");
+        let results = sync(Path::new("../"), Some("nate/pyO3")).expect("Sync failed");
         println!("Second sync took {:?}", ti.elapsed());
         assert_eq!(results.0.len(), 0);
         assert_eq!(results.1.len(), 0);
