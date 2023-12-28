@@ -164,7 +164,7 @@ class IdeProtocolClient (
                     println("Recieved message without messageId: $text")
                     return
                 }
-                send(messageType, responseData, data["messageId"] as String);
+                send(messageType, responseData ?: emptyMap<String, String>(), data["messageId"] as String);
             }
 
             val historyManager = HistoryManager()
@@ -194,11 +194,13 @@ class IdeProtocolClient (
                     }
 
                     "showDiff" -> {
+                        val data = data["message"] as Map<String, Any>
                         diffManager.showDiff(
                                 data["filepath"] as String,
-                                data["replacement"] as String,
-                                (data["step_index"] as Double).toInt()
+                                data["newContents"] as String,
+                                (data["stepIndex"] as Double).toInt()
                         )
+                        respond(null)
                     }
 
                     "readFile" -> {
@@ -228,18 +230,28 @@ class IdeProtocolClient (
 
                     "saveFile" -> {
                         saveFile((data["message"] as Map<String, String>)["filepath"] ?: throw Exception("No filepath provided"))
+                        respond(null)
                     }
-                    "showVirtualFile" -> showVirtualFile(
+                    "showVirtualFile" -> {
+                        showVirtualFile(
                             data["name"] as String,
                             data["contents"] as String
-                    )
+                        )
+                        respond(null)
+                    }
 
                     "connected" -> {}
-                    "showMessage" -> showMessage(data["message"] as String)
-                    "setFileOpen" -> setFileOpen(
-                            data["filepath"] as String,
-                            data["open"] as Boolean
-                    )
+                    "showMessage" -> {
+                        showMessage(data["message"] as String)
+                        respond(null)
+                    }
+                    "setFileOpen" -> {
+                        setFileOpen(
+                                data["filepath"] as String,
+                                data["open"] as Boolean
+                        )
+                        respond(null)
+                    }
 
                     "highlightCode" -> {
                         val gson = Gson()
@@ -248,6 +260,7 @@ class IdeProtocolClient (
                         val rangeInFile =
                                 gson.fromJson<RangeInFile>(json, type)
                         highlightCode(rangeInFile, data["color"] as String)
+                        respond(null)
                     }
 
                     "setSuggestionsLocked" -> {}
@@ -265,7 +278,7 @@ class IdeProtocolClient (
 
                     // NEW //
                     "getDiff" -> {
-                        respond("");
+                        respond(null);
                     }
                     "getSerializedConfig" -> {
                         val configPath = getConfigJsonPath()
