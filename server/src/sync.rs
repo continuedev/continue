@@ -195,7 +195,7 @@ impl IndexCache {
                     .unwrap(),
             ),
             tag_cache: DiskSet::new(
-                IndexCache::index_cache_path_for_tag(dir, branch.unwrap_or("main"))
+                Self::index_cache_path_for_tag(dir, branch.unwrap_or("main"))
                     .to_str()
                     .unwrap(),
             ),
@@ -208,7 +208,7 @@ impl IndexCache {
     // TODO: You could add_bulk, remove_bulk if this gets slow
 
     fn read_rev_tags(hash: [u8; ITEM_SIZE]) -> HashMap<String, Vec<String>> {
-        let rev_tags_path = IndexCache::rev_tags_path(hash);
+        let rev_tags_path = Self::rev_tags_path(hash);
         let mut rev_tags_file = OpenOptions::new()
             .read(true)
             .write(true)
@@ -222,7 +222,7 @@ impl IndexCache {
     }
 
     fn write_rev_tags(hash: [u8; ITEM_SIZE], rev_tags: &HashMap<String, Vec<String>>) {
-        let rev_tags_path = IndexCache::rev_tags_path(hash);
+        let rev_tags_path = Self::rev_tags_path(hash);
         let mut rev_tags_file = OpenOptions::new()
             .read(true)
             .write(true)
@@ -292,7 +292,7 @@ impl IndexCache {
         self.tag_cache.contains(hash)
     }
 
-    fn get_rev_tags(&self, hash: &[u8; ITEM_SIZE]) -> Vec<String> {
+    fn get_rev_tags(hash: &[u8; ITEM_SIZE]) -> Vec<String> {
         let mut rev_tags = Self::read_rev_tags(*hash);
         let hash_str = hash_string(*hash);
         if rev_tags.contains_key(hash_str.as_str()) {
@@ -377,7 +377,7 @@ pub fn sync(
             continue;
         }
         if index_cache.global_contains(&item.hash) {
-            if index_cache.get_rev_tags(&item.hash).len() <= 1 {
+            if IndexCache::get_rev_tags(&item.hash).len() <= 1 {
                 // If it's cached only for this tag, remove it from the global cache as well
                 index_cache.global_remove(&item);
                 let hash = hash_string(item.hash);

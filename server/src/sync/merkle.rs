@@ -68,22 +68,22 @@ pub struct ObjDescription {
 impl Object {
     fn hash(&self) -> ObjectHash {
         match self {
-            Object::Tree(tree) => tree.hash,
-            Object::Blob(blob) => blob.hash,
+            Self::Tree(tree) => tree.hash,
+            Self::Blob(blob) => blob.hash,
         }
     }
 
     fn path(&self) -> &String {
         match self {
-            Object::Tree(tree) => &tree.path,
-            Object::Blob(blob) => &blob.path,
+            Self::Tree(tree) => &tree.path,
+            Self::Blob(blob) => &blob.path,
         }
     }
 
     fn json_for_obj(&self) -> String {
         match self {
-            Object::Tree(tree) => tree.json_for_obj(),
-            Object::Blob(blob) => blob.json_for_obj(),
+            Self::Tree(tree) => tree.json_for_obj(),
+            Self::Blob(blob) => blob.json_for_obj(),
         }
     }
 
@@ -91,12 +91,12 @@ impl Object {
         return ObjDescription {
             hash: self.hash(),
             path: self.path().clone(),
-            is_blob: matches!(self, Object::Blob(_)),
+            is_blob: matches!(self, Self::Blob(_)),
         };
     }
 
     /// Return a tuple of (paths to add, paths to remove)
-    fn diff(&self, new_obj: &Object) -> (Vec<ObjDescription>, Vec<ObjDescription>) {
+    fn diff(&self, new_obj: &Self) -> (Vec<ObjDescription>, Vec<ObjDescription>) {
         let mut add: Vec<ObjDescription> = Vec::new();
         let mut remove: Vec<ObjDescription> = Vec::new();
 
@@ -105,7 +105,7 @@ impl Object {
         }
 
         match (self, new_obj) {
-            (Object::Tree(old_tree), Object::Tree(new_tree)) => {
+            (Self::Tree(old_tree), Self::Tree(new_tree)) => {
                 // This is where you recurse like below
                 let (child_add, child_remove) = old_tree.diff_children(new_tree);
                 add.push(new_tree.descr());
@@ -113,16 +113,16 @@ impl Object {
                 add.extend(child_add);
                 remove.extend(child_remove);
             }
-            (Object::Blob(old_blob), Object::Blob(new_blob)) => {
+            (Self::Blob(old_blob), Self::Blob(new_blob)) => {
                 add.push(new_blob.descr());
                 remove.push(old_blob.descr());
             }
-            (Object::Blob(old_blob), Object::Tree(new_tree)) => {
+            (Self::Blob(old_blob), Self::Tree(new_tree)) => {
                 // Remove blob, add entire new tree
                 remove.push(old_blob.descr());
                 add.extend(new_tree.all_obj_descriptions());
             }
-            (Object::Tree(old_tree), Object::Blob(new_blob)) => {
+            (Self::Tree(old_tree), Self::Blob(new_blob)) => {
                 // Remove entire old tree, add blob
                 remove.extend(old_tree.all_obj_descriptions());
                 add.push(new_blob.descr());
@@ -212,7 +212,7 @@ impl Tree {
         result
     }
 
-    fn obj_from_jsonl(lines: &mut std::str::Lines, first_line: Option<SerializeableNode>) -> Tree {
+    fn obj_from_jsonl(lines: &mut std::str::Lines, first_line: Option<SerializeableNode>) -> Self {
         let root_node =
             first_line.unwrap_or_else(|| serde_json::from_str(lines.next().unwrap()).unwrap());
 
@@ -224,7 +224,7 @@ impl Tree {
                 let child_jsonl = lines.next().unwrap();
                 let child_node: SerializeableNode = serde_json::from_str(child_jsonl).unwrap();
                 if child_node.children.is_some() {
-                    Tree::obj_from_jsonl(lines, Some(child_node)).into()
+                    Self::obj_from_jsonl(lines, Some(child_node)).into()
                 } else {
                     Blob {
                         parent: child_node.parent,
