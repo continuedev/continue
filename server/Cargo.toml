@@ -37,3 +37,5 @@ use_self = "warn"
 
 [lints.rust]
 dead_code = "deny"
+missing_copy_implementations = "warn"
+missing_debug_implementations = "warn"
