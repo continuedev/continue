@@ -13,6 +13,7 @@ class LlamaCpp extends BaseLLM {
       n_predict: options.maxTokens,
       frequency_penalty: options.frequencyPenalty,
       presence_penalty: options.presencePenalty,
+      min_p: options.minP,
     };
 
     return finalOptions;

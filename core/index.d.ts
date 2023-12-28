@@ -110,6 +110,7 @@ export interface CompletionOptions {
   temperature?: number;
   topP?: number;
   topK?: number;
+  minP?: number;
   presencePenalty?: number;
   frequencyPenalty?: number;
   stop?: string[];
@@ -164,6 +165,7 @@ export interface LLMFullCompletionOptions {
   temperature?: number;
   topP?: number;
   topK?: number;
+  minP?: number;
   presencePenalty?: number;
   frequencyPenalty?: number;
   stop?: string[];
@@ -409,6 +411,7 @@ interface BaseCompletionOptions {
   temperature?: number;
   topP?: number;
   topK?: number;
+  minP?: number;
   presencePenalty?: number;
   frequencyPenalty?: number;
   stop?: string[];
