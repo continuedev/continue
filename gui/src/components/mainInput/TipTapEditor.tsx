@@ -340,7 +340,12 @@ function TipTapEditor(props: TipTapEditorProps) {
   }, [editor, props.isMainInput, historyLength, ignoreHighlightedCode]);
 
   return (
-    <InputBoxDiv className="cursor-text">
+    <InputBoxDiv
+      className="cursor-text"
+      onClick={() => {
+        editor && editor.commands.focus();
+      }}
+    >
       <EditorContent
         editor={editor}
         onFocus={() => {
@@ -351,6 +356,9 @@ function TipTapEditor(props: TipTapEditorProps) {
           setTimeout(() => {
             setInputFocused(false);
           }, 100);
+        }}
+        onClick={(event) => {
+          event.stopPropagation();
         }}
       />
       <InputToolbar
@@ -363,9 +371,6 @@ function TipTapEditor(props: TipTapEditorProps) {
         }}
         onEnter={() => {
           onEnterRef.current(editor.getJSON());
-        }}
-        onClick={() => {
-          editor.commands.focus("end");
         }}
       />
     </InputBoxDiv>
