@@ -60,21 +60,21 @@ If you want to create an entirely new chat template, this can be done in [config
 
 ```typescript
 function templateAlpacaMessages(msgs: ChatMessage[]): string {
-    let prompt = ""
+  let prompt = "";
 
-    if msgs[0].role === "system" {
-        prompt += `${msgs[0].content}\n`
-        msgs.pop(0)
-    }
+  if (msgs[0].role === "system") {
+    prompt += `${msgs[0].content}\n`;
+    msgs.pop(0);
+  }
 
-    prompt += "### Instruction:\n"
-    for (let msg of msgs){
-      prompt += `${msg.content}\n`
-    }
+  prompt += "### Instruction:\n";
+  for (let msg of msgs) {
+    prompt += `${msg.content}\n`;
+  }
 
-    prompt += "### Response:\n"
+  prompt += "### Response:\n";
 
-    return prompt
+  return prompt;
 }
 ```
 
