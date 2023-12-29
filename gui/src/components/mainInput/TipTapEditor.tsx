@@ -275,6 +275,9 @@ function TipTapEditor(props: TipTapEditorProps) {
     if (!props.isMainInput) {
       return;
     }
+    if (editor && document.hasFocus()) {
+      editor.commands.focus()
+    }
     const handler = async (event: any) => {
       if (!editor) return;
 
