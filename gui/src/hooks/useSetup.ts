@@ -18,7 +18,9 @@ function useSetup(dispatch: Dispatch<any>) {
     try {
       const ide = new ExtensionIde();
       let serialized = await ide.getSerializedConfig();
+      console.log("serialized: ", serialized);
       let intermediate = serializedToIntermediateConfig(serialized);
+      console.log("i1", intermediate);
 
       const configJsUrl = await ide.getConfigJsUrl();
       if (configJsUrl) {
