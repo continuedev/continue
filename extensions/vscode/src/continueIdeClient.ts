@@ -36,7 +36,8 @@ class IdeProtocolClient {
         filepath.endsWith(".continue/config.json") ||
         filepath.endsWith(".continue\\config.json") ||
         filepath.endsWith(".continue/config.ts") ||
-        filepath.endsWith(".continue\\config.ts")
+        filepath.endsWith(".continue\\config.ts") ||
+        filepath.endsWith(".continuerc.json")
       ) {
         const config = readFileSync(getConfigJsonPath(), "utf8");
         const configJson = JSON.parse(config);

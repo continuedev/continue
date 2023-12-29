@@ -1,5 +1,4 @@
 import defaultConfig from "core/config/default";
-
 import {
   getConfigJsPath,
   getConfigJsonPath,
@@ -8,6 +7,7 @@ import {
   migrate,
 } from "core/util/paths";
 import * as fs from "fs";
+import * as path from "path";
 import * as vscode from "vscode";
 import { ideProtocolClient } from "./activation/activate";
 
@@ -16,6 +16,7 @@ import {
   intermediateToFinalConfig,
   serializedToIntermediateConfig,
 } from "core/config/load";
+import mergeJson from "./util/merge";
 
 async function buildConfigTs(browser: boolean) {
   if (!fs.existsSync(getConfigTsPath())) {
@@ -53,7 +54,7 @@ class VsCodeIde implements IDE {
     try {
       const configPath = getConfigJsonPath();
       let contents = fs.readFileSync(configPath, "utf8");
-      const config = JSON.parse(contents) as SerializedContinueConfig;
+      let config = JSON.parse(contents) as SerializedContinueConfig;
       config.allowAnonymousTelemetry =
         config.allowAnonymousTelemetry &&
         vscode.workspace.getConfiguration("continue").get("telemetryEnabled");
@@ -68,6 +69,16 @@ class VsCodeIde implements IDE {
 
         fs.writeFileSync(configPath, contents, "utf8");
       });
+
+      for (const workspacePath of await this.getWorkspaceDirs()) {
+        const continueRcPath = path.join(workspacePath, ".continuerc.json");
+        if (fs.existsSync(continueRcPath)) {
+          const continueRc = JSON.parse(
+            fs.readFileSync(continueRcPath, "utf8")
+          ) as Partial<SerializedContinueConfig>;
+          config = mergeJson(config, continueRc);
+        }
+      }
 
       return config;
     } catch (e) {
