@@ -50,7 +50,19 @@ class OpenAI extends BaseLLM {
     if (this.apiType === "azure") {
       return `${this.apiBase}/openai/deployments/${this.engine}/completions?api-version=${this.apiVersion}`;
     } else {
-      return this.apiBase + "/v1/completions";
+      let url = this.apiBase;
+      if (!url) {
+        throw new Error(
+          "No API base URL provided. Please set the 'apiBase' option in config.json"
+        );
+      }
+      if (url.endsWith("/")) {
+        url = url.slice(0, -1);
+      }
+      if (!url.endsWith("/v1")) {
+        url += "/v1";
+      }
+      return url + "/completions";
     }
   }
 
@@ -103,7 +115,20 @@ class OpenAI extends BaseLLM {
     if (this.apiType === "azure") {
       return `${this.apiBase}/openai/deployments/${this.engine}/chat/completions?api-version=${this.apiVersion}`;
     } else {
-      return this.apiBase + "/v1/chat/completions";
+      let url = this.apiBase;
+      if (!url) {
+        throw new Error(
+          "No API base URL provided. Please set the 'apiBase' option in config.json"
+        );
+      }
+      if (url.endsWith("/")) {
+        url = url.slice(0, -1);
+      }
+
+      if (!url.endsWith("/v1")) {
+        url += "/v1";
+      }
+      return url + "/chat/completions";
     }
   }
 
