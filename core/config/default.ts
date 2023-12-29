@@ -13,10 +13,6 @@ const defaultConfig: SerializedContinueConfig = {
       model: "gpt-3.5-turbo",
     },
   ],
-  modelRoles: {
-    default: "GPT-4",
-    summarize: "GPT-3.5-Turbo",
-  },
   slashCommands: [
     {
       name: "edit",
