@@ -474,6 +474,7 @@ export function getSidebarContent(
       vscode.window.showErrorMessage(
         `Error handling message from Continue side panel: ${e}`
       );
+      respond({ done: true });
     }
   });
 
