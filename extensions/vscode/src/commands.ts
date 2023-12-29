@@ -5,7 +5,7 @@ import * as vscode from "vscode";
 
 import { ideProtocolClient } from "./activation/activate";
 import { debugPanelWebview, getSidebarContent } from "./debugPanel";
-import { acceptDiffCommand, rejectDiffCommand } from "./diffs";
+import { acceptDiffCommand, rejectDiffCommand } from "./diff/horizontal";
 
 function addHighlightedCodeToContext(edit: boolean) {
   const editor = vscode.window.activeTextEditor;

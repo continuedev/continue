@@ -1,7 +1,7 @@
 import * as os from "os";
 import * as path from "path";
 import * as vscode from "vscode";
-import { DIFF_DIRECTORY, diffManager } from "../diffs";
+import { DIFF_DIRECTORY, diffManager } from "../diff/horizontal";
 import { editorSuggestionsLocked, editorToSuggestions } from "../suggestions";
 import { getMetaKeyLabel } from "../util/util";
 import { getExtensionUri } from "../util/vscode";

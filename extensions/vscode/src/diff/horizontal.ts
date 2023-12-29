@@ -3,10 +3,10 @@ import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
 import * as vscode from "vscode";
-import { extensionContext } from "./activation/activate";
-import { debugPanelWebview } from "./debugPanel";
-import { getMetaKeyLabel, getPlatform } from "./util/util";
-import { uriFromFilePath } from "./util/vscode";
+import { extensionContext } from "../activation/activate";
+import { debugPanelWebview } from "../debugPanel";
+import { getMetaKeyLabel, getPlatform } from "../util/util";
+import { uriFromFilePath } from "../util/vscode";
 
 interface DiffInfo {
   originalFilepath: string;
