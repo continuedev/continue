@@ -229,16 +229,10 @@ export type CustomLLM = RequireAtLeastOne<
 
 // IDE
 
-interface DiffLineNew {
-  type: "new";
-  newLine: string;
+export interface DiffLine {
+  type: "new" | "old" | "same";
+  line: string;
 }
-
-interface DiffLineOldOrSame {
-  type: "old" | "same";
-}
-
-export type DiffLine = DiffLineNew | DiffLineOldOrSame;
 
 export interface IDE {
   getSerializedConfig(): Promise<SerializedContinueConfig>;

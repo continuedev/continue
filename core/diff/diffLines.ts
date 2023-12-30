@@ -8,22 +8,24 @@ export async function* streamDiff(
   oldLines: string[],
   newLines: AsyncGenerator<string>
 ): AsyncGenerator<DiffLine> {
+  oldLines = [...oldLines]; // be careful
+
   let newLineResult = await newLines.next();
   while (oldLines.length > 0 && !newLineResult.done) {
     const newLine = newLineResult.value;
     const [matchIndex, isPerfectMatch] = matchLine(newLine, oldLines);
 
     if (matchIndex < 0) {
-      yield { type: "new", newLine };
+      yield { type: "new", line: newLine };
     } else {
       for (let i = 0; i < matchIndex; i++) {
-        yield { type: "old" };
+        yield { type: "old", line: oldLines.shift()! };
       }
       if (isPerfectMatch) {
-        yield { type: "same" };
+        yield { type: "same", line: oldLines.shift()! };
       } else {
-        yield { type: "old" };
-        yield { type: "new", newLine };
+        yield { type: "old", line: oldLines.shift()! };
+        yield { type: "new", line: newLine };
       }
     }
 
@@ -32,12 +34,13 @@ export async function* streamDiff(
 
   // Once at the edge, only one choice
   if (newLineResult.done === true && oldLines.length > 0) {
-    for (let _ of oldLines) {
-      yield { type: "old" };
+    for (let oldLine of oldLines) {
+      yield { type: "old", line: oldLine };
     }
   } else if (!newLineResult.done && oldLines.length === 0) {
+    yield { type: "new", line: newLineResult.value };
     for await (const newLine of newLines) {
-      yield { type: "new", newLine };
+      yield { type: "new", line: newLine };
     }
   }
 }

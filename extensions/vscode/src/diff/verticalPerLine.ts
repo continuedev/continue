@@ -6,21 +6,25 @@ import { llmFromTitle } from "../loadConfig";
 const redDecorationType = vscode.window.createTextEditorDecorationType({
   isWholeLine: true,
   backgroundColor: "rgba(255, 0, 0, 0.2)",
-  color: "--vscode-editorForeground",
+  color: "white",
+  rangeBehavior: vscode.DecorationRangeBehavior.ClosedClosed,
 });
 
 const greenDecorationType = vscode.window.createTextEditorDecorationType({
   isWholeLine: true,
   backgroundColor: "rgba(0, 255, 0, 0.2)",
+  rangeBehavior: vscode.DecorationRangeBehavior.ClosedClosed,
 });
 
 const indexDecorationType = vscode.window.createTextEditorDecorationType({
   isWholeLine: true,
   backgroundColor: "rgba(255, 255, 255, 0.2)",
+  rangeBehavior: vscode.DecorationRangeBehavior.ClosedClosed,
 });
 const belowIndexDecorationType = vscode.window.createTextEditorDecorationType({
   isWholeLine: true,
   backgroundColor: "rgba(255, 255, 255, 0.1)",
+  rangeBehavior: vscode.DecorationRangeBehavior.ClosedClosed,
 });
 
 class DecorationTypeRangeManager {
@@ -45,7 +49,9 @@ class DecorationTypeRangeManager {
         lastRange.end.translate(1)
       );
     } else {
-      this.ranges.push(new vscode.Range(index, 0, index + 1, 0));
+      this.ranges.push(
+        new vscode.Range(index, 0, index, Number.MAX_SAFE_INTEGER)
+      );
     }
 
     this.editor.setDecorations(this.decorationType, this.ranges);
@@ -98,19 +104,15 @@ export class VerticalPerLineDiffHandler {
   async handleDiffLine(diffLine: DiffLine) {
     switch (diffLine.type) {
       case "same":
-        this.incrementCurrentLineIndex();
         break;
       case "old":
         this.setLineAtIndexRed(this.currentLineIndex);
-        this.incrementCurrentLineIndex();
         break;
       case "new":
-        await this.insertLineAboveIndex(
-          this.currentLineIndex,
-          diffLine.newLine
-        );
+        await this.insertLineAboveIndex(this.currentLineIndex, diffLine.line);
         break;
     }
+    this.incrementCurrentLineIndex();
   }
 
   private incrementCurrentLineIndex() {
@@ -136,15 +138,14 @@ export class VerticalPerLineDiffHandler {
   private updateIndexLineDecorations() {
     // Highlight the line at the currentLineIndex
     // And lightly highlight all lines between that and endLine
-    const start = new vscode.Position(this.currentLineIndex, 0);
-    this.editor.setDecorations(indexDecorationType, [
-      new vscode.Range(start, start.translate(1)),
-    ]);
-
-    const end = new vscode.Position(this.endLine, 0);
-    this.editor.setDecorations(belowIndexDecorationType, [
-      new vscode.Range(start.translate(1), end),
-    ]);
+    // const start = new vscode.Position(this.currentLineIndex, 0);
+    // this.editor.setDecorations(indexDecorationType, [
+    //   new vscode.Range(start, start.translate(1)),
+    // ]);
+    // const end = new vscode.Position(this.endLine, 0);
+    // this.editor.setDecorations(belowIndexDecorationType, [
+    //   new vscode.Range(start.translate(1), end),
+    // ]);
   }
 }
 
@@ -216,6 +217,7 @@ export async function streamEdit(input: string) {
       llm,
       input
     )) {
+      console.log(diffLine.type + "  " + diffLine.line);
       await diffHandler.handleDiffLine(diffLine);
     }
   }
