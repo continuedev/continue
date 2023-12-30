@@ -106,8 +106,16 @@ describe("streamDiff", () => {
       const numOld = diff.filter((dl) => dl.type === "old").length;
       const numNew = diff.filter((dl) => dl.type === "new").length;
 
+      // Check that every line is represented
       expect(oldLines.length).toEqual(numOld + numSame);
       expect(newLines.length).toEqual(numNew + numSame);
+
+      // Check that there are no red lines immediately following green (they should always be above)
+      for (let i = 1; i < diff.length; i++) {
+        if (diff[i].type === "old" && diff[i - 1].type === "new") {
+          throw new Error("Found red immediately after green line");
+        }
+      }
     });
   }
 });
