@@ -71,6 +71,7 @@ export class VerticalPerLineDiffHandler {
   private editor: vscode.TextEditor;
   private endLine: number;
   private currentLineIndex: number;
+  private cancelled: boolean = false;
 
   constructor(startLine: number, endLine: number, editor: vscode.TextEditor) {
     this.currentLineIndex = startLine;
@@ -105,6 +106,12 @@ export class VerticalPerLineDiffHandler {
         );
       }
     });
+
+    this.cancelled = true;
+  }
+
+  get isCancelled() {
+    return this.cancelled;
   }
 
   async handleDiffLine(diffLine: DiffLine) {
@@ -131,6 +138,15 @@ export class VerticalPerLineDiffHandler {
   private greenDecorationManager: DecorationTypeRangeManager;
 
   private setLineAtIndexRed(index: number) {
+    // Don't remove trailing whitespace line
+    const editorLines = this.editor.document.getText().split("\n");
+    if (
+      index >= editorLines.length &&
+      editorLines[editorLines.length - 1] === ""
+    ) {
+      return;
+    }
+
     this.redDecorationManager.addLine(index);
   }
 
@@ -236,11 +252,20 @@ export async function streamEdit(input: string) {
     const rangeContent = editor.document.getText(selectedRange);
     const llm = await llmFromTitle();
 
+    // Unselect the range
+    editor.selection = new vscode.Selection(
+      editor.selection.active,
+      editor.selection.active
+    );
+
     for await (const diffLine of streamDiffLines(
       rangeContent.split("\n"),
       llm,
       input
     )) {
+      if (diffHandler.isCancelled) {
+        break;
+      }
       // console.log(
       //   (diffLine.type === "new"
       //     ? "+ "

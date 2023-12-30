@@ -6,7 +6,7 @@ function linesMatchPerfectly(lineA: string, lineB: string): boolean {
 
 function linesMatch(lineA: string, lineB: string): boolean {
   const d = distance(lineA, lineB);
-  return d / Math.max(lineA.length, lineB.length) < 0.5;
+  return d / Math.max(lineA.length, lineB.length) < 0.5 && lineA !== "";
 }
 
 /**
