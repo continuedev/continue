@@ -18,6 +18,8 @@ As you use Continue more, you will learn when to trust it. A great way to get st
 
 If you are trying to use it for a new task and don’t have a sense of how much Continue can help you complete it, it can often be helpful to start like this:
 
+'Highlight' refers to the act of selecting a text range in a file and pressing 'cmd+shift+M' (Macos) or 'ctrl+shift+M' (Windows) to include it in the Continue chat message.
+
 1. Highlight the code section(s) that you don’t understand and type "tell me how this code works" in the input box
 2. If the explanation seems reasonable, then, while still highlighting the code section(s), type "how would you change this code to [INSERT TASK]?"
 3. If this explanation is also pretty good, then, while still highlighting the code section(s), type `/edit [INSERT TASK]`. If you like the suggested diff, use `cmd+shift+enter` to accept the changes.
