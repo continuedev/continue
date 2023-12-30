@@ -248,6 +248,12 @@ export interface IDE {
     newContents: string,
     stepIndex: number
   ): Promise<void>;
+  verticalDiffUpdate(
+    filepath: string,
+    startLine: number,
+    endLine: number,
+    diffLine: DiffLine
+  ): Promise<void>;
   getOpenFiles(): Promise<string[]>;
 }
 

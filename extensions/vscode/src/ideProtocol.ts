@@ -16,6 +16,8 @@ import {
   intermediateToFinalConfig,
   serializedToIntermediateConfig,
 } from "core/config/load";
+import { DiffLine } from "core/diff/diffLines";
+import { verticalPerLineDiffManager } from "./diff/verticalPerLine";
 import mergeJson from "./util/merge";
 
 async function buildConfigTs(browser: boolean) {
@@ -206,6 +208,23 @@ class VsCodeIde implements IDE {
     stepIndex: number
   ): Promise<void> {
     await ideProtocolClient.showDiff(filepath, newContents, stepIndex);
+  }
+
+  async verticalDiffUpdate(
+    filepath: string,
+    startLine: number,
+    endLine: number,
+    diffLine: DiffLine
+  ) {
+    const diffHandler =
+      verticalPerLineDiffManager.getOrCreateVerticalPerLineDiffHandler(
+        filepath,
+        startLine,
+        endLine
+      );
+    if (diffHandler) {
+      await diffHandler.handleDiffLine(diffLine);
+    }
   }
 
   async getOpenFiles(): Promise<string[]> {

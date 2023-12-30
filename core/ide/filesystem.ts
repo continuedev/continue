@@ -1,5 +1,6 @@
 import * as fs from "fs";
 import { IDE, SerializedContinueConfig } from "..";
+import { DiffLine } from "../diff/diffLines";
 import {
   getConfigJsonPath,
   getConfigTsPath,
@@ -87,6 +88,15 @@ class FileSystemIde implements IDE {
     newContents: string,
     stepIndex: number
   ): Promise<void> {
+    return Promise.resolve();
+  }
+
+  async verticalDiffUpdate(
+    filepath: string,
+    startLine: number,
+    endLine: number,
+    diffLine: DiffLine
+  ) {
     return Promise.resolve();
   }
 

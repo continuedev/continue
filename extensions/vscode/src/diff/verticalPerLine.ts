@@ -1,5 +1,7 @@
+import { streamDiffLines } from "core/commands/slash/verticalEdit";
 import { DiffLine } from "core/diff/diffLines";
 import * as vscode from "vscode";
+import { llmFromTitle } from "../loadConfig";
 
 const redDecorationType = vscode.window.createTextEditorDecorationType({
   isWholeLine: true,
@@ -183,3 +185,40 @@ class VerticalPerLineDiffManager {
 }
 
 export const verticalPerLineDiffManager = new VerticalPerLineDiffManager();
+
+export async function streamEdit(input: string) {
+  const editor = vscode.window.activeTextEditor;
+  if (!editor) {
+    return;
+  }
+
+  const filepath = editor.document.uri.fsPath;
+  const startLine = editor.selection.start.line;
+  const endLine = editor.selection.end.line;
+
+  const diffHandler =
+    verticalPerLineDiffManager.getOrCreateVerticalPerLineDiffHandler(
+      filepath,
+      startLine,
+      endLine
+    );
+
+  if (diffHandler) {
+    const selectedRange = new vscode.Range(
+      editor.selection.start,
+      editor.selection.end
+    );
+    const rangeContent = editor.document.getText(selectedRange);
+    const llm = await llmFromTitle();
+
+    for await (const diffLine of streamDiffLines(
+      rangeContent.split("\n"),
+      llm,
+      input
+    )) {
+      await diffHandler.handleDiffLine(diffLine);
+    }
+  }
+
+  // Shortcuts to accept / reject
+}

@@ -14,7 +14,7 @@ export type DiffLine = DiffLineNew | DiffLineOldOrSame;
 /**
  * https://blog.jcoglan.com/2017/02/12/the-myers-diff-algorithm-part-1/
  */
-async function* streamDiff(
+export async function* streamDiff(
   oldLines: string[],
   newLines: AsyncGenerator<string>
 ): AsyncGenerator<DiffLine> {

@@ -6,6 +6,7 @@ import * as vscode from "vscode";
 import { ideProtocolClient } from "./activation/activate";
 import { debugPanelWebview, getSidebarContent } from "./debugPanel";
 import { acceptDiffCommand, rejectDiffCommand } from "./diff/horizontal";
+import { streamEdit } from "./diff/verticalPerLine";
 
 function addHighlightedCodeToContext(edit: boolean) {
   const editor = vscode.window.activeTextEditor;
@@ -105,20 +106,13 @@ const commandsMap: { [command: string]: (...args: any) => any } = {
   "continue.toggleAuxiliaryBar": () => {
     vscode.commands.executeCommand("workbench.action.toggleAuxiliaryBar");
   },
-  "continue.quickTextEntry": async () => {
-    addHighlightedCodeToContext(true);
+  "continue.quickEdit": async () => {
     const text = await vscode.window.showInputBox({
-      placeHolder: "Ask a question or enter a slash command",
-      title: "Continue Quick Input",
+      placeHolder: "Describe how to edit the highlighted code",
+      title: "Continue Quick Edit",
     });
     if (text) {
-      debugPanelWebview?.postMessage({
-        type: "userInput",
-        input: text,
-      });
-      if (!text.startsWith("/edit")) {
-        vscode.commands.executeCommand("continue.continueGUIView.focus");
-      }
+      await streamEdit(text);
     }
   },
   "continue.viewLogs": async () => {

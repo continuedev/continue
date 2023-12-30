@@ -16,6 +16,19 @@ Here is the edit requested:
 
 Here is the code after editing:`;
 
+const gptEditPrompt = `\
+You will be asked to rewrite a section of code to fulfill a user request. Here is the code you will rewrite:
+
+\`\`\`
+{{{codeToEdit}}}
+\`\`\`
+
+Here is the user request:
+
+{{{userInput}}}
+
+Now rewrite the code to perfectly satisfy the user request. Your output should include nothing but the code. No code block, no English explanation, no start/end tags. Here it is:`;
+
 const codellamaInfillEditPrompt = "{{filePrefix}}<FILL>{{fileSuffix}}";
 
 const codellamaEditPrompt = `[CODE]
@@ -101,6 +114,7 @@ export {
   codellamaEditPrompt,
   codellamaInfillEditPrompt,
   deepseekEditPrompt,
+  gptEditPrompt,
   openchatEditPrompt,
   phindEditPrompt,
   simplestEditPrompt,

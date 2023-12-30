@@ -81,9 +81,9 @@
         "title": "Reject Diff"
       },
       {
-        "command": "continue.quickTextEntry",
+        "command": "continue.quickEdit",
         "category": "Continue",
-        "title": "Quick Text Entry"
+        "title": "Quick Edit"
       },
       {
         "command": "continue.toggleAuxiliaryBar",
@@ -156,7 +156,7 @@
         "key": "shift+ctrl+backspace"
       },
       {
-        "command": "continue.quickTextEntry",
+        "command": "continue.quickEdit",
         "mac": "cmd+shift+l",
         "key": "ctrl+shift+l"
       },

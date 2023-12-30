@@ -1,3 +1,4 @@
+import { DiffLine } from "../diff/diffLines";
 import { IDE, SerializedContinueConfig } from "../index";
 import { ideRequest } from "./messaging";
 async function r(messageType: string, options: any = {}) {
@@ -67,6 +68,15 @@ export class ExtensionIde implements IDE {
     stepIndex: number
   ): Promise<void> {
     await r("showDiff", { filepath, newContents, stepIndex });
+  }
+
+  async verticalDiffUpdate(
+    filepath: string,
+    startLine: number,
+    endLine: number,
+    diffLine: DiffLine
+  ) {
+    await r("diffLine", { filepath, startLine, endLine, diffLine });
   }
 
   getOpenFiles(): Promise<string[]> {

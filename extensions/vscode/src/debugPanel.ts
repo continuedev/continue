@@ -10,7 +10,6 @@ import * as io from "socket.io-client";
 import * as vscode from "vscode";
 import { ideProtocolClient, windowId } from "./activation/activate";
 import { getContinueServerUrl } from "./bridge";
-import { verticalPerLineDiffManager } from "./diff/verticalPerLine";
 import historyManager from "./history";
 import { VsCodeIde } from "./ideProtocol";
 import { configHandler, llmFromTitle } from "./loadConfig";
@@ -354,15 +353,9 @@ export function getSidebarContent(
             endLine: number;
           } = data.message;
 
-          const diffHandler =
-            verticalPerLineDiffManager.getOrCreateVerticalPerLineDiffHandler(
-              filepath,
-              startLine,
-              endLine
-            );
-          if (diffHandler) {
-            await diffHandler.handleDiffLine(diffLine);
-          }
+          respond(
+            await ide.verticalDiffUpdate(filepath, startLine, endLine, diffLine)
+          );
           break;
         }
         case "getOpenFiles": {

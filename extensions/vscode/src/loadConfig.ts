@@ -22,9 +22,11 @@ class VsCodeConfigHandler {
 
 export const configHandler = new VsCodeConfigHandler();
 
-export async function llmFromTitle(title: string): Promise<ILLM> {
+export async function llmFromTitle(title?: string): Promise<ILLM> {
   let config = await configHandler.loadConfig(new VsCodeIde());
-  let llm = config.models.find((llm) => llm.title === title);
+  let llm = title
+    ? config.models.find((llm) => llm.title === title)
+    : config.models[0];
   if (!llm) {
     // Try to reload config
     configHandler.reloadConfig();
