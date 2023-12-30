@@ -16,7 +16,11 @@ async function* filterLines(
   rawLines: AsyncGenerator<string>
 ): AsyncGenerator<string> {
   let seenValidLine = false;
+
+  let waitingToSeeIfLineIsLast = undefined;
+
   for await (const line of rawLines) {
+    // Filter out starting ```
     if (!seenValidLine) {
       if (shouldRemoveLineBeforeStart(line)) {
         continue;
@@ -24,7 +28,18 @@ async function* filterLines(
         seenValidLine = true;
       }
     }
-    yield line;
+
+    // Filter out ending ```
+    if (typeof waitingToSeeIfLineIsLast !== "undefined") {
+      yield waitingToSeeIfLineIsLast;
+      waitingToSeeIfLineIsLast = undefined;
+    }
+
+    if (line === "```") {
+      waitingToSeeIfLineIsLast = line;
+    } else {
+      yield line;
+    }
   }
 }
 

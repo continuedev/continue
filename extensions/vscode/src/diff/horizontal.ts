@@ -7,6 +7,7 @@ import { extensionContext } from "../activation/activate";
 import { debugPanelWebview } from "../debugPanel";
 import { getMetaKeyLabel, getPlatform } from "../util/util";
 import { uriFromFilePath } from "../util/vscode";
+import { verticalPerLineDiffManager } from "./verticalPerLine";
 
 interface DiffInfo {
   originalFilepath: string;
@@ -342,9 +343,11 @@ async function recordAcceptReject(accepted: boolean, diffInfo: DiffInfo) {
 }
 
 export async function acceptDiffCommand(newFilepath?: string) {
+  verticalPerLineDiffManager.clearForFilepath(newFilepath, true);
   await diffManager.acceptDiff(newFilepath);
 }
 
 export async function rejectDiffCommand(newFilepath?: string) {
+  verticalPerLineDiffManager.clearForFilepath(newFilepath, false);
   await diffManager.rejectDiff(newFilepath);
 }

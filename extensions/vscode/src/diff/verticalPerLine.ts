@@ -88,15 +88,21 @@ export class VerticalPerLineDiffHandler {
   }
 
   clear(accept: boolean) {
-    this.redDecorationManager.clear();
-    this.greenDecorationManager.clear();
-
     const rangesToDelete = accept
       ? this.redDecorationManager.getRanges()
       : this.greenDecorationManager.getRanges();
+
+    this.redDecorationManager.clear();
+    this.greenDecorationManager.clear();
+
     this.editor.edit((editBuilder) => {
       for (const range of rangesToDelete) {
-        editBuilder.delete(range);
+        editBuilder.delete(
+          new vscode.Range(
+            range.start,
+            new vscode.Position(range.end.line + 1, 0)
+          )
+        );
       }
     });
   }
@@ -138,14 +144,24 @@ export class VerticalPerLineDiffHandler {
   private updateIndexLineDecorations() {
     // Highlight the line at the currentLineIndex
     // And lightly highlight all lines between that and endLine
-    // const start = new vscode.Position(this.currentLineIndex, 0);
-    // this.editor.setDecorations(indexDecorationType, [
-    //   new vscode.Range(start, start.translate(1)),
-    // ]);
-    // const end = new vscode.Position(this.endLine, 0);
-    // this.editor.setDecorations(belowIndexDecorationType, [
-    //   new vscode.Range(start.translate(1), end),
-    // ]);
+    if (
+      this.currentLineIndex >= this.editor.document.getText().split("\n").length
+    ) {
+      this.editor.setDecorations(indexDecorationType, []);
+      this.editor.setDecorations(belowIndexDecorationType, []);
+    } else {
+      const start = new vscode.Position(this.currentLineIndex, 0);
+      this.editor.setDecorations(indexDecorationType, [
+        new vscode.Range(
+          start,
+          new vscode.Position(start.line, Number.MAX_SAFE_INTEGER)
+        ),
+      ]);
+      const end = new vscode.Position(this.endLine, 0);
+      this.editor.setDecorations(belowIndexDecorationType, [
+        new vscode.Range(start.translate(1), end),
+      ]);
+    }
   }
 }
 
@@ -176,7 +192,15 @@ class VerticalPerLineDiffManager {
     }
   }
 
-  clearForFilepath(filepath: string, accept: boolean) {
+  clearForFilepath(filepath: string | undefined, accept: boolean) {
+    if (!filepath) {
+      const activeEditor = vscode.window.activeTextEditor;
+      if (!activeEditor) {
+        return;
+      }
+      filepath = activeEditor.document.uri.fsPath;
+    }
+
     const handler = this.filepathToEditorMap.get(filepath);
     if (handler) {
       handler.clear(accept);
@@ -217,7 +241,13 @@ export async function streamEdit(input: string) {
       llm,
       input
     )) {
-      console.log(diffLine.type + "  " + diffLine.line);
+      // console.log(
+      //   (diffLine.type === "new"
+      //     ? "+ "
+      //     : diffLine.type === "old"
+      //     ? "- "
+      //     : "  ") + diffLine.line
+      // );
       await diffHandler.handleDiffLine(diffLine);
     }
   }
