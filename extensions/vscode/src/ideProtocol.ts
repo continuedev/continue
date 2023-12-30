@@ -11,12 +11,11 @@ import * as path from "path";
 import * as vscode from "vscode";
 import { ideProtocolClient } from "./activation/activate";
 
-import { ContinueConfig, IDE, SerializedContinueConfig } from "core";
+import { ContinueConfig, DiffLine, IDE, SerializedContinueConfig } from "core";
 import {
   intermediateToFinalConfig,
   serializedToIntermediateConfig,
 } from "core/config/load";
-import { DiffLine } from "core/diff/diffLines";
 import { verticalPerLineDiffManager } from "./diff/verticalPerLine";
 import mergeJson from "./util/merge";
 

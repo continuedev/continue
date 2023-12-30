@@ -1,5 +1,4 @@
-import { FileEdit, ModelDescription } from "core";
-import { DiffLine } from "core/diff/diffLines";
+import { DiffLine, FileEdit, ModelDescription } from "core";
 import {
   editConfigJson,
   getConfigJsonPath,

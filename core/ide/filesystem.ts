@@ -1,6 +1,5 @@
 import * as fs from "fs";
-import { IDE, SerializedContinueConfig } from "..";
-import { DiffLine } from "../diff/diffLines";
+import { DiffLine, IDE, SerializedContinueConfig } from "..";
 import {
   getConfigJsonPath,
   getConfigTsPath,

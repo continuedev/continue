@@ -1,5 +1,5 @@
+import { DiffLine } from "core";
 import { streamDiffLines } from "core/commands/slash/verticalEdit";
-import { DiffLine } from "core/diff/diffLines";
 import * as vscode from "vscode";
 import { llmFromTitle } from "../loadConfig";
 

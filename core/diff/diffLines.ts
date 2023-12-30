@@ -1,15 +1,5 @@
+import { DiffLine } from "..";
 import { matchLine } from "./util";
-
-interface DiffLineNew {
-  type: "new";
-  newLine: string;
-}
-
-interface DiffLineOldOrSame {
-  type: "old" | "same";
-}
-
-export type DiffLine = DiffLineNew | DiffLineOldOrSame;
 
 /**
  * https://blog.jcoglan.com/2017/02/12/the-myers-diff-algorithm-part-1/

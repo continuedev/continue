@@ -1,9 +1,7 @@
 import * as dotenv from "dotenv";
 import { ContinueSDK } from "../..";
-import EditSlashCommand, {
-  contextItemToRangeInFileWithContents,
-  getPromptParts,
-} from "../../commands/slash/edit";
+import EditSlashCommand, { getPromptParts } from "../../commands/slash/edit";
+import { contextItemToRangeInFileWithContents } from "../../commands/util";
 import FileSystemIde from "../../ide/filesystem";
 import { dedentAndGetCommonWhitespace } from "../../util";
 import FreeTrial from "../llms/FreeTrial";
