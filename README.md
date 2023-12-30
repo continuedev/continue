@@ -32,7 +32,7 @@
 
 ### Answer coding questions
 
-Highlight (select and press `cmd+shift+M` (MacOS) / `ctrl+shift+M` (Windows)) a section of code and ask Continue for another perspective) sections of code and ask Continue for another perspective
+Highlight (select and press `cmd+shift+M` (MacOS) / `ctrl+shift+M` (Windows)) sections of code and ask Continue for another perspective
 
 - “what does this forRoot() static function do in nestjs?”
 - “why is the first left join in this query necessary here?”
