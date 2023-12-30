@@ -69,12 +69,16 @@ class DecorationTypeRangeManager {
 
 export class VerticalPerLineDiffHandler {
   private editor: vscode.TextEditor;
+  private startLine: number;
   private endLine: number;
   private currentLineIndex: number;
   private cancelled: boolean = false;
 
+  private newLinesAdded: number = 0;
+
   constructor(startLine: number, endLine: number, editor: vscode.TextEditor) {
     this.currentLineIndex = startLine;
+    this.startLine = startLine;
     this.endLine = endLine;
     this.editor = editor;
 
@@ -155,13 +159,15 @@ export class VerticalPerLineDiffHandler {
       editBuilder.insert(new vscode.Position(index, 0), line + "\n");
     });
     this.greenDecorationManager.addLine(index);
+    this.newLinesAdded++;
   }
 
   private updateIndexLineDecorations() {
     // Highlight the line at the currentLineIndex
     // And lightly highlight all lines between that and endLine
     if (
-      this.currentLineIndex >= this.editor.document.getText().split("\n").length
+      this.currentLineIndex - this.newLinesAdded >=
+      this.endLine - this.startLine
     ) {
       this.editor.setDecorations(indexDecorationType, []);
       this.editor.setDecorations(belowIndexDecorationType, []);
