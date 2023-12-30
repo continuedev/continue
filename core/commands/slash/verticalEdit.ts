@@ -1,8 +1,8 @@
 import { ContextItemWithId, DiffLine, ILLM, SlashCommand } from "../..";
 import { streamDiff } from "../../diff/diffLines";
-import { streamLines } from "../../diff/util";
+import { LineStream, streamLines } from "../../diff/util";
 import { gptEditPrompt } from "../../llm/templates/edit";
-import { renderPromptTemplate } from "../../util";
+import { dedentAndGetCommonWhitespace, renderPromptTemplate } from "../../util";
 import {
   RangeInFileWithContents,
   contextItemToRangeInFileWithContents,
@@ -12,9 +12,7 @@ function shouldRemoveLineBeforeStart(line: string): boolean {
   return line.startsWith("```");
 }
 
-async function* filterLines(
-  rawLines: AsyncGenerator<string>
-): AsyncGenerator<string> {
+async function* filterLines(rawLines: LineStream): LineStream {
   let seenValidLine = false;
 
   let waitingToSeeIfLineIsLast = undefined;
@@ -43,28 +41,42 @@ async function* filterLines(
   }
 }
 
-function constructPrompt(oldLines: string[], llm: ILLM, input: string): string {
+function constructPrompt(
+  codeToEdit: string,
+  llm: ILLM,
+  userInput: string
+): string {
   const template = llm.promptTemplates?.edit ?? gptEditPrompt;
   const rendered = renderPromptTemplate(template, [], {
-    userInput: input,
-    codeToEdit: oldLines.join("\n"),
+    userInput,
+    codeToEdit,
   });
   return typeof rendered === "string"
     ? rendered
     : rendered[rendered.length - 1].content;
 }
 
-export function streamDiffLines(
-  oldLines: string[],
+export async function* streamDiffLines(
+  oldCode: string,
   llm: ILLM,
   input: string
 ): AsyncGenerator<DiffLine> {
-  const prompt = constructPrompt(oldLines, llm, input);
+  // Strip common indentation for the LLM, then add back after generation
+  const [withoutIndentation, commonIndentation] =
+    dedentAndGetCommonWhitespace(oldCode);
+  oldCode = withoutIndentation;
+  const prompt = constructPrompt(oldCode, llm, input);
 
   const completion = llm.streamComplete(prompt);
   const newLines = filterLines(streamLines(completion));
-  const diffLineGenerator = streamDiff(oldLines, newLines);
-  return diffLineGenerator;
+  const diffLineGenerator = streamDiff(oldCode.split("\n"), newLines);
+
+  for await (const diffLine of diffLineGenerator) {
+    yield {
+      ...diffLine,
+      line: commonIndentation + diffLine.line,
+    };
+  }
 }
 
 const VerticalEditSlashCommand: SlashCommand = {
@@ -83,12 +95,11 @@ const VerticalEditSlashCommand: SlashCommand = {
 
     const rif: RangeInFileWithContents =
       contextItemToRangeInFileWithContents(contextItemToEdit);
-    const oldLines = rif.contents.split("\n");
     const startLine = rif.range.start.line;
     const endLine = rif.range.end.line;
     const filepath = rif.filepath;
 
-    const diffLineGenerator = streamDiffLines(oldLines, llm, input);
+    const diffLineGenerator = streamDiffLines(rif.contents, llm, input);
 
     for await (const diffLine of diffLineGenerator) {
       await ide.verticalDiffUpdate(filepath, startLine, endLine, diffLine);

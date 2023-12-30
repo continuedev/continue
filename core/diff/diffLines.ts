@@ -1,19 +1,21 @@
 import { DiffLine } from "..";
-import { matchLine } from "./util";
+import { LineStream, matchLine } from "./util";
 
 /**
  * https://blog.jcoglan.com/2017/02/12/the-myers-diff-algorithm-part-1/
  */
 export async function* streamDiff(
   oldLines: string[],
-  newLines: AsyncGenerator<string>
+  newLines: LineStream
 ): AsyncGenerator<DiffLine> {
   oldLines = [...oldLines]; // be careful
 
   let newLineResult = await newLines.next();
   while (oldLines.length > 0 && !newLineResult.done) {
-    const newLine = newLineResult.value;
-    const [matchIndex, isPerfectMatch] = matchLine(newLine, oldLines);
+    let newLine = newLineResult.value;
+    const [matchIndex, isPerfectMatch, newLineWithCorrectIndentation] =
+      matchLine(newLine, oldLines);
+    newLine = newLineWithCorrectIndentation;
 
     if (matchIndex < 0) {
       yield { type: "new", line: newLine };

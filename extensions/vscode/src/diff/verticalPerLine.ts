@@ -123,7 +123,7 @@ export class VerticalPerLineDiffHandler {
       case "same":
         break;
       case "old":
-        this.setLineAtIndexRed(this.currentLineIndex);
+        this.setLineAtIndexRed(this.currentLineIndex, diffLine.line);
         break;
       case "new":
         await this.insertLineAboveIndex(this.currentLineIndex, diffLine.line);
@@ -141,13 +141,9 @@ export class VerticalPerLineDiffHandler {
   private redDecorationManager: DecorationTypeRangeManager;
   private greenDecorationManager: DecorationTypeRangeManager;
 
-  private setLineAtIndexRed(index: number) {
+  private setLineAtIndexRed(index: number, line: string) {
     // Don't remove trailing whitespace line
-    const editorLines = this.editor.document.getText().split("\n");
-    if (
-      index >= editorLines.length &&
-      editorLines[editorLines.length - 1] === ""
-    ) {
+    if (line === "" && index >= this.endLine + this.newLinesAdded) {
       return;
     }
 
@@ -181,7 +177,7 @@ export class VerticalPerLineDiffHandler {
       ]);
       const end = new vscode.Position(this.endLine, 0);
       this.editor.setDecorations(belowIndexDecorationType, [
-        new vscode.Range(start.translate(1), end),
+        new vscode.Range(start.translate(1), end.translate(this.newLinesAdded)),
       ]);
     }
   }
@@ -252,8 +248,8 @@ export async function streamEdit(input: string) {
 
   if (diffHandler) {
     const selectedRange = new vscode.Range(
-      editor.selection.start,
-      editor.selection.end
+      editor.selection.start.with(undefined, 0),
+      editor.selection.end.with(undefined, Number.MAX_SAFE_INTEGER)
     );
     const rangeContent = editor.document.getText(selectedRange);
     const llm = await llmFromTitle();
@@ -264,21 +260,17 @@ export async function streamEdit(input: string) {
       editor.selection.active
     );
 
-    for await (const diffLine of streamDiffLines(
-      rangeContent.split("\n"),
-      llm,
-      input
-    )) {
+    for await (const diffLine of streamDiffLines(rangeContent, llm, input)) {
       if (diffHandler.isCancelled) {
         break;
       }
-      // console.log(
-      //   (diffLine.type === "new"
-      //     ? "+ "
-      //     : diffLine.type === "old"
-      //     ? "- "
-      //     : "  ") + diffLine.line
-      // );
+      console.log(
+        (diffLine.type === "new"
+          ? "+ "
+          : diffLine.type === "old"
+          ? "- "
+          : "  ") + diffLine.line
+      );
       await diffHandler.handleDiffLine(diffLine);
     }
   }
