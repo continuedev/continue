@@ -1,4 +1,5 @@
 import { FileEdit, ModelDescription } from "core";
+import { DiffLine } from "core/diff/diffLines";
 import {
   editConfigJson,
   getConfigJsonPath,
@@ -9,6 +10,7 @@ import * as io from "socket.io-client";
 import * as vscode from "vscode";
 import { ideProtocolClient, windowId } from "./activation/activate";
 import { getContinueServerUrl } from "./bridge";
+import { verticalPerLineDiffManager } from "./diff/verticalPerLine";
 import historyManager from "./history";
 import { VsCodeIde } from "./ideProtocol";
 import { configHandler, llmFromTitle } from "./loadConfig";
@@ -337,6 +339,30 @@ export function getSidebarContent(
               data.message.stepIndex
             )
           );
+          break;
+        }
+        case "diffLine": {
+          const {
+            diffLine,
+            filepath,
+            startLine,
+            endLine,
+          }: {
+            diffLine: DiffLine;
+            filepath: string;
+            startLine: number;
+            endLine: number;
+          } = data.message;
+
+          const diffHandler =
+            verticalPerLineDiffManager.getOrCreateVerticalPerLineDiffHandler(
+              filepath,
+              startLine,
+              endLine
+            );
+          if (diffHandler) {
+            await diffHandler.handleDiffLine(diffLine);
+          }
           break;
         }
         case "getOpenFiles": {
