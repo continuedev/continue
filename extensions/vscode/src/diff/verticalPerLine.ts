@@ -161,12 +161,6 @@ export class VerticalPerLineDiffHandler {
   private updateIndexLineDecorations() {
     // Highlight the line at the currentLineIndex
     // And lightly highlight all lines between that and endLine
-    console.log(
-      this.currentLineIndex,
-      this.newLinesAdded,
-      this.endLine,
-      this.startLine
-    );
     if (this.currentLineIndex - this.newLinesAdded >= this.endLine) {
       this.editor.setDecorations(indexDecorationType, []);
       this.editor.setDecorations(belowIndexDecorationType, []);

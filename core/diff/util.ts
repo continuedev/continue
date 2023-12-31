@@ -23,6 +23,11 @@ export function matchLine(
   newLine: string,
   oldLines: string[]
 ): [number, boolean, string] {
+  // Only match empty lines if it's the next one:
+  if (newLine.trim() === "" && oldLines[0]?.trim() === "") {
+    return [0, true, newLine.trim()];
+  }
+
   for (let i = 0; i < oldLines.length; i++) {
     if (linesMatchPerfectly(newLine, oldLines[i])) {
       return [i, true, newLine];

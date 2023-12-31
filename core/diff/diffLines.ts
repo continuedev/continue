@@ -12,10 +12,10 @@ export async function* streamDiff(
 
   let newLineResult = await newLines.next();
   while (oldLines.length > 0 && !newLineResult.done) {
-    let newLine = newLineResult.value;
-    const [matchIndex, isPerfectMatch, newLineWithCorrectIndentation] =
-      matchLine(newLine, oldLines);
-    newLine = newLineWithCorrectIndentation;
+    const [matchIndex, isPerfectMatch, newLine] = matchLine(
+      newLineResult.value,
+      oldLines
+    );
 
     if (matchIndex < 0) {
       yield { type: "new", line: newLine };
