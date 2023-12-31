@@ -10,6 +10,10 @@ export async function* streamDiff(
 ): AsyncGenerator<DiffLine> {
   oldLines = [...oldLines]; // be careful
 
+  // Greedy gives you alternating red/green
+  // Buffering to wait until end of block avoids this
+  let buffer: DiffLine[] = [];
+
   let newLineResult = await newLines.next();
   while (oldLines.length > 0 && !newLineResult.done) {
     const [matchIndex, isPerfectMatch, newLine] = matchLine(
@@ -18,16 +22,33 @@ export async function* streamDiff(
     );
 
     if (matchIndex < 0) {
+      // Empty buffer
+      while (buffer.length) {
+        yield buffer.shift()!;
+      }
+
+      // Insert new line
       yield { type: "new", line: newLine };
     } else {
+      if (isPerfectMatch) {
+        // Empty buffer
+        while (buffer.length) {
+          yield buffer.shift()!;
+        }
+      }
+
+      // Insert all deleted lines before match
       for (let i = 0; i < matchIndex; i++) {
         yield { type: "old", line: oldLines.shift()! };
       }
+
       if (isPerfectMatch) {
+        // Same
         yield { type: "same", line: oldLines.shift()! };
       } else {
+        // Delete old and buffer insertion of the new
         yield { type: "old", line: oldLines.shift()! };
-        yield { type: "new", line: newLine };
+        buffer.push({ type: "new", line: newLine });
       }
     }
 
@@ -39,7 +60,14 @@ export async function* streamDiff(
     for (let oldLine of oldLines) {
       yield { type: "old", line: oldLine };
     }
-  } else if (!newLineResult.done && oldLines.length === 0) {
+  }
+
+  // Empty the buffer - (important that this is between the above and below loops)
+  while (buffer.length) {
+    yield buffer.shift()!;
+  }
+
+  if (!newLineResult.done && oldLines.length === 0) {
     yield { type: "new", line: newLineResult.value };
     for await (const newLine of newLines) {
       yield { type: "new", line: newLine };
