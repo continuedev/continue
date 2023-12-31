@@ -178,6 +178,10 @@ export class VerticalPerLineDiffHandler {
       ]);
     }
   }
+
+  initialize() {
+    this.updateIndexLineDecorations();
+  }
 }
 
 class VerticalPerLineDiffManager {
@@ -257,20 +261,13 @@ export async function streamEdit(input: string) {
       editor.selection.active
     );
 
+    diffHandler.initialize();
+
     for await (const diffLine of streamDiffLines(rangeContent, llm, input)) {
       if (diffHandler.isCancelled) {
         break;
       }
-      console.log(
-        (diffLine.type === "new"
-          ? "+ "
-          : diffLine.type === "old"
-          ? "- "
-          : "  ") + diffLine.line
-      );
       await diffHandler.handleDiffLine(diffLine);
     }
   }
-
-  // Shortcuts to accept / reject
 }

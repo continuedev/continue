@@ -132,6 +132,26 @@
         "category": "Continue",
         "title": "View History",
         "icon": "$(history)"
+      },
+      {
+        "command": "continue.writeCommentsForCode",
+        "category": "Continue",
+        "title": "Write Comments for this Code"
+      },
+      {
+        "command": "continue.writeDocstringForCode",
+        "category": "Continue",
+        "title": "Write a Docstring for this Code"
+      },
+      {
+        "command": "continue.fixCode",
+        "category": "Continue",
+        "title": "Fix this Code"
+      },
+      {
+        "command": "continue.optimizeCode",
+        "category": "Continue",
+        "title": "Optimize this Code"
       }
     ],
     "keybindings": [
@@ -198,12 +218,27 @@
       ],
       "continue.continueSubMenu": [
         {
-          "command": "continue.focusContinueInput",
-          "when": "editorHasSelection",
-          "group": "Continue"
+          "command": "continue.focusContinueInputWithoutClear",
+          "group": "Continue",
+          "when": "editorHasSelection"
         },
         {
-          "command": "continue.focusContinueInputWithoutClear",
+          "command": "continue.writeCommentsForCode",
+          "group": "Continue",
+          "when": "editorHasSelection"
+        },
+        {
+          "command": "continue.writeDocstringForCode",
+          "group": "Continue",
+          "when": "editorHasSelection"
+        },
+        {
+          "command": "continue.fixCode",
+          "group": "Continue",
+          "when": "editorHasSelection"
+        },
+        {
+          "command": "continue.optimizeCode",
           "group": "Continue",
           "when": "editorHasSelection"
         }

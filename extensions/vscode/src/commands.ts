@@ -115,6 +115,18 @@ const commandsMap: { [command: string]: (...args: any) => any } = {
       await streamEdit(text);
     }
   },
+  "continue.writeCommentsForCode": async () => {
+    await streamEdit("Write comments for this code");
+  },
+  "continue.writeDocstringForCode": async () => {
+    await streamEdit("Write a docstring for this code");
+  },
+  "continue.fixCode": async () => {
+    await streamEdit("Fix this code");
+  },
+  "continue.optimizeCode": async () => {
+    await streamEdit("Optimize this code");
+  },
   "continue.viewLogs": async () => {
     // Open ~/.continue/continue.log
     const logFile = path.join(os.homedir(), ".continue", "continue.log");
