@@ -6,7 +6,7 @@ import { llmFromTitle } from "../loadConfig";
 const redDecorationType = vscode.window.createTextEditorDecorationType({
   isWholeLine: true,
   backgroundColor: "rgba(255, 0, 0, 0.2)",
-  color: "white",
+  color: "rgb(200, 200, 200)",
   rangeBehavior: vscode.DecorationRangeBehavior.ClosedClosed,
 });
 
@@ -161,10 +161,13 @@ export class VerticalPerLineDiffHandler {
   private updateIndexLineDecorations() {
     // Highlight the line at the currentLineIndex
     // And lightly highlight all lines between that and endLine
-    if (
-      this.currentLineIndex - this.newLinesAdded >=
-      this.endLine - this.startLine
-    ) {
+    console.log(
+      this.currentLineIndex,
+      this.newLinesAdded,
+      this.endLine,
+      this.startLine
+    );
+    if (this.currentLineIndex - this.newLinesAdded >= this.endLine) {
       this.editor.setDecorations(indexDecorationType, []);
       this.editor.setDecorations(belowIndexDecorationType, []);
     } else {
