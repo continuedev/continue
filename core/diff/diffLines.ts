@@ -3,6 +3,12 @@ import { LineStream, matchLine } from "./util";
 
 /**
  * https://blog.jcoglan.com/2017/02/12/the-myers-diff-algorithm-part-1/
+ * Invariants:
+ * - Output always comes in blocks of red above green separated by same
+ * - new + same = newLines.length
+ * - old + same = oldLines.length
+ * ^ (above two guarantee that all lines get represented)
+ * - Lines are always output in order, at least among old and new separately
  */
 export async function* streamDiff(
   oldLines: string[],
@@ -22,13 +28,8 @@ export async function* streamDiff(
     );
 
     if (matchIndex < 0) {
-      // Empty buffer
-      while (buffer.length) {
-        yield buffer.shift()!;
-      }
-
-      // Insert new line
-      yield { type: "new", line: newLine };
+      // Buffer insertion of the line
+      buffer.push({ type: "new", line: newLine });
     } else {
       if (isPerfectMatch) {
         // Empty buffer
