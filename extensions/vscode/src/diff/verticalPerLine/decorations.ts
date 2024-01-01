@@ -95,4 +95,12 @@ export class DecorationTypeRangeManager {
     }
     this.editor.setDecorations(this.decorationType, this.ranges);
   }
+
+  deleteRangeStartingAt(line: number) {
+    for (let i = 0; i < this.ranges.length; i++) {
+      if (this.ranges[i].start.line === line) {
+        return this.ranges.splice(i, 1)[0];
+      }
+    }
+  }
 }

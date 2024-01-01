@@ -6,7 +6,11 @@ import * as vscode from "vscode";
 import { ideProtocolClient } from "./activation/activate";
 import { debugPanelWebview, getSidebarContent } from "./debugPanel";
 import { acceptDiffCommand, rejectDiffCommand } from "./diff/horizontal";
-import { streamEdit } from "./diff/verticalPerLine/manager";
+import {
+  editorToVerticalDiffCodeLens,
+  streamEdit,
+  verticalPerLineDiffManager,
+} from "./diff/verticalPerLine/manager";
 
 function addHighlightedCodeToContext(edit: boolean) {
   const editor = vscode.window.activeTextEditor;
@@ -75,10 +79,48 @@ async function addEntireFileToContext(filepath: vscode.Uri, edit: boolean) {
   });
 }
 
+function acceptRejectVerticalDiffBlock(
+  accept: boolean,
+  filepath?: string,
+  index?: number
+) {
+  if (!filepath) {
+    const activeEditor = vscode.window.activeTextEditor;
+    if (!activeEditor) {
+      return;
+    }
+    filepath = activeEditor.document.uri.fsPath;
+  }
+
+  if (typeof index === "undefined") {
+    index = 0;
+  }
+
+  let blocks = editorToVerticalDiffCodeLens.get(filepath);
+  const block = blocks?.[index];
+  if (!blocks || !block) {
+    return;
+  }
+
+  const handler = verticalPerLineDiffManager.getHandlerForFile(filepath);
+  if (!handler) {
+    return;
+  }
+
+  // CodeLens object removed from editorToVerticalDiffCodeLens here
+  handler.acceptRejectBlock(accept, block.start, block.numGreen, block.numRed);
+}
+
 // Copy everything over from extension.ts
 const commandsMap: { [command: string]: (...args: any) => any } = {
   "continue.acceptDiff": acceptDiffCommand,
   "continue.rejectDiff": rejectDiffCommand,
+  "continue.acceptVerticalDiffBlock": (filepath?: string, index?: number) => {
+    acceptRejectVerticalDiffBlock(true, filepath, index);
+  },
+  "continue.rejectVerticalDiffBlock": (filepath?: string, index?: number) => {
+    acceptRejectVerticalDiffBlock(false, filepath, index);
+  },
   "continue.quickFix": async (message: string, code: string, edit: boolean) => {
     ideProtocolClient.sendMainUserInput(
       `${

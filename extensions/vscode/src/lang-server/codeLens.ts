@@ -2,9 +2,56 @@ import * as os from "os";
 import * as path from "path";
 import * as vscode from "vscode";
 import { DIFF_DIRECTORY, diffManager } from "../diff/horizontal";
+import { editorToVerticalDiffCodeLens } from "../diff/verticalPerLine/manager";
 import { editorSuggestionsLocked, editorToSuggestions } from "../suggestions";
 import { getMetaKeyLabel } from "../util/util";
 import { getExtensionUri } from "../util/vscode";
+
+class VerticalPerLineCodeLensProvider implements vscode.CodeLensProvider {
+  public provideCodeLenses(
+    document: vscode.TextDocument,
+    _: vscode.CancellationToken
+  ): vscode.CodeLens[] | Thenable<vscode.CodeLens[]> {
+    const filepath = document.uri.fsPath;
+    const blocks = editorToVerticalDiffCodeLens.get(filepath);
+    if (!blocks) {
+      return [];
+    }
+
+    const codeLenses: vscode.CodeLens[] = [];
+    for (let i = 0; i < blocks.length; i++) {
+      const block = blocks[i];
+      const start = new vscode.Position(block.start, 0);
+      const range = new vscode.Range(
+        start,
+        start.translate(block.numGreen + block.numRed)
+      );
+      codeLenses.push(
+        new vscode.CodeLens(range, {
+          title: "Accept ✅",
+          command: "continue.acceptVerticalDiffBlock",
+          arguments: [filepath, i],
+        }),
+        new vscode.CodeLens(range, {
+          title: "Reject ❌",
+          command: "continue.rejectVerticalDiffBlock",
+          arguments: [filepath, i],
+        })
+      );
+      if (codeLenses.length === 2) {
+        codeLenses.push(
+          new vscode.CodeLens(range, {
+            title: `(${getMetaKeyLabel()}⇧↩/${getMetaKeyLabel()}⇧⌫ to accept/reject all)`,
+            command: "",
+          })
+        );
+      }
+    }
+
+    return codeLenses;
+  }
+}
+
 class SuggestionsCodeLensProvider implements vscode.CodeLensProvider {
   public provideCodeLenses(
     document: vscode.TextDocument,
@@ -281,12 +328,16 @@ class TutorialCodeLensProvider implements vscode.CodeLensProvider {
   }
 }
 
+let verticalPerLineCodeLensProvider: vscode.Disposable | undefined = undefined;
 let diffsCodeLensDisposable: vscode.Disposable | undefined = undefined;
 let suggestionsCodeLensDisposable: vscode.Disposable | undefined = undefined;
 let configPyCodeLensDisposable: vscode.Disposable | undefined = undefined;
 let tutorialCodeLensDisposable: vscode.Disposable | undefined = undefined;
 
 export function registerAllCodeLensProviders(context: vscode.ExtensionContext) {
+  if (verticalPerLineCodeLensProvider) {
+    verticalPerLineCodeLensProvider.dispose();
+  }
   if (suggestionsCodeLensDisposable) {
     suggestionsCodeLensDisposable.dispose();
   }
@@ -299,6 +350,11 @@ export function registerAllCodeLensProviders(context: vscode.ExtensionContext) {
   if (tutorialCodeLensDisposable) {
     tutorialCodeLensDisposable.dispose();
   }
+
+  verticalPerLineCodeLensProvider = vscode.languages.registerCodeLensProvider(
+    "*",
+    new VerticalPerLineCodeLensProvider()
+  );
   suggestionsCodeLensDisposable = vscode.languages.registerCodeLensProvider(
     "*",
     new SuggestionsCodeLensProvider()
@@ -315,6 +371,7 @@ export function registerAllCodeLensProviders(context: vscode.ExtensionContext) {
     "*",
     new TutorialCodeLensProvider()
   );
+  context.subscriptions.push(verticalPerLineCodeLensProvider);
   context.subscriptions.push(suggestionsCodeLensDisposable);
   context.subscriptions.push(diffsCodeLensDisposable);
   context.subscriptions.push(configPyCodeLensDisposable);

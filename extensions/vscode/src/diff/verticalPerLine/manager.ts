@@ -30,6 +30,10 @@ class VerticalPerLineDiffManager {
     }
   }
 
+  getHandlerForFile(filepath: string) {
+    return this.filepathToEditorMap.get(filepath);
+  }
+
   clearForFilepath(filepath: string | undefined, accept: boolean) {
     if (!filepath) {
       const activeEditor = vscode.window.activeTextEditor;
@@ -83,3 +87,12 @@ export async function streamEdit(input: string) {
     await diffHandler.run(streamDiffLines(rangeContent, llm, input));
   }
 }
+
+export interface VerticalDiffCodeLens {
+  start: number;
+  numRed: number;
+  numGreen: number;
+}
+
+export const editorToVerticalDiffCodeLens: Map<string, VerticalDiffCodeLens[]> =
+  new Map();
