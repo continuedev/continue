@@ -17,6 +17,32 @@ import { getExtensionUri, getNonce, getUniqueId } from "./util/vscode";
 let sockets: { [url: string]: io.Socket | undefined } = {};
 
 export let debugPanelWebview: vscode.Webview | undefined;
+
+export async function webviewRequest(
+  messageType: string,
+  data: any = {}
+): Promise<any> {
+  return new Promise((resolve, reject) => {
+    if (!debugPanelWebview) {
+      resolve(undefined);
+    }
+
+    const listener = debugPanelWebview?.onDidReceiveMessage((data) => {
+      if (data.type === messageType) {
+        resolve(data);
+        listener?.dispose();
+      }
+    });
+
+    debugPanelWebview?.postMessage({ type: messageType, data });
+
+    setTimeout(() => {
+      reject("Error communciating with Continue side panel: timed out");
+      listener?.dispose();
+    }, 500);
+  });
+}
+
 export function getSidebarContent(
   panel: vscode.WebviewPanel | vscode.WebviewView,
   page: string | undefined = undefined,

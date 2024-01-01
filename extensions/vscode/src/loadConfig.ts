@@ -1,6 +1,7 @@
 import { ContinueConfig, IDE, ILLM } from "core";
 import * as fs from "fs";
 import { Agent, fetch } from "undici";
+import { webviewRequest } from "./debugPanel";
 import { VsCodeIde, loadFullConfigNode } from "./ideProtocol";
 const tls = require("tls");
 
@@ -24,6 +25,14 @@ export const configHandler = new VsCodeConfigHandler();
 
 export async function llmFromTitle(title?: string): Promise<ILLM> {
   let config = await configHandler.loadConfig(new VsCodeIde());
+
+  if (title === undefined) {
+    const resp = await webviewRequest("getDefaultModelTitle");
+    if (resp?.defaultModelTitle) {
+      title = resp.defaultModelTitle;
+    }
+  }
+
   let llm = title
     ? config.models.find((llm) => llm.title === title)
     : config.models[0];
