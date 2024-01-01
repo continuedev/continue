@@ -7,7 +7,7 @@ import { extensionContext } from "../activation/activate";
 import { debugPanelWebview } from "../debugPanel";
 import { getMetaKeyLabel, getPlatform } from "../util/util";
 import { uriFromFilePath } from "../util/vscode";
-import { verticalPerLineDiffManager } from "./verticalPerLine";
+import { verticalPerLineDiffManager } from "./verticalPerLine/manager";
 
 interface DiffInfo {
   originalFilepath: string;

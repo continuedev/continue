@@ -16,7 +16,8 @@ import {
   intermediateToFinalConfig,
   serializedToIntermediateConfig,
 } from "core/config/load";
-import { verticalPerLineDiffManager } from "./diff/verticalPerLine";
+
+import { verticalPerLineDiffManager } from "./diff/verticalPerLine/manager";
 import mergeJson from "./util/merge";
 
 async function buildConfigTs(browser: boolean) {
