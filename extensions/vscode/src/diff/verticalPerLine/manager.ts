@@ -7,6 +7,29 @@ class VerticalPerLineDiffManager {
   private filepathToEditorMap: Map<string, VerticalPerLineDiffHandler> =
     new Map();
 
+  createVerticalPerLineDiffHandler(
+    filepath: string,
+    startLine: number,
+    endLine: number
+  ) {
+    if (this.filepathToEditorMap.has(filepath)) {
+      this.filepathToEditorMap.get(filepath)?.clear(false);
+      this.filepathToEditorMap.delete(filepath);
+    }
+    const editor = vscode.window.activeTextEditor; // TODO
+    if (editor && editor.document.uri.fsPath === filepath) {
+      const handler = new VerticalPerLineDiffHandler(
+        startLine,
+        endLine,
+        editor
+      );
+      this.filepathToEditorMap.set(filepath, handler);
+      return handler;
+    } else {
+      return undefined;
+    }
+  }
+
   getOrCreateVerticalPerLineDiffHandler(
     filepath: string,
     startLine: number,
@@ -64,7 +87,7 @@ export async function streamEdit(input: string) {
   const endLine = editor.selection.end.line;
 
   const diffHandler =
-    verticalPerLineDiffManager.getOrCreateVerticalPerLineDiffHandler(
+    verticalPerLineDiffManager.createVerticalPerLineDiffHandler(
       filepath,
       startLine,
       endLine
