@@ -1,16 +1,18 @@
 package com.github.continuedev.continueintellijextension.`continue`
 
 import com.github.continuedev.continueintellijextension.*
-import com.github.continuedev.continueintellijextension.constants.getConfigJsPath
-import com.github.continuedev.continueintellijextension.constants.getConfigJsonPath
-import com.github.continuedev.continueintellijextension.constants.getContinueGlobalPath
-import com.github.continuedev.continueintellijextension.constants.getDevDataFilepath
+import com.github.continuedev.continueintellijextension.constants.*
 import com.github.continuedev.continueintellijextension.services.ContinuePluginService
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import com.google.gson.JsonObject
 import com.google.gson.reflect.TypeToken
+import com.intellij.execution.ExecutionManager
+import com.intellij.execution.process.ProcessAdapter
+import com.intellij.execution.process.ProcessEvent
+import com.intellij.execution.ui.RunContentDescriptor
 import com.intellij.openapi.Disposable
+import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.application.ApplicationInfo
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.ServiceManager
@@ -32,15 +34,13 @@ import com.intellij.ui.awt.RelativePoint
 import kotlinx.coroutines.*
 import net.minidev.json.JSONObject
 import org.jetbrains.annotations.NotNull
-import java.io.File
-import java.io.FileInputStream
-import java.io.FileReader
-import java.io.FileWriter
+import java.io.*
 import java.net.NetworkInterface
 import java.nio.charset.Charset
 import java.nio.file.Files
 import java.nio.file.Paths
 import java.util.*
+import kotlin.coroutines.ContinuationInterceptor
 
 
 fun uuid(): String {
@@ -278,11 +278,37 @@ class IdeProtocolClient (
 
                     // NEW //
                     "getDiff" -> {
-                        respond(null);
+                        val builder = ProcessBuilder("git", "diff")
+                        builder.directory(File(workspacePath ?: "."))
+                        val process = builder.start()
+
+                        val reader = BufferedReader(InputStreamReader(process.inputStream))
+                        val output = StringBuilder()
+                        var line: String? = reader.readLine()
+                        while (line != null) {
+                            output.append(line)
+                            output.append("\n")
+                            line = reader.readLine()
+                        }
+
+                        process.waitFor()
+
+                        respond(output.toString());
                     }
                     "getSerializedConfig" -> {
                         val configPath = getConfigJsonPath()
-                        val config = File(configPath).readText()
+                        var config = File(configPath).readText()
+
+                        migrate("camelCaseConfig") {
+                            if (config.contains("_")) {
+                                config = config
+                                        .replace(Regex("(_\\w)")) { it.value[1].uppercase() }
+                                        .replace("openai-aiohttp", "openai")
+                                // Rewrite to config.json
+                                File(configPath).writeText(config)
+                            }
+                        }
+
                         val mapType = object : TypeToken<Map<String, Any>>() {}.type
                         val parsed: Map<String, Any> = Gson().fromJson(config, mapType)
                         respond(parsed)

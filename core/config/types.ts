@@ -441,7 +441,6 @@ declare global {
     disallowedSteps?: string[];
     allowAnonymousTelemetry?: boolean;
     models: ModelDescription[];
-    modelRoles: ModelRoles;
     systemMessage?: string;
     completionOptions?: BaseCompletionOptions;
     slashCommands?: SlashCommandDescription[];

@@ -844,21 +844,6 @@
             "$ref": "#/definitions/ModelDescription"
           }
         },
-        "modelRoles": {
-          "title": "Model Roles",
-          "description": "Roles for models. Each entry should be the title of a model in the models array.",
-          "default": {
-            "default": "GPT-4 (trial)",
-            "chat": null,
-            "edit": null,
-            "summarize": null
-          },
-          "allOf": [
-            {
-              "$ref": "#/definitions/ModelRoles"
-            }
-          ]
-        },
         "systemMessage": {
           "title": "System Message",
           "description": "A system message that will always be followed by the LLM",
