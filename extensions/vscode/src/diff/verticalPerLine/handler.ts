@@ -100,7 +100,19 @@ export class VerticalPerLineDiffHandler {
 
   private async insertTextAboveLine(index: number, text: string) {
     await this.editor.edit((editBuilder) => {
-      editBuilder.insert(new vscode.Position(index, 0), text + "\n");
+      const lineCount = this.editor.document.lineCount;
+      if (index >= lineCount) {
+        // Append to end of file
+        editBuilder.insert(
+          new vscode.Position(
+            lineCount,
+            this.editor.document.lineAt(lineCount - 1).text.length
+          ),
+          "\n" + text
+        );
+      } else {
+        editBuilder.insert(new vscode.Position(index, 0), text + "\n");
+      }
     });
   }
 
@@ -206,6 +218,14 @@ export class VerticalPerLineDiffHandler {
 
     // Clear deletion buffer
     await this.insertDeletionBuffer();
+
+    // Reject on user typing
+    // const listener = vscode.workspace.onDidChangeTextDocument((e) => {
+    //   if (e.document.uri.fsPath === this.filepath) {
+    //     this.clear(false);
+    //     listener.dispose();
+    //   }
+    // });
   }
 
   async acceptRejectBlock(

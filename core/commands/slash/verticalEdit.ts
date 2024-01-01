@@ -1,5 +1,5 @@
 import { ContextItemWithId, DiffLine, ILLM, SlashCommand } from "../..";
-import { streamDiff } from "../../diff/diffLines";
+import { streamDiff } from "../../diff/streamDiff";
 import { LineStream, streamLines } from "../../diff/util";
 import { gptEditPrompt } from "../../llm/templates/edit";
 import { dedentAndGetCommonWhitespace, renderPromptTemplate } from "../../util";

@@ -1,4 +1,4 @@
-import { streamDiff } from "../diff/diffLines";
+import { streamDiff } from "../diff/streamDiff";
 
 const oldCode = [
   `function mergeSortAlgorithm() {
