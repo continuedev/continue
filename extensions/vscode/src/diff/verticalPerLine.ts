@@ -41,20 +41,29 @@ class DecorationTypeRangeManager {
 
   private ranges: vscode.Range[] = [];
 
-  addLine(index: number) {
+  addLines(startIndex: number, numLines: number) {
     const lastRange = this.ranges[this.ranges.length - 1];
-    if (lastRange && lastRange.end.line === index - 1) {
+    if (lastRange && lastRange.end.line === startIndex - 1) {
       this.ranges[this.ranges.length - 1] = lastRange.with(
         undefined,
-        lastRange.end.translate(1)
+        lastRange.end.translate(numLines)
       );
     } else {
       this.ranges.push(
-        new vscode.Range(index, 0, index, Number.MAX_SAFE_INTEGER)
+        new vscode.Range(
+          startIndex,
+          0,
+          startIndex + numLines - 1,
+          Number.MAX_SAFE_INTEGER
+        )
       );
     }
 
     this.editor.setDecorations(this.decorationType, this.ranges);
+  }
+
+  addLine(index: number) {
+    this.addLines(index, 1);
   }
 
   clear() {
@@ -64,6 +73,25 @@ class DecorationTypeRangeManager {
 
   getRanges() {
     return this.ranges;
+  }
+
+  private translateRange(
+    range: vscode.Range,
+    lineOffset: number
+  ): vscode.Range {
+    return new vscode.Range(
+      range.start.translate(lineOffset),
+      range.end.translate(lineOffset)
+    );
+  }
+
+  shiftDownAfterLine(afterLine: number, offset: number) {
+    for (let i = 0; i < this.ranges.length; i++) {
+      if (this.ranges[i].start.line >= afterLine) {
+        this.ranges[i] = this.translateRange(this.ranges[i], offset);
+      }
+    }
+    this.editor.setDecorations(this.decorationType, this.ranges);
   }
 }
 
@@ -99,6 +127,7 @@ export class VerticalPerLineDiffHandler {
 
     this.redDecorationManager.clear();
     this.greenDecorationManager.clear();
+    this.clearIndexLineDecorations();
 
     this.editor.edit((editBuilder) => {
       for (const range of rangesToDelete) {
@@ -118,18 +147,82 @@ export class VerticalPerLineDiffHandler {
     return this.cancelled;
   }
 
+  private deletionBuffer: string[] = [];
+  private redDecorationManager: DecorationTypeRangeManager;
+  insertedInCurrentBlock = 0;
+
+  private async insertDeletionBuffer() {
+    if (this.deletionBuffer.length === 0) {
+      this.insertedInCurrentBlock = 0;
+      return;
+    }
+
+    // Insert the block of deleted lines
+    const totalDeletedContent = this.deletionBuffer.join("\n");
+    // Don't remove trailing whitespace line
+    if (
+      totalDeletedContent === "" &&
+      this.currentLineIndex >= this.endLine + this.newLinesAdded
+    ) {
+      return;
+    }
+
+    await this.insertTextAboveLine(
+      this.currentLineIndex - this.insertedInCurrentBlock,
+      totalDeletedContent
+    );
+    this.redDecorationManager.addLines(
+      this.currentLineIndex - this.insertedInCurrentBlock,
+      this.deletionBuffer.length
+    );
+    // Shift green decorations downward
+    this.greenDecorationManager.shiftDownAfterLine(
+      this.currentLineIndex - this.insertedInCurrentBlock,
+      this.deletionBuffer.length
+    );
+
+    // Update line index, clear buffer
+    for (let i = 0; i < this.deletionBuffer.length; i++) {
+      this.incrementCurrentLineIndex();
+    }
+    this.deletionBuffer = [];
+    this.insertedInCurrentBlock = 0;
+  }
+
   async handleDiffLine(diffLine: DiffLine) {
     switch (diffLine.type) {
       case "same":
+        await this.insertDeletionBuffer();
+        this.incrementCurrentLineIndex();
         break;
       case "old":
-        this.setLineAtIndexRed(this.currentLineIndex, diffLine.line);
+        // Add to deletion buffer and delete the line for now
+        this.deletionBuffer.push(diffLine.line);
+        await this.deleteLineAt(this.currentLineIndex);
         break;
       case "new":
         await this.insertLineAboveIndex(this.currentLineIndex, diffLine.line);
+        this.incrementCurrentLineIndex();
+        this.insertedInCurrentBlock++;
         break;
     }
-    this.incrementCurrentLineIndex();
+  }
+
+  async run(diffLineGenerator: AsyncGenerator<DiffLine>) {
+    // As an indicator of loading
+    this.updateIndexLineDecorations();
+
+    for await (let diffLine of diffLineGenerator) {
+      if (this.isCancelled) {
+        return;
+      }
+      await this.handleDiffLine(diffLine);
+    }
+
+    // Clear deletion buffer (deletion of end of range)
+    if (this.deletionBuffer.length) {
+      await this.insertDeletionBuffer();
+    }
   }
 
   private incrementCurrentLineIndex() {
@@ -137,25 +230,25 @@ export class VerticalPerLineDiffHandler {
     this.updateIndexLineDecorations();
   }
 
-  /* Decorations */
-  private redDecorationManager: DecorationTypeRangeManager;
   private greenDecorationManager: DecorationTypeRangeManager;
 
-  private setLineAtIndexRed(index: number, line: string) {
-    // Don't remove trailing whitespace line
-    if (line === "" && index >= this.endLine + this.newLinesAdded) {
-      return;
-    }
-
-    this.redDecorationManager.addLine(index);
+  private async insertTextAboveLine(index: number, text: string) {
+    await this.editor.edit((editBuilder) => {
+      editBuilder.insert(new vscode.Position(index, 0), text + "\n");
+    });
   }
 
   async insertLineAboveIndex(index: number, line: string) {
-    await this.editor.edit((editBuilder) => {
-      editBuilder.insert(new vscode.Position(index, 0), line + "\n");
-    });
+    await this.insertTextAboveLine(index, line);
     this.greenDecorationManager.addLine(index);
     this.newLinesAdded++;
+  }
+
+  async deleteLineAt(index: number) {
+    const line = new vscode.Position(index, 0);
+    await this.editor.edit((editBuilder) => {
+      editBuilder.delete(new vscode.Range(line, line.translate(1)));
+    });
   }
 
   private updateIndexLineDecorations() {
@@ -179,8 +272,9 @@ export class VerticalPerLineDiffHandler {
     }
   }
 
-  initialize() {
-    this.updateIndexLineDecorations();
+  private clearIndexLineDecorations() {
+    this.editor.setDecorations(belowIndexDecorationType, []);
+    this.editor.setDecorations(indexDecorationType, []);
   }
 }
 
@@ -261,13 +355,6 @@ export async function streamEdit(input: string) {
       editor.selection.active
     );
 
-    diffHandler.initialize();
-
-    for await (const diffLine of streamDiffLines(rangeContent, llm, input)) {
-      if (diffHandler.isCancelled) {
-        break;
-      }
-      await diffHandler.handleDiffLine(diffLine);
-    }
+    await diffHandler.run(streamDiffLines(rangeContent, llm, input));
   }
 }

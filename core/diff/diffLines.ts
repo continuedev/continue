@@ -4,7 +4,6 @@ import { LineStream, matchLine } from "./util";
 /**
  * https://blog.jcoglan.com/2017/02/12/the-myers-diff-algorithm-part-1/
  * Invariants:
- * - Output always comes in blocks of red above green separated by same
  * - new + same = newLines.length
  * - old + same = oldLines.length
  * ^ (above two guarantee that all lines get represented)
@@ -16,10 +15,6 @@ export async function* streamDiff(
 ): AsyncGenerator<DiffLine> {
   oldLines = [...oldLines]; // be careful
 
-  // Greedy gives you alternating red/green
-  // Buffering to wait until end of block avoids this
-  let buffer: DiffLine[] = [];
-
   let newLineResult = await newLines.next();
   while (oldLines.length > 0 && !newLineResult.done) {
     const [matchIndex, isPerfectMatch, newLine] = matchLine(
@@ -28,16 +23,9 @@ export async function* streamDiff(
     );
 
     if (matchIndex < 0) {
-      // Buffer insertion of the line
-      buffer.push({ type: "new", line: newLine });
+      // Insert new line
+      yield { type: "new", line: newLine };
     } else {
-      if (isPerfectMatch) {
-        // Empty buffer
-        while (buffer.length) {
-          yield buffer.shift()!;
-        }
-      }
-
       // Insert all deleted lines before match
       for (let i = 0; i < matchIndex; i++) {
         yield { type: "old", line: oldLines.shift()! };
@@ -47,9 +35,9 @@ export async function* streamDiff(
         // Same
         yield { type: "same", line: oldLines.shift()! };
       } else {
-        // Delete old and buffer insertion of the new
+        // Delete old line and insert the new
         yield { type: "old", line: oldLines.shift()! };
-        buffer.push({ type: "new", line: newLine });
+        yield { type: "new", line: newLine };
       }
     }
 
@@ -61,11 +49,6 @@ export async function* streamDiff(
     for (let oldLine of oldLines) {
       yield { type: "old", line: oldLine };
     }
-  }
-
-  // Empty the buffer - (important that this is between the above and below loops)
-  while (buffer.length) {
-    yield buffer.shift()!;
   }
 
   if (!newLineResult.done && oldLines.length === 0) {

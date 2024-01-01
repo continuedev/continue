@@ -56,6 +56,18 @@ function constructPrompt(
     : rendered[rendered.length - 1].content;
 }
 
+async function* addIndentation(
+  diffLineGenerator: AsyncGenerator<DiffLine>,
+  indentation: string
+): AsyncGenerator<DiffLine> {
+  for await (const diffLine of diffLineGenerator) {
+    yield {
+      ...diffLine,
+      line: indentation + diffLine.line,
+    };
+  }
+}
+
 export async function* streamDiffLines(
   oldCode: string,
   llm: ILLM,
@@ -69,13 +81,13 @@ export async function* streamDiffLines(
 
   const completion = llm.streamComplete(prompt);
   const newLines = filterLines(streamLines(completion));
-  const diffLineGenerator = streamDiff(oldCode.split("\n"), newLines);
+  const diffLineGenerator = addIndentation(
+    streamDiff(oldCode.split("\n"), newLines),
+    commonIndentation
+  );
 
-  for await (const diffLine of diffLineGenerator) {
-    yield {
-      ...diffLine,
-      line: commonIndentation + diffLine.line,
-    };
+  for await (let diffLine of diffLineGenerator) {
+    yield diffLine;
   }
 }
 
