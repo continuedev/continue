@@ -233,7 +233,10 @@ function TipTapEditor(props: TipTapEditorProps) {
           continue;
         }
         for (const node of p.content) {
-          if (node.type === "slashcommand" && node.attrs.label === "/edit") {
+          if (
+            node.type === "slashcommand" &&
+            ["/edit", "/comment"].includes(node.attrs.label)
+          ) {
             // Update context items
             dispatch(
               setEditingContextItemAtIndex({ item: codeBlock.attrs.item })

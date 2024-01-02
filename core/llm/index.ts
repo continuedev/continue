@@ -49,6 +49,10 @@ function autodetectTemplateType(model: string): TemplateType | undefined {
     return undefined;
   }
 
+  if (lower.includes("dolphin")) {
+    return "chatml";
+  }
+
   if (lower.includes("phind")) {
     return "phind";
   }

@@ -678,7 +678,22 @@
       "properties": {
         "name": {
           "title": "Name",
-          "type": "string"
+          "anyOf": [
+            {
+              "enum": [
+                "issue",
+                "share",
+                "so",
+                "cmd",
+                "edit",
+                "comment",
+                "http",
+                "commit"
+              ],
+              "type": "string"
+            },
+            { "type": "string" }
+          ]
         },
         "description": {
           "title": "Description",
@@ -686,19 +701,7 @@
         },
         "step": {
           "title": "Step",
-          "enum": [
-            "AnswerQuestionChroma",
-            "GenerateShellCommandStep",
-            "EditHighlightedCodeStep",
-            "ShareSessionStep",
-            "CommentCodeStep",
-            "ClearHistoryStep",
-            "StackOverflowStep",
-            "OpenConfigStep",
-            "DraftIssueStep",
-            "HttpSlashCommand",
-            "CommitMessageStep"
-          ],
+          "description": "This property is no longer required and has no effect. To use a built-in slash command, instead set the 'name' property to one of the pre-configured options.",
           "type": "string"
         },
         "params": {
@@ -707,7 +710,32 @@
           "type": "object"
         }
       },
-      "required": ["name", "description", "step"]
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "enum": ["issue"]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "params": {
+                "properties": {
+                  "repositoryUrl": {
+                    "type": "string",
+                    "description": "Enter the URL of the GitHub repository for which you want to generate the issue."
+                  }
+                },
+                "required": ["repositoryUrl"]
+              }
+            },
+            "required": ["params"]
+          }
+        }
+      ],
+      "required": ["name", "description"]
     },
     "CustomCommand": {
       "title": "CustomCommand",
@@ -734,17 +762,22 @@
       "properties": {
         "name": {
           "title": "Name",
-          "enum": [
-            "diff",
-            "github",
-            "terminal",
-            "open",
-            "google",
-            "search",
-            "url",
-            "http"
-          ],
-          "type": "string"
+          "anyOf": [
+            {
+              "enum": [
+                "diff",
+                "github",
+                "terminal",
+                "open",
+                "google",
+                "search",
+                "url",
+                "http"
+              ],
+              "type": "string"
+            },
+            { "type": "string" }
+          ]
         },
         "params": {
           "title": "Params",
@@ -752,6 +785,31 @@
           "type": "object"
         }
       },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "enum": ["google"]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "params": {
+                "properties": {
+                  "serperApiKey": {
+                    "type": "string",
+                    "description": "Your API key for https://serper.dev in order to get Google search results"
+                  }
+                },
+                "required": ["serperApiKey"]
+              }
+            },
+            "required": ["params"]
+          }
+        }
+      ],
       "required": ["name"]
     },
     "RetrievalSettings": {

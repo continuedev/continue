@@ -396,7 +396,6 @@ export interface ContextProviderWithParams {
 export interface SlashCommandDescription {
   name: string;
   description: string;
-  step: StepName | string;
   params?: { [key: string]: any };
 }
 

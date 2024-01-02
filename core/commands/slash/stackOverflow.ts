@@ -16,13 +16,20 @@ async function getResults(q: string): Promise<any> {
 
   const resp = await fetch(`${SERVER_URL}/search`, {
     method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
     body: payload,
   });
   return await resp.json();
 }
 
 async function fetchData(url: string): Promise<string | undefined> {
-  const response = await fetch(url);
+  const response = await fetch(url, {
+    headers: {
+      Accept: "text/html",
+    },
+  });
   const htmlString = await response.text();
 
   const parser = new DOMParser();
