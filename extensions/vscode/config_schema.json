@@ -149,6 +149,14 @@
           ],
           "type": "string"
         },
+        "promptTemplates": {
+          "title": "Prompt Templates",
+          "description": "A mapping of prompt template name ('edit' is currently the only one used in Continue) to a string giving the prompt template. See [here](https://continue.dev/docs/model-setup/configuration#customizing-the-edit-prompt) for an example.",
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
         "completionOptions": {
           "title": "Completion Options",
           "description": "Options for the completion endpoint. Read more about the completion options in the documentation.",
