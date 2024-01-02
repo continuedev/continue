@@ -414,7 +414,7 @@ const EditSlashCommand: SlashCommand = {
     let lineBelowHighlightedRange = fileSuffix.trim().split("\n")[0];
 
     // Use custom templates defined by the model
-    const template = llm.promptTemplates?.["edit"];
+    const template = llm.promptTemplates?.edit;
     let generator: AsyncGenerator<string>;
     if (template) {
       let rendered = renderPromptTemplate(

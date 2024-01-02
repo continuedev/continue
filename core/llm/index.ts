@@ -197,8 +197,8 @@ export abstract class BaseLLM implements ILLM {
     };
     this.requestOptions = options.requestOptions;
     this.promptTemplates = {
-      ...options.promptTemplates,
       ...autodetectPromptTemplates(options.model, templateType),
+      ...options.promptTemplates,
     };
     this.templateMessages =
       options.templateMessages ||

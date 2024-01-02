@@ -440,6 +440,7 @@ export interface ModelDescription {
   completionOptions?: BaseCompletionOptions;
   systemMessage?: string;
   requestOptions?: RequestOptions;
+  promptTemplates?: { [key: string]: string };
 }
 
 export interface ModelRoles {

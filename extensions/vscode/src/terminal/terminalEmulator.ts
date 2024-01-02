@@ -1,8 +1,8 @@
 /* Terminal emulator - commented because node-pty is causing problems. */
 
-import * as vscode from "vscode";
-import * as os from 'os';
+import * as os from "os";
 import stripAnsi from "strip-ansi";
+import * as vscode from "vscode";
 import { longestCommonSubsequence } from "../util/lcs";
 
 function loadNativeModule<T>(id: string): T | null {
@@ -25,7 +25,7 @@ const pty = loadNativeModule<any>("node-pty");
 
 function getDefaultShell(): string {
   if (process.platform !== "win32") {
-    return os.userInfo().shell;
+    return os.userInfo().shell || "cmd";
   }
   switch (process.platform) {
     case "win32":

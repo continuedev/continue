@@ -112,6 +112,7 @@ declare global {
     temperature?: number;
     topP?: number;
     topK?: number;
+    minP?: number;
     presencePenalty?: number;
     frequencyPenalty?: number;
     stop?: string[];
@@ -166,6 +167,7 @@ declare global {
     temperature?: number;
     topP?: number;
     topK?: number;
+    minP?: number;
     presencePenalty?: number;
     frequencyPenalty?: number;
     stop?: string[];
@@ -229,6 +231,11 @@ declare global {
   
   // IDE
   
+  export interface DiffLine {
+    type: "new" | "old" | "same";
+    line: string;
+  }
+  
   export interface IDE {
     getSerializedConfig(): Promise<SerializedContinueConfig>;
     getConfigJsUrl(): Promise<string | undefined>;
@@ -247,6 +254,12 @@ declare global {
       filepath: string,
       newContents: string,
       stepIndex: number
+    ): Promise<void>;
+    verticalDiffUpdate(
+      filepath: string,
+      startLine: number,
+      endLine: number,
+      diffLine: DiffLine
     ): Promise<void>;
     getOpenFiles(): Promise<string[]>;
   }
@@ -411,6 +424,7 @@ declare global {
     temperature?: number;
     topP?: number;
     topK?: number;
+    minP?: number;
     presencePenalty?: number;
     frequencyPenalty?: number;
     stop?: string[];
@@ -428,6 +442,7 @@ declare global {
     completionOptions?: BaseCompletionOptions;
     systemMessage?: string;
     requestOptions?: RequestOptions;
+    promptTemplates?: { [key: string]: string };
   }
   
   export interface ModelRoles {
