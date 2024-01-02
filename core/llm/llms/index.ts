@@ -21,6 +21,7 @@ import OpenAI from "./OpenAI";
 import Replicate from "./Replicate";
 import TextGenWebUI from "./TextGenWebUI";
 import Together from "./Together";
+import AICore from "./AICore";
 
 const LLMs = [
   Anthropic,
@@ -39,6 +40,7 @@ const LLMs = [
   Gemini,
   Mistral,
   Bedrock,
+  AICore,
 ];
 
 export function llmFromDescription(

@@ -22,6 +22,7 @@ export enum ModelProviderTag {
   "Local" = "Local",
   "Free" = "Free",
   "Open-Source" = "Open-Source",
+  "SAP" = "SAP"
 }
 
 export const MODEL_PROVIDER_TAG_COLORS: any = {};
@@ -29,6 +30,7 @@ MODEL_PROVIDER_TAG_COLORS[ModelProviderTag["Requires API Key"]] = "#FF0000";
 MODEL_PROVIDER_TAG_COLORS[ModelProviderTag["Local"]] = "#00bb00";
 MODEL_PROVIDER_TAG_COLORS[ModelProviderTag["Open-Source"]] = "#0033FF";
 MODEL_PROVIDER_TAG_COLORS[ModelProviderTag["Free"]] = "#ffff00";
+MODEL_PROVIDER_TAG_COLORS[ModelProviderTag["SAP"]] = "#006BB8";
 
 export enum CollectInputType {
   "text" = "text",
@@ -123,6 +125,35 @@ const apiBaseInput: InputDescriptor = {
   placeholder: "e.g. http://localhost:8080",
   required: false,
 };
+const clientIDInput: InputDescriptor = {
+  inputType: CollectInputType.text,
+  key: "clientID",
+  label: "Client ID",
+  placeholder: "???",
+  required: true,
+};
+const clientSecretInput: InputDescriptor = {
+  inputType: CollectInputType.text,
+  key: "clientSecret",
+  label: "Client secret",
+  placeholder: "???",
+  required: true,
+};
+const resourceGroupInput: InputDescriptor = {
+  inputType: CollectInputType.text,
+  key: "resourceGroup",
+  label: "Resource Group",
+  placeholder: "default",
+  required: false,
+};
+const authURLInput: InputDescriptor = {
+  inputType: CollectInputType.text,
+  key: "authURL",
+  label: "Authentication URL",
+  placeholder: "https://mltooling-39tr6fbb.authentication.sap.hana.ondemand.com",
+  required: true,
+};
+
 
 export interface ModelInfo {
   title: string;
@@ -488,6 +519,27 @@ const chatBison: ModelPackage = {
   icon: "google-palm.png",
 };
 
+
+
+const abapLlama: ModelPackage = {
+  title: "ABAP-Llama (AI Core)",
+  description:
+    "An code-LlaMA (7b) hosted on AI Core",
+  params: {
+    model: "abap-llama",
+    contextLength: 2048,
+    title: "ABAP-Llama",
+    provider: "sap-ai-core",
+    apiBase: "https://api.ai.internalprod.eu-central-1.aws.ml.hana.ondemand.com/v2/inference/deployments/{deploymentID}",
+    clientID: "XXX",
+    clientSecret: "XXX",
+    resourceGroup: "XXX",
+    authURL: "https://mltooling-39tr6fbb.authentication.sap.hana.ondemand.com"
+  },
+  providerOptions: ["sap-ai-core"],
+  icon: "SAP.png",
+};
+
 export const MODEL_INFO: ModelPackage[] = [
   gpt4,
   gpt35turbo,
@@ -503,6 +555,7 @@ export const MODEL_INFO: ModelPackage[] = [
   chatBison,
   zephyr,
   deepseek,
+  abapLlama
 ];
 
 export const PROVIDER_INFO: { [key: string]: ModelInfo } = {
@@ -690,7 +743,7 @@ export const PROVIDER_INFO: { [key: string]: ModelInfo } = {
     provider: "llama.cpp",
     description: "If you are running the llama.cpp server from source",
     longDescription: `llama.cpp comes with a [built-in server](https://github.com/ggerganov/llama.cpp/tree/master/examples/server#llamacppexampleserver) that can be run from source. To do this:
-    
+
 1. Clone the repository with \`git clone https://github.com/ggerganov/llama.cpp\`.
 2. \`cd llama.cpp\`
 3. Download the model you'd like to use and place it in the \`llama.cpp/models\` directory (the best place to find models is [The Bloke on HuggingFace](https://huggingface.co/TheBloke))
@@ -777,4 +830,23 @@ After it's up and running, you can start using Continue.`,
     ],
     collectInputFor: [...completionParamsInputs],
   },
+  aicore: {
+    title: "AI Core Model (SAP internal)",
+    provider: "sap-ai-core",
+    description: "...",
+    longDescription: '...',
+    icon: "SAP.png",
+    tags: [ModelProviderTag.SAP],
+    packages: [
+      { ...abapLlama, title: "ABAP-LlaMA (7B)" }
+    ],
+    collectInputFor: [
+      {...apiBaseInput, defaultValue: "e.g. https://api.ai.internalprod.eu-central-1.aws.ml.hana.ondemand.com/v2/inference/deployments/{deploymentID}", required: true},
+      {...authURLInput, defaultValue: ""},
+      {...clientIDInput, defaultValue: "XXX"},
+      {...clientSecretInput, defaultValue: "XXX"},
+      {...resourceGroupInput, defaultValue: "default", required: true},
+      ...completionParamsInputs, ],
+
+  }
 };

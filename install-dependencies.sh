@@ -2,7 +2,14 @@
 # This is used in a task in .vscode/tasks.json
 # Start developing with:
 # - Run Task -> Install Dependencies
-# - Debug -> Extension
+# - Debug -> Extension+
+
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
+# Echo npm version
+nvm use default
+node --version
+
 set -e
 echo "Installing Core extension dependencies..."
 pushd core

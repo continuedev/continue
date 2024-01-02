@@ -13,7 +13,10 @@
       "args": ["--runInBand"],
       "console": "integratedTerminal",
       "internalConsoleOptions": "neverOpen",
-      "disableOptimisticBPs": true
+      "disableOptimisticBPs": true,
+      "env": {
+        "PATH": "/Users/I545048/.nvm/versions/node/v21.5.0/bin:${env:PATH}"
+      }
     },
     {
       "type": "chrome",
@@ -26,7 +29,7 @@
       },
       "port": 9222,
       // "runtimeArgs": ["--remote-debugging-port=9222"],
-      "sourceMaps": true
+      "sourceMaps": true,
       // "preLaunchTask": "gui:dev"
     },
     {
@@ -43,7 +46,8 @@
       "outFiles": ["${workspaceFolder}/extensions/vscode/out/**/*.js"],
       "preLaunchTask": "vscode-extension:build",
       "env": {
-        "CONTINUE_SERVER_URL": "http://localhost:8001"
+        "CONTINUE_SERVER_URL": "http://localhost:8001",
+        "PATH": "/Users/I545048/.nvm/versions/node/v21.5.0/bin:${env:PATH}"
       }
     },
     // Has to be run after starting the server (separately or using the compound configuration)
@@ -70,7 +74,8 @@
       "env": {
         "CONTINUE_SERVER_URL": "http://localhost:65432",
         // Avoid timing out when stopping on breakpoints during debugging in VSCode
-        "MOCHA_TIMEOUT": "0"
+        "MOCHA_TIMEOUT": "0",
+        "PATH": "/Users/I545048/.nvm/versions/node/v21.5.0/bin:${env:PATH}"
       }
     }
   ]

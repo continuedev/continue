@@ -21,6 +21,11 @@ export interface ILLM extends LLMOptions {
   apiType?: string;
   region?: string;
   projectId?: string;
+  // AI Core options
+  resourceGroup?: string;
+  authURL?: string;
+  clientID?: string;
+  clientSecret?: string;
 
   _fetch?: (input: any, init?: any) => Promise<any>;
 
@@ -196,6 +201,12 @@ export interface LLMOptions {
   // GCP Options
   region?: string;
   projectId?: string;
+
+    // AI Core options
+    resourceGroup?: string;
+    authURL?: string;
+    clientID?: string;
+    clientSecret?: string;
 }
 type RequireAtLeastOne<T, Keys extends keyof T = keyof T> = Pick<
   T,
@@ -326,7 +337,8 @@ type ModelProvider =
   | "llamafile"
   | "gemini"
   | "mistral"
-  | "bedrock";
+  | "bedrock"
+  | "sap-ai-core";
 
 export type ModelName =
   // OpenAI
@@ -362,7 +374,9 @@ export type ModelName =
   // Mistral
   | "mistral-tiny"
   | "mistral-small"
-  | "mistral-medium";
+  | "mistral-medium"
+  // AI Core
+  | "abap-llama";
 
 export interface RequestOptions {
   timeout?: number;

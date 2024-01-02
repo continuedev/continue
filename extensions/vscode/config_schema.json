@@ -108,7 +108,8 @@
             "google-palm",
             "lmstudio",
             "llamafile",
-            "mistral"
+            "mistral",
+            "sap-ai-core"
           ],
           "type": "string"
         },
@@ -201,6 +202,26 @@
         "engine": {
           "title": "Engine",
           "description": "Azure OpenAI engine",
+          "type": "string"
+        },
+        "authURL": {
+          "title": "OAuth URL",
+          "description": "URL to fetch OAuth token from",
+          "type": "string"
+        },
+        "clientID": {
+          "title": "OAuth Client ID",
+          "description": "OAuth client ID",
+          "type": "string"
+        },
+        "clientSecret": {
+          "title": "OAuth Client Secret",
+          "description": "OAuth client secret",
+          "type": "string"
+        },
+        "resourceGroup": {
+          "title": "AI Core Resource Group",
+          "description": "AI Core resource group",
           "type": "string"
         }
       },
@@ -633,6 +654,21 @@
                 "type": "string"
               }
             }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "provider": {
+                "enum": [
+                  "sap-ai-core"
+                ]
+              }
+            },
+            "required": ["provider"]
+          },
+          "then": {
+            "required": ["clientID", "clientSecret", "authURL", "resourceGroup", "apiBase"]
           }
         }
       ]

@@ -66,6 +66,15 @@ class OpenAI extends BaseLLM {
     }
   }
 
+  protected _getRequestHeaders() {
+    return {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${this.apiKey}`,
+      "api-key": this.apiKey || "", // For Azure
+    };
+  }
+
+
   protected async *_streamComplete(
     prompt: string,
     options: CompletionOptions
@@ -84,11 +93,7 @@ class OpenAI extends BaseLLM {
   ): AsyncGenerator<string> {
     const response = await this.fetch(this._getCompletionUrl(), {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${this.apiKey}`,
-        "api-key": this.apiKey || "", // For Azure
-      },
+      headers: this._getRequestHeaders(),
       body: JSON.stringify({
         ...{
           prompt,
@@ -138,11 +143,7 @@ class OpenAI extends BaseLLM {
   ): AsyncGenerator<ChatMessage> {
     const response = await this.fetch(this._getChatUrl(), {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${this.apiKey}`,
-        "api-key": this.apiKey || "", // For Azure
-      },
+      headers: this._getRequestHeaders(),
       body: JSON.stringify({
         ...this._convertArgs(options, messages),
         stream: true,
