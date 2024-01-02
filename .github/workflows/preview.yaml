@@ -10,30 +10,6 @@ jobs:
     strategy:
       matrix:
         include:
-          - os: windows-latest
-            platform: win32
-            arch: x64
-            npm_config_arch: x64
-          - os: windows-latest
-            platform: win32
-            arch: arm64
-            npm_config_arch: arm
-          - os: ubuntu-latest
-            platform: linux
-            arch: x64
-            npm_config_arch: x64
-          - os: ubuntu-latest
-            platform: linux
-            arch: arm64
-            npm_config_arch: arm64
-          - os: ubuntu-latest
-            platform: linux
-            arch: armhf
-            npm_config_arch: arm
-          - os: ubuntu-latest
-            platform: alpine
-            arch: x64
-            npm_config_arch: x64
           - os: macos-latest
             platform: darwin
             arch: x64
@@ -153,56 +129,56 @@ jobs:
           path: /home/runner/.continue/continue.log
         if: always()
 
-  publish:
-    runs-on: ubuntu-latest
-    needs:
-      - build
-    permissions:
-      contents: write
-    steps:
-      # 0. Setup git
-      - name: Checkout
-        uses: actions/checkout@v2
+  # publish:
+  #   runs-on: ubuntu-latest
+  #   needs:
+  #     - build
+  #   permissions:
+  #     contents: write
+  #   steps:
+  #     # 0. Setup git
+  #     - name: Checkout
+  #       uses: actions/checkout@v2
 
-      - name: Set up Git
-        run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
+  #     - name: Set up Git
+  #       run: |
+  #         git config --local user.email "action@github.com"
+  #         git config --local user.name "GitHub Action"
 
-      - name: Pull latest changes
-        run: git pull origin preview
+  #     - name: Pull latest changes
+  #       run: git pull origin preview
 
-      # 1. Download the artifacts
-      - uses: actions/download-artifact@v3
+  #     # 1. Download the artifacts
+  #     - uses: actions/download-artifact@v3
 
-      # 2. Publish the extension to VS Code Marketplace
-      - name: Publish to VS Code Marketplace
-        run: |
-          cd extensions/vscode
-          npx vsce publish --pre-release --packagePath ../../alpine-x64/*.vsix ../../darwin-arm64/*.vsix ../../darwin-x64/*.vsix ../../linux-arm64/*.vsix ../../linux-armhf/*.vsix ../../linux-x64/*.vsix ../../win32-x64/*.vsix ../../win32-arm64/*.vsix
-        env:
-          VSCE_PAT: ${{ secrets.VSCE_TOKEN }}
+  #     # 2. Publish the extension to VS Code Marketplace
+  #     - name: Publish to VS Code Marketplace
+  #       run: |
+  #         cd extensions/vscode
+  #         npx vsce publish --pre-release --packagePath ../../alpine-x64/*.vsix ../../darwin-arm64/*.vsix ../../darwin-x64/*.vsix ../../linux-arm64/*.vsix ../../linux-armhf/*.vsix ../../linux-x64/*.vsix ../../win32-x64/*.vsix ../../win32-arm64/*.vsix
+  #       env:
+  #         VSCE_PAT: ${{ secrets.VSCE_TOKEN }}
 
-      # 3. Publish the extension to Open VSX Registry
-      - name: Publish (Open VSX Registry)
-        run: |
-          cd extensions/vscode
-          npx ovsx publish --pre-release -p ${{ secrets.VSX_REGISTRY_TOKEN }} --packagePath ../../alpine-x64/*.vsix ../../darwin-arm64/*.vsix ../../darwin-x64/*.vsix ../../linux-arm64/*.vsix ../../linux-armhf/*.vsix ../../linux-x64/*.vsix ../../win32-x64/*.vsix ../../win32-arm64/*.vsix
+  #     # 3. Publish the extension to Open VSX Registry
+  #     - name: Publish (Open VSX Registry)
+  #       run: |
+  #         cd extensions/vscode
+  #         npx ovsx publish --pre-release -p ${{ secrets.VSX_REGISTRY_TOKEN }} --packagePath ../../alpine-x64/*.vsix ../../darwin-arm64/*.vsix ../../darwin-x64/*.vsix ../../linux-arm64/*.vsix ../../linux-armhf/*.vsix ../../linux-x64/*.vsix ../../win32-x64/*.vsix ../../win32-arm64/*.vsix
 
-      # 4. Update the package.json version and push changes
-      - name: Update version in package.json
-        run: |
-          cd extensions/vscode
-          npm version patch
+  #     # 4. Update the package.json version and push changes
+  #     - name: Update version in package.json
+  #       run: |
+  #         cd extensions/vscode
+  #         npm version patch
 
-      - name: Commit changes
-        run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-          git commit -am "💚 Update package.json version [skip ci]"
+  #     - name: Commit changes
+  #       run: |
+  #         git config --local user.email "action@github.com"
+  #         git config --local user.name "GitHub Action"
+  #         git commit -am "💚 Update package.json version [skip ci]"
 
-      - name: Push changes
-        uses: ad-m/github-push-action@master
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          branch: ${{ github.ref }}
+  #     - name: Push changes
+  #       uses: ad-m/github-push-action@master
+  #       with:
+  #         github_token: ${{ secrets.GITHUB_TOKEN }}
+  #         branch: ${{ github.ref }}
