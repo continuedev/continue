@@ -188,13 +188,12 @@ export const stateSlice = createSlice({
       }: {
         payload: {
           index: number;
-          content: string;
           editorState: JSONContent;
         };
       }
     ) => {
       if (payload.index < state.history.length) {
-        state.history[payload.index].message.content = payload.content;
+        state.history[payload.index].message.content = "";
         state.history[payload.index].editorState = payload.editorState;
 
         // Cut off history after the resubmitted message
@@ -213,19 +212,18 @@ export const stateSlice = createSlice({
         state.active = true;
       }
     },
-    submitMessage: (
+    initNewActiveMessage: (
       state,
       {
         payload,
       }: {
         payload: {
-          message: ChatMessage;
           editorState: JSONContent;
         };
       }
     ) => {
       state.history.push({
-        message: payload.message,
+        message: { role: "user", content: "" },
         contextItems: state.contextItems,
         editorState: payload.editorState,
       });
@@ -238,6 +236,12 @@ export const stateSlice = createSlice({
       });
       state.contextItems = [];
       state.active = true;
+    },
+    setMessageAtIndex: (
+      state,
+      { payload }: { payload: { message: ChatMessage; index: number } }
+    ) => {
+      state.history[payload.index].message = payload.message;
     },
     setInactive: (state) => {
       return {
@@ -425,7 +429,6 @@ export const stateSlice = createSlice({
 export const {
   addContextItemsAtIndex,
   addContextItems,
-  submitMessage,
   setInactive,
   streamUpdate,
   newSession,
@@ -438,5 +441,7 @@ export const {
   addLogs,
   setActive,
   setEditingContextItemAtIndex,
+  initNewActiveMessage,
+  setMessageAtIndex,
 } = stateSlice.actions;
 export default stateSlice.reducer;

@@ -13,10 +13,11 @@ import { defaultModelSelector } from "../redux/selectors/modelSelectors";
 import {
   addContextItems,
   addLogs,
+  initNewActiveMessage,
   resubmitAtIndex,
   setInactive,
+  setMessageAtIndex,
   streamUpdate,
-  submitMessage,
 } from "../redux/slices/stateSlice";
 import { RootStore } from "../redux/store";
 import { errorPopup } from "../util/ide";
@@ -126,9 +127,15 @@ function useChatHandler(dispatch: Dispatch) {
   }
 
   async function streamResponse(editorState: JSONContent, index?: number) {
-    const content = await resolveEditorContent(editorState, contextProviders);
-
     try {
+      if (typeof index === "number") {
+        dispatch(resubmitAtIndex({ index, editorState }));
+      } else {
+        dispatch(initNewActiveMessage({ editorState }));
+      }
+
+      // Resolve context providers and construct new history
+      const content = await resolveEditorContent(editorState, contextProviders);
       const message: ChatMessage = {
         role: "user",
         content,
@@ -142,14 +149,10 @@ function useChatHandler(dispatch: Dispatch) {
         editorState,
       };
 
-      let newHistory: ChatHistory = [];
-      if (typeof index === "number") {
-        newHistory = [...history.slice(0, index), historyItem];
-        dispatch(resubmitAtIndex({ index, content, editorState }));
-      } else {
-        newHistory = [...history, historyItem];
-        dispatch(submitMessage({ message, editorState }));
-      }
+      let newHistory: ChatHistory = [...history.slice(0, index), historyItem];
+      dispatch(
+        setMessageAtIndex({ message, index: index || newHistory.length - 1 })
+      );
 
       // TODO: hacky way to allow rerender
       await new Promise((resolve) => setTimeout(resolve, 0));
