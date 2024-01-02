@@ -1,5 +1,5 @@
 const simplifiedEditPrompt = `Consider the following code:
-\`\`\`
+\`\`\`{{{language}}}
 {{{codeToEdit}}}
 \`\`\`
 Edit the code to perfectly satisfy the following user request:
@@ -7,7 +7,7 @@ Edit the code to perfectly satisfy the following user request:
 Output nothing except for the code. No code block, no English explanation, no start/end tags.`;
 
 const simplestEditPrompt = `Here is the code before editing:
-\`\`\`
+\`\`\`{{{language}}}
 {{{codeToEdit}}}
 \`\`\`
 
@@ -17,29 +17,34 @@ Here is the edit requested:
 Here is the code after editing:`;
 
 const gptEditPrompt = `\
-You will be asked to rewrite a section of code to fulfill a user request. Here is the code you will rewrite:
-
-\`\`\`
+\`\`\`{{{language}}}
 {{{codeToEdit}}}
 \`\`\`
 
-Here is the user request:
+You are an expert programmer. You will rewrite the above code to do the following:
 
 {{{userInput}}}
 
-Now rewrite the code to perfectly satisfy the user request. Your output should include nothing but the code. No code block, no English explanation, no start/end tags. Here it is:`;
+Output only a code block with the rewritten code:`;
 
 const codellamaInfillEditPrompt = "{{filePrefix}}<FILL>{{fileSuffix}}";
 
-const codellamaEditPrompt = `[CODE]
+const codellamaEditPrompt = `\`\`\`{{{language}}}
 {{{codeToEdit}}}
-[/CODE]
-[INST]
-You are an expert programmer and personal assistant, here is your task: "Rewrite the above code in order to {{{userInput}}}"
+\`\`\`
+[INST] You are an expert programmer and personal assistant. Your task is to rewrite the above code with these instructions: "{{{userInput}}}"
 
-Your answer should start with a [CODE] tag and end with a [/CODE] tag.
-[/INST] Sure! Here's the code you requested:
-[CODE]`;
+Your answer should be given inside of a code block. It should use the same kind of indentation as above.
+[/INST] Sure! Here's the rewritten code you requested:
+\`\`\`{{{language}}}`;
+
+const mistralEditPrompt = `[INST] You are a helpful code assistant. Your task is to rewrite the following code with these instructions: "{{{userInput}}}"
+\`\`\`{{{language}}}
+{{{codeToEdit}}}
+\`\`\`
+
+Just rewrite the code without explanations: [/INST]
+\`\`\`{{{language}}}`;
 
 const alpacaEditPrompt = `Below is an instruction that describes a task, paired with an input that provides further context. Write a response that appropriately completes the request.
 
@@ -47,14 +52,14 @@ const alpacaEditPrompt = `Below is an instruction that describes a task, paired 
 
 ### Input:
 
-\`\`\`
+\`\`\`{{{language}}}
 {{{codeToEdit}}}
 \`\`\`
 
 ### Response:
 
 Sure! Here's the code you requested:
-\`\`\`
+\`\`\`{{{language}}}
 `;
 
 const phindEditPrompt = `### System Prompt
@@ -63,14 +68,14 @@ You are an expert programmer and write code on the first attempt without any err
 ### User Message:
 Rewrite the code to satisfy this request: "{{{userInput}}}"
 
-\`\`\`
+\`\`\`{{{language}}}
 {{{codeToEdit}}}
 \`\`\`
 
 ### Assistant:
 Sure! Here's the code you requested:
 
-\`\`\`
+\`\`\`{{{language}}}
 `;
 
 const deepseekEditPrompt = `### System Prompt
@@ -78,13 +83,13 @@ You are an AI programming assistant, utilizing the DeepSeek Coder model, develop
 ### Instruction:
 Rewrite the code to satisfy this request: "{{{userInput}}}"
 
-\`\`\`
+\`\`\`{{{language}}}
 {{{codeToEdit}}}
 \`\`\`<|EOT|>
 ### Response:
 Sure! Here's the code you requested:
 
-\`\`\`
+\`\`\`{{{language}}}
 `;
 
 const zephyrEditPrompt = `<|system|>
@@ -92,21 +97,21 @@ You are an expert programmer and write code on the first attempt without any err
 <|user|>
 Rewrite the code to satisfy this request: "{{{userInput}}}"
 
-\`\`\`
+\`\`\`{{{language}}}
 {{{codeToEdit}}}
 \`\`\`</s>
 <|assistant|>
 Sure! Here's the code you requested:
 
-\`\`\`
+\`\`\`{{{language}}}
 `;
 
 const openchatEditPrompt = `GPT4 Correct User: You are an expert programmer and personal assistant. You are asked to rewrite the following code in order to {{{userInput}}}.
-\`\`\`
+\`\`\`{{{language}}}
 {{{codeToEdit}}}
 \`\`\`
 Please only respond with code and put it inside of a markdown code block. Do not give any explanation, but your code should perfectly satisfy the user request.<|end_of_turn|>GPT4 Correct Assistant: Sure thing! Here is the rewritten code that you requested:
-\`\`\`
+\`\`\`{{{language}}}
 `;
 
 export {
@@ -115,6 +120,7 @@ export {
   codellamaInfillEditPrompt,
   deepseekEditPrompt,
   gptEditPrompt,
+  mistralEditPrompt,
   openchatEditPrompt,
   phindEditPrompt,
   simplestEditPrompt,

@@ -218,6 +218,7 @@ export class VerticalPerLineDiffHandler {
 
     // Clear deletion buffer
     await this.insertDeletionBuffer();
+    this.clearIndexLineDecorations();
 
     // Reject on user typing
     // const listener = vscode.workspace.onDidChangeTextDocument((e) => {

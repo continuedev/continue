@@ -14,13 +14,18 @@ export async function* streamDiff(
   newLines: LineStream
 ): AsyncGenerator<DiffLine> {
   oldLines = [...oldLines]; // be careful
+  let seenIndentationMistake = false;
 
   let newLineResult = await newLines.next();
   while (oldLines.length > 0 && !newLineResult.done) {
     const [matchIndex, isPerfectMatch, newLine] = matchLine(
       newLineResult.value,
-      oldLines
+      oldLines,
+      seenIndentationMistake
     );
+    if (!seenIndentationMistake && newLineResult.value !== newLine) {
+      seenIndentationMistake = true;
+    }
 
     if (matchIndex < 0) {
       // Insert new line

@@ -30,6 +30,7 @@ import {
   alpacaEditPrompt,
   codellamaEditPrompt,
   deepseekEditPrompt,
+  mistralEditPrompt,
   openchatEditPrompt,
   phindEditPrompt,
   simplestEditPrompt,
@@ -122,7 +123,11 @@ function autodetectPromptTemplates(
   } else if (templateType === "zephyr") {
     editTemplate = zephyrEditPrompt;
   } else if (templateType === "llama2") {
-    editTemplate = codellamaEditPrompt;
+    if (model.includes("mistral")) {
+      editTemplate = mistralEditPrompt;
+    } else {
+      editTemplate = codellamaEditPrompt;
+    }
   } else if (templateType === "alpaca") {
     editTemplate = alpacaEditPrompt;
   } else if (templateType === "deepseek") {

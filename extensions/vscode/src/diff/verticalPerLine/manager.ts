@@ -1,4 +1,5 @@
 import { streamDiffLines } from "core/commands/slash/verticalEdit";
+import { getMarkdownLanguageTagForFile } from "core/util";
 import * as vscode from "vscode";
 import { llmFromTitle } from "../../loadConfig";
 import { VerticalPerLineDiffHandler } from "./handler";
@@ -107,7 +108,14 @@ export async function streamEdit(input: string) {
       editor.selection.active
     );
 
-    await diffHandler.run(streamDiffLines(rangeContent, llm, input));
+    await diffHandler.run(
+      streamDiffLines(
+        rangeContent,
+        llm,
+        input,
+        getMarkdownLanguageTagForFile(filepath)
+      )
+    );
   }
 }
 
