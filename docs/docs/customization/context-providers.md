@@ -126,7 +126,7 @@ const RagContextProvider = {
   description:
     "Retrieve snippets from our vector database of internal documents",
 
-  getContextItems: (query: string) => {
+  getContextItems: async (query: string) => {
     const response = await fetch("https://internal_rag_server.com/retrieve", {
       method: "POST",
       body: JSON.stringify({ query }),
@@ -137,7 +137,7 @@ const RagContextProvider = {
     return results.map((result) => ({
       title: result.title,
       description: result.title,
-      contents: result.contents,
+      content: result.contents,
     }));
   },
 };
