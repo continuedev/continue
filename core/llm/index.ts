@@ -37,7 +37,16 @@ import {
   zephyrEditPrompt,
 } from "./templates/edit";
 
-function autodetectTemplateType(model: string): TemplateType | undefined {
+const PROVIDER_HANDLES_TEMPLATING: ModelProvider[] = ["lmstudio", "openai"];
+
+function autodetectTemplateType(
+  model: string,
+  provider: ModelProvider
+): TemplateType | undefined {
+  if (PROVIDER_HANDLES_TEMPLATING.includes(provider)) {
+    return "none";
+  }
+
   const lower = model.toLowerCase();
 
   if (
@@ -90,9 +99,11 @@ function autodetectTemplateType(model: string): TemplateType | undefined {
 
 function autodetectTemplateFunction(
   model: string,
+  provider: ModelProvider,
   explicitTemplate: TemplateType | undefined = undefined
 ) {
-  const templateType = explicitTemplate || autodetectTemplateType(model);
+  const templateType =
+    explicitTemplate || autodetectTemplateType(model, provider);
 
   if (templateType) {
     const mapping: Record<TemplateType, any> = {
@@ -115,9 +126,11 @@ function autodetectTemplateFunction(
 
 function autodetectPromptTemplates(
   model: string,
+  provider: ModelProvider,
   explicitTemplate: TemplateType | undefined = undefined
 ) {
-  const templateType = explicitTemplate || autodetectTemplateType(model);
+  const templateType =
+    explicitTemplate || autodetectTemplateType(model, provider);
   const templates: Record<string, any> = {};
 
   let editTemplate = null;
@@ -192,7 +205,8 @@ export abstract class BaseLLM implements ILLM {
     };
 
     const templateType =
-      options.template || autodetectTemplateType(options.model);
+      options.template ||
+      autodetectTemplateType(options.model, this.providerName);
 
     this.title = options.title;
     this.uniqueId = options.uniqueId || "None";
@@ -206,12 +220,20 @@ export abstract class BaseLLM implements ILLM {
     };
     this.requestOptions = options.requestOptions;
     this.promptTemplates = {
-      ...autodetectPromptTemplates(options.model, templateType),
+      ...autodetectPromptTemplates(
+        options.model,
+        this.providerName,
+        templateType
+      ),
       ...options.promptTemplates,
     };
     this.templateMessages =
       options.templateMessages ||
-      autodetectTemplateFunction(options.model, templateType);
+      autodetectTemplateFunction(
+        options.model,
+        this.providerName,
+        templateType
+      );
     this.writeLog = options.writeLog;
     this.llmRequestHook = options.llmRequestHook;
     this.apiKey = options.apiKey;
