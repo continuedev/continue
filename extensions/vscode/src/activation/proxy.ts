@@ -22,6 +22,10 @@ app.use((req, res, next) => {
   });
 
   proxy.on("response", (response) => {
+    res.status(response.statusCode || 500);
+    for (let i = 1; i < response.rawHeaders.length; i += 2) {
+      res.setHeader(response.rawHeaders[i - 1], response.rawHeaders[i]);
+    }
     response.pipe(res);
   });
 
