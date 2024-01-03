@@ -766,7 +766,6 @@
             {
               "enum": [
                 "diff",
-                "github",
                 "terminal",
                 "open",
                 "google",

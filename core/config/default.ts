@@ -17,22 +17,18 @@ const defaultConfig: SerializedContinueConfig = {
     {
       name: "edit",
       description: "Edit highlighted code",
-      step: "EditHighlightedCodeStep",
     },
     {
       name: "comment",
       description: "Write comments for the highlighted code",
-      step: "CommentCodeStep",
     },
     {
       name: "share",
       description: "Download and share this session",
-      step: "ShareSessionStep",
     },
     {
       name: "cmd",
       description: "Generate a shell command",
-      step: "GenerateShellCommandStep",
     },
   ],
   customCommands: [
