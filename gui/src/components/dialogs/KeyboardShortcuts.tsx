@@ -60,6 +60,11 @@ const vscodeShortcuts: KeyboardShortcutProps[] = [
     description: "Ask about Highlighted Code",
   },
   {
+    mac: "⌘ ⇧ L",
+    windows: "⌃ ⇧ L",
+    description: "Edit highlighted code",
+  },
+  {
     mac: "⌘ ⇧ M",
     windows: "⌃ ⇧ M",
     description: "Ask Follow-Up about Highlighted Code",
@@ -73,11 +78,6 @@ const vscodeShortcuts: KeyboardShortcutProps[] = [
     mac: "⌘ ⇧ ⌫",
     windows: "⌃ ⇧ ⌫",
     description: "Reject Diff",
-  },
-  {
-    mac: "⌘ ⇧ L",
-    windows: "⌃ ⇧ L",
-    description: "Quick Text Entry",
   },
   {
     mac: "⌥ ⌘ M",

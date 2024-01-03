@@ -210,7 +210,7 @@ const actions: TutorialCodeLensItems[] = [
     ],
   },
   {
-    lineIncludes: 'Step 3: Type "/edit <your edit request>" and press Enter',
+    lineIncludes: 'Step 3: Type "<your edit request>" and press Enter',
     commands: [
       {
         title: `"/edit make this more efficient"`,
@@ -297,7 +297,7 @@ class TutorialCodeLensProvider implements vscode.CodeLensProvider {
         new vscode.CodeLens(range, {
           title: "Highlight the function",
           command: "continue.selectRange",
-          arguments: [lineOf21 + 1, lineOf21 + 12],
+          arguments: [lineOf21 + 3, lineOf21 + 14],
         })
       );
     }
