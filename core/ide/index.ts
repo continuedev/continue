@@ -82,4 +82,8 @@ export class ExtensionIde implements IDE {
   getOpenFiles(): Promise<string[]> {
     return r("getOpenFiles");
   }
+
+  getSearchResults(query: string): Promise<string> {
+    return r("getSearchResults", { query });
+  }
 }

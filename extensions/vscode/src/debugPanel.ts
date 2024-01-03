@@ -328,6 +328,10 @@ export function getSidebarContent(
           respond(await ide.runCommand(data.message.command));
           break;
         }
+        case "getSearchResults": {
+          respond(await ide.getSearchResults(data.message.query));
+          break;
+        }
         // History
         case "history": {
           respond(historyManager.list());

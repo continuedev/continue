@@ -102,6 +102,10 @@ class FileSystemIde implements IDE {
   getOpenFiles(): Promise<string[]> {
     return Promise.resolve([]);
   }
+
+  async getSearchResults(query: string): Promise<string> {
+    return "";
+  }
 }
 
 export default FileSystemIde;

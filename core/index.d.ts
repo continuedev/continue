@@ -260,6 +260,7 @@ export interface IDE {
     diffLine: DiffLine
   ): Promise<void>;
   getOpenFiles(): Promise<string[]>;
+  getSearchResults(query: string): Promise<string>;
 }
 
 // Slash Commands

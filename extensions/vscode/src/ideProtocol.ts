@@ -11,14 +11,15 @@ import * as path from "path";
 import * as vscode from "vscode";
 import { ideProtocolClient } from "./activation/activate";
 
+import * as child_process from "child_process";
 import { ContinueConfig, DiffLine, IDE, SerializedContinueConfig } from "core";
 import {
   intermediateToFinalConfig,
   serializedToIntermediateConfig,
 } from "core/config/load";
-
 import { verticalPerLineDiffManager } from "./diff/verticalPerLine/manager";
 import mergeJson from "./util/merge";
+import { getExtensionUri } from "./util/vscode";
 
 async function buildConfigTs(browser: boolean) {
   if (!fs.existsSync(getConfigTsPath())) {
@@ -229,6 +230,46 @@ class VsCodeIde implements IDE {
 
   async getOpenFiles(): Promise<string[]> {
     return await ideProtocolClient.getOpenFiles();
+  }
+
+  private async _searchDir(query: string, dir: string): Promise<string> {
+    const p = child_process.spawn(
+      path.join(
+        getExtensionUri().fsPath,
+        "node_modules",
+        "@vscode",
+        "ripgrep",
+        "bin",
+        "rg"
+      ),
+      ["-i", "-C", "2", `"${query}"`, "."],
+      { cwd: dir }
+    );
+    let output = "";
+
+    p.stdout.on("data", (data) => {
+      output += data.toString();
+    });
+
+    return new Promise<string>((resolve, reject) => {
+      p.on("error", reject);
+      p.on("close", (code) => {
+        if (code === 0) {
+          resolve(output);
+        } else {
+          reject(new Error(`Process exited with code ${code}`));
+        }
+      });
+    });
+  }
+
+  async getSearchResults(query: string): Promise<string> {
+    let results = [];
+    for (let dir of await this.getWorkspaceDirs()) {
+      results.push(await this._searchDir(query, dir));
+    }
+
+    return results.join("\n\n");
   }
 }
 

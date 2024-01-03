@@ -357,6 +357,9 @@ class IdeProtocolClient (
                         val session = historyManager.load(data["message"] as String)
                         respond(session)
                     }
+                    "getSearchResults" -> {
+                        respond("")
+                    }
 
                     // Other
                     "getOpenFiles" -> {
