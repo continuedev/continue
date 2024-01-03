@@ -1,7 +1,6 @@
 import cors from "cors";
 import express from "express";
-import http from "http";
-import https from "https";
+import { http, https } from "follow-redirects";
 
 const PROXY_PORT = 65433;
 const app = express();
