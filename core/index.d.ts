@@ -339,7 +339,8 @@ type ModelProvider =
   | "llamafile"
   | "gemini"
   | "mistral"
-  | "bedrock";
+  | "bedrock"
+  | "deepinfra";
 
 export type ModelName =
   // OpenAI

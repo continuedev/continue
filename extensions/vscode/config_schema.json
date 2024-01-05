@@ -108,7 +108,8 @@
             "google-palm",
             "lmstudio",
             "llamafile",
-            "mistral"
+            "mistral",
+            "deepinfra"
           ],
           "type": "string"
         },
@@ -475,6 +476,23 @@
                   { "type": "string" }
                 ],
                 "description": "Select a pre-defined option, or find an exact model string from Together AI [here](https://docs.together.ai/docs/inference-models)."
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "provider": {
+                "enum": ["deepinfra"]
+              }
+            },
+            "required": ["provider"]
+          },
+          "then": {
+            "properties": {
+              "model": {
+                "description": "Find the model name you want to use from DeepInfra [here](https://deepinfra.com/models?type=text-generation)."
               }
             }
           }
