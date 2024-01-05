@@ -76,7 +76,8 @@ class MeilisearchCodebaseIndex(CodebaseIndex):
                     chunk, int(chunk.digest, 16), [self.tag]
                 )
                 for chunk in chunks
-            ]
+            ],
+            primary_key="id",
         )
 
     async def delete_chunks(self, document_ids: List[str], index: Index):
@@ -98,14 +99,14 @@ class MeilisearchCodebaseIndex(CodebaseIndex):
         for document in documents:
             document["tags"].remove(label)
 
-        await index.update_documents(documents)
+        await index.update_documents(documents, primary_key="id")
 
     async def add_label(self, digest: str, label: str, index: Index):
         documents = (await self.get_docs_for_digest(digest, index)).results
         for document in documents:
             document["tags"].append(label)
 
-        await index.update_documents(documents)
+        await index.update_documents(documents, primary_key="id")
 
     async def build(
         self, chunks: AsyncGenerator[Tuple[IndexAction, Union[str, Chunk]], None]
@@ -113,7 +114,7 @@ class MeilisearchCodebaseIndex(CodebaseIndex):
         """Builds the index, yielding progress as a float between 0 and 1"""
         async with Client(get_meilisearch_url()) as search_client:
             try:
-                await search_client.create_index(self.index_name)
+                await search_client.create_index(self.index_name, primary_key="id")
                 index = await search_client.get_index(self.index_name)
                 # await index.update_ranking_rules(
                 #     ["attribute", "words", "typo", "proximity", "sort", "exactness"]
