@@ -50,7 +50,7 @@ jobs:
 
       # 2. Install npm dependencies
       - name: Use Node.js 19.0.0
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: 19.0.0
 
