@@ -320,7 +320,8 @@ type TemplateType =
   | "chatml"
   | "none"
   | "openchat"
-  | "deepseek";
+  | "deepseek"
+  | "xwin-coder";
 
 type ModelProvider =
   | "openai"

@@ -177,6 +177,34 @@ function openchatTemplateMessages(msgs: ChatMessage[]): string {
   return prompt;
 }
 
+/**
+ * Chat template used by https://huggingface.co/TheBloke/XwinCoder-13B-GPTQ
+ *
+
+<system>: You are an AI coding assistant that helps people with programming. Write a response that appropriately completes the user's request.
+<user>: {prompt}
+<AI>:
+ */
+function xWinCoderTemplateMessages(msgs: ChatMessage[]): string {
+  let prompt = "<system>: ";
+  if (msgs[0].role === "system") {
+    prompt += msgs.shift()!.content;
+  } else {
+    prompt +=
+      "You are an AI coding assistant that helps people with programming. Write a response that appropriately completes the user's request.";
+  }
+
+  for (let msg of msgs) {
+    prompt += "\n";
+    prompt += msg.role === "user" ? "<user>" : "<AI>";
+    prompt += ": " + msg.content;
+  }
+
+  prompt += "<AI>: ";
+
+  return prompt;
+}
+
 export {
   anthropicTemplateMessages,
   chatmlTemplateMessages,
@@ -185,5 +213,6 @@ export {
   openchatTemplateMessages,
   phindTemplateMessages,
   templateAlpacaMessages,
+  xWinCoderTemplateMessages,
   zephyrTemplateMessages,
 };

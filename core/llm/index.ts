@@ -24,6 +24,7 @@ import {
   openchatTemplateMessages,
   phindTemplateMessages,
   templateAlpacaMessages,
+  xWinCoderTemplateMessages,
   zephyrTemplateMessages,
 } from "./templates/chat";
 import {
@@ -34,6 +35,7 @@ import {
   openchatEditPrompt,
   phindEditPrompt,
   simplestEditPrompt,
+  xWinCoderEditPrompt,
   zephyrEditPrompt,
 } from "./templates/edit";
 
@@ -56,6 +58,10 @@ function autodetectTemplateType(
     lower.includes("gemini")
   ) {
     return undefined;
+  }
+
+  if (lower.includes("xwin")) {
+    return "xwin-coder";
   }
 
   if (lower.includes("dolphin")) {
@@ -115,6 +121,7 @@ function autodetectTemplateFunction(
       chatml: chatmlTemplateMessages,
       deepseek: deepseekTemplateMessages,
       openchat: openchatTemplateMessages,
+      "xwin-coder": xWinCoderTemplateMessages,
       none: null,
     };
 
@@ -151,6 +158,8 @@ function autodetectPromptTemplates(
     editTemplate = deepseekEditPrompt;
   } else if (templateType === "openchat") {
     editTemplate = openchatEditPrompt;
+  } else if (templateType === "xwin-coder") {
+    editTemplate = xWinCoderEditPrompt;
   } else if (templateType) {
     editTemplate = simplestEditPrompt;
   }

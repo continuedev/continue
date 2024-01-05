@@ -114,6 +114,16 @@ Please only respond with code and put it inside of a markdown code block. Do not
 \`\`\`{{{language}}}
 `;
 
+const xWinCoderEditPrompt = `<system>: You are an AI coding assistant that helps people with programming. Write a response that appropriately completes the user's request.
+<user>: Please rewrite the following code with these instructions: "{{{userInput}}}"
+\`\`\`{{{language}}}
+{{{codeToEdit}}}
+\`\`\`
+
+Just rewrite the code without explanations:
+<AI>:
+\`\`\`{{{language}}}`;
+
 export {
   alpacaEditPrompt,
   codellamaEditPrompt,
@@ -125,5 +135,6 @@ export {
   phindEditPrompt,
   simplestEditPrompt,
   simplifiedEditPrompt,
+  xWinCoderEditPrompt,
   zephyrEditPrompt,
 };
