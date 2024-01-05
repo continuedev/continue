@@ -23,7 +23,7 @@ class VsCodeConfigHandler {
 
 export const configHandler = new VsCodeConfigHandler();
 
-const TIMEOUT = 7200e3; // 7200 seconds = 2 hours
+const TIMEOUT = 7200; // 7200 seconds = 2 hours
 
 export async function llmFromTitle(title?: string): Promise<ILLM> {
   let config = await configHandler.loadConfig(new VsCodeIde());
@@ -60,7 +60,7 @@ export async function llmFromTitle(title?: string): Promise<ILLM> {
     );
   }
 
-  let timeout = llm.requestOptions?.timeout || TIMEOUT;
+  let timeout = (llm.requestOptions?.timeout || TIMEOUT) * 1000; // measured in ms
 
   const agent = new Agent({
     connect: {
