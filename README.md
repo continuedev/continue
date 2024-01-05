@@ -32,7 +32,7 @@
 
 ### Answer coding questions
 
-Highlight sections of code and ask Continue for another perspective
+Highlight (select and press `cmd+shift+M` (MacOS) / `ctrl+shift+M` (Windows)) sections of code and ask Continue for another perspective
 
 - “what does this forRoot() static function do in nestjs?”
 - “why is the first left join in this query necessary here?”
@@ -40,7 +40,7 @@ Highlight sections of code and ask Continue for another perspective
 
 ### Edit in natural language
 
-Highlight a section of code and instruct Continue to refactor it
+Highlight (select and press `cmd+shift+M` (MacOS) / `ctrl+shift+M` (Windows)) a section of code and instruct Continue to refactor it
 
 - “/edit rewrite this to return a flattened list from a 3x3 matrix”
 - “/edit refactor these into an angular flex layout on one line"
