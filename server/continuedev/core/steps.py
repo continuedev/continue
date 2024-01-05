@@ -24,6 +24,7 @@ from .main import (
     ChatMessage,
     ContextItem,
     ContinueCustomException,
+    DeltaStep,
     SessionUpdate,
     SetStep,
     Step,
@@ -603,7 +604,7 @@ Please output the code to be inserted at the cursor in order to fulfill the user
 
             params: Dict[str, Any] = {"prompt": rendered}
             if template.__class__.__name__ == "PromptTemplate":
-                params.update(template.dict(exclude={"prompt"}))  # type: ignore
+                params.update(template.dict(exclude={"prompt"}))
 
             params.update(
                 {"max_tokens": min(max_tokens, model_to_use.context_length // 2, 4096)}

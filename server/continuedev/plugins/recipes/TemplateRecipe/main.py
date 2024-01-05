@@ -1,6 +1,6 @@
 from typing import Coroutine
 
-from ....core.main import Step
+from ....core.main import Observation, Step
 from ....core.sdk import ContinueSDK, Models
 
 
