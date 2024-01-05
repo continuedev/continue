@@ -1,4 +1,0 @@
-project: extensions/vscode
-kind: Added
-body: support for .continuerc.json in root of workspace to override config.json
-time: 2023-12-28T21:02:46.787754-05:00
