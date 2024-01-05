@@ -23,6 +23,8 @@ class VsCodeConfigHandler {
 
 export const configHandler = new VsCodeConfigHandler();
 
+const TIMEOUT = 7200e3; // 7200 seconds = 2 hours
+
 export async function llmFromTitle(title?: string): Promise<ILLM> {
   let config = await configHandler.loadConfig(new VsCodeIde());
 
@@ -46,41 +48,44 @@ export async function llmFromTitle(title?: string): Promise<ILLM> {
     }
   }
 
-  if (llm.requestOptions) {
-    // Since we know this is happening in Node.js, we can add requestOptions through a custom agent
-    const ca = [...tls.rootCertificates];
-    const customCerts =
-      typeof llm.requestOptions?.caBundlePath === "string"
-        ? [llm.requestOptions?.caBundlePath]
-        : llm.requestOptions?.caBundlePath;
-    if (customCerts) {
-      ca.push(
-        ...customCerts.map((customCert) => fs.readFileSync(customCert, "utf8"))
-      );
+  // Since we know this is happening in Node.js, we can add requestOptions through a custom agent
+  const ca = [...tls.rootCertificates];
+  const customCerts =
+    typeof llm.requestOptions?.caBundlePath === "string"
+      ? [llm.requestOptions?.caBundlePath]
+      : llm.requestOptions?.caBundlePath;
+  if (customCerts) {
+    ca.push(
+      ...customCerts.map((customCert) => fs.readFileSync(customCert, "utf8"))
+    );
+  }
+
+  let timeout = llm.requestOptions?.timeout || TIMEOUT;
+
+  const agent = new Agent({
+    connect: {
+      ca,
+      rejectUnauthorized: llm.requestOptions?.verifySsl,
+      timeout,
+    },
+    bodyTimeout: timeout,
+    connectTimeout: timeout,
+    headersTimeout: timeout,
+  });
+
+  llm._fetch = (input, init) => {
+    const headers: { [key: string]: string } =
+      llm!.requestOptions?.headers || {};
+    for (const [key, value] of Object.entries(init?.headers || {})) {
+      headers[key] = value as string;
     }
 
-    const agent = new Agent({
-      connect: {
-        ca,
-        rejectUnauthorized: llm.requestOptions?.verifySsl,
-        timeout: llm.requestOptions?.timeout,
-      },
+    return fetch(input, {
+      ...init,
+      dispatcher: agent,
+      headers,
     });
-
-    llm._fetch = (input, init) => {
-      const headers: { [key: string]: string } =
-        llm!.requestOptions?.headers || {};
-      for (const [key, value] of Object.entries(init?.headers || {})) {
-        headers[key] = value as string;
-      }
-
-      return fetch(input, {
-        ...init,
-        dispatcher: agent,
-        headers,
-      });
-    };
-  }
+  };
 
   return llm;
 }
