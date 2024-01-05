@@ -11,7 +11,10 @@ class FileContextProvider extends BaseContextProvider {
     requiresQuery: false,
   };
 
-  async getContextItems(query: string): Promise<ContextItem[]> {
+  async getContextItems(
+    query: string,
+    fullInput: string
+  ): Promise<ContextItem[]> {
     // Assume the query is a filepath
     query = query.trim();
     const content = await new ExtensionIde().readFile(query);

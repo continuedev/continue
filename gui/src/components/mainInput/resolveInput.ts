@@ -58,7 +58,8 @@ async function resolveEditorContent(
       const resolvedItems = await getContextItems(
         contextProviders,
         item.id,
-        item.query
+        item.query,
+        paragraphs.join("\n")
       );
       for (const resolvedItem of resolvedItems) {
         contextItemsText += `\`\`\`title="${item.label}"\n${resolvedItem.content}\n\`\`\`\n`;

@@ -113,7 +113,7 @@ interface CustomContextProvider {
   title: string;
   displayTitle?: string;
   description?: string;
-  getContextItems(query: string): Promise<ContextItem[]>;
+  getContextItems(query: string, fullInput: string): Promise<ContextItem[]>;
 }
 ```
 
@@ -126,7 +126,7 @@ const RagContextProvider = {
   description:
     "Retrieve snippets from our vector database of internal documents",
 
-  getContextItems: async (query: string) => {
+  getContextItems: async (query: string, fullInput: string) => {
     const response = await fetch("https://internal_rag_server.com/retrieve", {
       method: "POST",
       body: JSON.stringify({ query }),

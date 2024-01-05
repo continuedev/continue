@@ -17,7 +17,10 @@ class GoogleContextProvider extends BaseContextProvider {
     this._serperApiKey = options.serperApiKey;
   }
 
-  async getContextItems(query: string): Promise<ContextItem[]> {
+  async getContextItems(
+    query: string,
+    fullInput: string
+  ): Promise<ContextItem[]> {
     const url = "https://google.serper.dev/search";
 
     const payload = JSON.stringify({ q: query });
