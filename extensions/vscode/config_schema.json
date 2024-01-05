@@ -145,7 +145,8 @@
             "chatml",
             "none",
             "deepseek",
-            "openchat"
+            "openchat",
+            "xwin-coder"
           ],
           "type": "string"
         },
