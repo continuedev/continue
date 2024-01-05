@@ -11,6 +11,7 @@ Pre-release Changes
 * support for .continuerc.json in root of workspace to override config.json
 ### Changed
 * Allow LLM servers to handle templating
+* Use Ollama /chat endpoint instead of raw completions by default, and /show endpoint to gather model parameters like context length and stop tokens
 
 ## v0.6.16 - 2023-12-25
 

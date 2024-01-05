@@ -65,7 +65,10 @@
         "caBundlePath": {
           "title": "Ca Bundle Path",
           "description": "Path to a custom CA bundle to use when making the HTTP request",
-          "type": "string"
+          "anyOf": [
+            { "type": "string" },
+            { "type": "array", "items": { "type": "string" } }
+          ]
         },
         "proxy": {
           "title": "Proxy",
