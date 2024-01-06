@@ -19,7 +19,7 @@ import { contextProviderClassFromName } from "../context/providers";
 import CustomContextProviderClass from "../context/providers/CustomContextProvider";
 import FileContextProvider from "../context/providers/FileContextProvider";
 import { AllEmbeddingsProviders } from "../index/embeddings";
-import OllamaEmbeddingsProvider from "../index/embeddings/OllamaEmbeddingsProvider";
+import TransformersJsEmbeddingsProvider from "../index/embeddings/TransformersJsEmbeddingsProvider";
 import { BaseLLM } from "../llm";
 import { llmFromDescription } from "../llm/llms";
 import CustomLLMClass from "../llm/llms/CustomLLM";
@@ -87,10 +87,13 @@ function intermediateToFinalConfig(config: Config): ContinueConfig {
     }
   }
 
-  if ((config.embeddingsProvider as EmbeddingsProviderDescription).model) {
+  if (
+    (config.embeddingsProvider as EmbeddingsProviderDescription | undefined)
+      ?.model
+  ) {
     const { provider, ...options } =
       config.embeddingsProvider as EmbeddingsProviderDescription;
-    config.embeddingsProvider = AllEmbeddingsProviders[provider](options);
+    config.embeddingsProvider = new AllEmbeddingsProviders[provider](options);
   }
 
   return {
@@ -98,8 +101,8 @@ function intermediateToFinalConfig(config: Config): ContinueConfig {
     contextProviders,
     models,
     embeddingsProvider:
-      (config.embeddingsProvider as EmbeddingsProvider) ||
-      OllamaEmbeddingsProvider,
+      (config.embeddingsProvider as EmbeddingsProvider | undefined) ||
+      new TransformersJsEmbeddingsProvider(),
   };
 }
 
