@@ -881,8 +881,7 @@ After it's up and running, you can start using Continue.`,
       {...sapModelProxy}
     ],
     collectInputFor: [
-      {...modelInput, defaultValue: "coe-abap-llama/v1", required: true},
-      {...apiTypeInput, defaultValue: "non-azure"},
+      {...modelInput, required: true},
       {...apiBaseInput, required: true},
       {...authURLInput, required: true},
       {...clientIDInput, required: true},
