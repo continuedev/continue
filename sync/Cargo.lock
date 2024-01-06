@@ -98,21 +98,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "core"
-version = "0.1.0"
-dependencies = [
- "hex-literal",
- "homedir",
- "ignore",
- "neon",
- "pyo3",
- "serde",
- "serde_json",
- "sha1",
- "tempfile",
-]
-
-[[package]]
 name = "core-foundation-sys"
 version = "0.8.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -802,6 +787,21 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 1.0.109",
+]
+
+[[package]]
+name = "sync"
+version = "0.1.0"
+dependencies = [
+ "hex-literal",
+ "homedir",
+ "ignore",
+ "neon",
+ "pyo3",
+ "serde",
+ "serde_json",
+ "sha1",
+ "tempfile",
 ]
 
 [[package]]

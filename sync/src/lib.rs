@@ -28,8 +28,12 @@ use neon::prelude::*;
 //     Ok(js_array)
 // }
 
-// #[neon::main]
-// fn main(mut cx: ModuleContext) -> NeonResult<()> {
-//     cx.export_function("get", get_num_cpus)?;
-//     Ok(())
-// }
+fn get_num_cpus(mut cx: FunctionContext) -> JsResult<JsNumber> {
+    Ok(cx.number(2.0 as f64))
+}
+
+#[neon::main]
+fn main(mut cx: ModuleContext) -> NeonResult<()> {
+    cx.export_function("get", get_num_cpus)?;
+    Ok(())
+}

@@ -10,6 +10,7 @@ import { registerAllCodeLensProviders } from "../lang-server/codeLens";
 import { getExtensionUri } from "../util/vscode";
 import { setupInlineTips } from "./inlineTips";
 import { startProxy } from "./proxy";
+const cpuCount = require("../sync.node");
 
 export let extensionContext: vscode.ExtensionContext | undefined = undefined;
 export let ideProtocolClient: IdeProtocolClient;
@@ -99,6 +100,8 @@ function showRefactorMigrationMessage() {
 }
 
 export async function activateExtension(context: vscode.ExtensionContext) {
+  console.log("owijfio: ", cpuCount.get());
+
   // Add necessary files
   getTsConfigPath();
 
