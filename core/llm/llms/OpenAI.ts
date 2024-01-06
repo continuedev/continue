@@ -66,7 +66,7 @@ class OpenAI extends BaseLLM {
     }
   }
 
-  protected _getRequestHeaders() {
+  protected async _getRequestHeaders(): Promise<Record<string, string>>  {
     return {
       "Content-Type": "application/json",
       Authorization: `Bearer ${this.apiKey}`,
@@ -93,7 +93,7 @@ class OpenAI extends BaseLLM {
   ): AsyncGenerator<string> {
     const response = await this.fetch(this._getCompletionUrl(), {
       method: "POST",
-      headers: this._getRequestHeaders(),
+      headers: await this._getRequestHeaders(),
       body: JSON.stringify({
         ...{
           prompt,
@@ -143,7 +143,7 @@ class OpenAI extends BaseLLM {
   ): AsyncGenerator<ChatMessage> {
     const response = await this.fetch(this._getChatUrl(), {
       method: "POST",
-      headers: this._getRequestHeaders(),
+      headers: await this._getRequestHeaders(),
       body: JSON.stringify({
         ...this._convertArgs(options, messages),
         stream: true,

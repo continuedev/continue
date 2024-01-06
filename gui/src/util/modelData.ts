@@ -109,6 +109,16 @@ const FrequencyPenaltyInput: InputDescriptor = {
   max: 1,
   step: 0.01,
 };
+const Stop: InputDescriptor = {
+  inputType: CollectInputType.number,
+  key: "completionOptions.frequencyPenalty",
+  label: "Frequency Penalty",
+  defaultValue: undefined,
+  required: false,
+  min: 0,
+  max: 1,
+  step: 0.01,
+};
 const completionParamsInputs = [
   contextLengthInput,
   temperatureInput,
@@ -151,6 +161,13 @@ const authURLInput: InputDescriptor = {
   key: "authURL",
   label: "Authentication URL",
   placeholder: "https://mltooling-39tr6fbb.authentication.sap.hana.ondemand.com",
+  required: true,
+};
+const modelInput: InputDescriptor = {
+  inputType: CollectInputType.text,
+  key: "model",
+  label: "Model name",
+  placeholder: "coe-abap-llama/v1",
   required: true,
 };
 
@@ -534,7 +551,8 @@ const abapLlama: ModelPackage = {
     clientID: "XXX",
     clientSecret: "XXX",
     resourceGroup: "XXX",
-    authURL: "https://mltooling-39tr6fbb.authentication.sap.hana.ondemand.com"
+    authURL: "https://mltooling-39tr6fbb.authentication.sap.hana.ondemand.com",
+    stopTokens: ["</s>"]
   },
   providerOptions: ["sap-ai-core"],
   icon: "SAP.png",
@@ -841,12 +859,13 @@ After it's up and running, you can start using Continue.`,
       { ...abapLlama, title: "ABAP-LlaMA (7B)" }
     ],
     collectInputFor: [
+      {...modelInput, defaultValue: "coe-abap-llama/v1", required: true},
       {...apiBaseInput, defaultValue: "e.g. https://api.ai.internalprod.eu-central-1.aws.ml.hana.ondemand.com/v2/inference/deployments/{deploymentID}", required: true},
-      {...authURLInput, defaultValue: ""},
-      {...clientIDInput, defaultValue: "XXX"},
-      {...clientSecretInput, defaultValue: "XXX"},
+      {...authURLInput, defaultValue: "", required: true},
+      {...clientIDInput, defaultValue: "XXX", required: true},
+      {...clientSecretInput, defaultValue: "XXX", required: true},
       {...resourceGroupInput, defaultValue: "default", required: true},
-      ...completionParamsInputs, ],
+      ...completionParamsInputs],
 
   }
 };
