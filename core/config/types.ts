@@ -201,7 +201,7 @@ declare global {
     region?: string;
     projectId?: string;
 
-    // AI Core options
+    // SAP Gen AI Core options
     resourceGroup?: string;
     authURL?: string;
     clientID?: string;
@@ -337,7 +337,7 @@ declare global {
     | "gemini"
     | "mistral"
     | "bedrock"
-    | "sap-ai-core";
+    | "sap-gen-ai-hub";
 
   export type ModelName =
     // OpenAI

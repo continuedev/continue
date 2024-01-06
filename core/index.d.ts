@@ -21,7 +21,7 @@ export interface ILLM extends LLMOptions {
   apiType?: string;
   region?: string;
   projectId?: string;
-  // AI Core options
+  // SAP Gen AI Core options
   resourceGroup?: string;
   authURL?: string;
   clientID?: string;
@@ -202,7 +202,7 @@ export interface LLMOptions {
   region?: string;
   projectId?: string;
 
-    // AI Core options
+    // SAP Gen AI Core options
     resourceGroup?: string;
     authURL?: string;
     clientID?: string;
@@ -338,7 +338,7 @@ type ModelProvider =
   | "gemini"
   | "mistral"
   | "bedrock"
-  | "sap-ai-core";
+  | "sap-gen-ai-hub";
 
 export type ModelName =
   // OpenAI
@@ -375,7 +375,7 @@ export type ModelName =
   | "mistral-tiny"
   | "mistral-small"
   | "mistral-medium"
-  // AI Core
+  // SAP Gen AI Core
   | "abap-llama";
 
 export interface RequestOptions {

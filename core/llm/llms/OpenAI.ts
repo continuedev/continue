@@ -46,7 +46,7 @@ class OpenAI extends BaseLLM {
 
     return completion;
   }
-  private _getCompletionUrl() {
+  protected _getCompletionUrl() {
     if (this.apiType === "azure") {
       return `${this.apiBase}/openai/deployments/${this.engine}/completions?api-version=${this.apiVersion}`;
     } else {
@@ -91,9 +91,11 @@ class OpenAI extends BaseLLM {
     prompt: string,
     options: CompletionOptions
   ): AsyncGenerator<string> {
-    const response = await this.fetch(this._getCompletionUrl(), {
+    const header = await this._getRequestHeaders();
+    const url = this._getCompletionUrl();
+    const response = await this.fetch(url, {
       method: "POST",
-      headers: await this._getRequestHeaders(),
+      headers: header,
       body: JSON.stringify({
         ...{
           prompt,
@@ -116,7 +118,7 @@ class OpenAI extends BaseLLM {
     }
   }
 
-  private _getChatUrl() {
+  protected _getChatUrl() {
     if (this.apiType === "azure") {
       return `${this.apiBase}/openai/deployments/${this.engine}/chat/completions?api-version=${this.apiVersion}`;
     } else {
@@ -141,15 +143,16 @@ class OpenAI extends BaseLLM {
     messages: ChatMessage[],
     options: CompletionOptions
   ): AsyncGenerator<ChatMessage> {
-    const response = await this.fetch(this._getChatUrl(), {
+    const header = await this._getRequestHeaders();
+    const url = this._getChatUrl();
+    const response = await this.fetch(url, {
       method: "POST",
-      headers: await this._getRequestHeaders(),
+      headers: header,
       body: JSON.stringify({
         ...this._convertArgs(options, messages),
         stream: true,
       }),
     });
-
     for await (const value of streamSse(response)) {
       if (value.choices?.[0]?.delta?.content) {
         yield value.choices[0].delta;

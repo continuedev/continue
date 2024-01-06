@@ -170,6 +170,13 @@ const modelInput: InputDescriptor = {
   placeholder: "coe-abap-llama/v1",
   required: true,
 };
+const apiTypeInput: InputDescriptor = {
+  inputType: CollectInputType.text,
+  key: "apiType",
+  label: "API Type (vllm/azure)",
+  placeholder: "vllm",
+  required: true,
+};
 
 
 export interface ModelInfo {
@@ -537,24 +544,37 @@ const chatBison: ModelPackage = {
 };
 
 
-
-const abapLlama: ModelPackage = {
-  title: "ABAP-Llama (AI Core)",
+const sapCustomDeployment: ModelPackage = {
+  title: "Custom Deployment",
   description:
-    "An code-LlaMA (7b) hosted on AI Core",
+    "Custom deployment based on vllm, hosted on SAP Gen AI Hub",
   params: {
-    model: "abap-llama",
+    model: "codellama-7b",
     contextLength: 2048,
-    title: "ABAP-Llama",
-    provider: "sap-ai-core",
-    apiBase: "https://api.ai.internalprod.eu-central-1.aws.ml.hana.ondemand.com/v2/inference/deployments/{deploymentID}",
-    clientID: "XXX",
-    clientSecret: "XXX",
-    resourceGroup: "XXX",
-    authURL: "https://mltooling-39tr6fbb.authentication.sap.hana.ondemand.com",
+    title: "SAP Gen AI Hub - Deployment",
+    provider: "sap-gen-ai-hub",
+    apiType: "vllm",
     stopTokens: ["</s>"]
   },
-  providerOptions: ["sap-ai-core"],
+  providerOptions: ["sap-gen-ai-hub"],
+  icon: "SAP.png",
+};
+
+
+const sapModelProxy: ModelPackage = {
+  title: "SAP Gen AI Hub Model Access",
+  description:
+    "Consuming a central model via SAP Gen AI Hub",
+  params: {
+    model: "gpt-4",
+    contextLength: 2048,
+    title: "SAP Gen AI Hub - Proxy",
+    provider: "sap-gen-ai-hub",
+    apiType: "azure",
+    engine: "",
+
+  },
+  providerOptions: ["sap-gen-ai-hub"],
   icon: "SAP.png",
 };
 
@@ -573,7 +593,8 @@ export const MODEL_INFO: ModelPackage[] = [
   chatBison,
   zephyr,
   deepseek,
-  abapLlama
+  sapModelProxy,
+  sapCustomDeployment
 ];
 
 export const PROVIDER_INFO: { [key: string]: ModelInfo } = {
@@ -848,22 +869,24 @@ After it's up and running, you can start using Continue.`,
     ],
     collectInputFor: [...completionParamsInputs],
   },
-  aicore: {
-    title: "AI Core Model (SAP internal)",
-    provider: "sap-ai-core",
+  SAPGenAIHub: {
+    title: "SAP Genrative AI Hub",
+    provider: "sap-gen-ai-hub",
     description: "...",
     longDescription: '...',
     icon: "SAP.png",
     tags: [ModelProviderTag.SAP],
     packages: [
-      { ...abapLlama, title: "ABAP-LlaMA (7B)" }
+      {...sapCustomDeployment},
+      {...sapModelProxy}
     ],
     collectInputFor: [
       {...modelInput, defaultValue: "coe-abap-llama/v1", required: true},
-      {...apiBaseInput, defaultValue: "e.g. https://api.ai.internalprod.eu-central-1.aws.ml.hana.ondemand.com/v2/inference/deployments/{deploymentID}", required: true},
-      {...authURLInput, defaultValue: "", required: true},
-      {...clientIDInput, defaultValue: "XXX", required: true},
-      {...clientSecretInput, defaultValue: "XXX", required: true},
+      {...apiTypeInput, defaultValue: "non-azure"},
+      {...apiBaseInput, required: true},
+      {...authURLInput, required: true},
+      {...clientIDInput, required: true},
+      {...clientSecretInput, required: true},
       {...resourceGroupInput, defaultValue: "default", required: true},
       ...completionParamsInputs],
 

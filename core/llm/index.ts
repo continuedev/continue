@@ -169,7 +169,7 @@ export abstract class BaseLLM implements ILLM {
   region?: string;
   projectId?: string;
 
-  // AI Core options
+  // SAP Gen AI Core options
   resourceGroup?: string;
   authURL?: string;
   clientID?: string;
@@ -222,7 +222,7 @@ export abstract class BaseLLM implements ILLM {
     this.region = options.region;
     this.projectId = options.projectId;
 
-    // AI Core options
+    // SAP Gen AI Core options
     this.resourceGroup = options.resourceGroup;
     this.authURL = options.authURL;
     this.clientID = options.clientID;

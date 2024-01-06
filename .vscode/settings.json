@@ -6,5 +6,7 @@
   "continue.showInlineTip": false,
   "python.testing.pytestArgs": ["server"],
   "python.testing.unittestEnabled": false,
-  "python.testing.pytestEnabled": true
+  "python.testing.pytestEnabled": true,
+  "python.envFile": "${workspaceFolder}/.databricks/.databricks.env",
+  "databricks.python.envFile": "${workspaceFolder}/.env"
 }
