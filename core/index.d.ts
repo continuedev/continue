@@ -375,8 +375,6 @@ export type ModelName =
   | "mistral-tiny"
   | "mistral-small"
   | "mistral-medium"
-  // SAP Gen AI Core
-  | "abap-llama";
 
 export interface RequestOptions {
   timeout?: number;
