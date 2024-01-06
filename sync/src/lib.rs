@@ -1,4 +1,5 @@
 use std::path::Path;
+mod db;
 mod gitignore;
 mod sync;
 mod utils;
