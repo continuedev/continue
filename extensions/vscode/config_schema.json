@@ -107,12 +107,27 @@
             "huggingface-inference-api",
             "llama.cpp",
             "replicate",
-            "text-gen-webui",
             "google-palm",
             "lmstudio",
             "llamafile",
             "mistral",
             "deepinfra"
+          ],
+          "markdownEnumDescriptions": [
+            "### OpenAI\nUse gpt-4, gpt-3.5-turbo, or any other OpenAI model. See [here](https://openai.com/product#made-for-developers) to obtain an API key.\n\n> [Reference](https://continue.dev/docs/reference/Model%20Providers/openai)",
+            "### Free Trial\nNew users can try out Continue for free using a proxy server that securely makes calls to OpenAI using our API key. If you are ready to use your own API key or have used all 250 free uses, you can enter your API key in config.py where it says `apiKey=\"\"` or select another model provider.\n> [Reference](https://continue.dev/docs/reference/Model%20Providers/freetrial)",
+            "### Anthropic\nTo get started with Anthropic models, you first need to sign up for the open beta [here](https://claude.ai/login) to obtain an API key.\n> [Reference](https://continue.dev/docs/reference/Model%20Providers/anthropicllm)",
+            "### Together\nTogether is a hosted service that provides extremely fast streaming of open-source language models. To get started with Together:\n1. Obtain an API key from [here](https://together.ai)\n2. Paste below\n3. Select a model preset\n> [Reference](https://continue.dev/docs/reference/Model%20Providers/togetherllm)",
+            "### Ollama\nTo get started with Ollama, follow these steps:\n1. Download from [ollama.ai](https://ollama.ai/) and open the application\n2. Open a terminal and run `ollama pull <MODEL_NAME>`. Example model names are `codellama:7b-instruct` or `llama2:7b-text`. You can find the full list [here](https://ollama.ai/library).\n3. Make sure that the model name used in step 2 is the same as the one in config.py (e.g. `model=\"codellama:7b-instruct\"`)\n4. Once the model has finished downloading, you can start asking questions through Continue.\n> [Reference](https://continue.dev/docs/reference/Model%20Providers/ollama)",
+            "### Huggingface TGI\n\n> [Reference](https://continue.dev/docs/reference/Model%20Providers/huggingfacetgi)",
+            "### Huggingface Inference API\n\n> [Reference](https://continue.dev/docs/reference/Model%20Providers/huggingfaceinferenceapi)",
+            "### Llama.cpp\nllama.cpp comes with a [built-in server](https://github.com/ggerganov/llama.cpp/tree/master/examples/server#llamacppexampleserver) that can be run from source. To do this:\n\n1. Clone the repository with `git clone https://github.com/ggerganov/llama.cpp`.\n2. `cd llama.cpp`\n3. Run `make` to build the server.\n4. Download the model you'd like to use and place it in the `llama.cpp/models` directory (the best place to find models is [The Bloke on HuggingFace](https://huggingface.co/TheBloke))\n5. Run the llama.cpp server with the command below (replacing with the model you downloaded):\n\n```shell\n.\\server.exe -c 4096 --host 0.0.0.0 -t 16 --mlock -m models/codellama-7b-instruct.Q8_0.gguf\n```\n\nAfter it's up and running, you can start using Continue.\n> [Reference](https://continue.dev/docs/reference/Model%20Providers/llamacpp)",
+            "### Replicate\nReplicate is a hosted service that makes it easy to run ML models. To get started with Replicate:\n1. Obtain an API key from [here](https://replicate.com)\n2. Paste below\n3. Select a model preset\n> [Reference](https://continue.dev/docs/reference/Model%20Providers/replicatellm)",
+            "### Google PALM\nTo get started with Google Makersuite, obtain your API key from [here](https://makersuite.google.com) and paste it below.\n> [Reference](https://continue.dev/docs/reference/Model%20Providers/googlepalmapi)",
+            "### LMStudio\nLMStudio provides a professional and well-designed GUI for exploring, configuring, and serving LLMs. It is available on both Mac and Windows. To get started:\n1. Download from [lmstudio.ai](https://lmstudio.ai/) and open the application\n2. Search for and download the desired model from the home screen of LMStudio.\n3. In the left-bar, click the '<->' icon to open the Local Inference Server and press 'Start Server'.\n4. Once your model is loaded and the server has started, you can begin using Continue.\n> [Reference](https://continue.dev/docs/reference/Model%20Providers/lmstudio)",
+            "### Llamafile\nTo get started with llamafiles, find and download a binary on their [GitHub repo](https://github.com/Mozilla-Ocho/llamafile#binary-instructions). Then run it with the following command:\n\n```shell\nchmod +x ./llamafile\n./llamafile\n```\n> [Reference](https://continue.dev/docs/reference/Model%20Providers/llamafile)",
+            "### Mistral API\n\nTo get access to the Mistral API, obtain your API key from the [Mistral platform](https://docs.mistral.ai/)",
+            "### DeepInfra\n\n> [Reference](https://continue.dev/docs/reference/Model%20Providers/deepinfra)"
           ],
           "type": "string"
         },
@@ -712,7 +727,17 @@
                 "http",
                 "commit"
               ],
-              "type": "string"
+              "type": "string",
+              "markdownEnumDescriptions": [
+                "Generate a link to a drafted GitHub issue",
+                "Export the current chat session to markdown",
+                "Reference StackOverflow to answer the question",
+                "Generate a terminal command and paste it into the terminal",
+                "Edit the highlighted code with given instructions",
+                "Add comments to the highlighted code",
+                "Write a custom slash command at your own HTTP endpoint. Set 'url' in the params object for the endpoint you have setup.",
+                "Generate a commit message for the current changes"
+              ]
             },
             { "type": "string" }
           ]
@@ -794,6 +819,14 @@
                 "search",
                 "url",
                 "http"
+              ],
+              "markdownEnumDescriptions": [
+                "Reference the contents of the current changes as given by `git diff`",
+                "Reference the contents of the terminal",
+                "Reference the contents of all open files.",
+                "Enter a search phrase and include the Google search results as context",
+                "Enter a URL and use the contents of the webpage as context",
+                "Write a custom context provider at your own HTTP endpoint. Set 'url' in the params object for the endpoint you have setup."
               ],
               "type": "string"
             },
@@ -901,15 +934,6 @@
       "title": "SerializedContinueConfig",
       "type": "object",
       "properties": {
-        "disallowedSteps": {
-          "title": "Disallowed Steps",
-          "description": "Steps that are not allowed to be run, and will be skipped if attempted",
-          "default": [],
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
         "allowAnonymousTelemetry": {
           "title": "Allow Anonymous Telemetry",
           "description": "If this field is set to True, we will collect anonymous telemetry as described in the documentation page on telemetry. If set to False, we will not collect any data.",
